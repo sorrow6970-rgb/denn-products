@@ -103,6 +103,10 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(File System Access API) 구현 | 상태: 완료`
+  - 범위: denn-admin.html 기존 데이터 보호 IIFE 내부 확장 (L5640-5754 블록). 신규 wrap 없음.
+  - 충돌 위험: 낮음 (기존 패널/스냅샷 로직 보존, 새 헬퍼만 추가하고 updatePanel UI 확장)
+  - 메모: Chrome/Edge에서 폴더 1회 선택 → IndexedDB(denn_backup)에 핸들 보관. 자동 파일 백업(5/10/30/60분 주기) + 수동 백업 모두 동일 폴더로. 파일명 denn-backup-{auto|manual}-YYYY-MM-DD-HHmm.json. 7일 지난 auto 파일 자동 삭제. Firefox/Safari는 기본 다운로드 폴더 fallback. 새 localStorage 키 denn_backup_config_v1 (보호 키 미접촉). 보호 함수 무수정.
 - [x] `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage 연동 Step 1 (SDK init + 업로드 헬퍼) | 상태: 완료`
   - 범위: denn-admin.html 말미에 Firebase SDK 모듈 import + window.dennFirebase 헬퍼, docs/firebase-setup.md 신규
   - 충돌 위험: 없음 (격리된 module script, 다른 코드와 분리)
@@ -141,8 +145,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage SDK init + 업로드 헬퍼 (Step 2 wire-up 대기)`
-2. `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 자연값 회귀 + fbExport 1600x2400으로 본격 화질 개선`
-3. `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널을 좌측 사이드바 내부로 이동(알림 가림 해소)`
-4. `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복 + DPR 최소2 supersampling 강제`
-5. `2026-05-18 | Claude Code | claude/fix-template-sharpness | ze-canvas DPR + fbExport 해상도 1.5x로 템플릿 문구 선명도 개선`
+1. `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(FS Access API) + 보존 7일`
+2. `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage SDK init + 업로드 헬퍼 (Step 2 wire-up 대기/보류)`
+3. `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 자연값 회귀 + fbExport 1600x2400으로 본격 화질 개선`
+4. `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널을 좌측 사이드바 내부로 이동(알림 가림 해소)`
+5. `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복 + DPR 최소2 supersampling 강제`

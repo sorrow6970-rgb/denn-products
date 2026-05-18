@@ -5681,7 +5681,12 @@ function downloadObj(obj,name){
   setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
 }
 function stamp(){return new Date().toISOString().replace(/[:.]/g,'-').slice(0,19)}
-window.dennDownloadCurrentDataV35=function(){addSnapshot('manual-download',true);downloadObj(window.S,'DENN-current-data-'+stamp()+'.json')};
+window.dennDownloadCurrentDataV35=function(){
+  // 신규 파일 백업 경로 사용(폴더 지정 시 폴더, 미지정 시 다운로드). 파일명 규칙도 manual-*.json으로 통일.
+  if(typeof window.dennRunManualBackup==='function')return window.dennRunManualBackup();
+  addSnapshot('manual-download',true);
+  downloadObj(window.S,'DENN-current-data-'+stamp()+'.json');
+};
 window.dennDownloadLatestSnapshotV35=function(){
   addSnapshot('manual-snapshot-download',true);
   var arr=readSnaps();
@@ -5701,19 +5706,115 @@ window.dennRestoreLatestSnapshotV35=async function(){
   updatePanel();
   alert('최근 자동 백업으로 복구했습니다.');
 };
+
+/* ===== 파일 백업 자동화 (File System Access API) ===== */
+var CFG_KEY='denn_backup_config_v1';
+var DEFAULT_CFG={autoEnabled:false,intervalMin:10,lastAutoAt:0,lastAutoFile:'',lastAutoMode:'',lastManualAt:0,retentionDays:7};
+function readCfg(){try{return Object.assign({},DEFAULT_CFG,JSON.parse(localStorage.getItem(CFG_KEY)||'{}'))}catch(e){return Object.assign({},DEFAULT_CFG)}}
+function writeCfg(c){try{localStorage.setItem(CFG_KEY,JSON.stringify(c))}catch(e){console.warn('[backup] cfg save:',e)}}
+function fsSupported(){return typeof window.showDirectoryPicker==='function'}
+function notify(msg){try{if(typeof window.toast==='function'){window.toast(msg);return}}catch(e){}try{console.log('[backup] '+msg)}catch(e){}}
+function fmtStamp(d){d=d||new Date();var pad=function(n){return String(n).padStart(2,'0')};return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())}
+function autoFilename(){return 'denn-backup-auto-'+fmtStamp()+'.json'}
+function manualFilename(){return 'denn-backup-manual-'+fmtStamp()+'.json'}
+
+// IndexedDB로 FileSystemDirectoryHandle 보관 (localStorage는 직렬화 못 함)
+function openIDB(){return new Promise(function(res,rej){var rq=indexedDB.open('denn_backup',1);rq.onupgradeneeded=function(){rq.result.createObjectStore('handles')};rq.onsuccess=function(){res(rq.result)};rq.onerror=function(){rej(rq.error)}})}
+async function saveHandle(h){var db=await openIDB();return new Promise(function(res,rej){var tx=db.transaction('handles','readwrite');tx.objectStore('handles').put(h,'backupDir');tx.oncomplete=function(){res()};tx.onerror=function(){rej(tx.error)}})}
+async function loadHandle(){try{var db=await openIDB();return new Promise(function(res,rej){var tx=db.transaction('handles','readonly');var rq=tx.objectStore('handles').get('backupDir');rq.onsuccess=function(){res(rq.result||null)};rq.onerror=function(){rej(rq.error)}})}catch(e){return null}}
+async function clearHandleIDB(){try{var db=await openIDB();return new Promise(function(res,rej){var tx=db.transaction('handles','readwrite');tx.objectStore('handles').delete('backupDir');tx.oncomplete=function(){res()};tx.onerror=function(){rej(tx.error)}})}catch(e){}}
+async function ensureHandlePerm(h){if(!h)return false;try{var p=await h.queryPermission({mode:'readwrite'});if(p==='granted')return true;p=await h.requestPermission({mode:'readwrite'});return p==='granted'}catch(e){return false}}
+
+function fallbackDownload(content,name){var blob=new Blob([content],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
+async function downloadToFolder(obj,filename){
+  var content=JSON.stringify(obj,null,2);
+  var h=await loadHandle();
+  if(h&&await ensureHandlePerm(h)){
+    try{var fh=await h.getFileHandle(filename,{create:true});var w=await fh.createWritable();await w.write(content);await w.close();return{ok:true,mode:'folder',filename:filename}}
+    catch(e){console.warn('[backup] folder write failed, falling back:',e)}
+  }
+  fallbackDownload(content,filename);
+  return{ok:true,mode:'download',filename:filename};
+}
+
+async function cleanupOldAutoBackups(){
+  var cfg=readCfg();if(!cfg.retentionDays||cfg.retentionDays<=0)return;
+  var h=await loadHandle();if(!h||!(await ensureHandlePerm(h)))return;
+  var cutoff=Date.now()-cfg.retentionDays*86400000;
+  try{
+    var entries=[];for await(var entry of h.values())entries.push(entry);
+    for(var i=0;i<entries.length;i++){
+      var entry=entries[i];
+      if(entry.kind!=='file')continue;
+      if(!/^denn-backup-auto-/.test(entry.name))continue;
+      try{var f=await entry.getFile();if(f.lastModified<cutoff)await h.removeEntry(entry.name)}catch(e){}
+    }
+  }catch(e){console.warn('[backup] cleanup failed:',e)}
+}
+
+var autoTimer=null;
+async function runAutoBackup(){
+  if(!window.S)return;
+  var fn=autoFilename();
+  try{
+    var r=await downloadToFolder(window.S,fn);
+    var cfg=readCfg();cfg.lastAutoAt=Date.now();cfg.lastAutoFile=r.filename;cfg.lastAutoMode=r.mode;writeCfg(cfg);
+    notify('✓ 자동 백업: '+fn+(r.mode==='folder'?' (폴더)':' (다운로드)'));
+    updatePanel();
+    cleanupOldAutoBackups().catch(function(){});
+  }catch(e){console.warn('[backup] auto run failed:',e);notify('⚠ 자동 백업 실패 (콘솔 확인)')}
+}
+function startAutoTimer(){stopAutoTimer();var cfg=readCfg();if(!cfg.autoEnabled)return;var ms=Math.max(60000,cfg.intervalMin*60000);autoTimer=setInterval(runAutoBackup,ms)}
+function stopAutoTimer(){if(autoTimer){clearInterval(autoTimer);autoTimer=null}}
+
+// Public API
+window.dennPickBackupDir=async function(){
+  if(!fsSupported()){alert('이 브라우저는 폴더 선택을 지원하지 않습니다 (Chrome/Edge 권장).\n자동/수동 백업이 기본 다운로드 폴더로 저장됩니다.');return null}
+  try{var h=await window.showDirectoryPicker({mode:'readwrite',startIn:'documents'});await saveHandle(h);notify('백업 폴더 선택됨: '+h.name);updatePanel();return h}
+  catch(e){if(e&&e.name!=='AbortError')console.warn('pickBackupDir:',e);return null}
+};
+window.dennClearBackupDir=async function(){await clearHandleIDB();notify('백업 폴더 지정 해제됨');updatePanel()};
+window.dennToggleAutoBackup=function(on){var cfg=readCfg();cfg.autoEnabled=!!on;writeCfg(cfg);startAutoTimer();notify(on?'자동 파일 백업 ON':'자동 파일 백업 OFF');updatePanel()};
+window.dennSetBackupInterval=function(min){var cfg=readCfg();cfg.intervalMin=Math.max(1,parseInt(min,10)||10);writeCfg(cfg);startAutoTimer();updatePanel()};
+window.dennRunManualBackup=async function(){
+  if(!window.S){alert('저장할 데이터가 없습니다.');return}
+  addSnapshot('manual-file-backup',true);
+  var fn=manualFilename();
+  var r=await downloadToFolder(window.S,fn);
+  var cfg=readCfg();cfg.lastManualAt=Date.now();writeCfg(cfg);
+  notify('✓ 수동 백업: '+fn+(r.mode==='folder'?' (폴더)':' (다운로드)'));
+  updatePanel();
+};
 function updatePanel(){
   var p=by('denn-data-safety-panel');if(!p||!window.S)return;
   var m=summary(S),arr=readSnaps(),latest=arr[0]&&arr[0].summary;
+  var cfg=readCfg();
   var body=by('denn-data-safety-body');if(!body)return;
+  var intervals=[5,10,30,60];
+  var supportNote=fsSupported()?'':'<div style="color:#FFB020;font-size:9px;line-height:1.4">⚠ 폴더 지정 미지원 브라우저. 다운로드 폴더로 자동 저장됩니다.</div>';
   body.innerHTML=
     '<div class="ds-row"><span>업로드 템플릿</span><b>'+m.uploadedFrameTemplates+'</b></div>'+
     '<div class="ds-row"><span>가이드 배경</span><b>'+m.guideBackgrounds+'</b></div>'+
     '<div class="ds-row"><span>액자 사이즈</span><b>'+m.frameSizes+'</b></div>'+
-    '<div class="ds-row"><span>자동 백업</span><b>'+arr.length+'개</b></div>'+
-    '<button type="button" onclick="dennDownloadCurrentDataV35()">현재 데이터 JSON 저장</button>'+
-    '<button class="secondary" type="button" onclick="dennDownloadLatestSnapshotV35()">최근 자동 백업 저장</button>'+
-    '<button class="secondary" type="button" onclick="dennRestoreLatestSnapshotV35()">최근 자동 백업 복구</button>'+
-    '<div style="color:#918aa3;font-size:9.5px;line-height:1.45">기준 파일: working 폴더<br>최근 백업: '+(latest?new Date(latest.time).toLocaleString():'없음')+'</div>';
+    '<div class="ds-row"><span>인메모리 스냅샷</span><b>'+arr.length+'개</b></div>'+
+    '<hr style="border:0;border-top:1px solid rgba(255,255,255,.10);margin:4px 0">'+
+    '<div style="font-size:9.5px;color:#bdb6ca;font-weight:700;margin-bottom:2px">📁 파일 백업</div>'+
+    '<div class="ds-row"><span>폴더</span><b id="ds-folder-name" style="font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">로딩...</b></div>'+
+    '<div style="display:flex;gap:4px"><button type="button" style="flex:1" onclick="dennPickBackupDir()">📁 폴더 선택</button><button class="secondary" type="button" style="flex:0 0 28px;padding:0" onclick="dennClearBackupDir()" title="폴더 지정 해제">✕</button></div>'+
+    '<div class="ds-row" style="align-items:center"><span>자동 백업</span><label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" '+(cfg.autoEnabled?'checked':'')+' onchange="dennToggleAutoBackup(this.checked)"><b style="font-size:10px">'+(cfg.autoEnabled?'ON':'OFF')+'</b></label></div>'+
+    '<div class="ds-row" style="align-items:center"><span>주기</span><select onchange="dennSetBackupInterval(this.value)" style="background:#1a1827;color:#f7f2ea;border:1px solid rgba(255,255,255,.14);border-radius:5px;padding:2px 5px;font-size:10px;font-family:inherit">'+
+      intervals.map(function(v){return '<option value="'+v+'"'+(cfg.intervalMin==v?' selected':'')+'>'+(v>=60?(v/60)+'시간':v+'분')+'</option>'}).join('')+
+    '</select></div>'+
+    '<div class="ds-row"><span>최근 자동</span><b style="font-size:9.5px">'+(cfg.lastAutoAt?new Date(cfg.lastAutoAt).toLocaleString():'없음')+'</b></div>'+
+    '<button type="button" onclick="dennRunManualBackup()">💾 지금 백업</button>'+
+    supportNote+
+    '<hr style="border:0;border-top:1px solid rgba(255,255,255,.10);margin:4px 0">'+
+    '<div style="font-size:9.5px;color:#bdb6ca;font-weight:700;margin-bottom:2px">🗂 인메모리 스냅샷</div>'+
+    '<button class="secondary" type="button" onclick="dennDownloadLatestSnapshotV35()">최근 스냅샷 저장</button>'+
+    '<button class="secondary" type="button" onclick="dennRestoreLatestSnapshotV35()">최근 스냅샷 복구</button>'+
+    '<div style="color:#918aa3;font-size:9.5px;line-height:1.45">최근 스냅샷: '+(latest?new Date(latest.time).toLocaleString():'없음')+'</div>';
+  // 폴더 이름은 비동기로 채움
+  loadHandle().then(function(h){var el=by('ds-folder-name');if(el)el.textContent=h?h.name:'미지정'}).catch(function(){var el=by('ds-folder-name');if(el)el.textContent='미지정'});
 }
 function installPanel(){
   if(by('denn-data-safety-panel'))return;
@@ -5747,6 +5848,8 @@ function init(){
   installPanel();
   addSnapshot('page-load',false);
   setInterval(function(){try{addSnapshot('interval',false);updatePanel()}catch(e){}},30000);
+  // 자동 파일 백업 타이머 시작 (cfg.autoEnabled=true일 때만 실제 실행)
+  try{startAutoTimer()}catch(e){console.warn('[backup] startAutoTimer:',e)}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,800)});
 else setTimeout(init,800);
