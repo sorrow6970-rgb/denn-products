@@ -110,6 +110,10 @@
   - **다음 세션 진입 전 사용자가 할 일**: Firebase Console에서 Anonymous Auth 활성화 + Storage Rules 적용 + 콘솔 테스트(`dennFirebase.uploadDataUrl`) 통과
   - 통과 확인 후 Step 2 진행
 
+- [x] `2026-05-19 | Claude Code | claude/watermark-preview-overlay-off | 고객 미리보기 워터마크 오버레이 제거 (저장 시에만 출력) | 상태: 완료`
+  - 범위: denn-mockup-tool.html L708 초기화 호출에서 `updateWatermarkOverlay();` 제거 (1줄)
+  - 충돌 위험: 매우 낮음. 호출처 1곳(전수 grep 확인). 함수 정의(L1399) 및 DOM 요소(L293 `#wm-ov-case`, L349 `#wm-ov-frame`)는 그대로 보존 — DOM의 `display:none` 기본 스타일로 자연 비표시.
+  - 메모: 진단 — 워터마크가 두 경로로 출력 중이었음. (1) `applyWatermark` (저장 시 캔버스 합성, 의도된 동작): dlCanvas/sendKakao/room mockup/dlRoomMockup 등 6곳에서 호출. (2) `updateWatermarkOverlay` (미리보기 DOM 오버레이, 의도 외): 페이지 부트 시 한 번 호출되어 `<img>` 요소를 `display:block`으로. denn-admin.html:510 안내문("시안 이미지 저장 시 워터마크가 자동으로 삽입됩니다")과 실제 동작 불일치 → 안내문 기준에 맞춰 미리보기 오버레이만 제거. `applyWatermark` 경로(저장)는 무수정.
 - [x] `2026-05-19 | Claude Code | claude/ze-canvas-display-fix | ze-canvas 백킹/표시 분리 (1200 supersample + 660 display) | 상태: 완료`
   - 범위: denn-admin.html 4곳 — (1) v56 zeRender L8150에서 `displayBox=fit(..,660,760)` 별도 계산 후 `ZE._displayW/H` 저장, (2) L1527 setZePreviewZoom — `ZE._displayW||c.width/dpr` 사용, (3) L11414 v89 applyZoomCss — `ZE._displayW||c.width` (기존 fallback 유지), (4) L13699 canvasCssSize — `ZE._displayW||c.width/dpr` 사용
   - 충돌 위험: 낮음. 모든 변경에 dead-code 경로용 fallback 유지(기존 동작 보존). v89/v118/v364 wrap은 모두 체인 호출이라 그대로 통과.
@@ -168,8 +172,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | claude/ze-canvas-display-fix | ze-canvas 백킹/표시 분리 (1200 supersample + 660 display, 표시·줌 안정화)`
-2. `2026-05-19 | Claude Code | claude/ze-canvas-1200x1400 | ze-canvas 백킹 660×760 → 1200×1400 (글씨 흐림 해결)`
-3. `2026-05-19 | Claude Code | claude/firebase-storage-step2 | Firebase Storage 자동 업로드 wrap (fbExport 후처리, data:→URL 교체)`
-4. `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업 무변경 시 중복 파일 스킵`
-5. `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(FS Access API) + 보존 7일`
+1. `2026-05-19 | Claude Code | claude/watermark-preview-overlay-off | 고객 미리보기 워터마크 오버레이 제거 (저장 시에만 출력)`
+2. `2026-05-19 | Claude Code | claude/ze-canvas-display-fix | ze-canvas 백킹/표시 분리 (1200 supersample + 660 display, 표시·줌 안정화)`
+3. `2026-05-19 | Claude Code | claude/ze-canvas-1200x1400 | ze-canvas 백킹 660×760 → 1200×1400 (글씨 흐림 해결)`
+4. `2026-05-19 | Claude Code | claude/firebase-storage-step2 | Firebase Storage 자동 업로드 wrap (fbExport 후처리, data:→URL 교체)`
+5. `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업 무변경 시 중복 파일 스킵`
