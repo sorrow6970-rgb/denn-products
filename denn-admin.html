@@ -12671,6 +12671,12 @@ window.renderDennOrderRequestsV36=renderStableOrders;
     var h=host();if(!h)return;
     ensureManager();
     var fields=ensureFields();
+    // Guard-B: 동일 상태에서는 DOM 재생성을 건너뛰어 중복 호출/재진입 비용을 줄임
+    var sig=JSON.stringify(fields.map(function(f){
+      return [f.key,f.label,f.color,(window.ZE&&ZE.activeType===f.key)?1:0];
+    }));
+    if(h.__dennV363BtnSig===sig)return;
+    h.__dennV363BtnSig=sig;
     Array.prototype.slice.call(h.querySelectorAll('.ze-type-btn')).forEach(function(b){b.remove()});
     fields.forEach(function(f){
       var btn=document.createElement('button');
@@ -12781,6 +12787,10 @@ window.renderDennOrderRequestsV36=renderStableOrders;
   var oldSetZT=window.setZT;
   if(typeof oldSetZT==='function'&&!oldSetZT.__dennV363DynamicFields){
     window.setZT=function(key,el){
+      // Guard-A: drag 중에는 setZT 재진입으로 activeType이 흔들리지 않게 차단
+      if(window.ZE&&ZE.dragging!==null&&ZE.dragging!==undefined){
+        return;
+      }
       var tpl=currentTpl();ensureFields(tpl);renderButtons();
       var r=oldSetZT.apply(this,arguments);
       syncManagerInputs();

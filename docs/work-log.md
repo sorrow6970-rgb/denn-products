@@ -113,8 +113,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-18 | Codex+Claude Code | docs/work-log.md 신설 | branch: codex/add-work-log`
-2. `2026-05-17 | Claude Code | 1단계 (A 그룹) wrap 8개 제거 완료 | commit: 59d605c`
-3. 
+1. `2026-05-18 | Codex+Claude Code | codex/fix-text-field-position | 상세설정 문구/위치 버그 임시 가드 적용 (Guard-A + Guard-B)`
+2. `2026-05-18 | Codex+Claude Code | docs/work-log.md 신설 | branch: codex/add-work-log`
+3. `2026-05-17 | Claude Code | 1단계 (A 그룹) wrap 8개 제거 완료 | commit: 59d605c`
 4. 
 5. 
