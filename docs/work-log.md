@@ -110,6 +110,11 @@
   - **다음 세션 진입 전 사용자가 할 일**: Firebase Console에서 Anonymous Auth 활성화 + Storage Rules 적용 + 콘솔 테스트(`dennFirebase.uploadDataUrl`) 통과
   - 통과 확인 후 Step 2 진행
 
+- [x] `2026-05-19 | Claude Code | claude/firebase-storage-step2 | Firebase Storage 자동 업로드 wrap (fbExport 후처리) | 상태: 완료`
+  - 범위: denn-admin.html 말미에 `__dennFirebaseAutoSyncInstalled` IIFE 신규(단일 wrap), Step 1 모듈 직후 배치
+  - 충돌 위험: 낮음 (window.fbExport 최상위 래핑, 기존 v94 router / v364 setTimeout 꼬리(1300ms) 이후 sweep)
+  - 메모: load+1000ms 시점에 wrap 설치. 호출 후 +200ms/+1500ms 두 번 `tplArr()` sweep → `data:` 프리픽스이면서 `storagePath` 없는 모든 템플릿을 `templates/{id}.png` 경로로 업로드. 성공 시 `t.dataUrl=URL`, `t.storagePath=경로`, `persistState()` + 재렌더. 실패 시 dataUrl 유지(graceful degrade). 동시 업로드는 `inFlight[id]` 가드. Firebase 미설정/실패 시 자동 noop. **wrap 예외 사유**: 외부 서비스(Firebase Storage) 통합은 fbExport 본체와 책임이 다른 비동기 후처리라 분리 wrap이 자연스러움. work-log 원칙(추가 금지)에 대한 예외 1건으로 명시.
+  - 다음 단계 후보: (a) 삭제 시 `dennFirebase.deletePath(t.storagePath)` hook, (b) Storage CORS 설정(재편집 시 캔버스 합성 회귀 회피), (c) 기존 dataUrl 템플릿 일괄 마이그레이션 도구.
 - [x] `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업이 변경 없을 때 중복 파일 생성하지 않도록 스킵 | 상태: 완료`
   - 범위: denn-admin.html runAutoBackup / dennRunManualBackup
   - 메모: lastBackedUpJson 모듈 변수에 직전 직렬화 결과 보관. 동일하면 스킵 + 콘솔 로그. 수동 백업 직후에도 갱신해 직후 자동 주기 중복 회피.
@@ -155,8 +160,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업 무변경 시 중복 파일 스킵`
-2. `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(FS Access API) + 보존 7일`
-3. `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage SDK init + 업로드 헬퍼 (Step 2 wire-up 대기/보류)`
-4. `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 자연값 회귀 + fbExport 1600x2400으로 본격 화질 개선`
-5. `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널을 좌측 사이드바 내부로 이동(알림 가림 해소)`
+1. `2026-05-19 | Claude Code | claude/firebase-storage-step2 | Firebase Storage 자동 업로드 wrap (fbExport 후처리, data:→URL 교체)`
+2. `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업 무변경 시 중복 파일 스킵`
+3. `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(FS Access API) + 보존 7일`
+4. `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage SDK init + 업로드 헬퍼 (Step 2 wire-up 대기/보류)`
+5. `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 자연값 회귀 + fbExport 1600x2400으로 본격 화질 개선`

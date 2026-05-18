@@ -13856,5 +13856,89 @@ window.addEventListener('resize',scheduleSettle);
     console.error('[firebase] init failed:', e);
   }
 </script>
+
+<!-- ============================================================
+     Firebase Storage 연동 (Step 2: fbExport 자동 업로드 wrap)
+     - 예외 wrap 추가 사유: 외부 서비스(Firebase Storage) 통합은
+       기존 fbExport 본체와 책임이 다른 비동기 후처리이므로 분리.
+     - 동작: fbExport 호출 후 (200ms/1500ms) tplArr() 스윕 →
+       data: 프리픽스 + storagePath 없는 템플릿을 Storage로 업로드.
+       성공 시 t.dataUrl=URL, t.storagePath=경로, 재저장+재렌더.
+       실패 시 기존 dataUrl 유지 (graceful degrade).
+     - 동시 업로드 방지: inFlight[id] 가드. 세션 단위.
+     - Firebase 미준비/SDK 부재 시: 자동 noop (graceful degrade).
+     ============================================================ -->
+<script>
+(function(){
+  if(window.__dennFirebaseAutoSyncInstalled)return;
+  window.__dennFirebaseAutoSyncInstalled=true;
+
+  var inFlight=Object.create(null);
+
+  function tplArr(){window.S=window.S||{};window.S.frameTemplates=window.S.frameTemplates||[];return window.S.frameTemplates}
+  function persistAll(){try{if(typeof window.persistState==='function')return window.persistState();if(typeof window.dennPersistAdminStateV351==='function')return window.dennPersistAdminStateV351(window.S||{})}catch(e){console.warn('[firebase] persist failed',e)}}
+  function rerender(){try{if(typeof window.renderFTplsByCategory==='function')window.renderFTplsByCategory(window.curFCat||'all');else if(typeof window.renderFrameTpls==='function')window.renderFrameTpls()}catch(e){}}
+
+  function syncOne(t){
+    if(!t||!t.id||t.storagePath)return;
+    var src=t.dataUrl;
+    if(!src||typeof src!=='string'||src.indexOf('data:')!==0)return;
+    if(inFlight[t.id])return;
+    var fb=window.dennFirebase;
+    if(!fb||typeof fb.uploadDataUrl!=='function')return;
+    var id=t.id,path='templates/'+id+'.png';
+    inFlight[id]=true;
+    fb.uploadDataUrl(src,path).then(function(res){
+      var arr=tplArr(),cur=null;
+      for(var i=0;i<arr.length;i++){if(arr[i]&&arr[i].id===id){cur=arr[i];break}}
+      if(!cur)return;
+      if(typeof cur.dataUrl==='string'&&cur.dataUrl.indexOf('data:')===0){
+        cur.dataUrl=res.url;
+        cur.storagePath=res.path;
+        persistAll();
+        rerender();
+        console.log('[firebase] uploaded',id,'→',res.path);
+      }
+    }).catch(function(err){
+      console.warn('[firebase] auto-upload failed',id,err&&err.code,err&&err.message);
+    }).then(function(){delete inFlight[id]},function(){delete inFlight[id]});
+  }
+
+  function sweep(){
+    var arr=tplArr();
+    for(var i=0;i<arr.length;i++)syncOne(arr[i]);
+  }
+
+  function wrapFbExport(){
+    var orig=window.fbExport;
+    if(typeof orig!=='function')return false;
+    if(orig.__dennFirebaseAutoSync)return true;
+    var wrap=function(){
+      var r;
+      try{r=orig.apply(this,arguments)}finally{
+        setTimeout(sweep,200);
+        setTimeout(sweep,1500);
+      }
+      return r;
+    };
+    wrap.__dennFirebaseAutoSync=true;
+    window.fbExport=wrap;
+    console.log('[firebase] fbExport auto-sync wrap installed');
+    return true;
+  }
+
+  function install(){
+    if(wrapFbExport())return;
+    setTimeout(install,250);
+  }
+
+  function boot(){
+    setTimeout(install,1000);
+    setTimeout(sweep,2500);
+  }
+  if(document.readyState==='complete')boot();
+  else window.addEventListener('load',boot);
+})();
+</script>
 </body>
 </html>
