@@ -103,6 +103,10 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복(저장/오픈 회귀 해소) + DPR 최소2 강제(supersampling) | 상태: 완료`
+  - 범위: denn-admin.html zeRender(L8024), fbExport(L2330)
+  - 충돌 위험: 낮음 (원복 + 작은 상수 변경)
+  - 메모: fbExport 1200x1800 → localStorage 용량 초과로 saveNow 실패 → t.dataUrl 누락 → openZoneEditor 차단. 800x1200으로 원복. DPR=1 모니터에서도 텍스트 선명도 개선 위해 최소 2x 강제 (supersampling).
 - [x] `2026-05-18 | Claude Code | claude/fix-template-sharpness | ze-canvas DPR 적용 + fbExport 합성 해상도 1.5x | 상태: 완료`
   - 범위: denn-admin.html setZePreviewZoom (L1527), 활성 zeRender (L8022), 활성 fbExport (L2330)
   - 충돌 위험: 낮음 (drawing/hit 코드는 canvas.width 기준이라 DPR 확대해도 그대로 동작; setZePreviewZoom만 CSS 표시를 ÷dpr로 보정)
@@ -125,8 +129,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-18 | Claude Code | claude/fix-template-sharpness | ze-canvas DPR + fbExport 해상도 1.5x로 템플릿 문구 선명도 개선`
-2. `2026-05-18 | Claude Code | claude/fix-boxw-slider | 박스 너비 슬라이더 가이드 박스 즉시 반영`
-3. `2026-05-18 | Claude Code | claude/fix-ze-coords-v365 | v365 zeBindEvents wrap 좌표계 버그 + Guard-A 부작용 수정`
-4. `2026-05-18 | Codex+Claude Code | codex/fix-text-field-position | 상세설정 문구/위치 버그 임시 가드 적용 (Guard-A + Guard-B)`
-5. `2026-05-18 | Codex+Claude Code | docs/work-log.md 신설 | branch: codex/add-work-log`
+1. `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복 + DPR 최소2 supersampling 강제`
+2. `2026-05-18 | Claude Code | claude/fix-template-sharpness | ze-canvas DPR + fbExport 해상도 1.5x로 템플릿 문구 선명도 개선`
+3. `2026-05-18 | Claude Code | claude/fix-boxw-slider | 박스 너비 슬라이더 가이드 박스 즉시 반영`
+4. `2026-05-18 | Claude Code | claude/fix-ze-coords-v365 | v365 zeBindEvents wrap 좌표계 버그 + Guard-A 부작용 수정`
+5. `2026-05-18 | Codex+Claude Code | codex/fix-text-field-position | 상세설정 문구/위치 버그 임시 가드 적용 (Guard-A + Guard-B)`
