@@ -4503,12 +4503,6 @@ function currentSizeInfo(){
   if(isAllSizeValue(key))key=sizeKey(arr[0],0);
   return findSizeByKey(key)||findSizeByKey(sizeKey(arr[0],0));
 }
-function installSizeControl(){
-  var controls=document.querySelector('#ze-modal .ze-controls');if(!controls)return;
-  var cards=Array.prototype.slice.call(controls.querySelectorAll('#denn-v35-ze-size-card,#denn-v38-ze-size-card'));
-  var keeper=cards.filter(function(c){return c.querySelector('#denn-v38-ze-size-checks')})[0]||cards[0];
-  cards.forEach(function(c){if(c!==keeper&&c.parentNode)c.parentNode.removeChild(c)});
-}
 function coverRect(iw,ih,ow,oh){
   var s=Math.max(ow/Math.max(1,iw),oh/Math.max(1,ih)),dw=iw*s,dh=ih*s;
   return{x:(ow-dw)/2,y:(oh-dh)/2,w:dw,h:dh}
@@ -4570,20 +4564,6 @@ if(typeof oldZeBindEvents==='function'&&!oldZeBindEvents.__v35StableBind){
   };
   stableZeBind.__v35StableBind=true;
   window.zeBindEvents=stableZeBind;
-}
-var oldOpen=window.openZoneEditor;
-if(typeof oldOpen==='function'&&!oldOpen.__v35SizeSelector){
-  var wrappedOpen=function(idx){
-    var r=oldOpen.apply(this,arguments);
-    function ready(){
-      installSizeControl();
-      if(window.ZE&&ZE.img&&ZE.img.complete&&typeof zeBindEvents==='function')zeBindEvents()
-    }
-    setTimeout(ready,160);
-    return r;
-  };
-  wrappedOpen.__v35SizeSelector=true;
-  window.openZoneEditor=wrappedOpen;
 }
 window.zeRender=renderDetail;
 function saveSelectedSize(){
@@ -7270,17 +7250,9 @@ function drawWhiteGuide(ctx,W,H,t){
 window.zeRender=function(){
   if(!window.ZE||!ZE.ctx||!ZE.canvas||!ZE.img)return;syncDetailCanvas();var W=ZE.canvas.width,H=ZE.canvas.height,ctx=ZE.ctx,t=currentTpl();ctx.clearRect(0,0,W,H);ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';drawTemplateImageForDetail(ctx,ZE.img,W,H,t);ctx.restore();drawDetailGrid(ctx,W,H);(ZE.zones||[]).forEach(function(z){drawTextZone(ctx,W,H,z)});drawWhiteGuide(ctx,W,H,t);
 };
-function syncDetailCopy(){
-  var panel=by('denn-v15-detail-border'),desc=panel&&panel.querySelector('.desc'),guide=panel&&panel.querySelector('.denn-v15-frame-guide-note'),note=by('denn-v44-overlay-note');
-  if(desc)desc.textContent='프레임 없이 디자인 캔버스만 미리봅니다. 흰색테두리는 이 캔버스 외곽부터 안쪽으로 표시됩니다.';
-  if(guide)guide.innerHTML='<b>관리자용 가이드</b>입니다. 프레임은 목업툴과 내공간보기에서만 렌더링됩니다.';
-  if(note)note.style.display='none';
-}
-if(typeof previous.openZoneEditor==='function'&&!previous.openZoneEditor.__dennV45DesignCanvas){var open=function(){var r=previous.openZoneEditor.apply(this,arguments);setTimeout(syncDetailCopy,180);return r};open.__dennV45DesignCanvas=true;window.openZoneEditor=open}
 var oldGo=window.goTab;if(typeof oldGo==='function'&&!oldGo.__dennV45DesignCanvas){window.goTab=function(id,el){var r=oldGo.apply(this,arguments);if(id==='frame-builder'){[120,360,900].forEach(function(ms){setTimeout(function(){hideBuilderFrameUi();try{window.fbRender&&fbRender()}catch(e){}},ms)})}return r};window.goTab.__dennV45DesignCanvas=true}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(hideBuilderFrameUi,700)});else setTimeout(hideBuilderFrameUi,0);
 window.addEventListener('load',function(){setTimeout(hideBuilderFrameUi,900)});
-window.dennRollbackDesignCanvasOnlyV45=function(){window.fbRender=previous.fbRender;window.fbExport=previous.fbExport;window.openZoneEditor=previous.openZoneEditor;window.zeRender=previous.zeRender};
 })();
 </script>
 <style id="denn-v48-final-size-stability-css">
@@ -7528,8 +7500,6 @@ function grid(ctx,W,H){var unit=Math.max(16,Math.min(W,H)/22),cx=Math.round(W/2)
 window.drawBuilderWhiteOverlayV11=function(){return false};
 window.fbRender=function(){try{ensureBuilderUi();if(!window.FB)return;var info=selectedBuilder();if(!info)return;var d=dims(info.size),box=fit(d,560,720);FB.canvas=FB.canvas||by('fb-canvas');FB.ctx=FB.ctx||(FB.canvas&&FB.canvas.getContext('2d'));if(!FB.canvas||!FB.ctx)return;FB.sizeId=info.index;FB.canvas.width=box.w;FB.canvas.height=box.h;FB.W=box.w;FB.H=box.h;FB.BORDER=0;var ctx=FB.ctx,W=box.w,H=box.h;ctx.clearRect(0,0,W,H);if(FB.artImg){ctx.save();ctx.globalAlpha=.72;cover(ctx,FB.artImg,0,0,W,H);ctx.restore()}drawWhite(ctx,W,H,whiteState());grid(ctx,W,H);(FB.zones||[]).forEach(function(z,i){var ax=z.x/100*W,ay=z.y/100*H,aw=z.w/100*W,ah=z.h/100*H,isSel=i===FB.selIdx;ctx.save();ctx.strokeStyle=isSel?'rgba(200,168,100,.98)':'rgba(90,175,255,.86)';ctx.lineWidth=isSel?2.2:1.5;ctx.setLineDash(isSel?[]:[6,4]);zonePath(ctx,z,ax,ay,aw,ah);ctx.stroke();ctx.setLineDash([]);ctx.restore()});if(FB.drawing){var dx=Math.min(FB.sx,FB.ex),dy=Math.min(FB.sy,FB.ey),dw=Math.abs(FB.ex-FB.sx),dh=Math.abs(FB.ey-FB.sy);ctx.save();ctx.strokeStyle='rgba(255,200,50,.95)';ctx.lineWidth=2;ctx.setLineDash([6,4]);zonePath(ctx,{type:FB.tool,cornerR:FB.cornerR||0},dx,dy,dw,dh);ctx.stroke();ctx.restore()}if(by('fb-clock-tog')&&by('fb-clock-tog').classList.contains('on')&&typeof window.drawPreviewClock==='function')window.drawPreviewClock(ctx,0,0,W,H,{size:num((by('fb-clock-size')||{}).value,12),x:num((by('fb-clock-x')||{}).value,88),y:num((by('fb-clock-y')||{}).value,88)});if(typeof window.fbRenderZoneList==='function')fbRenderZoneList()}catch(e){console.warn('fbRender v49 authority failed',e)}};
 window.fbExport=function(){try{if(!window.S)window.S={};var info=selectedBuilder();if(!info){toastMsg('사이즈를 선택하세요','e');return}var d=dims(info.size),longSide=1800,pw=d.w>=d.h?longSide:Math.round(longSide*d.ratio),ph=d.h>d.w?longSide:Math.round(longSide/d.ratio);pw=Math.max(300,Math.round(pw));ph=Math.max(300,Math.round(ph));var oc=document.createElement('canvas'),ctx;oc.width=pw;oc.height=ph;ctx=oc.getContext('2d');ctx.clearRect(0,0,pw,ph);if(window.FB&&FB.artImg){ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';cover(ctx,FB.artImg,0,0,pw,ph);ctx.restore()}if(window.FB&&FB.zones&&FB.zones.length){ctx.save();ctx.globalCompositeOperation='destination-out';ctx.fillStyle='#000';FB.zones.forEach(function(z){var ax=z.x/100*pw,ay=z.y/100*ph,aw=z.w/100*pw,ah=z.h/100*ph;zonePath(ctx,z,ax,ay,aw,ah);ctx.fill()});ctx.restore();ctx.globalCompositeOperation='source-over'}var white=whiteState();drawWhite(ctx,pw,ph,white);var cfg={enabled:!!(by('fb-clock-tog')&&by('fb-clock-tog').classList.contains('on')),size:num((by('fb-clock-size')||{}).value,12),x:num((by('fb-clock-x')||{}).value,88),y:num((by('fb-clock-y')||{}).value,88)},first=(window.FB&&FB.zones&&FB.zones[0])||null,name=(by('fb-tpl-name')||{}).value||('액자 템플릿 '+(tplArr().filter(function(t){return t.type==='uploaded'}).length+1)),catId=(by('fb-cat-sel')||{}).value||null,t={id:'fb'+Date.now(),name:name,type:'uploaded',dataUrl:oc.toDataURL('image/png'),textZones:[],photoSlot:first?{x:first.x,y:first.y,w:first.w,h:first.h,type:first.type||'rect',cornerR:num(first.cornerR,0),fit:'cover'}:null,photoZones:deep((window.FB&&FB.zones)||[]),categoryId:catId,builtBy:'builder',clock:cfg.enabled?cfg:null,zones:deep((window.FB&&FB.zones)||[]),fit:'cover',objectFit:'cover',imgW:pw,imgH:ph,overlayScope:'inner',frameBaked:false,clockBaked:false,whiteInnerBorder:false,whiteInnerBorderThickness:0,whiteBorderBaked:!!white.on,whiteBorderBakedThickness:white.on?white.thick:0,exportVersion:'transparent-builder-v2'};writeTargets(t,selectedTargets());tplArr().push(t);saveNow();if(by('fb-tpl-name'))by('fb-tpl-name').value='';try{if(window.renderFTplsByCategory)renderFTplsByCategory(window.curFCat||'all');else if(window.renderFrameTpls)renderFrameTpls()}catch(e){}try{if(window.updateStats)updateStats()}catch(e){}toastMsg('✓ 액자 템플릿 완성: '+name)}catch(e){console.warn('fbExport v49 authority failed',e);toastMsg('템플릿 저장 중 오류가 발생했습니다','e')}};
-function hideDetailBorder(){var p=by('denn-v15-detail-border');if(p)p.style.display='none'}
-var oldOpen=window.openZoneEditor;if(typeof oldOpen==='function'&&!oldOpen.__dennV49Authority){window.openZoneEditor=function(){var r=oldOpen.apply(this,arguments);[0,120,420].forEach(function(ms){setTimeout(hideDetailBorder,ms)});return r};window.openZoneEditor.__dennV49Authority=true}
 var oldGo=window.goTab;if(typeof oldGo==='function'&&!oldGo.__dennV49Authority){window.goTab=function(id,el){var r=oldGo.apply(this,arguments);if(id==='frame-builder')[0,160,500].forEach(function(ms){setTimeout(function(){ensureBuilderUi();try{window.fbRender()}catch(e){}},ms)});return r};window.goTab.__dennV49Authority=true}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(ensureBuilderUi,700)});
 else setTimeout(ensureBuilderUi,0);
