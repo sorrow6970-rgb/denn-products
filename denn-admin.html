@@ -5753,13 +5753,25 @@ async function cleanupOldAutoBackups(){
 }
 
 var autoTimer=null;
+var lastBackedUpJson=null; // 직전 자동 백업 시점의 직렬화 결과. 동일하면 스킵.
 async function runAutoBackup(){
   if(!window.S)return;
+  var content=JSON.stringify(window.S,null,2);
+  if(content===lastBackedUpJson){
+    // 변경 없음 → 파일 생성 스킵. 콘솔만 로그.
+    try{console.log('[backup] auto skipped (no change)')}catch(e){}
+    return;
+  }
   var fn=autoFilename();
   try{
-    var r=await downloadToFolder(window.S,fn);
-    var cfg=readCfg();cfg.lastAutoAt=Date.now();cfg.lastAutoFile=r.filename;cfg.lastAutoMode=r.mode;writeCfg(cfg);
-    notify('✓ 자동 백업: '+fn+(r.mode==='folder'?' (폴더)':' (다운로드)'));
+    var blob=new Blob([content],{type:'application/json'}),h=await loadHandle(),mode;
+    if(h&&await ensureHandlePerm(h)){
+      try{var fh=await h.getFileHandle(fn,{create:true});var w=await fh.createWritable();await w.write(content);await w.close();mode='folder'}
+      catch(e){console.warn('[backup] folder write failed, falling back:',e);fallbackDownload(content,fn);mode='download'}
+    }else{fallbackDownload(content,fn);mode='download'}
+    lastBackedUpJson=content;
+    var cfg=readCfg();cfg.lastAutoAt=Date.now();cfg.lastAutoFile=fn;cfg.lastAutoMode=mode;writeCfg(cfg);
+    notify('✓ 자동 백업: '+fn+(mode==='folder'?' (폴더)':' (다운로드)'));
     updatePanel();
     cleanupOldAutoBackups().catch(function(){});
   }catch(e){console.warn('[backup] auto run failed:',e);notify('⚠ 자동 백업 실패 (콘솔 확인)')}
@@ -5781,6 +5793,8 @@ window.dennRunManualBackup=async function(){
   addSnapshot('manual-file-backup',true);
   var fn=manualFilename();
   var r=await downloadToFolder(window.S,fn);
+  // 수동 백업 직후 동일 내용이면 자동 백업이 중복 생성하지 않도록 지문 갱신
+  try{lastBackedUpJson=JSON.stringify(window.S,null,2)}catch(e){}
   var cfg=readCfg();cfg.lastManualAt=Date.now();writeCfg(cfg);
   notify('✓ 수동 백업: '+fn+(r.mode==='folder'?' (폴더)':' (다운로드)'));
   updatePanel();
