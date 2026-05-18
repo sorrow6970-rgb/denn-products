@@ -110,6 +110,10 @@
   - **다음 세션 진입 전 사용자가 할 일**: Firebase Console에서 Anonymous Auth 활성화 + Storage Rules 적용 + 콘솔 테스트(`dennFirebase.uploadDataUrl`) 통과
   - 통과 확인 후 Step 2 진행
 
+- [x] `2026-05-19 | Claude Code | claude/ze-canvas-1200x1400 | ze-canvas 미리보기 백킹 상한 660×760 → 1200×1400 (글씨 흐림 해결) | 상태: 완료`
+  - 범위: denn-admin.html L8153 활성 zeRender(`window.fbExport` 본체 v56 계열) 내 `fit(currentRatio(t,ZE.img),660,760)` → `fit(..,1200,1400)`
+  - 충돌 위험: 낮음. 사전 검증: ZE.canvas.width 절대좌표 사용 0건(모두 `nx/W*100` 정규화 또는 마우스 `canvas.width/rect.width` 비율). v15/v53/v54/v55/v363/v364 모두 W,H 비례 그리기라 백킹 크기 변화에 무관. v364(L13371) zeRender는 `oldZe.apply` 체인이라 v56 그대로 호출.
+  - 메모: 진단(see prior turn) — fbExport longSide=1800 PNG를 백킹 660px(DPR=1)에 다운샘플 → 2.7배 압축으로 글씨 흐림 + 줌 시 CSS 업스케일로 누적 흐림. 백킹 상한을 1200×1400으로 키워 원본 1800에 근접(다운샘플 1.5배 수준). DPR=2 환경에서 백킹 = 2400×2800 (~27MB). 백업 태그 `backup-pre-ze-canvas-1200x1400-2026-05-19`. L7353/L7757에 동일 660×760 dead-code 잔존(현재 활성 zeRender 아님) — 추후 정리 단계에서 같이 처리.
 - [x] `2026-05-19 | Claude Code | claude/firebase-storage-step2 | Firebase Storage 자동 업로드 wrap (fbExport 후처리) | 상태: 완료`
   - 범위: denn-admin.html 말미에 `__dennFirebaseAutoSyncInstalled` IIFE 신규(단일 wrap), Step 1 모듈 직후 배치
   - 충돌 위험: 낮음 (window.fbExport 최상위 래핑, 기존 v94 router / v364 setTimeout 꼬리(1300ms) 이후 sweep)
@@ -160,8 +164,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | claude/firebase-storage-step2 | Firebase Storage 자동 업로드 wrap (fbExport 후처리, data:→URL 교체)`
-2. `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업 무변경 시 중복 파일 스킵`
-3. `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(FS Access API) + 보존 7일`
-4. `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage SDK init + 업로드 헬퍼 (Step 2 wire-up 대기/보류)`
-5. `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 자연값 회귀 + fbExport 1600x2400으로 본격 화질 개선`
+1. `2026-05-19 | Claude Code | claude/ze-canvas-1200x1400 | ze-canvas 백킹 660×760 → 1200×1400 (글씨 흐림 해결)`
+2. `2026-05-19 | Claude Code | claude/firebase-storage-step2 | Firebase Storage 자동 업로드 wrap (fbExport 후처리, data:→URL 교체)`
+3. `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업 무변경 시 중복 파일 스킵`
+4. `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(FS Access API) + 보존 7일`
+5. `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage SDK init + 업로드 헬퍼 (Step 2 wire-up 대기/보류)`

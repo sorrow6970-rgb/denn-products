@@ -8150,7 +8150,7 @@ function textDraw(ctx,W,H,z){
 window.zeRender=function(){
   if(!window.ZE||!ZE.ctx||!ZE.canvas||!ZE.img)return;
   var t=currentTpl();syncWhiteMeta(t);
-  var box=fit(currentRatio(t,ZE.img),660,760);
+  var box=fit(currentRatio(t,ZE.img),1200,1400);
   // HiDPI: 실제 devicePixelRatio를 따름 (DPR 강제 2x는 FHD에서 이미지 업스케일 아티팩트 유발하여 해제).
   // 레티나/4K(DPR=2~3)에서만 백킹 확대 → 텍스트 선명. 일반 FHD(DPR=1)는 원본 픽셀 그대로.
   var dpr=Math.min(3,Math.max(1,window.devicePixelRatio||1));
