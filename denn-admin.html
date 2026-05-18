@@ -12787,10 +12787,8 @@ window.renderDennOrderRequestsV36=renderStableOrders;
   var oldSetZT=window.setZT;
   if(typeof oldSetZT==='function'&&!oldSetZT.__dennV363DynamicFields){
     window.setZT=function(key,el){
-      // Guard-A: drag 중에는 setZT 재진입으로 activeType이 흔들리지 않게 차단
-      if(window.ZE&&ZE.dragging!==null&&ZE.dragging!==undefined){
-        return;
-      }
+      // Guard-A 제거: base mousedown이 ZE.dragging=hit를 먼저 세팅한 뒤 setZT를 부르므로
+      // drag 차단 가드가 zone 선택 시 activeType 전환을 항상 막아버렸음.
       var tpl=currentTpl();ensureFields(tpl);renderButtons();
       var r=oldSetZT.apply(this,arguments);
       syncManagerInputs();
@@ -13308,65 +13306,14 @@ window.renderDennOrderRequestsV36=renderStableOrders;
     window.zeRenderList.__dennV365Stable=true;
   }
 
+  // v365 zeBindEvents wrap previously replaced canvas handlers with 0~1 normalized
+  // coordinates while base zeHitZone/zeRender expect canvas pixels / 0~100 percent.
+  // That broke both text add (zones rendered at top-left corner) and drag (hit always -1).
+  // Defer to base zeBindEvents which uses correct coordinates.
   var oldBind=window.zeBindEvents;
   if(typeof oldBind==='function'&&!oldBind.__dennV365Stable){
     window.zeBindEvents=function(){
-      if(!window.ZE||!ZE.canvas)return oldBind.apply(this,arguments);
-      var canvas=ZE.canvas;
-      canvas.onclick=function(e){
-        if(!window.ZE||!ZE.canvas||ZE.dragging!=null)return;
-        var r=ZE.canvas.getBoundingClientRect();
-        var px=(e.clientX-r.left)/r.width;
-        var py=(e.clientY-r.top)/r.height;
-        var hit=(typeof window.zeHitZone==='function')?window.zeHitZone(px,py):-1;
-        if(hit>=0){
-          if(typeof window.setZT==='function')window.setZT((ZE.zones&&ZE.zones[hit]&&ZE.zones[hit].key)||ZE.activeType);
-          return;
-        }
-        var key=ZE.activeType||'main';
-        var props=(typeof window.getZP==='function')?window.getZP():{};
-        var zone=(ZE.zones||[]).filter(function(z){return z&&z.key===key})[0];
-        if(zone){
-          zone.x=px;
-          zone.y=py;
-          Object.assign(zone,props);
-        }else{
-          if(!Array.isArray(ZE.zones))ZE.zones=[];
-          ZE.zones.push(Object.assign({key:key,x:px,y:py,w:.35,rot:0},props));
-        }
-        scheduleZe(true);
-      };
-      canvas.onmousedown=function(e){
-        if(!window.ZE||!ZE.canvas)return;
-        var r=ZE.canvas.getBoundingClientRect();
-        var px=(e.clientX-r.left)/r.width;
-        var py=(e.clientY-r.top)/r.height;
-        var hit=(typeof window.zeHitZone==='function')?window.zeHitZone(px,py):-1;
-        if(hit>=0){
-          ZE.dragging=hit;
-          ZE.dragOff={x:px-(ZE.zones[hit].x||0),y:py-(ZE.zones[hit].y||0)};
-          if(typeof window.setZT==='function')window.setZT(ZE.zones[hit].key);
-          e.preventDefault();
-        }
-      };
-      if(!window.__dennV365ZeDocBound){
-        document.addEventListener('mousemove',function(e){
-          if(!window.ZE||ZE.dragging==null||!ZE.canvas)return;
-          var modal=by('ze-modal');
-          if(modal&&!modal.classList.contains('open')){ZE.dragging=null;return}
-          var zone=ZE.zones&&ZE.zones[ZE.dragging];
-          if(!zone)return;
-          var r=ZE.canvas.getBoundingClientRect();
-          var off=ZE.dragOff||{x:0,y:0};
-          zone.x=clamp((e.clientX-r.left)/r.width-off.x,0,1);
-          zone.y=clamp((e.clientY-r.top)/r.height-off.y,0,1);
-          scheduleZe(true);
-        });
-        document.addEventListener('mouseup',function(){
-          if(window.ZE)ZE.dragging=null;
-        });
-        window.__dennV365ZeDocBound=true;
-      }
+      return oldBind.apply(this,arguments);
     };
     window.zeBindEvents.__dennV365Stable=true;
   }

@@ -103,18 +103,22 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-18 | Claude Code | claude/fix-ze-coords-v365 | 상세설정 문구 추가/위치 이동 실제 원인 수정 | 상태: 완료`
+  - 범위: denn-admin.html (v365 zeBindEvents wrap pass-through화 + Guard-A 제거)
+  - 충돌 위험: 낮음 (래퍼만 정리, 본체 무수정)
+  - 메모: 진짜 원인은 v365 wrap이 0~1 정규화 좌표를 쓰는데 base zeHitZone/zeRender는 캔버스픽셀/0~100% 기대 → hit 항상 -1, 신규 zone은 좌상단 박힘. Guard-A는 base mousedown(dragging먼저→setZT)을 항상 차단해서 activeType 전환을 막고 있었음.
 - [x] `2026-05-18 | Codex | codex/diagnosis-text-field-position | 상세설정 문구 추가/위치 이동 불가 진단 문서화 | 상태: 완료`
   - 범위: docs/bug-diagnosis-text-field-position.md (신규)
   - 충돌 위험: 낮음 (문서 작업만, HTML 무수정)
-  - 메모: 원인 후보를 #18/#19(v363 dynamic/parity wrap) 중심으로 정리
+  - 메모: 원인 후보를 #18/#19(v363 dynamic/parity wrap) 중심으로 정리 (실제 원인은 v365 wrap이었음)
 
 ---
 
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-18 | Codex+Claude Code | codex/fix-text-field-position | 상세설정 문구/위치 버그 임시 가드 적용 (Guard-A + Guard-B)`
-2. `2026-05-18 | Codex+Claude Code | docs/work-log.md 신설 | branch: codex/add-work-log`
-3. `2026-05-17 | Claude Code | 1단계 (A 그룹) wrap 8개 제거 완료 | commit: 59d605c`
-4. 
+1. `2026-05-18 | Claude Code | claude/fix-ze-coords-v365 | v365 zeBindEvents wrap 좌표계 버그 + Guard-A 부작용 수정`
+2. `2026-05-18 | Codex+Claude Code | codex/fix-text-field-position | 상세설정 문구/위치 버그 임시 가드 적용 (Guard-A + Guard-B)`
+3. `2026-05-18 | Codex+Claude Code | docs/work-log.md 신설 | branch: codex/add-work-log`
+4. `2026-05-17 | Claude Code | 1단계 (A 그룹) wrap 8개 제거 완료 | commit: 59d605c`
 5. 
