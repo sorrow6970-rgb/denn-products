@@ -7577,17 +7577,6 @@ function renderChecks(boxId,vals,onChange){
   box.innerHTML='<label class="all"><input type="checkbox" data-all="1" '+(isAllVal?'checked':'')+'>전체 사이즈 공용</label>'+arr.map(function(sz,i){var k=key(sz,i);return'<label><input type="checkbox" data-size-key="'+esc(k)+'" '+(!isAllVal&&set[k]?'checked':'')+'>'+esc(sizeLabel(sz,i))+'</label>'}).join('');
   Array.prototype.forEach.call(box.querySelectorAll('input'),function(inp){inp.onchange=function(){var next=enforce(box,this);onChange(next,this)}})
 }
-function installDetailSizeSync(){
-  var controls=document.querySelector('#ze-modal .ze-controls');if(!controls)return;
-  var cards=Array.prototype.slice.call(controls.querySelectorAll('#denn-v35-ze-size-card,#denn-v38-ze-size-card,#denn-v50-ze-size-card'));
-  var card=by('denn-v50-ze-size-card')||cards[0];
-  if(!card){card=document.createElement('div');card.className='denn-v35-ze-size-card';controls.insertBefore(card,controls.firstChild)}
-  card.id='denn-v50-ze-size-card';
-  cards.forEach(function(c){if(c!==card&&c.parentNode)c.parentNode.removeChild(c)});
-  card.innerHTML='<label>액자 사이즈</label><select id="ze-size-select" style="display:none"></select><div class="denn-v38-size-checks" id="denn-v38-ze-size-checks"></div><div class="hint">제작 시 체크한 사이즈가 그대로 연동됩니다. 여기서 수정하면 이 템플릿 노출 사이즈만 바뀝니다.</div>';
-  var vals=targetValues(tpl());
-  renderChecks('denn-v38-ze-size-checks',vals,function(next){var t=tpl();if(t){writeTargets(t,next);saveNow()}});
-}
 function selectedDetailVals(){return by('denn-v38-ze-size-checks')?readChecks('denn-v38-ze-size-checks'):targetValues(tpl())}
 function selectedBuilderTargets(){
   var box=by('denn-v38-fb-size-checks'),vals=[];
@@ -7647,7 +7636,6 @@ window.zeRender=function(){
   grid(ctx,W,H);
   (ZE.zones||[]).forEach(function(z){textDraw(ctx,W,H,z)});
 };
-var oldOpen=window.openZoneEditor;if(typeof oldOpen==='function'&&!oldOpen.__dennV50Sync){window.openZoneEditor=function(){var r=oldOpen.apply(this,arguments);[0,80,220,520].forEach(function(ms){setTimeout(function(){installDetailSizeSync();var p=by('denn-v15-detail-border');if(p)p.style.display='none';try{window.zeRender&&zeRender()}catch(e){}},ms)});return r};window.openZoneEditor.__dennV50Sync=true}
 ['saveZones','saveZonesOnly'].forEach(function(name){var old=window[name];if(typeof old==='function'&&!old.__dennV50Sync){var fn=function(){var t=tpl(),vals=selectedDetailVals();if(t){writeTargets(t,vals);saveNow()}var r=old.apply(this,arguments);setTimeout(function(){var t2=tpl();if(t2){writeTargets(t2,vals);saveNow()}},0);return r};fn.__dennV50Sync=true;window[name]=fn}});
 var oldFbExport=window.fbExport;if(typeof oldFbExport==='function'&&!oldFbExport.__dennV50Sync){window.fbExport=function(){var before=tplArr().length,vals=selectedBuilderTargets(),r=oldFbExport.apply(this,arguments);setTimeout(function(){for(var arr=tplArr(),i=before;i<arr.length;i++)writeTargets(arr[i],vals);saveNow()},0);return r};window.fbExport.__dennV50Sync=true}
 var oldGo=window.goTab;if(typeof oldGo==='function'&&!oldGo.__dennV50Sync){window.goTab=function(id,el){var r=oldGo.apply(this,arguments);if(id==='frame-builder')[0,120,420].forEach(function(ms){setTimeout(installBuilderWhitePanel,ms)});return r};window.goTab.__dennV50Sync=true}
@@ -10640,11 +10628,6 @@ window.addEventListener('load',tick);
   visibility:hidden!important;
   opacity:0!important;
 }
-#ze-modal.denn-v84-detail-preparing #ze-canvas,
-#ze-modal.denn-v84-detail-preparing .ze-controls{
-  visibility:visible!important;
-  opacity:1!important;
-}
 </style>
 <script id="denn-v84-white-border-flicker-lock">
 (function(){
@@ -10698,30 +10681,6 @@ window.addEventListener('load',tick);
     if(root)root.classList.remove('denn-v84-preparing');
     settleAll();
     [0,30,80,140].forEach(function(ms){setTimeout(settleAll,ms)});
-  }
-  function detailLater(){
-    var modal=by('ze-modal');
-    if(modal)modal.classList.add('denn-v84-detail-preparing');
-    [0,30,90,180,320].forEach(function(ms){setTimeout(function(){
-      hideLegacyDetail();
-      try{if(typeof window.dennV53StabilizeDetailSettings==='function')window.dennV53StabilizeDetailSettings()}catch(e){}
-    },ms)});
-    setTimeout(function(){
-      hideLegacyDetail();
-      try{if(typeof window.dennV53StabilizeDetailSettings==='function')window.dennV53StabilizeDetailSettings()}catch(e){}
-      var m=by('ze-modal');if(m)m.classList.remove('denn-v84-detail-preparing');
-    },460);
-  }
-  var oldOpen=window.openZoneEditor;
-  if(typeof oldOpen==='function'&&!oldOpen.__dennV84WhiteBorderFlickerLock){
-    window.openZoneEditor=function(){
-      hideLegacyDetail();
-      var modal=by('ze-modal');if(modal)modal.classList.add('denn-v84-detail-preparing');
-      var r=oldOpen.apply(this,arguments);
-      detailLater();
-      return r;
-    };
-    window.openZoneEditor.__dennV84WhiteBorderFlickerLock=true;
   }
   var oldGo=window.goTab;
   if(typeof oldGo==='function'&&!oldGo.__dennV84WhiteBorderFlickerLock){
