@@ -13574,7 +13574,9 @@ function canvasCssSize(){
   var c=canvas();
   if(!c||!c.width||!c.height)return null;
   var z=clamp(num(window.ZE&&ZE.previewZoom,1),.5,2.2);
-  return{w:Math.round(c.width*z)+'px',h:Math.round(c.height*z)+'px'};
+  // HiDPI: zeRender가 백킹을 dpr배수로 키워둔 경우 CSS는 ÷dpr로 표시해야 함.
+  var dpr=(window.ZE&&ZE._dpr)||1;
+  return{w:Math.round(c.width/dpr*z)+'px',h:Math.round(c.height/dpr*z)+'px'};
 }
 function applyCanvasCss(){
   var c=canvas(),s=canvasCssSize();
