@@ -103,6 +103,10 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage 연동 Step 1 (SDK init + 업로드 헬퍼) | 상태: 완료`
+  - 범위: denn-admin.html 말미에 Firebase SDK 모듈 import + window.dennFirebase 헬퍼, docs/firebase-setup.md 신규
+  - 충돌 위험: 없음 (격리된 module script, 다른 코드와 분리)
+  - 메모: SDK만 활성화. fbExport 자동 연동(Step 2)은 사용자가 Console에서 Anonymous Auth + Storage Rules 설정하고 콘솔 테스트 통과 후 진행. docs/firebase-setup.md에 Console 세팅 절차 명시.
 - [x] `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 강제 해제 + fbExport 1600x2400으로 화질 본격 개선 | 상태: 완료`
   - 범위: denn-admin.html zeRender(L8024) dpr 최소 2→1, fbExport 모든 경로(L1269, L2160, L2330, L3974) 800x1000~1200 → 1600x2400
   - 충돌 위험: 낮음 (DPR 자연값 회귀 + 단순 상수 확대)
@@ -137,8 +141,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 자연값 회귀 + fbExport 1600x2400으로 본격 화질 개선`
-2. `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널을 좌측 사이드바 내부로 이동(알림 가림 해소)`
-3. `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복 + DPR 최소2 supersampling 강제`
-4. `2026-05-18 | Claude Code | claude/fix-template-sharpness | ze-canvas DPR + fbExport 해상도 1.5x로 템플릿 문구 선명도 개선`
-5. `2026-05-18 | Claude Code | claude/fix-boxw-slider | 박스 너비 슬라이더 가이드 박스 즉시 반영`
+1. `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage SDK init + 업로드 헬퍼 (Step 2 wire-up 대기)`
+2. `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 자연값 회귀 + fbExport 1600x2400으로 본격 화질 개선`
+3. `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널을 좌측 사이드바 내부로 이동(알림 가림 해소)`
+4. `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복 + DPR 최소2 supersampling 강제`
+5. `2026-05-18 | Claude Code | claude/fix-template-sharpness | ze-canvas DPR + fbExport 해상도 1.5x로 템플릿 문구 선명도 개선`

@@ -13675,5 +13675,69 @@ if(typeof oldZoom==='function'&&!oldZoom.__dennCurrentDetailPreviewStability){
 window.addEventListener('resize',scheduleSettle);
 })();
 </script>
+
+<!-- ============================================================
+     Firebase Storage 연동 (Step 1: SDK init + 업로드 헬퍼)
+     - Firebase Console에서 활성화 필요:
+       1) Authentication → Sign-in method → Anonymous: 사용 설정
+       2) Storage → Rules: 아래 규칙 적용 (docs/firebase-setup.md 참고)
+     - 사용법: window.dennFirebase.uploadDataUrl(dataUrl, 'templates/foo.png')
+     - fbExport 자동 연동은 Step 2에서 진행
+     ============================================================ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCw7SEjICMoSoyLQpFOlLBvTYhYh0-6D3Y",
+    authDomain: "denn-products.firebaseapp.com",
+    projectId: "denn-products",
+    storageBucket: "denn-products.firebasestorage.app",
+    messagingSenderId: "66131680180",
+    appId: "1:66131680180:web:b45f5008b659936b0a70e1",
+    measurementId: "G-ZBJWLS0GKB"
+  };
+
+  let _ready = false;
+  const _readyPromise = new Promise(function(resolve){ window.__dennFirebaseReady = resolve; });
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    // Anonymous sign-in. Storage 규칙에서 request.auth != null 로 쓰기 허용.
+    signInAnonymously(auth).catch(function(err){
+      console.warn('[firebase] anonymous signin failed:', err && err.code, err && err.message);
+    });
+    onAuthStateChanged(auth, function(u){
+      if (u) { _ready = true; window.__dennFirebaseReady && window.__dennFirebaseReady(true); }
+    });
+
+    window.dennFirebase = {
+      app, auth, storage,
+      isReady: function(){ return _ready; },
+      ready: function(){ return _readyPromise; },
+      async uploadDataUrl(dataUrl, pathHint) {
+        if (!dataUrl || dataUrl.indexOf('data:') !== 0) throw new Error('uploadDataUrl: dataUrl 필요');
+        await _readyPromise; // 익명 인증 완료 대기
+        const path = pathHint || ('templates/' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.png');
+        const r = ref(storage, path);
+        const snap = await uploadString(r, dataUrl, 'data_url');
+        const url = await getDownloadURL(snap.ref);
+        return { url, path };
+      },
+      async deletePath(path) {
+        if (!path) return;
+        await _readyPromise;
+        try { await deleteObject(ref(storage, path)); } catch(e){ console.warn('[firebase] delete failed:', e && e.code); }
+      }
+    };
+    console.log('[firebase] SDK initialized; window.dennFirebase ready');
+  } catch (e) {
+    console.error('[firebase] init failed:', e);
+  }
+</script>
 </body>
 </html>
