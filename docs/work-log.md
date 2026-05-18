@@ -103,6 +103,10 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-18 | Claude Code | claude/fix-boxw-slider | 텍스트 박스 너비 슬라이더가 가이드 박스 폭을 직접 결정하도록 변경 | 상태: 완료`
+  - 범위: denn-admin.html zeTextGuideBox (L1645-1649)
+  - 충돌 위험: 낮음 (가이드 박스 그리기 로직만)
+  - 메모: 기존엔 박스폭=min(slider, 텍스트폭)이라 짧은 텍스트에선 슬라이더 무반응. 변경 후 박스폭=max(min, slider, 텍스트폭)로 슬라이더가 즉시 박스 폭에 반영됨. 텍스트 wrap은 기존대로 bwPx 기준.
 - [x] `2026-05-18 | Claude Code | claude/fix-ze-coords-v365 | 상세설정 문구 추가/위치 이동 실제 원인 수정 | 상태: 완료`
   - 범위: denn-admin.html (v365 zeBindEvents wrap pass-through화 + Guard-A 제거)
   - 충돌 위험: 낮음 (래퍼만 정리, 본체 무수정)
@@ -117,8 +121,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-18 | Claude Code | claude/fix-ze-coords-v365 | v365 zeBindEvents wrap 좌표계 버그 + Guard-A 부작용 수정`
-2. `2026-05-18 | Codex+Claude Code | codex/fix-text-field-position | 상세설정 문구/위치 버그 임시 가드 적용 (Guard-A + Guard-B)`
-3. `2026-05-18 | Codex+Claude Code | docs/work-log.md 신설 | branch: codex/add-work-log`
-4. `2026-05-17 | Claude Code | 1단계 (A 그룹) wrap 8개 제거 완료 | commit: 59d605c`
-5. 
+1. `2026-05-18 | Claude Code | claude/fix-boxw-slider | 박스 너비 슬라이더 가이드 박스 즉시 반영`
+2. `2026-05-18 | Claude Code | claude/fix-ze-coords-v365 | v365 zeBindEvents wrap 좌표계 버그 + Guard-A 부작용 수정`
+3. `2026-05-18 | Codex+Claude Code | codex/fix-text-field-position | 상세설정 문구/위치 버그 임시 가드 적용 (Guard-A + Guard-B)`
+4. `2026-05-18 | Codex+Claude Code | docs/work-log.md 신설 | branch: codex/add-work-log`
+5. `2026-05-17 | Claude Code | 1단계 (A 그룹) wrap 8개 제거 완료 | commit: 59d605c`

@@ -1644,9 +1644,10 @@ function zeTextBoxDrawX(align,bwPx){
 }
 function zeTextGuideBox(ctx,lines,fSize,lh,bwPx,align,spacingPx){
   align=align||'center';spacingPx=parseFloat(spacingPx)||0;
-  var pad=Math.max(4,fSize*.12),minW=Math.max(14,fSize*.75),maxW=Math.max(minW,bwPx||0),textW=0;
+  var pad=Math.max(4,fSize*.12),minW=Math.max(14,fSize*.75),textW=0;
   (lines||[]).forEach(function(line){textW=Math.max(textW,typeof zeMeasureTextSpacing==='function'?zeMeasureTextSpacing(ctx,line,spacingPx):ctx.measureText(String(line||'')).width)});
-  var boxW=Math.min(maxW,Math.max(minW,textW+pad*2));
+  // 슬라이더(bwPx)가 가이드 박스 폭을 직접 결정. 텍스트가 더 길면(예: wrap 불가한 단일 char) 박스가 늘어남.
+  var boxW=Math.max(minW,bwPx||0,textW+pad*2);
   var top=-fSize*.88,bottom=(Math.max(1,lines.length)-1)*fSize*lh+fSize*.28;
   var left=-boxW/2;
   if(align==='left')left=-(bwPx||boxW)/2-pad;
