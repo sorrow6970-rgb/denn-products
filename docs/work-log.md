@@ -103,6 +103,10 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널 우하단 → 좌측 사이드바 내부로 이동 | 상태: 완료`
+  - 범위: denn-admin.html #denn-data-safety-panel CSS(L5624) + installPanel JS(L5714)
+  - 충돌 위험: 낮음 (단일 패널 위치 변경)
+  - 메모: position:fixed 제거. .sidebar 내부 .sb-foot 바로 위에 삽입. 알림 토스트와 더 이상 겹치지 않음. 사이드바 width 215px에 자동 맞춤.
 - [x] `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복(저장/오픈 회귀 해소) + DPR 최소2 강제(supersampling) | 상태: 완료`
   - 범위: denn-admin.html zeRender(L8024), fbExport(L2330)
   - 충돌 위험: 낮음 (원복 + 작은 상수 변경)
@@ -129,8 +133,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복 + DPR 최소2 supersampling 강제`
-2. `2026-05-18 | Claude Code | claude/fix-template-sharpness | ze-canvas DPR + fbExport 해상도 1.5x로 템플릿 문구 선명도 개선`
-3. `2026-05-18 | Claude Code | claude/fix-boxw-slider | 박스 너비 슬라이더 가이드 박스 즉시 반영`
-4. `2026-05-18 | Claude Code | claude/fix-ze-coords-v365 | v365 zeBindEvents wrap 좌표계 버그 + Guard-A 부작용 수정`
-5. `2026-05-18 | Codex+Claude Code | codex/fix-text-field-position | 상세설정 문구/위치 버그 임시 가드 적용 (Guard-A + Guard-B)`
+1. `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널을 좌측 사이드바 내부로 이동(알림 가림 해소)`
+2. `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복 + DPR 최소2 supersampling 강제`
+3. `2026-05-18 | Claude Code | claude/fix-template-sharpness | ze-canvas DPR + fbExport 해상도 1.5x로 템플릿 문구 선명도 개선`
+4. `2026-05-18 | Claude Code | claude/fix-boxw-slider | 박스 너비 슬라이더 가이드 박스 즉시 반영`
+5. `2026-05-18 | Claude Code | claude/fix-ze-coords-v365 | v365 zeBindEvents wrap 좌표계 버그 + Guard-A 부작용 수정`

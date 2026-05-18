@@ -5621,7 +5621,8 @@ window.__dennAdminStableSaveSoon=saveSoon;
 })();
 </script>
 <style id="denn-v35-data-safety-css">
-#denn-data-safety-panel{position:fixed;right:14px;bottom:14px;z-index:9999;width:260px;background:#211f31;color:#f7f2ea;border:1px solid rgba(200,168,100,.34);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.28);font-size:11px;overflow:hidden}
+/* 좌측 사이드바 내부 위치 (이전: position:fixed로 우하단). 알림 토스트 영역 가리지 않도록 이동. */
+#denn-data-safety-panel{margin:0 8px 8px;background:#211f31;color:#f7f2ea;border:1px solid rgba(200,168,100,.34);border-radius:10px;font-size:10.5px;overflow:hidden;flex-shrink:0}
 #denn-data-safety-panel .ds-head{display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:#1a1827;border-bottom:1px solid rgba(255,255,255,.08);font-weight:700}
 #denn-data-safety-panel .ds-body{padding:9px 10px;display:flex;flex-direction:column;gap:7px}
 #denn-data-safety-panel .ds-row{display:flex;justify-content:space-between;color:#bdb6ca}
@@ -5715,7 +5716,12 @@ function installPanel(){
   if(by('denn-data-safety-panel'))return;
   var p=document.createElement('div');p.id='denn-data-safety-panel';
   p.innerHTML='<div class="ds-head"><span>데이터 보호</span><button class="ghost" type="button" onclick="document.getElementById(&quot;denn-data-safety-panel&quot;).classList.toggle(&quot;collapsed&quot;)">−</button></div><div class="ds-body" id="denn-data-safety-body"></div>';
-  document.body.appendChild(p);
+  // 좌측 사이드바 안 sb-foot(저장 버튼) 바로 위에 삽입. 사이드바가 없으면 body로 폴백.
+  var sidebar=document.querySelector('.sidebar');
+  var foot=sidebar&&sidebar.querySelector('.sb-foot');
+  if(sidebar&&foot)sidebar.insertBefore(p,foot);
+  else if(sidebar)sidebar.appendChild(p);
+  else document.body.appendChild(p);
   updatePanel();
 }
 function wrapPersist(){
