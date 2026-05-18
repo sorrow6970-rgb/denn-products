@@ -103,6 +103,10 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 강제 해제 + fbExport 1600x2400으로 화질 본격 개선 | 상태: 완료`
+  - 범위: denn-admin.html zeRender(L8024) dpr 최소 2→1, fbExport 모든 경로(L1269, L2160, L2330, L3974) 800x1000~1200 → 1600x2400
+  - 충돌 위험: 낮음 (DPR 자연값 회귀 + 단순 상수 확대)
+  - 메모: 이전 DPR=2 강제는 FHD 모니터에서 이미지가 업스케일되어 어색한 안티앨리어싱 유발. 자연 DPR로 되돌리고, fbExport 해상도를 2배로 키워 합성 dataUrl 자체를 고해상도화. localStorage 확보 예정이라 4x 픽셀 부담 감수. 신규 업로드부터 자동 적용. 기존 템플릿은 재업로드/재저장 필요.
 - [x] `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널 우하단 → 좌측 사이드바 내부로 이동 | 상태: 완료`
   - 범위: denn-admin.html #denn-data-safety-panel CSS(L5624) + installPanel JS(L5714)
   - 충돌 위험: 낮음 (단일 패널 위치 변경)
@@ -133,8 +137,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널을 좌측 사이드바 내부로 이동(알림 가림 해소)`
-2. `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복 + DPR 최소2 supersampling 강제`
-3. `2026-05-18 | Claude Code | claude/fix-template-sharpness | ze-canvas DPR + fbExport 해상도 1.5x로 템플릿 문구 선명도 개선`
-4. `2026-05-18 | Claude Code | claude/fix-boxw-slider | 박스 너비 슬라이더 가이드 박스 즉시 반영`
-5. `2026-05-18 | Claude Code | claude/fix-ze-coords-v365 | v365 zeBindEvents wrap 좌표계 버그 + Guard-A 부작용 수정`
+1. `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 자연값 회귀 + fbExport 1600x2400으로 본격 화질 개선`
+2. `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널을 좌측 사이드바 내부로 이동(알림 가림 해소)`
+3. `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복 + DPR 최소2 supersampling 강제`
+4. `2026-05-18 | Claude Code | claude/fix-template-sharpness | ze-canvas DPR + fbExport 해상도 1.5x로 템플릿 문구 선명도 개선`
+5. `2026-05-18 | Claude Code | claude/fix-boxw-slider | 박스 너비 슬라이더 가이드 박스 즉시 반영`

@@ -1265,8 +1265,8 @@ function fbExport(){
   var name=v('fb-tpl-name')||('액자 템플릿 '+(S.frameTemplates.filter(function(t){return t.type==='uploaded';}).length+1));
   var catId=document.getElementById('fb-cat-sel').value||null;
   var sz=S.frameSizes[FB.sizeId];
-  // Render at double resolution
-  var maxW=800,maxH=1000;var pw=maxW,ph=pw*sz.aspect;if(ph>maxH){ph=maxH;pw=ph/sz.aspect;}
+  // 합성 dataUrl 1600x2400 (이전 800x1000 → 2x linear). 화질 우선, localStorage 확장 예정.
+  var maxW=1600,maxH=2400;var pw=maxW,ph=pw*sz.aspect;if(ph>maxH){ph=maxH;pw=ph/sz.aspect;}
   var oc=document.createElement('canvas');oc.width=Math.round(pw);oc.height=Math.round(ph);
   var octx=oc.getContext('2d');
   var borderPct=parseFloat(document.getElementById('fb-border-pct').value)||6;
@@ -2157,7 +2157,8 @@ window.addEventListener('load',async function(){
     var name=v('fb-tpl-name')||('액자 템플릿 '+(S.frameTemplates.filter(function(t){return t.type==='uploaded';}).length+1));
     var catId=document.getElementById('fb-cat-sel').value||null; var sz=S.frameSizes[FB.sizeId];
     var aspect=(sz&&sz.wcm&&sz.hcm)?(parseFloat(sz.wcm)/parseFloat(sz.hcm)):(sz.aspect||1);
-    var maxW=800,maxH=1000,pw=maxW,ph=pw*aspect; if(ph>maxH){ ph=maxH; pw=ph/aspect; }
+    // 합성 dataUrl 1600x2400 (이전 800x1000 → 2x linear).
+    var maxW=1600,maxH=2400,pw=maxW,ph=pw*aspect; if(ph>maxH){ ph=maxH; pw=ph/aspect; }
     var oc=document.createElement('canvas'); oc.width=Math.round(pw); oc.height=Math.round(ph); var octx=oc.getContext('2d');
     var borderPct=parseFloat(document.getElementById('fb-border-pct').value)||6; var B=Math.round(pw*borderPct/100), IX=B,IY=B,IW=pw-B*2,IH=ph-B*2;
     octx.fillStyle=document.getElementById('fb-mat-col').value||'#FFFDF8'; octx.fillRect(0,0,pw,ph);
@@ -2327,9 +2328,10 @@ window.addEventListener('load',async function(){
       var catId = document.getElementById('fb-cat-sel').value || null;
       var sz = S.frameSizes[FB.sizeId];
       var aspect = frameAspectFromSize(sz);
-      // 800x1200 유지: 1.5x 확대 시 localStorage 용량 초과로 저장/오픈 실패가 발생했음.
-      // 화질은 zeRender의 DPR 캔버스 백킹으로 대신 보완.
-      var maxW = 800, maxH = 1200, pw = maxW, ph = pw * aspect;
+      // 합성 dataUrl 해상도 800x1200 → 1600x2400 (2x linear, 4x pixels).
+      // localStorage 용량 확보 예정이라 공격적으로 확대. 카드/에디터 미리보기 모두 선명도 개선.
+      // 원본 업로드 이미지는 t.originalDataUrl로 풀해상도 별도 보존됨.
+      var maxW = 1600, maxH = 2400, pw = maxW, ph = pw * aspect;
       if(ph > maxH){ ph = maxH; pw = ph / aspect; }
       var oc = document.createElement('canvas');
       oc.width = Math.round(pw);
@@ -3970,7 +3972,8 @@ window.fbRender=function(){
 };
 window.fbExport=function(){
   if(FB.sizeId==null||!S.frameSizes||!S.frameSizes[FB.sizeId]){toast('사이즈를 선택하세요','e');return}
-  var name=(by('fb-tpl-name')||{}).value||('액자 템플릿 '+((S.frameTemplates||[]).filter(function(t){return t.type==='uploaded'}).length+1)),catId=(by('fb-cat-sel')||{}).value||null,sz=normalizeSize(S.frameSizes[FB.sizeId]),ratio=sizeRatio(sz),maxW=800,maxH=1000,pw=maxW,ph=pw/ratio;if(ph>maxH){ph=maxH;pw=ph*ratio}
+  // 합성 dataUrl 1600x2400 (이전 800x1000 → 2x linear).
+  var name=(by('fb-tpl-name')||{}).value||('액자 템플릿 '+((S.frameTemplates||[]).filter(function(t){return t.type==='uploaded'}).length+1)),catId=(by('fb-cat-sel')||{}).value||null,sz=normalizeSize(S.frameSizes[FB.sizeId]),ratio=sizeRatio(sz),maxW=1600,maxH=2400,pw=maxW,ph=pw/ratio;if(ph>maxH){ph=maxH;pw=ph*ratio}
   var oc=document.createElement('canvas');oc.width=Math.round(pw);oc.height=Math.round(ph);var ctx=oc.getContext('2d'),b=n((by('fb-border-pct')||{}).value,2),B=Math.round(Math.min(oc.width,oc.height)*b/100),IX=B,IY=B,IW=oc.width-B*2,IH=oc.height-B*2;
   ctx.fillStyle=(by('fb-mat-col')||{}).value||'#FFFDF8';ctx.fillRect(0,0,oc.width,oc.height);
   if(FB.zones&&FB.zones.length){ctx.save();ctx.globalCompositeOperation='destination-out';FB.zones.forEach(function(z){var ax=IX+z.x/100*IW,ay=IY+z.y/100*IH,aw=z.w/100*IW,ah=z.h/100*IH;ctx.fillStyle='#000';if(z.type==='circle'){ctx.beginPath();ctx.ellipse(ax+aw/2,ay+ah/2,aw/2,ah/2,0,0,Math.PI*2);ctx.fill()}else ctx.fillRect(ax,ay,aw,ah)});ctx.restore();ctx.globalCompositeOperation='source-over'}
@@ -8031,10 +8034,9 @@ window.zeRender=function(){
   if(!window.ZE||!ZE.ctx||!ZE.canvas||!ZE.img)return;
   var t=currentTpl();syncWhiteMeta(t);
   var box=fit(currentRatio(t,ZE.img),660,760);
-  // HiDPI + supersampling: 일반 FHD(DPR=1) 모니터에서도 강제로 최소 2x 백킹을 잡아
-  // 텍스트를 2x 해상도로 그린 뒤 CSS 다운스케일 → 안티앨리어싱으로 또렷해짐.
-  // 레티나/4K는 실제 DPR을 따름. CSS 표시 크기는 (canvas.width/dpr) 기준으로 보정됨.
-  var dpr=Math.min(3,Math.max(2,window.devicePixelRatio||1));
+  // HiDPI: 실제 devicePixelRatio를 따름 (DPR 강제 2x는 FHD에서 이미지 업스케일 아티팩트 유발하여 해제).
+  // 레티나/4K(DPR=2~3)에서만 백킹 확대 → 텍스트 선명. 일반 FHD(DPR=1)는 원본 픽셀 그대로.
+  var dpr=Math.min(3,Math.max(1,window.devicePixelRatio||1));
   var bw=Math.round(box.w*dpr),bh=Math.round(box.h*dpr);
   if(ZE.canvas.width!==bw||ZE.canvas.height!==bh){ZE.canvas.width=bw;ZE.canvas.height=bh}
   ZE._dpr=dpr;
