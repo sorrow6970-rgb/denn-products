@@ -1524,7 +1524,7 @@ var ZE={tplIdx:null,zones:[],activeType:'main',canvas:null,ctx:null,img:null,dra
 var ZC={main:'#FF6B6B',name:'#60A5FA',date:'#3DD68C',sub:'#FFB020'};
 var ZL={main:'메인 문구',name:'이름',date:'날짜',sub:'추가 문구'};
 var ZP={main:'WEDDING',name:'J & K',date:'11 MAY 2025',sub:'SPECIAL EDITION'};
-function setZePreviewZoom(z){z=Math.max(.5,Math.min(2.2,parseFloat(z)||1));if(window.ZE)ZE.previewZoom=z;var c=document.getElementById('ze-canvas'),r=document.getElementById('ze-preview-zoom'),v=document.getElementById('ze-preview-zoom-v');if(c&&c.width&&c.height){var dpr=(window.ZE&&ZE._dpr)||1;c.style.width=Math.round(c.width/dpr*z)+'px';c.style.height=Math.round(c.height/dpr*z)+'px'}if(r)r.value=Math.round(z*100);if(v)v.textContent=Math.round(z*100)+'%'}
+function setZePreviewZoom(z){z=Math.max(.5,Math.min(2.2,parseFloat(z)||1));if(window.ZE)ZE.previewZoom=z;var c=document.getElementById('ze-canvas'),r=document.getElementById('ze-preview-zoom'),v=document.getElementById('ze-preview-zoom-v');if(c&&c.width&&c.height){var dpr=(window.ZE&&ZE._dpr)||1;var dispW=(window.ZE&&ZE._displayW)||(c.width/dpr);var dispH=(window.ZE&&ZE._displayH)||(c.height/dpr);c.style.width=Math.round(dispW*z)+'px';c.style.height=Math.round(dispH*z)+'px'}if(r)r.value=Math.round(z*100);if(v)v.textContent=Math.round(z*100)+'%'}
 function syncZeGridGuideButton(){var b=document.getElementById('ze-guide-toggle');if(!b)return;var on=!window.ZE||ZE.gridGuide!==false;b.classList.toggle('on',on);b.textContent=on?'가이드 ON':'가이드 OFF'}
 function toggleZeGridGuide(){if(!window.ZE)return;ZE.gridGuide=ZE.gridGuide===false;syncZeGridGuideButton();zeRender()}
 function openZoneEditor(idx){var t=S.frameTemplates[idx];if(!t||!t.dataUrl){toast('템플릿 이미지 필요','e');return;}ZE.tplIdx=idx;ZE.zones=t.textZones?JSON.parse(JSON.stringify(t.textZones)):[];ZP=Object.assign({main:'WEDDING',name:'J & K',date:'11 MAY 2025',sub:'SPECIAL EDITION'},t.defaultTexts||{});if(!ZE.previewZoom)ZE.previewZoom=1;document.getElementById('ze-tpl-name').textContent=t.name;var _zem=document.getElementById('ze-modal');if(_zem)_zem.classList.add('open');syncZeGridGuideButton();ZE.canvas=document.getElementById('ze-canvas');ZE.ctx=ZE.canvas.getContext('2d');ZE.img=new Image();ZE.img.onload=function(){zeRender();zeBindEvents();};ZE.img.src=t.dataUrl;updateZFontSelect();setZT('main',document.querySelector('.ze-type-btn[data-key="main"]'));zeRenderList();}
@@ -8151,12 +8151,15 @@ window.zeRender=function(){
   if(!window.ZE||!ZE.ctx||!ZE.canvas||!ZE.img)return;
   var t=currentTpl();syncWhiteMeta(t);
   var box=fit(currentRatio(t,ZE.img),1200,1400);
+  // 백킹은 1200×1400 supersample (글씨 선명). 표시는 660×760 기준(미리보기 영역 맞춤).
+  var displayBox=fit(currentRatio(t,ZE.img),660,760);
   // HiDPI: 실제 devicePixelRatio를 따름 (DPR 강제 2x는 FHD에서 이미지 업스케일 아티팩트 유발하여 해제).
   // 레티나/4K(DPR=2~3)에서만 백킹 확대 → 텍스트 선명. 일반 FHD(DPR=1)는 원본 픽셀 그대로.
   var dpr=Math.min(3,Math.max(1,window.devicePixelRatio||1));
   var bw=Math.round(box.w*dpr),bh=Math.round(box.h*dpr);
   if(ZE.canvas.width!==bw||ZE.canvas.height!==bh){ZE.canvas.width=bw;ZE.canvas.height=bh}
   ZE._dpr=dpr;
+  ZE._displayW=displayBox.w;ZE._displayH=displayBox.h;
   try{if(typeof window.setZePreviewZoom==='function')setZePreviewZoom(ZE.previewZoom||1)}catch(e){}
   var ctx=ZE.ctx,W=ZE.canvas.width,H=ZE.canvas.height;ctx.clearRect(0,0,W,H);
   if(!isDesignCanvasTemplate(t)){ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(ZE.img,0,0,W,H);ctx.restore()}
@@ -11411,7 +11414,9 @@ window.addEventListener('load',tick);
     var c=canvas();
     if(!c||!c.width||!c.height)return;
     z=clamp(z,.5,2.2);
-    var ww=Math.round(c.width*z)+'px',hh=Math.round(c.height*z)+'px';
+    var dispW=(window.ZE&&ZE._displayW)||c.width;
+    var dispH=(window.ZE&&ZE._displayH)||c.height;
+    var ww=Math.round(dispW*z)+'px',hh=Math.round(dispH*z)+'px';
     if(c.style.width!==ww)c.style.width=ww;
     if(c.style.height!==hh)c.style.height=hh;
   }
@@ -13700,9 +13705,12 @@ function canvasCssSize(){
   var c=canvas();
   if(!c||!c.width||!c.height)return null;
   var z=clamp(num(window.ZE&&ZE.previewZoom,1),.5,2.2);
-  // HiDPI: zeRender가 백킹을 dpr배수로 키워둔 경우 CSS는 ÷dpr로 표시해야 함.
+  // 백킹은 1200×1400 supersample이지만 CSS 표시는 ZE._displayW/H(660 기준) × zoom으로 분리.
+  // dead-code 경로 fallback: c.width/dpr (기존 동작 유지).
   var dpr=(window.ZE&&ZE._dpr)||1;
-  return{w:Math.round(c.width/dpr*z)+'px',h:Math.round(c.height/dpr*z)+'px'};
+  var dispW=(window.ZE&&ZE._displayW)||(c.width/dpr);
+  var dispH=(window.ZE&&ZE._displayH)||(c.height/dpr);
+  return{w:Math.round(dispW*z)+'px',h:Math.round(dispH*z)+'px'};
 }
 function applyCanvasCss(){
   var c=canvas(),s=canvasCssSize();

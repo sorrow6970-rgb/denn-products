@@ -110,6 +110,10 @@
   - **다음 세션 진입 전 사용자가 할 일**: Firebase Console에서 Anonymous Auth 활성화 + Storage Rules 적용 + 콘솔 테스트(`dennFirebase.uploadDataUrl`) 통과
   - 통과 확인 후 Step 2 진행
 
+- [x] `2026-05-19 | Claude Code | claude/ze-canvas-display-fix | ze-canvas 백킹/표시 분리 (1200 supersample + 660 display) | 상태: 완료`
+  - 범위: denn-admin.html 4곳 — (1) v56 zeRender L8150에서 `displayBox=fit(..,660,760)` 별도 계산 후 `ZE._displayW/H` 저장, (2) L1527 setZePreviewZoom — `ZE._displayW||c.width/dpr` 사용, (3) L11414 v89 applyZoomCss — `ZE._displayW||c.width` (기존 fallback 유지), (4) L13699 canvasCssSize — `ZE._displayW||c.width/dpr` 사용
+  - 충돌 위험: 낮음. 모든 변경에 dead-code 경로용 fallback 유지(기존 동작 보존). v89/v118/v364 wrap은 모두 체인 호출이라 그대로 통과.
+  - 메모: 직전 1200×1400 변경 후 두 부작용 발생 — (a) c.width=1200 그대로 CSS에 쓰여서 표시 1.8배 큼, (b) v89 `applyZoomCss`가 `c.width*z` (/dpr 누락) 으로 마지막에 덮어써서 더 어긋남. 백킹은 1200(선명), 표시는 660(영역 맞춤) 분리해 모두 해결. 줌 100% 기준점 = 기존과 동일 (660 × 1.0). DPR>1 환경에서는 v89 applyZoomCss가 historically `c.width*z` (overflow) 였으나 `ZE._displayW`가 설정되면 정상 동작 — 부수적 latent 버그 부분 개선.
 - [x] `2026-05-19 | Claude Code | claude/ze-canvas-1200x1400 | ze-canvas 미리보기 백킹 상한 660×760 → 1200×1400 (글씨 흐림 해결) | 상태: 완료`
   - 범위: denn-admin.html L8153 활성 zeRender(`window.fbExport` 본체 v56 계열) 내 `fit(currentRatio(t,ZE.img),660,760)` → `fit(..,1200,1400)`
   - 충돌 위험: 낮음. 사전 검증: ZE.canvas.width 절대좌표 사용 0건(모두 `nx/W*100` 정규화 또는 마우스 `canvas.width/rect.width` 비율). v15/v53/v54/v55/v363/v364 모두 W,H 비례 그리기라 백킹 크기 변화에 무관. v364(L13371) zeRender는 `oldZe.apply` 체인이라 v56 그대로 호출.
@@ -164,8 +168,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | claude/ze-canvas-1200x1400 | ze-canvas 백킹 660×760 → 1200×1400 (글씨 흐림 해결)`
-2. `2026-05-19 | Claude Code | claude/firebase-storage-step2 | Firebase Storage 자동 업로드 wrap (fbExport 후처리, data:→URL 교체)`
-3. `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업 무변경 시 중복 파일 스킵`
-4. `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(FS Access API) + 보존 7일`
-5. `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage SDK init + 업로드 헬퍼 (Step 2 wire-up 대기/보류)`
+1. `2026-05-19 | Claude Code | claude/ze-canvas-display-fix | ze-canvas 백킹/표시 분리 (1200 supersample + 660 display, 표시·줌 안정화)`
+2. `2026-05-19 | Claude Code | claude/ze-canvas-1200x1400 | ze-canvas 백킹 660×760 → 1200×1400 (글씨 흐림 해결)`
+3. `2026-05-19 | Claude Code | claude/firebase-storage-step2 | Firebase Storage 자동 업로드 wrap (fbExport 후처리, data:→URL 교체)`
+4. `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업 무변경 시 중복 파일 스킵`
+5. `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(FS Access API) + 보존 7일`
