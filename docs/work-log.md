@@ -103,7 +103,10 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
-- 없음
+- [x] `2026-05-18 | Codex | codex/diagnosis-text-field-position | 상세설정 문구 추가/위치 이동 불가 진단 문서화 | 상태: 완료`
+  - 범위: docs/bug-diagnosis-text-field-position.md (신규)
+  - 충돌 위험: 낮음 (문서 작업만, HTML 무수정)
+  - 메모: 원인 후보를 #18/#19(v363 dynamic/parity wrap) 중심으로 정리
 
 ---
 
