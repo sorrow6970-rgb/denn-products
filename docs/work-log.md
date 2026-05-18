@@ -103,6 +103,16 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+### 🔖 세션 종료 메모 (2026-05-18)
+- **Firebase Storage 연동: Step 1 완료, Step 2는 다음에**
+  - Step 1 완료: SDK init + `window.dennFirebase` 헬퍼 + `docs/firebase-setup.md` 설정 가이드
+  - Step 2 대기: fbExport 4개 경로(L1269/L2160/L2330/L3974)에 자동 업로드 wrap 추가, dataUrl → Storage URL 교체, `t.storagePath` 저장(삭제용), graceful degrade(실패 시 dataUrl 유지)
+  - **다음 세션 진입 전 사용자가 할 일**: Firebase Console에서 Anonymous Auth 활성화 + Storage Rules 적용 + 콘솔 테스트(`dennFirebase.uploadDataUrl`) 통과
+  - 통과 확인 후 Step 2 진행
+
+- [x] `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업이 변경 없을 때 중복 파일 생성하지 않도록 스킵 | 상태: 완료`
+  - 범위: denn-admin.html runAutoBackup / dennRunManualBackup
+  - 메모: lastBackedUpJson 모듈 변수에 직전 직렬화 결과 보관. 동일하면 스킵 + 콘솔 로그. 수동 백업 직후에도 갱신해 직후 자동 주기 중복 회피.
 - [x] `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(File System Access API) 구현 | 상태: 완료`
   - 범위: denn-admin.html 기존 데이터 보호 IIFE 내부 확장 (L5640-5754 블록). 신규 wrap 없음.
   - 충돌 위험: 낮음 (기존 패널/스냅샷 로직 보존, 새 헬퍼만 추가하고 updatePanel UI 확장)
@@ -145,8 +155,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(FS Access API) + 보존 7일`
-2. `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage SDK init + 업로드 헬퍼 (Step 2 wire-up 대기/보류)`
-3. `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 자연값 회귀 + fbExport 1600x2400으로 본격 화질 개선`
-4. `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널을 좌측 사이드바 내부로 이동(알림 가림 해소)`
-5. `2026-05-18 | Claude Code | claude/fix-save-and-dpr | fbExport 1.5x 원복 + DPR 최소2 supersampling 강제`
+1. `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업 무변경 시 중복 파일 스킵`
+2. `2026-05-18 | Claude Code | claude/auto-backup-feature | JSON 자동 백업 + 폴더 지정(FS Access API) + 보존 7일`
+3. `2026-05-18 | Claude Code | claude/firebase-storage-step1 | Firebase Storage SDK init + 업로드 헬퍼 (Step 2 wire-up 대기/보류)`
+4. `2026-05-18 | Claude Code | claude/restore-quality-improve | DPR 자연값 회귀 + fbExport 1600x2400으로 본격 화질 개선`
+5. `2026-05-18 | Claude Code | claude/move-data-safety-panel | 데이터 보호 패널을 좌측 사이드바 내부로 이동(알림 가림 해소)`
