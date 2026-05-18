@@ -3254,11 +3254,9 @@ function paintClock(ctx,src,cx,cy,box){var im=new Image();im.onload=function(){t
 window.dennV15DrawClock=function(ctx,cx,cy,box){var src=S&&S.clockSettings&&(S.clockSettings.customImgClean||S.clockSettings.customImg);if(!src)return false;paintClock(ctx,src,cx,cy,box);return true;};
 /* detail modal: rename + put white border controls inside, live preview */
 function getTpl(){return (window.ZE&&ZE.tplIdx!=null&&S.frameTemplates&&S.frameTemplates[ZE.tplIdx])?S.frameTemplates[ZE.tplIdx]:null}
-function installDetailBorder(){try{var p=by('denn-v15-detail-border');if(p&&p.parentNode)p.parentNode.removeChild(p);}catch(e){}}
 window.dennV15SetZoneWhite=function(on){try{var sw=by('ze-white-switch-v15');if(sw)sw.classList.toggle('on',!!on);var tpl=getTpl();if(tpl){tpl.whiteInnerBorder=!!on;if(on&&!(tpl.whiteInnerBorderThickness>0)){tpl.whiteInnerBorderThickness=2;var r=by('ze-white-thick-v15'),v=by('ze-white-thick-val-v15');if(r)r.value=2;if(v)v.textContent='2%';}}zeRender&&zeRender();}catch(e){}}
 window.dennV15SetZoneWhiteThickness=function(v){try{v=Math.max(0,num(v,0));var lab=by('ze-white-thick-val-v15');if(lab)lab.textContent=v+'%';var tpl=getTpl();if(tpl){tpl.whiteInnerBorderThickness=v;tpl.whiteInnerBorder=v>0;}var sw=by('ze-white-switch-v15');if(sw)sw.classList.toggle('on',v>0);zeRender&&zeRender();}catch(e){}}
 function drawDetailFrameOverlay(ctx,W,H,tpl){try{var framePct=(S&&S.frameThickness)||5.5;var B=Math.max(2,Math.round(Math.min(W,H)*framePct/100));ctx.save();ctx.lineWidth=B;ctx.strokeStyle='rgba(0,0,0,.68)';ctx.strokeRect(B/2,B/2,W-B,H-B);if(tpl&&tpl.whiteInnerBorder&&tpl.whiteInnerBorderThickness>0){var lw=Math.max(1,Math.min(W,H)*tpl.whiteInnerBorderThickness/100);ctx.fillStyle='#FFFDF8';ctx.fillRect(B,B,W-B*2,lw);ctx.fillRect(B,H-B-lw,W-B*2,lw);ctx.fillRect(B,B,lw,H-B*2);ctx.fillRect(W-B-lw,B,lw,H-B*2);}ctx.restore();}catch(e){}}
-var oldOpen=window.openZoneEditor;if(typeof oldOpen==='function'){window.openZoneEditor=function(idx){var r=oldOpen.apply(this,arguments);setTimeout(function(){installDetailBorder()},80);return r}}
 var oldZe=window.zeRender;if(typeof oldZe==='function'){window.zeRender=function(){var r=oldZe.apply(this,arguments);try{if(ZE&&ZE.ctx&&ZE.canvas)drawDetailFrameOverlay(ZE.ctx,ZE.canvas.width,ZE.canvas.height,getTpl());}catch(e){}return r}}
 var oldSave=window.saveZones;if(typeof oldSave==='function'){window.saveZones=function(){try{var tpl=getTpl();if(tpl){var sw=by('ze-white-switch-v15'),ra=by('ze-white-thick-v15');if(sw)tpl.whiteInnerBorder=sw.classList.contains('on');if(ra)tpl.whiteInnerBorderThickness=num(ra.value,0);}}catch(e){}return oldSave.apply(this,arguments)}}
 var oldSaveOnly=window.saveZonesOnly;if(typeof oldSaveOnly==='function'){window.saveZonesOnly=function(){try{var tpl=getTpl();if(tpl){var sw=by('ze-white-switch-v15'),ra=by('ze-white-thick-v15');if(sw)tpl.whiteInnerBorder=sw.classList.contains('on');if(ra)tpl.whiteInnerBorderThickness=num(ra.value,0);}}catch(e){}return oldSaveOnly.apply(this,arguments)}}
@@ -7002,18 +7000,9 @@ window.zeRender=function(){
   drawWhiteGuide(ctx,W,H,t);
   renderRatioNote();
 };
-function syncDetail(){
-  syncWhitePanel();renderRatioNote();
-  var box=by('denn-v38-ze-size-checks');if(box&&!box.__dennV42RatioBind){box.__dennV42RatioBind=true;box.addEventListener('change',function(){setTimeout(renderRatioNote,0)})}
-}
-if(typeof previous.openZoneEditor==='function'&&!previous.openZoneEditor.__dennV42DetailGuide){
-  var open=function(){var r=previous.openZoneEditor.apply(this,arguments);setTimeout(syncDetail,120);return r};
-  open.__dennV42DetailGuide=true;window.openZoneEditor=open;
-}
 function beforeSave(){var t=tpl();if(!t)return;var sw=by('ze-white-switch-v15'),ra=by('ze-white-thick-v15'),on=sw?sw.classList.contains('on'):!!t.whiteInnerBorder,th=ra?Math.max(0,num(ra.value,0)):Math.max(0,num(t.whiteInnerBorderThickness,0));t.whiteInnerBorder=!!on;t.whiteInnerBorderThickness=on?th:0;if(on&&th<=0){t.whiteInnerBorder=false;t.whiteInnerBorderThickness=0}saveSoft()}
 function wrapSave(name,old){if(typeof old==='function'&&!old.__dennV42DetailGuide){var fn=function(){beforeSave();return old.apply(this,arguments)};fn.__dennV42DetailGuide=true;window[name]=fn}}
 wrapSave('saveZones',previous.saveZones);wrapSave('saveZonesOnly',previous.saveZonesOnly);
-window.dennRollbackDetailPreviewGuideV42=function(){window.openZoneEditor=previous.openZoneEditor;window.zeRender=previous.zeRender;window.saveZones=previous.saveZones;window.saveZonesOnly=previous.saveZonesOnly;window.dennV15SetZoneWhite=previous.dennV15SetZoneWhite;window.dennV15SetZoneWhiteThickness=previous.dennV15SetZoneWhiteThickness};
 })();
 </script>
 <style id="denn-v44-transparent-detail-overlay-css">
@@ -7147,9 +7136,6 @@ function saveDetail(closeAfter){
 }
 window.saveZones=function(){return saveDetail(true)};
 window.saveZonesOnly=function(){return saveDetail(false)};
-function syncDetail(){syncWhitePanel();renderRatioNote()}
-if(typeof previous.openZoneEditor==='function'&&!previous.openZoneEditor.__dennV44Overlay){var open=function(){var r=previous.openZoneEditor.apply(this,arguments);setTimeout(syncDetail,140);return r};open.__dennV44Overlay=true;window.openZoneEditor=open}
-window.dennRollbackTransparentDetailOverlayV44=function(){window.zeRender=previous.zeRender;window.saveZones=previous.saveZones;window.saveZonesOnly=previous.saveZonesOnly;window.openZoneEditor=previous.openZoneEditor};
 })();
 </script>
 <style id="denn-v45-design-canvas-only-css">
