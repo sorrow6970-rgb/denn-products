@@ -103,7 +103,27 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
-### 🔖 세션 종료 메모 (2026-05-18)
+- [x] `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API | 상태: 완료`
+  - 범위: denn-mockup-tool.html 상단 모듈 변수 `dennFrameTextOverrides={}` 신규(L655 부근), 말미에 `denn-phase1-text-override-api` IIFE 신규
+  - 충돌 위험: 낮음. 신규 state + 신규 API 네임스페이스. 기존 코드 접점은 `selFTplByRef` wrap 1곳(템플릿 전환 시 auto clearAll).
+  - 메모: 데이터 모델/공개 API만. 렌더/UI 통합은 Phase C (Stage 4+5) 예정. API: `window.dennFrameTextOverrideAPI.{get,set,replace,clear,clearAll,all,bulkSet,allowedByTemplate,isHexColor,normalizeShadow}`. shape: `{ color:'#RRGGBB', shadow:{enabled,color,blur,dx,dy} }`. allowedByTemplate()는 curFTpl.allowColorChange를 게이트로 사용.
+- [x] `2026-05-19 | Claude Code | phase1-stage2-mask-mode | Phase1 Stage 2: maskMode 자동 감지 + 수동 override (auto/white/black) | 상태: 완료`
+  - 범위: denn-admin.html 동일 IIFE 확장 — `detectMaskModeFromDataUrl` 함수, 라디오 UI, fbExport wrap 분기(manual 즉시 / auto 비동기 감지)
+  - 충돌 위험: 낮음. 신규 자료(`t.maskMode`, `t.maskModeSource`)만 추가, 기존 렌더러 무영향.
+  - 메모: 120×120 다운샘플 후 불투명 픽셀 평균 휘도(0.299R+0.587G+0.114B) <128 이면 'black' 판정. UI는 `색상 변경 허용` 카드 하단에 라디오 3개 + 상태표시 영역. 편집 진입 시 maskModeSource로 'auto'/수동 복원.
+- [x] `2026-05-19 | Claude Code | phase1-stage1-allow-color-toggle | Phase1 Stage 1: 어드민 빌더 '색상 변경 허용' 토글 + preserveDetailFields 확장 | 상태: 완료`
+  - 범위: denn-admin.html — preserveDetailFields(L12037 직후) 1줄 직접 수정(`['allowColorChange','maskMode','maskModeSource'].forEach...`), 말미에 `denn-phase1-color-toggle` IIFE 신규
+  - 충돌 위험: 낮음. preserveDetailFields는 보호 함수 외(편집-저장 보존 로직), 라인 1줄만 추가(기존 패턴 동일). 외부에서 fbExport는 wrap 패턴(v94 router → firebase → phase1 체인).
+  - 메모: `__dennFrameTemplateEditIndex` 폴링(250ms)으로 편집 진입/이탈 시 UI 복원/리셋. fbExport wrap은 capturedEditIdx + beforeLen 두 단서로 신규 저장/v94 edit save 모두 호환. wrap 예외 사유: 외부 모듈(v94 edit-mode + firebase auto-sync) 사이에 들어가는 추가 통합 레이어로 분리가 자연스러움.
+
+### 🔖 세션 종료 메모 (2026-05-19) — Phase 1 Stage 1+2+3 완료
+- **다음 작업: Phase B (Stage 5 프로토타입, 그림자+마스크 합성 검증, ~1h)**
+  - 검증 포인트: maskMode='black' 템플릿에서 customer 텍스트 색상을 흰색으로 + shadow.color='#000' 적용했을 때 시인성/마스크 합성 자연스러운지
+  - 1차 데이터 모델은 본 세션에서 완성 → Phase C에서 UI/렌더 통합 본격 진행
+- **다음 작업 진입 전 사용자가 할 일**: 어드민에서 새 액자 템플릿 1~2개 업로드 → '색상 변경 허용' ON + 마스크 모드 '자동' 저장 → 콘솔에서 `S.frameTemplates.find(t=>t.allowColorChange)` 로 필드 저장 확인. 또는 기존 템플릿 '수정하기' 진입 시 토글이 OFF 상태로, 라디오는 '자동 감지'로 복원되는지 확인.
+- **참고**: 본 세션 변경은 모두 신규 필드/IIFE 추가라 기존 렌더 경로(zeRender/renderFrame/fbRender)는 무영향. 회귀 없음.
+
+### 🔖 이전 세션 종료 메모 (2026-05-18)
 - **Firebase Storage 연동: Step 1 완료, Step 2는 다음에**
   - Step 1 완료: SDK init + `window.dennFirebase` 헬퍼 + `docs/firebase-setup.md` 설정 가이드
   - Step 2 대기: fbExport 4개 경로(L1269/L2160/L2330/L3974)에 자동 업로드 wrap 추가, dataUrl → Storage URL 교체, `t.storagePath` 저장(삭제용), graceful degrade(실패 시 dataUrl 유지)
@@ -172,8 +192,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | claude/watermark-preview-overlay-off | 고객 미리보기 워터마크 오버레이 제거 (저장 시에만 출력)`
-2. `2026-05-19 | Claude Code | claude/ze-canvas-display-fix | ze-canvas 백킹/표시 분리 (1200 supersample + 660 display, 표시·줌 안정화)`
-3. `2026-05-19 | Claude Code | claude/ze-canvas-1200x1400 | ze-canvas 백킹 660×760 → 1200×1400 (글씨 흐림 해결)`
-4. `2026-05-19 | Claude Code | claude/firebase-storage-step2 | Firebase Storage 자동 업로드 wrap (fbExport 후처리, data:→URL 교체)`
-5. `2026-05-18 | Claude Code | claude/backup-skip-unchanged | 자동 백업 무변경 시 중복 파일 스킵`
+1. `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API`
+2. `2026-05-19 | Claude Code | phase1-stage2-mask-mode | Phase1 Stage 2: maskMode 자동 감지 + 수동 override`
+3. `2026-05-19 | Claude Code | phase1-stage1-allow-color-toggle | Phase1 Stage 1: 어드민 빌더 '색상 변경 허용' 토글 + preserveDetailFields 확장`
+4. `2026-05-19 | Claude Code | claude/watermark-preview-overlay-off | 고객 미리보기 워터마크 오버레이 제거 (저장 시에만 출력)`
+5. `2026-05-19 | Claude Code | claude/ze-canvas-display-fix | ze-canvas 백킹/표시 분리 (1200 supersample + 660 display, 표시·줌 안정화)`
