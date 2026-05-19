@@ -103,6 +103,20 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백 — denn-admin.html 상태 c안 직후(23133d7)로 복원 | 상태: 완료`
+  - 롤백 대상 (revert 순서: 최신부터):
+    - `862229d` 4차 — inline onclick `event.stopPropagation()` 3건 추가
+    - `c6168dd` 3차 — `.up-zone > [id$="-prev"] button/img` z-index/pointer-events 분리
+    - `d404b29` 1차 — `.up-zone > [id$="-prev"]` z-index:2 분리
+  - 사유: 3 패치 모두 [제거] 클릭 흡수를 해결하지 못함. 마지막 패치(862229d)에서 ZE modal 우측 패널 레이아웃 회귀(디자인 템플릿 영역이 본체 위로 빠져나옴) 추가 발생 → 정공법 채택 결정 + 임시 봉합 모두 회수.
+  - 보존: C안(23133d7 `phase1-c-installguidepanel-fix`)는 유지. B v1/v2 마이그, snapshot 슬림화, mockup-tool CORS 패치 모두 유지.
+  - 향후 재시도 시 정공법 메모:
+    - CSS z-index만으론 해결 안 됨 (1·3차에서 검증 완료).
+    - inline onclick stopPropagation도 단독으론 안 됨 (4차에서 검증 완료) — .up-zone에 추가 click 핸들러가 있는 듯, capture phase 차단까지 필요.
+    - 진짜 정공법: 마크업 자체 재구성 — `[제거]` 버튼을 `.up-zone` **형제**(외부) 또는 별도 컨테이너로 이동 + 핸들러 재바인딩. mockup-prev 패턴(`#case-mku-prev`, `#frame-mku-prev`)이 동일 구조로 정상 작동하므로 그 마크업을 참고.
+    - 또는: JS-side hit 차단 — `.up-zone` 자체에 click listener 추가, `event.target.closest('button')`이면 input.click() 호출 차단.
+    - 우선순위 낮음 — UX 거슬림이지만 빈 영역 클릭으로 우회 가능, 동작 자체는 정상.
+
 - [x] `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정 | 상태: 완료`
   - 범위: denn-admin.html L13350 한 줄 교체.
     - 이전: `if(anchor&&anchor.nextSibling)controls.insertBefore(panel,anchor.nextSibling);else controls.insertBefore(panel,controls.firstChild);`
@@ -262,8 +276,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정`
-2. `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강`
-3. `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그 + snapshot 슬림화 + deletedKeys 누수 청소`
-4. `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (start-dev.ps1 + docs/local-dev.md)`
-5. `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안 v1: localStorage 마이그레이션 확장 (4 필드) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치`
+1. `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백 (23133d7 상태 복원)`
+2. `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정`
+3. `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강`
+4. `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그 + snapshot 슬림화 + deletedKeys 누수 청소`
+5. `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (start-dev.ps1 + docs/local-dev.md)`

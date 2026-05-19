@@ -2026,9 +2026,9 @@ window.addEventListener('load',async function(){
     var wrap=document.createElement('div');
     wrap.innerHTML = ''+
       '<hr>'+
-      '<div class="field"><label>디자인 템플릿 업로드</label><div class="up-zone" style="padding:12px" ondragover="evStop(event)" ondrop="dropCBArt(event)"><input type="file" accept="image/*,.svg" id="cb-art-inp" onchange="uploadCBArt(this)"><div id="cb-art-prev" style="display:none"><img id="cb-art-thumb" class="mockup-prev" style="height:90px"><button type="button" style="margin-top:4px;width:100%;padding:4px;font-family:inherit;font-size:9.5px;background:var(--sb);border:1px solid var(--bdr);border-radius:3px;color:var(--muted);cursor:pointer" onclick="event.stopPropagation();clearCBArt()">제거</button></div><div id="cb-art-empty"><div style="font-size:16px;margin-bottom:3px">🧩</div><h4>디자인 원본 업로드</h4><p>그 위에 영역만 지정합니다</p></div></div></div>'+
+      '<div class="field"><label>디자인 템플릿 업로드</label><div class="up-zone" style="padding:12px" ondragover="evStop(event)" ondrop="dropCBArt(event)"><input type="file" accept="image/*,.svg" id="cb-art-inp" onchange="uploadCBArt(this)"><div id="cb-art-prev" style="display:none"><img id="cb-art-thumb" class="mockup-prev" style="height:90px"><button type="button" style="margin-top:4px;width:100%;padding:4px;font-family:inherit;font-size:9.5px;background:var(--sb);border:1px solid var(--bdr);border-radius:3px;color:var(--muted);cursor:pointer" onclick="clearCBArt()">제거</button></div><div id="cb-art-empty"><div style="font-size:16px;margin-bottom:3px">🧩</div><h4>디자인 원본 업로드</h4><p>그 위에 영역만 지정합니다</p></div></div></div>'+
       '<div class="row-btn" style="margin-bottom:8px"><span style="font-size:11px">맥세이프 표시</span><div class="tog" id="cb-magsafe-tog2" onclick="cbToggleMagSafe(this)"></div></div>'+
-      '<div class="field"><label>맥세이프 이미지 업로드</label><div class="up-zone" style="padding:12px" ondragover="evStop(event)" ondrop="dropCBMagsafe(event)"><input type="file" accept="image/*,.svg" id="cb-magsafe-inp" onchange="uploadCBMagsafe(this)"><div id="cb-magsafe-prev" style="display:none"><img id="cb-magsafe-thumb" class="mockup-prev" style="height:80px"><button type="button" style="margin-top:4px;width:100%;padding:4px;font-family:inherit;font-size:9.5px;background:var(--sb);border:1px solid var(--bdr);border-radius:3px;color:var(--muted);cursor:pointer" onclick="event.stopPropagation();clearCBMagsafe()">제거</button></div><div id="cb-magsafe-empty"><div style="font-size:16px;margin-bottom:3px">🧲</div><h4>맥세이프 이미지 업로드</h4><p>실제 제작용 이미지를 사용</p></div></div></div>'+
+      '<div class="field"><label>맥세이프 이미지 업로드</label><div class="up-zone" style="padding:12px" ondragover="evStop(event)" ondrop="dropCBMagsafe(event)"><input type="file" accept="image/*,.svg" id="cb-magsafe-inp" onchange="uploadCBMagsafe(this)"><div id="cb-magsafe-prev" style="display:none"><img id="cb-magsafe-thumb" class="mockup-prev" style="height:80px"><button type="button" style="margin-top:4px;width:100%;padding:4px;font-family:inherit;font-size:9.5px;background:var(--sb);border:1px solid var(--bdr);border-radius:3px;color:var(--muted);cursor:pointer" onclick="clearCBMagsafe()">제거</button></div><div id="cb-magsafe-empty"><div style="font-size:16px;margin-bottom:3px">🧲</div><h4>맥세이프 이미지 업로드</h4><p>실제 제작용 이미지를 사용</p></div></div></div>'+
       '<div class="field"><label>맥세이프 크기 %</label><div style="display:flex;align-items:center;gap:6px"><input type="range" id="cb-magsafe-size" min="5" max="100" value="38" style="flex:1" oninput="document.getElementById(\'cb-ms-size-v\').textContent=this.value+\'%\';cbRender()"><span id="cb-ms-size-v" style="font-size:9.5px;color:var(--muted);min-width:30px">38%</span></div></div>';
     rightCol.insertBefore(wrap, rightCol.lastElementChild);
   }
@@ -2041,7 +2041,7 @@ window.addEventListener('load',async function(){
     var note=document.createElement('div');
     note.innerHTML = ''+
       '<hr>'+
-      '<div class="field"><label>디자인 템플릿 업로드</label><div class="up-zone" style="padding:12px" ondragover="evStop(event)" ondrop="dropFBArt(event)"><input type="file" accept="image/*,.svg" id="fb-art-inp" onchange="uploadFBArt(this)"><div id="fb-art-prev" style="display:none"><img id="fb-art-thumb" class="mockup-prev" style="height:90px"><button type="button" style="margin-top:4px;width:100%;padding:4px;font-family:inherit;font-size:9.5px;background:var(--sb);border:1px solid var(--bdr);border-radius:3px;color:var(--muted);cursor:pointer" onclick="event.stopPropagation();clearFBArt()">제거</button></div><div id="fb-art-empty"><div style="font-size:16px;margin-bottom:3px">🖼</div><h4>디자인 원본 업로드</h4><p>그 위에 사진/시계 영역 지정</p></div></div></div>'+
+      '<div class="field"><label>디자인 템플릿 업로드</label><div class="up-zone" style="padding:12px" ondragover="evStop(event)" ondrop="dropFBArt(event)"><input type="file" accept="image/*,.svg" id="fb-art-inp" onchange="uploadFBArt(this)"><div id="fb-art-prev" style="display:none"><img id="fb-art-thumb" class="mockup-prev" style="height:90px"><button type="button" style="margin-top:4px;width:100%;padding:4px;font-family:inherit;font-size:9.5px;background:var(--sb);border:1px solid var(--bdr);border-radius:3px;color:var(--muted);cursor:pointer" onclick="clearFBArt()">제거</button></div><div id="fb-art-empty"><div style="font-size:16px;margin-bottom:3px">🖼</div><h4>디자인 원본 업로드</h4><p>그 위에 사진/시계 영역 지정</p></div></div></div>'+
       '<div class="hint">시계 이미지는 아래 "액자 설정"의 저장된 시계 이미지를 사용합니다.</div>';
     rightCol.insertBefore(note, rightCol.lastElementChild);
     var size=document.getElementById('fb-clock-size');
@@ -5125,10 +5125,6 @@ window.addEventListener('load',function(){setTimeout(init,600);setTimeout(init,1
 #case-mku-prev button,#frame-mku-prev button{position:relative;z-index:20;pointer-events:auto}
 #case-mku-prev img,#frame-mku-prev img{position:relative;z-index:6;pointer-events:none}
 .up-zone input[type=file]{z-index:1}
-/* UX fix: .up-zone 내부 미리보기(제거 버튼 포함)는 z-index:2로 끌어올려 file input(z-index:1) 클릭 흡수 방지 */
-.up-zone > [id$="-prev"]{position:relative;z-index:2}
-.up-zone > [id$="-prev"] button{position:relative;z-index:20;pointer-events:auto}
-.up-zone > [id$="-prev"] img{position:relative;z-index:6;pointer-events:none}
 </style>
 <script id="denn-v35-mockup-remove-click-fix">
 (function(){
