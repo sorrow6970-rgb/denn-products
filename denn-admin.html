@@ -13960,6 +13960,15 @@ window.addEventListener('resize',scheduleSettle);
 #fb-allow-color-wrap .ph1-title{display:block;font-size:11px;font-weight:700;color:var(--txt);margin-bottom:4px}
 #fb-allow-color-wrap .ph1-help{display:block;font-size:9.5px;line-height:1.55;color:var(--muted)}
 #fb-allow-color-wrap .denn-v10-switch{flex-shrink:0;margin-left:8px;align-self:center}
+#fb-allow-color-wrap .ph1-mask{margin-top:10px;padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.035)}
+#fb-allow-color-wrap .ph1-mask-head{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--muted);margin-bottom:6px}
+#fb-allow-color-wrap .ph1-mask-status{font-size:9px;color:var(--gold);letter-spacing:.04em}
+#fb-allow-color-wrap .ph1-mask-radios{display:flex;gap:6px;flex-wrap:wrap}
+#fb-allow-color-wrap .ph1-mask-radios label{flex:1;min-width:60px;font-size:10px;display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 4px;border:1px solid var(--bdr);border-radius:6px;background:var(--surf);cursor:pointer;color:var(--muted)}
+#fb-allow-color-wrap .ph1-mask-radios label:hover{border-color:var(--gold)}
+#fb-allow-color-wrap .ph1-mask-radios input{margin:0;accent-color:var(--gold)}
+#fb-allow-color-wrap .ph1-mask-radios label.on{border-color:var(--gold2);background:rgba(196,154,108,.12);color:var(--txt)}
+#fb-allow-color-wrap .ph1-mask-help{display:block;margin-top:6px;font-size:9px;color:var(--muted);line-height:1.5}
 </style>
 <script id="denn-phase1-color-toggle-js">
 (function(){
@@ -13985,24 +13994,101 @@ window.addEventListener('resize',scheduleSettle);
           '</div>'+
           '<div id="fb-allow-color" class="denn-v10-switch" onclick="this.classList.toggle(\'on\')"></div>'+
         '</div>'+
+        '<div class="ph1-mask">'+
+          '<div class="ph1-mask-head">'+
+            '<span>마스크 모드 (업로드 PNG)</span>'+
+            '<span class="ph1-mask-status" id="fb-mask-status"></span>'+
+          '</div>'+
+          '<div class="ph1-mask-radios" id="fb-mask-radios">'+
+            '<label data-mode="auto" class="on"><input type="radio" name="fb-mask-mode" value="auto" checked>자동 감지</label>'+
+            '<label data-mode="white"><input type="radio" name="fb-mask-mode" value="white">흰색</label>'+
+            '<label data-mode="black"><input type="radio" name="fb-mask-mode" value="black">검정</label>'+
+          '</div>'+
+          '<small class="ph1-mask-help">저장 시 자동 감지하거나 직접 지정. 흰색/검정 PNG 모두 호환되도록 합니다.</small>'+
+        '</div>'+
       '</div>';
     anchor.insertAdjacentHTML('afterend',html);
+    bindMaskRadios();
+  }
+
+  function bindMaskRadios(){
+    var box=by('fb-mask-radios');if(!box||box.__dennBound)return;
+    box.__dennBound=true;
+    Array.prototype.forEach.call(box.querySelectorAll('input[name="fb-mask-mode"]'),function(inp){
+      inp.addEventListener('change',function(){
+        Array.prototype.forEach.call(box.querySelectorAll('label[data-mode]'),function(lb){
+          lb.classList.toggle('on',lb.getAttribute('data-mode')===inp.value);
+        });
+      });
+    });
+  }
+
+  // === Stage 2: maskMode auto-detect ===
+  // Sample average luminance of opaque pixels; <128 → 'black', else 'white'.
+  function detectMaskModeFromDataUrl(src,cb){
+    if(!src||typeof src!=='string'){cb('white');return}
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var aspect=(img.naturalWidth||img.width||1)/(img.naturalHeight||img.height||1);
+        var W=120,H=120;
+        if(aspect>=1)H=Math.max(20,Math.round(W/aspect));else W=Math.max(20,Math.round(H*aspect));
+        var c=document.createElement('canvas');c.width=W;c.height=H;
+        var ctx=c.getContext('2d');
+        ctx.drawImage(img,0,0,W,H);
+        var data=ctx.getImageData(0,0,W,H).data;
+        var sumLum=0,count=0;
+        for(var i=0;i<data.length;i+=4){
+          var a=data[i+3];if(a<32)continue;
+          sumLum+=0.299*data[i]+0.587*data[i+1]+0.114*data[i+2];
+          count++;
+        }
+        if(count===0){cb('white');return}
+        cb((sumLum/count)<128?'black':'white');
+      }catch(e){cb('white')}
+    };
+    img.onerror=function(){cb('white')};
+    try{img.src=src}catch(e){cb('white')}
   }
 
   // Capture/restore helpers
   function readUI(){
     var allow=by('fb-allow-color');
+    var checked=document.querySelector('input[name="fb-mask-mode"]:checked');
     return {
-      allowColorChange: !!(allow&&allow.classList.contains('on'))
+      allowColorChange: !!(allow&&allow.classList.contains('on')),
+      maskMode: checked?checked.value:'auto'
     };
   }
+  function setMaskRadio(mode){
+    var box=by('fb-mask-radios');if(!box)return;
+    var inp=box.querySelector('input[name="fb-mask-mode"][value="'+mode+'"]');
+    if(inp){
+      inp.checked=true;
+      Array.prototype.forEach.call(box.querySelectorAll('label[data-mode]'),function(lb){
+        lb.classList.toggle('on',lb.getAttribute('data-mode')===mode);
+      });
+    }
+  }
+  function setMaskStatus(text){var s=by('fb-mask-status');if(s)s.textContent=text||''}
   function restoreUI(t){
     var allow=by('fb-allow-color');
     if(allow)allow.classList.toggle('on',!!(t&&t.allowColorChange));
+    var mode='auto',status='';
+    if(t&&t.maskModeSource==='manual'&&(t.maskMode==='white'||t.maskMode==='black')){
+      mode=t.maskMode;
+    }else if(t&&(t.maskMode==='white'||t.maskMode==='black')){
+      mode='auto';
+      status='저장된 감지값: '+(t.maskMode==='black'?'검정':'흰색');
+    }
+    setMaskRadio(mode);
+    setMaskStatus(status);
   }
   function resetUI(){
     var allow=by('fb-allow-color');
     if(allow)allow.classList.remove('on');
+    setMaskRadio('auto');
+    setMaskStatus('');
   }
 
   // Find the template that was just saved (handles new save + v94 edit save).
@@ -14026,12 +14112,29 @@ window.addEventListener('resize',scheduleSettle);
       var ui=readUI();
       var r;
       try{r=cur.apply(this,arguments)}finally{
+        var applied=false;
         var apply=function(){
+          if(applied)return;
           var t=findSavedTemplate(beforeLen,capturedEditIdx);
           if(!t)return;
+          applied=true;
           t.allowColorChange=!!ui.allowColorChange;
-          persistNow();
-          try{if(typeof window.renderFTplsByCategory==='function')window.renderFTplsByCategory(window.curFCat||'all')}catch(e){}
+          var req=ui.maskMode;
+          if(req==='white'||req==='black'){
+            t.maskMode=req;
+            t.maskModeSource='manual';
+            persistNow();
+            try{if(typeof window.renderFTplsByCategory==='function')window.renderFTplsByCategory(window.curFCat||'all')}catch(e){}
+          }else{
+            var src=t.sourceDataUrl||t.builderArtDataUrl||t.originalDataUrl||t.dataUrl||'';
+            detectMaskModeFromDataUrl(src,function(detected){
+              t.maskMode=detected;
+              t.maskModeSource='auto';
+              persistNow();
+              try{if(typeof window.renderFTplsByCategory==='function')window.renderFTplsByCategory(window.curFCat||'all')}catch(e){}
+              setMaskStatus('저장된 감지값: '+(detected==='black'?'검정':'흰색'));
+            });
+          }
         };
         setTimeout(apply,220);
         setTimeout(apply,1500);
