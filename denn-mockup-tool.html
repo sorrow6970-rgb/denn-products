@@ -651,6 +651,9 @@ var BM={
 var MODELS=[],FS=[],FC=[],FTPLS=[],CTPLS=[],FCATS=[];
 var curModel=null,curFSz=null,curFCol=null,curFTpl=null,curCTpl=null,curCatId='all';
 var caseImg=null,frameImg=null,caseColor='#1A1A1A',phoneColor='#1A1A1A';
+// Phase1 Stage3: per-zone color/shadow overrides — keyed by frame text zone key (e.g. 'main','name','name2','date','sub' or custom).
+// Shape per entry: { color: '#RRGGBB', shadow: { enabled: bool, color: '#RRGGBB', blur: number, dx: number, dy: number } }
+var dennFrameTextOverrides={};
 var opts={dl:true,mg:true,magsafe:false,clock:true};
 var textObjs=[],dragIdx=null,dragOff={x:0,y:0},clockTmr=null;
 var FONT_LIST=['DM Sans','Playfair Display','Nanum Gothic','Nanum Myeongjo'];
@@ -9808,6 +9811,126 @@ if(typeof oldRender==='function'&&!oldRender.__dennCurrentStabilitySweep){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',later);else later();
 window.addEventListener('load',later);
+})();
+</script>
+
+
+<!-- DENN Phase 1 / Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API (data model only — UI는 Stage 4) -->
+<script id="denn-phase1-text-override-api">
+(function(){
+  'use strict';
+  var HEX=/^#[0-9a-fA-F]{6}$/;
+  function clampNum(n,min,max,def){n=parseFloat(n);if(!isFinite(n))return def;if(min!=null&&n<min)n=min;if(max!=null&&n>max)n=max;return n}
+  function normColor(c,def){return (typeof c==='string'&&HEX.test(c))?c:def}
+  function normShadow(s){
+    if(!s||typeof s!=='object')return null;
+    return {
+      enabled:!!s.enabled,
+      color:normColor(s.color,'#000000'),
+      blur:clampNum(s.blur,0,40,0),
+      dx:clampNum(s.dx,-30,30,0),
+      dy:clampNum(s.dy,-30,30,0)
+    };
+  }
+  function normEntry(e){
+    if(!e||typeof e!=='object')return null;
+    var out={};
+    if(e.color!=null)out.color=normColor(e.color,'#000000');
+    if(e.shadow!=null){var sh=normShadow(e.shadow);if(sh)out.shadow=sh}
+    return (out.color||out.shadow)?out:null;
+  }
+
+  // window.dennFrameTextOverrides is the source of truth (declared earlier near other state).
+  function store(){
+    if(!window.dennFrameTextOverrides||typeof window.dennFrameTextOverrides!=='object')window.dennFrameTextOverrides={};
+    return window.dennFrameTextOverrides;
+  }
+
+  function currentTplAllowsColorChange(){
+    var t=window.curFTpl;
+    return !!(t&&t.allowColorChange===true);
+  }
+
+  function getOverride(key){
+    if(!key)return null;
+    var s=store();
+    return s[key]||null;
+  }
+  function setOverride(key,patch){
+    if(!key||!patch||typeof patch!=='object')return null;
+    var s=store();
+    var cur=s[key]||{};
+    if(patch.color!==undefined){
+      var c=normColor(patch.color,null);
+      if(c)cur.color=c;else delete cur.color;
+    }
+    if(patch.shadow!==undefined){
+      if(patch.shadow===null){delete cur.shadow}
+      else{var sh=normShadow(patch.shadow);if(sh)cur.shadow=sh;else delete cur.shadow}
+    }
+    if(!cur.color&&!cur.shadow){delete s[key];return null}
+    s[key]=cur;
+    return cur;
+  }
+  function replaceOverride(key,entry){
+    if(!key)return null;
+    var s=store();
+    var norm=normEntry(entry);
+    if(!norm){delete s[key];return null}
+    s[key]=norm;
+    return norm;
+  }
+  function clearOverride(key){if(!key)return;var s=store();delete s[key]}
+  function clearAllOverrides(){
+    var s=store();
+    Object.keys(s).forEach(function(k){delete s[k]});
+  }
+  function getAllOverrides(){
+    var s=store(),out={};
+    Object.keys(s).forEach(function(k){
+      var v=s[k];if(!v)return;
+      var copy={};
+      if(v.color)copy.color=v.color;
+      if(v.shadow)copy.shadow={enabled:!!v.shadow.enabled,color:v.shadow.color,blur:v.shadow.blur,dx:v.shadow.dx,dy:v.shadow.dy};
+      out[k]=copy;
+    });
+    return out;
+  }
+  function setBulkOverride(patch){
+    // 일괄 설정: 모든 zone 키에 동일 patch 적용. allowedKeys 인자(string[])로 한정 가능.
+    var s=store();
+    var allowed=arguments.length>1&&Array.isArray(arguments[1])?arguments[1]:null;
+    var keys=allowed?allowed.slice():Object.keys(s);
+    keys.forEach(function(k){setOverride(k,patch)});
+  }
+
+  // Auto-clear overrides on template change (selFTplByRef hook).
+  var oldSel=window.selFTplByRef;
+  if(typeof oldSel==='function'&&!oldSel.__dennPhase1OverrideClear){
+    var wrap=function(el,i){
+      var prev=window.curFTpl&&window.curFTpl.id;
+      var r=oldSel.apply(this,arguments);
+      var nextId=window.curFTpl&&window.curFTpl.id;
+      if(prev!==nextId)clearAllOverrides();
+      return r;
+    };
+    wrap.__dennPhase1OverrideClear=true;
+    window.selFTplByRef=wrap;
+  }
+
+  // Public API namespace.
+  window.dennFrameTextOverrideAPI={
+    get:getOverride,
+    set:setOverride,
+    replace:replaceOverride,
+    clear:clearOverride,
+    clearAll:clearAllOverrides,
+    all:getAllOverrides,
+    bulkSet:setBulkOverride,
+    allowedByTemplate:currentTplAllowsColorChange,
+    isHexColor:function(c){return HEX.test(String(c||''))},
+    normalizeShadow:normShadow
+  };
 })();
 </script>
 </body>
