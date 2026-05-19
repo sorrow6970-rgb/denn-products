@@ -103,6 +103,14 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | three-launcher-unify | 3개 런처 통일: start-denn → DENN어드민 rename + DENN풀세트 신규 + docs 보강 | 상태: 완료`
+  - 변경:
+    1. `git mv start-denn.bat DENN어드민.bat` — history 보존, 내용 무수정.
+    2. 신규 `DENN풀세트.bat` (repo 루트) — `chcp 65001` UTF-8, title "DENN PRODUCTS 풀세트". 동작: (a) `DENN어드민.bat`을 별도 cmd 창에서 `start`, (b) 3초 대기, (c) `DENN작업시작.bat`을 현재 창에서 `call`. 어드민(백그라운드) → 작업시작(현재 창 → Claude Code interactive prompt 보장) 순서. 둘 다 무존재 시 graceful skip + pause.
+    3. `docs/local-dev.md` 일괄: `start-denn.bat` → `DENN어드민.bat` 모든 참조 치환. "3 런처 빠른 비교" 표 추가 + "어느 걸 쓸지" 가이드 + 풀세트 자동 동작 설명 + 바탕화면 바로가기 3종 안내.
+  - 보호: 기존 `DENN작업시작.bat` 무수정 (사용자 로컬 파일, git 미추적). HTML/JS/`start-dev.ps1` 무수정. 신규 .bat + rename + docs만.
+  - 일상 워크플로우: 바탕화면 "DENN 풀세트" 더블클릭 → 10초 내 코드 + 어드민 전 환경 셋업.
+
 - [x] `2026-05-19 | Claude Code | one-click-launcher | start-denn.bat 한 번 클릭 런처 + local-dev.md 보강 | 상태: 완료`
   - 신규: `start-denn.bat` (repo 루트). 한 번 더블클릭으로 (1) 기존 dev 서버 감지(8000/8080/5500) → 있으면 브라우저만 (2) 없으면 새 PowerShell 창("DENN Dev Server") 띄워 `start-dev.ps1` 실행 (3) 5초 응답 대기 (4) 기본 브라우저로 `denn-admin.html` 자동 열기.
   - 안전장치: 8000 외 8080/5500도 fallback 감지, PS 창 제목 고정, 에러 시 `pause`로 창 유지, ASCII-only (CP949 안전).
@@ -283,8 +291,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | one-click-launcher | start-denn.bat 한 번 클릭 런처 + local-dev.md 보강 (file:// 사고 방지)`
-2. `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백 (23133d7 상태 복원)`
-3. `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정`
-4. `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강`
-5. `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그 + snapshot 슬림화 + deletedKeys 누수 청소`
+1. `2026-05-19 | Claude Code | three-launcher-unify | 3개 런처 통일 (DENN어드민 rename + DENN풀세트 신규 + docs)`
+2. `2026-05-19 | Claude Code | one-click-launcher | start-denn.bat 한 번 클릭 런처 + local-dev.md 보강`
+3. `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백`
+4. `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정`
+5. `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강`

@@ -9,32 +9,56 @@ Windows에서 `file://` origin은 **모든 로컬 HTML 파일이 단일 localSto
 
 ---
 
-## 매번 작업 시작 (1줄)
+## 3 런처 빠른 비교
 
-**바탕화면의 "DENN 작업" 바로가기 더블클릭.**
+| 런처 | 용도 | 더블클릭 시 동작 |
+|---|---|---|
+| `DENN작업시작.bat` | 코드 작업 | GitHub Desktop + Claude Code 실행 |
+| `DENN어드민.bat` | 어드민 페이지 | dev 서버 + 브라우저 자동 |
+| `DENN풀세트.bat` | 풀 작업 | 위 둘 모두 동시 (어드민 별도 창 + 작업시작 현재 창) |
 
-자동 동작:
+### 어느 걸 쓸지
+
+- **코드만 만질 때** (HTML/JS 수정, 커밋, push) → `DENN작업시작.bat`
+- **어드민에서 시안 만들거나 검증할 때** → `DENN어드민.bat`
+- **둘 다 필요할 때** (대부분의 작업) → `DENN풀세트.bat`
+
+---
+
+## DENN어드민.bat 자동 동작
+
 1. 포트 8000/8080/5500 중 이미 서버 떠있는지 확인 → 있으면 그걸로 브라우저만 열기
 2. 없으면 `start-dev.ps1`을 새 PowerShell 창("DENN Dev Server")에서 실행
 3. 서버 응답 대기 (최대 5초)
 4. 기본 브라우저로 `http://localhost:<port>/denn-admin.html` 자동 열기
 
+## DENN풀세트.bat 자동 동작
+
+1. `DENN어드민.bat`을 별도 cmd 창에서 시작 (백그라운드 → dev 서버 + 브라우저 자동)
+2. 3초 대기 (어드민 셋업 시간)
+3. `DENN작업시작.bat`을 현재 창에서 `call` 호출 (Claude Code interactive prompt 보장)
+
+순서 중요:
+- 어드민 먼저(별도 창, 백그라운드 OK) → 작업시작 다음(현재 창, prompt 필요)
+
 ---
 
 ## 바탕화면 바로가기 만드는 법 (1회)
 
-1. 탐색기에서 `C:\repo\denn-products\start-denn.bat` 위치 열기
-2. **우클릭 → 보내기 → 바탕 화면 (바로 가기 만들기)**
-3. 바탕화면의 새 바로가기를 **우클릭 → 이름 바꾸기 → `DENN 작업`** 으로 변경
-4. (선택) 우클릭 → 속성 → 아이콘 변경으로 원하는 아이콘 지정
+각 .bat을 우클릭 → **보내기 → 바탕 화면 (바로 가기 만들기)** → 바탕화면에서 이름 변경:
+- `DENN작업시작.bat` → "DENN 작업시작"
+- `DENN어드민.bat` → "DENN 어드민"
+- `DENN풀세트.bat` → "DENN 풀세트"  ← 일상적으로 가장 자주 쓰는 한 개
 
-이후 매번 바탕화면의 "DENN 작업" 더블클릭 한 번으로 어드민 즉시 진입.
+(선택) 우클릭 → 속성 → 아이콘 변경으로 구분.
+
+이후 매일 바탕화면의 **"DENN 풀세트"** 더블클릭 한 번으로 코드 + 어드민 동시 셋업.
 
 ---
 
 ## 사용법 (수동 / 고급)
 
-### `start-denn.bat` (권장 — 더블클릭)
+### `DENN어드민.bat` (권장 — 더블클릭)
 - 한 번에 서버 + 브라우저 자동
 - 기존 서버 살아있으면 새로 안 띄움
 
@@ -113,9 +137,9 @@ console.log('storage bytes:', (localStorage.getItem('denn_admin')||'').length);
 
 ## 트러블슈팅
 
-### `start-denn.bat` 더블클릭 후 PowerShell 창이 안 뜸
+### `DENN어드민.bat` 더블클릭 후 PowerShell 창이 안 뜸
 - Windows Defender / 보안 소프트웨어가 `.bat` 실행 차단했을 가능성. 우클릭 → "관리자 권한으로 실행" 또는 보안 설정에서 예외 추가.
-- 또는 `start-dev.ps1` 위치가 변경됐을 가능성 (이동/삭제). `start-denn.bat`가 같은 폴더의 `start-dev.ps1`를 찾음.
+- 또는 `start-dev.ps1` 위치가 변경됐을 가능성 (이동/삭제). `DENN어드민.bat`가 같은 폴더의 `start-dev.ps1`를 찾음.
 
 ### `[ERROR] Server did not come up within 5 seconds`
 - "DENN Dev Server" PowerShell 창에 에러 표시됨. 다음 중 하나일 가능성:
@@ -140,20 +164,20 @@ console.log('storage bytes:', (localStorage.getItem('denn_admin')||'').length);
 ### "Neither node nor python is installed"
 - **Python (가장 빠른 설치)**: Microsoft Store → "Python 3.x" 검색 → 설치 (1-2분)
 - **Node**: https://nodejs.org → LTS 설치 (5분)
-- 설치 후 새 PowerShell 창에서 `.\start-denn.bat` 또는 `.\start-dev.ps1` 재실행
+- 설치 후 새 PowerShell 창에서 `.\DENN어드민.bat` 또는 `.\start-dev.ps1` 재실행
 
 ### `npx --yes serve` 첫 실행이 느림
 - 최초 1회만 `serve` 패키지를 npm 캐시로 다운로드 (수 초). 이후 캐시 사용으로 즉시 시작.
-- `start-denn.bat`의 5초 wait를 초과할 수 있음. ERROR 메시지 떠도 잠시 후 브라우저에서 직접 열어보면 됨.
+- `DENN어드민.bat`의 5초 wait를 초과할 수 있음. ERROR 메시지 떠도 잠시 후 브라우저에서 직접 열어보면 됨.
 
 ### file:// 로 실수로 어드민을 열어버린 경우 (사고 방지)
 - 증상: 브라우저 주소창이 `file:///C:/repo/denn-products/denn-admin.html` 로 시작
 - 결과: 다른 로컬 HTML과 localStorage 풀(~5MB) 공유 → QuotaExceededError 재발
-- 대처: 즉시 그 탭 닫고 `start-denn.bat`로 localhost 진입. 데이터 손실은 없음 (IndexedDB는 origin별로 분리).
+- 대처: 즉시 그 탭 닫고 `DENN어드민.bat`로 localhost 진입. 데이터 손실은 없음 (IndexedDB는 origin별로 분리).
 - **예방: 바탕화면 바로가기만 사용하고, 직접 HTML 파일을 더블클릭하지 말 것.** 탐색기에서 우클릭 → "연결 프로그램" 으로도 file:// 가 됨 → 주의.
 
 ### 로그가 안 보이거나 한글이 깨짐
-- `start-denn.bat`과 `start-dev.ps1` 모두 ASCII-only (Korean Windows CP949 안전). 한글이 깨지는 건 docs/콘솔이 아닌 스크립트 출력 자체. 정상.
+- `DENN어드민.bat`과 `start-dev.ps1` 모두 ASCII-only (Korean Windows CP949 안전). 한글이 깨지는 건 docs/콘솔이 아닌 스크립트 출력 자체. 정상.
 
 ### CORS 오류 (localhost → Firebase Storage)
 - Firebase Storage CORS가 `origin: ["*"]` 인 한 localhost도 허용됩니다.
