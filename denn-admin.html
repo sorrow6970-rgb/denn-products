@@ -14678,5 +14678,75 @@ window.addEventListener('resize',scheduleSettle);
   else window.addEventListener('load',boot);
 })();
 </script>
+
+
+<!-- DENN 새로고침 보호 — ZE modal 편집 중 실수 reload/close 방지 -->
+<script id="denn-beforeunload-guard">
+(function(){
+  'use strict';
+  if(window.__dennBeforeUnloadGuard)return;
+  window.__dennBeforeUnloadGuard=true;
+
+  var dirty=false;
+
+  function getModal(){return document.getElementById('ze-modal')}
+  function modalOpen(){var m=getModal();return !!(m&&m.classList&&m.classList.contains('open'))}
+
+  // 1) modal class 변경 감시: 'open' 부여 시 dirty 리셋, 제거 시 리셋.
+  function bindObserver(){
+    var m=getModal();
+    if(!m){setTimeout(bindObserver,500);return}
+    if(m.__dennGuardObserved)return;
+    m.__dennGuardObserved=true;
+    var prev=m.classList.contains('open');
+    var obs=new MutationObserver(function(){
+      var cur=m.classList.contains('open');
+      if(cur!==prev){
+        prev=cur;
+        dirty=false; // open→close 또는 close→open 둘 다 클린 상태로
+      }
+    });
+    obs.observe(m,{attributes:true,attributeFilter:['class']});
+  }
+
+  // 2) ZE 내부 input/change/canvas 드래그 → dirty
+  document.addEventListener('input',function(e){
+    if(!modalOpen())return;
+    var m=getModal();
+    if(m&&m.contains(e.target))dirty=true;
+  },true);
+  document.addEventListener('change',function(e){
+    if(!modalOpen())return;
+    var m=getModal();
+    if(m&&m.contains(e.target))dirty=true;
+  },true);
+  document.addEventListener('mousedown',function(e){
+    if(!modalOpen())return;
+    // ze-canvas 클릭/드래그(zone 추가/이동)는 dirty
+    if(e.target&&e.target.id==='ze-canvas')dirty=true;
+  },true);
+
+  // 3) 명시적 저장 또는 닫기 버튼 → 클린
+  document.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest&&e.target.closest('button');
+    if(!b)return;
+    var oc=b.getAttribute('onclick')||'';
+    if(/saveZones|saveZonesOnly|closeZoneEditor/i.test(oc))dirty=false;
+  },true);
+
+  // 4) beforeunload: ZE modal 열려있고 dirty면 브라우저 기본 다이얼로그.
+  window.addEventListener('beforeunload',function(e){
+    if(!modalOpen())return;
+    if(!dirty)return;
+    var msg='변경 사항이 저장되지 않을 수 있습니다.';
+    e.preventDefault();
+    e.returnValue=msg;
+    return msg;
+  });
+
+  bindObserver();
+  console.log('[beforeunload-guard] installed (ZE modal dirty tracking)');
+})();
+</script>
 </body>
 </html>

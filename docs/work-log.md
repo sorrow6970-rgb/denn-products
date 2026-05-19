@@ -103,6 +103,16 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | beforeunload-guard | 새로고침 보호 — ZE modal 편집 중 reload/close 경고 | 상태: 완료`
+  - 신규: denn-admin.html 말미 `denn-beforeunload-guard` IIFE.
+  - 동작:
+    1. ze-modal 클래스 'open' 토글 감지 (MutationObserver) → 매 open 시 dirty 리셋.
+    2. modal 내부 input/change 이벤트 → dirty=true. ze-canvas mousedown(zone 드래그)도 dirty.
+    3. 저장 버튼(saveZones/saveZonesOnly) 또는 닫기 버튼(closeZoneEditor) onclick 매치 → dirty=false.
+    4. beforeunload: modal 열려있고 dirty면 브라우저 표준 다이얼로그 ("변경 사항이 저장되지 않을 수 있습니다.").
+  - 적용 범위: 어드민 ZE modal만 (mockup-tool 고객 측은 무수정 — 고객 흐름에 prompt 거슬림 회피).
+  - 보호: HTML body 무수정. document-level listener + IIFE 1개만 추가. ESC 모달 닫기 기존 동작 무영향.
+
 - [x] `2026-05-19 | Claude Code | phase1-stage5-c1-fix | Phase C / Commit 1 보정 — zeRender wrap outermost 보장 (v364 재wrap 회피) | 상태: 완료`
   - 진단: 직전 C1 (134007e)에서 v36.4 `wrapAll`이 DOMContentLoaded+100ms 및 load+400ms에 zeRender를 추가 wrap. 우리 wrap 마커 `__dennStage5Wrap`은 v364의 `__dennV364Guides` 체크와 무관 → v364가 우리 wrap을 oldZe로 재wrap. 결과: 우리 wrap이 chain 중간으로 묻히고 outermost는 v364 wrap이 차지.
   - 수정: denn-phase1-stage5-admin IIFE의 boot/install 타이밍 재설계.
