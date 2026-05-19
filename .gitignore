@@ -28,3 +28,6 @@ old/
 .vscode/
 .idea/
 *.swp
+
+# 사용자 로컬 런처 (각 머신마다 다른 경로/도구 의존). DENN어드민/DENN풀세트는 추적함.
+DENN작업시작.bat
