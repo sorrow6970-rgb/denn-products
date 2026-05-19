@@ -12036,6 +12036,7 @@ window.addEventListener('load',tick);
     if(old.customerTextSettings)next.customerTextSettings=deep(old.customerTextSettings);
     ['backgroundEnabled','templateBackgroundEnabled','canvasBgEnabled','backgroundColor','templateBackgroundColor','canvasBgColor'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
     ['allowColorChange','maskMode','maskModeSource'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
+    ['sourceStoragePath','builderArtStoragePath','originalStoragePath'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
     try{
       var tools=window.DENNFrameTemplateToolsV364, state=null, hasUi=false, valid=/^#[0-9a-fA-F]{6}$/;
       if(tools&&typeof tools.builderBgState==='function'){state=tools.builderBgState();hasUi=true}
@@ -13870,12 +13871,17 @@ window.addEventListener('resize',scheduleSettle);
      Firebase Storage 연동 (Step 2: fbExport 자동 업로드 wrap)
      - 예외 wrap 추가 사유: 외부 서비스(Firebase Storage) 통합은
        기존 fbExport 본체와 책임이 다른 비동기 후처리이므로 분리.
-     - 동작: fbExport 호출 후 (200ms/1500ms) tplArr() 스윕 →
-       data: 프리픽스 + storagePath 없는 템플릿을 Storage로 업로드.
-       성공 시 t.dataUrl=URL, t.storagePath=경로, 재저장+재렌더.
+     - 동작 (B안 확장):
+       fbExport 호출 후 (200ms/1500ms) tplArr() 스윕 →
+       4개 필드(dataUrl/sourceDataUrl/builderArtDataUrl/originalDataUrl) 중
+       data: 프리픽스이고 대응 storagePath가 없는 것을 Storage로 업로드.
+       동일 data: URL은 string-identity로 dedup → 1회 업로드 후 공유.
+       성공 시 해당 필드 = URL, 대응 *StoragePath = 경로, 재저장+재렌더.
+       stale-path 자동 클리어 (data:인데 path가 있으면 path 삭제 → 재마이그 유도).
        실패 시 기존 dataUrl 유지 (graceful degrade).
-     - 동시 업로드 방지: inFlight[id] 가드. 세션 단위.
+     - 동시 업로드 방지: inFlight[id+':'+suffix] 가드. 세션 단위.
      - Firebase 미준비/SDK 부재 시: 자동 noop (graceful degrade).
+     - orphan 정리: B안 범위 외 (별도 cleanup 작업).
      ============================================================ -->
 <script>
 (function(){
@@ -13884,33 +13890,89 @@ window.addEventListener('resize',scheduleSettle);
 
   var inFlight=Object.create(null);
 
+  // (dataField, pathField, suffix) — suffix가 null이면 'templates/{id}.png' (기존 호환)
+  var FIELDS=[
+    ['dataUrl',           'storagePath',           null],
+    ['sourceDataUrl',     'sourceStoragePath',     'source'],
+    ['builderArtDataUrl', 'builderArtStoragePath', 'builder'],
+    ['originalDataUrl',   'originalStoragePath',   'original']
+  ];
+
   function tplArr(){window.S=window.S||{};window.S.frameTemplates=window.S.frameTemplates||[];return window.S.frameTemplates}
   function persistAll(){try{if(typeof window.persistState==='function')return window.persistState();if(typeof window.dennPersistAdminStateV351==='function')return window.dennPersistAdminStateV351(window.S||{})}catch(e){console.warn('[firebase] persist failed',e)}}
   function rerender(){try{if(typeof window.renderFTplsByCategory==='function')window.renderFTplsByCategory(window.curFCat||'all');else if(typeof window.renderFrameTpls==='function')window.renderFrameTpls()}catch(e){}}
 
+  // stale-path 클리어: data:인데 path가 있으면 path 삭제 (재마이그 유도). 정량 카운트 반환.
+  function clearStalePaths(t){
+    var cleared=0;
+    FIELDS.forEach(function(f){
+      var data=t[f[0]];
+      if(typeof data==='string'&&data.indexOf('data:')===0&&t[f[1]]){
+        delete t[f[1]];
+        cleared++;
+      }
+    });
+    return cleared;
+  }
+
+  // 단일 업로드 helper: 주어진 data: URL을 path에 올리고 {url, path, bytes} 반환.
+  function migrateOnce(dataUrl,path){
+    var fb=window.dennFirebase;
+    if(!fb||typeof fb.uploadDataUrl!=='function')return Promise.reject(new Error('firebase not ready'));
+    var bytes=(dataUrl&&dataUrl.length)||0;
+    return fb.uploadDataUrl(dataUrl,path).then(function(res){return {url:res.url,path:res.path,bytes:bytes}});
+  }
+
+  // 템플릿 1개의 4 필드를 string-identity로 그룹화 → 그룹별 1회 업로드 후 공유.
   function syncOne(t){
-    if(!t||!t.id||t.storagePath)return;
-    var src=t.dataUrl;
-    if(!src||typeof src!=='string'||src.indexOf('data:')!==0)return;
-    if(inFlight[t.id])return;
+    if(!t||!t.id)return;
+    clearStalePaths(t);
+    // pending 필드: data:이고 path 없음
+    var pending=FIELDS.filter(function(f){
+      var src=t[f[0]];
+      return typeof src==='string'&&src.indexOf('data:')===0&&!t[f[1]];
+    });
+    if(!pending.length)return;
     var fb=window.dennFirebase;
     if(!fb||typeof fb.uploadDataUrl!=='function')return;
-    var id=t.id,path='templates/'+id+'.png';
-    inFlight[id]=true;
-    fb.uploadDataUrl(src,path).then(function(res){
-      var arr=tplArr(),cur=null;
-      for(var i=0;i<arr.length;i++){if(arr[i]&&arr[i].id===id){cur=arr[i];break}}
-      if(!cur)return;
-      if(typeof cur.dataUrl==='string'&&cur.dataUrl.indexOf('data:')===0){
-        cur.dataUrl=res.url;
-        cur.storagePath=res.path;
-        persistAll();
-        rerender();
-        console.log('[firebase] uploaded',id,'→',res.path);
-      }
-    }).catch(function(err){
-      console.warn('[firebase] auto-upload failed',id,err&&err.code,err&&err.message);
-    }).then(function(){delete inFlight[id]},function(){delete inFlight[id]});
+    // string-identity 그룹화 (대표: 그룹 내 첫 필드의 suffix를 path 생성에 사용)
+    var groups={};
+    pending.forEach(function(f){
+      var key=t[f[0]];
+      if(!groups[key])groups[key]={fields:[],lead:f};
+      groups[key].fields.push(f);
+    });
+    var id=t.id;
+    var keys=Object.keys(groups);
+    keys.forEach(function(dataUrl){
+      var g=groups[dataUrl];
+      var suffix=g.lead[2];
+      var guardKey=id+':'+(suffix||'data');
+      if(inFlight[guardKey])return;
+      inFlight[guardKey]=true;
+      var path='templates/'+id+(suffix?'-'+suffix:'')+'.png';
+      migrateOnce(dataUrl,path).then(function(res){
+        var arr=tplArr(),cur=null;
+        for(var i=0;i<arr.length;i++){if(arr[i]&&arr[i].id===id){cur=arr[i];break}}
+        if(!cur)return;
+        var saved=0,applied=[];
+        g.fields.forEach(function(f){
+          if(typeof cur[f[0]]==='string'&&cur[f[0]].indexOf('data:')===0){
+            saved+=cur[f[0]].length;
+            cur[f[0]]=res.url;
+            cur[f[1]]=res.path;
+            applied.push(f[0]);
+          }
+        });
+        if(applied.length){
+          persistAll();
+          rerender();
+          console.log('[firebase] migrated',id,applied.join('+'),'→',res.path,'saved bytes:',saved);
+        }
+      }).catch(function(err){
+        console.warn('[firebase] migrate failed',id,suffix||'data',err&&err.code,err&&err.message);
+      }).then(function(){delete inFlight[guardKey]},function(){delete inFlight[guardKey]});
+    });
   }
 
   function sweep(){
@@ -13932,7 +13994,7 @@ window.addEventListener('resize',scheduleSettle);
     };
     wrap.__dennFirebaseAutoSync=true;
     window.fbExport=wrap;
-    console.log('[firebase] fbExport auto-sync wrap installed');
+    console.log('[firebase] fbExport auto-sync wrap installed (B안 확장: 4 필드 마이그)');
     return true;
   }
 
@@ -13947,6 +14009,53 @@ window.addEventListener('resize',scheduleSettle);
   }
   if(document.readyState==='complete')boot();
   else window.addEventListener('load',boot);
+})();
+</script>
+
+
+<!-- ============================================================
+     B안: Heavy snapshot cleanup helper (사용자 콘솔 호출 전용)
+     - 자동 실행 금지 (사용자 요구사항).
+     - 안전장치: 파일 백업 존재 여부 1회 체크 → 없으면 abort.
+       강제 실행: dennCleanupHeavySnapshots({force:true})
+     - denn_admin_snapshots_v35 ring을 통째로 삭제 → 마이그 후
+       새 lightweight snapshot이 누적될 공간 확보.
+     - 파일 백업(denn-backup-auto-*.json)은 별도 보존되어 안전.
+     ============================================================ -->
+<script>
+(function(){
+  if(window.dennCleanupHeavySnapshots)return;
+
+  function hasFileBackup(){
+    // (a) 폴더 핸들 등록 + (b) lastAutoAt 또는 lastManualAt 존재 시 백업 있다고 판단
+    try{
+      var cfg=JSON.parse(localStorage.getItem('denn_backup_config_v1')||'{}');
+      if(cfg&&((cfg.lastAutoAt&&cfg.lastAutoFile)||(cfg.lastManualAt))){return {ok:true,info:cfg}}
+    }catch(e){}
+    return {ok:false,info:null};
+  }
+
+  window.dennCleanupHeavySnapshots=function(opt){
+    opt=opt||{};
+    var force=!!opt.force;
+    if(!force){
+      var chk=hasFileBackup();
+      if(!chk.ok){
+        console.warn('[firebase] 파일 백업 흔적이 없어 cleanup을 중단합니다. '+
+          '먼저 dennDownloadCurrentDataV35() 또는 dennRunManualBackup()으로 백업한 뒤 재시도하세요. '+
+          '강제 실행: dennCleanupHeavySnapshots({force:true})');
+        return false;
+      }
+      console.log('[firebase] 파일 백업 발견 →',chk.info.lastAutoFile||'(manual)');
+    }
+    try{
+      var prev=localStorage.getItem('denn_admin_snapshots_v35');
+      var prevBytes=prev?prev.length:0;
+      localStorage.removeItem('denn_admin_snapshots_v35');
+      console.log('[firebase] heavy snapshots cleared. removed bytes:',prevBytes,force?'(forced)':'');
+      return true;
+    }catch(e){console.warn('[firebase] cleanup failed:',e);return false}
+  };
 })();
 </script>
 

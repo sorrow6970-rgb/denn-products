@@ -103,6 +103,17 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안: localStorage 마이그레이션 확장 (source/builder/original) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치 | 상태: 완료`
+  - 범위:
+    1. denn-admin.html Firebase auto-sync wrap 본체 재작성 — `migrateOnce` helper + `syncOne` string-identity 그룹화. 4 필드(dataUrl/sourceDataUrl/builderArtDataUrl/originalDataUrl) 동시 마이그, 동일 data: URL은 1회 업로드 후 공유. 동시성 가드 `inFlight[id+':'+suffix]`. 신규 path 필드 3개(`sourceStoragePath`, `builderArtStoragePath`, `originalStoragePath`).
+    2. denn-admin.html `clearStalePaths`: data:인데 대응 storagePath가 있는 경우 path 자동 삭제 → 재마이그 유도 (RC-1/RC-4 동시 해결, 편집 재업로드 시 stale 잔존 방지). orphan deletePath는 B안 범위 외(별도 cleanup 작업).
+    3. denn-admin.html `preserveDetailFields` 1줄 추가 — 신규 3개 path 필드 보존.
+    4. denn-admin.html `window.dennCleanupHeavySnapshots(opt)` 신규 — 자동 실행 금지(사용자 콘솔 호출 전용). 안전장치: `denn_backup_config_v1`의 `lastAutoAt`/`lastAutoFile` 또는 `lastManualAt` 확인 → 없으면 abort + 경고. `{force:true}` 옵션으로 우회 가능.
+    5. denn-mockup-tool.html — admin과 동일 `denn-cors-fix-image-src-setter` IIFE 추가 (RC-3 해결, 고객 측 canvas taint 차단). 멱등 가드 동일.
+  - 보호 함수 무수정 (fbRender/renderFrame/fbExport/openZoneEditor/sendKakao 본체 불변). 저장키 스키마는 superset 호환 (필드 추가만).
+  - 마이그 로그에 `saved bytes` 표시 → 정량 효과 측정 가능.
+  - 백업 태그: `phase1-b-localstorage-start` @ `8188991` (A안 직후).
+  - 충돌 위험: 낮음. wrap 본체 재작성이지만 동일 책임 범위 내 확장 (4 필드 → 동일 패턴, 동일 inFlight 가드 방식).
 - [x] `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap | 상태: 완료`
   - 범위: denn-admin.html 말미 `denn-cors-fix-image-src-setter` IIFE 신규. HTMLImageElement.prototype.src 세터 + setAttribute('src') 양쪽 패치, `needsCors`가 firebasestorage 도메인 매치 시에만 `crossOrigin='anonymous'` 자동 부여.
   - 보호 함수 무수정 (fbRender/renderFrame/fbExport 본체 불변). 백업 태그 `phase1-cors-fix-start` @ a8bfe83.
@@ -202,8 +213,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap (인쇄파일 0×0px 차단 해소 — Step 1-2 사용자 Cloud Shell 작업 후 효과 발현)`
-2. `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API`
-3. `2026-05-19 | Claude Code | phase1-stage2-mask-mode | Phase1 Stage 2: maskMode 자동 감지 + 수동 override`
-4. `2026-05-19 | Claude Code | phase1-stage1-allow-color-toggle | Phase1 Stage 1: 어드민 빌더 '색상 변경 허용' 토글 + preserveDetailFields 확장`
-5. `2026-05-19 | Claude Code | claude/watermark-preview-overlay-off | 고객 미리보기 워터마크 오버레이 제거 (저장 시에만 출력)`
+1. `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안: localStorage 마이그레이션 확장 (4 필드) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치`
+2. `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap`
+3. `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API`
+4. `2026-05-19 | Claude Code | phase1-stage2-mask-mode | Phase1 Stage 2: maskMode 자동 감지 + 수동 override`
+5. `2026-05-19 | Claude Code | phase1-stage1-allow-color-toggle | Phase1 Stage 1: 어드민 빌더 '색상 변경 허용' 토글 + preserveDetailFields 확장`
