@@ -5689,6 +5689,16 @@ function slimSnapshotState(s){
       if(t.sourceStoragePath&&typeof t.sourceDataUrl==='string'&&t.sourceDataUrl.indexOf('data:')===0)copy.sourceDataUrl=null;
       if(t.builderArtStoragePath&&typeof t.builderArtDataUrl==='string'&&t.builderArtDataUrl.indexOf('data:')===0)copy.builderArtDataUrl=null;
       if(t.originalStoragePath&&typeof t.originalDataUrl==='string'&&t.originalDataUrl.indexOf('data:')===0)copy.originalDataUrl=null;
+      // B v3: editorOverlayImages[i].dataUrl도 조건부 strip (storagePath 부여된 항목만).
+      if(Array.isArray(t.editorOverlayImages)){
+        copy.editorOverlayImages=t.editorOverlayImages.map(function(ov){
+          if(!ov||typeof ov!=='object')return ov;
+          if(ov.storagePath&&typeof ov.dataUrl==='string'&&ov.dataUrl.indexOf('data:')===0){
+            return Object.assign({},ov,{dataUrl:null});
+          }
+          return ov;
+        });
+      }
       return copy;
     });
   }
@@ -14124,11 +14134,72 @@ window.addEventListener('resize',scheduleSettle);
     console.log('[firebase] cleaned deletedGuideBackgroundKeys: '+removed+' entries removed, '+(beforeBytes-afterBytes)+' bytes saved');
   }
 
+  // B v3: 어드민 전용 editor overlay 이미지 마이그.
+  // 위치: frameTemplates[i].editorOverlayImages[j] = {id, name, dataUrl, visible, opacity}
+  // 적용 후: dataUrl=URL, storagePath='editor-overlays/{tplId}/{ovId}.{ext}' 부여.
+  // 표시 경로는 <img> 직접 사용(L13394) — CORS issue 무, 글로벌 crossOrigin 패치도 적용됨.
+  function migrateOverlay(t, ov){
+    if(!t||!t.id||!ov||!ov.id||ov.storagePath)return;
+    var src=ov.dataUrl;
+    if(typeof src!=='string'||src.indexOf('data:')!==0)return;
+    var fb=window.dennFirebase;
+    if(!fb||typeof fb.uploadDataUrl!=='function')return;
+    var guardKey='overlay:'+t.id+':'+ov.id;
+    if(inFlight[guardKey])return;
+    inFlight[guardKey]=true;
+    var path='editor-overlays/'+t.id+'/'+ov.id+'.'+extFromDataUrl(src);
+    var bytes=src.length;
+    var tplId=t.id, ovId=ov.id;
+    fb.uploadDataUrl(src,path).then(function(res){
+      var arr=tplArr(),cur=null;
+      for(var i=0;i<arr.length;i++){if(arr[i]&&arr[i].id===tplId){cur=arr[i];break}}
+      if(!cur||!Array.isArray(cur.editorOverlayImages))return;
+      var ovCur=null;
+      for(var j=0;j<cur.editorOverlayImages.length;j++){
+        if(cur.editorOverlayImages[j]&&cur.editorOverlayImages[j].id===ovId){ovCur=cur.editorOverlayImages[j];break}
+      }
+      if(!ovCur||typeof ovCur.dataUrl!=='string'||ovCur.dataUrl.indexOf('data:')!==0)return;
+      ovCur.dataUrl=res.url;
+      ovCur.storagePath=res.path;
+      persistAll();
+      console.log('[firebase] migrated overlay',tplId,'/',ovId,'→',res.path,'saved bytes:',bytes);
+    }).catch(function(err){
+      console.warn('[firebase] overlay migrate failed',tplId,'/',ovId,err&&err.code,err&&err.message);
+    }).then(function(){delete inFlight[guardKey]},function(){delete inFlight[guardKey]});
+  }
+
+  function migrateOverlays(){
+    var arr=tplArr();
+    for(var i=0;i<arr.length;i++){
+      var t=arr[i];
+      if(!t||!Array.isArray(t.editorOverlayImages))continue;
+      for(var j=0;j<t.editorOverlayImages.length;j++){
+        migrateOverlay(t,t.editorOverlayImages[j]);
+      }
+    }
+  }
+
   function sweepHeavyV2(){
     try{cleanupDeletedKeys()}catch(e){console.warn('[firebase] cleanupDeletedKeys error',e)}
     try{migrateGuideBgs()}catch(e){console.warn('[firebase] migrateGuideBgs error',e)}
     try{migrateGlobal(window.S,'frameMockup','frameMockupStoragePath','mockups/frame')}catch(e){console.warn('[firebase] frameMockup error',e)}
     try{migrateGlobal(window.S,'caseMockup','caseMockupStoragePath','mockups/case')}catch(e){console.warn('[firebase] caseMockup error',e)}
+    try{migrateOverlays()}catch(e){console.warn('[firebase] migrateOverlays error',e)}
+  }
+
+  // B v3: uploadGuides 후크 — ZE modal의 가이드 업로드 input change 이벤트를
+  // document-level capture로 위임. FileReader.onload 비동기 완료를 기다려
+  // 800ms / 2000ms에 sweepHeavyV2 호출. ZE modal이 동적 생성/제거되어도 안전.
+  function installUploadGuidesHook(){
+    if(document.__dennB3OverlayHook)return;
+    document.__dennB3OverlayHook=true;
+    document.addEventListener('change',function(e){
+      if(e.target&&e.target.id==='denn-v364-guide-file'){
+        setTimeout(sweepHeavyV2,800);
+        setTimeout(sweepHeavyV2,2000);
+      }
+    },true);
+    console.log('[firebase] uploadGuides DOM hook installed (B v3 후속: overlay 추가 자동 sweep)');
   }
 
   function wrapFbExport(){
@@ -14188,6 +14259,7 @@ window.addEventListener('resize',scheduleSettle);
   function boot(){
     setTimeout(install,1000);
     setTimeout(sweep,2500);
+    installUploadGuidesHook(); // B v3: ZE overlay 업로드 후크 (document-level, 즉시 안전)
   }
   if(document.readyState==='complete')boot();
   else window.addEventListener('load',boot);

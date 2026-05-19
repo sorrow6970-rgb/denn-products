@@ -27,8 +27,10 @@ Step 1 (SDK init + 헬퍼)이 코드에 들어갔습니다. 사용하려면 Fire
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // 템플릿 이미지: 누구나 읽기 가능 (고객 화면에서도 봐야 함), 인증된 사용자만 쓰기
-    match /templates/{allPaths=**} {
+    // 모든 경로 공통: 누구나 읽기 가능 (고객 화면에서도 봐야 함), 인증된 사용자만 쓰기
+    // templates/ guides/ mockups/ editor-overlays/ 등 모두 적용.
+    // 향후 신규 경로 추가 시 rule 수정 불필요.
+    match /{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null;
     }
@@ -36,8 +38,15 @@ service firebase.storage {
 }
 ```
 
+**적용 범위:**
+- `templates/` — 액자 템플릿 합성 이미지 (B v1)
+- `templates/{id}-source.png`, `-builder.png`, `-original.png` — 원본/빌더 PNG (B v1)
+- `guides/` — 가이드 배경 (B v2)
+- `mockups/` — frameMockup / caseMockup (B v2)
+- `editor-overlays/{tplId}/` — 어드민 ZE 작업 가이드 이미지 (B v3)
+
 **보안 메모:**
-- `read: if true` 는 템플릿 이미지가 공개 URL로 노출 가능함을 의미합니다 (고객 화면에서 직접 로드해야 하므로).
+- `read: if true` 는 이미지가 공개 URL로 노출 가능함을 의미합니다 (고객 화면에서 직접 로드해야 하므로).
 - `write: if request.auth != null` 은 익명 로그인 포함 어떤 인증된 사용자든 업로드 가능. 어드민 자체에 비번 잠금이 있으므로 충분합니다.
 - 추후 강화 시: 어드민 전용 이메일 로그인으로 바꾸고 `write: if request.auth.token.email == '...'` 같은 식으로 제한.
 

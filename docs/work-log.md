@@ -103,6 +103,23 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | phase1-b3-overlay-migration | B v3: editorOverlayImages 마이그 (어드민 ZE 가이드 이미지 → Firebase) | 상태: 완료`
+  - 발견: frameTemplates[i].editorOverlayImages가 ~2.5MB 차지. 어드민 ZE modal 작업 가이드 이미지(원본 dataUrl base64). 31개 시안 누적 ~5.6MB. quota 재발 원인.
+  - 변경:
+    1. denn-admin.html Firebase IIFE 확장:
+       - `migrateOverlay(t, ov)` helper — 단일 overlay 마이그 (path: `editor-overlays/{tplId}/{ovId}.{ext}`)
+       - `migrateOverlays()` — 전체 frameTemplates 순회
+       - `sweepHeavyV2`에 `migrateOverlays()` 통합 (B v2 패턴 동형)
+       - `installUploadGuidesHook()` — document-level change listener (`#denn-v364-guide-file`), FileReader.onload 대기 후 800/2000ms에 sweepHeavyV2 호출. uploadGuides가 v36.4 IIFE 내부라 함수 wrap 불가 → DOM event delegation.
+    2. denn-admin.html `denn-v35` IIFE의 `slimSnapshotState`: editorOverlayImages 조건부 strip (storagePath 부여된 항목만 dataUrl=null).
+    3. docs/firebase-setup.md §2: rule을 generic으로 일반화 (`match /{allPaths=**}` — templates/guides/mockups/editor-overlays 등 모두 자동 커버). 향후 신규 경로 rule 수정 불필요.
+  - 보호: openZoneEditor/zeRender/renderFrame/fbExport/sendKakao 무수정. uploadGuides/ensureGuides(v36.4 IIFE 내부) 무수정. 저장키 superset 호환 (editorOverlayImages[i].storagePath 신규 필드).
+  - 백업 태그: `phase1-b3-overlay-start` @ `e7f4317`.
+  - 검증 목표:
+    - `S.frameTemplates.reduce((s,t)=>s+(t.editorOverlayImages||[]).filter(ov=>ov.dataUrl?.startsWith('data:')).length,0)` === 0
+    - `JSON.stringify(S).length` < 500KB (5.6MB → 0.2MB 목표)
+    - QuotaExceededError 0건
+
 - [x] `2026-05-19 | Claude Code | phase1-stage5-prototype | Phase B: Stage 5 마스크 컴포지트 매트릭스 프로토타입 (단일 HTML) | 상태: 완료`
   - 결정 4건 반영: D-1 시나리오 A (PNG 텍스트 픽셀 색 변환), D-2 frameTextStyle 확장 채택, D-3 마스터 토글만 비활성, D-4 1h 프로토타입 먼저.
   - 신규: `denn-stage5-prototype.html` (repo 루트, 단일 파일, 외부 의존 0, ~500 lines).
@@ -308,8 +325,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | phase1-stage5-prototype | Phase B: Stage 5 마스크 컴포지트 매트릭스 프로토타입 (10-cell, 3-way clip)`
-2. `2026-05-19 | Claude Code | three-launcher-unify | 3개 런처 통일 (DENN어드민 rename + DENN풀세트 신규)`
-3. `2026-05-19 | Claude Code | one-click-launcher | start-denn.bat 한 번 클릭 런처`
-4. `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백`
-5. `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정`
+1. `2026-05-19 | Claude Code | phase1-b3-overlay-migration | B v3: editorOverlayImages 마이그 (어드민 ZE 가이드 → Firebase) + storage rule generic 일반화`
+2. `2026-05-19 | Claude Code | phase1-stage5-prototype | Phase B: Stage 5 마스크 컴포지트 매트릭스 프로토타입`
+3. `2026-05-19 | Claude Code | three-launcher-unify | 3개 런처 통일`
+4. `2026-05-19 | Claude Code | one-click-launcher | start-denn.bat 한 번 클릭 런처`
+5. `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백`
