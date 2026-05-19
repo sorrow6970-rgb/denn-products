@@ -103,6 +103,16 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap | 상태: 완료`
+  - 범위: denn-admin.html 말미 `denn-cors-fix-image-src-setter` IIFE 신규. HTMLImageElement.prototype.src 세터 + setAttribute('src') 양쪽 패치, `needsCors`가 firebasestorage 도메인 매치 시에만 `crossOrigin='anonymous'` 자동 부여.
+  - 보호 함수 무수정 (fbRender/renderFrame/fbExport 본체 불변). 백업 태그 `phase1-cors-fix-start` @ a8bfe83.
+  - 충돌 위험: 낮음. 비-Firebase URL은 통과(needsCors false), 기존 `img.crossOrigin` 설정값은 보존(`!this.crossOrigin` 가드), data:/blob: 명시 제외.
+  - wrap 예외 사유: 외부 인프라(Firebase Storage) 통합 부작용 보정. `Image.prototype.src` 세터 패치는 49개 호출 위치 어디서든 효과를 발휘해야 하므로 모듈 wrap이 아닌 prototype 레벨 패치가 자연스러움. 단일 글로벌 wrap 1건.
+  - 의존성: Step 1-2 (Storage CORS 헤더 설정, 사용자 Cloud Shell 작업) 완료 시점부터 효과 발현. 단독으로는 회귀 무 (현재도 0KB이므로 더 나빠질 게 없음).
+- [x] `2026-05-19 | Claude Code | firebase-setup-cors-required | Step 1-2 가이드: Firebase Storage CORS 필수화 (firebase-setup.md §3) | 상태: 완료`
+  - 범위: docs/firebase-setup.md §3 "선택" → "필수" 격상. Cloud Shell gsutil cors set 명령 + cors.json (GET+HEAD, origin *) + 검증 콘솔 스니펫 추가.
+  - 사용자 작업 필요: Console → Cloud Shell → gsutil 4개 명령 (cors.json 생성 → cors set → cors get 확인).
+
 - [x] `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API | 상태: 완료`
   - 범위: denn-mockup-tool.html 상단 모듈 변수 `dennFrameTextOverrides={}` 신규(L655 부근), 말미에 `denn-phase1-text-override-api` IIFE 신규
   - 충돌 위험: 낮음. 신규 state + 신규 API 네임스페이스. 기존 코드 접점은 `selFTplByRef` wrap 1곳(템플릿 전환 시 auto clearAll).
@@ -192,8 +202,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API`
-2. `2026-05-19 | Claude Code | phase1-stage2-mask-mode | Phase1 Stage 2: maskMode 자동 감지 + 수동 override`
-3. `2026-05-19 | Claude Code | phase1-stage1-allow-color-toggle | Phase1 Stage 1: 어드민 빌더 '색상 변경 허용' 토글 + preserveDetailFields 확장`
-4. `2026-05-19 | Claude Code | claude/watermark-preview-overlay-off | 고객 미리보기 워터마크 오버레이 제거 (저장 시에만 출력)`
-5. `2026-05-19 | Claude Code | claude/ze-canvas-display-fix | ze-canvas 백킹/표시 분리 (1200 supersample + 660 display, 표시·줌 안정화)`
+1. `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap (인쇄파일 0×0px 차단 해소 — Step 1-2 사용자 Cloud Shell 작업 후 효과 발현)`
+2. `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API`
+3. `2026-05-19 | Claude Code | phase1-stage2-mask-mode | Phase1 Stage 2: maskMode 자동 감지 + 수동 override`
+4. `2026-05-19 | Claude Code | phase1-stage1-allow-color-toggle | Phase1 Stage 1: 어드민 빌더 '색상 변경 허용' 토글 + preserveDetailFields 확장`
+5. `2026-05-19 | Claude Code | claude/watermark-preview-overlay-off | 고객 미리보기 워터마크 오버레이 제거 (저장 시에만 출력)`

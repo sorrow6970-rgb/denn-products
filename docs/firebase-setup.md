@@ -43,19 +43,78 @@ service firebase.storage {
 
 ---
 
-## 3. (선택) Storage CORS 설정
+## 3. Storage CORS 설정 (필수 — 캔버스 합성/인쇄용)
 
-브라우저에서 캔버스로 이미지를 다시 합성/조작하는 경우 CORS 헤더가 필요할 수 있습니다.  
-기본 Firebase Storage는 GET에 대해 CORS를 허용하지 않습니다.
+캔버스에 Firebase Storage 이미지를 그리고 그것을 다시 PNG로 export하려면 CORS 헤더가 **필수**입니다.  
+미설정 시 캔버스가 tainted되어 `toDataURL()`이 실패하고 **인쇄파일이 0×0px / 0KB**로 나옵니다 (고객 주문 차단).
 
-**필요해지면** Cloud Shell에서:
+코드 측은 이미 Firebase Storage URL에 `crossOrigin='anonymous'`를 자동 부여하도록 패치되어 있습니다 (`denn-cors-fix-image-src-setter` IIFE). 그 anonymous 요청이 통과되려면 버킷이 CORS 응답 헤더를 내보내야 합니다.
 
-```bash
-echo '[{"origin":["*"],"method":["GET"],"maxAgeSeconds":3600}]' > cors.json
-gsutil cors set cors.json gs://denn-products.firebasestorage.app
-```
+### 단계
 
-지금은 `<img>` 태그로만 로드(에디터 미리보기 등)하므로 필수 아닙니다.
+1. **Google Cloud Console 진입**
+   - https://console.cloud.google.com 접속
+   - 우상단에서 프로젝트가 `denn-products`인지 확인
+
+2. **Cloud Shell 열기**
+   - 우상단 `>_` (터미널) 아이콘 클릭
+   - 권한 승인 → 셸 프롬프트 대기
+
+3. **cors.json 파일 생성**
+   ```bash
+   cat > cors.json <<'EOF'
+   [
+     {
+       "origin": ["*"],
+       "method": ["GET", "HEAD"],
+       "responseHeader": ["Content-Type"],
+       "maxAgeSeconds": 3600
+     }
+   ]
+   EOF
+   ```
+
+4. **버킷에 적용**
+   ```bash
+   gsutil cors set cors.json gs://denn-products.firebasestorage.app
+   ```
+
+5. **확인**
+   ```bash
+   gsutil cors get gs://denn-products.firebasestorage.app
+   ```
+   출력에 위 JSON이 그대로 보이면 성공.
+
+### 보안 메모
+- `origin: ["*"]` 은 모든 도메인에서 GET 가능. 템플릿 이미지는 어차피 공개 URL이므로 충분.
+- 더 엄격히 하려면 `["https://your-domain.com", "file://"]` 등 명시 가능. 단, `file://` 로 어드민을 열 때도 동작해야 한다면 `*` 권장.
+- `maxAgeSeconds: 3600` 은 preflight 캐시 1시간. 짧게 가져가서 정책 변경 반영을 빠르게.
+
+### 적용 후 검증
+- 어드민 새로고침 (Ctrl+Shift+R)
+- 콘솔에서:
+  ```js
+  const t = S.frameTemplates.find(t => t.storagePath);
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = 100; c.height = 100;
+    c.getContext('2d').drawImage(img, 0, 0, 100, 100);
+    try { console.log('CORS ok, toDataURL length:', c.toDataURL().length); }
+    catch(e) { console.error('still tainted:', e.message); }
+  };
+  img.onerror = e => console.error('load failed', e);
+  img.src = t.dataUrl;
+  ```
+  `CORS ok` 로그가 보이면 성공.
+- 새 액자 시안 1개 생성 → 인쇄/저장 → 정상 PNG 출력 확인.
+
+### 실패 시
+| 증상 | 원인 후보 |
+|---|---|
+| `crossOrigin: anonymous` 인데 onerror | CORS 미적용. `gsutil cors get`으로 재확인. 적용 직후라면 5분 대기 후 재시도. |
+| `still tainted` 에러 | 다른 tainted source 존재. 캔버스 합성 경로의 모든 `img.src` 검증. |
+| `[cors-fix]` 콘솔 로그 없음 | 패치 IIFE 미실행. 브라우저 새로고침 강제 (Ctrl+Shift+R). |
 
 ---
 

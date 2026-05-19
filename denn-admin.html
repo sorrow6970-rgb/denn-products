@@ -14190,5 +14190,38 @@ window.addEventListener('resize',scheduleSettle);
   else window.addEventListener('load',boot);
 })();
 </script>
+
+
+<!-- DENN CORS Fix: Firebase Storage URL을 로드하는 Image에 자동 crossOrigin -->
+<script id="denn-cors-fix-image-src-setter">
+(function(){
+  'use strict';
+  if(window.__dennCorsImageWrapInstalled)return;
+  var proto=HTMLImageElement.prototype;
+  var d=Object.getOwnPropertyDescriptor(proto,'src');
+  if(!d||typeof d.set!=='function'||typeof d.get!=='function')return;
+  function needsCors(v){
+    if(typeof v!=='string'||!v)return false;
+    if(v.indexOf('data:')===0||v.indexOf('blob:')===0)return false;
+    return /firebasestorage\.(googleapis\.com|app)/i.test(v);
+  }
+  Object.defineProperty(proto,'src',{
+    configurable:true,
+    enumerable:d.enumerable,
+    get:d.get,
+    set:function(v){
+      try{if(needsCors(v)&&!this.crossOrigin)this.crossOrigin='anonymous';}catch(e){}
+      d.set.call(this,v);
+    }
+  });
+  var origSetAttr=proto.setAttribute;
+  proto.setAttribute=function(name,value){
+    try{if(name&&String(name).toLowerCase()==='src'&&needsCors(value)&&!this.crossOrigin)this.crossOrigin='anonymous';}catch(e){}
+    return origSetAttr.apply(this,arguments);
+  };
+  window.__dennCorsImageWrapInstalled=true;
+  try{console.log('[cors-fix] Image src setter patched for firebasestorage URLs')}catch(e){}
+})();
+</script>
 </body>
 </html>
