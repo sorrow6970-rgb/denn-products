@@ -103,6 +103,13 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (file:// 5MB localStorage 풀 회피) | 상태: 완료`
+  - 범위:
+    1. `start-dev.ps1` 신규 — node→python 폴백, 포트 8000/8080/5500 자동선택, ASCII-only(PS5.1 호환), Get-NetTCPConnection -State Listen으로 점유 검사.
+    2. `docs/local-dev.md` 신규 — 사용법 + 데이터 이전 절차(file://→localhost) A~E + 트러블슈팅.
+  - 코드 무수정 (HTML/JS 변경 없음). 서버 설정 + docs만.
+  - 백그라운드: Windows file:// origin은 모든 로컬 HTML이 단일 ~5MB localStorage 풀 공유. 우리 데이터 100KB여도 setItem 실패. http://localhost:PORT는 별도 origin → 풀 분리.
+  - 사용자 액션: `.\start-dev.ps1` 후 `dennDownloadCurrentDataV35()` 로 file:// 측 백업 → http://localhost/... 어드민 콘솔에서 `S = JSON.parse(...); await persistState()` 로 가져오기. Firebase Storage 템플릿/익명 인증은 origin 무관 → 이전 불필요.
 - [x] `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안: localStorage 마이그레이션 확장 (source/builder/original) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치 | 상태: 완료`
   - 범위:
     1. denn-admin.html Firebase auto-sync wrap 본체 재작성 — `migrateOnce` helper + `syncOne` string-identity 그룹화. 4 필드(dataUrl/sourceDataUrl/builderArtDataUrl/originalDataUrl) 동시 마이그, 동일 data: URL은 1회 업로드 후 공유. 동시성 가드 `inFlight[id+':'+suffix]`. 신규 path 필드 3개(`sourceStoragePath`, `builderArtStoragePath`, `originalStoragePath`).
@@ -213,8 +220,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안: localStorage 마이그레이션 확장 (4 필드) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치`
-2. `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap`
-3. `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API`
-4. `2026-05-19 | Claude Code | phase1-stage2-mask-mode | Phase1 Stage 2: maskMode 자동 감지 + 수동 override`
-5. `2026-05-19 | Claude Code | phase1-stage1-allow-color-toggle | Phase1 Stage 1: 어드민 빌더 '색상 변경 허용' 토글 + preserveDetailFields 확장`
+1. `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (start-dev.ps1 + docs/local-dev.md) — file:// 5MB localStorage 풀 회피`
+2. `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안: localStorage 마이그레이션 확장 (4 필드) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치`
+3. `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap`
+4. `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API`
+5. `2026-05-19 | Claude Code | phase1-stage2-mask-mode | Phase1 Stage 2: maskMode 자동 감지 + 수동 override`
