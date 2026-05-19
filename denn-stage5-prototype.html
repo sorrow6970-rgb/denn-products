@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>DENN Stage 5 Prototype — 마스크 컴포지트 비교</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#0f0e16;color:#f0eef8;min-height:100vh;display:flex;flex-direction:column}
+  header{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid #2e2d40;background:#15141c}
+  header h1{font-size:13px;font-weight:600;letter-spacing:.04em}
+  header h1 em{color:#C8A864;font-style:normal}
+  #fps{font-size:11px;color:#8885A0;background:#1a1926;padding:5px 10px;border-radius:6px;font-family:Consolas,monospace}
+  main{display:flex;flex:1;overflow:hidden}
+  aside{width:240px;border-right:1px solid #2e2d40;padding:14px;overflow-y:auto;background:#15141c;flex-shrink:0}
+  aside h3{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#C8A864;margin-bottom:8px;padding-top:12px;border-top:1px solid #2e2d40}
+  aside h3:first-of-type{padding-top:0;border-top:none}
+  aside section{margin-bottom:12px}
+  aside label{display:block;font-size:10px;color:#8885A0;margin:6px 0 3px}
+  aside input[type=file]{font-size:10px;width:100%;color:#a8a5b8}
+  aside button.example{font-size:9.5px;padding:3px 6px;margin-top:3px;background:#1a1926;border:1px solid #2e2d40;color:#a8a5b8;border-radius:4px;cursor:pointer}
+  aside button.example:hover{border-color:#C8A864;color:#f0eef8}
+  aside .color-row{display:flex;gap:6px;align-items:center}
+  aside input[type=color]{width:38px;height:30px;border:1px solid #2e2d40;border-radius:5px;cursor:pointer;background:none;padding:0}
+  aside input[type=text]{flex:1;padding:6px;background:#0f0e16;border:1px solid #2e2d40;color:#f0eef8;font-family:Consolas,monospace;font-size:11px;border-radius:5px}
+  aside .range-row{display:flex;align-items:center;gap:8px;margin-top:4px}
+  aside .range-row input[type=range]{flex:1}
+  aside .range-row span{font-size:10px;color:#8885A0;min-width:32px;text-align:right;font-family:Consolas,monospace}
+  aside .tog{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;user-select:none}
+  aside .tog input{margin:0}
+  aside .radio-group{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+  aside .radio-group label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:#f0eef8;margin:0;padding:4px 6px;background:#0f0e16;border:1px solid #2e2d40;border-radius:4px}
+  aside .radio-group label small{color:#8885A0;font-size:9.5px;margin-left:auto}
+  aside .radio-group label:has(input:checked){border-color:#C8A864;background:rgba(200,168,100,.08)}
+  aside .photo-toggle{display:flex;gap:4px;margin-top:4px}
+  aside .photo-toggle button{flex:1;padding:5px;font-size:10px;background:#0f0e16;border:1px solid #2e2d40;color:#8885A0;border-radius:4px;cursor:pointer}
+  aside .photo-toggle button.on{border-color:#C8A864;background:rgba(200,168,100,.08);color:#f0eef8}
+  #matrix-area{flex:1;overflow-y:auto;padding:14px}
+  .row-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#C8A864;margin:6px 0 8px}
+  .row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+  .cell{background:#15141c;border:1px solid #2e2d40;border-radius:7px;padding:6px;display:flex;flex-direction:column;align-items:center}
+  .cell canvas{width:100%;max-width:200px;aspect-ratio:3/4;background:#000;border-radius:4px;border:1px solid #1a1926}
+  .cell .lbl{font-size:9.5px;color:#f0eef8;font-family:Consolas,monospace;margin-top:4px;text-align:center}
+  .cell.orig{border-color:#3a3950}
+  .cell.orig .lbl{color:#C8A864}
+  footer{border-top:1px solid #2e2d40;padding:14px 18px;background:#15141c}
+  footer h3{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#C8A864;margin-bottom:10px}
+  .reco-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:10px}
+  .reco-grid > div label.title{font-size:10px;color:#8885A0;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.1em}
+  .reco-grid > div .radio-group label{font-size:11px;padding:4px 6px;background:#0f0e16;border:1px solid #2e2d40;border-radius:4px;display:flex;align-items:center;gap:6px;margin-bottom:3px;cursor:pointer;color:#f0eef8}
+  .reco-grid > div .radio-group label:has(input:checked){border-color:#C8A864;background:rgba(200,168,100,.08)}
+  .reco-grid > div .radio-group{display:flex;flex-direction:column}
+  .json-out{font-family:Consolas,monospace;font-size:11px;background:#0a0910;border:1px solid #2e2d40;color:#8de;padding:10px 12px;border-radius:6px;white-space:pre-wrap;max-height:160px;overflow:auto}
+  .json-out::selection{background:#C8A864;color:#0a0910}
+</style>
+</head>
+<body>
+<header>
+  <h1><em>DENN</em> Stage 5 Prototype — 마스크 컴포지트 비교 (D-1 시나리오 A)</h1>
+  <span id="fps">FPS: --</span>
+</header>
+
+<main>
+<aside>
+  <section>
+    <h3>흰색 마스크 PNG</h3>
+    <input type="file" id="upload-white" accept="image/*">
+    <button class="example" data-load="whiteMask">내장 예시 사용</button>
+  </section>
+
+  <section>
+    <h3>검정 마스크 PNG</h3>
+    <input type="file" id="upload-black" accept="image/*">
+    <button class="example" data-load="blackMask">내장 예시 사용</button>
+  </section>
+
+  <section>
+    <h3>고객 사진</h3>
+    <input type="file" id="upload-photo" accept="image/*">
+    <div class="photo-toggle">
+      <button data-photo="photo1" class="on">밝은 예시</button>
+      <button data-photo="photo2">어두운 예시</button>
+    </div>
+  </section>
+
+  <section>
+    <h3>텍스트 색상</h3>
+    <div class="color-row">
+      <input type="color" id="color-pick" value="#FF6B6B">
+      <input type="text" id="color-text" value="#FF6B6B" maxlength="7">
+    </div>
+  </section>
+
+  <section>
+    <h3>그림자</h3>
+    <label class="tog"><input type="checkbox" id="sh-on"> 그림자 활성</label>
+    <label>Blur <span id="sh-blur-v" style="float:right;color:#8885A0;font-family:Consolas,monospace;font-size:10px">8</span></label>
+    <input type="range" id="sh-blur" min="0" max="40" value="8" style="width:100%">
+    <label>X 오프셋 <span id="sh-dx-v" style="float:right;color:#8885A0;font-family:Consolas,monospace;font-size:10px">0</span></label>
+    <input type="range" id="sh-dx" min="-30" max="30" value="0" style="width:100%">
+    <label>Y 오프셋 <span id="sh-dy-v" style="float:right;color:#8885A0;font-family:Consolas,monospace;font-size:10px">2</span></label>
+    <input type="range" id="sh-dy" min="-30" max="30" value="2" style="width:100%">
+    <label>그림자 색</label>
+    <div class="color-row">
+      <input type="color" id="sh-color-pick" value="#000000">
+      <input type="text" id="sh-color-text" value="#000000" maxlength="7">
+    </div>
+  </section>
+
+  <section>
+    <h3>그림자 클리핑</h3>
+    <div class="radio-group">
+      <label><input type="radio" name="clip" value="off" checked> OFF <small>제한 없음</small></label>
+      <label><input type="radio" name="clip" value="tight"> TIGHT <small>마스크 내부만</small></label>
+      <label><input type="radio" name="clip" value="canvas"> CANVAS <small>외곽만 차단</small></label>
+    </div>
+  </section>
+</aside>
+
+<section id="matrix-area">
+  <div class="row-label">WHITE MASK</div>
+  <div class="row" id="row-white"></div>
+
+  <div class="row-label">BLACK MASK</div>
+  <div class="row" id="row-black"></div>
+
+  <footer>
+    <h3>최종 추천 (시각 검증 후 선택 → JSON 자동 갱신)</h3>
+    <div class="reco-grid">
+      <div>
+        <label class="title">White mask composite</label>
+        <div class="radio-group" id="reco-white">
+          <label><input type="radio" name="reco-w" value="multiply" checked> multiply</label>
+          <label><input type="radio" name="reco-w" value="source-in"> source-in</label>
+          <label><input type="radio" name="reco-w" value="source-atop"> source-atop</label>
+          <label><input type="radio" name="reco-w" value="destination-in"> destination-in</label>
+        </div>
+      </div>
+      <div>
+        <label class="title">Black mask composite</label>
+        <div class="radio-group" id="reco-black">
+          <label><input type="radio" name="reco-b" value="screen" checked> screen</label>
+          <label><input type="radio" name="reco-b" value="lighter"> lighter</label>
+          <label><input type="radio" name="reco-b" value="difference"> difference</label>
+          <label><input type="radio" name="reco-b" value="source-atop"> source-atop</label>
+        </div>
+      </div>
+      <div>
+        <label class="title">Shadow clip</label>
+        <div class="radio-group" id="reco-clip">
+          <label><input type="radio" name="reco-c" value="off" checked> off</label>
+          <label><input type="radio" name="reco-c" value="tight"> tight</label>
+          <label><input type="radio" name="reco-c" value="canvas"> canvas</label>
+        </div>
+      </div>
+    </div>
+    <pre class="json-out" id="reco-json"></pre>
+  </footer>
+</section>
+</main>
+
+<script>
+'use strict';
+
+// ===== State =====
+const state = {
+  whiteMask: null,   // HTMLImageElement
+  blackMask: null,
+  photo1: null,
+  photo2: null,
+  activePhoto: 'photo1',
+  color: '#FF6B6B',
+  shadow: { enabled: false, blur: 8, dx: 0, dy: 2, color: '#000000' },
+  clip: 'off',
+  reco: { white: 'multiply', black: 'screen', clip: 'off' }
+};
+
+// ===== Matrix cells (10) =====
+const CELLS = [
+  { mask: 'white',  op: 'orig',           label: 'orig' },
+  { mask: 'white',  op: 'multiply',       label: 'multiply' },
+  { mask: 'white',  op: 'source-in',      label: 'source-in' },
+  { mask: 'white',  op: 'source-atop',    label: 'source-atop' },
+  { mask: 'white',  op: 'destination-in', label: 'destination-in' },
+  { mask: 'black',  op: 'orig',           label: 'orig' },
+  { mask: 'black',  op: 'screen',         label: 'screen' },
+  { mask: 'black',  op: 'lighter',        label: 'lighter' },
+  { mask: 'black',  op: 'difference',     label: 'difference' },
+  { mask: 'black',  op: 'source-atop',    label: 'source-atop' }
+];
+
+const CANVAS_W = 300, CANVAS_H = 400;
+const canvases = {};  // cellKey -> canvas
+
+// ===== Inline SVG examples (data URL) =====
+
+function svgToDataUrl(svg){
+  return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+}
+
+const WHITE_MASK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_W}" height="${CANVAS_H}" viewBox="0 0 ${CANVAS_W} ${CANVAS_H}">
+  <text x="${CANVAS_W/2}" y="180" fill="white" font-size="56" font-family="serif" font-weight="700" text-anchor="middle" font-style="italic">WEDDING</text>
+  <text x="${CANVAS_W/2}" y="240" fill="white" font-size="28" font-family="serif" text-anchor="middle">J &amp; K</text>
+  <text x="${CANVAS_W/2}" y="280" fill="white" font-size="14" font-family="sans-serif" text-anchor="middle" letter-spacing="3">19 MAY 2026</text>
+  <rect x="20" y="20" width="${CANVAS_W-40}" height="${CANVAS_H-40}" fill="none" stroke="white" stroke-width="2" stroke-opacity=".4"/>
+</svg>`;
+
+const BLACK_MASK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_W}" height="${CANVAS_H}" viewBox="0 0 ${CANVAS_W} ${CANVAS_H}">
+  <text x="${CANVAS_W/2}" y="180" fill="black" font-size="56" font-family="serif" font-weight="700" text-anchor="middle" font-style="italic">WEDDING</text>
+  <text x="${CANVAS_W/2}" y="240" fill="black" font-size="28" font-family="serif" text-anchor="middle">J &amp; K</text>
+  <text x="${CANVAS_W/2}" y="280" fill="black" font-size="14" font-family="sans-serif" text-anchor="middle" letter-spacing="3">19 MAY 2026</text>
+  <rect x="20" y="20" width="${CANVAS_W-40}" height="${CANVAS_H-40}" fill="none" stroke="black" stroke-width="2" stroke-opacity=".4"/>
+</svg>`;
+
+const PHOTO_LIGHT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_W}" height="${CANVAS_H}" viewBox="0 0 ${CANVAS_W} ${CANVAS_H}">
+  <defs>
+    <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFEEDB"/>
+      <stop offset="50%" stop-color="#F4C2A1"/>
+      <stop offset="100%" stop-color="#E08B5A"/>
+    </linearGradient>
+    <radialGradient id="rg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#FFF8F0" stop-opacity=".8"/>
+      <stop offset="100%" stop-color="#FFF8F0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="${CANVAS_W}" height="${CANVAS_H}" fill="url(#lg)"/>
+  <ellipse cx="${CANVAS_W/2}" cy="160" rx="${CANVAS_W*.6}" ry="120" fill="url(#rg)"/>
+  <circle cx="80" cy="120" r="50" fill="#FFF1DA" opacity=".5"/>
+  <ellipse cx="${CANVAS_W-60}" cy="${CANVAS_H-100}" rx="80" ry="60" fill="#F5C091" opacity=".6"/>
+  <rect y="${CANVAS_H-80}" width="${CANVAS_W}" height="80" fill="#C68A5A" opacity=".4"/>
+</svg>`;
+
+const PHOTO_DARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_W}" height="${CANVAS_H}" viewBox="0 0 ${CANVAS_W} ${CANVAS_H}">
+  <defs>
+    <linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F0A14"/>
+      <stop offset="50%" stop-color="#251837"/>
+      <stop offset="100%" stop-color="#3A2A4D"/>
+    </linearGradient>
+    <radialGradient id="dr" cx="50%" cy="60%" r="50%">
+      <stop offset="0%" stop-color="#5B3F75" stop-opacity=".6"/>
+      <stop offset="100%" stop-color="#5B3F75" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="${CANVAS_W}" height="${CANVAS_H}" fill="url(#dg)"/>
+  <ellipse cx="${CANVAS_W/2}" cy="240" rx="${CANVAS_W*.6}" ry="120" fill="url(#dr)"/>
+  <circle cx="60" cy="60" r="30" fill="#FFFAEB" opacity=".7"/>
+  <ellipse cx="${CANVAS_W-50}" cy="${CANVAS_H-60}" rx="70" ry="50" fill="#4A2D60" opacity=".5"/>
+</svg>`;
+
+// ===== Image loading =====
+
+function loadImage(src){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(e);
+    img.src = src;
+  });
+}
+
+async function loadDefaults(){
+  state.whiteMask = await loadImage(svgToDataUrl(WHITE_MASK_SVG));
+  state.blackMask = await loadImage(svgToDataUrl(BLACK_MASK_SVG));
+  state.photo1    = await loadImage(svgToDataUrl(PHOTO_LIGHT_SVG));
+  state.photo2    = await loadImage(svgToDataUrl(PHOTO_DARK_SVG));
+  renderAll();
+}
+
+// ===== Rendering =====
+
+function makeOffscreen(w, h){
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  return c;
+}
+
+// Build the color-composite layer (mask + color via composite op).
+// For destination-in: order is reversed (color first, then mask clips).
+function buildCompositeLayer(maskImg, color, op, W, H){
+  const off = makeOffscreen(W, H);
+  const octx = off.getContext('2d');
+  if (op === 'destination-in') {
+    octx.fillStyle = color;
+    octx.fillRect(0, 0, W, H);
+    octx.globalCompositeOperation = 'destination-in';
+    octx.drawImage(maskImg, 0, 0, W, H);
+  } else {
+    octx.drawImage(maskImg, 0, 0, W, H);
+    octx.globalCompositeOperation = op;
+    octx.fillStyle = color;
+    octx.fillRect(0, 0, W, H);
+  }
+  octx.globalCompositeOperation = 'source-over';
+  return off;
+}
+
+function renderCell(canvas, cell){
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const photo = state[state.activePhoto];
+  const mask  = cell.mask === 'white' ? state.whiteMask : state.blackMask;
+  if (!photo || !mask) return;
+
+  // Layer 1: photo
+  ctx.drawImage(photo, 0, 0, W, H);
+
+  // Layer 2: composite or orig
+  if (cell.op === 'orig') {
+    // Baseline: draw mask raw (no color, no shadow)
+    ctx.drawImage(mask, 0, 0, W, H);
+    return;
+  }
+
+  const colorLayer = buildCompositeLayer(mask, state.color, cell.op, W, H);
+
+  // Layer 3: shadow + composite, with clip mode
+  const sh = state.shadow;
+  if (!sh.enabled) {
+    ctx.drawImage(colorLayer, 0, 0);
+    return;
+  }
+
+  if (state.clip === 'tight') {
+    // Render shadow + composite into temp, then clip to mask alpha
+    const temp = makeOffscreen(W, H);
+    const tctx = temp.getContext('2d');
+    tctx.shadowColor = sh.color;
+    tctx.shadowBlur = sh.blur;
+    tctx.shadowOffsetX = sh.dx;
+    tctx.shadowOffsetY = sh.dy;
+    tctx.drawImage(colorLayer, 0, 0);
+    tctx.shadowColor = 'transparent';
+    tctx.globalCompositeOperation = 'destination-in';
+    tctx.drawImage(mask, 0, 0, W, H);
+    tctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(temp, 0, 0);
+  } else {
+    // OFF or CANVAS: shadow drawn naturally (canvas edges clip automatically)
+    // 'canvas' mode is conceptually documented but visually identical to 'off'
+    // when the photo covers the full canvas (which is the standard case).
+    ctx.save();
+    ctx.shadowColor = sh.color;
+    ctx.shadowBlur = sh.blur;
+    ctx.shadowOffsetX = sh.dx;
+    ctx.shadowOffsetY = sh.dy;
+    ctx.drawImage(colorLayer, 0, 0);
+    ctx.restore();
+  }
+}
+
+function renderAll(){
+  for (const cell of CELLS) {
+    const c = canvases[cell.mask + '-' + cell.op];
+    if (c) renderCell(c, cell);
+  }
+}
+
+// ===== UI wiring =====
+
+function $(sel){ return document.querySelector(sel) }
+function $$(sel){ return Array.from(document.querySelectorAll(sel)) }
+
+function buildMatrix(){
+  const rowWhite = $('#row-white');
+  const rowBlack = $('#row-black');
+  for (const cell of CELLS) {
+    const wrap = document.createElement('div');
+    wrap.className = 'cell' + (cell.op === 'orig' ? ' orig' : '');
+    const cv = document.createElement('canvas');
+    cv.width = CANVAS_W; cv.height = CANVAS_H;
+    wrap.appendChild(cv);
+    const lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    lbl.textContent = cell.label;
+    wrap.appendChild(lbl);
+    (cell.mask === 'white' ? rowWhite : rowBlack).appendChild(wrap);
+    canvases[cell.mask + '-' + cell.op] = cv;
+  }
+}
+
+function wireInputs(){
+  // Color
+  $('#color-pick').addEventListener('input', e => { state.color = e.target.value; $('#color-text').value = e.target.value; renderAll() });
+  $('#color-text').addEventListener('input', e => {
+    if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) { state.color = e.target.value; $('#color-pick').value = e.target.value; renderAll() }
+  });
+
+  // Shadow
+  $('#sh-on').addEventListener('change', e => { state.shadow.enabled = e.target.checked; renderAll() });
+  $('#sh-blur').addEventListener('input', e => { state.shadow.blur = +e.target.value; $('#sh-blur-v').textContent = e.target.value; renderAll() });
+  $('#sh-dx').addEventListener('input', e => { state.shadow.dx = +e.target.value; $('#sh-dx-v').textContent = e.target.value; renderAll() });
+  $('#sh-dy').addEventListener('input', e => { state.shadow.dy = +e.target.value; $('#sh-dy-v').textContent = e.target.value; renderAll() });
+  $('#sh-color-pick').addEventListener('input', e => { state.shadow.color = e.target.value; $('#sh-color-text').value = e.target.value; renderAll() });
+  $('#sh-color-text').addEventListener('input', e => {
+    if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) { state.shadow.color = e.target.value; $('#sh-color-pick').value = e.target.value; renderAll() }
+  });
+
+  // Clip
+  $$('input[name="clip"]').forEach(r => r.addEventListener('change', e => { state.clip = e.target.value; renderAll(); updateReco() }));
+
+  // Photo toggle
+  $$('.photo-toggle button').forEach(btn => btn.addEventListener('click', e => {
+    $$('.photo-toggle button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    state.activePhoto = btn.dataset.photo;
+    renderAll();
+  }));
+
+  // File uploads
+  function readToImage(file){
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = e => loadImage(e.target.result).then(res).catch(rej);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+  }
+  $('#upload-white').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    try { state.whiteMask = await readToImage(f); renderAll() } catch(err) { alert('흰색 마스크 로드 실패') }
+  });
+  $('#upload-black').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    try { state.blackMask = await readToImage(f); renderAll() } catch(err) { alert('검정 마스크 로드 실패') }
+  });
+  $('#upload-photo').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    try {
+      const img = await readToImage(f);
+      state[state.activePhoto] = img;
+      renderAll();
+    } catch(err) { alert('사진 로드 실패') }
+  });
+
+  // Reset to example
+  $$('button.example').forEach(btn => btn.addEventListener('click', async e => {
+    const target = btn.dataset.load;
+    if (target === 'whiteMask') state.whiteMask = await loadImage(svgToDataUrl(WHITE_MASK_SVG));
+    if (target === 'blackMask') state.blackMask = await loadImage(svgToDataUrl(BLACK_MASK_SVG));
+    renderAll();
+  }));
+
+  // Recommendation radios
+  $$('input[name="reco-w"]').forEach(r => r.addEventListener('change', e => { state.reco.white = e.target.value; updateReco() }));
+  $$('input[name="reco-b"]').forEach(r => r.addEventListener('change', e => { state.reco.black = e.target.value; updateReco() }));
+  $$('input[name="reco-c"]').forEach(r => r.addEventListener('change', e => { state.reco.clip = e.target.value; updateReco() }));
+}
+
+function updateReco(){
+  const out = {
+    decided_at: new Date().toISOString(),
+    maskMode_white_composite: state.reco.white,
+    maskMode_black_composite: state.reco.black,
+    shadow_clip: state.reco.clip,
+    shadow_default: {
+      enabled: state.shadow.enabled,
+      color: state.shadow.color,
+      blur: state.shadow.blur,
+      dx: state.shadow.dx,
+      dy: state.shadow.dy
+    },
+    color_sampled: state.color,
+    photo_used: state.activePhoto,
+    notes: '시각 검증 기준'
+  };
+  const json = JSON.stringify(out, null, 2);
+  $('#reco-json').textContent = json;
+  console.log('[reco]', out);
+}
+
+// ===== FPS =====
+
+const frameTimes = [];
+function fpsLoop(t){
+  frameTimes.push(t);
+  while (frameTimes[0] < t - 1000) frameTimes.shift();
+  $('#fps').textContent = 'FPS: ' + frameTimes.length;
+  requestAnimationFrame(fpsLoop);
+}
+
+// ===== Init =====
+
+(async function init(){
+  buildMatrix();
+  wireInputs();
+  await loadDefaults();
+  updateReco();
+  requestAnimationFrame(fpsLoop);
+})();
+</script>
+</body>
+</html>

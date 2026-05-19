@@ -103,6 +103,23 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | phase1-stage5-prototype | Phase B: Stage 5 마스크 컴포지트 매트릭스 프로토타입 (단일 HTML) | 상태: 완료`
+  - 결정 4건 반영: D-1 시나리오 A (PNG 텍스트 픽셀 색 변환), D-2 frameTextStyle 확장 채택, D-3 마스터 토글만 비활성, D-4 1h 프로토타입 먼저.
+  - 신규: `denn-stage5-prototype.html` (repo 루트, 단일 파일, 외부 의존 0, ~500 lines).
+  - 구성:
+    1. **10-cell 매트릭스** (2 rows × 5 cols) — WHITE/BLACK 각 행 맨 왼쪽에 `orig`(베이스라인) 추가, 8 composite 8개 비교.
+       - WHITE: orig / multiply / source-in / source-atop / destination-in
+       - BLACK: orig / screen / lighter / difference / source-atop
+       - `destination-in`은 순서 반전 처리 (color fill → mask로 destination-in).
+    2. **3-way 그림자 클리핑** (라디오): off (제한 없음) / tight (마스크 내부만, destination-in) / canvas (외곽만 차단).
+    3. **컬러 + 그림자 컨트롤**: 색 picker + HEX text 동기화, blur(0-40), dx/dy(-30~30), 그림자 색.
+    4. **내장 예시 (외부 의존 0)**: WEDDING/J&K/날짜 SVG 텍스트 + 외곽 stroke로 흰/검 마스크. 사진 2장(밝은 그라데이션 / 어두운 그라데이션). 전부 base64 data URL.
+    5. **사진 토글**: 밝은 ↔ 어두운 즉시 비교. 본인 사진 업로드 가능.
+    6. **FPS 카운터** (우상단, requestAnimationFrame 기반 1초 카운트).
+    7. **추천 패널** (하단): white/black 합성 + clip 라디오 → JSON 자동 갱신 (`<pre>` + `console.log`).
+  - 비-범위: 본 어드민/mockup-tool 무수정. frameTextStyle/dennFrameTextOverrideAPI 통합은 Phase C에서.
+  - 검증 흐름: localhost에서 `http://localhost:8000/denn-stage5-prototype.html` 접속 → 즉시 10 canvas 표시 → 컬러/그림자 조정 → 추천 라디오 선택 → JSON 캡처 → Phase C plan 의뢰 시 인용.
+
 - [x] `2026-05-19 | Claude Code | three-launcher-unify | 3개 런처 통일: start-denn → DENN어드민 rename + DENN풀세트 신규 + docs 보강 | 상태: 완료`
   - 변경:
     1. `git mv start-denn.bat DENN어드민.bat` — history 보존, 내용 무수정.
@@ -291,8 +308,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | three-launcher-unify | 3개 런처 통일 (DENN어드민 rename + DENN풀세트 신규 + docs)`
-2. `2026-05-19 | Claude Code | one-click-launcher | start-denn.bat 한 번 클릭 런처 + local-dev.md 보강`
-3. `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백`
-4. `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정`
-5. `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강`
+1. `2026-05-19 | Claude Code | phase1-stage5-prototype | Phase B: Stage 5 마스크 컴포지트 매트릭스 프로토타입 (10-cell, 3-way clip)`
+2. `2026-05-19 | Claude Code | three-launcher-unify | 3개 런처 통일 (DENN어드민 rename + DENN풀세트 신규)`
+3. `2026-05-19 | Claude Code | one-click-launcher | start-denn.bat 한 번 클릭 런처`
+4. `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백`
+5. `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정`
