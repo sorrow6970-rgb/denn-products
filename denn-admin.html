@@ -12035,6 +12035,7 @@ window.addEventListener('load',tick);
     if(old.customerTextCommonStyle)next.customerTextCommonStyle=deep(old.customerTextCommonStyle);
     if(old.customerTextSettings)next.customerTextSettings=deep(old.customerTextSettings);
     ['backgroundEnabled','templateBackgroundEnabled','canvasBgEnabled','backgroundColor','templateBackgroundColor','canvasBgColor'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
+    ['allowColorChange','maskMode','maskModeSource'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
     try{
       var tools=window.DENNFrameTemplateToolsV364, state=null, hasUi=false, valid=/^#[0-9a-fA-F]{6}$/;
       if(tools&&typeof tools.builderBgState==='function'){state=tools.builderBgState();hasUi=true}
@@ -13943,6 +13944,144 @@ window.addEventListener('resize',scheduleSettle);
   function boot(){
     setTimeout(install,1000);
     setTimeout(sweep,2500);
+  }
+  if(document.readyState==='complete')boot();
+  else window.addEventListener('load',boot);
+})();
+</script>
+
+
+<!-- DENN Phase 1 / Stage 1: 색상 변경 허용 토글 (어드민 빌더 상세설정) -->
+<style id="denn-phase1-color-toggle-css">
+#fb-allow-color-wrap{display:block;width:100%;margin:12px 0 10px;padding:12px;border:1px solid var(--bdr);border-radius:10px;background:var(--sb);clear:both}
+#fb-allow-color-wrap::before{content:'고객 측 색상/그림자';display:block;font-size:9px;color:var(--gold);letter-spacing:.08em;margin-bottom:6px}
+#fb-allow-color-wrap .ph1-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+#fb-allow-color-wrap .ph1-label-block{flex:1;min-width:0}
+#fb-allow-color-wrap .ph1-title{display:block;font-size:11px;font-weight:700;color:var(--txt);margin-bottom:4px}
+#fb-allow-color-wrap .ph1-help{display:block;font-size:9.5px;line-height:1.55;color:var(--muted)}
+#fb-allow-color-wrap .denn-v10-switch{flex-shrink:0;margin-left:8px;align-self:center}
+</style>
+<script id="denn-phase1-color-toggle-js">
+(function(){
+  'use strict';
+  function by(id){return document.getElementById(id)}
+  function persistNow(){try{if(typeof persistState==='function')persistState();else if(typeof dennPersistAdminStateV351==='function')dennPersistAdminStateV351(window.S||{})}catch(e){}}
+
+  // Inject toggle UI right after the white-border wrap (or after the tpl-name field as fallback).
+  function addToggleUI(){
+    if(by('fb-allow-color'))return;
+    var anchor=by('fb-white-border-wrap-v10');
+    if(!anchor){
+      var nameInp=by('fb-tpl-name');
+      if(nameInp)anchor=nameInp.closest('.field')||nameInp.parentElement;
+    }
+    if(!anchor)return;
+    var html=''+
+      '<div id="fb-allow-color-wrap">'+
+        '<div class="ph1-row">'+
+          '<div class="ph1-label-block">'+
+            '<span class="ph1-title">색상 변경 허용</span>'+
+            '<small class="ph1-help">고객이 문구 색상/그림자를 자유롭게 바꿀 수 있게 합니다. 끄면 템플릿 기본값으로 고정됩니다.</small>'+
+          '</div>'+
+          '<div id="fb-allow-color" class="denn-v10-switch" onclick="this.classList.toggle(\'on\')"></div>'+
+        '</div>'+
+      '</div>';
+    anchor.insertAdjacentHTML('afterend',html);
+  }
+
+  // Capture/restore helpers
+  function readUI(){
+    var allow=by('fb-allow-color');
+    return {
+      allowColorChange: !!(allow&&allow.classList.contains('on'))
+    };
+  }
+  function restoreUI(t){
+    var allow=by('fb-allow-color');
+    if(allow)allow.classList.toggle('on',!!(t&&t.allowColorChange));
+  }
+  function resetUI(){
+    var allow=by('fb-allow-color');
+    if(allow)allow.classList.remove('on');
+  }
+
+  // Find the template that was just saved (handles new save + v94 edit save).
+  function findSavedTemplate(beforeLen,capturedEditIdx){
+    var arr=(window.S&&window.S.frameTemplates)||[];
+    if(capturedEditIdx!=null&&arr[capturedEditIdx])return arr[capturedEditIdx];
+    if(arr.length>beforeLen)return arr[arr.length-1];
+    if(window.__dennV61LastSavedTemplate&&window.__dennV61LastSavedTemplate.template)return window.__dennV61LastSavedTemplate.template;
+    return null;
+  }
+
+  // Wrap fbExport: snapshot UI before save, write to template after save.
+  function installFbExportWrap(){
+    var cur=window.fbExport;
+    if(typeof cur!=='function')return false;
+    if(cur.__dennPhase1Wrap)return true;
+    var wrap=function(){
+      var arr=(window.S&&window.S.frameTemplates)||[];
+      var beforeLen=arr.length;
+      var capturedEditIdx=window.__dennFrameTemplateEditIndex;
+      var ui=readUI();
+      var r;
+      try{r=cur.apply(this,arguments)}finally{
+        var apply=function(){
+          var t=findSavedTemplate(beforeLen,capturedEditIdx);
+          if(!t)return;
+          t.allowColorChange=!!ui.allowColorChange;
+          persistNow();
+          try{if(typeof window.renderFTplsByCategory==='function')window.renderFTplsByCategory(window.curFCat||'all')}catch(e){}
+        };
+        setTimeout(apply,220);
+        setTimeout(apply,1500);
+      }
+      return r;
+    };
+    wrap.__dennPhase1Wrap=true;
+    window.fbExport=wrap;
+    return true;
+  }
+
+  // Watch __dennFrameTemplateEditIndex for transitions to restore/reset UI on edit-load.
+  var lastEditIdx=null,bootDone=false;
+  function pollEditIdx(){
+    var idx=window.__dennFrameTemplateEditIndex;
+    if(idx===lastEditIdx)return;
+    lastEditIdx=idx;
+    if(idx==null){resetUI();return}
+    var arr=(window.S&&window.S.frameTemplates)||[];
+    var t=arr[idx];
+    if(t)restoreUI(t);
+  }
+
+  function install(){
+    addToggleUI();
+    if(installFbExportWrap())return true;
+    return false;
+  }
+
+  function boot(){
+    if(bootDone)return;bootDone=true;
+    // Wait until v94 (and firebase wrap) have installed their fbExport routers.
+    var attempts=0;
+    function tryInstall(){
+      attempts++;
+      install();
+      if(attempts<40&&!(window.fbExport&&window.fbExport.__dennPhase1Wrap))setTimeout(tryInstall,200);
+    }
+    setTimeout(tryInstall,1200); // after firebase install (1000ms)
+    setInterval(pollEditIdx,250);
+    // Also rebuild toggle UI when user navigates into builder tab (DOM may rerender).
+    var oldGo=window.goTab;
+    if(typeof oldGo==='function'&&!oldGo.__dennPhase1Tab){
+      window.goTab=function(id,el){
+        var r=oldGo.apply(this,arguments);
+        if(id==='frame-builder')setTimeout(function(){addToggleUI();pollEditIdx()},180);
+        return r;
+      };
+      window.goTab.__dennPhase1Tab=true;
+    }
   }
   if(document.readyState==='complete')boot();
   else window.addEventListener('load',boot);
