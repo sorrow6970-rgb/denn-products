@@ -14636,7 +14636,7 @@ window.addEventListener('resize',scheduleSettle);
   function installZeRenderWrap(){
     var orig=window.zeRender;
     if(typeof orig!=='function')return false;
-    if(orig.__dennStage5Wrap)return true;
+    if(orig.__dennStage5Wrap)return true; // 이미 outermost — skip
     var wrap=function(){
       try{
         var t=currentTpl();
@@ -14655,17 +14655,24 @@ window.addEventListener('resize',scheduleSettle);
     };
     wrap.__dennStage5Wrap=true;
     window.zeRender=wrap;
-    console.log('[stage5-admin] zeRender wrap installed (allowColorChange 시 source-atop 샘플 컬러 '+SAMPLE_COLOR+')');
+    console.log('[stage5-admin] zeRender wrap installed/re-installed (allowColorChange 시 source-atop 샘플 컬러 '+SAMPLE_COLOR+')');
     return true;
   }
 
+  // 재설치 가드: v36.4 wrapAll이 load+400ms에 zeRender를 재wrap → 우리 wrap이 중간으로 묻혀
+  // outermost 위치 잃음. 5초 지연 후 wrap + 안전 재확인 (+8s, +15s) 으로 outermost 보장.
+  // installZeRenderWrap는 __dennStage5Wrap 마커 보유 시 idempotent.
+  function ensureOutermost(){
+    if(!window.zeRender||typeof window.zeRender!=='function')return;
+    if(window.zeRender.__dennStage5Wrap)return; // outermost — OK
+    installZeRenderWrap();
+  }
+
   function boot(){
-    var attempts=0;
-    (function tryInstall(){
-      attempts++;
-      if(installZeRenderWrap())return;
-      if(attempts<40)setTimeout(tryInstall,200);
-    })();
+    // v36.4 wrapAll: DOMContentLoaded+100ms, load+400ms. 우리는 그 이후에 outermost로.
+    setTimeout(ensureOutermost,5000);
+    setTimeout(ensureOutermost,8000);
+    setTimeout(ensureOutermost,15000);
   }
   if(document.readyState==='complete')boot();
   else window.addEventListener('load',boot);

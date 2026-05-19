@@ -103,6 +103,15 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | phase1-stage5-c1-fix | Phase C / Commit 1 보정 — zeRender wrap outermost 보장 (v364 재wrap 회피) | 상태: 완료`
+  - 진단: 직전 C1 (134007e)에서 v36.4 `wrapAll`이 DOMContentLoaded+100ms 및 load+400ms에 zeRender를 추가 wrap. 우리 wrap 마커 `__dennStage5Wrap`은 v364의 `__dennV364Guides` 체크와 무관 → v364가 우리 wrap을 oldZe로 재wrap. 결과: 우리 wrap이 chain 중간으로 묻히고 outermost는 v364 wrap이 차지.
+  - 수정: denn-phase1-stage5-admin IIFE의 boot/install 타이밍 재설계.
+    - `boot()`: `setTimeout(ensureOutermost, 5000/8000/15000)` 3회. v364 wrapAll 완전 종료 후 outermost로 재설치.
+    - `ensureOutermost()`: window.zeRender의 `__dennStage5Wrap` 마커 부재 시에만 installZeRenderWrap 호출 → 멱등.
+    - `installZeRenderWrap` 자체는 마커 보유 시 즉시 return (멱등 가드).
+  - 보호: zeRender 본체 무수정. 다른 보호 함수 무수정. 다중 setTimeout만 추가.
+  - 검증 (사용자): 새로고침 → 5초 후 콘솔에 `[stage5-admin] zeRender wrap installed/re-installed`. `window.zeRender.__dennStage5Wrap === true` 확인. allowColorChange ON 템플릿에서 골드 합성 표시.
+
 - [x] `2026-05-19 | Claude Code | phase1-stage5-c1-admin | Phase C / Commit 1 — 어드민 (textDraw shadow + zeRender source-atop 샘플) | 상태: 완료`
   - 변경:
     1. denn-admin.html L8192 textDraw — shadow 강제 OFF 해제, 조건부화. `window.__dennShadowDefault.enabled`이면 그림자 적용, 미정의/OFF면 기존 동작 그대로. 5줄 추가 (z.color line 그대로 유지). textDraw는 v36 v56 IIFE 내부 helper (보호 함수 외, 사용자 spec L8192 명시 승인).
