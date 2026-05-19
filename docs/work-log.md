@@ -103,6 +103,13 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | one-click-launcher | start-denn.bat 한 번 클릭 런처 + local-dev.md 보강 | 상태: 완료`
+  - 신규: `start-denn.bat` (repo 루트). 한 번 더블클릭으로 (1) 기존 dev 서버 감지(8000/8080/5500) → 있으면 브라우저만 (2) 없으면 새 PowerShell 창("DENN Dev Server") 띄워 `start-dev.ps1` 실행 (3) 5초 응답 대기 (4) 기본 브라우저로 `denn-admin.html` 자동 열기.
+  - 안전장치: 8000 외 8080/5500도 fallback 감지, PS 창 제목 고정, 에러 시 `pause`로 창 유지, ASCII-only (CP949 안전).
+  - 보강: `docs/local-dev.md` — "매번 작업 시작 (1줄)" + "바탕화면 바로가기 만드는 법" + 트러블슈팅 5건 추가 (.bat 차단 / 5초 timeout / 브라우저 자동열기 실패 / file:// 사고 방지 / npx 첫 실행 지연).
+  - 보호: `start-dev.ps1` 무수정 (.bat이 호출만), HTML/JS 무수정, 서버 설정 + docs만.
+  - 우선순위: 작업 환경 안정성 — file:// 실수 진입(quota 사고 재발) 예방 의도. 사용자 워크플로우 1줄(바탕화면 더블클릭)로 단순화.
+
 - [x] `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백 — denn-admin.html 상태 c안 직후(23133d7)로 복원 | 상태: 완료`
   - 롤백 대상 (revert 순서: 최신부터):
     - `862229d` 4차 — inline onclick `event.stopPropagation()` 3건 추가
@@ -276,8 +283,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백 (23133d7 상태 복원)`
-2. `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정`
-3. `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강`
-4. `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그 + snapshot 슬림화 + deletedKeys 누수 청소`
-5. `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (start-dev.ps1 + docs/local-dev.md)`
+1. `2026-05-19 | Claude Code | one-click-launcher | start-denn.bat 한 번 클릭 런처 + local-dev.md 보강 (file:// 사고 방지)`
+2. `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백 (23133d7 상태 복원)`
+3. `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정`
+4. `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강`
+5. `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그 + snapshot 슬림화 + deletedKeys 누수 청소`
