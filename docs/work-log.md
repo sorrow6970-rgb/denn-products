@@ -103,6 +103,16 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정 | 상태: 완료`
+  - 범위: denn-admin.html L13350 한 줄 교체.
+    - 이전: `if(anchor&&anchor.nextSibling)controls.insertBefore(panel,anchor.nextSibling);else controls.insertBefore(panel,controls.firstChild);`
+    - 이후: `if(anchor)anchor.parentNode.insertBefore(panel,anchor.nextSibling);else controls.insertBefore(panel,controls.firstChild);`
+  - 원인: `controls.querySelector('.denn-v363-field-manager')`는 descendant 매칭(직접 자식 아님)이라 `anchor.nextSibling`이 controls의 직접 자식이 아니어서 `controls.insertBefore(panel, X)`에서 NotFoundError. anchor의 부모(inner `<div>`)에 직접 삽입하도록 변경.
+  - 기원: v36.4 베이스라인(initial commit a7ecac8c). Phase 1 무관, 사전 잠재 버그.
+  - 보호 함수 무수정 (openZoneEditor/zeRender/renderFrame/fbExport/sendKakao 본체 불변). installGuidePanel은 v36.4 모듈 내부 함수, 보호 함수 외.
+  - 부수효과: 패널 위치가 `.ze-label → .denn-v363-field-manager → .denn-v364-guide-panel → .ze-type-btn(×4)` 순서로 그룹화 → 시각적 흐름 자연스러움 (이전엔 NotFoundError로 패널이 아예 안 떴을 가능성).
+  - 백업 태그: `phase1-c-installguidepanel-start` @ `bb0971f`.
+
 - [x] `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강 (fbExport 명시 + processGuideBgs wrap + 글로벌 노출) | 상태: 완료`
   - 범위: denn-admin.html Firebase auto-sync IIFE — 3 곳 변경, 보호 함수 무변.
     1. `wrapFbExport` finally 블록에 `setTimeout(sweepHeavyV2, 250/1550)` 명시 추가 — sweep() 내부 호출과 중복이지만 멱등(defense in depth).
@@ -252,8 +262,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강 (fbExport 명시 + processGuideBgs wrap + dennSweepHeavy 노출)`
-2. `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그 + snapshot 슬림화 + deletedKeys 누수 청소`
-3. `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (start-dev.ps1 + docs/local-dev.md)`
-4. `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안 v1: localStorage 마이그레이션 확장 (4 필드) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치`
-5. `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap`
+1. `2026-05-19 | Claude Code | phase1-c-installguidepanel-fix | C안: installGuidePanel insertBefore NotFoundError 1줄 수정`
+2. `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강`
+3. `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그 + snapshot 슬림화 + deletedKeys 누수 청소`
+4. `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (start-dev.ps1 + docs/local-dev.md)`
+5. `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안 v1: localStorage 마이그레이션 확장 (4 필드) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치`

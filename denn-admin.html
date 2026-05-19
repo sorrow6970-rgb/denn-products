@@ -13347,7 +13347,7 @@ window.renderDennOrderRequestsV36=renderStableOrders;
       panel.className='denn-v364-guide-panel';
       panel.innerHTML='<div class="denn-v364-guide-title">작업용 가이드 이미지</div><div class="denn-v364-guide-actions"><input type="file" id="denn-v364-guide-file" accept="image/*" multiple style="display:none"><button type="button" id="denn-v364-guide-upload">가이드 이미지 업로드</button></div><div class="denn-v364-guide-list" id="denn-v364-guide-list"></div><div class="denn-v364-guide-hint">관리자 상세설정 미리보기에서만 보이며 고객 목업/저장 이미지에는 포함되지 않습니다.</div>';
       var anchor=controls.querySelector('.denn-v363-field-manager');
-      if(anchor&&anchor.nextSibling)controls.insertBefore(panel,anchor.nextSibling);else controls.insertBefore(panel,controls.firstChild);
+      if(anchor)anchor.parentNode.insertBefore(panel,anchor.nextSibling);else controls.insertBefore(panel,controls.firstChild);
       by('denn-v364-guide-upload').onclick=function(){var f=by('denn-v364-guide-file');if(f)f.click()};
       by('denn-v364-guide-file').onchange=function(){uploadGuides(this.files);this.value=''};
     }
