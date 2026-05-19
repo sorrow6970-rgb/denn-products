@@ -14140,17 +14140,48 @@ window.addEventListener('resize',scheduleSettle);
       try{r=orig.apply(this,arguments)}finally{
         setTimeout(sweep,200);
         setTimeout(sweep,1500);
+        // B v2 후속: sweepHeavyV2 명시 호출 (sweep() 내부 호출과 중복이지만 멱등 — 트리거 누락 방지 defense in depth)
+        setTimeout(sweepHeavyV2,250);
+        setTimeout(sweepHeavyV2,1550);
       }
       return r;
     };
     wrap.__dennFirebaseAutoSync=true;
     window.fbExport=wrap;
-    console.log('[firebase] fbExport auto-sync wrap installed (B안 확장: 4 필드 마이그)');
+    console.log('[firebase] fbExport auto-sync wrap installed (B안 v1+v2: 4 필드 + heavy state 마이그)');
     return true;
   }
 
+  // B v2 후속: processGuideBgs wrap — 가이드 추가 시 자동 sweepHeavyV2 트리거.
+  // 가이드 업로드는 fbExport 경로와 무관하므로 별도 후크가 필수.
+  // FileReader 비동기 완료를 기다리도록 200/1500ms 두 번 호출.
+  function wrapProcessGuideBgs(){
+    var orig=window.processGuideBgs;
+    if(typeof orig!=='function')return false;
+    if(orig.__dennHeavyHook)return true;
+    var wrap=function(){
+      var r=orig.apply(this,arguments);
+      setTimeout(sweepHeavyV2,800);
+      setTimeout(sweepHeavyV2,2000);
+      return r;
+    };
+    wrap.__dennHeavyHook=true;
+    window.processGuideBgs=wrap;
+    console.log('[firebase] processGuideBgs wrap installed (B v2 후속: 가이드 추가 자동 sweep)');
+    return true;
+  }
+
+  // B v2 후속: 외부 노출 API — 콘솔/이벤트 핸들러에서 수동 트리거 가능.
+  window.dennSweepHeavy=function(){
+    try{sweepHeavyV2()}catch(e){console.warn('[firebase] dennSweepHeavy error',e)}
+    return true;
+  };
+
   function install(){
-    if(wrapFbExport())return;
+    var fbOk=wrapFbExport();
+    var guideOk=wrapProcessGuideBgs();
+    // 두 wrap 모두 설치될 때까지 재시도 (각각 다른 시점에 정의될 수 있음).
+    if(fbOk&&guideOk)return;
     setTimeout(install,250);
   }
 

@@ -103,6 +103,16 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강 (fbExport 명시 + processGuideBgs wrap + 글로벌 노출) | 상태: 완료`
+  - 범위: denn-admin.html Firebase auto-sync IIFE — 3 곳 변경, 보호 함수 무변.
+    1. `wrapFbExport` finally 블록에 `setTimeout(sweepHeavyV2, 250/1550)` 명시 추가 — sweep() 내부 호출과 중복이지만 멱등(defense in depth).
+    2. `wrapProcessGuideBgs` 신규 — `window.processGuideBgs`를 wrap. FileReader 비동기 완료 후 800/2000ms에 sweepHeavyV2 호출. 가이드 업로드는 fbExport 경로와 무관하므로 별도 후크 필수였음.
+    3. `window.dennSweepHeavy` 외부 노출 — 콘솔/이벤트 핸들러에서 수동 트리거 가능.
+    4. `install()` 재시도 조건: `fbOk && guideOk` 둘 다 성공할 때까지 재시도 (각각 다른 시점에 정의될 수 있음).
+  - 원인 진단: B v2의 sweep()이 sweepHeavyV2를 호출하지만, processGuideBgs는 fbExport를 트리거하지 않으므로 가이드 업로드 직후 sweep 자체가 발동 안 함. fbExport 경로로 fold하던 가정이 틀림.
+  - 보호 함수 본체 무변 (openZoneEditor/zeRender/renderFrame/fbExport/sendKakao), 저장키 스키마 무변. fbExport는 wrap만 추가, processGuideBgs도 외부 wrap.
+  - 검증: 가이드 1개 업로드 → 콘솔에 `[firebase] migrated guideBg gb_xxx → guides/...` 자동 출력, 5초 후 `S.guideBackgrounds[].storagePath` 부여됨. 수동 트리거: `window.dennSweepHeavy()`.
+
 - [x] `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그(guideBgs/mockups) + snapshot 슬림화 + deletedKeys 누수 청소 | 상태: 완료`
   - 범위:
     1. denn-admin.html L5280 `delGuideBg` — `S.deletedGuideBackgroundKeys.push(bg.dataUrl)` 1줄 제거 (RC-1 미래 누수 차단). key+id push는 보존 → merge 부활방지 로직 무영향. base64를 키로 저장하던 패턴 종식.
@@ -242,8 +252,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그(guideBgs/mockups) + snapshot 슬림화 + deletedKeys 누수 청소`
-2. `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (start-dev.ps1 + docs/local-dev.md)`
-3. `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안 v1: localStorage 마이그레이션 확장 (4 필드) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치`
-4. `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap`
-5. `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API`
+1. `2026-05-19 | Claude Code | phase1-b2-trigger-fix | B v2 후속: sweepHeavyV2 트리거 누락 보강 (fbExport 명시 + processGuideBgs wrap + dennSweepHeavy 노출)`
+2. `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그 + snapshot 슬림화 + deletedKeys 누수 청소`
+3. `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (start-dev.ps1 + docs/local-dev.md)`
+4. `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안 v1: localStorage 마이그레이션 확장 (4 필드) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치`
+5. `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap`
