@@ -8199,7 +8199,11 @@ function textDraw(ctx,W,H,z){
   if(typeof window.zeRender!=='function'||!z)return;
   var px=num(z.x,50)/100*W,py=num(z.y,50)/100*H,col=(window.ZC&&ZC[z.key])||'#FFF',fSize=num(z.fontSize,6)/100*W,rot=num(z.rotation,0)*Math.PI/180,bwPx=num(z.boxW,100)/100*W,lh=num(z.lineH,1.4),lsPx=fSize*(num(z.letterSpacing,0)/100),align=z.align||'center';
   ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();ctx.translate(px,py);if(rot)ctx.rotate(rot);
-  ctx.font=(z.italic?'italic ':'')+(z.bold?'bold ':'')+fSize+'px \''+(z.font||'DM Sans')+'\',sans-serif';ctx.textAlign=align;ctx.fillStyle=z.color||'#FFFFFF';ctx.shadowColor='transparent';ctx.shadowBlur=0;
+  ctx.font=(z.italic?'italic ':'')+(z.bold?'bold ':'')+fSize+'px \''+(z.font||'DM Sans')+'\',sans-serif';ctx.textAlign=align;ctx.fillStyle=z.color||'#FFFFFF';
+  /* Phase1 Stage5: 어드민 shadow 강제 OFF 해제 → 글로벌 __dennShadowDefault 적용 (WYSIWYG). 미정의 시 OFF. */
+  var __sh=window.__dennShadowDefault;
+  if(__sh&&__sh.enabled){ctx.shadowColor=__sh.color||'#000';ctx.shadowBlur=num(__sh.blur,0);ctx.shadowOffsetX=num(__sh.dx,0);ctx.shadowOffsetY=num(__sh.dy,0)}
+  else{ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0}
   var txt=(window.ZP&&ZP[z.key])||((window.ZL&&ZL[z.key])||''),lines=typeof window.zeWrapText==='function'?zeWrapText(ctx,txt,bwPx,lsPx):String(txt).split(/\n/),gb=typeof window.zeTextGuideBox==='function'?zeTextGuideBox(ctx,lines,fSize,lh,bwPx,align,lsPx):{x:-bwPx/2,y:-fSize,w:bwPx,h:lines.length*fSize*lh+fSize},handle={x:gb.x+gb.w/2,y:gb.y+gb.h+Math.max(8,fSize*.24)};
   z._hit={cx:px,cy:py,rot:rot,box:gb,handle:handle};
   var drawX=typeof window.zeTextBoxDrawX==='function'?zeTextBoxDrawX(align,bwPx):(align==='left'?-bwPx/2:(align==='right'?bwPx/2:0));
@@ -14584,6 +14588,87 @@ window.addEventListener('resize',scheduleSettle);
   };
   window.__dennCorsImageWrapInstalled=true;
   try{console.log('[cors-fix] Image src setter patched for firebasestorage URLs')}catch(e){}
+})();
+</script>
+
+
+<!-- DENN Phase1 Stage5 (어드민 측): 글로벌 shadow_default + ZE 미리보기 source-atop 샘플 -->
+<script id="denn-phase1-stage5-admin">
+(function(){
+  'use strict';
+  // 글로벌 shadow default — Phase B 프로토타입 검증값.
+  // textDraw(L8192)가 이 객체를 참조해 어드민 미리보기에 그림자 항상 ON.
+  // shadow_per_template: false (시안별 토글 X, 글로벌 고정).
+  window.__dennShadowDefault={
+    enabled:true,
+    color:'#000000',
+    blur:17,
+    dx:2,
+    dy:2
+  };
+
+  // 어드민 ZE 미리보기 source-atop 샘플 컬러 (D5-A 옵션 1).
+  // 고객 측 실제 색은 mockup-tool에서 자유 선택; 어드민은 effect만 확인.
+  var SAMPLE_COLOR='#C49A6C';
+
+  // zeRender wrap: t.allowColorChange === true 일 때만 ZE.img를 사전 합성
+  // 캔버스로 교체. zeRender 본체는 무수정, ZE.img.drawImage 결과만 변경됨.
+  // currentRatio(t,img)는 img.naturalWidth || img.width 폴백이라 canvas도 호환.
+  function buildSourceAtopCanvas(srcImg, color){
+    var w=srcImg.naturalWidth||srcImg.width||0;
+    var h=srcImg.naturalHeight||srcImg.height||0;
+    if(!w||!h)return srcImg;
+    var c=document.createElement('canvas');
+    c.width=w; c.height=h;
+    var ctx=c.getContext('2d');
+    ctx.drawImage(srcImg,0,0);
+    ctx.globalCompositeOperation='source-atop';
+    ctx.fillStyle=color;
+    ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation='source-over';
+    return c;
+  }
+
+  function currentTpl(){
+    try{return window.S&&window.ZE&&ZE.tplIdx!=null&&S.frameTemplates?S.frameTemplates[ZE.tplIdx]:null}catch(e){return null}
+  }
+
+  function installZeRenderWrap(){
+    var orig=window.zeRender;
+    if(typeof orig!=='function')return false;
+    if(orig.__dennStage5Wrap)return true;
+    var wrap=function(){
+      try{
+        var t=currentTpl();
+        if(t&&t.allowColorChange===true&&window.ZE&&ZE.img){
+          var origImg=ZE.img;
+          // 캐시: 같은 ZE.img + 같은 색이면 재사용
+          if(!origImg.__dennS5Cache||origImg.__dennS5Cache.color!==SAMPLE_COLOR){
+            origImg.__dennS5Cache={color:SAMPLE_COLOR,canvas:buildSourceAtopCanvas(origImg,SAMPLE_COLOR)};
+          }
+          ZE.img=origImg.__dennS5Cache.canvas;
+          try{var r=orig.apply(this,arguments)}finally{ZE.img=origImg}
+          return r;
+        }
+      }catch(e){console.warn('[stage5-admin] wrap error',e)}
+      return orig.apply(this,arguments);
+    };
+    wrap.__dennStage5Wrap=true;
+    window.zeRender=wrap;
+    console.log('[stage5-admin] zeRender wrap installed (allowColorChange 시 source-atop 샘플 컬러 '+SAMPLE_COLOR+')');
+    return true;
+  }
+
+  function boot(){
+    var attempts=0;
+    (function tryInstall(){
+      attempts++;
+      if(installZeRenderWrap())return;
+      if(attempts<40)setTimeout(tryInstall,200);
+    })();
+  }
+  if(document.readyState==='complete')boot();
+  else window.addEventListener('load',boot);
 })();
 </script>
 </body>

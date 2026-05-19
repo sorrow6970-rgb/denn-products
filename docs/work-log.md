@@ -103,6 +103,17 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | phase1-stage5-c1-admin | Phase C / Commit 1 — 어드민 (textDraw shadow + zeRender source-atop 샘플) | 상태: 완료`
+  - 변경:
+    1. denn-admin.html L8192 textDraw — shadow 강제 OFF 해제, 조건부화. `window.__dennShadowDefault.enabled`이면 그림자 적용, 미정의/OFF면 기존 동작 그대로. 5줄 추가 (z.color line 그대로 유지). textDraw는 v36 v56 IIFE 내부 helper (보호 함수 외, 사용자 spec L8192 명시 승인).
+    2. denn-admin.html 말미 `denn-phase1-stage5-admin` IIFE 신규.
+       - `window.__dennShadowDefault = {enabled:true, color:#000, blur:17, dx:2, dy:2}` — Phase B 프로토타입 검증값. 글로벌 고정 (shadow_per_template: false).
+       - SAMPLE_COLOR `#C49A6C` (D5-A 옵션 1, 골드 톤).
+       - `installZeRenderWrap()` — `zeRender` 외부 wrap. t.allowColorChange === true 시 `ZE.img`를 source-atop 합성된 offscreen canvas로 임시 교체 후 원본 호출 → finally에서 복원. `currentRatio` 폴백 호환 (img.naturalWidth || img.width). 캐시는 ZE.img 객체에 `__dennS5Cache` 부여.
+  - 보호: zeRender 본체 무수정 (외부 wrap). openZoneEditor/renderFrame/fbExport/sendKakao 무수정. 저장키 무변.
+  - 백업 태그: `phase1-stage5-c-start` @ `170f505`.
+  - 검증 (사용자): 어드민 새로고침 → 액자 카드 "수정하기" → ZE modal. (a) 텍스트(WEDDING/J&K/88:88)에 그림자 표시 확인. (b) allowColorChange ON된 템플릿이라면 PNG에 골드(#C49A6C) source-atop 적용 확인. allowColorChange OFF는 기존 그대로.
+
 - [x] `2026-05-19 | Claude Code | phase1-b3-overlay-migration | B v3: editorOverlayImages 마이그 (어드민 ZE 가이드 이미지 → Firebase) | 상태: 완료`
   - 발견: frameTemplates[i].editorOverlayImages가 ~2.5MB 차지. 어드민 ZE modal 작업 가이드 이미지(원본 dataUrl base64). 31개 시안 누적 ~5.6MB. quota 재발 원인.
   - 변경:
@@ -325,8 +336,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | phase1-b3-overlay-migration | B v3: editorOverlayImages 마이그 (어드민 ZE 가이드 → Firebase) + storage rule generic 일반화`
-2. `2026-05-19 | Claude Code | phase1-stage5-prototype | Phase B: Stage 5 마스크 컴포지트 매트릭스 프로토타입`
-3. `2026-05-19 | Claude Code | three-launcher-unify | 3개 런처 통일`
-4. `2026-05-19 | Claude Code | one-click-launcher | start-denn.bat 한 번 클릭 런처`
-5. `2026-05-19 | Claude Code | ux-remove-button-rollback | UX [제거] 버튼 클릭 흡수 패치 4건 모두 롤백`
+1. `2026-05-19 | Claude Code | phase1-stage5-c1-admin | Phase C / Commit 1 — 어드민 (textDraw shadow + zeRender source-atop 샘플)`
+2. `2026-05-19 | Claude Code | phase1-b3-overlay-migration | B v3: editorOverlayImages 마이그`
+3. `2026-05-19 | Claude Code | phase1-stage5-prototype | Phase B: Stage 5 마스크 컴포지트 매트릭스 프로토타입`
+4. `2026-05-19 | Claude Code | three-launcher-unify | 3개 런처 통일`
+5. `2026-05-19 | Claude Code | one-click-launcher | start-denn.bat 한 번 클릭 런처`
