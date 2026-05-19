@@ -5125,6 +5125,8 @@ window.addEventListener('load',function(){setTimeout(init,600);setTimeout(init,1
 #case-mku-prev button,#frame-mku-prev button{position:relative;z-index:20;pointer-events:auto}
 #case-mku-prev img,#frame-mku-prev img{position:relative;z-index:6;pointer-events:none}
 .up-zone input[type=file]{z-index:1}
+/* UX fix: .up-zone 내부 미리보기(제거 버튼 포함)는 z-index:2로 끌어올려 file input(z-index:1) 클릭 흡수 방지 */
+.up-zone > [id$="-prev"]{position:relative;z-index:2}
 </style>
 <script id="denn-v35-mockup-remove-click-fix">
 (function(){
