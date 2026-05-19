@@ -5277,7 +5277,7 @@ window.renderGuideBgs=function(){
 };
 var oldProcess=window.processGuideBgs;
 window.processGuideBgs=function(files){S.guideBackgrounds=S.guideBackgrounds||[];Array.prototype.forEach.call(files||[],function(f){var r=new FileReader();r.onload=function(e){var id='gb'+Date.now()+Math.random().toString(16).slice(2),data=e.target.result;S.deletedGuideBackgroundKeys=(S.deletedGuideBackgroundKeys||[]).filter(function(k){return k!==data&&k!==f.name.replace(/\.[^.]+$/,'')});S.guideBackgrounds.push({id:id,name:f.name.replace(/\.[^.]+$/,''),dataUrl:data});S.roomBackgroundSettings=S.roomBackgroundSettings||{};S.roomBackgroundSettings[id]=initialGuideBgSetting();saveNow();renderGuideBgs();toastSafe(f.name+' 추가됨')};r.readAsDataURL(f)})};
-window.delGuideBg=function(i){if(!S.guideBackgrounds||!S.guideBackgrounds[i])return;if(!confirm('삭제?'))return;var bg=S.guideBackgrounds[i],key=guideBgMergeKey?guideBgMergeKey(bg,i):(bg.id||bg.dataUrl||bg.name||('guide-'+i));S.deletedGuideBackgroundKeys=S.deletedGuideBackgroundKeys||[];if(S.deletedGuideBackgroundKeys.indexOf(key)<0)S.deletedGuideBackgroundKeys.push(key);if(bg.id&&S.deletedGuideBackgroundKeys.indexOf(bg.id)<0)S.deletedGuideBackgroundKeys.push(bg.id);if(bg.dataUrl&&S.deletedGuideBackgroundKeys.indexOf(bg.dataUrl)<0)S.deletedGuideBackgroundKeys.push(bg.dataUrl);if(S.roomBackgroundSettings&&bg.id)delete S.roomBackgroundSettings[bg.id];S.guideBackgrounds.splice(i,1);saveNow();renderGuideBgs();toastSafe('삭제됨')};
+window.delGuideBg=function(i){if(!S.guideBackgrounds||!S.guideBackgrounds[i])return;if(!confirm('삭제?'))return;var bg=S.guideBackgrounds[i],key=guideBgMergeKey?guideBgMergeKey(bg,i):(bg.id||bg.dataUrl||bg.name||('guide-'+i));S.deletedGuideBackgroundKeys=S.deletedGuideBackgroundKeys||[];if(S.deletedGuideBackgroundKeys.indexOf(key)<0)S.deletedGuideBackgroundKeys.push(key);if(bg.id&&S.deletedGuideBackgroundKeys.indexOf(bg.id)<0)S.deletedGuideBackgroundKeys.push(bg.id);/* B안 v2: bg.dataUrl(base64) push 제거 — localStorage MB 단위 누수 차단. guideBgMergeKey가 id/name로 fallback하므로 merge 부활 방지에 영향 없음. */if(S.roomBackgroundSettings&&bg.id)delete S.roomBackgroundSettings[bg.id];S.guideBackgrounds.splice(i,1);saveNow();renderGuideBgs();toastSafe('삭제됨')};
 function init(){if(window.S)renderGuideBgs()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,400);setTimeout(init,1500)});else{setTimeout(init,0);setTimeout(init,1000)}
 window.addEventListener('load',function(){setTimeout(init,900);setTimeout(init,2200)});
@@ -5640,7 +5640,7 @@ window.__dennAdminStableSaveSoon=saveSoon;
 <script id="denn-v35-admin-data-safety-final">
 (function(){
 'use strict';
-var SNAP_KEY='denn_admin_snapshots_v35',MAX_SNAPS=12,lastSig='',lastSnapAt=0;
+var SNAP_KEY='denn_admin_snapshots_v35',MAX_SNAPS=5,lastSig='',lastSnapAt=0;
 function by(id){return document.getElementById(id)}
 function clone(v){try{return JSON.parse(JSON.stringify(v))}catch(e){return v}}
 function count(v){return Array.isArray(v)?v.length:0}
@@ -5662,16 +5662,68 @@ function signature(s){
 }
 function readSnaps(){try{return JSON.parse(localStorage.getItem(SNAP_KEY)||'[]')||[]}catch(e){return[]}}
 function writeSnaps(arr){try{localStorage.setItem(SNAP_KEY,JSON.stringify(arr.slice(0,MAX_SNAPS)))}catch(e){console.warn('snapshot save skipped',e)}}
+// B안 v2: snapshot용 slim state — base64 페이로드 strip, metadata만 보존.
+// 조건부 strip: storagePath가 있어야만 dataUrl을 null로 치환 (마이그 실패 시 데이터 유실 방지).
+function slimSnapshotState(s){
+  if(!s||typeof s!=='object')return s;
+  var slim=Object.assign({},s);
+  if(Array.isArray(slim.guideBackgrounds)){
+    slim.guideBackgrounds=slim.guideBackgrounds.map(function(bg){
+      if(bg&&bg.storagePath)return Object.assign({},bg,{dataUrl:null});
+      return bg;
+    });
+  }
+  if(slim.frameMockup&&slim.frameMockupStoragePath)slim.frameMockup=null;
+  if(slim.caseMockup&&slim.caseMockupStoragePath)slim.caseMockup=null;
+  if(Array.isArray(slim.deletedGuideBackgroundKeys)){
+    slim.deletedGuideBackgroundKeys=slim.deletedGuideBackgroundKeys.filter(function(k){
+      return typeof k==='string'&&k.indexOf('data:')!==0;
+    });
+  }
+  // frameTemplates는 Firebase 마이그(B안 v1)로 이미 URL이거나 storagePath 보유 — 조건부 처리.
+  if(Array.isArray(slim.frameTemplates)){
+    slim.frameTemplates=slim.frameTemplates.map(function(t){
+      if(!t||typeof t!=='object')return t;
+      var copy=Object.assign({},t);
+      if(t.storagePath&&typeof t.dataUrl==='string'&&t.dataUrl.indexOf('data:')===0)copy.dataUrl=null;
+      if(t.sourceStoragePath&&typeof t.sourceDataUrl==='string'&&t.sourceDataUrl.indexOf('data:')===0)copy.sourceDataUrl=null;
+      if(t.builderArtStoragePath&&typeof t.builderArtDataUrl==='string'&&t.builderArtDataUrl.indexOf('data:')===0)copy.builderArtDataUrl=null;
+      if(t.originalStoragePath&&typeof t.originalDataUrl==='string'&&t.originalDataUrl.indexOf('data:')===0)copy.originalDataUrl=null;
+      return copy;
+    });
+  }
+  return clone(slim); // 최종 deep clone (저장 시 변형 격리)
+}
 function addSnapshot(reason,force){
   if(!window.S)return;
   var sig=signature(S),now=Date.now();
   if(!force&&sig===lastSig&&now-lastSnapAt<5000)return;
   lastSig=sig;lastSnapAt=now;
   var arr=readSnaps();
-  arr.unshift({reason:reason||'auto',summary:summary(S),state:clone(S)});
+  arr.unshift({reason:reason||'auto',summary:summary(S),state:slimSnapshotState(S)});
   writeSnaps(arr);
   updatePanel();
 }
+// B안 v2: 기존 ring을 1회 자동 slim — IIFE 시작 시점에 동기적으로 실행.
+// 동기 + 멱등 (조건부 strip이라 두 번 실행해도 결과 동일).
+// 본체 denn_admin setItem 차단 해소를 위해 필수.
+function autoSlimExistingRingOnce(){
+  try{
+    var raw=localStorage.getItem(SNAP_KEY);
+    if(!raw)return;
+    var arr=JSON.parse(raw);
+    if(!Array.isArray(arr)||!arr.length)return;
+    var beforeBytes=raw.length;
+    var slimmed=arr.slice(0,MAX_SNAPS).map(function(entry){
+      if(!entry||typeof entry!=='object')return entry;
+      return {reason:entry.reason,summary:entry.summary,state:slimSnapshotState(entry.state||{})};
+    });
+    var out=JSON.stringify(slimmed);
+    localStorage.setItem(SNAP_KEY,out);
+    console.log('[snapshot] auto-slimmed existing ring:',beforeBytes,'→',out.length,'bytes ('+slimmed.length+' entries)');
+  }catch(e){console.warn('[snapshot] auto-slim failed:',e)}
+}
+autoSlimExistingRingOnce();
 function downloadObj(obj,name){
   if(!obj){alert('저장할 데이터가 없습니다.');return}
   var blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),a=document.createElement('a');
@@ -13871,10 +13923,13 @@ window.addEventListener('resize',scheduleSettle);
      Firebase Storage 연동 (Step 2: fbExport 자동 업로드 wrap)
      - 예외 wrap 추가 사유: 외부 서비스(Firebase Storage) 통합은
        기존 fbExport 본체와 책임이 다른 비동기 후처리이므로 분리.
-     - 동작 (B안 확장):
+     - 동작 (B안 v1+v2 확장):
        fbExport 호출 후 (200ms/1500ms) tplArr() 스윕 →
        4개 필드(dataUrl/sourceDataUrl/builderArtDataUrl/originalDataUrl) 중
        data: 프리픽스이고 대응 storagePath가 없는 것을 Storage로 업로드.
+       추가 (v2): sweepHeavyV2()로 S.guideBackgrounds[].dataUrl(guides/{id}.{ext}),
+       S.frameMockup(mockups/frame.{ext}), S.caseMockup(mockups/case.{ext}) 마이그.
+       S.deletedGuideBackgroundKeys에서 data: URL 엔트리 청소 (RC-1 과거 누수).
        동일 data: URL은 string-identity로 dedup → 1회 업로드 후 공유.
        성공 시 해당 필드 = URL, 대응 *StoragePath = 경로, 재저장+재렌더.
        stale-path 자동 클리어 (data:인데 path가 있으면 path 삭제 → 재마이그 유도).
@@ -13978,6 +14033,102 @@ window.addEventListener('resize',scheduleSettle);
   function sweep(){
     var arr=tplArr();
     for(var i=0;i<arr.length;i++)syncOne(arr[i]);
+    sweepHeavyV2();
+  }
+
+  // ===== B안 v2: heavy state 필드 마이그 (guideBgs / frameMockup / caseMockup / deletedKeys) =====
+
+  function extFromDataUrl(d){
+    var m=/^data:image\/(png|jpe?g|webp|gif);base64,/i.exec(d||'');
+    if(!m)return 'png';
+    var t=m[1].toLowerCase();
+    return t==='jpeg'?'jpg':t;
+  }
+
+  // 전역 string 필드 (frameMockup, caseMockup) 마이그.
+  // host[dataField]가 data:이면 업로드 → URL+pathField 기록.
+  function migrateGlobal(host,dataField,pathField,basePath){
+    if(!host||typeof host!=='object')return;
+    var src=host[dataField];
+    if(typeof src!=='string'||src.indexOf('data:')!==0)return;
+    if(host[pathField])return; // 이미 마이그됨
+    var fb=window.dennFirebase;
+    if(!fb||typeof fb.uploadDataUrl!=='function')return;
+    var guardKey='global:'+dataField;
+    if(inFlight[guardKey])return;
+    inFlight[guardKey]=true;
+    var path=basePath+'.'+extFromDataUrl(src);
+    var bytes=src.length;
+    fb.uploadDataUrl(src,path).then(function(res){
+      if(typeof host[dataField]==='string'&&host[dataField].indexOf('data:')===0){
+        host[dataField]=res.url;
+        host[pathField]=res.path;
+        persistAll();
+        console.log('[firebase] migrated S',dataField,'→',res.path,'saved bytes:',bytes);
+      }
+    }).catch(function(err){
+      console.warn('[firebase] global migrate failed',dataField,err&&err.code,err&&err.message);
+    }).then(function(){delete inFlight[guardKey]},function(){delete inFlight[guardKey]});
+  }
+
+  function migrateGuideBgs(){
+    var arr=(window.S&&Array.isArray(window.S.guideBackgrounds))?window.S.guideBackgrounds:null;
+    if(!arr||!arr.length)return;
+    var fb=window.dennFirebase;
+    if(!fb||typeof fb.uploadDataUrl!=='function')return;
+    arr.forEach(function(bg){
+      if(!bg||!bg.id||bg.storagePath)return;
+      var src=bg.dataUrl;
+      if(typeof src!=='string'||src.indexOf('data:')!==0)return;
+      var guardKey='guide:'+bg.id;
+      if(inFlight[guardKey])return;
+      inFlight[guardKey]=true;
+      var path='guides/'+bg.id+'.'+extFromDataUrl(src);
+      var bytes=src.length;
+      var id=bg.id;
+      fb.uploadDataUrl(src,path).then(function(res){
+        var list=(window.S&&Array.isArray(window.S.guideBackgrounds))?window.S.guideBackgrounds:null;
+        if(!list)return;
+        for(var i=0;i<list.length;i++){
+          var cur=list[i];
+          if(cur&&cur.id===id&&typeof cur.dataUrl==='string'&&cur.dataUrl.indexOf('data:')===0){
+            cur.dataUrl=res.url;
+            cur.storagePath=res.path;
+            persistAll();
+            console.log('[firebase] migrated guideBg',id,'→',res.path,'saved bytes:',bytes);
+            break;
+          }
+        }
+      }).catch(function(err){
+        console.warn('[firebase] guideBg migrate failed',id,err&&err.code,err&&err.message);
+      }).then(function(){delete inFlight[guardKey]},function(){delete inFlight[guardKey]});
+    });
+  }
+
+  // S.deletedGuideBackgroundKeys에서 data: URL 엔트리 제거 (RC-1 과거 누수 청소).
+  // 멱등: 한번 실행 후엔 data: 엔트리 없음 → 후속 실행에서 no-op.
+  function cleanupDeletedKeys(){
+    if(!window.S||!Array.isArray(window.S.deletedGuideBackgroundKeys))return;
+    var before=window.S.deletedGuideBackgroundKeys.length;
+    var beforeBytes=0;
+    var filtered=window.S.deletedGuideBackgroundKeys.filter(function(k){
+      if(typeof k!=='string'){beforeBytes+=0;return true}
+      beforeBytes+=k.length;
+      return k.indexOf('data:')!==0;
+    });
+    var removed=before-filtered.length;
+    if(removed===0)return;
+    var afterBytes=filtered.reduce(function(a,k){return a+(typeof k==='string'?k.length:0)},0);
+    window.S.deletedGuideBackgroundKeys=filtered;
+    persistAll();
+    console.log('[firebase] cleaned deletedGuideBackgroundKeys: '+removed+' entries removed, '+(beforeBytes-afterBytes)+' bytes saved');
+  }
+
+  function sweepHeavyV2(){
+    try{cleanupDeletedKeys()}catch(e){console.warn('[firebase] cleanupDeletedKeys error',e)}
+    try{migrateGuideBgs()}catch(e){console.warn('[firebase] migrateGuideBgs error',e)}
+    try{migrateGlobal(window.S,'frameMockup','frameMockupStoragePath','mockups/frame')}catch(e){console.warn('[firebase] frameMockup error',e)}
+    try{migrateGlobal(window.S,'caseMockup','caseMockupStoragePath','mockups/case')}catch(e){console.warn('[firebase] caseMockup error',e)}
   }
 
   function wrapFbExport(){

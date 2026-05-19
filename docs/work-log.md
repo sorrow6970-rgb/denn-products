@@ -103,6 +103,28 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그(guideBgs/mockups) + snapshot 슬림화 + deletedKeys 누수 청소 | 상태: 완료`
+  - 범위:
+    1. denn-admin.html L5280 `delGuideBg` — `S.deletedGuideBackgroundKeys.push(bg.dataUrl)` 1줄 제거 (RC-1 미래 누수 차단). key+id push는 보존 → merge 부활방지 로직 무영향. base64를 키로 저장하던 패턴 종식.
+    2. denn-admin.html `denn-v35-admin-data-safety-final` IIFE 내부:
+       - `MAX_SNAPS`: 12 → 5
+       - `slimSnapshotState(s)` helper 신규 — **조건부** strip (storagePath가 있어야만 dataUrl을 null로). 마이그 부분 실패 시 데이터 유실 방지.
+       - `addSnapshot`의 `clone(S)` → `slimSnapshotState(S)`
+       - `autoSlimExistingRingOnce()` — IIFE 시작 시 기존 ring을 1회 자동 slim → 본체 `denn_admin` setItem 차단 즉시 해소. 멱등.
+    3. denn-admin.html Firebase auto-sync IIFE 확장:
+       - `migrateGlobal(host, dataField, pathField, basePath)` helper (단일 string 필드용)
+       - `migrateGuideBgs()` — `S.guideBackgrounds[].dataUrl` → `guides/{id}.{ext}`, `bg.storagePath` 부여
+       - `cleanupDeletedKeys()` — `S.deletedGuideBackgroundKeys`의 `data:` 엔트리 필터, 청소량 로그
+       - `sweepHeavyV2()` — 위 4종 호출. 기존 `sweep()` 끝에 통합.
+       - `extFromDataUrl()` mime → 확장자 매핑 (png/jpg/webp/gif).
+       - 신규 path 필드: `S.guideBackgrounds[].storagePath`, `S.frameMockupStoragePath`, `S.caseMockupStoragePath`.
+  - 보호 함수 무수정 (openZoneEditor/zeRender/renderFrame/fbExport/sendKakao 본체 불변).
+  - 저장키 스키마 superset 호환 (`denn_admin`은 필드 추가만, `denn_shared_db`/`denn_order_requests` 무접촉). `denn_admin_snapshots_v35`의 state는 slim 버전으로 변경 — 같은 빌드 내에서만 유의미한 데이터라 외부 호환 영향 없음.
+  - 사용자 임시 hook(Storage.prototype.setItem 차단)은 페이지 새로고침 시 자동 제거됨. 코드 변경 불필요.
+  - 백업 태그: `phase1-b2-localstorage-v2-start` @ `bb8a013` (B v1 직후, dev 서버 셋업 직후).
+  - 충돌 위험: 낮음. 신규 sweep은 기존 sweep과 같은 cadence에 통합, 모두 멱등. snapshot 슬림화의 conditional strip이 마이그 실패에도 안전.
+  - 사용자 검증 목표: `JSON.stringify(S).length`<2MB, `denn_admin`<2MB, `denn_admin_snapshots_v35`<500KB, QuotaExceededError=0.
+
 - [x] `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (file:// 5MB localStorage 풀 회피) | 상태: 완료`
   - 범위:
     1. `start-dev.ps1` 신규 — node→python 폴백, 포트 8000/8080/5500 자동선택, ASCII-only(PS5.1 호환), Get-NetTCPConnection -State Listen으로 점유 검사.
@@ -220,8 +242,8 @@
 ## 최근 완료한 작업 5건
 > 최신 완료 작업이 위로 오도록 유지하세요. (최대 5건)
 
-1. `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (start-dev.ps1 + docs/local-dev.md) — file:// 5MB localStorage 풀 회피`
-2. `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안: localStorage 마이그레이션 확장 (4 필드) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치`
-3. `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap`
-4. `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API`
-5. `2026-05-19 | Claude Code | phase1-stage2-mask-mode | Phase1 Stage 2: maskMode 자동 감지 + 수동 override`
+1. `2026-05-19 | Claude Code | phase1-b2-localstorage-heavy-fields | B안 v2: heavy state 필드 마이그(guideBgs/mockups) + snapshot 슬림화 + deletedKeys 누수 청소`
+2. `2026-05-19 | Claude Code | local-dev-server-setup | 로컬 정적 dev 서버 (start-dev.ps1 + docs/local-dev.md)`
+3. `2026-05-19 | Claude Code | phase1-b-localstorage-migration-expand | B안 v1: localStorage 마이그레이션 확장 (4 필드) + 스냅샷 cleanup 헬퍼 + mockup-tool CORS 패치`
+4. `2026-05-19 | Claude Code | cors-fix-image-src-setter | Step 1-1: Firebase Storage URL용 crossOrigin 글로벌 wrap`
+5. `2026-05-19 | Claude Code | phase1-stage3-customer-override-api | Phase1 Stage 3: 고객(목업툴) 텍스트 색상/그림자 override state API`
