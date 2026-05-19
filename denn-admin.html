@@ -12096,6 +12096,7 @@ window.addEventListener('load',tick);
     next.createdAt=old.createdAt||next.createdAt;
     next.updatedAt=Date.now();
     if(Array.isArray(old.textZones))next.textZones=deep(old.textZones);
+    if(Array.isArray(old.editorOverlayImages))next.editorOverlayImages=deep(old.editorOverlayImages);
     if(old.defaultTexts)next.defaultTexts=deep(old.defaultTexts);
     if(old.textInputMode!=null)next.textInputMode=old.textInputMode;
     if(old.customerTextCommonStyle)next.customerTextCommonStyle=deep(old.customerTextCommonStyle);

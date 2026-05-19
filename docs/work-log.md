@@ -103,6 +103,14 @@
 ## 현재 진행 중인 작업 (실시간 업데이트용)
 > 최신 작업이 위로 오도록 추가하세요.
 
+- [x] `2026-05-19 | Claude Code | guide-bg-preserve | preserveDetailFields에 editorOverlayImages 보존 1줄 추가 (가이드 사라짐 root cause 해소) | 상태: 완료`
+  - 증상: ZE modal에서 가이드 배경 추가 + 저장 → 모달 재진입 시 가이드 사라짐.
+  - 원인: `denn-admin.html:12146` finishEditSave → preserveDetailFields(created, oldTpl) → 명시 보존 리스트에 `editorOverlayImages` 부재 → `list[idx]=created` 시 통째 손실.
+  - 수정: `denn-admin.html` v94 IIFE 내부 preserveDetailFields에 `if(Array.isArray(old.editorOverlayImages))next.editorOverlayImages=deep(old.editorOverlayImages);` 1줄 추가. textZones 보존 패턴(L12084) 동형.
+  - 부수 효과: race condition도 함께 해소 — 마이그 미완료 상태(data: 그대로)로 edit-save해도 보존, 후속 sweep에서 정상 마이그.
+  - 보호: preserveDetailFields는 v94 IIFE 내부 함수, 보호 함수 외(이전 Phase1 Stage1+2+3에서 동일 함수에 추가한 선례 유지).
+  - 백업 태그: `phase1-guide-preserve-start` @ `b8b8dc9`.
+
 - [x] `2026-05-19 | Claude Code | beforeunload-guard | 새로고침 보호 — ZE modal 편집 중 reload/close 경고 | 상태: 완료`
   - 신규: denn-admin.html 말미 `denn-beforeunload-guard` IIFE.
   - 동작:
