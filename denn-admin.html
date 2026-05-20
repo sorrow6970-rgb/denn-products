@@ -14557,6 +14557,41 @@ window.addEventListener('resize',scheduleSettle);
     }
     setTimeout(tryInstall,1200); // after firebase install (1000ms)
     setInterval(pollEditIdx,250);
+    // 저장 버튼 onclick은 v63 authority가 exportFromBuilder를 직접 호출 →
+    // window.fbExport(Phase 1 wrap) 우회. capture phase에서 click을 가로채
+    // (1) preserveDetailFields용 UI 캡처, (2) 저장 후 list[idx]에 직접 set + persist
+    if(!window.__dennPhase1ClickCaptureInstalled){
+      window.__dennPhase1ClickCaptureInstalled=true;
+      document.addEventListener('click',function(e){
+        var b=e.target&&e.target.closest&&e.target.closest('#tp-frame-builder button[onclick*="fbExport"],#tp-frame-builder button[data-save-authority]');
+        if(!b)return;
+        try{
+          var ui=readUI();
+          window.__dennPhase1LastUI=ui;
+          var capturedIdx=window.__dennFrameTemplateEditIndex;
+          if(capturedIdx==null)return;
+          [80,300,900,1600,3000].forEach(function(d){
+            setTimeout(function(){
+              try{
+                var arr=(window.S&&window.S.frameTemplates)||[];
+                var t=arr[capturedIdx];
+                if(!t)return;
+                var changed=t.allowColorChange!==ui.allowColorChange;
+                t.allowColorChange=!!ui.allowColorChange;
+                if(ui.maskMode==='white'||ui.maskMode==='black'){
+                  if(t.maskMode!==ui.maskMode||t.maskModeSource!=='manual')changed=true;
+                  t.maskMode=ui.maskMode;
+                  t.maskModeSource='manual';
+                }
+                if(changed){
+                  try{if(typeof window.persistNow==='function')window.persistNow();else if(typeof window.persist==='function')window.persist();}catch(_p){}
+                }
+              }catch(_t){}
+            },d);
+          });
+        }catch(_e){}
+      },true);
+    }
     // Also rebuild toggle UI when user navigates into builder tab (DOM may rerender).
     var oldGo=window.goTab;
     if(typeof oldGo==='function'&&!oldGo.__dennPhase1Tab){
