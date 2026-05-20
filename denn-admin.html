@@ -14668,6 +14668,12 @@ window.addEventListener('resize',scheduleSettle);
 
   // FB.artImg를 SAMPLE_COLOR로 source-atop 합성한 캔버스로 swap 후 fn 실행.
   // wrap 본체 공통화 — fbRender와 v71 API.render 양쪽에서 사용.
+  //
+  // v365 rAF 우회: line 13529의 v365 wrap이 window.fbRender를 requestAnimationFrame으로
+  // deferred 처리. v365의 oldFb 클로저는 script load 시점에 캡처된 v71 render 직접 참조라
+  // 우리 wrap의 finally가 sync로 FB.artImg를 원복한 뒤, rAF 다음 프레임에서
+  // 원본 FB.artImg로 다시 그림 → "잠깐 골드 → 원본" 증상.
+  // __dennV365FbImmediate=true 로 v365가 노출한 sync 모드 강제 → swap 상태에서 페인트 완료.
   function withFbArtImgSwap(fn,thisArg,argsArr){
     try{
       var t=currentFbTpl();
@@ -14677,7 +14683,13 @@ window.addEventListener('resize',scheduleSettle);
           origImg.__dennS5FbCache={color:SAMPLE_COLOR,canvas:buildSourceAtopCanvas(origImg,SAMPLE_COLOR)};
         }
         FB.artImg=origImg.__dennS5FbCache.canvas;
-        try{return fn.apply(thisArg,argsArr)}finally{FB.artImg=origImg}
+        var prevImmediate=window.__dennV365FbImmediate;
+        window.__dennV365FbImmediate=true;
+        try{return fn.apply(thisArg,argsArr)}
+        finally{
+          window.__dennV365FbImmediate=prevImmediate;
+          FB.artImg=origImg;
+        }
       }
     }catch(e){console.warn('[stage5-admin] FB.artImg swap error',e)}
     return fn.apply(thisArg,argsArr);
