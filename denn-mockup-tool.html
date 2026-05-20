@@ -10145,7 +10145,11 @@ window.addEventListener('load',later);
     return true;
   }
 
-  // === wrap realTemplateSrc ===
+  // === wrap realTemplateSrc (그리드 thumbnails만 영향) ===
+  // ⚠ ROOT CAUSE: L2388 `function realTemplateSrc`는 L2375 strict mode IIFE 내부에 선언되어
+  // IIFE-로컬 함수. window.realTemplateSrc는 IIFE 외부에서만 보임 (L2388 함수와 별개).
+  // L2472 renderFrame body는 같은 IIFE 내부에서 IIFE-로컬 realTemplateSrc를 사용 → 이 wrap 우회.
+  // 해결책: installRenderFrameTintHook가 tpl.dataUrl을 직접 swap.
   function installRealTemplateSrcWrap(){
     if(typeof window.realTemplateSrc!=='function')return false;
     if(window.realTemplateSrc.__dennPhaseCCustomer)return true;
@@ -10157,19 +10161,56 @@ window.addEventListener('load',later);
       record('lastTpl',t&&{id:t.id,type:t.type,hasDataUrl:!!t.dataUrl,allowColorChange:t.allowColorChange});
       record('lastSrc',src&&src.slice(0,100));
       record('lastShouldTint',should);
-      if(!should){
-        dlog('realTemplateSrc: shouldTint=false → original',{imgOn:ensureImageState().on, masterOn:masterOn(), allowed:currentTplAllowed()});
-        record('lastReturned','original (shouldTint=false)');
-        return src;
-      }
+      if(!should){record('lastReturned','original (shouldTint=false)');return src}
       var out=getTintedSrc(t, src);
-      var ret=out===src?'original (cache miss/pending)':'tinted (cache hit)';
-      dlog('realTemplateSrc: returning',ret,out&&out.slice(0,80));
-      record('lastReturned',ret);
+      record('lastReturned',out===src?'original (cache miss/pending)':'tinted (cache hit)');
       return out;
     };
     wrapped.__dennPhaseCCustomer=true;
     window.realTemplateSrc=wrapped;
+    return true;
+  }
+
+  // === renderFrame swap hook — 진짜 해결책 ===
+  // 렌더 시작 직전 tpl.dataUrl을 tinted dataUrl로 교체.
+  // L2490 `loadImg(tplSrc, callback)`은 tplSrc를 클로저 캡처 — finally에서 원본 복원해도
+  // 비동기 콜백은 캡처된 tinted URL로 Image 로드 → ctx.drawImage가 tinted 결과 그림.
+  // fbExport/Print 등 다른 경로는 renderFrame 외부 → 원본 dataUrl 그대로 사용.
+  function ensureTintedFor(tpl){
+    if(!tpl||!tpl.dataUrl)return null;
+    var key=paramKey(imageParams());
+    var tplKey=tpl.id||'';
+    var cache=tintCache[tplKey];
+    if(cache&&cache.key===key&&cache.dataUrl)return cache.dataUrl;
+    if(!cache||cache.key!==key){
+      tintCache[tplKey]={key:key,dataUrl:null};
+      buildTintedDataUrl(tpl.dataUrl, imageParams()).then(function(dataUrl){
+        tintCache[tplKey]={key:key,dataUrl:dataUrl};
+        if(typeof window.renderFrame==='function')window.renderFrame();
+      });
+    }
+    return null;
+  }
+  function installRenderFrameSwapHook(){
+    if(typeof window.renderFrame!=='function')return false;
+    if(window.renderFrame.__dennPhaseCCustomerSwap)return true;
+    var orig=window.renderFrame;
+    var wrap=function(){
+      var tpl=window.curFTpl;
+      var swapped=null;
+      if(shouldTintImage()&&tpl&&tpl.dataUrl){
+        var tinted=ensureTintedFor(tpl);
+        if(tinted){
+          swapped={tpl:tpl, original:tpl.dataUrl};
+          tpl.dataUrl=tinted;
+          instrumentation.tplDataUrlSwapped=(instrumentation.tplDataUrlSwapped||0)+1;
+        }
+      }
+      try{return orig.apply(this,arguments)}
+      finally{if(swapped)swapped.tpl.dataUrl=swapped.original}
+    };
+    wrap.__dennPhaseCCustomerSwap=true;
+    window.renderFrame=wrap;
     return true;
   }
 
@@ -10355,6 +10396,7 @@ window.addEventListener('load',later);
     installToggleMasterWrap();
     installSelFTplWrap();
     installRenderFrameInstrumentation();
+    installRenderFrameSwapHook();
     dedupRows();
     applyGating();
   }
