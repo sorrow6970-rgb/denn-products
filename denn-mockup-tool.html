@@ -10013,9 +10013,12 @@ window.addEventListener('load',later);
   }
   function masterOn(){return !!window.frameTextStyleOn}
 
+  // [Issue v4-fix] image tint를 master toggle과 분리 — 독립 row.
+  // v70 textStyleLock이 텍스트 zone 없는 시안에서 master를 잠그지만 image tint는 무관.
+  // master가 OFF여도 image row toggle만으로 합성 동작.
   function shouldTintImage(){
     var s=ensureImageState();
-    return !!s.on && masterOn() && currentTplAllowed();
+    return !!s.on && currentTplAllowed();
   }
 
   function imageParams(){
@@ -10270,6 +10273,36 @@ window.addEventListener('load',later);
     }
   }
 
+  // toggleFrameTextStyleBox wrap — v70 textStyleLock 우회.
+  // 문제: 시안의 textZones가 ['main','name','date','sub']와 매치 안 되는 경우
+  //  v70이 allowedKeys=[] 판정 → toggleFrameTextStyleBox 호출 시 lockTextStyleBox 실행 → master 잠김.
+  //  하지만 우리 image tint는 텍스트 zone 유무와 무관 — uploaded 시안 + allowColorChange면 항상 가능.
+  // 해결: allowed일 때 v70 본체 호출 없이 직접 toggle 수행. denn-v70-locked CSS 클래스도 제거.
+  function installToggleMasterWrap(){
+    if(typeof window.toggleFrameTextStyleBox!=='function')return false;
+    if(window.toggleFrameTextStyleBox.__dennPhaseCCustomerMasterBypass)return true;
+    var orig=window.toggleFrameTextStyleBox;
+    var wrap=function(){
+      if(currentTplAllowed()){
+        // 직접 toggle — v70 lock 우회
+        window.frameTextStyleOn=!window.frameTextStyleOn;
+        var box=document.getElementById('frame-text-style-box');
+        var tog=document.getElementById('frame-text-style-master');
+        if(box){
+          box.classList.toggle('on',!!window.frameTextStyleOn);
+          box.classList.remove('denn-v70-locked'); // 잠금 해제 (image tint는 항상 가능)
+        }
+        if(tog)tog.classList.toggle('on',!!window.frameTextStyleOn);
+        if(typeof window.renderFrame==='function')window.renderFrame();
+        return true;
+      }
+      return orig.apply(this,arguments);
+    };
+    wrap.__dennPhaseCCustomerMasterBypass=true;
+    window.toggleFrameTextStyleBox=wrap;
+    return true;
+  }
+
   // selFTplByRef wrap — 시안 변경 시 캐시 무효화 + 게이팅
   function installSelFTplWrap(){
     if(typeof window.selFTplByRef!=='function')return false;
@@ -10292,6 +10325,7 @@ window.addEventListener('load',later);
     installRealTemplateSrcWrap();
     installBulkKeysWrap();
     installBulkApplyWrap();
+    installToggleMasterWrap();
     installSelFTplWrap();
     dedupRows();
     applyGating();
@@ -10315,19 +10349,16 @@ window.addEventListener('load',later);
   function autoEnable(opts){
     opts=opts||{};
     var color=opts.color||'#C49A6C';
-    // master ON
-    autoToggle('frame-text-style-master', true);
-    // _image row ON
-    autoToggle('fts-'+IMG_KEY+'-on', true);
-    // color 설정 — row의 color input 첫 번째
-    var row=document.getElementById('fts-row-'+IMG_KEY);
-    if(row){
-      var colors=row.querySelectorAll('input[type=color]');
-      if(colors[0]&&colors[0].value!==color){
-        colors[0].value=color;
-        colors[0].dispatchEvent(new Event('input',{bubbles:true}));
-      }
+    // master toggle — 직접 호출로 v70 lock 우회 (autoToggle click이 pointer-events:none 잠금에 막힐 수도)
+    if(!window.frameTextStyleOn){
+      if(typeof window.toggleFrameTextStyleBox==='function')window.toggleFrameTextStyleBox();
     }
+    applyGating(); // disabled 클래스 즉시 제거
+    // _image row 토글 — updateImage 직접 호출
+    var s=ensureImageState();
+    if(!s.on)updateImage('on', true);
+    // 색상 설정
+    if(s.color!==color)updateImage('color', color);
     if(typeof window.renderFrame==='function')window.renderFrame();
   }
 
