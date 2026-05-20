@@ -9966,6 +9966,210 @@ window.addEventListener('load',later);
   };
 })();
 </script>
+
+<!-- DENN Phase C 고객측 — 이미지 tint + 어드민 OFF 게이팅 -->
+<style id="denn-phase-c-customer-color-css">
+.denn-color-disabled{opacity:.45;cursor:not-allowed;position:relative}
+.denn-color-disabled > *{pointer-events:none}
+#denn-image-tint-box{margin-top:8px}
+#denn-image-tint-box .frame-text-style-body{padding-top:4px}
+.denn-image-tint-row{display:flex;align-items:center;gap:10px;padding:6px 2px}
+.denn-image-tint-row label{font-size:11px;color:#6b5a42;font-weight:600;min-width:36px}
+.denn-image-tint-row input[type=color]{width:36px;height:24px;border:1px solid #d8c6aa;border-radius:5px;padding:0;cursor:pointer}
+.denn-image-tint-hint{font-size:9.5px;color:#A08870;line-height:1.4}
+.denn-image-tint-status{font-size:9.5px;color:#8B7355;font-style:italic;margin-top:2px}
+</style>
+<script id="denn-phase-c-customer-color">
+(function(){
+  'use strict';
+  if(window.__dennPhaseCCustomerColor)return;
+  window.__dennPhaseCCustomerColor=true;
+
+  // === state ===
+  // tintOn: 사용자가 이미지 tint master 토글 ON. tintColor: 선택한 컬러.
+  // tintCache[tpl.id]={color, dataUrl|null} — 같은 색이면 재사용. 색 바뀌면 무효화.
+  var tintOn=false, tintColor='#C49A6C';
+  var tintCache=Object.create(null);
+  var DISABLED_CLASS='denn-color-disabled';
+  var DISABLED_TOOLTIP='관리자가 색상 변경을 허용하지 않은 시안입니다';
+
+  function currentTplAllowed(){
+    var t=window.curFTpl;
+    return !!(t&&t.allowColorChange===true);
+  }
+  function shouldTintImage(){return tintOn && currentTplAllowed()}
+
+  // === source-atop dataUrl 생성 ===
+  // 어드민 Phase C C1과 동일 패턴 — img 위에 globalCompositeOperation='source-atop' fillRect.
+  // 비동기: realTemplateSrc 첫 반환은 원본, 생성 완료 후 cache 채우고 renderFrame 재호출 → 다음 렌더부터 tinted.
+  function buildTintedDataUrl(srcUrl, color){
+    return new Promise(function(resolve){
+      var img=new Image();
+      img.crossOrigin='anonymous';
+      img.onload=function(){
+        try{
+          var w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+          if(!w||!h){resolve(srcUrl);return}
+          var c=document.createElement('canvas');
+          c.width=w; c.height=h;
+          var ctx=c.getContext('2d');
+          ctx.drawImage(img,0,0);
+          ctx.globalCompositeOperation='source-atop';
+          ctx.fillStyle=color;
+          ctx.fillRect(0,0,w,h);
+          ctx.globalCompositeOperation='source-over';
+          resolve(c.toDataURL('image/png'));
+        }catch(e){console.warn('[phase-c-customer] tint build failed',e);resolve(srcUrl)}
+      };
+      img.onerror=function(){console.warn('[phase-c-customer] tint img load failed',srcUrl);resolve(srcUrl)};
+      img.src=srcUrl;
+    });
+  }
+
+  function getTintedSrc(tpl, originalSrc){
+    if(!tpl||!originalSrc)return originalSrc;
+    var key=tpl.id||'';
+    var cache=tintCache[key];
+    if(cache&&cache.color===tintColor&&cache.dataUrl)return cache.dataUrl;
+    if(!cache||cache.color!==tintColor){
+      tintCache[key]={color:tintColor, dataUrl:null};
+      buildTintedDataUrl(originalSrc, tintColor).then(function(dataUrl){
+        tintCache[key]={color:tintColor, dataUrl:dataUrl};
+        if(typeof window.renderFrame==='function')window.renderFrame();
+      });
+    }
+    return originalSrc;
+  }
+
+  // === wrap realTemplateSrc (보호 영역 아님) ===
+  // renderFrame 본체 무수정 — realTemplateSrc wrap이 tint 적용 dataUrl 반환.
+  function installRealTemplateSrcWrap(){
+    if(typeof window.realTemplateSrc!=='function')return false;
+    if(window.realTemplateSrc.__dennPhaseCCustomer)return true;
+    var orig=window.realTemplateSrc;
+    var wrapped=function(t){
+      var src=orig.apply(this, arguments);
+      if(!shouldTintImage())return src;
+      return getTintedSrc(t, src);
+    };
+    wrapped.__dennPhaseCCustomer=true;
+    window.realTemplateSrc=wrapped;
+    return true;
+  }
+
+  // === UI: 이미지 tint 패널 ===
+  function buildUI(){
+    var box=document.getElementById('frame-text-style-box');
+    if(!box||document.getElementById('denn-image-tint-box'))return;
+    var panel=document.createElement('div');
+    panel.id='denn-image-tint-box';
+    panel.className='frame-text-style-box';
+    panel.innerHTML=
+      '<div class="frame-text-style-head">'+
+        '<div class="frame-text-style-title">시안 이미지 색상</div>'+
+        '<div class="tog" id="denn-image-tint-master"></div>'+
+      '</div>'+
+      '<div class="frame-text-style-body">'+
+        '<div class="denn-image-tint-row">'+
+          '<label>색상</label>'+
+          '<input type="color" id="denn-image-tint-color" value="'+tintColor+'">'+
+          '<span class="denn-image-tint-hint">시안 PNG의 불투명 영역(텍스트/그래픽)을 선택 컬러로 변환</span>'+
+        '</div>'+
+        '<div class="denn-image-tint-status" id="denn-image-tint-status"></div>'+
+      '</div>';
+    box.parentNode.insertBefore(panel, box.nextSibling);
+
+    var master=document.getElementById('denn-image-tint-master');
+    master.onclick=function(){
+      if(!currentTplAllowed())return;
+      tintOn=!tintOn;
+      panel.classList.toggle('on', tintOn);
+      master.classList.toggle('on', tintOn);
+      updateStatus();
+      if(typeof window.renderFrame==='function')window.renderFrame();
+    };
+    var picker=document.getElementById('denn-image-tint-color');
+    picker.oninput=function(){
+      tintColor=this.value;
+      tintCache=Object.create(null); // 색 변경 시 캐시 무효화
+      updateStatus();
+      if(tintOn&&typeof window.renderFrame==='function')window.renderFrame();
+    };
+  }
+
+  function updateStatus(){
+    var el=document.getElementById('denn-image-tint-status');
+    if(!el)return;
+    if(!currentTplAllowed()){el.textContent='';return}
+    if(!tintOn){el.textContent='OFF — 원본 PNG 사용';return}
+    var t=window.curFTpl, cache=t&&tintCache[t.id||''];
+    if(cache&&cache.dataUrl)el.textContent='ON — '+tintColor+' 적용';
+    else el.textContent='ON — '+tintColor+' 합성 중…';
+  }
+
+  // === 게이팅: 어드민 OFF 시 비활성 상태 + tooltip ===
+  function applyGating(){
+    var allowed=currentTplAllowed();
+    ['frame-text-style-box','denn-image-tint-box'].forEach(function(id){
+      var el=document.getElementById(id);if(!el)return;
+      el.classList.toggle(DISABLED_CLASS, !allowed);
+      if(allowed)el.removeAttribute('title');
+      else el.title=DISABLED_TOOLTIP;
+    });
+    // 비허용 시 활성 상태 자동 OFF
+    if(!allowed){
+      if(tintOn){
+        tintOn=false;
+        var p=document.getElementById('denn-image-tint-box'),m=document.getElementById('denn-image-tint-master');
+        if(p)p.classList.remove('on');
+        if(m)m.classList.remove('on');
+        if(typeof window.renderFrame==='function')window.renderFrame();
+      }
+    }
+    updateStatus();
+  }
+
+  // === selFTplByRef wrap (template 변경 시 게이팅 재적용) ===
+  function installSelFTplWrap(){
+    if(typeof window.selFTplByRef!=='function')return false;
+    if(window.selFTplByRef.__dennPhaseCCustomerGate)return true;
+    var orig=window.selFTplByRef;
+    var wrap=function(){
+      var r=orig.apply(this, arguments);
+      // 템플릿 바뀌면 tint 캐시 무효화 (다른 시안 fresh start)
+      tintCache=Object.create(null);
+      applyGating();
+      return r;
+    };
+    wrap.__dennPhaseCCustomerGate=true;
+    window.selFTplByRef=wrap;
+    return true;
+  }
+
+  // === Boot ===
+  function boot(){
+    buildUI();
+    installRealTemplateSrcWrap();
+    installSelFTplWrap();
+    applyGating();
+    console.log('[phase-c-customer] installed (image tint + admin OFF gating)');
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+  // 지연 boot — 다른 wrap이 늦게 설치되거나 UI가 늦게 그려질 수 있음
+  setTimeout(boot, 500);
+  setTimeout(boot, 2000);
+  // 주기적 게이팅 점검 — selFTplByRef 외 경로로 curFTpl이 바뀔 경우 대비
+  setInterval(applyGating, 1500);
+
+  // 디버그 API
+  window.dennPhaseCCustomerColor={
+    getState:function(){return {tintOn:tintOn,tintColor:tintColor,allowed:currentTplAllowed(),cacheKeys:Object.keys(tintCache)}},
+    setTintColor:function(c){var p=document.getElementById('denn-image-tint-color');if(p){p.value=c;p.oninput.call(p)}},
+    setTintOn:function(v){var m=document.getElementById('denn-image-tint-master');if(m&&!!v!==tintOn)m.onclick.call(m)}
+  };
+})();
+</script>
 </body>
 </html>
 
