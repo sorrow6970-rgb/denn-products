@@ -14623,11 +14623,14 @@ window.addEventListener('resize',scheduleSettle);
     if(!window.__dennPhase1ClickCaptureInstalled){
       window.__dennPhase1ClickCaptureInstalled=true;
       document.addEventListener('click',function(e){
-        var b=e.target&&e.target.closest&&e.target.closest('#tp-frame-builder button[onclick*="fbExport"],#tp-frame-builder button[data-save-authority]');
+        // edit 모드에서는 syncSaveButtonLabel이 onclick/data-save-authority를 제거하고
+        // data-denn-v94-edit-save를 부여 → 그 selector도 포함해야 함
+        var b=e.target&&e.target.closest&&e.target.closest('#tp-frame-builder button[onclick*="fbExport"],#tp-frame-builder button[data-save-authority],#tp-frame-builder button[data-denn-v94-edit-save]');
         if(!b)return;
         try{
           var ui=readUI();
           window.__dennPhase1LastUI=ui;
+          if(!window.__dennPhase1CaptureLogged){console.log('[phase1] save btn capture installed listener fired',{ui:ui,editIdx:window.__dennFrameTemplateEditIndex,btn:b.textContent.slice(0,30)});window.__dennPhase1CaptureLogged=true}
           var capturedIdx=window.__dennFrameTemplateEditIndex;
           if(capturedIdx==null)return;
           [80,300,900,1600,3000].forEach(function(d){
