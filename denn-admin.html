@@ -14634,6 +14634,12 @@ window.addEventListener('resize',scheduleSettle);
     try{return window.S&&window.ZE&&ZE.tplIdx!=null&&S.frameTemplates?S.frameTemplates[ZE.tplIdx]:null}catch(e){return null}
   }
 
+  // fb-canvas (Frame Builder) 시안 미리보기 측 현재 템플릿.
+  // loadTemplateIntoBuilder가 window.__dennFrameTemplateEditIndex를 세팅.
+  function currentFbTpl(){
+    try{var i=window.__dennFrameTemplateEditIndex;return window.S&&i!=null&&S.frameTemplates?S.frameTemplates[i]:null}catch(e){return null}
+  }
+
   function installZeRenderWrap(){
     var orig=window.zeRender;
     if(typeof orig!=='function')return false;
@@ -14660,13 +14666,44 @@ window.addEventListener('resize',scheduleSettle);
     return true;
   }
 
+  // fbRender wrap: fb-canvas (시안 미리보기)에서 FB.artImg drawImage 결과를 가로채
+  // allowColorChange=true일 때 source-atop 합성한 캔버스로 사전 교체.
+  // fbRender 본체/fbExport 무수정 — drawImage 결과만 변경됨. fbExport는 wrap 대상 아님.
+  function installFbRenderWrap(){
+    var orig=window.fbRender;
+    if(typeof orig!=='function')return false;
+    if(orig.__dennStage5FbWrap)return true; // 이미 outermost — skip
+    var wrap=function(){
+      try{
+        var t=currentFbTpl();
+        if(t&&t.allowColorChange===true&&window.FB&&FB.artImg){
+          var origImg=FB.artImg;
+          if(!origImg.__dennS5FbCache||origImg.__dennS5FbCache.color!==SAMPLE_COLOR){
+            origImg.__dennS5FbCache={color:SAMPLE_COLOR,canvas:buildSourceAtopCanvas(origImg,SAMPLE_COLOR)};
+          }
+          FB.artImg=origImg.__dennS5FbCache.canvas;
+          try{var r=orig.apply(this,arguments)}finally{FB.artImg=origImg}
+          return r;
+        }
+      }catch(e){console.warn('[stage5-admin] fbRender wrap error',e)}
+      return orig.apply(this,arguments);
+    };
+    wrap.__dennStage5FbWrap=true;
+    window.fbRender=wrap;
+    console.log('[stage5-admin] fbRender wrap installed/re-installed (allowColorChange 시 source-atop 샘플 컬러 '+SAMPLE_COLOR+')');
+    return true;
+  }
+
   // 재설치 가드: v36.4 wrapAll이 load+400ms에 zeRender를 재wrap → 우리 wrap이 중간으로 묻혀
   // outermost 위치 잃음. 5초 지연 후 wrap + 안전 재확인 (+8s, +15s) 으로 outermost 보장.
-  // installZeRenderWrap는 __dennStage5Wrap 마커 보유 시 idempotent.
+  // installZeRenderWrap/installFbRenderWrap는 마커 보유 시 idempotent.
   function ensureOutermost(){
-    if(!window.zeRender||typeof window.zeRender!=='function')return;
-    if(window.zeRender.__dennStage5Wrap)return; // outermost — OK
-    installZeRenderWrap();
+    if(window.zeRender&&typeof window.zeRender==='function'&&!window.zeRender.__dennStage5Wrap){
+      installZeRenderWrap();
+    }
+    if(window.fbRender&&typeof window.fbRender==='function'&&!window.fbRender.__dennStage5FbWrap){
+      installFbRenderWrap();
+    }
   }
 
   function boot(){
