@@ -10026,6 +10026,7 @@ window.addEventListener('load',later);
 
   // === tint + shadow 합성 (2단계 캔버스) — 변경 없음 ===
   function buildTintedDataUrl(srcUrl, params){
+    instrumentation.buildTintCalls++;
     return new Promise(function(resolve){
       dlog('buildTintedDataUrl start',srcUrl&&srcUrl.slice(0,80),params);
       var img=new Image();
@@ -10056,11 +10057,11 @@ window.addEventListener('load',later);
           }else{
             out=temp.toDataURL('image/png');
           }
+          instrumentation.buildTintResolves++;
           dlog('buildTintedDataUrl ok, dataUrl length:',out.length);
           resolve(out);
         }catch(e){
-          // toDataURL fails on tainted canvas — Firebase CORS 미설정 시 발생.
-          // crossOrigin='anonymous' Image 로딩이 성공해도 응답 헤더에 Access-Control-Allow-Origin 없으면 taint.
+          instrumentation.errors.push(String(e));
           console.warn('[phase-c-customer] tint build failed (likely tainted canvas — Firebase Storage CORS check)',e);
           resolve(srcUrl);
         }
@@ -10101,21 +10102,40 @@ window.addEventListener('load',later);
     return originalSrc;
   }
 
+  // === instrumentation: realTemplateSrc 호출 카운터 + 마지막 호출 정보 (진단용) ===
+  var instrumentation={
+    realTemplateSrcCalls:0,
+    buildTintCalls:0,
+    buildTintResolves:0,
+    lastSrc:null,
+    lastTpl:null,
+    lastShouldTint:null,
+    lastReturned:null,
+    errors:[]
+  };
+  function record(field,val){instrumentation[field]=val}
+
   // === wrap realTemplateSrc ===
   function installRealTemplateSrcWrap(){
     if(typeof window.realTemplateSrc!=='function')return false;
     if(window.realTemplateSrc.__dennPhaseCCustomer)return true;
     var orig=window.realTemplateSrc;
     var wrapped=function(t){
+      instrumentation.realTemplateSrcCalls++;
       var src=orig.apply(this, arguments);
-      if(!shouldTintImage()){
-        dlog('realTemplateSrc: shouldTint=false → original',{
-          imgOn:ensureImageState().on, masterOn:masterOn(), allowed:currentTplAllowed()
-        });
+      var should=shouldTintImage();
+      record('lastTpl',t&&{id:t.id,type:t.type,hasDataUrl:!!t.dataUrl,allowColorChange:t.allowColorChange});
+      record('lastSrc',src&&src.slice(0,100));
+      record('lastShouldTint',should);
+      if(!should){
+        dlog('realTemplateSrc: shouldTint=false → original',{imgOn:ensureImageState().on, masterOn:masterOn(), allowed:currentTplAllowed()});
+        record('lastReturned','original (shouldTint=false)');
         return src;
       }
       var out=getTintedSrc(t, src);
-      dlog('realTemplateSrc: returning',out===src?'original (cache miss)':'tinted (cache hit)',out&&out.slice(0,80));
+      var ret=out===src?'original (cache miss/pending)':'tinted (cache hit)';
+      dlog('realTemplateSrc: returning',ret,out&&out.slice(0,80));
+      record('lastReturned',ret);
       return out;
     };
     wrapped.__dennPhaseCCustomer=true;
@@ -10360,7 +10380,7 @@ window.addEventListener('load',later);
   window.dennPhaseCCustomerColor={
     getState:function(){
       var s=ensureImageState();
-      return {image:s, masterOn:masterOn(), allowed:currentTplAllowed(), cacheKeys:Object.keys(tintCache), shouldTint:shouldTintImage()};
+      return {image:s, masterOn:masterOn(), allowed:currentTplAllowed(), cacheKeys:Object.keys(tintCache), shouldTint:shouldTintImage(), instrumentation:JSON.parse(JSON.stringify(instrumentation))};
     },
     debugRender:function(){
       var t=window.curFTpl,src=t&&typeof window.realTemplateSrc==='function'?window.realTemplateSrc(t):null;
