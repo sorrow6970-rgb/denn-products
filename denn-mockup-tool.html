@@ -9967,17 +9967,18 @@ window.addEventListener('load',later);
 })();
 </script>
 
-<!-- DENN Phase C 고객측 — 이미지 tint + 어드민 OFF 게이팅 -->
+<!-- DENN Phase C 고객측 — 문구별 패널 내 이미지 동기화 sub-toggle + 그림자 통합 + admin OFF 게이팅 -->
 <style id="denn-phase-c-customer-color-css">
 .denn-color-disabled{opacity:.45;cursor:not-allowed;position:relative}
 .denn-color-disabled > *{pointer-events:none}
-#denn-image-tint-box{margin-top:8px}
-#denn-image-tint-box .frame-text-style-body{padding-top:4px}
-.denn-image-tint-row{display:flex;align-items:center;gap:10px;padding:6px 2px}
-.denn-image-tint-row label{font-size:11px;color:#6b5a42;font-weight:600;min-width:36px}
-.denn-image-tint-row input[type=color]{width:36px;height:24px;border:1px solid #d8c6aa;border-radius:5px;padding:0;cursor:pointer}
-.denn-image-tint-hint{font-size:9.5px;color:#A08870;line-height:1.4}
-.denn-image-tint-status{font-size:9.5px;color:#8B7355;font-style:italic;margin-top:2px}
+.denn-image-sync-row{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:8px;padding:6px 0;margin-top:6px;border-top:1px dashed #d8c6aa}
+.denn-image-sync-row .lbl{font-size:11px;color:#6b5a42;font-weight:700}
+.denn-image-sync-row .tog{width:36px;height:18px;border-radius:9px;background:#d8c6aa;cursor:pointer;position:relative;flex-shrink:0;transition:background .15s}
+.denn-image-sync-row .tog::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .15s}
+.denn-image-sync-row .tog.on{background:#a47b38}
+.denn-image-sync-row .tog.on::after{left:20px}
+.denn-image-sync-hint{font-size:9.5px;color:#A08870;line-height:1.35}
+.denn-image-sync-status{font-size:9.5px;color:#8B7355;font-style:italic;padding:2px 0;grid-column:1/-1}
 </style>
 <script id="denn-phase-c-customer-color">
 (function(){
@@ -9985,24 +9986,54 @@ window.addEventListener('load',later);
   if(window.__dennPhaseCCustomerColor)return;
   window.__dennPhaseCCustomerColor=true;
 
-  // === state ===
-  // tintOn: 사용자가 이미지 tint master 토글 ON. tintColor: 선택한 컬러.
-  // tintCache[tpl.id]={color, dataUrl|null} — 같은 색이면 재사용. 색 바뀌면 무효화.
-  var tintOn=false, tintColor='#C49A6C';
-  var tintCache=Object.create(null);
+  // === 디자인 변경 — 문구별 패널 내부 통합 ===
+  // 기존: 별도 #denn-image-tint-box 패널 (제거됨)
+  // 신규: 문구별 색상/그림자 패널 (#frame-text-style-box)의 bulk-box (#fts-bulk-box) 내부에
+  //       "시안 이미지에도 동일 색 적용 (그림자 포함)" sub-toggle 추가.
+  //       이미지 tint 색상/그림자는 bulk 컨트롤 (#fts-bulk-color/-shadowOn/-shadowColor/-blur/-y) 재사용.
+
+  var imageSyncOn=false;
+  var tintCache=Object.create(null); // tpl.id → {key, dataUrl}
   var DISABLED_CLASS='denn-color-disabled';
   var DISABLED_TOOLTIP='관리자가 색상 변경을 허용하지 않은 시안입니다';
 
+  function val(id,def){var el=document.getElementById(id);return el?el.value:def}
+  function classOn(id){var el=document.getElementById(id);return !!(el&&el.classList.contains('on'))}
+
+  // 디버그 override (Firebase listener의 curFTpl 새 객체 교체로 allowColorChange 휘발 회피)
   function currentTplAllowed(){
+    var f=window.__dennDebugForceAllowColorChange;
     var t=window.curFTpl;
+    if(f===true)return true;
+    if(typeof f==='number'){
+      // 단순 모드: 숫자면 무조건 허용 (mockup-tool은 idx 개념이 다르므로)
+      return true;
+    }
     return !!(t&&t.allowColorChange===true);
   }
-  function shouldTintImage(){return tintOn && currentTplAllowed()}
 
-  // === source-atop dataUrl 생성 ===
-  // 어드민 Phase C C1과 동일 패턴 — img 위에 globalCompositeOperation='source-atop' fillRect.
-  // 비동기: realTemplateSrc 첫 반환은 원본, 생성 완료 후 cache 채우고 renderFrame 재호출 → 다음 렌더부터 tinted.
-  function buildTintedDataUrl(srcUrl, color){
+  // shouldTintImage — render time 체크. allowed가 false면 결과적으로 tint 안 됨.
+  // imageSyncOn 상태는 보존됨 (자동 리셋 없음) — 사용자가 다시 allowed 시안으로 돌아가면 자동 복원.
+  function shouldTintImage(){
+    return imageSyncOn && currentTplAllowed() && !!window.frameTextStyleOn;
+  }
+
+  // 현재 tint 파라미터 — bulk 컨트롤에서 읽음
+  function readTintParams(){
+    var color=val('fts-bulk-color','#ffffff');
+    var shadowOn=classOn('fts-bulk-shadowOn');
+    var shadowColor=val('fts-bulk-shadowColor','#000000');
+    var blur=Number(val('fts-bulk-blur',4))||0;
+    var dy=Number(val('fts-bulk-y',1))||0;
+    return {color:color,shadow:{enabled:shadowOn,color:shadowColor,blur:blur,dx:0,dy:dy}};
+  }
+  function paramKey(p){return [p.color,p.shadow.enabled?1:0,p.shadow.color,p.shadow.blur,p.shadow.dx,p.shadow.dy].join('|')}
+
+  // === tint + shadow 합성 (2단계 캔버스) ===
+  // Step 1 (temp): 원본 위에 source-atop fill — 이미지 자체만 tint.
+  // Step 2 (final): shadow 설정 후 drawImage(temp) — 그림자는 그림자 색으로 분리 유지.
+  // 캔버스 크기는 원본 PNG와 동일 — aspect 유지. shadow가 캔버스 경계 넘으면 자연 clip.
+  function buildTintedDataUrl(srcUrl, params){
     return new Promise(function(resolve){
       var img=new Image();
       img.crossOrigin='anonymous';
@@ -10010,15 +10041,27 @@ window.addEventListener('load',later);
         try{
           var w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
           if(!w||!h){resolve(srcUrl);return}
-          var c=document.createElement('canvas');
-          c.width=w; c.height=h;
-          var ctx=c.getContext('2d');
-          ctx.drawImage(img,0,0);
-          ctx.globalCompositeOperation='source-atop';
-          ctx.fillStyle=color;
-          ctx.fillRect(0,0,w,h);
-          ctx.globalCompositeOperation='source-over';
-          resolve(c.toDataURL('image/png'));
+          var temp=document.createElement('canvas');
+          temp.width=w; temp.height=h;
+          var tctx=temp.getContext('2d');
+          tctx.drawImage(img,0,0);
+          tctx.globalCompositeOperation='source-atop';
+          tctx.fillStyle=params.color;
+          tctx.fillRect(0,0,w,h);
+          tctx.globalCompositeOperation='source-over';
+          if(params.shadow&&params.shadow.enabled){
+            var fin=document.createElement('canvas');
+            fin.width=w; fin.height=h;
+            var fctx=fin.getContext('2d');
+            fctx.shadowColor=params.shadow.color;
+            fctx.shadowBlur=params.shadow.blur;
+            fctx.shadowOffsetX=params.shadow.dx;
+            fctx.shadowOffsetY=params.shadow.dy;
+            fctx.drawImage(temp,0,0);
+            resolve(fin.toDataURL('image/png'));
+          }else{
+            resolve(temp.toDataURL('image/png'));
+          }
         }catch(e){console.warn('[phase-c-customer] tint build failed',e);resolve(srcUrl)}
       };
       img.onerror=function(){console.warn('[phase-c-customer] tint img load failed',srcUrl);resolve(srcUrl)};
@@ -10028,21 +10071,23 @@ window.addEventListener('load',later);
 
   function getTintedSrc(tpl, originalSrc){
     if(!tpl||!originalSrc)return originalSrc;
-    var key=tpl.id||'';
-    var cache=tintCache[key];
-    if(cache&&cache.color===tintColor&&cache.dataUrl)return cache.dataUrl;
-    if(!cache||cache.color!==tintColor){
-      tintCache[key]={color:tintColor, dataUrl:null};
-      buildTintedDataUrl(originalSrc, tintColor).then(function(dataUrl){
-        tintCache[key]={color:tintColor, dataUrl:dataUrl};
+    var params=readTintParams();
+    var key=paramKey(params);
+    var tplKey=tpl.id||'';
+    var cache=tintCache[tplKey];
+    if(cache&&cache.key===key&&cache.dataUrl)return cache.dataUrl;
+    if(!cache||cache.key!==key){
+      tintCache[tplKey]={key:key, dataUrl:null};
+      buildTintedDataUrl(originalSrc, params).then(function(dataUrl){
+        tintCache[tplKey]={key:key, dataUrl:dataUrl};
         if(typeof window.renderFrame==='function')window.renderFrame();
+        updateStatus();
       });
     }
     return originalSrc;
   }
 
   // === wrap realTemplateSrc (보호 영역 아님) ===
-  // renderFrame 본체 무수정 — realTemplateSrc wrap이 tint 적용 dataUrl 반환.
   function installRealTemplateSrcWrap(){
     if(typeof window.realTemplateSrc!=='function')return false;
     if(window.realTemplateSrc.__dennPhaseCCustomer)return true;
@@ -10057,86 +10102,79 @@ window.addEventListener('load',later);
     return true;
   }
 
-  // === UI: 이미지 tint 패널 ===
-  function buildUI(){
-    var box=document.getElementById('frame-text-style-box');
-    if(!box||document.getElementById('denn-image-tint-box'))return;
-    var panel=document.createElement('div');
-    panel.id='denn-image-tint-box';
-    panel.className='frame-text-style-box';
-    panel.innerHTML=
-      '<div class="frame-text-style-head">'+
-        '<div class="frame-text-style-title">시안 이미지 색상</div>'+
-        '<div class="tog" id="denn-image-tint-master"></div>'+
-      '</div>'+
-      '<div class="frame-text-style-body">'+
-        '<div class="denn-image-tint-row">'+
-          '<label>색상</label>'+
-          '<input type="color" id="denn-image-tint-color" value="'+tintColor+'">'+
-          '<span class="denn-image-tint-hint">시안 PNG의 불투명 영역(텍스트/그래픽)을 선택 컬러로 변환</span>'+
-        '</div>'+
-        '<div class="denn-image-tint-status" id="denn-image-tint-status"></div>'+
-      '</div>';
-    box.parentNode.insertBefore(panel, box.nextSibling);
-
-    var master=document.getElementById('denn-image-tint-master');
-    master.onclick=function(){
+  // === sub-toggle을 bulk-box에 주입 ===
+  function ensureSubToggle(){
+    var bulk=document.getElementById('fts-bulk-box');
+    if(!bulk||document.getElementById('denn-image-sync-row'))return false;
+    var row=document.createElement('div');
+    row.id='denn-image-sync-row';
+    row.className='denn-image-sync-row';
+    row.innerHTML=
+      '<span class="lbl">시안 이미지에도 적용</span>'+
+      '<div class="tog" id="denn-image-sync-tog"></div>'+
+      '<span class="denn-image-sync-hint">위 일괄 색상/그림자가 시안 PNG에도 source-atop 합성으로 동기화됩니다</span>'+
+      '<div class="denn-image-sync-status" id="denn-image-sync-status"></div>';
+    bulk.appendChild(row);
+    document.getElementById('denn-image-sync-tog').onclick=function(){
       if(!currentTplAllowed())return;
-      tintOn=!tintOn;
-      panel.classList.toggle('on', tintOn);
-      master.classList.toggle('on', tintOn);
+      imageSyncOn=!imageSyncOn;
+      this.classList.toggle('on', imageSyncOn);
       updateStatus();
       if(typeof window.renderFrame==='function')window.renderFrame();
     };
-    var picker=document.getElementById('denn-image-tint-color');
-    picker.oninput=function(){
-      tintColor=this.value;
-      tintCache=Object.create(null); // 색 변경 시 캐시 무효화
-      updateStatus();
-      if(tintOn&&typeof window.renderFrame==='function')window.renderFrame();
-    };
+    bindLiveInputs();
+    return true;
+  }
+
+  // bulk 컨트롤 변경 시 캐시 무효화 + 재렌더 (라이브)
+  function bindLiveInputs(){
+    ['fts-bulk-color','fts-bulk-shadowColor','fts-bulk-blur','fts-bulk-y'].forEach(function(id){
+      var el=document.getElementById(id);if(!el||el.__dennPhaseCCustomerHook)return;
+      el.addEventListener('input',onBulkChange);
+      el.__dennPhaseCCustomerHook=true;
+    });
+    var sh=document.getElementById('fts-bulk-shadowOn');
+    if(sh&&!sh.__dennPhaseCCustomerHook){
+      sh.addEventListener('click',function(){setTimeout(onBulkChange,0)},true);
+      sh.__dennPhaseCCustomerHook=true;
+    }
+  }
+  function onBulkChange(){
+    tintCache=Object.create(null);
+    updateStatus();
+    if(imageSyncOn&&typeof window.renderFrame==='function')window.renderFrame();
   }
 
   function updateStatus(){
-    var el=document.getElementById('denn-image-tint-status');
+    var el=document.getElementById('denn-image-sync-status');
     if(!el)return;
     if(!currentTplAllowed()){el.textContent='';return}
-    if(!tintOn){el.textContent='OFF — 원본 PNG 사용';return}
-    var t=window.curFTpl, cache=t&&tintCache[t.id||''];
-    if(cache&&cache.dataUrl)el.textContent='ON — '+tintColor+' 적용';
-    else el.textContent='ON — '+tintColor+' 합성 중…';
+    if(!imageSyncOn){el.textContent='OFF — 시안 PNG는 원본 유지';return}
+    var t=window.curFTpl, p=readTintParams(), cache=t&&tintCache[t.id||''];
+    var summary=p.color+(p.shadow.enabled?' + 그림자':'');
+    if(cache&&cache.dataUrl&&cache.key===paramKey(p))el.textContent='ON — '+summary+' 적용';
+    else el.textContent='ON — '+summary+' 합성 중…';
   }
 
-  // === 게이팅: 어드민 OFF 시 비활성 상태 + tooltip ===
+  // === 게이팅 — 자동 리셋 없음 (render-time 체크가 안전망) ===
   function applyGating(){
     var allowed=currentTplAllowed();
-    ['frame-text-style-box','denn-image-tint-box'].forEach(function(id){
-      var el=document.getElementById(id);if(!el)return;
-      el.classList.toggle(DISABLED_CLASS, !allowed);
-      if(allowed)el.removeAttribute('title');
-      else el.title=DISABLED_TOOLTIP;
-    });
-    // 비허용 시 활성 상태 자동 OFF
-    if(!allowed){
-      if(tintOn){
-        tintOn=false;
-        var p=document.getElementById('denn-image-tint-box'),m=document.getElementById('denn-image-tint-master');
-        if(p)p.classList.remove('on');
-        if(m)m.classList.remove('on');
-        if(typeof window.renderFrame==='function')window.renderFrame();
-      }
+    var box=document.getElementById('frame-text-style-box');
+    if(box){
+      box.classList.toggle(DISABLED_CLASS, !allowed);
+      if(allowed)box.removeAttribute('title');
+      else box.title=DISABLED_TOOLTIP;
     }
     updateStatus();
   }
 
-  // === selFTplByRef wrap (template 변경 시 게이팅 재적용) ===
+  // === selFTplByRef wrap (시안 변경 시 캐시 무효화 + 게이팅) ===
   function installSelFTplWrap(){
     if(typeof window.selFTplByRef!=='function')return false;
     if(window.selFTplByRef.__dennPhaseCCustomerGate)return true;
     var orig=window.selFTplByRef;
     var wrap=function(){
       var r=orig.apply(this, arguments);
-      // 템플릿 바뀌면 tint 캐시 무효화 (다른 시안 fresh start)
       tintCache=Object.create(null);
       applyGating();
       return r;
@@ -10148,25 +10186,27 @@ window.addEventListener('load',later);
 
   // === Boot ===
   function boot(){
-    buildUI();
+    ensureSubToggle();
     installRealTemplateSrcWrap();
     installSelFTplWrap();
     applyGating();
-    console.log('[phase-c-customer] installed (image tint + admin OFF gating)');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);
   else boot();
-  // 지연 boot — 다른 wrap이 늦게 설치되거나 UI가 늦게 그려질 수 있음
   setTimeout(boot, 500);
   setTimeout(boot, 2000);
-  // 주기적 게이팅 점검 — selFTplByRef 외 경로로 curFTpl이 바뀔 경우 대비
+  // 게이팅만 주기 점검 — 자동 리셋 없음
   setInterval(applyGating, 1500);
+  // bulk-box가 늦게 만들어질 수 있어 sub-toggle 주입도 주기 시도
+  setInterval(ensureSubToggle, 1500);
+  console.log('[phase-c-customer] installed (sub-toggle in bulk-box + shadow + admin OFF gating)');
 
-  // 디버그 API
   window.dennPhaseCCustomerColor={
-    getState:function(){return {tintOn:tintOn,tintColor:tintColor,allowed:currentTplAllowed(),cacheKeys:Object.keys(tintCache)}},
-    setTintColor:function(c){var p=document.getElementById('denn-image-tint-color');if(p){p.value=c;p.oninput.call(p)}},
-    setTintOn:function(v){var m=document.getElementById('denn-image-tint-master');if(m&&!!v!==tintOn)m.onclick.call(m)}
+    getState:function(){
+      return {imageSyncOn:imageSyncOn, params:readTintParams(), allowed:currentTplAllowed(), cacheKeys:Object.keys(tintCache), masterOn:!!window.frameTextStyleOn};
+    },
+    setImageSync:function(v){var t=document.getElementById('denn-image-sync-tog');if(t&&!!v!==imageSyncOn)t.click()},
+    forceRebuild:function(){tintCache=Object.create(null);if(typeof window.renderFrame==='function')window.renderFrame()}
   };
 })();
 </script>
