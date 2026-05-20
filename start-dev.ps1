@@ -41,20 +41,24 @@ Write-Host " Stop  : Ctrl+C"
 Write-Host "==============================================" -ForegroundColor Cyan
 Write-Host ""
 
-$node = Get-Command node -ErrorAction SilentlyContinue
 $python = Get-Command python -ErrorAction SilentlyContinue
 if (-not $python) { $python = Get-Command python3 -ErrorAction SilentlyContinue }
+$node = Get-Command node -ErrorAction SilentlyContinue
 
-if ($node) {
-    Write-Host "[runtime] node found -> npx --yes serve" -ForegroundColor Green
-    & npx --yes serve $root -l $port
-}
-elseif ($python) {
-    Write-Host "[runtime] python found -> http.server" -ForegroundColor Green
+# Python is preferred: starts in <1s, no package download.
+# npx serve cold-start can take 30-60s on first run (downloads ~40MB),
+# which blows past the launcher's wait window after a reboot.
+if ($python) {
+    Write-Host "[runtime] python found -> http.server (fast cold start)" -ForegroundColor Green
     & $python.Source -m http.server $port --directory $root
 }
+elseif ($node) {
+    Write-Host "[runtime] node found -> npx --yes serve" -ForegroundColor Green
+    Write-Host "[note]    first run may download 'serve' (~40MB)" -ForegroundColor Yellow
+    & npx --yes serve $root -l $port
+}
 else {
-    Write-Host "[ERROR] Neither node nor python is installed." -ForegroundColor Red
+    Write-Host "[ERROR] Neither python nor node is installed." -ForegroundColor Red
     Write-Host "        Python (fastest): Microsoft Store -> search 'Python 3.x'" -ForegroundColor Yellow
     Write-Host "        Node: https://nodejs.org -> LTS installer" -ForegroundColor Yellow
     exit 1
