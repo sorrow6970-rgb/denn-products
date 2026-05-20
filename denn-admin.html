@@ -9071,6 +9071,12 @@ function makeTemplate(){
   var t={id:'fb'+Date.now()+Math.random().toString(16).slice(2),name:name,type:'uploaded',dataUrl:oc.toDataURL('image/png'),textZones:[],photoSlot:first?{x:first.x,y:first.y,w:first.w,h:first.h,type:first.type||'rect',cornerR:num(first.cornerR,0),fit:'cover'}:null,photoZones:deep((window.FB&&FB.zones)||[]),categoryId:catId,builtBy:'builder',clock:cfg.enabled?cfg:null,zones:deep((window.FB&&FB.zones)||[]),fit:'cover',objectFit:'cover',imgW:pw,imgH:ph,overlayScope:'inner',frameBaked:false,clockBaked:false,exportVersion:'transparent-builder-authority-v1',saveAuthorityVersion:'frame-template-save-authority-v1',saveAuthorityLocked:true,sizeBasisKey:info.key};
   preserveOriginalSource(t);
   normalizeSavedTemplate(t,targets,white,info);
+  // Phase 1 Stage 1/2 — 본체에서 직접 빌더 UI 읽기 (외부 wrap 의존 폐기)
+  var __allowEl=document.getElementById('fb-allow-color');
+  t.allowColorChange=!!(__allowEl&&__allowEl.classList.contains('on'));
+  var __maskInp=document.querySelector('input[name="fb-mask-mode"]:checked');
+  var __mode=__maskInp&&__maskInp.value;
+  if(__mode==='white'||__mode==='black'){t.maskMode=__mode;t.maskModeSource='manual'}
   return{template:t,targets:targets,white:white,info:info};
 }
 function persist(){
@@ -12161,20 +12167,10 @@ window.addEventListener('load',tick);
     if(old.customerTextCommonStyle)next.customerTextCommonStyle=deep(old.customerTextCommonStyle);
     if(old.customerTextSettings)next.customerTextSettings=deep(old.customerTextSettings);
     ['backgroundEnabled','templateBackgroundEnabled','canvasBgEnabled','backgroundColor','templateBackgroundColor','canvasBgColor'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
-    var __uiCap=window.__dennPhase1LastUI;
-    if(__uiCap&&typeof __uiCap.allowColorChange==='boolean'){
-      next.allowColorChange=__uiCap.allowColorChange;
-      if(__uiCap.maskMode==='white'||__uiCap.maskMode==='black'){
-        next.maskMode=__uiCap.maskMode;
-        next.maskModeSource='manual';
-      }else{
-        if(old.maskMode!=null)next.maskMode=old.maskMode;
-        if(old.maskModeSource!=null)next.maskModeSource=old.maskModeSource;
-      }
-      window.__dennPhase1LastUI=null;
-    }else{
-      ['allowColorChange','maskMode','maskModeSource'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
-    }
+    // makeTemplate이 본체에서 next에 박은 값을 신뢰. 없을 때만 old로 폴백 (마이그 미완 보호).
+    ['allowColorChange','maskMode','maskModeSource'].forEach(function(k){
+      if(next[k]==null&&old[k]!=null)next[k]=old[k];
+    });
     ['sourceStoragePath','builderArtStoragePath','originalStoragePath'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
     try{
       var tools=window.DENNFrameTemplateToolsV364, state=null, hasUi=false, valid=/^#[0-9a-fA-F]{6}$/;
@@ -14617,44 +14613,9 @@ window.addEventListener('resize',scheduleSettle);
     }
     setTimeout(tryInstall,1200); // after firebase install (1000ms)
     setInterval(pollEditIdx,250);
-    // 저장 버튼 onclick은 v63 authority가 exportFromBuilder를 직접 호출 →
-    // window.fbExport(Phase 1 wrap) 우회. capture phase에서 click을 가로채
-    // (1) preserveDetailFields용 UI 캡처, (2) 저장 후 list[idx]에 직접 set + persist
-    if(!window.__dennPhase1ClickCaptureInstalled){
-      window.__dennPhase1ClickCaptureInstalled=true;
-      document.addEventListener('click',function(e){
-        // edit 모드에서는 syncSaveButtonLabel이 onclick/data-save-authority를 제거하고
-        // data-denn-v94-edit-save를 부여 → 그 selector도 포함해야 함
-        var b=e.target&&e.target.closest&&e.target.closest('#tp-frame-builder button[onclick*="fbExport"],#tp-frame-builder button[data-save-authority],#tp-frame-builder button[data-denn-v94-edit-save]');
-        if(!b)return;
-        try{
-          var ui=readUI();
-          window.__dennPhase1LastUI=ui;
-          if(!window.__dennPhase1CaptureLogged){console.log('[phase1] save btn capture installed listener fired',{ui:ui,editIdx:window.__dennFrameTemplateEditIndex,btn:b.textContent.slice(0,30)});window.__dennPhase1CaptureLogged=true}
-          var capturedIdx=window.__dennFrameTemplateEditIndex;
-          if(capturedIdx==null)return;
-          [80,300,900,1600,3000].forEach(function(d){
-            setTimeout(function(){
-              try{
-                var arr=(window.S&&window.S.frameTemplates)||[];
-                var t=arr[capturedIdx];
-                if(!t)return;
-                var changed=t.allowColorChange!==ui.allowColorChange;
-                t.allowColorChange=!!ui.allowColorChange;
-                if(ui.maskMode==='white'||ui.maskMode==='black'){
-                  if(t.maskMode!==ui.maskMode||t.maskModeSource!=='manual')changed=true;
-                  t.maskMode=ui.maskMode;
-                  t.maskModeSource='manual';
-                }
-                if(changed){
-                  try{if(typeof window.persistNow==='function')window.persistNow();else if(typeof window.persist==='function')window.persist();}catch(_p){}
-                }
-              }catch(_t){}
-            },d);
-          });
-        }catch(_e){}
-      },true);
-    }
+    // 2adacfa/168cbcc의 capture-phase listener는 폐기 — makeTemplate(L9073 부근)이
+    // 본체에서 직접 fb-allow-color/fb-mask-radios를 읽어 t에 박으므로 외부 가로채기 불필요.
+    // (preserveDetailFields의 fallback이 next 우선 신뢰 + old 보존으로 정합)
     // Also rebuild toggle UI when user navigates into builder tab (DOM may rerender).
     var oldGo=window.goTab;
     if(typeof oldGo==='function'&&!oldGo.__dennPhase1Tab){
