@@ -631,7 +631,29 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
 <script>
 /* DENN v35.1 storage helper: keeps denn_admin structure, routes direct saves through one local helper. */
 function dennSetLocalStorageV351(key,value){
-  try{localStorage.setItem(key,value);return true}catch(e){console.warn('DENN v35.1 localStorage save skipped',e);return false}
+  try{localStorage.setItem(key,value);return true}catch(e){
+    // QuotaExceededError 자동 retry: snapshots ring 정리 후 1회 재시도
+    var isQuota=e&&(e.name==='QuotaExceededError'||/quota/i.test(String(e&&e.message||e)));
+    if(isQuota&&key!=='denn_admin_snapshots_v35'){
+      try{
+        var prev=localStorage.getItem('denn_admin_snapshots_v35');
+        if(prev&&prev.length>0){
+          localStorage.removeItem('denn_admin_snapshots_v35');
+          console.warn('[storage] quota 초과 - snapshots 자동 정리됨('+prev.length+' bytes), '+key+' 재시도');
+          try{localStorage.setItem(key,value);
+            try{if(typeof window.toast==='function')window.toast('저장공간 부족: 스냅샷 자동 정리됨','i')}catch(_t){}
+            return true;
+          }catch(e2){
+            console.error('[storage] retry after cleanup 실패:',e2);
+          }
+        }
+        try{if(typeof window.toast==='function')window.toast('⚠ 저장공간 초과 — 변경사항이 디스크에 저장되지 않았습니다. dennCleanupHeavySnapshots() 실행 필요.','e')}catch(_t){}
+      }catch(e3){console.error('[storage] auto-cleanup err:',e3)}
+    }else{
+      console.warn('DENN v35.1 localStorage save skipped',e);
+    }
+    return false;
+  }
 }
 function saveAdminStateToLocalStorage(state){
   try{return dennSetLocalStorageV351('denn_admin',JSON.stringify(state||window.S||{}))}catch(e){console.warn('DENN v35.1 stringify failed',e);return false}
@@ -5640,7 +5662,7 @@ window.__dennAdminStableSaveSoon=saveSoon;
 <script id="denn-v35-admin-data-safety-final">
 (function(){
 'use strict';
-var SNAP_KEY='denn_admin_snapshots_v35',MAX_SNAPS=5,lastSig='',lastSnapAt=0;
+var SNAP_KEY='denn_admin_snapshots_v35',MAX_SNAPS=2,lastSig='',lastSnapAt=0;
 function by(id){return document.getElementById(id)}
 function clone(v){try{return JSON.parse(JSON.stringify(v))}catch(e){return v}}
 function count(v){return Array.isArray(v)?v.length:0}
@@ -5661,7 +5683,20 @@ function signature(s){
   return [m.frameTemplates,m.uploadedFrameTemplates,m.guideBackgrounds,m.frameSizes,m.roomBackgroundSettings,m.customFonts].join('|');
 }
 function readSnaps(){try{return JSON.parse(localStorage.getItem(SNAP_KEY)||'[]')||[]}catch(e){return[]}}
-function writeSnaps(arr){try{localStorage.setItem(SNAP_KEY,JSON.stringify(arr.slice(0,MAX_SNAPS)))}catch(e){console.warn('snapshot save skipped',e)}}
+function writeSnaps(arr){
+  try{localStorage.setItem(SNAP_KEY,JSON.stringify(arr.slice(0,MAX_SNAPS)));return}
+  catch(e){
+    console.warn('snapshot save skipped',e);
+    // quota 시 자체 ring 축소: 2→1→0(완전 제거) 순으로 재시도
+    var isQuota=e&&(e.name==='QuotaExceededError'||/quota/i.test(String(e&&e.message||e)));
+    if(isQuota){
+      for(var n=Math.min(arr.length,MAX_SNAPS)-1;n>=1;n--){
+        try{localStorage.setItem(SNAP_KEY,JSON.stringify(arr.slice(0,n)));console.warn('[storage] snapshot ring '+n+'으로 자동 축소');return}catch(_){}
+      }
+      try{localStorage.removeItem(SNAP_KEY);console.warn('[storage] snapshot ring 완전 제거 (quota 압박)')}catch(_e){}
+    }
+  }
+}
 // B안 v2: snapshot용 slim state — base64 페이로드 strip, metadata만 보존.
 // 조건부 strip: storagePath가 있어야만 dataUrl을 null로 치환 (마이그 실패 시 데이터 유실 방지).
 function slimSnapshotState(s){
