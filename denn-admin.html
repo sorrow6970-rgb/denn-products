@@ -12102,7 +12102,20 @@ window.addEventListener('load',tick);
     if(old.customerTextCommonStyle)next.customerTextCommonStyle=deep(old.customerTextCommonStyle);
     if(old.customerTextSettings)next.customerTextSettings=deep(old.customerTextSettings);
     ['backgroundEnabled','templateBackgroundEnabled','canvasBgEnabled','backgroundColor','templateBackgroundColor','canvasBgColor'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
-    ['allowColorChange','maskMode','maskModeSource'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
+    var __uiCap=window.__dennPhase1LastUI;
+    if(__uiCap&&typeof __uiCap.allowColorChange==='boolean'){
+      next.allowColorChange=__uiCap.allowColorChange;
+      if(__uiCap.maskMode==='white'||__uiCap.maskMode==='black'){
+        next.maskMode=__uiCap.maskMode;
+        next.maskModeSource='manual';
+      }else{
+        if(old.maskMode!=null)next.maskMode=old.maskMode;
+        if(old.maskModeSource!=null)next.maskModeSource=old.maskModeSource;
+      }
+      window.__dennPhase1LastUI=null;
+    }else{
+      ['allowColorChange','maskMode','maskModeSource'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
+    }
     ['sourceStoragePath','builderArtStoragePath','originalStoragePath'].forEach(function(k){if(old[k]!=null)next[k]=old[k]});
     try{
       var tools=window.DENNFrameTemplateToolsV364, state=null, hasUi=false, valid=/^#[0-9a-fA-F]{6}$/;
@@ -14478,6 +14491,7 @@ window.addEventListener('resize',scheduleSettle);
       var beforeLen=arr.length;
       var capturedEditIdx=window.__dennFrameTemplateEditIndex;
       var ui=readUI();
+      window.__dennPhase1LastUI=ui;
       var r;
       try{r=cur.apply(this,arguments)}finally{
         var applied=false;
