@@ -10105,18 +10105,45 @@ window.addEventListener('load',later);
     return originalSrc;
   }
 
-  // === instrumentation: realTemplateSrc 호출 카운터 + 마지막 호출 정보 (진단용) ===
+  // === instrumentation: 호출 흐름 추적 (진단용) ===
   var instrumentation={
     realTemplateSrcCalls:0,
     buildTintCalls:0,
     buildTintResolves:0,
+    renderFrameCalls:0,
+    renderFrameEarlyReturns:0,
     lastSrc:null,
     lastTpl:null,
     lastShouldTint:null,
     lastReturned:null,
+    lastRenderFrameStack:null,
     errors:[]
   };
   function record(field,val){instrumentation[field]=val}
+
+  // renderFrame 외곽 wrap (본체 무수정) — 호출 카운트 + 호출 후 sz/fc/tpl 상태 캡처
+  function installRenderFrameInstrumentation(){
+    if(typeof window.renderFrame!=='function')return false;
+    if(window.renderFrame.__dennPhaseCCustomerInstr)return true;
+    var orig=window.renderFrame;
+    var wrap=function(){
+      instrumentation.renderFrameCalls++;
+      var sz=window.curFSz||(window.FS&&window.FS[0]);
+      var fc=window.curFCol||(window.FC&&window.FC[0]);
+      var tpl=window.curFTpl||(window.FTPLS&&window.FTPLS[0]);
+      var earlyRet=!sz||!fc||!tpl;
+      if(earlyRet)instrumentation.renderFrameEarlyReturns++;
+      record('lastRenderFrameStack',{
+        sz:!!sz, fc:!!fc, tpl:tpl&&{id:tpl.id,type:tpl.type},
+        earlyReturn:earlyRet,
+        callTime:Date.now()
+      });
+      return orig.apply(this,arguments);
+    };
+    wrap.__dennPhaseCCustomerInstr=true;
+    window.renderFrame=wrap;
+    return true;
+  }
 
   // === wrap realTemplateSrc ===
   function installRealTemplateSrcWrap(){
@@ -10327,6 +10354,7 @@ window.addEventListener('load',later);
     installBulkApplyWrap();
     installToggleMasterWrap();
     installSelFTplWrap();
+    installRenderFrameInstrumentation();
     dedupRows();
     applyGating();
   }
@@ -10349,17 +10377,27 @@ window.addEventListener('load',later);
   function autoEnable(opts){
     opts=opts||{};
     var color=opts.color||'#C49A6C';
-    // master toggle — 직접 호출로 v70 lock 우회 (autoToggle click이 pointer-events:none 잠금에 막힐 수도)
-    if(!window.frameTextStyleOn){
-      if(typeof window.toggleFrameTextStyleBox==='function')window.toggleFrameTextStyleBox();
-    }
-    applyGating(); // disabled 클래스 즉시 제거
-    // _image row 토글 — updateImage 직접 호출
+    // 진단 마커
+    instrumentation.autoEnableTrace=[];
+    function trace(label,data){instrumentation.autoEnableTrace.push({label:label,data:data,t:Date.now()})}
+    trace('start',{masterPre:!!window.frameTextStyleOn});
+    // master toggle — wrap 우회용 직접 frameTextStyleOn 강제 (debug 모드 신뢰)
+    window.frameTextStyleOn=true;
+    var box=document.getElementById('frame-text-style-box');
+    if(box){box.classList.add('on');box.classList.remove('denn-v70-locked')}
+    var tog=document.getElementById('frame-text-style-master');
+    if(tog)tog.classList.add('on');
+    trace('master-forced',{masterPost:!!window.frameTextStyleOn});
+    applyGating();
+    // _image row 토글
     var s=ensureImageState();
     if(!s.on)updateImage('on', true);
+    trace('image-on',{sOn:s.on});
     // 색상 설정
     if(s.color!==color)updateImage('color', color);
+    trace('color-set',{color:s.color});
     if(typeof window.renderFrame==='function')window.renderFrame();
+    trace('renderFrame-called',{rfCalls:instrumentation.renderFrameCalls,realCalls:instrumentation.realTemplateSrcCalls});
   }
 
   // 자동 검증: master+row 토글 + 색 설정 + cache 대기 + 픽셀 샘플
