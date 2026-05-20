@@ -14666,6 +14666,23 @@ window.addEventListener('resize',scheduleSettle);
     return true;
   }
 
+  // FB.artImg를 SAMPLE_COLOR로 source-atop 합성한 캔버스로 swap 후 fn 실행.
+  // wrap 본체 공통화 — fbRender와 v71 API.render 양쪽에서 사용.
+  function withFbArtImgSwap(fn,thisArg,argsArr){
+    try{
+      var t=currentFbTpl();
+      if(t&&t.allowColorChange===true&&window.FB&&FB.artImg){
+        var origImg=FB.artImg;
+        if(!origImg.__dennS5FbCache||origImg.__dennS5FbCache.color!==SAMPLE_COLOR){
+          origImg.__dennS5FbCache={color:SAMPLE_COLOR,canvas:buildSourceAtopCanvas(origImg,SAMPLE_COLOR)};
+        }
+        FB.artImg=origImg.__dennS5FbCache.canvas;
+        try{return fn.apply(thisArg,argsArr)}finally{FB.artImg=origImg}
+      }
+    }catch(e){console.warn('[stage5-admin] FB.artImg swap error',e)}
+    return fn.apply(thisArg,argsArr);
+  }
+
   // fbRender wrap: fb-canvas (시안 미리보기)에서 FB.artImg drawImage 결과를 가로채
   // allowColorChange=true일 때 source-atop 합성한 캔버스로 사전 교체.
   // fbRender 본체/fbExport 무수정 — drawImage 결과만 변경됨. fbExport는 wrap 대상 아님.
@@ -14673,36 +14690,41 @@ window.addEventListener('resize',scheduleSettle);
     var orig=window.fbRender;
     if(typeof orig!=='function')return false;
     if(orig.__dennStage5FbWrap)return true; // 이미 outermost — skip
-    var wrap=function(){
-      try{
-        var t=currentFbTpl();
-        if(t&&t.allowColorChange===true&&window.FB&&FB.artImg){
-          var origImg=FB.artImg;
-          if(!origImg.__dennS5FbCache||origImg.__dennS5FbCache.color!==SAMPLE_COLOR){
-            origImg.__dennS5FbCache={color:SAMPLE_COLOR,canvas:buildSourceAtopCanvas(origImg,SAMPLE_COLOR)};
-          }
-          FB.artImg=origImg.__dennS5FbCache.canvas;
-          try{var r=orig.apply(this,arguments)}finally{FB.artImg=origImg}
-          return r;
-        }
-      }catch(e){console.warn('[stage5-admin] fbRender wrap error',e)}
-      return orig.apply(this,arguments);
-    };
+    var wrap=function(){return withFbArtImgSwap(orig,this,arguments)};
     wrap.__dennStage5FbWrap=true;
     window.fbRender=wrap;
     console.log('[stage5-admin] fbRender wrap installed/re-installed (allowColorChange 시 source-atop 샘플 컬러 '+SAMPLE_COLOR+')');
     return true;
   }
 
+  // v71 API.render wrap: window.fbRender 우회 경로 차단.
+  // dennV71FrameBuilderPreviewStability.render는 fbRender와 동일 함수가 별도로 노출되어
+  // line 9568/9631/9744/9793/10562의 renderStable()/settle()/fullSettle() 경로에서
+  // window.fbRender를 거치지 않고 직접 호출됨 (탭 진입, 사이즈 변경 시 자동 재렌더).
+  function installFbApiRenderWrap(){
+    var api=window.dennV71FrameBuilderPreviewStability;
+    if(!api||typeof api.render!=='function')return false;
+    if(api.render.__dennStage5FbApiWrap)return true;
+    var orig=api.render;
+    var wrap=function(){return withFbArtImgSwap(orig,this,arguments)};
+    wrap.__dennStage5FbApiWrap=true;
+    api.render=wrap;
+    console.log('[stage5-admin] v71 API.render wrap installed/re-installed');
+    return true;
+  }
+
   // 재설치 가드: v36.4 wrapAll이 load+400ms에 zeRender를 재wrap → 우리 wrap이 중간으로 묻혀
   // outermost 위치 잃음. 5초 지연 후 wrap + 안전 재확인 (+8s, +15s) 으로 outermost 보장.
-  // installZeRenderWrap/installFbRenderWrap는 마커 보유 시 idempotent.
+  // install*Wrap는 마커 보유 시 idempotent.
   function ensureOutermost(){
     if(window.zeRender&&typeof window.zeRender==='function'&&!window.zeRender.__dennStage5Wrap){
       installZeRenderWrap();
     }
     if(window.fbRender&&typeof window.fbRender==='function'&&!window.fbRender.__dennStage5FbWrap){
       installFbRenderWrap();
+    }
+    if(window.dennV71FrameBuilderPreviewStability&&typeof window.dennV71FrameBuilderPreviewStability.render==='function'&&!window.dennV71FrameBuilderPreviewStability.render.__dennStage5FbApiWrap){
+      installFbApiRenderWrap();
     }
   }
 
