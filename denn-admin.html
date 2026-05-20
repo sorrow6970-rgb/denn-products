@@ -12015,10 +12015,12 @@ window.addEventListener('load',tick);
     if(!b){
       b=document.createElement('div');
       b.id='denn-v94-builder-edit-banner';
-      b.innerHTML='<span id="denn-v94-builder-edit-label"></span><button type="button" id="denn-v94-builder-edit-cancel">\uC218\uC815 \uCDE8\uC18C</button>';
+      b.innerHTML='<span id="denn-v94-builder-edit-label"></span>';
       card.insertBefore(b,card.firstChild);
-      by('denn-v94-builder-edit-cancel').onclick=function(){clearEditMode(true)};
     }
+    // \uAE30\uC874 \uC0AC\uC6A9\uC790 \uBE4C\uB4DC\uC5D0 \uB0A8\uC544\uC788\uC744 \uC218 \uC788\uB294 '\uC218\uC815 \uCDE8\uC18C' \uBC84\uD2BC\uC740 \uC81C\uAC70
+    var oldCancel=by('denn-v94-builder-edit-cancel');
+    if(oldCancel&&oldCancel.parentNode)oldCancel.parentNode.removeChild(oldCancel);
     return b;
   }
   function syncBanner(){
@@ -12049,11 +12051,33 @@ window.addEventListener('load',tick);
     });
   }
   function clearEditMode(showToast){
-    editIdx=null;
-    window.__dennFrameTemplateEditIndex=null;
-    syncBanner();
+    resetBuilderUI();
     if(showToast)toastMsg('\uD15C\uD50C\uB9BF \uC218\uC815 \uBAA8\uB4DC\uB97C \uCDE8\uC18C\uD588\uC2B5\uB2C8\uB2E4.');
   }
+  // \uC800\uC7A5 \uC131\uACF5 \uB610\uB294 \uCDE8\uC18C \uD6C4 \uBE4C\uB354 UI/state\uB97C default\uB85C \uBCF5\uC6D0 \u2014 stale value \uC7AC\uC9C4\uC785 \uBC29\uC9C0
+  function resetBuilderUI(){
+    editIdx=null;
+    window.__dennFrameTemplateEditIndex=null;
+    try{setVal('fb-tpl-name','')}catch(e){}
+    try{setVal('fb-cat-sel','')}catch(e){}
+    if(window.FB){
+      FB.artDataUrl=null;FB.artImg=null;
+      FB.zones=[];FB.selIdx=null;FB.cornerR=0;
+    }
+    try{syncArtPreview(null)}catch(e){}
+    try{setVal('fb-corner-r',0);var cv=by('fb-corner-v');if(cv)cv.textContent='0%'}catch(e){}
+    try{setSwitch('fb-white-border-v10',false)}catch(e){}
+    try{setRange('fb-white-thickness-v11',0,'fb-white-thickness-v11-val')}catch(e){}
+    try{setSwitch('fb-clock-tog',false)}catch(e){}
+    try{setRange('fb-clock-size',12,'fb-cs-v');setRange('fb-clock-x',88,'fb-cx-v');setRange('fb-clock-y',88,'fb-cy-v')}catch(e){}
+    try{applyTargetChecks([ALL])}catch(e){}
+    try{syncBanner()}catch(e){}
+    try{if(typeof window.fbRender==='function')window.fbRender()}catch(e){}
+    try{if(typeof window.fbRenderZoneList==='function')window.fbRenderZoneList()}catch(e){}
+    // Phase 1 IIFE\uC758 pollEditIdx(250ms)\uAC00 idx==null \uAC10\uC9C0 \u2192 resetUI \uD638\uCD9C\uB85C
+    // fb-allow-color + fb-mask-radios \uC790\uB3D9 \uC815\uB9AC (\uBCC4\uB3C4 \uD638\uCD9C \uBD88\uD544\uC694)
+  }
+  window.__dennV94ResetBuilderUI=resetBuilderUI;
   function loadTemplateIntoBuilder(idx){
     var t=templates()[idx];if(!t||t.type==='builtin'){toastMsg('\uC5C5\uB85C\uB4DC \uD15C\uD50C\uB9BF\uB9CC \uC218\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.','e');return}
     editIdx=idx;window.__dennFrameTemplateEditIndex=idx;
@@ -12167,6 +12191,7 @@ window.addEventListener('load',tick);
     try{if(typeof window.updateStats==='function')window.updateStats()}catch(e){}
     editIdx=null;window.__dennFrameTemplateEditIndex=null;saving=false;syncBanner();
     toastMsg('\uD15C\uD50C\uB9BF \uC218\uC815 \uC800\uC7A5\uB428');
+    resetBuilderUI();
     return true;
   }
   function saveEdit(){
