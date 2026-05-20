@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 REM DENN PRODUCTS - one-click launcher
 REM 1. Detect existing dev server on port 8000/8080/5500
 REM 2. If none, launch start-dev.ps1 in a NEW PowerShell window titled "DENN Dev Server"
