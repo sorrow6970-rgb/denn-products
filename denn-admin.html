@@ -14647,7 +14647,7 @@ window.addEventListener('resize',scheduleSettle);
     var wrap=function(){
       try{
         var t=currentTpl();
-        if(t&&t.allowColorChange===true&&window.ZE&&ZE.img){
+        if(debugAllowsColorChange(t,window.ZE&&ZE.tplIdx)&&window.ZE&&ZE.img){
           var origImg=ZE.img;
           // 캐시: 같은 ZE.img + 같은 색이면 재사용
           if(!origImg.__dennS5Cache||origImg.__dennS5Cache.color!==SAMPLE_COLOR){
@@ -14674,10 +14674,21 @@ window.addEventListener('resize',scheduleSettle);
   // 우리 wrap의 finally가 sync로 FB.artImg를 원복한 뒤, rAF 다음 프레임에서
   // 원본 FB.artImg로 다시 그림 → "잠깐 골드 → 원본" 증상.
   // __dennV365FbImmediate=true 로 v365가 노출한 sync 모드 강제 → swap 상태에서 페인트 완료.
+  // 디버그 override: Firebase listener가 S.frameTemplates를 새 객체로 교체하면
+  // 콘솔로 set한 t.allowColorChange=true 가 휘발됨. window.__dennDebugForceAllowColorChange
+  // 를 true(전체) 또는 idx number(특정 시안)로 set하면 우리 wrap에서 OR 처리.
+  function debugAllowsColorChange(t,idx){
+    var f=window.__dennDebugForceAllowColorChange;
+    if(f===true)return true;
+    if(typeof f==='number'&&f===idx)return true;
+    return !!(t&&t.allowColorChange===true);
+  }
+
   function withFbArtImgSwap(fn,thisArg,argsArr){
     try{
+      var idx=window.__dennFrameTemplateEditIndex;
       var t=currentFbTpl();
-      if(t&&t.allowColorChange===true&&window.FB&&FB.artImg){
+      if(debugAllowsColorChange(t,idx)&&window.FB&&FB.artImg){
         var origImg=FB.artImg;
         if(!origImg.__dennS5FbCache||origImg.__dennS5FbCache.color!==SAMPLE_COLOR){
           origImg.__dennS5FbCache={color:SAMPLE_COLOR,canvas:buildSourceAtopCanvas(origImg,SAMPLE_COLOR)};
