@@ -8616,7 +8616,8 @@ window.addEventListener('load',run);
    - 캔버스 attribute width/height는 미수정 → renderFrame/renderCase 좌표계 무영향.
    - PC(>=769px): 영향 0. */
 @media(max-width:768px){
-  #page-case.main, #page-frame.main{
+  /* 활성(.on) 페이지에만 flex 적용 — .page{display:none}/.page.on{display:grid}의 토글 보존. */
+  #page-case.main.on, #page-frame.main.on{
     display:flex!important;
     flex-direction:column!important;
     overflow:auto!important;
@@ -8627,7 +8628,10 @@ window.addEventListener('load',run);
     top:0;
     z-index:5;
     min-height:auto!important;
+    /* svh: 주소창 표시/숨김 변동에 무영향 (vh와 달리 작은 viewport 기준 고정).
+       지원 안 하는 구형 브라우저는 vh로 폴백. */
     max-height:62vh;
+    max-height:62svh;
     padding:10px 6px!important;
     width:100%;
   }
@@ -8642,10 +8646,12 @@ window.addEventListener('load',run);
   #page-case .canvas-wrap, #page-frame .canvas-wrap{
     max-width:94vw!important;
     max-height:58vh;
+    max-height:58svh;
   }
   #page-case .canvas-wrap canvas, #page-frame .canvas-wrap canvas{
     max-width:100%;
     max-height:58vh;
+    max-height:58svh;
     height:auto;
     width:auto;
     object-fit:contain;
