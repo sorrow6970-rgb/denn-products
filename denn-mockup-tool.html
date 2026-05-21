@@ -658,13 +658,22 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     if(hide)setTimeout(function(){try{msg.remove()}catch(e){}},hide);
   }
   try{
-    var params=new URLSearchParams(location.search);
-    var shareParam=params.get('share');
+    // share param: query string(?share=) 먼저, 없으면 hash fragment(#share=).
+    // 카톡 인앱 브라우저가 query를 strip하는 케이스 대비 — hash는 서버 전송 안 되고 클라이언트만 처리.
+    var shareParam=new URLSearchParams(location.search).get('share');
+    var source='query';
+    if(!shareParam&&location.hash){
+      shareParam=new URLSearchParams(location.hash.replace(/^#/,'')).get('share');
+      if(shareParam)source='hash';
+    }
     if(!shareParam){
-      step('[share] ?share= 없음. URL: '+location.href.slice(0,60),'#666',3000);
+      step('[share] share param 없음.<br>'+
+           'search: <code>'+(location.search||'(empty)')+'</code><br>'+
+           'hash: <code>'+(location.hash||'(empty)')+'</code><br>'+
+           'URL: <code>'+location.href+'</code>','#666',8000);
       return;
     }
-    step('1/5 ?share= 감지: '+shareParam.slice(0,60));
+    step('1/5 share 감지 ('+source+'): '+shareParam.slice(0,60));
     // share 있으면 무조건 import (사용자가 명시 의도). 기존 denn_admin은 백업.
     var existing=localStorage.getItem('denn_admin');
     if(existing&&existing.length>0){

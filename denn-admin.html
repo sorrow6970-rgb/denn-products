@@ -14000,8 +14000,9 @@ window.addEventListener('resize',scheduleSettle);
     console.log('[firebase] SDK initialized; window.dennFirebase ready');
 
     // 어드민 데이터 share URL 생성 — 다른 기기/origin에서 mockup-tool로 import 용도.
-    // 기본: 짧은 URL (path만 전달, mockup-tool이 Firebase Storage URL 재구성). 100자 정도.
-    // opts.fullUrl=true: 긴 URL (Firebase download URL 그대로). 백업용.
+    // 기본: hash fragment (#share=) + 짧은 path (~100자). 카톡 인앱이 query strip해도 hash는 보존.
+    // opts.useQuery=true: ?share= 사용 (구버전 호환 / 디버그용).
+    // opts.fullUrl=true: 짧은 path 대신 Firebase download URL 그대로.
     window.dennShareCreate = async function(opts){
       opts = opts || {};
       if (!_ready) { await _readyPromise; }
@@ -14012,17 +14013,16 @@ window.addEventListener('resize',scheduleSettle);
       const r = await window.dennFirebase.uploadDataUrl(dataUrl, path);
       const target = opts.target || 'denn-mockup-tool.html';
       const baseUrl = opts.baseUrl || (location.origin + location.pathname.replace(/[^/]+$/, '') + target);
-      // 짧은 URL — share 값에 path만. mockup-tool이 Firebase Storage URL 재구성.
-      const shortUrl = baseUrl + '?share=' + encodeURIComponent(path);
-      const fullUrl = baseUrl + '?share=' + encodeURIComponent(r.url);
-      const finalUrl = opts.fullUrl ? fullUrl : shortUrl;
-      console.log('=== 공유 URL (' + (opts.fullUrl?'full':'short') + ') ===');
+      const shareValue = opts.fullUrl ? r.url : path;
+      const sep = opts.useQuery ? '?' : '#';
+      const finalUrl = baseUrl + sep + 'share=' + encodeURIComponent(shareValue);
+      console.log('=== 공유 URL ('+(opts.useQuery?'query':'hash')+'/'+(opts.fullUrl?'full':'short')+') ===');
       console.log(finalUrl);
       console.log('=== JSON 크기:', json.length, 'bytes / URL 길이:', finalUrl.length, '자 ===');
       try { await navigator.clipboard.writeText(finalUrl); console.log('✓ 클립보드 복사 완료'); } catch(e){}
       return finalUrl;
     };
-    console.log('[share] dennShareCreate() 사용 가능. opts.fullUrl=true로 긴 URL.');
+    console.log('[share] dennShareCreate() 사용 가능. 기본: hash fragment (#share=). opts.useQuery=true로 ?share=.');
   } catch (e) {
     console.error('[firebase] init failed:', e);
   }
