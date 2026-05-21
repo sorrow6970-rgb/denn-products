@@ -10049,43 +10049,149 @@ window.addEventListener('load',later);
 
   function imageParams(){
     var s=ensureImageState();
-    return {color:s.color||'#ffffff',shadow:{enabled:!!s.shadowOn,color:s.shadowColor||'#000000',blur:Number(s.shadowBlur)||0,dx:0,dy:Number(s.shadowY)||0}};
+    // 그림자 blur/dy는 4단위로 round — paramKey cache hit 빈도 ~4배 증가 → 새 dataUrl 발행/image decode 빈도 1/4로 축소.
+    // 시각 차이는 미세 (사용자 인지 어려움). 슬라이더 미세 변동마다 build 폭주 차단.
+    var blur=Math.round((Number(s.shadowBlur)||0)/4)*4;
+    var dy=Math.round((Number(s.shadowY)||0)/4)*4;
+    return {color:s.color||'#ffffff',shadow:{enabled:!!s.shadowOn,color:s.shadowColor||'#000000',blur:blur,dx:0,dy:dy}};
   }
   function paramKey(p){return [p.color,p.shadow.enabled?1:0,p.shadow.color,p.shadow.blur,p.shadow.dx,p.shadow.dy].join('|')}
 
-  // === tint + shadow 합성 (2단계 캔버스) — 변경 없음 ===
+  // === tint + shadow 합성 (2단계 캔버스) ===
+  // Image 객체 cache — 첫 load (50-200ms) 후 재사용 → 두 번째부터 build이 거의 즉시(~5-15ms).
+  // jitter window 축소 + build 동시 폭주 부담 감소.
+  var imgCache=Object.create(null); // srcUrl → Image (loaded) — Phase C 내부 build용
+  // loadImg wrap용 외부 cache. renderFrame 본체가 호출하는 loadImg가 우리 tinted dataUrl을 sync hit하도록.
+  // 흐름: build resolve → preloadAndCache → loadImg wrap에서 cache hit → sync done(img) → 본체 즉시 drawImage → 깜빡임 차단.
+  var renderImgCache=Object.create(null); // src(dataUrl) → Image (preloaded, ready for sync hit)
+  function preloadAndCache(src){
+    return new Promise(function(resolve){
+      var existing=renderImgCache[src];
+      if(existing&&existing.complete&&existing.naturalWidth){resolve(existing);return}
+      var im=new Image();
+      im.onload=function(){renderImgCache[src]=im;resolve(im)};
+      im.onerror=function(){resolve(null)};
+      im.src=src;
+    });
+  }
+  function installLoadImgWrap(){
+    if(typeof window.loadImg!=='function')return false;
+    if(window.loadImg.__dennPhaseCCustomerCache)return true;
+    var orig=window.loadImg;
+    var wrap=function(src, done){
+      var cached=renderImgCache[src];
+      if(cached&&cached.complete&&cached.naturalWidth){done(cached,true);return}
+      return orig.apply(this, arguments);
+    };
+    wrap.__dennPhaseCCustomerCache=true;
+    window.loadImg=wrap;
+    return true;
+  }
+
+  // window.Image + CanvasRenderingContext2D.drawImage 글로벌 wrap.
+  // root cause: renderFrame 본체 L1357의 `var ov=new Image(); ov.onload=...; ov.src=tplSrc` 패턴 →
+  //   매 호출마다 새 Image + 비동기 load → CLEAR 후 onload fire 사이 캔버스에 액자 테두리만(=사용자가 본 "작은 액자").
+  // 해결: cache hit인 src 설정 시 (1) onload sync fire (microtask), (2) drawImage 시 cache image로 swap.
+  // 위험 최소화: renderImgCache hit인 경우만 wrap 동작. 외부 코드 영향 없음.
+  function installImageWrap(){
+    if(window.Image.__dennPhaseCCustomerWrap)return true;
+    var OrigImage=window.Image;
+    var srcDesc=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,'src');
+    var origSrcSet=srcDesc&&srcDesc.set;
+    var origSrcGet=srcDesc&&srcDesc.get;
+    if(!origSrcSet||!origSrcGet)return false;
+    function WrappedImage(){
+      var img;
+      if(arguments.length===0)img=new OrigImage();
+      else if(arguments.length===1)img=new OrigImage(arguments[0]);
+      else img=new OrigImage(arguments[0],arguments[1]);
+      try{
+        Object.defineProperty(img,'src',{
+          configurable:true,
+          get:function(){return origSrcGet.call(this)},
+          set:function(v){
+            var cached=renderImgCache[v];
+            if(cached&&cached.complete&&cached.naturalWidth){
+              img.__dennPhaseCCached=cached;
+              origSrcSet.call(this,v);
+              // onload microtask fire — 본체 함수 종료 후 paint 전에 drawImage 실행 → 깜빡임 차단
+              Promise.resolve().then(function(){
+                if(typeof img.onload==='function'){
+                  try{img.onload.call(img,new Event('load'))}catch(e){}
+                }
+              });
+              return;
+            }
+            origSrcSet.call(this,v);
+          }
+        });
+      }catch(e){/* src 재정의 실패 시 정상 동작 */}
+      return img;
+    }
+    WrappedImage.prototype=OrigImage.prototype;
+    WrappedImage.__dennPhaseCCustomerWrap=true;
+    window.Image=WrappedImage;
+    return true;
+  }
+  function installDrawImageWrap(){
+    if(typeof CanvasRenderingContext2D==='undefined')return false;
+    var proto=CanvasRenderingContext2D.prototype;
+    if(proto.drawImage.__dennPhaseCCustomerWrap)return true;
+    var orig=proto.drawImage;
+    proto.drawImage=function(){
+      var s=arguments[0];
+      if(s&&s.__dennPhaseCCached){
+        var args=Array.prototype.slice.call(arguments);
+        args[0]=s.__dennPhaseCCached;
+        return orig.apply(this,args);
+      }
+      return orig.apply(this,arguments);
+    };
+    proto.drawImage.__dennPhaseCCustomerWrap=true;
+    return true;
+  }
+  function compose(img, params){
+    var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+    if(!w||!h)return null;
+    var temp=document.createElement('canvas');
+    temp.width=w; temp.height=h;
+    var tctx=temp.getContext('2d');
+    tctx.drawImage(img,0,0);
+    tctx.globalCompositeOperation='source-atop';
+    tctx.fillStyle=params.color;
+    tctx.fillRect(0,0,w,h);
+    tctx.globalCompositeOperation='source-over';
+    if(params.shadow&&params.shadow.enabled){
+      var fin=document.createElement('canvas');
+      fin.width=w; fin.height=h;
+      var fctx=fin.getContext('2d');
+      fctx.shadowColor=params.shadow.color;
+      fctx.shadowBlur=params.shadow.blur;
+      fctx.shadowOffsetX=params.shadow.dx;
+      fctx.shadowOffsetY=params.shadow.dy;
+      fctx.drawImage(temp,0,0);
+      return fin.toDataURL('image/png');
+    }
+    return temp.toDataURL('image/png');
+  }
   function buildTintedDataUrl(srcUrl, params){
     instrumentation.buildTintCalls++;
     return new Promise(function(resolve){
       dlog('buildTintedDataUrl start',srcUrl&&srcUrl.slice(0,80),params);
+      var cached=imgCache[srcUrl];
+      if(cached&&cached.complete&&cached.naturalWidth){
+        try{
+          var out=compose(cached, params);
+          if(out){instrumentation.buildTintResolves++;dlog('buildTintedDataUrl (cached img) ok, length:',out.length);resolve(out);return}
+        }catch(e){instrumentation.errors.push(String(e));console.warn('[phase-c-customer] cached img compose failed',e);resolve(srcUrl);return}
+      }
       var img=new Image();
       img.crossOrigin='anonymous';
       img.onload=function(){
         try{
-          var w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
-          if(!w||!h){dlog('img has no dim');resolve(srcUrl);return}
-          var temp=document.createElement('canvas');
-          temp.width=w; temp.height=h;
-          var tctx=temp.getContext('2d');
-          tctx.drawImage(img,0,0);
-          tctx.globalCompositeOperation='source-atop';
-          tctx.fillStyle=params.color;
-          tctx.fillRect(0,0,w,h);
-          tctx.globalCompositeOperation='source-over';
-          var out;
-          if(params.shadow&&params.shadow.enabled){
-            var fin=document.createElement('canvas');
-            fin.width=w; fin.height=h;
-            var fctx=fin.getContext('2d');
-            fctx.shadowColor=params.shadow.color;
-            fctx.shadowBlur=params.shadow.blur;
-            fctx.shadowOffsetX=params.shadow.dx;
-            fctx.shadowOffsetY=params.shadow.dy;
-            fctx.drawImage(temp,0,0);
-            out=fin.toDataURL('image/png');
-          }else{
-            out=temp.toDataURL('image/png');
-          }
+          imgCache[srcUrl]=img; // 다음 build부터 cache hit
+          var out=compose(img, params);
+          if(!out){dlog('img has no dim');resolve(srcUrl);return}
           instrumentation.buildTintResolves++;
           dlog('buildTintedDataUrl ok, dataUrl length:',out.length);
           resolve(out);
@@ -10096,11 +10202,9 @@ window.addEventListener('load',later);
         }
       };
       img.onerror=function(e){
-        // crossOrigin='anonymous'로 로딩 실패 — 보통 CORS 헤더 미존재. crossOrigin 없이 재시도.
         dlog('crossOrigin load failed, retry without crossOrigin',srcUrl&&srcUrl.slice(0,80));
         var img2=new Image();
         img2.onload=function(){
-          // 재시도 성공: 그러나 캔버스 tainted → toDataURL 불가. 원본 그대로 반환 (no tint).
           console.warn('[phase-c-customer] template loaded without CORS — tint skipped (Firebase Storage CORS not configured for origin '+location.origin+')');
           resolve(srcUrl);
         };
@@ -10122,21 +10226,21 @@ window.addEventListener('load',later);
     var cache=tintCache[tplKey];
     if(cache&&cache.key===key&&cache.dataUrl)return cache.dataUrl;
     if(!cache||cache.key!==key){
-      // 흰색 깜빡임 방지: 새 build 중에도 이전 dataUrl(stale)을 유지해 반환 → 사용자 눈에 부드러운 전환.
-      // build 시작 중복 방지: inFlight 플래그로 같은 key의 동시 build 차단.
+      // 흰색 깜빡임 방지: stale + lastValid 보존으로 cache가 null인 중간 상태도 항상 fallback.
       var staleDataUrl=cache&&cache.dataUrl?cache.dataUrl:null;
+      var lastValid=cache&&(cache.dataUrl||cache.lastValidDataUrl)||null;
       var inFlightKey=cache&&cache.inFlightKey===key;
-      tintCache[tplKey]={key:key, dataUrl:staleDataUrl, inFlightKey:key};
+      tintCache[tplKey]={key:key, dataUrl:staleDataUrl, inFlightKey:key, lastValidDataUrl:lastValid};
       if(!inFlightKey){
         buildTintedDataUrl(originalSrc, p).then(function(dataUrl){
-          // resolve 시점에 더 새로운 key가 시작됐다면 그 결과는 무시 (race-safe)
           var cur=tintCache[tplKey];
           if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
-          tintCache[tplKey]={key:key, dataUrl:dataUrl};
+          tintCache[tplKey]={key:key, dataUrl:dataUrl, lastValidDataUrl:dataUrl};
           scheduleRenderFrame();
         });
       }
       if(staleDataUrl)return staleDataUrl;
+      if(lastValid)return lastValid;
     }
     return originalSrc;
   }
@@ -10219,20 +10323,26 @@ window.addEventListener('load',later);
     var cache=tintCache[tplKey];
     if(cache&&cache.key===key&&cache.dataUrl)return cache.dataUrl;
     if(!cache||cache.key!==key){
-      // 흰색 깜빡임 차단: 새 build 중에도 이전 dataUrl(stale) 유지 → swap 계속 작동 → 사용자 눈에 부드러운 전환.
-      // 동시 build 중복 차단: inFlightKey 가드.
+      // 흰색 깜빡임 차단: 새 build 중에도 이전 dataUrl(stale) + lastValid 보존 → swap 계속 작동.
       var staleDataUrl=cache&&cache.dataUrl?cache.dataUrl:null;
+      var lastValid=cache&&(cache.dataUrl||cache.lastValidDataUrl)||null;
       var inFlightSame=cache&&cache.inFlightKey===key;
-      tintCache[tplKey]={key:key,dataUrl:staleDataUrl,inFlightKey:key};
+      tintCache[tplKey]={key:key,dataUrl:staleDataUrl,inFlightKey:key,lastValidDataUrl:lastValid};
       if(!inFlightSame){
         buildTintedDataUrl(tpl.dataUrl, imageParams()).then(function(dataUrl){
           var cur=tintCache[tplKey];
           if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
-          tintCache[tplKey]={key:key,dataUrl:dataUrl};
-          scheduleRenderFrame();
+          // preload → renderImgCache 등록 → renderFrame (본체 loadImg wrap이 sync hit → 깜빡임 차단)
+          preloadAndCache(dataUrl).then(function(){
+            var cur2=tintCache[tplKey];
+            if(cur2&&cur2.inFlightKey!==key&&cur2.key!==key)return;
+            tintCache[tplKey]={key:key,dataUrl:dataUrl,lastValidDataUrl:dataUrl};
+            scheduleRenderFrame();
+          });
         });
       }
       if(staleDataUrl)return staleDataUrl;
+      if(lastValid)return lastValid;
     }
     return null;
   }
@@ -10311,6 +10421,8 @@ window.addEventListener('load',later);
     if(dupes>0)console.warn('[phase-c-customer] removed',dupes,'duplicate zone row(s)');
   }
 
+  // 즉시 적용 + cache invalidate + scheduleRenderFrame (rAF 60Hz cap).
+  // paramKey grouping(imageParams)이 1/4로 cache hit 증가시켜 jitter 빈도 감소 — debounce 없이도 부드러움.
   function updateImage(prop,val){
     var s=ensureImageState();
     s[prop]=val;
@@ -10321,16 +10433,8 @@ window.addEventListener('load',later);
       var el2=document.getElementById('fts-'+IMG_KEY+'-shadowOn');
       if(el2)el2.classList.toggle('on',!!val);
     }
-    // 파라미터 변경 → 현재 tpl의 cache key만 무효화 (stale dataUrl은 보존해서 build 중 흰색 깜빡임 방지).
-    // 다른 tpl의 cache는 영향 없음 (전체 폭파 X — 슬라이더 미세 변동마다 모든 tpl 재합성 회피).
-    if(prop!=='on'||val===false){
-      var t=window.curFTpl;
-      if(t&&tintCache[t.id])tintCache[t.id].key='__invalid__';
-    }
-    if(prop==='on'&&val===true){
-      var t2=window.curFTpl;
-      if(t2&&tintCache[t2.id])tintCache[t2.id].key='__invalid__';
-    }
+    var t=window.curFTpl;
+    if(t&&tintCache[t.id])tintCache[t.id].key='__invalid__';
     scheduleRenderFrame();
   }
 
@@ -10427,13 +10531,16 @@ window.addEventListener('load',later);
   }
 
   // selFTplByRef wrap — 시안 변경 시 캐시 무효화 + 게이팅
+  // tintCache는 tpl.id별로 분리 저장 → 다른 시안 cache는 보존 (같은 시안 reselect 시 즉시 cache hit).
+  // 이전 동작: tintCache=Object.create(null) 전체 폭파 → 시안 reselect / buildFrameTplGrid 호출 시
+  // 누적된 build 결과 손실 → 사용자가 슬라이더 조작 중 간헐적 흰색 깜빡임 원인 1.
   function installSelFTplWrap(){
     if(typeof window.selFTplByRef!=='function')return false;
     if(window.selFTplByRef.__dennPhaseCCustomerGate)return true;
     var orig=window.selFTplByRef;
     var wrap=function(){
       var r=orig.apply(this, arguments);
-      tintCache=Object.create(null);
+      // tintCache 전체 폭파 X — tpl.id별로 자연 분리. 다른 시안 cache 보존.
       applyGating();
       return r;
     };
@@ -10450,6 +10557,9 @@ window.addEventListener('load',later);
     installBulkApplyWrap();
     installToggleMasterWrap();
     installSelFTplWrap();
+    installLoadImgWrap(); // 본체 loadImg를 wrap해서 tinted dataUrl을 sync hit
+    installImageWrap();    // window.Image ctor wrap: cache hit src → onload sync fire
+    installDrawImageWrap();// ctx.drawImage wrap: __dennPhaseCCached 마커 image를 cache image로 swap
     installRenderFrameInstrumentation();
     installRenderFrameSwapHook();
     dedupRows();
