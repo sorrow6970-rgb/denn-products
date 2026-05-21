@@ -8608,6 +8608,50 @@ window.addEventListener('load',run);
   .denn-v36-actions button{min-height:44px;font-size:13px}
 }
 </style>
+<style id="denn-mobile-layout-v1">
+/* 모바일 레이아웃 재구성 — @media(max-width:768px) 한정.
+   - #page-case/#page-frame을 1열로 펼치고, 미리보기(액자/케이스)를 위로, 설정 패널을 아래로 재배치.
+   - HTML 순서는 panel→preview 그대로 (접근성/탭 순서 보존), flex order로 시각만 뒤집음.
+   - sticky 적용: main이 overflow:auto라 main 내부에서 미리보기가 상단 고정.
+   - 캔버스 attribute width/height는 미수정 → renderFrame/renderCase 좌표계 무영향.
+   - PC(>=769px): 영향 0. */
+@media(max-width:768px){
+  #page-case.main, #page-frame.main{
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:auto!important;
+  }
+  #page-case .preview-area, #page-frame .preview-area{
+    order:1;
+    position:sticky;
+    top:0;
+    z-index:5;
+    min-height:auto!important;
+    max-height:62vh;
+    padding:10px 6px!important;
+    width:100%;
+  }
+  #page-case .panel, #page-frame .panel{
+    order:2;
+    width:100%;
+    max-width:none!important;
+    max-height:none!important;
+    overflow:visible!important;
+    border-right:none;
+  }
+  #page-case .canvas-wrap, #page-frame .canvas-wrap{
+    max-width:94vw!important;
+    max-height:58vh;
+  }
+  #page-case .canvas-wrap canvas, #page-frame .canvas-wrap canvas{
+    max-width:100%;
+    max-height:58vh;
+    height:auto;
+    width:auto;
+    object-fit:contain;
+  }
+}
+</style>
 <style id="denn-v36-1-frame-action-ui-home-css">
 #page-frame .denn-frame-action-stack{
   display:flex;
