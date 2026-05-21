@@ -8696,6 +8696,11 @@ window.addEventListener('load',run);
 @media(max-width:768px){
   .page:not(.on){display:none!important}
 }
+/* 모바일에서 frame 스케일 컨트롤 숨김 — 핀치줌도 차단됐고 작은 캔버스에서 사용 가치 낮음.
+   .show 클래스로 표시되는 .img-transform-ctl 룰을 모바일에서 덮어씀. */
+@media(max-width:768px){
+  #frame-transform-ctl{display:none!important}
+}
 </style>
 <script id="denn-mobile-split-pane-v1">
 /* 모바일 split-pane 핸들 주입 + drag로 액자/설정 분할 비율 조절.
