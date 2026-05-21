@@ -2255,7 +2255,7 @@ function paint(ctx,src,cx,cy,box){load(src,function(im){if(!im)return;try{var ar
 function clockSrc(c){return (c&&c.customImgClean)||(window.ADM&&ADM.clockSettings&&(ADM.clockSettings.customImgClean||ADM.clockSettings.customImg))||(c&&c.customImg)||null}
 window.drawClockLayer=function(ctx,IX,IY,IW,IH,CS){var base=Object.assign({x:88,y:88,size:12,customImg:null,customImgClean:null},(window.ADM&&ADM.clockSettings)||{},CS||{});var src=clockSrc(base);var box=Math.max(4,Math.min(IW,IH)*(num(base.size,12)/100));var cx=IX+(base.x==null?88:num(base.x,88))/100*IW,cy=IY+(base.y==null?88:num(base.y,88))/100*IH;if(src){cleanClock(src,function(clean){paint(ctx,clean,cx,cy,box);});}else if(typeof window.drawClock==='function'){window.drawClock(ctx,cx,cy,box/2)}};
 function drawWhiteBorder(){try{var tpl=window.curFTpl||((window.FTPLS||[])[0]);if(!tpl||!tpl.whiteInnerBorder)return;var th=num(tpl.whiteInnerBorderThickness,0);if(th<=0)return;var cv=by('frameCanvas');if(!cv)return;var ctx=cv.getContext('2d'),sz=window.curFSz||((window.FS||[])[0]),W=cv.width,H=cv.height;var framePct=(sz&&sz.frameThickness!=null)?sz.frameThickness:((window.ADM&&ADM.frameThickness)||5.5);var B=Math.max(1,Math.round(Math.min(W,H)*framePct/100));var IX=B,IY=B,IW=W-B*2,IH=H-B*2;if(IW<=0||IH<=0)return;var lw=Math.max(1,Math.min(IW,IH)*th/100);ctx.save();ctx.fillStyle='#FFFDF8';ctx.fillRect(IX,IY,IW,lw);ctx.fillRect(IX,IY+IH-lw,IW,lw);ctx.fillRect(IX,IY,lw,IH);ctx.fillRect(IX+IW-lw,IY,lw,IH);ctx.restore();}catch(e){}}
-function scalePreview(){try{var area=document.querySelector('.preview-area'),wrap=document.querySelector('.canvas-wrap'),cv=by('frameCanvas');if(!area||!wrap||!cv)return;var user=num(window.ADM&&ADM.uiCustom&&ADM.uiCustom.customerPreviewScale,68)/100;var aw=area.clientWidth-40,ah=area.clientHeight-40;var fit=Math.min(1,aw/(cv.width||1),ah/(cv.height||1));var mobile=innerWidth<861?.84:1;var s=Math.max(.22,Math.min(1,fit*user*mobile));wrap.style.transform='scale('+s+')';}catch(e){}}
+function scalePreview(){try{var area=document.querySelector('.preview-area'),wrap=document.querySelector('.canvas-wrap'),cv=by('frameCanvas');if(!area||!wrap||!cv)return;var user=num(window.ADM&&ADM.uiCustom&&ADM.uiCustom.customerPreviewScale,100)/100;var aw=area.clientWidth-40,ah=area.clientHeight-40;var fit=Math.min(1,aw/(cv.width||1),ah/(cv.height||1));var mobile=innerWidth<861?.84:1;var s=Math.max(.22,Math.min(1,fit*user*mobile));wrap.style.transform='scale('+s+')';}catch(e){}}
 var oldRF=window.renderFrame;if(typeof oldRF==='function'){window.renderFrame=function(){var r=oldRF.apply(this,arguments);[40,120,280,600].forEach(function(ms){setTimeout(function(){drawWhiteBorder();},ms)});return r}}
 })();
 </script>
@@ -2533,7 +2533,7 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(normalizeFram
 function by(id){return document.getElementById(id)}
 function num(v,d){v=parseFloat(v);return isFinite(v)?v:d}
 function adm(){try{return JSON.parse(localStorage.getItem('denn_admin')||'{}')||window.ADM||{}}catch(e){return window.ADM||{}}}
-function ui(A){A=A||adm();var u=A.uiSettings||{},c=A.uiCustom||{};return{previewMaxW:num(u.previewMaxW,c.prevMaxW||840),frameScale:num(u.framePreviewScale,c.customerPreviewScale||72)}}
+function ui(A){A=A||adm();var u=A.uiSettings||{},c=A.uiCustom||{};return{previewMaxW:num(u.previewMaxW,c.prevMaxW||840),frameScale:num(u.framePreviewScale,c.customerPreviewScale||100)}}
 function load(src,cb){if(!src){cb(null);return}window.__dennV23MockImg=window.__dennV23MockImg||{};var im=window.__dennV23MockImg[src];if(im&&im.complete&&im.naturalWidth){cb(im);return}im=new Image();window.__dennV23MockImg[src]=im;im.onload=function(){cb(im)};im.onerror=function(){cb(null)};im.src=src}
 window.drawClockLayer=function(ctx,IX,IY,IW,IH,CS){var A=adm(),base=Object.assign({x:88,y:88,size:12,customImg:null},A.clockSettings||{},CS||{}),src=(A.clockSettings&&A.clockSettings.customImg)||base.customImg||null,box=Math.max(4,Math.min(IW,IH)*num(base.size,12)/100),cx=IX+num(base.x,88)*IW/100,cy=IY+num(base.y,88)*IH/100;if(src){load(src,function(im){if(!im)return;var ar=(im.naturalWidth||1)/(im.naturalHeight||1),w=box,h=box;if(ar>=1)h=box/ar;else w=box*ar;ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(im,cx-w/2,cy-h/2,w,h);ctx.restore()});return}if(typeof window.drawClock==='function')window.drawClock(ctx,cx,cy,box/2)};
 function scaleFramePreview(){return}
@@ -10150,6 +10150,57 @@ window.addEventListener('load',later);
     proto.drawImage.__dennPhaseCCustomerWrap=true;
     return true;
   }
+
+  // denn-customer-final 패치 (L2063-2067)의 .canvas-wrap.rendering pulse 효과 무력화.
+  function installNoRenderingPulse(){
+    if(document.getElementById('denn-phase-c-no-rendering-pulse'))return true;
+    var s=document.createElement('style');
+    s.id='denn-phase-c-no-rendering-pulse';
+    s.textContent='.canvas-wrap.rendering{opacity:1!important;transform:none!important;transition:none!important}';
+    document.head.appendChild(s);
+    return true;
+  }
+
+  // root cause: L3833 applyStableScale (v39)가 매 renderFrame 후 0ms 지연으로 frame-wrap의
+  //   transform을 'scale(fit*.56*getScale()/100)'으로 변경. .56 factor 때문에 fit=1.2면 0.672 적용
+  //   → 슬라이더 input 시점에 462x654 → 311x440(33% 축소) → 다른 wrap 복원으로 462x654.
+  //   사용자 시각으로 9ms 짧은 스케일 튐. 매 input마다 반복.
+  // 해결: frame-wrap의 style.setProperty('transform', 'scale(...)') 호출을 instance-level wrap →
+  //   scale 변경 시 항상 scale(1) 강제. inline style + !important까지 우리 wrap이 차단.
+  function installFrameWrapScaleLock(){
+    var wrap=document.querySelector('#page-frame .canvas-wrap');
+    if(!wrap||wrap.__dennPhaseCScaleLocked)return false;
+    wrap.__dennPhaseCScaleLocked=true;
+    var origSetProperty=wrap.style.setProperty.bind(wrap.style);
+    wrap.style.setProperty=function(prop, val, priority){
+      if(prop==='transform' && typeof val==='string' && val.indexOf('scale')!==-1){
+        return origSetProperty('transform','scale(1)',priority||'');
+      }
+      return origSetProperty(prop, val, priority);
+    };
+    // 직접 wrap.style.transform 할당도 차단 — defineProperty로 setter wrap
+    try{
+      var origStyleObj=wrap.style;
+      var origTransformDesc=Object.getOwnPropertyDescriptor(CSSStyleDeclaration.prototype,'transform');
+      if(origTransformDesc&&origTransformDesc.set){
+        var origSet=origTransformDesc.set.bind(origStyleObj);
+        Object.defineProperty(origStyleObj,'transform',{
+          configurable:true,
+          get:function(){return origTransformDesc.get.call(origStyleObj)},
+          set:function(v){
+            if(typeof v==='string'&&v.indexOf('scale')!==-1){
+              origSet('scale(1)');
+              return;
+            }
+            origSet(v);
+          }
+        });
+      }
+    }catch(e){}
+    // 초기 transform 정리 (이미 set된 scale 강제로 scale(1))
+    origSetProperty('transform','scale(1)','important');
+    return true;
+  }
   function compose(img, params){
     var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
     if(!w||!h)return null;
@@ -10517,9 +10568,33 @@ window.addEventListener('load',later);
         var tog=document.getElementById('frame-text-style-master');
         if(box){
           box.classList.toggle('on',!!window.frameTextStyleOn);
-          box.classList.remove('denn-v70-locked'); // 잠금 해제 (image tint는 항상 가능)
+          box.classList.remove('denn-v70-locked');
         }
         if(tog)tog.classList.toggle('on',!!window.frameTextStyleOn);
+        // "최초 ON 1회 작은 액자 깜빡임" 차단: master ON 시점에 cache 미준비면 build + preload 완료 후에만 renderFrame.
+        // 즉시 renderFrame 호출 시 본체가 비동기 ov.onload → drawSlot 영역(작은)만 잠깐 보임 = 사용자가 본 깜빡임 정체.
+        if(window.frameTextStyleOn){
+          var t=window.curFTpl;
+          if(t&&t.dataUrl){
+            var p=imageParams();
+            var key=paramKey(p);
+            var tplKey=t.id||'';
+            var cache=tintCache[tplKey];
+            if(!cache||cache.key!==key||!cache.dataUrl){
+              // cache 미준비 → 즉시 renderFrame 안 하고 build 완료 후만 호출 (50-100ms 색 적용 지연 트레이드오프)
+              tintCache[tplKey]={key:key,dataUrl:null,inFlightKey:key,lastValidDataUrl:cache&&(cache.dataUrl||cache.lastValidDataUrl)||null};
+              buildTintedDataUrl(t.dataUrl, p).then(function(dataUrl){
+                var cur=tintCache[tplKey];
+                if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
+                preloadAndCache(dataUrl).then(function(){
+                  tintCache[tplKey]={key:key,dataUrl:dataUrl,lastValidDataUrl:dataUrl};
+                  if(typeof window.renderFrame==='function')window.renderFrame();
+                });
+              });
+              return true; // 즉시 renderFrame 건너뛰기 — build 완료 후 cache hit으로 sync paint
+            }
+          }
+        }
         if(typeof window.renderFrame==='function')window.renderFrame();
         return true;
       }
@@ -10542,6 +10617,30 @@ window.addEventListener('load',later);
       var r=orig.apply(this, arguments);
       // tintCache 전체 폭파 X — tpl.id별로 자연 분리. 다른 시안 cache 보존.
       applyGating();
+      // "작은 액자 튀는 1회" 차단: 시안 선택 시점에 원본 + tinted 둘 다 background build.
+      // master toggle ON 클릭 시점에 이미 cache 준비 → 본체가 swap된 tinted를 sync 그림 → 원본 PNG 노출 없음.
+      var t=window.curFTpl;
+      if(t&&t.dataUrl){
+        preloadAndCache(t.dataUrl); // 원본 dataUrl cache
+        // tinted도 background build (현재 imageParams 기반)
+        if(typeof currentTplAllowed==='function'&&currentTplAllowed()){
+          var p=imageParams();
+          var tplKey=t.id||'';
+          var key=paramKey(p);
+          var cache=tintCache[tplKey];
+          if(!cache||cache.key!==key){
+            tintCache[tplKey]={key:key,dataUrl:null,inFlightKey:key,lastValidDataUrl:cache&&(cache.dataUrl||cache.lastValidDataUrl)||null};
+            buildTintedDataUrl(t.dataUrl, p).then(function(dataUrl){
+              var cur=tintCache[tplKey];
+              if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
+              preloadAndCache(dataUrl).then(function(){
+                tintCache[tplKey]={key:key,dataUrl:dataUrl,lastValidDataUrl:dataUrl};
+                scheduleRenderFrame();
+              });
+            });
+          }
+        }
+      }
       return r;
     };
     wrap.__dennPhaseCCustomerGate=true;
@@ -10560,10 +10659,34 @@ window.addEventListener('load',later);
     installLoadImgWrap(); // 본체 loadImg를 wrap해서 tinted dataUrl을 sync hit
     installImageWrap();    // window.Image ctor wrap: cache hit src → onload sync fire
     installDrawImageWrap();// ctx.drawImage wrap: __dennPhaseCCached 마커 image를 cache image로 swap
+    installNoRenderingPulse(); // denn-customer-final pulse 효과 무력화
+    installFrameWrapScaleLock(); // v39 applyStableScale의 transform: scale 변경 차단 (스케일 튐 진짜 root cause)
     installRenderFrameInstrumentation();
     installRenderFrameSwapHook();
     dedupRows();
     applyGating();
+    // "작은 액자 튀는 1회" 차단: boot 직후 현재 시안 background build (사용자가 master ON 시점에 cache hit 보장)
+    setTimeout(prebuildCurrentTpl, 500);
+  }
+  function prebuildCurrentTpl(){
+    var t=window.curFTpl;
+    if(!t||!t.dataUrl)return;
+    preloadAndCache(t.dataUrl); // 원본 dataUrl도 cache (본체가 swap 안 됐을 때 sync hit)
+    if(typeof currentTplAllowed!=='function'||!currentTplAllowed())return;
+    var p=imageParams();
+    var tplKey=t.id||'';
+    var key=paramKey(p);
+    var cache=tintCache[tplKey];
+    if(cache&&cache.key===key&&cache.dataUrl)return; // 이미 준비됨
+    tintCache[tplKey]={key:key,dataUrl:null,inFlightKey:key,lastValidDataUrl:cache&&(cache.dataUrl||cache.lastValidDataUrl)||null};
+    buildTintedDataUrl(t.dataUrl, p).then(function(dataUrl){
+      var cur=tintCache[tplKey];
+      if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
+      preloadAndCache(dataUrl).then(function(){
+        tintCache[tplKey]={key:key,dataUrl:dataUrl,lastValidDataUrl:dataUrl};
+        scheduleRenderFrame();
+      });
+    });
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);
   else boot();
