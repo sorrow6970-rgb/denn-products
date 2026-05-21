@@ -639,6 +639,38 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
 
 
 <script>
+// ?share=<Firebase Storage URL> query 처리 — 다른 기기/origin에서 어드민 데이터 import.
+// 데스크탑 어드민이 dennShareCreate()로 URL 생성 → 카톡으로 전송 → 모바일 mockup-tool에서 ?share=URL로 진입.
+// localStorage 비어있을 때만 fetch (이미 import된 경우 재호출 방지).
+(function(){
+  try{
+    var params=new URLSearchParams(location.search);
+    var shareUrl=params.get('share');
+    if(!shareUrl)return;
+    var existing=localStorage.getItem('denn_admin');
+    if(existing&&existing.length>1000){
+      console.log('[share] localStorage already populated, skipping import. ?share=... 무시');
+      return;
+    }
+    console.log('[share] fetching:',shareUrl.slice(0,80));
+    var msg=document.createElement('div');
+    msg.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:16px 24px;background:#333;color:#fff;border-radius:8px;font:14px sans-serif;z-index:99999';
+    msg.textContent='시안 데이터 받는 중...';
+    document.documentElement.appendChild(msg);
+    fetch(shareUrl).then(function(r){return r.json()}).then(function(json){
+      localStorage.setItem('denn_admin',JSON.stringify(json));
+      msg.textContent='✓ 가져오기 완료. 새로고침 중...';
+      // share param 제거 후 reload (재호출 방지)
+      var clean=location.origin+location.pathname+location.hash;
+      setTimeout(function(){location.replace(clean)},400);
+    }).catch(function(e){
+      msg.style.background='#c33';
+      msg.textContent='✕ 가져오기 실패: '+e.message;
+      console.error('[share] fetch failed:',e);
+      setTimeout(function(){msg.remove()},5000);
+    });
+  }catch(e){console.warn('[share] init error:',e)}
+})();
 var ADM=null;try{var _r=localStorage.getItem('denn_admin');ADM=_r?JSON.parse(_r):null;}catch(e){}
 var frameTextStyleOn=false;
 var frameTextStyle={main:{on:false,color:'#ffffff',shadowOn:false,shadowColor:'#000000',shadowBlur:4,shadowY:1},name:{on:false,color:'#ffffff',shadowOn:false,shadowColor:'#000000',shadowBlur:4,shadowY:1},date:{on:false,color:'#ffffff',shadowOn:false,shadowColor:'#000000',shadowBlur:4,shadowY:1},sub:{on:false,color:'#ffffff',shadowOn:false,shadowColor:'#000000',shadowBlur:4,shadowY:1}};
