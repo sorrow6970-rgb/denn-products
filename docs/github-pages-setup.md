@@ -52,11 +52,23 @@ admin:       https://sorrow6970-rgb.github.io/denn-products/denn-admin.html
 
 ### 3-3. 검증
 
-GitHub Pages URL에서 mockup-tool 접속 후 콘솔:
+GitHub Pages **어드민** 접속 후 콘솔 (mockup-tool에는 dennFirebase 자체가 없음 — §5 참고):
 ```js
-dennFirebase?.isReady().then(r => console.log('Firebase ready:', r));
+// isReady()는 동기 boolean, ready()가 Promise. 헷갈리지 말 것.
+dennFirebase?.ready().then(r => console.log('Firebase ready:', r));
 ```
 `true` 출력이면 정상.
+
+종합 진단:
+```js
+(async () => {
+  const fb = window.dennFirebase;
+  if (!fb) { console.error('dennFirebase 미정의 (mockup-tool에는 정상)'); return; }
+  console.log('isReady 즉시:', fb.isReady());
+  await fb.ready();
+  console.log('인증 완료 후:', fb.isReady(), 'uid:', fb.auth?.currentUser?.uid);
+})();
+```
 
 만약 `false` 또는 에러 → Authorized Domains 추가 누락 의심.
 
