@@ -10446,8 +10446,17 @@ window.addEventListener('load',later);
   function autoVerify(opts){
     opts=opts||{};
     var color=opts.color||'#C49A6C';
+    // 진입 시 flag 상태 보존 → 종료 시 복원 (autoVerify 후 force 잔존으로 후속 disabled 검증이 false 양성 나는 문제 차단)
+    var hadForce='__dennDebugForceAllowColorChange' in window;
+    var prevForce=window.__dennDebugForceAllowColorChange;
+    var hadDebug='__dennPhaseCCustomerDebug' in window;
+    var prevDebug=window.__dennPhaseCCustomerDebug;
     window.__dennDebugForceAllowColorChange=true;
     window.__dennPhaseCCustomerDebug=true;
+    function restoreDebugFlags(){
+      if(hadForce)window.__dennDebugForceAllowColorChange=prevForce; else delete window.__dennDebugForceAllowColorChange;
+      if(hadDebug)window.__dennPhaseCCustomerDebug=prevDebug; else delete window.__dennPhaseCCustomerDebug;
+    }
     return new Promise(function(resolve){
       autoEnable({color:color});
       // 캐시 + 렌더 대기 (img load + buildTinted + renderFrame)
@@ -10479,7 +10488,9 @@ window.addEventListener('load',later);
           }
           var state=window.dennPhaseCCustomerColor.getState();
           var pass=hasData && !sample.error && goldRatio>15;
-          resolve({pass:pass, hasCache:hasData, sample:sample, state:state, waited:waited});
+          restoreDebugFlags();
+          if(typeof window.renderFrame==='function')window.renderFrame();
+          resolve({pass:pass, hasCache:hasData, sample:sample, state:state, waited:waited, debugRestored:true});
         }else{
           setTimeout(check, interval);
         }
@@ -10501,6 +10512,14 @@ window.addEventListener('load',later);
     forceRebuild:function(){tintCache=Object.create(null);if(typeof window.renderFrame==='function')window.renderFrame()},
     autoEnable:autoEnable,
     autoVerify:autoVerify,
+    clearDebug:function(){
+      // 통합 verification 스크립트에서 명시 해제용 — autoVerify가 정상 resolve되면 자동 복원되지만,
+      // 콘솔에서 수동 set한 경우 / autoVerify 도중 중단 / 다른 도구가 남겨놓은 경우를 위한 보험.
+      delete window.__dennDebugForceAllowColorChange;
+      delete window.__dennPhaseCCustomerDebug;
+      if(typeof window.renderFrame==='function')window.renderFrame();
+      return {force:('__dennDebugForceAllowColorChange' in window), debug:('__dennPhaseCCustomerDebug' in window)};
+    },
     dedupRows:dedupRows
   };
 })();
