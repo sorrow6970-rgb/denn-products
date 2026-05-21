@@ -8609,55 +8609,163 @@ window.addEventListener('load',run);
 }
 </style>
 <style id="denn-mobile-layout-v1">
-/* 모바일 레이아웃 재구성 — @media(max-width:768px) 한정.
-   - #page-case/#page-frame을 1열로 펼치고, 미리보기(액자/케이스)를 위로, 설정 패널을 아래로 재배치.
-   - HTML 순서는 panel→preview 그대로 (접근성/탭 순서 보존), flex order로 시각만 뒤집음.
-   - sticky 적용: main이 overflow:auto라 main 내부에서 미리보기가 상단 고정.
-   - 캔버스 attribute width/height는 미수정 → renderFrame/renderCase 좌표계 무영향.
-   - PC(>=769px): 영향 0. */
+/* 모바일 split-pane 레이아웃 — @media(max-width:768px) 한정.
+   - #page-case/#page-frame을 고정 높이 flex 컨테이너로 만들어 body 전체 스크롤 차단.
+   - preview-area(액자/케이스) = 상단, 분할 비율 var(--mobile-preview-h)로 높이 결정.
+   - .mobile-split-handle = 중간 드래그 핸들 (JS로 inject).
+   - .panel(설정) = 하단, flex:1 + overflow-y:auto로 자체 스크롤.
+   - svh 사용: 모바일 주소창 표시/숨김에 따른 vh 변동 무영향.
+   - 캔버스 attribute width/height는 미수정 → renderFrame/renderCase 좌표계 무영향. */
 @media(max-width:768px){
-  /* 활성(.on) 페이지에만 flex 적용 — .page{display:none}/.page.on{display:grid}의 토글 보존. */
+  /* 활성(.on) 페이지에만 split 적용 — .page{display:none}/.page.on{display:grid} 토글 보존. */
   #page-case.main.on, #page-frame.main.on{
     display:flex!important;
     flex-direction:column!important;
-    overflow:auto!important;
+    height:calc(100vh - 95px);
+    height:calc(100svh - 95px);
+    overflow:hidden!important;
+    touch-action:pan-y;
   }
   #page-case .preview-area, #page-frame .preview-area{
     order:1;
-    position:sticky;
-    top:0;
-    z-index:5;
-    min-height:auto!important;
-    /* svh: 주소창 표시/숨김 변동에 무영향 (vh와 달리 작은 viewport 기준 고정).
-       지원 안 하는 구형 브라우저는 vh로 폴백. */
-    max-height:62vh;
-    max-height:62svh;
+    flex:none;
+    height:var(--mobile-preview-h,55%);
+    min-height:0;
     padding:10px 6px!important;
     width:100%;
+    overflow:hidden;
   }
-  #page-case .panel, #page-frame .panel{
+  .mobile-split-handle{
     order:2;
+    flex:none;
+    height:18px;
+    background:var(--surface,#FDFAF4);
+    border-top:1px solid var(--border,#DDD5C8);
+    border-bottom:1px solid var(--border,#DDD5C8);
+    touch-action:none;
+    cursor:row-resize;
+    position:relative;
+    z-index:10;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  .mobile-split-handle::before{
+    content:'';
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:44px;
+    height:4px;
+    background:var(--warm,#8A7D6E);
+    border-radius:2px;
+    opacity:.5;
+    transition:opacity .15s;
+  }
+  .mobile-split-handle[data-dragging="1"]::before{opacity:.9;background:var(--gold2,#8C6E3C)}
+  #page-case .panel, #page-frame .panel{
+    order:3;
+    flex:1;
+    min-height:0;
     width:100%;
     max-width:none!important;
-    max-height:none!important;
-    overflow:visible!important;
+    overflow-y:auto!important;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
     border-right:none;
   }
   #page-case .canvas-wrap, #page-frame .canvas-wrap{
     max-width:94vw!important;
-    max-height:58vh;
-    max-height:58svh;
+    max-height:100%;
   }
   #page-case .canvas-wrap canvas, #page-frame .canvas-wrap canvas{
     max-width:100%;
-    max-height:58vh;
-    max-height:58svh;
+    max-height:100%;
     height:auto;
     width:auto;
     object-fit:contain;
   }
 }
+/* PC에서는 handle 숨김 (HTML 주입은 됐어도 표시 X) */
+@media(min-width:769px){
+  .mobile-split-handle{display:none!important}
+}
 </style>
+<script id="denn-mobile-split-pane-v1">
+/* 모바일 split-pane 핸들 주입 + drag로 액자/설정 분할 비율 조절.
+   - CSS 변수 --mobile-preview-h를 html에 박아 양쪽 페이지 공유.
+   - localStorage('denn_mobile_split_ratio')에 마지막 비율 저장.
+   - drag 종료 시 resize 이벤트 dispatch → renderFrame/renderCase 재계산 트리거. */
+(function(){
+  var KEY='denn_mobile_split_ratio';
+  var DEFAULT=0.55, MIN=0.25, MAX=0.75;
+  function isMobile(){try{return matchMedia('(max-width:768px)').matches}catch(_){return false}}
+  function getStoredRatio(){
+    try{var v=parseFloat(localStorage.getItem(KEY));return (isFinite(v)&&v>=MIN&&v<=MAX)?v:DEFAULT}
+    catch(_){return DEFAULT}
+  }
+  function applyRatio(r){
+    r=Math.max(MIN,Math.min(MAX,r));
+    document.documentElement.style.setProperty('--mobile-preview-h',(r*100)+'%');
+    return r;
+  }
+  function currentRatio(){
+    var raw=document.documentElement.style.getPropertyValue('--mobile-preview-h');
+    var r=parseFloat(raw)/100;
+    return isFinite(r)?r:getStoredRatio();
+  }
+  function injectHandle(page){
+    if(!page||page.querySelector('.mobile-split-handle'))return;
+    var panel=page.querySelector('.panel');
+    if(!panel)return;
+    var h=document.createElement('div');
+    h.className='mobile-split-handle';
+    h.setAttribute('role','separator');
+    h.setAttribute('aria-orientation','horizontal');
+    h.setAttribute('aria-label','패널 크기 조절');
+    page.insertBefore(h,panel);
+    var dragging=false,startY=0,startRatio=0;
+    function pointY(e){return e.touches?e.touches[0].clientY:e.clientY}
+    function onStart(e){
+      if(!isMobile())return;
+      dragging=true;
+      startY=pointY(e);
+      startRatio=currentRatio();
+      h.setAttribute('data-dragging','1');
+      if(e.cancelable)e.preventDefault();
+    }
+    function onMove(e){
+      if(!dragging)return;
+      var dy=pointY(e)-startY;
+      var pageH=page.clientHeight||1;
+      applyRatio(startRatio+dy/pageH);
+      if(e.cancelable)e.preventDefault();
+    }
+    function onEnd(){
+      if(!dragging)return;
+      dragging=false;
+      h.removeAttribute('data-dragging');
+      var r=currentRatio();
+      try{localStorage.setItem(KEY,String(r))}catch(_){}
+      try{window.dispatchEvent(new Event('resize'))}catch(_){}
+    }
+    h.addEventListener('touchstart',onStart,{passive:false});
+    h.addEventListener('mousedown',onStart);
+    window.addEventListener('touchmove',onMove,{passive:false});
+    window.addEventListener('mousemove',onMove);
+    window.addEventListener('touchend',onEnd);
+    window.addEventListener('touchcancel',onEnd);
+    window.addEventListener('mouseup',onEnd);
+  }
+  function init(){
+    applyRatio(getStoredRatio());
+    injectHandle(document.getElementById('page-frame'));
+    injectHandle(document.getElementById('page-case'));
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+  else init();
+})();
+</script>
 <style id="denn-v36-1-frame-action-ui-home-css">
 #page-frame .denn-frame-action-stack{
   display:flex;
