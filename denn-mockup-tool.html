@@ -8696,6 +8696,12 @@ window.addEventListener('load',run);
 @media(max-width:768px){
   .page:not(.on){display:none!important}
 }
+/* 모바일에서 '액자 스케일' 슬라이더 박스 숨김 — split-pane 핸들이 액자 영역 크기 조절을
+   대체하므로 별도 슬라이더 불필요. applyPreviewScale은 박스 유무와 무관하게 기본 100%로
+   동작 + area.clientWidth/Height 기반 fit 계산은 그대로 → 핸들 연동 유지. */
+@media(max-width:768px){
+  #frame-preview-scale-box{display:none!important}
+}
 </style>
 <script id="denn-mobile-split-pane-v1">
 /* 모바일 split-pane 핸들 주입 + drag로 액자/설정 분할 비율 조절.
