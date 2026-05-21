@@ -10006,6 +10006,15 @@ window.addEventListener('load',later);
   var IMG_KEY='_image';
   var IMG_LABEL='템플릿 문구'; // UI 표기
   var tintCache=Object.create(null); // tpl.id → {key, dataUrl}
+  // renderFrame rAF throttle — 슬라이더 input 100Hz를 60Hz로 cap, build 호출 폭주 차단.
+  var renderRAF=null;
+  function scheduleRenderFrame(){
+    if(renderRAF)return;
+    renderRAF=requestAnimationFrame(function(){
+      renderRAF=null;
+      if(typeof window.renderFrame==='function')window.renderFrame();
+    });
+  }
   var DISABLED_CLASS='denn-color-disabled';
   var DISABLED_TOOLTIP='관리자가 색상 변경을 허용하지 않은 시안입니다';
   var DEFAULT_IMAGE_STATE={on:false,color:'#C49A6C',shadowOn:false,shadowColor:'#000000',shadowBlur:4,shadowY:1};
@@ -10113,11 +10122,21 @@ window.addEventListener('load',later);
     var cache=tintCache[tplKey];
     if(cache&&cache.key===key&&cache.dataUrl)return cache.dataUrl;
     if(!cache||cache.key!==key){
-      tintCache[tplKey]={key:key, dataUrl:null};
-      buildTintedDataUrl(originalSrc, p).then(function(dataUrl){
-        tintCache[tplKey]={key:key, dataUrl:dataUrl};
-        if(typeof window.renderFrame==='function')window.renderFrame();
-      });
+      // 흰색 깜빡임 방지: 새 build 중에도 이전 dataUrl(stale)을 유지해 반환 → 사용자 눈에 부드러운 전환.
+      // build 시작 중복 방지: inFlight 플래그로 같은 key의 동시 build 차단.
+      var staleDataUrl=cache&&cache.dataUrl?cache.dataUrl:null;
+      var inFlightKey=cache&&cache.inFlightKey===key;
+      tintCache[tplKey]={key:key, dataUrl:staleDataUrl, inFlightKey:key};
+      if(!inFlightKey){
+        buildTintedDataUrl(originalSrc, p).then(function(dataUrl){
+          // resolve 시점에 더 새로운 key가 시작됐다면 그 결과는 무시 (race-safe)
+          var cur=tintCache[tplKey];
+          if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
+          tintCache[tplKey]={key:key, dataUrl:dataUrl};
+          scheduleRenderFrame();
+        });
+      }
+      if(staleDataUrl)return staleDataUrl;
     }
     return originalSrc;
   }
@@ -10200,11 +10219,20 @@ window.addEventListener('load',later);
     var cache=tintCache[tplKey];
     if(cache&&cache.key===key&&cache.dataUrl)return cache.dataUrl;
     if(!cache||cache.key!==key){
-      tintCache[tplKey]={key:key,dataUrl:null};
-      buildTintedDataUrl(tpl.dataUrl, imageParams()).then(function(dataUrl){
-        tintCache[tplKey]={key:key,dataUrl:dataUrl};
-        if(typeof window.renderFrame==='function')window.renderFrame();
-      });
+      // 흰색 깜빡임 차단: 새 build 중에도 이전 dataUrl(stale) 유지 → swap 계속 작동 → 사용자 눈에 부드러운 전환.
+      // 동시 build 중복 차단: inFlightKey 가드.
+      var staleDataUrl=cache&&cache.dataUrl?cache.dataUrl:null;
+      var inFlightSame=cache&&cache.inFlightKey===key;
+      tintCache[tplKey]={key:key,dataUrl:staleDataUrl,inFlightKey:key};
+      if(!inFlightSame){
+        buildTintedDataUrl(tpl.dataUrl, imageParams()).then(function(dataUrl){
+          var cur=tintCache[tplKey];
+          if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
+          tintCache[tplKey]={key:key,dataUrl:dataUrl};
+          scheduleRenderFrame();
+        });
+      }
+      if(staleDataUrl)return staleDataUrl;
     }
     return null;
   }
@@ -10293,10 +10321,17 @@ window.addEventListener('load',later);
       var el2=document.getElementById('fts-'+IMG_KEY+'-shadowOn');
       if(el2)el2.classList.toggle('on',!!val);
     }
-    // 파라미터 변경 → 캐시 무효화 + 재렌더
-    if(prop!=='on'||val===false)tintCache=Object.create(null);
-    if(prop==='on'&&val===true)tintCache=Object.create(null);
-    if(typeof window.renderFrame==='function')window.renderFrame();
+    // 파라미터 변경 → 현재 tpl의 cache key만 무효화 (stale dataUrl은 보존해서 build 중 흰색 깜빡임 방지).
+    // 다른 tpl의 cache는 영향 없음 (전체 폭파 X — 슬라이더 미세 변동마다 모든 tpl 재합성 회피).
+    if(prop!=='on'||val===false){
+      var t=window.curFTpl;
+      if(t&&tintCache[t.id])tintCache[t.id].key='__invalid__';
+    }
+    if(prop==='on'&&val===true){
+      var t2=window.curFTpl;
+      if(t2&&tintCache[t2.id])tintCache[t2.id].key='__invalid__';
+    }
+    scheduleRenderFrame();
   }
 
   // === bulk apply가 _image에도 적용되도록 frameTextStyleBulkKeys 확장 ===
@@ -10337,9 +10372,10 @@ window.addEventListener('load',later);
         if(ranges[0])ranges[0].value=s.shadowBlur==null?4:s.shadowBlur;
         if(ranges[1])ranges[1].value=s.shadowY==null?1:s.shadowY;
       }
-      // 캐시 무효화 — bulk 변경된 색/그림자로 새 합성 필요
-      tintCache=Object.create(null);
-      if(typeof window.renderFrame==='function')window.renderFrame();
+      // 캐시 무효화 — 현재 tpl만 key invalidate (stale dataUrl 보존 → bulk 직후도 흰색 깜빡임 차단)
+      var bt=window.curFTpl;
+      if(bt&&tintCache[bt.id])tintCache[bt.id].key='__bulk_invalid__';
+      scheduleRenderFrame();
       return r;
     };
     wrap.__dennPhaseCCustomer=true;
