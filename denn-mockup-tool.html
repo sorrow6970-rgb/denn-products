@@ -8703,6 +8703,31 @@ window.addEventListener('load',run);
   #frame-preview-scale-box{display:none!important}
 }
 </style>
+<script id="denn-mobile-hide-frame-preview-scale-v1">
+/* 모바일에서 #frame-preview-scale-box 강제 숨김.
+   원인: v36 IIFE(line 3912-3914)가 document.head.appendChild로 동적 style 추가하면서
+   #frame-preview-scale-box{display:flex} 박음. CSS만으로는 race 및 cascade 충돌로 실패.
+   대응: inline style.setProperty('display','none','important')로 CSS specificity 최강 적용.
+   box는 250/700/900ms timeout으로 동적 생성되므로 setTimeout 시리즈 + MutationObserver. */
+(function(){
+  function isMob(){try{return matchMedia('(max-width:768px)').matches}catch(_){return false}}
+  function hide(){
+    if(!isMob())return;
+    var nodes=document.querySelectorAll('#frame-preview-scale-box');
+    for(var i=0;i<nodes.length;i++){
+      try{nodes[i].style.setProperty('display','none','important')}catch(_){}
+    }
+  }
+  [0,100,300,500,800,1200,1800,2500,4000].forEach(function(ms){setTimeout(hide,ms)});
+  function watch(){
+    var area=document.getElementById('frame-preview-area');
+    if(!area){setTimeout(watch,200);return}
+    try{new MutationObserver(hide).observe(area,{childList:true,subtree:true})}catch(_){}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watch);
+  else watch();
+})();
+</script>
 <script id="denn-mobile-split-pane-v1">
 /* 모바일 split-pane 핸들 주입 + drag로 액자/설정 분할 비율 조절.
    - CSS 변수 --mobile-preview-h를 html에 박아 양쪽 페이지 공유.
