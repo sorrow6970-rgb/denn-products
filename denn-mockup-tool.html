@@ -8974,7 +8974,8 @@ window.addEventListener('load',run);
       ['main','name','date','sub'].forEach(function(k){addField(fields,seen,{key:k},countByBase)});
     }
     if(Array.isArray(tpl.textZones))tpl.textZones.forEach(function(z){if(z&&z.key)addField(fields,seen,{key:z.key},countByBase)});
-    if(tpl.defaultTexts)Object.keys(tpl.defaultTexts).forEach(function(k){addField(fields,seen,{key:k},countByBase)});
+    // defaultTexts fallback: 빈 값 키 제외 — 어드민에서 명시적으로 default 설정한 키만 입력창/row 생성
+    if(tpl.defaultTexts)Object.keys(tpl.defaultTexts).forEach(function(k){var v=tpl.defaultTexts[k];if(v==null||String(v).trim()==='')return;addField(fields,seen,{key:k},countByBase)});
     tpl.textFields=fields;
     return fields;
   }
@@ -9047,7 +9048,17 @@ window.addEventListener('load',run);
   function syncStyleRows(fields){
     fields.forEach(ensureStyleRow);
     var allowed={};
-    fields.forEach(function(f){allowed[f.key]=true;var row=by('fts-row-'+f.key);if(row){row.classList.remove('template-hidden');var title=row.querySelector('b');if(title)title.textContent=f.label}});
+    // row visibility는 입력창과 동일 게이팅(isFrameTextKeyAllowed) — textFields/textZones 정의 없는 fallback 키 hide.
+    fields.forEach(function(f){
+      var rowOk=typeof window.isFrameTextKeyAllowed==='function'?!!window.isFrameTextKeyAllowed(f.key):true;
+      allowed[f.key]=rowOk;
+      var row=by('fts-row-'+f.key);
+      if(row){
+        row.classList.toggle('template-hidden',!rowOk);
+        var title=row.querySelector('b');
+        if(title)title.textContent=f.label;
+      }
+    });
     Array.prototype.forEach.call(document.querySelectorAll('#frame-text-style-body .denn-v363-dynamic-row'),function(row){
       var key=row.id.replace(/^fts-row-/,'');
       row.classList.toggle('template-hidden',!allowed[key]);
@@ -9065,7 +9076,11 @@ window.addEventListener('load',run);
   }
   function build(force){
     var g=group();if(!g)return;
-    var fields=templateFields(window.curFTpl),sig=fields.map(function(f){return f.key+':'+f.label}).join('|');
+    var allFields=templateFields(window.curFTpl);
+    // 입력창 게이팅: textFields/textZones에 명시되어도 isFrameTextKeyAllowed false면 hide
+    // (사용자가 어드민에서 'main' default만 입력 → main만 visible, 나머지는 fallback이라 hide)
+    var fields=allFields.filter(function(f){return typeof window.isFrameTextKeyAllowed!=='function'||window.isFrameTextKeyAllowed(f.key)});
+    var sig=fields.map(function(f){return f.key+':'+f.label}).join('|');
     var box=by('denn-v363-frame-text-fields');
     hideStaticInputs(true);
     if(!box){
