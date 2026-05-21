@@ -6124,7 +6124,8 @@ function allowedKeys(tpl){
 function lockTextStyleBox(){
   var box=by('frame-text-style-box'),tog=by('frame-text-style-master');
   if(!box)return;
-  var none=allowedKeys(window.curFTpl).length===0;
+  // Phase C image tint 게이팅: allowColorChange:true 시 textZones 매치 없어도 lock 미발동 (image tint는 텍스트 zone과 무관)
+  var none=allowedKeys(window.curFTpl).length===0 && !window.__dennPhaseCImageAllows;
   box.classList.toggle('denn-v70-locked',none);
   if(none){
     window.frameTextStyleOn=false;
@@ -6910,7 +6911,8 @@ window.dennRollbackRoomGuideResetDefaultsV73=function(){
   }
   function syncTextLock(reason){
     var page=by('page-frame'),box=by('frame-text-style-box'),master=by('frame-text-style-master');
-    var locked=!hasTemplate()||!templateHasText(window.curFTpl);
+    // Phase C image tint 게이팅: allowColorChange:true 시 textZones/text 부재여도 lock 미발동
+    var locked=(!hasTemplate()||!templateHasText(window.curFTpl)) && !window.__dennPhaseCImageAllows;
     if(page)page.classList.toggle('denn-v97-textless-locked',locked);
     if(box){
       box.classList.toggle('denn-v70-locked',locked);
@@ -10333,6 +10335,8 @@ window.addEventListener('load',later);
   // === 게이팅 — render-time 안전망. 자동 리셋 없음. ===
   function applyGating(){
     var allowed=currentTplAllowed();
+    // v70 lockTextStyleBox + v97 syncTextLock 본체 게이팅에서 참조 (lock CSS 적용 우회)
+    window.__dennPhaseCImageAllows=allowed;
     var box=document.getElementById('frame-text-style-box');
     if(box){
       box.classList.toggle(DISABLED_CLASS, !allowed);
