@@ -665,12 +665,14 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
       return;
     }
     step('1/5 ?share= 감지: '+shareParam.slice(0,60));
+    // share 있으면 무조건 import (사용자가 명시 의도). 기존 denn_admin은 백업.
     var existing=localStorage.getItem('denn_admin');
-    if(existing&&existing.length>1000){
-      step('[share] 이미 import됨 (size='+existing.length+'). 새로고침으로 ?share= 제거.','#666',3000);
-      var clean=location.origin+location.pathname+location.hash;
-      setTimeout(function(){location.replace(clean)},2000);
-      return;
+    if(existing&&existing.length>0){
+      try{
+        var backupKey='denn_admin_pre_share_'+Date.now();
+        localStorage.setItem(backupKey, existing);
+        console.log('[share] 기존 denn_admin 백업: '+backupKey+' ('+existing.length+'b)');
+      }catch(e){console.warn('[share] 백업 실패:',e)}
     }
     // share 값이 'http'로 시작 안 하면 Firebase Storage path로 간주 → 짧은 URL 지원
     var shareUrl=shareParam;
