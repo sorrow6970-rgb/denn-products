@@ -14000,7 +14000,8 @@ window.addEventListener('resize',scheduleSettle);
     console.log('[firebase] SDK initialized; window.dennFirebase ready');
 
     // 어드민 데이터 share URL 생성 — 다른 기기/origin에서 mockup-tool로 import 용도.
-    // 사용법: 어드민 콘솔에서 `dennShareCreate()` 호출 → 카톡으로 받는 URL을 모바일에서 클릭.
+    // 기본: 짧은 URL (path만 전달, mockup-tool이 Firebase Storage URL 재구성). 100자 정도.
+    // opts.fullUrl=true: 긴 URL (Firebase download URL 그대로). 백업용.
     window.dennShareCreate = async function(opts){
       opts = opts || {};
       if (!_ready) { await _readyPromise; }
@@ -14011,14 +14012,17 @@ window.addEventListener('resize',scheduleSettle);
       const r = await window.dennFirebase.uploadDataUrl(dataUrl, path);
       const target = opts.target || 'denn-mockup-tool.html';
       const baseUrl = opts.baseUrl || (location.origin + location.pathname.replace(/[^/]+$/, '') + target);
-      const shareUrl = baseUrl + '?share=' + encodeURIComponent(r.url);
-      console.log('=== 공유 URL ===');
-      console.log(shareUrl);
-      console.log('=== JSON 크기:', json.length, 'bytes ===');
-      try { await navigator.clipboard.writeText(shareUrl); console.log('✓ 클립보드 복사 완료'); } catch(e){}
-      return shareUrl;
+      // 짧은 URL — share 값에 path만. mockup-tool이 Firebase Storage URL 재구성.
+      const shortUrl = baseUrl + '?share=' + encodeURIComponent(path);
+      const fullUrl = baseUrl + '?share=' + encodeURIComponent(r.url);
+      const finalUrl = opts.fullUrl ? fullUrl : shortUrl;
+      console.log('=== 공유 URL (' + (opts.fullUrl?'full':'short') + ') ===');
+      console.log(finalUrl);
+      console.log('=== JSON 크기:', json.length, 'bytes / URL 길이:', finalUrl.length, '자 ===');
+      try { await navigator.clipboard.writeText(finalUrl); console.log('✓ 클립보드 복사 완료'); } catch(e){}
+      return finalUrl;
     };
-    console.log('[share] dennShareCreate() 사용 가능');
+    console.log('[share] dennShareCreate() 사용 가능. opts.fullUrl=true로 긴 URL.');
   } catch (e) {
     console.error('[firebase] init failed:', e);
   }

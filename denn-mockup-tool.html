@@ -639,37 +639,63 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
 
 
 <script>
-// ?share=<Firebase Storage URL> query 처리 — 다른 기기/origin에서 어드민 데이터 import.
-// 데스크탑 어드민이 dennShareCreate()로 URL 생성 → 카톡으로 전송 → 모바일 mockup-tool에서 ?share=URL로 진입.
-// localStorage 비어있을 때만 fetch (이미 import된 경우 재호출 방지).
+// ?share=<URL|path> query 처리 — 다른 기기/origin에서 어드민 데이터 import.
+// 모바일 디버그용: IIFE 시작부터 화면 toast로 단계별 표시 (모바일 콘솔 없이도 진행 추적 가능).
+// share 값이 'http'로 시작 안 하면 Firebase Storage path로 간주 → URL 재구성 (짧은 share URL 지원).
 (function(){
+  var msg=document.createElement('div');
+  msg.style.cssText='position:fixed;top:12px;left:12px;right:12px;padding:12px 16px;background:#333;color:#fff;border-radius:8px;font:13px sans-serif;z-index:99999;max-width:none;word-break:break-all;text-align:left;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,.3)';
+  msg.textContent='[share] 부트 중...';
+  function attach(){
+    if(document.documentElement)document.documentElement.appendChild(msg);
+    else setTimeout(attach,10);
+  }
+  attach();
+  function step(s,color,hide){
+    msg.innerHTML=s;
+    if(color)msg.style.background=color;
+    try{console.log('[share]',s)}catch(e){}
+    if(hide)setTimeout(function(){try{msg.remove()}catch(e){}},hide);
+  }
   try{
     var params=new URLSearchParams(location.search);
-    var shareUrl=params.get('share');
-    if(!shareUrl)return;
-    var existing=localStorage.getItem('denn_admin');
-    if(existing&&existing.length>1000){
-      console.log('[share] localStorage already populated, skipping import. ?share=... 무시');
+    var shareParam=params.get('share');
+    if(!shareParam){
+      step('[share] ?share= 없음. URL: '+location.href.slice(0,60),'#666',3000);
       return;
     }
-    console.log('[share] fetching:',shareUrl.slice(0,80));
-    var msg=document.createElement('div');
-    msg.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:16px 24px;background:#333;color:#fff;border-radius:8px;font:14px sans-serif;z-index:99999';
-    msg.textContent='시안 데이터 받는 중...';
-    document.documentElement.appendChild(msg);
-    fetch(shareUrl).then(function(r){return r.json()}).then(function(json){
-      localStorage.setItem('denn_admin',JSON.stringify(json));
-      msg.textContent='✓ 가져오기 완료. 새로고침 중...';
-      // share param 제거 후 reload (재호출 방지)
+    step('1/5 ?share= 감지: '+shareParam.slice(0,60));
+    var existing=localStorage.getItem('denn_admin');
+    if(existing&&existing.length>1000){
+      step('[share] 이미 import됨 (size='+existing.length+'). 새로고침으로 ?share= 제거.','#666',3000);
       var clean=location.origin+location.pathname+location.hash;
-      setTimeout(function(){location.replace(clean)},400);
+      setTimeout(function(){location.replace(clean)},2000);
+      return;
+    }
+    // share 값이 'http'로 시작 안 하면 Firebase Storage path로 간주 → 짧은 URL 지원
+    var shareUrl=shareParam;
+    if(!/^https?:/i.test(shareUrl)){
+      shareUrl='https://firebasestorage.googleapis.com/v0/b/denn-products.firebasestorage.app/o/'+encodeURIComponent(shareParam)+'?alt=media';
+    }
+    step('2/5 fetch 시작:<br>'+shareUrl.slice(0,80)+'...');
+    fetch(shareUrl).then(function(r){
+      step('3/5 응답: HTTP '+r.status+' '+r.statusText);
+      if(!r.ok)throw new Error('HTTP '+r.status+' '+r.statusText);
+      return r.json();
+    }).then(function(json){
+      var size=JSON.stringify(json).length;
+      step('4/5 JSON 파싱 OK ('+size+' bytes)');
+      try{localStorage.setItem('denn_admin',JSON.stringify(json))}catch(e){throw new Error('localStorage 저장 실패: '+e.message)}
+      step('5/5 ✓ 저장 완료. 새로고침 중...','#080');
+      var clean=location.origin+location.pathname+location.hash;
+      setTimeout(function(){location.replace(clean)},800);
     }).catch(function(e){
-      msg.style.background='#c33';
-      msg.textContent='✕ 가져오기 실패: '+e.message;
-      console.error('[share] fetch failed:',e);
-      setTimeout(function(){msg.remove()},5000);
+      step('✕ 실패: '+(e.message||String(e))+'<br><small>URL: '+shareUrl.slice(0,100)+'</small>','#c33');
+      try{console.error('[share] error:',e)}catch(_){}
     });
-  }catch(e){console.warn('[share] init error:',e)}
+  }catch(e){
+    step('✕ IIFE error: '+(e.message||String(e)),'#c33');
+  }
 })();
 var ADM=null;try{var _r=localStorage.getItem('denn_admin');ADM=_r?JSON.parse(_r):null;}catch(e){}
 var frameTextStyleOn=false;
