@@ -10049,11 +10049,9 @@ window.addEventListener('load',later);
 
   function imageParams(){
     var s=ensureImageState();
-    // 그림자 blur/dy는 4단위로 round — paramKey cache hit 빈도 ~4배 증가 → 새 dataUrl 발행/image decode 빈도 1/4로 축소.
-    // 시각 차이는 미세 (사용자 인지 어려움). 슬라이더 미세 변동마다 build 폭주 차단.
-    var blur=Math.round((Number(s.shadowBlur)||0)/4)*4;
-    var dy=Math.round((Number(s.shadowY)||0)/4)*4;
-    return {color:s.color||'#ffffff',shadow:{enabled:!!s.shadowOn,color:s.shadowColor||'#000000',blur:blur,dx:0,dy:dy}};
+    // grouping 제거 (이전 4단위) — 다른 fix들(stale/preload/scaleLock/rAF throttle)로 jitter 차단 충분.
+    // 슬라이더 1단위 변동마다 새 paramKey → 새 build → 매끄러운 색상/그림자 변화. rAF throttle로 60Hz cap.
+    return {color:s.color||'#ffffff',shadow:{enabled:!!s.shadowOn,color:s.shadowColor||'#000000',blur:Number(s.shadowBlur)||0,dx:0,dy:Number(s.shadowY)||0}};
   }
   function paramKey(p){return [p.color,p.shadow.enabled?1:0,p.shadow.color,p.shadow.blur,p.shadow.dx,p.shadow.dy].join('|')}
 
@@ -10062,8 +10060,51 @@ window.addEventListener('load',later);
   // jitter window 축소 + build 동시 폭주 부담 감소.
   var imgCache=Object.create(null); // srcUrl → Image (loaded) — Phase C 내부 build용
   // loadImg wrap용 외부 cache. renderFrame 본체가 호출하는 loadImg가 우리 tinted dataUrl을 sync hit하도록.
-  // 흐름: build resolve → preloadAndCache → loadImg wrap에서 cache hit → sync done(img) → 본체 즉시 drawImage → 깜빡임 차단.
-  var renderImgCache=Object.create(null); // src(dataUrl) → Image (preloaded, ready for sync hit)
+  var renderImgCache=Object.create(null); // src(dataUrl) → Image (preloaded, ready for sync hit) — 보조 cache
+  // Canvas 직접 swap cache — preload(Image decode 50-100ms) 우회.
+  // build resolve 시 compose 결과 canvas를 즉시 등록 → drawImage wrap이 canvas로 sync swap → preload 시간 0ms.
+  var renderCanvasCache=Object.create(null); // dataUrl → HTMLCanvasElement (composed, ready for sync drawImage)
+  // build 결과를 canvas로 즉시 cache + image preload는 background (fallback용).
+  // race-safe: cur.inFlightKey/key 비교로 옛 build resolve가 새 cache 안 덮어쓰도록.
+  function commitBuiltTinted(tplKey, key, dataUrl, srcUrl, params){
+    var cur=tintCache[tplKey];
+    if(cur&&cur.inFlightKey!==key&&cur.key!==key)return false;
+    var srcImg=imgCache[srcUrl];
+    if(srcImg&&srcImg.complete&&srcImg.naturalWidth){
+      try{
+        var canvas=composeToCanvas(srcImg, params);
+        if(canvas)renderCanvasCache[dataUrl]=canvas;
+      }catch(e){instrumentation.errors.push(String(e))}
+    }
+    preloadAndCache(dataUrl); // background — image cache는 fallback
+    tintCache[tplKey]={key:key,dataUrl:dataUrl,lastValidDataUrl:dataUrl};
+    return true;
+  }
+  // compose의 canvas 버전 (toDataURL 안 함 — 즉시 canvas 반환)
+  function composeToCanvas(img, params){
+    var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+    if(!w||!h)return null;
+    var temp=document.createElement('canvas');
+    temp.width=w; temp.height=h;
+    var tctx=temp.getContext('2d');
+    tctx.drawImage(img,0,0);
+    tctx.globalCompositeOperation='source-atop';
+    tctx.fillStyle=params.color;
+    tctx.fillRect(0,0,w,h);
+    tctx.globalCompositeOperation='source-over';
+    if(params.shadow&&params.shadow.enabled){
+      var fin=document.createElement('canvas');
+      fin.width=w; fin.height=h;
+      var fctx=fin.getContext('2d');
+      fctx.shadowColor=params.shadow.color;
+      fctx.shadowBlur=params.shadow.blur;
+      fctx.shadowOffsetX=params.shadow.dx;
+      fctx.shadowOffsetY=params.shadow.dy;
+      fctx.drawImage(temp,0,0);
+      return fin;
+    }
+    return temp;
+  }
   function preloadAndCache(src){
     return new Promise(function(resolve){
       var existing=renderImgCache[src];
@@ -10110,11 +10151,23 @@ window.addEventListener('load',later);
           configurable:true,
           get:function(){return origSrcGet.call(this)},
           set:function(v){
+            // canvas cache 우선 (preload 없이 즉시 sync swap)
+            var canvasCached=renderCanvasCache[v];
+            if(canvasCached){
+              img.__dennPhaseCCached=canvasCached;
+              origSrcSet.call(this,v);
+              Promise.resolve().then(function(){
+                if(typeof img.onload==='function'){
+                  try{img.onload.call(img,new Event('load'))}catch(e){}
+                }
+              });
+              return;
+            }
+            // image cache (preload 완료된 경우)
             var cached=renderImgCache[v];
             if(cached&&cached.complete&&cached.naturalWidth){
               img.__dennPhaseCCached=cached;
               origSrcSet.call(this,v);
-              // onload microtask fire — 본체 함수 종료 후 paint 전에 drawImage 실행 → 깜빡임 차단
               Promise.resolve().then(function(){
                 if(typeof img.onload==='function'){
                   try{img.onload.call(img,new Event('load'))}catch(e){}
@@ -10140,10 +10193,30 @@ window.addEventListener('load',later);
     var orig=proto.drawImage;
     proto.drawImage=function(){
       var s=arguments[0];
+      // Path 1 — Image ctor wrap이 cache hit 마킹 → cache image/canvas로 swap
       if(s&&s.__dennPhaseCCached){
         var args=Array.prototype.slice.call(arguments);
         args[0]=s.__dennPhaseCCached;
         return orig.apply(this,args);
+      }
+      // Path 2 — IMG src가 cache에 있으면 swap (complete/incomplete 둘 다, canvas 우선)
+      if(s&&s.nodeName==='IMG'&&s.src){
+        // canvas cache 우선 (preload 없이 즉시 sync swap)
+        var cv=renderCanvasCache[s.src];
+        if(cv){
+          var argsC=Array.prototype.slice.call(arguments);
+          argsC[0]=cv;
+          return orig.apply(this,argsC);
+        }
+        // image cache fallback — incomplete일 때만 (complete + cache match면 어차피 정상)
+        if((!s.complete||!s.naturalWidth)){
+          var cached2=renderImgCache[s.src];
+          if(cached2&&cached2.complete&&cached2.naturalWidth){
+            var args2=Array.prototype.slice.call(arguments);
+            args2[0]=cached2;
+            return orig.apply(this,args2);
+          }
+        }
       }
       return orig.apply(this,arguments);
     };
@@ -10232,20 +10305,30 @@ window.addEventListener('load',later);
       var cached=imgCache[srcUrl];
       if(cached&&cached.complete&&cached.naturalWidth){
         try{
-          var out=compose(cached, params);
-          if(out){instrumentation.buildTintResolves++;dlog('buildTintedDataUrl (cached img) ok, length:',out.length);resolve(out);return}
+          // canvas + dataUrl 한 번에 생성 + renderCanvasCache 즉시 등록 (race-safe 가드 우회)
+          var canvasC=composeToCanvas(cached, params);
+          if(canvasC){
+            var outC=canvasC.toDataURL('image/png');
+            renderCanvasCache[outC]=canvasC;
+            instrumentation.buildTintResolves++;
+            dlog('buildTintedDataUrl (cached img + canvas) ok, length:',outC.length);
+            resolve(outC);return;
+          }
         }catch(e){instrumentation.errors.push(String(e));console.warn('[phase-c-customer] cached img compose failed',e);resolve(srcUrl);return}
       }
       var img=new Image();
       img.crossOrigin='anonymous';
       img.onload=function(){
         try{
-          imgCache[srcUrl]=img; // 다음 build부터 cache hit
-          var out=compose(img, params);
-          if(!out){dlog('img has no dim');resolve(srcUrl);return}
+          imgCache[srcUrl]=img;
+          // canvas + dataUrl 한 번에 생성 + renderCanvasCache 즉시 등록
+          var canvasN=composeToCanvas(img, params);
+          if(!canvasN){dlog('img has no dim');resolve(srcUrl);return}
+          var outN=canvasN.toDataURL('image/png');
+          renderCanvasCache[outN]=canvasN;
           instrumentation.buildTintResolves++;
-          dlog('buildTintedDataUrl ok, dataUrl length:',out.length);
-          resolve(out);
+          dlog('buildTintedDataUrl ok, dataUrl length:',outN.length);
+          resolve(outN);
         }catch(e){
           instrumentation.errors.push(String(e));
           console.warn('[phase-c-customer] tint build failed (likely tainted canvas — Firebase Storage CORS check)',e);
@@ -10284,10 +10367,9 @@ window.addEventListener('load',later);
       tintCache[tplKey]={key:key, dataUrl:staleDataUrl, inFlightKey:key, lastValidDataUrl:lastValid};
       if(!inFlightKey){
         buildTintedDataUrl(originalSrc, p).then(function(dataUrl){
-          var cur=tintCache[tplKey];
-          if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
-          tintCache[tplKey]={key:key, dataUrl:dataUrl, lastValidDataUrl:dataUrl};
-          scheduleRenderFrame();
+          if(commitBuiltTinted(tplKey, key, dataUrl, originalSrc, p)){
+            scheduleRenderFrame();
+          }
         });
       }
       if(staleDataUrl)return staleDataUrl;
@@ -10367,29 +10449,48 @@ window.addEventListener('load',later);
   // L2490 `loadImg(tplSrc, callback)`은 tplSrc를 클로저 캡처 — finally에서 원본 복원해도
   // 비동기 콜백은 캡처된 tinted URL로 Image 로드 → ctx.drawImage가 tinted 결과 그림.
   // fbExport/Print 등 다른 경로는 renderFrame 외부 → 원본 dataUrl 그대로 사용.
+  // 1x1 transparent PNG (placeholder) — sync compose의 dataUrl 우회용
+  var BLANK_PNG_PLACEHOLDER='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
   function ensureTintedFor(tpl){
     if(!tpl||!tpl.dataUrl)return null;
     var key=paramKey(imageParams());
     var tplKey=tpl.id||'';
     var cache=tintCache[tplKey];
     if(cache&&cache.key===key&&cache.dataUrl)return cache.dataUrl;
+
+    // === SYNC FAST PATH === Image cache hit이면 즉시 compose + placeholder 반환 (stale 색 점프 차단)
+    // 매 paramKey 변경 시 build 비동기 wait 없이 즉시 새 색 dataUrl. toDataURL 우회 (placeholder 1x1 PNG).
+    // setter wrap의 renderCanvasCache hit → canvas로 sync swap → 본체 drawImage 즉시 새 색.
+    var srcImg=imgCache[tpl.dataUrl];
+    if(srcImg&&srcImg.complete&&srcImg.naturalWidth){
+      try{
+        var paramsSync=imageParams();
+        var canvasSync=composeToCanvas(srcImg, paramsSync);
+        if(canvasSync){
+          // placeholder = 1x1 valid PNG + fragment (deterministic: tplKey + paramKey)
+          // 같은 paramKey 재방문 시 cache hit. fragment는 browser load에 영향 없음.
+          var placeholder=BLANK_PNG_PLACEHOLDER+'#dennPC=t_'+tplKey+'_k_'+encodeURIComponent(key);
+          renderCanvasCache[placeholder]=canvasSync;
+          tintCache[tplKey]={key:key,dataUrl:placeholder,lastValidDataUrl:placeholder};
+          instrumentation.buildTintCalls++;
+          instrumentation.buildTintResolves++;
+          return placeholder;
+        }
+      }catch(e){instrumentation.errors.push(String(e))}
+    }
+
+    // === ASYNC FALLBACK === Image cache miss (첫 호출) — stale/lastValid 보존
     if(!cache||cache.key!==key){
-      // 흰색 깜빡임 차단: 새 build 중에도 이전 dataUrl(stale) + lastValid 보존 → swap 계속 작동.
       var staleDataUrl=cache&&cache.dataUrl?cache.dataUrl:null;
       var lastValid=cache&&(cache.dataUrl||cache.lastValidDataUrl)||null;
       var inFlightSame=cache&&cache.inFlightKey===key;
       tintCache[tplKey]={key:key,dataUrl:staleDataUrl,inFlightKey:key,lastValidDataUrl:lastValid};
       if(!inFlightSame){
-        buildTintedDataUrl(tpl.dataUrl, imageParams()).then(function(dataUrl){
-          var cur=tintCache[tplKey];
-          if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
-          // preload → renderImgCache 등록 → renderFrame (본체 loadImg wrap이 sync hit → 깜빡임 차단)
-          preloadAndCache(dataUrl).then(function(){
-            var cur2=tintCache[tplKey];
-            if(cur2&&cur2.inFlightKey!==key&&cur2.key!==key)return;
-            tintCache[tplKey]={key:key,dataUrl:dataUrl,lastValidDataUrl:dataUrl};
+        var capturedParams=imageParams();
+        buildTintedDataUrl(tpl.dataUrl, capturedParams).then(function(dataUrl){
+          if(commitBuiltTinted(tplKey, key, dataUrl, tpl.dataUrl, capturedParams)){
             scheduleRenderFrame();
-          });
+          }
         });
       }
       if(staleDataUrl)return staleDataUrl;
@@ -10473,7 +10574,8 @@ window.addEventListener('load',later);
   }
 
   // 즉시 적용 + cache invalidate + scheduleRenderFrame (rAF 60Hz cap).
-  // paramKey grouping(imageParams)이 1/4로 cache hit 증가시켜 jitter 빈도 감소 — debounce 없이도 부드러움.
+  // "최초 조절 시 흰색 깜빡임" 차단: lastValid dataUrl이 없을 때 (= 첫 build 전)만 build 완료 후 renderFrame.
+  // 두 번째 이후는 lastValid 보존되어 stale로 swap 유지 → 즉시 renderFrame으로 매끄럽게.
   function updateImage(prop,val){
     var s=ensureImageState();
     s[prop]=val;
@@ -10485,6 +10587,25 @@ window.addEventListener('load',later);
       if(el2)el2.classList.toggle('on',!!val);
     }
     var t=window.curFTpl;
+    // 첫 build wait — lastValid 없으면 build 완료 후만 renderFrame (원본 PNG 흰색 노출 차단)
+    if(t&&t.dataUrl&&typeof currentTplAllowed==='function'&&currentTplAllowed()&&s.on){
+      var p=imageParams();
+      var key=paramKey(p);
+      var tplKey=t.id||'';
+      var cache=tintCache[tplKey];
+      var lastValid=cache&&(cache.dataUrl||cache.lastValidDataUrl)||null;
+      if(!lastValid){
+        // 첫 build — wait until cache ready
+        tintCache[tplKey]={key:key,dataUrl:null,inFlightKey:key,lastValidDataUrl:null};
+        buildTintedDataUrl(t.dataUrl, p).then(function(dataUrl){
+          if(commitBuiltTinted(tplKey, key, dataUrl, t.dataUrl, p)){
+            scheduleRenderFrame();
+          }
+        });
+        return; // 즉시 renderFrame skip — build 완료 후 호출
+      }
+    }
+    // 일반: cache invalidate + 즉시 renderFrame (stale/lastValid로 swap 유지)
     if(t&&tintCache[t.id])tintCache[t.id].key='__invalid__';
     scheduleRenderFrame();
   }
@@ -10584,12 +10705,9 @@ window.addEventListener('load',later);
               // cache 미준비 → 즉시 renderFrame 안 하고 build 완료 후만 호출 (50-100ms 색 적용 지연 트레이드오프)
               tintCache[tplKey]={key:key,dataUrl:null,inFlightKey:key,lastValidDataUrl:cache&&(cache.dataUrl||cache.lastValidDataUrl)||null};
               buildTintedDataUrl(t.dataUrl, p).then(function(dataUrl){
-                var cur=tintCache[tplKey];
-                if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
-                preloadAndCache(dataUrl).then(function(){
-                  tintCache[tplKey]={key:key,dataUrl:dataUrl,lastValidDataUrl:dataUrl};
+                if(commitBuiltTinted(tplKey, key, dataUrl, t.dataUrl, p)){
                   if(typeof window.renderFrame==='function')window.renderFrame();
-                });
+                }
               });
               return true; // 즉시 renderFrame 건너뛰기 — build 완료 후 cache hit으로 sync paint
             }
@@ -10631,12 +10749,9 @@ window.addEventListener('load',later);
           if(!cache||cache.key!==key){
             tintCache[tplKey]={key:key,dataUrl:null,inFlightKey:key,lastValidDataUrl:cache&&(cache.dataUrl||cache.lastValidDataUrl)||null};
             buildTintedDataUrl(t.dataUrl, p).then(function(dataUrl){
-              var cur=tintCache[tplKey];
-              if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
-              preloadAndCache(dataUrl).then(function(){
-                tintCache[tplKey]={key:key,dataUrl:dataUrl,lastValidDataUrl:dataUrl};
+              if(commitBuiltTinted(tplKey, key, dataUrl, t.dataUrl, p)){
                 scheduleRenderFrame();
-              });
+              }
             });
           }
         }
@@ -10665,8 +10780,13 @@ window.addEventListener('load',later);
     installRenderFrameSwapHook();
     dedupRows();
     applyGating();
-    // "작은 액자 튀는 1회" 차단: boot 직후 현재 시안 background build (사용자가 master ON 시점에 cache hit 보장)
+    // "작은 액자 튀는 1회" + "최초 슬라이더 깜빡임" 차단: 여러 시점에 prebuild trigger.
+    // setTimeout 0/100/500/1500 — 페이지 로드 후 사용자가 빠르게 동작해도 cache 준비.
+    // inFlightKey 가드로 중복 build 안 됨 (안전).
+    setTimeout(prebuildCurrentTpl, 0);
+    setTimeout(prebuildCurrentTpl, 100);
     setTimeout(prebuildCurrentTpl, 500);
+    setTimeout(prebuildCurrentTpl, 1500);
   }
   function prebuildCurrentTpl(){
     var t=window.curFTpl;
@@ -10680,12 +10800,9 @@ window.addEventListener('load',later);
     if(cache&&cache.key===key&&cache.dataUrl)return; // 이미 준비됨
     tintCache[tplKey]={key:key,dataUrl:null,inFlightKey:key,lastValidDataUrl:cache&&(cache.dataUrl||cache.lastValidDataUrl)||null};
     buildTintedDataUrl(t.dataUrl, p).then(function(dataUrl){
-      var cur=tintCache[tplKey];
-      if(cur&&cur.inFlightKey!==key&&cur.key!==key)return;
-      preloadAndCache(dataUrl).then(function(){
-        tintCache[tplKey]={key:key,dataUrl:dataUrl,lastValidDataUrl:dataUrl};
+      if(commitBuiltTinted(tplKey, key, dataUrl, t.dataUrl, p)){
         scheduleRenderFrame();
-      });
+      }
     });
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);
