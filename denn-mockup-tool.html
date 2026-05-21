@@ -8690,6 +8690,12 @@ window.addEventListener('load',run);
 @media(min-width:769px){
   .mobile-split-handle{display:none!important}
 }
+/* 비활성 페이지 강제 hide — 기존 line 8601의 #page-frame.main{display:flex} 룰이 .on 조건 없이 적용돼
+   .page{display:none} 토글을 깨뜨리는 leak 차단. specificity (0,2,0) for .page:not(.on)가
+   #page-frame.main (0,1,1)을 이김. */
+@media(max-width:768px){
+  .page:not(.on){display:none!important}
+}
 </style>
 <script id="denn-mobile-split-pane-v1">
 /* 모바일 split-pane 핸들 주입 + drag로 액자/설정 분할 비율 조절.
@@ -8764,6 +8770,29 @@ window.addEventListener('load',run);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
+})();
+</script>
+<script id="denn-mobile-frame-pinch-block-v1">
+/* 모바일 frame canvas 핀치줌 차단 — 본체 line 1231-1239 touch handler 미수정.
+   capture phase + stopImmediatePropagation으로 2-finger 제스처를 본체 도달 전 가로챔.
+   slider/wheel/pan(1-finger)은 그대로 유지. */
+(function(){
+  function isMob(){try{return matchMedia('(max-width:768px)').matches}catch(_){return false}}
+  function setup(){
+    var fc=document.getElementById('frameCanvas');
+    if(!fc)return;
+    fc.addEventListener('touchstart',function(e){
+      if(isMob()&&e.touches&&e.touches.length>=2)e.stopImmediatePropagation();
+    },{capture:true,passive:true});
+    fc.addEventListener('touchmove',function(e){
+      if(isMob()&&e.touches&&e.touches.length>=2){
+        e.stopImmediatePropagation();
+        if(e.cancelable)e.preventDefault();
+      }
+    },{capture:true,passive:false});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);
+  else setup();
 })();
 </script>
 <style id="denn-v36-1-frame-action-ui-home-css">
