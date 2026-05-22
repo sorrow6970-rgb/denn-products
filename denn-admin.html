@@ -559,7 +559,7 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
 <div class="ze-modal" id="ze-modal">
   <div class="ze-box">
     <div class="ze-header"><h2>📍 텍스트 위치 설정 — <span id="ze-tpl-name"></span></h2><div style="display:flex;gap:7px"><button class="tb-btn outline" id="ze-img-edit-btn" onclick="zeToggleImgEdit()" style="font-size:10px;padding:5px 10px">🖼 이미지 수정</button><button class="tb-btn outline" onclick="saveZonesOnly()" style="font-size:10px;padding:5px 10px">📍 위치만 저장</button><button class="tb-btn primary" onclick="saveZones()">✓ 전체 저장</button><button class="tb-btn outline" onclick="closeZoneEditor()">✕</button></div></div>
-    <div id="ze-img-panel" style="display:none;padding:12px;border-bottom:1px solid var(--bdr);background:var(--surf)"><div style="font-size:10px;color:var(--muted);margin-bottom:8px">🖼 현재 템플릿 이미지 수정</div><div class="up-zone" style="padding:10px" ondragover="evStop(event)" ondrop="zeDropImg(event)"><input type="file" accept="image/*" id="ze-img-inp" onchange="zeUploadImg(this)"><div style="text-align:center;font-size:10.5px;color:var(--muted)">새 이미지 업로드 (기존 이미지 교체)</div></div><div id="ze-img-preview" style="margin-top:8px;display:none"><img id="ze-img-thumb" style="max-height:60px;border-radius:4px;border:1px solid var(--bdr)"><button onclick="zeRemoveImg()" style="margin-left:8px;font-size:9.5px;padding:3px 8px;border:1px solid var(--red);border-radius:4px;background:rgba(255,80,80,.08);color:var(--red);cursor:pointer">제거</button></div></div><div class="ze-body">
+    <div id="ze-img-panel" style="display:none;padding:12px;border-bottom:1px solid var(--bdr);background:var(--surf)"><div style="font-size:10px;color:var(--muted);margin-bottom:8px">🖼 현재 템플릿 이미지 수정</div><div class="up-zone" style="padding:10px" ondragover="evStop(event)" ondrop="zeDropImg(event)"><input type="file" accept="image/*" id="ze-img-inp" onchange="zeUploadImg(this)"><div style="text-align:center;font-size:10.5px;color:var(--muted)">새 이미지 업로드 (기존 이미지 교체)</div></div><div id="ze-img-preview" style="margin-top:8px;display:none"><img id="ze-img-thumb" style="max-height:60px;border-radius:4px;border:1px solid var(--bdr)"><button onclick="zeRemoveImg()" style="margin-left:8px;font-size:9.5px;padding:3px 8px;border:1px solid var(--red);border-radius:4px;background:rgba(255,80,80,.08);color:var(--red);cursor:pointer">제거</button></div></div><div id="ze-ph-panel" style="padding:12px;border-bottom:1px solid var(--bdr);background:var(--surf)"><div style="font-size:10px;color:var(--muted);margin-bottom:8px">🖼 기본 이미지 (고객이 사진 업로드 전 미리보기에 표시)</div><div class="up-zone" style="padding:10px" ondragover="evStop(event)" ondrop="zePhDropImg(event)"><input type="file" accept="image/png,image/jpeg,image/webp,.svg" id="ze-ph-inp" onchange="zePhUpload(this)"><div style="text-align:center;font-size:10.5px;color:var(--muted)">PNG / JPG / WebP — Firebase Storage에 업로드</div></div><div id="ze-ph-preview" style="margin-top:8px;display:none;align-items:center;gap:8px"><img id="ze-ph-thumb" style="max-height:60px;border-radius:4px;border:1px solid var(--bdr)"><button onclick="zePhRemove()" style="font-size:9.5px;padding:3px 8px;border:1px solid var(--red);border-radius:4px;background:rgba(255,80,80,.08);color:var(--red);cursor:pointer">제거</button><span id="ze-ph-status" style="font-size:9.5px;color:var(--muted)"></span></div></div><div class="ze-body">
       <div class="ze-canvas-wrap"><div class="ze-canvas-stage"><div class="ze-zoom-bar"><span>미리보기 확대</span><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)-0.1)">－</button><input type="range" id="ze-preview-zoom" min="50" max="220" value="100" oninput="setZePreviewZoom(this.value/100)"><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)+0.1)">＋</button><button type="button" onclick="setZePreviewZoom(1)">100%</button><span id="ze-preview-zoom-v">100%</span><button type="button" id="ze-guide-toggle" class="ze-guide-btn on" onclick="toggleZeGridGuide()">가이드 ON</button></div><canvas id="ze-canvas" style="cursor:crosshair;border:2px solid var(--bdr);border-radius:5px;display:block"></canvas></div></div>
       <div class="ze-controls">
         <div><div class="ze-label" style="font-size:11px;color:var(--txt);font-weight:600;margin-bottom:6px">타입 선택 → 캔버스 클릭</div>
@@ -8842,6 +8842,96 @@ window.openZoneEditor=function(idx){
   ZE.img.src=detailImageSrc(t);
 };
 window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는 backup-20260503-2020-before-v56-canonical-save-detail 파일로 롤백하세요')};
+})();
+</script>
+<script id="denn-phase2-placeholder-image">
+(function(){
+  'use strict';
+  function by(id){return document.getElementById(id)}
+  function tplArr(){return (window.S&&S.frameTemplates)||[]}
+  function curTpl(){var idx=window.ZE&&ZE.tplIdx;if(idx==null)return null;return tplArr()[idx]||null}
+  function toastMsg(msg,type){try{if(typeof window.toast==='function')toast(msg,type)}catch(_){}}
+  function persistAll(){
+    try{if(typeof window.dennPersistAdminStateV351==='function')dennPersistAdminStateV351(window.S||{})}catch(_){}
+    try{if(typeof window.dbSet==='function')window.dbSet('denn_admin_state',window.S||{})}catch(_){}
+  }
+  function refreshPreview(){
+    var t=curTpl(),box=by('ze-ph-preview'),img=by('ze-ph-thumb'),st=by('ze-ph-status');
+    if(!box||!img)return;
+    if(t&&t.placeholderImageUrl){
+      img.src=t.placeholderImageUrl;
+      box.style.display='flex';
+      if(st)st.textContent='';
+    }else{
+      box.style.display='none';
+      img.removeAttribute('src');
+      if(st)st.textContent='';
+    }
+  }
+  function handleFile(f){
+    var t=curTpl();
+    if(!t){toastMsg('템플릿을 먼저 선택하세요','e');return}
+    if(!window.dennFirebase||!window.dennFirebase.uploadDataUrl){
+      toastMsg('Firebase 미준비 — 새로고침 후 다시 시도','e');return;
+    }
+    var allow=['image/png','image/jpeg','image/webp','image/svg+xml'];
+    if(f.type&&allow.indexOf(f.type)<0&&!/\.(png|jpe?g|webp|svg)$/i.test(f.name||'')){
+      toastMsg('PNG / JPG / WebP만 업로드 가능','e');return;
+    }
+    var r=new FileReader();
+    r.onload=function(e){
+      var dataUrl=e&&e.target&&e.target.result;
+      if(!dataUrl)return;
+      var st=by('ze-ph-status');if(st)st.textContent='업로드 중…';
+      var idx=window.ZE&&ZE.tplIdx;
+      var t2=tplArr()[idx]; if(!t2){if(st)st.textContent='';return}
+      var pathHint='placeholders/'+(t2.id||('ft'+Date.now()))+'-'+Date.now()+'.png';
+      window.dennFirebase.uploadDataUrl(dataUrl,pathHint).then(function(res){
+        var cur=tplArr()[idx]; if(!cur)return;
+        var oldPath=cur.placeholderImagePath;
+        cur.placeholderImageUrl=res.url;
+        cur.placeholderImagePath=res.path;
+        persistAll();
+        refreshPreview();
+        toastMsg('기본 이미지 업로드 완료');
+        if(oldPath&&oldPath!==res.path&&window.dennFirebase.deletePath)window.dennFirebase.deletePath(oldPath);
+      }).catch(function(err){
+        console.error('[ze-ph] upload failed:',err);
+        toastMsg('업로드 실패: '+((err&&err.message)||err),'e');
+        var st2=by('ze-ph-status');if(st2)st2.textContent='실패';
+      });
+    };
+    r.readAsDataURL(f);
+  }
+  window.zePhDropImg=function(e){
+    try{e.preventDefault();e.stopPropagation()}catch(_){}
+    var f=e&&e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+    if(f)handleFile(f);
+  };
+  window.zePhUpload=function(inp){
+    var f=inp&&inp.files&&inp.files[0];
+    if(!f)return;
+    handleFile(f);
+    try{inp.value=''}catch(_){}
+  };
+  window.zePhRemove=function(){
+    var idx=window.ZE&&ZE.tplIdx,t=idx!=null?tplArr()[idx]:null;
+    if(!t)return;
+    var oldPath=t.placeholderImagePath;
+    delete t.placeholderImageUrl; delete t.placeholderImagePath;
+    persistAll();
+    refreshPreview();
+    toastMsg('기본 이미지 제거됨');
+    if(oldPath&&window.dennFirebase&&window.dennFirebase.deletePath)window.dennFirebase.deletePath(oldPath);
+  };
+  var orig=window.openZoneEditor;
+  if(typeof orig==='function'){
+    window.openZoneEditor=function(idx){
+      var r=orig.apply(this,arguments);
+      setTimeout(function(){try{refreshPreview()}catch(_){}}, 0);
+      return r;
+    };
+  }
 })();
 </script>
 <script id="denn-v59-builder-capture-union">

@@ -11276,6 +11276,130 @@ window.addEventListener('load',later);
   };
 })();
 </script>
+<script id="denn-phase2-placeholder-image-customer">
+(function(){
+  'use strict';
+  function curTpl(){return window.curFTpl||null}
+  function isPlaceholderImg(img){return !!(img&&img._isPlaceholder)}
+  function clearPlaceholder(){
+    if(window.frameImg&&isPlaceholderImg(window.frameImg)){
+      window.frameImg=null;
+      window.frameImgT={scale:1,x:0,y:0};
+    }
+  }
+  window.dennLoadPlaceholderForFrame=function(){
+    var t=curTpl();
+    if(!t||!t.placeholderImageUrl){ clearPlaceholder(); try{if(typeof window.renderFrame==='function')window.renderFrame()}catch(_){}; return false; }
+    if(window.frameImg&&!isPlaceholderImg(window.frameImg)) return false; // 사용자 사진 보호
+    var url=t.placeholderImageUrl;
+    var img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=function(){
+      // 그 사이 사용자가 사진 업로드했으면 무시
+      if(window.frameImg&&!isPlaceholderImg(window.frameImg))return;
+      // 시안이 그 사이 바뀌었으면 무시
+      var t2=curTpl(); if(!t2||t2.placeholderImageUrl!==url)return;
+      img._isPlaceholder=true;
+      window.frameImg=img;
+      window.frameImgT={scale:1,x:0,y:0};
+      var fe=document.getElementById('frame-empty'); if(fe)fe.classList.add('hidden');
+      try{if(typeof window.renderFrame==='function')window.renderFrame()}catch(_){}
+    };
+    img.onerror=function(){console.warn('[placeholder] load failed:',url)};
+    img.src=url;
+    return true;
+  };
+  var origSel=window.selFTplByRef;
+  if(typeof origSel==='function'){
+    window.selFTplByRef=function(el,i){
+      // 시안 전환 직전, 기존 placeholder는 정리 (사용자 사진은 그대로 둔다)
+      clearPlaceholder();
+      var r=origSel.apply(this,arguments);
+      try{window.dennLoadPlaceholderForFrame()}catch(_){}
+      return r;
+    };
+  }
+  // 첫 진입 시 (선택된 시안이 이미 있으면) placeholder 로드 시도
+  if(document.readyState==='complete'||document.readyState==='interactive'){
+    setTimeout(function(){try{if(window.curFTpl&&!window.frameImg)window.dennLoadPlaceholderForFrame()}catch(_){}},300);
+  }else{
+    window.addEventListener('DOMContentLoaded',function(){
+      setTimeout(function(){try{if(window.curFTpl&&!window.frameImg)window.dennLoadPlaceholderForFrame()}catch(_){}},300);
+    });
+  }
+  window.dennPlaceholderApi={
+    isPlaceholder:function(){return isPlaceholderImg(window.frameImg)},
+    reload:function(){clearPlaceholder();return window.dennLoadPlaceholderForFrame()}
+  };
+
+  // ───── 다운로드/공유 가드 ─────
+  function ensureToastNode(){
+    var id='denn-ph-toast';
+    var el=document.getElementById(id);
+    if(el)return el;
+    el=document.createElement('div');
+    el.id=id;
+    el.style.cssText='position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);transform:translateX(-50%);background:rgba(20,20,25,.94);color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:99999;pointer-events:none;opacity:0;transition:opacity .2s ease;max-width:88vw;text-align:center;line-height:1.4';
+    document.body.appendChild(el);
+    return el;
+  }
+  function showToast(msg){
+    var el=ensureToastNode();
+    el.textContent=msg;
+    el.style.opacity='1';
+    clearTimeout(el._timer);
+    el._timer=setTimeout(function(){el.style.opacity='0'},2200);
+  }
+  window.dennShowFrameToast=showToast;
+
+  function isFramePlaceholderState(){return isPlaceholderImg(window.frameImg)}
+  function guardFrameDownload(type){
+    if(type!=='frame')return true;
+    if(!isFramePlaceholderState())return true;
+    showToast('사진을 업로드해주세요');
+    return false;
+  }
+  window.dennIsFramePlaceholderState=isFramePlaceholderState;
+
+  // dlCanvas wrap (다운로드 + sendKakao 모두 이 함수 거침)
+  var origDl=window.dlCanvas;
+  if(typeof origDl==='function'){
+    window.dlCanvas=function(type){
+      if(!guardFrameDownload(type))return Promise.resolve();
+      return origDl.apply(this,arguments);
+    };
+  }
+  // v36 주문제작 흐름 가드
+  function wrapOrderV36(){
+    var api=window.DENNOrderRequestV36;
+    if(!api||api.__dennPhGuarded)return;
+    var origOpen=api.open;
+    api.open=function(type){
+      if(!guardFrameDownload(type))return;
+      return origOpen.apply(this,arguments);
+    };
+    var origDown=api.downloadOnly;
+    api.downloadOnly=function(type){
+      if(!guardFrameDownload(type))return Promise.resolve();
+      return origDown.apply(this,arguments);
+    };
+    var origSave=api.saveAndOpen;
+    api.saveAndOpen=function(type){
+      if(!guardFrameDownload(type))return Promise.resolve();
+      return origSave.apply(this,arguments);
+    };
+    api.__dennPhGuarded=true;
+  }
+  if(window.DENNOrderRequestV36){wrapOrderV36()}
+  else{
+    var tries=0,iv=setInterval(function(){
+      tries++;
+      if(window.DENNOrderRequestV36){wrapOrderV36();clearInterval(iv)}
+      else if(tries>40)clearInterval(iv);
+    },150);
+  }
+})();
+</script>
 </body>
 </html>
 
