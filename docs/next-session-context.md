@@ -11,6 +11,8 @@
 
 ### 이미 해결된 항목 (참고)
 - "액자 자체 스케일 조정 바" 모바일 제거 — 12c78aa로 완료, 재준 검증 완료
+- **PC 액자 스케일 슬라이더 회귀 픽스** — 000ffce: `installFrameWrapScaleLock`(3862c48 도입)이 사용자 슬라이더 input도 차단하던 문제. document-level capture 리스너로 slider input / 박스 내 BUTTON 클릭 감지 시 200ms 윈도우 동안 `window.__dennScaleUserInput=true` → lock이 그 윈도우 안에서만 scale 변경 통과. v39 자동 호출(스케일 튐)은 여전히 차단 유지. 재준 검증 완료.
+- **PC 새로고침 시 100% 리셋** — a4d3d2f: viewport>860일 때 v36.1 IIFE 진입 직후 `SCALE_KEYS.desktop` + `LEGACY_SCALE_KEY` localStorage 두 키 제거 → 매번 디폴트(100). 모바일은 split-pane handle 연동이라 미수정 (디폴트 140 유지).
 
 ### 핵심 재정의 사항
 - 작업 1·2는 **PC/모바일 공통** 우선 (모바일 단독 UX는 바텀시트 이후 일괄 재평가)
@@ -20,6 +22,16 @@
 ---
 
 ## 작업 1 — 액자 기본 이미지(placeholder) 기능 추가
+
+### 사전 평가 (완료, 2026-05-22 세션 말)
+- **위험도: 가벼움** (~50줄, 보호 영역 본체 침범 없음)
+- **진입점 확정**: 어드민의 "텍스트 위치 설정" 모달(`#ze-modal`) 안에 "기본 이미지" 섹션 추가 (재준 선택 옵션 A)
+- **재사용 인프라**: `window.dennFirebase.uploadDataUrl(dataUrl, pathHint) → { url, path }` (denn-admin.html:13985)
+- **데이터 모델**: `S.frameTemplates[i]`에 `placeholderImage`(URL) + `placeholderStoragePath`(path) 키 추가 — 기존 키와 충돌 없음
+- **mockup-tool hook 지점**: `var frameImg=null` (line 762), `handleF()` (line 996), `drawSlot()` (line 1519). `renderFrame()` 본체는 보호 영역이지만 호출 직전 `frameImg`가 null일 때 `tpl.placeholderImage`로 prefill하는 방식으로 우회 가능
+- **Fallback 자연스러움**: 기존 시안은 `placeholderImage` undefined → 기존 empty-state ("📷 이미지 업로드") 유지
+
+### 다음 세션 진입 즉시 구현 가능 — 사전 조사 끝, 진입점 확정, 사용자 승인 완료
 
 ### 의도
 - 어드민 "액자 템플릿 → 상세 설정"에 **"기본 이미지" 업로드 필드** 추가
@@ -152,6 +164,18 @@
 - 일부 항목은 바텀시트 구조에서 자연스럽게 해결됐을 수 있음
 - 보호 영역 무수정
 - PC 영향 있는 항목(예: 2번)은 PC/모바일 공통으로 진행
+
+---
+
+## (참고) PC 환경별 디폴트 스케일 자동 설정 — 보류 옵션
+
+현재 PC는 viewport > 860 = 100% 일률. 만약 환경별 분기를 원하면 다음 옵션 가능:
+
+1. **어드민 설정 UI**: 어드민 페이지에 "PC 디폴트 스케일" 입력 필드 추가 → `S.uiSettings.framePreviewDesktopDefault` 같은 키에 저장 → mockup-tool 로드 시 그 값으로 override
+2. **DPR/해상도 기반 자동 분기**: `window.devicePixelRatio`, `window.screen.width` 등을 활용해 코드 내 임계값으로 자동 결정 (예: width>=2560 → 110%, <1366 → 90%)
+3. **사용자 localStorage 저장 + 어드민 토글**: PC도 모바일처럼 사용자 마지막 값 기억 (현재 동작 복귀 + 어드민에서 ON/OFF 가능)
+
+→ 1차 배포 후 사용자 피드백 보고 진행 여부 결정.
 
 ---
 
