@@ -1,39 +1,19 @@
-# 다음 세션 작업 컨텍스트 (2026-05-22 작업 종료 시점)
-
-## 오늘 완료한 작업
-
-### 모바일 share 기능 완성 (b522cf4 ~ de90727)
-- `?share=<URL>` query + `#share=<path>` hash fragment 양쪽 지원 (카톡 인앱 query strip 우회)
-- 짧은 URL 지원 (Firebase Storage path만 share 값으로 사용)
-- 모바일 화면 toast로 단계별 진행 상태 표시 (1/5 ~ 5/5)
-- reload 직전 hash 제거 (`history.replaceState`) → `location.replace`가 hash-only 변경으로 no-op 되는 버그 차단
-- share IIFE에서 IndexedDB(`denn_shared_db/kv/denn_admin_state`)도 직접 저장 → `loadAdminFresh`의 머지에서 share 데이터 묻히는 문제 해결
-- 검증: `[init] FTPLS=32 / raw=32 / uploaded=32 / denn_admin 213772b`
-
-### 모바일 split-pane 레이아웃 (fcd36db ~ 12c78aa)
-- mobile-layout-v1: 액자 위 + 설정 아래 재배치 (`order` flex), sticky preview, 62vh 크기 제한
-- 핫픽스: `.page.on` 토글 보존, vh → svh로 주소창 변동 흔들림 해결
-- split-pane handle: 모바일에서만 미리보기/설정 사이 드래그 가능한 18px 핸들 inject + 25~75% 분할 비율 + localStorage 저장 + drag 종료 시 resize 이벤트로 renderFrame 재계산
-- 비활성 페이지 leak 차단: `.page:not(.on){display:none!important}` (기존 line 8601의 `.on` 무시 룰 우회)
-- `#frame-preview-scale-box` 모바일 hide: CSS만으론 v36 IIFE의 동적 `<style>` race 패배 → JS로 `inline display:none !important` 강제 + MutationObserver(`#frame-preview-area` 스코프) + setTimeout 9회 시리즈
-
-### 잘못 막은 것 롤백 (4cb8650)
-- 877390b/40f5f16의 사진 줌(핀치 + zoom 슬라이더) 차단은 사용자 의도 오해석 → 롤백
-- 사용자의 정확한 의도는 `#frame-preview-scale-box`(액자 자체 스케일 슬라이더) → 12c78aa로 정확 타겟 hide
-
----
+# 다음 세션 작업 컨텍스트 (2026-05-22 작업 종료 시점, 갱신 2026-05-22)
 
 ## 다음 세션 작업 순서 (재준 확정)
 
 1. **[다음 1순위]** 액자 기본 이미지(placeholder) 기능 추가
 2. **[추가]** 템플릿 색상/그림자 토글 활성화 조건 변경 (PC/모바일 공통)
-3. **[추가]** "액자 자체 스케일 조정 바" 모바일 제거 — **12c78aa로 완료**, 검증만 필요
-4. **[추가]** 모바일 액자 사이즈 설정 UX 변경 (드롭다운)
-5. **[추가]** 프레임 보이기 영역 UI 정리 (PC/모바일 공통)
-6. **[추가]** 모바일 "색상 선택 → 맞춤 설정" UI 정리
+3. **[추가]** 모바일 액자 사이즈 설정 UX 변경 (드롭다운)
+4. **[추가]** 프레임 보이기 영역 UI 정리 (PC/모바일 공통)
+5. **[추가]** 모바일 "색상 선택 → 맞춤 설정" UI 정리
+6. **[추가]** 모바일 전체 레이아웃 — 바텀시트 패턴 검토 (모바일 최적화 단계 옵션)
 7. **[그 다음]** Phase 3: Firestore 통합 — 어드민/mockup-tool 데이터 동기화
 8. **[그 다음]** 모바일 최적화 본격 작업
 9. **[최종]** Phase 4: 1차 배포
+
+### 이미 해결된 항목 (참고)
+- "액자 자체 스케일 조정 바" 모바일 제거 — 12c78aa로 완료, 재준 검증 완료
 
 ---
 
@@ -85,26 +65,7 @@
 
 ---
 
-## 작업 3 — "액자 자체 스케일 조정 바" 모바일 제거
-
-### 현재 상태
-- **12c78aa로 완료** (`#frame-preview-scale-box` 모바일 강제 hide)
-- 사용자 모바일 검증 완료 ("해결했어")
-- 다음 세션에서는 PC 회귀만 가볍게 확인 (PC에서 박스 여전히 표시 + 정상 동작)
-
-### 건드리지 말아야 할 것 (재확인)
-- 업로드한 사진의 캔버스 내부 확대/축소 (zoom) — `frameImgT.scale`
-- 캔버스 내부 드래그 이동 (pan) — `frameImgT.x/y`
-- → 이건 그대로 유지
-
-### 핵심 식별 정보
-- 박스 element: `#frame-preview-scale-box` (v36 IIFE, line 3865/3944 `frame-preview-area`에 appendChild)
-- 핸들 연동: `applyStableScale` (`#page-frame .canvas-wrap`에 transform scale 적용) — `area.clientWidth/Height` 기반 fit 자동 계산
-- 동적 style 충돌: line 3912-3914 `document.head.appendChild`로 추가되는 style — CSS만으론 race 패배, JS inline style 필요
-
----
-
-## 작업 4 — 모바일 액자 사이즈 설정 UX 변경
+## 작업 3 — 모바일 액자 사이즈 설정 UX 변경
 
 ### 의도
 - 현재: 액자 사이즈 선택 UI = 칩(`.chips.c2 #frame-sz-chips`) — 카드 형식
@@ -123,7 +84,7 @@
 
 ---
 
-## 작업 5 — 프레임 보이기 영역 UI 정리 (PC/모바일 공통)
+## 작업 4 — 프레임 보이기 영역 UI 정리 (PC/모바일 공통)
 
 ### 1) 안내 문구 삭제
 - 현재: "OFF 시 프레임 레이어만 숨기고 사진과 시계 좌표는 유지합니다." 같은 안내 문구
@@ -145,7 +106,7 @@
 
 ---
 
-## 작업 6 — 모바일 "색상 선택 → 맞춤 설정" UI 정리
+## 작업 5 — 모바일 "색상 선택 → 맞춤 설정" UI 정리
 
 ### 현재 동작 (문제)
 - mockup-tool 좌측 패널 "문구별 색상/그림자" → 색상 선택 → 맞춤 설정 영역
@@ -158,28 +119,56 @@
    - 색조 → Hue
    - 채도 → Saturation
    - 값 → Value
-   - (또는 H / S / V 짧은 표기도 검토 가능 — 판단)
+   - (또는 H / S / V 짧은 표기도 검토 가능 — Claude Code 판단)
 
 ### 원칙
 - **모바일 전용 변경** (`@media` 미디어 쿼리로 분리)
 - PC는 기존 동작/표기 유지
 - 보호 영역 무수정
+- 이 색상 선택 영역의 라벨만 영문 변경 (전체 UI i18n 아님)
 - 사전 평가 후 적용
 
 ### 사전 조사 시작점
 - 라벨 텍스트가 코드상 어디서 출력되는지 grep: "색조", "채도", "값"
 - HSV 컨트롤은 color picker 모달 또는 inline panel 어디?
-- 영문화는 **이 색상 선택 영역의 라벨만** 영문 변경 (전체 UI i18n 아님)
 - 정렬은 flex/grid 중앙 정렬로 충분한지 확인
+
+---
+
+## 작업 6 — 모바일 전체 레이아웃 바텀시트 패턴 검토
+
+### 목표 디자인 (참고 레퍼런스)
+- 상단: 액자 미리보기 영역 (항상 표시, 화면 대부분 차지)
+- 하단 고정 탭바: 카테고리 아이콘 (상품 선택 / 템플릿 / 이미지 / 텍스트 / 도형 / 장식 등 — mockup-tool 실제 카테고리에 맞게)
+- 탭 아이콘 탭 시 → 해당 설정 패널이 하단에서 위로 올라오는 바텀시트
+- 다시 탭 또는 X 닫기 → 패널 내려가고 미리보기 풀화면
+
+### 현재 모바일 구조와의 차이
+- 현재: PC 레이아웃을 세로로 단순 펼침 (액자 위, 좌측 패널 아래 + split-pane handle)
+- 변경 후: 모바일 전용 완전 재구성 (액자 위, 탭바 아래, 설정은 바텀시트 슬라이드)
+
+### 작업 분류
+- 본 작업은 **"8. 모바일 최적화 본격 작업"** 단계에서 처리할 후보
+- 작업 1~5와 별개의 큰 작업 (모바일 레이아웃 전체 재설계 수준)
+- 모바일 최적화 진입 시점에 다음 옵션 중 재준이 선택:
+  - **A.** 현재 split-pane 구조 유지 + 다듬기 (가장 보수적)
+  - **B.** 바텀시트 방식 (위 목표 디자인) ← 새 옵션
+  - **C.** 다른 형태
+
+### 원칙
+- 모바일 전용 (`@media`로 분리, PC는 기존 좌우 분할 레이아웃 유지)
+- 보호 영역 무수정
+- Phase 3 (Firestore 통합)과는 독립 — 어느 순서로도 진행 가능
+- 진입 전 사전 평가 필수 (전체 모바일 DOM/이벤트 영향 범위 큼)
 
 ---
 
 ## 1차 배포 전 전체 로드맵 (재확인)
 
 - ✅ Phase 1: 템플릿 색상/그림자 — 완료 (Phase C로 진입)
-- ⏳ Phase 2: 모바일 UX 본격 정비 (작업 1~6) — 다음 세션
+- ⏳ Phase 2: 모바일 UX 본격 정비 (작업 1~5) — 다음 세션
 - ⏳ Phase 3: Firestore 통합 (어드민 ↔ mockup-tool 동기화)
-- ⏳ Phase 4: 모바일 최적화 본격
+- ⏳ Phase 4: 모바일 최적화 본격 (작업 6 바텀시트 검토 포함)
 - ⏳ Phase 5: 1차 배포 + 안정화
 - ⏳ Phase 6: 2단계/3단계 wrap 정리 (배포 후)
 
