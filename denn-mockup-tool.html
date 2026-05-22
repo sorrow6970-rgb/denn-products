@@ -8893,6 +8893,14 @@ window.addEventListener('load',run);
   SCALE_CONFIG.breakpoint=num(SCALE_CONFIG.breakpoint,DEFAULT_SCALE_CONFIG.breakpoint);
   SCALE_CONFIG.desktop=Object.assign({},DEFAULT_SCALE_CONFIG.desktop,SCALE_CONFIG.desktop||{});
   SCALE_CONFIG.mobile=Object.assign({},DEFAULT_SCALE_CONFIG.mobile,SCALE_CONFIG.mobile||{});
+  // PC mode 새로고침마다 디폴트(100)로 리셋 — 사용자 마지막 슬라이더 값 무력화. 모바일은 split-pane
+  // handle 연동 + 자체 디폴트(140) 유지이므로 미수정. legacy v40 키도 함께 정리해서 stale 값 차단.
+  try{
+    if(window.innerWidth>(SCALE_CONFIG.breakpoint||860)){
+      localStorage.removeItem(SCALE_KEYS.desktop);
+      localStorage.removeItem(LEGACY_SCALE_KEY);
+    }
+  }catch(_){}
   var DEFAULT_MODE='sharp';
   var MODE_RATIO={normal:1,sharp:1.75,ultra:2.25};
   var MAX_RATIO=2.25;
