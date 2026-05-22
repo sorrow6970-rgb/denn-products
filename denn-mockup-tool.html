@@ -10564,9 +10564,27 @@ window.addEventListener('load',later);
     var wrap=document.querySelector('#page-frame .canvas-wrap');
     if(!wrap||wrap.__dennPhaseCScaleLocked)return false;
     wrap.__dennPhaseCScaleLocked=true;
+    // 사용자 슬라이더 input bypass: 슬라이더 변경/버튼 클릭 후 200ms 윈도우 동안 scale 변경 통과.
+    // v39 applyStableScale의 자동 호출(renderFrame 후 0ms)은 이 윈도우 밖이라 여전히 scale(1) 강제 → 스케일 튐 차단 유지.
+    if(!window.__dennScaleLockUserBypassInstalled){
+      window.__dennScaleLockUserBypassInstalled=true;
+      function markUserInput(){
+        window.__dennScaleUserInput=true;
+        clearTimeout(window.__dennScaleUserInputTimer);
+        window.__dennScaleUserInputTimer=setTimeout(function(){window.__dennScaleUserInput=false},200);
+      }
+      document.addEventListener('input',function(e){
+        if(e.target&&e.target.id==='frame-preview-scale')markUserInput();
+      },true);
+      document.addEventListener('click',function(e){
+        var t=e.target;
+        if(t&&t.closest&&t.closest('#frame-preview-scale-box')&&t.tagName==='BUTTON')markUserInput();
+      },true);
+    }
     var origSetProperty=wrap.style.setProperty.bind(wrap.style);
     wrap.style.setProperty=function(prop, val, priority){
       if(prop==='transform' && typeof val==='string' && val.indexOf('scale')!==-1){
+        if(window.__dennScaleUserInput)return origSetProperty(prop,val,priority);
         return origSetProperty('transform','scale(1)',priority||'');
       }
       return origSetProperty(prop, val, priority);
@@ -10582,6 +10600,7 @@ window.addEventListener('load',later);
           get:function(){return origTransformDesc.get.call(origStyleObj)},
           set:function(v){
             if(typeof v==='string'&&v.indexOf('scale')!==-1){
+              if(window.__dennScaleUserInput){origSet(v);return}
               origSet('scale(1)');
               return;
             }
