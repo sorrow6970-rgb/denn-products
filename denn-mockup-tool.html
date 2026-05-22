@@ -11361,6 +11361,42 @@ window.addEventListener('load',later);
   }
   window.dennIsFramePlaceholderState=isFramePlaceholderState;
 
+  // ────── 시안 목록 카드 썸네일에 placeholder 표시 ──────
+  function decorateFrameTplCards(){
+    var grid=document.getElementById('frame-tpl-grid'); if(!grid)return;
+    var cards=grid.querySelectorAll('.tpl-card');
+    Array.prototype.slice.call(cards).forEach(function(card){
+      var onClick=card.getAttribute('onclick')||'';
+      var m=onClick.match(/selFTplByRef\(this,(\d+)\)/);
+      if(!m)return;
+      var i=parseInt(m[1],10);
+      var t=(window.FTPLS||[])[i]; if(!t)return;
+      var url=t.placeholderImageUrl||'';
+      var thumb=card.querySelector('.tpl-thumb.fr');
+      if(!thumb)return;
+      if(url){
+        thumb.style.backgroundImage='url("'+url.replace(/"/g,'\\"')+'")';
+        thumb.style.backgroundSize='cover';
+        thumb.style.backgroundPosition='center';
+        thumb.style.backgroundRepeat='no-repeat';
+      }else if(thumb.style.backgroundImage){
+        thumb.style.backgroundImage='';
+      }
+    });
+  }
+  var oldBuild=window.buildFrameTplGrid;
+  if(typeof oldBuild==='function'&&!oldBuild.__dennPh){
+    window.buildFrameTplGrid=function(){
+      var r=oldBuild.apply(this,arguments);
+      setTimeout(decorateFrameTplCards,30);
+      setTimeout(decorateFrameTplCards,200);
+      return r;
+    };
+    window.buildFrameTplGrid.__dennPh=true;
+  }
+  setTimeout(decorateFrameTplCards,800);
+  setTimeout(decorateFrameTplCards,2000);
+
   // dlCanvas wrap (다운로드 + sendKakao 모두 이 함수 거침)
   var origDl=window.dlCanvas;
   if(typeof origDl==='function'){

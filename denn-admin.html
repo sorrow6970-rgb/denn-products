@@ -8861,7 +8861,8 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
     if(t&&t.placeholderImageUrl){
       img.onload=function(){if(st){st.style.color='#3DD68C';st.textContent='✓ '+img.naturalWidth+'×'+img.naturalHeight+'px'}};
       img.onerror=function(){if(st){st.style.color='#FF5050';st.textContent='❌ 이미지 로드 실패 — Storage 권한/네트워크 확인'}};
-      img.src=t.placeholderImageUrl;
+      var url=t.placeholderImageUrl;
+      if(img.src!==url){img.src=''; img.src=url}
       box.style.display='flex';
       if(st){st.style.color='var(--muted)';st.textContent='로딩 중…'}
     }else{
@@ -8870,6 +8871,11 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
       img.removeAttribute('src');
       if(st){st.style.color='var(--muted)';st.textContent=''}
     }
+  }
+  function refreshGuideForced(){
+    try{if(typeof window.installGuidePanel==='function')window.installGuidePanel()}catch(_){}
+    try{if(typeof window.renderGuideList==='function')window.renderGuideList()}catch(_){}
+    try{if(typeof window.scheduleGuideOverlay==='function')window.scheduleGuideOverlay()}catch(_){}
   }
   function handleFile(f){
     var t=curTpl();
@@ -8931,10 +8937,49 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
   if(typeof orig==='function'){
     window.openZoneEditor=function(idx){
       var r=orig.apply(this,arguments);
-      setTimeout(function(){try{refreshPreview()}catch(_){}}, 0);
+      [0,80,220,500,900].forEach(function(ms){
+        setTimeout(function(){try{refreshPreview()}catch(_){};try{refreshGuideForced()}catch(_){}}, ms);
+      });
       return r;
     };
   }
+  // ────── 카드 인디케이터 ──────
+  function decorateFrameTplCards(){
+    var grid=document.getElementById('frame-tpl-grid-a'); if(!grid)return;
+    var cur=window.curFCat||'all',arr=(window.S&&S.frameTemplates)||[];
+    var filtered=arr.filter(function(t){if(cur==='all')return true;if(cur==='builtin')return t.type==='builtin';return t.type==='uploaded'&&t.categoryId===cur});
+    Array.prototype.slice.call(grid.querySelectorAll('.tpl-ca')).forEach(function(card,idx){
+      var t=filtered[idx]; if(!t)return;
+      var hasPh=!!t.placeholderImageUrl;
+      var thumb=card.querySelector('.tpl-thumb-a');
+      if(thumb){thumb.style.position='relative'}
+      var badge=card.querySelector('.denn-ph-card-badge');
+      if(hasPh){
+        if(!badge){
+          badge=document.createElement('div');
+          badge.className='denn-ph-card-badge';
+          badge.style.cssText='position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(255,200,80,.95);color:#1a1410;font-size:11px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,.2);box-shadow:0 1px 4px rgba(0,0,0,.3);z-index:5;pointer-events:none';
+          badge.title='기본 이미지 설정됨';
+          badge.textContent='📷';
+          if(thumb)thumb.appendChild(badge); else card.appendChild(badge);
+        }
+      }else{
+        if(badge)badge.remove();
+      }
+    });
+  }
+  var oldRender=window.renderFTplsByCategory;
+  if(typeof oldRender==='function'&&!oldRender.__dennPh){
+    window.renderFTplsByCategory=function(){
+      var r=oldRender.apply(this,arguments);
+      setTimeout(decorateFrameTplCards,80);
+      setTimeout(decorateFrameTplCards,260);
+      return r;
+    };
+    window.renderFTplsByCategory.__dennPh=true;
+  }
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(decorateFrameTplCards,500)});
+  setTimeout(decorateFrameTplCards,1200);
 })();
 </script>
 <script id="denn-v59-builder-capture-union">
