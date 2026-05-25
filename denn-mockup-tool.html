@@ -11375,12 +11375,16 @@ window.addEventListener('load',later);
       var thumb=card.querySelector('.tpl-thumb.fr');
       if(!thumb)return;
       if(url){
-        thumb.style.backgroundImage='url("'+url.replace(/"/g,'\\"')+'")';
-        thumb.style.backgroundSize='cover';
-        thumb.style.backgroundPosition='center';
-        thumb.style.backgroundRepeat='no-repeat';
-      }else if(thumb.style.backgroundImage){
-        thumb.style.backgroundImage='';
+        var safeUrl=url.replace(/"/g,'\\"');
+        thumb.style.setProperty('background-image','url("'+safeUrl+'")','important');
+        thumb.style.setProperty('background-size','cover','important');
+        thumb.style.setProperty('background-position','center center','important');
+        thumb.style.setProperty('background-repeat','no-repeat','important');
+        thumb.style.setProperty('padding','0','important');
+        thumb.dataset.dennPhActive='1';
+      }else if(thumb.dataset.dennPhActive){
+        ['background-image','background-size','background-position','background-repeat','padding'].forEach(function(p){thumb.style.removeProperty(p)});
+        delete thumb.dataset.dennPhActive;
       }
     });
   }
