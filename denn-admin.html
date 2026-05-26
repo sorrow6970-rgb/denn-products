@@ -558,8 +558,8 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
 <!-- ZONE EDITOR (frame text zones) -->
 <div class="ze-modal" id="ze-modal">
   <div class="ze-box">
-    <div class="ze-header"><h2>📍 텍스트 위치 설정 — <span id="ze-tpl-name"></span></h2><div style="display:flex;gap:7px"><button class="tb-btn outline" id="ze-img-edit-btn" onclick="zeToggleImgEdit()" style="font-size:10px;padding:5px 10px">🖼 이미지 수정</button><button class="tb-btn outline" onclick="saveZonesOnly()" style="font-size:10px;padding:5px 10px">📍 위치만 저장</button><button class="tb-btn primary" onclick="saveZones()">✓ 전체 저장</button><button class="tb-btn outline" onclick="closeZoneEditor()">✕</button></div></div>
-    <div id="ze-img-panel" style="display:none;padding:12px;border-bottom:1px solid var(--bdr);background:var(--surf)"><div style="font-size:10px;color:var(--muted);margin-bottom:8px">🖼 현재 템플릿 이미지 수정</div><div class="up-zone" style="padding:10px" ondragover="evStop(event)" ondrop="zeDropImg(event)"><input type="file" accept="image/*" id="ze-img-inp" onchange="zeUploadImg(this)"><div style="text-align:center;font-size:10.5px;color:var(--muted)">새 이미지 업로드 (기존 이미지 교체)</div></div><div id="ze-img-preview" style="margin-top:8px;display:none"><img id="ze-img-thumb" style="max-height:60px;border-radius:4px;border:1px solid var(--bdr)"><button onclick="zeRemoveImg()" style="margin-left:8px;font-size:9.5px;padding:3px 8px;border:1px solid var(--red);border-radius:4px;background:rgba(255,80,80,.08);color:var(--red);cursor:pointer">제거</button></div></div><div id="ze-ph-panel" style="padding:12px;border-bottom:1px solid var(--bdr);background:var(--surf)"><div style="font-size:10px;color:var(--muted);margin-bottom:8px">🖼 기본 이미지 (고객이 사진 업로드 전 미리보기에 표시)</div><div class="up-zone" style="padding:10px" ondragover="evStop(event)" ondrop="zePhDropImg(event)"><input type="file" accept="image/png,image/jpeg,image/webp,.svg" id="ze-ph-inp" onchange="zePhUpload(this)"><div style="text-align:center;font-size:10.5px;color:var(--muted)">PNG / JPG / WebP — Firebase Storage에 업로드</div></div><div id="ze-ph-preview" style="margin-top:8px;display:none;align-items:center;gap:8px;flex-wrap:wrap"><img id="ze-ph-thumb" style="max-height:80px;max-width:120px;border-radius:4px;border:1px solid var(--bdr);object-fit:contain;background:#f4ede0;display:inline-block" alt="placeholder"><button onclick="zePhRemove()" style="font-size:9.5px;padding:3px 8px;border:1px solid var(--red);border-radius:4px;background:rgba(255,80,80,.08);color:var(--red);cursor:pointer">제거</button><span id="ze-ph-status" style="font-size:9.5px;color:var(--muted);flex:1;min-width:0;word-break:break-all"></span></div></div><div class="ze-body">
+    <div class="ze-header"><h2>📍 텍스트 위치 설정 — <span id="ze-tpl-name"></span></h2><div style="display:flex;gap:7px"><button class="tb-btn outline" onclick="saveZonesOnly()" style="font-size:10px;padding:5px 10px">📍 위치만 저장</button><button class="tb-btn primary" onclick="saveZones()">✓ 전체 저장</button><button class="tb-btn outline" onclick="closeZoneEditor()">✕</button></div></div>
+    <div id="ze-ph-panel" style="padding:12px;border-bottom:1px solid var(--bdr);background:var(--surf)"><div style="font-size:10px;color:var(--muted);margin-bottom:8px">🖼 기본 이미지 (고객이 사진 업로드 전 미리보기에 표시)</div><div class="up-zone" style="padding:10px" ondragover="evStop(event)" ondrop="zePhDropImg(event)"><input type="file" accept="image/png,image/jpeg,image/webp,.svg" id="ze-ph-inp" onchange="zePhUpload(this)"><div style="text-align:center;font-size:10.5px;color:var(--muted)">PNG / JPG / WebP — Firebase Storage에 업로드</div></div><div id="ze-ph-preview" style="margin-top:8px;display:none;align-items:center;gap:8px;flex-wrap:wrap"><img id="ze-ph-thumb" style="max-height:80px;max-width:120px;border-radius:4px;border:1px solid var(--bdr);object-fit:contain;background:#f4ede0;display:inline-block" alt="placeholder"><button onclick="zePhRemove()" style="font-size:9.5px;padding:3px 8px;border:1px solid var(--red);border-radius:4px;background:rgba(255,80,80,.08);color:var(--red);cursor:pointer">제거</button><span id="ze-ph-status" style="font-size:9.5px;color:var(--muted);flex:1;min-width:0;word-break:break-all"></span></div></div><div class="ze-body">
       <div class="ze-canvas-wrap"><div class="ze-canvas-stage"><div class="ze-zoom-bar"><span>미리보기 확대</span><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)-0.1)">－</button><input type="range" id="ze-preview-zoom" min="50" max="220" value="100" oninput="setZePreviewZoom(this.value/100)"><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)+0.1)">＋</button><button type="button" onclick="setZePreviewZoom(1)">100%</button><span id="ze-preview-zoom-v">100%</span><button type="button" id="ze-guide-toggle" class="ze-guide-btn on" onclick="toggleZeGridGuide()">가이드 ON</button></div><canvas id="ze-canvas" style="cursor:crosshair;border:2px solid var(--bdr);border-radius:5px;display:block"></canvas></div></div>
       <div class="ze-controls">
         <div><div class="ze-label" style="font-size:11px;color:var(--txt);font-weight:600;margin-bottom:6px">타입 선택 → 캔버스 클릭</div>
@@ -1783,37 +1783,6 @@ function zeRenderList(){
 }
 function rmZone(i){ZE.zones.splice(i,1);zeRender();zeRenderList();}
 
-function zeToggleImgEdit(){
-  var panel=document.getElementById('ze-img-panel');
-  var btn=document.getElementById('ze-img-edit-btn');
-  if(!panel)return;
-  var showing=panel.style.display!=='none';
-  panel.style.display=showing?'none':'block';
-  btn.style.background=showing?'':'var(--gold2)';btn.style.color=showing?'':'#fff';
-  // 현재 템플릿 이미지 미리보기 로드
-  if(!showing&&ZE.tplIdx>=0){
-    var tpl=S.frameTemplates[ZE.tplIdx];
-    if(tpl&&tpl.dataUrl){document.getElementById('ze-img-thumb').src=tpl.dataUrl;document.getElementById('ze-img-preview').style.display='block';}
-  }
-}
-function zeUploadImg(inp){
-  var f=inp.files[0];if(!f)return;
-  var r=new FileReader();
-  r.onload=function(e){
-    if(ZE.tplIdx>=0){
-      S.frameTemplates[ZE.tplIdx].dataUrl=e.target.result;
-      S.frameTemplates[ZE.tplIdx].generatedDetailPreview=false;
-      try{delete S.frameTemplates[ZE.tplIdx].generatedDetailPreview}catch(_){}
-      try{saveNow&&saveNow()}catch(_){}
-      ZE.img=new Image();ZE.img.onload=function(){zeRender();};ZE.img.src=e.target.result;
-      document.getElementById('ze-img-thumb').src=e.target.result;
-      document.getElementById('ze-img-preview').style.display='block';
-      toast('✓ 이미지 교체됨');
-    }
-  };r.readAsDataURL(f);
-}
-function zeDropImg(e){e.preventDefault();var f=e.dataTransfer.files[0];if(f){var dt=new DataTransfer();dt.items.add(f);document.getElementById('ze-img-inp').files=dt.files;zeUploadImg(document.getElementById('ze-img-inp'));}}
-function zeRemoveImg(){if(ZE.tplIdx>=0){S.frameTemplates[ZE.tplIdx].dataUrl=null;S.frameTemplates[ZE.tplIdx].generatedDetailPreview=false;try{delete S.frameTemplates[ZE.tplIdx].generatedDetailPreview}catch(_){};try{saveNow&&saveNow()}catch(_){}ZE.img=null;zeRender();document.getElementById('ze-img-preview').style.display='none';toast('이미지 제거됨');}}
 function zeSerializableZones(){return ZE.zones.map(function(z){var c=Object.assign({},z);delete c._hit;return c;});}
 function zeDefaultTexts(){return {main:ZP.main||'',name:ZP.name||'',date:ZP.date||'',sub:ZP.sub||''};}
 function saveZones(){S.frameTemplates[ZE.tplIdx].textZones=JSON.parse(JSON.stringify(zeSerializableZones()));S.frameTemplates[ZE.tplIdx].defaultTexts=zeDefaultTexts();closeZoneEditor();renderFTplsByCategory(curFCat);toast('✓ '+ZE.zones.length+'개 위치/기본문구 저장');}
