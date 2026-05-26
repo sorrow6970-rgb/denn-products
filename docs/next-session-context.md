@@ -34,6 +34,24 @@
 - **작업 전 사전 평가** (작업 분량/위험 요소/변경 위치) 먼저 보고
 - 가벼우면 바로 적용, 위험 있으면 승인 받고 진행
 
+### 진행 상황 (2026-05-26 기준)
+| 항목 | 상태 | 비고 |
+|---|---|---|
+| 기능부 (어드민 저장 + mockup-tool 본 캔버스 표시) | ✅ | `66f737d` 외 |
+| mockup-tool 시안 카드 썸네일 placeholder 강제 노출 | ✅ | `5f3fa74` — v37 CSS `!important` 잠금 돌파 |
+| 변경요청 1 — 이미지 수정 패널 제거 | ✅ | `4b79bb2` — ze-modal에서 중복 기능 제거 |
+| A1 어드민 카드 📷 뱃지 (본체 패치 → MutationObserver 전환) | ✅ | `1e3faeb` — wrap chain 의존 0 + 16px 골드 아웃라인 디자인 |
+| A3 어드민 가이드 모달 재진입 표시 | ✅ | 메모리는 stale, 실측 결과 이미 정상 작동 (코드 변경 0) |
+| A4 mockup-tool selFTplByRef 시안 전환 placeholder | ✅ | 메모리는 stale, 실측 결과 이미 정상 작동 (코드 변경 0) |
+| 변경요청 2 — "기본 이미지" + "작업용 가이드 이미지" UI 정돈 | ⏳ | 가이드 패널 컨트롤 추적 + 디자인 합의 필요 |
+| 변경요청 3 + A2 — 모달 미리보기 ON/OFF 토글 + 캔버스 overlay | ⏳ | 휘발성 토글 + zeRender 외부 overlay |
+
+### A1 회귀 원인 (메모 자산)
+- 본체 `renderFTplsByCategory` (L1345) 마지막 줄 패치 시도 → 후속 wrap 5단(L2976/L3014/L3230/L3295) 누적이 본체 호출 결과를 가로채면서 setTimeout 발사 0건
+- 사용자 verifier로 setTimeout hook → `calls:0`, `threw:null` → 호출 자체가 도달 못함 확인
+- MutationObserver(`#frame-tpl-grid-a` childList, subtree:false)로 우회 → wrap chain 의존 0, badge 부착은 손자 레벨이라 무한루프 0
+- **교훈**: wrap chain이 두꺼운 함수의 본체 패치는 신뢰 불가. observer/직접 hook이 self-closing.
+
 ---
 
 ## 작업 2 — 템플릿 색상/그림자 토글 활성화 조건 변경 (PC/모바일 공통)
