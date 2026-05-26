@@ -14285,6 +14285,16 @@ window.addEventListener('load',later);
 #ze-modal .ze-canvas-stage{margin:auto!important;min-height:100%!important;padding:0!important}
 #ze-modal #ze-canvas{margin:auto!important}
 </style>
+<style id="denn-v91-ze-card-unify-css">
+/* 작업 A: 우측 컨트롤 카드 스타일 통일 — "작업용 가이드 이미지" 카드(테두리 없는 형태) 기준.
+   액자 사이즈 / 기본 이미지 / 문구 필드 관리 카드의 외곽(border·background·padding)만 평탄화.
+   카드 간 간격(margin/gap)·내부 요소(업로드존·타이틀·힌트)·#ze-aux-grid 그룹 구분선은 유지. */
+#ze-modal .denn-v35-ze-size-card,
+#ze-modal .denn-aux-card,
+#ze-modal .denn-v363-field-manager{border:none!important;background:transparent!important;padding:0!important}
+/* 기본 이미지 ↔ 작업용 가이드 이미지 사이 얇은 구분선 (aux-grid 두 카드 정돈) */
+#ze-modal #ze-aux-grid .denn-v364-guide-panel{border-top:1px solid var(--bdr)!important;padding-top:8px!important;margin-top:0!important}
+</style>
 <script id="denn-current-detail-preview-stability">
 (function(){
 'use strict';
