@@ -559,9 +559,10 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
 <div class="ze-modal" id="ze-modal">
   <div class="ze-box">
     <div class="ze-header"><h2>📍 텍스트 위치 설정 — <span id="ze-tpl-name"></span></h2><div style="display:flex;gap:7px"><button class="tb-btn outline" onclick="saveZonesOnly()" style="font-size:10px;padding:5px 10px">📍 위치만 저장</button><button class="tb-btn primary" onclick="saveZones()">✓ 전체 저장</button><button class="tb-btn outline" onclick="closeZoneEditor()">✕</button></div></div>
-    <div id="ze-ph-panel" style="padding:12px;border-bottom:1px solid var(--bdr);background:var(--surf)"><div style="font-size:10px;color:var(--muted);margin-bottom:8px">🖼 기본 이미지 (고객이 사진 업로드 전 미리보기에 표시)</div><div class="up-zone" style="padding:10px" ondragover="evStop(event)" ondrop="zePhDropImg(event)"><input type="file" accept="image/png,image/jpeg,image/webp,.svg" id="ze-ph-inp" onchange="zePhUpload(this)"><div style="text-align:center;font-size:10.5px;color:var(--muted)">PNG / JPG / WebP — Firebase Storage에 업로드</div></div><div id="ze-ph-preview" style="margin-top:8px;display:none;align-items:center;gap:8px;flex-wrap:wrap"><img id="ze-ph-thumb" style="max-height:80px;max-width:120px;border-radius:4px;border:1px solid var(--bdr);object-fit:contain;background:#f4ede0;display:inline-block" alt="placeholder"><button onclick="zePhRemove()" style="font-size:9.5px;padding:3px 8px;border:1px solid var(--red);border-radius:4px;background:rgba(255,80,80,.08);color:var(--red);cursor:pointer">제거</button><span id="ze-ph-status" style="font-size:9.5px;color:var(--muted);flex:1;min-width:0;word-break:break-all"></span></div></div><div class="ze-body">
+    <div class="ze-body">
       <div class="ze-canvas-wrap"><div class="ze-canvas-stage"><div class="ze-zoom-bar"><span>미리보기 확대</span><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)-0.1)">－</button><input type="range" id="ze-preview-zoom" min="50" max="220" value="100" oninput="setZePreviewZoom(this.value/100)"><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)+0.1)">＋</button><button type="button" onclick="setZePreviewZoom(1)">100%</button><span id="ze-preview-zoom-v">100%</span><button type="button" id="ze-guide-toggle" class="ze-guide-btn on" onclick="toggleZeGridGuide()">가이드 ON</button></div><canvas id="ze-canvas" style="cursor:crosshair;border:2px solid var(--bdr);border-radius:5px;display:block"></canvas></div></div>
       <div class="ze-controls">
+        <div id="ze-aux-grid"><div id="ze-ph-panel" class="denn-aux-card"><div class="denn-aux-title">🖼 기본 이미지</div><div class="denn-aux-row"><div class="up-zone" ondragover="evStop(event)" ondrop="zePhDropImg(event)"><input type="file" accept="image/png,image/jpeg,image/webp,.svg" id="ze-ph-inp" onchange="zePhUpload(this)"><div style="text-align:center;font-size:9.5px;color:var(--muted);margin-top:4px">PNG / JPG / WebP — Storage 업로드</div></div><div id="ze-ph-preview" style="display:none;align-items:center;gap:8px"><img id="ze-ph-thumb" style="max-height:56px;max-width:80px;border-radius:4px;border:1px solid var(--bdr);object-fit:contain;background:#f4ede0;display:inline-block" alt="placeholder"><button onclick="zePhRemove()" style="font-size:9.5px;padding:3px 8px;border:1px solid var(--red);border-radius:4px;background:rgba(255,80,80,.08);color:var(--red);cursor:pointer">제거</button><span id="ze-ph-status" style="font-size:9px;color:var(--muted);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></div></div><div class="denn-aux-hint">고객이 사진 업로드 전 미리보기에 표시됩니다.</div></div></div>
         <div><div class="ze-label" style="font-size:11px;color:var(--txt);font-weight:600;margin-bottom:6px">타입 선택 → 캔버스 클릭</div>
           <button class="ze-type-btn active" data-key="main" onclick="setZT('main',this)"><div class="dot" style="background:#FF6B6B"></div>메인 문구</button>
           <button class="ze-type-btn" data-key="name" onclick="setZT('name',this)"><div class="dot" style="background:#60A5FA"></div>이름</button>
@@ -13353,6 +13354,23 @@ window.renderDennOrderRequestsV36=renderStableOrders;
 #ze-modal .denn-v364-guide-controls .tog{width:34px;height:19px;flex:0 0 auto}
 #ze-modal .denn-v364-guide-del{border:1px solid rgba(255,96,112,.55);background:rgba(255,80,80,.08);color:#ff8b96;border-radius:6px;height:30px;cursor:pointer}
 #ze-modal .denn-v364-guide-hint{font-size:8.8px;color:var(--muted);line-height:1.5;margin-top:6px}
+/* === ze-modal 광폭화 (캔버스 영역 최대 확보) === */
+#ze-modal .ze-box{width:1600px;max-width:calc(100vw - 48px);max-height:calc(100vh - 32px)}
+/* === 우측 컨트롤 패널 확장 (보조 이미지 카드 수용) === */
+#ze-modal .ze-controls{width:auto;flex:0 0 36%;min-width:360px;max-width:540px}
+/* === 보조 이미지 stack — 우측 컨트롤 최상단, 동일 카드 디자인 === */
+#ze-modal #ze-aux-grid{display:flex;flex-direction:column;gap:8px;padding:0 0 10px;margin:0 0 6px;border-bottom:1px solid var(--bdr)}
+#ze-modal .denn-aux-card{border:1px solid rgba(214,177,96,.36);background:rgba(8,7,18,.24);border-radius:10px;padding:9px 11px;min-width:0;display:flex;flex-direction:column;gap:7px}
+#ze-modal .denn-aux-card .denn-aux-title{font-size:10.5px;font-weight:800;color:var(--gold)}
+#ze-modal .denn-aux-card .denn-aux-hint{font-size:8.5px;color:var(--muted);line-height:1.45}
+/* 기본 이미지 카드 본문: 업로드 + 썸네일 가로 flex */
+#ze-modal #ze-ph-panel .denn-aux-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#ze-modal #ze-ph-panel .up-zone{flex:1;min-width:160px;border:1px dashed var(--gold2);background:rgba(214,177,96,.08);border-radius:7px;padding:7px;cursor:pointer}
+#ze-modal #ze-ph-panel .up-zone input[type="file"]{width:100%;font-size:9.5px;color:var(--muted);cursor:pointer}
+#ze-modal #ze-ph-panel #ze-ph-preview{margin:0;flex-wrap:wrap;flex:1 1 100%;border-top:1px dashed rgba(214,177,96,.18);padding-top:6px}
+/* 가이드 카드: 자체 padding/border 제거 (.denn-aux-card 스타일이 대신) */
+#ze-modal #ze-aux-grid .denn-v364-guide-panel{margin:0;border:none;background:transparent;padding:0}
+#ze-modal #ze-aux-grid .denn-v364-guide-actions{margin-top:2px}
 </style>
 <script id="denn-v36-4-frame-template-tools">
 (function(){
@@ -13536,17 +13554,27 @@ window.renderDennOrderRequestsV36=renderStableOrders;
   }
   function ensureGuides(t){if(!t)return[];if(!Array.isArray(t.editorOverlayImages))t.editorOverlayImages=[];return t.editorOverlayImages}
   function installGuidePanel(){
-    var controls=document.querySelector('#ze-modal .ze-controls');if(!controls)return;
+    // 우선 #ze-aux-grid에 부착. 없으면 fallback으로 .ze-controls에.
+    var auxGrid=by('ze-aux-grid');
+    var controls=document.querySelector('#ze-modal .ze-controls');
+    if(!auxGrid&&!controls)return;
     var panel=by('denn-v364-guide-panel');
     if(!panel){
       panel=document.createElement('div');
       panel.id='denn-v364-guide-panel';
-      panel.className='denn-v364-guide-panel';
-      panel.innerHTML='<div class="denn-v364-guide-title">작업용 가이드 이미지</div><div class="denn-v364-guide-actions"><input type="file" id="denn-v364-guide-file" accept="image/*" multiple style="display:none"><button type="button" id="denn-v364-guide-upload">가이드 이미지 업로드</button></div><div class="denn-v364-guide-list" id="denn-v364-guide-list"></div><div class="denn-v364-guide-hint">관리자 상세설정 미리보기에서만 보이며 고객 목업/저장 이미지에는 포함되지 않습니다.</div>';
-      var anchor=controls.querySelector('.denn-v363-field-manager');
-      if(anchor)anchor.parentNode.insertBefore(panel,anchor.nextSibling);else controls.insertBefore(panel,controls.firstChild);
+      panel.className='denn-v364-guide-panel denn-aux-card';
+      panel.innerHTML='<div class="denn-v364-guide-title denn-aux-title">🪟 작업용 가이드 이미지</div><div class="denn-v364-guide-actions"><input type="file" id="denn-v364-guide-file" accept="image/*" multiple style="display:none"><button type="button" id="denn-v364-guide-upload">가이드 이미지 업로드</button></div><div class="denn-v364-guide-list" id="denn-v364-guide-list"></div><div class="denn-v364-guide-hint denn-aux-hint">관리자 상세설정 미리보기에서만 보이며 고객 목업/저장 이미지에는 포함되지 않습니다.</div>';
+      if(auxGrid){
+        auxGrid.appendChild(panel);
+      }else{
+        var anchor=controls.querySelector('.denn-v363-field-manager');
+        if(anchor)anchor.parentNode.insertBefore(panel,anchor.nextSibling);else controls.insertBefore(panel,controls.firstChild);
+      }
       by('denn-v364-guide-upload').onclick=function(){var f=by('denn-v364-guide-file');if(f)f.click()};
       by('denn-v364-guide-file').onchange=function(){uploadGuides(this.files);this.value=''};
+    }else if(auxGrid&&panel.parentNode!==auxGrid){
+      // 이미 다른 곳(.ze-controls 등)에 부착돼 있으면 grid로 이동
+      auxGrid.appendChild(panel);
     }
     renderGuideList();
   }
@@ -13584,10 +13612,15 @@ window.renderDennOrderRequestsV36=renderStableOrders;
   }
   function syncGuideOverlay(){
     var ov=ensureGuideOverlay(),c=by('ze-canvas'),stage=document.querySelector('#ze-modal .ze-canvas-stage'),t=currentTpl();
-    if(!ov||!c||!stage||!t){if(ov)ov.innerHTML='';return}
+    if(!ov||!c||!stage||!t){if(ov){ov.innerHTML='';ov.__dennGuideSig=''}return}
     var sr=stage.getBoundingClientRect(),cr=c.getBoundingClientRect();
     ov.style.left=(cr.left-sr.left)+'px';ov.style.top=(cr.top-sr.top)+'px';ov.style.width=cr.width+'px';ov.style.height=cr.height+'px';
     var list=ensureGuides(t).filter(function(g){return g&&g.visible!==false&&g.dataUrl});
+    // === 깜빡임 방지: list/opacity 변화 없으면 innerHTML reset 금지 ===
+    // sig = 각 가이드의 dataUrl 끝 40자 + opacity. 동일하면 img DOM 그대로 두고 위치만 동기화.
+    var sig=list.map(function(g){return (g.dataUrl||'').slice(-40)+'|'+(g.opacity==null?55:g.opacity)}).join('||');
+    if(ov.__dennGuideSig===sig)return;
+    ov.__dennGuideSig=sig;
     ov.innerHTML=list.map(function(g){var op=Math.max(0,Math.min(100,Number(g.opacity==null?55:g.opacity)))/100;return '<img src="'+esc(g.dataUrl)+'" style="opacity:'+op+'">'}).join('');
   }
   function wrapAll(){
