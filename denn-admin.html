@@ -560,7 +560,7 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
   <div class="ze-box">
     <div class="ze-header"><h2>📍 텍스트 위치 설정 — <span id="ze-tpl-name"></span></h2><div style="display:flex;gap:7px"><button class="tb-btn outline" onclick="saveZonesOnly()" style="font-size:10px;padding:5px 10px">📍 위치만 저장</button><button class="tb-btn primary" onclick="saveZones()">✓ 전체 저장</button><button class="tb-btn outline" onclick="closeZoneEditor()">✕</button></div></div>
     <div class="ze-body">
-      <div class="ze-canvas-wrap"><div class="ze-canvas-stage"><div class="ze-zoom-bar"><span>미리보기 확대</span><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)-0.1)">－</button><input type="range" id="ze-preview-zoom" min="50" max="220" value="100" oninput="setZePreviewZoom(this.value/100)"><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)+0.1)">＋</button><button type="button" onclick="setZePreviewZoom(1)">100%</button><span id="ze-preview-zoom-v">100%</span><button type="button" id="ze-guide-toggle" class="ze-guide-btn on" onclick="toggleZeGridGuide()">가이드 ON</button></div><canvas id="ze-canvas" style="cursor:crosshair;border:2px solid var(--bdr);border-radius:5px;display:block"></canvas></div></div>
+      <div class="ze-canvas-col"><div class="ze-zoom-bar"><span>미리보기 확대</span><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)-0.1)">－</button><input type="range" id="ze-preview-zoom" min="50" max="220" value="100" oninput="setZePreviewZoom(this.value/100)"><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)+0.1)">＋</button><button type="button" onclick="setZePreviewZoom(1)">100%</button><span id="ze-preview-zoom-v">100%</span><button type="button" id="ze-guide-toggle" class="ze-guide-btn on" onclick="toggleZeGridGuide()">가이드 ON</button></div><div class="ze-canvas-wrap"><div class="ze-canvas-stage"><canvas id="ze-canvas" style="cursor:crosshair;border:2px solid var(--bdr);border-radius:5px;display:block"></canvas></div></div></div>
       <div class="ze-controls">
         <div id="ze-aux-grid"><div id="ze-ph-panel" class="denn-aux-card"><div class="denn-aux-title-row"><span class="denn-aux-title">🖼 기본 이미지</span><div class="tog on" id="ze-aux-ph-toggle" title="미리보기에 기본 이미지 표시"></div></div><div class="denn-aux-row"><div class="up-zone" ondragover="evStop(event)" ondrop="zePhDropImg(event)"><input type="file" accept="image/png,image/jpeg,image/webp,.svg" id="ze-ph-inp" onchange="zePhUpload(this)"><div style="text-align:center;font-size:9.5px;color:var(--muted);margin-top:4px">PNG / JPG / WebP — Storage 업로드</div></div><div id="ze-ph-preview" style="display:none;align-items:center;gap:8px"><img id="ze-ph-thumb" style="max-height:56px;max-width:80px;border-radius:4px;border:1px solid var(--bdr);object-fit:contain;background:#f4ede0;display:inline-block" alt="placeholder"><button onclick="zePhRemove()" style="font-size:9.5px;padding:3px 8px;border:1px solid var(--red);border-radius:4px;background:rgba(255,80,80,.08);color:var(--red);cursor:pointer">제거</button><span id="ze-ph-status" style="font-size:9px;color:var(--muted);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></div></div><div class="denn-aux-hint">고객이 사진 업로드 전 미리보기에 표시됩니다.</div></div></div>
         <div><div class="ze-label" style="font-size:11px;color:var(--txt);font-weight:600;margin-bottom:6px">타입 선택 → 캔버스 클릭</div>
@@ -14271,6 +14271,19 @@ window.addEventListener('load',later);
 #ze-modal.denn-current-detail-settling .ze-canvas-wrap,
 #ze-modal.denn-current-detail-settling .ze-canvas-stage,
 #ze-modal.denn-current-detail-settling #ze-canvas{transition:none!important;animation:none!important}
+</style>
+<style id="denn-v90-ze-canvas-center-css">
+/* 작업 B: 줌바 분리(.ze-canvas-col 고정) + 캔버스 중앙정렬(overflow-safe) + placeholder 자락 4면 대칭.
+   기존 ze CSS 전부보다 뒤 → 동일 specificity+!important 충돌에서 최후순위 승리.
+   v88(가로스크롤)/v89(렌더안정성) 가드: stage의 width/min-width/flex 미접촉.
+   옵션(d): stage가 wrap 뷰포트를 채우고(min-height:100%, padding 제거) 캔버스를 그 안에서 margin:auto로 중앙정렬
+   → placeholder overlay(=stage=뷰포트)의 잘림 자락이 캔버스 중심 4면 대칭으로 펴짐(휠 확대 시 비례, 한도=보이는 뷰포트).
+   캔버스 margin:auto는 overflow(큰 줌) 시 0으로 폴백 → 상단 잘림 없음(v89 세로스크롤 가드 유지). */
+#ze-modal .ze-canvas-col{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--surf)}
+#ze-modal .ze-canvas-col>.ze-zoom-bar{position:static;flex:0 0 auto;align-self:center;margin:10px 0 0;z-index:auto;background:rgba(28,27,43,.92);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid var(--bdr);border-radius:8px;padding:6px 8px}
+#ze-modal .ze-canvas-wrap{flex:1;display:flex!important;flex-direction:column;overflow:auto}
+#ze-modal .ze-canvas-stage{margin:auto!important;min-height:100%!important;padding:0!important}
+#ze-modal #ze-canvas{margin:auto!important}
 </style>
 <script id="denn-current-detail-preview-stability">
 (function(){
