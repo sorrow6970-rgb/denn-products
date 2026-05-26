@@ -8935,13 +8935,18 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
     var cLeft=cr.left-sr.left,cTop=cr.top-sr.top,cW=cr.width,cH=cr.height;
     // 모달 opening 중(rAF 전, display:none 상태)이면 canvas rect 0 → sig 박지 말고 후속 호출에 위임
     if(cW<2||cH<2)return;
+    // 사용자 transform (개선 2: placeholder 이미지 조작)
+    var userX=Number(t.placeholderOffsetX)||0;
+    var userY=Number(t.placeholderOffsetY)||0;
+    var userScale=Number(t.placeholderScale);if(!(userScale>0))userScale=1;
     getPhDims(url,function(dim){
       if(!dim.w||!dim.h){ov.innerHTML='';ov.__dennPhSig='';return}
-      // cover 계산: canvas 영역을 비율 유지하면서 빈 공간 없이 채움 → 일부 잘림
-      var scale=Math.max(cW/dim.w,cH/dim.h);
-      var drawW=dim.w*scale,drawH=dim.h*scale;
-      var drawX=cLeft+(cW-drawW)/2,drawY=cTop+(cH-drawH)/2;
-      var sig=url+'|'+Math.round(cLeft)+'|'+Math.round(cTop)+'|'+Math.round(cW)+'|'+Math.round(cH);
+      // cover 계산 (base) → 사용자 scale/offset 적용
+      var baseScale=Math.max(cW/dim.w,cH/dim.h);
+      var finalScale=baseScale*userScale;
+      var drawW=dim.w*finalScale,drawH=dim.h*finalScale;
+      var drawX=cLeft+(cW-drawW)/2+userX,drawY=cTop+(cH-drawH)/2+userY;
+      var sig=url+'|'+Math.round(cLeft)+'|'+Math.round(cTop)+'|'+Math.round(cW)+'|'+Math.round(cH)+'|'+Math.round(userX)+'|'+Math.round(userY)+'|'+userScale.toFixed(3);
       if(ov.__dennPhSig===sig)return;
       ov.__dennPhSig=sig;
       // style attribute가 "로 감싸지므로 url()은 '로 감싸야 충돌 없음. URL 내부의 '도 percent-encode.
@@ -8957,6 +8962,117 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
     });
   }
   window.dennSyncPhOverlay=syncPhOverlay;
+
+  // === 개선 2: placeholder 이미지 조작 (pan + zoom) + addZone 모드 분리 ===
+  // 휘발성 상태(모드)는 ZE.editMode, 영구 저장은 t.placeholderOffsetX/Y/Scale
+  function curEditTpl(){var idx=window.ZE&&ZE.tplIdx;if(idx==null)return null;return ((window.S&&S.frameTemplates)||[])[idx]||null}
+  var phSaveTimer=null;
+  function debouncedPhSave(){clearTimeout(phSaveTimer);phSaveTimer=setTimeout(function(){try{persistAll()}catch(_){}},220)}
+  function updatePhCursor(){
+    if(!window.ZE||!ZE.canvas)return;
+    if(ZE.editMode==='addZone')ZE.canvas.style.cursor='cell';
+    else if(ZE.phPanning)ZE.canvas.style.cursor='grabbing';
+    else ZE.canvas.style.cursor='grab';
+  }
+  function clientToCanvas(e){
+    if(!ZE||!ZE.canvas)return null;
+    var r=ZE.canvas.getBoundingClientRect();
+    return{x:(e.clientX-r.left)*(ZE.canvas.width/r.width),y:(e.clientY-r.top)*(ZE.canvas.height/r.height)};
+  }
+  function onPhMouseDown(e){
+    if(!window.ZE||!ZE.canvas)return;
+    if(ZE.editMode==='addZone')return; // 기존 zone 생성 흐름 위임
+    var p=clientToCanvas(e);if(!p)return;
+    // zone hit이면 기존 zone 드래그 위임 (placeholder pan 안 함)
+    if(typeof window.zeHitZone==='function'&&window.zeHitZone(p.x,p.y)>=0)return;
+    var t=curEditTpl();if(!t||!t.placeholderImageUrl)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    ZE.phPanning=true;
+    ZE.phPanStart={cx:e.clientX,cy:e.clientY,ox:Number(t.placeholderOffsetX)||0,oy:Number(t.placeholderOffsetY)||0};
+    updatePhCursor();
+  }
+  function onPhMouseMove(e){
+    if(!window.ZE||!ZE.phPanning)return;
+    var t=curEditTpl();if(!t)return;
+    var dx=e.clientX-ZE.phPanStart.cx,dy=e.clientY-ZE.phPanStart.cy;
+    t.placeholderOffsetX=ZE.phPanStart.ox+dx;
+    t.placeholderOffsetY=ZE.phPanStart.oy+dy;
+    syncPhOverlay();
+  }
+  function onPhMouseUp(){
+    if(!window.ZE||!ZE.phPanning)return;
+    ZE.phPanning=false;updatePhCursor();
+    try{persistAll()}catch(_){}
+  }
+  function onPhWheel(e){
+    if(!window.ZE||!ZE.canvas)return;
+    if(ZE.editMode==='addZone')return;
+    var t=curEditTpl();if(!t||!t.placeholderImageUrl)return;
+    e.preventDefault();
+    var cur=Number(t.placeholderScale);if(!(cur>0))cur=1;
+    var delta=e.deltaY>0?-0.08:0.08;
+    t.placeholderScale=Math.max(0.3,Math.min(5,cur+delta));
+    syncPhOverlay();debouncedPhSave();
+  }
+  function onPhDblClick(e){
+    if(!window.ZE)return;
+    if(ZE.editMode==='addZone')return;
+    var t=curEditTpl();if(!t)return;
+    t.placeholderOffsetX=0;t.placeholderOffsetY=0;t.placeholderScale=1;
+    syncPhOverlay();try{persistAll()}catch(_){}
+  }
+  function clearTypeBtnActive(){
+    try{document.querySelectorAll('.ze-type-btn').forEach(function(b){b.classList.remove('active')})}catch(_){}
+  }
+  function onPhClick(e){
+    if(!window.ZE||!ZE.canvas)return;
+    if(ZE.editMode==='addZone'){
+      // 기존 onclick 그대로 발사 → zone 생성 → 다음 tick에 모드 복귀 + type-btn active 해제
+      setTimeout(function(){if(window.ZE){ZE.editMode='placeholder';updatePhCursor();clearTypeBtnActive()}},0);
+      return;
+    }
+    // placeholder 모드: zone hit이면 기존 setZT 위임, 아니면 차단 (zone 생성 금지)
+    var p=clientToCanvas(e);if(!p)return;
+    if(typeof window.zeHitZone==='function'&&window.zeHitZone(p.x,p.y)>=0)return;
+    e.preventDefault();e.stopImmediatePropagation();
+  }
+  var phDocBound=false;
+  function installPhPanHandlers(){
+    if(!window.ZE||!ZE.canvas)return;
+    if(!ZE.canvas.__dennPhPanBound){
+      ZE.canvas.__dennPhPanBound=true;
+      ZE.canvas.addEventListener('mousedown',onPhMouseDown,true);
+      ZE.canvas.addEventListener('click',onPhClick,true);
+      ZE.canvas.addEventListener('wheel',onPhWheel,{passive:false});
+      ZE.canvas.addEventListener('dblclick',onPhDblClick);
+    }
+    if(!phDocBound){
+      phDocBound=true;
+      document.addEventListener('mousemove',onPhMouseMove);
+      document.addEventListener('mouseup',onPhMouseUp);
+    }
+    updatePhCursor();
+  }
+  // setZT wrap: 버튼(el 존재) 클릭 시 addZone 모드 진입. zone 선택(el=null) 시 active 표시 해제.
+  // 원본 setZT가 항상 type-btn active 토글하므로, placeholder 모드에서는 wrap에서 active 다시 해제.
+  function installSetZTHook(){
+    if(typeof window.setZT!=='function'||window.setZT.__dennAddZone)return;
+    var orig=window.setZT;
+    window.setZT=function(key,el){
+      var r=orig.apply(this,arguments);
+      if(el&&window.ZE){
+        // 버튼 클릭 → addZone 모드 진입 (active 표시는 원본이 set한 그대로 유지)
+        ZE.editMode='addZone';
+        updatePhCursor();
+        try{if(typeof window.toast==='function')window.toast('캔버스 클릭으로 '+key+' 위치 지정')}catch(_){}
+      }else{
+        // el null = zone hit 자동 호출 → ZE.activeType는 갱신되되 type-btn active는 해제 (placeholder 모드 유지)
+        clearTypeBtnActive();
+      }
+      return r;
+    };
+    window.setZT.__dennAddZone=true;
+  }
 
   // === 개선 1: 정렬 가이드 SVG overlay (3분할 + 중앙 십자 + 안전영역) ===
   // 기존 canvas 격자(drawZeCenterGuides/drawSafeGuides/drawDetailGrid)는 ZE.gridGuide=false로 자동 OFF.
@@ -9049,6 +9165,9 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
       window.__dennAuxToggles.guide=true;
       // 기존 canvas 격자 비활성 + 새 정렬 가이드 ON 기본
       if(window.ZE){window.ZE.gridGuide=false;if(window.ZE.alignGuide==null)window.ZE.alignGuide=true}
+      // 개선 2: 모달 열 때 편집 모드 placeholder로 리셋 + pan flag clear + type-btn active 해제
+      if(window.ZE){window.ZE.editMode='placeholder';window.ZE.phPanning=false}
+      try{document.querySelectorAll('.ze-type-btn').forEach(function(b){b.classList.remove('active')})}catch(_){}
       // 1500/2500ms 추가: modal opening rAF x2 + classList.add('open') 완료 후 보장 시점
       [0,80,220,500,900,1500,2500].forEach(function(ms){
         setTimeout(function(){
@@ -9059,6 +9178,9 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
           try{installGridGuideToggleHook()}catch(_){};
           try{if(typeof window.syncZeGridGuideButton==='function')window.syncZeGridGuideButton()}catch(_){};
           try{syncGridOverlay()}catch(_){};
+          try{installPhPanHandlers()}catch(_){};
+          try{installSetZTHook()}catch(_){};
+          try{if(window.ZE&&ZE.editMode==='placeholder')clearTypeBtnActive()}catch(_){};
         },ms);
       });
       return r;
