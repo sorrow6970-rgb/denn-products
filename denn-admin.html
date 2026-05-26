@@ -8955,23 +8955,88 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
     });
   }
   window.dennSyncPhOverlay=syncPhOverlay;
+
+  // === 개선 1: 정렬 가이드 SVG overlay (3분할 + 중앙 십자 + 안전영역) ===
+  // 기존 canvas 격자(drawZeCenterGuides/drawSafeGuides/drawDetailGrid)는 ZE.gridGuide=false로 자동 OFF.
+  // 새 SVG overlay는 ZE.alignGuide로 ON/OFF (기존 #ze-guide-toggle 재활용).
+  function ensureGridOverlay(){
+    var stage=document.querySelector('#ze-modal .ze-canvas-stage');if(!stage)return null;
+    var ov=by('denn-grid-overlay');
+    if(!ov){ov=document.createElement('div');ov.id='denn-grid-overlay';stage.appendChild(ov)}
+    return ov;
+  }
+  function syncGridOverlay(){
+    var ov=ensureGridOverlay();if(!ov)return;
+    if(window.ZE&&window.ZE.alignGuide===false){ov.classList.add('is-off');return}
+    ov.classList.remove('is-off');
+    var c=by('ze-canvas'),stage=document.querySelector('#ze-modal .ze-canvas-stage');
+    if(!c||!stage){ov.innerHTML='';ov.__dennGridSig='';return}
+    var sr=stage.getBoundingClientRect(),cr=c.getBoundingClientRect();
+    var cLeft=cr.left-sr.left,cTop=cr.top-sr.top,cW=cr.width,cH=cr.height;
+    if(cW<2||cH<2){ov.innerHTML='';ov.__dennGridSig='';return}
+    ov.style.left=cLeft+'px';ov.style.top=cTop+'px';ov.style.width=cW+'px';ov.style.height=cH+'px';
+    // sig 비교 — 캔버스 사이즈 변화 없으면 SVG 재생성 skip (깜빡임 방지)
+    var sig=Math.round(cW)+'x'+Math.round(cH);
+    if(ov.__dennGridSig===sig)return;
+    ov.__dennGridSig=sig;
+    var safe=Math.max(6,Math.round(Math.min(cW,cH)*.045));
+    var x1=cW/3,x2=cW*2/3,y1=cH/3,y2=cH*2/3,cx=cW/2,cy=cH/2;
+    ov.innerHTML='<svg width="'+cW+'" height="'+cH+'" style="position:absolute;left:0;top:0;display:block">'+
+      // 3분할선 (rule of thirds)
+      '<line x1="'+x1+'" y1="0" x2="'+x1+'" y2="'+cH+'" stroke="white" stroke-opacity=".55" stroke-width="1"/>'+
+      '<line x1="'+x2+'" y1="0" x2="'+x2+'" y2="'+cH+'" stroke="white" stroke-opacity=".55" stroke-width="1"/>'+
+      '<line x1="0" y1="'+y1+'" x2="'+cW+'" y2="'+y1+'" stroke="white" stroke-opacity=".55" stroke-width="1"/>'+
+      '<line x1="0" y1="'+y2+'" x2="'+cW+'" y2="'+y2+'" stroke="white" stroke-opacity=".55" stroke-width="1"/>'+
+      // 중앙 십자선 (강조)
+      '<line x1="'+cx+'" y1="0" x2="'+cx+'" y2="'+cH+'" stroke="white" stroke-opacity=".7" stroke-width="1"/>'+
+      '<line x1="0" y1="'+cy+'" x2="'+cW+'" y2="'+cy+'" stroke="white" stroke-opacity=".7" stroke-width="1"/>'+
+      // 안전영역 박스 (액자 사이즈 비례 4.5% 마진)
+      '<rect x="'+safe+'" y="'+safe+'" width="'+(cW-safe*2)+'" height="'+(cH-safe*2)+'" stroke="rgba(255,200,80,.6)" stroke-width="1" stroke-dasharray="5,4" fill="none"/>'+
+      '</svg>';
+  }
+  window.dennSyncGridOverlay=syncGridOverlay;
+  // 토글 hook: 기존 toggleZeGridGuide / syncZeGridGuideButton를 alignGuide 기반으로 재배선.
+  // 기존 ZE.gridGuide는 항상 false 유지 (canvas 격자 자동 OFF), ZE.alignGuide만 토글.
+  function installGridGuideToggleHook(){
+    if(typeof window.toggleZeGridGuide==='function'&&!window.toggleZeGridGuide.__dennAlignGuide){
+      window.toggleZeGridGuide=function(){
+        if(!window.ZE)return;
+        window.ZE.gridGuide=false;
+        window.ZE.alignGuide=window.ZE.alignGuide===false;
+        if(typeof window.syncZeGridGuideButton==='function')window.syncZeGridGuideButton();
+        syncGridOverlay();
+        try{if(typeof window.zeRender==='function')window.zeRender()}catch(_){}
+      };
+      window.toggleZeGridGuide.__dennAlignGuide=true;
+    }
+    if(typeof window.syncZeGridGuideButton==='function'&&!window.syncZeGridGuideButton.__dennAlignGuide){
+      window.syncZeGridGuideButton=function(){
+        var btn=by('ze-guide-toggle');if(!btn)return;
+        var on=!window.ZE||window.ZE.alignGuide!==false;
+        btn.classList.toggle('on',on);
+        btn.textContent=on?'가이드 ON':'가이드 OFF';
+      };
+      window.syncZeGridGuideButton.__dennAlignGuide=true;
+    }
+  }
+
   function bindPhToggle(){
     var btn=by('ze-aux-ph-toggle');if(!btn||btn.__dennBound)return;btn.__dennBound=true;
     btn.classList.toggle('on',!!window.__dennAuxToggles.ph);
     btn.onclick=function(){window.__dennAuxToggles.ph=!window.__dennAuxToggles.ph;btn.classList.toggle('on',window.__dennAuxToggles.ph);syncPhOverlay()};
   }
-  // zeRender / setZePreviewZoom wrap — overlay 위치/크기 동기화
+  // zeRender / setZePreviewZoom wrap — overlay 위치/크기 동기화 (placeholder + grid 같이)
   var oldZeR=window.zeRender;
   if(typeof oldZeR==='function'&&!oldZeR.__dennPhOverlay){
-    window.zeRender=function(){var r=oldZeR.apply(this,arguments);try{syncPhOverlay()}catch(_){}return r};
+    window.zeRender=function(){var r=oldZeR.apply(this,arguments);try{syncPhOverlay()}catch(_){};try{syncGridOverlay()}catch(_){};return r};
     window.zeRender.__dennPhOverlay=true;
   }
   var oldZeZ=window.setZePreviewZoom;
   if(typeof oldZeZ==='function'&&!oldZeZ.__dennPhOverlay){
-    window.setZePreviewZoom=function(){var r=oldZeZ.apply(this,arguments);try{syncPhOverlay()}catch(_){}return r};
+    window.setZePreviewZoom=function(){var r=oldZeZ.apply(this,arguments);try{syncPhOverlay()}catch(_){};try{syncGridOverlay()}catch(_){};return r};
     window.setZePreviewZoom.__dennPhOverlay=true;
   }
-  window.addEventListener('resize',function(){try{syncPhOverlay()}catch(_){}});
+  window.addEventListener('resize',function(){try{syncPhOverlay()}catch(_){};try{syncGridOverlay()}catch(_){}});
 
   var orig=window.openZoneEditor;
   if(typeof orig==='function'){
@@ -8980,12 +9045,17 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
       // 모달 열 때 두 마스터 토글 ON으로 리셋 (저장 무관)
       window.__dennAuxToggles.ph=true;
       window.__dennAuxToggles.guide=true;
+      // 기존 canvas 격자 비활성 + 새 정렬 가이드 ON 기본
+      if(window.ZE){window.ZE.gridGuide=false;if(window.ZE.alignGuide==null)window.ZE.alignGuide=true}
       [0,80,220,500,900].forEach(function(ms){
         setTimeout(function(){
           try{refreshPreview()}catch(_){};
           try{refreshGuideForced()}catch(_){};
           try{bindPhToggle()}catch(_){};
           try{syncPhOverlay()}catch(_){};
+          try{installGridGuideToggleHook()}catch(_){};
+          try{if(typeof window.syncZeGridGuideButton==='function')window.syncZeGridGuideButton()}catch(_){};
+          try{syncGridOverlay()}catch(_){};
         },ms);
       });
       return r;
@@ -13457,6 +13527,9 @@ window.renderDennOrderRequestsV36=renderStableOrders;
 #ze-modal .denn-aux-title-row .tog{flex:0 0 auto;width:34px;height:19px}
 /* === A2: placeholder overlay (가이드 아래, 캔버스 본체 아래) === */
 #ze-modal #denn-ph-overlay{position:absolute;pointer-events:none;z-index:1;overflow:hidden;border-radius:5px}
+/* === 개선 1: 정렬 가이드 SVG overlay (3분할 + 십자 + 안전영역). z-index 2: 가이드 overlay와 같지만 DOM 마지막이라 위로 stacking === */
+#ze-modal #denn-grid-overlay{position:absolute;pointer-events:none;z-index:2;overflow:hidden}
+#ze-modal #denn-grid-overlay.is-off{display:none}
 #ze-modal #denn-ph-overlay img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
 /* === 마스터 토글 OFF 상태: overlay 숨김 === */
 #ze-modal #denn-ph-overlay.is-off,#ze-modal #denn-v364-guide-overlay.is-off{display:none}
