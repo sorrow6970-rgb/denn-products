@@ -8933,6 +8933,8 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
     ov.style.left='0';ov.style.top='0';ov.style.width='100%';ov.style.height='100%';
     var sr=stage.getBoundingClientRect(),cr=c.getBoundingClientRect();
     var cLeft=cr.left-sr.left,cTop=cr.top-sr.top,cW=cr.width,cH=cr.height;
+    // 모달 opening 중(rAF 전, display:none 상태)이면 canvas rect 0 → sig 박지 말고 후속 호출에 위임
+    if(cW<2||cH<2)return;
     getPhDims(url,function(dim){
       if(!dim.w||!dim.h){ov.innerHTML='';ov.__dennPhSig='';return}
       // cover 계산: canvas 영역을 비율 유지하면서 빈 공간 없이 채움 → 일부 잘림
@@ -9005,7 +9007,7 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
         window.ZE.alignGuide=window.ZE.alignGuide===false;
         if(typeof window.syncZeGridGuideButton==='function')window.syncZeGridGuideButton();
         syncGridOverlay();
-        try{if(typeof window.zeRender==='function')window.zeRender()}catch(_){}
+        // zeRender 호출 제거 — alignGuide는 SVG overlay만 영향. zeRender 호출 시 placeholder/가이드까지 강제 재동기화되는 사이드 이펙트 차단.
       };
       window.toggleZeGridGuide.__dennAlignGuide=true;
     }
@@ -9047,7 +9049,8 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
       window.__dennAuxToggles.guide=true;
       // 기존 canvas 격자 비활성 + 새 정렬 가이드 ON 기본
       if(window.ZE){window.ZE.gridGuide=false;if(window.ZE.alignGuide==null)window.ZE.alignGuide=true}
-      [0,80,220,500,900].forEach(function(ms){
+      // 1500/2500ms 추가: modal opening rAF x2 + classList.add('open') 완료 후 보장 시점
+      [0,80,220,500,900,1500,2500].forEach(function(ms){
         setTimeout(function(){
           try{refreshPreview()}catch(_){};
           try{refreshGuideForced()}catch(_){};
