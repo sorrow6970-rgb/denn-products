@@ -562,7 +562,7 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
     <div class="ze-body">
       <div class="ze-canvas-wrap"><div class="ze-canvas-stage"><div class="ze-zoom-bar"><span>미리보기 확대</span><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)-0.1)">－</button><input type="range" id="ze-preview-zoom" min="50" max="220" value="100" oninput="setZePreviewZoom(this.value/100)"><button type="button" onclick="setZePreviewZoom((window.ZE&&ZE.previewZoom||1)+0.1)">＋</button><button type="button" onclick="setZePreviewZoom(1)">100%</button><span id="ze-preview-zoom-v">100%</span><button type="button" id="ze-guide-toggle" class="ze-guide-btn on" onclick="toggleZeGridGuide()">가이드 ON</button></div><canvas id="ze-canvas" style="cursor:crosshair;border:2px solid var(--bdr);border-radius:5px;display:block"></canvas></div></div>
       <div class="ze-controls">
-        <div id="ze-aux-grid"><div id="ze-ph-panel" class="denn-aux-card"><div class="denn-aux-title">🖼 기본 이미지</div><div class="denn-aux-row"><div class="up-zone" ondragover="evStop(event)" ondrop="zePhDropImg(event)"><input type="file" accept="image/png,image/jpeg,image/webp,.svg" id="ze-ph-inp" onchange="zePhUpload(this)"><div style="text-align:center;font-size:9.5px;color:var(--muted);margin-top:4px">PNG / JPG / WebP — Storage 업로드</div></div><div id="ze-ph-preview" style="display:none;align-items:center;gap:8px"><img id="ze-ph-thumb" style="max-height:56px;max-width:80px;border-radius:4px;border:1px solid var(--bdr);object-fit:contain;background:#f4ede0;display:inline-block" alt="placeholder"><button onclick="zePhRemove()" style="font-size:9.5px;padding:3px 8px;border:1px solid var(--red);border-radius:4px;background:rgba(255,80,80,.08);color:var(--red);cursor:pointer">제거</button><span id="ze-ph-status" style="font-size:9px;color:var(--muted);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></div></div><div class="denn-aux-hint">고객이 사진 업로드 전 미리보기에 표시됩니다.</div></div></div>
+        <div id="ze-aux-grid"><div id="ze-ph-panel" class="denn-aux-card"><div class="denn-aux-title-row"><span class="denn-aux-title">🖼 기본 이미지</span><div class="tog on" id="ze-aux-ph-toggle" title="미리보기에 기본 이미지 표시"></div></div><div class="denn-aux-row"><div class="up-zone" ondragover="evStop(event)" ondrop="zePhDropImg(event)"><input type="file" accept="image/png,image/jpeg,image/webp,.svg" id="ze-ph-inp" onchange="zePhUpload(this)"><div style="text-align:center;font-size:9.5px;color:var(--muted);margin-top:4px">PNG / JPG / WebP — Storage 업로드</div></div><div id="ze-ph-preview" style="display:none;align-items:center;gap:8px"><img id="ze-ph-thumb" style="max-height:56px;max-width:80px;border-radius:4px;border:1px solid var(--bdr);object-fit:contain;background:#f4ede0;display:inline-block" alt="placeholder"><button onclick="zePhRemove()" style="font-size:9.5px;padding:3px 8px;border:1px solid var(--red);border-radius:4px;background:rgba(255,80,80,.08);color:var(--red);cursor:pointer">제거</button><span id="ze-ph-status" style="font-size:9px;color:var(--muted);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></div></div><div class="denn-aux-hint">고객이 사진 업로드 전 미리보기에 표시됩니다.</div></div></div>
         <div><div class="ze-label" style="font-size:11px;color:var(--txt);font-weight:600;margin-bottom:6px">타입 선택 → 캔버스 클릭</div>
           <button class="ze-type-btn active" data-key="main" onclick="setZT('main',this)"><div class="dot" style="background:#FF6B6B"></div>메인 문구</button>
           <button class="ze-type-btn" data-key="name" onclick="setZT('name',this)"><div class="dot" style="background:#60A5FA"></div>이름</button>
@@ -8903,12 +8903,90 @@ window.dennRollbackCanonicalSaveDetailV56=function(){alert('v56 정리 패치는
     toastMsg('기본 이미지 제거됨');
     if(oldPath&&window.dennFirebase&&window.dennFirebase.deletePath)window.dennFirebase.deletePath(oldPath);
   };
+  // === A2 + 변경요청 3: placeholder overlay + 마스터 토글 ===
+  // 휘발성 상태 (전역 공유 — 가이드 IIFE도 읽음). 모달 열 때 ON으로 리셋.
+  if(window.__dennAuxToggles==null)window.__dennAuxToggles={ph:true,guide:true};
+  function ensurePhOverlay(){
+    var stage=document.querySelector('#ze-modal .ze-canvas-stage');if(!stage)return null;
+    var ov=by('denn-ph-overlay');
+    if(!ov){ov=document.createElement('div');ov.id='denn-ph-overlay';stage.appendChild(ov)}
+    return ov;
+  }
+  // 이미지 원본 dim cache (cover 계산용)
+  var phImgDims=Object.create(null);
+  function getPhDims(url,cb){
+    var d=phImgDims[url];
+    if(d){cb(d);return}
+    var im=new Image();
+    im.onload=function(){phImgDims[url]={w:im.naturalWidth,h:im.naturalHeight};cb(phImgDims[url])};
+    im.onerror=function(){phImgDims[url]={w:0,h:0};cb(phImgDims[url])};
+    im.src=url;
+  }
+  function syncPhOverlay(){
+    var ov=ensurePhOverlay();if(!ov)return;
+    if(!window.__dennAuxToggles.ph){ov.classList.add('is-off');return}
+    ov.classList.remove('is-off');
+    var t=curTpl(),c=by('ze-canvas'),stage=document.querySelector('#ze-modal .ze-canvas-stage');
+    if(!c||!stage||!t||!t.placeholderImageUrl){ov.innerHTML='';ov.__dennPhSig='';return}
+    var url=t.placeholderImageUrl;
+    // ov는 stage 전체 (잘림 영역 표시 위해 canvas 영역만이 아님)
+    ov.style.left='0';ov.style.top='0';ov.style.width='100%';ov.style.height='100%';
+    var sr=stage.getBoundingClientRect(),cr=c.getBoundingClientRect();
+    var cLeft=cr.left-sr.left,cTop=cr.top-sr.top,cW=cr.width,cH=cr.height;
+    getPhDims(url,function(dim){
+      if(!dim.w||!dim.h){ov.innerHTML='';ov.__dennPhSig='';return}
+      // cover 계산: canvas 영역을 비율 유지하면서 빈 공간 없이 채움 → 일부 잘림
+      var scale=Math.max(cW/dim.w,cH/dim.h);
+      var drawW=dim.w*scale,drawH=dim.h*scale;
+      var drawX=cLeft+(cW-drawW)/2,drawY=cTop+(cH-drawH)/2;
+      var sig=url+'|'+Math.round(cLeft)+'|'+Math.round(cTop)+'|'+Math.round(cW)+'|'+Math.round(cH);
+      if(ov.__dennPhSig===sig)return;
+      ov.__dennPhSig=sig;
+      // style attribute가 "로 감싸지므로 url()은 '로 감싸야 충돌 없음. URL 내부의 '도 percent-encode.
+      var safe=url.replace(/"/g,'%22').replace(/'/g,'%27');
+      var bg="background:url('"+safe+"') 0 0/100% 100% no-repeat";
+      // outer: stage 영역에서 placeholder 전체 크기/위치 (canvas 밖 영역 포함), opacity 0.3
+      // inner clip: canvas 영역만, overflow:hidden, 안에 같은 cover (opacity 1.0)
+      ov.innerHTML=
+        '<div style="position:absolute;left:'+drawX+'px;top:'+drawY+'px;width:'+drawW+'px;height:'+drawH+'px;opacity:.3;'+bg+'"></div>'+
+        '<div style="position:absolute;left:'+cLeft+'px;top:'+cTop+'px;width:'+cW+'px;height:'+cH+'px;overflow:hidden">'+
+          '<div style="position:absolute;left:'+(drawX-cLeft)+'px;top:'+(drawY-cTop)+'px;width:'+drawW+'px;height:'+drawH+'px;'+bg+'"></div>'+
+        '</div>';
+    });
+  }
+  window.dennSyncPhOverlay=syncPhOverlay;
+  function bindPhToggle(){
+    var btn=by('ze-aux-ph-toggle');if(!btn||btn.__dennBound)return;btn.__dennBound=true;
+    btn.classList.toggle('on',!!window.__dennAuxToggles.ph);
+    btn.onclick=function(){window.__dennAuxToggles.ph=!window.__dennAuxToggles.ph;btn.classList.toggle('on',window.__dennAuxToggles.ph);syncPhOverlay()};
+  }
+  // zeRender / setZePreviewZoom wrap — overlay 위치/크기 동기화
+  var oldZeR=window.zeRender;
+  if(typeof oldZeR==='function'&&!oldZeR.__dennPhOverlay){
+    window.zeRender=function(){var r=oldZeR.apply(this,arguments);try{syncPhOverlay()}catch(_){}return r};
+    window.zeRender.__dennPhOverlay=true;
+  }
+  var oldZeZ=window.setZePreviewZoom;
+  if(typeof oldZeZ==='function'&&!oldZeZ.__dennPhOverlay){
+    window.setZePreviewZoom=function(){var r=oldZeZ.apply(this,arguments);try{syncPhOverlay()}catch(_){}return r};
+    window.setZePreviewZoom.__dennPhOverlay=true;
+  }
+  window.addEventListener('resize',function(){try{syncPhOverlay()}catch(_){}});
+
   var orig=window.openZoneEditor;
   if(typeof orig==='function'){
     window.openZoneEditor=function(idx){
       var r=orig.apply(this,arguments);
+      // 모달 열 때 두 마스터 토글 ON으로 리셋 (저장 무관)
+      window.__dennAuxToggles.ph=true;
+      window.__dennAuxToggles.guide=true;
       [0,80,220,500,900].forEach(function(ms){
-        setTimeout(function(){try{refreshPreview()}catch(_){};try{refreshGuideForced()}catch(_){}}, ms);
+        setTimeout(function(){
+          try{refreshPreview()}catch(_){};
+          try{refreshGuideForced()}catch(_){};
+          try{bindPhToggle()}catch(_){};
+          try{syncPhOverlay()}catch(_){};
+        },ms);
       });
       return r;
     };
@@ -13339,7 +13417,9 @@ window.renderDennOrderRequestsV36=renderStableOrders;
 #tp-frame-builder #denn-v364-builder-bg-panel.is-off .denn-v364-row input{opacity:.45}
 #tp-frame-builder #denn-v364-builder-bg-panel.is-off .denn-v364-row input[type="text"]{color:var(--muted)}
 #ze-modal .ze-canvas-stage{position:relative}
-#ze-modal #denn-v364-guide-overlay{position:absolute;pointer-events:none;z-index:8;overflow:hidden;border-radius:5px}
+#ze-modal #denn-v364-guide-overlay{position:absolute;pointer-events:none;z-index:2;overflow:hidden;border-radius:5px}
+/* 캔버스 본체(투명 PNG의 시안 디자인)가 두 overlay 위에 합성되도록 stacking 재배치 */
+#ze-modal #ze-canvas{position:relative;z-index:3}
 #ze-modal #denn-v364-guide-overlay img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
 #ze-modal .denn-v364-guide-panel{border:1px solid rgba(214,177,96,.36);background:rgba(8,7,18,.24);border-radius:10px;padding:9px;margin:0 0 10px}
 #ze-modal .denn-v364-guide-title{font-size:10.5px;font-weight:800;color:var(--gold);margin-bottom:7px}
@@ -13371,6 +13451,15 @@ window.renderDennOrderRequestsV36=renderStableOrders;
 /* 가이드 카드: 자체 padding/border 제거 (.denn-aux-card 스타일이 대신) */
 #ze-modal #ze-aux-grid .denn-v364-guide-panel{margin:0;border:none;background:transparent;padding:0}
 #ze-modal #ze-aux-grid .denn-v364-guide-actions{margin-top:2px}
+/* === 카드 헤더 행 (타이틀 + 마스터 토글) === */
+#ze-modal .denn-aux-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#ze-modal .denn-aux-title-row .denn-aux-title{margin:0}
+#ze-modal .denn-aux-title-row .tog{flex:0 0 auto;width:34px;height:19px}
+/* === A2: placeholder overlay (가이드 아래, 캔버스 본체 아래) === */
+#ze-modal #denn-ph-overlay{position:absolute;pointer-events:none;z-index:1;overflow:hidden;border-radius:5px}
+#ze-modal #denn-ph-overlay img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+/* === 마스터 토글 OFF 상태: overlay 숨김 === */
+#ze-modal #denn-ph-overlay.is-off,#ze-modal #denn-v364-guide-overlay.is-off{display:none}
 </style>
 <script id="denn-v36-4-frame-template-tools">
 (function(){
@@ -13563,7 +13652,7 @@ window.renderDennOrderRequestsV36=renderStableOrders;
       panel=document.createElement('div');
       panel.id='denn-v364-guide-panel';
       panel.className='denn-v364-guide-panel denn-aux-card';
-      panel.innerHTML='<div class="denn-v364-guide-title denn-aux-title">🪟 작업용 가이드 이미지</div><div class="denn-v364-guide-actions"><input type="file" id="denn-v364-guide-file" accept="image/*" multiple style="display:none"><button type="button" id="denn-v364-guide-upload">가이드 이미지 업로드</button></div><div class="denn-v364-guide-list" id="denn-v364-guide-list"></div><div class="denn-v364-guide-hint denn-aux-hint">관리자 상세설정 미리보기에서만 보이며 고객 목업/저장 이미지에는 포함되지 않습니다.</div>';
+      panel.innerHTML='<div class="denn-aux-title-row"><span class="denn-v364-guide-title denn-aux-title">🪟 작업용 가이드 이미지</span><div class="tog on" id="ze-aux-guide-toggle" title="미리보기에 가이드 이미지 표시"></div></div><div class="denn-v364-guide-actions"><input type="file" id="denn-v364-guide-file" accept="image/*" multiple style="display:none"><button type="button" id="denn-v364-guide-upload">가이드 이미지 업로드</button></div><div class="denn-v364-guide-list" id="denn-v364-guide-list"></div><div class="denn-v364-guide-hint denn-aux-hint">관리자 상세설정 미리보기에서만 보이며 고객 목업/저장 이미지에는 포함되지 않습니다.</div>';
       if(auxGrid){
         auxGrid.appendChild(panel);
       }else{
@@ -13576,7 +13665,15 @@ window.renderDennOrderRequestsV36=renderStableOrders;
       // 이미 다른 곳(.ze-controls 등)에 부착돼 있으면 grid로 이동
       auxGrid.appendChild(panel);
     }
+    bindGuideMasterToggle();
     renderGuideList();
+  }
+  // 변경요청 3: 가이드 마스터 토글 (휘발성, 모달 열 때 ON 리셋)
+  function bindGuideMasterToggle(){
+    var btn=by('ze-aux-guide-toggle');if(!btn||btn.__dennBound)return;btn.__dennBound=true;
+    if(window.__dennAuxToggles==null)window.__dennAuxToggles={ph:true,guide:true};
+    btn.classList.toggle('on',!!window.__dennAuxToggles.guide);
+    btn.onclick=function(){window.__dennAuxToggles.guide=!window.__dennAuxToggles.guide;btn.classList.toggle('on',window.__dennAuxToggles.guide);scheduleGuideOverlay()};
   }
   function uploadGuides(files){
     var t=currentTpl();if(!t||!files||!files.length)return;
@@ -13613,6 +13710,10 @@ window.renderDennOrderRequestsV36=renderStableOrders;
   function syncGuideOverlay(){
     var ov=ensureGuideOverlay(),c=by('ze-canvas'),stage=document.querySelector('#ze-modal .ze-canvas-stage'),t=currentTpl();
     if(!ov||!c||!stage||!t){if(ov){ov.innerHTML='';ov.__dennGuideSig=''}return}
+    // 변경요청 3: 마스터 토글 OFF면 overlay 숨김 (per-item visible과 별개, 마스터가 우선)
+    var masterOn=!window.__dennAuxToggles||window.__dennAuxToggles.guide!==false;
+    if(!masterOn){ov.classList.add('is-off');return}
+    ov.classList.remove('is-off');
     var sr=stage.getBoundingClientRect(),cr=c.getBoundingClientRect();
     ov.style.left=(cr.left-sr.left)+'px';ov.style.top=(cr.top-sr.top)+'px';ov.style.width=cr.width+'px';ov.style.height=cr.height+'px';
     var list=ensureGuides(t).filter(function(g){return g&&g.visible!==false&&g.dataUrl});
