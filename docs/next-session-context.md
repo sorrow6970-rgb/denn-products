@@ -1,5 +1,25 @@
 # 다음 세션 작업 컨텍스트 (2026-05-22 작업 종료 시점, v3 — PC UI 리뉴얼 신설)
 
+---
+
+## 2026-05-27 세션 종료 시점 업데이트
+
+### 이번 세션 완료 (push 완료, denn-admin.html CSS/HTML만, 보호영역·syncPhOverlay·JS 무수정)
+- **작업 1 (placeholder)** = 완전 종료 (이미 `eec26b3`까지 반영됨)
+- **상세설정 모달(ze-modal) UI 픽스 — 작업 B** `0ae2c92`:
+  - 줌바를 `.ze-canvas-col`로 분리 (스크롤/정렬과 무관, 캔버스 상단 겹침 제거)
+  - 캔버스 수직 중앙정렬 (overflow-safe: `.ze-canvas-stage{min-height:100%}` + `#ze-canvas{margin:auto}`, v88 가로스크롤/v89 렌더안정성 가드 유지)
+  - placeholder 잘림 자락이 stage 비대칭 clip(상0/좌우232)으로 위쪽만 잘리던 회귀 수정 → stage가 wrap 뷰포트를 채워 자락 4면 대칭, 휠 확대 시 비례
+  - 관련 CSS 블록: `denn-v90-ze-canvas-center-css` (denn-admin.html 끝부분)
+- **상세설정 모달 우측 카드 통일 — 작업 A** `c81d332`:
+  - 액자 사이즈/기본 이미지/문구 필드 관리 카드 외곽(border·background·padding)을 "작업용 가이드 이미지" 카드(테두리 없음) 기준으로 평탄화
+  - 기본 이미지 ↔ 작업용 가이드 이미지 사이 얇은 구분선(border-top 1px) 추가
+  - 관련 CSS 블록: `denn-v91-ze-card-unify-css`
+
+### → 다음 세션 1순위: **작업 2** (아래 순서 2번). 특히 `eec26b3` "검증 대기"분(Phase C `_image` row 항상 표시) 검증부터 시작.
+
+---
+
 ## 다음 세션 작업 순서 (재준 확정)
 
 1. **[다음 1순위]** 액자 기본 이미지(placeholder) 기능 추가 (PC/모바일 공통)
