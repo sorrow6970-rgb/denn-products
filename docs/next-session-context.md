@@ -47,8 +47,10 @@
 | 변경요청 2-B — 가이드 깜빡임 픽스 | ✅ | `f76c9dd` — syncGuideOverlay sig 비교로 innerHTML reset skip |
 | 변경요청 3 — 모달 ON/OFF 마스터 토글 | ✅ | `609d3e2` — 휘발성 toggles, 모달 열 때 ON 리셋 |
 | A2 — 캔버스 placeholder overlay + z-index 회귀 + 잘림 시각화 | ✅ | `609d3e2` — canvas z-index:3, 2-layer (outer opacity 0.3 + inner clip 1.0), cover 계산 |
-| 개선 1 — 가이드 선 의미 강화 (3분할 + 십자 + 안전영역) | ⏳ | 다음 사전 평가 |
-| 개선 2 — placeholder 이미지 조작 + 모드 분리 | ⏳ | mockup-tool 조작 로직 재활용 검토 |
+| 개선 1 — 가이드 선 의미 강화 (3분할 + 십자 + 안전영역) | ✅ | `efaa830` SVG overlay + `0175575` 회귀 픽스(sig stale + 토글 결합 해제) |
+| 개선 2 — placeholder 이미지 조작 (drag/wheel) + addZone 모드 분리 + type-btn 동기화 | ✅ | placeholder IIFE 안 ZE.editMode/phPanning 휘발 상태 + setZT wrap |
+
+**→ 작업 1 (액자 기본 이미지 placeholder) 완전 종료. 작업 2 진입 가능.**
 
 ### A1 회귀 원인 (메모 자산)
 - 본체 `renderFTplsByCategory` (L1345) 마지막 줄 패치 시도 → 후속 wrap 5단(L2976/L3014/L3230/L3295) 누적이 본체 호출 결과를 가로채면서 setTimeout 발사 0건
