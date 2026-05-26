@@ -43,14 +43,27 @@
 | A1 어드민 카드 📷 뱃지 (본체 패치 → MutationObserver 전환) | ✅ | `1e3faeb` — wrap chain 의존 0 + 16px 골드 아웃라인 디자인 |
 | A3 어드민 가이드 모달 재진입 표시 | ✅ | 메모리는 stale, 실측 결과 이미 정상 작동 (코드 변경 0) |
 | A4 mockup-tool selFTplByRef 시안 전환 placeholder | ✅ | 메모리는 stale, 실측 결과 이미 정상 작동 (코드 변경 0) |
-| 변경요청 2 — "기본 이미지" + "작업용 가이드 이미지" UI 정돈 | ⏳ | 가이드 패널 컨트롤 추적 + 디자인 합의 필요 |
-| 변경요청 3 + A2 — 모달 미리보기 ON/OFF 토글 + 캔버스 overlay | ⏳ | 휘발성 토글 + zeRender 외부 overlay |
+| 변경요청 2-A — UI 정돈 (우측 컨트롤 통합 + 모달 광폭화) | ✅ | `f76c9dd` — ze-aux-grid를 .ze-controls 최상단으로, 모달 width 1600px, 우측 패널 36% |
+| 변경요청 2-B — 가이드 깜빡임 픽스 | ✅ | `f76c9dd` — syncGuideOverlay sig 비교로 innerHTML reset skip |
+| 변경요청 3 — 모달 ON/OFF 마스터 토글 | ✅ | `609d3e2` — 휘발성 toggles, 모달 열 때 ON 리셋 |
+| A2 — 캔버스 placeholder overlay + z-index 회귀 + 잘림 시각화 | ✅ | `609d3e2` — canvas z-index:3, 2-layer (outer opacity 0.3 + inner clip 1.0), cover 계산 |
+| 개선 1 — 가이드 선 의미 강화 (3분할 + 십자 + 안전영역) | ⏳ | 다음 사전 평가 |
+| 개선 2 — placeholder 이미지 조작 + 모드 분리 | ⏳ | mockup-tool 조작 로직 재활용 검토 |
 
 ### A1 회귀 원인 (메모 자산)
 - 본체 `renderFTplsByCategory` (L1345) 마지막 줄 패치 시도 → 후속 wrap 5단(L2976/L3014/L3230/L3295) 누적이 본체 호출 결과를 가로채면서 setTimeout 발사 0건
 - 사용자 verifier로 setTimeout hook → `calls:0`, `threw:null` → 호출 자체가 도달 못함 확인
 - MutationObserver(`#frame-tpl-grid-a` childList, subtree:false)로 우회 → wrap chain 의존 0, badge 부착은 손자 레벨이라 무한루프 0
 - **교훈**: wrap chain이 두꺼운 함수의 본체 패치는 신뢰 불가. observer/직접 hook이 self-closing.
+
+### URL escape 픽스 (메모 자산)
+- `style="...background:url(\"...\")..."` — 외부 `"`와 내부 `"` 충돌로 URL 빈 문자열 잘림
+- 해결: `url('...')` (single quote), URL 내부 `'`는 `%27`로 percent-encode
+- `replace(/"/g,'%22').replace(/'/g,'%27')` 안전 패턴
+
+### 백로그 (향후 검토)
+- **이미지 최적화**: placeholder 자동 리사이즈(예: max 1920px) + WebP 변환 + Firebase Storage `cacheControl` metadata 설정. 현재 원본 그대로 업로드 → 대용량 파일 전송 비용/속도 비효율
+- **포토샵 스타일 드래그 가이드선**: 룰러 + 자유 배치 가이드. 사용 빈도 낮음(가끔 정렬용), 작업 분량 큼(200~300줄). Phase 4 배포 후 v2에서 사용자 피드백 기반 재검토
 
 ---
 
