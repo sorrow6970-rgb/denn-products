@@ -10321,7 +10321,9 @@ window.addEventListener('load',later);
 /* v70-locked 시 box 자체 비활성 해제 */
 #frame-text-style-box.denn-v70-locked{opacity:1!important;pointer-events:auto!important}
 /* body 항상 표시 (master OFF + v70-locked 모두 무관 — 기존 L124 .frame-text-style-body{display:none} override) */
-#frame-text-style-box .frame-text-style-body{display:flex!important;flex-direction:column}
+/* 두 번째 selector: v70 lock body 숨김(L6224 #...denn-v70-locked .frame-text-style-body{display:none!important}, 특이도 1,2,0)을 이기려면 동일 특이도(1,2,0)+이 블록이 소스상 뒤 → 승리 */
+#frame-text-style-box .frame-text-style-body,
+#frame-text-style-box.denn-v70-locked .frame-text-style-body{display:flex!important;flex-direction:column}
 /* master OFF 또는 v70-locked 시: _image 외 다른 row는 숨김 (문구 row 표시 정책 유지) */
 #frame-text-style-box:not(.on) .frame-text-style-body > .frame-text-style-row:not(#fts-row-_image),
 #frame-text-style-box.denn-v70-locked .frame-text-style-body > .frame-text-style-row:not(#fts-row-_image){display:none!important}
