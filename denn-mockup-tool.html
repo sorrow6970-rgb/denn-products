@@ -9000,6 +9000,15 @@ window.addEventListener('load',run);
       var area=by('frame-preview-area'),wrap=document.querySelector('#page-frame .canvas-wrap'),cv=by('frameCanvas');
       if(!area||!wrap||!cv)return;
       syncScaleUi();
+      // 로드 직후 area 미정착(0x0 등)에서 작은 스케일(scale 0.28)을 칠하면, 정착 후 1.2로 스냅하며
+      // "작았다 커지는" 점프(=튐/초기 플래시) 발생. 정착 전엔 transform을 쓰지 않고 wrap을 숨긴 채
+      // 60ms 재시도하다가 첫 정상 계산 시 노출. 예산 초과 시엔 영구 숨김 방지로 그냥 노출.
+      var ready=area.clientWidth>=120&&area.clientHeight>=120;
+      if(!ready&&wrap.dataset.dennScaleReady!=='1'){
+        wrap.style.setProperty('visibility','hidden','important');
+        var tries=(window.__dennScaleReadyTries=(window.__dennScaleReadyTries||0)+1);
+        if(tries<=40){clearTimeout(window.__dennScaleReadyRetry);window.__dennScaleReadyRetry=setTimeout(applyPreviewScale,60);return;}
+      }
       var s=logicalSize(cv);
       var aw=Math.max(260,area.clientWidth-48),ah=Math.max(260,area.clientHeight-48);
       var fit=Math.min(1.45,aw/s.w,ah/s.h);
@@ -9013,6 +9022,8 @@ window.addEventListener('load',run);
       wrap.style.setProperty('max-width','none','important');
       cv.style.setProperty('max-width','none','important');
       cv.style.setProperty('min-width','0','important');
+      // 첫 정상 계산 완료 — 숨겨뒀던 wrap 노출(이후엔 가드 영구 통과, 리사이즈/렌더 정상 동작)
+      if(wrap.dataset.dennScaleReady!=='1'){wrap.dataset.dennScaleReady='1';wrap.style.setProperty('visibility','visible','important');}
     }catch(e){}
   }
   function scheduleScale(){
