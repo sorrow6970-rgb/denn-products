@@ -300,6 +300,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
 <!-- FRAME -->
 <div class="main page" id="page-frame">
   <div class="panel">
+    <div class="info-bar"><span>사이즈: <strong id="ib-sz">-</strong></span><span>·</span><span>프레임: <strong id="ib-fc">-</strong></span></div>
     <div><div class="sec-label">01 액자 사이즈</div><div class="chips c2" id="frame-sz-chips"></div><div class="hint" id="denn-v71-frame-size-note" style="margin-top:7px;line-height:1.55">액자 사이즈는 동일하게 표기됩니다. 실제 사이즈 예시보기는 내공간에서보기에서 확인하세요!</div></div>
     <hr>
     <div>
@@ -349,7 +350,6 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     <div class="prev-top"><div class="prev-label">실시간 시안 확인</div></div>
     <div class="empty-state" id="frame-empty"><p>이미지를 업로드하면<br>시안이 표시됩니다</p></div>
     <div class="canvas-wrap" style="position:relative;display:inline-block"><canvas id="frameCanvas" width="400" height="400" style="filter:drop-shadow(0 20px 40px rgba(25,22,15,.25));background:transparent"></canvas><img id="wm-ov-frame" style="position:absolute;bottom:8px;right:8px;max-width:25%;display:none;pointer-events:none;object-fit:contain" src="" alt=""></div>
-    <div class="info-bar"><span>사이즈: <strong id="ib-sz">-</strong></span><span>·</span><span>프레임: <strong id="ib-fc">-</strong></span></div>
   </div>
 </div>
 
@@ -11522,6 +11522,11 @@ window.addEventListener('load',later);
   /* 모바일/태블릿: 사이저를 박스트리에서 제거 → canvas-wrap이 직속 자식처럼 동작(기존 모바일 레이아웃 유지) */
   #page-frame .denn-scale-sizer{display:contents!important}
 }
+</style>
+<style id="denn-v93-infobar-panel-css">
+/* 사이즈/프레임 요약(info-bar)을 미리보기 영역(absolute, 스크롤에 휩쓸림)에서 좌측 패널 최상단으로 이동.
+   absolute→static 재배치. ib-sz/ib-fc id는 그대로라 JS 갱신 무영향. */
+#page-frame .panel>.info-bar{position:static!important;transform:none!important;left:auto!important;bottom:auto!important;width:100%;box-sizing:border-box;margin:0 0 14px;justify-content:center}
 </style>
 </body>
 </html>
