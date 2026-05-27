@@ -11541,30 +11541,33 @@ window.addEventListener('load',later);
 #page-frame .panel>.info-bar{position:static!important;transform:none!important;left:auto!important;bottom:auto!important;width:100%;box-sizing:border-box;margin:0 0 14px;justify-content:center}
 </style>
 <style id="denn-v94-pc-shell-css">
-/* (작업 3 Phase 1) PC 전용(≥861px) 4컬럼 셸: [기능 아이콘 레일 | 기능 메뉴(전환) | 캔버스 | 문구·요소 리스트].
-   액자(#page-frame)에만, denn-pc-shell-on 클래스가 붙었을 때만. 모바일은 JS가 원복하므로 이 규칙 자체가 미적용. */
+/* (작업 3 Phase 1) PC 전용(≥861px) 4컬럼 셸: [기능 아이콘 레일(풀높이) | 기능 메뉴=드로어 | 캔버스 | 액션(항시)].
+   모든 설정을 아이콘 드로어로 → 모바일 바텀시트(작업 5)와 1:1 매핑. 액자(#page-frame)에 denn-pc-shell-on일 때만.
+   모바일(<861)은 JS가 원복하므로 이 규칙 자체가 미적용. */
 @media(min-width:861px){
   #page-frame.denn-pc-shell-on{display:block!important;padding:0!important;max-height:none!important}
   #page-frame.denn-pc-shell-on>.panel{display:none!important}
-  .denn-pc-shell{display:grid;grid-template-columns:80px 248px minmax(0,1fr) 300px;height:calc(100vh - 95px);background:var(--surface)}
+  .denn-pc-shell{display:grid;grid-template-columns:88px 256px minmax(0,1fr) 212px;height:calc(100vh - 95px);background:var(--surface)}
   .denn-pc-shell .dps-col{min-width:0;min-height:0}
-  /* 좌측 기능 아이콘 레일 */
-  .denn-pc-shell .dps-rail{background:var(--ink);display:flex;flex-direction:column;gap:4px;padding:12px 6px}
-  .denn-pc-shell .dps-icon{display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 4px;border:none;border-radius:10px;background:transparent;color:#9A9282;font-family:inherit;cursor:pointer;transition:all .15s}
-  .denn-pc-shell .dps-icon .dps-ico{font-size:19px;line-height:1}
-  .denn-pc-shell .dps-icon .dps-lab{font-size:9px;letter-spacing:.02em;white-space:nowrap}
+  /* 좌측 기능 아이콘 레일 — 풀높이 */
+  .denn-pc-shell .dps-rail{background:var(--ink);display:flex;flex-direction:column;gap:2px;padding:14px 6px;overflow-y:auto}
+  .denn-pc-shell .dps-icon{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;border:none;border-radius:10px;background:transparent;color:#9A9282;font-family:inherit;cursor:pointer;transition:all .15s}
+  .denn-pc-shell .dps-icon .dps-ico{font-size:20px;line-height:1}
+  .denn-pc-shell .dps-icon .dps-lab{font-size:9.5px;letter-spacing:.02em;white-space:nowrap}
   .denn-pc-shell .dps-icon:hover{background:rgba(255,255,255,.06);color:var(--cream)}
   .denn-pc-shell .dps-icon.on{background:rgba(200,168,100,.18);color:var(--gold)}
-  /* 기능 메뉴 컬럼 — 활성 그룹만 노출 */
+  /* 기능 메뉴(드로어) 컬럼 — info-bar 상단 고정 + 활성 그룹만 노출 */
   .denn-pc-shell .dps-menu{border-right:1px solid var(--border);padding:16px 14px;overflow-y:auto}
+  .denn-pc-shell .dps-menu>.info-bar{position:static!important;transform:none!important;left:auto!important;bottom:auto!important;width:100%;box-sizing:border-box;margin:0 0 14px;justify-content:center}
   .denn-pc-shell .dps-group{display:none;flex-direction:column;gap:13px}
   .denn-pc-shell .dps-group.on{display:flex}
   /* 캔버스 */
   .denn-pc-shell .dps-canvas{position:relative;overflow:hidden}
-  /* 우측 문구·요소 리스트 */
-  .denn-pc-shell .dps-list{border-left:1px solid var(--border);padding:14px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
-  /* 셸 안에서는 사이저 스크롤 래퍼가 .dps-canvas 안 preview-area를 채우도록 (작업 C 규칙 유지) */
+  /* 우측 액션 컬럼 — 항시 고정(내공간/저장/주문제작 등) */
+  .denn-pc-shell .dps-action{border-left:1px solid var(--border);padding:16px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
   #page-frame.denn-pc-shell-on .preview-area{min-height:0!important;height:100%!important}
+  /* 스케일 컨트롤러를 캔버스 하단 중앙으로 (메뉴 컬럼 침범 방지, 뷰포트 고정 유지) */
+  #page-frame.denn-pc-shell-on #frame-preview-scale-box{top:auto!important;bottom:16px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important}
 }
 </style>
 <script id="denn-v94-pc-shell-frame">
@@ -11572,8 +11575,8 @@ window.addEventListener('load',later);
   'use strict';
   if(window.__DENN_PC_SHELL_V94)return; window.__DENN_PC_SHELL_V94=true;
   var MIN=861, moved=[];
-  // 좌측 아이콘 → 메뉴 그룹. 클릭 시 해당 그룹만 메뉴 컬럼에 노출.
-  var ICONS=[['🖼','템플릿','tpl'],['📐','사이즈','size'],['📷','이미지','img'],['🎨','색상·시계','color']];
+  // 좌측 아이콘 → 메뉴 그룹(드로어). 클릭 시 해당 그룹만 메뉴 컬럼에 노출. (모바일 바텀시트와 1:1 매핑 목적)
+  var ICONS=[['🖼','템플릿','tpl'],['📐','사이즈','size'],['🌄','이미지','img'],['🎨','색상','color'],['✍','문구','text'],['🕐','시계','clock']];
   function el(t,c){var d=document.createElement(t);if(c)d.className=c;return d;}
   function setGroup(g){
     var pf=document.getElementById('page-frame'),shell=pf&&pf.querySelector('.denn-pc-shell'); if(!shell)return;
@@ -11589,24 +11592,26 @@ window.addEventListener('load',later);
       if(!panel||!preview)return;
       var shell=el('div','denn-pc-shell'),
           rail=el('div','dps-col dps-rail'),menu=el('div','dps-col dps-menu'),
-          cvs=el('div','dps-col dps-canvas'),list=el('div','dps-col dps-list');
-      shell.appendChild(rail);shell.appendChild(menu);shell.appendChild(cvs);shell.appendChild(list);
-      // 메뉴 컬럼 안 그룹 컨테이너
-      var groups={};
-      ['tpl','size','img','color'].forEach(function(g){var d=el('div','dps-group');d.setAttribute('data-g',g);groups[g]=d;menu.appendChild(d);});
-      // 패널 자식 분배 (마커 id로 분류). <hr>은 셸에서 생략(원복용 기록). 문구·info-bar·액션은 우측 리스트로.
+          cvs=el('div','dps-col dps-canvas'),act=el('div','dps-col dps-action');
+      shell.appendChild(rail);shell.appendChild(menu);shell.appendChild(cvs);shell.appendChild(act);
+      // 메뉴 컬럼 안 그룹 컨테이너 (info-bar는 메뉴 상단 고정으로 별도)
+      var groups={}, gbox=el('div','dps-groups');
+      ['tpl','size','img','color','text','clock'].forEach(function(g){var d=el('div','dps-group');d.setAttribute('data-g',g);groups[g]=d;gbox.appendChild(d);});
+      // 패널 자식 분배 (마커 id로 분류). <hr>은 생략(원복용 기록). 문구→text 그룹, 액션류→우측 액션 컬럼.
       [].slice.call(panel.children).forEach(function(node){
         moved.push({node:node,parent:panel});
         if(node.tagName==='HR'){node.remove();return;}
         var q=function(s){return node.querySelector&&node.querySelector(s);};
-        if(node.classList&&node.classList.contains('info-bar')){list.insertBefore(node,list.firstChild);}
+        if(node.classList&&node.classList.contains('info-bar')){menu.appendChild(node);} // info-bar → 메뉴 상단(지속)
         else if(q('#frame-tpl-grid')){groups.tpl.appendChild(node);}
         else if(q('#frame-sz-chips')){groups.size.appendChild(node);}
         else if(q('#frame-drop')||q('#frame-file')){groups.img.appendChild(node);}
-        else if(q('#frame-color-chips')||q('#tog-clock')){groups.color.appendChild(node);}
-        else if(q('#f-main')||q('#frame-text-style-box')){list.appendChild(node);} // 문구 → 우측 리스트
-        else {list.appendChild(node);} // 액션 스택 등 나머지 → 리스트 하단
+        else if(q('#frame-color-chips')){groups.color.appendChild(node);}
+        else if(q('#f-main')||q('#frame-text-style-box')){groups.text.appendChild(node);}
+        else if(q('#tog-clock')){groups.clock.appendChild(node);}
+        else {act.appendChild(node);} // 액션 스택(내공간/저장/주문/홈) → 우측 액션 컬럼
       });
+      menu.appendChild(gbox);
       moved.push({node:preview,parent:pf}); cvs.appendChild(preview);
       // 레일 아이콘
       ICONS.forEach(function(it,idx){
@@ -11617,6 +11622,14 @@ window.addEventListener('load',later);
       });
       pf.appendChild(shell); pf.classList.add('denn-pc-shell-on');
       setGroup('tpl');
+      // 숨겨진 패널에 나중에 주입되는 노드(주문제작 버튼 등)를 우측 액션 컬럼으로 자동 이동
+      if(pf.__dennPanelObs)pf.__dennPanelObs.disconnect();
+      pf.__dennPanelObs=new MutationObserver(function(muts){
+        if(!pf.classList.contains('denn-pc-shell-on'))return;
+        var a=pf.querySelector('.denn-pc-shell .dps-action'); if(!a)return;
+        muts.forEach(function(m){[].slice.call(m.addedNodes).forEach(function(n){if(n.nodeType===1)a.appendChild(n)})});
+      });
+      pf.__dennPanelObs.observe(panel,{childList:true});
       if(typeof window.applyFramePreviewScaleV36==='function')setTimeout(window.applyFramePreviewScaleV36,60);
     }catch(e){}
   }
@@ -11624,6 +11637,7 @@ window.addEventListener('load',later);
     try{
       var pf=document.getElementById('page-frame'); if(!pf)return;
       var shell=pf.querySelector('.denn-pc-shell'); if(!shell)return;
+      if(pf.__dennPanelObs)pf.__dennPanelObs.disconnect(); // 원복 중 재이동 방지
       // 기록 순서(원래 children 순서)대로 부모에 append → 원래 구조·순서 복원. 모바일 split-pane 정상화.
       moved.forEach(function(m){try{m.parent.appendChild(m.node)}catch(e){}});
       moved=[]; shell.remove(); pf.classList.remove('denn-pc-shell-on');
