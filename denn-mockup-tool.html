@@ -147,6 +147,10 @@ hr{border:none;border-top:1px solid var(--border);margin:0}
 .prev-top{position:absolute;top:12px;left:16px;right:16px;display:flex;align-items:center;justify-content:space-between;z-index:20}
 .prev-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--warm)}
 .canvas-wrap{position:relative;z-index:1}
+/* B2: 액자가 미리보기 영역을 넘으면 영역 안에서 상하/좌우 스크롤 (PC만, 컨트롤 패널 무관). 모바일은 기존 overflow 유지 */
+@media(min-width:861px){#frame-preview-area{overflow:auto;justify-content:safe center;align-items:safe center}}
+/* 초기 로드 시 캔버스 기본크기(400) 짧은 플래시 방지 — applyPreviewScale가 정상 사이징 후 visible 처리 */
+#frame-preview-area .canvas-wrap{visibility:hidden}
 #caseCanvas,#frameCanvas{display:block}
 .info-bar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(25,22,15,.08);backdrop-filter:blur(10px);border:1px solid rgba(25,22,15,.08);border-radius:30px;padding:5px 14px;display:flex;gap:12px;white-space:nowrap;z-index:10}
 .info-bar span{font-size:9.5px;color:var(--ink)}.info-bar strong{font-weight:600}
@@ -9005,14 +9009,15 @@ window.addEventListener('load',run);
       var fit=Math.min(1.45,aw/s.w,ah/s.h);
       var minScale=previewMode()==='mobile'?.34:.14;
       var scale=Math.max(minScale,Math.min(1.45,fit*(previewMode()==='mobile'?.56:.868)*(userScale()/100)));
-      wrap.dataset.dennBasePreviewScale='1';
-      wrap.dataset.dennUserPreviewScale='1';
-      wrap.style.setProperty('transform','scale('+scale+')','important');
+      // B2: transform:scale 대신 캔버스를 CSS 크기로 직접 사이징 → 레이아웃 footprint=표시크기 → 액자가 영역을 넘으면 preview-area에 스크롤 발생. (hidpi 물리해상도 유지 → 선명, transform 제거로 v39/lock 다툼 뿌리 제거)
+      wrap.style.setProperty('transform','none','important');
       wrap.style.setProperty('transition','none','important');
-      wrap.style.setProperty('transform-origin','center center','important');
       wrap.style.setProperty('max-width','none','important');
+      cv.style.setProperty('width',Math.max(1,Math.round(s.w*scale))+'px','important');
+      cv.style.setProperty('height',Math.max(1,Math.round(s.h*scale))+'px','important');
       cv.style.setProperty('max-width','none','important');
       cv.style.setProperty('min-width','0','important');
+      wrap.style.visibility='visible'; // 초기 작은-스케일 플래시 방지: 정상 사이징 후에만 노출(기본 hidden은 CSS)
     }catch(e){}
   }
   function scheduleScale(){
