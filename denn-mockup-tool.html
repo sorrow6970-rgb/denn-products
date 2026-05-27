@@ -9006,16 +9006,26 @@ window.addEventListener('load',run);
     }catch(e){}
   }
   function ensureScaleSizer(wrap){
-    // .canvas-wrap을 footprint용 사이저로 1회 감싼다. 보호영역 selector('#page-frame .canvas-wrap')은
-    // descendant 매칭이라 조상 삽입에 무영향. 오버레이(mockup-bg/prev-top/info-bar/empty-state)는 전부
-    // position:absolute라 flex 흐름엔 canvas-wrap만 존재 → 사이저로 대체돼도 정렬 동일.
+    // .canvas-wrap을 [.denn-scale-scroll > .denn-scale-sizer]로 1회 감싼다.
+    //  - 사이저: scale된 footprint 생성(영역 초과분).
+    //  - 스크롤 래퍼: position:absolute inset:0로 preview-area를 채워 "스크롤만" 담당.
+    // → 스케일 컨트롤러(#frame-preview-scale-box)·prev-top·empty-state는 preview-area 직속으로 남아
+    //   스크롤에 안 휩쓸리고 뷰포트에 고정. 보호영역 selector(descendant)는 조상 삽입에 무영향.
     try{
-      var p=wrap.parentNode;
-      if(p&&p.classList&&p.classList.contains('denn-scale-sizer'))return p;
-      var sizer=document.createElement('div');
-      sizer.className='denn-scale-sizer';
-      p.insertBefore(sizer,wrap);
-      sizer.appendChild(wrap);
+      var sizer=wrap.parentNode;
+      if(!(sizer&&sizer.classList&&sizer.classList.contains('denn-scale-sizer'))){
+        sizer=document.createElement('div');
+        sizer.className='denn-scale-sizer';
+        wrap.parentNode.insertBefore(sizer,wrap);
+        sizer.appendChild(wrap);
+      }
+      var scroll=sizer.parentNode;
+      if(!(scroll&&scroll.classList&&scroll.classList.contains('denn-scale-scroll'))){
+        scroll=document.createElement('div');
+        scroll.className='denn-scale-scroll';
+        sizer.parentNode.insertBefore(scroll,sizer);
+        scroll.appendChild(sizer);
+      }
       return sizer;
     }catch(e){return null}
   }
@@ -11516,11 +11526,13 @@ window.addEventListener('load',later);
 .denn-scale-sizer{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
 .denn-scale-sizer>.canvas-wrap{flex:0 0 auto}
 @media(min-width:861px){
-  #page-frame .preview-area{overflow:auto!important;max-height:calc(100vh - 95px)!important;align-items:safe center!important;justify-content:safe center!important}
+  /* preview-area는 스크롤하지 않음 → 오버레이/스케일 컨트롤러가 뷰포트에 고정. 스크롤은 내부 래퍼가 담당 */
+  #page-frame .preview-area{position:relative!important;overflow:hidden!important;max-height:calc(100vh - 95px)!important}
+  #page-frame .denn-scale-scroll{position:absolute;inset:0;overflow:auto;display:flex;align-items:safe center;justify-content:safe center;z-index:1}
 }
 @media(max-width:860px){
-  /* 모바일/태블릿: 사이저를 박스트리에서 제거 → canvas-wrap이 직속 자식처럼 동작(기존 모바일 레이아웃 유지) */
-  #page-frame .denn-scale-sizer{display:contents!important}
+  /* 모바일/태블릿: 래퍼들을 박스트리에서 제거 → canvas-wrap이 직속 자식처럼 동작(기존 모바일 레이아웃 유지) */
+  #page-frame .denn-scale-sizer,#page-frame .denn-scale-scroll{display:contents!important}
 }
 </style>
 <style id="denn-v93-infobar-panel-css">
