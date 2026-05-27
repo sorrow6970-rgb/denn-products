@@ -9006,7 +9006,9 @@ window.addEventListener('load',run);
       var scale=Math.max(minScale,Math.min(1.45,fit*(previewMode()==='mobile'?.56:.868)*(userScale()/100)));
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
+      window.__dennAuthoritativeScale=true; // v361 권위 스케일 — installFrameWrapScaleLock의 scale(1) 강제를 이 적용만 통과 (로드/리사이즈 시 정상 스케일 적용, v39 자동호출은 여전히 차단)
       wrap.style.setProperty('transform','scale('+scale+')','important');
+      window.__dennAuthoritativeScale=false;
       wrap.style.setProperty('transition','none','important');
       wrap.style.setProperty('transform-origin','center center','important');
       wrap.style.setProperty('max-width','none','important');
@@ -9043,7 +9045,7 @@ window.addEventListener('load',run);
   function boot(){try{if(typeof window.renderFrame==='function')window.renderFrame();else applyPreviewScale()}catch(e){}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,120)});
   else setTimeout(boot,120);
-  window.addEventListener('load',function(){setTimeout(boot,240)});
+  window.addEventListener('load',function(){setTimeout(boot,240);setTimeout(applyPreviewScale,700)});
   window.addEventListener('resize',function(){clearTimeout(window.__dennFramePreviewHidpiResize);window.__dennFramePreviewHidpiResize=setTimeout(applyPreviewScale,120)});
 })();
 </script>
@@ -10605,7 +10607,7 @@ window.addEventListener('load',later);
     var origSetProperty=wrap.style.setProperty.bind(wrap.style);
     wrap.style.setProperty=function(prop, val, priority){
       if(prop==='transform' && typeof val==='string' && val.indexOf('scale')!==-1){
-        if(window.__dennScaleUserInput)return origSetProperty(prop,val,priority);
+        if(window.__dennScaleUserInput||window.__dennAuthoritativeScale)return origSetProperty(prop,val,priority);
         return origSetProperty('transform','scale(1)',priority||'');
       }
       return origSetProperty(prop, val, priority);
@@ -10621,7 +10623,7 @@ window.addEventListener('load',later);
           get:function(){return origTransformDesc.get.call(origStyleObj)},
           set:function(v){
             if(typeof v==='string'&&v.indexOf('scale')!==-1){
-              if(window.__dennScaleUserInput){origSet(v);return}
+              if(window.__dennScaleUserInput||window.__dennAuthoritativeScale){origSet(v);return}
               origSet('scale(1)');
               return;
             }
