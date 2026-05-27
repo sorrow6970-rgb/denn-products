@@ -11563,8 +11563,18 @@ window.addEventListener('load',later);
   .denn-pc-shell .dps-group.on{display:flex}
   /* 캔버스 */
   .denn-pc-shell .dps-canvas{position:relative;overflow:hidden}
-  /* 우측 액션 컬럼 — 항시 고정(내공간/저장/주문제작 등) */
-  .denn-pc-shell .dps-action{border-left:1px solid var(--border);padding:16px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+  /* 우측 컬럼 — 요소 리스트(스크롤) 상단 + 기본설정/액션 하단 고정 */
+  .denn-pc-shell .dps-action{border-left:1px solid var(--border);padding:14px 12px;overflow:hidden;display:flex;flex-direction:column;gap:10px}
+  .denn-pc-shell .dps-elem-wrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+  .denn-pc-shell .dps-elem-title{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--warm)}
+  .denn-pc-shell .dps-elem-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+  .denn-pc-shell .dps-elem-row{display:flex;align-items:center;gap:6px;padding:6px 8px;background:#FAFAF7;border:1px solid var(--border);border-radius:7px;font-size:10px}
+  .denn-pc-shell .dps-elem-row.empty{opacity:.5}
+  .denn-pc-shell .dps-elem-lab{color:var(--warm);white-space:nowrap}
+  .denn-pc-shell .dps-elem-val{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+  .denn-pc-shell .dps-elem-del{border:none;background:none;color:var(--red,#C0392B);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;flex-shrink:0}
+  .denn-pc-shell .dps-reset-btn{flex:none;width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--ink);font-family:inherit;font-size:11.5px;cursor:pointer;transition:all .15s}
+  .denn-pc-shell .dps-reset-btn:hover{border-color:var(--gold2);color:var(--gold2)}
   #page-frame.denn-pc-shell-on .preview-area{min-height:0!important;height:100%!important}
   /* 스케일 컨트롤러를 캔버스 하단 중앙으로 (메뉴 컬럼 침범 방지, 뷰포트 고정 유지) */
   #page-frame.denn-pc-shell-on #frame-preview-scale-box{top:auto!important;bottom:16px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important}
@@ -11582,6 +11592,59 @@ window.addEventListener('load',later);
     var pf=document.getElementById('page-frame'),shell=pf&&pf.querySelector('.denn-pc-shell'); if(!shell)return;
     shell.querySelectorAll('.dps-group').forEach(function(d){d.classList.toggle('on',d.getAttribute('data-g')===g)});
     shell.querySelectorAll('.dps-icon').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-g')===g)});
+  }
+  // ── 우측 요소 리스트(행별 삭제) + 기본설정 버튼 ──
+  var ELEMS=[['main','메인 문구','f-main'],['name','이름','f-name'],['date','날짜','f-date'],['sub','추가 문구','f-sub']];
+  function elText(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
+  function imgPresent(){var p=document.getElementById('frame-prev');if(p&&getComputedStyle(p).display!=='none')return true;var t=document.getElementById('frame-thumb');return !!(t&&t.getAttribute('src'));}
+  function clockOn(){var c=document.getElementById('tog-clock');return !!(c&&c.classList.contains('on'));}
+  function clearElem(k){
+    try{
+      if(k==='image'){if(typeof window.resetImg==='function')window.resetImg('frame');}
+      else if(k==='clock'){if(clockOn()&&typeof window.togFrame==='function')window.togFrame('clock');}
+      else{var f=document.getElementById('f-'+k);if(f){f.value='';f.dispatchEvent(new Event('input',{bubbles:true}));}}
+    }catch(e){}
+    renderElemList();
+  }
+  function renderElemList(){
+    try{
+      var box=document.getElementById('dps-elem-list'); if(!box)return;
+      var rows=ELEMS.map(function(e){var v=elText(e[2]);return{k:e[0],lab:e[1],val:v,empty:!v};});
+      rows.push({k:'image',lab:'이미지',val:'업로드됨',empty:!imgPresent()});
+      rows.push({k:'clock',lab:'시계',val:'표시',empty:!clockOn()});
+      box.innerHTML='';
+      rows.forEach(function(r){
+        var row=el('div','dps-elem-row'+(r.empty?' empty':''));
+        var lab=el('span','dps-elem-lab');lab.textContent=r.lab;
+        var val=el('span','dps-elem-val');val.textContent=r.empty?'비어있음':(r.val.length>14?r.val.slice(0,14)+'…':r.val);
+        row.appendChild(lab);row.appendChild(val);
+        if(!r.empty){var del=el('button','dps-elem-del');del.type='button';del.textContent='×';del.title='이 요소 지우기';del.addEventListener('click',function(){clearElem(r.k)});row.appendChild(del);}
+        box.appendChild(row);
+      });
+    }catch(e){}
+  }
+  function resetFrameDefaults(){
+    if(!window.confirm('기본 설정으로 되돌릴까요?\n입력한 문구·이미지·확대설정이 이 시안의 초기 상태로 돌아갑니다.'))return;
+    try{if(typeof window.applyFrameDefaultTexts==='function')window.applyFrameDefaultTexts(window.curFTpl||null,true);}catch(e){}
+    try{if(typeof window.resetImg==='function')window.resetImg('frame');}catch(e){}
+    try{if(typeof window.resetFrameTransform==='function')window.resetFrameTransform();}catch(e){}
+    try{if(typeof window.renderFrame==='function')window.renderFrame();}catch(e){}
+    renderElemList();
+  }
+  function ensureElemListeners(){
+    if(window.__dennElemListenersOn)return; window.__dennElemListenersOn=true;
+    ['f-main','f-name','f-date','f-sub'].forEach(function(id){var f=document.getElementById(id);if(f)f.addEventListener('input',renderElemList);});
+  }
+  function buildRightExtras(act){
+    // 요소 리스트(상단, 스크롤) + 기본설정 버튼(액션 스택 위). 액션 스택은 이미 act 하단에 들어와 있음.
+    var wrap=el('div','dps-elem-wrap');
+    wrap.innerHTML='<div class="dps-elem-title">요소 · 행별 삭제</div><div class="dps-elem-list" id="dps-elem-list"></div>';
+    act.insertBefore(wrap,act.firstChild);
+    var reset=el('button','dps-reset-btn');reset.type='button';reset.textContent='↺ 기본설정으로';
+    reset.addEventListener('click',resetFrameDefaults);
+    var stack=act.querySelector('.denn-frame-action-stack');
+    if(stack)act.insertBefore(reset,stack); else act.appendChild(reset);
+    ensureElemListeners(); renderElemList();
   }
   function build(){
     try{
@@ -11622,6 +11685,7 @@ window.addEventListener('load',later);
       });
       pf.appendChild(shell); pf.classList.add('denn-pc-shell-on');
       setGroup('tpl');
+      buildRightExtras(act);
       // 숨겨진 패널에 나중에 주입되는 노드(주문제작 버튼 등)를 우측 액션 컬럼으로 자동 이동
       if(pf.__dennPanelObs)pf.__dennPanelObs.disconnect();
       pf.__dennPanelObs=new MutationObserver(function(muts){
