@@ -8995,19 +8995,31 @@ window.addEventListener('load',run);
   function userScale(){
     return getFramePreviewUserScaleV361(previewMode());
   }
+  function ensureAreaScaleObserver(){
+    // frame-preview-area의 크기 변화를 이벤트로 감지 → 액자 탭 전환(display:none→실측)·리사이즈 시
+    // applyPreviewScale 재호출. observe() 직후 1회 즉시 발사되므로 정착 누락도 자체 복구.
+    try{
+      if(window.__dennAreaScaleRO||typeof ResizeObserver==='undefined')return;
+      var area=by('frame-preview-area');if(!area)return;
+      window.__dennAreaScaleRO=new ResizeObserver(function(){applyPreviewScale();});
+      window.__dennAreaScaleRO.observe(area);
+    }catch(e){}
+  }
   function applyPreviewScale(){
     try{
       var area=by('frame-preview-area'),wrap=document.querySelector('#page-frame .canvas-wrap'),cv=by('frameCanvas');
       if(!area||!wrap||!cv)return;
       syncScaleUi();
-      // 로드 직후 area 미정착(0x0 등)에서 작은 스케일(scale 0.28)을 칠하면, 정착 후 1.2로 스냅하며
-      // "작았다 커지는" 점프(=튐/초기 플래시) 발생. 정착 전엔 transform을 쓰지 않고 wrap을 숨긴 채
-      // 60ms 재시도하다가 첫 정상 계산 시 노출. 예산 초과 시엔 영구 숨김 방지로 그냥 노출.
+      // 기본 활성 페이지가 #page-case라 #page-frame은 로드 시 display:none → frame-preview-area=0x0.
+      // 이때 작은 스케일(0.28)을 칠하면 액자 탭 전환 시 정착되며 1.2로 스냅하는 점프(튐/플래시) 발생.
+      // 미정착이면 transform을 쓰지 않고 숨긴 채 보류. ResizeObserver가 area 크기 변화(탭 전환=display
+      // none→실측 포함) 시 재호출 → 그때 정상 스케일로 한 번에 노출. (시간 budget-fallback로 0.28 칠하던 버그 제거)
+      ensureAreaScaleObserver();
       var ready=area.clientWidth>=120&&area.clientHeight>=120;
-      if(!ready&&wrap.dataset.dennScaleReady!=='1'){
-        wrap.style.setProperty('visibility','hidden','important');
-        var tries=(window.__dennScaleReadyTries=(window.__dennScaleReadyTries||0)+1);
-        if(tries<=40){clearTimeout(window.__dennScaleReadyRetry);window.__dennScaleReadyRetry=setTimeout(applyPreviewScale,60);return;}
+      if(!ready){
+        if(wrap.dataset.dennScaleReady!=='1')wrap.style.setProperty('visibility','hidden','important');
+        if(typeof ResizeObserver==='undefined'){clearTimeout(window.__dennScaleReadyRetry);window.__dennScaleReadyRetry=setTimeout(applyPreviewScale,80);}
+        return;
       }
       var s=logicalSize(cv);
       var aw=Math.max(260,area.clientWidth-48),ah=Math.max(260,area.clientHeight-48);
