@@ -11592,7 +11592,7 @@ window.addEventListener('load',later);
   if(window.__DENN_PC_SHELL_V94)return; window.__DENN_PC_SHELL_V94=true;
   var MIN=861, moved=[];
   // 좌측 아이콘 → 메뉴 그룹(드로어). 클릭 시 해당 그룹만 메뉴 컬럼에 노출. (모바일 바텀시트와 1:1 매핑 목적)
-  var ICONS=[['🖼','템플릿','tpl'],['📐','사이즈','size'],['🌄','이미지','img'],['🎨','색상','color'],['✍','문구','text'],['🕐','시계','clock']];
+  var ICONS=[['🖼','시안','tpl'],['🌄','이미지','img'],['🎨','색상','color'],['✍','문구','text'],['🕐','시계','clock']];
   function el(t,c){var d=document.createElement(t);if(c)d.className=c;return d;}
   function setGroup(g){
     var pf=document.getElementById('page-frame'),shell=pf&&pf.querySelector('.denn-pc-shell'); if(!shell)return;
@@ -11665,15 +11665,15 @@ window.addEventListener('load',later);
       shell.appendChild(rail);shell.appendChild(menu);shell.appendChild(cvs);shell.appendChild(act);
       // 메뉴 컬럼 안 그룹 컨테이너 (info-bar는 메뉴 상단 고정으로 별도)
       var groups={}, gbox=el('div','dps-groups');
-      ['tpl','size','img','color','text','clock'].forEach(function(g){var d=el('div','dps-group');d.setAttribute('data-g',g);groups[g]=d;gbox.appendChild(d);});
+      ['tpl','img','color','text','clock'].forEach(function(g){var d=el('div','dps-group');d.setAttribute('data-g',g);groups[g]=d;gbox.appendChild(d);});
       // 패널 자식 분배 (마커 id로 분류). <hr>은 생략(원복용 기록). 문구→text 그룹, 액션류→우측 액션 컬럼.
       [].slice.call(panel.children).forEach(function(node){
         moved.push({node:node,parent:panel});
         if(node.tagName==='HR'){node.remove();return;}
         var q=function(s){return node.querySelector&&node.querySelector(s);};
         if(node.classList&&node.classList.contains('info-bar')){menu.appendChild(node);} // info-bar → 메뉴 상단(지속)
+        else if(q('#frame-sz-chips')){groups.tpl.appendChild(node);} // 사이즈 → 시안 드로어 상단(사이즈 먼저 → 그 사이즈 시안)
         else if(q('#frame-tpl-grid')){groups.tpl.appendChild(node);}
-        else if(q('#frame-sz-chips')){groups.size.appendChild(node);}
         else if(q('#frame-drop')||q('#frame-file')){groups.img.appendChild(node);}
         else if(q('#frame-color-chips')){groups.color.appendChild(node);}
         else if(q('#f-main')||q('#frame-text-style-box')){groups.text.appendChild(node);}
