@@ -10317,6 +10317,8 @@ window.addEventListener('load',later);
 .denn-color-disabled{opacity:.45;cursor:not-allowed;position:relative}
 .denn-color-disabled > *{pointer-events:none}
 #fts-row-_image .frame-text-style-mini{color:#a47b38;font-weight:600}
+/* allowColorChange:false + V363 문구 입력칸 없음(조정 대상 0) → 박스 자체 숨김+잠금 (applyGating이 토글) */
+#frame-text-style-box.denn-phase-c-box-hidden{display:none!important}
 /* === 작업 2: _image row는 master toggle / v70-locked 무관하게 항상 표시 + 활성. 어드민 allowColorChange 정책 존중 (false면 denn-color-disabled로 흐림+비활성 유지) === */
 /* v70-locked 시 box 자체 비활성 해제 */
 #frame-text-style-box.denn-v70-locked{opacity:1!important;pointer-events:auto!important}
@@ -11023,7 +11025,14 @@ window.addEventListener('load',later);
     window.__dennPhaseCImageAllows=allowed;
     var box=document.getElementById('frame-text-style-box');
     if(box){
-      box.classList.toggle(DISABLED_CLASS, !allowed);
+      // allowColorChange는 _image(PNG) row만 게이팅 — V363 사용자 문구 색/그림자는 무관(입력칸 있으면 항상 허용)
+      var imgRow=document.getElementById('fts-row-_image');
+      if(imgRow)imgRow.classList.toggle('template-hidden', !allowed);
+      // 조정 대상 유무: PNG 허용 OR V363 입력 문구 존재 → 둘 다 0이면 박스 자체 숨김+잠금
+      var hasV363=!!(window.DENNFrameDynamicTextsV363&&DENNFrameDynamicTextsV363.fields(window.curFTpl)
+        .filter(function(f){return typeof window.isFrameTextKeyAllowed!=='function'||window.isFrameTextKeyAllowed(f.key)}).length);
+      box.classList.toggle('denn-phase-c-box-hidden', !(allowed||hasV363));
+      box.classList.remove(DISABLED_CLASS); // 전체 흐림 제거 — V363 문구 색은 허용해야 하므로 박스 전체에 걸지 않음
       if(allowed)box.removeAttribute('title');
       else box.title=DISABLED_TOOLTIP;
     }
