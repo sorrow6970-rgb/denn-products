@@ -3964,7 +3964,7 @@ function applyStableScale(){
     if(!area||!wrap||!cv||!cv.width||!cv.height)return;
     var aw=Math.max(260,area.clientWidth-48),ah=Math.max(260,area.clientHeight-48);
     var fit=Math.min(1.45,aw/cv.width,ah/cv.height);
-    var scale=Math.max(.14,Math.min(1.45,fit*.56*(getScale()/100)));
+    var scale=Math.max(.14,Math.min(1.45,fit*(window.innerWidth>860?.868:.56)*(getScale()/100)));
     wrap.dataset.dennBasePreviewScale='1';
     wrap.dataset.dennUserPreviewScale='1';
     wrap.style.setProperty('transform','scale('+scale+')','important');
@@ -9003,7 +9003,7 @@ window.addEventListener('load',run);
       var aw=Math.max(260,area.clientWidth-48),ah=Math.max(260,area.clientHeight-48);
       var fit=Math.min(1.45,aw/s.w,ah/s.h);
       var minScale=previewMode()==='mobile'?.34:.14;
-      var scale=Math.max(minScale,Math.min(1.45,fit*.56*(userScale()/100)));
+      var scale=Math.max(minScale,Math.min(1.45,fit*(previewMode()==='mobile'?.56:.868)*(userScale()/100)));
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
       wrap.style.setProperty('transform','scale('+scale+')','important');
