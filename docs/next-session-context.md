@@ -16,7 +16,7 @@
   - 기본 이미지 ↔ 작업용 가이드 이미지 사이 얇은 구분선(border-top 1px) 추가
   - 관련 CSS 블록: `denn-v91-ze-card-unify-css`
 
-### → 다음 세션 1순위: **작업 2** (아래 순서 2번).
+### → 다음 세션 1순위: **작업 3 (PC UI 전체 리뉴얼)** — 작업 1·2 및 액자 스케일 리워크 모두 완료됨 (아래 순서 3번).
 
 #### 2026-05-27 추가 세션 — 작업 2 `_image` row 표시 회귀 픽스 검증 완료
 - `eec26b3` "검증 대기"분 verifier 결과 **FAIL** — textless 시안에서 `body_display:none` → `_image` row 0×0 미표시.
@@ -30,6 +30,13 @@
   - 문구 없음 + allowColorChange:false (`v70_locked:true`) → `PASS:true` (직전 FAIL 케이스)
   - allowColorChange:false 시안의 box dim(opacity .45)·pointer none은 매트릭스 스펙상 "흐림+비활성" = 의도된 동작.
 - **미검증(권장 후속)**: allowColorChange:**true** textless 시안에서 `_image` 토글이 **활성·클릭 가능**한지 end-to-end 확인 (= 사용자 원래 목표 "문구 없어도 템플릿 색 변경"). 이 경로는 lock 미발동(`__dennPhaseCImageAllows=true`)이라 eec26b3 unconditional 규칙이 처리 → 동작 예상되나 실측 미확인.
+
+#### 2026-05-27 추가 세션 (3차) — 작업 2 게이팅 정책 확정 + 액자 스케일 리워크 A·B·C 완료 (HEAD `9fae79d`)
+- **작업 2 게이팅 최종화·검증** (`8d2605a`→`b6b30ea`): `_image` row는 allowColorChange 게이팅, 마스터 OFF=공통설정만/ON=개별 row 드롭다운. (잔여: name2 누락 엣지 — 별도 작업으로 분리)
+- **액자 스케일 리워크 (작업 외 부수 트랙) 완료** — 상세는 `docs/2026-05-27-scale-task2-handoff.md` 3절:
+  - **(A/B) 로드·탭 전환 시 작은-스케일 점프 제거** (`3d947c1`): 기본 페이지가 #page-case라 #page-frame 로드 시 0×0 → 작은 scale 칠하던 게 원인. ResizeObserver + 미정착 시 숨김/보류로 해결.
+  - **(C) cap 해제 + 영역 초과 시 미리보기 스크롤** (`e8be317`→`86abca3`→`9fae79d`): PC 최종 scale cap 제거(기본값 불변, slider max 300), 사이저+내부 스크롤 래퍼 분리로 스크롤 구현, 스케일 컨트롤러/오버레이는 뷰포트 고정, info-bar는 좌측 패널 최상단 이동. **모바일은 무변경(PC 전용 스코프).**
+- → **작업 1·2 + 스케일 리워크 모두 종료. 다음은 작업 3 (PC UI 전체 리뉴얼).**
 
 ---
 

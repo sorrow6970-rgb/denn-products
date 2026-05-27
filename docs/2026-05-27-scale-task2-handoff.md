@@ -1,8 +1,9 @@
-# 2026-05-27 핸드오프 — 작업 2(문구별 색상/그림자) + 액자 스케일 리워크
+# 2026-05-27 핸드오프 — 작업 2(문구별 색상/그림자) + 액자 스케일 리워크(완료)
 
-> 이어서 수정하기 위한 현재 상태 + 미해결 항목 정리. 파일: `denn-mockup-tool.html` (고객 목업툴).
-> 현재 main HEAD: `489a04f` (B2 revert 직후 = `78f0d79` 일원화 상태와 동일 코드).
+> 이어서 수정하기 위한 현재 상태 정리. 파일: `denn-mockup-tool.html` (고객 목업툴).
+> 현재 main HEAD: `9fae79d` (작업 2 + 액자 스케일 리워크 A·B·C **전부 완료·검증됨**).
 > 검증 방식: GitHub Pages 새로고침(`Ctrl+Shift+R`) + 콘솔 verifier 1줄 → 스크린샷.
+> ⚠️ 아래 2절의 `:라인번호`는 스케일 리워크 삽입(applyPreviewScale 부근 ~+30줄)으로 소폭 밀렸을 수 있음 — 검색으로 확인.
 
 ---
 
@@ -42,48 +43,41 @@
 
 ---
 
-## 3. 액자 스케일 리워크 — ⚠️ 미완성, 베이스로 되돌린 상태
+## 3. 액자 스케일 리워크 — ✅ 완료 (A·B·C 전부 해결·검증됨)
 
-### 현재 베이스 (`489a04f` = `78f0d79` 코드)
-- **스케일 방식**: `transform:scale` (v361 `applyPreviewScale` `:8997`)
-- **스케일러 일원화 완료**: v39 `applyStableScale` 무력화(`:3961` 가드), `installFrameWrapScaleLock` 비활성(`:10585` early return), v23/v36 스케일러는 기존부터 무력화. → **v361 단일 스케일러.**
-- **PC 기준 계수 0.868** (기존 슬라이더 155% = 새 100% 기본값). 모바일은 0.56 유지. 공식: `scale = fit × (mobile?0.56:0.868) × (slider/100)`, `fit=min(1.45, area/logicalSize)` (`:9006`, `:3967`).
-  - 적용 위치 2곳: v361 `:9006`(live), v39 `:3967`(무력화됨이지만 계수는 맞춰둠).
+### 최종 구조 (v361 단일 스케일러, `transform:scale` 유지)
+- **스케일러 일원화**: v39 `applyStableScale` 무력화(가드), `installFrameWrapScaleLock` 비활성, v23/v36 기존 무력화 → **v361 `applyPreviewScale` 단일.**
+- **공식**: `scale = fit × (mobile?0.56:0.868) × (slider/100)`, `fit=min(1.45, (area-48)/logicalSize)`.
+  - **fit cap(1.45)은 유지** → 기본(slider 100%) 표시 크기 불변(`fit×0.868≤1.26<1.45`라 기본은 cap 미도달).
+  - **PC만 최종 scale cap 제거**(안전 상한 4). 모바일은 기존 1.45 cap 유지.
+- **슬라이더**: PC `{default:100, min:60, max:300}`, 모바일 `{140, 80, 220}`.
 
-### 되돌린 것 (실패한 시도들)
-- `484b328` **B2(CSS 사이징 + 스크롤 + 플래시 제거)** → **revert(`489a04f`)**. 이유: 스크롤 안 됨 + 확대축소 매끄럽지 않음 + 튐 여전.
-- `07369ac` scale-lock 우회 밴드에이드 → 일원화(`78f0d79`)로 대체됨.
+### (A) 로드/탭 전환 시 작은-스케일 점프 — ✅ 해결 (B와 동일 현상이었음)
+- **진짜 원인**: 기본 활성 페이지가 `#page-case`(L196 `class="... on"`)라 `#page-frame`은 로드 시 display:none → `frame-preview-area`가 **탭 전환 전까지 0×0**. 이때 첫 `applyPreviewScale`가 작은 scale(0.28)을 칠하고, 액자 탭 전환으로 area 정착되며 1.2로 스냅 = 점프. ((B) "초기 플래시"도 같은 메커니즘 → 함께 해결.)
+- **픽스**: `applyPreviewScale`에서 area<120px면 transform 미적용 + `visibility:hidden`로 보류, **ResizeObserver**(`ensureAreaScaleObserver`)가 area 크기 변화(탭 전환=display none→실측 포함) 시 재호출 → 첫 정상 area에서 정상 scale로 한 번에 노출(`dennScaleReady`).
+- **커밋**: `761b6d3`(초기 시도 — 시간 budget 재시도라 탭 미전환 시 0.28 고정 버그) → **`3d947c1`(ResizeObserver로 교정, 검증 완료)**. ※ 시간 재시도 방식 폐기, 이벤트 기반이 정답.
 
-### 🔧 미해결 — 다음에 고칠 항목 (우선순위 순)
+### (C) cap 해제 + 영역 초과 시 미리보기 스크롤 — ✅ 완료
+- **cap 해제**: 위 공식대로 PC 최종 cap만 제거 → slider 119%+ dead zone 사라짐. 기본값 무영향(검증).
+- **스크롤(B1 사이저 + 내부 스크롤 래퍼 분리)**: `ensureScaleSizer`가 `.canvas-wrap`을 **`.denn-scale-scroll` > `.denn-scale-sizer`** 2겹으로 감쌈.
+  - `.denn-scale-sizer`: 크기 = `(논리W×scale) × (논리H×scale)` → **footprint 생성**. 내부 flex center로 wrap 정렬 → `transform-origin:center`(현행) 그대로 정합(B2가 막힌 origin 변경 회피).
+  - `.denn-scale-scroll`: `position:absolute; inset:0; overflow:auto; align/justify safe center; z-index:1` → **스크롤 전담**. `safe center`로 영역 초과 시 상/좌 도달성 확보(B2가 막혔던 지점).
+  - **`#frame-preview-area`는 overflow:hidden** 유지 → 그 안 absolute 오버레이(스케일 컨트롤러 `#frame-preview-scale-box` top:54px, `prev-top`, `empty-state`)가 **스크롤에 안 휩쓸리고 뷰포트 고정**.
+- **info-bar(사이즈/프레임 요약) 이동**: 미리보기 하단(absolute) → **좌측 패널 최상단**(static 재배치). `ib-sz`/`ib-fc` id 유지라 갱신 JS 무영향.
+- **PC 전용 스코프**: 전부 `@media(min-width:861px)`. 모바일(≤860px)은 두 래퍼 `display:contents`로 무력화 → 레이아웃 무변경.
+- **커밋**: `e8be317`(cap 해제 + 사이저 스크롤) → `86abca3`(info-bar 패널 이동) → **`9fae79d`(스크롤 래퍼 분리 = 컨트롤러/오버레이 고정)**. CSS 블록: `denn-v92-frame-scale-scroll-css`, `denn-v93-infobar-panel-css`.
 
-**(A) 튐(jitter) — 최우선.**
-- 증상: 스케일이 짧게 튀는 현상. 78f0d79에서 "튐 없다"고 했었으나, 이후 "여전하다" 피드백 있음 → **현재 베이스에서 재확인 필요.**
-- 진단 포인트: 로드 직후 / 슬라이더 input / 리사이즈 중 **언제** 튀는지 특정. 매 renderFrame마다 v361 `scheduleScale[0,80,220ms]`이 여러 번 적용하는 게 원인일 수 있음(중간값 깜빡임).
-- 가설: scheduleScale의 다중 틱(0/80/220) 사이 중간 fit/scale이 잠깐 적용 → 튐. 단일 적용 or 디바운스 검토.
-
-**(B) 초기 작은-스케일 플래시.**
-- 증상: 새로고침 직후 정말 짧게 작은 스케일로 보였다가 정상화.
-- 원인 추정: 로드 시 canvas 기본 attribute(400×400) 또는 첫 applyPreviewScale가 미정착 area 크기로 계산 → 작게 → 정정.
-- 시도했던 fix(B2의 `visibility:hidden` 후 노출)는 B2와 함께 revert됨. transform 방식 유지하면서 별도로 적용 가능.
-
-**(C) 스케일 확대 시 미리보기 스크롤 (영역 초과분).**
-- 요구: 액자를 영역 밖까지 키우면 **컨트롤 패널 말고 미리보기(모달) 영역에 상하/좌우 스크롤바.**
-- 난점: `transform:scale`은 레이아웃 footprint를 안 만들어 스크롤 영역이 안 생김.
-- 실패한 접근(B2): transform 제거 + 캔버스 CSS width/height 직접 사이징 → 스크롤은 이론상 되나 **실제로 스크롤 안 됨 + 확대축소 끊김**. 원인 재분석 필요(아마 `safe center` flex + overflow 조합 or 캔버스 사이징 타이밍 문제).
-- 대안: **B1(사이저 래퍼)** — transform 유지하고 스케일 크기를 가진 sizer DOM을 감싸 footprint 생성 + `#frame-preview-area{overflow:auto}`. transform 메커니즘 유지라 확대축소는 매끄러울 것.
-
-### 레이아웃 메모 (참고, 정상 동작 중)
-- `9e21636` PC 좌측 패널 내부 스크롤(`@media(min-width:861px) #page-frame .panel{max-height:calc(100vh-95px)}`) → 드롭다운 시 미리보기 안 흔들림. (정상)
-- `.main{display:grid; 340px 1fr; min-height:calc(100vh-95px)}`(`:33`), `.preview-area{...justify/align center; overflow:hidden; min-height:500px}`(`:142`), `.canvas-wrap{position:relative;z-index:1}`(`:147`).
-- 프레임 미리보기 영역(`#frame-preview-area` `:347`) 오버레이는 워터마크(`wm-ov-frame`, canvas-wrap 내부)뿐. 사이즈가이드 `sg-canvas`는 룸 모달 전용.
+### 남은 것
+- **액자 스케일 리워크 종료.** 모바일 스케일/스크롤 cap은 의도적으로 손대지 않음(작업 5/6 모바일 단계에서 별도 판단).
+- 레이아웃 참고: `.main{display:grid; 340px 1fr; min-height:calc(100vh-95px)}`, `9e21636` 좌측 패널 내부 스크롤(정상).
 
 ---
 
 ## 4. 재검증 verifier 모음 (콘솔 1줄)
 
-### 스케일 상태 (실제 적용된 transform 읽기)
+### 스케일 상태 (cap·사이저·스크롤 래퍼 포함)
 ```js
-(()=>{const a=document.getElementById('frame-preview-area'),w=document.querySelector('#page-frame .canvas-wrap'),c=document.getElementById('frameCanvas');if(!a||!c||!w)return'미리보기없음';const m=(w.style.transform||'').match(/scale\(([\d.]+)\)/);return JSON.stringify({screen:innerWidth+'x'+innerHeight,applied_scale:m?+m[1]:null,area_h:Math.round(a.clientHeight),canvas:c.width+'x'+c.height,slider:(window.getFramePreviewUserScaleV361&&getFramePreviewUserScaleV361())||'?',mode:(window.DENNFramePreviewScaleV361&&DENNFramePreviewScaleV361.mode())||'?'},null,2);})()
+(()=>{const a=document.getElementById('frame-preview-area'),w=document.querySelector('#page-frame .canvas-wrap'),sc=a&&a.querySelector('.denn-scale-scroll'),sz=a&&a.querySelector('.denn-scale-sizer'),D=window.DENNFramePreviewScaleV361;if(!a||!w)return'미리보기없음';const m=(w.style.transform||'').match(/scale\(([\d.]+)\)/);return JSON.stringify({mode:D&&D.mode(),slider:D&&D.get(),slider_max:D&&D.config.desktop.max,applied_scale:m?+m[1]:null,sizer:sz?sz.style.width+' x '+sz.style.height:'없음',scroll_wrap:!!sc,area_overflow:getComputedStyle(a).overflow,scrollable:sc?(sc.scrollWidth>sc.clientWidth||sc.scrollHeight>sc.clientHeight):false,infobar_in_panel:!!document.querySelector('#page-frame .panel>.info-bar')},null,2);})()
 ```
 
 ### 작업 2 게이팅 상태
