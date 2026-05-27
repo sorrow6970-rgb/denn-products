@@ -16,7 +16,20 @@
   - 기본 이미지 ↔ 작업용 가이드 이미지 사이 얇은 구분선(border-top 1px) 추가
   - 관련 CSS 블록: `denn-v91-ze-card-unify-css`
 
-### → 다음 세션 1순위: **작업 2** (아래 순서 2번). 특히 `eec26b3` "검증 대기"분(Phase C `_image` row 항상 표시) 검증부터 시작.
+### → 다음 세션 1순위: **작업 2** (아래 순서 2번).
+
+#### 2026-05-27 추가 세션 — 작업 2 `_image` row 표시 회귀 픽스 검증 완료
+- `eec26b3` "검증 대기"분 verifier 결과 **FAIL** — textless 시안에서 `body_display:none` → `_image` row 0×0 미표시.
+- **원인**: textless 시안엔 잠금 **2레이어** 동시 적용 (eec26b3는 v70만 가정)
+  - v70 `#frame-text-style-box.denn-v70-locked .frame-text-style-body{display:none!important}` (L6224, 특이도 1,2,0)
+  - v97 `#page-frame.denn-v97-textless-locked #frame-text-style-box{opacity:.45!important;pointer-events:none!important}` (L6996, 특이도 2,1,0)
+  - eec26b3 body 규칙 (1,1,0)이 둘 다에 밀림
+- **픽스** `0b88be1`: body 표시 규칙에 `#frame-text-style-box.denn-v70-locked .frame-text-style-body` (1,2,0) selector 추가 → L6224 이김(동일 특이도+소스 뒤). CSS only.
+- **검증 완료** (verifier 2셀 PASS):
+  - 문구 있음 + allowColorChange:false (`v70_locked:false`) → `PASS:true`
+  - 문구 없음 + allowColorChange:false (`v70_locked:true`) → `PASS:true` (직전 FAIL 케이스)
+  - allowColorChange:false 시안의 box dim(opacity .45)·pointer none은 매트릭스 스펙상 "흐림+비활성" = 의도된 동작.
+- **미검증(권장 후속)**: allowColorChange:**true** textless 시안에서 `_image` 토글이 **활성·클릭 가능**한지 end-to-end 확인 (= 사용자 원래 목표 "문구 없어도 템플릿 색 변경"). 이 경로는 lock 미발동(`__dennPhaseCImageAllows=true`)이라 eec26b3 unconditional 규칙이 처리 → 동작 예상되나 실측 미확인.
 
 ---
 
