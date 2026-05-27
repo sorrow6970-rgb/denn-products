@@ -32,6 +32,8 @@ header{background:var(--ink);padding:0 32px;height:54px;display:flex;align-items
 .tab{flex:1;padding:14px;text-align:center;font-size:13px;font-weight:500;cursor:pointer;color:var(--warm);border-bottom:2px solid transparent;transition:all .2s}.tab.on{color:var(--ink);border-bottom-color:var(--gold2)}
 .main{display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - 95px)}
 .panel{background:var(--surface);border-right:1px solid var(--border);padding:16px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:13px}
+/* 드롭다운 등으로 좌측 패널이 길어져도 grid 행 높이 고정 → 우측 미리보기가 따라 움직이지 않게: PC에서 패널 내부 스크롤 (모바일은 @media max-width 별도 처리) */
+@media(min-width:861px){#page-frame .panel{max-height:calc(100vh - 95px)}}
 .sec-label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--warm);margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
 .drop-zone{border:1.5px dashed var(--border);border-radius:10px;padding:18px 14px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#FAFAF7}
