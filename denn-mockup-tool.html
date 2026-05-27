@@ -10319,18 +10319,15 @@ window.addEventListener('load',later);
 #fts-row-_image .frame-text-style-mini{color:#a47b38;font-weight:600}
 /* allowColorChange:false + V363 문구 입력칸 없음(조정 대상 0) → 박스 자체 숨김+잠금 (applyGating이 토글) */
 #frame-text-style-box.denn-phase-c-box-hidden{display:none!important}
-/* 각 문구 row 조절창(.frame-text-style-tools)은 그 row의 ON 토글이 켜졌을 때만 드롭다운으로 펼침. OFF면 제목+토글만. '전체 문구 공통 설정'(.frame-text-style-bulk)은 .frame-text-style-row가 아니라 영향 없음(항상 펼침) */
-#frame-text-style-box .frame-text-style-row:not(:has(.frame-text-style-top .tog.on)) .frame-text-style-tools{display:none!important}
-/* === 작업 2: _image row는 master toggle / v70-locked 무관하게 항상 표시 + 활성. 어드민 allowColorChange 정책 존중 (false면 denn-color-disabled로 흐림+비활성 유지) === */
+/* === 작업 2: body(전체 문구 공통 설정)는 master OFF/v70-locked 무관하게 항상 노출. 개별 문구 row는 master ON 시에만 드롭다운(아래 규칙). _image row는 allowColorChange로 게이팅(applyGating) === */
 /* v70-locked 시 box 자체 비활성 해제 */
 #frame-text-style-box.denn-v70-locked{opacity:1!important;pointer-events:auto!important}
 /* body 항상 표시 (master OFF + v70-locked 모두 무관 — 기존 L124 .frame-text-style-body{display:none} override) */
 /* 두 번째 selector: v70 lock body 숨김(L6224 #...denn-v70-locked .frame-text-style-body{display:none!important}, 특이도 1,2,0)을 이기려면 동일 특이도(1,2,0)+이 블록이 소스상 뒤 → 승리 */
 #frame-text-style-box .frame-text-style-body,
 #frame-text-style-box.denn-v70-locked .frame-text-style-body{display:flex!important;flex-direction:column}
-/* master OFF 또는 v70-locked 시: _image 외 다른 row는 숨김 (문구 row 표시 정책 유지) */
-#frame-text-style-box:not(.on) .frame-text-style-body > .frame-text-style-row:not(#fts-row-_image),
-#frame-text-style-box.denn-v70-locked .frame-text-style-body > .frame-text-style-row:not(#fts-row-_image){display:none!important}
+/* master OFF 시: 모든 문구 row 숨김 → '전체 문구 공통 설정'만 노출. master ON 시에만 해당 항목 row 드롭다운. bulk(.frame-text-style-bulk)는 .frame-text-style-row 아니라 항상 노출 */
+#frame-text-style-box:not(.on) .frame-text-style-body > .frame-text-style-row{display:none!important}
 </style>
 <script id="denn-phase-c-customer-color">
 (function(){
