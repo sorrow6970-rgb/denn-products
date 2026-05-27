@@ -11548,7 +11548,7 @@ window.addEventListener('load',later);
   #page-frame.denn-pc-shell-on{display:block!important;padding:0!important;max-height:none!important}
   #page-frame.denn-pc-shell-on>.panel{display:none!important}
   /* 컬럼 폭을 화면 해상도에 비례(vw)시키되 최소/최대 한도(clamp). 큰 모니터일수록 좌우 컨트롤 박스가 넓어짐. */
-  .denn-pc-shell{display:grid;grid-template-columns:clamp(80px,5vw,108px) clamp(264px,18vw,380px) minmax(0,1fr) clamp(252px,17vw,360px);height:calc(100vh - 95px);background:var(--surface)}
+  .denn-pc-shell{display:grid;grid-template-columns:clamp(80px,5vw,108px) clamp(264px,18vw,380px) minmax(0,1fr) clamp(264px,18vw,380px);height:calc(100vh - 95px);background:var(--surface)}
   .denn-pc-shell .dps-col{min-width:0;min-height:0}
   /* 좌측 기능 아이콘 레일 — 풀높이 */
   .denn-pc-shell .dps-rail{background:var(--ink);display:flex;flex-direction:column;gap:2px;padding:14px 6px;overflow-y:auto}
@@ -11577,9 +11577,11 @@ window.addEventListener('load',later);
   .denn-pc-shell .dps-reset-btn{flex:none;width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--ink);font-family:inherit;font-size:11.5px;cursor:pointer;transition:all .15s}
   .denn-pc-shell .dps-reset-btn:hover{border-color:var(--gold2);color:var(--gold2)}
   #page-frame.denn-pc-shell-on .preview-area{min-height:0!important;height:100%!important}
-  /* 템플릿 그리드: 240px 고정 → 메뉴 컬럼 높이 거의 다 사용(해상도 비례). 넓은 메뉴에선 칸 수 자동 증가. */
+  /* 템플릿 그리드: 240px 고정 → 메뉴 컬럼 높이 거의 다 사용(해상도 비례). 카드는 2열 고정(넓은 메뉴라 크게 보임). */
   #page-frame.denn-pc-shell-on .tpl-scroll{max-height:calc(100vh - 230px)!important}
-  #page-frame.denn-pc-shell-on .tpl-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))!important}
+  #page-frame.denn-pc-shell-on .tpl-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px!important}
+  #page-frame.denn-pc-shell-on .tpl-card{padding:8px 7px}
+  #page-frame.denn-pc-shell-on .tpl-name{font-size:10px}
   /* 스케일 컨트롤러를 캔버스 하단 중앙으로 (메뉴 컬럼 침범 방지, 뷰포트 고정 유지) */
   #page-frame.denn-pc-shell-on #frame-preview-scale-box{top:auto!important;bottom:16px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important}
 }
