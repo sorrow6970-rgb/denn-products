@@ -8890,7 +8890,7 @@ window.addEventListener('load',run);
   if(window.DENN_FRAME_PREVIEW_HIDPI_V361&&window.DENN_FRAME_PREVIEW_HIDPI_V361.version==='v36.1-frame-preview-hidpi')return;
   var LEGACY_SCALE_KEY='denn_frame_preview_user_scale_v40';
   var SCALE_KEYS={desktop:'denn_frame_preview_user_scale_desktop_v361',mobile:'denn_frame_preview_user_scale_mobile_v361'};
-  var DEFAULT_SCALE_CONFIG={breakpoint:860,desktop:{defaultScale:100,min:60,max:170},mobile:{defaultScale:140,min:80,max:220}};
+  var DEFAULT_SCALE_CONFIG={breakpoint:860,desktop:{defaultScale:100,min:60,max:300},mobile:{defaultScale:140,min:80,max:220}};
   window.DENN_FRAME_PREVIEW_SCALE_CONFIG_V361=window.DENN_FRAME_PREVIEW_SCALE_CONFIG_V361||DEFAULT_SCALE_CONFIG;
   var SCALE_CONFIG=window.DENN_FRAME_PREVIEW_SCALE_CONFIG_V361;
   SCALE_CONFIG.breakpoint=num(SCALE_CONFIG.breakpoint,DEFAULT_SCALE_CONFIG.breakpoint);
@@ -9005,6 +9005,20 @@ window.addEventListener('load',run);
       window.__dennAreaScaleRO.observe(area);
     }catch(e){}
   }
+  function ensureScaleSizer(wrap){
+    // .canvas-wrap을 footprint용 사이저로 1회 감싼다. 보호영역 selector('#page-frame .canvas-wrap')은
+    // descendant 매칭이라 조상 삽입에 무영향. 오버레이(mockup-bg/prev-top/info-bar/empty-state)는 전부
+    // position:absolute라 flex 흐름엔 canvas-wrap만 존재 → 사이저로 대체돼도 정렬 동일.
+    try{
+      var p=wrap.parentNode;
+      if(p&&p.classList&&p.classList.contains('denn-scale-sizer'))return p;
+      var sizer=document.createElement('div');
+      sizer.className='denn-scale-sizer';
+      p.insertBefore(sizer,wrap);
+      sizer.appendChild(wrap);
+      return sizer;
+    }catch(e){return null}
+  }
   function applyPreviewScale(){
     try{
       var area=by('frame-preview-area'),wrap=document.querySelector('#page-frame .canvas-wrap'),cv=by('frameCanvas');
@@ -9023,9 +9037,12 @@ window.addEventListener('load',run);
       }
       var s=logicalSize(cv);
       var aw=Math.max(260,area.clientWidth-48),ah=Math.max(260,area.clientHeight-48);
+      // fit cap(1.45)은 유지 → 기본(slider 100%) 표시 크기 불변(fit×.868≤1.26<1.45라 기본은 cap 미도달).
+      // PC만 최종 cap을 풀어(안전 상한 4) slider 119%+ dead zone 제거. 모바일은 기존 1.45 cap 유지.
       var fit=Math.min(1.45,aw/s.w,ah/s.h);
-      var minScale=previewMode()==='mobile'?.34:.14;
-      var scale=Math.max(minScale,Math.min(1.45,fit*(previewMode()==='mobile'?.56:.868)*(userScale()/100)));
+      var mob=previewMode()==='mobile';
+      var raw=fit*(mob?.56:.868)*(userScale()/100);
+      var scale=mob?Math.max(.34,Math.min(1.45,raw)):Math.max(.14,Math.min(4,raw));
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
       wrap.style.setProperty('transform','scale('+scale+')','important');
@@ -9034,6 +9051,13 @@ window.addEventListener('load',run);
       wrap.style.setProperty('max-width','none','important');
       cv.style.setProperty('max-width','none','important');
       cv.style.setProperty('min-width','0','important');
+      // PC: 사이저에 scale된 크기를 부여 → 레이아웃 footprint 생성 → 영역 초과 시 preview-area 스크롤.
+      // transform-origin:center 유지 + 사이저 내부 flex center 정렬(B2가 막힌 origin 변경 회피). 모바일은 사이저 무력화.
+      var sizer=ensureScaleSizer(wrap);
+      if(sizer){
+        if(mob){sizer.style.removeProperty('width');sizer.style.removeProperty('height');}
+        else{sizer.style.width=Math.round(s.w*scale)+'px';sizer.style.height=Math.round(s.h*scale)+'px';}
+      }
       // 첫 정상 계산 완료 — 숨겨뒀던 wrap 노출(이후엔 가드 영구 통과, 리사이즈/렌더 정상 동작)
       if(wrap.dataset.dennScaleReady!=='1'){wrap.dataset.dennScaleReady='1';wrap.style.setProperty('visibility','visible','important');}
     }catch(e){}
@@ -11485,6 +11509,20 @@ window.addEventListener('load',later);
   }
 })();
 </script>
+<style id="denn-v92-frame-scale-scroll-css">
+/* (C) 액자 스케일 cap 해제 + 영역 초과 시 미리보기 스크롤. PC(≥861px)만. 모바일·케이스 무영향.
+   사이저는 transform된 시각 크기와 동일한 footprint를 만들고, 내부에서 wrap을 flex center로 정렬해
+   transform-origin:center(현행) 그대로 정합. */
+.denn-scale-sizer{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.denn-scale-sizer>.canvas-wrap{flex:0 0 auto}
+@media(min-width:861px){
+  #page-frame .preview-area{overflow:auto!important;max-height:calc(100vh - 95px)!important;align-items:safe center!important;justify-content:safe center!important}
+}
+@media(max-width:860px){
+  /* 모바일/태블릿: 사이저를 박스트리에서 제거 → canvas-wrap이 직속 자식처럼 동작(기존 모바일 레이아웃 유지) */
+  #page-frame .denn-scale-sizer{display:contents!important}
+}
+</style>
 </body>
 </html>
 
