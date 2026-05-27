@@ -11541,22 +11541,28 @@ window.addEventListener('load',later);
 #page-frame .panel>.info-bar{position:static!important;transform:none!important;left:auto!important;bottom:auto!important;width:100%;box-sizing:border-box;margin:0 0 14px;justify-content:center}
 </style>
 <style id="denn-v94-pc-shell-css">
-/* (작업 3 Phase 1) PC 전용(≥861px) 4컬럼 셸: [아이콘네비 | 시안그리드 | 캔버스 | 우측 인스펙터].
+/* (작업 3 Phase 1) PC 전용(≥861px) 4컬럼 셸: [기능 아이콘 레일 | 기능 메뉴(전환) | 캔버스 | 문구·요소 리스트].
    액자(#page-frame)에만, denn-pc-shell-on 클래스가 붙었을 때만. 모바일은 JS가 원복하므로 이 규칙 자체가 미적용. */
 @media(min-width:861px){
   #page-frame.denn-pc-shell-on{display:block!important;padding:0!important;max-height:none!important}
   #page-frame.denn-pc-shell-on>.panel{display:none!important}
-  .denn-pc-shell{display:grid;grid-template-columns:74px 232px minmax(0,1fr) 332px;height:calc(100vh - 95px);background:var(--surface)}
+  .denn-pc-shell{display:grid;grid-template-columns:80px 248px minmax(0,1fr) 300px;height:calc(100vh - 95px);background:var(--surface)}
   .denn-pc-shell .dps-col{min-width:0;min-height:0}
-  .denn-pc-shell .dps-nav{background:var(--ink);display:flex;flex-direction:column;gap:6px;padding:14px 8px}
-  .denn-pc-shell .dps-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;border:none;border-radius:10px;background:transparent;color:#9A9282;font-family:inherit;cursor:pointer;transition:all .15s}
-  .denn-pc-shell .dps-nav-btn .dps-ico{font-size:20px;line-height:1}
-  .denn-pc-shell .dps-nav-btn .dps-lab{font-size:9px;letter-spacing:.04em}
-  .denn-pc-shell .dps-nav-btn:hover{background:rgba(255,255,255,.06);color:var(--cream)}
-  .denn-pc-shell .dps-nav-btn.on{background:rgba(200,168,100,.18);color:var(--gold)}
-  .denn-pc-shell .dps-grid{border-right:1px solid var(--border);padding:14px 12px;overflow-y:auto}
+  /* 좌측 기능 아이콘 레일 */
+  .denn-pc-shell .dps-rail{background:var(--ink);display:flex;flex-direction:column;gap:4px;padding:12px 6px}
+  .denn-pc-shell .dps-icon{display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 4px;border:none;border-radius:10px;background:transparent;color:#9A9282;font-family:inherit;cursor:pointer;transition:all .15s}
+  .denn-pc-shell .dps-icon .dps-ico{font-size:19px;line-height:1}
+  .denn-pc-shell .dps-icon .dps-lab{font-size:9px;letter-spacing:.02em;white-space:nowrap}
+  .denn-pc-shell .dps-icon:hover{background:rgba(255,255,255,.06);color:var(--cream)}
+  .denn-pc-shell .dps-icon.on{background:rgba(200,168,100,.18);color:var(--gold)}
+  /* 기능 메뉴 컬럼 — 활성 그룹만 노출 */
+  .denn-pc-shell .dps-menu{border-right:1px solid var(--border);padding:16px 14px;overflow-y:auto}
+  .denn-pc-shell .dps-group{display:none;flex-direction:column;gap:13px}
+  .denn-pc-shell .dps-group.on{display:flex}
+  /* 캔버스 */
   .denn-pc-shell .dps-canvas{position:relative;overflow:hidden}
-  .denn-pc-shell .dps-insp{border-left:1px solid var(--border);padding:16px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:13px}
+  /* 우측 문구·요소 리스트 */
+  .denn-pc-shell .dps-list{border-left:1px solid var(--border);padding:14px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
   /* 셸 안에서는 사이저 스크롤 래퍼가 .dps-canvas 안 preview-area를 채우도록 (작업 C 규칙 유지) */
   #page-frame.denn-pc-shell-on .preview-area{min-height:0!important;height:100%!important}
 }
@@ -11566,12 +11572,13 @@ window.addEventListener('load',later);
   'use strict';
   if(window.__DENN_PC_SHELL_V94)return; window.__DENN_PC_SHELL_V94=true;
   var MIN=861, moved=[];
+  // 좌측 아이콘 → 메뉴 그룹. 클릭 시 해당 그룹만 메뉴 컬럼에 노출.
+  var ICONS=[['🖼','템플릿','tpl'],['📐','사이즈','size'],['📷','이미지','img'],['🎨','색상·시계','color']];
   function el(t,c){var d=document.createElement(t);if(c)d.className=c;return d;}
-  function navBtn(ico,lab,tab,on){
-    var b=el('button','dps-nav-btn'+(on?' on':''));b.type='button';
-    b.innerHTML='<span class="dps-ico">'+ico+'</span><span class="dps-lab">'+lab+'</span>';
-    b.addEventListener('click',function(){try{window.switchTab&&window.switchTab(tab)}catch(e){}});
-    return b;
+  function setGroup(g){
+    var pf=document.getElementById('page-frame'),shell=pf&&pf.querySelector('.denn-pc-shell'); if(!shell)return;
+    shell.querySelectorAll('.dps-group').forEach(function(d){d.classList.toggle('on',d.getAttribute('data-g')===g)});
+    shell.querySelectorAll('.dps-icon').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-g')===g)});
   }
   function build(){
     try{
@@ -11581,22 +11588,35 @@ window.addEventListener('load',later);
       var preview=document.getElementById('frame-preview-area');
       if(!panel||!preview)return;
       var shell=el('div','denn-pc-shell'),
-          nav=el('div','dps-col dps-nav'),grid=el('div','dps-col dps-grid'),
-          cvs=el('div','dps-col dps-canvas'),insp=el('div','dps-col dps-insp');
-      shell.appendChild(nav);shell.appendChild(grid);shell.appendChild(cvs);shell.appendChild(insp);
-      nav.appendChild(navBtn('📱','케이스','case',false));
-      nav.appendChild(navBtn('🖼','액자','frame',true));
-      // 패널 자식 분배: 02 템플릿(#frame-tpl-grid 포함)은 그리드 컬럼, 나머지는 우측 인스펙터. <hr>은 셸에서 생략(원복용 기록).
+          rail=el('div','dps-col dps-rail'),menu=el('div','dps-col dps-menu'),
+          cvs=el('div','dps-col dps-canvas'),list=el('div','dps-col dps-list');
+      shell.appendChild(rail);shell.appendChild(menu);shell.appendChild(cvs);shell.appendChild(list);
+      // 메뉴 컬럼 안 그룹 컨테이너
+      var groups={};
+      ['tpl','size','img','color'].forEach(function(g){var d=el('div','dps-group');d.setAttribute('data-g',g);groups[g]=d;menu.appendChild(d);});
+      // 패널 자식 분배 (마커 id로 분류). <hr>은 셸에서 생략(원복용 기록). 문구·info-bar·액션은 우측 리스트로.
       [].slice.call(panel.children).forEach(function(node){
         moved.push({node:node,parent:panel});
         if(node.tagName==='HR'){node.remove();return;}
-        if(node.querySelector&&node.querySelector('#frame-tpl-grid'))grid.appendChild(node);
-        else insp.appendChild(node);
+        var q=function(s){return node.querySelector&&node.querySelector(s);};
+        if(node.classList&&node.classList.contains('info-bar')){list.insertBefore(node,list.firstChild);}
+        else if(q('#frame-tpl-grid')){groups.tpl.appendChild(node);}
+        else if(q('#frame-sz-chips')){groups.size.appendChild(node);}
+        else if(q('#frame-drop')||q('#frame-file')){groups.img.appendChild(node);}
+        else if(q('#frame-color-chips')||q('#tog-clock')){groups.color.appendChild(node);}
+        else if(q('#f-main')||q('#frame-text-style-box')){list.appendChild(node);} // 문구 → 우측 리스트
+        else {list.appendChild(node);} // 액션 스택 등 나머지 → 리스트 하단
       });
-      moved.push({node:preview,parent:pf});
-      cvs.appendChild(preview);
-      pf.appendChild(shell);
-      pf.classList.add('denn-pc-shell-on');
+      moved.push({node:preview,parent:pf}); cvs.appendChild(preview);
+      // 레일 아이콘
+      ICONS.forEach(function(it,idx){
+        var b=el('button','dps-icon'+(idx===0?' on':'')); b.type='button'; b.setAttribute('data-g',it[2]);
+        b.innerHTML='<span class="dps-ico">'+it[0]+'</span><span class="dps-lab">'+it[1]+'</span>';
+        b.addEventListener('click',function(){setGroup(it[2])});
+        rail.appendChild(b);
+      });
+      pf.appendChild(shell); pf.classList.add('denn-pc-shell-on');
+      setGroup('tpl');
       if(typeof window.applyFramePreviewScaleV36==='function')setTimeout(window.applyFramePreviewScaleV36,60);
     }catch(e){}
   }
