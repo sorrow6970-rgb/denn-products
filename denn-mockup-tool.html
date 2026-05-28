@@ -3261,7 +3261,8 @@ function syncGuideForSelectedSize(){
 window.rmSizeCanvas=function(){
   window.RM=window.RM||{};
   RM.canvas=by('rm-canvas');RM.ctx=ctx(RM.canvas);if(!RM.canvas)return;
-  var area=by('rm-canvas-area'),A=adm(),ui=A.uiSettings||{},uc=A.uiCustom||{},pref=num(ui.previewMaxW,uc.prevMaxW||960),rawW=Math.max(320,((area&&area.clientWidth)||900)-20),maxH=Math.max(240,((area&&area.clientHeight)||620)-20),cap=innerWidth>=1500?1800:1600,mobilePortrait=isRoomPortrait(),mobileLandscape=isRoomLandscape();
+  /* v95: canvas-area padding 4px 기준으로 subtraction 축소(-20→-8), cap도 살짝 키워 전체 렌더 스케일 ↑ → 아일랜드 꽉 차게 */
+  var area=by('rm-canvas-area'),A=adm(),ui=A.uiSettings||{},uc=A.uiCustom||{},pref=num(ui.previewMaxW,uc.prevMaxW||960),rawW=Math.max(320,((area&&area.clientWidth)||900)-8),maxH=Math.max(240,((area&&area.clientHeight)||620)-8),cap=innerWidth>=1500?2200:1900,mobilePortrait=isRoomPortrait(),mobileLandscape=isRoomLandscape();
   if(mobilePortrait){rawW=Math.max(320,((area&&area.clientWidth)||innerWidth||360)-12);maxH=Math.max(maxH,Math.round((innerHeight||720)*.56));var mw=Math.round(rawW),mh=Math.round(maxH);RM.canvas.width=mw;RM.canvas.height=mh;RM.canvas.style.width=mw+'px';RM.canvas.style.height=mh+'px';var sgM=by('sg-canvas');if(sgM){sgM.style.width=mw+'px';sgM.style.height=mh+'px'}return}
   if(mobileLandscape){rawW=Math.max(360,((area&&area.clientWidth)||innerWidth||760)-16);maxH=Math.max(260,((area&&area.clientHeight)||innerHeight||420)-16);cap=pref}
   if(innerWidth<760)cap=pref;
