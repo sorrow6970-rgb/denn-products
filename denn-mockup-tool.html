@@ -185,15 +185,15 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
 <body>
 <header>
   <div class="logo" id="hdr-logo">DENN <em>PRODUCTS</em></div>
+  <div class="tabbar">
+    <div class="tab on" onclick="switchTab('frame')">🖼 액자 · 프레임</div>
+    <div class="tab" onclick="switchTab('case')">📱 폰케이스</div>
+  </div>
   <div class="tagline" id="hdr-tag">시안 확인 시스템</div>
 </header>
-<div class="tabbar">
-  <div class="tab on" onclick="switchTab('case')">📱 폰케이스</div>
-  <div class="tab" onclick="switchTab('frame')">🖼 액자 · 프레임</div>
-</div>
 
 <!-- PHONE CASE -->
-<div class="main page on" id="page-case">
+<div class="main page" id="page-case">
   <div class="panel">
     <div>
       <div class="sec-label">01 기종 선택</div>
@@ -298,7 +298,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
 </div>
 
 <!-- FRAME -->
-<div class="main page" id="page-frame">
+<div class="main page on" id="page-frame">
   <div class="panel">
     <div class="info-bar"><span>사이즈: <strong id="ib-sz">-</strong></span><span>·</span><span>프레임: <strong id="ib-fc">-</strong></span></div>
     <div><div class="sec-label">01 액자 사이즈</div><div class="chips c2" id="frame-sz-chips"></div><div class="hint" id="denn-v71-frame-size-note" style="margin-top:7px;line-height:1.55">액자 사이즈는 동일하게 표기됩니다. 실제 사이즈 예시보기는 내공간에서보기에서 확인하세요!</div></div>
@@ -990,7 +990,7 @@ function setCaseColor(c,el){document.querySelectorAll('#case-colors .sw').forEac
 function setPhoneColor(c,el){document.querySelectorAll('#phone-colors .sw').forEach(function(s){s.classList.remove('on');});el.classList.add('on');phoneColor=c;renderCase();}
 function togOpt(k){var t=document.getElementById('tog-'+k);t.classList.toggle('on');opts[k]=t.classList.contains('on');if(k==='dl')document.getElementById('ib-dl').textContent=opts.dl?'포함':'숨김';renderCase();}
 function togFrame(k){var t=document.getElementById('tog-'+k);t.classList.toggle('on');opts[k]=t.classList.contains('on');if(k==='clock'){if(opts.clock)clockTmr=setInterval(renderFrame,1000);else clearInterval(clockTmr);}renderFrame();}
-function switchTab(tab){document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('on',['case','frame'][i]===tab);});document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});document.getElementById('page-'+tab).classList.add('on');}
+function switchTab(tab){document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('on',['frame','case'][i]===tab);});document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});document.getElementById('page-'+tab).classList.add('on');}
 
 function ev(e){e.preventDefault();}
 function dropF(e,t){e.preventDefault();var f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))handleF(f,t);}
@@ -11596,6 +11596,7 @@ window.addEventListener('load',later);
   function el(t,c){var d=document.createElement(t);if(c)d.className=c;return d;}
   function setGroup(g){
     var pf=document.getElementById('page-frame'),shell=pf&&pf.querySelector('.denn-pc-shell'); if(!shell)return;
+    shell.classList.remove('dps-menu-collapsed'); // 아이콘 클릭 시 접힌 메뉴 자동 펼침
     shell.querySelectorAll('.dps-group').forEach(function(d){d.classList.toggle('on',d.getAttribute('data-g')===g)});
     shell.querySelectorAll('.dps-icon').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-g')===g)});
   }
@@ -11690,6 +11691,11 @@ window.addEventListener('load',later);
         rail.appendChild(b);
       });
       pf.appendChild(shell); pf.classList.add('denn-pc-shell-on');
+      // 좌측 메뉴 접기 버튼 (캔버스 좌측 경계)
+      var mtog=el('button','dps-menu-toggle'); mtog.type='button'; mtog.setAttribute('aria-label','메뉴 접기/펼치기');
+      mtog.innerHTML='<span class="dps-mtog-ico"></span>';
+      mtog.addEventListener('click',function(e){e.stopPropagation();shell.classList.toggle('dps-menu-collapsed');});
+      cvs.appendChild(mtog);
       setGroup('tpl');
       buildRightExtras(act);
       // 숨겨진 패널에 나중에 주입되는 노드(주문제작 버튼 등)를 우측 액션 컬럼으로 자동 이동
@@ -11765,6 +11771,83 @@ window.addEventListener('load',later);
   window.addEventListener('load',function(){setTimeout(boot,420)});
 })();
 </script>
+<style id="denn-v95-2tone-island-css">
+/* (작업3) 목업툴 2톤(흰색 + #e6e6e6) + 아일랜드 플로팅 셸 + 좌측 메뉴 접기.
+   상단 헤더(검정)와 --gold(헤더 'PRODUCTS' 강조)는 보존. 나머지 배경=흰색, 좌측 레일=#e6e6e6, 강조=검정 모노.
+   대부분은 :root 변수 remap으로 일괄 처리하고, 변수 미사용 웜톤만 개별 override. */
+:root{--surface:#ffffff;--cream:#ffffff;--border:#e6e6e6;--gold2:#19160F;--warm:#7a7a7a}
+body{background:#fff}
+/* 변수 미사용 웜톤 off-white → 흰/연회색 */
+.drop-zone{background:#fff!important}
+.drop-zone:hover{background:#f5f5f5!important;border-color:#19160F!important}
+.tog-row{background:#fff!important}
+.img-transform-ctl{background:#f7f7f7!important}
+/* 안내문구(.hint) 크림+브라운 → 연회색+그레이 */
+.hint,.frame-extra-options .hint{background:#f5f5f5!important;color:#777!important}
+/* 캔버스 미리보기 영역 크림 그라데이션 → 흰색 */
+.preview-area{background:#fff!important}
+.preview-area::before{display:none!important}
+
+/* ===== MOIITEE식 밝은 상단 바: 로고 알약 + 탭 알약 토글 + 태그라인 ===== */
+header{background:#fff!important;border-bottom:1px solid #e6e6e6!important;height:auto!important;min-height:60px;gap:18px!important;padding:10px 22px!important;flex-wrap:wrap}
+.logo{color:#19160F!important;border:1px solid #e6e6e6;border-radius:24px;padding:7px 16px;line-height:1;display:inline-flex;align-items:center;height:38px;font-size:14px;background:#fff;font-family:'Playfair Display',serif;letter-spacing:.08em}
+.logo em{color:#19160F!important;font-style:normal;font-weight:700;margin-left:6px}
+.tagline{color:#888!important;font-size:11px;font-weight:500;margin-left:auto}
+/* 탭바를 헤더 안 알약 토글로 — 기본 underline 탭 무력화 */
+header .tabbar{background:transparent!important;border-bottom:none!important;display:flex;gap:6px;align-items:center;flex:0 0 auto}
+header .tab{flex:0 0 auto!important;padding:8px 16px!important;border:1px solid #e6e6e6!important;border-radius:20px!important;background:#f5f5f5!important;color:#555!important;font-size:12px!important;font-weight:500!important;transition:all .15s;line-height:1}
+header .tab:hover{background:#ebebeb!important;color:#19160F!important}
+header .tab.on{background:#19160F!important;color:#fff!important;border-color:#19160F!important}
+@media(max-width:640px){
+  header{padding:8px 12px!important;gap:10px!important}
+  .tagline{display:none}
+  header .tab{padding:7px 12px!important;font-size:11px!important}
+}
+/* 잔존 gold hover 강조도 모노로 */
+.chip:hover,.cat-chip:hover,.brand-tab:hover,.z-btn:hover{border-color:#19160F!important}
+.z-btn:hover{background:#f5f5f5!important}
+/* 룸 모달도 전체 흰색 통일(--surface로 본체는 이미 흰색, 헤더/좌측패널/사이즈가이드만 인라인 잔존) */
+#room-modal>div>div:first-child{background:#fff!important}
+#room-modal>div>div:nth-child(2)>div:first-child{background:#fff!important}
+#sg-panel{background:#fff!important}
+
+/* ===== PC 셸(≥861) 2톤 + 아일랜드 ===== */
+@media(min-width:861px){
+  .denn-pc-shell{position:relative;background:#fff;gap:14px;padding:14px;box-sizing:border-box}
+  /* 좌측 아이콘 레일 = 그레이 아일랜드 */
+  .denn-pc-shell .dps-rail{background:#e6e6e6;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);padding:14px 6px}
+  .denn-pc-shell .dps-icon{color:#555;background:transparent}
+  .denn-pc-shell .dps-icon:hover{background:rgba(0,0,0,.06);color:#19160F}
+  .denn-pc-shell .dps-icon.on{background:#19160F;color:#fff}
+  /* 메뉴/액션/캔버스 = 흰 아일랜드 */
+  .denn-pc-shell .dps-menu{background:#fff;border:1px solid #e6e6e6;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);transition:opacity .18s ease}
+  .denn-pc-shell .dps-action{background:#fff;border:1px solid #e6e6e6;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+  .denn-pc-shell .dps-canvas{background:#fff;border:1px solid #e6e6e6;border-radius:16px}
+  .denn-pc-shell .dps-elem-row{background:#fff;border:1px solid #e6e6e6}
+  /* 접기 버튼 — 캔버스 좌측 경계 */
+  .denn-pc-shell .dps-menu-toggle{position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:40;width:22px;height:48px;border:1px solid #e6e6e6;border-left:none;border-radius:0 12px 12px 0;background:#fff;color:#19160F;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:3px 0 10px rgba(0,0,0,.07);padding:0;transition:background .15s}
+  .denn-pc-shell .dps-menu-toggle:hover{background:#f0f0f0}
+  .denn-pc-shell .dps-mtog-ico::before{content:'‹';font-size:18px;line-height:1;font-weight:700}
+  /* 접힘 상태 — 메뉴 컬럼 0폭 + 숨김, 캔버스 확장 */
+  .denn-pc-shell.dps-menu-collapsed{grid-template-columns:clamp(80px,5vw,108px) 0px minmax(0,1fr) clamp(264px,18vw,380px)}
+  .denn-pc-shell.dps-menu-collapsed .dps-menu{opacity:0;pointer-events:none;padding:0;border:none;box-shadow:none;overflow:hidden}
+  .denn-pc-shell.dps-menu-collapsed .dps-mtog-ico::before{content:'›'}
+}
+
+/* ===== 액션 버튼 검정 모노 (기존 !important 이김) ===== */
+#page-frame .denn-action-btn{border:1px solid #e6e6e6}
+/* 주문 = 약간 진한 그레이(강조), 나머지 = 연회색. 전부 그레이톤. */
+#page-frame .denn-action-btn-primary{background:#d9d9d9!important;color:#19160F!important;border-color:#cfcfcf!important;box-shadow:none!important}
+#page-frame .denn-action-btn-save,
+#page-frame .denn-action-btn-secondary,
+#page-frame .denn-action-btn-room,
+#page-frame .denn-action-btn-home{background:#efefef!important;color:#19160F!important;border-color:#e0e0e0!important;box-shadow:none!important}
+#page-frame .denn-action-btn-primary:hover{background:#cccccc!important;border-color:#bdbdbd!important}
+#page-frame .denn-action-btn-save:hover,
+#page-frame .denn-action-btn-secondary:hover,
+#page-frame .denn-action-btn-room:hover,
+#page-frame .denn-action-btn-home:hover{background:#e4e4e4!important;border-color:#cfcfcf!important}
+</style>
 </body>
 </html>
 
