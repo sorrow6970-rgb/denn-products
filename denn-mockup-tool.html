@@ -16,7 +16,7 @@ function saveCustomerAdminStateToLocalStorage(A){
 </script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--cream:#F6F1E9;--ink:#5a5a5a;--warm:#8A7D6E;--border:#DDD5C8;--gold:#C8A864;--gold2:#8C6E3C;--surface:#FDFAF4;--red:#E53E3E;--blue:#3182CE}
+:root{--cream:#F6F1E9;--ink:#777;--warm:#8A7D6E;--border:#DDD5C8;--gold:#C8A864;--gold2:#8C6E3C;--surface:#FDFAF4;--red:#E53E3E;--blue:#3182CE}
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;overflow-x:hidden}
 html.denn-admin-room-boot body{background:#0f0c08}
 html.denn-admin-room-boot header,
@@ -646,7 +646,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
 // share 값이 'http'로 시작 안 하면 Firebase Storage path로 간주 → URL 재구성 (짧은 share URL 지원).
 (function(){
   var msg=document.createElement('div');
-  msg.style.cssText='position:fixed;top:12px;left:12px;right:12px;padding:12px 16px;background:#5a5a5a;color:#fff;border-radius:8px;font:13px sans-serif;z-index:99999;max-width:none;word-break:break-all;text-align:left;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,.3)';
+  msg.style.cssText='position:fixed;top:12px;left:12px;right:12px;padding:12px 16px;background:#777;color:#fff;border-radius:8px;font:13px sans-serif;z-index:99999;max-width:none;word-break:break-all;text-align:left;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,.3)';
   msg.textContent='[share] 부트 중...';
   function attach(){
     if(document.documentElement)document.documentElement.appendChild(msg);
@@ -6160,7 +6160,7 @@ window.__dennV65FrameRotationProjectionInstalled=true;
 function by(id){return document.getElementById(id)}
 function st(){return window.DENN_FRAME_ORIENTATION_V64||(window.DENN_FRAME_ORIENTATION_V64={mode:'portrait',rot:0})}
 function rot(){var r=parseInt(st().rot,10)||0;return r===-90?-90:90}
-function setGuide(mode){try{window.SG=window.SG||{on:true,active:{},_sizes:[],ori:'portrait'};SG.ori=mode;var p=by('sg-ori-portrait'),l=by('sg-ori-landscape');if(p){p.style.background=mode==='portrait'?'#5a5a5a':'#e6e6e6';p.style.color=mode==='portrait'?'#fff':'#5a5a5a'}if(l){l.style.background=mode==='landscape'?'#5a5a5a':'#e6e6e6';l.style.color=mode==='landscape'?'#fff':'#5a5a5a'}}catch(e){}}
+function setGuide(mode){try{window.SG=window.SG||{on:true,active:{},_sizes:[],ori:'portrait'};SG.ori=mode;var p=by('sg-ori-portrait'),l=by('sg-ori-landscape');if(p){p.style.background=mode==='portrait'?'#777':'#e6e6e6';p.style.color=mode==='portrait'?'#fff':'#777'}if(l){l.style.background=mode==='landscape'?'#777':'#e6e6e6';l.style.color=mode==='landscape'?'#fff':'#777'}}catch(e){}}
 function syncUi(){
   var s=st();if(s.mode==='landscape'&&s.rot!==-90&&s.rot!==90)s.rot=90;if(s.mode!=='landscape')s.rot=0;
   var label=by('denn-v64-orient-label'),row=by('denn-v64-rotation-row'),none=by('denn-v64-rot-none');
@@ -11778,11 +11778,11 @@ window.addEventListener('load',later);
 /* (작업3) 목업툴 2톤(흰색 + #e6e6e6) + 아일랜드 플로팅 셸 + 좌측 메뉴 접기.
    상단 헤더(검정)와 --gold(헤더 'PRODUCTS' 강조)는 보존. 나머지 배경=흰색, 좌측 레일=#e6e6e6, 강조=검정 모노.
    대부분은 :root 변수 remap으로 일괄 처리하고, 변수 미사용 웜톤만 개별 override. */
-:root{--surface:#ffffff;--cream:#ffffff;--border:#e6e6e6;--gold2:#5a5a5a;--gold:#5a5a5a;--warm:#7a7a7a}
+:root{--surface:#ffffff;--cream:#ffffff;--border:#e6e6e6;--gold2:#777;--gold:#777;--warm:#7a7a7a}
 body{background:#fff}
 /* 변수 미사용 웜톤 off-white → 흰/연회색 */
 .drop-zone{background:#fff!important}
-.drop-zone:hover{background:#f5f5f5!important;border-color:#5a5a5a!important}
+.drop-zone:hover{background:#f5f5f5!important;border-color:#777!important}
 .tog-row{background:#fff!important}
 .img-transform-ctl{background:#f7f7f7!important}
 /* 안내문구(.hint) 크림+브라운 → 연회색+그레이 */
@@ -11791,27 +11791,27 @@ body{background:#fff}
 .preview-area{background:#fff!important}
 .preview-area::before{display:none!important}
 /* 활성 템플릿 카드 크림 → 흰색 (테두리만 검정으로 활성 표시) */
-.tpl-card.on{background:#fff!important;border-color:#5a5a5a!important}
-.tpl-card:hover{border-color:#5a5a5a!important}
+.tpl-card.on{background:#fff!important;border-color:#777!important}
+.tpl-card:hover{border-color:#777!important}
 
 /* ===== MOIITEE식 밝은 상단 바: 로고 알약 + 탭 알약 토글 + 태그라인 ===== */
 header{background:#fff!important;border-bottom:1px solid #e6e6e6!important;height:auto!important;min-height:60px;gap:18px!important;padding:10px 22px!important;flex-wrap:wrap}
-.logo{color:#5a5a5a!important;border:1px solid #e6e6e6;border-radius:24px;padding:7px 16px;line-height:1;display:inline-flex;align-items:center;height:38px;font-size:14px;background:#fff;font-family:'Playfair Display',serif;letter-spacing:.08em}
-.logo em{color:#5a5a5a!important;font-style:normal;font-weight:700;margin-left:6px}
+.logo{color:#777!important;border:1px solid #e6e6e6;border-radius:24px;padding:7px 16px;line-height:1;display:inline-flex;align-items:center;height:38px;font-size:14px;background:#fff;font-family:'Playfair Display',serif;letter-spacing:.08em}
+.logo em{color:#777!important;font-style:normal;font-weight:700;margin-left:6px}
 .tagline{color:#888!important;font-size:11px;font-weight:500;margin-left:auto;max-width:420px;line-height:1.45;text-align:right}
 @media(max-width:860px){header .tagline{display:none}}
 /* 탭바를 헤더 안 알약 토글로 — 기본 underline 탭 무력화 */
 header .tabbar{background:transparent!important;border-bottom:none!important;display:flex;gap:6px;align-items:center;flex:0 0 auto}
 header .tab{flex:0 0 auto!important;padding:8px 16px!important;border:1px solid #e6e6e6!important;border-radius:20px!important;background:#f5f5f5!important;color:#555!important;font-size:12px!important;font-weight:500!important;transition:all .15s;line-height:1}
-header .tab:hover{background:#ebebeb!important;color:#5a5a5a!important}
-header .tab.on{background:#5a5a5a!important;color:#fff!important;border-color:#5a5a5a!important}
+header .tab:hover{background:#ebebeb!important;color:#777!important}
+header .tab.on{background:#777!important;color:#fff!important;border-color:#777!important}
 @media(max-width:640px){
   header{padding:8px 12px!important;gap:10px!important}
   .tagline{display:none}
   header .tab{padding:7px 12px!important;font-size:11px!important}
 }
 /* 잔존 gold hover 강조도 모노로 */
-.chip:hover,.cat-chip:hover,.brand-tab:hover,.z-btn:hover{border-color:#5a5a5a!important}
+.chip:hover,.cat-chip:hover,.brand-tab:hover,.z-btn:hover{border-color:#777!important}
 .z-btn:hover{background:#f5f5f5!important}
 /* 룸 모달도 전체 흰색 통일(--surface로 본체는 이미 흰색, 헤더/좌측패널/사이즈가이드만 인라인 잔존) */
 #room-modal>div>div:first-child{background:#fff!important}
@@ -11824,15 +11824,19 @@ header .tab.on{background:#5a5a5a!important;color:#fff!important;border-color:#5
   /* 좌측 아이콘 레일 = 그레이 아일랜드 */
   .denn-pc-shell .dps-rail{background:#e6e6e6;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);padding:14px 6px}
   .denn-pc-shell .dps-icon{color:#555;background:transparent}
-  .denn-pc-shell .dps-icon:hover{background:rgba(0,0,0,.06);color:#5a5a5a}
-  .denn-pc-shell .dps-icon.on{background:#5a5a5a;color:#fff}
+  .denn-pc-shell .dps-icon:hover{background:rgba(0,0,0,.06);color:#777}
+  .denn-pc-shell .dps-icon.on{background:#777;color:#fff}
   /* 메뉴/액션/캔버스 = 흰 아일랜드 */
-  .denn-pc-shell .dps-menu{background:#fff;border:1px solid #e6e6e6;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);transition:opacity .18s ease;padding-top:24px!important}
+  .denn-pc-shell .dps-menu{background:#fff;border:1px solid #e6e6e6;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);transition:opacity .18s ease;padding-top:24px!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+  .denn-pc-shell .dps-menu>.info-bar{flex:0 0 auto}
+  .denn-pc-shell .dps-groups{flex:1;min-height:0;overflow-y:auto;padding-right:4px}
+  /* 템플릿 그리드는 .dps-groups 안에서 자연 흐름 (이중 스크롤 제거) */
+  #page-frame.denn-pc-shell-on .tpl-scroll{max-height:none!important;overflow:visible!important;padding-right:0!important}
   .denn-pc-shell .dps-action{background:#fff;border:1px solid #e6e6e6;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);padding-top:24px!important}
   .denn-pc-shell .dps-canvas{background:#fff;border:1px solid #e6e6e6;border-radius:16px}
   .denn-pc-shell .dps-elem-row{background:#fff;border:1px solid #e6e6e6}
   /* 접기 버튼 — 캔버스 좌측 경계 */
-  .denn-pc-shell .dps-menu-toggle{position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:40;width:22px;height:48px;border:1px solid #e6e6e6;border-left:none;border-radius:0 12px 12px 0;background:#fff;color:#5a5a5a;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:3px 0 10px rgba(0,0,0,.07);padding:0;transition:background .15s}
+  .denn-pc-shell .dps-menu-toggle{position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:40;width:22px;height:48px;border:1px solid #e6e6e6;border-left:none;border-radius:0 12px 12px 0;background:#fff;color:#777;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:3px 0 10px rgba(0,0,0,.07);padding:0;transition:background .15s}
   .denn-pc-shell .dps-menu-toggle:hover{background:#f0f0f0}
   .denn-pc-shell .dps-mtog-ico::before{content:'‹';font-size:18px;line-height:1;font-weight:700}
   /* 접힘 상태 — 메뉴 컬럼 0폭 + 숨김, 캔버스 확장 */
@@ -11849,7 +11853,7 @@ header .tab.on{background:#5a5a5a!important;color:#fff!important;border-color:#5
 #page-frame .denn-action-btn-save,
 #page-frame .denn-action-btn-secondary,
 #page-frame .denn-action-btn-room,
-#page-frame .denn-action-btn-home{background:#efefef!important;color:#5a5a5a!important;border-color:#e0e0e0!important;box-shadow:none!important}
+#page-frame .denn-action-btn-home{background:#efefef!important;color:#777!important;border-color:#e0e0e0!important;box-shadow:none!important}
 #page-frame .denn-action-btn-save:hover,
 #page-frame .denn-action-btn-secondary:hover,
 #page-frame .denn-action-btn-room:hover,
@@ -11860,19 +11864,19 @@ header .tab.on{background:#5a5a5a!important;color:#fff!important;border-color:#5
 /* 활성(.on/.active) 상태 — var(--gold2) 의존 셀렉터 직접 검정 강제 */
 .chip.on,.cat-chip.on,.brand-tab.on,.z-btn.on,.z-btn.active,
 .model-row-item.on,.ico-btn.on,.denn-v64-frame-orientation button.on,
-.sg-sz-btn.on{background:#5a5a5a!important;border-color:#5a5a5a!important;color:#fff!important}
-.tab.on{border-bottom-color:#5a5a5a!important;color:#5a5a5a!important}
-.tog.on{background:#5a5a5a!important}
-.sw.on{border-color:#5a5a5a!important}
-.sw::after{border-color:#5a5a5a!important}
+.sg-sz-btn.on{background:#777!important;border-color:#777!important;color:#fff!important}
+.tab.on{border-bottom-color:#777!important;color:#777!important}
+.tog.on{background:#777!important}
+.sw.on{border-color:#777!important}
+.sw::after{border-color:#777!important}
 /* tpl-card.on은 흰 배경 + 검정 테두리만 (위 일반 .on 규칙 덮어쓰기) */
-.tpl-card.on{background:#fff!important;border-color:#5a5a5a!important;color:inherit!important}
+.tpl-card.on{background:#fff!important;border-color:#777!important;color:inherit!important}
 /* hover/focus 잔존 골드 → 검정 */
 .chip:hover,.cat-chip:hover,.brand-tab:hover,.z-btn:hover,.tpl-card:hover,
-.model-row-item:hover,.ico-btn:hover,.drop-zone:hover{border-color:#5a5a5a!important}
-.inp:focus,.f-txt-item input:focus,.f-txt-item textarea:focus{border-color:#5a5a5a!important;outline:none}
+.model-row-item:hover,.ico-btn:hover,.drop-zone:hover{border-color:#777!important}
+.inp:focus,.f-txt-item input:focus,.f-txt-item textarea:focus{border-color:#777!important;outline:none}
 /* model mi-badge 금색 → 회색 */
-.model-row-item .mi-badge{background:#e6e6e6!important;color:#5a5a5a!important}
+.model-row-item .mi-badge{background:#e6e6e6!important;color:#777!important}
 /* v64 액자 방향 패널 웜틴트 → 흰색 */
 .denn-v64-frame-orientation{background:#fff!important;border-color:#e6e6e6!important}
 /* 템플릿 썸네일 크림 + transparent-canvas 크림 체커 → 흰/연회색 모노 */
@@ -11889,10 +11893,14 @@ header .tab.on{background:#5a5a5a!important;color:#fff!important;border-color:#5
 #frame-tpl-grid .tpl-card.transparent-canvas.white-border-template .tpl-thumb.fr::after{
   border-color:rgba(0,0,0,.15)!important;box-shadow:0 0 0 1px rgba(0,0,0,.04)!important
 }
-/* 액자 스케일 바 등 모든 range input — 트랙/썸 검정 */
-input[type=range]{accent-color:#5a5a5a}
+/* 액자 스케일 바 등 모든 range input — 트랙/썸 다크그레이 */
+input[type=range]{accent-color:#777}
+/* 액자 스케일 박스 — JS가 주입한 inline <style>의 rgba 크림/브라운 override */
+#frame-preview-scale-box{background:#fff!important;border:1px solid #e6e6e6!important;box-shadow:0 6px 16px rgba(0,0,0,.06)!important;backdrop-filter:none!important}
+#frame-preview-scale-box button{border-color:#e6e6e6!important;color:#777!important}
+#frame-preview-scale-box button:hover{border-color:#777!important;color:#777!important}
 /* 카카오 노란 버튼 → 회색 모노 (전체 톤 일관성) */
-.cta-kakao{background:#efefef!important;color:#5a5a5a!important;border:1px solid #e0e0e0}
+.cta-kakao{background:#efefef!important;color:#777!important;border:1px solid #e0e0e0}
 .cta-kakao:hover{background:#e4e4e4!important}
 </style>
 </body>
