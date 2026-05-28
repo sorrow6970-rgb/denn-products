@@ -11862,8 +11862,8 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
 
 /* ===== 룸 모달 셸과 통일된 3-컬럼 아일랜드 레이아웃 (PC ≥861px) ===== */
 @media(min-width:861px){
-  /* Body 컨테이너 — gap + padding + 연회색 배경(흰 아일랜드 대비) */
-  #room-modal>div>div:nth-child(2){gap:14px!important;padding:14px!important;background:#f5f5f5!important;box-sizing:border-box!important;overflow:hidden!important}
+  /* Body 컨테이너 — gap + padding + 회색 배경(흰 아일랜드 대비) */
+  #room-modal>div>div:nth-child(2){gap:14px!important;padding:14px!important;background:#ececec!important;box-sizing:border-box!important;overflow:hidden!important}
   /* 헤더 하단도 살짝 회색 톤 — 본체와 시각적 연결 */
   #room-modal>div>div:first-child{background:#fff!important;border-bottom:1px solid #e6e6e6!important}
   /* 좌측 컨트롤 패널 — 셸 메뉴 드로어 폭과 동일, 아일랜드 */
@@ -11919,8 +11919,11 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   #room-modal .rm-tab.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);color:#444}
   #room-modal .rm-tab.on .rm-tab-lab{font-weight:700}
 
-  /* 캔버스 이미지 위아래 잘림 방지 — contain fit (이미지 비율 유지하며 안 잘리게) */
-  #room-modal #rm-canvas{max-width:100%!important;max-height:100%!important;object-fit:contain!important}
+  /* 캔버스 영역 — flex center로 이미지 꽉 차게, padding 최소화로 위아래 여백 줄임 */
+  #room-modal #rm-canvas-area{padding:6px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+  /* 캔버스 이미지 fit — 3 ID 셀렉터로 line 4862 JS injection(2 ID)보다 specificity 높여 이김 */
+  #room-modal #rm-canvas-area #rm-canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;object-fit:contain!important}
+  #room-modal #rm-canvas-area #sg-canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;object-fit:contain!important}
 }
 
 /* ===== PC 셸(≥861) 2톤 + 아일랜드 ===== */
@@ -12046,12 +12049,12 @@ input[type=range]{accent-color:#777}
     var body=inner.children[1]; if(!body||body.children.length<2)return;
     var leftPanel=body.children[0];
     var guide=document.getElementById('rm-guide-section'); if(!guide||!leftPanel)return;
-    /* ===== 우측 패널: 가이드 scroll(위) + 액션(아래) ===== */
+    /* ===== 우측 패널: 가이드 scroll(위) + 액션 4종(아래, 메인 셸 순서와 동일) ===== */
     var right=document.createElement('div'); right.className='rm-right-panel';
     var scrollWrap=document.createElement('div'); scrollWrap.className='rm-right-scroll';
     scrollWrap.appendChild(guide); right.appendChild(scrollWrap);
     var actionWrap=document.createElement('div'); actionWrap.className='rm-right-actions';
-    /* 기본설정으로 — 룸 모달 전체 reset 함수 chain (typeof check) */
+    /* 기본설정으로 */
     var resetBtn=document.createElement('button'); resetBtn.className='rm-action-btn'; resetBtn.type='button';
     resetBtn.textContent='↺ 기본설정으로';
     resetBtn.addEventListener('click',function(){
@@ -12060,18 +12063,30 @@ input[type=range]{accent-color:#777}
         try{if(typeof window[fn]==='function')window[fn]()}catch(e){}
       });
     });
+    /* 배경 이미지 저장 — 헤더에서 우측 액션으로 이동(메인 셸 시안저장 자리와 같은 위치) */
+    var saveBtn=document.querySelector('#room-modal button[onclick="dlRoomMockup()"]');
+    if(saveBtn){
+      saveBtn.removeAttribute('style');
+      saveBtn.className='rm-action-btn rm-action-save';
+      saveBtn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>배경 이미지 저장';
+    }else{
+      saveBtn=document.createElement('button'); saveBtn.className='rm-action-btn rm-action-save'; saveBtn.type='button';
+      saveBtn.textContent='배경 이미지 저장';
+      saveBtn.addEventListener('click',function(){if(typeof window.dlRoomMockup==='function')window.dlRoomMockup()});
+    }
     /* 액자 설정으로 돌아가기 — 모달 닫기 */
     var backBtn=document.createElement('button'); backBtn.className='rm-action-btn'; backBtn.type='button';
     backBtn.textContent='← 액자 설정으로 돌아가기';
     backBtn.addEventListener('click',function(){if(typeof window.closeRoomMockup==='function')window.closeRoomMockup()});
-    /* 주문제작 의뢰하기 — 카카오 옐로우, 메인 주문 버튼 click 위임 */
+    /* 주문제작 의뢰하기 — 카카오 옐로우 */
     var orderBtn=document.createElement('button'); orderBtn.className='rm-action-btn rm-action-order'; orderBtn.type='button';
     orderBtn.textContent='주문제작 의뢰하기';
     orderBtn.addEventListener('click',function(){
       if(typeof window.closeRoomMockup==='function')window.closeRoomMockup();
       setTimeout(function(){var main=document.getElementById('denn-v36-order-btn-frame');if(main)main.click();},150);
     });
-    actionWrap.appendChild(resetBtn); actionWrap.appendChild(backBtn); actionWrap.appendChild(orderBtn);
+    /* 순서: 기본설정 → 배경저장 → 돌아가기 → 주문제작 (메인 셸과 동일 순서) */
+    actionWrap.appendChild(resetBtn); actionWrap.appendChild(saveBtn); actionWrap.appendChild(backBtn); actionWrap.appendChild(orderBtn);
     right.appendChild(actionWrap); body.appendChild(right);
     /* ===== 좌측 패널 탭 ===== */
     /* sec-label로 섹션 식별 → 직속 자식까지 walk up → data-rm-pane 부여 */
@@ -12083,6 +12098,24 @@ input[type=range]{accent-color:#777}
       var tab=TABS.filter(function(t){return text.indexOf(t.match)>=0})[0];
       if(tab)section.setAttribute('data-rm-pane',tab.key);
     });
+    /* 사이즈 가이드(sg-panel) — 액자 사이즈 관련이므로 '액자' 탭에 묶음 */
+    var sgPanel=document.getElementById('sg-panel');
+    if(sgPanel){
+      var sgRoot=sgPanel;
+      while(sgRoot&&sgRoot.parentElement&&sgRoot.parentElement!==leftPanel)sgRoot=sgRoot.parentElement;
+      if(sgRoot&&sgRoot!==leftPanel)sgRoot.setAttribute('data-rm-pane','frame');
+    }
+    /* '배경 밝기' / '배경 크기' 슬라이더 — 원래 액자 섹션 안에 있었지만 배경 관련이므로 '배경' 탭으로 이동 */
+    var bgSection=leftPanel.querySelector('[data-rm-pane="bg"]');
+    if(bgSection){
+      ['rm-bright','rm-bg-scale'].forEach(function(id){
+        var inp=document.getElementById(id);
+        if(inp){
+          var wrap=inp.parentElement;
+          if(wrap)bgSection.appendChild(wrap);
+        }
+      });
+    }
     /* divider(빈 border-top div) 숨김 */
     [].slice.call(leftPanel.children).forEach(function(c){
       if(c.children.length===0&&!c.hasAttribute('data-rm-pane')&&!c.textContent.trim())c.style.display='none';
