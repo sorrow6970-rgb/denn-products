@@ -11919,7 +11919,8 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   #room-modal .rm-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px;background:#f5f5f5;border-radius:10px;margin-bottom:14px;flex-shrink:0}
   #room-modal .rm-tab{border:none;background:transparent;cursor:pointer;padding:8px 4px;border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:inherit;color:#777;transition:all .15s}
   #room-modal .rm-tab:hover{background:rgba(0,0,0,.04);color:#444}
-  #room-modal .rm-tab-ico{font-size:18px;line-height:1}
+  #room-modal .rm-tab-ico{font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;width:20px;height:20px}
+  #room-modal .rm-tab-ico svg{width:18px;height:18px;display:block}
   #room-modal .rm-tab-lab{font-size:9px;font-weight:500}
   #room-modal .rm-tab.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);color:#444}
   #room-modal .rm-tab.on .rm-tab-lab{font-weight:700}
@@ -12052,7 +12053,7 @@ input[type=range]{accent-color:#777}
      우측: 가이드 썸네일(scroll) + 액션 버튼(기본설정/돌아가기/주문제작) */
   var TABS=[
     {key:'bg',icon:'🏠',label:'배경',match:'배경 사진'},
-    {key:'frame',icon:'🖼',label:'액자',match:'액자 크기'},
+    {key:'frame',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1"/></svg>',label:'액자',match:'액자'},
     {key:'shadow',icon:'🌑',label:'그림자',match:'그림자'},
     {key:'sun',icon:'☀️',label:'햇빛',match:'햇빛'}
   ];
