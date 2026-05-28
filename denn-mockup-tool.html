@@ -11829,10 +11829,36 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
 /* 잔존 gold hover 강조도 모노로 */
 .chip:hover,.cat-chip:hover,.brand-tab:hover,.z-btn:hover{border-color:#777!important}
 .z-btn:hover{background:#f5f5f5!important}
-/* 룸 모달도 전체 흰색 통일(--surface로 본체는 이미 흰색, 헤더/좌측패널/사이즈가이드만 인라인 잔존) */
-#room-modal>div>div:first-child{background:#fff!important}
-#room-modal>div>div:nth-child(2)>div:first-child{background:#fff!important}
+/* ===== 룸 목업 모달 2톤 모노 통일 (셸 무드와 동일하게) ===== */
+/* 바깥 dim — 웜 다크 → 중립 */
+#room-modal:not(.denn-room-fullscreen-active){background:rgba(0,0,0,.4)!important}
+/* 안쪽 본체 + 헤더 + 좌측 컨트롤 패널 — 크림 → 흰색 */
+#room-modal>div{background:#fff!important}
+#room-modal>div>div:first-child{background:#fff!important;border-bottom-color:#e6e6e6!important}
+#room-modal>div>div:nth-child(2)>div:first-child{background:#fff!important;border-right-color:#e6e6e6!important}
 #sg-panel{background:#fff!important}
+/* 사이즈가이드 토글/버튼 — 골드 → 다크그레이 */
+#room-modal .sg-sz-btn.on{background:#444!important;border-color:#444!important;color:#fff!important}
+#room-modal input:checked+.sg-sw-slider{background:#444!important}
+/* 헤더 "이미지 저장" 버튼 — 셸 시안저장과 통일(연회색 모노) */
+#room-modal button[onclick="dlRoomMockup()"]{background:#efefef!important;color:#444!important;border:1px solid #e0e0e0!important;box-shadow:none!important}
+#room-modal button[onclick="dlRoomMockup()"]:hover{background:#e4e4e4!important;border-color:#cfcfcf!important}
+#room-modal button[onclick="dlRoomMockup()"] svg{stroke:#444!important}
+/* 닫기(X) 버튼 */
+#room-modal button[onclick="closeRoomMockup()"]{border-color:#e6e6e6!important;color:#777!important}
+#room-modal button[onclick="closeRoomMockup()"]:hover{background:#f5f5f5!important;border-color:#777!important}
+/* 드롭존 — 크림 → 흰색 + hover 다크그레이 보더 */
+#room-modal #rm-drop{background:#fff!important;border-color:#e6e6e6!important}
+#room-modal #rm-drop:hover{background:#f5f5f5!important;border-color:#777!important}
+/* 촬영 권장 팁 박스 — 노란/골드 → 연회색 + 다크그레이 텍스트 */
+#room-modal [style*="#FFF9EC"]{background:#f5f5f5!important;border-color:#e6e6e6!important;color:#777!important}
+#room-modal [style*="#FFF9EC"] b{color:#444!important}
+/* 기울기 패널 박스 — 크림 → 연회색 */
+#room-modal [style*="#FAF6EE"]{background:#fafafa!important;border-color:#e6e6e6!important}
+/* 잔존 하드코딩 크림 인라인 일괄 — 흰색/연회색으로 */
+#room-modal [style*="#FAFAF7"]{background:#fafafa!important}
+/* 인라인 var(--gold) 텍스트(팁 등) → 다크그레이 */
+#room-modal [style*="color:var(--gold"]{color:#777!important}
 
 /* ===== PC 셸(≥861) 2톤 + 아일랜드 ===== */
 @media(min-width:861px){
