@@ -11925,6 +11925,19 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   #room-modal .rm-tab.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);color:#444}
   #room-modal .rm-tab.on .rm-tab-lab{font-weight:700}
 
+  /* 사이즈 가이드 UI 사이즈 ↑ — 다른 모달 UI와 통일(font 9-10→11-12, 패딩/토글/슬라이더 키움) */
+  #room-modal #sg-panel{padding:14px!important}
+  #room-modal #sg-panel .sg-head-label{font-size:12px!important}
+  #room-modal #sg-panel .sg-sz-btn{font-size:11px!important;padding:5px 10px!important;border-radius:6px!important;line-height:1.4!important}
+  #room-modal #sg-panel .sg-ctrl{margin-bottom:8px!important;grid-template-columns:64px 1fr 48px!important;gap:6px!important}
+  #room-modal #sg-panel .sg-ctrl label{font-size:11px!important}
+  #room-modal #sg-panel .sg-ctrl input[type=number]{font-size:11px!important;padding:4px 6px!important}
+  #room-modal #sg-panel .sg-color-row label{font-size:11px!important}
+  #room-modal #sg-panel .sg-sw-track{width:36px!important;height:20px!important}
+  #room-modal #sg-panel .sg-sw-slider:before{height:14px!important;width:14px!important;left:3px!important;bottom:3px!important}
+  #room-modal #sg-panel input:checked+.sg-sw-slider:before{transform:translateX(16px)!important}
+  #room-modal #sg-panel input[type=range]{height:4px!important}
+
   /* 기울기 / 햇빛 / 그림자 body — 토글과 무관하게 항상 펼침. OFF면 .rm-body-disabled dim+pointer-events:none */
   #room-modal #rm-tilt-body,#room-modal #rm-sun-controls,#room-modal #rm-shadow-body{display:block!important;transition:opacity .18s ease}
   #room-modal .rm-body-disabled{opacity:.4!important;pointer-events:none!important}
@@ -12113,13 +12126,12 @@ input[type=range]{accent-color:#777}
       if(tab)section.setAttribute('data-rm-pane',tab.key);
     });
     /* 액자 '크기' 슬라이더 제거 — 사이즈 가이드의 '기준 스케일'과 중복 → 사이즈 가이드로 통일.
-       라벨 '액자 크기/위치' → '액자 기울기'로 변경(섹션 내용은 기울기+리셋만 남음). */
+       액자 기본값 버튼 제거 — 우측 마스터 '기본설정으로'가 이미 resetRoomFrameDefaultsV39 호출.
+       라벨 '액자 크기/위치' → '액자 기울기'로 변경(섹션 내용은 기울기+사이즈가이드 기본값만 남음). */
     (function(){
       var sizeSlider=document.getElementById('rm-size');
-      if(sizeSlider){
-        var wrap=sizeSlider.parentElement;
-        if(wrap)wrap.style.display='none';
-      }
+      if(sizeSlider){var wrap=sizeSlider.parentElement;if(wrap)wrap.style.display='none'}
+      leftPanel.querySelectorAll('button[onclick*="resetRoomFrameDefaultsV39"]').forEach(function(b){b.style.display='none'});
       leftPanel.querySelectorAll('div[style*="letter-spacing:.14em"]').forEach(function(l){
         if(l.textContent.trim()==='액자 크기 / 위치')l.textContent='액자 기울기';
       });
