@@ -791,7 +791,7 @@ function init(){
   var upFT=ADM&&ADM.frameTemplates?ADM.frameTemplates.filter(function(t){return t&&t.type==='uploaded'}):[]; FTPLS=upFT;
   var builtinCT=[{id:'none',name:'없음',type:'builtin',icon:'📷'}];
   var upCT=ADM&&ADM.caseTemplates?ADM.caseTemplates:[]; CTPLS=builtinCT.concat(upCT);
-  if(ADM&&ADM.brand){var b=ADM.brand;if(b.acc)document.documentElement.style.setProperty('--gold',b.acc);if(b.acc2)document.documentElement.style.setProperty('--gold2',b.acc2);if(b.msgCase)document.getElementById('msg-case').textContent=b.msgCase;}
+  if(ADM&&ADM.brand){var b=ADM.brand;/* v95 2톤 모노 테마: admin의 --gold/--gold2 인라인 override 비활성화(stylesheet :root remap이 이김). msgCase는 유지. */if(b.msgCase)document.getElementById('msg-case').textContent=b.msgCase;}
   if(ADM&&ADM.caseMockup)document.getElementById('case-mockup-bg').style.backgroundImage='url('+ADM.caseMockup+')';
   if(ADM&&ADM.frameMockup)document.getElementById('frame-mockup-bg').style.backgroundImage='url('+ADM.frameMockup+')';
   buildUI();
@@ -6157,7 +6157,7 @@ window.__dennV65FrameRotationProjectionInstalled=true;
 function by(id){return document.getElementById(id)}
 function st(){return window.DENN_FRAME_ORIENTATION_V64||(window.DENN_FRAME_ORIENTATION_V64={mode:'portrait',rot:0})}
 function rot(){var r=parseInt(st().rot,10)||0;return r===-90?-90:90}
-function setGuide(mode){try{window.SG=window.SG||{on:true,active:{},_sizes:[],ori:'portrait'};SG.ori=mode;var p=by('sg-ori-portrait'),l=by('sg-ori-landscape'),gold='var(--gold,#C8A864)';if(p){p.style.background=mode==='portrait'?gold:'transparent';p.style.color=mode==='portrait'?'#fff':'var(--warm)'}if(l){l.style.background=mode==='landscape'?gold:'transparent';l.style.color=mode==='landscape'?'#fff':'var(--warm)'}}catch(e){}}
+function setGuide(mode){try{window.SG=window.SG||{on:true,active:{},_sizes:[],ori:'portrait'};SG.ori=mode;var p=by('sg-ori-portrait'),l=by('sg-ori-landscape');if(p){p.style.background=mode==='portrait'?'#19160F':'#e6e6e6';p.style.color=mode==='portrait'?'#fff':'#19160F'}if(l){l.style.background=mode==='landscape'?'#19160F':'#e6e6e6';l.style.color=mode==='landscape'?'#fff':'#19160F'}}catch(e){}}
 function syncUi(){
   var s=st();if(s.mode==='landscape'&&s.rot!==-90&&s.rot!==90)s.rot=90;if(s.mode!=='landscape')s.rot=0;
   var label=by('denn-v64-orient-label'),row=by('denn-v64-rotation-row'),none=by('denn-v64-rot-none');
@@ -11775,7 +11775,7 @@ window.addEventListener('load',later);
 /* (작업3) 목업툴 2톤(흰색 + #e6e6e6) + 아일랜드 플로팅 셸 + 좌측 메뉴 접기.
    상단 헤더(검정)와 --gold(헤더 'PRODUCTS' 강조)는 보존. 나머지 배경=흰색, 좌측 레일=#e6e6e6, 강조=검정 모노.
    대부분은 :root 변수 remap으로 일괄 처리하고, 변수 미사용 웜톤만 개별 override. */
-:root{--surface:#ffffff;--cream:#ffffff;--border:#e6e6e6;--gold2:#19160F;--warm:#7a7a7a}
+:root{--surface:#ffffff;--cream:#ffffff;--border:#e6e6e6;--gold2:#19160F;--gold:#19160F;--warm:#7a7a7a}
 body{background:#fff}
 /* 변수 미사용 웜톤 off-white → 흰/연회색 */
 .drop-zone{background:#fff!important}
@@ -11851,6 +11851,47 @@ header .tab.on{background:#19160F!important;color:#fff!important;border-color:#1
 #page-frame .denn-action-btn-secondary:hover,
 #page-frame .denn-action-btn-room:hover,
 #page-frame .denn-action-btn-home:hover{background:#e4e4e4!important;border-color:#cfcfcf!important}
+/* 액션 버튼 안 이모지/아이콘 컬러까지 모노로 → 4개 버튼 시각적으로 균일 */
+#page-frame .denn-action-btn{filter:grayscale(1)}
+
+/* ===== 잔존 골드/크림 추가 강제 cleanup (admin --gold/--gold2 인라인 우회분 보강) ===== */
+/* 활성(.on/.active) 상태 — var(--gold2) 의존 셀렉터 직접 검정 강제 */
+.chip.on,.cat-chip.on,.brand-tab.on,.z-btn.on,.z-btn.active,
+.model-row-item.on,.ico-btn.on,.denn-v64-frame-orientation button.on,
+.sg-sz-btn.on{background:#19160F!important;border-color:#19160F!important;color:#fff!important}
+.tab.on{border-bottom-color:#19160F!important;color:#19160F!important}
+.tog.on{background:#19160F!important}
+.sw.on{border-color:#19160F!important}
+.sw::after{border-color:#19160F!important}
+/* tpl-card.on은 흰 배경 + 검정 테두리만 (위 일반 .on 규칙 덮어쓰기) */
+.tpl-card.on{background:#fff!important;border-color:#19160F!important;color:inherit!important}
+/* hover/focus 잔존 골드 → 검정 */
+.chip:hover,.cat-chip:hover,.brand-tab:hover,.z-btn:hover,.tpl-card:hover,
+.model-row-item:hover,.ico-btn:hover,.drop-zone:hover{border-color:#19160F!important}
+.inp:focus,.f-txt-item input:focus,.f-txt-item textarea:focus{border-color:#19160F!important;outline:none}
+/* model mi-badge 금색 → 회색 */
+.model-row-item .mi-badge{background:#e6e6e6!important;color:#19160F!important}
+/* v64 액자 방향 패널 웜틴트 → 흰색 */
+.denn-v64-frame-orientation{background:#fff!important;border-color:#e6e6e6!important}
+/* 템플릿 썸네일 크림 + transparent-canvas 크림 체커 → 흰/연회색 모노 */
+.tpl-thumb{background:#fff!important}
+#frame-tpl-grid .tpl-card.transparent-canvas .tpl-thumb.fr{
+  background-color:#fafafa!important;
+  background-image:
+    linear-gradient(45deg,#ececec 25%,transparent 25%),
+    linear-gradient(-45deg,#ececec 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#ececec 75%),
+    linear-gradient(-45deg,transparent 75%,#ececec 75%)!important
+}
+#frame-tpl-grid .tpl-card.transparent-canvas .tpl-thumb.fr::before{color:#999!important}
+#frame-tpl-grid .tpl-card.transparent-canvas.white-border-template .tpl-thumb.fr::after{
+  border-color:rgba(0,0,0,.15)!important;box-shadow:0 0 0 1px rgba(0,0,0,.04)!important
+}
+/* 액자 스케일 바 등 모든 range input — 트랙/썸 검정 */
+input[type=range]{accent-color:#19160F}
+/* 카카오 노란 버튼 → 회색 모노 (전체 톤 일관성) */
+.cta-kakao{background:#efefef!important;color:#19160F!important;border:1px solid #e0e0e0}
+.cta-kakao:hover{background:#e4e4e4!important}
 </style>
 </body>
 </html>
