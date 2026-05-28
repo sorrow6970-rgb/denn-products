@@ -3111,13 +3111,14 @@ function openRoomFullscreenView(){
 }
 function showCanvas(){var c=by('rm-canvas'),drop=by('rm-drop'),empty=by('rm-empty-msg');if(c)c.style.display='block';if(drop)drop.style.display='none';if(empty)empty.style.display='none'}
 function drawFallback(ctx2,W,H){
+  /* v95 2톤: 베이지 → 그레이스케일 (흰색~연회색 미세 그라데이션) */
   var wall=ctx2.createLinearGradient(0,0,W,H);
-  wall.addColorStop(0,'#E9E4DC');wall.addColorStop(.52,'#DCD5CC');wall.addColorStop(1,'#D0C8BD');
+  wall.addColorStop(0,'#f7f7f7');wall.addColorStop(.52,'#ececec');wall.addColorStop(1,'#e0e0e0');
   ctx2.fillStyle=wall;ctx2.fillRect(0,0,W,H);
   var vignette=ctx2.createRadialGradient(W*.5,H*.45,0,W*.5,H*.45,Math.max(W,H)*.72);
-  vignette.addColorStop(0,'rgba(255,255,255,.18)');vignette.addColorStop(1,'rgba(80,70,58,.10)');
+  vignette.addColorStop(0,'rgba(255,255,255,.18)');vignette.addColorStop(1,'rgba(0,0,0,.04)');
   ctx2.fillStyle=vignette;ctx2.fillRect(0,0,W,H);
-  ctx2.fillStyle='rgba(35,31,26,.56)';ctx2.font='13px DM Sans,sans-serif';ctx2.textAlign='center';ctx2.fillText('배경을 선택하거나 업로드하세요',W/2,H*.18);
+  ctx2.fillStyle='rgba(60,60,60,.55)';ctx2.font='13px DM Sans,sans-serif';ctx2.textAlign='center';ctx2.fillText('배경을 선택하거나 업로드하세요',W/2,H*.18);
 }
 function drawContain(ctx2,img,x,y,w,h,scale){scale=clamp(scale==null?1:scale,0.5,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';var ar=(img.naturalWidth||1)/(img.naturalHeight||1),tw=w,th=tw/ar;if(th>h){th=h;tw=th*ar}tw*=scale;th*=scale;var dx=x+(w-tw)/2,dy=y+(h-th)/2;ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}}
 function drawCover(ctx2,img,x,y,w,h,scale){scale=clamp(scale==null?1:scale,1,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';var iw=img.naturalWidth||1,ih=img.naturalHeight||1,s=Math.max(w/iw,h/ih)*scale,tw=iw*s,th=ih*s,dx=x+(w-tw)/2,dy=y+(h-th)/2;ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}}
