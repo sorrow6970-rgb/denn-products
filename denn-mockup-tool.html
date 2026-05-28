@@ -12111,6 +12111,18 @@ input[type=range]{accent-color:#777}
       var tab=TABS.filter(function(t){return text.indexOf(t.match)>=0})[0];
       if(tab)section.setAttribute('data-rm-pane',tab.key);
     });
+    /* 액자 '크기' 슬라이더 제거 — 사이즈 가이드의 '기준 스케일'과 중복 → 사이즈 가이드로 통일.
+       라벨 '액자 크기/위치' → '액자 기울기'로 변경(섹션 내용은 기울기+리셋만 남음). */
+    (function(){
+      var sizeSlider=document.getElementById('rm-size');
+      if(sizeSlider){
+        var wrap=sizeSlider.parentElement;
+        if(wrap)wrap.style.display='none';
+      }
+      leftPanel.querySelectorAll('div[style*="letter-spacing:.14em"]').forEach(function(l){
+        if(l.textContent.trim()==='액자 크기 / 위치')l.textContent='액자 기울기';
+      });
+    })();
     /* 사이즈 가이드(sg-panel) — 액자 사이즈 관련이므로 '액자' 탭에 묶음 */
     var sgPanel=document.getElementById('sg-panel');
     if(sgPanel){
