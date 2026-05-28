@@ -11774,45 +11774,9 @@ window.addEventListener('load',later);
   window.addEventListener('load',function(){setTimeout(boot,420)});
 })();
 </script>
-<script id="denn-v95-toggle-user-intent-guard">
-(function(){
-  'use strict';
-  if(window.__dennV95ToggleGuard)return; window.__dennV95ToggleGuard=true;
-  /* 사용자가 토글(프레임 보이기 / 시계) 클릭한 직후 3초간 외부 sync(v36 syncFrameDefault,
-     v96 sync, v37 syncFrameLock 등)가 사용자 의도와 다르게 .on 클래스를 변경하면 즉시 되돌림.
-     setFrameToggle/setFrame/setClockToggle/setClock 등이 모두 IIFE 폐쇄 스코프에 있어 직접
-     wrap이 불가능 → MutationObserver guardian으로 결과(.on 변경)만 감시·revert. */
-  function guard(el){
-    if(!el)return;
-    /* bubble phase로 등록 — target onclick(.classList.toggle) 이후 fire. 모두 동기 처리.
-       race condition 회피: 이전 observer를 setTimeout 안이 아닌 동기 코드에서 disconnect.
-       그래야 사용자 N차 클릭의 microtask MutationObserver 콜백이 (N-1)차 observer로
-       처리돼 user intent를 revert하는 race를 막을 수 있음. */
-    el.addEventListener('click',function(){
-      if(el.__dennGuardObs){el.__dennGuardObs.disconnect();el.__dennGuardObs=null;}
-      var desired=el.classList.contains('on');
-      var obs=new MutationObserver(function(){
-        if(el.classList.contains('on')!==desired){
-          el.classList.toggle('on',desired);
-          /* v95: revert 시 실제 렌더 state도 sync — class만 바꾸면 캔버스 렌더가 안 따라옴.
-             frame은 window.DENN_FRAME_VISIBLE, clock은 window.opts.clock이 진짜 signal. */
-          if(el.id==='tog-frame-visible')window.DENN_FRAME_VISIBLE=desired;
-          if(el.id==='tog-clock'&&window.opts)window.opts.clock=desired;
-          if(typeof window.renderFrame==='function')window.renderFrame();
-        }
-      });
-      obs.observe(el,{attributes:true,attributeFilter:['class']});
-      el.__dennGuardObs=obs;
-      setTimeout(function(){if(el.__dennGuardObs===obs){obs.disconnect();el.__dennGuardObs=null;}},3000);
-    },false);
-  }
-  function attach(){var f=document.getElementById('tog-frame-visible'),c=document.getElementById('tog-clock');if(f&&!f.__dennGuardAttached){f.__dennGuardAttached=true;guard(f);}if(c&&!c.__dennGuardAttached){c.__dennGuardAttached=true;guard(c);}}
-  /* 토글이 늦게 주입되므로 여러 시점에 attach 시도 */
-  [200,800,1600,2800].forEach(function(ms){setTimeout(attach,ms)});
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);
-  window.addEventListener('load',function(){setTimeout(attach,1200)});
-})();
-</script>
+<!-- v95 toggle guardian 롤백 — race condition으로 사용자 재클릭 막던 버그. 시계 토글 동작도 함께 원복.
+     프레임 토글의 진짜 fix는 normalizeFrameToggle(line 2638)에서 .on + window.DENN_FRAME_VISIBLE
+     둘 다 sync하는 것으로 충분. v17~v19 원본 onclick의 의도를 v21이 단순화하며 빠뜨린 부분을 복구. -->
 <style id="denn-v95-2tone-island-css">
 /* (작업3) 목업툴 2톤(흰색 + #e6e6e6) + 아일랜드 플로팅 셸 + 좌측 메뉴 접기.
    상단 헤더(검정)와 --gold(헤더 'PRODUCTS' 강조)는 보존. 나머지 배경=흰색, 좌측 레일=#e6e6e6, 강조=검정 모노.
