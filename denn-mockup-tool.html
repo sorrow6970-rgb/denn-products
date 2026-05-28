@@ -12107,8 +12107,9 @@ input[type=range]{accent-color:#777}
       if(typeof window.closeRoomMockup==='function')window.closeRoomMockup();
       setTimeout(function(){var main=document.getElementById('denn-v36-order-btn-frame');if(main)main.click();},150);
     });
-    /* 순서: 기본설정 → 배경저장 → 돌아가기 → 주문제작 (메인 셸과 동일 순서) */
-    actionWrap.appendChild(resetBtn); actionWrap.appendChild(saveBtn); actionWrap.appendChild(backBtn); actionWrap.appendChild(orderBtn);
+    /* 순서: 기본설정 → 배경저장 → 주문제작 → 돌아가기 (메인 셸 패턴 reset/내공간/save/order/home과 정렬,
+       모달에선 '내공간보기' 의미 없어 skip, '홈' 자리에 '돌아가기') */
+    actionWrap.appendChild(resetBtn); actionWrap.appendChild(saveBtn); actionWrap.appendChild(orderBtn); actionWrap.appendChild(backBtn);
     right.appendChild(actionWrap); body.appendChild(right);
     /* ===== 좌측 패널 탭 ===== */
     /* sec-label로 섹션 식별 → 직속 자식까지 walk up → data-rm-pane 부여 */
