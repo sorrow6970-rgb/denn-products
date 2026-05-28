@@ -1876,7 +1876,7 @@ function setRayStyle(style, el){
       var tog=document.getElementById('rm-sun-tog');
       var knob=document.getElementById('rm-sun-tog-knob');
       var ctrl=document.getElementById('rm-sun-controls');
-      if(tog)tog.style.background='#C8A864';
+      if(tog)tog.style.background='#444';
       if(knob)knob.style.left='19px';
       if(ctrl)ctrl.style.display='flex';
     }
@@ -1888,8 +1888,8 @@ function setRayStyle(style, el){
   RM.rayStyle=style;
   document.querySelectorAll('[data-rs]').forEach(function(b){
     var on=b.getAttribute('data-rs')===style;
-    b.style.background=on?'#C8A864':'rgba(255,255,255,.1)';
-    b.style.borderColor=on?'#C8A864':'var(--border)';
+    b.style.background=on?'#444':'rgba(255,255,255,.1)';
+    b.style.borderColor=on?'#444':'var(--border)';
     b.style.color=on?'#fff':'var(--warm)';
   });
   rmRender();
@@ -1900,7 +1900,7 @@ function rmTogSun(){
   var tog=document.getElementById('rm-sun-tog');
   var knob=document.getElementById('rm-sun-tog-knob');
   var ctrl=document.getElementById('rm-sun-controls');
-  if(tog)tog.style.background=RM.sunOn?'#C8A864':'var(--border)';
+  if(tog)tog.style.background=RM.sunOn?'#444':'var(--border)';
   if(knob)knob.style.left=RM.sunOn?'19px':'3px';
   if(ctrl)ctrl.style.display=RM.sunOn?'flex':'none';
   rmRender();
@@ -2856,7 +2856,7 @@ function setSun(on){
   window.RM=window.RM||{};
   RM.sunOn=!!on;
   var tog=by('rm-sun-tog'),knob=by('rm-sun-tog-knob'),ctrl=by('rm-sun-controls');
-  if(tog)tog.style.background=RM.sunOn?'#C8A864':'var(--border)';
+  if(tog)tog.style.background=RM.sunOn?'#444':'var(--border)';
   if(knob)knob.style.left=RM.sunOn?'19px':'3px';
   if(ctrl)ctrl.style.display=RM.sunOn?'flex':'none';
 }
@@ -4157,7 +4157,7 @@ function syncSunToggle(){
   window.RM=window.RM||{};
   var on=!!RM.sunOn,tog=by('rm-sun-tog'),knob=by('rm-sun-tog-knob'),ctrl=by('rm-sun-controls');
   if(tog){
-    tog.style.background=on?'#C8A864':'var(--border)';
+    tog.style.background=on?'#444':'var(--border)';
     tog.setAttribute('aria-pressed',on?'true':'false');
   }
   if(knob)knob.style.left=on?'19px':'3px';
@@ -11856,6 +11856,8 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
 #room-modal [style*="#FAFAF7"]{background:#fafafa!important}
 /* 인라인 var(--gold) 텍스트(팁 등) → 다크그레이 */
 #room-modal [style*="color:var(--gold"]{color:#777!important}
+/* 햇빛 연출 안내 박스 — 웜 크림/골드 → 연회색/뉴트럴 */
+#room-modal [style*="#FEF9EE"]{background:#f5f5f5!important;border-color:#e6e6e6!important;color:#777!important}
 
 /* ===== 룸 모달 셸과 통일된 3-컬럼 아일랜드 레이아웃 (PC ≥861px) ===== */
 @media(min-width:861px){
