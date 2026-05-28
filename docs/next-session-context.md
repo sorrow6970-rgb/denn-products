@@ -18,6 +18,15 @@
 
 ### → 다음 세션 1순위: **작업 3 (PC UI 전체 리뉴얼) Phase 1 진행 중** — 상세는 **`docs/2026-05-28-task3-pc-shell-handoff.md`** 참조.
 - 액자(#page-frame) PC 4컬럼 셸(아이콘 레일 | 템플릿 드로어 | 캔버스 | 우측 요소·액션) 구현·push 완료. 이후 룸 모달(내공간보기) 다듬기 10커밋 추가 → 현재 HEAD `2fd76bd` (상세 3-C).
+
+#### 2026-05-28 추가 세션 — Q1~Q5 완료 / Q6 보류
+- **Q1** 문구별 색상/그림자 카드 크림(`#FAF6EE`) → 그레이(`#fafafa`) — 클래스 기반이라 룸 모달 sweep에 안 잡혔던 박스.
+- **Q2** 우측 요소 리스트 — 이미지/시계 변경 자동 반영 (MutationObserver 3개 추가).
+- **Q3** 좌/우 컨트롤 폭 단일 소스화 — `--denn-control-w` / `--denn-control-pad` CSS 변수 + box-sizing 통일 (PC셸 메뉴/액션 + 룸 모달 좌/우 = `clamp(264px,18vw,380px)` / `16px 14px`).
+- **Q4** 잔존 골드 일괄 제거 — 문구 bulk 컨트롤(L136-143) + `.tpl-card.on` + `.drop-zone:hover` + `.dps-icon.on` rail + `.denn-v36-order-*` 오버라이드 + `.denn-v363-empty-text` "이 템플릿은 고객이 수정할 문구 영역이 없습니다" 박스.
+- **Q4b** 전체 적용 버튼 색상 정정 — `#1c1c1c`(너무 검정) → `#efefef`(너무 옅음) → `#777`(다른 활성 버튼들과 통일된 다크그레이) 최종.
+- **Q5** 캔버스 그림자 3단 레이어드 — `drop-shadow` 1px+6px+24px 스택으로 흰 배경 + 흰 테두리 액자 경계 명확화.
+- **Q6 (보류)** 액자 방향 가로 = 캔버스 통째 90° CSS 회전. v100 IIFE 추가했으나 v36.1 스케일러(`applyPreviewScale`)가 `wrap.style.transform`을 매 렌더 후 setTimeout(0/80/220ms) 3회 재설정 → 회전 깜빡임. 현재 `denn-v100-canvas-rotate-DEFERRED` no-op 스텁으로 비활성, 코드 안에 분석/다음 옵션 상세 주석. 보호 영역 인접 — renderFrame 본체 수정 없이 사이저/wrap 외곽에서 해결 필요.
 - 다음 후보: 레일/메뉴 디자인 다듬기 · 케이스 페이지 셸 적용 · 첫화면 템플릿 쇼케이스(데이터 확인 선행) · 헤더 통합.
 - (작업 1·2 및 액자 스케일 리워크 A·B·C는 완료됨.)
 

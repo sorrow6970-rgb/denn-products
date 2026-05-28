@@ -37,7 +37,7 @@ header{background:var(--ink);padding:0 32px;height:54px;display:flex;align-items
 .sec-label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--warm);margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
 .drop-zone{border:1.5px dashed var(--border);border-radius:10px;padding:18px 14px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#FAFAF7}
-.drop-zone:hover{border-color:var(--gold);background:#FDF8F0}
+.drop-zone:hover{border-color:var(--gold);background:#f5f5f5}
 .drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .drop-icon{font-size:18px;margin-bottom:3px}.drop-zone h4{font-size:11px;font-weight:500;margin-bottom:2px}.drop-zone p{font-size:9.5px;color:var(--warm)}
 .img-prev{border-radius:7px;overflow:hidden;position:relative;display:none}.img-prev img{width:100%;max-height:100px;object-fit:cover;display:block}
@@ -88,7 +88,7 @@ header{background:var(--ink);padding:0 32px;height:54px;display:flex;align-items
 .tpl-scroll::-webkit-scrollbar{width:4px !important}.tpl-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 .tpl-grid{display:grid !important;grid-template-columns:repeat(2,1fr) !important;gap:5px !important}
 .tpl-card{border:1.5px solid var(--border);border-radius:7px;padding:6px 5px;cursor:pointer;transition:all .15s;background:#fff;text-align:center}
-.tpl-card:hover{border-color:var(--gold)}.tpl-card.on{border-color:var(--gold2);background:#FDF8F0}
+.tpl-card:hover{border-color:var(--gold)}.tpl-card.on{border-color:var(--gold2);background:#f5f5f5}
 .tpl-thumb{width:100%;margin-bottom:4px;border-radius:4px;background:var(--cream);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px;aspect-ratio:2/3}
 .tpl-thumb.ph{}.tpl-thumb.fr{aspect-ratio:2/3}
 .tpl-thumb img{width:100%;height:100%;object-fit:cover}.tpl-name{font-size:8.5px;font-weight:500}
@@ -120,7 +120,7 @@ hr{border:none;border-top:1px solid var(--border);margin:0}
 .f-txt-item textarea{height:42px;min-height:42px;max-height:54px;resize:vertical;line-height:1.35}
 .f-txt-item input:focus,.f-txt-item textarea:focus{border-color:var(--gold)}
 .f-txt-item.template-hidden{display:none}
-.frame-text-style-box{border:1px solid var(--border);border-radius:8px;background:#FAF6EE;padding:8px;margin-top:8px}
+.frame-text-style-box{border:1px solid var(--border);border-radius:8px;background:#fafafa;padding:8px;margin-top:8px}
 .frame-text-style-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .frame-text-style-title{font-size:10.5px;font-weight:600;color:var(--ink)}
 .frame-text-style-body{display:none;margin-top:8px;gap:7px;flex-direction:column}.frame-text-style-box.on .frame-text-style-body{display:flex}
@@ -133,14 +133,14 @@ hr{border:none;border-top:1px solid var(--border);margin:0}
 .frame-text-style-mini{font-size:8.5px;color:var(--warm)}
 .frame-text-style-row.template-hidden{display:none}
 .frame-text-style-bulk{border:1px solid var(--border);border-radius:8px;background:#fff;padding:8px;margin-bottom:8px;display:grid;gap:7px}
-.frame-text-style-bulk-title{font-weight:900;font-size:12px;color:#4A3920;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.frame-text-style-bulk-title{font-weight:900;font-size:12px;color:#444;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .frame-text-style-bulk-grid{display:grid;grid-template-columns:56px 1fr 56px 1fr;gap:6px 8px;align-items:center}
-.frame-text-style-bulk-grid label{font-size:11px;color:#7B6A4B;font-weight:800}
-.frame-text-style-bulk-grid input[type=color]{width:42px;height:26px;padding:1px;border:1px solid #B9AA8A;border-radius:4px;background:white}
+.frame-text-style-bulk-grid label{font-size:11px;color:#777;font-weight:800}
+.frame-text-style-bulk-grid input[type=color]{width:42px;height:26px;padding:1px;border:1px solid #e0e0e0;border-radius:4px;background:white}
 .frame-text-style-bulk-grid input[type=range]{width:100%;min-width:0}
 .frame-text-style-bulk-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.frame-text-style-bulk-actions button{height:28px;border:1px solid #D8C49A;border-radius:6px;background:white;color:#5E4723;font-size:11px;font-weight:900;cursor:pointer}
-.frame-text-style-bulk-actions button.primary{background:#A47B37;color:white;border-color:#A47B37}
+.frame-text-style-bulk-actions button{height:28px;border:1px solid #e0e0e0;border-radius:6px;background:white;color:#444;font-size:11px;font-weight:900;cursor:pointer}
+.frame-text-style-bulk-actions button.primary{background:#777;color:#fff;border-color:#777}
 .preview-area{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:linear-gradient(140deg,#EAE5DC,#F0EBE2,#E5DFCF);position:relative;overflow:hidden;min-height:500px}
 .preview-area::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(200,168,120,.1),transparent 55%);pointer-events:none}
 .mockup-bg{position:absolute;inset:0;background-size:contain;background-repeat:no-repeat;background-position:center;opacity:.22;pointer-events:none}
@@ -292,7 +292,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     <div class="mockup-bg" id="case-mockup-bg"></div>
     <div class="prev-top"><div class="prev-label">실시간 시안 확인</div></div>
     <div class="empty-state" id="case-empty"><p>이미지를 업로드하면<br>시안이 표시됩니다</p></div>
-    <div class="canvas-wrap" style="position:relative" id="case-wrap"><canvas id="caseCanvas" width="320" height="620" style="filter:drop-shadow(0 20px 40px rgba(25,22,15,.22));cursor:default"></canvas><img id="wm-ov-case" style="position:absolute;bottom:8px;right:8px;max-width:25%;display:none;pointer-events:none;object-fit:contain" src="" alt=""></div>
+    <div class="canvas-wrap" style="position:relative" id="case-wrap"><canvas id="caseCanvas" width="320" height="620" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.22)) drop-shadow(0 6px 14px rgba(0,0,0,.10)) drop-shadow(0 24px 48px rgba(0,0,0,.14));cursor:default"></canvas><img id="wm-ov-case" style="position:absolute;bottom:8px;right:8px;max-width:25%;display:none;pointer-events:none;object-fit:contain" src="" alt=""></div>
     <div class="info-bar"><span>기종: <strong id="ib-model">-</strong></span><span>·</span><span>칼선: <strong id="ib-dl">포함</strong></span></div>
   </div>
 </div>
@@ -349,7 +349,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     <div class="mockup-bg" id="frame-mockup-bg"></div>
     <div class="prev-top"><div class="prev-label">실시간 시안 확인</div></div>
     <div class="empty-state" id="frame-empty"><p>이미지를 업로드하면<br>시안이 표시됩니다</p></div>
-    <div class="canvas-wrap" style="position:relative;display:inline-block"><canvas id="frameCanvas" width="400" height="400" style="filter:drop-shadow(0 20px 40px rgba(25,22,15,.25));background:transparent"></canvas><img id="wm-ov-frame" style="position:absolute;bottom:8px;right:8px;max-width:25%;display:none;pointer-events:none;object-fit:contain" src="" alt=""></div>
+    <div class="canvas-wrap" style="position:relative;display:inline-block"><canvas id="frameCanvas" width="400" height="400" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.22)) drop-shadow(0 6px 14px rgba(0,0,0,.10)) drop-shadow(0 24px 48px rgba(0,0,0,.14));background:transparent"></canvas><img id="wm-ov-frame" style="position:absolute;bottom:8px;right:8px;max-width:25%;display:none;pointer-events:none;object-fit:contain" src="" alt=""></div>
   </div>
 </div>
 
@@ -9305,7 +9305,7 @@ window.addEventListener('load',run);
 <style id="denn-v36-3-dynamic-frame-text-fields-mockup-css">
 #page-frame .f-txt-item.denn-v363-static-hidden{display:none!important}
 #page-frame .denn-v363-text-fields{display:flex;flex-direction:column;gap:8px}
-#page-frame .denn-v363-empty-text{font-size:10px;line-height:1.45;color:var(--warm);background:rgba(159,118,61,.08);border:1px solid rgba(159,118,61,.22);border-radius:6px;padding:9px}
+#page-frame .denn-v363-empty-text{font-size:10px;line-height:1.45;color:var(--warm);background:#f5f5f5;border:1px solid #e6e6e6;border-radius:6px;padding:9px}
 #page-frame .frame-text-style-row.denn-v363-dynamic-row.template-hidden{display:none!important}
 </style>
 <script id="denn-v36-3-dynamic-frame-text-fields-mockup">
@@ -11548,7 +11548,7 @@ window.addEventListener('load',later);
   #page-frame.denn-pc-shell-on{display:block!important;padding:0!important;max-height:none!important}
   #page-frame.denn-pc-shell-on>.panel{display:none!important}
   /* 컬럼 폭을 화면 해상도에 비례(vw)시키되 최소/최대 한도(clamp). 큰 모니터일수록 좌우 컨트롤 박스가 넓어짐. */
-  .denn-pc-shell{display:grid;grid-template-columns:clamp(80px,5vw,108px) clamp(264px,18vw,380px) minmax(0,1fr) clamp(264px,18vw,380px);height:calc(100vh - 95px);background:var(--surface)}
+  .denn-pc-shell{display:grid;grid-template-columns:clamp(80px,5vw,108px) var(--denn-control-w) minmax(0,1fr) var(--denn-control-w);height:calc(100vh - 95px);background:var(--surface)}
   .denn-pc-shell .dps-col{min-width:0;min-height:0}
   /* 좌측 기능 아이콘 레일 — 풀높이 */
   .denn-pc-shell .dps-rail{background:var(--ink);display:flex;flex-direction:column;gap:2px;padding:14px 6px;overflow-y:auto}
@@ -11556,16 +11556,16 @@ window.addEventListener('load',later);
   .denn-pc-shell .dps-icon .dps-ico{font-size:20px;line-height:1}
   .denn-pc-shell .dps-icon .dps-lab{font-size:9.5px;letter-spacing:.02em;white-space:nowrap}
   .denn-pc-shell .dps-icon:hover{background:rgba(255,255,255,.06);color:var(--cream)}
-  .denn-pc-shell .dps-icon.on{background:rgba(200,168,100,.18);color:var(--gold)}
+  .denn-pc-shell .dps-icon.on{background:rgba(255,255,255,.12);color:var(--gold)}
   /* 기능 메뉴(드로어) 컬럼 — info-bar 상단 고정 + 활성 그룹만 노출 */
-  .denn-pc-shell .dps-menu{border-right:1px solid var(--border);padding:16px 14px;overflow-y:auto}
+  .denn-pc-shell .dps-menu{border-right:1px solid var(--border);padding:var(--denn-control-pad);box-sizing:border-box;overflow-y:auto}
   .denn-pc-shell .dps-menu>.info-bar{position:static!important;transform:none!important;left:auto!important;bottom:auto!important;width:100%;box-sizing:border-box;margin:0 0 14px;justify-content:center}
   .denn-pc-shell .dps-group{display:none;flex-direction:column;gap:13px}
   .denn-pc-shell .dps-group.on{display:flex}
   /* 캔버스 */
   .denn-pc-shell .dps-canvas{position:relative;overflow:hidden}
   /* 우측 컬럼 — 요소 리스트(스크롤) 상단 + 기본설정/액션 하단 고정. 좌(메뉴)와 패딩 통일 */
-  .denn-pc-shell .dps-action{border-left:1px solid var(--border);padding:16px 14px;overflow:hidden;display:flex;flex-direction:column;gap:10px}
+  .denn-pc-shell .dps-action{border-left:1px solid var(--border);padding:var(--denn-control-pad);box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;gap:10px}
   .denn-pc-shell .dps-elem-wrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
   .denn-pc-shell .dps-elem-title{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--warm)}
   .denn-pc-shell .dps-elem-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
@@ -11654,6 +11654,14 @@ window.addEventListener('load',later);
   function ensureElemListeners(){
     if(window.__dennElemListenersOn)return; window.__dennElemListenersOn=true;
     ['f-main','f-name','f-date','f-sub'].forEach(function(id){var f=document.getElementById(id);if(f)f.addEventListener('input',renderElemList);});
+    // 이미지 가시성(display) + 썸네일 src 변경 감지 → 업로드/제거 시 리스트 갱신
+    var prev=document.getElementById('frame-prev');
+    if(prev)new MutationObserver(renderElemList).observe(prev,{attributes:true,attributeFilter:['style']});
+    var thumb=document.getElementById('frame-thumb');
+    if(thumb)new MutationObserver(renderElemList).observe(thumb,{attributes:true,attributeFilter:['src']});
+    // 시계 토글 .on 클래스 변경 감지 → 표시/해제 즉시 반영
+    var clk=document.getElementById('tog-clock');
+    if(clk)new MutationObserver(renderElemList).observe(clk,{attributes:true,attributeFilter:['class']});
   }
   function buildRightExtras(act){
     // 요소 리스트(상단, 스크롤) + 기본설정 버튼(액션 스택 위). 액션 스택은 이미 act 하단에 들어와 있음.
@@ -11791,7 +11799,7 @@ window.addEventListener('load',later);
 /* (작업3) 목업툴 2톤(흰색 + #e6e6e6) + 아일랜드 플로팅 셸 + 좌측 메뉴 접기.
    상단 헤더(검정)와 --gold(헤더 'PRODUCTS' 강조)는 보존. 나머지 배경=흰색, 좌측 레일=#e6e6e6, 강조=검정 모노.
    대부분은 :root 변수 remap으로 일괄 처리하고, 변수 미사용 웜톤만 개별 override. */
-:root{--surface:#ffffff;--cream:#ffffff;--border:#e6e6e6;--gold2:#777;--gold:#777;--warm:#7a7a7a}
+:root{--surface:#ffffff;--cream:#ffffff;--border:#e6e6e6;--gold2:#777;--gold:#777;--warm:#7a7a7a;--denn-control-w:clamp(264px,18vw,380px);--denn-control-pad:16px 14px}
 body{background:#fff}
 /* 변수 미사용 웜톤 off-white → 흰/연회색 */
 .drop-zone{background:#fff!important}
@@ -11859,6 +11867,18 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
 /* 햇빛 연출 안내 박스 — 웜 크림/골드 → 연회색/뉴트럴 */
 #room-modal [style*="#FEF9EE"]{background:#f5f5f5!important;border-color:#e6e6e6!important;color:#777!important}
 
+/* v36 주문제작 버튼/모달 — 크림/다크골드 → 뉴트럴 (L8378 한 줄 대형 CSS를 직접 수정하지 않고 후행 오버라이드) */
+.denn-v36-order-btn{background:#efefef!important;color:#444!important;border-color:#e0e0e0!important;box-shadow:0 4px 12px rgba(0,0,0,.06)!important}
+.denn-v36-order-btn:hover{background:#e4e4e4!important}
+.denn-v36-modal{background:#fff!important;border-color:#e6e6e6!important;color:#1c1c1c!important}
+.denn-v36-modal p{color:#777!important}
+.denn-v36-field label{color:#555!important}
+.denn-v36-field input,.denn-v36-field textarea{border-color:#e0e0e0!important;color:#1c1c1c!important}
+.denn-v36-actions .primary{background:#1c1c1c!important;color:#fff!important}
+.denn-v36-actions .outline{border-color:#e0e0e0!important;color:#444!important}
+.denn-v36-actions .ghost{color:#777!important;border-color:#e0e0e0!important}
+.denn-v36-status{color:#777!important}
+
 /* ===== 룸 모달 셸과 통일된 3-컬럼 아일랜드 레이아웃 (PC ≥861px) ===== */
 @media(min-width:861px){
   /* Body 컨테이너 — gap + padding + 회색 배경(흰 아일랜드 대비) */
@@ -11867,27 +11887,27 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   #room-modal>div>div:first-child{background:#fff!important;border-bottom:1px solid #e6e6e6!important}
   /* 좌측 컨트롤 패널 — 셸 메뉴 드로어 폭과 동일, 아일랜드 */
   #room-modal>div>div:nth-child(2)>div:first-child{
-    width:clamp(264px,18vw,380px)!important;
+    width:var(--denn-control-w)!important;
     flex-shrink:0!important;
     border-right:none!important;
     border:1px solid #e6e6e6!important;
     border-radius:16px!important;
     box-shadow:0 4px 16px rgba(0,0,0,.05)!important;
     background:#fff!important;
-    padding:18px!important;
+    padding:var(--denn-control-pad)!important;
     box-sizing:border-box!important
   }
   /* 캔버스 영역 — 가운데 아일랜드 */
   #room-modal #rm-canvas-area{flex:1!important;border:1px solid #e6e6e6!important;border-radius:16px!important;box-shadow:0 4px 16px rgba(0,0,0,.05)!important;background:#fff!important;min-width:0!important}
   /* 우측 가이드+액션 패널 — 좌측 폭과 통일 */
   #room-modal .rm-right-panel{
-    width:clamp(264px,18vw,380px);
+    width:var(--denn-control-w);
     flex-shrink:0;
     border:1px solid #e6e6e6;
     border-radius:16px;
     box-shadow:0 4px 16px rgba(0,0,0,.05);
     background:#fff;
-    padding:18px;
+    padding:var(--denn-control-pad);
     box-sizing:border-box;
     display:flex;
     flex-direction:column;
@@ -12249,6 +12269,24 @@ input[type=range]{accent-color:#777}
   else restructure();
   window.addEventListener('load',function(){setTimeout(restructure,200)});
 })();
+</script>
+
+<script id="denn-v100-canvas-rotate-DEFERRED">
+/* (작업3 Q6 — 다음 세션 처리) 액자 방향 '가로' = 캔버스 통째 90° CSS 회전.
+   현 상태: 비활성(no-op). 시도 결과 v36.1 스케일러(DENNFramePreviewScaleV361 / applyFramePreviewScaleV36)가
+   .canvas-wrap.style.transform을 매 renderFrame 후 setTimeout(0/80/220ms)으로 3회 재설정 → 회전 합성한 직후 지움(깜빡임).
+   회피 시도 1) wrap에 scale+rotate 합성 → setTimeout 재설정이 rotate 날림.
+   회피 시도 2) canvas 엘리먼트에 직접 rotate → 충돌은 없으나 cPos(L9086, rect 기반 mouse→pixel 매핑)가 회전을 모름 → 드래그 좌표 어긋남 예상.
+   다음 세션 옵션:
+     A) 스케일러 내부 closure 함수 applyPreviewScale 직접 패치 (L9008~9079 ensureScaleSizer/applyPreviewScale 영역 손대야 함, 보호 영역 인접).
+     B) MutationObserver로 wrap.style 변경 감지해 매번 회전 재합성 (무한루프 방지 가드 필요).
+     C) 사이저(.denn-scale-sizer) 단계에 회전, wrap는 scale 전담 → 사이저 width/height swap 필요.
+   참고:
+     - v64 setOrientation('landscape')은 sz.aspect=1/base로 transpose 시도하나 L2194 v2 wrap의 normFrameRatio가 즉시 >=1로 복원 → 결과적으로 캔버스 픽셀 비율은 항상 portrait 유지.
+     - 따라서 보이는 "이미지만 압축되며 가로로 돌아감"의 직접 원인은 drawImgT가 state.rot(±90)을 폴백 적용하기 때문 (L6113).
+     - 보호 영역(renderFrame 본체) 무수정 원칙 유지 — 셸 외곽 wrap 단계에서 해결할 것.
+*/
+(function(){'use strict';})();
 </script>
 </body>
 </html>
