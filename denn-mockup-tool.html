@@ -2635,7 +2635,7 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){in
 <script id="denn-v21-mock-frame-toggle-ui">
 (function(){
 function by(id){return document.getElementById(id)}
-function normalizeFrameToggle(){try{var row=by('denn-frame-visible-row');if(!row)return;var span=row.querySelector('.row span');if(span)span.textContent='프레임 보이기';var hint=row.querySelector('.hint');if(hint)hint.textContent='OFF 시 프레임 레이어만 숨기고 사진과 시계 좌표는 유지합니다.';var tog=by('tog-frame-visible');if(tog){tog.onclick=function(){this.classList.toggle('on');/* v95: 사용자 명시적 토글은 자동 lock 무시 — 다음 클릭도 통과 보장 */if(row)row.classList.remove('denn-v37-frame-locked');if(window.renderFrame)window.renderFrame();};}}catch(e){}}
+function normalizeFrameToggle(){try{var row=by('denn-frame-visible-row');if(!row)return;var span=row.querySelector('.row span');if(span)span.textContent='프레임 보이기';var hint=row.querySelector('.hint');if(hint)hint.textContent='OFF 시 프레임 레이어만 숨기고 사진과 시계 좌표는 유지합니다.';var tog=by('tog-frame-visible');if(tog){tog.onclick=function(){this.classList.toggle('on');/* v95 진짜 fix: window.DENN_FRAME_VISIBLE도 sync — 렌더 경로(drawClockV18, hideFramePost 등)가 .on 클래스가 아닌 이 전역 변수를 봄. 원본 v17/v18/v19 onclick은 둘 다 토글했는데 v21 normalizeFrameToggle이 단순화하며 누락 → 토글이 시각적으로만 작동하고 렌더 미반영 버그의 진짜 원인. */window.DENN_FRAME_VISIBLE=this.classList.contains('on');/* 사용자 명시적 토글 — 자동 lock 무시 */if(row)row.classList.remove('denn-v37-frame-locked');if(window.renderFrame)window.renderFrame();};}}catch(e){}}
 var oldSwitch=window.switchTab;if(typeof oldSwitch==='function'){window.switchTab=function(tab){var r=oldSwitch.apply(this,arguments);setTimeout(normalizeFrameToggle,160);return r}}
 document.addEventListener('DOMContentLoaded',function(){setTimeout(normalizeFrameToggle,1200)});window.addEventListener('load',function(){setTimeout(normalizeFrameToggle,1400)});
 })();
@@ -11792,7 +11792,14 @@ window.addEventListener('load',later);
       if(el.__dennGuardObs){el.__dennGuardObs.disconnect();el.__dennGuardObs=null;}
       var desired=el.classList.contains('on');
       var obs=new MutationObserver(function(){
-        if(el.classList.contains('on')!==desired){el.classList.toggle('on',desired);if(el.id==='tog-clock'&&window.opts)window.opts.clock=desired;}
+        if(el.classList.contains('on')!==desired){
+          el.classList.toggle('on',desired);
+          /* v95: revert 시 실제 렌더 state도 sync — class만 바꾸면 캔버스 렌더가 안 따라옴.
+             frame은 window.DENN_FRAME_VISIBLE, clock은 window.opts.clock이 진짜 signal. */
+          if(el.id==='tog-frame-visible')window.DENN_FRAME_VISIBLE=desired;
+          if(el.id==='tog-clock'&&window.opts)window.opts.clock=desired;
+          if(typeof window.renderFrame==='function')window.renderFrame();
+        }
       });
       obs.observe(el,{attributes:true,attributeFilter:['class']});
       el.__dennGuardObs=obs;
