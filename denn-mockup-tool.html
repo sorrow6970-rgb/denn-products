@@ -11663,7 +11663,7 @@ window.addEventListener('load',later);
     var wrap=el('div','dps-elem-wrap');
     wrap.innerHTML='<div class="dps-elem-title">요소 · 행별 삭제</div><div class="dps-elem-list" id="dps-elem-list"></div>';
     act.insertBefore(wrap,act.firstChild);
-    var reset=el('button','dps-reset-btn');reset.type='button';reset.textContent='↻ 기본설정으로';
+    var reset=el('button','dps-reset-btn');reset.type='button';reset.textContent='↺ 기본설정으로';
     reset.addEventListener('click',resetFrameDefaults);
     var stack=act.querySelector('.denn-frame-action-stack');
     if(stack)act.insertBefore(reset,stack); else act.appendChild(reset);
@@ -11922,6 +11922,10 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   #room-modal .rm-tab.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);color:#444}
   #room-modal .rm-tab.on .rm-tab-lab{font-weight:700}
 
+  /* 기울기 / 햇빛 / 그림자 body — 토글과 무관하게 항상 펼침. OFF면 .rm-body-disabled dim+pointer-events:none */
+  #room-modal #rm-tilt-body,#room-modal #rm-sun-controls,#room-modal #rm-shadow-body{display:block!important;transition:opacity .18s ease}
+  #room-modal .rm-body-disabled{opacity:.4!important;pointer-events:none!important}
+
   /* 캔버스 영역 — padding 0, flex center 유지하되 캔버스를 100%로 채워 위아래 여백 최소화 */
   #room-modal #rm-canvas-area{padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}
   /* 캔버스/사이즈가이드 — 영역 100% 채움 + object-fit:contain으로 비율 유지 */
@@ -12062,7 +12066,7 @@ input[type=range]{accent-color:#777}
     var actionWrap=document.createElement('div'); actionWrap.className='rm-right-actions';
     /* 기본설정으로 */
     var resetBtn=document.createElement('button'); resetBtn.className='rm-action-btn rm-action-reset'; resetBtn.type='button';
-    resetBtn.textContent='↻ 기본설정으로';
+    resetBtn.textContent='↺ 기본설정으로';
     resetBtn.addEventListener('click',function(){
       if(!window.confirm('내 공간 보기의 모든 설정을 기본값으로 되돌릴까요?'))return;
       ['resetRoomFrameDefaultsV39','resetRoomTiltDefaultsV40','resetRoomShadowDefaultsV39','resetRoomSunDefaultsV40','resetRoomSizeGuideDefaults'].forEach(function(fn){
@@ -12111,6 +12115,47 @@ input[type=range]{accent-color:#777}
       while(sgRoot&&sgRoot.parentElement&&sgRoot.parentElement!==leftPanel)sgRoot=sgRoot.parentElement;
       if(sgRoot&&sgRoot!==leftPanel)sgRoot.setAttribute('data-rm-pane','frame');
     }
+    /* 기울기(rm-tilt) / 햇빛(rm-sun) 토글 — body 항상 펼침. toggle OFF면 dim+disabled, ON이면 또렷+활성 */
+    [['rm-tilt-tog','rm-tilt-body'],['rm-sun-tog','rm-sun-controls']].forEach(function(p){
+      var tog=document.getElementById(p[0]),bd=document.getElementById(p[1]);
+      if(!tog||!bd)return;
+      var sync=function(){if(bd.style.display==='none')bd.style.display='block';bd.classList.toggle('rm-body-disabled',!tog.classList.contains('on'))};
+      sync();
+      try{new MutationObserver(sync).observe(tog,{attributes:true,attributeFilter:['class']})}catch(e){}
+      /* 기존 JS(toggleRoomTiltV40/rmTogSun)가 display:none 강제 set하면 다시 block으로 복구 */
+      try{new MutationObserver(function(){if(bd.style.display==='none')bd.style.display='block'}).observe(bd,{attributes:true,attributeFilter:['style']})}catch(e){}
+    });
+    /* 그림자 섹션 — 원래 토글 없음. 추가하고 기본 ON. OFF면 rm-sh-op=0(렌더 영향)+dim, ON이면 값 복원 */
+    (function addShadowTog(){
+      if(document.getElementById('rm-shadow-tog'))return;
+      var labelEl=null;
+      leftPanel.querySelectorAll('div[style*="letter-spacing:.14em"]').forEach(function(l){if(l.textContent.trim()==='그림자')labelEl=l});
+      if(!labelEl)return;
+      var section=labelEl.parentElement;
+      /* 라벨을 toggle row로 wrap */
+      var togRow=document.createElement('div');
+      togRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px';
+      labelEl.style.marginBottom='0';
+      section.insertBefore(togRow,labelEl); togRow.appendChild(labelEl);
+      var tog=document.createElement('div'); tog.className='tog on'; tog.id='rm-shadow-tog'; togRow.appendChild(tog);
+      /* 후속 형제들(슬라이더+리셋버튼) body div로 묶음 */
+      var body=document.createElement('div'); body.id='rm-shadow-body';
+      var sib=togRow.nextElementSibling;
+      while(sib){var nx=sib.nextElementSibling; body.appendChild(sib); sib=nx;}
+      section.appendChild(body);
+      /* click: dim/enable + 렌더 영향(rm-sh-op 0↔복원) */
+      tog.addEventListener('click',function(){
+        var nowOn=!tog.classList.contains('on');
+        tog.classList.toggle('on',nowOn);
+        body.classList.toggle('rm-body-disabled',!nowOn);
+        var op=document.getElementById('rm-sh-op');
+        if(op){
+          if(!nowOn){op.dataset.prevValue=op.value;op.value=0;}
+          else if(op.dataset.prevValue){op.value=op.dataset.prevValue;delete op.dataset.prevValue;}
+          op.dispatchEvent(new Event('input',{bubbles:true}));
+        }
+      });
+    })();
     /* '배경 밝기' / '배경 크기' 슬라이더 — 원래 액자 섹션 안에 있었지만 배경 관련이므로 '배경' 탭으로 이동 */
     var bgSection=leftPanel.querySelector('[data-rm-pane="bg"]');
     if(bgSection){
