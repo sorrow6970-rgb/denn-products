@@ -11784,18 +11784,19 @@ window.addEventListener('load',later);
      wrap이 불가능 → MutationObserver guardian으로 결과(.on 변경)만 감시·revert. */
   function guard(el){
     if(!el)return;
-    var prevHandler=el.onclick;
+    /* bubble phase로 등록 — target onclick(.classList.toggle) 이후 fire. 모두 동기 처리.
+       race condition 회피: 이전 observer를 setTimeout 안이 아닌 동기 코드에서 disconnect.
+       그래야 사용자 N차 클릭의 microtask MutationObserver 콜백이 (N-1)차 observer로
+       처리돼 user intent를 revert하는 race를 막을 수 있음. */
     el.addEventListener('click',function(){
-      setTimeout(function(){
-        var desired=el.classList.contains('on');
-        if(el.__dennGuardObs)el.__dennGuardObs.disconnect();
-        var obs=new MutationObserver(function(){
-          if(el.classList.contains('on')!==desired){el.classList.toggle('on',desired);if(el.id==='tog-clock'&&window.opts)window.opts.clock=desired;}
-        });
-        obs.observe(el,{attributes:true,attributeFilter:['class']});
-        el.__dennGuardObs=obs;
-        setTimeout(function(){if(el.__dennGuardObs===obs){obs.disconnect();el.__dennGuardObs=null;}},3000);
-      },20);
+      if(el.__dennGuardObs){el.__dennGuardObs.disconnect();el.__dennGuardObs=null;}
+      var desired=el.classList.contains('on');
+      var obs=new MutationObserver(function(){
+        if(el.classList.contains('on')!==desired){el.classList.toggle('on',desired);if(el.id==='tog-clock'&&window.opts)window.opts.clock=desired;}
+      });
+      obs.observe(el,{attributes:true,attributeFilter:['class']});
+      el.__dennGuardObs=obs;
+      setTimeout(function(){if(el.__dennGuardObs===obs){obs.disconnect();el.__dennGuardObs=null;}},3000);
     },false);
   }
   function attach(){var f=document.getElementById('tog-frame-visible'),c=document.getElementById('tog-clock');if(f&&!f.__dennGuardAttached){f.__dennGuardAttached=true;guard(f);}if(c&&!c.__dennGuardAttached){c.__dennGuardAttached=true;guard(c);}}
