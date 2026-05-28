@@ -12133,11 +12133,24 @@ input[type=range]{accent-color:#777}
     })();
     /* 사이즈 가이드(sg-panel) — 액자 사이즈 관련이므로 '액자' 탭에 묶음 */
     var sgPanel=document.getElementById('sg-panel');
+    var sgRoot=null;
     if(sgPanel){
-      var sgRoot=sgPanel;
+      sgRoot=sgPanel;
       while(sgRoot&&sgRoot.parentElement&&sgRoot.parentElement!==leftPanel)sgRoot=sgRoot.parentElement;
       if(sgRoot&&sgRoot!==leftPanel)sgRoot.setAttribute('data-rm-pane','frame');
     }
+    /* 사용자 요청: 사이즈 가이드 ↔ 액자 기울기 위치 swap (사이즈가이드를 기울기 앞으로) */
+    (function(){
+      var tiltTog=document.getElementById('rm-tilt-tog');
+      var tiltSection=null;
+      if(tiltTog){
+        tiltSection=tiltTog;
+        while(tiltSection&&tiltSection.parentElement&&tiltSection.parentElement!==leftPanel)tiltSection=tiltSection.parentElement;
+      }
+      if(tiltSection&&sgRoot&&tiltSection.parentElement===sgRoot.parentElement){
+        tiltSection.parentElement.insertBefore(sgRoot,tiltSection);
+      }
+    })();
     /* 기울기(rm-tilt) — .on class 기반. 사용자 요청: 기본값 강제 OFF (저장 상태 복원이 ON이라도 덮어쓰기) */
     (function(){
       var tog=document.getElementById('rm-tilt-tog'),bd=document.getElementById('rm-tilt-body');
