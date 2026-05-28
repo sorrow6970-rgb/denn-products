@@ -11774,6 +11774,37 @@ window.addEventListener('load',later);
   window.addEventListener('load',function(){setTimeout(boot,420)});
 })();
 </script>
+<script id="denn-v95-toggle-user-intent-guard">
+(function(){
+  'use strict';
+  if(window.__dennV95ToggleGuard)return; window.__dennV95ToggleGuard=true;
+  /* 사용자가 토글(프레임 보이기 / 시계) 클릭한 직후 3초간 외부 sync(v36 syncFrameDefault,
+     v96 sync, v37 syncFrameLock 등)가 사용자 의도와 다르게 .on 클래스를 변경하면 즉시 되돌림.
+     setFrameToggle/setFrame/setClockToggle/setClock 등이 모두 IIFE 폐쇄 스코프에 있어 직접
+     wrap이 불가능 → MutationObserver guardian으로 결과(.on 변경)만 감시·revert. */
+  function guard(el){
+    if(!el)return;
+    var prevHandler=el.onclick;
+    el.addEventListener('click',function(){
+      setTimeout(function(){
+        var desired=el.classList.contains('on');
+        if(el.__dennGuardObs)el.__dennGuardObs.disconnect();
+        var obs=new MutationObserver(function(){
+          if(el.classList.contains('on')!==desired){el.classList.toggle('on',desired);if(el.id==='tog-clock'&&window.opts)window.opts.clock=desired;}
+        });
+        obs.observe(el,{attributes:true,attributeFilter:['class']});
+        el.__dennGuardObs=obs;
+        setTimeout(function(){if(el.__dennGuardObs===obs){obs.disconnect();el.__dennGuardObs=null;}},3000);
+      },20);
+    },false);
+  }
+  function attach(){var f=document.getElementById('tog-frame-visible'),c=document.getElementById('tog-clock');if(f&&!f.__dennGuardAttached){f.__dennGuardAttached=true;guard(f);}if(c&&!c.__dennGuardAttached){c.__dennGuardAttached=true;guard(c);}}
+  /* 토글이 늦게 주입되므로 여러 시점에 attach 시도 */
+  [200,800,1600,2800].forEach(function(ms){setTimeout(attach,ms)});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);
+  window.addEventListener('load',function(){setTimeout(attach,1200)});
+})();
+</script>
 <style id="denn-v95-2tone-island-css">
 /* (작업3) 목업툴 2톤(흰색 + #e6e6e6) + 아일랜드 플로팅 셸 + 좌측 메뉴 접기.
    상단 헤더(검정)와 --gold(헤더 'PRODUCTS' 강조)는 보존. 나머지 배경=흰색, 좌측 레일=#e6e6e6, 강조=검정 모노.
@@ -11829,7 +11860,7 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   /* 메뉴/액션/캔버스 = 흰 아일랜드 */
   .denn-pc-shell .dps-menu{background:#fff;border:1px solid #e6e6e6;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);transition:opacity .18s ease;padding-top:24px!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
   .denn-pc-shell .dps-menu>.info-bar{flex:0 0 auto}
-  .denn-pc-shell .dps-groups{flex:1;min-height:0;overflow-y:auto;padding-right:4px;padding-top:8px}
+  .denn-pc-shell .dps-groups{flex:1;min-height:0;overflow-y:auto;padding:8px 6px 0 6px}
   /* 템플릿 그리드는 .dps-groups 안에서 자연 흐름 (이중 스크롤 제거) */
   #page-frame.denn-pc-shell-on .tpl-scroll{max-height:none!important;overflow:visible!important;padding-right:0!important}
   .denn-pc-shell .dps-action{background:#fff;border:1px solid #e6e6e6;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);padding-top:24px!important}
