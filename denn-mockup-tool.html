@@ -365,7 +365,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button onclick="dlRoomMockup()" style="padding:9px 18px;background:var(--ink);color:var(--cream);border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>이미지 저장</button>
+        <button onclick="dlRoomMockup()" style="padding:9px 18px;background:var(--ink);color:var(--cream);border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>배경 이미지 저장</button>
         <button onclick="closeRoomMockup()" style="width:34px;height:34px;border:1.5px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:15px;color:var(--ink)">✕</button>
       </div>
     </div>
@@ -11862,8 +11862,10 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
 
 /* ===== 룸 모달 셸과 통일된 3-컬럼 아일랜드 레이아웃 (PC ≥861px) ===== */
 @media(min-width:861px){
-  /* Body 컨테이너 — gap + padding + 흰 배경(아일랜드 사이 여백) */
-  #room-modal>div>div:nth-child(2){gap:14px!important;padding:14px!important;background:#fff!important;box-sizing:border-box!important;overflow:hidden!important}
+  /* Body 컨테이너 — gap + padding + 연회색 배경(흰 아일랜드 대비) */
+  #room-modal>div>div:nth-child(2){gap:14px!important;padding:14px!important;background:#f5f5f5!important;box-sizing:border-box!important;overflow:hidden!important}
+  /* 헤더 하단도 살짝 회색 톤 — 본체와 시각적 연결 */
+  #room-modal>div>div:first-child{background:#fff!important;border-bottom:1px solid #e6e6e6!important}
   /* 좌측 컨트롤 패널 — 셸 메뉴 드로어 폭과 동일, 아일랜드 */
   #room-modal>div>div:nth-child(2)>div:first-child{
     width:clamp(264px,18vw,380px)!important;
@@ -11878,20 +11880,47 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   }
   /* 캔버스 영역 — 가운데 아일랜드 */
   #room-modal #rm-canvas-area{flex:1!important;border:1px solid #e6e6e6!important;border-radius:16px!important;box-shadow:0 4px 16px rgba(0,0,0,.05)!important;background:#fff!important;min-width:0!important}
-  /* 우측 가이드 패널 (JS로 주입) — 아일랜드 */
+  /* 우측 가이드+액션 패널 — 좌측 폭과 통일 */
   #room-modal .rm-right-panel{
-    width:clamp(220px,16vw,300px);
+    width:clamp(264px,18vw,380px);
     flex-shrink:0;
     border:1px solid #e6e6e6;
     border-radius:16px;
     box-shadow:0 4px 16px rgba(0,0,0,.05);
     background:#fff;
     padding:18px;
-    overflow-y:auto;
-    box-sizing:border-box
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    overflow:hidden
   }
-  /* 우측 패널로 옮긴 가이드 섹션은 상단 구분선/마진 제거 */
+  /* 가이드 scroll(위) + 액션(아래) 구조 */
+  #room-modal .rm-right-scroll{flex:1;min-height:0;overflow-y:auto;padding-right:4px}
+  #room-modal .rm-right-actions{display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:1px solid #e6e6e6;flex-shrink:0}
+  /* 액션 버튼 — 셸 액션 스택과 동일 톤(연회색 모노) */
+  #room-modal .rm-action-btn{width:100%;min-height:40px;padding:9px 12px;border-radius:9px;border:1px solid #e0e0e0;background:#efefef;color:#444;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
+  #room-modal .rm-action-btn:hover{background:#e4e4e4;border-color:#cfcfcf}
+  /* 주문제작 = 카카오 옐로우 포인트 + 말풍선 아이콘 */
+  #room-modal .rm-action-order{background:#FEE500!important;color:#1c1c1c!important;border-color:#FEE500!important;font-weight:800;box-shadow:0 4px 12px rgba(254,229,0,.22)}
+  #room-modal .rm-action-order:hover{background:#F4D900!important;border-color:#F4D900!important}
+  #room-modal .rm-action-order::before{content:'';width:18px;height:18px;flex-shrink:0;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%231c1c1c' d='M12 3C6.48 3 2 6.58 2 11c0 2.83 1.83 5.31 4.6 6.71L5.3 21.5c-.1.42.32.78.7.6L11 19.96c.33.02.66.04 1 .04 5.52 0 10-3.58 10-8S17.52 3 12 3z'/></svg>") center/contain no-repeat}
+  /* 우측 패널로 옮긴 가이드 섹션 — 상단 구분선/패딩 제거 */
   #room-modal .rm-right-panel #rm-guide-section>div:first-child{display:none!important}
+  /* 가이드 썸네일 — 비율 5/3로 세로 확대 (좁아서 잘 안 보이던 문제 해결) */
+  #room-modal .rm-right-scroll #rm-guide-grid > div > img{height:auto!important;aspect-ratio:5/3!important;width:100%!important;object-fit:cover}
+
+  /* 좌측 패널 탭 (배경/액자/그림자/햇빛) */
+  #room-modal .rm-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px;background:#f5f5f5;border-radius:10px;margin-bottom:14px;flex-shrink:0}
+  #room-modal .rm-tab{border:none;background:transparent;cursor:pointer;padding:8px 4px;border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:inherit;color:#777;transition:all .15s}
+  #room-modal .rm-tab:hover{background:rgba(0,0,0,.04);color:#444}
+  #room-modal .rm-tab-ico{font-size:18px;line-height:1}
+  #room-modal .rm-tab-lab{font-size:9px;font-weight:500}
+  #room-modal .rm-tab.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);color:#444}
+  #room-modal .rm-tab.on .rm-tab-lab{font-weight:700}
+
+  /* 캔버스 이미지 위아래 잘림 방지 — contain fit (이미지 비율 유지하며 안 잘리게) */
+  #room-modal #rm-canvas{max-width:100%!important;max-height:100%!important;object-fit:contain!important}
 }
 
 /* ===== PC 셸(≥861) 2톤 + 아일랜드 ===== */
@@ -12001,23 +12030,84 @@ input[type=range]{accent-color:#777}
 (function(){
   'use strict';
   if(window.__dennV95RoomModal3Col)return; window.__dennV95RoomModal3Col=true;
-  /* 룸 모달 3-컬럼 재구조화: 좌측 컨트롤 패널 | 캔버스 | 우측 가이드 배경 패널.
-     #rm-guide-section을 좌측에서 새 우측 .rm-right-panel로 이동.
-     가이드 섹션 display 변경을 MutationObserver로 우측 패널과 sync. */
+  /* 룸 모달 셸식 3-컬럼 재구조화:
+     좌측: 탭 4개(배경/액자/그림자/햇빛, 배경 기본 오픈) + 해당 섹션
+     가운데: 캔버스
+     우측: 가이드 썸네일(scroll) + 액션 버튼(기본설정/돌아가기/주문제작) */
+  var TABS=[
+    {key:'bg',icon:'🏠',label:'배경',match:'배경 사진'},
+    {key:'frame',icon:'🖼',label:'액자',match:'액자 크기'},
+    {key:'shadow',icon:'🌑',label:'그림자',match:'그림자'},
+    {key:'sun',icon:'☀️',label:'햇빛',match:'햇빛'}
+  ];
   function restructure(){
     var modal=document.getElementById('room-modal'); if(!modal||modal.__dennRestruct)return;
     var inner=modal.children[0]; if(!inner)return;
     var body=inner.children[1]; if(!body||body.children.length<2)return;
-    var guide=document.getElementById('rm-guide-section'); if(!guide)return;
-    var right=document.createElement('div');
-    right.className='rm-right-panel';
-    right.appendChild(guide);
-    body.appendChild(right);
+    var leftPanel=body.children[0];
+    var guide=document.getElementById('rm-guide-section'); if(!guide||!leftPanel)return;
+    /* ===== 우측 패널: 가이드 scroll(위) + 액션(아래) ===== */
+    var right=document.createElement('div'); right.className='rm-right-panel';
+    var scrollWrap=document.createElement('div'); scrollWrap.className='rm-right-scroll';
+    scrollWrap.appendChild(guide); right.appendChild(scrollWrap);
+    var actionWrap=document.createElement('div'); actionWrap.className='rm-right-actions';
+    /* 기본설정으로 — 룸 모달 전체 reset 함수 chain (typeof check) */
+    var resetBtn=document.createElement('button'); resetBtn.className='rm-action-btn'; resetBtn.type='button';
+    resetBtn.textContent='↺ 기본설정으로';
+    resetBtn.addEventListener('click',function(){
+      if(!window.confirm('내 공간 보기의 모든 설정을 기본값으로 되돌릴까요?'))return;
+      ['resetRoomFrameDefaultsV39','resetRoomTiltDefaultsV40','resetRoomShadowDefaultsV39','resetRoomSunDefaultsV40','resetRoomSizeGuideDefaults'].forEach(function(fn){
+        try{if(typeof window[fn]==='function')window[fn]()}catch(e){}
+      });
+    });
+    /* 액자 설정으로 돌아가기 — 모달 닫기 */
+    var backBtn=document.createElement('button'); backBtn.className='rm-action-btn'; backBtn.type='button';
+    backBtn.textContent='← 액자 설정으로 돌아가기';
+    backBtn.addEventListener('click',function(){if(typeof window.closeRoomMockup==='function')window.closeRoomMockup()});
+    /* 주문제작 의뢰하기 — 카카오 옐로우, 메인 주문 버튼 click 위임 */
+    var orderBtn=document.createElement('button'); orderBtn.className='rm-action-btn rm-action-order'; orderBtn.type='button';
+    orderBtn.textContent='주문제작 의뢰하기';
+    orderBtn.addEventListener('click',function(){
+      if(typeof window.closeRoomMockup==='function')window.closeRoomMockup();
+      setTimeout(function(){var main=document.getElementById('denn-v36-order-btn-frame');if(main)main.click();},150);
+    });
+    actionWrap.appendChild(resetBtn); actionWrap.appendChild(backBtn); actionWrap.appendChild(orderBtn);
+    right.appendChild(actionWrap); body.appendChild(right);
+    /* ===== 좌측 패널 탭 ===== */
+    /* sec-label로 섹션 식별 → 직속 자식까지 walk up → data-rm-pane 부여 */
+    leftPanel.querySelectorAll('div[style*="letter-spacing:.14em"]').forEach(function(label){
+      var section=label;
+      while(section&&section.parentElement&&section.parentElement!==leftPanel)section=section.parentElement;
+      if(!section||section===leftPanel)return;
+      var text=label.textContent.trim();
+      var tab=TABS.filter(function(t){return text.indexOf(t.match)>=0})[0];
+      if(tab)section.setAttribute('data-rm-pane',tab.key);
+    });
+    /* divider(빈 border-top div) 숨김 */
+    [].slice.call(leftPanel.children).forEach(function(c){
+      if(c.children.length===0&&!c.hasAttribute('data-rm-pane')&&!c.textContent.trim())c.style.display='none';
+    });
+    /* 탭 row 생성 */
+    var tabRow=document.createElement('div'); tabRow.className='rm-tabs';
+    TABS.forEach(function(t,i){
+      var btn=document.createElement('button');
+      btn.className='rm-tab'+(i===0?' on':''); btn.type='button'; btn.setAttribute('data-tab',t.key);
+      btn.innerHTML='<span class="rm-tab-ico">'+t.icon+'</span><span class="rm-tab-lab">'+t.label+'</span>';
+      btn.addEventListener('click',function(){
+        tabRow.querySelectorAll('.rm-tab').forEach(function(b){b.classList.remove('on')});
+        btn.classList.add('on');
+        leftPanel.querySelectorAll('[data-rm-pane]').forEach(function(p){
+          p.style.display=p.getAttribute('data-rm-pane')===t.key?'':'none';
+        });
+      });
+      tabRow.appendChild(btn);
+    });
+    leftPanel.insertBefore(tabRow,leftPanel.firstChild);
+    /* 기본: 'bg' 탭만 표시 */
+    leftPanel.querySelectorAll('[data-rm-pane]').forEach(function(p){
+      p.style.display=p.getAttribute('data-rm-pane')==='bg'?'':'none';
+    });
     modal.__dennRestruct=true;
-    /* 가이드 섹션 display ↔ 우측 패널 display sync */
-    var sync=function(){right.style.display=(guide.style.display==='none')?'none':''};
-    sync();
-    try{new MutationObserver(sync).observe(guide,{attributes:true,attributeFilter:['style']});}catch(e){}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',restructure);
   else restructure();
