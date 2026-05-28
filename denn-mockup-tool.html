@@ -11926,11 +11926,12 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   #room-modal #rm-tilt-body,#room-modal #rm-sun-controls,#room-modal #rm-shadow-body{display:block!important;transition:opacity .18s ease}
   #room-modal .rm-body-disabled{opacity:.4!important;pointer-events:none!important}
 
-  /* 캔버스 영역 — padding 0, flex center 유지하되 캔버스를 100%로 채워 위아래 여백 최소화 */
-  #room-modal #rm-canvas-area{padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}
-  /* 캔버스/사이즈가이드 — 영역 100% 채움 + object-fit:contain으로 비율 유지 */
-  #room-modal #rm-canvas-area #rm-canvas{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;display:block!important}
-  #room-modal #rm-canvas-area #sg-canvas{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;display:block!important}
+  /* 캔버스 영역 — flex center, padding 최소화. 캔버스는 intrinsic 크기 유지(stretch 금지) */
+  #room-modal #rm-canvas-area{padding:4px!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}
+  /* 캔버스/사이즈가이드 — 디스플레이 stretch 금지(JS rmRender의 intrinsic 그리기와 mismatch 방지).
+     intrinsic size 그대로 + max-width/height:100%로 area 초과만 축소. width/height:auto로 비율 유지. */
+  #room-modal #rm-canvas-area #rm-canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;display:block!important}
+  #room-modal #rm-canvas-area #sg-canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;display:block!important}
 }
 
 /* ===== PC 셸(≥861) 2톤 + 아일랜드 ===== */
@@ -12115,16 +12116,29 @@ input[type=range]{accent-color:#777}
       while(sgRoot&&sgRoot.parentElement&&sgRoot.parentElement!==leftPanel)sgRoot=sgRoot.parentElement;
       if(sgRoot&&sgRoot!==leftPanel)sgRoot.setAttribute('data-rm-pane','frame');
     }
-    /* 기울기(rm-tilt) / 햇빛(rm-sun) 토글 — body 항상 펼침. toggle OFF면 dim+disabled, ON이면 또렷+활성 */
-    [['rm-tilt-tog','rm-tilt-body'],['rm-sun-tog','rm-sun-controls']].forEach(function(p){
-      var tog=document.getElementById(p[0]),bd=document.getElementById(p[1]);
+    /* 기울기(rm-tilt) — .on class 기반. 사용자 요청: 기본값 강제 OFF (저장 상태 복원이 ON이라도 덮어쓰기) */
+    (function(){
+      var tog=document.getElementById('rm-tilt-tog'),bd=document.getElementById('rm-tilt-body');
       if(!tog||!bd)return;
+      [150,600,1500].forEach(function(ms){setTimeout(function(){var t=document.getElementById('rm-tilt-tog');if(t)t.classList.remove('on')},ms)});
       var sync=function(){if(bd.style.display==='none')bd.style.display='block';bd.classList.toggle('rm-body-disabled',!tog.classList.contains('on'))};
       sync();
       try{new MutationObserver(sync).observe(tog,{attributes:true,attributeFilter:['class']})}catch(e){}
-      /* 기존 JS(toggleRoomTiltV40/rmTogSun)가 display:none 강제 set하면 다시 block으로 복구 */
       try{new MutationObserver(function(){if(bd.style.display==='none')bd.style.display='block'}).observe(bd,{attributes:true,attributeFilter:['style']})}catch(e){}
-    });
+    })();
+    /* 햇빛(rm-sun) — custom toggle. .on 클래스 안 쓰고 RM.sunOn(JS 변수) 사용 → 별도 sync */
+    (function(){
+      var tog=document.getElementById('rm-sun-tog'),bd=document.getElementById('rm-sun-controls');
+      if(!tog||!bd)return;
+      var sync=function(){
+        if(bd.style.display==='none')bd.style.display='block';
+        var on=!!(window.RM&&window.RM.sunOn);
+        bd.classList.toggle('rm-body-disabled',!on);
+      };
+      sync();
+      tog.addEventListener('click',function(){setTimeout(sync,50)});
+      try{new MutationObserver(function(){setTimeout(sync,0)}).observe(bd,{attributes:true,attributeFilter:['style']})}catch(e){}
+    })();
     /* 그림자 섹션 — 원래 토글 없음. 추가하고 기본 ON. OFF면 rm-sh-op=0(렌더 영향)+dim, ON이면 값 복원 */
     (function addShadowTog(){
       if(document.getElementById('rm-shadow-tog'))return;
