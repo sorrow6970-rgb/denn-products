@@ -11859,13 +11859,13 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
 
 /* ===== 룸 모달 셸과 통일된 3-컬럼 아일랜드 레이아웃 (PC ≥861px) ===== */
 @media(min-width:861px){
-  /* Body 컨테이너 — gap/padding 살짝 축소(캔버스 가로 더 확보) + 회색 배경(흰 아일랜드 대비) */
-  #room-modal>div>div:nth-child(2){gap:10px!important;padding:10px!important;background:#ececec!important;box-sizing:border-box!important;overflow:hidden!important}
+  /* Body 컨테이너 — gap + padding + 회색 배경(흰 아일랜드 대비) */
+  #room-modal>div>div:nth-child(2){gap:14px!important;padding:14px!important;background:#ececec!important;box-sizing:border-box!important;overflow:hidden!important}
   /* 헤더 하단도 살짝 회색 톤 — 본체와 시각적 연결 */
   #room-modal>div>div:first-child{background:#fff!important;border-bottom:1px solid #e6e6e6!important}
-  /* 좌측 컨트롤 패널 — 살짝 축소(캔버스 가로 확보) */
+  /* 좌측 컨트롤 패널 — 셸 메뉴 드로어 폭과 동일, 아일랜드 */
   #room-modal>div>div:nth-child(2)>div:first-child{
-    width:clamp(240px,15vw,320px)!important;
+    width:clamp(264px,18vw,380px)!important;
     flex-shrink:0!important;
     border-right:none!important;
     border:1px solid #e6e6e6!important;
@@ -11877,9 +11877,9 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   }
   /* 캔버스 영역 — 가운데 아일랜드 */
   #room-modal #rm-canvas-area{flex:1!important;border:1px solid #e6e6e6!important;border-radius:16px!important;box-shadow:0 4px 16px rgba(0,0,0,.05)!important;background:#fff!important;min-width:0!important}
-  /* 우측 가이드+액션 패널 — 좌측 폭과 통일(살짝 축소) */
+  /* 우측 가이드+액션 패널 — 좌측 폭과 통일 */
   #room-modal .rm-right-panel{
-    width:clamp(240px,15vw,320px);
+    width:clamp(264px,18vw,380px);
     flex-shrink:0;
     border:1px solid #e6e6e6;
     border-radius:16px;
@@ -11920,19 +11920,18 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   #room-modal .rm-tab.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);color:#444}
   #room-modal .rm-tab.on .rm-tab-lab{font-weight:700}
 
-  /* 사이즈 가이드 UI 사이즈 ↑↑ — 다른 모달 UI와 동일 사이즈, 숫자 잘림 방지 */
+  /* 사이즈 가이드 UI 사이즈 ↑ — 다른 모달 UI와 통일(font 9-10→11-12, 패딩/토글/슬라이더 키움) */
   #room-modal #sg-panel{padding:14px!important}
-  #room-modal #sg-panel .sg-head-label{font-size:12.5px!important}
-  #room-modal #sg-panel .sg-sz-btn{font-size:11.5px!important;padding:6px 11px!important;border-radius:6px!important;line-height:1.4!important;min-height:28px!important}
-  /* 숫자 입력 64px → 충분히 키워 잘림 방지 */
-  #room-modal #sg-panel .sg-ctrl{margin-bottom:10px!important;grid-template-columns:72px 1fr 64px!important;gap:8px!important;align-items:center!important}
-  #room-modal #sg-panel .sg-ctrl label{font-size:11.5px!important}
-  #room-modal #sg-panel .sg-ctrl input[type=number]{font-size:11.5px!important;padding:5px 8px!important;min-width:0!important}
-  #room-modal #sg-panel .sg-color-row label{font-size:11.5px!important}
-  #room-modal #sg-panel .sg-sw-track{width:40px!important;height:22px!important}
-  #room-modal #sg-panel .sg-sw-slider:before{height:16px!important;width:16px!important;left:3px!important;bottom:3px!important}
-  #room-modal #sg-panel input:checked+.sg-sw-slider:before{transform:translateX(18px)!important}
-  #room-modal #sg-panel input[type=range]{height:5px!important}
+  #room-modal #sg-panel .sg-head-label{font-size:12px!important}
+  #room-modal #sg-panel .sg-sz-btn{font-size:11px!important;padding:5px 10px!important;border-radius:6px!important;line-height:1.4!important}
+  #room-modal #sg-panel .sg-ctrl{margin-bottom:8px!important;grid-template-columns:64px 1fr 48px!important;gap:6px!important}
+  #room-modal #sg-panel .sg-ctrl label{font-size:11px!important}
+  #room-modal #sg-panel .sg-ctrl input[type=number]{font-size:11px!important;padding:4px 6px!important}
+  #room-modal #sg-panel .sg-color-row label{font-size:11px!important}
+  #room-modal #sg-panel .sg-sw-track{width:36px!important;height:20px!important}
+  #room-modal #sg-panel .sg-sw-slider:before{height:14px!important;width:14px!important;left:3px!important;bottom:3px!important}
+  #room-modal #sg-panel input:checked+.sg-sw-slider:before{transform:translateX(16px)!important}
+  #room-modal #sg-panel input[type=range]{height:4px!important}
 
   /* 기울기 / 햇빛 / 그림자 body — 토글과 무관하게 항상 펼침. OFF면 .rm-body-disabled dim+pointer-events:none */
   #room-modal #rm-tilt-body,#room-modal #rm-sun-controls,#room-modal #rm-shadow-body{display:block!important;transition:opacity .18s ease}
