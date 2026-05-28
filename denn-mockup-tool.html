@@ -189,7 +189,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     <div class="tab on" onclick="switchTab('frame')">🖼 액자 · 프레임</div>
     <div class="tab" onclick="switchTab('case')">📱 폰케이스</div>
   </div>
-  <div class="tagline" id="hdr-tag">시안 확인 시스템</div>
+  <div class="tagline" id="hdr-tag">사진과 문구를 자유롭게 배치하며 원하는 스타일로 직접 디자인해보세요</div>
 </header>
 
 <!-- PHONE CASE -->
@@ -1520,7 +1520,7 @@ function drawClockLayer(ctx,IX,IY,IW,IH,CS){var size=(CS.size||12)/100*IW,cx=IX+
 function drawFTxt(ctx,IX,IY,IW,IH,main,name,date,sub,mode){if(!main&&!name&&!date&&!sub)return;ctx.textAlign='center';var bY=IY+IH-6,cxm=IX+IW/2;if(main){var fs=Math.round(IW*0.07);ctx.save();ctx.font='500 '+fs+'px \'Playfair Display\',serif';ctx.fillStyle='#fff';ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=8;ctx.shadowOffsetY=1;fillFrameTextLines(ctx,main,cxm,bY-50,fs*1.12);ctx.restore();}if(name){var ns=Math.round(IW*0.055);ctx.save();ctx.font='400 '+ns+'px \'DM Sans\',sans-serif';ctx.fillStyle='rgba(255,255,255,.92)';ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=6;fillFrameTextLines(ctx,name,cxm,bY-30,ns*1.16);ctx.restore();}if(date){var ds=Math.round(IW*0.048);ctx.save();ctx.font='300 '+ds+'px \'DM Sans\',sans-serif';ctx.fillStyle='rgba(255,255,255,.85)';ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=5;fillFrameTextLines(ctx,date,cxm,bY-14,ds*1.16);ctx.restore();}if(sub){var ss=Math.round(IW*0.038);ctx.save();ctx.font='300 '+ss+'px \'DM Sans\',sans-serif';ctx.fillStyle='rgba(255,255,255,.75)';ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=4;fillFrameTextLines(ctx,sub,cxm,bY+2,ss*1.16);ctx.restore();}}
 function drawSlot(ctx,img,x,y,w,h,shape,T){
   ctx.save();if(shape==='circle'){ctx.beginPath();ctx.arc(x+w/2,y+h/2,Math.min(w,h)/2,0,Math.PI*2);ctx.clip();}else{ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();}
-  if(img){if(T)drawImgT(ctx,img,x,y,w,h,T);else coverFit(ctx,img,x,y,w,h);}else{ctx.fillStyle='#EDE8E0';ctx.fillRect(x,y,w,h);ctx.textAlign='center';ctx.fillStyle='#C8A882';ctx.font='16px DM Sans,sans-serif';ctx.fillText('📷',x+w/2,y+h/2+6);ctx.font='9px DM Sans,sans-serif';ctx.fillStyle='#A08870';ctx.fillText('이미지 업로드',x+w/2,y+h/2+20);}
+  if(img){if(T)drawImgT(ctx,img,x,y,w,h,T);else coverFit(ctx,img,x,y,w,h);}else{ctx.fillStyle='#f5f5f5';ctx.fillRect(x,y,w,h);ctx.textAlign='center';ctx.fillStyle='#999';ctx.font='16px DM Sans,sans-serif';ctx.fillText('📷',x+w/2,y+h/2+6);ctx.font='9px DM Sans,sans-serif';ctx.fillStyle='#777';ctx.fillText('이미지 업로드',x+w/2,y+h/2+20);}
   ctx.restore();ctx.save();if(shape==='circle'){ctx.beginPath();ctx.arc(x+w/2,y+h/2,Math.min(w,h)/2,0,Math.PI*2);}else{ctx.beginPath();ctx.rect(x,y,w,h);}ctx.strokeStyle='rgba(0,0,0,.06)';ctx.lineWidth=1;ctx.stroke();ctx.restore();
 }
 function drawClock(ctx,cx,cy,r){var now=new Date(),h=now.getHours()%12,m=now.getMinutes(),s=now.getSeconds();ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle='rgba(255,253,248,.95)';ctx.fill();ctx.strokeStyle='rgba(0,0,0,.15)';ctx.lineWidth=1.5;ctx.stroke();for(var i=0;i<12;i++){var a=i*Math.PI*2/12-Math.PI/2,inner=i%3===0?r*0.75:r*0.85;ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*inner,cy+Math.sin(a)*inner);ctx.lineTo(cx+Math.cos(a)*(r-2),cy+Math.sin(a)*(r-2));ctx.strokeStyle=i%3===0?'rgba(0,0,0,.5)':'rgba(0,0,0,.25)';ctx.lineWidth=i%3===0?1.5:1;ctx.stroke();}var ha=(h+m/60)*Math.PI*2/12-Math.PI/2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(ha)*r*.5,cy+Math.sin(ha)*r*.5);ctx.strokeStyle='#2A2018';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();var ma=(m+s/60)*Math.PI*2/60-Math.PI/2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(ma)*r*.72,cy+Math.sin(ma)*r*.72);ctx.strokeStyle='#2A2018';ctx.lineWidth=1.5;ctx.stroke();var sa=s*Math.PI*2/60-Math.PI/2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(sa)*r*.8,cy+Math.sin(sa)*r*.8);ctx.strokeStyle='#C8A864';ctx.lineWidth=1;ctx.stroke();ctx.beginPath();ctx.arc(cx,cy,2.5,0,Math.PI*2);ctx.fillStyle='#1A1410';ctx.fill();ctx.restore();}
@@ -11787,12 +11787,16 @@ body{background:#fff}
 /* 캔버스 미리보기 영역 크림 그라데이션 → 흰색 */
 .preview-area{background:#fff!important}
 .preview-area::before{display:none!important}
+/* 활성 템플릿 카드 크림 → 흰색 (테두리만 검정으로 활성 표시) */
+.tpl-card.on{background:#fff!important;border-color:#19160F!important}
+.tpl-card:hover{border-color:#19160F!important}
 
 /* ===== MOIITEE식 밝은 상단 바: 로고 알약 + 탭 알약 토글 + 태그라인 ===== */
 header{background:#fff!important;border-bottom:1px solid #e6e6e6!important;height:auto!important;min-height:60px;gap:18px!important;padding:10px 22px!important;flex-wrap:wrap}
 .logo{color:#19160F!important;border:1px solid #e6e6e6;border-radius:24px;padding:7px 16px;line-height:1;display:inline-flex;align-items:center;height:38px;font-size:14px;background:#fff;font-family:'Playfair Display',serif;letter-spacing:.08em}
 .logo em{color:#19160F!important;font-style:normal;font-weight:700;margin-left:6px}
-.tagline{color:#888!important;font-size:11px;font-weight:500;margin-left:auto}
+.tagline{color:#888!important;font-size:11px;font-weight:500;margin-left:auto;max-width:420px;line-height:1.45;text-align:right}
+@media(max-width:860px){header .tagline{display:none}}
 /* 탭바를 헤더 안 알약 토글로 — 기본 underline 탭 무력화 */
 header .tabbar{background:transparent!important;border-bottom:none!important;display:flex;gap:6px;align-items:center;flex:0 0 auto}
 header .tab{flex:0 0 auto!important;padding:8px 16px!important;border:1px solid #e6e6e6!important;border-radius:20px!important;background:#f5f5f5!important;color:#555!important;font-size:12px!important;font-weight:500!important;transition:all .15s;line-height:1}
