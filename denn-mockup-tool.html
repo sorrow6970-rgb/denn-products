@@ -11663,7 +11663,7 @@ window.addEventListener('load',later);
     var wrap=el('div','dps-elem-wrap');
     wrap.innerHTML='<div class="dps-elem-title">요소 · 행별 삭제</div><div class="dps-elem-list" id="dps-elem-list"></div>';
     act.insertBefore(wrap,act.firstChild);
-    var reset=el('button','dps-reset-btn');reset.type='button';reset.textContent='↺ 기본설정으로';
+    var reset=el('button','dps-reset-btn');reset.type='button';reset.textContent='↻ 기본설정으로';
     reset.addEventListener('click',resetFrameDefaults);
     var stack=act.querySelector('.denn-frame-action-stack');
     if(stack)act.insertBefore(reset,stack); else act.appendChild(reset);
@@ -11922,11 +11922,11 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   #room-modal .rm-tab.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);color:#444}
   #room-modal .rm-tab.on .rm-tab-lab{font-weight:700}
 
-  /* 캔버스 영역 — flex center로 이미지 꽉 차게, padding 최소화로 위아래 여백 줄임 */
-  #room-modal #rm-canvas-area{padding:6px!important;display:flex!important;align-items:center!important;justify-content:center!important}
-  /* 캔버스 이미지 fit — 3 ID 셀렉터로 line 4862 JS injection(2 ID)보다 specificity 높여 이김 */
-  #room-modal #rm-canvas-area #rm-canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;object-fit:contain!important}
-  #room-modal #rm-canvas-area #sg-canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;object-fit:contain!important}
+  /* 캔버스 영역 — padding 0, flex center 유지하되 캔버스를 100%로 채워 위아래 여백 최소화 */
+  #room-modal #rm-canvas-area{padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}
+  /* 캔버스/사이즈가이드 — 영역 100% 채움 + object-fit:contain으로 비율 유지 */
+  #room-modal #rm-canvas-area #rm-canvas{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;display:block!important}
+  #room-modal #rm-canvas-area #sg-canvas{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;display:block!important}
 }
 
 /* ===== PC 셸(≥861) 2톤 + 아일랜드 ===== */
@@ -12062,7 +12062,7 @@ input[type=range]{accent-color:#777}
     var actionWrap=document.createElement('div'); actionWrap.className='rm-right-actions';
     /* 기본설정으로 */
     var resetBtn=document.createElement('button'); resetBtn.className='rm-action-btn rm-action-reset'; resetBtn.type='button';
-    resetBtn.textContent='↺ 기본설정으로';
+    resetBtn.textContent='↻ 기본설정으로';
     resetBtn.addEventListener('click',function(){
       if(!window.confirm('내 공간 보기의 모든 설정을 기본값으로 되돌릴까요?'))return;
       ['resetRoomFrameDefaultsV39','resetRoomTiltDefaultsV40','resetRoomShadowDefaultsV39','resetRoomSunDefaultsV40','resetRoomSizeGuideDefaults'].forEach(function(fn){
