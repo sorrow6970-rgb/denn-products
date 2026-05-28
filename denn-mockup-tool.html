@@ -11860,6 +11860,40 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
 /* 인라인 var(--gold) 텍스트(팁 등) → 다크그레이 */
 #room-modal [style*="color:var(--gold"]{color:#777!important}
 
+/* ===== 룸 모달 셸과 통일된 3-컬럼 아일랜드 레이아웃 (PC ≥861px) ===== */
+@media(min-width:861px){
+  /* Body 컨테이너 — gap + padding + 흰 배경(아일랜드 사이 여백) */
+  #room-modal>div>div:nth-child(2){gap:14px!important;padding:14px!important;background:#fff!important;box-sizing:border-box!important;overflow:hidden!important}
+  /* 좌측 컨트롤 패널 — 셸 메뉴 드로어 폭과 동일, 아일랜드 */
+  #room-modal>div>div:nth-child(2)>div:first-child{
+    width:clamp(264px,18vw,380px)!important;
+    flex-shrink:0!important;
+    border-right:none!important;
+    border:1px solid #e6e6e6!important;
+    border-radius:16px!important;
+    box-shadow:0 4px 16px rgba(0,0,0,.05)!important;
+    background:#fff!important;
+    padding:18px!important;
+    box-sizing:border-box!important
+  }
+  /* 캔버스 영역 — 가운데 아일랜드 */
+  #room-modal #rm-canvas-area{flex:1!important;border:1px solid #e6e6e6!important;border-radius:16px!important;box-shadow:0 4px 16px rgba(0,0,0,.05)!important;background:#fff!important;min-width:0!important}
+  /* 우측 가이드 패널 (JS로 주입) — 아일랜드 */
+  #room-modal .rm-right-panel{
+    width:clamp(220px,16vw,300px);
+    flex-shrink:0;
+    border:1px solid #e6e6e6;
+    border-radius:16px;
+    box-shadow:0 4px 16px rgba(0,0,0,.05);
+    background:#fff;
+    padding:18px;
+    overflow-y:auto;
+    box-sizing:border-box
+  }
+  /* 우측 패널로 옮긴 가이드 섹션은 상단 구분선/마진 제거 */
+  #room-modal .rm-right-panel #rm-guide-section>div:first-child{display:none!important}
+}
+
 /* ===== PC 셸(≥861) 2톤 + 아일랜드 ===== */
 @media(min-width:861px){
   .denn-pc-shell{position:relative;background:#fff;gap:14px;padding:14px;box-sizing:border-box}
@@ -11963,6 +11997,33 @@ input[type=range]{accent-color:#777}
 #page-frame .denn-scale-scroll::-webkit-scrollbar-corner{background:#f5f5f5}
 #page-frame .denn-scale-scroll{scrollbar-width:auto;scrollbar-color:#bdbdbd #f5f5f5}
 </style>
+<script id="denn-v95-room-modal-3col">
+(function(){
+  'use strict';
+  if(window.__dennV95RoomModal3Col)return; window.__dennV95RoomModal3Col=true;
+  /* 룸 모달 3-컬럼 재구조화: 좌측 컨트롤 패널 | 캔버스 | 우측 가이드 배경 패널.
+     #rm-guide-section을 좌측에서 새 우측 .rm-right-panel로 이동.
+     가이드 섹션 display 변경을 MutationObserver로 우측 패널과 sync. */
+  function restructure(){
+    var modal=document.getElementById('room-modal'); if(!modal||modal.__dennRestruct)return;
+    var inner=modal.children[0]; if(!inner)return;
+    var body=inner.children[1]; if(!body||body.children.length<2)return;
+    var guide=document.getElementById('rm-guide-section'); if(!guide)return;
+    var right=document.createElement('div');
+    right.className='rm-right-panel';
+    right.appendChild(guide);
+    body.appendChild(right);
+    modal.__dennRestruct=true;
+    /* 가이드 섹션 display ↔ 우측 패널 display sync */
+    var sync=function(){right.style.display=(guide.style.display==='none')?'none':''};
+    sync();
+    try{new MutationObserver(sync).observe(guide,{attributes:true,attributeFilter:['style']});}catch(e){}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',restructure);
+  else restructure();
+  window.addEventListener('load',function(){setTimeout(restructure,200)});
+})();
+</script>
 </body>
 </html>
 
