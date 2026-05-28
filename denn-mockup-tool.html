@@ -2635,7 +2635,7 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){in
 <script id="denn-v21-mock-frame-toggle-ui">
 (function(){
 function by(id){return document.getElementById(id)}
-function normalizeFrameToggle(){try{var row=by('denn-frame-visible-row');if(!row)return;var span=row.querySelector('.row span');if(span)span.textContent='프레임 보이기';var hint=row.querySelector('.hint');if(hint)hint.textContent='OFF 시 프레임 레이어만 숨기고 사진과 시계 좌표는 유지합니다.';var tog=by('tog-frame-visible');if(tog){tog.onclick=function(){this.classList.toggle('on');if(window.renderFrame)window.renderFrame();};}}catch(e){}}
+function normalizeFrameToggle(){try{var row=by('denn-frame-visible-row');if(!row)return;var span=row.querySelector('.row span');if(span)span.textContent='프레임 보이기';var hint=row.querySelector('.hint');if(hint)hint.textContent='OFF 시 프레임 레이어만 숨기고 사진과 시계 좌표는 유지합니다.';var tog=by('tog-frame-visible');if(tog){tog.onclick=function(){this.classList.toggle('on');/* v95: 사용자 명시적 토글은 자동 lock 무시 — 다음 클릭도 통과 보장 */if(row)row.classList.remove('denn-v37-frame-locked');if(window.renderFrame)window.renderFrame();};}}catch(e){}}
 var oldSwitch=window.switchTab;if(typeof oldSwitch==='function'){window.switchTab=function(tab){var r=oldSwitch.apply(this,arguments);setTimeout(normalizeFrameToggle,160);return r}}
 document.addEventListener('DOMContentLoaded',function(){setTimeout(normalizeFrameToggle,1200)});window.addEventListener('load',function(){setTimeout(normalizeFrameToggle,1400)});
 })();
@@ -11829,7 +11829,7 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   /* 메뉴/액션/캔버스 = 흰 아일랜드 */
   .denn-pc-shell .dps-menu{background:#fff;border:1px solid #e6e6e6;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);transition:opacity .18s ease;padding-top:24px!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
   .denn-pc-shell .dps-menu>.info-bar{flex:0 0 auto}
-  .denn-pc-shell .dps-groups{flex:1;min-height:0;overflow-y:auto;padding-right:4px}
+  .denn-pc-shell .dps-groups{flex:1;min-height:0;overflow-y:auto;padding-right:4px;padding-top:8px}
   /* 템플릿 그리드는 .dps-groups 안에서 자연 흐름 (이중 스크롤 제거) */
   #page-frame.denn-pc-shell-on .tpl-scroll{max-height:none!important;overflow:visible!important;padding-right:0!important}
   .denn-pc-shell .dps-action{background:#fff;border:1px solid #e6e6e6;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);padding-top:24px!important}
@@ -11895,6 +11895,11 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
 }
 /* 액자 스케일 바 등 모든 range input — 트랙/썸 다크그레이 */
 input[type=range]{accent-color:#777}
+/* 프레임 보이기/시계 토글 lock 무력화 — denn-v37-frame-locked가 pointer-events:none을 걸어
+   OFF→ON 재클릭 막던 회귀. 시각적 dim만 약하게 유지, 클릭은 항상 통과. */
+#denn-frame-visible-row.denn-v37-frame-locked .tog{pointer-events:auto!important;opacity:1!important}
+#denn-frame-visible-row.denn-v37-frame-locked{opacity:1!important}
+
 /* 액자 스케일 박스 — JS가 주입한 inline <style>의 rgba 크림/브라운 override */
 #frame-preview-scale-box{background:#fff!important;border:1px solid #e6e6e6!important;box-shadow:0 6px 16px rgba(0,0,0,.06)!important;backdrop-filter:none!important}
 #frame-preview-scale-box button{border-color:#e6e6e6!important;color:#777!important}
