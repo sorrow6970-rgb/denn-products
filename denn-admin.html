@@ -5499,7 +5499,7 @@ function saveNow(){try{if(typeof window.persistState==='function')return window.
 function bgKey(bg,i){return bg&&(bg.id||bg.name)?(bg.id||('guide-'+i)):'guide-'+i}
 function mockupUrlFor(bg,i){
   var key=bgKey(bg,i);
-  var file='denn-mockup-tool-v35-bugfix-stable.html';
+  var file='denn-mockup-tool.html';
   try{
     var base=location.href.replace(/[^\/\\]*$/,'');
     return base+file+'?adminRoomSetup='+encodeURIComponent(key)+'&roomOnly=1';
@@ -6111,7 +6111,7 @@ window.addEventListener('load',function(){setTimeout(function(){annotateBadges()
 })();
 
 window.openCustomerMockupV35=function(){
-  var file='denn-mockup-tool-v35-bugfix-stable.html';
+  var file='denn-mockup-tool.html';
   try{
     var base=String(location.href||'').replace(/[^\/\\]*$/,'');
     window.open(base+file,'_blank');
@@ -10623,7 +10623,7 @@ function commonMeta(){
   return '저장됨 · 액자 '+scale+'% · 가이드 '+guide+' · '+saved;
 }
 window.openRoomCommonDefaultSetupV79=function(){
-  var file='denn-mockup-tool-v35-bugfix-stable.html';
+  var file='denn-mockup-tool.html';
   var query='?adminRoomSetup='+encodeURIComponent(COMMON_KEY)+'&adminRoomDefault=1#room-fullscreen';
   try{
     var base=String(location.href||'').replace(/[^\/\\]*$/,'');
@@ -10705,7 +10705,7 @@ function metaText(){
 function ensureOpenFn(){
   if(typeof window.openRoomCommonDefaultSetupV79==='function')return;
   window.openRoomCommonDefaultSetupV79=function(){
-    var file='denn-mockup-tool-v35-bugfix-stable.html';
+    var file='denn-mockup-tool.html';
     var query='?adminRoomSetup='+encodeURIComponent(COMMON_KEY)+'&adminRoomDefault=1#room-fullscreen';
     try{
       var base=String(location.href||'').replace(/[^\/\\]*$/,'');
@@ -10759,7 +10759,7 @@ window.addEventListener('load',function(){setTimeout(install,800);setTimeout(ins
 'use strict';
 var COMMON_KEY='__denn_room_common_default__';
 function openCommonDefault(){
-  var file='denn-mockup-tool-v35-bugfix-stable.html';
+  var file='denn-mockup-tool.html';
   var query='?adminRoomSetup='+encodeURIComponent(COMMON_KEY)+'&adminRoomDefault=1&roomOnly=1#room-fullscreen';
   try{
     var base=String(location.href||'').replace(/[^\/\\]*$/,'');
@@ -10784,7 +10784,7 @@ window.addEventListener('load',function(){setTimeout(retarget,500);setTimeout(re
 'use strict';
 var COMMON_KEY='__denn_room_common_default__';
 function openCommonDefault(){
-  var file='denn-mockup-tool-v35-bugfix-stable.html';
+  var file='denn-mockup-tool.html';
   var query='?adminRoomSetup='+encodeURIComponent(COMMON_KEY)+'&adminRoomDefault=1&roomOnly=1#room-fullscreen';
   try{
     var base=String(location.href||'').replace(/[^\/\\]*$/,'');

@@ -12478,36 +12478,94 @@ input[type=range]{accent-color:#777}
 (function(){
   if(window.__dennAdminGuideScaleSync)return;
   window.__dennAdminGuideScaleSync=true;
+  function syncIndexedDB(adminGS,v){
+    if(!window.indexedDB)return;
+    try{
+      var req=indexedDB.open('denn_shared_db');
+      req.onsuccess=function(){
+        try{
+          var db=req.result;
+          if(!db.objectStoreNames.contains('kv')){db.close();return}
+          var tx=db.transaction('kv','readwrite'),s=tx.objectStore('kv'),g=s.get('denn_admin_state');
+          g.onsuccess=function(){
+            try{
+              var d=g.result;
+              if(d&&typeof d==='object'){
+                d.roomBackgroundSettings=d.roomBackgroundSettings||{};
+                ['default-room','__denn_room_common_default__'].forEach(function(key){
+                  var def=d.roomBackgroundSettings[key]=d.roomBackgroundSettings[key]||{};
+                  def.guideScale=adminGS;
+                  def['sg-scale-r']=v;
+                  def['sg-scale-n']=v;
+                  if(def.__guideResetDefaults&&typeof def.__guideResetDefaults==='object'){
+                    def.__guideResetDefaults.guideScale=adminGS;
+                  }
+                });
+                s.put(d,'denn_admin_state');
+              }
+              tx.oncomplete=function(){try{db.close()}catch(e){}};
+            }catch(e){try{db.close()}catch(_){}}
+          };
+          g.onerror=function(){try{db.close()}catch(e){}};
+        }catch(e){}
+      };
+      req.onerror=function(){};
+    }catch(e){}
+  }
+  function applyToUI(adminGS){
+    /* 현재 화면 슬라이더 즉시 업데이트 — 배경 선택 안 한 상태에서만 */
+    try{
+      var isDefault=!window.RM||(!RM.roomImg&&(RM.bgId==='default-room'||!RM.bgId)&&RM.guideIndex==null);
+      if(!isDefault)return;
+      var v=Math.round(Math.max(20,Math.min(300,adminGS*100))*10)/10;
+      var r=document.getElementById('sg-scale-r'),n=document.getElementById('sg-scale-n');
+      if(r)r.value=v;
+      if(n)n.value=v;
+      if(typeof window.sgDraw==='function')setTimeout(window.sgDraw,30);
+    }catch(e){}
+  }
+  function purgeStored(rs,adminGS,v){
+    /* 3곳 모두 정리: default-room / __denn_room_common_default__ / __guideResetDefaults */
+    ['default-room','__denn_room_common_default__'].forEach(function(key){
+      var def=rs[key]=rs[key]||{};
+      def.guideScale=adminGS;
+      def['sg-scale-r']=v;
+      def['sg-scale-n']=v;
+      if(def.__guideResetDefaults&&typeof def.__guideResetDefaults==='object'){
+        def.__guideResetDefaults.guideScale=adminGS;
+      }
+    });
+  }
   function sync(){
     try{
       var raw=localStorage.getItem('denn_admin')||'{}';
       var A=JSON.parse(raw)||{};
       var adminGS=A.uiSettings&&A.uiSettings.roomInitialGuideScale;
       if(typeof adminGS!=='number'||!isFinite(adminGS))return;
+      var v=Math.round(Math.max(20,Math.min(300,adminGS*100))*10)/10;
       var rs=A.roomBackgroundSettings=A.roomBackgroundSettings||{};
-      var def=rs['default-room']=rs['default-room']||{};
-      var changed=false;
-      if(def.guideScale!==adminGS){
-        def.guideScale=adminGS;
-        changed=true;
+      purgeStored(rs,adminGS,v);
+      /* 캡처값 메모리 전체 비움 (특정 key 아닌 모두 클리어 — 찌꺼기 잔존 방지) */
+      window.__dennRoomGuideInitialDefaults={};
+      try{localStorage.setItem('denn_admin',JSON.stringify(A))}catch(e){}
+      if(window.ADM){
+        window.ADM.roomBackgroundSettings=window.ADM.roomBackgroundSettings||{};
+        purgeStored(window.ADM.roomBackgroundSettings,adminGS,v);
       }
-      /* 캡처값 메모리 비움 — 어드민 공통값이 우선되도록 */
-      window.__dennRoomGuideInitialDefaults=window.__dennRoomGuideInitialDefaults||{};
-      delete window.__dennRoomGuideInitialDefaults['default-room'];
-      if(changed){
-        try{localStorage.setItem('denn_admin',JSON.stringify(A))}catch(e){}
-        /* window.ADM 메모리 캐시도 동기화 */
-        if(window.ADM&&window.ADM.roomBackgroundSettings){
-          window.ADM.roomBackgroundSettings['default-room']=window.ADM.roomBackgroundSettings['default-room']||{};
-          window.ADM.roomBackgroundSettings['default-room'].guideScale=adminGS;
-        }
-      }
+      syncIndexedDB(adminGS,v);
+      applyToUI(adminGS);
     }catch(e){}
   }
-  /* 페이지 로드 시 */
+  /* storage 이벤트 — 다른 탭(어드민)에서 localStorage 변경 시 즉시 동기화 */
+  window.addEventListener('storage',function(e){
+    if(e.key==='denn_admin')sync();
+  });
+  /* 페이지 로드 + window.load 후 + 여러 setTimeout — loadAdminState가 IDB 복원 후에도 다시 동기화 */
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync);
   else sync();
-  window.addEventListener('load',function(){setTimeout(sync,200)});
+  window.addEventListener('load',function(){
+    [200,800,2000,4000].forEach(function(ms){setTimeout(sync,ms)});
+  });
   /* 룸 모달 display 변경 감지 */
   function setupObs(){
     var modal=document.getElementById('room-modal');
@@ -12544,11 +12602,7 @@ input[type=range]{accent-color:#777}
   }
   function uiGuideScale(A){
     A=A||adm();
-    /* 우선순위: default-room.guideScale → uiSettings.roomInitialGuideScale → 1 (fallback)
-       사용자가 "공통 기본값 74"라 부르는 게 default-room.guideScale에 저장됨 */
-    var rs=A.roomBackgroundSettings||{};
-    var def=rs['default-room']||{};
-    if(typeof def.guideScale==='number'&&isFinite(def.guideScale))return Math.max(.2,Math.min(2,def.guideScale));
+    /* 어드민 공통 설정(A.uiSettings.roomInitialGuideScale)만 사용. default-room 저장값은 사용자 조정값이라 무시 */
     var g=A.uiSettings&&A.uiSettings.roomInitialGuideScale;
     return (typeof g==='number'&&isFinite(g))?Math.max(.2,Math.min(2,g)):1;
   }
