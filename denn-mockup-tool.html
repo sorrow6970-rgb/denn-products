@@ -591,22 +591,22 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
               <div class="sg-ctrl">
                 <label>기준 스케일</label>
                 <input type="range" id="sg-scale-r" min="20" max="300" step="0.5" value="100" oninput="document.getElementById('sg-scale-n').value=this.value;sgDraw()">
-                <input type="number" id="sg-scale-n" value="100" min="20" max="300" step="0.5" style="width:38px" oninput="document.getElementById('sg-scale-r').value=this.value;sgDraw()">
+                <input type="number" id="sg-scale-n" value="100" min="20" max="300" step="0.5" oninput="document.getElementById('sg-scale-r').value=this.value;sgDraw()">
               </div>
               <div class="sg-ctrl">
                 <label>위치 X</label>
                 <input type="range" id="sg-ox-r" min="0" max="90" step="0.1" value="40" oninput="document.getElementById('sg-ox-n').value=this.value;sgDraw()">
-                <input type="number" id="sg-ox-n" value="40" min="0" max="90" step="0.1" style="width:38px" oninput="document.getElementById('sg-ox-r').value=this.value;sgDraw()">
+                <input type="number" id="sg-ox-n" value="40" min="0" max="90" step="0.1" oninput="document.getElementById('sg-ox-r').value=this.value;sgDraw()">
               </div>
               <div class="sg-ctrl">
                 <label>위치 Y</label>
                 <input type="range" id="sg-oy-r" min="0" max="90" step="0.1" value="25" oninput="document.getElementById('sg-oy-n').value=this.value;sgDraw()">
-                <input type="number" id="sg-oy-n" value="25" min="0" max="90" step="0.1" style="width:38px" oninput="document.getElementById('sg-oy-r').value=this.value;sgDraw()">
+                <input type="number" id="sg-oy-n" value="25" min="0" max="90" step="0.1" oninput="document.getElementById('sg-oy-r').value=this.value;sgDraw()">
               </div>
               <div class="sg-ctrl">
                 <label>투명도</label>
                 <input type="range" id="sg-alpha-r" min="10" max="100" step="0.5" value="75" oninput="document.getElementById('sg-alpha-n').value=this.value;sgDraw()">
-                <input type="number" id="sg-alpha-n" value="75" min="10" max="100" step="0.5" style="width:38px" oninput="document.getElementById('sg-alpha-r').value=this.value;sgDraw()">
+                <input type="number" id="sg-alpha-n" value="75" min="10" max="100" step="0.5" oninput="document.getElementById('sg-alpha-r').value=this.value;sgDraw()">
               </div>
               <div class="sg-color-row">
                 <label>선 색상</label>
@@ -617,7 +617,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
                 </label>
               </div>
             </div>
-            <button class="sg-reset-btn" onclick="sgReset()">↩ 기본값</button>
+            <button class="sg-reset-btn" onclick="sgReset()">↩ 사이즈가이드 기본값</button>
           </div>
         </div>
 
@@ -11946,9 +11946,12 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   #room-modal #sg-panel{padding:14px!important}
   #room-modal #sg-panel .sg-head-label{font-size:12px!important}
   #room-modal #sg-panel .sg-sz-btn{font-size:11px!important;padding:5px 10px!important;border-radius:6px!important;line-height:1.4!important}
-  #room-modal #sg-panel .sg-ctrl{margin-bottom:8px!important;grid-template-columns:64px 1fr 48px!important;gap:6px!important}
+  #room-modal #sg-panel .sg-ctrl{margin-bottom:8px!important;grid-template-columns:48px 1fr 40px!important;gap:4px!important}
   #room-modal #sg-panel .sg-ctrl label{font-size:11px!important}
-  #room-modal #sg-panel .sg-ctrl input[type=number]{font-size:11px!important;padding:4px 6px!important}
+  #room-modal #sg-panel .sg-ctrl input[type=number]{font-size:11px!important;padding:3px 4px!important;width:100%!important;box-sizing:border-box!important;-moz-appearance:textfield!important}
+  #room-modal #sg-panel .sg-reset-btn{height:27px!important;padding:0 8px!important;font-size:10px!important;border-radius:6px!important;background:#fff!important;margin-top:8px!important}
+  #room-modal #sg-panel .sg-ctrl input[type=number]::-webkit-outer-spin-button,
+  #room-modal #sg-panel .sg-ctrl input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none!important;margin:0!important}
   #room-modal #sg-panel .sg-color-row label{font-size:11px!important}
   #room-modal #sg-panel .sg-sw-track{width:36px!important;height:20px!important}
   #room-modal #sg-panel .sg-sw-slider:before{height:14px!important;width:14px!important;left:3px!important;bottom:3px!important}
