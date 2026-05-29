@@ -61,7 +61,7 @@ header{background:var(--ink);padding:0 32px;height:54px;display:flex;align-items
 .zoom-row{display:flex;align-items:center;gap:7px}
 .zoom-row label{font-size:9px;color:var(--warm);white-space:nowrap}
 .zoom-row input[type=range]{flex:1;cursor:pointer}
-.zoom-row span{font-size:9px;color:var(--warm);min-width:30px;text-align:right}
+.zoom-row span{font-size:9px;color:var(--warm);min-width:42px;text-align:right;flex-shrink:0;white-space:nowrap}
 .zoom-btns{display:flex;gap:5px}
 .z-btn{flex:1;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;background:#fff;font-family:inherit;font-size:11px;cursor:pointer;transition:all .15s;text-align:center}
 .z-btn:hover{border-color:var(--gold);background:#FDF8F0}
@@ -6053,7 +6053,9 @@ function currentSize(){return window.curFSz||(window.FS&&window.FS[0])||null}
 function applyAspect(){
   var sz=currentSize();if(!sz)return;
   var base=baseAspect(sz);sz.__dennBaseAspectV64=base;
-  sz.aspect=state.mode==='landscape'?1/base:base;
+  /* 회전 애니메이션 중에는 from-mode 기준으로 aspect 유지 → 캔버스 dims가 애니 동안 안 바뀜 */
+  var effMode=window.__dennFrameOrientAnimating?window.__dennFrameOrientAnimFromMode:state.mode;
+  sz.aspect=effMode==='landscape'?1/base:base;
 }
 function requestRender(){
   if(window.__dennV64FrameOrientationRaf)cancelAnimationFrame(window.__dennV64FrameOrientationRaf);
@@ -6075,15 +6077,91 @@ function syncGuideOrientation(redraw){
   if(redraw){try{if(window.sgDraw)window.sgDraw()}catch(e){}try{if(window.rmRender)window.rmRender()}catch(e){}}
 }
 function setOrientation(mode){
-  state.mode=normalizeMode(mode);
-  if(state.mode==='portrait')state.rot=0;
-  ensureTransform().rot=state.rot;
-  applyAspect();syncUi();syncGuideOrientation(true);requestRender();
+  var prev=state.mode,next=normalizeMode(mode);
+  var canvas=document.getElementById('frameCanvas');
+  /* 같은 모드 클릭 또는 캔버스 없음/이미 애니 중 → 애니 없이 즉시 적용 */
+  if(prev===next||!canvas||window.__dennFrameOrientAnimating){
+    state.mode=next;
+    if(next==='portrait')state.rot=0;
+    ensureTransform().rot=state.rot;
+    applyAspect();syncUi();syncGuideOrientation(true);requestRender();
+    return;
+  }
+  /* 애니메이션 경로: inline transform으로 동적 각도 회전 후 실제 swap.
+     - portrait→landscape: +90°
+     - landscape→portrait: prev rot=-90(좌)면 +90°(untwist), 그 외엔 -90°
+     transpose된 새 캔버스가 회전 종료 시 같은 footprint + 이미지 시각 회전 = 0°(자연)으로 도착해 자연 snap. */
+  window.__dennFrameOrientAnimating=true;
+  window.__dennFrameOrientAnimFromMode=prev;
+  state.mode=next;syncUi();state.mode=prev;
+  var deg=(next==='landscape')?90:((state.rot===-90)?90:-90);
+  /* pulse() 깜빡임 차단 — .canvas-wrap의 .rendering opacity:.72를 애니 동안 무력화 */
+  var wrap=document.querySelector('#page-frame .canvas-wrap');
+  if(wrap)wrap.style.setProperty('opacity','1','important');
+  canvas.style.transition='none';
+  canvas.style.transformOrigin='center center';
+  canvas.style.transform='rotate(0deg)';
+  void canvas.offsetWidth;
+  canvas.style.transition='transform .35s cubic-bezier(.4,0,.2,1)';
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    canvas.style.transform='rotate('+deg+'deg)';
+  })});
+  setTimeout(function(){
+    /* 순서 중요: 1) 애니플래그 OFF + 새 state 적용 → 2) 동기 renderFrame(캔버스 픽셀 업데이트)
+       → 3) inline transform/transition/opacity 제거. 같은 JS 블록 안에서 처리하면 브라우저가
+       한 번의 paint로 합쳐 깜빡임 없음. (분리하면 transform 해제 → 1프레임 이전 그림 노출 → 깜빡임) */
+    window.__dennFrameOrientAnimating=false;
+    window.__dennFrameOrientAnimFromMode=null;
+    state.mode=next;
+    if(next==='portrait')state.rot=0;
+    ensureTransform().rot=state.rot;
+    applyAspect();
+    try{if(window.renderFrame)window.renderFrame()}catch(e){}
+    canvas.style.transition='';
+    canvas.style.transform='';
+    if(wrap)wrap.style.removeProperty('opacity');
+    syncUi();syncGuideOrientation(true);
+  },370);
 }
 function setRotation(rot){
-  state.rot=normalizeRot(rot);
-  ensureTransform().rot=state.rot;
-  syncUi();requestRender();
+  var prev=state.rot,next=normalizeRot(rot);
+  var canvas=document.getElementById('frameCanvas');
+  if(prev===next||!canvas||window.__dennFrameOrientAnimating){
+    state.rot=next;
+    ensureTransform().rot=state.rot;
+    syncUi();requestRender();
+    return;
+  }
+  /* 회전 애니메이션: 캔버스를 prev→next delta만큼 부드럽게 돌리고, 종료 시 실제 state.rot 갱신 + re-render.
+     setOrientation과 동일 매커니즘이지만 각도 delta가 가변(±90/±180)이라 inline transform 사용. */
+  window.__dennFrameOrientAnimating=true;
+  window.__dennFrameOrientAnimFromMode=state.mode;
+  var delta=next-prev;
+  /* 180° 회전 시 짧은 방향 선택(-180→180 같은 케이스에서 자연스럽게) */
+  if(delta>180)delta-=360;else if(delta<-180)delta+=360;
+  /* pulse 깜빡임 차단 */
+  var wrap=document.querySelector('#page-frame .canvas-wrap');
+  if(wrap)wrap.style.setProperty('opacity','1','important');
+  canvas.style.transition='none';
+  canvas.style.transformOrigin='center center';
+  canvas.style.transform='rotate(0deg)';
+  void canvas.offsetWidth;
+  canvas.style.transition='transform .35s cubic-bezier(.4,0,.2,1)';
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    canvas.style.transform='rotate('+delta+'deg)';
+  })});
+  setTimeout(function(){
+    /* setOrientation과 동일 — 동기 render 후 inline style 제거 */
+    window.__dennFrameOrientAnimating=false;
+    window.__dennFrameOrientAnimFromMode=null;
+    state.rot=next;
+    ensureTransform().rot=state.rot;
+    try{if(window.renderFrame)window.renderFrame()}catch(e){}
+    canvas.style.transition='';
+    canvas.style.transform='';
+    if(wrap)wrap.style.removeProperty('opacity');
+    syncUi();
+  },370);
 }
 function syncUi(){
   var label=by('denn-v64-orient-label'),rotRow=by('denn-v64-rotation-row');
@@ -6175,6 +6253,8 @@ if(typeof oldReset==='function'&&!oldReset.__dennV64FrameOrientation){
   window.resetFrameTransform=function(){var r=oldReset.apply(this,arguments);ensureTransform().rot=state.rot;syncUi();requestRender();return r};
   window.resetFrameTransform.__dennV64FrameOrientation=true;
 }
+window.dennV64SetOrientation=setOrientation;
+window.dennV64SetRotation=setRotation;
 function boot(){state.mode=normalizeMode(state.mode);state.rot=normalizeRot(state.rot);ensureTransform().rot=state.rot;installUi();applyAspect();syncGuideOrientation(false);syncUi()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,120)});else setTimeout(boot,80);
 window.addEventListener('load',function(){setTimeout(boot,220)});
@@ -6189,6 +6269,10 @@ window.dennRollbackFrameOrientationV64=function(){alert('v64 액자 방향 패�
 .denn-v64-frame-orientation button{height:30px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink);font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer}
 .denn-v64-frame-orientation button.on{border-color:var(--gold2);background:var(--gold2);color:#fff}
 .denn-v64-frame-orientation .hint{margin-top:6px;font-size:9px;color:var(--warm);line-height:1.35}
+@keyframes dennFrameOrientToLandscape{from{transform:rotate(0deg)}to{transform:rotate(90deg)}}
+@keyframes dennFrameOrientToPortrait{from{transform:rotate(0deg)}to{transform:rotate(-90deg)}}
+#frameCanvas.denn-v64-anim-to-landscape{animation:dennFrameOrientToLandscape .35s cubic-bezier(.4,0,.2,1) forwards!important;transform-origin:center center!important}
+#frameCanvas.denn-v64-anim-to-portrait{animation:dennFrameOrientToPortrait .35s cubic-bezier(.4,0,.2,1) forwards!important;transform-origin:center center!important}
 </style>
 
 <script id="denn-v65-frame-rotation-projection">
@@ -6235,11 +6319,15 @@ if(typeof oldRender==='function'&&!oldRender.__dennV65FrameRotationProjection){
   window.renderFrame.__dennV65FrameRotationProjection=true;
 }
 function installControls(){
+  /* v65 핸들러가 v64.setOrientation을 우회하면 회전 애니메이션이 안 걸림.
+     v64를 노출(window.dennV64SetOrientation/SetRotation)했으므로 그것 호출. */
   var p=by('denn-v64-orient-portrait'),l=by('denn-v64-orient-landscape'),left=by('denn-v64-rot-left'),right=by('denn-v64-rot-right');
-  if(p&&!p.__dennV65){p.onclick=function(){var s=st();s.mode='portrait';s.rot=0;if(window.frameImgT)frameImgT.rot=0;setGuide('portrait');syncUi();if(window.renderFrame)window.renderFrame()};p.__dennV65=true}
-  if(l&&!l.__dennV65){l.onclick=function(){var s=st();s.mode='landscape';if(s.rot!==-90&&s.rot!==90)s.rot=90;if(window.frameImgT)frameImgT.rot=s.rot;setGuide('landscape');syncUi();if(window.renderFrame)window.renderFrame()};l.__dennV65=true}
-  if(left&&!left.__dennV65){left.onclick=function(){var s=st();s.mode='landscape';s.rot=-90;if(window.frameImgT)frameImgT.rot=-90;setGuide('landscape');syncUi();if(window.renderFrame)window.renderFrame()};left.__dennV65=true}
-  if(right&&!right.__dennV65){right.onclick=function(){var s=st();s.mode='landscape';s.rot=90;if(window.frameImgT)frameImgT.rot=90;setGuide('landscape');syncUi();if(window.renderFrame)window.renderFrame()};right.__dennV65=true}
+  function safeOri(m){if(typeof window.dennV64SetOrientation==='function')window.dennV64SetOrientation(m);else{var s=st();s.mode=m;if(m==='portrait')s.rot=0;if(window.frameImgT)frameImgT.rot=s.rot;setGuide(m);syncUi();if(window.renderFrame)window.renderFrame()}}
+  function safeRot(v){if(typeof window.dennV64SetRotation==='function')window.dennV64SetRotation(v);else{var s=st();s.rot=v;if(window.frameImgT)frameImgT.rot=v;syncUi();if(window.renderFrame)window.renderFrame()}}
+  if(p&&!p.__dennV65){p.onclick=function(){safeOri('portrait')};p.__dennV65=true}
+  if(l&&!l.__dennV65){l.onclick=function(){safeOri('landscape')};l.__dennV65=true}
+  if(left&&!left.__dennV65){left.onclick=function(){safeRot(-90)};left.__dennV65=true}
+  if(right&&!right.__dennV65){right.onclick=function(){safeRot(90)};right.__dennV65=true}
   syncUi();
 }
 var oldOpen=window.openRoomMockup;
@@ -11848,7 +11936,7 @@ window.addEventListener('load',later);
 /* (작업3) 목업툴 2톤(흰색 + #e6e6e6) + 아일랜드 플로팅 셸 + 좌측 메뉴 접기.
    상단 헤더(검정)와 --gold(헤더 'PRODUCTS' 강조)는 보존. 나머지 배경=흰색, 좌측 레일=#e6e6e6, 강조=검정 모노.
    대부분은 :root 변수 remap으로 일괄 처리하고, 변수 미사용 웜톤만 개별 override. */
-:root{--surface:#ffffff;--cream:#ffffff;--border:#e6e6e6;--gold2:#777;--gold:#777;--warm:#7a7a7a;--denn-control-w:clamp(264px,18vw,380px);--denn-control-pad:16px 14px}
+:root{--surface:#ffffff;--cream:#ffffff;--border:#e6e6e6;--gold2:#777;--gold:#777;--warm:#7a7a7a;--denn-control-w:clamp(300px,18vw,380px);--denn-control-pad:16px 14px}
 body{background:#fff}
 /* 변수 미사용 웜톤 off-white → 흰/연회색 */
 .drop-zone{background:#fff!important}
