@@ -6115,7 +6115,49 @@ window.drawImgT=function(ctx,img,x,y,w,h,T){
 };
 var oldRender=window.renderFrame;
 if(typeof oldRender==='function'&&!oldRender.__dennV64FrameOrientation){
-  window.renderFrame=function(){applyAspect();var r=oldRender.apply(this,arguments);syncGuideOrientation(false);return r};
+  window.renderFrame=function(){
+    applyAspect();
+    /* landscape는 portrait를 그대로 90° 돌린 크기 — L2603 본체 sizing(pw=maxW, if ph>maxH clamp)이
+       landscape에선 clamp 미발동으로 캔버스가 더 넓어지는 비대칭 → portrait의 긴 변(=maxH)을 임시로
+       maxW에 강제해 pw=maxH×aspect로 만들어 transpose 결과(예: portrait 368×520 → landscape 520×368). */
+    var swapPrev=null,swapThick=null;
+    try{
+      if(state.mode==='landscape'){
+        var ADMref=window.ADM;
+        if(!ADMref){try{ADMref=JSON.parse(localStorage.getItem('denn_admin')||'{}');if(ADMref)window.ADM=ADMref}catch(e){}}
+        if(ADMref){
+          if(!ADMref.uiCustom)ADMref.uiCustom={};
+          var cur=parseFloat(ADMref.uiCustom.prevMaxW);
+          var base=isFinite(cur)&&cur>0?cur:500;
+          var maxH=Math.max(320,Math.round(base*1.04));
+          swapPrev={admin:ADMref,prev:ADMref.uiCustom.prevMaxW};
+          ADMref.uiCustom.prevMaxW=maxH;
+        }
+        /* 프레임 두께: L2604 B=W*thickPct/100이라 W가 W가 커진 landscape에서 두꺼워 보임.
+           portrait 픽셀 두께 유지하려면 thickPct를 sz.aspect(landscape에선 <1)로 스케일. */
+        var sz=window.curFSz;
+        if(sz){
+          var thickAsp=parseFloat(sz.aspect);
+          if(isFinite(thickAsp)&&thickAsp>0&&thickAsp<1){
+            var origThick=sz.frameThickness!=null?sz.frameThickness:(ADMref&&ADMref.frameThickness)||5.5;
+            swapThick={sz:sz,prev:sz.frameThickness};
+            sz.frameThickness=origThick*thickAsp;
+          }
+        }
+      }
+    }catch(e){}
+    var r=oldRender.apply(this,arguments);
+    if(swapPrev){try{
+      if(swapPrev.prev===undefined)delete swapPrev.admin.uiCustom.prevMaxW;
+      else swapPrev.admin.uiCustom.prevMaxW=swapPrev.prev;
+    }catch(e){}}
+    if(swapThick){try{
+      if(swapThick.prev===undefined)delete swapThick.sz.frameThickness;
+      else swapThick.sz.frameThickness=swapThick.prev;
+    }catch(e){}}
+    syncGuideOrientation(false);
+    return r;
+  };
   window.renderFrame.__dennV64FrameOrientation=true;
 }
 var oldOpenRoom=window.openRoomMockup;
@@ -6181,13 +6223,13 @@ function paintLandscapeProjection(){
 function projectSoon(){[60,180].forEach(function(ms){setTimeout(paintLandscapeProjection,ms)})}
 var oldRender=window.renderFrame;
 if(typeof oldRender==='function'&&!oldRender.__dennV65FrameRotationProjection){
+  /* v65 force-portrait + paintLandscapeProjection 비활성 — v64의 순수 aspect 스왑이 작동하도록 함.
+     기존 v65는 캔버스를 portrait로 렌더 후 60/180ms 지연 합성으로 landscape 흉내냈으나 scale 시스템과
+     race로 결국 portrait 모양에 이미지만 회전된 상태로 굳음. UI 동기화(syncUi/setGuide)는 유지. */
   window.renderFrame=function(){
-    var s=st();syncUi();
-    if(s.mode!=='landscape')return oldRender.apply(this,arguments);
-    var savedMode=s.mode,savedRot=s.rot;if(savedRot!==-90&&savedRot!==90)savedRot=90;
-    s.mode='portrait';s.rot=0;if(window.frameImgT)frameImgT.rot=0;
+    syncUi();
     var r=oldRender.apply(this,arguments);
-    s.mode=savedMode;s.rot=savedRot;if(window.frameImgT)frameImgT.rot=savedRot;setGuide('landscape');syncUi();projectSoon();
+    if(st().mode==='landscape')setGuide('landscape');
     return r;
   };
   window.renderFrame.__dennV65FrameRotationProjection=true;
@@ -9050,7 +9092,13 @@ window.addEventListener('load',run);
       var aw=Math.max(260,area.clientWidth-48),ah=Math.max(260,area.clientHeight-48);
       // fit cap(1.45)은 유지 → 기본(slider 100%) 표시 크기 불변(fit×.868≤1.26<1.45라 기본은 cap 미도달).
       // PC만 최종 cap을 풀어(안전 상한 4) slider 119%+ dead zone 제거. 모바일은 기존 1.45 cap 유지.
-      var fit=Math.min(1.45,aw/s.w,ah/s.h);
+      /* landscape일 때 fit이 비대칭(가로 area가 넓으면 landscape canvas가 더 크게 zoom됨)이라
+         portrait↔landscape 전환 시 display 크기가 달라짐. landscape에서 area aw/ah를 swap해
+         "transposed portrait와 동일한 fit"으로 만들어 같은 scale 보장. */
+      var __dennOriV64=window.DENN_FRAME_ORIENTATION_V64;
+      var __dennFW=(__dennOriV64&&__dennOriV64.mode==='landscape')?ah:aw;
+      var __dennFH=(__dennOriV64&&__dennOriV64.mode==='landscape')?aw:ah;
+      var fit=Math.min(1.45,__dennFW/s.w,__dennFH/s.h);
       var mob=previewMode()==='mobile';
       var raw=fit*(mob?.56:.868)*(userScale()/100);
       var scale=mob?Math.max(.34,Math.min(1.45,raw)):Math.max(.14,Math.min(4,raw));
