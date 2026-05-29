@@ -55,6 +55,10 @@ header{background:var(--ink);padding:0 32px;height:54px;display:flex;align-items
 .cat-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
 .cat-chip{padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:#fff;font-family:inherit;font-size:10px;cursor:pointer;transition:all .15s;color:var(--warm);white-space:nowrap}
 .cat-chip:hover{border-color:var(--gold)}.cat-chip.on{border-color:var(--gold2);background:var(--gold2);color:#fff}
+.clock-group-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px}
+.clock-group-tab{padding:7px 6px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--warm);text-align:center;white-space:nowrap}
+.clock-group-tab:hover{border-color:var(--gold2);color:var(--ink)}
+.clock-group-tab.on{border-color:var(--gold2);background:var(--gold2);color:#fff}
 /* Image transform controls */
 .img-transform-ctl{background:#F5F0E7;border-radius:7px;padding:9px 10px;display:none;flex-direction:column;gap:6px}
 .img-transform-ctl.show{display:flex}
@@ -305,6 +309,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     <hr>
     <div>
       <div class="sec-label">02 템플릿</div>
+      <div class="clock-group-tabs" id="frame-clock-group-tabs"></div>
       <div class="cat-chips" id="frame-cat-chips"></div>
       <div class="tpl-scroll"><div class="tpl-grid" id="frame-tpl-grid"></div></div>
     </div>
@@ -337,7 +342,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
       </div>
     </div>
     <hr>
-    <div><div class="sec-label">06 시계 표시</div><div class="tog-row"><div><div style="font-size:11.5px;font-weight:500">시계 추가</div><div style="font-size:9.5px;color:var(--warm);margin-top:1px">저장된 시계 이미지 표시</div></div><div class="tog on" id="tog-clock" onclick="togFrame('clock')"></div></div></div>
+    <div><div class="sec-label">06 시계 표시</div><div class="tog-row"><div><div style="font-size:11.5px;font-weight:500">시계 추가</div><div style="font-size:9.5px;color:var(--warm);margin-top:1px">저장된 시계 이미지 표시</div></div><div class="tog on" id="tog-clock" onclick="togFrame('clock')"></div></div><div id="clock-hint-msg" style="font-size:9.5px;color:var(--warm);margin-top:7px;line-height:1.5;padding:7px 9px;background:#FAFAFA;border-radius:6px;border:1px solid #e6e6e6">시계액자 템플릿 선택시에만 설정 가능합니다.</div></div>
     <hr>
     <div class="denn-frame-action-stack" id="denn-frame-action-stack">
       <button class="cta denn-action-btn denn-action-btn-room" onclick="openRoomMockup()">🏠 내 공간에서 보기</button>
@@ -761,6 +766,17 @@ var BM={
 };
 var MODELS=[],FS=[],FC=[],FTPLS=[],CTPLS=[],FCATS=[];
 var curModel=null,curFSz=null,curFCol=null,curFTpl=null,curCTpl=null,curCatId='all';
+var curClockGroup='all'; // 'all' | 'clock' | 'plain' — 시계액자/일반액자 Top tab
+/* 분류 함수: 기존 templateClockOn(L2509) 로직과 동일. 명시적 OFF만 일반액자.
+   - tpl.clockEnabled===false 또는 tpl.clock===false → 일반액자
+   - 빌더 생성이고 clock===null → 일반액자
+   - 그 외 → 시계액자 (초기 데이터의 clock 필드 없음도 시계액자) */
+function isClockTemplate(tpl){
+  if(!tpl)return false;
+  if(tpl.clockEnabled===false||tpl.clock===false)return false;
+  if(tpl.builtBy==='builder'&&Object.prototype.hasOwnProperty.call(tpl,'clock')&&tpl.clock==null)return false;
+  return true;
+}
 var caseImg=null,frameImg=null,caseColor='#1A1A1A',phoneColor='#1A1A1A';
 // Phase1 Stage3: per-zone color/shadow overrides — keyed by frame text zone key (e.g. 'main','name','name2','date','sub' or custom).
 // Shape per entry: { color: '#RRGGBB', shadow: { enabled: bool, color: '#RRGGBB', blur: number, dx: number, dy: number } }
@@ -884,9 +900,18 @@ function selModelRow(el,i){
 }
 
 function buildCatChips(){
+  buildClockGroupTabs();
   var cc=document.getElementById('frame-cat-chips');
   cc.innerHTML='<div class="cat-chip on" onclick="filterCat(\'all\',this)">전체</div>'+FCATS.map(function(c){return '<div class="cat-chip" onclick="filterCat(\''+c.id+'\',this)">'+c.name+'</div>';}).join('');
 }
+
+function buildClockGroupTabs(){
+  var box=document.getElementById('frame-clock-group-tabs');if(!box)return;
+  box.innerHTML='<div class="clock-group-tab'+(curClockGroup==='all'?' on':'')+'" onclick="switchClockGroup(\'all\')">전체</div>'+
+    '<div class="clock-group-tab'+(curClockGroup==='clock'?' on':'')+'" onclick="switchClockGroup(\'clock\')">시계액자</div>'+
+    '<div class="clock-group-tab'+(curClockGroup==='plain'?' on':'')+'" onclick="switchClockGroup(\'plain\')">일반액자</div>';
+}
+function switchClockGroup(g){curClockGroup=g;buildClockGroupTabs();buildFrameTplGrid(curCatId||'all');}
 
 function filterCat(catId,el){
   curCatId=catId;
@@ -921,7 +946,15 @@ function templateMatchesCurrentFrameSize(t){
 }
 function buildFrameTplGrid(catId){
   var tg=document.getElementById('frame-tpl-grid');
-  var filtered=FTPLS.filter(function(t){if(!templateMatchesCurrentFrameSize(t))return false;if(catId==='all')return true;if(t.type==='builtin')return catId==='all';return t.categoryId===catId;});
+  var filtered=FTPLS.filter(function(t){
+    if(!templateMatchesCurrentFrameSize(t))return false;
+    /* 시계 그룹 Top tab 필터 */
+    if(curClockGroup==='clock'&&!isClockTemplate(t))return false;
+    if(curClockGroup==='plain'&&isClockTemplate(t))return false;
+    if(catId==='all')return true;
+    if(t.type==='builtin')return catId==='all';
+    return t.categoryId===catId;
+  });
   if(!filtered.length){tg.innerHTML='<div style="grid-column:1/-1;font-size:10px;color:var(--warm);text-align:center;padding:16px">현재 선택한 사이즈에 맞는 템플릿이 없습니다</div>';return;}
   tg.innerHTML=filtered.map(function(t){var i=FTPLS.indexOf(t),src=(typeof realTemplateSrc==='function'?realTemplateSrc(t):(t&&!t.generatedDetailPreview?t.dataUrl:null));return '<div class="tpl-card'+(curFTpl&&curFTpl.id===t.id?' on':'')+'" onclick="selFTplByRef(this,'+i+')"><div class="tpl-thumb fr">'+(src?'<img src="'+src+'">':t.icon||'🎨')+'</div><div class="tpl-name">'+t.name+'</div></div>';}).join('');
   if(!curFTpl||!filtered.find(function(t){return t.id===curFTpl.id;})){curFTpl=filtered[0];document.querySelectorAll('#frame-tpl-grid .tpl-card').forEach(function(c,i){c.classList.toggle('on',i===0);});applyFrameDefaultTexts(curFTpl,false);}

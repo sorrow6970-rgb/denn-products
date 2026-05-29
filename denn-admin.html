@@ -63,6 +63,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--sb);color:var(--txt);disp
 hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
 .cat-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px;padding-bottom:10px;border-bottom:1px solid var(--bdr)}
 .cat-tab{padding:5px 12px;border:1.5px solid var(--bdr);border-radius:20px;background:var(--sb);font-family:inherit;font-size:11px;cursor:pointer;transition:all .15s;color:var(--muted);position:relative}.cat-tab:hover{border-color:var(--bdr2);color:var(--txt)}.cat-tab.on{border-color:var(--gold2);background:var(--gold2);color:#111;font-weight:600}
+.clock-group-tabs{display:flex;gap:6px;margin-bottom:10px}
+.clock-group-tab{padding:7px 14px;border:1.5px solid var(--bdr);border-radius:8px;background:var(--sb);font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--muted);display:flex;align-items:center;gap:5px}
+.clock-group-tab:hover{border-color:var(--bdr2);color:var(--txt)}
+.clock-group-tab.on{border-color:var(--gold2);background:var(--gold2);color:#111}
+/* 시계 뱃지 — 카드 썸네일 좌측 하단 overlay (가독성 위해 반투명 배경) */
+.tpl-thumb-a{position:relative}
+.tpl-thumb-a .tpl-clock-badge{position:absolute;bottom:6px;left:6px;padding:3px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.04em;pointer-events:none;z-index:3;line-height:1}
+.tpl-thumb-a .tpl-clock-badge.has{background:rgba(200,168,100,.95);color:#1c1c1c}
+.tpl-thumb-a .tpl-clock-badge.no{background:rgba(0,0,0,.7);color:#fff}
+/* Top tab(시계액자/일반액자/전체)이 카테고리 역할 → 기존 카테고리 칩 행은 중복이라 숨김(드롭다운 필터로 대체) */
+#cat-tabs{display:none!important}
+/* 그리드 시계 그룹 필터 — data-clock-filter(그리드)와 data-denn-clock-group(카드) 매칭으로 숨김.
+   후속 wrap이 카드 다시 만들어도 data attribute는 보존됨. */
+#frame-tpl-grid-a[data-clock-filter="clock"] .tpl-ca[data-denn-clock-group="plain"]{display:none!important}
+#frame-tpl-grid-a[data-clock-filter="plain"] .tpl-ca[data-denn-clock-group="clock"]{display:none!important}
 .cat-tab .del-cat{position:absolute;top:-5px;right:-5px;width:14px;height:14px;background:var(--red);border-radius:50%;border:none;color:#fff;font-size:8px;cursor:pointer;display:none;align-items:center;justify-content:center}.cat-tab:hover .del-cat{display:flex}
 /* Modals */
 .ze-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9000;align-items:center;justify-content:center}.ze-modal.open{display:flex}
@@ -336,6 +351,7 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
           <input type="text" id="new-cat-name" class="field" style="margin:0;flex:1;min-width:120px" placeholder="카테고리명 (예: 웨딩)">
           <button class="tb-btn primary" onclick="addCat()">+ 추가</button>
         </div>
+        <div class="clock-group-tabs" id="clock-group-tabs"></div>
         <div class="cat-tabs" id="cat-tabs"></div>
         <div>
           <div class="up-zone" style="margin-bottom:11px" id="frame-up-zone" ondragover="evStop(event)" ondrop="dropFTpl(event)"><input type="file" accept="image/*,.svg" multiple id="frame-tpl-inp" onchange="addFTpls(this)"><div style="font-size:18px;margin-bottom:4px">🖼</div><h4 id="frame-up-label">템플릿 업로드</h4><p style="display:none"></p></div>
@@ -728,6 +744,18 @@ if(S.frameSizes)S.frameSizes.forEach(function(sz){if(!sz.clock)sz.clock=null;});
 function deep(o){return JSON.parse(JSON.stringify(o));}
 var TITLES={dashboard:'대시보드',models:'기종 & 칼선','case-tpls':'케이스 템플릿','case-builder':'케이스 템플릿 제작','frame-tpls':'액자 템플릿','frame-builder':'액자 템플릿 제작',frames:'액자 설정',fonts:'폰트 관리',brand:'브랜드 설정',export:'내보내기'};
 var curFCat='all';
+var curFClockGroup='all'; // 'all' | 'clock' | 'plain' — 시계액자/일반액자 Top tab
+/* 분류 함수: mockup-tool의 templateClockOn(L2509)와 동일 로직. 명시적 OFF만 일반액자.
+   - tpl.clockEnabled===false 또는 tpl.clock===false → 일반액자
+   - 빌더 생성이고 clock===null → 일반액자(빌더에서 시계 OFF로 저장)
+   - 그 외 (clock 필드 없음 / 객체 / undefined) → 시계액자
+   초기 데이터(clock 필드 없음)도 자연스럽게 시계액자로 분류됨. */
+function isClockTemplate(tpl){
+  if(!tpl)return false;
+  if(tpl.clockEnabled===false||tpl.clock===false)return false;
+  if(tpl.builtBy==='builder'&&Object.prototype.hasOwnProperty.call(tpl,'clock')&&tpl.clock==null)return false;
+  return true;
+}
 
 function goTab(id,el){document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});if(el)el.classList.add('on');document.querySelectorAll('.tp').forEach(function(p){p.classList.remove('on');});document.getElementById('tp-'+id).classList.add('on');document.getElementById('ttl').textContent=TITLES[id]||id;var rs={dashboard:renderDash,models:renderModels,'case-tpls':renderCTpls,'case-builder':initCaseBuilder,'frame-tpls':renderFTplsTab,'frame-builder':initFrameBuilder,frames:renderFrames,fonts:renderFonts,brand:renderWatermarkUI};if(rs[id])rs[id]();}
 
@@ -1340,19 +1368,38 @@ function dropGuideBg(e){e.preventDefault();processGuideBgs(e.dataTransfer.files)
 function addGuideBgs(inp){processGuideBgs(inp.files);}
 
 /* ======= FRAME TEMPLATES ======= */
-function renderFTplsTab(){buildCatTabs();renderFTplsByCategory(curFCat);}
+function renderFTplsTab(){buildClockGroupTabs();buildCatTabs();renderFTplsByCategory(curFCat);}
+function buildClockGroupTabs(){
+  var ct=document.getElementById('clock-group-tabs');if(!ct)return;
+  var counts=countByClockGroup();
+  ct.innerHTML='<div class="clock-group-tab'+(curFClockGroup==='all'?' on':'')+'" onclick="switchFClockGroup(\'all\')">전체 <span style="opacity:.6;font-weight:400">('+counts.all+')</span></div>'+
+    '<div class="clock-group-tab'+(curFClockGroup==='clock'?' on':'')+'" onclick="switchFClockGroup(\'clock\')">🕐 시계액자 <span style="opacity:.6;font-weight:400">('+counts.clock+')</span></div>'+
+    '<div class="clock-group-tab'+(curFClockGroup==='plain'?' on':'')+'" onclick="switchFClockGroup(\'plain\')">⬜ 일반액자 <span style="opacity:.6;font-weight:400">('+counts.plain+')</span></div>';
+}
+function countByClockGroup(){var c=0,p=0;(S.frameTemplates||[]).forEach(function(t){if(isClockTemplate(t))c++;else p++;});return{all:c+p,clock:c,plain:p};}
+function switchFClockGroup(g){curFClockGroup=g;buildClockGroupTabs();renderFTplsByCategory(curFCat);}
 function buildCatTabs(){var ct=document.getElementById('cat-tabs');ct.innerHTML='<div class="cat-tab'+(curFCat==='all'?' on':'')+'" onclick="switchFCat(\'all\',this)">전체</div><div class="cat-tab'+(curFCat==='builtin'?' on':'')+'" onclick="switchFCat(\'builtin\',this)">기본</div>'+(S.frameCategories||[]).map(function(c){return '<div class="cat-tab'+(curFCat===c.id?' on':'')+'" onclick="switchFCat(\''+c.id+'\',this)">'+c.name+'<button class="del-cat" onclick="event.stopPropagation();delCat(\''+c.id+'\')">×</button></div>';}).join('');}
 function switchFCat(catId,el){curFCat=catId;document.querySelectorAll('.cat-tab').forEach(function(t){t.classList.remove('on');});el.classList.add('on');renderFTplsByCategory(catId);}
 function renderFTplsByCategory(catId){
+  /* 모든 진입에서 Top tab 카운트 자동 갱신 — 빌더 저장·삭제 등 외부 호출에서도 동기화 */
+  try{buildClockGroupTabs()}catch(e){}
   var grid=document.getElementById('frame-tpl-grid-a');
   var label=document.getElementById('frame-up-label');
   var catName='전체';if(catId==='builtin'){catName='기본';}else if(catId!=='all'){var f=(S.frameCategories||[]).find(function(c){return c.id===catId;});if(f)catName=f.name;}
   label.textContent=catName+' 템플릿 업로드';
   document.getElementById('frame-up-zone').style.display=catId==='all'?'none':'';
-  var filtered=S.frameTemplates.filter(function(t){if(catId==='all')return true;if(catId==='builtin')return t.type==='builtin';return t.type==='uploaded'&&t.categoryId===catId;});
+  var filtered=S.frameTemplates.filter(function(t){
+    /* 카테고리 필터 */
+    var catOk;if(catId==='all')catOk=true;else if(catId==='builtin')catOk=t.type==='builtin';else catOk=t.type==='uploaded'&&t.categoryId===catId;
+    if(!catOk)return false;
+    /* 시계 그룹 필터 (Top tab) */
+    if(curFClockGroup==='clock')return isClockTemplate(t);
+    if(curFClockGroup==='plain')return !isClockTemplate(t);
+    return true;
+  });
   if(!filtered.length){grid.innerHTML='<div style="font-size:10.5px;color:var(--faint);text-align:center;padding:18px">템플릿 없음</div>';return;}
   var ICONS={full:'🖼',top_text:'📝',duo:'⬛',trio:'▦',text_only:'Aa',circle:'⭕'};
-  grid.innerHTML=filtered.map(function(t){var ri=S.frameTemplates.indexOf(t);var zc=t.textZones?t.textZones.length:0;var zBtn=t.type==='uploaded'?'<button onclick="openZoneEditor('+ri+')" style="margin-top:4px;width:100%;padding:4px;border:1px solid var(--gold2);border-radius:4px;background:rgba(200,168,100,.08);color:var(--gold);font-family:inherit;font-size:9px;cursor:pointer">📍 텍스트 위치 설정</button>':'';var zBadge=t.type==='uploaded'?(zc>0?'<span class="tag new">'+zc+'개</span>':'<span class="tag builtin">위치미설정</span>'):'';var delBtn=t.type==='uploaded'?'<button class="del-tpl-btn" onclick="delFTpl('+ri+')">🗑 삭제</button>':'';return '<div class="tpl-ca"><div class="tpl-thumb-a fr">'+(t.dataUrl?'<img src="'+t.dataUrl+'">':'<span>'+(ICONS[t.id]||'🎨')+'</span>')+'</div><input class="edit-name" value="'+t.name+'" onchange="S.frameTemplates['+ri+'].name=this.value" placeholder="이름"><div style="font-size:8.5px;color:var(--muted);margin-top:2px">'+(t.type==='builtin'?'<span class="tag builtin">내장</span>':'<span class="tag new">업로드</span>')+zBadge+'</div>'+zBtn+delBtn+'</div>';}).join('');
+  grid.innerHTML=filtered.map(function(t){var ri=S.frameTemplates.indexOf(t);var zc=t.textZones?t.textZones.length:0;var zBtn=t.type==='uploaded'?'<button onclick="openZoneEditor('+ri+')" style="margin-top:4px;width:100%;padding:4px;border:1px solid var(--gold2);border-radius:4px;background:rgba(200,168,100,.08);color:var(--gold);font-family:inherit;font-size:9px;cursor:pointer">📍 텍스트 위치 설정</button>':'';var zBadge=t.type==='uploaded'?(zc>0?'<span class="tag new">'+zc+'개</span>':'<span class="tag builtin">위치미설정</span>'):'';var delBtn=t.type==='uploaded'?'<button class="del-tpl-btn" onclick="delFTpl('+ri+')">🗑 삭제</button>':'';var clockBadge=isClockTemplate(t)?'<span class="tpl-clock-badge has">🕐</span>':'<span class="tpl-clock-badge no">⬜</span>';return '<div class="tpl-ca"><div class="tpl-thumb-a fr">'+(t.dataUrl?'<img src="'+t.dataUrl+'">':'<span>'+(ICONS[t.id]||'🎨')+'</span>')+'</div><input class="edit-name" value="'+t.name+'" onchange="S.frameTemplates['+ri+'].name=this.value" placeholder="이름"><div style="font-size:8.5px;color:var(--muted);margin-top:2px">'+(t.type==='builtin'?'<span class="tag builtin">내장</span>':'<span class="tag new">업로드</span>')+clockBadge+zBadge+'</div>'+zBtn+delBtn+'</div>';}).join('');
 }
 function addCat(){var name=v('new-cat-name');if(!name){toast('카테고리명 필요','e');return;}if(!S.frameCategories)S.frameCategories=[];S.frameCategories.push({id:'cat'+Date.now(),name:name});document.getElementById('new-cat-name').value='';buildCatTabs();toast('✓ '+name);}
 function delCat(id){if(!confirm('카테고리 삭제?'))return;S.frameCategories=(S.frameCategories||[]).filter(function(c){return c.id!==id;});if(curFCat===id)curFCat='all';buildCatTabs();renderFTplsByCategory(curFCat);}
@@ -15395,6 +15442,151 @@ window.addEventListener('resize',scheduleSettle);
 
   bindObserver();
   console.log('[beforeunload-guard] installed (ZE modal dirty tracking)');
+})();
+</script>
+<script id="denn-clock-group-frame-tpl-final">
+/* 어드민 액자 템플릿 시계 그룹 분류 — 모든 기존 wrap(v70/v85/v94/v95/v364 등)이 renderFTplsByCategory를
+   replace/wrap 한 상태에서 효과 보장하려면 가장 후순위에서 한 번 더 감싸 후처리(DOM 카드 필터+뱃지)로 적용. */
+(function(){
+  if(window.__dennClockGroupFrameTpl)return;
+  window.__dennClockGroupFrameTpl=true;
+  if(typeof window.curFClockGroup==='undefined')window.curFClockGroup='all';
+  function isClockTemplate(tpl){
+    if(!tpl)return false;
+    if(tpl.clockEnabled===false||tpl.clock===false)return false;
+    if(tpl.builtBy==='builder'&&Object.prototype.hasOwnProperty.call(tpl,'clock')&&tpl.clock==null)return false;
+    return true;
+  }
+  function ensureContainer(){
+    var ct=document.getElementById('clock-group-tabs');
+    if(ct)return ct;
+    var anchor=document.getElementById('cat-tabs');
+    if(!anchor||!anchor.parentNode)return null;
+    ct=document.createElement('div');
+    ct.className='clock-group-tabs';ct.id='clock-group-tabs';
+    anchor.parentNode.insertBefore(ct,anchor);
+    return ct;
+  }
+  function countByGroup(){
+    var c=0,p=0;
+    var arr=window.S&&Array.isArray(S.frameTemplates)?S.frameTemplates:[];
+    arr.forEach(function(t){
+      if(t&&t.type==='builtin')return; /* v70이 빌트인 숨김 → 카운트도 제외 */
+      if(isClockTemplate(t))c++;else p++;
+    });
+    return{all:c+p,clock:c,plain:p};
+  }
+  function buildTopTabs(){
+    var ct=ensureContainer();if(!ct)return;
+    var cur=window.curFClockGroup||'all';
+    var cnt=countByGroup();
+    ct.innerHTML=
+      '<div class="clock-group-tab'+(cur==='all'?' on':'')+'" onclick="window.dennClockGroupSwitch(\'all\')">전체 <span style="opacity:.6;font-weight:400">('+cnt.all+')</span></div>'+
+      '<div class="clock-group-tab'+(cur==='clock'?' on':'')+'" onclick="window.dennClockGroupSwitch(\'clock\')">시계액자 <span style="opacity:.6;font-weight:400">('+cnt.clock+')</span></div>'+
+      '<div class="clock-group-tab'+(cur==='plain'?' on':'')+'" onclick="window.dennClockGroupSwitch(\'plain\')">일반액자 <span style="opacity:.6;font-weight:400">('+cnt.plain+')</span></div>';
+  }
+  function applyGridFilterAttr(){
+    var grid=document.getElementById('frame-tpl-grid-a');if(!grid)return;
+    var cur=window.curFClockGroup||'all';
+    grid.setAttribute('data-clock-filter',cur);
+  }
+  window.dennClockGroupSwitch=function(g){
+    window.curFClockGroup=g;
+    buildTopTabs();
+    applyGridFilterAttr();
+    /* CSS rule만으론 후속 wrap의 inline display:grid 등에 가려질 수 있어 inline display:none 직접 박음 */
+    try{postProcess()}catch(e){}
+  };
+  function extractRi(card){
+    /* 1) 카드 자체의 data attribute 먼저 (v85/v364가 박아둔 것) */
+    var direct=['data-denn-tpl-idx','data-denn-v364-template-index','data-tpl-idx','data-tpl-index','data-index','data-ri'];
+    for(var k=0;k<direct.length;k++){
+      var v=card.getAttribute(direct[k]);
+      if(v!=null&&v!==''){var n=parseInt(v,10);if(isFinite(n))return n}
+    }
+    /* 2) 카드 내부 element의 onclick/onchange 패턴 */
+    var attrs=['onclick','onchange'];
+    var all=card.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){
+      var el=all[i];
+      for(var j=0;j<attrs.length;j++){
+        var av=el.getAttribute(attrs[j]);
+        if(!av)continue;
+        var m=av.match(/(?:frameTemplates\s*\[\s*(\d+)|(?:delFTpl|openZoneEditor|openFrameTemplateDetail|saveDetail|toggleWhiteBorder|setCardWhite|tplIdx\s*[:=])\s*[(\[\s]*(\d+))/);
+        if(m){var idx=m[1]||m[2];if(idx)return parseInt(idx,10)}
+      }
+    }
+    return NaN;
+  }
+  function postProcess(){
+    var grid=document.getElementById('frame-tpl-grid-a');if(!grid)return;
+    applyGridFilterAttr();
+    var cards=grid.querySelectorAll('.tpl-ca');
+    var arr=window.S&&Array.isArray(S.frameTemplates)?S.frameTemplates:[];
+    var cur=window.curFClockGroup||'all';
+    cards.forEach(function(card){
+      var ri=extractRi(card);
+      if(!isFinite(ri))return;
+      var tpl=arr[ri];if(!tpl)return;
+      var clk=isClockTemplate(tpl);
+      /* 카드에 data attribute(필터 CSS가 사용) */
+      card.setAttribute('data-denn-clock-group',clk?'clock':'plain');
+      /* inline display 강제 — 후속 wrap이 inline style 만져도 매번 다시 박음 (MutationObserver가 재실행) */
+      if(cur==='clock'&&!clk)card.style.setProperty('display','none','important');
+      else if(cur==='plain'&&clk)card.style.setProperty('display','none','important');
+      else card.style.removeProperty('display');
+      /* 시계 뱃지(썸네일 좌측 하단 overlay — 없을 때만 추가) */
+      if(!card.querySelector('.tpl-clock-badge')){
+        var thumb=card.querySelector('.tpl-thumb-a');
+        if(thumb){
+          var bg=document.createElement('span');
+          bg.className='tpl-clock-badge '+(clk?'has':'no');
+          bg.textContent=clk?'시계':'일반';
+          thumb.appendChild(bg);
+        }
+      }
+    });
+  }
+  /* MutationObserver — 후속 wrap이 카드를 재구성해도 자동으로 postProcess 재실행 */
+  function ensureObserver(){
+    var grid=document.getElementById('frame-tpl-grid-a');if(!grid)return;
+    if(grid.__dennClockObs)return;
+    grid.__dennClockObs=new MutationObserver(function(){clearTimeout(grid.__dennClockTm);grid.__dennClockTm=setTimeout(postProcess,30)});
+    grid.__dennClockObs.observe(grid,{childList:true,subtree:false});
+  }
+  /* 모든 기존 wrap 이후에 마지막으로 한 번 더 감쌈 */
+  var oldRender=window.renderFTplsByCategory;
+  if(typeof oldRender==='function'){
+    window.renderFTplsByCategory=function(){
+      var r=oldRender.apply(this,arguments);
+      buildTopTabs();
+      setTimeout(postProcess,40);
+      setTimeout(postProcess,180);
+      return r;
+    };
+  }
+  var oldTab=window.renderFTplsTab;
+  if(typeof oldTab==='function'){
+    window.renderFTplsTab=function(){
+      var r=oldTab.apply(this,arguments);
+      buildTopTabs();
+      setTimeout(postProcess,40);
+      setTimeout(postProcess,180);
+      return r;
+    };
+  }
+  function boot(){
+    try{
+      ensureObserver();
+      if(document.getElementById('tp-frame-tpls')&&document.getElementById('tp-frame-tpls').classList.contains('on')){
+        if(typeof window.renderFTplsTab==='function')window.renderFTplsTab();
+        else{buildTopTabs();postProcess()}
+      }else{buildTopTabs()}
+    }catch(e){}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,400)});
+  else setTimeout(boot,400);
+  window.addEventListener('load',function(){setTimeout(boot,800)});
 })();
 </script>
 </body>
