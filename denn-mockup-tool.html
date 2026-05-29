@@ -36,11 +36,11 @@ header{background:var(--ink);padding:0 32px;height:54px;display:flex;align-items
 @media(min-width:861px){#page-frame .panel{max-height:calc(100vh - 95px)}}
 .sec-label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--warm);margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
-.drop-zone{border:1.5px dashed var(--border);border-radius:10px;padding:18px 14px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#FAFAF7}
+.drop-zone{border:1.5px dashed var(--border);border-radius:10px;padding:32px 14px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#FAFAF7}
 .drop-zone:hover{border-color:var(--gold);background:#f5f5f5}
 .drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .drop-icon{font-size:18px;margin-bottom:3px}.drop-zone h4{font-size:11px;font-weight:500;margin-bottom:2px}.drop-zone p{font-size:9.5px;color:var(--warm)}
-.img-prev{border-radius:7px;overflow:hidden;position:relative;display:none}.img-prev img{width:100%;max-height:100px;object-fit:cover;display:block}
+.img-prev{border-radius:7px;overflow:hidden;position:relative;display:none}.img-prev img{width:100%;height:auto;max-height:420px;object-fit:cover;display:block}
 .img-prev .rebtn{position:absolute;bottom:5px;right:5px;background:rgba(25,22,15,.78);color:#fff;border:none;font-size:9.5px;padding:3px 7px;border-radius:4px;cursor:pointer;font-family:inherit}
 .chips{display:grid;gap:5px}.chips.c2{grid-template-columns:1fr 1fr}.chips.c3{grid-template-columns:1fr 1fr 1fr}
 .chip{padding:6px 7px;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-family:inherit;font-size:10.5px;cursor:pointer;text-align:center;transition:all .15s;color:var(--ink);line-height:1.3}
@@ -377,7 +377,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
         <!-- Upload -->
         <div>
           <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--warm);margin-bottom:7px">배경 사진</div>
-          <div id="rm-drop" style="border:1.5px dashed var(--border);border-radius:9px;padding:16px 10px;text-align:center;cursor:pointer;position:relative;background:#FAFAF7;transition:all .2s" ondragover="event.preventDefault()" ondrop="rmDropRoom(event)">
+          <div id="rm-drop" style="border:1.5px dashed var(--border);border-radius:9px;padding:30px 14px;text-align:center;cursor:pointer;position:relative;background:#FAFAF7;transition:all .2s" ondragover="event.preventDefault()" ondrop="rmDropRoom(event)">
             <input type="file" id="rm-file" accept="image/*" onchange="rmLoadRoom(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
             <div style="font-size:22px;margin-bottom:4px">🏠</div>
             <div style="font-size:10.5px;font-weight:500;margin-bottom:2px">방/벽면 사진 업로드</div>
@@ -387,7 +387,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
             📏 <b>촬영 권장</b>: 액자를 놓을 곳 실측 후 촬영하면 사이즈 가이드가 더 정확합니다
           </div>
           <div id="rm-room-prev" style="display:none;margin-top:7px;border-radius:7px;overflow:hidden;position:relative">
-            <img id="rm-room-thumb" style="width:100%;max-height:80px;object-fit:cover;display:block">
+            <img id="rm-room-thumb" style="width:100%;height:auto;max-height:420px;object-fit:cover;display:block">
             <button onclick="rmClearRoom()" style="position:absolute;bottom:5px;right:5px;background:rgba(25,22,15,.75);color:#fff;border:none;font-size:9px;padding:3px 7px;border-radius:4px;cursor:pointer;font-family:inherit">다른 사진</button>
           </div>
         </div>
@@ -11947,7 +11947,7 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   #room-modal #sg-panel{padding:14px!important}
   #room-modal #sg-panel .sg-head-label{font-size:12px!important}
   #room-modal #sg-panel .sg-sz-btn{font-size:11px!important;padding:5px 10px!important;border-radius:6px!important;line-height:1.4!important}
-  #room-modal #sg-panel .sg-ctrl{margin-bottom:8px!important;grid-template-columns:48px 1fr 40px!important;gap:4px!important}
+  #room-modal #sg-panel .sg-ctrl{margin-bottom:8px!important;grid-template-columns:56px 1fr 40px!important;gap:8px!important}
   #room-modal #sg-panel .sg-ctrl label{font-size:11px!important}
   #room-modal #sg-panel .sg-ctrl input[type=number]{font-size:11px!important;padding:3px 4px!important;width:100%!important;box-sizing:border-box!important;-moz-appearance:textfield!important}
   #room-modal #sg-panel .sg-reset-btn{height:27px!important;padding:0 8px!important;font-size:10px!important;border-radius:6px!important;background:#fff!important;margin-top:8px!important}
