@@ -12472,6 +12472,56 @@ input[type=range]{accent-color:#777}
 */
 (function(){'use strict';})();
 </script>
+<script id="denn-admin-guide-scale-sync">
+/* 어드민 공통값(uiSettings.roomInitialGuideScale) → default-room.guideScale 자동 동기화 + 캡처값 무효화.
+   페이지 로드/룸 모달 열기 시점에 발동. 사용자 의도: 어드민에서 값 변경 시 즉시 반영, 캡처값 시스템에 묶이지 않음. */
+(function(){
+  if(window.__dennAdminGuideScaleSync)return;
+  window.__dennAdminGuideScaleSync=true;
+  function sync(){
+    try{
+      var raw=localStorage.getItem('denn_admin')||'{}';
+      var A=JSON.parse(raw)||{};
+      var adminGS=A.uiSettings&&A.uiSettings.roomInitialGuideScale;
+      if(typeof adminGS!=='number'||!isFinite(adminGS))return;
+      var rs=A.roomBackgroundSettings=A.roomBackgroundSettings||{};
+      var def=rs['default-room']=rs['default-room']||{};
+      var changed=false;
+      if(def.guideScale!==adminGS){
+        def.guideScale=adminGS;
+        changed=true;
+      }
+      /* 캡처값 메모리 비움 — 어드민 공통값이 우선되도록 */
+      window.__dennRoomGuideInitialDefaults=window.__dennRoomGuideInitialDefaults||{};
+      delete window.__dennRoomGuideInitialDefaults['default-room'];
+      if(changed){
+        try{localStorage.setItem('denn_admin',JSON.stringify(A))}catch(e){}
+        /* window.ADM 메모리 캐시도 동기화 */
+        if(window.ADM&&window.ADM.roomBackgroundSettings){
+          window.ADM.roomBackgroundSettings['default-room']=window.ADM.roomBackgroundSettings['default-room']||{};
+          window.ADM.roomBackgroundSettings['default-room'].guideScale=adminGS;
+        }
+      }
+    }catch(e){}
+  }
+  /* 페이지 로드 시 */
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync);
+  else sync();
+  window.addEventListener('load',function(){setTimeout(sync,200)});
+  /* 룸 모달 display 변경 감지 */
+  function setupObs(){
+    var modal=document.getElementById('room-modal');
+    if(!modal||modal.__dennAdminSyncObs)return;
+    modal.__dennAdminSyncObs=new MutationObserver(function(){
+      var d='';try{d=getComputedStyle(modal).display||''}catch(e){}
+      if(d&&d!=='none')setTimeout(sync,100);
+    });
+    modal.__dennAdminSyncObs.observe(modal,{attributes:true,attributeFilter:['style','class']});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(setupObs,500)});
+  else setTimeout(setupObs,500);
+})();
+</script>
 <script id="denn-room-reset-fix">
 /* "기본설정으로" 버튼이 캡처값(__dennRoomGuideInitialDefaults) 무시하고 어드민 명시값 우선 사용.
    - 초기 화면(default-room) → 어드민 공통값(A.uiSettings.roomInitialGuideScale) 적용
