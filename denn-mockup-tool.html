@@ -3756,7 +3756,18 @@ window.rmHandleRoom=function(file){
     if(window.rmLoadGuideBgs)window.rmLoadGuideBgs();
   }
   prepareRoomUpload(file,function(dataUrl){
-    addUploadedBg(dataUrl);
+    /* 일반 사용자는 localStorage 영구 저장 skip — 메모리(RM.roomImg + RM.userBgs)에만 보관.
+       다른 사용자/탭과 공유 X, F5/탭 닫기 시 자동 삭제, 같은 탭에선 '기본설정으로' 눌러도 유지.
+       우측 그리드에는 RM.userBgs를 추가로 렌더(아래 v97 wrap 참조), X 버튼으로 사용자가 직접 제거 가능. */
+    if(setupUploadKey)addUploadedBg(dataUrl);
+    else{
+      window.RM=window.RM||{};window.RM.userBgs=window.RM.userBgs||[];
+      if(!window.RM.userBgs.some(function(b){return b.dataUrl===dataUrl})){
+        var uid='ub'+Date.now()+Math.random().toString(16).slice(2);
+        window.RM.userBgs.push({id:uid,name:(file&&file.name?file.name.replace(/\.[^.]+$/,''):'내 업로드'),dataUrl:dataUrl});
+      }
+      try{if(window.rmLoadGuideBgs)window.rmLoadGuideBgs()}catch(e){}
+    }
     var img=new Image();
     img.onload=function(){
       img.__dennDirectUpload=true;
@@ -12460,6 +12471,89 @@ input[type=range]{accent-color:#777}
      - 보호 영역(renderFrame 본체) 무수정 원칙 유지 — 셸 외곽 wrap 단계에서 해결할 것.
 */
 (function(){'use strict';})();
+</script>
+<script id="denn-user-bgs-room-modal">
+/* 사용자 업로드 배경 — 메모리(RM.userBgs)만 사용. 우측 가이드 그리드에 추가 표시 + X 버튼.
+   localStorage/IndexedDB 저장 X → 다른 사용자/탭과 공유 X, F5 시 자동 삭제. 카드 X 클릭 시 즉시 메모리에서 제거. */
+(function(){
+  if(window.__dennUserBgsRoomModal)return;
+  window.__dennUserBgsRoomModal=true;
+  function appendUserBgs(){
+    try{
+      var sec=document.getElementById('rm-guide-section');
+      var grid=document.getElementById('rm-guide-grid');
+      if(!grid)return;
+      /* 기존 사용자 카드 정리(중복 방지) */
+      [].slice.call(grid.querySelectorAll('[data-denn-userbg-id]')).forEach(function(n){n.remove()});
+      var ub=(window.RM&&window.RM.userBgs)||[];
+      if(!ub.length)return;
+      if(sec)sec.style.display='block';
+      ub.forEach(function(bg){
+        var card=document.createElement('div');
+        card.setAttribute('data-denn-userbg-id',bg.id);
+        card.style.cssText='cursor:pointer;border-radius:7px;overflow:hidden;position:relative;border:2px solid transparent;transition:all .15s';
+        card.innerHTML=
+          '<img src="'+(bg.dataUrl||'').replace(/"/g,'%22')+'" style="width:100%;height:55px;object-fit:cover;display:block">'+
+          '<div style="position:absolute;bottom:0;left:0;right:0;padding:3px 6px;background:rgba(25,22,15,.6);color:#fff;font-size:9px">'+(bg.name||'내 업로드')+'</div>'+
+          '<button data-denn-userbg-del="'+bg.id+'" title="이 배경 삭제" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(220,53,69,.95);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;font-family:inherit;font-weight:700">×</button>';
+        card.addEventListener('mouseover',function(){this.style.borderColor='var(--gold)'});
+        card.addEventListener('mouseout',function(){this.style.borderColor='transparent'});
+        card.addEventListener('click',function(e){
+          var del=e.target&&e.target.getAttribute&&e.target.getAttribute('data-denn-userbg-del');
+          if(del){
+            e.stopPropagation();
+            window.RM=window.RM||{};
+            window.RM.userBgs=(window.RM.userBgs||[]).filter(function(b){return b.id!==del});
+            /* 현재 선택된 배경이 삭제 대상이면 RM.roomImg도 비움 */
+            if(window.RM.bgId==='user-upload-'+del){
+              RM.roomImg=null;RM.bgId='default-room';
+              var prev=document.getElementById('rm-room-prev');if(prev)prev.style.display='none';
+              var drop=document.getElementById('rm-drop');if(drop)drop.style.display='';
+              if(typeof window.rmRender==='function')window.rmRender();
+            }
+            appendUserBgs();
+            return;
+          }
+          /* 카드 클릭 → 선택 (어드민 인덱스 시스템 안 거치고 직접 RM.roomImg 설정) */
+          var img=new Image();
+          img.onload=function(){
+            img.__dennDirectUpload=true;
+            window.RM=window.RM||{};
+            RM.roomImg=img;RM.guideIndex=null;RM.bgId='user-upload-'+bg.id;
+            var prev=document.getElementById('rm-room-prev');if(prev)prev.style.display='block';
+            var thumb=document.getElementById('rm-room-thumb');if(thumb)thumb.src=img.src;
+            var emp=document.getElementById('rm-empty-msg');if(emp)emp.style.display='none';
+            var drop=document.getElementById('rm-drop');if(drop)drop.style.display='none';
+            if(typeof window.showCanvas==='function')window.showCanvas();
+            if(typeof window.rmRender==='function')window.rmRender();
+          };
+          img.src=bg.dataUrl;
+        });
+        grid.appendChild(card);
+      });
+    }catch(e){}
+  }
+  /* rmLoadGuideBgs 호출 후 사용자 카드 append */
+  var old=window.rmLoadGuideBgs;
+  if(typeof old==='function'){
+    window.rmLoadGuideBgs=function(){
+      var r=old.apply(this,arguments);
+      appendUserBgs();
+      return r;
+    };
+  }
+  /* 모달 열림/렌더 시점에도 한 번 호출 (rmLoadGuideBgs가 안 불릴 케이스 대비) */
+  var oldOpen=window.openRoomMockup;
+  if(typeof oldOpen==='function'&&!oldOpen.__dennUserBgs){
+    window.openRoomMockup=function(){
+      var r=oldOpen.apply(this,arguments);
+      [120,400,800].forEach(function(ms){setTimeout(appendUserBgs,ms)});
+      return r;
+    };
+    window.openRoomMockup.__dennUserBgs=true;
+  }
+  window.dennAppendUserBgsRoomModal=appendUserBgs;
+})();
 </script>
 </body>
 </html>
