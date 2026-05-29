@@ -12503,12 +12503,17 @@ input[type=range]{accent-color:#777}
           if(del){
             e.stopPropagation();
             window.RM=window.RM||{};
+            var deletedBg=(window.RM.userBgs||[]).find(function(b){return b.id===del});
             window.RM.userBgs=(window.RM.userBgs||[]).filter(function(b){return b.id!==del});
-            /* 현재 선택된 배경이 삭제 대상이면 RM.roomImg도 비움 */
-            if(window.RM.bgId==='user-upload-'+del){
-              RM.roomImg=null;RM.bgId='default-room';
+            /* 캔버스 현재 사진이 삭제 대상이면 초기 배경으로 복귀 — bgId 매칭 외에 dataUrl/src 비교도 fallback */
+            var curSrc=(window.RM.roomImg&&window.RM.roomImg.src)||'';
+            var shouldClear=(window.RM.bgId==='user-upload-'+del)||(deletedBg&&deletedBg.dataUrl&&curSrc===deletedBg.dataUrl);
+            if(shouldClear){
+              RM.roomImg=null;RM.bgId='default-room';RM.guideIndex=null;
               var prev=document.getElementById('rm-room-prev');if(prev)prev.style.display='none';
+              var thumb=document.getElementById('rm-room-thumb');if(thumb)thumb.src='';
               var drop=document.getElementById('rm-drop');if(drop)drop.style.display='';
+              var emp=document.getElementById('rm-empty-msg');if(emp)emp.style.display='';
               if(typeof window.rmRender==='function')window.rmRender();
             }
             appendUserBgs();
