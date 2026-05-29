@@ -12472,6 +12472,31 @@ input[type=range]{accent-color:#777}
 */
 (function(){'use strict';})();
 </script>
+<script id="denn-sgscale-slider-sync">
+/* 기준 스케일(sg-scale) 슬라이더 조정 시 액자도 함께 움직이게 — 마우스 휠(v75 onWheel)과 동일 redraw 로직.
+   기존 oninput은 sgDraw만 호출. 슬라이더 변경 시 rmRender + applyFrameAnchorV48도 함께 → 가이드 + 액자 fit하게 연동. */
+(function(){
+  if(window.__dennSgScaleSliderSync)return;
+  window.__dennSgScaleSliderSync=true;
+  function $(id){return document.getElementById(id)}
+  function redraw(){
+    try{if(window.RM&&RM.frameAnchorV48&&typeof window.applyFrameAnchorV48==='function')window.applyFrameAnchorV48(RM.frameAnchorV48)}catch(e){}
+    try{if(typeof window.rmRender==='function')window.rmRender()}catch(e){}
+    try{if(typeof window.markRoomDirty==='function')window.markRoomDirty()}catch(e){}
+  }
+  function setup(){
+    ['sg-scale-r','sg-scale-n'].forEach(function(id){
+      var el=$(id);if(!el||el.__dennSliderSync)return;
+      el.__dennSliderSync=true;
+      el.addEventListener('input',redraw);
+      el.addEventListener('change',redraw);
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);
+  else setup();
+  setTimeout(setup,800);setTimeout(setup,2000);
+})();
+</script>
 <script id="denn-user-bgs-room-modal">
 /* 사용자 업로드 배경 — 메모리(RM.userBgs)만 사용. 우측 가이드 그리드에 추가 표시 + X 버튼.
    localStorage/IndexedDB 저장 X → 다른 사용자/탭과 공유 X, F5 시 자동 삭제. 카드 X 클릭 시 즉시 메모리에서 제거. */
