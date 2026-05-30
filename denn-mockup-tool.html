@@ -12476,6 +12476,11 @@ input[type=range]{accent-color:#777}
 /* 어드민 공통값(uiSettings.roomInitialGuideScale) → default-room.guideScale 자동 동기화 + 캡처값 무효화.
    페이지 로드/룸 모달 열기 시점에 발동. 사용자 의도: 어드민에서 값 변경 시 즉시 반영, 캡처값 시스템에 묶이지 않음. */
 (function(){
+  /* 세션1(정책A): denn-admin-guide-scale-sync 비활성 — uiSettings.roomInitialGuideScale로
+     default-room/공통키 guideScale을 로드/모달/storage/setTimeout마다 강제 덮어쓰던 동작 제거.
+     (slider scale 스냅백 + 캡처값 강제 클리어 원인). 플래그 미설정 → syncIIFE_alive:false.
+     롤백: 바로 아래 return 한 줄 삭제. */
+  return;
   if(window.__dennAdminGuideScaleSync)return;
   window.__dennAdminGuideScaleSync=true;
   function syncIndexedDB(adminGS,v){
@@ -12536,7 +12541,7 @@ input[type=range]{accent-color:#777}
       }
     });
   }
-  function sync(){
+  function sync(applyUi){
     try{
       var raw=localStorage.getItem('denn_admin')||'{}';
       var A=JSON.parse(raw)||{};
@@ -12553,26 +12558,31 @@ input[type=range]{accent-color:#777}
         purgeStored(window.ADM.roomBackgroundSettings,adminGS,v);
       }
       syncIndexedDB(adminGS,v);
-      applyToUI(adminGS);
+      /* 옵션 A 회귀 수정(9675c6b): 슬라이더 UI 강제(applyToUI)는 명시 요청(초기 로드/모달 오픈)에서만.
+         반복 setTimeout·storage 이벤트·관찰자 연속 발동 시엔 데이터만 동기화하고
+         사용자가 조정 중인 슬라이더 값은 덮어쓰지 않음. */
+      if(applyUi)applyToUI(adminGS);
     }catch(e){}
   }
-  /* storage 이벤트 — 다른 탭(어드민)에서 localStorage 변경 시 즉시 동기화 */
+  /* storage 이벤트 — 다른 탭(어드민) 변경 시 데이터만 동기화 (라이브 슬라이더는 건드리지 않음) */
   window.addEventListener('storage',function(e){
-    if(e.key==='denn_admin')sync();
+    if(e.key==='denn_admin')sync(false);
   });
-  /* 페이지 로드 + window.load 후 + 여러 setTimeout — loadAdminState가 IDB 복원 후에도 다시 동기화 */
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync);
-  else sync();
-  window.addEventListener('load',function(){
-    [200,800,2000,4000].forEach(function(ms){setTimeout(sync,ms)});
-  });
-  /* 룸 모달 display 변경 감지 */
+  /* 페이지 로드: 1회 UI 적용. window.load 뒤 IDB 복원 대비 데이터 재동기화 1회(UI 강제 없음) */
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){sync(true)});
+  else sync(true);
+  window.addEventListener('load',function(){setTimeout(function(){sync(false)},800)});
+  /* 룸 모달 display 변경 감지 — none→표시 전환(모달 오픈) 시에만 1회 UI 적용 */
   function setupObs(){
     var modal=document.getElementById('room-modal');
     if(!modal||modal.__dennAdminSyncObs)return;
+    var wasShown=false;
+    try{var d0=getComputedStyle(modal).display||'';wasShown=!!d0&&d0!=='none';}catch(e){}
     modal.__dennAdminSyncObs=new MutationObserver(function(){
       var d='';try{d=getComputedStyle(modal).display||''}catch(e){}
-      if(d&&d!=='none')setTimeout(sync,100);
+      var shown=!!d&&d!=='none';
+      if(shown&&!wasShown)setTimeout(function(){sync(true)},100);
+      wasShown=shown;
     });
     modal.__dennAdminSyncObs.observe(modal,{attributes:true,attributeFilter:['style','class']});
   }
