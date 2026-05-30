@@ -12814,6 +12814,119 @@ input[type=range]{accent-color:#777}
   window.dennAppendUserBgsRoomModal=appendUserBgs;
 })();
 </script>
+<script id="denn-room-common-inherit-v82">
+/* B1 (정책A 세션2): 기본화면(default-room)이 공통 기본값(__denn_room_common_default__, ②)을 상속.
+   - 사이즈 필드(defaultSizeId, sizeId, frameSizeId, primarySizeId, adminGuideSize·guideSize·runtimeGuideSize 계열)는 제외
+     -> 주문 사이즈-first 제약 유지 (C 정책). 사이즈는 기존 default-room 값 보존.
+   - adminRoomSetup(관리자 설정) 모드는 미적용.
+   - default-room에 사용자 위치 조정 흔적(frameCenter≠기본 50/40)이 있으면 미적용 → 조정값 보존 (B2-다 현행 유지).
+   - 본체 무수정. window.ADM 메모리에 ② 시드 후 loadRoomBackgroundSettings(=loadSettingsV33) 재호출로 UI 반영.
+   - 모달 오픈/배경 클리어 시 1회만(observer 없음) → 사용자 조정 후 스냅백 없음. */
+(function(){
+  if(window.__dennRoomCommonInheritV82)return;
+  window.__dennRoomCommonInheritV82=true;
+  var COMMON_KEY='__denn_room_common_default__';
+  var SIZE_KEYS=['defaultSizeId','sizeId','frameSizeId','primarySizeId',
+    'adminGuideSizeId','adminGuideSizeName','adminGuideSizeWcm','adminGuideSizeHcm','adminGuideOrientation',
+    'guideSizeId','guideSizeName','guideSizeWcm','guideSizeHcm','guideOrientation',
+    'runtimeGuideSizeId','runtimeGuideSizeName','runtimeGuideSizeWcm','runtimeGuideSizeHcm','runtimeGuideOrientation'];
+  function adm(){try{return window.ADM||JSON.parse(localStorage.getItem('denn_admin')||'{}')||{}}catch(e){return window.ADM||{}}}
+  function isAdmin(){try{return new URLSearchParams(location.search||'').has('adminRoomSetup')}catch(e){return false}}
+  function num(v){v=parseFloat(v);return isFinite(v)?v:null}
+  function clone(v){try{return JSON.parse(JSON.stringify(v||{}))}catch(e){return Object.assign({},v||{})}}
+  function usefulCommon(st){
+    if(!st||typeof st!=='object')return false;
+    return Object.keys(st).filter(function(k){return k.indexOf('__denn')!==0}).length>0;
+  }
+  function isDefaultRoomNow(){
+    var RM=window.RM;
+    if(!RM)return false;
+    if(RM.roomImg)return false;
+    if(RM.guideIndex!=null)return false;
+    return RM.bgId==='default-room'||!RM.bgId;
+  }
+  function isUntouched(st,common){
+    if(!st)return true;
+    if(st.__adminPreset||st.__savedFromAdminRoomSetup)return false;
+    /* 정책A: 사용자가 일반화면에서 액자를 직접 드래그한 경우 → 영구 보존 (B2-다) */
+    if(st.__dennUserMovedFrame)return false;
+    /* 우리 상속본이고 사용자 드래그 흔적 없음 → 어드민이 ②를 바꿨든 아니든 항상 ② 재반영.
+       (구 matchCommon 절은 ② 변경 시 fx≠cx로 위치 영구 자가-차단되던 버그라 제거) */
+    if(st.__dennCommonInheritV82)return true;
+    /* 마커 없는 순정: 기본값(50/40 근처)만 상속, 그 외 비정상 위치는 보존(안전) */
+    var fx=st.frameCenterX!=null?num(st.frameCenterX):num(st.frameX);
+    var fy=st.frameCenterY!=null?num(st.frameCenterY):num(st.frameY);
+    var nearDefault=((fx==null)||Math.abs(fx-50)<0.8)&&((fy==null)||Math.abs(fy-40)<0.8);
+    return nearDefault;
+  }
+  function buildSeed(common,prev){
+    var seed=clone(common);
+    SIZE_KEYS.forEach(function(k){delete seed[k]});
+    delete seed.__guideResetDefaults; /* default-room reset 기준은 B3에서 별도 처리 */
+    delete seed.__dennUserMovedFrame; /* 재상속 시 드래그 플래그 클리어(다음 드래그 전까지 ② 추종) */
+    prev=prev||{};
+    SIZE_KEYS.forEach(function(k){if(prev[k]!=null)seed[k]=prev[k]});  /* 사이즈는 기존값 보존 */
+    seed.__dennInheritedCommonDefault=true;
+    seed.__dennInheritedCommonKey=COMMON_KEY;
+    seed.__adminPreset=false;
+    seed.__savedFromAdminRoomSetup=false;
+    seed.__dennCommonInheritV82=true;
+    return seed;
+  }
+  function applyCommonToDefaultRoom(){
+    try{
+      if(isAdmin())return;
+      if(!isDefaultRoomNow())return;
+      var A=adm();
+      var rs=A.roomBackgroundSettings=A.roomBackgroundSettings||{};
+      var common=rs[COMMON_KEY];
+      if(!usefulCommon(common))return;
+      var prev=rs['default-room']||{};
+      if(!isUntouched(prev,common))return;
+      rs['default-room']=buildSeed(common,prev);
+      window.ADM=A;
+      if(typeof window.loadRoomBackgroundSettings==='function')window.loadRoomBackgroundSettings();
+    }catch(e){}
+  }
+  window.dennApplyCommonToDefaultRoomV82=applyCommonToDefaultRoom;
+  function markUserMovedFrame(){
+    try{
+      if(isAdmin()||!isDefaultRoomNow())return;
+      var A=adm(),rs=A.roomBackgroundSettings=A.roomBackgroundSettings||{},d=rs['default-room'];
+      if(!d||d.__dennUserMovedFrame)return;
+      d.__dennUserMovedFrame=true;window.ADM=A;
+      if(typeof window.requestSaveSettingsV33==='function')window.requestSaveSettingsV33(0);
+    }catch(e){}
+  }
+  document.addEventListener('pointermove',function(ev){
+    if(window.RM&&RM.dragging&&!RM.sunDrag&&(ev.buttons==null||ev.buttons!==0))markUserMovedFrame();
+  },true);
+  function wrapOpen(){
+    var prev=window.openRoomMockup;
+    if(typeof prev!=='function'||prev.__dennCommonInheritV82)return;
+    window.openRoomMockup=function(){
+      var r=prev.apply(this,arguments);
+      setTimeout(applyCommonToDefaultRoom,600);
+      return r;
+    };
+    window.openRoomMockup.__dennCommonInheritV82=true;
+  }
+  function wrapClear(){
+    var prev=window.rmClearRoom;
+    if(typeof prev!=='function'||prev.__dennCommonInheritV82)return;
+    window.rmClearRoom=function(){
+      var r=prev.apply(this,arguments);
+      setTimeout(applyCommonToDefaultRoom,450);
+      return r;
+    };
+    window.rmClearRoom.__dennCommonInheritV82=true;
+  }
+  function setup(){wrapOpen();wrapClear();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);
+  else setup();
+  setTimeout(setup,800);setTimeout(setup,2000);
+})();
+</script>
 </body>
 </html>
 
