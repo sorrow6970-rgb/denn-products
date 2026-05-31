@@ -2923,14 +2923,14 @@ function applySettingsV33(s){
   if(window.RM){RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=clamp(s.frameX,0,100)/100;RM.pos.y=clamp(s.frameY,0,100)/100;RM.sunPos=RM.sunPos||{x:.75,y:.2};RM.sunPos.x=clamp(num(s.sunX!=null?s.sunX:s.sunlightX,.75),0,1);RM.sunPos.y=clamp(num(s.sunY!=null?s.sunY:s.sunlightY,.2),0,1)}
 }
 function loadSettingsV33(){
-  var A=adm(),st=store(A),key=bgKey(),base=Object.assign(defaults(),A.sizeGuideSettings||{},{bgScale:uiBgScale(A)});
+  var A=adm(),st=store(A),key=window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey(),base=Object.assign(defaults(),A.sizeGuideSettings||{},{bgScale:uiBgScale(A)});
   if(!st[key])st[key]=Object.assign({},base);
   upgradeGuideScaleDefault(st[key]);
   applySettingsV33(Object.assign({},base,st[key]));
   persist(A);
 }
 function saveSettingsV33(){
-  var A=adm(),st=store(A),key=bgKey(),prev=st[key]||{},base=null,c=null;
+  var A=adm(),st=store(A),key=window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey(),prev=st[key]||{},base=null,c=null;
   try{c=window.__dennRoomGuideBaselineV92b||{};base=prev.__guideResetDefaults||c[key]||null}catch(e){}
   st[key]=Object.assign(defaults(),prev,currentSettingsV33());
   if(base&&typeof base==='object')st[key].__guideResetDefaults=JSON.parse(JSON.stringify(base));
@@ -5097,6 +5097,7 @@ function restoreRoomSunV48(st,sun){
 }
 function saveCurrentRoomKeyV48(key,extra){
   key=key||currentBgKeyV48();
+  if(window.scopedKeyV2)key=window.scopedKeyV2(key);
   if(!key)return false;
   clearRoomAutoSavePause();
   var A=adm();
@@ -8100,14 +8101,16 @@ function hasUsefulSetting(st){if(!st||typeof st!=='object')return false;var keys
 function commonPreset(A){A=A||adm();var st=window.roomRead?window.roomRead('operator','default'):(A.roomBackgroundSettings&&A.roomBackgroundSettings[COMMON_KEY]);return hasUsefulSetting(st)?st:null}
 function clone(v){try{return JSON.parse(JSON.stringify(v||{}))}catch(e){return Object.assign({},v||{})}}
 function applyCommonToGuideIndex(i){
-  var A=adm(),bgs=A.guideBackgrounds||[],bg=bgs[i],key=bgKey(bg,i);
-  if(!bg||!key)return;
+  var A=adm(),bgs=A.guideBackgrounds||[],bg=bgs[i],raw=bgKey(bg,i);
+  if(!bg||!raw)return;
+  var key=window.scopedKeyV2?window.scopedKeyV2(raw):raw; /* 2a: 소비자=user:bgId, 운영자=bgId */
   A.roomBackgroundSettings=A.roomBackgroundSettings||{};
   var own=A.roomBackgroundSettings[key];
   if(hasOwnPreset(own)||hasUsefulSetting(own))return;
-  var common=commonPreset(A);
-  if(!common)return;
-  var inherited=clone(common);
+  var src=(window.roomRead&&window.roomRead('operator',raw)); /* 운영자 배경 디폴트 우선 */
+  if(!hasUsefulSetting(src))src=commonPreset(A);             /* 없으면 ②(operator.default) */
+  if(!src)return;
+  var inherited=clone(src);
   inherited.__dennInheritedCommonDefault=true;
   inherited.__dennInheritedCommonKey=COMMON_KEY;
   inherited.__adminPreset=false;
@@ -12939,6 +12942,14 @@ input[type=range]{accent-color:#777}
   function admA(){try{return window.ADM||JSON.parse(localStorage.getItem('denn_admin')||'{}')||{}}catch(e){return window.ADM||{}}}
   function clone(v){try{return v==null?v:JSON.parse(JSON.stringify(v))}catch(e){return v}}
   function bgKeyOf(bg,i){return (bg&&(bg.id||bg.name))||('guide-'+i)}
+  function isAdminSetup(){try{return new URLSearchParams(location.search||'').has('adminRoomSetup')}catch(e){return false}}
+  function scopedKeyV2(rawKey){
+    if(!rawKey)return rawKey;
+    if(isAdminSetup())return rawKey;                                              /* 운영자 → operator 키 그대로 */
+    if(rawKey==='default-room'||rawKey==='uploaded-room'||rawKey===COMMON_KEY)return rawKey;
+    if(rawKey.indexOf('user:')===0)return rawKey;                                /* 이미 user 키 */
+    return 'user:'+rawKey;                                                       /* 소비자 + 가이드 배경 → user 키 */
+  }
   function roomSchemaSyncV1(A){
     A=A||admA();
     var rs=A.roomBackgroundSettings||{};
@@ -12949,13 +12960,13 @@ input[type=range]{accent-color:#777}
     for(var i=0;i<bgs.length;i++){
       var k=bgKeyOf(bgs[i],i);
       S.operator[k]=clone(rs[k]);
-      S.user[k]=clone(rs[k]); /* 1단계: operator/user 동일 소스, 분리는 2단계 */
+      S.user[k]=clone(rs['user:'+k]!=null?rs['user:'+k]:rs[k]); /* 2a: user:키 우선, 없으면 operator 상속(읽기) */
     }
     return A;
   }
   function flatKey(scope,key){
     if(key==='default')return scope==='operator'?COMMON_KEY:'default-room';
-    return key; /* 가이드 배경: 1단계는 단일 키 */
+    return scope==='user'?('user:'+key):key; /* 2a: user 가이드배경은 user: 키 */
   }
   function roomRead(scope,key){
     var A=admA();roomSchemaSyncV1(A);
@@ -12967,6 +12978,7 @@ input[type=range]{accent-color:#777}
   }
   window.roomSchemaSyncV1=roomSchemaSyncV1;
   window.roomRead=roomRead;
+  window.scopedKeyV2=scopedKeyV2;
 })();
 </script>
 </body>
