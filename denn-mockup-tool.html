@@ -4455,7 +4455,13 @@ function mergeAdminStates(a,b){
   out.uploadedFrameTemplates=mergeUniqueArray(primary.uploadedFrameTemplates,secondary.uploadedFrameTemplates,function(t,i){return (t&&(t.id||t.dataUrl||t.name))||('tpl-'+i)});
   out.frameTemplates=mergeUniqueArray(primary.frameTemplates,secondary.frameTemplates,function(t,i){return (t&&(t.id||t.name))||('base-tpl-'+i)});
   out.frameSizes=mergeUniqueArray(primary.frameSizes,secondary.frameSizes,function(s,i){return (s&&(s.id||s.name))||('size-'+i)});
-  out.roomBackgroundSettings=Object.assign({},secondary.roomBackgroundSettings||{},primary.roomBackgroundSettings||{});
+  var __rbs=Object.assign({},secondary.roomBackgroundSettings||{},primary.roomBackgroundSettings||{});
+  /* 2b: room-key tombstone(deletedRoomKeys) — union-merge가 삭제한 키를 부활시키는 걸 막음.
+     단 __adminPreset/__savedFromAdminRoomSetup 있는 값(진짜 운영자 디폴트)은 면제 → 미래 정상 운영자 키 보호. */
+  var __delRoom={};(a.deletedRoomKeys||[]).concat(b.deletedRoomKeys||[]).forEach(function(k){if(k)__delRoom[k]=true});
+  Object.keys(__delRoom).forEach(function(k){var v=__rbs[k];if(v&&(v.__adminPreset||v.__savedFromAdminRoomSetup)){delete __delRoom[k];}else{delete __rbs[k];}});
+  out.deletedRoomKeys=Object.keys(__delRoom);
+  out.roomBackgroundSettings=__rbs;
   return out;
 }
 function openDB(){
@@ -4655,6 +4661,7 @@ function selectGuideStable(i,opts){
 function markSavedAdminPreset(){
   var key=currentBgKey();
   if(!key)return Promise.resolve(false);
+  if(key==='default-room')return Promise.resolve(false); /* 2b: user.default 키에 운영자 마커 오염 차단(?adminRoomSetup=default-room 오용 방어) */
   var A=window.ADM||readLocalAdmin()||{};
   A.roomBackgroundSettings=A.roomBackgroundSettings||{};
   var st=A.roomBackgroundSettings[key]=Object.assign({},A.roomBackgroundSettings[key]||{});
@@ -12979,6 +12986,88 @@ input[type=range]{accent-color:#777}
   window.roomSchemaSyncV1=roomSchemaSyncV1;
   window.roomRead=roomRead;
   window.scopedKeyV2=scopedKeyV2;
+})();
+</script>
+<script id="denn-room-migrate-2b">
+/* 컷오버 2b: 과거 오염 잔존물 1회 정리 (멱등, __dennMigrate2bDone 플래그 가드).
+   A. 오염 <bgId>(preset 없음=소비자 조정 잔존) → user:<bgId> 이동 + operator <bgId> 삭제.
+      값은 user:<bgId>에 보존 → 데이터 손실 0. operator는 비워 다음 진입 시 ②(operator.default) lazy 상속(V79).
+      preset(__adminPreset/__savedFromAdminRoomSetup) 있는 <bgId>는 operator 디폴트로 유지(불변).
+   B. user 영역(default-room/user:*)에서 운영자 마커(__adminPreset/__savedFromAdminRoomSetup/__adminPresetSavedAt) 제거.
+      → B1 isUntouched()가 더 이상 false로 막히지 않아 ② 상속 정상화(오늘 d_fcX 24.51 미추종 회귀 해소).
+   백업: 변환 직전 roomBackgroundSettings 스냅샷을 별도 localStorage 키(denn_room_premigrate2b_backup)에 1회.
+         (A에 중첩 안 함 → 매 save마다 blob 2배 직렬화되는 quota 부담 회피.)
+   persist: localStorage + IDB(denn_shared_db/kv/denn_admin_state) 양쪽. 읽기가 IDB-primary 머지라 한쪽만 쓰면 부활.
+   본체·보호영역·V363·Phase C 무수정. 신규 스크립트만 추가. 설계: docs/2026-06-01-cutover-phase2b-design.md
+   롤백: 이 스크립트 제거 + 필요 시 window.dennRollbackMigrate2b()로 백업 복원. */
+(function(){
+  if(window.__dennRoomMigrate2bInstalled)return;
+  window.__dennRoomMigrate2bInstalled=true;
+  var BACKUP_KEY='denn_room_premigrate2b_backup';
+  var RESERVED={'__denn_room_common_default__':1,'default-room':1,'uploaded-room':1,'direct-room-upload':1};
+  var OP_MARKERS=['__adminPreset','__savedFromAdminRoomSetup','__adminPresetSavedAt'];
+  function admA(){try{return window.ADM||JSON.parse(localStorage.getItem('denn_admin')||'{}')||{}}catch(e){return window.ADM||{}}}
+  function clone(v){try{return v==null?v:JSON.parse(JSON.stringify(v))}catch(e){return v}}
+  function hasPreset(st){return !!(st&&(st.__adminPreset||st.__savedFromAdminRoomSetup))}
+  function stripMarkers(st){if(st&&typeof st==='object')OP_MARKERS.forEach(function(m){delete st[m]});return st}
+  function idbPut(val){try{
+    if(!window.indexedDB)return;
+    var req=indexedDB.open('denn_shared_db');
+    req.onupgradeneeded=function(){try{req.result.createObjectStore('kv')}catch(e){}};
+    req.onsuccess=function(){try{var db=req.result;var tx=db.transaction('kv','readwrite');tx.objectStore('kv').put(val,'denn_admin_state');tx.oncomplete=function(){try{db.close()}catch(e){}};tx.onerror=function(){try{db.close()}catch(e){}};}catch(e){}};
+    req.onerror=function(){};
+  }catch(e){}}
+  function persistBoth(A){
+    try{window.ADM=A}catch(e){}
+    try{if(typeof window.saveCustomerAdminStateToLocalStorage==='function')window.saveCustomerAdminStateToLocalStorage(A);else localStorage.setItem('denn_admin',JSON.stringify(A));}catch(e){}
+    idbPut(A);
+  }
+  var REV=2; /* rev1=초기(삭제만) → rev2=tombstone 추가(union-merge 부활 방지). rev<2면 재실행 */
+  function migrate(force){
+    var A=admA();
+    var rs=A.roomBackgroundSettings;
+    if(!rs||typeof rs!=='object')return false;
+    var rev=rs.__dennMigrate2bRev||0;
+    if(rev>=REV&&!force)return false;
+    /* 백업: 별도 키, 1회만(존재 시 덮지 않음) */
+    try{if(localStorage.getItem(BACKUP_KEY)==null)localStorage.setItem(BACKUP_KEY,JSON.stringify(rs));}catch(e){}
+    var tomb={};(A.deletedRoomKeys||[]).forEach(function(k){if(k)tomb[k]=true});
+    var moved=0,cleaned=0;
+    /* A. 오염 <bgId> 이동 + tombstone(durable 삭제) */
+    Object.keys(rs).forEach(function(k){
+      if(RESERVED[k])return;
+      if(k.indexOf('user:')===0)return;
+      if(k.indexOf('__')===0)return;           /* 메타/플래그 키 */
+      var st=rs[k];
+      if(!st||typeof st!=='object')return;
+      if(hasPreset(st))return;                  /* operator 디폴트 유지(불변), user는 lazy */
+      var uk='user:'+k;
+      if(rs[uk]==null)rs[uk]=stripMarkers(clone(st));  /* 값 보존(중복 시 기존 user값 우선) */
+      delete rs[k];                             /* operator 비움(즉시) */
+      tomb[k]=true;                             /* tombstone → 머지 부활 차단(미래 __adminPreset 키는 면제) */
+      moved++;
+    });
+    A.deletedRoomKeys=Object.keys(tomb);
+    /* B. user 영역 마커 클린업 */
+    Object.keys(rs).forEach(function(k){
+      if(k!=='default-room'&&k.indexOf('user:')!==0)return;
+      var st=rs[k];
+      if(!st||typeof st!=='object')return;
+      if(OP_MARKERS.some(function(m){return m in st})){stripMarkers(st);cleaned++;}
+    });
+    rs.__dennMigrate2bDone=true;
+    rs.__dennMigrate2bRev=REV;
+    persistBoth(A);
+    try{console.log('[denn 2b] migrate rev'+REV+' done. moved='+moved+' cleaned='+cleaned+' tombstones='+A.deletedRoomKeys.length);}catch(e){}
+    return true;
+  }
+  window.dennMigrate2b=function(){return migrate(true)};
+  window.dennMigrate2bStatus=function(){var A=admA(),rs=A.roomBackgroundSettings||{};return{done:!!rs.__dennMigrate2bDone,rev:rs.__dennMigrate2bRev||0,tombstones:(A.deletedRoomKeys||[]).length,hasBackup:localStorage.getItem(BACKUP_KEY)!=null};};
+  window.dennRollbackMigrate2b=function(){try{var raw=localStorage.getItem(BACKUP_KEY);if(!raw)return false;var A=admA();var restored=JSON.parse(raw);restored.__dennMigrate2bDisabled=true;/* 스크립트 잔존 시 reload 후 재마이그레이션 방지 */A.roomBackgroundSettings=restored;A.deletedRoomKeys=[];/* 2b tombstone 제거 → 복원된 operator 키가 머지서 다시 안 지워지게(deletedRoomKeys는 2b 신설 필드) */persistBoth(A);console.log('[denn 2b] rolled back from backup (tombstones cleared, auto-migrate disabled)');return true;}catch(e){return false;}};
+  function tryRun(){try{var A=admA(),rs=A&&A.roomBackgroundSettings;if(rs&&(rs.__dennMigrate2bRev||0)<REV&&!rs.__dennMigrate2bDisabled)migrate(false);}catch(e){}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tryRun);
+  else tryRun();
+  setTimeout(tryRun,1200);setTimeout(tryRun,3000);
 })();
 </script>
 </body>
