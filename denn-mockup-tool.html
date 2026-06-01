@@ -2920,7 +2920,7 @@ function applySettingsV33(s){
   setVal('rm-sun-rays',num(s.sunlightRays,0),'');
   setVal('rm-ray-thick',Math.round(num(s.sunlightRayThickness,.03)*100),'%');
   setVal('rm-sun-ang',num(s.sunlightAngle,-30),'°');
-  if(window.RM){RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=clamp(s.frameX,0,100)/100;RM.pos.y=clamp(s.frameY,0,100)/100;RM.sunPos=RM.sunPos||{x:.75,y:.2};RM.sunPos.x=clamp(num(s.sunX!=null?s.sunX:s.sunlightX,.75),0,1);RM.sunPos.y=clamp(num(s.sunY!=null?s.sunY:s.sunlightY,.2),0,1)}
+  if(window.RM){RM.pos=RM.pos||{x:.5,y:.4};/* 단계1(R1): 위치를 frameCenterX 우선으로 읽음(applyRoomSettings L4993과 동일) — ②가 frameCenterX로 저장하므로 frameX만 읽던 desync 차단 */var __cx=s.frameCenterX!=null?s.frameCenterX:(s.guideCenterX!=null?s.guideCenterX:s.frameX),__cy=s.frameCenterY!=null?s.frameCenterY:(s.guideCenterY!=null?s.guideCenterY:s.frameY);RM.pos.x=clamp(num(__cx,50),0,100)/100;RM.pos.y=clamp(num(__cy,40),0,100)/100;RM.sunPos=RM.sunPos||{x:.75,y:.2};RM.sunPos.x=clamp(num(s.sunX!=null?s.sunX:s.sunlightX,.75),0,1);RM.sunPos.y=clamp(num(s.sunY!=null?s.sunY:s.sunlightY,.2),0,1)}
 }
 function loadSettingsV33(){
   var A=adm(),st=store(A),key=window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey(),base=Object.assign(defaults(),A.sizeGuideSettings||{},{bgScale:uiBgScale(A)});
