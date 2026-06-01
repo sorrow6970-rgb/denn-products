@@ -7969,6 +7969,16 @@ window.dennRollbackRoomGuideResetDefaultsV73=function(){
   }
   function baseline(keys,force){
     keys=keys&&keys.length?keys:currentKeys();
+    /* 단계2(R2): 초기화면(default-room 전용) 리셋은 항상 운영자 공통 디폴트(②)를 기준으로.
+       → "기본설정으로"가 옛 ①(roomInitialGuideScale)/default-room 자체 스냅샷 대신 ②를 줌.
+       가이드배경/업로드룸 컨텍스트(nonDef>0)는 영향 없음. */
+    try{
+      var __nonDef=keys.filter(function(k){return k&&k!=='default-room'});
+      if(__nonDef.length===0&&window.roomRead){
+        var __cb=pickGuide(window.roomRead('operator','default'));
+        if(__cb){window.__dennGuideBaselineSourceV92b='operator.default(②)';return clone(__cb);}
+      }
+    }catch(e){}
     var c=cache(),i,k,base=null;
     if(!force){
       for(i=0;i<keys.length;i++){
