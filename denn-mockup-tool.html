@@ -12792,7 +12792,13 @@ input[type=range]{accent-color:#777}
       var common=window.roomRead?window.roomRead('operator','default'):rs[COMMON_KEY]; /* cutover phase1: 상속 읽기 어댑터 경유 */
       if(!usefulCommon(common))return;
       var prev=rs['default-room']||{};
-      if(!isUntouched(prev,common))return;
+      /* 단계3(R3): 페이지 로드 후 '첫 적용'은 isUntouched 무시하고 ② 강제 재상속
+         → 새 창/강제 새로고침마다 초기화면이 운영자 디폴트(②)로 시작. 이후 세션 조정은 보존(B2-다).
+         단계1(applySettingsV33 frameCenterX) 덕에 재시드해도 액자/가이드 정렬됨(desync 없음).
+         uploaded-room(자기 사진)은 isDefaultRoomNow()에서 제외 → 무영향. */
+      var forceFresh=!window.__dennDefaultRoomFreshSeededV82;
+      if(!forceFresh&&!isUntouched(prev,common))return;
+      window.__dennDefaultRoomFreshSeededV82=true;
       rs['default-room']=buildSeed(common,prev);
       window.ADM=A;
       if(typeof window.loadRoomBackgroundSettings==='function')window.loadRoomBackgroundSettings();
