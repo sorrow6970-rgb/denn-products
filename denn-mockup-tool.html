@@ -2952,16 +2952,27 @@ function applySettingsV33(s){
 var SIZE_KEYS_MIRROR_V=['defaultSizeId','sizeId','frameSizeId','primarySizeId','adminGuideSizeId','adminGuideSizeName','adminGuideSizeWcm','adminGuideSizeHcm','adminGuideOrientation','guideSizeId','guideSizeName','guideSizeWcm','guideSizeHcm','guideOrientation','runtimeGuideSizeId','runtimeGuideSizeName','runtimeGuideSizeWcm','runtimeGuideSizeHcm','runtimeGuideOrientation'];
 function loadSettingsV33(){
   var A=adm(),st=store(A),key=window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey(),base=Object.assign(defaults(),A.sizeGuideSettings||{},{bgScale:uiBgScale(A)});
-  /* 2026-06-02 단순·견고: 소비자 기본화면(default-room)은 항상 운영자 ②를 미러. 별도 default-room 저장이 드리프트/stale 되던 문제 제거(왕복 유지 포기, 절대 안 틀어짐). 사이즈 키만 기존 보존(주문 사이즈-first). 운영자 모드는 제외. */
+  /* 2026-06-02 단순·견고: 소비자는 항상 운영자 디폴트를 미러(왕복 유지 포기, 절대 안 틀어짐). 사이즈 키만 기존 보존(주문 사이즈-first). 운영자 모드 제외.
+     - 기본화면(default-room) → ②(공통 디폴트)
+     - 촬영배경(uploaded-room) → ②(공통 디폴트) — 업로드 진입 시 stableUploadDefaults(① 스케일 90) 대신 ② 일관 적용
+     - 가이드배경(user:<bgId>) → 그 배경의 운영자 프리셋(<bgId>), 없으면 ② 폴백 */
   try{
-    if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())&&key==='default-room'){
-      var __c=A.roomBackgroundSettings&&A.roomBackgroundSettings['__denn_room_common_default__'];
-      if(__c&&typeof __c==='object'&&Object.keys(__c).filter(function(k){return k.indexOf('__')!==0}).length){
-        var __prev=st[key]||{},__seed=JSON.parse(JSON.stringify(__c));
-        SIZE_KEYS_MIRROR_V.forEach(function(k){delete __seed[k];if(__prev[k]!=null)__seed[k]=__prev[k]});
-        delete __seed.__guideResetDefaults;
-        __seed.__adminPreset=false;__seed.__savedFromAdminRoomSetup=false;__seed.__dennCommonInheritV82=true;
-        st[key]=__seed;
+    if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){
+      var __rs=A.roomBackgroundSettings||{},__srcKey=null;
+      if(window.RM&&window.RM.roomImg)__srcKey='__denn_room_common_default__'; /* 촬영배경(사진) → ②. 키 변종(direct-room-upload/uploaded-room/user:*) 무관하게 RM.roomImg로 감지 */
+      else if(key==='default-room')__srcKey='__denn_room_common_default__';
+      else if(key.indexOf('user:')===0)__srcKey=key.slice(5); /* 가이드배경: user:bgId → 운영자 bgId */
+      if(__srcKey){
+        var __useful=function(o){return o&&typeof o==='object'&&Object.keys(o).filter(function(k){return k.indexOf('__')!==0}).length>0;};
+        var __c=__rs[__srcKey];
+        if(!__useful(__c)&&__srcKey!=='__denn_room_common_default__')__c=__rs['__denn_room_common_default__']; /* 가이드배경 프리셋 없으면 ② 폴백 */
+        if(__useful(__c)){
+          var __prev=st[key]||{},__seed=JSON.parse(JSON.stringify(__c));
+          SIZE_KEYS_MIRROR_V.forEach(function(k){delete __seed[k];if(__prev[k]!=null)__seed[k]=__prev[k]});
+          delete __seed.__guideResetDefaults;
+          __seed.__adminPreset=false;__seed.__savedFromAdminRoomSetup=false;__seed.__dennCommonInheritV82=true;
+          st[key]=__seed;
+        }
       }
     }
   }catch(e){}
@@ -12692,6 +12703,11 @@ input[type=range]{accent-color:#777}
       /* 2026-06-02: 촬영배경(사진 업로드) → 운영자 ② 설정을 사진에 적용(기울기 포함). */
       if(_RM&&_RM.roomImg&&typeof window.dennApplyCommonToUploadedRoomV82==='function'){
         window.dennApplyCommonToUploadedRoomV82();
+        return;
+      }
+      /* 2026-06-02: 가이드배경 선택 상태 → 그 배경의 운영자 프리셋으로(기울기 포함). loadSettingsV33가 user:bgId ← 운영자 프리셋 미러. */
+      if(_RM&&_RM.guideIndex!=null&&!_RM.roomImg){
+        try{if(typeof window.loadRoomBackgroundSettings==='function')window.loadRoomBackgroundSettings();if(window.rmSizeCanvas)window.rmSizeCanvas();if(window.rmRender)window.rmRender();if(window.sgDraw)window.sgDraw();if(window.dennSyncGuideOverlayGeomV)window.dennSyncGuideOverlayGeomV();}catch(e){}
         return;
       }
       ['resetRoomFrameDefaultsV39','resetRoomTiltDefaultsV40','resetRoomShadowDefaultsV39','resetRoomSunDefaultsV40'].forEach(function(fn){
