@@ -5712,6 +5712,39 @@ if(typeof prevOpen==='function'&&!prevOpen.__interactionStabilityV48){
   };
   window.openRoomMockup.__interactionStabilityV48=true;
 }
+/* 2026-06-02: 가이드 오버레이(sg-canvas) 위치 즉시 동기화 — sg-canvas는 절대위치 오버레이로 좌표를 sgDraw가 JS로 설정(L3655)하기에,
+   창 resize/모달 오픈 레이아웃 정착 시 액자 캔버스는 즉시 움직여도 가이드 오버레이는 debounce 후에야 따라붙어 "따로 노는" 분리 발생.
+   여기서 geometry(left/top/width/height)만 가볍게(재래스터화 없이) rAF로 액자에 붙여 즉시 추종 → 분리/늦게따라붙음 제거. */
+function dennSyncGuideOverlayGeomV(){
+  try{
+    var rm=document.getElementById('rm-canvas'),sg=document.getElementById('sg-canvas'),area=document.getElementById('rm-canvas-area');
+    if(!rm||!sg||!area||sg.style.display==='none'||!sg.classList.contains('on'))return;
+    var r=rm.getBoundingClientRect(),a=area.getBoundingClientRect();
+    if(!r.width||!r.height)return;
+    sg.style.width=r.width+'px';sg.style.height=r.height+'px';
+    sg.style.left=(r.left-a.left+area.scrollLeft)+'px';sg.style.top=(r.top-a.top+area.scrollTop)+'px';
+  }catch(e){}
+}
+window.dennSyncGuideOverlayGeomV=dennSyncGuideOverlayGeomV;
+if(!window.__dennGuideOverlayTrackBound){
+  window.__dennGuideOverlayTrackBound=true;
+  var _geomRaf=0;function _schedGeom(){if(_geomRaf)return;_geomRaf=requestAnimationFrame(function(){_geomRaf=0;dennSyncGuideOverlayGeomV()})}
+  ['resize','orientationchange','scroll'].forEach(function(ev){window.addEventListener(ev,_schedGeom,true)});
+  var _po=window.openRoomMockup;
+  window.openRoomMockup=function(){
+    var r=_po?_po.apply(this,arguments):undefined;
+    var t0=null;
+    requestAnimationFrame(function loop(t){
+      var modal=document.getElementById('room-modal');
+      if(modal&&modal.style.display==='none')return;
+      dennSyncGuideOverlayGeomV();
+      if(t0==null)t0=t;
+      if(t-t0<1300)requestAnimationFrame(loop);
+    });
+    return r;
+  };
+  if(_po)try{window.openRoomMockup.__interactionStabilityV48=_po.__interactionStabilityV48}catch(e){}
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(installObserver,700)});
 else setTimeout(installObserver,250);
 window.dennRollbackRoomInteractionStabilityV48=function(){
