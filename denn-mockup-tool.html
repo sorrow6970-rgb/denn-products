@@ -10,7 +10,32 @@
 function dennSetLocalStorageV351(key,value){
   try{localStorage.setItem(key,value);return true}catch(e){console.warn('DENN v35.1 customer localStorage save skipped',e);return false}
 }
+/* 기반 단계 A(2026-06-02): 운영자 ② 단일 진실 — 단조 리비전.
+   전역(여러 IIFE 스크립트 블록에서 bare 호출) + self-contained(블록-로컬 num/readLocalAdmin/isAdminRoomSetupV48에 의존 안 함).
+   운영자 저장마다 __opRev +1, merge는 룸키별 max-rev 승, 소비자 write는 운영자 키 rev 보존. */
+function opRevNumV(v){v=parseFloat(v);return isFinite(v)?v:null;}
+function dennIsAdminSetupV(){try{return new URLSearchParams(location.search||'').has('adminRoomSetup');}catch(e){return false;}}
+function stampOpRevV(st){if(st&&typeof st==='object'){var r=opRevNumV(st.__opRev);st.__opRev=(r==null?0:r)+1;st.__opRevAt=new Date().toISOString();}return st;}
+function isOpKeyV(key){return !!(key&&key!=='default-room'&&key!=='uploaded-room'&&String(key).indexOf('user:')!==0);}
+window.stampOpRevV=stampOpRevV;window.isOpKeyV=isOpKeyV;window.dennIsAdminSetupV=dennIsAdminSetupV;
+/* LS clobber guard — 비-admin(소비자) 쓰기가 운영자 키 __opRev를 낮추지 못하게 보존.
+   merge가 두 store 중 max-rev를 취하므로 LS 한쪽만 지켜도 IDB clobber 복구. */
+function guardOpKeysLSV(A){
+  try{if(dennIsAdminSetupV())return A;}catch(e){return A;}
+  try{
+    var cur=JSON.parse(localStorage.getItem('denn_admin')||'{}')||{},crb=cur.roomBackgroundSettings||{};
+    Object.keys(crb).forEach(function(k){
+      var c=crb[k];if(!(c&&typeof c==='object'&&('__opRev'in c)))return;
+      var a=A&&A.roomBackgroundSettings&&A.roomBackgroundSettings[k];
+      var cr=opRevNumV(c.__opRev);cr=(cr==null?0:cr);
+      var ar=a?opRevNumV(a.__opRev):null;ar=(ar==null?-1:ar);
+      if(!a||cr>ar){A.roomBackgroundSettings=A.roomBackgroundSettings||{};A.roomBackgroundSettings[k]=c;}
+    });
+  }catch(e){}
+  return A;
+}
 function saveCustomerAdminStateToLocalStorage(A){
+  try{A=guardOpKeysLSV(A||window.ADM||{});}catch(e){}
   try{return dennSetLocalStorageV351('denn_admin',JSON.stringify(A||window.ADM||{}))}catch(e){console.warn('DENN v35.1 customer stringify failed',e);return false}
 }(function(){try{var q=new URLSearchParams(location.search);if(q.has('adminRoomSetup')||q.has('roomOnly'))document.documentElement.classList.add('denn-admin-room-boot')}catch(e){}})();
 </script>
@@ -2836,7 +2861,7 @@ function guideKey(i){var A=adm(),bg=(A.guideBackgrounds||[])[i];return bg&&(bg.i
 function bgKey(){try{var __sk=new URLSearchParams(location.search||'').get('adminRoomSetup');if(__sk)return __sk}catch(e){}/* 운영자 편집기: 로드 키를 저장(currentBgKeyV48 L4997)과 일치 — adminRoomSetup이면 그 키(②/배경) 로드. 미설정 시 안 탐(소비자 영향 0) */if(window.RM&&RM.guideIndex!=null)return guideKey(RM.guideIndex);if(window.RM&&RM.bgId)return RM.bgId;if(window.RM&&RM.roomImg)return 'uploaded-room';return 'default-room'}
  function uiBgScale(A){A=A||adm();return clamp(num(A.uiSettings&&A.uiSettings.roomBgScale,1),0.5,2)}
  function uiGuideScale(A){A=A||adm();return clamp(num(A.uiSettings&&A.uiSettings.roomInitialGuideScale,1),0.2,2)}
- function defaults(){return{frameX:50,frameY:40,frameScale:0.2,frameTiltEnabled:false,framePerspectiveX:0,framePerspectiveY:0,bgScale:uiBgScale(),shadowEnabled:true,shadowOpacity:0.6,shadowBlur:20,shadowX:0,shadowY:8,shadowDirection:180,shadowDistance:8,sunlightEnabled:false,sunlightOpacity:0.5,sunlightAngle:-30,sunlightSpread:0.6,sunlightWarm:0.7,sunlightRays:0,sunlightRayThickness:0.03,sunX:.75,sunY:.2,guideEnabled:true,guideScale:uiGuideScale(),guideX:40,guideY:25,guideOpacity:0.75,showRuler:true}}
+ function defaults(){return{frameX:50,frameY:40,frameScale:0.2,frameTiltEnabled:false,frameTiltDeg:0,framePerspectiveX:0,framePerspectiveY:0,bgScale:uiBgScale(),shadowEnabled:true,shadowOpacity:0.6,shadowBlur:20,shadowX:0,shadowY:8,shadowDirection:180,shadowDistance:8,sunlightEnabled:false,sunlightOpacity:0.5,sunlightAngle:-30,sunlightSpread:0.6,sunlightWarm:0.7,sunlightRays:0,sunlightRayThickness:0.03,sunX:.75,sunY:.2,guideEnabled:true,guideScale:uiGuideScale(),guideX:40,guideY:25,guideOpacity:0.75,showRuler:true}}
 function store(A){A=A||adm();A.roomBackgroundSettings=A.roomBackgroundSettings||{};return A.roomBackgroundSettings}
 function setVal(id,val,suffix){var el=by(id);if(el)el.value=val;var out=by(id+'-v');if(out)out.textContent=val+(suffix||'')}
 function setGuideVal(id,val,suffix){var fine=/^sg-o[xy]-/.test(id);setVal(id,fmtStep(val,fine?.1:.5),suffix)}
@@ -2855,6 +2880,7 @@ function currentSettingsV33(){
     frameY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
     frameScale:num((by('rm-size')||{}).value,20)/100,
     frameTiltEnabled:!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),
+    frameTiltDeg:num((by('rm-tilt')||{}).value,0),
     framePerspectiveX:num((by('rm-persp-x')||{}).value,0),
     framePerspectiveY:num((by('rm-persp-y')||{}).value,0),
     bgScale:num((by('rm-bg-scale')||{}).value,Math.round(uiBgScale()*100))/100,
@@ -2906,6 +2932,7 @@ function applySettingsV33(s){
   setVal('rm-size',Math.round(num(s.frameScale,.2)*200)/2,'%');
   if(window.setRoomTiltEnabledV40)window.setRoomTiltEnabledV40(!!s.frameTiltEnabled,false);
   else{var tt=by('rm-tilt-tog'),tb=by('rm-tilt-body');if(tt)tt.classList.toggle('on',!!s.frameTiltEnabled);if(tb)tb.style.display=s.frameTiltEnabled?'block':'none'}
+  setVal('rm-tilt',num(s.frameTiltDeg,0),'°');
   setVal('rm-persp-x',num(s.framePerspectiveX,0),'');
   setVal('rm-persp-y',num(s.framePerspectiveY,0),'');
   setVal('rm-bg-scale',Math.round(num(s.bgScale,uiBgScale())*100),'%');
@@ -2934,6 +2961,7 @@ function saveSettingsV33(){
   try{c=window.__dennRoomGuideBaselineV92b||{};base=prev.__guideResetDefaults||c[key]||null}catch(e){}
   st[key]=Object.assign(defaults(),prev,currentSettingsV33());
   if(base&&typeof base==='object')st[key].__guideResetDefaults=JSON.parse(JSON.stringify(base));
+  try{if(dennIsAdminSetupV()&&isOpKeyV(key))stampOpRevV(st[key]);}catch(e){}
   persist(A);
 }
 var saveSettingsV33Timer=0;
@@ -4455,7 +4483,14 @@ function mergeAdminStates(a,b){
   out.uploadedFrameTemplates=mergeUniqueArray(primary.uploadedFrameTemplates,secondary.uploadedFrameTemplates,function(t,i){return (t&&(t.id||t.dataUrl||t.name))||('tpl-'+i)});
   out.frameTemplates=mergeUniqueArray(primary.frameTemplates,secondary.frameTemplates,function(t,i){return (t&&(t.id||t.name))||('base-tpl-'+i)});
   out.frameSizes=mergeUniqueArray(primary.frameSizes,secondary.frameSizes,function(s,i){return (s&&(s.id||s.name))||('size-'+i)});
-  var __rbs=Object.assign({},secondary.roomBackgroundSettings||{},primary.roomBackgroundSettings||{});
+  /* A(2026-06-02): 룸키별 max-`__opRev` 승 — 운영자 ② 단일 진실. store 전체 점수 무관, 최신 운영자 저장이 이김. */
+  var __pr=primary.roomBackgroundSettings||{},__sr=secondary.roomBackgroundSettings||{},__rbs={};
+  Object.keys(__sr).forEach(function(k){__rbs[k]=__sr[k]});
+  Object.keys(__pr).forEach(function(k){
+    var p=__pr[k],s=__sr[k];
+    if(p&&s&&typeof p==='object'&&typeof s==='object'&&(('__opRev'in p)||('__opRev'in s)))__rbs[k]=(num(s.__opRev,-1)>num(p.__opRev,-1))?s:p;
+    else __rbs[k]=p;
+  });
   /* 2b: room-key tombstone(deletedRoomKeys) — union-merge가 삭제한 키를 부활시키는 걸 막음.
      단 __adminPreset/__savedFromAdminRoomSetup 있는 값(진짜 운영자 디폴트)은 면제 → 미래 정상 운영자 키 보호. */
   var __delRoom={};(a.deletedRoomKeys||[]).concat(b.deletedRoomKeys||[]).forEach(function(k){if(k)__delRoom[k]=true});
@@ -4464,6 +4499,7 @@ function mergeAdminStates(a,b){
   out.roomBackgroundSettings=__rbs;
   return out;
 }
+try{window.mergeAdminStates=mergeAdminStates;}catch(e){}
 function openDB(){
   return new Promise(function(resolve){
     if(!window.indexedDB)return resolve(null);
@@ -4693,6 +4729,7 @@ function markSavedAdminPreset(){
     guideOpacity:st.guideOpacity,
     showRuler:st.showRuler!==false
   };
+  if(isOpKeyV(key))stampOpRevV(st);
   A.roomBackgroundSettings[key]=st;
   persistAdmin(A);
   try{
@@ -4947,7 +4984,7 @@ function setOut(id,val){
 function defaultRoomSettings(A){
   A=A||adm();
   return Object.assign({
-    frameX:50,frameY:40,frameScale:0.2,frameTiltEnabled:false,framePerspectiveX:0,framePerspectiveY:0,
+    frameX:50,frameY:40,frameScale:0.2,frameTiltEnabled:false,frameTiltDeg:0,framePerspectiveX:0,framePerspectiveY:0,
     bgScale:uiBgScale(A),shadowOpacity:0.6,shadowBlur:20,shadowDirection:180,shadowDistance:8,
     sunlightEnabled:false,sunlightOpacity:0.5,sunlightAngle:-30,sunlightSpread:0.6,sunlightWarm:0.7,sunlightRays:0,sunlightRayThickness:0.03,
     sunX:.75,sunY:.2,
@@ -4987,6 +5024,7 @@ function applyRoomSettings(s){
   setVal('rm-sun-rays',num(s.sunlightRays,0));
   setVal('rm-ray-thick',Math.round(num(s.sunlightRayThickness,.03)*100));
   setVal('rm-sun-ang',num(s.sunlightAngle,-30));
+  setVal('rm-tilt',num(s.frameTiltDeg,0));
   setVal('rm-persp-x',num(s.framePerspectiveX,0));
   setVal('rm-persp-y',num(s.framePerspectiveY,0));
   if(window.setRoomTiltEnabledV40)window.setRoomTiltEnabledV40(!!s.frameTiltEnabled,false);
@@ -5010,6 +5048,7 @@ function currentRoomSettingsV48(){
     frameY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
     frameScale:num((by('rm-size')||{}).value,20)/100,
     frameTiltEnabled:!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),
+    frameTiltDeg:num((by('rm-tilt')||{}).value,0),
     framePerspectiveX:num((by('rm-persp-x')||{}).value,0),
     framePerspectiveY:num((by('rm-persp-y')||{}).value,0),
     bgScale:num((by('rm-bg-scale')||{}).value,Math.round(uiBgScale()*100))/100,
@@ -5115,6 +5154,7 @@ function saveCurrentRoomKeyV48(key,extra){
   A.roomBackgroundSettings[key]=Object.assign({},defaultRoomSettings(A),prev,currentRoomSettingsV48(),extra||{});
   restoreRoomSunV48(A.roomBackgroundSettings[key],savedSun);
   if(base&&typeof base==='object')A.roomBackgroundSettings[key].__guideResetDefaults=JSON.parse(JSON.stringify(base));
+  try{if(dennIsAdminSetupV()&&isOpKeyV(key))stampOpRevV(A.roomBackgroundSettings[key]);}catch(e){}
   if(writeAdminV48(A)){roomDirty=false;return true}
   return false;
 }
