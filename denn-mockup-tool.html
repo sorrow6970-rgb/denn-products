@@ -12418,11 +12418,10 @@ input[type=range]{accent-color:#777}
         tiltSection.parentElement.insertBefore(sgRoot,tiltSection);
       }
     })();
-    /* 기울기(rm-tilt) — .on class 기반. 사용자 요청: 기본값 강제 OFF (저장 상태 복원이 ON이라도 덮어쓰기) */
+    /* 기울기(rm-tilt) — .on class 기반. 2026-06-02: 강제 OFF 타이머 제거(사용자 요청) — 저장된 tilt ON/OFF 상태 존중. body 표시/disabled 동기화만 유지. */
     (function(){
       var tog=document.getElementById('rm-tilt-tog'),bd=document.getElementById('rm-tilt-body');
       if(!tog||!bd)return;
-      [150,600,1500].forEach(function(ms){setTimeout(function(){var t=document.getElementById('rm-tilt-tog');if(t)t.classList.remove('on')},ms)});
       var sync=function(){if(bd.style.display==='none')bd.style.display='block';bd.classList.toggle('rm-body-disabled',!tog.classList.contains('on'))};
       sync();
       try{new MutationObserver(sync).observe(tog,{attributes:true,attributeFilter:['class']})}catch(e){}
