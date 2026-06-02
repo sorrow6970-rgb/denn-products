@@ -2949,8 +2949,22 @@ function applySettingsV33(s){
   setVal('rm-sun-ang',num(s.sunlightAngle,-30),'°');
   if(window.RM){RM.pos=RM.pos||{x:.5,y:.4};/* 단계1(R1): 위치를 frameCenterX 우선으로 읽음(applyRoomSettings L4993과 동일) — ②가 frameCenterX로 저장하므로 frameX만 읽던 desync 차단 */var __cx=s.frameCenterX!=null?s.frameCenterX:(s.guideCenterX!=null?s.guideCenterX:s.frameX),__cy=s.frameCenterY!=null?s.frameCenterY:(s.guideCenterY!=null?s.guideCenterY:s.frameY);RM.pos.x=clamp(num(__cx,50),0,100)/100;RM.pos.y=clamp(num(__cy,40),0,100)/100;RM.sunPos=RM.sunPos||{x:.75,y:.2};RM.sunPos.x=clamp(num(s.sunX!=null?s.sunX:s.sunlightX,.75),0,1);RM.sunPos.y=clamp(num(s.sunY!=null?s.sunY:s.sunlightY,.2),0,1)}
 }
+var SIZE_KEYS_MIRROR_V=['defaultSizeId','sizeId','frameSizeId','primarySizeId','adminGuideSizeId','adminGuideSizeName','adminGuideSizeWcm','adminGuideSizeHcm','adminGuideOrientation','guideSizeId','guideSizeName','guideSizeWcm','guideSizeHcm','guideOrientation','runtimeGuideSizeId','runtimeGuideSizeName','runtimeGuideSizeWcm','runtimeGuideSizeHcm','runtimeGuideOrientation'];
 function loadSettingsV33(){
   var A=adm(),st=store(A),key=window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey(),base=Object.assign(defaults(),A.sizeGuideSettings||{},{bgScale:uiBgScale(A)});
+  /* 2026-06-02 단순·견고: 소비자 기본화면(default-room)은 항상 운영자 ②를 미러. 별도 default-room 저장이 드리프트/stale 되던 문제 제거(왕복 유지 포기, 절대 안 틀어짐). 사이즈 키만 기존 보존(주문 사이즈-first). 운영자 모드는 제외. */
+  try{
+    if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())&&key==='default-room'){
+      var __c=A.roomBackgroundSettings&&A.roomBackgroundSettings['__denn_room_common_default__'];
+      if(__c&&typeof __c==='object'&&Object.keys(__c).filter(function(k){return k.indexOf('__')!==0}).length){
+        var __prev=st[key]||{},__seed=JSON.parse(JSON.stringify(__c));
+        SIZE_KEYS_MIRROR_V.forEach(function(k){delete __seed[k];if(__prev[k]!=null)__seed[k]=__prev[k]});
+        delete __seed.__guideResetDefaults;
+        __seed.__adminPreset=false;__seed.__savedFromAdminRoomSetup=false;__seed.__dennCommonInheritV82=true;
+        st[key]=__seed;
+      }
+    }
+  }catch(e){}
   if(!st[key])st[key]=Object.assign({},base);
   upgradeGuideScaleDefault(st[key]);
   applySettingsV33(Object.assign({},base,st[key]));
@@ -6782,7 +6796,7 @@ window.dennRollbackRoomGuideResetDefaultsV73=function(){
   function num(v,d){v=parseFloat(v);return isFinite(v)?v:d}
   function adm(){try{return JSON.parse(localStorage.getItem('denn_admin')||'{}')||window.ADM||{}}catch(e){return window.ADM||{}}}
   function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-  function uiGuideScale(){var A=adm();return clamp(num(A.uiSettings&&A.uiSettings.roomInitialGuideScale,1),0.2,2)}
+  function uiGuideScale(){var A=adm();try{var c=A.roomBackgroundSettings&&A.roomBackgroundSettings['__denn_room_common_default__'];if(c&&isFinite(c.guideScale))return clamp(c.guideScale,0.2,2)}catch(e){}return clamp(num(A.uiSettings&&A.uiSettings.roomInitialGuideScale,1),0.2,2)}/* 2026-06-02: 기준 스케일도 ②(공통 디폴트) 우선 — 클리어 후 ①(roomInitialGuideScale)로 덮여 스케일만 90 되던 문제 해결 */
   function setGuideScaleFromUi(){
     var v=Math.round(uiGuideScale()*1000)/10;
     ['sg-scale-r','sg-scale-n'].forEach(function(id){var el=$(id),out=$(id+'-v');if(el)el.value=v;if(out)out.textContent=v+'%'});
@@ -12868,21 +12882,8 @@ input[type=range]{accent-color:#777}
     try{
       if(isAdmin())return;
       if(!isDefaultRoomNow())return;
-      var A=adm();
-      var rs=A.roomBackgroundSettings=A.roomBackgroundSettings||{};
-      var common=window.roomRead?window.roomRead('operator','default'):rs[COMMON_KEY]; /* cutover phase1: 상속 읽기 어댑터 경유 */
-      if(!usefulCommon(common))return;
-      var prev=rs['default-room']||{};
-      if(prev.__adminPreset||prev.__savedFromAdminRoomSetup)return; /* default-room이 운영자 프리셋 키로 오염된 경우만 보호(안전장치) */
-      var force=!!(opts&&opts.force);
-      /* 2026-06-02 정책(단계3 강제전파): 페이지 로드 후 첫 오픈(=새로고침/사이트 재진입) 또는 명시 force(기본설정으로 버튼) → 운영자 ② 재상속.
-         세션 중 재오픈(액자설정↔내공간보기 왕복)은 사용자 조정값 유지 → 플래그로 구분. 새로고침/재진입 시 페이지가 새로 로드돼 플래그가 초기화되므로 다시 ②. */
-      if(!force&&window.__dennDefaultRoomFreshSeededV82)return;
-      window.__dennDefaultRoomFreshSeededV82=true;
-      rs['default-room']=buildSeed(common,prev);
-      window.ADM=A;
+      /* 2026-06-02 단순화: default-room=② 미러는 loadSettingsV33가 담당. 여기선 재로드(=미러)+재렌더만. 플래그/buildSeed/force 제거 — 깨질 구석 없음. */
       if(typeof window.loadRoomBackgroundSettings==='function')window.loadRoomBackgroundSettings();
-      /* 재상속 후 캔버스 즉시 재렌더(버튼/세션 중 호출 시 슬라이더만 바뀌고 액자 안 그려지던 문제 방지) */
       try{if(window.rmSizeCanvas)window.rmSizeCanvas();if(window.rmRender)window.rmRender();if(window.sgDraw)window.sgDraw();if(window.dennSyncGuideOverlayGeomV)window.dennSyncGuideOverlayGeomV();}catch(e){}
     }catch(e){}
   }
