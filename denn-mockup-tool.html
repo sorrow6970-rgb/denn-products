@@ -12380,6 +12380,12 @@ input[type=range]{accent-color:#777}
     resetBtn.textContent='↺ 기본설정으로';
     resetBtn.addEventListener('click',function(){
       if(!window.confirm('내 공간 보기의 모든 설정을 기본값으로 되돌릴까요?'))return;
+      /* 2026-06-02: default-room(배경 미선택)이면 운영자 ②로 전체 복귀(위치·스케일·기울기 회전/원근 전부) → 공장 0 리셋이 아니라 관리자 디폴트값. */
+      var _RM=window.RM,_isDef=_RM&&!_RM.roomImg&&(_RM.guideIndex==null)&&(_RM.bgId==='default-room'||!_RM.bgId);
+      if(_isDef&&typeof window.dennApplyCommonToDefaultRoomV82==='function'){
+        window.dennApplyCommonToDefaultRoomV82({force:true});
+        return;
+      }
       ['resetRoomFrameDefaultsV39','resetRoomTiltDefaultsV40','resetRoomShadowDefaultsV39','resetRoomSunDefaultsV40','resetRoomSizeGuideDefaults'].forEach(function(fn){
         try{if(typeof window[fn]==='function')window[fn]()}catch(e){}
       });
@@ -12662,6 +12668,13 @@ input[type=range]{accent-color:#777}
     if(btn.parentNode)btn.parentNode.replaceChild(newBtn,btn);
     newBtn.onclick=function(){
       if(!window.confirm('내 공간 보기의 모든 설정을 기본값으로 되돌릴까요?'))return;
+      /* 2026-06-02: default-room(배경 미선택)이면 운영자 ②로 전체 복귀(위치·스케일·기울기 회전/원근 전부) — 공장 0 리셋이 아니라 관리자 디폴트값.
+         (이 핸들러가 restructure의 addEventListener를 cloneNode로 덮으므로, 여기에 분기를 둬야 실제 동작) */
+      var _RM=window.RM,_isDef=_RM&&!_RM.roomImg&&(_RM.guideIndex==null)&&(_RM.bgId==='default-room'||!_RM.bgId);
+      if(_isDef&&typeof window.dennApplyCommonToDefaultRoomV82==='function'){
+        window.dennApplyCommonToDefaultRoomV82({force:true});
+        return;
+      }
       ['resetRoomFrameDefaultsV39','resetRoomTiltDefaultsV40','resetRoomShadowDefaultsV39','resetRoomSunDefaultsV40'].forEach(function(fn){
         try{if(typeof window[fn]==='function')window[fn]()}catch(e){}
       });
@@ -12830,12 +12843,8 @@ input[type=range]{accent-color:#777}
   function isUntouched(st,common){
     if(!st)return true;
     if(st.__adminPreset||st.__savedFromAdminRoomSetup)return false;
-    /* 정책A: 사용자가 일반화면에서 액자를 직접 드래그한 경우 → 영구 보존 (B2-다) */
     if(st.__dennUserMovedFrame)return false;
-    /* 우리 상속본이고 사용자 드래그 흔적 없음 → 어드민이 ②를 바꿨든 아니든 항상 ② 재반영.
-       (구 matchCommon 절은 ② 변경 시 fx≠cx로 위치 영구 자가-차단되던 버그라 제거) */
     if(st.__dennCommonInheritV82)return true;
-    /* 마커 없는 순정: 기본값(50/40 근처)만 상속, 그 외 비정상 위치는 보존(안전) */
     var fx=st.frameCenterX!=null?num(st.frameCenterX):num(st.frameX);
     var fy=st.frameCenterY!=null?num(st.frameCenterY):num(st.frameY);
     var nearDefault=((fx==null)||Math.abs(fx-50)<0.8)&&((fy==null)||Math.abs(fy-40)<0.8);
@@ -12855,7 +12864,7 @@ input[type=range]{accent-color:#777}
     seed.__dennCommonInheritV82=true;
     return seed;
   }
-  function applyCommonToDefaultRoom(){
+  function applyCommonToDefaultRoom(opts){
     try{
       if(isAdmin())return;
       if(!isDefaultRoomNow())return;
@@ -12864,10 +12873,17 @@ input[type=range]{accent-color:#777}
       var common=window.roomRead?window.roomRead('operator','default'):rs[COMMON_KEY]; /* cutover phase1: 상속 읽기 어댑터 경유 */
       if(!usefulCommon(common))return;
       var prev=rs['default-room']||{};
-      if(!isUntouched(prev,common))return;
+      if(prev.__adminPreset||prev.__savedFromAdminRoomSetup)return; /* default-room이 운영자 프리셋 키로 오염된 경우만 보호(안전장치) */
+      var force=!!(opts&&opts.force);
+      /* 2026-06-02 정책(단계3 강제전파): 페이지 로드 후 첫 오픈(=새로고침/사이트 재진입) 또는 명시 force(기본설정으로 버튼) → 운영자 ② 재상속.
+         세션 중 재오픈(액자설정↔내공간보기 왕복)은 사용자 조정값 유지 → 플래그로 구분. 새로고침/재진입 시 페이지가 새로 로드돼 플래그가 초기화되므로 다시 ②. */
+      if(!force&&window.__dennDefaultRoomFreshSeededV82)return;
+      window.__dennDefaultRoomFreshSeededV82=true;
       rs['default-room']=buildSeed(common,prev);
       window.ADM=A;
       if(typeof window.loadRoomBackgroundSettings==='function')window.loadRoomBackgroundSettings();
+      /* 재상속 후 캔버스 즉시 재렌더(버튼/세션 중 호출 시 슬라이더만 바뀌고 액자 안 그려지던 문제 방지) */
+      try{if(window.rmSizeCanvas)window.rmSizeCanvas();if(window.rmRender)window.rmRender();if(window.sgDraw)window.sgDraw();if(window.dennSyncGuideOverlayGeomV)window.dennSyncGuideOverlayGeomV();}catch(e){}
     }catch(e){}
   }
   window.dennApplyCommonToDefaultRoomV82=applyCommonToDefaultRoom;
@@ -12888,6 +12904,8 @@ input[type=range]{accent-color:#777}
     if(typeof prev!=='function'||prev.__dennCommonInheritV82)return;
     window.openRoomMockup=function(){
       var r=prev.apply(this,arguments);
+      /* 2026-06-02: 내부 loadSettingsV33(120ms) 직후 일찍 재상속해 ②가 바로 뜨게 함(기존 600ms만이면 한 박자 늦게 뜸). 600은 backup(플래그로 중복 시드 방지). */
+      setTimeout(applyCommonToDefaultRoom,150);
       setTimeout(applyCommonToDefaultRoom,600);
       return r;
     };
