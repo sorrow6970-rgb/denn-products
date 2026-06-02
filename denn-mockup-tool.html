@@ -12689,6 +12689,11 @@ input[type=range]{accent-color:#777}
         window.dennApplyCommonToDefaultRoomV82({force:true});
         return;
       }
+      /* 2026-06-02: 촬영배경(사진 업로드) → 운영자 ② 설정을 사진에 적용(기울기 포함). */
+      if(_RM&&_RM.roomImg&&typeof window.dennApplyCommonToUploadedRoomV82==='function'){
+        window.dennApplyCommonToUploadedRoomV82();
+        return;
+      }
       ['resetRoomFrameDefaultsV39','resetRoomTiltDefaultsV40','resetRoomShadowDefaultsV39','resetRoomSunDefaultsV40'].forEach(function(fn){
         try{if(typeof window[fn]==='function')window[fn]()}catch(e){}
       });
@@ -12888,6 +12893,24 @@ input[type=range]{accent-color:#777}
     }catch(e){}
   }
   window.dennApplyCommonToDefaultRoomV82=applyCommonToDefaultRoom;
+  /* 2026-06-02: 촬영배경(사진 업로드) "기본설정으로" → 운영자 ②(공통 디폴트) 설정을 사진에 적용(기울기 포함). 사진 유지, 사이즈 키 보존. */
+  function applyCommonToUploadedRoom(){
+    try{
+      if(isAdmin())return;
+      if(!(window.RM&&RM.roomImg))return; /* 촬영배경 컨텍스트만 */
+      var A=adm(),rs=A.roomBackgroundSettings=A.roomBackgroundSettings||{};
+      var common=window.roomRead?window.roomRead('operator','default'):rs[COMMON_KEY];
+      if(!usefulCommon(common))return;
+      var prev=rs['uploaded-room']||{},seed=clone(common);
+      SIZE_KEYS.forEach(function(k){delete seed[k];if(prev[k]!=null)seed[k]=prev[k]});
+      delete seed.__guideResetDefaults;delete seed.__dennUserMovedFrame;
+      seed.__adminPreset=false;seed.__savedFromAdminRoomSetup=false;seed.__dennCommonInheritV82=true;
+      rs['uploaded-room']=seed;window.ADM=A;
+      if(typeof window.loadRoomBackgroundSettings==='function')window.loadRoomBackgroundSettings();
+      try{if(window.rmSizeCanvas)window.rmSizeCanvas();if(window.rmRender)window.rmRender();if(window.sgDraw)window.sgDraw();if(window.dennSyncGuideOverlayGeomV)window.dennSyncGuideOverlayGeomV();}catch(e){}
+    }catch(e){}
+  }
+  window.dennApplyCommonToUploadedRoomV82=applyCommonToUploadedRoom;
   function markUserMovedFrame(){
     try{
       if(isAdmin()||!isDefaultRoomNow())return;
