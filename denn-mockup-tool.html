@@ -12149,15 +12149,19 @@ window.addEventListener('load',later);
         });
         chips.parentNode.insertBefore(sel,chips.nextSibling);
       }
-      var active=0;
+      var active=-1;
       var html=items.map(function(c,i){
         var n=c.childNodes[0], name=((n&&n.textContent)||c.textContent||'').trim();
         var sm=c.querySelector('small'), sub=sm?sm.textContent.trim():'';
         if(c.classList.contains('on'))active=i;
         return '<option value="'+i+'"'+(c.classList.contains('denn-size-disabled')?' disabled':'')+'>'+name+(sub?' · '+sub:'')+'</option>';
       }).join('');
+      /* E(2026-06-04): 사이즈 미선택(초기) 상태면 '사이즈를 선택하세요' placeholder 노출 */
+      var __none=!!window.__dennSizeUnset||active<0;
+      if(__none)html='<option value="__none__">사이즈를 선택하세요</option>'+html;
       if(sel.innerHTML!==html)sel.innerHTML=html;
-      if(sel.value!==String(active))sel.value=String(active);
+      var __want=__none?'__none__':String(active);
+      if(sel.value!==__want)sel.value=__want;
       chips.style.display='none';
     }catch(e){}
   }
@@ -12172,6 +12176,44 @@ window.addEventListener('load',later);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,200)});
   else setTimeout(boot,200);
   window.addEventListener('load',function(){setTimeout(boot,420)});
+})();
+</script>
+<script id="denn-v97-initial-size-prompt">
+/* E(2026-06-04): 소비자 최초 진입 = 사이즈 미선택. 사이즈 고를 때까지 캔버스/그리드/카테고리/문구패널 잠금 + '먼저, 액자 사이즈를 선택해 주세요' 안내. curFSz는 안 건드리고 래퍼로만 게이팅. 운영자 편집기 제외. */
+(function(){
+  if(window.__dennV97SizePrompt)return; window.__dennV97SizePrompt=1;
+  function by(id){return document.getElementById(id)}
+  function isAdmin(){try{return new URLSearchParams(location.search||'').has('adminRoomSetup')}catch(e){return false}}
+  if(isAdmin())return;
+  try{var st=document.createElement('style');st.textContent='.denn-input-locked{opacity:.45;pointer-events:none;filter:grayscale(.4)}';document.head.appendChild(st);}catch(e){}
+  window.__dennSizeUnset=true;
+  function overlay(show){
+    var cv=by('frameCanvas'); if(!cv)return;
+    var host=cv.parentNode; if(host&&getComputedStyle(host).position==='static')host.style.position='relative';
+    cv.style.visibility=show?'hidden':'';/* 빈 캔버스 회색박스 제거 — 캔버스 숨기고 투명 오버레이만 */
+    var fe=by('frame-empty'); if(fe)fe.classList.toggle('hidden',!!show);/* '이미지를 업로드' 안내와 겹침 방지 — 미선택 동안 숨김 */
+    var ov=by('denn-size-prompt-ov');
+    if(!ov){ov=document.createElement('div');ov.id='denn-size-prompt-ov';ov.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px;color:#8a7d6e;z-index:30;padding:24px;line-height:1.7;pointer-events:none';ov.innerHTML='먼저, <b style="color:#3a3028">액자 사이즈</b>를 선택해 주세요';(host||document.body).appendChild(ov);}
+    ov.style.display=show?'flex':'none';
+  }
+  function lockInputs(lock){
+    ['f-main','f-name','f-name2','f-date','f-sub'].forEach(function(id){var e=by(id);if(e)e.disabled=lock;});
+    var w=document.querySelector('.dps-elem-wrap'); if(w)w.classList.toggle('denn-input-locked',lock);
+    var g=document.querySelector('.f-txt-group'); if(g)g.classList.toggle('denn-input-locked',lock);
+  }
+  function disableCats(){var cc=by('frame-cat-chips');if(cc)Array.prototype.forEach.call(cc.querySelectorAll('.cat-chip'),function(c){c.classList.add('denn-cat-disabled');c.setAttribute('data-denn-cat-disabled','1')})}
+  function gridPrompt(){var tg=by('frame-tpl-grid');if(tg)tg.innerHTML='<div style="grid-column:1/-1;font-size:11px;color:var(--warm);text-align:center;padding:20px 16px;line-height:1.6">먼저, <strong>액자 사이즈</strong>를 선택해 주세요.</div>'}
+  function gate(){gridPrompt();disableCats();overlay(true);lockInputs(true);}
+  var oldBuild=window.buildFrameTplGrid;
+  if(typeof oldBuild==='function')window.buildFrameTplGrid=function(catId){if(window.__dennSizeUnset){gate();return;}return oldBuild.apply(this,arguments)};
+  var oldRender=window.renderFrame;
+  if(typeof oldRender==='function')window.renderFrame=function(){if(window.__dennSizeUnset){overlay(true);return;}return oldRender.apply(this,arguments)};
+  var oldSel=window.selFSz;
+  if(typeof oldSel==='function')window.selFSz=function(){window.__dennSizeUnset=false;overlay(false);lockInputs(false);return oldSel.apply(this,arguments)};
+  function boot(){if(!window.__dennSizeUnset)return;var lab=by('ib-sz');if(lab)lab.textContent='-';gate();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,520)});
+  else setTimeout(boot,320);
+  window.addEventListener('load',function(){setTimeout(boot,1000)});
 })();
 </script>
 <!-- v95 toggle guardian 롤백 — race condition으로 사용자 재클릭 막던 버그. 시계 토글 동작도 함께 원복.
