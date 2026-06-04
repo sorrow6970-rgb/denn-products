@@ -927,7 +927,7 @@ function selModelRow(el,i){
 function buildCatChips(){
   buildClockGroupTabs();
   var cc=document.getElementById('frame-cat-chips');
-  cc.innerHTML='<div class="cat-chip on" onclick="filterCat(\'all\',this)">전체</div>'+FCATS.map(function(c){return '<div class="cat-chip" onclick="filterCat(\''+c.id+'\',this)">'+c.name+'</div>';}).join('');
+  cc.innerHTML='<div class="cat-chip on" data-cat-id="all" onclick="filterCat(\'all\',this)">전체</div>'+FCATS.map(function(c){return '<div class="cat-chip" data-cat-id="'+c.id+'" onclick="filterCat(\''+c.id+'\',this)">'+c.name+'</div>';}).join('');
 }
 
 function buildClockGroupTabs(){
@@ -1002,7 +1002,7 @@ function buildFrameTplGrid(catId){
     if(t.type==='builtin')return catId==='all';
     return t.categoryId===catId;
   });
-  if(!filtered.length){tg.innerHTML='<div style="grid-column:1/-1;font-size:10px;color:var(--warm);text-align:center;padding:16px">현재 선택한 사이즈에 맞는 템플릿이 없습니다</div>';return;}
+  if(!filtered.length){tg.innerHTML='<div style="grid-column:1/-1;font-size:11px;color:var(--warm);text-align:center;padding:20px 16px;line-height:1.6">이 사이즈에는 표시할 템플릿이 없습니다.<br>위에서 <strong>다른 사이즈를 선택</strong>해 주세요.</div>';return;}
   tg.innerHTML=filtered.map(function(t){var i=FTPLS.indexOf(t),src=(typeof realTemplateSrc==='function'?realTemplateSrc(t):(t&&!t.generatedDetailPreview?t.dataUrl:null));return '<div class="tpl-card'+(curFTpl&&curFTpl.id===t.id?' on':'')+'" onclick="selFTplByRef(this,'+i+')"><div class="tpl-thumb fr">'+(src?'<img src="'+src+'">':t.icon||'🎨')+'</div><div class="tpl-name">'+t.name+'</div></div>';}).join('');
   try{var __H=window.dennZoneCompositeHelpersV;if(__H&&__H.drawPhotos){var __ccards=tg.querySelectorAll('.tpl-card');filtered.forEach(function(t,__ci){if(!(t&&t.type==='uploaded'&&__H.realSrc&&__H.realSrc(t)))return;var __cd=__ccards[__ci];if(!__cd)return;var __th=__cd.querySelector('.tpl-thumb');if(__th)dennRenderCardCompositeThumbV(t,__th)})}}catch(__e){}
   if(!curFTpl||!filtered.find(function(t){return t.id===curFTpl.id;})){curFTpl=filtered[0];document.querySelectorAll('#frame-tpl-grid .tpl-card').forEach(function(c,i){c.classList.toggle('on',i===0);});applyFrameDefaultTexts(curFTpl,false);}
@@ -7089,6 +7089,8 @@ window.dennRollbackRoomGuideResetDefaultsV73=function(){
   opacity:.55;
   pointer-events:none;
 }
+/* E(2026-06-04): 현재 사이즈에 템플릿 없는 카테고리 칩 비활성(회색·선택불가). 사이즈=상위 필터 고정. */
+.cat-chip.denn-cat-disabled{opacity:.4;cursor:not-allowed;pointer-events:none;filter:grayscale(.6)}
 </style>
 <script id="denn-v95-template-size-disable">
 (function(){
@@ -7161,28 +7163,24 @@ window.dennRollbackRoomGuideResetDefaultsV73=function(){
     ['main','name','date','sub'].forEach(function(k){var el=by('f-'+k);if(el)el.disabled=!!on});
     if(grid)grid.classList.toggle('denn-no-template-lock',!!on);
   }
+  /* E(2026-06-04): 게이팅 역전 — 사이즈는 절대 상위 필터(자동 전환 금지). 시계그룹까지 인지. */
+  function tplMatchesGroup(t){var g=window.curClockGroup||'all';if(g==='all')return true;var ic=(typeof window.isClockTemplate==='function')&&window.isClockTemplate(t);return g==='clock'?!!ic:!ic}
+  function sizeCatHasTpl(s,catId){return tpls().some(function(t){return tplMatchesSize(t,s)&&tplMatchesCat(t,catId)&&tplMatchesGroup(t)})}
   function ensureUsableSize(catId){
-    var avail=availableIndexes(catId),idx=curSizeIndex();
-    if(!avail.length){
-      window.curFTpl=null;
-      setNoTemplateLock(true);
-      return false;
-    }
-    setNoTemplateLock(false);
-    if(idx<0||avail.indexOf(idx)<0)setSizeIndex(avail[0]);
-    return true;
+    /* 사이즈 자동 전환하지 않음. 현재 사이즈+카테고리+시계그룹에 템플릿 유무만 판정해 입력 잠금. */
+    var s=window.curFSz,has=!!(s&&sizeCatHasTpl(s,catId||window.curCatId||'all'));
+    setNoTemplateLock(!has);
+    if(!has)window.curFTpl=null;
+    return has;
   }
   function refreshButtons(catId){
-    var chips=by('frame-sz-chips'),arr=fs();
-    if(!chips||!arr.length)return;
-    var avail=availableIndexes(catId);
-    Array.prototype.forEach.call(chips.querySelectorAll('.chip'),function(chip,i){
-      var ok=avail.indexOf(i)>=0;
-      chip.classList.toggle('denn-size-disabled',!ok);
-      chip.setAttribute('aria-disabled',ok?'false':'true');
-      chip.setAttribute('data-denn-disabled',ok?'0':'1');
-      chip.title=ok?'':'사용 가능한 템플릿이 없는 사이즈입니다';
-    });
+    var s=window.curFSz;
+    /* 사이즈 칩: 항상 활성(상위 필터) — 비활성 전부 해제 */
+    var chips=by('frame-sz-chips');
+    if(chips)Array.prototype.forEach.call(chips.querySelectorAll('.chip'),function(chip){chip.classList.remove('denn-size-disabled');chip.setAttribute('aria-disabled','false');chip.setAttribute('data-denn-disabled','0');chip.title=''});
+    /* 카테고리 칩: 현재 사이즈+시계그룹에 템플릿 없는 카테고리 비활성 */
+    var cc=by('frame-cat-chips');
+    if(cc)Array.prototype.forEach.call(cc.querySelectorAll('.cat-chip'),function(c){var cid=c.getAttribute('data-cat-id')||'all';var ok=!!(s&&sizeCatHasTpl(s,cid));c.classList.toggle('denn-cat-disabled',!ok);c.setAttribute('data-denn-cat-disabled',ok?'0':'1');c.title=ok?'':'이 사이즈에는 해당 카테고리 템플릿이 없습니다'});
   }
   function sync(catId,render){
     var cat=catId||window.curCatId||'all';
@@ -7203,20 +7201,23 @@ window.dennRollbackRoomGuideResetDefaultsV73=function(){
   var oldSel=window.selFSz;
   if(typeof oldSel==='function'){
     window.selFSz=function(el,i){
-      var idx=Number(i),cat=window.curCatId||'all';
-      if(!isFinite(idx)||idx<0)idx=curSizeIndex();
-      if(availableIndexes(cat).indexOf(idx)<0){
-        refreshButtons(cat);
-        return false;
-      }
+      /* 사이즈 = 상위 필터: 어떤 사이즈든 선택 허용(차단 없음) */
       var r=oldSel.apply(this,arguments);
-      sync(cat,false);
+      var cat=window.curCatId||'all';
+      /* 새 사이즈에 현재 카테고리 템플릿 없으면 '전체'로 폴백(선택된 칩이 비활성+on 되는 어색함 방지) */
+      if(window.curFSz&&!sizeCatHasTpl(window.curFSz,cat)){
+        cat='all';window.curCatId='all';
+        var cc=by('frame-cat-chips');
+        if(cc)Array.prototype.forEach.call(cc.querySelectorAll('.cat-chip'),function(c){c.classList.toggle('on',(c.getAttribute('data-cat-id')||'all')==='all')});
+      }
+      sync(cat,true);
       return r;
     };
   }
   var oldFilter=window.filterCat;
   if(typeof oldFilter==='function'){
     window.filterCat=function(catId,el){
+      if(el&&el.getAttribute('data-denn-cat-disabled')==='1')return false;/* 비활성 카테고리 클릭 차단 */
       var r=oldFilter.apply(this,arguments);
       sync(catId||window.curCatId||'all',true);
       return r;
