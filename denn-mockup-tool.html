@@ -969,6 +969,18 @@ function templateMatchesCurrentFrameSize(t){
   var cur=currentFrameSizeKeys();
   return keys.some(function(k){return cur.indexOf(k)>=0;});
 }
+/* E(2026-06-04): uploaded(빌더/투명) 템플릿 카드 썸네일을 본 캔버스와 동일하게 합성 — 업로드 사진을 photoZones(특정 사각)에만 클립 + 아트 오버레이. 기존 풀샷 <img> 대체. renderFrame 본체 무수정, 헬퍼만 재사용. live canvas append라 toDataURL/CORS 무관. */
+function dennRenderCardCompositeThumbV(tpl,thumbEl){
+  try{
+    var aspect=(window.curFSz&&curFSz.aspect)||1,W=240,H=Math.max(1,Math.round(W*(aspect||1)));
+    var c=document.createElement('canvas');c.width=W;c.height=H;c.style.cssText='width:100%;height:100%;display:block;object-fit:cover';
+    var ctx=c.getContext('2d');if(!ctx)return;
+    drawUploadedTemplatePhotos(ctx,window.frameImg,tpl,0,0,W,H,window.frameImgT);
+    thumbEl.innerHTML='';thumbEl.appendChild(c);
+    var src=(typeof realTemplateSrc==='function')?realTemplateSrc(tpl):null;
+    if(src&&typeof loadImg==='function')loadImg(src,function(ov){if(ov&&typeof drawUploadedTemplateOverlay==='function'){try{drawUploadedTemplateOverlay(ctx,ov,tpl,0,0,W,H,window.curFSz,(typeof admin==='function'?admin():null))}catch(e){}}});
+  }catch(e){}
+}
 function buildFrameTplGrid(catId){
   var tg=document.getElementById('frame-tpl-grid');
   var filtered=FTPLS.filter(function(t){
@@ -982,6 +994,7 @@ function buildFrameTplGrid(catId){
   });
   if(!filtered.length){tg.innerHTML='<div style="grid-column:1/-1;font-size:10px;color:var(--warm);text-align:center;padding:16px">현재 선택한 사이즈에 맞는 템플릿이 없습니다</div>';return;}
   tg.innerHTML=filtered.map(function(t){var i=FTPLS.indexOf(t),src=(typeof realTemplateSrc==='function'?realTemplateSrc(t):(t&&!t.generatedDetailPreview?t.dataUrl:null));return '<div class="tpl-card'+(curFTpl&&curFTpl.id===t.id?' on':'')+'" onclick="selFTplByRef(this,'+i+')"><div class="tpl-thumb fr">'+(src?'<img src="'+src+'">':t.icon||'🎨')+'</div><div class="tpl-name">'+t.name+'</div></div>';}).join('');
+  try{var __ccards=tg.querySelectorAll('.tpl-card');filtered.forEach(function(t,__ci){if(!(t&&t.type==='uploaded'&&typeof realTemplateSrc==='function'&&realTemplateSrc(t)))return;if(typeof drawUploadedTemplatePhotos!=='function')return;var __cd=__ccards[__ci];if(!__cd)return;var __th=__cd.querySelector('.tpl-thumb');if(__th)dennRenderCardCompositeThumbV(t,__th)})}catch(__e){}
   if(!curFTpl||!filtered.find(function(t){return t.id===curFTpl.id;})){curFTpl=filtered[0];document.querySelectorAll('#frame-tpl-grid .tpl-card').forEach(function(c,i){c.classList.toggle('on',i===0);});applyFrameDefaultTexts(curFTpl,false);}
   renderFrame();
 }
