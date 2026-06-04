@@ -971,14 +971,24 @@ function templateMatchesCurrentFrameSize(t){
 }
 /* E(2026-06-04): uploaded(빌더/투명) 템플릿 카드 썸네일을 본 캔버스와 동일하게 합성 — 업로드 사진을 photoZones(특정 사각)에만 클립 + 아트 오버레이. 기존 풀샷 <img> 대체. renderFrame 본체 무수정, 헬퍼만 재사용. live canvas append라 toDataURL/CORS 무관. */
 function dennRenderCardCompositeThumbV(tpl,thumbEl){
+  var Hh=window.dennZoneCompositeHelpersV;if(!Hh||!Hh.drawPhotos)return;
   try{
     var aspect=(window.curFSz&&curFSz.aspect)||1,W=240,H=Math.max(1,Math.round(W*(aspect||1)));
     var c=document.createElement('canvas');c.width=W;c.height=H;c.style.cssText='width:100%;height:100%;display:block;object-fit:cover';
     var ctx=c.getContext('2d');if(!ctx)return;
-    drawUploadedTemplatePhotos(ctx,window.frameImg,tpl,0,0,W,H,window.frameImgT);
-    thumbEl.innerHTML='';thumbEl.appendChild(c);
-    var src=(typeof realTemplateSrc==='function')?realTemplateSrc(tpl):null;
-    if(src&&typeof loadImg==='function')loadImg(src,function(ov){if(ov&&typeof drawUploadedTemplateOverlay==='function'){try{drawUploadedTemplateOverlay(ctx,ov,tpl,0,0,W,H,window.curFSz,(typeof admin==='function'?admin():null))}catch(e){}}});
+    var bg=Hh.bg&&Hh.bg(tpl),src=Hh.realSrc?Hh.realSrc(tpl):null;
+    /* 본 캔버스(window.renderFrame) 시퀀스: 흰/템플릿 배경 → 사진을 photoZones에만 클립(있을 때만) → 아트 오버레이 */
+    function paint(photoImg){
+      if(bg){ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);}else ctx.clearRect(0,0,W,H);
+      if(photoImg)Hh.drawPhotos(ctx,photoImg,tpl,0,0,W,H,window.frameImgT);
+      if(thumbEl.firstChild!==c){thumbEl.innerHTML='';thumbEl.appendChild(c);}
+      if(src&&Hh.loadImg)Hh.loadImg(src,function(ov){if(ov&&Hh.drawOverlay){try{Hh.drawOverlay(ctx,ov,tpl,0,0,W,H,window.curFSz,null)}catch(e){}}});
+    }
+    /* 선택된 카드만 실제 사진(frameImg=업로드/현재 기본이미지)로 본 캔버스와 일치. 그 외 카드는 각자 placeholderImageUrl, 없으면 사진 없이(빈 zone). 한 장을 모든 카드에 입히지 않음. */
+    var sel=window.curFTpl&&tpl.id===window.curFTpl.id;
+    if(sel&&window.frameImg){paint(window.frameImg);}
+    else if(tpl.placeholderImageUrl&&Hh.loadImg){Hh.loadImg(tpl.placeholderImageUrl,function(pi){paint(pi||null)});}
+    else{paint(null);}
   }catch(e){}
 }
 function buildFrameTplGrid(catId){
@@ -994,7 +1004,7 @@ function buildFrameTplGrid(catId){
   });
   if(!filtered.length){tg.innerHTML='<div style="grid-column:1/-1;font-size:10px;color:var(--warm);text-align:center;padding:16px">현재 선택한 사이즈에 맞는 템플릿이 없습니다</div>';return;}
   tg.innerHTML=filtered.map(function(t){var i=FTPLS.indexOf(t),src=(typeof realTemplateSrc==='function'?realTemplateSrc(t):(t&&!t.generatedDetailPreview?t.dataUrl:null));return '<div class="tpl-card'+(curFTpl&&curFTpl.id===t.id?' on':'')+'" onclick="selFTplByRef(this,'+i+')"><div class="tpl-thumb fr">'+(src?'<img src="'+src+'">':t.icon||'🎨')+'</div><div class="tpl-name">'+t.name+'</div></div>';}).join('');
-  try{var __ccards=tg.querySelectorAll('.tpl-card');filtered.forEach(function(t,__ci){if(!(t&&t.type==='uploaded'&&typeof realTemplateSrc==='function'&&realTemplateSrc(t)))return;if(typeof drawUploadedTemplatePhotos!=='function')return;var __cd=__ccards[__ci];if(!__cd)return;var __th=__cd.querySelector('.tpl-thumb');if(__th)dennRenderCardCompositeThumbV(t,__th)})}catch(__e){}
+  try{var __H=window.dennZoneCompositeHelpersV;if(__H&&__H.drawPhotos){var __ccards=tg.querySelectorAll('.tpl-card');filtered.forEach(function(t,__ci){if(!(t&&t.type==='uploaded'&&__H.realSrc&&__H.realSrc(t)))return;var __cd=__ccards[__ci];if(!__cd)return;var __th=__cd.querySelector('.tpl-thumb');if(__th)dennRenderCardCompositeThumbV(t,__th)})}}catch(__e){}
   if(!curFTpl||!filtered.find(function(t){return t.id===curFTpl.id;})){curFTpl=filtered[0];document.querySelectorAll('#frame-tpl-grid .tpl-card').forEach(function(c,i){c.classList.toggle('on',i===0);});applyFrameDefaultTexts(curFTpl,false);}
   renderFrame();
 }
@@ -2667,6 +2677,8 @@ function frameTemplateBgFlagOn(v){return v===true||v===1||v==='1'||String(v).toL
 function frameTemplateBgEnabled(tpl){return !!(tpl&&(frameTemplateBgFlagOn(tpl.backgroundEnabled)||frameTemplateBgFlagOn(tpl.templateBackgroundEnabled)||frameTemplateBgFlagOn(tpl.canvasBgEnabled)))}
 function frameTemplateBgColor(tpl){var c=tpl&&(tpl.templateBackgroundColor||tpl.canvasBgColor||tpl.backgroundColor||tpl.paperColor);return /^#[0-9a-fA-F]{6}$/.test(String(c||''))?String(c):'#fff'}
 function frameTemplateBg(tpl){return frameTemplateBgEnabled(tpl)?frameTemplateBgColor(tpl):null}
+/* E(2026-06-04): 카드 썸네일을 본 캔버스와 동일 합성하려면 이 IIFE 내부 헬퍼가 필요 — buildFrameTplGrid(다른 스코프)에서 쓰도록 window로 노출만. renderFrame 본체 무수정. */
+window.dennZoneCompositeHelpersV={drawPhotos:drawUploadedTemplatePhotos,drawOverlay:drawUploadedTemplateOverlay,loadImg:loadImg,bg:frameTemplateBg,realSrc:realTemplateSrc};
 window.renderFrame=function(){
   var canvas=by('frameCanvas'),ctx=canvas&&canvas.getContext('2d');if(!ctx)return;
   window.__dennFrameRenderSeq=(window.__dennFrameRenderSeq||0)+1;var renderSeq=window.__dennFrameRenderSeq;
@@ -11750,6 +11762,8 @@ window.addEventListener('load',later);
       window.frameImgT={scale:1,x:0,y:0};
       var fe=document.getElementById('frame-empty'); if(fe)fe.classList.add('hidden');
       try{if(typeof window.renderFrame==='function')window.renderFrame()}catch(_){}
+      /* E(2026-06-04): 기본이미지가 비동기 로드된 뒤 카드 썸네일도 재합성 — 그리드가 사진 로드 전에 빌드돼 썸네일이 사진 없이 stale하던 것 해소. */
+      try{if(typeof window.buildFrameTplGrid==='function')window.buildFrameTplGrid(window.curCatId||'all')}catch(_){}
     };
     img.onerror=function(){console.warn('[placeholder] load failed:',url)};
     img.src=url;
