@@ -2919,6 +2919,13 @@ function setSun(on){
   if(knob)knob.style.left=RM.sunOn?'19px':'3px';
   if(ctrl)ctrl.style.display=RM.sunOn?'flex':'none';
 }
+/* E(2026-06-04): 그림자 토글 시각 동기화 — rm-sh-op>0 불변식(currentSettings와 동일 단일 진실)에 맞춰 핀/dim 갱신. 적용 경로(V33/V48)·생성부에서 호출. 기울기=setRoomTiltEnabledV40, 햇빛=setSun에 대응하는 그림자 누락분. */
+function dennSyncShadowTogV(){
+  var op=by('rm-sh-op'),on=num((op||{}).value,0)>0,stog=by('rm-shadow-tog'),sbody=by('rm-shadow-body');
+  if(stog)stog.classList.toggle('on',on);
+  if(sbody)sbody.classList.toggle('rm-body-disabled',!on);
+}
+window.dennSyncShadowTogV=dennSyncShadowTogV;
 function applySettingsV33(s){
   s=Object.assign(defaults(),s||{});
   var on=by('sg-on'),body=by('sg-body'),ruler=by('sg-ruler');
@@ -2940,6 +2947,7 @@ function applySettingsV33(s){
   setVal('rm-sh-dir',num(s.shadowDirection,180),'°');
   setVal('rm-sh-dist',num(s.shadowDistance,8),'');
   setVal('rm-sh-blur',num(s.shadowBlur,20),'');
+  dennSyncShadowTogV();/* E: 그림자 토글 시각도 저장값(rm-sh-op)에 맞춰 동기화 */
   setSun(!!s.sunlightEnabled);
   setVal('rm-sun-int',Math.round(num(s.sunlightOpacity,.5)*100),'%');
   setVal('rm-sun-spread',Math.round(num(s.sunlightSpread,.6)*100),'%');
@@ -4194,6 +4202,7 @@ document.head.appendChild(css);
 /* v39: room frame/shadow reset helpers */
 (function(){
 function by(id){return document.getElementById(id)}
+function num(v,d){v=parseFloat(v);return isFinite(v)?v:d}/* E(2026-06-04): 이 IIFE 로컬 num 누락 → reset 버튼 ReferenceError 수정 */
 function setVal(id,val,suffix){
   var el=by(id),out=by(id+'-v');
   if(el)el.value=val;
@@ -4248,6 +4257,7 @@ window.resetRoomShadowDefaultsV39=function(){
 /* v40: grouped room tilt controls */
 (function(){
 function by(id){return document.getElementById(id)}
+function num(v,d){v=parseFloat(v);return isFinite(v)?v:d}/* E(2026-06-04): 이 IIFE 로컬 num 누락 → reset 버튼 ReferenceError 수정 */
 function setVal(id,val,suffix){
   var el=by(id),out=by(id+'-v');
   if(el)el.value=val;
@@ -5084,6 +5094,7 @@ function applyRoomSettings(s){
   setVal('rm-sh-dir',num(s.shadowDirection,180));
   setVal('rm-sh-dist',num(s.shadowDistance,8));
   setVal('rm-sh-blur',num(s.shadowBlur,20));
+  dennSyncShadowTogV();/* E: 그림자 토글 시각 동기화(V48 경로) */
   setVal('rm-sun-int',Math.round(num(s.sunlightOpacity,.5)*100));
   setVal('rm-sun-spread',Math.round(num(s.sunlightSpread,.6)*100));
   setVal('rm-sun-warm',Math.round(num(s.sunlightWarm,.7)*100));
@@ -12578,6 +12589,7 @@ input[type=range]{accent-color:#777}
           op.dispatchEvent(new Event('input',{bubbles:true}));
         }
       });
+      if(window.dennSyncShadowTogV)window.dennSyncShadowTogV();/* E: 생성 직후 현재 rm-sh-op 값으로 핀/dim 초기화 — 무조건 'on' 시작 버그 제거 */
     })();
     /* '배경 밝기' / '배경 크기' 슬라이더 — 원래 액자 섹션 안에 있었지만 배경 관련이므로 '배경' 탭으로 이동 */
     var bgSection=leftPanel.querySelector('[data-rm-pane="bg"]');
