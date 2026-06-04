@@ -2972,6 +2972,14 @@ setTimeout(afterLoad,250);
     if(!field)return;
     field.insertAdjacentHTML('afterend','<div class="denn-v10-white-toggle" id="fb-white-border-wrap-v10"><div><span>흰색 안쪽 테두리</span><small>이 템플릿에만 저장됩니다. 기본값은 꺼짐이며, 액자 비율/이미지는 건드리지 않습니다.</small></div><div id="fb-white-border-v10" class="denn-v10-switch" onclick="this.classList.toggle(\'on\');try{fbRender()}catch(e){}"></div></div>');
   }
+  /* E(2026-06-04): 가로세로 호환 토글 — white-border(v10/v50 재배치)와 독립 삽입. 템플릿 이름 필드 바로 아래. plain 액자(FULL SIZE류)만 ON → 목업툴에서 가로/세로 노출. */
+  function addBuilderOrientationToggle(){
+    var name=document.getElementById('fb-tpl-name');
+    if(!name||document.getElementById('fb-orientation-free'))return;
+    var field=name.closest('.field')||name.parentElement;
+    if(!field)return;
+    field.insertAdjacentHTML('afterend','<div class="field" id="fb-orientation-free-wrap"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><label style="margin:0">가로세로 호환</label><div id="fb-orientation-free" class="denn-v10-switch" onclick="this.classList.toggle(\'on\')"></div></div><div class="hint" style="margin:4px 0 0">그림만 채우는 액자(FULL SIZE류)만 ON · 디자인·시계 템플릿은 OFF(세로 고정)</div></div>');
+  }
   function drawBuilderWhiteOverlay(){
     try{
       var tog=document.getElementById('fb-white-border-v10'); if(!tog||!tog.classList.contains('on'))return;
@@ -2989,12 +2997,13 @@ setTimeout(afterLoad,250);
   };
   var oldProcess=window.processFTpls; if(typeof oldProcess==='function'){window.processFTpls=function(files){var before=(S.frameTemplates||[]).length; var r=oldProcess.apply(this,arguments); setTimeout(function(){(S.frameTemplates||[]).slice(before).forEach(function(t){t.whiteInnerBorder=false;}); enhanceFrameTemplateCards(window.curFCat||'all');},120); return r;};}
   var oldFbRender=window.fbRender; if(typeof oldFbRender==='function'){window.fbRender=function(){normalizeWhiteBorderData(); var r=oldFbRender.apply(this,arguments); drawBuilderWhiteOverlay(); return r;};}
-  var oldFbExport=window.fbExport; if(typeof oldFbExport==='function'){window.fbExport=function(){normalizeWhiteBorderData(); var before=(S.frameTemplates||[]).length; var use=!!(document.getElementById('fb-white-border-v10')&&document.getElementById('fb-white-border-v10').classList.contains('on')); var r=oldFbExport.apply(this,arguments); setTimeout(function(){var arr=S.frameTemplates||[]; if(arr.length>before){arr[arr.length-1].whiteInnerBorder=use; try{if(typeof persistState==='function')persistState();else dennPersistAdminStateV351(S);}catch(e){} } if(typeof renderFTplsByCategory==='function')renderFTplsByCategory(window.curFCat||'all');},80); return r;};}
+  var oldFbExport=window.fbExport; if(typeof oldFbExport==='function'){window.fbExport=function(){normalizeWhiteBorderData(); var before=(S.frameTemplates||[]).length; var use=!!(document.getElementById('fb-white-border-v10')&&document.getElementById('fb-white-border-v10').classList.contains('on')); var oriUse=!!(document.getElementById('fb-orientation-free')&&document.getElementById('fb-orientation-free').classList.contains('on')); var editI=(window.__dennFrameTemplateEditIndex!=null)?window.__dennFrameTemplateEditIndex:null; var r=oldFbExport.apply(this,arguments); setTimeout(function(){var arr=S.frameTemplates||[]; var idx=(arr.length>before)?arr.length-1:((editI!=null&&arr[editI])?editI:-1); if(idx>=0&&arr[idx]){arr[idx].whiteInnerBorder=use; arr[idx].orientationFree=oriUse;/* E(2026-06-04): 가로세로 호환 저장(신규/편집 공통) */ try{if(typeof persistState==='function')persistState();else dennPersistAdminStateV351(S);}catch(e){} } if(typeof renderFTplsByCategory==='function')renderFTplsByCategory(window.curFCat||'all');},80); return r;};}
   var oldRenderFT=window.renderFTplsByCategory; if(typeof oldRenderFT==='function'){window.renderFTplsByCategory=function(catId){normalizeWhiteBorderData(); var r=oldRenderFT.apply(this,arguments); enhanceFrameTemplateCards(catId); return r;};}
   var oldRenderSz=window.renderSzPreview; if(typeof oldRenderSz==='function'){window.renderSzPreview=function(){normalizeWhiteBorderData(); return oldRenderSz.apply(this,arguments);};}
-  var oldGo=window.goTab; if(typeof oldGo==='function'){window.goTab=function(id,el){var r=oldGo.apply(this,arguments); setTimeout(function(){normalizeWhiteBorderData();hideOldMatControls();if(id==='frame-builder')addBuilderWhiteToggle();if(id==='frame-tpls')enhanceFrameTemplateCards(window.curFCat||'all');},80); return r;};}
+  window.addBuilderOrientationToggle=addBuilderOrientationToggle;
+  var oldGo=window.goTab; if(typeof oldGo==='function'){window.goTab=function(id,el){var r=oldGo.apply(this,arguments); setTimeout(function(){normalizeWhiteBorderData();hideOldMatControls();if(id==='frame-builder'){addBuilderWhiteToggle();addBuilderOrientationToggle();}if(id==='frame-tpls')enhanceFrameTemplateCards(window.curFCat||'all');},80); return r;};}
   var oldSave=window.saveAll; if(typeof oldSave==='function'){window.saveAll=function(){normalizeWhiteBorderData(); return oldSave.apply(this,arguments);};}
-  document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){normalizeWhiteBorderData();hideOldMatControls();addBuilderWhiteToggle();enhanceFrameTemplateCards(window.curFCat||'all');},300);});
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){normalizeWhiteBorderData();hideOldMatControls();addBuilderWhiteToggle();addBuilderOrientationToggle();enhanceFrameTemplateCards(window.curFCat||'all');},300);});
 })();
 </script>
 
@@ -9508,6 +9517,9 @@ function makeTemplate(){
   // Phase 1 Stage 1/2 — 본체에서 직접 빌더 UI 읽기 (외부 wrap 의존 폐기)
   var __allowEl=document.getElementById('fb-allow-color');
   t.allowColorChange=!!(__allowEl&&__allowEl.classList.contains('on'));
+  /* E(2026-06-04): 가로세로 호환 플래그 저장 — 목업툴이 이 값으로 가로/세로 노출 결정 */
+  var __oriEl=document.getElementById('fb-orientation-free');
+  t.orientationFree=!!(__oriEl&&__oriEl.classList.contains('on'));
   var __maskInp=document.querySelector('input[name="fb-mask-mode"]:checked');
   var __mode=__maskInp&&__maskInp.value;
   if(__mode==='white'||__mode==='black'){t.maskMode=__mode;t.maskModeSource='manual'}
@@ -12575,6 +12587,8 @@ window.addEventListener('load',tick);
       setVal('fb-mat-col',t.whiteBorderColor||t.matColor);
       var cp=by('fb-mat-cp');if(cp)cp.style.background=t.whiteBorderColor||t.matColor;
     }
+    try{if(window.addBuilderOrientationToggle)window.addBuilderOrientationToggle()}catch(e){}/* 토글 존재 보장 후 복원 */
+    setSwitch('fb-orientation-free',!!t.orientationFree);/* E(2026-06-04): 가로세로 호환 플래그 복원 */
     var clk=t.clock||null;
     setSwitch('fb-clock-tog',!!(clk&&clk.enabled!==false));
     if(clk){setRange('fb-clock-size',num(clk.size,12),'fb-cs-v');setRange('fb-clock-x',num(clk.x,88),'fb-cx-v');setRange('fb-clock-y',num(clk.y,88),'fb-cy-v')}

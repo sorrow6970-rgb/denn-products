@@ -6396,6 +6396,7 @@ function syncUi(){
   if(rotRow)rotRow.style.display=state.mode==='landscape'?'grid':'none';
   ['portrait','landscape'].forEach(function(m){var b=by('denn-v64-orient-'+m);if(b)b.classList.toggle('on',state.mode===m)});
   [['none',0],['left',-90],['right',90]].forEach(function(pair){var b=by('denn-v64-rot-'+pair[0]);if(b)b.classList.toggle('on',state.rot===pair[1])});
+  try{updateOrientUiVisibility()}catch(e){}/* E: 방향 UI는 orientationFree 템플릿에서만 노출 */
 }
 function installUi(){
   if(by('denn-v64-frame-orientation-ui')){syncUi();return}
@@ -6418,9 +6419,14 @@ window.drawImgT=function(ctx,img,x,y,w,h,T){
   var swap=Math.abs(rot)%180===90,rw=swap?ih:iw,rh=swap?iw:ih,sc=Math.max(w/rw,h/rh)*num(T.scale,1);
   ctx.save();ctx.translate(x+w/2+num(T.x,0),y+h/2+num(T.y,0));ctx.rotate(rot*Math.PI/180);ctx.drawImage(img,-iw*sc/2,-ih*sc/2,iw*sc,ih*sc);ctx.restore();
 };
+/* E(2026-06-04): 가로/세로는 'orientationFree' 플래그(admin '가로세로 호환')가 켜진 plain 액자에서만. 디자인·시계 템플릿(OFF/미설정)은 방향 UI 숨김 + 세로 고정. */
+function frameOrientationAllowed(){var t=window.curFTpl;return !!(t&&t.orientationFree===true)}
+function updateOrientUiVisibility(){var ui=by('denn-v64-frame-orientation-ui');if(ui)ui.style.display=frameOrientationAllowed()?'':'none'}
+function enforceOrientationGate(){if(!frameOrientationAllowed()&&(state.mode!=='portrait'||state.rot!==0)){state.mode='portrait';state.rot=0;ensureTransform().rot=0;applyAspect();try{syncUi()}catch(e){}syncGuideOrientation(false);return true}return false}
 var oldRender=window.renderFrame;
 if(typeof oldRender==='function'&&!oldRender.__dennV64FrameOrientation){
   window.renderFrame=function(){
+    updateOrientUiVisibility();enforceOrientationGate();
     applyAspect();
     /* landscape는 portrait를 그대로 90° 돌린 크기 — L2603 본체 sizing(pw=maxW, if ph>maxH clamp)이
        landscape에선 clamp 미발동으로 캔버스가 더 넓어지는 비대칭 → portrait의 긴 변(=maxH)을 임시로
@@ -12011,7 +12017,8 @@ window.addEventListener('load',later);
   function renderElemList(){
     try{
       var box=document.getElementById('dps-elem-list'); if(!box)return;
-      var rows=ELEMS.map(function(e){var v=elText(e[2]);return{k:e[0],lab:e[1],val:v,empty:!v};});
+      /* E(2026-06-04): 우측 요소행을 좌측 '05 문구 입력'과 동일하게 isFrameTextKeyAllowed로 게이팅 — 편집 불가 템플릿에서 문구행이 뜨던 불일치 해소 */
+      var rows=ELEMS.filter(function(e){return typeof window.isFrameTextKeyAllowed!=='function'||window.isFrameTextKeyAllowed(e[0],window.curFTpl);}).map(function(e){var v=elText(e[2]);return{k:e[0],lab:e[1],val:v,empty:!v};});
       rows.push({k:'image',lab:'이미지',val:'업로드됨',empty:!imgPresent()});
       rows.push({k:'clock',lab:'시계',val:'표시',empty:!clockOn()});
       box.innerHTML='';
