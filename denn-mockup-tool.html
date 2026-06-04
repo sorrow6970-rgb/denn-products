@@ -12611,77 +12611,8 @@ input[type=range]{accent-color:#777}
 (function(){
   if(window.__dennRoomResetFix)return;
   window.__dennRoomResetFix=true;
-  function adm(){try{return JSON.parse(localStorage.getItem('denn_admin')||'{}')||window.ADM||{}}catch(e){return window.ADM||{}}}
-  function bgKey(){
-    try{
-      if(window.RM&&RM.guideIndex!=null){
-        var A=adm(),bg=(A.guideBackgrounds||[])[RM.guideIndex];
-        return (bg&&(bg.id||bg.name))||('guide-'+RM.guideIndex);
-      }
-      if(window.RM&&RM.bgId)return RM.bgId;
-      if(window.RM&&RM.roomImg)return 'uploaded-room';
-    }catch(e){}
-    return 'default-room';
-  }
-  function uiGuideScale(A){
-    A=A||adm();
-    /* 어드민 공통 설정(A.uiSettings.roomInitialGuideScale)만 사용. default-room 저장값은 사용자 조정값이라 무시 */
-    var g=A.uiSettings&&A.uiSettings.roomInitialGuideScale;
-    return (typeof g==='number'&&isFinite(g))?Math.max(.2,Math.min(2,g)):1;
-  }
-  function setSlider(id,v,suf){
-    var el=document.getElementById(id);
-    if(el)el.value=v;
-    var out=document.getElementById(id+'-v');
-    if(out)out.textContent=v+(suf||'');
-  }
-  function applyDefaults(d){
-    setSlider('sg-scale-r',d.guideScale*100,'%');setSlider('sg-scale-n',d.guideScale*100,'%');
-    setSlider('sg-ox-r',d.guideX,'%');setSlider('sg-ox-n',d.guideX,'%');
-    setSlider('sg-oy-r',d.guideY,'%');setSlider('sg-oy-n',d.guideY,'%');
-    setSlider('sg-alpha-r',d.guideOpacity*100,'%');setSlider('sg-alpha-n',d.guideOpacity*100,'%');
-    var col=document.getElementById('sg-color');if(col)col.value='#2a2a2a';
-    var ruler=document.getElementById('sg-ruler');if(ruler)ruler.checked=d.showRuler!==false;
-    var on=document.getElementById('sg-on'),body=document.getElementById('sg-body');
-    if(on)on.checked=d.guideEnabled!==false;
-    if(body)body.style.display=d.guideEnabled!==false?'block':'none';
-    if(window.SG)window.SG.on=d.guideEnabled!==false;
-    if(typeof window.sgBuildSizes==='function')try{window.sgBuildSizes()}catch(e){}
-    if(typeof window.sgDraw==='function')setTimeout(window.sgDraw,40);
-    if(typeof window.rmRender==='function')setTimeout(window.rmRender,60);
-  }
-  function buildNewReset(oldReset){
-    var fn=function(){
-      try{
-        var A=adm(),key=bgKey(),stored=(A.roomBackgroundSettings||{})[key]||{};
-        var isAdminPreset=!!(stored.__adminPreset||stored.__savedFromAdminRoomSetup);
-        var defaults={
-          guideEnabled:true,
-          guideScale:uiGuideScale(A),
-          guideX:40,guideY:25,
-          guideOpacity:.75,
-          showRuler:true
-        };
-        if(isAdminPreset){
-          if(typeof stored.guideScale==='number'&&isFinite(stored.guideScale))defaults.guideScale=stored.guideScale;
-          if(typeof stored.guideX==='number'&&isFinite(stored.guideX))defaults.guideX=stored.guideX;
-          if(typeof stored.guideY==='number'&&isFinite(stored.guideY))defaults.guideY=stored.guideY;
-          if(typeof stored.guideOpacity==='number'&&isFinite(stored.guideOpacity))defaults.guideOpacity=stored.guideOpacity;
-          if(typeof stored.showRuler==='boolean')defaults.showRuler=stored.showRuler;
-          if(typeof stored.guideEnabled==='boolean')defaults.guideEnabled=stored.guideEnabled;
-        }
-        applyDefaults(defaults);
-        if(typeof window.saveRoomBackgroundSettings==='function')try{window.saveRoomBackgroundSettings()}catch(e){}
-        /* 후속 비동기 코드가 덮어쓸 가능성 — 100/300ms 후 다시 강제 적용 */
-        setTimeout(function(){applyDefaults(defaults)},100);
-        setTimeout(function(){applyDefaults(defaults)},300);
-      }catch(e){
-        if(typeof oldReset==='function')return oldReset.apply(this,arguments);
-      }
-    };
-    fn.__dennRoomResetFix=true;
-    return fn;
-  }
+  /* [2026-06-04 dead code 청소] bgKey/uiGuideScale/setSlider/applyDefaults/buildNewReset(+전용 adm) 제거.
+     buildNewReset은 어디서도 호출되지 않던 시체였고 실제 "기본설정으로" 핸들러는 아래 rebindMasterReset.onclick. */
   /* 핵심 fix: "기본설정으로" 마스터 버튼이 사이즈 가이드 reset을 sgReset(v73 wrap된 것 = '사이즈가이드 기본값' 버튼과 동일)로 위임.
      그러면 두 버튼 모두 동일 동작 = 74로 reset. */
   function rebindMasterReset(){
@@ -12885,20 +12816,7 @@ input[type=range]{accent-color:#777}
     var nearDefault=((fx==null)||Math.abs(fx-50)<0.8)&&((fy==null)||Math.abs(fy-40)<0.8);
     return nearDefault;
   }
-  function buildSeed(common,prev){
-    var seed=clone(common);
-    SIZE_KEYS.forEach(function(k){delete seed[k]});
-    delete seed.__guideResetDefaults; /* default-room reset 기준은 B3에서 별도 처리 */
-    delete seed.__dennUserMovedFrame; /* 재상속 시 드래그 플래그 클리어(다음 드래그 전까지 ② 추종) */
-    prev=prev||{};
-    SIZE_KEYS.forEach(function(k){if(prev[k]!=null)seed[k]=prev[k]});  /* 사이즈는 기존값 보존 */
-    seed.__dennInheritedCommonDefault=true;
-    seed.__dennInheritedCommonKey=COMMON_KEY;
-    seed.__adminPreset=false;
-    seed.__savedFromAdminRoomSetup=false;
-    seed.__dennCommonInheritV82=true;
-    return seed;
-  }
+  /* [2026-06-04 dead code 청소] buildSeed 제거 — default-room=② 미러는 loadSettingsV33가 담당(L12906 주석 참조), 미호출 함수였음. */
   function applyCommonToDefaultRoom(opts){
     try{
       if(isAdmin())return;
