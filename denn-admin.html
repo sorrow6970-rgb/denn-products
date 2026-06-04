@@ -15604,60 +15604,135 @@ window.addEventListener('resize',scheduleSettle);
 })();
 </script>
 <script id="denn-v98-builder-accordion">
-/* E(2026-06-04): 액자 빌더 우측 패널(builder-side) 컨트롤을 접는 그룹 카드(아코디언)로 정리.
-   섹션을 셀렉터로 모아 컨테이너 단위 이동(내부·재배치 로직 보존). 멱등·가드. 모든 주입 후 지연 실행. */
+/* E(2026-06-04 rev4): 액자 빌더 3컬럼 — [좌 디자인설정(아코디언·기본 접힘)] [가운데 캔버스] [우 업로드·저장(펼침)].
+   builder-shell을 3컬럼 그리드로. ★ builder-side 자체를 '좌 컬럼'으로 사용 →
+   흰테두리 패널(v50/v52)이 .builder-side 자손으로 남아 기존 CSS(L8065)·재배치(v52)와 충돌 없음.
+   아코디언 카드는 builder-side 안에 생성, 디자인 섹션을 그 안으로 이동. 업로드·저장만 새 우측 컬럼으로.
+   좌(접이식): 🗂 영역·정렬 / 🎨 테두리·색상 / 🎨 배경    우(펼침): 📝 업로드·저장.
+   분류는 containment(직속 자식이 무엇을 포함) — 래퍼 통째 이동, 내부 로직 보존.
+   MutationObserver로 늦게 주입되는 패널(bg/color/orientation/업로드)도 자동 수거.
+   가산적·가역적: 이 <script id="denn-v98-builder-accordion"> 만 제거하면 원복. */
 (function(){
   if(window.__dennV98BuilderAccordion)return; window.__dennV98BuilderAccordion=1;
   function by(id){return document.getElementById(id)}
   function q(sel,root){return (root||document).querySelector(sel)}
-  var css='#tp-frame-builder .denn-acc-group{border:1px solid var(--bdr,#2E2D40);border-radius:9px;margin:0 0 9px;overflow:hidden;background:var(--card,#1F1E2C)}'
-    +'#tp-frame-builder .denn-acc-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;cursor:pointer;font-size:11.5px;font-weight:800;color:var(--txt,#F0EEF8);background:var(--surf,#252436);user-select:none}'
-    +'#tp-frame-builder .denn-acc-head .denn-acc-chev{transition:transform .2s;color:var(--muted,#8885A0);font-size:10px}'
-    +'#tp-frame-builder .denn-acc-group.collapsed .denn-acc-chev{transform:rotate(-90deg)}'
-    +'#tp-frame-builder .denn-acc-body{padding:11px 12px;display:flex;flex-direction:column;gap:11px}'
-    +'#tp-frame-builder .denn-acc-group.collapsed .denn-acc-body{display:none}'
-    +'#tp-frame-builder .denn-acc-body hr{display:none}';
+  function hasAny(ch,sels){for(var i=0;i<sels.length;i++){var s=sels[i];try{if((ch.matches&&ch.matches(s))||ch.querySelector(s))return true;}catch(e){}}return false;}
+
+  var FB='#tp-frame-builder ';
+  var css=
+    // 3컬럼: 좌 컨트롤(=builder-side) | 가운데 캔버스 | 우 컨트롤(새 컬럼)
+    FB+'.builder-shell.denn-acc-3col{display:grid;grid-template-columns:minmax(200px,270px) minmax(0,1fr) minmax(290px,360px);gap:14px;align-items:start}'
+    // 좌 컬럼: builder-side 직속 카드 세로 적층 + 카드 자체 스타일(기존 >div 자동 테두리 덮어씀)
+   +FB+'.builder-shell.denn-acc-3col>.builder-side{display:flex;flex-direction:column;gap:9px}'
+   +FB+'.builder-side>.denn-acc-group{padding:0;background:var(--card,#1F1E2C);border:1px solid var(--bdr,#2E2D40);border-radius:10px;overflow:hidden}'
+   +FB+'.builder-side hr{display:none}'  // 쓸데없는 구분선 제거
+   +FB+'.denn-acc-col{display:flex;flex-direction:column;gap:9px;min-width:0}'
+    // 카드 공통
+   +FB+'.denn-acc-group,'+FB+'.denn-acc-open{border:1px solid var(--bdr,#2E2D40);border-radius:10px;overflow:hidden;background:var(--card,#1F1E2C)}'
+   +FB+'.denn-acc-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;cursor:pointer;font-size:11px;font-weight:800;color:var(--txt,#F0EEF8);background:var(--surf,#252436);user-select:none}'
+   +FB+'.denn-acc-open>.denn-acc-head{cursor:default}'
+   +FB+'.denn-acc-chev{transition:transform .2s;color:var(--muted,#8885A0);font-size:10px}'
+   +FB+'.denn-acc-group.collapsed .denn-acc-chev{transform:rotate(-90deg)}'
+   +FB+'.denn-acc-body{padding:11px;display:flex;flex-direction:column;gap:10px}'
+   +FB+'.denn-acc-group.collapsed .denn-acc-body{display:none}'
+   +FB+'.denn-acc-body hr{display:none}'
+   +FB+'.denn-acc-body>div{min-width:0}'
+    // 우측 업로드 박스 확대(우측 컬럼 빈 느낌 보완)
+   +FB+'.denn-acc-col-right .up-zone{padding:20px 14px}'
+   +FB+'.denn-acc-col-right .up-zone h4{font-size:12.5px}'
+   +FB+'.denn-acc-col-right #fb-art-thumb{height:120px}'
+    // 좁은 화면: 단일 컬럼으로 복귀(좌·캔버스·우 세로 적층)
+   +'@media (max-width:1100px){'+FB+'.builder-shell.denn-acc-3col{grid-template-columns:1fr}}';
   var sst=document.createElement('style');sst.textContent=css;document.head.appendChild(sst);
-  var GROUPS=[
-    {key:'zones',title:'🗂 영역 · 정렬',sels:function(){return [
-      by('fb-zone-list')&&by('fb-zone-list').parentElement,
-      by('fb-zone-label')&&by('fb-zone-label').closest('.field'),
-      (q('#tp-frame-builder .align-mini')||{}).parentElement
-    ]}},
-    {key:'border',title:'🎨 테두리 · 색상 · 배경',sels:function(){return [
-      by('denn-v50-builder-white-panel'),
-      by('denn-v364-builder-bg-panel'),
-      by('fb-allow-color-wrap')
-    ]}},
-    {key:'meta',title:'📝 템플릿 · 저장',sels:function(){return [
-      by('fb-cat-sel')&&by('fb-cat-sel').closest('.field'),
-      by('fb-tpl-name')&&by('fb-tpl-name').closest('.field'),
-      by('fb-orientation-free-wrap'),
-      q('#tp-frame-builder .builder-side button[onclick*="fbExport"]')
-    ]}}
-  ];
-  function ensureGroup(side,g){
-    var id='denn-acc-'+g.key,ex=by(id);if(ex)return ex;
-    var card=document.createElement('div');card.className='denn-acc-group';card.id=id;
-    card.innerHTML='<div class="denn-acc-head">'+g.title+'<span class="denn-acc-chev">▼</span></div><div class="denn-acc-body"></div>';
+
+  // 좌측 그룹(아코디언) 분류
+  function leftKind(ch){
+    if(hasAny(ch,['#fb-zone-list','#fb-zone-label','.align-mini']))return 'zones';
+    if(hasAny(ch,['#denn-v364-builder-bg-panel']))return 'bg';
+    if(hasAny(ch,['#denn-v50-builder-white-panel','#fb-allow-color-wrap','#fb-white-border-wrap-v10','.denn-v10-white-toggle']))return 'border';
+    return null;
+  }
+  // 우측 표시 순서(업로드→카테고리→이름→가로세로→완성→안내)
+  function rightPriority(ch){
+    if(hasAny(ch,['#fb-art-inp']))return 1;
+    if(hasAny(ch,['#fb-cat-sel']))return 2;
+    if(hasAny(ch,['#fb-tpl-name']))return 3;
+    if(hasAny(ch,['#fb-orientation-free-wrap','#fb-orientation-free']))return 4;
+    if(hasAny(ch,['button[onclick*="fbExport"]']))return 5;
+    return 6;
+  }
+  function ensureCol(which){
+    var id='denn-acc-col-'+which,ex=by(id);if(ex)return ex;
+    var c=document.createElement('div');c.className='denn-acc-col denn-acc-col-'+which;c.id=id;
+    return c; // 배치는 regroup에서
+  }
+  function ensureGroup(parent,key,title,collapsed){
+    var id='denn-acc-'+key,ex=by(id);if(ex)return ex;
+    var card=document.createElement('div');card.className='denn-acc-group'+(collapsed?' collapsed':'');card.id=id;
+    card.innerHTML='<div class="denn-acc-head">'+title+'<span class="denn-acc-chev">▼</span></div><div class="denn-acc-body"></div>';
     card.querySelector('.denn-acc-head').addEventListener('click',function(){card.classList.toggle('collapsed')});
-    side.appendChild(card);return card;
+    parent.appendChild(card);return card;
+  }
+  function ensureOpen(parent,key,title){
+    var id='denn-acc-'+key,ex=by(id);if(ex)return ex;
+    var card=document.createElement('div');card.className='denn-acc-open';card.id=id;
+    card.innerHTML='<div class="denn-acc-head">'+title+'</div><div class="denn-acc-body"></div>';
+    parent.appendChild(card);return card;
+  }
+
+  var OBS=null,scheduled=false;
+  function ensureObserver(side){
+    if(!OBS){
+      OBS=new MutationObserver(function(muts){
+        for(var i=0;i<muts.length;i++){var a=muts[i].addedNodes;for(var j=0;j<a.length;j++){var n=a[j];
+          if(n.nodeType===1){
+            if(!scheduled){scheduled=true;setTimeout(function(){scheduled=false;regroup();},50);}return;
+          }
+        }}
+      });
+    }
+    OBS.observe(side,{childList:true});
   }
   function regroup(){
+    var shell=q(FB+'.builder-shell');if(!shell)return;
+    var main=shell.querySelector('.builder-main'),side=shell.querySelector('.builder-side');
+    if(!main||!side)return;
+    if(OBS)OBS.disconnect();
     try{
-      var side=q('#tp-frame-builder .builder-side');if(!side)return;
-      GROUPS.forEach(function(g){
-        var card=ensureGroup(side,g),body=card.querySelector('.denn-acc-body');
-        g.sels().forEach(function(el){if(el&&el!==card&&el.parentNode!==body&&!card.contains(el))body.appendChild(el)});
+      shell.classList.add('denn-acc-3col');
+      // 배치: side(좌) → main(캔버스) → R(우). side는 좌 컬럼으로 그대로 사용.
+      if(side.nextSibling!==main)shell.insertBefore(side,main);
+      var R=ensureCol('right');
+      if(main.nextSibling!==R)shell.insertBefore(R,main.nextSibling);
+      // 좌측 아코디언(기본 접힘) — builder-side 내부에 생성(패널을 side 자손으로 유지)
+      var zCard=ensureGroup(side,'zones','🗂 영역 · 정렬',true),zBody=zCard.querySelector('.denn-acc-body');
+      var bCard=ensureGroup(side,'border','🎨 테두리 · 색상',true),bBody=bCard.querySelector('.denn-acc-body');
+      var gCard=ensureGroup(side,'bg','🎨 배경',true),gBody=gCard.querySelector('.denn-acc-body');
+      var rBody=ensureOpen(R,'meta','📝 업로드 · 저장').querySelector('.denn-acc-body');
+      // side 직속 자식 분류 → 래퍼 통째 이동(appendChild가 기존 부모에서 자동 분리)
+      Array.prototype.slice.call(side.children).forEach(function(ch){
+        if(ch===zCard||ch===bCard||ch===gCard)return; // 카드 자신
+        if(ch.tagName==='HR'){ch.style.display='none';return;}
+        var lk=leftKind(ch);
+        if(lk==='zones'){zBody.appendChild(ch);return;}
+        if(lk==='border'){bBody.appendChild(ch);return;}
+        if(lk==='bg'){gBody.appendChild(ch);return;}
+        rBody.appendChild(ch); // 우측 또는 미분류
       });
-      Array.prototype.forEach.call(side.children,function(c){if(c.tagName==='HR')c.style.display='none'});
+      // 우측 순서 정렬
+      Array.prototype.slice.call(rBody.children)
+        .sort(function(a,b){return rightPriority(a)-rightPriority(b);})
+        .forEach(function(k){rBody.appendChild(k);});
+      // 내용 없는 좌측 카드(주입 전/미존재 패널)는 숨김 — 빈 헤더 방지
+      [zCard,bCard,gCard].forEach(function(c){var b=c.querySelector('.denn-acc-body');c.style.display=(b&&b.children.length)?'':'none';});
     }catch(e){}
+    ensureObserver(side);
   }
-  function boot(){regroup();setTimeout(regroup,300);setTimeout(regroup,900)}
-  var oldGo=window.goTab;if(typeof oldGo==='function'){window.goTab=function(id){var r=oldGo.apply(this,arguments);if(id==='frame-builder')setTimeout(boot,560);return r}}
-  if(document.readyState!=='loading')setTimeout(boot,750);
-  document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,750)});
-  window.addEventListener('load',function(){setTimeout(boot,1150)});
+  function boot(){regroup();}
+  var oldGo=window.goTab;if(typeof oldGo==='function'){window.goTab=function(id){var r=oldGo.apply(this,arguments);if(id==='frame-builder')setTimeout(boot,400);return r}}
+  if(document.readyState!=='loading')setTimeout(boot,700);
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,700)});
+  window.addEventListener('load',function(){setTimeout(boot,1100)});
 })();
 </script>
 </body>
