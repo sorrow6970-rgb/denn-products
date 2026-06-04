@@ -609,7 +609,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
             <div class="sg-section">
               <div class="sg-sec-title" style="display:flex;align-items:center;justify-content:space-between">
                 <span>표시 사이즈</span>
-                <div style="display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:#fff">
+                <div id="sg-ori-row" style="display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:#fff">
                   <button id="sg-ori-portrait" onclick="sgSetOri('portrait')" style="font-size:9px;padding:2px 8px;border:none;cursor:pointer;background:var(--gold,#C8A864);color:#fff;font-family:inherit">세로</button>
                   <button id="sg-ori-landscape" onclick="sgSetOri('landscape')" style="font-size:9px;padding:2px 8px;border:none;cursor:pointer;background:transparent;color:var(--warm);font-family:inherit">가로</button>
                 </div>
@@ -2244,13 +2244,19 @@ function sgInit(){
   sgBuildSizes();
 }
 
+/* E(2026-06-04): 내공간 사이즈가이드 방향도 액자와 동일 게이팅 — orientationFree plain 액자에서만 가로 허용. 디자인·시계 템플릿은 세로 강제 + 버튼 숨김. */
+function dennSgOrientationAllowed(){return !!(window.curFTpl&&window.curFTpl.orientationFree===true)}
+function updateSgOriVisibility(){var row=document.getElementById('sg-ori-row');if(row)row.style.display=dennSgOrientationAllowed()?'':'none'}
+window.updateSgOriVisibility=updateSgOriVisibility;
 function sgSetOri(ori){
+  if(ori==='landscape'&&!dennSgOrientationAllowed())ori='portrait';/* 디자인 템플릿은 가로 불가 */
   SG.ori=ori;
   var pb=document.getElementById('sg-ori-portrait');
   var lb=document.getElementById('sg-ori-landscape');
   var gold='var(--gold,#C8A864)';
   if(pb){pb.style.background=ori==='portrait'?gold:'transparent';pb.style.color=ori==='portrait'?'#fff':'var(--warm)';}
   if(lb){lb.style.background=ori==='landscape'?gold:'transparent';lb.style.color=ori==='landscape'?'#fff':'var(--warm)';}
+  updateSgOriVisibility();
   sgDraw();
 }
 function sgReset(){
@@ -3735,7 +3741,7 @@ window.sgDraw=function(){
     if(centerModeV52){var baseCm=orientedGuideSize(activeGuideSize());if(baseCm){var baseCp=guideCenterPointV52(W,H,baseCm,pxPerCm);gx=baseCp.x-baseCm.w*pxPerCm/2;gy=baseCp.y-baseCm.h*pxPerCm/2}}
     ctx2.save();
     if(showRuler){ctx2.strokeStyle=rgbaTick;ctx2.fillStyle=rgbaTick;ctx2.font='8.5px DM Sans,sans-serif';ctx2.lineWidth=.8;for(var cm=0;cm<=400;cm+=10){var px=gx+cm*pxPerCm;if(px>W+5)break;var maj=cm%50===0;ctx2.beginPath();ctx2.moveTo(px,gy-(maj?12:6));ctx2.lineTo(px,gy);ctx2.stroke();if(cm>0){ctx2.fillStyle=rgba;ctx2.fillText(cm+'cm',px-10,gy-(maj?14:10));ctx2.fillStyle=rgbaTick}}for(var cm2=0;cm2<=400;cm2+=10){var py=gy+cm2*pxPerCm;if(py>H+5)break;var maj2=cm2%50===0;ctx2.beginPath();ctx2.moveTo(gx-(maj2?12:6),py);ctx2.lineTo(gx,py);ctx2.stroke();if(cm2>0){ctx2.fillStyle=rgba;ctx2.fillText(cm2+'cm',gx-(maj2?40:34),py+3);ctx2.fillStyle=rgbaTick}}ctx2.strokeStyle=rgbaTick;ctx2.lineWidth=1;ctx2.beginPath();ctx2.moveTo(gx,gy-20);ctx2.lineTo(gx,H);ctx2.stroke();ctx2.beginPath();ctx2.moveTo(0,gy);ctx2.lineTo(W,gy);ctx2.stroke()}
-    sizes.forEach(function(s){if(!SG.active[s.id])return;var a=num(s.wcm,0),b=num(s.hcm,0),drawW,drawH;if(SG.ori==='landscape'){drawW=Math.max(a,b);drawH=Math.min(a,b)}else{drawW=Math.min(a,b);drawH=Math.max(a,b)}var pw=drawW*pxPerCm,ph=drawH*pxPerCm,bx=gx,by=gy;if(centerModeV52){var cp=guideCenterPointV52(W,H,{w:drawW,h:drawH},pxPerCm);bx=cp.x-pw/2;by=cp.y-ph/2}ctx2.strokeStyle=rgba;ctx2.lineWidth=1.5;ctx2.fillStyle=rgbaFill;ctx2.fillRect(bx,by,pw,ph);ctx2.strokeRect(bx,by,pw,ph);ctx2.fillStyle='rgba(255,255,255,.38)';ctx2.fillRect(bx+4,by+4,Math.min(Math.max(pw-8,64),154),34);ctx2.fillStyle=rgba;ctx2.font='bold 11px DM Sans,sans-serif';ctx2.fillText(s.name,bx+8,by+17);ctx2.font='10px DM Sans,sans-serif';ctx2.fillText(drawW+'×'+drawH+'cm',bx+8,by+31)});
+    sizes.forEach(function(s){if(!SG.active[s.id])return;var a=num(s.wcm,0),b=num(s.hcm,0),drawW,drawH;if(SG.ori==='landscape'){drawW=Math.max(a,b);drawH=Math.min(a,b)}else{drawW=Math.min(a,b);drawH=Math.max(a,b)}var pw=drawW*pxPerCm,ph=drawH*pxPerCm,bx=gx,by=gy;if(centerModeV52){var cp=guideCenterPointV52(W,H,{w:drawW,h:drawH},pxPerCm);bx=cp.x-pw/2;by=cp.y-ph/2}ctx2.strokeStyle=rgba;ctx2.lineWidth=1.5;ctx2.fillStyle=rgbaFill;ctx2.fillRect(bx,by,pw,ph);ctx2.strokeRect(bx,by,pw,ph);/* E(2026-06-04): 사이즈 라벨 — 사각형 밖 우상단, 컴팩트 크기 */var __lw=92,__lh=25;var __lx=(bx+pw+6+__lw<=W)?(bx+pw+6):Math.max(0,bx+pw-__lw);var __ly=Math.max(0,by);ctx2.fillStyle='rgba(255,255,255,.78)';ctx2.fillRect(__lx,__ly,__lw,__lh);ctx2.strokeStyle=rgba;ctx2.lineWidth=1;ctx2.strokeRect(__lx,__ly,__lw,__lh);ctx2.fillStyle=rgba;ctx2.font='bold 9.5px DM Sans,sans-serif';ctx2.fillText(s.name,__lx+6,__ly+11);ctx2.font='8.5px DM Sans,sans-serif';ctx2.fillText(drawW+'×'+drawH+'cm',__lx+6,__ly+21)});
     ctx2.restore();requestSaveSettingsV33();
   }catch(e){}
 };
@@ -6301,6 +6307,7 @@ function syncGuideOrientation(redraw){
   window.SG=window.SG||{on:true,active:{},_sizes:[],ori:'portrait'};
   SG.ori=state.mode;
   paintGuideButtons();
+  try{if(window.updateSgOriVisibility)window.updateSgOriVisibility()}catch(e){}/* E: 사이즈가이드 방향 버튼도 orientationFree에서만 노출 */
   if(redraw){try{if(window.sgDraw)window.sgDraw()}catch(e){}try{if(window.rmRender)window.rmRender()}catch(e){}}
 }
 function setOrientation(mode){
@@ -6426,7 +6433,7 @@ function enforceOrientationGate(){if(!frameOrientationAllowed()&&(state.mode!=='
 var oldRender=window.renderFrame;
 if(typeof oldRender==='function'&&!oldRender.__dennV64FrameOrientation){
   window.renderFrame=function(){
-    updateOrientUiVisibility();enforceOrientationGate();
+    updateOrientUiVisibility();enforceOrientationGate();try{if(window.updateSgOriVisibility)window.updateSgOriVisibility()}catch(e){}
     applyAspect();
     /* landscape는 portrait를 그대로 90° 돌린 크기 — L2603 본체 sizing(pw=maxW, if ph>maxH clamp)이
        landscape에선 clamp 미발동으로 캔버스가 더 넓어지는 비대칭 → portrait의 긴 변(=maxH)을 임시로
