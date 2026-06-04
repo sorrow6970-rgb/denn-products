@@ -2950,6 +2950,10 @@ function applySettingsV33(s){
   if(window.RM){RM.pos=RM.pos||{x:.5,y:.4};/* 단계1(R1): 위치를 frameCenterX 우선으로 읽음(applyRoomSettings L4993과 동일) — ②가 frameCenterX로 저장하므로 frameX만 읽던 desync 차단 */var __cx=s.frameCenterX!=null?s.frameCenterX:(s.guideCenterX!=null?s.guideCenterX:s.frameX),__cy=s.frameCenterY!=null?s.frameCenterY:(s.guideCenterY!=null?s.guideCenterY:s.frameY);RM.pos.x=clamp(num(__cx,50),0,100)/100;RM.pos.y=clamp(num(__cy,40),0,100)/100;RM.sunPos=RM.sunPos||{x:.75,y:.2};RM.sunPos.x=clamp(num(s.sunX!=null?s.sunX:s.sunlightX,.75),0,1);RM.sunPos.y=clamp(num(s.sunY!=null?s.sunY:s.sunlightY,.2),0,1)}
 }
 var SIZE_KEYS_MIRROR_V=['defaultSizeId','sizeId','frameSizeId','primarySizeId','adminGuideSizeId','adminGuideSizeName','adminGuideSizeWcm','adminGuideSizeHcm','adminGuideOrientation','guideSizeId','guideSizeName','guideSizeWcm','guideSizeHcm','guideOrientation','runtimeGuideSizeId','runtimeGuideSizeName','runtimeGuideSizeWcm','runtimeGuideSizeHcm','runtimeGuideOrientation'];
+/* A(2026-06-04): 컨텍스트 진입(select/clear/upload/preset/reset)이 호출 → 다음 loadSettingsV33가 현재 키를 ② 미러하도록 요청. 인메모리(비영속) → refresh 시 소멸. */
+function dennCurScopedKeyV(){try{return window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey()}catch(e){try{return bgKey()}catch(_){return 'default-room'}}}
+function dennReqMirrorV(){try{(window.__dennMirrorReqV||(window.__dennMirrorReqV={}))[dennCurScopedKeyV()]=true}catch(e){}}
+window.dennReqMirrorV=dennReqMirrorV;
 function loadSettingsV33(){
   var A=adm(),st=store(A),key=window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey(),base=Object.assign(defaults(),A.sizeGuideSettings||{},{bgScale:uiBgScale(A)});
   /* 2026-06-02 단순·견고: 소비자는 항상 운영자 디폴트를 미러(왕복 유지 포기, 절대 안 틀어짐). 사이즈 키만 기존 보존(주문 사이즈-first). 운영자 모드 제외.
@@ -2958,21 +2962,29 @@ function loadSettingsV33(){
      - 가이드배경(user:<bgId>) → 그 배경의 운영자 프리셋(<bgId>), 없으면 ② 폴백 */
   try{
     if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){
-      var __rs=A.roomBackgroundSettings||{},__srcKey=null;
-      if(window.RM&&window.RM.roomImg)__srcKey='__denn_room_common_default__'; /* 촬영배경(사진) → ②. 키 변종(direct-room-upload/uploaded-room/user:*) 무관하게 RM.roomImg로 감지 */
-      else if(key==='default-room')__srcKey='__denn_room_common_default__';
-      else if(key.indexOf('user:')===0)__srcKey=key.slice(5); /* 가이드배경: user:bgId → 운영자 bgId */
-      if(__srcKey){
-        var __useful=function(o){return o&&typeof o==='object'&&Object.keys(o).filter(function(k){return k.indexOf('__')!==0}).length>0;};
-        var __c=__rs[__srcKey];
-        if(!__useful(__c)&&__srcKey!=='__denn_room_common_default__')__c=__rs['__denn_room_common_default__']; /* 가이드배경 프리셋 없으면 ② 폴백 */
-        if(__useful(__c)){
-          var __prev=st[key]||{},__seed=JSON.parse(JSON.stringify(__c));
-          SIZE_KEYS_MIRROR_V.forEach(function(k){delete __seed[k];if(__prev[k]!=null)__seed[k]=__prev[k]});
-          delete __seed.__guideResetDefaults;
-          __seed.__adminPreset=false;__seed.__savedFromAdminRoomSetup=false;__seed.__dennCommonInheritV82=true;
-          st[key]=__seed;
+      /* A(2026-06-04): 컨텍스트 진입 요청(__dennMirrorReqV[key]) 또는 이번 세션 첫 시드(미시드)일 때만 ② 미러.
+         그 외(이미 시드 + 요청 없음 = 단순 모달 재오픈)는 st[key](세션 조정값) 보존. 맵은 인메모리라 새로고침=항상 미러. */
+      var __seededMap=window.__dennSeededKeysV||(window.__dennSeededKeysV={});
+      var __reqMap=window.__dennMirrorReqV||(window.__dennMirrorReqV={});
+      var __doMirror=(!!__reqMap[key])||!__seededMap[key];
+      if(__doMirror){
+        var __rs=A.roomBackgroundSettings||{},__srcKey=null;
+        if(window.RM&&window.RM.roomImg)__srcKey='__denn_room_common_default__'; /* 촬영배경(사진) → ②. 키 변종(direct-room-upload/uploaded-room/user:*) 무관하게 RM.roomImg로 감지 */
+        else if(key==='default-room')__srcKey='__denn_room_common_default__';
+        else if(key.indexOf('user:')===0)__srcKey=key.slice(5); /* 가이드배경: user:bgId → 운영자 bgId */
+        if(__srcKey){
+          var __useful=function(o){return o&&typeof o==='object'&&Object.keys(o).filter(function(k){return k.indexOf('__')!==0}).length>0;};
+          var __c=__rs[__srcKey];
+          if(!__useful(__c)&&__srcKey!=='__denn_room_common_default__')__c=__rs['__denn_room_common_default__']; /* 가이드배경 프리셋 없으면 ② 폴백 */
+          if(__useful(__c)){
+            var __prev=st[key]||{},__seed=JSON.parse(JSON.stringify(__c));
+            SIZE_KEYS_MIRROR_V.forEach(function(k){delete __seed[k];if(__prev[k]!=null)__seed[k]=__prev[k]});
+            delete __seed.__guideResetDefaults;
+            __seed.__adminPreset=false;__seed.__savedFromAdminRoomSetup=false;__seed.__dennCommonInheritV82=true;
+            st[key]=__seed;
+          }
         }
+        __seededMap[key]=true;delete __reqMap[key];
       }
     }
   }catch(e){}
@@ -3062,6 +3074,7 @@ function alignDirectUploadStart(key){
         var setupIdx=null;
         if(setupKey){try{var A0=adm(),gb=A0.guideBackgrounds||[];for(var gi=0;gi<gb.length;gi++){if(String((gb[gi]||{}).id||(gb[gi]||{}).name||'')===String(setupKey)){setupIdx=gi;break}}}catch(_e2){}}
         if(window.RM){RM.guideIndex=setupKey&&setupIdx!=null?setupIdx:null;RM.bgId=key}
+        dennReqMirrorV();/* 업로드/배경진입 = ② 미러(왕복 보존 대상 아님) */
         loadSettingsV33();
         var on=by('sg-on');if(on)on.checked=true;
         setFrameToGuideBaseScale();
@@ -3692,7 +3705,7 @@ window.sgDraw=function(){
 };
 var prevSelect=window.rmSelectGuide;
 function isAdminRoomSetupUploadV33(){try{return new URLSearchParams(location.search||'').has('adminRoomSetup')}catch(e){return false}}
-window.rmSelectGuide=function(i){if(!isAdminRoomSetupUploadV33())saveSettingsV33();if(window.RM){RM.guideIndex=i;RM.bgId=guideKey(i)}var r=prevSelect&&prevSelect.apply(this,arguments);setTimeout(function(){if(window.RM){RM.guideIndex=i;RM.bgId=guideKey(i)}loadSettingsV33();forceMobileCenterStart()},120);return r};
+window.rmSelectGuide=function(i){if(!isAdminRoomSetupUploadV33())saveSettingsV33();if(window.RM){RM.guideIndex=i;RM.bgId=guideKey(i)}var r=prevSelect&&prevSelect.apply(this,arguments);setTimeout(function(){if(window.RM){RM.guideIndex=i;RM.bgId=guideKey(i)}dennReqMirrorV();loadSettingsV33();forceMobileCenterStart()},120);return r};
 var prevHandle=window.rmHandleRoom;
 function roomUploadAlert(msg){try{alert(msg)}catch(e){}}
 function prepareRoomUpload(file,done){
@@ -3841,7 +3854,7 @@ window.rmHandleRoom=function(file){
   return false
 };
 var prevClear=window.rmClearRoom;
-window.rmClearRoom=function(){saveSettingsV33();if(window.RM){RM.guideIndex=null;RM.bgId='default-room'}var r=prevClear&&prevClear.apply(this,arguments);setTimeout(function(){if(window.RM)RM.guideIndex=null;loadSettingsV33();forceMobileCenterStart();syncInitialGuideFrame()},120);return r};
+window.rmClearRoom=function(){saveSettingsV33();if(window.RM){RM.guideIndex=null;RM.bgId='default-room'}var r=prevClear&&prevClear.apply(this,arguments);setTimeout(function(){if(window.RM)RM.guideIndex=null;dennReqMirrorV();loadSettingsV33();forceMobileCenterStart();syncInitialGuideFrame()},120);return r};
 var prevOpen=window.openRoomMockup;
 window.openRoomMockup=function(){window.RM=window.RM||{roomImg:null,sunPos:{x:.75,y:.2},rayStyle:'slat',sunOn:false,frameSnap:null,pos:{x:.5,y:.4},dragging:false,dragStart:{mx:0,my:0,px:0,py:0},canvas:null,ctx:null};var firstOpen=!window.__dennRoomOpenedOnce;window.__dennRoomOpenedOnce=true;var r=prevOpen&&prevOpen.apply(this,arguments);setTimeout(function(){var modal=by('room-modal');if(modal){modal.style.display='flex';modal.style.zIndex='8000';modal.style.opacity='1'}if(!RM.bgId){var __ars;try{__ars=new URLSearchParams(location.search||'').get('adminRoomSetup')}catch(e){}RM.bgId=__ars||(RM.roomImg?'uploaded-room':'default-room');}/* 운영자 편집기: 정체성을 운영자 키(②/배경)로 고정 — 모든 RM.bgId 기반 로드/재적용이 일관되게 ②를 봄. 소비자(파라미터 없음)는 default-room 유지 */installUsageGuide();installGuidePrecision();installGuideDragEvents();installFrameOnlyDragEvents();installMobileHoldSliders();installMobilePreviewResizer();loadSettingsV33();var on=by('sg-on'),body=by('sg-body');if(on)on.checked=true;if(body)body.style.display='block';if(firstOpen||isRoomMobile()){forceMobileCenterStart();syncInitialGuideFrame()}else{if(window.rmSizeCanvas)rmSizeCanvas();if(window.sgBuildSizes)sgBuildSizes();if(window.rmRender)rmRender();if(window.sgDraw)sgDraw()}},120);return r};
 var prevSun=window.rmTogSun;
@@ -4694,6 +4707,7 @@ function applyPresetByKey(key,opts){
     var st=A.roomBackgroundSettings[hit.key];
     if(!opts.forceAdmin&&!hasPreset(st))return false;
     setRoomKey(hit);
+    if(window.dennReqMirrorV)window.dennReqMirrorV();/* 프리셋 적용 = 미러(왕복 보존 대상 아님) */
     if(window.loadRoomBackgroundSettings)window.loadRoomBackgroundSettings();
     applyRoomPresetSize(st);
     renderRoomSoon();
@@ -12624,6 +12638,7 @@ input[type=range]{accent-color:#777}
     if(btn.parentNode)btn.parentNode.replaceChild(newBtn,btn);
     newBtn.onclick=function(){
       if(!window.confirm('내 공간 보기의 모든 설정을 기본값으로 되돌릴까요?'))return;
+      if(window.dennReqMirrorV)window.dennReqMirrorV();/* "기본설정으로" = 항상 ② 미러(세션 보존 무시) */
       /* 2026-06-02: default-room(배경 미선택)이면 운영자 ②로 전체 복귀(위치·스케일·기울기 회전/원근 전부) — 공장 0 리셋이 아니라 관리자 디폴트값.
          (이 핸들러가 restructure의 addEventListener를 cloneNode로 덮으므로, 여기에 분기를 둬야 실제 동작) */
       var _RM=window.RM,_isDef=_RM&&!_RM.roomImg&&(_RM.guideIndex==null)&&(_RM.bgId==='default-room'||!_RM.bgId);
