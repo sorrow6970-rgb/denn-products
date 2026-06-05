@@ -2020,12 +2020,15 @@ function rmBindEvents(){
     RM.pos.x=Math.max(0.05,Math.min(0.95,RM.dragStart.px+dx));
     RM.pos.y=Math.max(0.05,Math.min(0.95,RM.dragStart.py+dy));
     RM.__userMoved=true;
+    /* 드래그한 위치를 frameAnchorV48에 반영 → 휠 리사이즈(L5557) 등 재적용 시 사용자 위치 유지(운영자값으로 안 튐) */
+    RM.frameAnchorV48={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameAnchor:'center'};
     if(window.dennSyncGuideXYDisplayCenterV89)window.dennSyncGuideXYDisplayCenterV89();
     rmRender();
   });
   document.addEventListener('mouseup',function(){RM.sunDrag=false;if(RM.dragging){RM.dragging=false;if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51();if(c)c.style.cursor='grab';}});
   /* 위치 슬라이더(위치 X/Y)를 소비자가 직접 조정해도 '옮김'으로 간주 → 운영자 ② 강제 해제(세션 한정) */
-  document.addEventListener('input',function(e){var t=e&&e.target;if(t&&/^sg-o[xy]-/.test(t.id||'')&&window.RM)RM.__userMoved=true;},true);
+  /* 소비자가 룸/가이드 컨트롤(기준 스케일·위치 X/Y·프레임 크기 등)을 직접 조정하면 '조절함'으로 간주 → 운영자 디폴트 강제 해제(세션 한정, 새로고침/기본설정으로만 다시 디폴트). */
+  document.addEventListener('input',function(e){var t=e&&e.target;if(t&&/^(sg-|rm-)/.test(t.id||'')&&window.RM)RM.__userMoved=true;},true);
   // Touch drag
   c.ontouchstart=function(e){
     e.preventDefault();RM.dragging=true;
@@ -2038,6 +2041,8 @@ function rmBindEvents(){
     RM.pos.x=Math.max(0.05,Math.min(0.95,RM.dragStart.px+dx));
     RM.pos.y=Math.max(0.05,Math.min(0.95,RM.dragStart.py+dy));
     RM.__userMoved=true;
+    /* 드래그한 위치를 frameAnchorV48에 반영 → 휠 리사이즈(L5557) 등 재적용 시 사용자 위치 유지(운영자값으로 안 튐) */
+    RM.frameAnchorV48={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameAnchor:'center'};
     if(window.dennSyncGuideXYDisplayCenterV89)window.dennSyncGuideXYDisplayCenterV89();
     rmRender();
   };
@@ -2047,7 +2052,7 @@ function rmBindEvents(){
     e.preventDefault();
     var sl=document.getElementById('rm-size');
     var nv=Math.max(8,Math.min(80,parseFloat(sl.value)+(e.deltaY<0?2:-2)));
-    sl.value=nv;document.getElementById('rm-size-v').textContent=nv+'%';rmRender();
+    sl.value=nv;document.getElementById('rm-size-v').textContent=nv+'%';if(window.RM)RM.__userMoved=true;rmRender();
   },{passive:false});
 }
 
@@ -2997,11 +3002,14 @@ function applySettingsV33(s){
 var SIZE_KEYS_MIRROR_V=['defaultSizeId','sizeId','frameSizeId','primarySizeId','adminGuideSizeId','adminGuideSizeName','adminGuideSizeWcm','adminGuideSizeHcm','adminGuideOrientation','guideSizeId','guideSizeName','guideSizeWcm','guideSizeHcm','guideOrientation','runtimeGuideSizeId','runtimeGuideSizeName','runtimeGuideSizeWcm','runtimeGuideSizeHcm','runtimeGuideOrientation'];
 /* A(2026-06-04): 컨텍스트 진입(select/clear/upload/preset/reset)이 호출 → 다음 loadSettingsV33가 현재 키를 ② 미러하도록 요청. 인메모리(비영속) → refresh 시 소멸. */
 function dennCurScopedKeyV(){try{return window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey()}catch(e){try{return bgKey()}catch(_){return 'default-room'}}}
-function dennReqMirrorV(){try{(window.__dennMirrorReqV||(window.__dennMirrorReqV={}))[dennCurScopedKeyV()]=true}catch(e){}}
+function dennReqMirrorV(){try{(window.__dennMirrorReqV||(window.__dennMirrorReqV={}))[dennCurScopedKeyV()]=true;if(window.RM)window.RM.__userMoved=false;/* 컨텍스트 진입(배경 선택/클리어/업로드/프리셋/기본설정으로)=운영자 디폴트로 리셋 → __userMoved 해제해 강제 재개. 그 외 세션 조절은 유지. */}catch(e){}}
 window.dennReqMirrorV=dennReqMirrorV;
 /* E(2026-06-04): per-section "기본값" 버튼(액자/기울기/그림자/햇빛) 공통 소스. 소비자=운영자 ②(공통 디폴트, 토글 포함), 운영자 편집모드/② 없음=null(각 함수의 공장 폴백). */
 function dennSectionCommonV(){try{if(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())return null;var rs=adm().roomBackgroundSettings,c=rs&&rs['__denn_room_common_default__'];if(c&&typeof c==='object'&&Object.keys(c).filter(function(k){return k.indexOf('__')!==0}).length>0)return c;}catch(e){}return null;}
 window.dennSectionCommonV=dennSectionCommonV;
+/* 2026-06-05: 현재 컨텍스트의 운영자 프리셋 — 가이드배경이면 그 bg 키(운영자가 배경별로 저장한 값), 기본화면/촬영배경이면 공통 ②. 없으면 ② 폴백. 강제 가드(스케일/위치)가 ②만 보던 것을 컨텍스트별로 교정. 운영자 편집모드 제외. */
+function dennCurrentOperatorPresetV(){try{if(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())return null;var rs=adm().roomBackgroundSettings||{};var k=(typeof bgKey==='function')?bgKey():'default-room';var useful=function(o){return o&&typeof o==='object'&&Object.keys(o).filter(function(x){return x.indexOf('__')!==0}).length>0};var src=(k==='default-room'||k==='uploaded-room')?'__denn_room_common_default__':k;var c=rs[src];if(!useful(c))c=rs['__denn_room_common_default__'];return useful(c)?c:null;}catch(e){return null}}
+window.dennCurrentOperatorPresetV=dennCurrentOperatorPresetV;
 function loadSettingsV33(){
   var A=adm(),st=store(A),key=window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey(),base=Object.assign(defaults(),A.sizeGuideSettings||{},{bgScale:uiBgScale(A)});
   /* 2026-06-02 단순·견고: 소비자는 항상 운영자 디폴트를 미러(왕복 유지 포기, 절대 안 틀어짐). 사이즈 키만 기존 보존(주문 사이즈-first). 운영자 모드 제외.
@@ -3531,6 +3539,9 @@ function installGuideDragEvents(){
       var dx=(ev.clientX-RM.dragStart.mx)/r.width,dy=(ev.clientY-RM.dragStart.my)/r.height;
       RM.pos.x=clamp(RM.dragStart.px+dx,.02,.98);
       RM.pos.y=clamp(RM.dragStart.py+dy,.02,.98);
+      /* ★ 이 포인터 드래그가 실제 액자 이동 핸들러 — 위치를 '사용자 소유'로 표시(운영자 디폴트 강제/앵커 재적용이 위치를 안 되돌리도록). 드래그 종료 후 휠/스케일 변경에도 위치 유지. */
+      RM.__userMoved=true;
+      RM.frameAnchorV48={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameAnchor:'center'};
       if(window.dennSyncGuideXYDisplayCenterV89)window.dennSyncGuideXYDisplayCenterV89();
       if(window.rmRender)window.rmRender();
       if(window.sgDraw)window.sgDraw();
@@ -3551,6 +3562,7 @@ function installGuideDragEvents(){
     var sl=by('rm-size'),sv=by('rm-size-v');if(!sl)return;
     var nv=clamp(num(sl.value,20)+(ev.deltaY<0?2:-2),8,80);
     sl.value=nv;if(sv)sv.textContent=nv+'%';
+    if(window.RM)RM.__userMoved=true;
     if(window.rmRender)window.rmRender();
   },{capture:true,passive:false});
 }
@@ -3699,8 +3711,20 @@ window.rmRender=function(){
     if(!window.RM)return;
     RM.canvas=RM.canvas||by('rm-canvas');RM.ctx=RM.ctx||ctx(RM.canvas);if(!RM.canvas||!RM.ctx)return;
     if(!RM.canvas.width||!RM.canvas.height)window.rmSizeCanvas();
-    /* ★ 소비자: 드래그 전이면 프레임 위치를 운영자 ②(공통 디폴트) center로 강제 — 모든 렌더 경로 첫 프레임부터 통일(초기 튐/드리프트 제거, 캔버스·창 무관). 드래그/위치슬라이더 조정 시 RM.__userMoved로 해제(세션 한정, 새로고침 리셋). 운영자 편집모드 제외. */
-    if(!RM.__userMoved&&!RM.dragging&&!RM.sunDrag&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){var __cc=window.dennSectionCommonV&&window.dennSectionCommonV();if(__cc){var __ppx=num(__cc.frameCenterX!=null?__cc.frameCenterX:__cc.frameX,50),__ppy=num(__cc.frameCenterY!=null?__cc.frameCenterY:__cc.frameY,40);RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=clamp(__ppx/100,.02,.98);RM.pos.y=clamp(__ppy/100,.02,.98);RM.frameAnchorV48={frameCenterX:__ppx,frameCenterY:__ppy,frameAnchor:'center'};var __ggx=num(__cc.guideX,__ppx),__ggy=num(__cc.guideY,__ppy);setVal('sg-ox-r',__ggx);setVal('sg-ox-n',__ggx);setVal('sg-oy-r',__ggy);setVal('sg-oy-n',__ggy);}}
+    /* ★ 소비자 운영자 디폴트는 '초기값'일 뿐 — 한 번이라도 조절(RM.__userMoved) 전에만 운영자 프리셋(스케일+위치)을 강제하고,
+       그 이후엔 스케일·위치·크기 전부 사용자가 자유롭게 조절(세션 유지). 새로고침/기본설정으로만 다시 프리셋으로 리셋.
+       현재 컨텍스트 프리셋: 가이드배경=그 배경 저장값 / 기본화면·촬영사진=공통 ②(폴백 ②). 운영자 편집모드(adminRoomSetup) 전체 제외.
+       저장은 scopedKeyV2로 user: 키에만 → 운영자 프리셋 원본 불변. */
+    if(!RM.__userMoved&&!RM.dragging&&!RM.sunDrag&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){
+      var __op=window.dennCurrentOperatorPresetV&&window.dennCurrentOperatorPresetV();
+      if(__op){
+        if(isFinite(__op.guideScale)){var __scv=Math.round(__op.guideScale*1000)/10;setVal('sg-scale-r',__scv);setVal('sg-scale-n',__scv);}
+        var __px=num(__op.frameCenterX!=null?__op.frameCenterX:__op.frameX,50),__py=num(__op.frameCenterY!=null?__op.frameCenterY:__op.frameY,40);
+        RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=clamp(__px/100,.02,.98);RM.pos.y=clamp(__py/100,.02,.98);
+        RM.frameAnchorV48={frameCenterX:__px,frameCenterY:__py,frameAnchor:'center'};
+        var __gx=num(__op.guideX,__px),__gy=num(__op.guideY,__py);setVal('sg-ox-r',__gx);setVal('sg-ox-n',__gx);setVal('sg-oy-r',__gy);setVal('sg-oy-n',__gy);
+      }
+    }
     showCanvas();
     var c=RM.canvas,ctx2=RM.ctx,W=c.width,H=c.height,bright=num((by('rm-bright')||{}).value,100);
     ctx2.clearRect(0,0,W,H);ctx2.fillStyle='#D8D3CB';ctx2.fillRect(0,0,W,H);
@@ -5557,7 +5581,7 @@ if(!window.__dennRoomUserEditSaveClearV48){
           return;
         }
         markRoomDirty();
-        if((t.id==='rm-size'||t.id==='sg-scale-r'||t.id==='sg-scale-n')&&window.RM&&RM.frameAnchorV48)applyFrameAnchorV48(RM.frameAnchorV48);
+        if((t.id==='rm-size'||t.id==='sg-scale-r'||t.id==='sg-scale-n')&&window.RM&&RM.frameAnchorV48){if(RM.pos&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV()))RM.frameAnchorV48={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameAnchor:'center'};/* 소비자: 스케일/크기 변경 시 앵커를 현재 위치로 갱신 → 제자리 스케일(운영자 위치 스냅 방지) */applyFrameAnchorV48(RM.frameAnchorV48);}
         scheduleUserSaveV48();
       }else if(t.id==='rm-canvas'||t.id==='sg-canvas'||t.closest('#rm-canvas-area')){
         markRoomDirty();
@@ -5752,10 +5776,10 @@ function syncOutputs(){
 }
 function applyGuide(i,bg,img){
   var A=adm(),key=bgKey(bg,i),saved=A.roomBackgroundSettings&&A.roomBackgroundSettings[key]||{},hasSaved=hasSavedSettings(saved),st=hasSaved?Object.assign({},defaultRoomSettings(A),saved):defaultRoomSettings(A);
-  /* 소비자: 기준 스케일은 항상 운영자 ②를 따른다(가이드 배경의 옛 저장 guideScale이 덮지 않도록). 사이즈/위치/투명도 무수정, 운영자 편집모드 제외. */
-  try{ if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV()) && isFinite(uiGuideScale(A))) st.guideScale=uiGuideScale(A); }catch(e){}
   window.RM=window.RM||{};
   RM.roomImg=img;RM.roomSrc=bgSrc(bg);RM.guideIndex=i;RM.bgId=key;
+  /* 소비자: 기준 스케일은 현재 컨텍스트의 운영자 프리셋을 따른다(가이드배경=그 배경값, 기본/촬영=②). ★ RM(guideIndex/bgId) 갱신 '후' 호출해야 dennCurrentOperatorPresetV가 새로 선택한 배경 키를 봄(이전엔 갱신 전이라 ②로 덮였음). 사이즈/위치/투명도 무수정, 운영자 편집모드 제외. */
+  try{ if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){ var __op=window.dennCurrentOperatorPresetV&&window.dennCurrentOperatorPresetV(); if(__op&&isFinite(__op.guideScale)) st.guideScale=__op.guideScale; } }catch(e){}
   updateGuideUi(i,img.src);
   applyRoomSettings(st);
   applyDefaultSize(A,st);
@@ -5773,8 +5797,8 @@ function stabilizeCurrentGuide(){
   if(idx==null||idx<0)return;
   var bg=(A.guideBackgrounds||[])[idx],key=bgKey(bg,idx),saved=A.roomBackgroundSettings&&A.roomBackgroundSettings[key];
   var hasSaved=hasSavedSettings(saved),st=hasSaved?Object.assign({},defaultRoomSettings(A),saved):defaultRoomSettings(A);
-  /* 소비자: 기준 스케일은 항상 운영자 ②를 따른다(가이드 배경의 옛 저장 guideScale이 덮지 않도록). 사이즈/위치/투명도 무수정, 운영자 편집모드 제외. */
-  try{ if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV()) && isFinite(uiGuideScale(A))) st.guideScale=uiGuideScale(A); }catch(e){}
+  /* 소비자: 기준 스케일은 현재 컨텍스트의 운영자 프리셋을 따른다(가이드배경=그 배경값, 기본/촬영=②). 사이즈/위치/투명도 무수정, 운영자 편집모드 제외. */
+  try{ if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){ var __op=window.dennCurrentOperatorPresetV&&window.dennCurrentOperatorPresetV(); if(__op&&isFinite(__op.guideScale)) st.guideScale=__op.guideScale; } }catch(e){}
   applyRoomSettings(st);
   applyDefaultSize(A,st);
   restoreUserFrameForRoom();
@@ -6829,7 +6853,7 @@ window.dennRollbackRoomGuideResetDefaultsV73=function(){
     return true;
   }
   function redraw(){
-    try{if(window.RM&&RM.frameAnchorV48&&typeof window.applyFrameAnchorV48==='function')window.applyFrameAnchorV48(RM.frameAnchorV48)}catch(e){}
+    try{if(window.RM&&RM.frameAnchorV48&&typeof window.applyFrameAnchorV48==='function'){if(RM.pos&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV()))RM.frameAnchorV48={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameAnchor:'center'};/* 소비자: 휠 스케일 변경 시 앵커를 현재 위치로 갱신 → 제자리 스케일(운영자 위치 스냅 방지). 슬라이더(L5581/L12848)와 동일. */window.applyFrameAnchorV48(RM.frameAnchorV48)}}catch(e){}
     try{if(typeof window.sgDraw==='function')window.sgDraw()}catch(e){}
     try{if(typeof window.rmRender==='function')window.rmRender()}catch(e){}
     try{if(typeof window.markRoomDirty==='function')window.markRoomDirty()}catch(e){}
@@ -6839,6 +6863,8 @@ window.dennRollbackRoomGuideResetDefaultsV73=function(){
     var area=$('rm-canvas-area'),scale=$('sg-scale-r')||$('sg-scale-n');
     if(!area||!area.contains(e.target)||!guideOn()||!scale)return;
     e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+    /* ★ 휠 스케일 조정 = 사용자 조작 → __userMoved 세팅(미조작 시 운영자 스케일로 매 렌더 되돌리는 force 블록을 멈춰 초기화면에서도 휠 스케일이 먹게 함). */
+    if(window.RM)RM.__userMoved=true;
     if(setScale(num(scale.value,100)+(e.deltaY<0?2:-2)))redraw();
   }
   function install(){
@@ -12824,7 +12850,7 @@ input[type=range]{accent-color:#777}
   window.__dennSgScaleSliderSync=true;
   function $(id){return document.getElementById(id)}
   function redraw(){
-    try{if(window.RM&&RM.frameAnchorV48&&typeof window.applyFrameAnchorV48==='function')window.applyFrameAnchorV48(RM.frameAnchorV48)}catch(e){}
+    try{if(window.RM&&RM.frameAnchorV48&&typeof window.applyFrameAnchorV48==='function'){if(RM.pos&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV()))RM.frameAnchorV48={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameAnchor:'center'};/* 소비자: 스케일 변경 시 앵커를 현재 위치로 갱신 → 프레임이 제자리에서 스케일만 변함(운영자 위치로 스냅 방지) */window.applyFrameAnchorV48(RM.frameAnchorV48)}}catch(e){}
     try{if(typeof window.rmRender==='function')window.rmRender()}catch(e){}
     try{if(typeof window.markRoomDirty==='function')window.markRoomDirty()}catch(e){}
   }
