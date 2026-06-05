@@ -59,7 +59,7 @@ header{background:var(--ink);padding:0 32px;height:54px;display:flex;align-items
 .panel{background:var(--surface);border-right:1px solid var(--border);padding:16px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:13px}
 /* 드롭다운 등으로 좌측 패널이 길어져도 grid 행 높이 고정 → 우측 미리보기가 따라 움직이지 않게: PC에서 패널 내부 스크롤 (모바일은 @media max-width 별도 처리) */
 @media(min-width:861px){#page-frame .panel{max-height:calc(100vh - 95px)}}
-.sec-label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--warm);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.sec-label{font-size:12.5px;font-weight:700;letter-spacing:0;color:var(--ink);margin-bottom:9px;display:flex;align-items:center;gap:8px}
 .sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
 .drop-zone{border:1.5px dashed var(--border);border-radius:10px;padding:32px 14px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#FAFAF7}
 .drop-zone:hover{border-color:var(--gold);background:#f5f5f5}
@@ -330,18 +330,22 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
 <div class="main page on" id="page-frame">
   <div class="panel">
     <div class="info-bar"><span>사이즈: <strong id="ib-sz">-</strong></span><span>·</span><span>프레임: <strong id="ib-fc">-</strong></span></div>
-    <div><div class="sec-label">01 액자 사이즈</div><div class="chips c2" id="frame-sz-chips"></div><div class="hint" id="denn-v71-frame-size-note" style="margin-top:7px;line-height:1.55">액자 사이즈는 동일하게 표기됩니다. 실제 사이즈 예시보기는 내공간에서보기에서 확인하세요!</div></div>
+    <div><div class="sec-label">액자 사이즈</div><div class="chips c2" id="frame-sz-chips"></div><div class="hint" id="denn-v71-frame-size-note" style="margin-top:7px;line-height:1.55">액자 사이즈는 동일하게 표기됩니다. 실제 사이즈 예시보기는 내공간에서보기에서 확인하세요!</div></div>
     <hr>
     <div>
-      <div class="sec-label">02 템플릿</div>
+      <div class="sec-label">템플릿</div>
       <div class="clock-group-tabs" id="frame-clock-group-tabs"></div>
       <div class="cat-chips" id="frame-cat-chips"></div>
       <div class="tpl-scroll"><div class="tpl-grid" id="frame-tpl-grid"></div></div>
     </div>
     <hr>
-    <div><div class="sec-label">03 프레임 색상</div><div class="sw-row" id="frame-color-chips"></div></div>
+    <div><div class="sec-label">프레임 색상</div><div class="sw-row" id="frame-color-chips"></div></div>
+    <div><div class="frame-text-style-box" id="frame-text-style-box">
+        <div class="frame-text-style-head"><div class="frame-text-style-title">문구별 색상 / 그림자</div><div class="tog" id="frame-text-style-master" onclick="toggleFrameTextStyleBox()"></div></div>
+        <div class="frame-text-style-body" id="frame-text-style-body"></div>
+      </div></div>
     <hr>
-    <div><div class="sec-label">04 이미지 업로드</div><div class="drop-zone" id="frame-drop" ondragover="ev(event)" ondrop="dropF(event,'frame')"><input type="file" id="frame-file" accept="image/*" onchange="loadF(this,'frame')"><div class="drop-icon">🖼</div><h4>이미지를 끌어다 놓거나 클릭</h4><p>JPG · PNG · 고해상도 권장</p></div><div class="img-prev" id="frame-prev"><img id="frame-thumb" src="" alt=""><button class="rebtn" onclick="resetImg('frame')">다른 이미지</button></div>
+    <div><div class="sec-label">이미지 업로드</div><div class="drop-zone" id="frame-drop" ondragover="ev(event)" ondrop="dropF(event,'frame')"><input type="file" id="frame-file" accept="image/*" onchange="loadF(this,'frame')"><div class="drop-icon">🖼</div><h4>이미지를 끌어다 놓거나 클릭</h4><p>JPG · PNG · 고해상도 권장</p></div><div class="img-prev" id="frame-prev"><img id="frame-thumb" src="" alt=""><button class="rebtn" onclick="resetImg('frame')">다른 이미지</button></div>
       <div class="img-transform-ctl" id="frame-transform-ctl">
         <div class="zoom-row"><label>🔍 확대/축소</label><input type="range" id="frame-zoom" min="30" max="500" value="100" oninput="setFrameZoom(this.value)"><span id="frame-zoom-v">100%</span></div>
         <div class="zoom-btns">
@@ -354,20 +358,16 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     </div>
     <hr>
     <div>
-      <div class="sec-label">05 문구 입력</div>
+      <div class="sec-label">문구 입력</div>
       <div class="f-txt-group">
         <div class="f-txt-item"><label>메인 문구<span id="cnt-main">0/30</span></label><textarea id="f-main" maxlength="60" rows="2" placeholder="메인 문구 (엔터 1회 가능)" oninput="limitFrameTextLines(this);fCnt('main',30);renderFrame()"></textarea></div>
         <div class="f-txt-item"><label>이름<span id="cnt-name">0/30</span></label><textarea id="f-name" maxlength="60" rows="2" placeholder="이름 (엔터 1회 가능)" oninput="limitFrameTextLines(this);fCnt('name',30);renderFrame()"></textarea></div>
         <div class="f-txt-item"><label>날짜<span id="cnt-date">0/20</span></label><textarea id="f-date" maxlength="40" rows="2" placeholder="예: 2024. 11. 15" oninput="limitFrameTextLines(this);fCnt('date',20);renderFrame()"></textarea></div>
         <div class="f-txt-item"><label>추가 문구<span id="cnt-sub">0/50</span></label><textarea id="f-sub" maxlength="100" rows="2" placeholder="추가 문구 (엔터 1회 가능)" oninput="limitFrameTextLines(this);fCnt('sub',50);renderFrame()"></textarea></div>
       </div>
-      <div class="frame-text-style-box" id="frame-text-style-box">
-        <div class="frame-text-style-head"><div class="frame-text-style-title">문구별 색상 / 그림자</div><div class="tog" id="frame-text-style-master" onclick="toggleFrameTextStyleBox()"></div></div>
-        <div class="frame-text-style-body" id="frame-text-style-body"></div>
-      </div>
     </div>
     <hr>
-    <div><div class="sec-label">06 시계 표시</div><div class="tog-row"><div><div style="font-size:11.5px;font-weight:500">시계 추가</div><div style="font-size:9.5px;color:var(--warm);margin-top:1px">저장된 시계 이미지 표시</div></div><div class="tog on" id="tog-clock" onclick="togFrame('clock')"></div></div><div id="clock-hint-msg" style="font-size:9.5px;color:var(--warm);margin-top:7px;line-height:1.5;padding:7px 9px;background:#FAFAFA;border-radius:6px;border:1px solid #e6e6e6">시계액자 템플릿 선택시에만 설정 가능합니다.</div></div>
+    <div><div class="sec-label">시계 표시</div><div class="tog-row"><div><div style="font-size:11.5px;font-weight:500">시계 추가</div><div style="font-size:9.5px;color:var(--warm);margin-top:1px">저장된 시계 이미지 표시</div></div><div class="tog on" id="tog-clock" onclick="togFrame('clock')"></div></div><div id="clock-hint-msg" style="font-size:9.5px;color:var(--warm);margin-top:7px;line-height:1.5;padding:7px 9px;background:#FAFAFA;border-radius:6px;border:1px solid #e6e6e6">시계액자 템플릿 선택시에만 설정 가능합니다.</div></div>
     <hr>
     <div class="denn-frame-action-stack" id="denn-frame-action-stack">
       <button class="cta denn-action-btn denn-action-btn-room" onclick="openRoomMockup()">🏠 내 공간에서 보기</button>
@@ -2558,7 +2558,10 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){in
 
 <style id="denn-v19-mock-style">
 /* v19: frame/clock toggles never change canvas coordinates; only overlays after render */
-#denn-frame-visible-row{margin-top:7px}.frame-extra-options .hint{font-size:9.5px;color:var(--warm);line-height:1.6;background:#F5F0E7;border-radius:6px;padding:6px 8px}
+#denn-frame-vis-section{margin-top:16px}/* 2026-06-05: 제목(밖)+박스 한 섹션 래퍼 — 구분선 없이 위 여백만으로 별도 섹션 구분(시계 표시도 위에 줄 없음) */
+#denn-frame-vis-section>.sec-label{margin-bottom:10px}
+#denn-frame-visible-row{margin-top:0}
+.frame-extra-options .hint{font-size:9.5px;color:var(--warm);line-height:1.6;background:#F5F0E7;border-radius:6px;padding:6px 8px}
 </style>
 <script id="denn-v19-mock-stability">
 (function(){
@@ -11995,7 +11998,10 @@ window.addEventListener('load',later);
   .denn-pc-shell .dps-icon.on{background:rgba(255,255,255,.12);color:var(--gold)}
   /* 기능 메뉴(드로어) 컬럼 — info-bar 상단 고정 + 활성 그룹만 노출 */
   .denn-pc-shell .dps-menu{border-right:1px solid var(--border);padding:var(--denn-control-pad);box-sizing:border-box;overflow-y:auto}
-  .denn-pc-shell .dps-menu>.info-bar{position:static!important;transform:none!important;left:auto!important;bottom:auto!important;width:100%;box-sizing:border-box;margin:0 0 14px;justify-content:center}
+  .denn-pc-shell .dps-menu>.info-bar{position:static!important;transform:none!important;left:auto!important;bottom:auto!important;width:100%;box-sizing:border-box;margin:0 0 14px;justify-content:center;padding:12px 16px;gap:16px}
+  /* 2026-06-05: PC 셸 상단 사이즈/프레임 정보 바 — 크기·텍스트 키움(비어 보이던 박스 채움) */
+  .denn-pc-shell .dps-menu>.info-bar span{font-size:13px}
+  .denn-pc-shell .dps-menu>.info-bar strong{font-weight:700}
   .denn-pc-shell .dps-group{display:none;flex-direction:column;gap:13px}
   .denn-pc-shell .dps-group.on{display:flex}
   /* 캔버스 */
@@ -12035,10 +12041,10 @@ window.addEventListener('load',later);
     ['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 9.5l-9 9-2-2 9-9z"/><path d="M13 8l3 3"/><path d="M18 3v2M18 7v2M15.5 5h2M19.5 5h2"/><path d="M20 13l.6 1.4 1.4.6-1.4.6L20 17l-.6-1.4L18 15l1.4-.6z"/></svg>','템플릿','tpl'],
     /* 이미지: 사진 카드 스택 (앞 카드에 산봉우리 + 해) */
     ['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h10a2 2 0 012 2v10"/><rect x="3" y="7" width="14" height="14" rx="1.5"/><circle cx="7.5" cy="11.5" r="1.1"/><path d="M3 18l4-4 3 3 4-4 3 3"/></svg>','이미지','img'],
+    /* 문구: T + 크롭 마크 코너 4개 (색상보다 위로 — 2026-06-05 순서 변경) */
+    ['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6V3h3"/><path d="M21 6V3h-3"/><path d="M3 18v3h3"/><path d="M21 18v3h-3"/><path d="M8 8h8"/><line x1="12" y1="8" x2="12" y2="16"/></svg>','문구','text'],
     /* 색상: 팔레트 + 색점 4개 + 브러시 손잡이 */
     ['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12c0 1.5 1 2 2 2h2.5a2.5 2.5 0 010 5c0 1.5 2 3 5.5 3z"/><circle cx="7.5" cy="10.5" r=".9"/><circle cx="11.5" cy="7" r=".9"/><circle cx="16" cy="9" r=".9"/><circle cx="16.5" cy="14" r=".9"/></svg>','색상','color'],
-    /* 문구: T + 크롭 마크 코너 4개 */
-    ['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6V3h3"/><path d="M21 6V3h-3"/><path d="M3 18v3h3"/><path d="M21 18v3h-3"/><path d="M8 8h8"/><line x1="12" y1="8" x2="12" y2="16"/></svg>','문구','text'],
     /* 설정: 슬라이더(equalizer) 스타일 — 향후 옵션 확장 대비. data-g='clock'은 내부 키로 유지(빌드 분류 변경 없음, 기존 시계 토글이 이 드로어로 자동 라우팅). */
     ['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="11" y2="6"/><line x1="15" y1="6" x2="20" y2="6"/><circle cx="13" cy="6" r="2"/><line x1="4" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="20" y2="12"/><circle cx="9" cy="12" r="2"/><line x1="4" y1="18" x2="14" y2="18"/><line x1="18" y1="18" x2="20" y2="18"/><circle cx="16" cy="18" r="2"/></svg>','설정','clock']
   ];
@@ -12135,7 +12141,9 @@ window.addEventListener('load',later);
         else if(q('#frame-tpl-grid')){groups.tpl.appendChild(node);}
         else if(q('#frame-drop')||q('#frame-file')){groups.img.appendChild(node);}
         else if(q('#frame-color-chips')){groups.color.appendChild(node);}
-        else if(q('#f-main')||q('#frame-text-style-box')){groups.text.appendChild(node);}
+        else if(q('#frame-text-style-box')){groups.color.appendChild(node);} // 2026-06-05: 문구별 색상/그림자 → 색상 탭
+        else if(q('#f-main')){groups.text.appendChild(node);} // 문구 입력 → 문구 탭
+        else if(node.id==='denn-frame-visible-row'||q('#denn-frame-visible-row')){groups.clock.appendChild(node);} // 2026-06-05: 프레임 보이기 → 설정 탭
         else if(q('#tog-clock')){groups.clock.appendChild(node);}
         else {act.appendChild(node);} // 액션 스택(내공간/저장/주문/홈) → 우측 액션 컬럼
       });
@@ -12156,12 +12164,30 @@ window.addEventListener('load',later);
       cvs.appendChild(mtog);
       setGroup('tpl');
       buildRightExtras(act);
-      // 숨겨진 패널에 나중에 주입되는 노드(주문제작 버튼 등)를 우측 액션 컬럼으로 자동 이동
+      /* ★ 2026-06-05: '프레임 보이기' 행(denn-frame-visible-row)은 installFrameToggle가 색상 섹션 뒤(=색상 그룹 안)로 늦게 주입할 수 있어, 주입 시점 무관하게 설정(clock) 탭으로 이동 고정. */
+      function __placeFrameVis(){try{
+        /* installFrameToggle가 프레임 색상 섹션 뒤에 주입한 <hr>이 행 이동 후 색상 그룹에 orphan으로 남아 어색한 줄/여백을 만듦 → 제거 */
+        var cc=document.getElementById('frame-color-chips'),csec=cc&&cc.closest&&cc.closest('div'),nx=csec&&csec.nextElementSibling;if(nx&&nx.tagName==='HR')nx.remove();
+        var r=document.getElementById('denn-frame-visible-row');if(!r)return;
+        /* 박스(row) 안에 잘못 들어간 제목 제거 → 제목은 박스 밖으로 */
+        var innerT=r.querySelector('.sec-label');if(innerT)innerT.remove();
+        /* '프레임 표시' 제목 + 박스(row)를 한 섹션 래퍼로 묶어 시계 표시처럼 "제목 + 박스" 구조 + 구분선(CSS) */
+        var wrap=document.getElementById('denn-frame-vis-section');
+        if(!wrap){wrap=document.createElement('div');wrap.id='denn-frame-vis-section';var t=document.createElement('div');t.className='sec-label';t.textContent='프레임 표시';wrap.appendChild(t);}
+        if(r.parentNode!==wrap)wrap.appendChild(r);
+        if(groups.clock&&wrap.parentNode!==groups.clock)groups.clock.appendChild(wrap);
+        /* 클록 그룹에 같이 딸려온 떠도는 <hr> 제거 → 섹션 구분선은 #denn-frame-vis-section border-top 하나만 */
+        if(groups.clock){[].slice.call(groups.clock.children).forEach(function(c){if(c.tagName==='HR')c.remove();});}}catch(e){}}
+      [60,300,900].forEach(function(ms){setTimeout(__placeFrameVis,ms)});
+      if(pf.__dennFrameVisObs)pf.__dennFrameVisObs.disconnect();
+      pf.__dennFrameVisObs=new MutationObserver(__placeFrameVis);
+      pf.__dennFrameVisObs.observe(gbox,{childList:true,subtree:true});
+      // 숨겨진 패널에 나중에 주입되는 노드(주문제작 버튼 등)를 우측 액션 컬럼으로 자동 이동(프레임 보이기는 설정 탭으로)
       if(pf.__dennPanelObs)pf.__dennPanelObs.disconnect();
       pf.__dennPanelObs=new MutationObserver(function(muts){
         if(!pf.classList.contains('denn-pc-shell-on'))return;
         var a=pf.querySelector('.denn-pc-shell .dps-action'); if(!a)return;
-        muts.forEach(function(m){[].slice.call(m.addedNodes).forEach(function(n){if(n.nodeType===1)a.appendChild(n)})});
+        muts.forEach(function(m){[].slice.call(m.addedNodes).forEach(function(n){if(n.nodeType===1){if(n.id==='denn-frame-visible-row'&&groups.clock){groups.clock.appendChild(n);}else{a.appendChild(n);}}})});
       });
       pf.__dennPanelObs.observe(panel,{childList:true});
       if(typeof window.applyFramePreviewScaleV36==='function')setTimeout(window.applyFramePreviewScaleV36,60);
