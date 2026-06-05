@@ -2019,10 +2019,13 @@ function rmBindEvents(){
     var dy=(e.clientY-RM.dragStart.my)/r.height;
     RM.pos.x=Math.max(0.05,Math.min(0.95,RM.dragStart.px+dx));
     RM.pos.y=Math.max(0.05,Math.min(0.95,RM.dragStart.py+dy));
+    RM.__userMoved=true;
     if(window.dennSyncGuideXYDisplayCenterV89)window.dennSyncGuideXYDisplayCenterV89();
     rmRender();
   });
   document.addEventListener('mouseup',function(){RM.sunDrag=false;if(RM.dragging){RM.dragging=false;if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51();if(c)c.style.cursor='grab';}});
+  /* 위치 슬라이더(위치 X/Y)를 소비자가 직접 조정해도 '옮김'으로 간주 → 운영자 ② 강제 해제(세션 한정) */
+  document.addEventListener('input',function(e){var t=e&&e.target;if(t&&/^sg-o[xy]-/.test(t.id||'')&&window.RM)RM.__userMoved=true;},true);
   // Touch drag
   c.ontouchstart=function(e){
     e.preventDefault();RM.dragging=true;
@@ -2034,6 +2037,7 @@ function rmBindEvents(){
     var dy=(e.touches[0].clientY-RM.dragStart.my)/c.height;
     RM.pos.x=Math.max(0.05,Math.min(0.95,RM.dragStart.px+dx));
     RM.pos.y=Math.max(0.05,Math.min(0.95,RM.dragStart.py+dy));
+    RM.__userMoved=true;
     if(window.dennSyncGuideXYDisplayCenterV89)window.dennSyncGuideXYDisplayCenterV89();
     rmRender();
   };
@@ -3695,6 +3699,8 @@ window.rmRender=function(){
     if(!window.RM)return;
     RM.canvas=RM.canvas||by('rm-canvas');RM.ctx=RM.ctx||ctx(RM.canvas);if(!RM.canvas||!RM.ctx)return;
     if(!RM.canvas.width||!RM.canvas.height)window.rmSizeCanvas();
+    /* ★ 소비자: 드래그 전이면 프레임 위치를 운영자 ②(공통 디폴트) center로 강제 — 모든 렌더 경로 첫 프레임부터 통일(초기 튐/드리프트 제거, 캔버스·창 무관). 드래그/위치슬라이더 조정 시 RM.__userMoved로 해제(세션 한정, 새로고침 리셋). 운영자 편집모드 제외. */
+    if(!RM.__userMoved&&!RM.dragging&&!RM.sunDrag&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){var __cc=window.dennSectionCommonV&&window.dennSectionCommonV();if(__cc){var __ppx=num(__cc.frameCenterX!=null?__cc.frameCenterX:__cc.frameX,50),__ppy=num(__cc.frameCenterY!=null?__cc.frameCenterY:__cc.frameY,40);RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=clamp(__ppx/100,.02,.98);RM.pos.y=clamp(__ppy/100,.02,.98);RM.frameAnchorV48={frameCenterX:__ppx,frameCenterY:__ppy,frameAnchor:'center'};var __ggx=num(__cc.guideX,__ppx),__ggy=num(__cc.guideY,__ppy);setVal('sg-ox-r',__ggx);setVal('sg-ox-n',__ggx);setVal('sg-oy-r',__ggy);setVal('sg-oy-n',__ggy);}}
     showCanvas();
     var c=RM.canvas,ctx2=RM.ctx,W=c.width,H=c.height,bright=num((by('rm-bright')||{}).value,100);
     ctx2.clearRect(0,0,W,H);ctx2.fillStyle='#D8D3CB';ctx2.fillRect(0,0,W,H);
