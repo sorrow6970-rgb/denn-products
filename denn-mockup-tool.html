@@ -5025,12 +5025,10 @@ function shouldCover(st){
   return !!(hasAdminPreset(st)||(modal&&modal.classList&&modal.classList.contains('denn-room-fullscreen-active')));
 }
 function layoutAspect(){
-  var st=setting();
-  /* 배경 사진(촬영/가이드배경)이 로드돼 있으면 그 사진 비율 사용 */
-  if(window.RM&&RM.roomImg){var ia=imageAspect();if(ia>0)return clamp(ia,.75,3.2);}
-  /* ★ 배경 없을 때: 저장된 16/9(가로) 대신 프리뷰 영역 비율로 가득 채움 → 위아래 흰 띠(레터박스) 제거, 세로 영역 최대(세로형 액자 상하단 덜 잘림). 저장 aspect보다 우선. */
+  /* ★ 2026-06-05 cover: 캔버스는 항상 프리뷰 영역 비율로 가득 채움(배경 유무 무관) → 흰 여백 0. 배경 이미지는 drawCover가 영역을 덮음(양끝 크롭, 작은 이미지도 업스케일해 꽉 채움). 배경 크기/위치 슬라이더로 조정 가능. */
   try{var a=areaSize();if(a&&a.w>0&&a.h>0)return clamp(a.w/a.h,.75,3.2)}catch(e){}
-  return clamp(num(st.layoutAspect||st.__layoutAspectV47,0)||savedAspect(st)||16/9,.75,3.2);
+  var st=setting();
+  return clamp(num(st.layoutAspect||st.__layoutAspectV47,0)||16/9,.75,3.2);
 }
 function areaSize(){
   var area=by('rm-canvas-area'),r=area&&area.getBoundingClientRect&&area.getBoundingClientRect();
