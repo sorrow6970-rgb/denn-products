@@ -6002,7 +6002,8 @@ window.dennRollbackSizeFrameDefaultV36=function(){userTouched=true};
     linear-gradient(-45deg,transparent 75%,rgba(0,0,0,.075) 75%)!important;
   background-size:12px 12px!important;
   background-position:0 0,0 6px,6px -6px,-6px 0!important;
-  padding:6px!important;
+  /* ★ 2026-06-05: 패딩 0 → 합성 캔버스가 카드 가득(edge-to-edge)으로 채워 '꽉 찬' 모양. 투명(배경無) 템플릿은 빈 영역에 체크무늬가 그대로 가득 표시(의도 유지). */
+  padding:0!important;
   box-sizing:border-box!important;
 }
 #frame-tpl-grid .tpl-card.transparent-canvas .tpl-thumb.fr img{
