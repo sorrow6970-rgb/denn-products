@@ -277,6 +277,28 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
       <div class="card">
         <div class="ct">🎞 액자 템플릿 제작 도구 <span class="badge">직접 영역 설정</span></div>
         <p style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.8">액자 페이퍼 영역 위에 사진이 들어갈 투명 구멍을 드래그로 그립니다.<br>완성된 템플릿은 액자 템플릿 목록에 자동으로 추가됩니다.</p>
+        <style id="denn-size-clock-2col-css">
+/* 좌 사이즈 = 우 시계 동일 높이(stretch). 좌측 리스트가 남는 높이를 flex로 채우며 스크롤 →
+   항목 수·화면 배율과 무관하게 하단이 항상 우측과 자동 일치(px 추측 불필요). */
+#tp-frame-builder .denn-size-clock-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;margin-bottom:12px}
+/* 좌측 사이즈 박스: 시계 가이드 카드처럼 어두운 dashed 배경 */
+#tp-frame-builder .denn-size-clock-2col>.g3{margin-bottom:0;display:flex;flex-direction:column;gap:9px;background:var(--sb);border:1px dashed var(--bdr2);border-radius:10px;padding:12px 13px}
+#tp-frame-builder .denn-size-clock-2col>.g3>.field{flex:1;display:flex;flex-direction:column;min-height:0;margin-bottom:0}
+#tp-frame-builder .denn-size-clock-2col>.g3>.field>label{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:9px}
+/* 체크리스트: flex-basis 0 + grow → 카드 남는 높이를 정확히 채움(스크롤 유지). 좌측 자연높이를 키우지 않아 우측 강제여백 없음 */
+#tp-frame-builder .denn-size-clock-2col .denn-v38-size-checks{flex:1 1 0;min-height:80px;max-height:none;overflow:auto;gap:7px;padding:9px;background:rgba(255,255,255,.02)}
+#tp-frame-builder .denn-size-clock-2col .denn-v38-size-checks label{font-size:12px!important;padding:10px 11px;line-height:1.4}
+#tp-frame-builder .denn-size-clock-2col .denn-v38-size-checks input{width:16px;height:16px}
+/* 작은 안내 문구 가독성: 어두운 회색 → 밝은 흰색 */
+#tp-frame-builder .denn-size-clock-2col .denn-v38-fb-size-hint,#tp-frame-builder .denn-size-clock-2col>.g3 .hint{font-size:10.5px;margin-top:7px;color:#dcd8ec!important;line-height:1.5}
+/* 미리보기 칸: 폭 100%로 키워 카드 채움 + 상태줄(.sub) 골드로 밝게 */
+#tp-frame-builder .denn-size-clock-2col #denn-v40-builder-rule-note{display:block;width:100%;box-sizing:border-box;max-width:none;padding:12px 13px;font-size:11.5px;line-height:1.5;background:rgba(200,168,100,.08);border-color:rgba(200,168,100,.42)}
+#tp-frame-builder .denn-size-clock-2col #denn-v40-builder-rule-note .sub{color:var(--gold)!important;font-size:10px;margin-top:4px}
+#tp-frame-builder .denn-size-clock-2col>.card{margin-bottom:0}
+#tp-frame-builder .denn-size-clock-2col .g4{grid-template-columns:1fr 1fr}
+@media(max-width:1100px){#tp-frame-builder .denn-size-clock-2col{grid-template-columns:1fr}}
+        </style>
+        <div class="denn-size-clock-2col">
         <div class="g3" style="margin-bottom:12px">
           <div class="field"><label>액자 사이즈 (비율)</label>
             <select class="ze-inp" id="fb-size-sel" style="width:100%;background:var(--surf)" onchange="fbSelectSize()">
@@ -303,6 +325,7 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
           </div>
           <div class="hint" style="margin-top:8px">템플릿 제작 시 시계를 미리 보면서 위치를 잡고, 저장 시 해당 설정이 템플릿에 함께 저장됩니다.</div>
         </div>
+        </div><!-- /denn-size-clock-2col -->
         <div style="display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap">
           <div class="tool-btn on" id="fb-tool-rect" onclick="setFBTool('rect',this)"><div class="ti">⬜</div>사각 영역</div>
           <div class="tool-btn" id="fb-tool-circle" onclick="setFBTool('circle',this)"><div class="ti">⭕</div>원형 영역</div>
@@ -2080,7 +2103,7 @@ window.addEventListener('load',async function(){
     var note=document.createElement('div');
     note.innerHTML = ''+
       '<hr>'+
-      '<div class="field"><label>디자인 템플릿 업로드</label><div class="up-zone" style="padding:12px" ondragover="evStop(event)" ondrop="dropFBArt(event)"><input type="file" accept="image/*,.svg" id="fb-art-inp" onchange="uploadFBArt(this)"><div id="fb-art-prev" style="display:none"><img id="fb-art-thumb" class="mockup-prev" style="height:90px"><button type="button" style="margin-top:4px;width:100%;padding:4px;font-family:inherit;font-size:9.5px;background:var(--sb);border:1px solid var(--bdr);border-radius:3px;color:var(--muted);cursor:pointer" onclick="clearFBArt()">제거</button></div><div id="fb-art-empty"><div style="font-size:16px;margin-bottom:3px">🖼</div><h4>디자인 원본 업로드</h4><p>그 위에 사진/시계 영역 지정</p></div></div></div>'+
+      '<div class="field"><label>디자인 템플릿 업로드</label><div class="up-zone" style="padding:12px" ondragover="evStop(event)" ondrop="dropFBArt(event)"><input type="file" accept="image/*,.svg" id="fb-art-inp" onchange="uploadFBArt(this)"><div id="fb-art-prev" style="display:none"><img id="fb-art-thumb" class="mockup-prev" style="width:100%;height:auto;max-height:340px;object-fit:contain;display:block"><button type="button" style="margin-top:4px;width:100%;padding:4px;font-family:inherit;font-size:9.5px;background:var(--sb);border:1px solid var(--bdr);border-radius:3px;color:var(--muted);cursor:pointer" onclick="clearFBArt()">제거</button></div><div id="fb-art-empty"><div style="font-size:16px;margin-bottom:3px">🖼</div><h4>디자인 원본 업로드</h4><p>그 위에 사진/시계 영역 지정</p></div></div></div>'+
       '<div class="hint">시계 이미지는 아래 "액자 설정"의 저장된 시계 이미지를 사용합니다.</div>';
     rightCol.insertBefore(note, rightCol.lastElementChild);
     var size=document.getElementById('fb-clock-size');
@@ -8098,7 +8121,7 @@ function movePanel(){
   var side=root.querySelector('.builder-side');
   if(!side)return;
   panel.classList.add('denn-v52-in-builder-side');
-  if(panel.parentNode!==side)side.insertBefore(panel,side.firstElementChild||null);
+  if(!side.contains(panel))side.insertBefore(panel,side.firstElementChild||null);
   try{window.dennPolishBuilderWhiteUiV51&&window.dennPolishBuilderWhiteUiV51()}catch(e){}
 }
 var oldGo=window.goTab;
@@ -10205,7 +10228,7 @@ window.dennV69SyncInitialSizeToggles=sync;
       panel.innerHTML='<div class="denn-v50-title">흰색테두리 설정</div><div class="denn-v50-white-row"></div><div class="denn-v50-note"></div>';
     }
     panel.classList.add('denn-v52-in-builder-side','denn-v74-stable-panel');
-    if(panel.parentNode!==s)s.insertBefore(panel,s.firstElementChild||null);
+    if(!s.contains(panel))s.insertBefore(panel,s.firstElementChild||null);
     return panel;
   }
   function stabilizePanel(){
@@ -11665,7 +11688,7 @@ window.addEventListener('load',tick);
       panel.innerHTML='<div class="denn-v50-title">흰색테두리 설정</div><div class="denn-v50-white-row"></div><div class="denn-v50-note"></div>';
     }
     panel.classList.add('denn-v50-builder-white-panel','denn-v51-white-panel','denn-v52-in-builder-side','denn-v74-stable-panel','denn-v80-panel','denn-v84-stable-white-panel','denn-v86-stable-white-panel');
-    if(panel.parentNode!==side)side.insertBefore(panel,side.firstElementChild||null);
+    if(!side.contains(panel))side.insertBefore(panel,side.firstElementChild||null);
     var title=panel.querySelector('.denn-v50-title');
     if(title)title.textContent='흰색테두리 설정';
     var row=panel.querySelector('.denn-v50-white-row');
@@ -14945,7 +14968,7 @@ window.addEventListener('resize',scheduleSettle);
 <!-- DENN Phase 1 / Stage 1: 색상 변경 허용 토글 (어드민 빌더 상세설정) -->
 <style id="denn-phase1-color-toggle-css">
 #fb-allow-color-wrap{display:block;width:100%;margin:12px 0 10px;padding:12px;border:1px solid var(--bdr);border-radius:10px;background:var(--sb);clear:both}
-#fb-allow-color-wrap::before{content:'고객 측 색상/그림자';display:block;font-size:9px;color:var(--gold);letter-spacing:.08em;margin-bottom:6px}
+#fb-allow-color-wrap::before{content:'템플릿 색상/그림자';display:block;font-size:9px;color:var(--gold);letter-spacing:.08em;margin-bottom:6px}
 #fb-allow-color-wrap .ph1-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 #fb-allow-color-wrap .ph1-label-block{flex:1;min-width:0}
 #fb-allow-color-wrap .ph1-title{display:block;font-size:11px;font-weight:700;color:var(--txt);margin-bottom:4px}
@@ -15621,9 +15644,13 @@ window.addEventListener('resize',scheduleSettle);
   var FB='#tp-frame-builder ';
   var css=
     // 3컬럼: 좌 컨트롤(=builder-side) | 가운데 캔버스 | 우 컨트롤(새 컬럼)
-    FB+'.builder-shell.denn-acc-3col{display:grid;grid-template-columns:minmax(200px,270px) minmax(0,1fr) minmax(290px,360px);gap:14px;align-items:start}'
+    // ★ 좌·우 컬럼 폭 동일(대칭). 가운데만 가변(1fr).
+    FB+'.builder-shell.denn-acc-3col{display:grid;grid-template-columns:minmax(270px,320px) minmax(0,1fr) minmax(270px,320px);gap:14px;align-items:start}'
     // 좌 컬럼: builder-side 직속 카드 세로 적층 + 카드 자체 스타일(기존 >div 자동 테두리 덮어씀)
-   +FB+'.builder-shell.denn-acc-3col>.builder-side{display:flex;flex-direction:column;gap:9px}'
+   +FB+'.builder-shell.denn-acc-3col>.builder-side{display:flex;flex-direction:column;gap:9px;order:1;min-height:0!important;height:auto!important}'
+    // ★ DOM 순서는 [main,side,R] 유지(레거시 wrapBuilder의 parts[0]=main/parts[1]=side 가정 보존). 시각 배치만 order로.
+   +FB+'.builder-shell.denn-acc-3col>.builder-main{order:2}'
+   +FB+'.builder-shell.denn-acc-3col>.denn-acc-col-right{order:3}'
    +FB+'.builder-side>.denn-acc-group{padding:0;background:var(--card,#1F1E2C);border:1px solid var(--bdr,#2E2D40);border-radius:10px;overflow:hidden}'
    +FB+'.builder-side hr{display:none}'  // 쓸데없는 구분선 제거
    +FB+'.denn-acc-col{display:flex;flex-direction:column;gap:9px;min-width:0}'
@@ -15638,9 +15665,11 @@ window.addEventListener('resize',scheduleSettle);
    +FB+'.denn-acc-body hr{display:none}'
    +FB+'.denn-acc-body>div{min-width:0}'
     // 우측 업로드 박스 확대(우측 컬럼 빈 느낌 보완)
-   +FB+'.denn-acc-col-right .up-zone{padding:20px 14px}'
+   +FB+'.denn-acc-col-right .up-zone{padding:18px 14px;min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center}'
    +FB+'.denn-acc-col-right .up-zone h4{font-size:12.5px}'
-   +FB+'.denn-acc-col-right #fb-art-thumb{height:120px}'
+   +FB+'.denn-acc-col-right #fb-art-prev{width:100%}'
+    // 업로드 이미지: 폭 100% + 높이 auto = 가로세로 비율대로 크게 표시(인라인 고정 height 제거됨)
+   +FB+'.denn-acc-col-right #fb-art-thumb{width:100%!important;height:auto!important;max-height:340px;object-fit:contain}'
     // 좁은 화면: 단일 컬럼으로 복귀(좌·캔버스·우 세로 적층)
    +'@media (max-width:1100px){'+FB+'.builder-shell.denn-acc-3col{grid-template-columns:1fr}}';
   var sst=document.createElement('style');sst.textContent=css;document.head.appendChild(sst);
@@ -15649,7 +15678,7 @@ window.addEventListener('resize',scheduleSettle);
   function leftKind(ch){
     if(hasAny(ch,['#fb-zone-list','#fb-zone-label','.align-mini']))return 'zones';
     if(hasAny(ch,['#denn-v364-builder-bg-panel']))return 'bg';
-    if(hasAny(ch,['#denn-v50-builder-white-panel','#fb-allow-color-wrap','#fb-white-border-wrap-v10','.denn-v10-white-toggle']))return 'border';
+    if(hasAny(ch,['#denn-v50-builder-white-panel','#fb-white-border-wrap-v10','.denn-v10-white-toggle']))return 'border';
     return null;
   }
   // 우측 표시 순서(업로드→카테고리→이름→가로세로→완성→안내)
@@ -15695,15 +15724,28 @@ window.addEventListener('resize',scheduleSettle);
   }
   function regroup(){
     var shell=q(FB+'.builder-shell');if(!shell)return;
-    var main=shell.querySelector('.builder-main'),side=shell.querySelector('.builder-side');
+    var main=shell.querySelector('.builder-main');
+    // ★ 근본 원인: patchLayout(L2783)이 builder-main을 shell로 착각해 그 내부 help div에 'builder-side'를
+    //   잘못 부여 → 빈 가짜 .builder-side가 DOM상 먼저 와서 querySelector('.builder-side')가 이걸 잡음
+    //   (v98/v52/v86 모두 엉뚱한 컨테이너 오인). 가짜 클래스만 떼면 모든 querySelector가 원본 side로 수렴.
+    if(main){
+      // ★ patchLayout이 builder-main에도 'builder-shell'을 잘못 부여 → 내부가 2컬럼 grid가 되어
+      //   자식 [캔버스영역, 안내문]이 분리 배치되고 캔버스가 63px로 짜부됨. 가짜 builder-shell 제거.
+      main.classList.remove('builder-shell');
+      Array.prototype.slice.call(main.querySelectorAll('.builder-side')).forEach(function(el){el.classList.remove('builder-side');});
+    }
+    var side=shell.querySelector('.builder-side');
     if(!main||!side)return;
+    // 레거시(v52/v86)가 가짜 side로 옮겨놨을 흰패널을 원본 side로 회수 → 이후 border 카드로 분류됨
+    var _wp=by('denn-v50-builder-white-panel');
+    if(_wp&&!side.contains(_wp))side.appendChild(_wp);
     if(OBS)OBS.disconnect();
     try{
       shell.classList.add('denn-acc-3col');
-      // 배치: side(좌) → main(캔버스) → R(우). side는 좌 컬럼으로 그대로 사용.
-      if(side.nextSibling!==main)shell.insertBefore(side,main);
+      // ★ shell 자식 재정렬 금지(컨테이너 중복 방지). DOM은 [main,side,R] 유지, 시각 배치는 CSS order.
+      // R는 항상 마지막으로 append → wrapBuilder의 parts[1]은 언제나 side(원본)로 보존됨.
       var R=ensureCol('right');
-      if(main.nextSibling!==R)shell.insertBefore(R,main.nextSibling);
+      if(R.parentNode!==shell)shell.appendChild(R);
       // 좌측 아코디언(기본 접힘) — builder-side 내부에 생성(패널을 side 자손으로 유지)
       var zCard=ensureGroup(side,'zones','🗂 영역 · 정렬',true),zBody=zCard.querySelector('.denn-acc-body');
       var bCard=ensureGroup(side,'border','🎨 테두리 · 색상',true),bBody=bCard.querySelector('.denn-acc-body');
@@ -15723,16 +15765,28 @@ window.addEventListener('resize',scheduleSettle);
       Array.prototype.slice.call(rBody.children)
         .sort(function(a,b){return rightPriority(a)-rightPriority(b);})
         .forEach(function(k){rBody.appendChild(k);});
+      // ★ 흰패널은 레거시(v52/v86)가 v98 부트 이후 타이밍에 side 최상단으로 주입할 수 있어,
+      //   분류 루프에서 누락될 수 있음 → 분류와 별개로 매 regroup마다 border body에 명시적으로 못박음.
+      var _wpFix=by('denn-v50-builder-white-panel');
+      if(_wpFix&&bBody&&_wpFix.parentNode!==bBody)bBody.appendChild(_wpFix);
+      // ★ 배경 카드 구성: 배경색상 패널을 먼저, 그 아래에 '템플릿 색상/그림자'(#fb-allow-color-wrap)를
+      //   흰패널에서 빼내 배치(사용자 요청). allow-wrap은 항상 마지막 → 배경색상 바로 아래.
+      var _bgP=by('denn-v364-builder-bg-panel');
+      if(_bgP&&gBody&&_bgP.parentNode!==gBody)gBody.appendChild(_bgP);
+      var _allow=by('fb-allow-color-wrap');
+      if(_allow&&gBody)gBody.appendChild(_allow);
       // 내용 없는 좌측 카드(주입 전/미존재 패널)는 숨김 — 빈 헤더 방지
       [zCard,bCard,gCard].forEach(function(c){var b=c.querySelector('.denn-acc-body');c.style.display=(b&&b.children.length)?'':'none';});
     }catch(e){}
     ensureObserver(side);
   }
   function boot(){regroup();}
-  var oldGo=window.goTab;if(typeof oldGo==='function'){window.goTab=function(id){var r=oldGo.apply(this,arguments);if(id==='frame-builder')setTimeout(boot,400);return r}}
+  // ★ 부트 패스는 레거시 흰패널 타이머(v52: goTab+900 / load+1800, v86 유사)보다 뒤에도 한 번 더 돌려
+  //   늦게 주입된 흰패널을 회수한다. (관찰자 누락 대비 안전망)
+  var oldGo=window.goTab;if(typeof oldGo==='function'){window.goTab=function(id){var r=oldGo.apply(this,arguments);if(id==='frame-builder')[400,1200].forEach(function(ms){setTimeout(boot,ms)});return r}}
   if(document.readyState!=='loading')setTimeout(boot,700);
   document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,700)});
-  window.addEventListener('load',function(){setTimeout(boot,1100)});
+  window.addEventListener('load',function(){[1100,2000].forEach(function(ms){setTimeout(boot,ms)})});
 })();
 </script>
 </body>
