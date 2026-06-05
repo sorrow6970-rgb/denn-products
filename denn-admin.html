@@ -5978,7 +5978,7 @@ function updatePanel(){
 }
 function installPanel(){
   if(by('denn-data-safety-panel'))return;
-  var p=document.createElement('div');p.id='denn-data-safety-panel';
+  var p=document.createElement('div');p.id='denn-data-safety-panel';p.className='collapsed';/* 기본 접힘 — 머리(데이터 보호)만 보이고 − 버튼으로 펼침 */
   p.innerHTML='<div class="ds-head"><span>데이터 보호</span><button class="ghost" type="button" onclick="document.getElementById(&quot;denn-data-safety-panel&quot;).classList.toggle(&quot;collapsed&quot;)">−</button></div><div class="ds-body" id="denn-data-safety-body"></div>';
   // 좌측 사이드바 안 sb-foot(저장 버튼) 바로 위에 삽입. 사이드바가 없으면 body로 폴백.
   var sidebar=document.querySelector('.sidebar');
