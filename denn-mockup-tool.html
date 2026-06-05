@@ -3690,6 +3690,8 @@ function drawFrame(ctx2,W,H){
   if(!window.RM||!RM.frameSnap||!RM.frameSnap.width||!RM.frameSnap.height){if(window.RM)RM.frameHit=null;return}
   function frameCm(){var list=actualSizes(),pick=null,primary=(window.RM&&RM.activeGuideSizeId)||(window.SG&&SG.primarySizeId);if(primary){for(var p=0;p<list.length;p++){if(list[p].id===primary){pick=list[p];break}}}if(!pick&&window.SG&&SG.active){for(var i=0;i<list.length;i++){if(SG.active[list[i].id]){pick=list[i];break}}}if(!pick&&window.curFSz)pick=normalizeSize(window.curFSz,'cur');if(!pick)pick=preferredRoomDefaultSize(list);if(!pick&&list.length)pick=list[0];if(!pick)return null;var a=num(pick.wcm,0),b=num(pick.hcm,0);if(!(a>0&&b>0))return null;return (window.SG&&SG.ori)==='landscape'?{w:Math.max(a,b),h:Math.min(a,b)}:{w:Math.min(a,b),h:Math.max(a,b)}}
   var tiltOn=!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),sizePct=num((by('rm-size')||{}).value,20),tiltDeg=tiltOn?num((by('rm-tilt')||{}).value,0):0,perspX=tiltOn?num((by('rm-persp-x')||{}).value,0):0,perspY=tiltOn?num((by('rm-persp-y')||{}).value,0):0,cm=frameCm(),pxPerCm=Math.max(1,(measureBase(W,H)/150)*(num((by('sg-scale-r')||{}).value,100)/100)),fallbackBoost=(!cm&&isRoomMobile())?1.25:1,fw=cm?cm.w*pxPerCm*(sizePct/20):W*sizePct/100*fallbackBoost,fh=cm?cm.h*pxPerCm*(sizePct/20):fw*(RM.frameSnap.height/RM.frameSnap.width),cxp=(RM.pos&&RM.pos.x||.5),cyp=(RM.pos&&RM.pos.y||.4),cx=W*cxp,cy=H*cyp,sy=1,shOp=num((by('rm-sh-op')||{}).value,0),shDir=num((by('rm-sh-dir')||{}).value,180),shDist=num((by('rm-sh-dist')||{}).value,0),shBlur=num((by('rm-sh-blur')||{}).value,0),shRad=(shDir-90)*Math.PI/180,distPx=fw*shDist/100;
+  /* ★ B(2026-06-05): 배경 없는 기본 상태에선 액자를 캔버스에 fit-contain(여백 6%) → 큰 스케일에서도 액자 전체가 캔버스(=흰 영역) 안에 보이게(잘림 방지). 배경 사진 있을 땐 실제 스케일 유지, 운영자 편집모드 제외. */
+  if(window.RM&&!(RM.roomImg&&RM.roomImg.naturalWidth)&&String(RM.bgId||'default-room')==='default-room'&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){var __fit=Math.min(1,(W*0.94)/Math.max(1,fw),(H*0.94)/Math.max(1,fh));if(__fit<1){fw*=__fit;fh*=__fit;}}
   RM.frameHit={cx:cx,cy:cy,w:fw,h:fh,tilt:tiltDeg,sy:sy};
   ctx2.save();ctx2.translate(cx,cy);ctx2.rotate(tiltDeg*Math.PI/180);ctx2.scale(1,sy);
   if(shOp>0){ctx2.shadowColor='rgba(0,0,0,'+(shOp/100)+')';ctx2.shadowBlur=fw*shBlur/100;ctx2.shadowOffsetX=Math.cos(shRad)*distPx;ctx2.shadowOffsetY=Math.sin(shRad)*distPx}
@@ -5024,7 +5026,11 @@ function shouldCover(st){
 }
 function layoutAspect(){
   var st=setting();
-  return clamp(num(st.layoutAspect||st.__layoutAspectV47,0)||imageAspect()||savedAspect(st)||16/9,.75,3.2);
+  /* 배경 사진(촬영/가이드배경)이 로드돼 있으면 그 사진 비율 사용 */
+  if(window.RM&&RM.roomImg){var ia=imageAspect();if(ia>0)return clamp(ia,.75,3.2);}
+  /* ★ 배경 없을 때: 저장된 16/9(가로) 대신 프리뷰 영역 비율로 가득 채움 → 위아래 흰 띠(레터박스) 제거, 세로 영역 최대(세로형 액자 상하단 덜 잘림). 저장 aspect보다 우선. */
+  try{var a=areaSize();if(a&&a.w>0&&a.h>0)return clamp(a.w/a.h,.75,3.2)}catch(e){}
+  return clamp(num(st.layoutAspect||st.__layoutAspectV47,0)||savedAspect(st)||16/9,.75,3.2);
 }
 function areaSize(){
   var area=by('rm-canvas-area'),r=area&&area.getBoundingClientRect&&area.getBoundingClientRect();
@@ -6734,10 +6740,8 @@ function applyStableDefaultBox(){
   var r=area.getBoundingClientRect?area.getBoundingClientRect():null;
   var aw=Math.max(320,Math.round((r&&r.width)||area.clientWidth||window.innerWidth||960)-20);
   var ah=Math.max(240,Math.round((r&&r.height)||area.clientHeight||window.innerHeight||540)-20);
-  var aspect=stableAspect(),areaAspect=aw/Math.max(1,ah),dw,dh;
-  if(areaAspect>aspect){dh=ah;dw=Math.round(dh*aspect)}
-  else{dw=aw;dh=Math.round(dw/aspect)}
-  dw=Math.max(1,dw);dh=Math.max(1,dh);
+  /* ★ 2026-06-05 B방식: 기본화면(배경 없음) 캔버스를 프리뷰 영역에 가득 채움(여백 0, 흰 공간 낭비 X) → 액자가 영역 전체를 사용. 액자 자체는 drawFrame에서 캔버스에 fit-contain(어떤 스케일/위치든 잘림 방지). */
+  var dw=Math.max(1,aw),dh=Math.max(1,ah);
   if(cv.width!==dw)cv.width=dw;
   if(cv.height!==dh)cv.height=dh;
   setBox(cv,dw,dh);
