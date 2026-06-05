@@ -5744,6 +5744,8 @@ function syncOutputs(){
 }
 function applyGuide(i,bg,img){
   var A=adm(),key=bgKey(bg,i),saved=A.roomBackgroundSettings&&A.roomBackgroundSettings[key]||{},hasSaved=hasSavedSettings(saved),st=hasSaved?Object.assign({},defaultRoomSettings(A),saved):defaultRoomSettings(A);
+  /* 소비자: 기준 스케일은 항상 운영자 ②를 따른다(가이드 배경의 옛 저장 guideScale이 덮지 않도록). 사이즈/위치/투명도 무수정, 운영자 편집모드 제외. */
+  try{ if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV()) && isFinite(uiGuideScale(A))) st.guideScale=uiGuideScale(A); }catch(e){}
   window.RM=window.RM||{};
   RM.roomImg=img;RM.roomSrc=bgSrc(bg);RM.guideIndex=i;RM.bgId=key;
   updateGuideUi(i,img.src);
@@ -5763,6 +5765,8 @@ function stabilizeCurrentGuide(){
   if(idx==null||idx<0)return;
   var bg=(A.guideBackgrounds||[])[idx],key=bgKey(bg,idx),saved=A.roomBackgroundSettings&&A.roomBackgroundSettings[key];
   var hasSaved=hasSavedSettings(saved),st=hasSaved?Object.assign({},defaultRoomSettings(A),saved):defaultRoomSettings(A);
+  /* 소비자: 기준 스케일은 항상 운영자 ②를 따른다(가이드 배경의 옛 저장 guideScale이 덮지 않도록). 사이즈/위치/투명도 무수정, 운영자 편집모드 제외. */
+  try{ if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV()) && isFinite(uiGuideScale(A))) st.guideScale=uiGuideScale(A); }catch(e){}
   applyRoomSettings(st);
   applyDefaultSize(A,st);
   restoreUserFrameForRoom();
