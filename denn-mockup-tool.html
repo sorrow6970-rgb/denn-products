@@ -13741,6 +13741,15 @@ input[type=range]{accent-color:#777}
     var main=document.createElement('canvas');main.className='dsg-proof';
     function setMain(cv){main.width=cv.width;main.height=cv.height;try{main.getContext('2d').drawImage(cv,0,0);}catch(e){}}
     setMain(items[0].canvas);mainIsland.appendChild(main);
+    /* 왼쪽 액션 아일랜드 — 오른쪽 갤러리와 같은 크기, 버튼 배치 */
+    var leftIsland=document.createElement('div');leftIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:16px;flex:0 0 200px;max-height:90vh;display:flex;flex-direction:column;gap:12px;justify-content:center';
+    if(labelTxt){var ll=document.createElement('div');ll.textContent=labelTxt;ll.style.cssText='font-size:13px;color:#5a5248;text-align:center;font-weight:600;margin-bottom:4px';leftIsland.appendChild(ll);}
+    var detailBtn=document.createElement('button');detailBtn.type='button';detailBtn.innerHTML='🔍 시안(액자)<br>원본 크게 보기';detailBtn.style.cssText='width:100%;box-sizing:border-box;padding:14px 10px;background:#fff;border:1.5px solid #2b2620;color:#2b2620;border-radius:11px;font-weight:700;cursor:pointer;font-size:13px;line-height:1.4';
+    detailBtn.addEventListener('click',showFrameDetail);
+    leftIsland.appendChild(detailBtn);
+    if(kakao){ var ca=document.createElement('a');ca.className='dsg-kakao';ca.href=kakao;ca.target='_blank';ca.innerHTML='✓ 시안 확정<br>담당자에게 알리기';ca.style.cssText='display:block;text-align:center;width:100%;box-sizing:border-box;background:#FEE500;color:#191600;font-weight:700;font-size:14px;text-decoration:none;padding:14px 10px;border-radius:11px;line-height:1.4';leftIsland.appendChild(ca); }
+    else { var sp=document.createElement('div');sp.textContent='확인 후 담당자에게 알려주세요.';sp.style.cssText='font-size:12px;color:#8a8378;text-align:center';leftIsland.appendChild(sp); }
+    row.appendChild(leftIsland);
     row.appendChild(mainIsland);
     /* 갤러리 아일랜드 — 오른쪽: 다른 공간 썸네일만(스크롤) */
     if(items.length>1){
@@ -13758,14 +13767,6 @@ input[type=range]{accent-color:#777}
       row.appendChild(galIsland);
     }
     card.appendChild(row);
-    /* 하단 액션 바 — 원본 보기 + 시안 확정 (중앙, 항상 보임) */
-    var bottom=document.createElement('div');bottom.style.cssText='display:flex;gap:14px;align-items:center;justify-content:center;margin-top:18px;flex-wrap:wrap';
-    var detailBtn=document.createElement('button');detailBtn.type='button';detailBtn.textContent='🔍 시안(액자) 원본 크게 보기';detailBtn.style.cssText='padding:13px 22px;background:#fff;border:1.5px solid #2b2620;color:#2b2620;border-radius:11px;font-weight:700;cursor:pointer;font-size:13.5px';
-    detailBtn.addEventListener('click',showFrameDetail);
-    bottom.appendChild(detailBtn);
-    if(kakao){ var ca=document.createElement('a');ca.className='dsg-kakao';ca.href=kakao;ca.target='_blank';ca.textContent='✓ 시안 확정 — 담당자에게 알리기';ca.style.cssText='background:#FEE500;color:#191600;font-weight:700;font-size:14px;text-decoration:none;padding:14px 26px;border-radius:11px';bottom.appendChild(ca); }
-    else { var sp=document.createElement('span');sp.textContent='확인 후 담당자에게 알려주세요.';sp.style.cssText='font-size:12px;color:#8a8378';bottom.appendChild(sp); }
-    card.appendChild(bottom);
   }
   async function showProof(data){
     var card=document.getElementById('dsg-card');if(!card)return;
