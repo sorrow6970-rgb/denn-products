@@ -9056,6 +9056,14 @@ window.addEventListener('load',run);
 @media(max-width:768px){
   .page:not(.on){display:none!important}
 }
+/* 2026-06-08 작업2: PC(≥769)에서도 비활성 페이지 강제 hide. PC 셸 규칙
+   #page-frame.denn-pc-shell-on{display:block!important}(L11862, 특이도 1,1,0)이 .on 조건
+   없이 걸려 케이스 탭에서 액자(#page-frame)가 누출됨. 둘 다 !important라 특이도로 결정되므로
+   ID 포함 (1,2,0) 규칙으로 셸 규칙을 이겨 비활성 셸 프레임을 숨김. 활성(.on)일 땐 미적용. */
+@media(min-width:769px){
+  .page:not(.on){display:none!important}
+  #page-frame.denn-pc-shell-on:not(.on){display:none!important}
+}
 /* 모바일에서 '액자 스케일' 슬라이더 박스 숨김 — split-pane 핸들이 액자 영역 크기 조절을
    대체하므로 별도 슬라이더 불필요. applyPreviewScale은 박스 유무와 무관하게 기본 100%로
    동작 + area.clientWidth/Height 기반 fit 계산은 그대로 → 핸들 연동 유지. */
