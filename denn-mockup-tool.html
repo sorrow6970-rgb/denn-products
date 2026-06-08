@@ -13697,6 +13697,23 @@ input[type=range]{accent-color:#777}
     var rc=document.getElementById('rm-canvas');
     return (rc&&rc.width)?copyCanvas(rc):null;
   }
+  async function showFrameDetail(){ /* 액자 디자인만 고해상도로 렌더해 크게 보기(글씨/디테일 확인) */
+    var ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(20,18,14,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;cursor:zoom-out';
+    var cap=document.createElement('div');cap.textContent='시안(액자) 원본 — 화면을 누르면 닫힙니다';cap.style.cssText='color:#eee;font-size:13px;margin-bottom:10px';ov.appendChild(cap);
+    var slot=document.createElement('div');slot.textContent='불러오는 중…';slot.style.cssText='color:#ccc;font-size:13px';ov.appendChild(slot);
+    document.body.appendChild(ov);ov.addEventListener('click',function(){ov.remove();});
+    try{
+      window.ADM=window.ADM||{};window.ADM.uiCustom=window.ADM.uiCustom||{};var oldP=window.ADM.uiCustom.prevMaxW;
+      window.ADM.uiCustom.prevMaxW=1500; /* 고해상도 */
+      if(window.renderFrame){try{window.renderFrame();}catch(e){}}
+      await wait(750); /* 비동기 이미지(사진/템플릿) 완성 대기 */
+      var fc=document.getElementById('frameCanvas');
+      if(fc&&fc.width){ var cv=copyCanvas(fc); cv.style.cssText='max-width:96vw;max-height:86vh;border-radius:8px;box-shadow:0 12px 48px rgba(0,0,0,.5);background:#fff;display:block'; ov.replaceChild(cv,slot); }
+      else { slot.textContent='시안을 불러올 수 없습니다.'; }
+      window.ADM.uiCustom.prevMaxW=oldP||500; /* 원복 */
+      if(window.renderFrame){try{window.renderFrame();}catch(e){}}
+    }catch(e){ slot.textContent='시안을 불러올 수 없습니다.'; }
+  }
   async function showComposed(scene){
     var card=document.getElementById('dsg-card');if(!card)return;
     var room=(scene&&scene.room)||{};
@@ -13724,6 +13741,9 @@ input[type=range]{accent-color:#777}
     var main=document.createElement('canvas');main.className='dsg-proof';
     function setMain(cv){main.width=cv.width;main.height=cv.height;try{main.getContext('2d').drawImage(cv,0,0);}catch(e){}}
     setMain(items[0].canvas);mainIsland.appendChild(main);
+    var detailBtn=document.createElement('button');detailBtn.type='button';detailBtn.textContent='🔍 시안(액자) 원본 크게 보기';detailBtn.style.cssText='margin-top:12px;padding:9px 18px;background:#fff;border:1.5px solid #2b2620;color:#2b2620;border-radius:9px;font-weight:700;cursor:pointer;font-size:12.5px';
+    detailBtn.addEventListener('click',showFrameDetail);
+    mainIsland.appendChild(detailBtn);
     var foot=document.createElement('div');foot.style.marginTop='14px';
     foot.innerHTML=kakao?('<a class="dsg-kakao" href="'+kakao+'" target="_blank">✓ 시안 확정 — 담당자에게 알리기</a>'):'<span style="font-size:12px;color:#8a8378">확인 후 담당자에게 알려주세요.</span>';
     mainIsland.appendChild(foot);
