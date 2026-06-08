@@ -13741,19 +13741,11 @@ input[type=range]{accent-color:#777}
     var main=document.createElement('canvas');main.className='dsg-proof';
     function setMain(cv){main.width=cv.width;main.height=cv.height;try{main.getContext('2d').drawImage(cv,0,0);}catch(e){}}
     setMain(items[0].canvas);mainIsland.appendChild(main);
-    var detailBtn=document.createElement('button');detailBtn.type='button';detailBtn.textContent='🔍 시안(액자) 원본 크게 보기';detailBtn.style.cssText='margin-top:14px;padding:9px 18px;background:#fff;border:1.5px solid #2b2620;color:#2b2620;border-radius:9px;font-weight:700;cursor:pointer;font-size:12.5px';
-    detailBtn.addEventListener('click',showFrameDetail);
-    mainIsland.appendChild(detailBtn);
     row.appendChild(mainIsland);
-    /* 확정 버튼(오른쪽 배치) */
-    var confirmEl=document.createElement('div');
-    if(kakao){ confirmEl.innerHTML='<a class="dsg-kakao" href="'+kakao+'" target="_blank" style="display:block;text-align:center;background:#FEE500;color:#191600;font-weight:700;font-size:14px;text-decoration:none;padding:14px 12px;border-radius:12px;line-height:1.4">✓ 시안 확정<br>담당자에게 알리기</a>'; }
-    else { confirmEl.innerHTML='<div style="font-size:12px;color:#8a8378;text-align:center;padding:10px">확인 후 담당자에게 알려주세요.</div>'; }
-    /* 갤러리 아일랜드 — 오른쪽: 다른 공간 썸네일 + 하단 확정 버튼 */
+    /* 갤러리 아일랜드 — 오른쪽: 다른 공간 썸네일만(스크롤) */
     if(items.length>1){
-      var galIsland=document.createElement('div');galIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:16px;flex:0 0 200px;max-height:90vh;display:flex;flex-direction:column';
-      var hd=document.createElement('div');hd.textContent='다른 공간에서 보기';hd.style.cssText='font-size:12px;font-weight:700;color:#2b2620;margin-bottom:10px;text-align:center;flex-shrink:0';galIsland.appendChild(hd);
-      var thumbsWrap=document.createElement('div');thumbsWrap.style.cssText='flex:1;min-height:0;overflow:auto';
+      var galIsland=document.createElement('div');galIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:16px;flex:0 0 200px;max-height:90vh;overflow:auto';
+      var hd=document.createElement('div');hd.textContent='다른 공간에서 보기';hd.style.cssText='font-size:12px;font-weight:700;color:#2b2620;margin-bottom:10px;text-align:center';galIsland.appendChild(hd);
       var thumbs=[];
       items.forEach(function(it,idx){
         var t=document.createElement('div');t.style.cssText='border:3px solid '+(idx===0?'#111':'#ece6dd')+';border-radius:10px;overflow:hidden;cursor:pointer;background:#fff;margin-bottom:10px;transition:border-color .15s';
@@ -13761,15 +13753,19 @@ input[type=range]{accent-color:#777}
         try{tc.getContext('2d').drawImage(it.canvas,0,0,tc.width,tc.height);}catch(e){}tc.style.cssText='display:block;width:100%';t.appendChild(tc);
         if(it.name){var nm=document.createElement('div');nm.textContent=it.name;nm.style.cssText='font-size:10.5px;color:#5a5248;padding:4px 6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';t.appendChild(nm);}
         t.addEventListener('click',function(){setMain(it.canvas);thumbs.forEach(function(x){x.style.borderColor='#ece6dd';});t.style.borderColor='#111';});
-        thumbs.push(t);thumbsWrap.appendChild(t);
+        thumbs.push(t);galIsland.appendChild(t);
       });
-      galIsland.appendChild(thumbsWrap);
-      confirmEl.style.cssText='margin-top:12px;flex-shrink:0';galIsland.appendChild(confirmEl);
       row.appendChild(galIsland);
-    } else { /* 갤러리 없으면 메인 하단에 확정 */
-      confirmEl.style.marginTop='14px';mainIsland.appendChild(confirmEl);
     }
     card.appendChild(row);
+    /* 하단 액션 바 — 원본 보기 + 시안 확정 (중앙, 항상 보임) */
+    var bottom=document.createElement('div');bottom.style.cssText='display:flex;gap:14px;align-items:center;justify-content:center;margin-top:18px;flex-wrap:wrap';
+    var detailBtn=document.createElement('button');detailBtn.type='button';detailBtn.textContent='🔍 시안(액자) 원본 크게 보기';detailBtn.style.cssText='padding:13px 22px;background:#fff;border:1.5px solid #2b2620;color:#2b2620;border-radius:11px;font-weight:700;cursor:pointer;font-size:13.5px';
+    detailBtn.addEventListener('click',showFrameDetail);
+    bottom.appendChild(detailBtn);
+    if(kakao){ var ca=document.createElement('a');ca.className='dsg-kakao';ca.href=kakao;ca.target='_blank';ca.textContent='✓ 시안 확정 — 담당자에게 알리기';ca.style.cssText='background:#FEE500;color:#191600;font-weight:700;font-size:14px;text-decoration:none;padding:14px 26px;border-radius:11px';bottom.appendChild(ca); }
+    else { var sp=document.createElement('span');sp.textContent='확인 후 담당자에게 알려주세요.';sp.style.cssText='font-size:12px;color:#8a8378';bottom.appendChild(sp); }
+    card.appendChild(bottom);
   }
   async function showProof(data){
     var card=document.getElementById('dsg-card');if(!card)return;
