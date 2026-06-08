@@ -13479,7 +13479,7 @@ input[type=range]{accent-color:#777}
 #denn-space-gate button.dsg-btn{margin-top:12px;width:100%;padding:12px;font-size:14px;font-weight:700;border:none;border-radius:10px;background:#2b2620;color:#fff;cursor:pointer}
 #denn-space-gate button.dsg-btn:disabled{opacity:.55;cursor:default}
 #denn-space-gate .dsg-err{margin-top:10px;font-size:12px;color:#c0392b;min-height:16px}
-#denn-space-gate .dsg-proof{max-width:100%;max-height:74vh;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.16)}
+#denn-space-gate .dsg-proof{max-width:100%;max-height:86vh;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.16);display:block;margin:0 auto}
 #denn-space-gate .dsg-label{font-size:13px;color:#5a5248;margin:0 0 12px}
 #denn-space-gate a.dsg-kakao{display:inline-block;margin-top:14px;padding:10px 18px;border-radius:10px;background:#FEE500;color:#191600;font-weight:700;font-size:13px;text-decoration:none}
 </style>
@@ -13560,10 +13560,10 @@ input[type=range]{accent-color:#777}
     var kakao=(window.ADM&&window.ADM.brand&&window.ADM.brand.kakaoUrl)||'';
     var confirmRow=kakao?('<a class="dsg-kakao" href="'+kakao+'" target="_blank">✓ 시안 확정 — 담당자에게 알리기</a>')
       :('<p style="margin-top:14px;font-size:12px;color:#8a8378">확인 후 담당자에게 알려주세요.</p>');
-    card.style.maxWidth='820px';
-    card.innerHTML='<h2>내 공간 시안 확인</h2>'+label;
+    card.style.maxWidth='98vw';card.style.width='1500px';card.style.padding='16px 16px 18px';card.style.maxHeight='98vh';
+    card.innerHTML='<h2 style="margin-bottom:10px">내 공간 시안 확인</h2>'+label;
     card.appendChild(holder);
-    var foot=document.createElement('div');foot.innerHTML=confirmRow;card.appendChild(foot);
+    var foot=document.createElement('div');foot.style.marginTop='12px';foot.innerHTML=confirmRow;card.appendChild(foot);
   }
   async function showProof(data){
     var card=document.getElementById('dsg-card');if(!card)return;
