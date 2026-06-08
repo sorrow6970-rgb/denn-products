@@ -13356,6 +13356,71 @@ input[type=range]{accent-color:#777}
     console.error('[space] firebase init failed:', e);
   }
 </script>
+
+<!-- 작업5-3: ?space=<token> 게이트 — 패스워드 입력 → 시안(proof) 열람 전용. 편집기 숨김. -->
+<style id="denn-space-gate-css">
+#denn-space-gate{position:fixed;inset:0;z-index:2147483600;background:#f4f1ec;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;font-family:'DM Sans','Noto Sans KR',sans-serif}
+#denn-space-gate .dsg-card{background:#fff;border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.18);max-width:560px;width:100%;max-height:92vh;overflow:auto;padding:26px 24px;text-align:center}
+#denn-space-gate h2{margin:0 0 6px;font-size:19px;color:#2b2620}
+#denn-space-gate p.dsg-sub{margin:0 0 18px;font-size:12.5px;color:#8a8378;line-height:1.6}
+#denn-space-gate input.dsg-pw{width:100%;box-sizing:border-box;padding:12px 14px;font-size:15px;border:1px solid #e0dad0;border-radius:10px;text-align:center;letter-spacing:1px}
+#denn-space-gate button.dsg-btn{margin-top:12px;width:100%;padding:12px;font-size:14px;font-weight:700;border:none;border-radius:10px;background:#2b2620;color:#fff;cursor:pointer}
+#denn-space-gate button.dsg-btn:disabled{opacity:.55;cursor:default}
+#denn-space-gate .dsg-err{margin-top:10px;font-size:12px;color:#c0392b;min-height:16px}
+#denn-space-gate .dsg-proof{max-width:100%;max-height:74vh;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.16)}
+#denn-space-gate .dsg-label{font-size:13px;color:#5a5248;margin:0 0 12px}
+#denn-space-gate a.dsg-kakao{display:inline-block;margin-top:14px;padding:10px 18px;border-radius:10px;background:#FEE500;color:#191600;font-weight:700;font-size:13px;text-decoration:none}
+</style>
+<script>
+(function(){
+  'use strict';
+  function param(name){try{var u=new URLSearchParams(location.search);return u.get(name);}catch(e){return null;}}
+  var token=param('space');
+  if(!token)return; /* 일반 진입이면 게이트 미적용 */
+  function el(t,c){var d=document.createElement(t);if(c)d.className=c;return d;}
+  function mount(){
+    if(document.getElementById('denn-space-gate'))return;
+    var g=el('div');g.id='denn-space-gate';
+    g.innerHTML='<div class="dsg-card" id="dsg-card">'+
+      '<h2>시안 확인</h2>'+
+      '<p class="dsg-sub">담당자에게 전달받은 <b>비밀번호</b>를 입력하면 시안을 확인할 수 있습니다.</p>'+
+      '<input class="dsg-pw" id="dsg-pw" type="password" inputmode="text" placeholder="비밀번호" autocomplete="off">'+
+      '<button class="dsg-btn" id="dsg-go" type="button">시안 보기</button>'+
+      '<div class="dsg-err" id="dsg-err"></div>'+
+    '</div>';
+    document.body.appendChild(g);
+    try{document.documentElement.style.overflow='hidden';}catch(e){}
+    var pw=document.getElementById('dsg-pw'),go=document.getElementById('dsg-go'),err=document.getElementById('dsg-err');
+    function submit(){
+      var p=(pw.value||'');
+      if(!p){err.textContent='비밀번호를 입력하세요.';return;}
+      if(!window.dennSpace||!window.dennSpace.load){err.textContent='연결 준비 중입니다. 잠시 후 다시 시도하세요.';return;}
+      go.disabled=true;var old=go.textContent;go.textContent='확인 중...';err.textContent='';
+      window.dennSpace.load(token,p).then(function(data){ showProof(data); })
+      .catch(function(e){
+        var m=(e&&e.message)||'';
+        err.textContent = m==='BAD_PASSWORD' ? '비밀번호가 올바르지 않습니다.' : (m==='NOT_FOUND' ? '존재하지 않는 시안입니다(만료/삭제).' : '불러오기 실패. 잠시 후 다시 시도하세요.');
+        go.disabled=false;go.textContent=old;
+      });
+    }
+    go.addEventListener('click',submit);
+    pw.addEventListener('keydown',function(e){if(e.key==='Enter')submit();});
+    setTimeout(function(){try{pw.focus();}catch(e){}},120);
+  }
+  function showProof(data){
+    var card=document.getElementById('dsg-card');if(!card)return;
+    data=data||{};
+    var label=data.label?('<p class="dsg-label">'+String(data.label).replace(/[<>&]/g,'')+'</p>'):'';
+    var img=data.imageUrl?('<img class="dsg-proof" src="'+data.imageUrl+'" alt="시안">'):'<p>시안 이미지를 찾을 수 없습니다.</p>';
+    var kakao=(window.ADM&&window.ADM.brand&&window.ADM.brand.kakaoUrl)||'';
+    var confirmRow=kakao?('<a class="dsg-kakao" href="'+kakao+'" target="_blank">✓ 확인 완료 — 담당자에게 알리기</a>')
+      :('<p style="margin-top:14px;font-size:12px;color:#8a8378">확인 후 담당자에게 알려주세요.</p>');
+    card.innerHTML='<h2>시안 확인</h2>'+label+img+'<div>'+confirmRow+'</div>';
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);
+  else mount();
+})();
+</script>
 </body>
 </html>
 
