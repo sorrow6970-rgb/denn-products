@@ -56,7 +56,7 @@ git log --oneline -6   # HEAD = 25f7e9d
 
 ### 중간 — Phase C (placeholder / 색상 / textless)
 5. ~~Placeholder 잔존 surface~~ → ✅ **완료(2026-06-08 시각검증)** ([[project_placeholder_progress]]): 메모가 stale했고, 5 surface 전부 작동 확인. 어드민 카드뱃지(`decorateFrameTplCards` admin:9269-9310)·모달overlay(`syncPhOverlay` admin:9004-9042)·가이드(병렬), mockup 합성썸네일(`dennRenderCardCompositeThumbV` mockup:973-993, 61d559d)·`selFTplByRef` wrap(mockup:11830-11839). Phase5 토글(`__dennAuxToggles.ph`) 존재. 사용자 "모두정상".
-6. **Phase C 작업2 textless 이중잠금 / 케이스 모델 V363 게이팅** ([[project_phase_c_task2_case_model]], [[project_phase_c_textless_dual_lock]]).
+6. ~~Phase C 작업2 textless 이중잠금 / 케이스 모델 V363 게이팅~~ → ✅ **사실상 완료(2026-06-08 코드검증)** ([[project_phase_c_task2_case_model]], [[project_phase_c_textless_dual_lock]]): 4케이스 게이팅(`b6b30ea`+`8d2605a`)·textless body 버그(`0b88be1`) 모두 처리됨. ⏳ name2 누락 엣지(v70 allowedKeys, 커스텀 키만 있는 시안서 토글 잠김)만 의도적 보류.
 
 ### 낮음 — UI 후속(이번 워크스트림 연장)
 7. 케이스 제작 페이지 섹션 번호(01~08) 제거 여부 — 사용자 결정 대기.
