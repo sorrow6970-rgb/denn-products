@@ -1934,11 +1934,13 @@ function rmRender(){
       ctx.globalCompositeOperation='source-over';
     }
     ctx.globalCompositeOperation='source-over';
-    // Sun source indicator dot
-    ctx.beginPath();ctx.arc(lx,ly,5,0,Math.PI*2);
-    ctx.strokeStyle='rgba(255,200,50,.8)';ctx.lineWidth=2;ctx.stroke();
-    ctx.beginPath();ctx.arc(lx,ly,2,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,220,80,.9)';ctx.fill();
+    // Sun source indicator dot (편집용 핸들) — view-only(고객 시안확인)에선 숨김
+    if(!window.__dennSpaceViewOnly){
+      ctx.beginPath();ctx.arc(lx,ly,5,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,200,50,.8)';ctx.lineWidth=2;ctx.stroke();
+      ctx.beginPath();ctx.arc(lx,ly,2,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,220,80,.9)';ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -13518,15 +13520,23 @@ input[type=range]{accent-color:#777}
       if(psrc){ scene.design.photoUrl = isData(psrc) ? await window.dennSpace.uploadDataUrl(psrc,'proofs/'+Date.now()+'-photo.png') : psrc; }
       var gsrc=window.RM&&window.RM.roomImg&&window.RM.roomImg.src;
       if(gsrc){ scene.room.guideBgUrl = isData(gsrc) ? await window.dennSpace.uploadDataUrl(gsrc,'proofs/'+Date.now()+'-bg.png') : gsrc; }
-      // 갤러리: 운영자가 업로드한 가이드배경 전부 → 고객이 여러 배경에서 액자 느낌 비교
+      // 갤러리: 운영자 가이드배경 전부 → 각 배경의 운영자 위치/스케일까지 캡처(배경별로 액자가 다르게)
       try{
         var bgs=(window.ADM&&window.ADM.guideBackgrounds)||[];
         scene.room.gallery=[];
+        var primIdx=(window.RM&&RM.guideIndex!=null)?RM.guideIndex:-1;
         for(var gi=0;gi<bgs.length;gi++){
           var bg=bgs[gi]; if(!bg||!bg.dataUrl)continue;
+          if(window.rmSelectGuide){ try{window.rmSelectGuide(gi);}catch(e){} await wait(500); } /* 그 배경의 운영자 위치/스케일 적용 */
           var burl=isData(bg.dataUrl)?await window.dennSpace.uploadDataUrl(bg.dataUrl,'proofs/'+Date.now()+'-g'+gi+'.png'):bg.dataUrl;
-          scene.room.gallery.push({name:bg.name||('배경 '+(gi+1)),bgId:bg.id||('guide-'+gi),url:burl});
+          scene.room.gallery.push({
+            name:bg.name||('배경 '+(gi+1)), bgId:bg.id||('guide-'+gi), url:burl,
+            controls: captureControls(),
+            pos:(window.RM&&RM.pos)?{x:RM.pos.x,y:RM.pos.y}:null,
+            sunOn: !!(window.RM&&RM.sunOn), sunPos:(window.RM&&RM.sunPos)?{x:RM.sunPos.x,y:RM.sunPos.y}:null
+          });
         }
+        if(primIdx>=0&&window.rmSelectGuide){ try{window.rmSelectGuide(primIdx);}catch(e){} await wait(350); } /* 원래 배경 복원 */
       }catch(e){}
       var r=await window.dennSpace.create({roomSettings:scene,password:pw,ownerMeta:{label:label},token:editToken||undefined});
       remember(r.token,label,r.url,pw);
@@ -13570,6 +13580,7 @@ input[type=range]{accent-color:#777}
   function param(name){try{var u=new URLSearchParams(location.search);return u.get(name);}catch(e){return null;}}
   var token=param('space');
   if(!token)return; /* 일반 진입이면 게이트 미적용 */
+  try{window.__dennSpaceViewOnly=true;}catch(e){} /* 고객 열람 = view-only → 햇빛 편집핸들 숨김 */
   function el(t,c){var d=document.createElement(t);if(c)d.className=c;return d;}
   function mount(){
     if(document.getElementById('denn-space-gate'))return;
@@ -13635,11 +13646,14 @@ input[type=range]{accent-color:#777}
     }
   }
   function copyCanvas(rc){var cv=document.createElement('canvas');cv.width=rc.width;cv.height=rc.height;try{cv.getContext('2d').drawImage(rc,0,0);}catch(e){}return cv;}
-  async function renderFrameOnBg(url){ /* 현재 디자인 액자를 주어진 배경에 합성 → 캔버스 복사본 */
-    try{window.RM.roomImg=await loadImage(url);}catch(e){return null;}
+  async function renderFrameOnBg(item){ /* 액자를 그 배경의 운영자 위치/스케일대로 합성 → 캔버스 복사본 */
+    try{window.RM.roomImg=await loadImage(item.url);}catch(e){return null;}
+    if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
+    applyControls(item.controls); /* 배경별 스케일/기울기/그림자/밝기 */
+    if(window.RM){ if(item.pos)window.RM.pos={x:item.pos.x,y:item.pos.y}; window.RM.__userMoved=true; if(item.sunOn!=null)window.RM.sunOn=!!item.sunOn; if(item.sunPos)window.RM.sunPos={x:item.sunPos.x,y:item.sunPos.y}; }
     if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
     if(window.rmRender){try{window.rmRender();}catch(e){}}
-    await wait(70);
+    await wait(90);
     var rc=document.getElementById('rm-canvas');
     return (rc&&rc.width)?copyCanvas(rc):null;
   }
@@ -13647,44 +13661,49 @@ input[type=range]{accent-color:#777}
     var card=document.getElementById('dsg-card');if(!card)return;
     var room=(scene&&scene.room)||{};
     var gallery=(room.gallery&&room.gallery.length)?room.gallery:null;
-    /* 갤러리: 운영자 가이드배경 각각에 액자 합성 → 캔버스들 수집 (primary가 먼저 오도록 정렬) */
+    /* 각 가이드배경에 그 배경의 운영자 위치/스케일대로 액자 합성 (primary 먼저) */
     var items=[];
     if(gallery){
       var prim=room.bgId;
       var ordered=gallery.slice().sort(function(a,b){return (b.bgId===prim?1:0)-(a.bgId===prim?1:0);});
-      for(var i=0;i<ordered.length;i++){ var c=await renderFrameOnBg(ordered[i].url); if(c)items.push({name:ordered[i].name||'',canvas:c}); }
+      for(var i=0;i<ordered.length;i++){ var c=await renderFrameOnBg(ordered[i]); if(c)items.push({name:ordered[i].name||'',canvas:c}); }
     }
     if(!items.length){ var rc0=document.getElementById('rm-canvas'); if(rc0&&rc0.width)items.push({name:'',canvas:copyCanvas(rc0)}); }
     if(window.closeRoomMockup){try{window.closeRoomMockup();}catch(e){}}
-    var label=scene&&scene.label?('<p class="dsg-label">'+String(scene.label).replace(/[<>&]/g,'')+'</p>'):'';
     var kakao=(window.ADM&&window.ADM.brand&&window.ADM.brand.kakaoUrl)||'';
-    var confirmRow=kakao?('<a class="dsg-kakao" href="'+kakao+'" target="_blank">✓ 시안 확정 — 담당자에게 알리기</a>')
-      :('<p style="margin-top:14px;font-size:12px;color:#8a8378">확인 후 담당자에게 알려주세요.</p>');
-    card.style.maxWidth='98vw';card.style.width='1500px';card.style.padding='16px';card.style.maxHeight='98vh';
-    card.innerHTML='<h2 style="margin-bottom:10px">내 공간 시안 확인</h2>'+label;
-    if(!items.length){ var p=document.createElement('p');p.textContent='시안을 표시할 수 없습니다. 새로고침 후 다시 시도해주세요.';card.appendChild(p); }
-    else {
-      var wrap=document.createElement('div');wrap.style.cssText='display:flex;gap:14px;align-items:flex-start;justify-content:center';
-      var mainBox=document.createElement('div');mainBox.style.cssText='flex:1;min-width:0;display:flex;justify-content:center';
-      var main=document.createElement('canvas');main.className='dsg-proof';
-      function setMain(cv){main.width=cv.width;main.height=cv.height;try{main.getContext('2d').drawImage(cv,0,0);}catch(e){}}
-      setMain(items[0].canvas);mainBox.appendChild(main);wrap.appendChild(mainBox);
-      if(items.length>1){
-        var gal=document.createElement('div');gal.style.cssText='flex:0 0 156px;display:flex;flex-direction:column;gap:8px;max-height:82vh;overflow:auto;padding:2px';
-        var hd=document.createElement('div');hd.textContent='다른 공간에서 보기';hd.style.cssText='font-size:11px;color:#8a8378;margin-bottom:2px';gal.appendChild(hd);
-        items.forEach(function(it,idx){
-          var t=document.createElement('div');t.style.cssText='border:2px solid '+(idx===0?'#2b2620':'#e0dad0')+';border-radius:8px;overflow:hidden;cursor:pointer;background:#fff';
-          var tc=document.createElement('canvas');var sc=148/it.canvas.width;tc.width=148;tc.height=Math.max(1,Math.round(it.canvas.height*sc));
-          try{tc.getContext('2d').drawImage(it.canvas,0,0,tc.width,tc.height);}catch(e){}tc.style.cssText='display:block;width:100%';t.appendChild(tc);
-          if(it.name){var nm=document.createElement('div');nm.textContent=it.name;nm.style.cssText='font-size:10px;color:#5a5248;padding:3px 5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';t.appendChild(nm);}
-          t.addEventListener('click',function(){setMain(it.canvas);[].forEach.call(gal.querySelectorAll('div[style*="cursor:pointer"]'),function(ch){ch.style.borderColor='#e0dad0';});t.style.borderColor='#2b2620';});
-          gal.appendChild(t);
-        });
-        wrap.appendChild(gal);
-      }
-      card.appendChild(wrap);
+    var labelTxt=scene&&scene.label?String(scene.label).replace(/[<>&]/g,''):'';
+    /* 게이트 카드를 투명 컨테이너로 → 흰색 아일랜드 2개(메인/갤러리)가 떠보이게 */
+    card.style.cssText='background:transparent;box-shadow:none;max-width:98vw;width:1500px;padding:0;max-height:98vh;overflow:visible';
+    card.innerHTML='';
+    if(!items.length){ card.innerHTML='<div style="background:#fff;border-radius:18px;padding:34px;text-align:center;color:#5a5248">시안을 표시할 수 없습니다. 새로고침 후 다시 시도해주세요.</div>'; return; }
+    var row=document.createElement('div');row.style.cssText='display:flex;gap:16px;align-items:flex-start;justify-content:center';
+    /* 메인 아일랜드 */
+    var mainIsland=document.createElement('div');mainIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:18px;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center';
+    var h=document.createElement('div');h.textContent='내 공간 시안 확인';h.style.cssText='font-size:18px;font-weight:700;color:#2b2620;margin-bottom:'+(labelTxt?'4px':'12px');mainIsland.appendChild(h);
+    if(labelTxt){var lb=document.createElement('div');lb.textContent=labelTxt;lb.style.cssText='font-size:13px;color:#8a8378;margin-bottom:12px';mainIsland.appendChild(lb);}
+    var main=document.createElement('canvas');main.className='dsg-proof';
+    function setMain(cv){main.width=cv.width;main.height=cv.height;try{main.getContext('2d').drawImage(cv,0,0);}catch(e){}}
+    setMain(items[0].canvas);mainIsland.appendChild(main);
+    var foot=document.createElement('div');foot.style.marginTop='14px';
+    foot.innerHTML=kakao?('<a class="dsg-kakao" href="'+kakao+'" target="_blank">✓ 시안 확정 — 담당자에게 알리기</a>'):'<span style="font-size:12px;color:#8a8378">확인 후 담당자에게 알려주세요.</span>';
+    mainIsland.appendChild(foot);
+    row.appendChild(mainIsland);
+    /* 갤러리 아일랜드 — 별도 흰색 패널, 현재 적용 썸네일만 검정 테두리 */
+    if(items.length>1){
+      var galIsland=document.createElement('div');galIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:16px;flex:0 0 196px;max-height:90vh;overflow:auto';
+      var hd=document.createElement('div');hd.textContent='다른 공간에서 보기';hd.style.cssText='font-size:12px;font-weight:700;color:#2b2620;margin-bottom:10px;text-align:center';galIsland.appendChild(hd);
+      var thumbs=[];
+      items.forEach(function(it,idx){
+        var t=document.createElement('div');t.style.cssText='border:3px solid '+(idx===0?'#111':'#ece6dd')+';border-radius:10px;overflow:hidden;cursor:pointer;background:#fff;margin-bottom:10px;transition:border-color .15s';
+        var tc=document.createElement('canvas');var sc=160/it.canvas.width;tc.width=160;tc.height=Math.max(1,Math.round(it.canvas.height*sc));
+        try{tc.getContext('2d').drawImage(it.canvas,0,0,tc.width,tc.height);}catch(e){}tc.style.cssText='display:block;width:100%';t.appendChild(tc);
+        if(it.name){var nm=document.createElement('div');nm.textContent=it.name;nm.style.cssText='font-size:10.5px;color:#5a5248;padding:4px 6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';t.appendChild(nm);}
+        t.addEventListener('click',function(){setMain(it.canvas);thumbs.forEach(function(x){x.style.borderColor='#ece6dd';});t.style.borderColor='#111';});
+        thumbs.push(t);galIsland.appendChild(t);
+      });
+      row.appendChild(galIsland);
     }
-    var foot=document.createElement('div');foot.style.marginTop='12px';foot.innerHTML=confirmRow;card.appendChild(foot);
+    card.appendChild(row);
   }
   async function showProof(data){
     var card=document.getElementById('dsg-card');if(!card)return;
