@@ -13618,9 +13618,11 @@ input[type=range]{accent-color:#777}
     if(d.colorId!=null&&window.FC){var c=find(window.FC,function(x){return x.id===d.colorId||x.fill===d.colorId;});if(c)window.curFCol=c;}
     ['main','name','name2','date','sub'].forEach(function(k){var e=document.getElementById('f-'+k);if(e)e.value=(d.texts&&d.texts[k])||'';});
     if(d.photoUrl){try{window.frameImg=await loadImage(d.photoUrl);window.frameImgT=d.imgT||{scale:1,x:0,y:0};}catch(e){}}
+    /* 프레임을 고해상도로 렌더 → 룸 합성 시 글씨/디테일 선명(미리보기 ~500px → 1600px) */
+    try{window.ADM=window.ADM||{};window.ADM.uiCustom=window.ADM.uiCustom||{};window.ADM.uiCustom.prevMaxW=1600;}catch(e){}
     window.__dennSizeUnset=false; /* 사이즈 게이트 해제(렌더 허용) */
     if(window.renderFrame){try{window.renderFrame();}catch(e){}}
-    await wait(280);
+    await wait(360);
     /* 2. 룸 설정 주입 */
     if(window.ADM){window.ADM.roomBackgroundSettings=window.ADM.roomBackgroundSettings||{};
       if(room.bgId&&room.settings)window.ADM.roomBackgroundSettings[room.bgId]=room.settings;
