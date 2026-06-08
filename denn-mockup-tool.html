@@ -11740,13 +11740,30 @@ window.addEventListener('load',later);
     if(el)return el;
     el=document.createElement('div');
     el.id=id;
-    el.style.cssText='position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);transform:translateX(-50%);background:rgba(20,20,25,.94);color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:99999;pointer-events:none;opacity:0;transition:opacity .2s ease;max-width:88vw;text-align:center;line-height:1.4';
+    /* 2026-06-08: translateX(-50%) 중앙정렬이 어긋나 보이던 문제 → left:0/right:0 + margin auto로 뷰포트 가로 중앙 견고화(transform 미사용) */
+    el.style.cssText='position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);margin:0 auto;width:max-content;max-width:88vw;background:rgba(20,20,25,.94);color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:99999;pointer-events:none;opacity:0;transition:opacity .2s ease;text-align:center;line-height:1.4';
     document.body.appendChild(el);
     return el;
   }
   function showToast(msg){
     var el=ensureToastNode();
     el.textContent=msg;
+    /* 2026-06-08: PC 셸에선 뷰포트 중앙이 캔버스 기준 왼쪽으로 치우치고 스케일바를 가림
+       → 활성 캔버스 컬럼의 가로 중앙 + 하단 컨트롤(스케일바) 위로 배치. 셸 아니면 뷰포트 하단중앙. */
+    try{
+      var cvs=document.querySelector('#page-frame.denn-pc-shell-on.on .dps-canvas, #page-case.denn-pc-shell-on.on .dps-canvas');
+      var r=cvs&&cvs.getBoundingClientRect();
+      if(cvs&&r&&r.width>0){
+        el.style.left=Math.round(r.left+r.width/2)+'px';
+        el.style.right='auto'; el.style.margin='0';
+        el.style.transform='translateX(-50%)';
+        el.style.bottom=Math.round(Math.max(0,window.innerHeight-r.bottom)+100)+'px';
+      }else{
+        el.style.left='0'; el.style.right='0'; el.style.margin='0 auto';
+        el.style.transform='none';
+        el.style.bottom='calc(env(safe-area-inset-bottom,0px) + 80px)';
+      }
+    }catch(e){}
     el.style.opacity='1';
     clearTimeout(el._timer);
     el._timer=setTimeout(function(){el.style.opacity='0'},2200);
