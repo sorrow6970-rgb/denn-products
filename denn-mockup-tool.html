@@ -2430,7 +2430,7 @@ function autoScale(){
     if(isFinite(s)&&s>0)wrap.style.transform='scale('+Math.max(.32,Math.min(1,s))+')';
   }catch(e){}
 }
-var oldRF=window.renderFrame;if(oldRF){window.renderFrame=function(){var r=oldRF.apply(this,arguments);return r;};}
+/* v13: renderFrame 순수 no-op wrap 제거 — 2026-06-08 작업1 Phase B. 아무 동작/마커 없이 위임만 하던 패스스루 레이어라 제거해도 체인·동작 동일. */
 })();
 </script>
 
