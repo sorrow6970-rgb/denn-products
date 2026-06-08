@@ -13412,6 +13412,9 @@ input[type=range]{accent-color:#777}
   function loadImage(url){return new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im);};im.onerror=function(){rej(new Error('IMG'));};im.src=url;});}
   function find(arr,pred){if(!arr)return null;for(var i=0;i<arr.length;i++){if(arr[i]&&pred(arr[i]))return arr[i];}return null;}
   function getStored(token){try{var a=JSON.parse(localStorage.getItem('denn_proof_spaces')||'[]');for(var i=0;i<a.length;i++){if(a[i].token===token)return a[i];}return null;}catch(e){return null;}}
+  /* 내공간 렌더(rmRender)·사이즈가이드(sgDraw)가 직접 읽는 슬라이더 DOM 값들 — 스케일/기울기/그림자/밝기/배경/가이드 */
+  var CTRL_IDS=['rm-bright','rm-size','rm-tilt','rm-persp-x','rm-persp-y','rm-bg-scale','rm-sh-op','rm-sh-dir','rm-sh-dist','rm-sh-blur','sg-scale-r','sg-scale-n','sg-ox-r','sg-ox-n','sg-oy-r','sg-oy-n','sg-alpha-r','sg-alpha-n','sg-on'];
+  function captureControls(){var o={};CTRL_IDS.forEach(function(id){var e=document.getElementById(id);if(!e)return;o[id]=(e.type==='checkbox')?(e.checked?1:0):e.value;});return o;}
   function captureScene(){
     var tpl=window.curFTpl||{}, sz=window.curFSz||{}, col=window.curFCol||{}, RM=window.RM||{};
     var rbs=(window.ADM&&window.ADM.roomBackgroundSettings)||{};
@@ -13426,11 +13429,21 @@ input[type=range]{accent-color:#777}
       room:{
         bgId: key, guideIndex: (RM.guideIndex!=null?RM.guideIndex:null),
         pos: (RM.pos?{x:RM.pos.x,y:RM.pos.y}:null),
+        controls: captureControls(),
         settings: key&&rbs[key]?clone(rbs[key]):null,
         common: rbs['__denn_room_common_default__']?clone(rbs['__denn_room_common_default__']):null
       }
     };
   }
+  /* 슬라이더 값 복원 — 내공간보기 열린 뒤 호출(컨트롤 DOM 존재). value 설정+input 디스패치(출력라벨·RM 동기) */
+  function applyControls(controls){
+    if(!controls)return;
+    Object.keys(controls).forEach(function(id){
+      var e=document.getElementById(id);if(!e)return;
+      try{ if(e.type==='checkbox'){e.checked=!!controls[id];} else {e.value=controls[id];} e.dispatchEvent(new Event('input',{bubbles:true})); e.dispatchEvent(new Event('change',{bubbles:true})); }catch(err){}
+    });
+  }
+  window.__dennSpaceApplyControls=applyControls; /* 게이트 재현에서도 사용 */
   function remember(token,label,url,pw){try{var k='denn_proof_spaces',a=JSON.parse(localStorage.getItem(k)||'[]');var rec={token:token,label:label,pw:pw,url:url,at:new Date().toISOString()};var i=-1;for(var j=0;j<a.length;j++){if(a[j].token===token){i=j;break;}}if(i>=0)a[i]=rec;else a.unshift(rec);localStorage.setItem(k,JSON.stringify(a.slice(0,50)));}catch(e){}}
   async function replayEditable(scene){
     var d=scene.design||{}, room=scene.room||{};
@@ -13444,11 +13457,21 @@ input[type=range]{accent-color:#777}
     await wait(300);
     if(window.ADM){window.ADM.roomBackgroundSettings=window.ADM.roomBackgroundSettings||{};if(room.bgId&&room.settings)window.ADM.roomBackgroundSettings[room.bgId]=room.settings;if(room.common)window.ADM.roomBackgroundSettings['__denn_room_common_default__']=room.common;}
     if(window.openRoomMockup){try{window.openRoomMockup();}catch(e){}}
-    await wait(200);
+    await wait(250);
     if(room.guideBgUrl){try{window.RM.roomImg=await loadImage(room.guideBgUrl);}catch(e){}}
-    if(window.RM){if(room.pos)window.RM.pos={x:room.pos.x,y:room.pos.y};if(room.bgId)window.RM.bgId=room.bgId;if(room.guideIndex!=null)window.RM.guideIndex=room.guideIndex;}
+    if(window.RM){if(room.bgId)window.RM.bgId=room.bgId;if(room.guideIndex!=null)window.RM.guideIndex=room.guideIndex;}
     if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
-    if(window.rmRender){try{window.rmRender();}catch(e){}}
+    await applyRoomState(room); /* 디폴트 미러 타이머 후 슬라이더/위치 복원 + __userMoved 잠금, 2회 */
+  }
+  /* 운영자 디폴트 미러가 가이드배경 기본값으로 덮는 걸 이기고 저장값(스케일/위치/그림자 등)을 강제 복원 */
+  async function applyRoomState(room){
+    for(var pass=0;pass<2;pass++){
+      await wait(pass===0?450:550);
+      try{applyControls(room.controls);}catch(e){}
+      if(window.RM){ if(room.pos)window.RM.pos={x:room.pos.x,y:room.pos.y}; window.RM.__userMoved=true; /* 미러 force 차단 */ }
+      if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
+      if(window.rmRender){try{window.rmRender();}catch(e){}}
+    }
   }
   async function loadForEdit(){
     try{
@@ -13569,6 +13592,7 @@ input[type=range]{accent-color:#777}
   function wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
   function loadImage(url){return new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im);};im.onerror=function(){rej(new Error('IMG_LOAD'));};im.src=url;});}
   function find(arr,pred){if(!arr)return null;for(var i=0;i<arr.length;i++){if(arr[i]&&pred(arr[i]))return arr[i];}return null;}
+  function applyControls(controls){if(!controls)return;Object.keys(controls).forEach(function(id){var e=document.getElementById(id);if(!e)return;try{if(e.type==='checkbox'){e.checked=!!controls[id];}else{e.value=controls[id];}e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}catch(err){}});}
   async function replayScene(scene){
     var d=scene.design||{}, room=scene.room||{};
     /* 1. 디자인 복원 */
@@ -13584,14 +13608,20 @@ input[type=range]{accent-color:#777}
     if(window.ADM){window.ADM.roomBackgroundSettings=window.ADM.roomBackgroundSettings||{};
       if(room.bgId&&room.settings)window.ADM.roomBackgroundSettings[room.bgId]=room.settings;
       if(room.common)window.ADM.roomBackgroundSettings['__denn_room_common_default__']=room.common;}
-    /* 3. 내공간보기 열고 RM 적용 후 렌더 */
+    /* 3. 내공간보기 열고 배경 로드 */
     if(window.openRoomMockup){try{window.openRoomMockup();}catch(e){}}
-    await wait(180);
+    await wait(250);
     if(room.guideBgUrl){try{window.RM.roomImg=await loadImage(room.guideBgUrl);}catch(e){}}
-    if(window.RM){if(room.pos)window.RM.pos={x:room.pos.x,y:room.pos.y};if(room.bgId)window.RM.bgId=room.bgId;if(room.guideIndex!=null)window.RM.guideIndex=room.guideIndex;}
+    if(window.RM){if(room.bgId)window.RM.bgId=room.bgId;if(room.guideIndex!=null)window.RM.guideIndex=room.guideIndex;}
     if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
-    if(window.rmRender){try{window.rmRender();}catch(e){}}
-    await wait(150);
+    /* 4. 운영자 디폴트 미러가 가이드배경 기본값으로 덮는 걸 이기고 저장값(스케일/위치/그림자) 강제 복원 — 2회 */
+    for(var pass=0;pass<2;pass++){
+      await wait(pass===0?450:550);
+      applyControls(room.controls);
+      if(window.RM){ if(room.pos)window.RM.pos={x:room.pos.x,y:room.pos.y}; window.RM.__userMoved=true; }
+      if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
+      if(window.rmRender){try{window.rmRender();}catch(e){}}
+    }
   }
   function showComposed(scene){
     var card=document.getElementById('dsg-card');if(!card)return;
