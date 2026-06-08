@@ -13735,12 +13735,16 @@ input[type=range]{accent-color:#777}
     if(!items.length){ card.innerHTML='<div style="background:#fff;border-radius:18px;padding:34px;text-align:center;color:#5a5248">시안을 표시할 수 없습니다. 새로고침 후 다시 시도해주세요.</div>'; return; }
     var row=document.createElement('div');row.style.cssText='display:flex;gap:16px;align-items:flex-start;justify-content:center';
     /* 메인 아일랜드 */
-    var mainIsland=document.createElement('div');mainIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:18px;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center';
-    var h=document.createElement('div');h.textContent='내 공간 시안 확인';h.style.cssText='font-size:18px;font-weight:700;color:#2b2620;margin-bottom:'+(labelTxt?'4px':'12px');mainIsland.appendChild(h);
-    if(labelTxt){var lb=document.createElement('div');lb.textContent=labelTxt;lb.style.cssText='font-size:13px;color:#8a8378;margin-bottom:12px';mainIsland.appendChild(lb);}
+    var mainIsland=document.createElement('div');mainIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:18px;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center';
+    var titleBlock=document.createElement('div');titleBlock.style.cssText='text-align:center;margin-bottom:12px';
+    var h=document.createElement('div');h.textContent='내 공간 시안 확인';h.style.cssText='font-size:18px;font-weight:700;color:#2b2620';titleBlock.appendChild(h);
+    if(labelTxt){var lb=document.createElement('div');lb.textContent=labelTxt;lb.style.cssText='font-size:13px;color:#8a8378;margin-top:4px';titleBlock.appendChild(lb);}
+    mainIsland.appendChild(titleBlock);
     var main=document.createElement('canvas');main.className='dsg-proof';
     function setMain(cv){main.width=cv.width;main.height=cv.height;try{main.getContext('2d').drawImage(cv,0,0);}catch(e){}}
     setMain(items[0].canvas);mainIsland.appendChild(main);
+    /* 하단 균형 스페이서 — 상단 제목 블록과 동일 높이의 투명 복제본으로 이미지 상하 여백 대칭 */
+    var spacer=titleBlock.cloneNode(true);spacer.style.cssText='text-align:center;margin-top:12px;margin-bottom:0;visibility:hidden';mainIsland.appendChild(spacer);
     /* 왼쪽 액션 아일랜드 — 오른쪽 갤러리와 같은 크기, 버튼 배치 */
     var leftIsland=document.createElement('div');leftIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:18px;flex:0 0 220px;max-height:90vh;display:flex;flex-direction:column;gap:14px;justify-content:center';
     if(labelTxt){var ll=document.createElement('div');ll.textContent=labelTxt;ll.style.cssText='font-size:13px;color:#5a5248;text-align:center;font-weight:600;margin-bottom:4px';leftIsland.appendChild(ll);}
