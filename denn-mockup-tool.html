@@ -12209,6 +12209,54 @@ window.addEventListener('load',later);
   var rt; window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(sync,150)});
 })();
 </script>
+<!-- (작업4) 폰케이스 탭 진입 차단 — 개발 완료 전까지 비활성. 플래그 한 줄로 재활성. -->
+<style id="denn-v102-case-tab-disable-css">
+.denn-tab-disabled{opacity:.5}
+.denn-tab-soon{font-size:9px;font-weight:600;opacity:.85;margin-left:2px}
+</style>
+<script id="denn-v102-case-tab-disable">
+(function(){
+  'use strict';
+  if(window.__DENN_CASE_TAB_DISABLE_V102)return; window.__DENN_CASE_TAB_DISABLE_V102=true;
+  /* ★★ 폰케이스 개발 완료 후 아래 한 줄을 true로 바꾸면(또는 콘솔 dennSetCaseTabEnabled(true)) 즉시 열림. */
+  if(window.__DENN_CASE_ENABLED==null)window.__DENN_CASE_ENABLED=false;
+  function enabled(){return window.__DENN_CASE_ENABLED===true;}
+  function toast(msg){try{if(window.dennShowFrameToast){window.dennShowFrameToast(msg);return;}}catch(e){} try{alert(msg);}catch(e){}}
+  /* switchTab 가로채기: 비활성 시 case 진입 차단 + 안내(페이지 전환 자체를 막음) */
+  function wrapSwitch(){
+    var orig=window.switchTab;
+    if(typeof orig!=='function'||orig.__dennCaseGate)return;
+    window.switchTab=function(tab){
+      if(tab==='case'&&!enabled()){toast('폰케이스는 준비 중입니다. 곧 만나요!');return;}
+      return orig.apply(this,arguments);
+    };
+    window.switchTab.__dennCaseGate=true;
+  }
+  function caseTabs(){
+    return [].slice.call(document.querySelectorAll('.tabbar .tab, header .tab')).filter(function(t){
+      return /case/i.test(t.getAttribute('onclick')||'')||/폰케이스/.test(t.textContent||'');
+    });
+  }
+  function markTab(){
+    try{caseTabs().forEach(function(t){
+      if(enabled()){t.classList.remove('denn-tab-disabled');var b=t.querySelector('.denn-tab-soon');if(b)b.remove();}
+      else{t.classList.add('denn-tab-disabled');if(!t.querySelector('.denn-tab-soon')){var s=document.createElement('span');s.className='denn-tab-soon';s.textContent='(준비중)';t.appendChild(s);}}
+    });}catch(e){}
+  }
+  /* 비활성인데 case가 활성 상태로 로드되면 frame으로 되돌림(토스트 없이) */
+  function guardActive(){
+    if(enabled())return;
+    var pc=document.getElementById('page-case');
+    if(pc&&pc.classList.contains('on')){try{var orig=window.switchTab;if(orig&&orig.__dennCaseGate)orig.call(window,'frame');else if(orig)orig.call(window,'frame');}catch(e){}}
+  }
+  function boot(){wrapSwitch();markTab();guardActive();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,260)});
+  else setTimeout(boot,260);
+  window.addEventListener('load',function(){setTimeout(boot,440)});
+  /* 콘솔/코드에서 즉시 토글 */
+  window.dennSetCaseTabEnabled=function(on){window.__DENN_CASE_ENABLED=(on===true);markTab();if(!enabled())guardActive();return window.__DENN_CASE_ENABLED;};
+})();
+</script>
 <script id="denn-v96-size-dropdown">
 (function(){
   'use strict';
