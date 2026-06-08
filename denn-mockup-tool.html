@@ -13300,6 +13300,62 @@ input[type=range]{accent-color:#777}
   setTimeout(tryRun,1200);setTimeout(tryRun,3000);
 })();
 </script>
+
+<!-- ============================================================
+     작업5 (내공간 패스워드 개별 접근) — 1단계: 소비자측 Firebase+Firestore init + dennSpace.load
+     운영자가 admin dennSpace.create로 발급한 spaces/{token}(암호화)을 ?space=<token>로 열람(view-only).
+     패스워드 파생키(PBKDF2)+AES-GCM 복호화. 보안규칙: docs/firestore.rules.
+     ============================================================ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyCw7SEjICMoSoyLQpFOlLBvTYhYh0-6D3Y",
+    authDomain: "denn-products.firebaseapp.com",
+    projectId: "denn-products",
+    storageBucket: "denn-products.firebasestorage.app",
+    messagingSenderId: "66131680180",
+    appId: "1:66131680180:web:b45f5008b659936b0a70e1",
+    measurementId: "G-ZBJWLS0GKB"
+  };
+  let _ready = false;
+  const _readyPromise = new Promise(function(resolve){ window.__dennSpaceFbReady = resolve; });
+  try {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    signInAnonymously(auth).catch(function(err){ console.warn('[space] anon signin failed:', err && err.code); });
+    onAuthStateChanged(auth, function(u){ if(u){ _ready=true; window.__dennSpaceFbReady && window.__dennSpaceFbReady(true); } });
+    const _ub64 = function(b){ var s=atob(b), u=new Uint8Array(s.length); for(var i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; };
+    const _deriveKey = async function(password, salt){
+      const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), {name:'PBKDF2'}, false, ['deriveKey']);
+      return crypto.subtle.deriveKey({name:'PBKDF2', salt:salt, iterations:120000, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+    };
+    const _decryptJson = async function(enc, password){
+      const key = await _deriveKey(password, _ub64(enc.salt));
+      const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:_ub64(enc.iv)}, key, _ub64(enc.ct));
+      return JSON.parse(new TextDecoder().decode(pt));
+    };
+    window.dennSpace = window.dennSpace || {};
+    window.dennSpace.isReady = function(){ return _ready; };
+    window.dennSpace.ready = function(){ return _readyPromise; };
+    /* dennSpace.load(token, password) → roomSettings | throws('NOT_FOUND' | 'BAD_PASSWORD') */
+    window.dennSpace.load = async function(token, password){
+      if(!token) throw new Error('NO_TOKEN');
+      await _readyPromise;
+      const snap = await getDoc(doc(db, 'spaces', token));
+      if(!snap.exists()) throw new Error('NOT_FOUND');
+      const data = snap.data();
+      if(!data || !data.enc) throw new Error('BAD_DOC');
+      try { return await _decryptJson(data.enc, password||''); }
+      catch(e){ throw new Error('BAD_PASSWORD'); }
+    };
+    console.log('[space] dennSpace.load() 사용 가능 (작업5 1단계: ?space=<token> 복호화 열람).');
+  } catch (e) {
+    console.error('[space] firebase init failed:', e);
+  }
+</script>
 </body>
 </html>
 

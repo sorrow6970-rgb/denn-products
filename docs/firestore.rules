@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// 작업5 (내공간 패스워드 개별 접근) — Firestore 보안 규칙
+// 배포: Firebase 콘솔 → Firestore Database → 규칙 탭에 아래 내용 붙여넣고 게시.
+// (또는 firebase deploy --only firestore:rules)
+//
+// 보안 모델:
+//   spaces/{token}.enc 에는 roomSettings가 클라이언트에서 패스워드 파생키(PBKDF2)+AES-GCM로
+//   암호화되어 저장됨. 따라서 토큰을 알아도 enc 블롭만 읽힐 뿐, 패스워드 없이는 복호화 불가.
+//   → 읽기를 익명 인증 사용자에게 열어도 내용은 패스워드로 보호됨.
+//   생성은 1회(create)만 허용하고 update/delete 차단 → 변조/삭제 방지(view-only).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /spaces/{token} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && request.resource.data.schema == 'space-v1'
+        && request.resource.data.keys().hasOnly(['enc','ownerMeta','createdAt','schema'])
+        && request.resource.data.enc is map
+        && request.resource.data.enc.keys().hasOnly(['salt','iv','ct']);
+
+      allow update, delete: if false;
+    }
+
+    // 그 외 모든 경로 기본 차단
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
