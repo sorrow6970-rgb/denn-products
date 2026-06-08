@@ -13034,16 +13034,7 @@ input[type=range]{accent-color:#777}
     if(RM.guideIndex!=null)return false;
     return RM.bgId==='default-room'||!RM.bgId;
   }
-  function isUntouched(st,common){
-    if(!st)return true;
-    if(st.__adminPreset||st.__savedFromAdminRoomSetup)return false;
-    if(st.__dennUserMovedFrame)return false;
-    if(st.__dennCommonInheritV82)return true;
-    var fx=st.frameCenterX!=null?num(st.frameCenterX):num(st.frameX);
-    var fy=st.frameCenterY!=null?num(st.frameCenterY):num(st.frameY);
-    var nearDefault=((fx==null)||Math.abs(fx-50)<0.8)&&((fy==null)||Math.abs(fy-40)<0.8);
-    return nearDefault;
-  }
+  /* [2026-06-08 dead code 청소] isUntouched() 제거 — 미러 모델 전환 후 applyCommonToDefaultRoom이 더 이상 호출 안 함(본체=reload+render). 참조 0의 미사용 함수였음. */
   /* [2026-06-04 dead code 청소] buildSeed 제거 — default-room=② 미러는 loadSettingsV33가 담당(L12906 주석 참조), 미호출 함수였음. */
   function applyCommonToDefaultRoom(opts){
     try{
@@ -13170,7 +13161,7 @@ input[type=range]{accent-color:#777}
       값은 user:<bgId>에 보존 → 데이터 손실 0. operator는 비워 다음 진입 시 ②(operator.default) lazy 상속(V79).
       preset(__adminPreset/__savedFromAdminRoomSetup) 있는 <bgId>는 operator 디폴트로 유지(불변).
    B. user 영역(default-room/user:*)에서 운영자 마커(__adminPreset/__savedFromAdminRoomSetup/__adminPresetSavedAt) 제거.
-      → B1 isUntouched()가 더 이상 false로 막히지 않아 ② 상속 정상화(오늘 d_fcX 24.51 미추종 회귀 해소).
+      → 과거 B1 상속 게이트(isUntouched, 2026-06-08 제거됨)를 false로 막던 운영자 마커를 제거해 ② 상속 정상화(d_fcX 24.51 미추종 회귀 해소).
    백업: 변환 직전 roomBackgroundSettings 스냅샷을 별도 localStorage 키(denn_room_premigrate2b_backup)에 1회.
          (A에 중첩 안 함 → 매 save마다 blob 2배 직렬화되는 quota 부담 회피.)
    persist: localStorage + IDB(denn_shared_db/kv/denn_admin_state) 양쪽. 읽기가 IDB-primary 머지라 한쪽만 쓰면 부활.

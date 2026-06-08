@@ -52,7 +52,7 @@ git log --oneline -6   # HEAD = 25f7e9d
 
 ### 중간 — 컷오버/정리
 3. **룸 스키마 컷오버 3·4단계 (격리/청결)** ([[project_cutover_room_schema]]): 공유 모듈 추출 필요해 보류. 1/2a/2b(오염 차단)는 완료.
-4. **Dead code 청소**: buildSeed / 단계3 잔재 / V79 / orphan v33 rmSelectGuide 등(미러 모델 핸드오프 후속).
+4. **Dead code 청소 — 2026-06-08 완료/교정**: 실제 죽은 코드는 `isUntouched`(10줄) **하나뿐**이었고 제거함(90e5a82 이후 커밋). buildSeed·단계3 플래그(`__dennDefaultRoomFreshSeededV82`)는 이미 제거돼 있었음. ⚠️ **이전 리스트 오류 정정**: `V79`(공통디폴트 상속 아키텍처)·`rmSelectGuide`("orphan v33")는 **죽은 코드가 아니라 활성 핵심 경로** — 건드리지 말 것. 상세 [[project_dead_code_audit]].
 
 ### 중간 — Phase C (placeholder / 색상 / textless)
 5. **Placeholder 잔존 surface** ([[project_placeholder_progress]], 10일 전 메모 — 현 코드 재확인 필요):
