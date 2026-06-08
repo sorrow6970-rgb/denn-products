@@ -55,13 +55,7 @@ git log --oneline -6   # HEAD = 25f7e9d
 4. **Dead code 청소 — 2026-06-08 완료/교정**: 실제 죽은 코드는 `isUntouched`(10줄) **하나뿐**이었고 제거함(90e5a82 이후 커밋). buildSeed·단계3 플래그(`__dennDefaultRoomFreshSeededV82`)는 이미 제거돼 있었음. ⚠️ **이전 리스트 오류 정정**: `V79`(공통디폴트 상속 아키텍처)·`rmSelectGuide`("orphan v33")는 **죽은 코드가 아니라 활성 핵심 경로** — 건드리지 말 것. 상세 [[project_dead_code_audit]].
 
 ### 중간 — Phase C (placeholder / 색상 / textless)
-5. **Placeholder 잔존 surface** ([[project_placeholder_progress]], 10일 전 메모 — 현 코드 재확인 필요):
-   - 어드민 메인 카드 📷 노란 뱃지 (renderFTplsByCategory 본체 직접 패치, Phase 1)
-   - 어드민 모달 중앙 캔버스 `#ze-canvas` placeholder overlay (Phase 4)
-   - 어드민 가이드 이미지 모달 재진입 표시 (refreshGuideForced)
-   - mockup-tool `selFTplByRef` wrap chain (Phase 3)
-   - ON/OFF 토글(Phase 5) → UI 정돈(Phase 6)
-   - (단, 카드 썸네일은 61d559d로 합성 방식 재구현됨 — 메모 항목과 대조 필요)
+5. ~~Placeholder 잔존 surface~~ → ✅ **완료(2026-06-08 시각검증)** ([[project_placeholder_progress]]): 메모가 stale했고, 5 surface 전부 작동 확인. 어드민 카드뱃지(`decorateFrameTplCards` admin:9269-9310)·모달overlay(`syncPhOverlay` admin:9004-9042)·가이드(병렬), mockup 합성썸네일(`dennRenderCardCompositeThumbV` mockup:973-993, 61d559d)·`selFTplByRef` wrap(mockup:11830-11839). Phase5 토글(`__dennAuxToggles.ph`) 존재. 사용자 "모두정상".
 6. **Phase C 작업2 textless 이중잠금 / 케이스 모델 V363 게이팅** ([[project_phase_c_task2_case_model]], [[project_phase_c_textless_dual_lock]]).
 
 ### 낮음 — UI 후속(이번 워크스트림 연장)
