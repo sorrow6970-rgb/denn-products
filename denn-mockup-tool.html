@@ -3433,7 +3433,7 @@ function drawSun(ctx2,W,H){
   var sunInt=num((by('rm-sun-int')||{}).value,50)/100,sunSpread=num((by('rm-sun-spread')||{}).value,60)/100,sunWarm=num((by('rm-sun-warm')||{}).value,70)/100,sunRays=parseInt((by('rm-sun-rays')||{}).value||0,10),sunAng=num((by('rm-sun-ang')||{}).value,-30),lx=(RM.sunPos&&RM.sunPos.x||.75)*W,ly=(RM.sunPos&&RM.sunPos.y||.2)*H,radius=Math.max(W,H)*sunSpread,rC=255,gC=Math.round(255-(155*sunWarm)),bC=Math.round(255-(155*sunWarm));
   ctx2.save();ctx2.globalCompositeOperation='screen';var grad=ctx2.createRadialGradient(lx,ly,0,lx,ly,radius);grad.addColorStop(0,'rgba('+rC+','+gC+','+bC+','+Math.min(sunInt*.85,.85)+')');grad.addColorStop(.25,'rgba('+rC+','+gC+','+bC+','+Math.min(sunInt*.45,.45)+')');grad.addColorStop(.6,'rgba('+rC+','+gC+','+bC+','+Math.min(sunInt*.15,.15)+')');grad.addColorStop(1,'rgba('+rC+','+gC+','+bC+',0)');ctx2.fillStyle=grad;ctx2.fillRect(0,0,W,H);
   if(sunRays>0){var radAng=sunAng*Math.PI/180,perpX=Math.cos(radAng+Math.PI/2),perpY=Math.sin(radAng+Math.PI/2),dirX=Math.cos(radAng),dirY=Math.sin(radAng),extLen=Math.max(W,H)*2.5,rayWidth=Math.max(W,H)*num((by('rm-ray-thick')||{}).value,3)/100,raySpacing=Math.max(W,H)*.07;for(var ri=-Math.ceil(sunRays/2);ri<=Math.ceil(sunRays/2);ri++){var ox=lx+perpX*ri*raySpacing,oy=ly+perpY*ri*raySpacing,x1=ox+dirX*extLen,y1=oy+dirY*extLen,x2=ox-dirX*extLen,y2=oy-dirY*extLen,wX=perpX*rayWidth/2,wY=perpY*rayWidth/2,rg=ctx2.createLinearGradient(ox-wX,oy-wY,ox+wX,oy+wY),rA=Math.min(sunInt*.55*(1-Math.abs(ri)/(sunRays/2+1)*.4),.55);rg.addColorStop(0,'rgba('+rC+','+gC+','+bC+',0)');rg.addColorStop(.5,'rgba('+rC+','+gC+','+bC+','+rA+')');rg.addColorStop(1,'rgba('+rC+','+gC+','+bC+',0)');ctx2.beginPath();ctx2.moveTo(x1-wX,y1-wY);ctx2.lineTo(x2-wX,y2-wY);ctx2.lineTo(x2+wX,y2+wY);ctx2.lineTo(x1+wX,y1+wY);ctx2.closePath();ctx2.fillStyle=rg;ctx2.fill()}}
-  ctx2.globalCompositeOperation='source-over';ctx2.beginPath();ctx2.arc(lx,ly,5,0,Math.PI*2);ctx2.strokeStyle='rgba(255,200,50,.8)';ctx2.lineWidth=2;ctx2.stroke();ctx2.beginPath();ctx2.arc(lx,ly,2,0,Math.PI*2);ctx2.fillStyle='rgba(255,220,80,.9)';ctx2.fill();ctx2.restore();
+  ctx2.globalCompositeOperation='source-over';if(!window.__dennSpaceViewOnly){ctx2.beginPath();ctx2.arc(lx,ly,5,0,Math.PI*2);ctx2.strokeStyle='rgba(255,200,50,.8)';ctx2.lineWidth=2;ctx2.stroke();ctx2.beginPath();ctx2.arc(lx,ly,2,0,Math.PI*2);ctx2.fillStyle='rgba(255,220,80,.9)';ctx2.fill();}ctx2.restore();
 }
 function drawDirectUploadNotice(ctx2,W,H){
   return;
@@ -13675,6 +13675,13 @@ input[type=range]{accent-color:#777}
     setSV('rm-sun-warm',Math.round(nv(s.sunlightWarm,.7)*100));
     setSV('rm-sun-rays',nv(s.sunlightRays,0));
   }
+  function sizeHiRes(){ /* 룸 캔버스를 배경 원본 해상도(최대 1680px)로 → 선명 */
+    var rc=document.getElementById('rm-canvas'),im=window.RM&&window.RM.roomImg;
+    if(!rc||!im||!im.naturalWidth)return;
+    var sc=Math.min(1680/im.naturalWidth,1);
+    rc.width=Math.round(im.naturalWidth*sc); rc.height=Math.round(im.naturalHeight*sc);
+    if(window.RM){RM.canvas=rc;RM.ctx=rc.getContext('2d');}
+  }
   async function renderFrameOnBg(item, primary, room){ /* 액자를 그 배경에 합성 → 캔버스 복사본 */
     try{window.RM.roomImg=await loadImage(item.url);}catch(e){return null;}
     if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
@@ -13684,7 +13691,7 @@ input[type=range]{accent-color:#777}
     } else { /* 다른 배경 = 그 배경의 운영자 저장 프리셋 */
       applyBgSettings(item.settings);
     }
-    if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
+    sizeHiRes(); /* 슬라이더 dispatch 후 고해상도로 키우고 최종 렌더 */
     if(window.rmRender){try{window.rmRender();}catch(e){}}
     await wait(90);
     var rc=document.getElementById('rm-canvas');
