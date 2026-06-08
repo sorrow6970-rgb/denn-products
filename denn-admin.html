@@ -15871,7 +15871,7 @@ window.addEventListener('resize',scheduleSettle);
   function _proofGet(){try{return JSON.parse(localStorage.getItem('denn_proof_spaces')||'[]');}catch(e){return [];}}
   function _proofSet(a){try{localStorage.setItem('denn_proof_spaces',JSON.stringify(a));renderList();}catch(e){}}
   window.dennProofDelete=function(token){if(!confirm('이 발급 목록에서 삭제할까요?\n(목록에서만 제거됩니다 — 링크 접근 차단은 추후 지원)'))return;_proofSet(_proofGet().filter(function(s){return s.token!==token;}));};
-  window.dennProofEdit=function(token){var a=_proofGet(),i=a.findIndex(function(s){return s.token===token;});if(i<0)return;var nl=prompt('라벨(고객명) 수정:',a[i].label||'');if(nl===null)return;a[i].label=String(nl).trim();_proofSet(a);};
+  window.dennProofEdit=function(token){try{var base=location.origin+location.pathname.replace(/[^/]+$/, '')+'denn-mockup-tool.html';window.open(base+'?spaceCreate=1&edit='+encodeURIComponent(token),'_blank');}catch(e){alert('수정 창 열기 실패: '+((e&&e.message)||e));}};
   window.dennProofCopyLink=function(token){var a=_proofGet(),s=a.find(function(x){return x.token===token;});if(!s)return;try{navigator.clipboard.writeText(s.url);}catch(e){}var t=document.createElement('div');t.textContent='링크 복사됨'+(s.pw?' · 비번 '+s.pw:'');t.style.cssText='position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#1A1926;color:#fff;padding:9px 16px;border-radius:8px;z-index:99999;font-size:12px';document.body.appendChild(t);setTimeout(function(){t.remove();},1800);};
   window.dennRenderProofList=renderList;
   document.addEventListener('DOMContentLoaded',renderList);setTimeout(renderList,600);

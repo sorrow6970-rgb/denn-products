@@ -13403,10 +13403,15 @@ input[type=range]{accent-color:#777}
 (function(){
   'use strict';
   function param(n){try{return new URLSearchParams(location.search).get(n);}catch(e){return null;}}
-  if(param('spaceCreate')!=='1')return; /* 발급 모드에서만 */
+  if(param('spaceCreate')!=='1')return; /* 발급/수정 모드에서만 */
+  var editToken=param('edit')||null; /* 수정 모드: 기존 토큰 덮어쓰기(같은 링크 유지) */
   function tv(id){var e=document.getElementById(id);return e?(e.value||''):'';}
   function clone(o){try{return JSON.parse(JSON.stringify(o||null));}catch(e){return null;}}
   function isData(s){return typeof s==='string'&&s.indexOf('data:')===0;}
+  function wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
+  function loadImage(url){return new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im);};im.onerror=function(){rej(new Error('IMG'));};im.src=url;});}
+  function find(arr,pred){if(!arr)return null;for(var i=0;i<arr.length;i++){if(arr[i]&&pred(arr[i]))return arr[i];}return null;}
+  function getStored(token){try{var a=JSON.parse(localStorage.getItem('denn_proof_spaces')||'[]');for(var i=0;i<a.length;i++){if(a[i].token===token)return a[i];}return null;}catch(e){return null;}}
   function captureScene(){
     var tpl=window.curFTpl||{}, sz=window.curFSz||{}, col=window.curFCol||{}, RM=window.RM||{};
     var rbs=(window.ADM&&window.ADM.roomBackgroundSettings)||{};
@@ -13426,7 +13431,39 @@ input[type=range]{accent-color:#777}
       }
     };
   }
-  function remember(token,label,url,pw){try{var k='denn_proof_spaces',a=JSON.parse(localStorage.getItem(k)||'[]');a.unshift({token:token,label:label,pw:pw,url:url,at:new Date().toISOString()});localStorage.setItem(k,JSON.stringify(a.slice(0,50)));}catch(e){}}
+  function remember(token,label,url,pw){try{var k='denn_proof_spaces',a=JSON.parse(localStorage.getItem(k)||'[]');var rec={token:token,label:label,pw:pw,url:url,at:new Date().toISOString()};var i=-1;for(var j=0;j<a.length;j++){if(a[j].token===token){i=j;break;}}if(i>=0)a[i]=rec;else a.unshift(rec);localStorage.setItem(k,JSON.stringify(a.slice(0,50)));}catch(e){}}
+  async function replayEditable(scene){
+    var d=scene.design||{}, room=scene.room||{};
+    if(d.sizeId&&window.FS){var s=find(window.FS,function(x){return x.id===d.sizeId;});if(s)window.curFSz=s;}
+    if(d.tplId&&window.FTPLS){var t=find(window.FTPLS,function(x){return x.id===d.tplId;});if(t)window.curFTpl=t;}
+    if(d.colorId!=null&&window.FC){var c=find(window.FC,function(x){return x.id===d.colorId||x.fill===d.colorId;});if(c)window.curFCol=c;}
+    ['main','name','name2','date','sub'].forEach(function(k){var e=document.getElementById('f-'+k);if(e)e.value=(d.texts&&d.texts[k])||'';});
+    if(d.photoUrl){try{window.frameImg=await loadImage(d.photoUrl);window.frameImgT=d.imgT||{scale:1,x:0,y:0};}catch(e){}}
+    window.__dennSizeUnset=false;
+    if(window.renderFrame){try{window.renderFrame();}catch(e){}}
+    await wait(300);
+    if(window.ADM){window.ADM.roomBackgroundSettings=window.ADM.roomBackgroundSettings||{};if(room.bgId&&room.settings)window.ADM.roomBackgroundSettings[room.bgId]=room.settings;if(room.common)window.ADM.roomBackgroundSettings['__denn_room_common_default__']=room.common;}
+    if(window.openRoomMockup){try{window.openRoomMockup();}catch(e){}}
+    await wait(200);
+    if(room.guideBgUrl){try{window.RM.roomImg=await loadImage(room.guideBgUrl);}catch(e){}}
+    if(window.RM){if(room.pos)window.RM.pos={x:room.pos.x,y:room.pos.y};if(room.bgId)window.RM.bgId=room.bgId;if(room.guideIndex!=null)window.RM.guideIndex=room.guideIndex;}
+    if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
+    if(window.rmRender){try{window.rmRender();}catch(e){}}
+  }
+  async function loadForEdit(){
+    try{
+      var rec=getStored(editToken), pw=rec&&rec.pw;
+      if(window.dennSpace&&window.dennSpace.ready){try{await window.dennSpace.ready();}catch(e){}}
+      if(!pw){pw=window.prompt('이 공간의 비밀번호를 입력하세요(수정):')||'';}
+      if(!window.dennSpace||!window.dennSpace.load){return;}
+      var scene=await window.dennSpace.load(editToken,pw);
+      if(!scene||scene.schema!=='space-scene-v1'){alert('이 공간은 수정 가능한 씬 형식이 아닙니다.');return;}
+      var lab=document.getElementById('denn-sc-label'), pwi=document.getElementById('denn-sc-pw');
+      if(lab)lab.value=(rec&&rec.label)||'';
+      if(pwi)pwi.value=pw;
+      await replayEditable(scene);
+    }catch(e){var m=(e&&e.message)||'';alert(m==='BAD_PASSWORD'?'비밀번호가 올바르지 않습니다.':'수정용 불러오기 실패: '+m);}
+  }
   function mount(){
     if(document.getElementById('denn-sc-btn'))return;
     var btn=document.createElement('button');btn.id='denn-sc-btn';btn.type='button';btn.textContent='🔐 비공개 공간 발급';
@@ -13457,15 +13494,25 @@ input[type=range]{accent-color:#777}
       if(psrc){ scene.design.photoUrl = isData(psrc) ? await window.dennSpace.uploadDataUrl(psrc,'proofs/'+Date.now()+'-photo.png') : psrc; }
       var gsrc=window.RM&&window.RM.roomImg&&window.RM.roomImg.src;
       if(gsrc){ scene.room.guideBgUrl = isData(gsrc) ? await window.dennSpace.uploadDataUrl(gsrc,'proofs/'+Date.now()+'-bg.png') : gsrc; }
-      var r=await window.dennSpace.create({roomSettings:scene,password:pw,ownerMeta:{label:label}});
+      var r=await window.dennSpace.create({roomSettings:scene,password:pw,ownerMeta:{label:label},token:editToken||undefined});
       remember(r.token,label,r.url,pw);
-      linkBox.innerHTML='✅ 발급 완료<br><a href="'+r.url+'" target="_blank">'+r.url+'</a><br>비번: <b>'+pw+'</b> (고객에게 링크와 함께 전달)';
+      linkBox.innerHTML=(editToken?'✅ 수정 저장 완료(같은 링크 유지)':'✅ 발급 완료')+'<br><a href="'+r.url+'" target="_blank">'+r.url+'</a><br>비번: <b>'+pw+'</b>'+(editToken?'':' (고객에게 링크와 함께 전달)');
       try{await navigator.clipboard.writeText(r.url);}catch(e){}
-    }catch(e){ err.textContent='발급 실패: '+((e&&e.message)||e); }
+    }catch(e){ err.textContent=(editToken?'수정 저장 실패: ':'발급 실패: ')+((e&&e.message)||e); }
     go.disabled=false;go.textContent=old;
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(mount,400);});
-  else setTimeout(mount,400);
+  function boot(){
+    mount();
+    if(editToken){
+      var go=document.getElementById('denn-sc-go'); if(go)go.textContent='수정 저장';
+      var b=document.getElementById('denn-sc-btn'); if(b)b.textContent='✏️ 수정 저장';
+      var h=document.querySelector('#denn-sc-panel h4'); if(h)h.textContent='시안 수정 저장 (같은 링크)';
+      var p=document.getElementById('denn-sc-panel'); if(p)p.classList.add('on');
+      setTimeout(loadForEdit,1000);
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,500);});
+  else setTimeout(boot,500);
 })();
 </script>
 
