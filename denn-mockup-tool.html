@@ -4490,9 +4490,8 @@ if(typeof prevOpenSunOverlayV42==='function'&&!prevOpenSunOverlayV42.__sunOverla
 </script>
 
 <script>
-/* v43: clear stale sunlight marker after My Room background changes */
+/* v43: My Room 배경 변경 후 sun preview 초기화. (2026-06-08 작업1: 비활성(__dennDisableLegacySunResidueV43=true 고정)이던 residue wrap 기계장치 제거 — renderStable/refreshSunPreview 부팅 init만 잔존) */
 (function(){
-if(window.__dennDisableLegacySunResidueV43==null)window.__dennDisableLegacySunResidueV43=true;
 function renderStable(){
   cancelAnimationFrame(window.__dennRoomStableRenderRAF||0);
   window.__dennRoomStableRenderRAF=requestAnimationFrame(function(){
@@ -4508,84 +4507,11 @@ function refreshSunPreview(){
   renderStable();
 }
 window.dennRefreshRoomSunPreviewV43=refreshSunPreview;
-function wrap(name){
-  var prev=window[name];
-  if(typeof prev!=='function'||prev.__sunResidueV43)return;
-  window[name]=function(){
-    var r=prev.apply(this,arguments);
-    setTimeout(refreshSunPreview,160);
-    setTimeout(refreshSunPreview,420);
-    return r;
-  };
-  window[name].__sunResidueV43=true;
-}
-if(!window.__dennDisableLegacySunResidueV43){
-  wrap('rmSelectGuide');
-  wrap('rmClearRoom');
-  wrap('rmLoadRoom');
-  wrap('openRoomMockup');
-}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(refreshSunPreview,900)});else setTimeout(refreshSunPreview,300);
 })();
 </script>
 
-<script>
-/* v44: preserve My Room frame/guide scale while switching backgrounds or sunlight */
-(function(){
-if(window.__dennDisableLegacyPreserveScaleV44==null)window.__dennDisableLegacyPreserveScaleV44=true;
-function by(id){return document.getElementById(id)}
-var IDS=['rm-size','rm-tilt','rm-persp-x','rm-persp-y','rm-bg-scale','rm-sh-op','rm-sh-dir','rm-sh-dist','rm-sh-blur','sg-scale-r','sg-scale-n','sg-ox-r','sg-ox-n','sg-oy-r','sg-oy-n','sg-alpha-r','sg-alpha-n'];
-function suffix(id){
-  if(id==='rm-size'||id==='rm-bg-scale'||id==='rm-sh-op'||id==='sg-scale-r'||id==='sg-scale-n'||id==='sg-alpha-r'||id==='sg-alpha-n')return'%';
-  if(id==='rm-tilt'||id==='rm-sh-dir')return'°';
-  return'';
-}
-function snapRoomScale(){
-  var s={vals:{},pos:null,sg:null};
-  IDS.forEach(function(id){var el=by(id);if(el)s.vals[id]=el.value});
-  if(window.RM&&RM.pos)s.pos={x:RM.pos.x,y:RM.pos.y};
-  if(window.SG)s.sg={active:Object.assign({},SG.active||{}),primarySizeId:SG.primarySizeId,ori:SG.ori,on:SG.on};
-  return s;
-}
-function setOut(id,val){
-  var out=by(id+'-v');
-  if(out)out.textContent=String(val)+suffix(id);
-}
-function restoreRoomScale(s){
-  if(!s)return;
-  Object.keys(s.vals||{}).forEach(function(id){
-    var el=by(id);
-    if(el){el.value=s.vals[id];setOut(id,s.vals[id])}
-  });
-  if(s.pos&&window.RM){RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=s.pos.x;RM.pos.y=s.pos.y}
-  if(s.sg&&window.SG){SG.active=Object.assign({},s.sg.active||{});SG.primarySizeId=s.sg.primarySizeId;SG.ori=s.sg.ori||SG.ori;SG.on=s.sg.on}
-  if(window.sgBuildSizes)window.sgBuildSizes();
-  if(window.dennRoomRenderStableV45)window.dennRoomRenderStableV45();
-  else{if(window.rmRender)window.rmRender();if(window.sgDraw)window.sgDraw()}
-}
-function saveSoon(){
-  if(window.requestSaveSettingsV33)window.requestSaveSettingsV33(120);
-  else if(window.saveSettingsV33)setTimeout(function(){try{window.saveSettingsV33()}catch(e){}},120);
-}
-function wrapPreserve(name){
-  var prev=window[name];
-  if(typeof prev!=='function'||prev.__preserveScaleV44)return;
-  window[name]=function(){
-    var snap=snapRoomScale();
-    var r=prev.apply(this,arguments);
-    setTimeout(function(){restoreRoomScale(snap);saveSoon()},190);
-    setTimeout(function(){restoreRoomScale(snap)},460);
-    return r;
-  };
-  window[name].__preserveScaleV44=true;
-}
-if(!window.__dennDisableLegacyPreserveScaleV44){
-  wrapPreserve('rmSelectGuide');
-  wrapPreserve('rmTogSun');
-  wrapPreserve('setRoomSunEnabledV41');
-}
-})();
-</script>
+<!-- v44(preserve room scale) 제거 — 2026-06-08 작업1. __dennDisableLegacyPreserveScaleV44=true 고정으로 wrapPreserve가 영구 미실행이라 블록 전체가 데드였음(외부 참조 0). -->
 
 <script id="denn-v46-room-guide-bg-preset-link">
 (function(){
