@@ -34,8 +34,28 @@ function guardOpKeysLSV(A){
   }catch(e){}
   return A;
 }
+/* 가이드배경 축소 clobber 방지(2026-06-08): 목업툴은 guideBackgrounds를 '읽기'만 하고 편집하지 않는다.
+   따라서 목업툴 경로의 localStorage 쓰기가, 이미 저장된 것보다 '실제 이미지가 든 항목 수'를 줄이려 하면
+   저장본을 유지(되써넣기/stale 사본/축소 머지로 4→1 같은 손실 차단). 삭제는 admin 자체 persist에서만 발생. */
+function guardGuideBgsLSV(A){
+  try{
+    if(!A||typeof A!=='object')return A;
+    var prev=null;try{prev=JSON.parse(localStorage.getItem('denn_admin')||'null');}catch(e){}
+    if(!prev||!Array.isArray(prev.guideBackgrounds))return A;
+    function rc(arr){return (Array.isArray(arr)?arr:[]).filter(function(b){return b&&((typeof b.dataUrl==='string'&&b.dataUrl.length>200)||b.storagePath);}).length;}
+    /* 저장본은 ≥2개인데 쓰려는 건 ≤1개(거의 전멸) → clobber로 간주, 저장본 유지. 정상 삭제는 ≥2 유지라 미간섭. */
+    if(rc(A.guideBackgrounds)<=1&&rc(prev.guideBackgrounds)>=2){
+      A.guideBackgrounds=prev.guideBackgrounds;
+      try{if(window.ADM&&window.ADM!==A)window.ADM.guideBackgrounds=prev.guideBackgrounds;}catch(e){}
+      try{console.warn('[denn] guideBackgrounds 축소 clobber 차단: 저장본 '+rc(prev.guideBackgrounds)+'개 유지');}catch(e){}
+    }
+  }catch(e){}
+  return A;
+}
+try{window.guardGuideBgsLSV=guardGuideBgsLSV;}catch(e){}
 function saveCustomerAdminStateToLocalStorage(A){
   try{A=guardOpKeysLSV(A||window.ADM||{});}catch(e){}
+  try{A=guardGuideBgsLSV(A);}catch(e){}
   try{return dennSetLocalStorageV351('denn_admin',JSON.stringify(A||window.ADM||{}))}catch(e){console.warn('DENN v35.1 customer stringify failed',e);return false}
 }(function(){try{var q=new URLSearchParams(location.search);if(q.has('adminRoomSetup')||q.has('roomOnly'))document.documentElement.classList.add('denn-admin-room-boot')}catch(e){}})();
 </script>
