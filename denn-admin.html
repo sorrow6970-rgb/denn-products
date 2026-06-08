@@ -169,6 +169,7 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
     <div class="ni" onclick="goTab('frames',this)"><span class="icon">🪵</span>액자 설정</div>
     <div class="ni" onclick="goTab('fonts',this)"><span class="icon">🔤</span>폰트 관리</div>
     <div class="ns">시스템</div>
+    <div class="ni" onclick="goTab('proof-space',this)"><span class="icon">🔐</span>고객 시안 확인</div>
     <div class="ni" onclick="goTab('brand',this)"><span class="icon">⚡</span>브랜드 설정</div>
     <div class="ni" onclick="goTab('export',this)"><span class="icon">📦</span>내보내기</div>
   </div>
@@ -195,6 +196,30 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
     <div class="tp" id="tp-models">
       <div class="card"><div class="ct">등록된 기종</div><div id="model-list"></div></div>
       <div class="card"><div class="ct">➕ 기종 추가</div><div class="g2"><div class="field"><label>기종명</label><input id="nm-name" placeholder="예: iPhone 17"></div><div class="field"><label>서브 설명</label><input id="nm-sub" placeholder="예: Pro Max 포함"></div></div><div class="g2"><div class="field"><label>캔버스 너비(px)</label><input type="number" id="nm-w" value="320"></div><div class="field"><label>캔버스 높이(px)</label><input type="number" id="nm-h" value="620"></div></div><div class="field"><label>인쇄영역 안내</label><input id="nm-info" placeholder="예: 인쇄 가능 영역: 71.5 × 153 mm"></div><button class="tb-btn primary" onclick="addModel()">기종 추가</button></div>
+    </div>
+
+    <!-- PROOF SPACE (고객 시안 확인 — 운영자→고객 발급, 작업5. 주문의뢰 탭과 별개) -->
+    <div class="tp" id="tp-proof-space">
+      <div class="card">
+        <div class="ct">🔐 고객 시안 확인 — 공간 발급</div>
+        <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:12px">운영자가 시안을 업로드/구성해 <b style="color:var(--txt)">패스워드 보호 링크</b>로 발급합니다. 고객은 링크+비밀번호로 열어 시안을 확인·컨펌합니다.<br><span style="color:var(--faint)">※ '주문의뢰'(고객→운영자) 탭과는 별개의 운영자→고객 기능입니다.</span></p>
+        <div class="up-zone" id="proof-upzone" ondragover="evStop(event)" ondrop="dennProofDrop(event)"><input type="file" accept="image/*" onchange="dennProofPick(this)"><div style="font-size:18px;margin-bottom:4px">🖼</div><h4>시안 이미지 업로드</h4><p>JPG · PNG · WEBP</p></div>
+        <div id="proof-preview" style="display:none;margin:10px 0;text-align:center"><img id="proof-thumb" style="max-width:240px;max-height:300px;border-radius:8px;border:1px solid var(--bdr)"></div>
+        <div class="g2">
+          <div class="field"><label>고객명/라벨 (선택)</label><input id="proof-label" placeholder="예: 김OO님 웨딩 시안"></div>
+          <div class="field"><label>패스워드</label><input id="proof-pw" type="text" placeholder="고객에게 전달할 비밀번호"></div>
+        </div>
+        <button class="tb-btn primary" id="proof-issue-btn" onclick="dennProofIssue()">🔐 공간 발급</button>
+        <div id="proof-result" style="display:none;margin-top:12px;padding:12px;background:var(--surf);border-radius:8px;border:1px solid var(--bdr)">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">발급 완료 — 고객에게 아래 <b style="color:var(--txt)">링크 + 비밀번호</b>를 전달하세요.</div>
+          <div style="display:flex;gap:6px;align-items:center"><input id="proof-link" readonly style="flex:1;font-size:11px"><button class="tb-btn outline" onclick="dennProofCopy()">복사</button></div>
+          <div id="proof-status" style="font-size:11px;color:var(--green);margin-top:6px"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">발급한 공간 목록 <span class="badge">이 브라우저 기준</span></div>
+        <div id="proof-list" style="font-size:11px;color:var(--muted)">아직 발급한 공간이 없습니다.</div>
+      </div>
     </div>
 
     <!-- CASE TEMPLATES (upload) -->
@@ -765,7 +790,7 @@ if(!S.guideBackgrounds)S.guideBackgrounds=[];
 // ensure clock field in frameSizes
 if(S.frameSizes)S.frameSizes.forEach(function(sz){if(!sz.clock)sz.clock=null;});}
 function deep(o){return JSON.parse(JSON.stringify(o));}
-var TITLES={dashboard:'대시보드',models:'기종 & 칼선','case-tpls':'케이스 템플릿','case-builder':'케이스 템플릿 제작','frame-tpls':'액자 템플릿','frame-builder':'액자 템플릿 제작',frames:'액자 설정',fonts:'폰트 관리',brand:'브랜드 설정',export:'내보내기'};
+var TITLES={dashboard:'대시보드',models:'기종 & 칼선','case-tpls':'케이스 템플릿','case-builder':'케이스 템플릿 제작','frame-tpls':'액자 템플릿','frame-builder':'액자 템플릿 제작',frames:'액자 설정',fonts:'폰트 관리','proof-space':'고객 시안 확인',brand:'브랜드 설정',export:'내보내기'};
 var curFCat='all';
 var curFClockGroup='all'; // 'all' | 'clock' | 'plain' — 시계액자/일반액자 Top tab
 /* 분류 함수: mockup-tool의 templateClockOn(L2509)와 동일 로직. 명시적 OFF만 일반액자.
@@ -15834,6 +15859,41 @@ window.addEventListener('resize',scheduleSettle);
   if(document.readyState!=='loading')setTimeout(boot,700);
   document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,700)});
   window.addEventListener('load',function(){[1100,2000].forEach(function(ms){setTimeout(boot,ms)})});
+})();
+</script>
+
+<!-- 작업5-2: '고객 시안 확인' 탭 발급 로직 (운영자→고객). 시안 이미지→Storage 업로드 →
+     dennSpace.create로 URL+메타를 암호화해 Firestore spaces/{token} 저장 → 링크 발급. -->
+<script>
+(function(){
+  var _img=null;
+  function by(id){return document.getElementById(id);}
+  function val(id){var e=by(id);return e?String(e.value||'').trim():'';}
+  function setImg(dataUrl){_img=dataUrl||null;var p=by('proof-preview'),t=by('proof-thumb');if(t&&dataUrl)t.src=dataUrl;if(p)p.style.display=dataUrl?'block':'none';}
+  function readFile(f){if(!f)return;var rd=new FileReader();rd.onload=function(e){setImg(e.target.result);};rd.readAsDataURL(f);}
+  window.dennProofPick=function(inp){readFile(inp&&inp.files&&inp.files[0]);};
+  window.dennProofDrop=function(ev){try{ev.preventDefault();ev.stopPropagation();}catch(e){}readFile(ev.dataTransfer&&ev.dataTransfer.files&&ev.dataTransfer.files[0]);};
+  window.dennProofCopy=function(){var lk=by('proof-link');if(!lk)return;try{lk.select();}catch(e){}try{document.execCommand('copy');}catch(e){}try{navigator.clipboard.writeText(lk.value);}catch(e){}};
+  function remember(token,label,url,pw){try{var k='denn_proof_spaces',a=JSON.parse(localStorage.getItem(k)||'[]');a.unshift({token:token,label:label,url:url,at:new Date().toISOString()});localStorage.setItem(k,JSON.stringify(a.slice(0,50)));renderList();}catch(e){}}
+  function renderList(){try{var box=by('proof-list');if(!box)return;var a=JSON.parse(localStorage.getItem('denn_proof_spaces')||'[]');if(!a.length){box.textContent='아직 발급한 공간이 없습니다.';return;}box.innerHTML=a.map(function(s){return '<div style="padding:7px 0;border-bottom:1px solid var(--bdr)"><b style="color:var(--txt)">'+(s.label||'(라벨없음)')+'</b> &middot; <span style="font-family:monospace">'+s.token+'</span><br><a href="'+s.url+'" target="_blank" style="font-size:10px;color:var(--blue);word-break:break-all">'+s.url+'</a></div>';}).join('');}catch(e){}}
+  window.dennProofIssue=async function(){
+    var btn=by('proof-issue-btn'),pw=val('proof-pw'),label=val('proof-label');
+    if(!_img){alert('시안 이미지를 먼저 업로드하세요.');return;}
+    if(!pw){alert('패스워드를 입력하세요.');return;}
+    if(!window.dennSpace||!window.dennSpace.create||!window.dennFirebase){alert('Firebase 준비 안 됨 — 잠시 후(또는 새로고침) 재시도.');return;}
+    btn.disabled=true;var old=btn.textContent;btn.textContent='발급 중...';
+    try{
+      var up=await window.dennFirebase.uploadDataUrl(_img,'proofs/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.png');
+      var roomSettings={type:'proof',imageUrl:up.url,imagePath:up.path,label:label,issuedAt:new Date().toISOString()};
+      var r=await window.dennSpace.create({roomSettings:roomSettings,password:pw,ownerMeta:{label:label}});
+      var lk=by('proof-link');if(lk)lk.value=r.url;
+      by('proof-result').style.display='block';
+      by('proof-status').textContent='토큰: '+r.token+'  ·  비밀번호: '+pw+'  (고객에게 링크와 함께 전달)';
+      remember(r.token,label,r.url,pw);
+    }catch(e){alert('발급 실패: '+((e&&e.message)||e));}
+    btn.disabled=false;btn.textContent=old;
+  };
+  document.addEventListener('DOMContentLoaded',renderList);setTimeout(renderList,600);
 })();
 </script>
 </body>
