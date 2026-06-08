@@ -13309,7 +13309,8 @@ input[type=range]{accent-color:#777}
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
   const firebaseConfig = {
     apiKey: "AIzaSyCw7SEjICMoSoyLQpFOlLBvTYhYh0-6D3Y",
     authDomain: "denn-products.firebaseapp.com",
@@ -13325,21 +13326,49 @@ input[type=range]{accent-color:#777}
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
     signInAnonymously(auth).catch(function(err){ console.warn('[space] anon signin failed:', err && err.code); });
     onAuthStateChanged(auth, function(u){ if(u){ _ready=true; window.__dennSpaceFbReady && window.__dennSpaceFbReady(true); } });
+    const _b64 = function(u8){ var s=''; for(var i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]); return btoa(s); };
     const _ub64 = function(b){ var s=atob(b), u=new Uint8Array(s.length); for(var i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; };
     const _deriveKey = async function(password, salt){
       const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), {name:'PBKDF2'}, false, ['deriveKey']);
       return crypto.subtle.deriveKey({name:'PBKDF2', salt:salt, iterations:120000, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+    };
+    const _encryptJson = async function(obj, password){
+      const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+      const key = await _deriveKey(password, salt);
+      const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, key, new TextEncoder().encode(JSON.stringify(obj)));
+      return { salt:_b64(salt), iv:_b64(iv), ct:_b64(new Uint8Array(ct)) };
     };
     const _decryptJson = async function(enc, password){
       const key = await _deriveKey(password, _ub64(enc.salt));
       const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:_ub64(enc.iv)}, key, _ub64(enc.ct));
       return JSON.parse(new TextDecoder().decode(pt));
     };
+    const _genToken = function(){ var u=crypto.getRandomValues(new Uint8Array(12)), s=''; for(var i=0;i<u.length;i++) s+=('0'+u[i].toString(16)).slice(-2); return s; };
     window.dennSpace = window.dennSpace || {};
     window.dennSpace.isReady = function(){ return _ready; };
     window.dennSpace.ready = function(){ return _readyPromise; };
+    /* dataUrl → Firebase Storage 업로드 → download URL */
+    window.dennSpace.uploadDataUrl = async function(dataUrl, pathHint){
+      await _readyPromise;
+      const r = ref(storage, pathHint || ('proofs/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.png'));
+      const snap = await uploadString(r, dataUrl, 'data_url');
+      return await getDownloadURL(snap.ref);
+    };
+    /* dennSpace.create({roomSettings, password, ownerMeta, token}) → {token, url} */
+    window.dennSpace.create = async function(opts){
+      opts = opts || {};
+      if(!opts.password) throw new Error('NO_PASSWORD');
+      if(!opts.roomSettings) throw new Error('NO_SCENE');
+      await _readyPromise;
+      const token = opts.token || _genToken();
+      const enc = await _encryptJson(opts.roomSettings, opts.password);
+      await setDoc(doc(db, 'spaces', token), { enc: enc, ownerMeta: opts.ownerMeta || {}, createdAt: new Date().toISOString(), schema: 'space-v1' });
+      const base = location.origin + location.pathname.replace(/[^/]+$/, '') + 'denn-mockup-tool.html';
+      return { token: token, url: base + '?space=' + encodeURIComponent(token) };
+    };
     /* dennSpace.load(token, password) → roomSettings | throws('NOT_FOUND' | 'BAD_PASSWORD') */
     window.dennSpace.load = async function(token, password){
       if(!token) throw new Error('NO_TOKEN');
@@ -13355,6 +13384,89 @@ input[type=range]{accent-color:#777}
   } catch (e) {
     console.error('[space] firebase init failed:', e);
   }
+</script>
+
+<!-- 작업5-3a: ?spaceCreate=1 — 운영자가 현재 내공간 씬을 비공개 공간으로 발급(스냅샷+암호화). -->
+<style id="denn-space-create-css">
+#denn-sc-btn{position:fixed;right:18px;bottom:18px;z-index:2147483000;background:#2b2620;color:#fff;border:none;border-radius:24px;padding:13px 20px;font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer}
+#denn-sc-panel{position:fixed;right:18px;bottom:74px;z-index:2147483000;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.28);padding:16px;width:310px;max-width:92vw;display:none;font-family:'DM Sans','Noto Sans KR',sans-serif}
+#denn-sc-panel.on{display:block}
+#denn-sc-panel h4{margin:0 0 4px;font-size:14px;color:#2b2620}
+#denn-sc-panel p.sc-hint{margin:0 0 10px;font-size:11px;color:#8a8378;line-height:1.5}
+#denn-sc-panel input{width:100%;box-sizing:border-box;padding:9px 11px;font-size:13px;border:1px solid #e0dad0;border-radius:8px;margin-bottom:8px}
+#denn-sc-panel button.go{width:100%;padding:10px;background:#2b2620;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+#denn-sc-panel button.go:disabled{opacity:.55}
+#denn-sc-panel .sc-link{margin-top:10px;font-size:11px;word-break:break-all;color:#2b6cb0}
+#denn-sc-panel .sc-err{color:#c0392b;font-size:11px;margin-top:6px;min-height:14px}
+</style>
+<script>
+(function(){
+  'use strict';
+  function param(n){try{return new URLSearchParams(location.search).get(n);}catch(e){return null;}}
+  if(param('spaceCreate')!=='1')return; /* 발급 모드에서만 */
+  function tv(id){var e=document.getElementById(id);return e?(e.value||''):'';}
+  function clone(o){try{return JSON.parse(JSON.stringify(o||null));}catch(e){return null;}}
+  function isData(s){return typeof s==='string'&&s.indexOf('data:')===0;}
+  function captureScene(){
+    var tpl=window.curFTpl||{}, sz=window.curFSz||{}, col=window.curFCol||{}, RM=window.RM||{};
+    var rbs=(window.ADM&&window.ADM.roomBackgroundSettings)||{};
+    var key=RM.bgId||null;
+    return {
+      schema:'space-scene-v1',
+      design:{
+        tplId: tpl.id||null, sizeId: sz.id||null, colorId: (col.id!=null?col.id:(col.fill||null)),
+        texts:{ main:tv('f-main'), name:tv('f-name'), name2:tv('f-name2'), date:tv('f-date'), sub:tv('f-sub') },
+        imgT: clone(window.frameImgT)
+      },
+      room:{
+        bgId: key, guideIndex: (RM.guideIndex!=null?RM.guideIndex:null),
+        pos: (RM.pos?{x:RM.pos.x,y:RM.pos.y}:null),
+        settings: key&&rbs[key]?clone(rbs[key]):null,
+        common: rbs['__denn_room_common_default__']?clone(rbs['__denn_room_common_default__']):null
+      }
+    };
+  }
+  function remember(token,label,url,pw){try{var k='denn_proof_spaces',a=JSON.parse(localStorage.getItem(k)||'[]');a.unshift({token:token,label:label,pw:pw,url:url,at:new Date().toISOString()});localStorage.setItem(k,JSON.stringify(a.slice(0,50)));}catch(e){}}
+  function mount(){
+    if(document.getElementById('denn-sc-btn'))return;
+    var btn=document.createElement('button');btn.id='denn-sc-btn';btn.type='button';btn.textContent='🔐 비공개 공간 발급';
+    var panel=document.createElement('div');panel.id='denn-sc-panel';
+    panel.innerHTML='<h4>비공개 공간 발급</h4>'+
+      '<p class="sc-hint">현재 구성한 내공간 시안(사진·프레임·배경·위치)을 스냅샷해 비밀번호 보호 링크로 발급합니다. <b>먼저 내 공간에서 보기로 배경·위치를 잡아주세요.</b></p>'+
+      '<input id="denn-sc-label" placeholder="고객명/라벨 (선택)">'+
+      '<input id="denn-sc-pw" placeholder="고객 전달용 비밀번호">'+
+      '<button class="go" id="denn-sc-go" type="button">발급</button>'+
+      '<div class="sc-err" id="denn-sc-err"></div>'+
+      '<div class="sc-link" id="denn-sc-link"></div>';
+    document.body.appendChild(btn);document.body.appendChild(panel);
+    btn.addEventListener('click',function(){panel.classList.toggle('on');});
+    document.getElementById('denn-sc-go').addEventListener('click',issue);
+  }
+  async function issue(){
+    var go=document.getElementById('denn-sc-go'),err=document.getElementById('denn-sc-err'),linkBox=document.getElementById('denn-sc-link');
+    var pw=(document.getElementById('denn-sc-pw').value||'').trim(), label=(document.getElementById('denn-sc-label').value||'').trim();
+    err.textContent='';linkBox.textContent='';
+    if(!pw){err.textContent='비밀번호를 입력하세요.';return;}
+    if(!window.dennSpace||!window.dennSpace.create){err.textContent='연결 준비 중 — 잠시 후 다시.';return;}
+    if(!window.frameImg){err.textContent='시안(사진/프레임)을 먼저 구성하세요.';return;}
+    go.disabled=true;var old=go.textContent;go.textContent='발급 중...';
+    try{
+      var scene=captureScene();
+      // 사진 업로드(데이터URL이면 Storage), 아니면 src 그대로
+      var psrc=window.frameImg&&window.frameImg.src;
+      if(psrc){ scene.design.photoUrl = isData(psrc) ? await window.dennSpace.uploadDataUrl(psrc,'proofs/'+Date.now()+'-photo.png') : psrc; }
+      var gsrc=window.RM&&window.RM.roomImg&&window.RM.roomImg.src;
+      if(gsrc){ scene.room.guideBgUrl = isData(gsrc) ? await window.dennSpace.uploadDataUrl(gsrc,'proofs/'+Date.now()+'-bg.png') : gsrc; }
+      var r=await window.dennSpace.create({roomSettings:scene,password:pw,ownerMeta:{label:label}});
+      remember(r.token,label,r.url,pw);
+      linkBox.innerHTML='✅ 발급 완료<br><a href="'+r.url+'" target="_blank">'+r.url+'</a><br>비번: <b>'+pw+'</b> (고객에게 링크와 함께 전달)';
+      try{await navigator.clipboard.writeText(r.url);}catch(e){}
+    }catch(e){ err.textContent='발급 실패: '+((e&&e.message)||e); }
+    go.disabled=false;go.textContent=old;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(mount,400);});
+  else setTimeout(mount,400);
+})();
 </script>
 
 <!-- 작업5-3: ?space=<token> 게이트 — 패스워드 입력 → 시안(proof) 열람 전용. 편집기 숨김. -->
