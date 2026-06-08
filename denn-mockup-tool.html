@@ -11003,58 +11003,7 @@ window.addEventListener('load',later);
   // 해결: frame-wrap의 style.setProperty('transform', 'scale(...)') 호출을 instance-level wrap →
   //   scale 변경 시 항상 scale(1) 강제. inline style + !important까지 우리 wrap이 차단.
   function installFrameWrapScaleLock(){
-    return false; // v361 일원화로 v39 스케일 튐이 사라져 락 불필요 — transform 가로채기/scale(1) 강제 전부 비활성
-    var wrap=document.querySelector('#page-frame .canvas-wrap');
-    if(!wrap||wrap.__dennPhaseCScaleLocked)return false;
-    wrap.__dennPhaseCScaleLocked=true;
-    // 사용자 슬라이더 input bypass: 슬라이더 변경/버튼 클릭 후 200ms 윈도우 동안 scale 변경 통과.
-    // v39 applyStableScale의 자동 호출(renderFrame 후 0ms)은 이 윈도우 밖이라 여전히 scale(1) 강제 → 스케일 튐 차단 유지.
-    if(!window.__dennScaleLockUserBypassInstalled){
-      window.__dennScaleLockUserBypassInstalled=true;
-      function markUserInput(){
-        window.__dennScaleUserInput=true;
-        clearTimeout(window.__dennScaleUserInputTimer);
-        window.__dennScaleUserInputTimer=setTimeout(function(){window.__dennScaleUserInput=false},200);
-      }
-      document.addEventListener('input',function(e){
-        if(e.target&&e.target.id==='frame-preview-scale')markUserInput();
-      },true);
-      document.addEventListener('click',function(e){
-        var t=e.target;
-        if(t&&t.closest&&t.closest('#frame-preview-scale-box')&&t.tagName==='BUTTON')markUserInput();
-      },true);
-    }
-    var origSetProperty=wrap.style.setProperty.bind(wrap.style);
-    wrap.style.setProperty=function(prop, val, priority){
-      if(prop==='transform' && typeof val==='string' && val.indexOf('scale')!==-1){
-        if(window.__dennScaleUserInput)return origSetProperty(prop,val,priority);
-        return origSetProperty('transform','scale(1)',priority||'');
-      }
-      return origSetProperty(prop, val, priority);
-    };
-    // 직접 wrap.style.transform 할당도 차단 — defineProperty로 setter wrap
-    try{
-      var origStyleObj=wrap.style;
-      var origTransformDesc=Object.getOwnPropertyDescriptor(CSSStyleDeclaration.prototype,'transform');
-      if(origTransformDesc&&origTransformDesc.set){
-        var origSet=origTransformDesc.set.bind(origStyleObj);
-        Object.defineProperty(origStyleObj,'transform',{
-          configurable:true,
-          get:function(){return origTransformDesc.get.call(origStyleObj)},
-          set:function(v){
-            if(typeof v==='string'&&v.indexOf('scale')!==-1){
-              if(window.__dennScaleUserInput){origSet(v);return}
-              origSet('scale(1)');
-              return;
-            }
-            origSet(v);
-          }
-        });
-      }
-    }catch(e){}
-    // 초기 transform 정리 (이미 set된 scale 강제로 scale(1))
-    origSetProperty('transform','scale(1)','important');
-    return true;
+    return false; /* v361 일원화로 v39 스케일 튐이 사라져 락 불필요. 2026-06-08 작업1: return false 이후 도달불가 본체(~50줄, transform setProperty/defineProperty 가로채기) 제거. */
   }
   function compose(img, params){
     var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
