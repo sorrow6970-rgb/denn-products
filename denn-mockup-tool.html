@@ -225,7 +225,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
 <div class="main page" id="page-case">
   <div class="panel">
     <div>
-      <div class="sec-label">01 기종 선택</div>
+      <div class="sec-label">기종 선택</div>
       <!-- Brand tabs -->
       <div class="brand-tabs">
         <div class="brand-tab on" id="btab-iphone" onclick="switchBrandTab('iphone',this)">🍎 아이폰</div>
@@ -238,9 +238,9 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
       <div class="hint" style="margin-top:5px" id="model-info">기종을 선택하세요</div>
     </div>
     <hr>
-    <div><div class="sec-label">02 케이스 템플릿</div><div class="tpl-scroll"><div class="tpl-grid" id="case-tpl-grid"></div></div></div>
+    <div><div class="sec-label">케이스 템플릿</div><div class="tpl-scroll"><div class="tpl-grid" id="case-tpl-grid"></div></div></div>
     <hr>
-    <div id="case-upload-section"><div class="sec-label">03 이미지 업로드</div><div id="case-multi-info" style="display:none;font-size:10.5px;color:var(--muted);margin-bottom:8px;padding:6px 10px;background:rgba(200,168,100,.08);border-radius:6px;border:1px solid rgba(200,168,100,.2)"></div><div id="case-multi-zones"></div><div class="drop-zone" id="case-drop" ondragover="ev(event)" ondrop="dropF(event,'case')"><input type="file" id="case-file" accept="image/*" onchange="loadF(this,'case')"><div class="drop-icon">📷</div><h4>이미지를 끌어다 놓거나 클릭</h4><p id="msg-case">JPG · PNG · WEBP 권장</p></div><div class="img-prev" id="case-prev"><img id="case-thumb" src="" alt=""><button class="rebtn" onclick="resetImg('case')">다른 이미지</button></div>
+    <div id="case-upload-section"><div class="sec-label">이미지 업로드</div><div id="case-multi-info" style="display:none;font-size:10.5px;color:var(--muted);margin-bottom:8px;padding:6px 10px;background:rgba(200,168,100,.08);border-radius:6px;border:1px solid rgba(200,168,100,.2)"></div><div id="case-multi-zones"></div><div class="drop-zone" id="case-drop" ondragover="ev(event)" ondrop="dropF(event,'case')"><input type="file" id="case-file" accept="image/*" onchange="loadF(this,'case')"><div class="drop-icon">📷</div><h4>이미지를 끌어다 놓거나 클릭</h4><p id="msg-case">JPG · PNG · WEBP 권장</p></div><div class="img-prev" id="case-prev"><img id="case-thumb" src="" alt=""><button class="rebtn" onclick="resetImg('case')">다른 이미지</button></div>
       <div class="img-transform-ctl" id="case-transform-ctl">
         <div class="zoom-row"><label>🔍 확대/축소</label><input type="range" id="case-zoom" min="30" max="500" value="100" oninput="setCaseZoom(this.value)"><span id="case-zoom-v">100%</span></div>
         <div class="zoom-btns">
@@ -254,7 +254,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     </div>
     <hr>
     <div>
-      <div class="sec-label">04 케이스 색상</div>
+      <div class="sec-label">케이스 색상</div>
       <div class="sw-row" id="case-colors">
         <div class="sw on" style="background:#1A1A1A" title="블랙" onclick="setCaseColor('#1A1A1A',this)"></div>
         <div class="sw" style="background:#FFFFFF;border:1px solid #ddd" title="화이트" onclick="setCaseColor('#FFFFFF',this)"></div>
@@ -269,7 +269,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     </div>
     <hr>
     <div>
-      <div class="sec-label">05 휴대폰 색상</div>
+      <div class="sec-label">휴대폰 색상</div>
       <div class="sw-row" id="phone-colors">
         <div class="sw on" style="background:#1A1A1A" title="블랙" onclick="setPhoneColor('#1A1A1A',this)"></div>
         <div class="sw" style="background:#F8F8F8;border:1px solid #ddd" title="화이트" onclick="setPhoneColor('#F8F8F8',this)"></div>
@@ -281,12 +281,12 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     </div>
     <hr>
     <div>
-      <div class="sec-label">06 맥세이프 여부</div>
+      <div class="sec-label">맥세이프 여부</div>
       <div class="tog-row"><div><div style="font-size:11.5px;font-weight:500">MagSafe 호환</div><div style="font-size:9.5px;color:var(--warm);margin-top:1px">자석 링 위치 칼선 표시</div></div><div class="tog" id="tog-magsafe" onclick="togOpt('magsafe')"></div></div>
     </div>
     <hr>
     <div>
-      <div class="sec-label">07 텍스트 추가</div>
+      <div class="sec-label">텍스트 추가</div>
       <div class="txt-controls">
         <input type="text" class="inp" id="txt-content" placeholder="텍스트 입력..." style="width:100%">
         <div class="txt-row">
@@ -303,7 +303,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     </div>
     <hr>
     <div>
-      <div class="sec-label">08 표시 옵션</div>
+      <div class="sec-label">표시 옵션</div>
       <div style="display:flex;flex-direction:column;gap:5px">
         <div class="tog-row"><span>칼선 표시</span><div class="tog on" id="tog-dl" onclick="togOpt('dl')"></div></div>
         <div class="tog-row"><span>안전 여백 표시</span><div class="tog on" id="tog-mg" onclick="togOpt('mg')"></div></div>
