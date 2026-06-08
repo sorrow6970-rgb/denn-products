@@ -169,9 +169,9 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
     <div class="ni" onclick="goTab('frames',this)"><span class="icon">🪵</span>액자 설정</div>
     <div class="ni" onclick="goTab('fonts',this)"><span class="icon">🔤</span>폰트 관리</div>
     <div class="ns">시스템</div>
-    <div class="ni" onclick="goTab('proof-space',this)"><span class="icon">🔐</span>고객 시안 확인</div>
     <div class="ni" onclick="goTab('brand',this)"><span class="icon">⚡</span>브랜드 설정</div>
     <div class="ni" onclick="goTab('export',this)"><span class="icon">📦</span>내보내기</div>
+    <div class="ni" id="denn-proof-space-nav" onclick="goTab('proof-space',this)"><span class="icon">🔐</span>고객 시안 확인</div>
   </div>
   <div class="sb-foot"><button class="save-btn" id="save-btn" onclick="saveAll()">💾 저장</button></div>
 </div>
@@ -15878,6 +15878,10 @@ window.addEventListener('resize',scheduleSettle);
   /* 다른 탭/창(mockup 발급)에서 목록 갱신되면 반영 */
   window.addEventListener('storage',function(e){if(e&&e.key==='denn_proof_spaces')renderList();});
   window.addEventListener('focus',renderList);
+  /* '고객 시안 확인' 탭을 JS주입 '주문 의뢰' 탭 바로 앞으로 이동 — 고객 플로우 인접 배치 */
+  function moveNav(){try{var mine=by('denn-proof-space-nav');if(!mine||!mine.parentNode)return;var nav=mine.parentNode;var orders=[].slice.call(nav.querySelectorAll('.ni')).filter(function(n){return /주문\s*의뢰/.test(n.textContent||'');})[0];if(orders&&mine.nextElementSibling!==orders){nav.insertBefore(mine,orders);}}catch(e){}}
+  [400,900,1800].forEach(function(ms){setTimeout(moveNav,ms);});
+  window.addEventListener('load',function(){setTimeout(moveNav,500);});
 })();
 </script>
 </body>
