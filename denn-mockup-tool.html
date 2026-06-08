@@ -13730,7 +13730,7 @@ input[type=range]{accent-color:#777}
     var kakao=(window.ADM&&window.ADM.brand&&window.ADM.brand.kakaoUrl)||'';
     var labelTxt=scene&&scene.label?String(scene.label).replace(/[<>&]/g,''):'';
     /* 게이트 카드를 투명 컨테이너로 → 흰색 아일랜드 2개(메인/갤러리)가 떠보이게 */
-    card.style.cssText='background:transparent;box-shadow:none;max-width:98vw;width:1500px;padding:0;max-height:98vh;overflow:visible';
+    card.style.cssText='background:transparent;box-shadow:none;max-width:99vw;width:1820px;padding:0;max-height:98vh;overflow:visible';
     card.innerHTML='';
     if(!items.length){ card.innerHTML='<div style="background:#fff;border-radius:18px;padding:34px;text-align:center;color:#5a5248">시안을 표시할 수 없습니다. 새로고침 후 다시 시도해주세요.</div>'; return; }
     var row=document.createElement('div');row.style.cssText='display:flex;gap:16px;align-items:flex-start;justify-content:center';
@@ -13742,18 +13742,18 @@ input[type=range]{accent-color:#777}
     function setMain(cv){main.width=cv.width;main.height=cv.height;try{main.getContext('2d').drawImage(cv,0,0);}catch(e){}}
     setMain(items[0].canvas);mainIsland.appendChild(main);
     /* 왼쪽 액션 아일랜드 — 오른쪽 갤러리와 같은 크기, 버튼 배치 */
-    var leftIsland=document.createElement('div');leftIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:16px;flex:0 0 200px;max-height:90vh;display:flex;flex-direction:column;gap:12px;justify-content:center';
+    var leftIsland=document.createElement('div');leftIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:18px;flex:0 0 220px;max-height:90vh;display:flex;flex-direction:column;gap:14px;justify-content:center';
     if(labelTxt){var ll=document.createElement('div');ll.textContent=labelTxt;ll.style.cssText='font-size:13px;color:#5a5248;text-align:center;font-weight:600;margin-bottom:4px';leftIsland.appendChild(ll);}
-    var detailBtn=document.createElement('button');detailBtn.type='button';detailBtn.innerHTML='🔍 시안(액자)<br>원본 크게 보기';detailBtn.style.cssText='width:100%;box-sizing:border-box;padding:14px 10px;background:#fff;border:1.5px solid #2b2620;color:#2b2620;border-radius:11px;font-weight:700;cursor:pointer;font-size:13px;line-height:1.4';
+    var detailBtn=document.createElement('button');detailBtn.type='button';detailBtn.innerHTML='🔍 시안(액자)<br>원본 크게 보기';detailBtn.style.cssText='width:100%;box-sizing:border-box;padding:16px 10px;background:#fff;border:3px solid #ece6dd;color:#2b2620;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px;line-height:1.4';
     detailBtn.addEventListener('click',showFrameDetail);
     leftIsland.appendChild(detailBtn);
-    if(kakao){ var ca=document.createElement('a');ca.className='dsg-kakao';ca.href=kakao;ca.target='_blank';ca.innerHTML='✓ 시안 확정<br>담당자에게 알리기';ca.style.cssText='display:block;text-align:center;width:100%;box-sizing:border-box;background:#FEE500;color:#191600;font-weight:700;font-size:14px;text-decoration:none;padding:14px 10px;border-radius:11px;line-height:1.4';leftIsland.appendChild(ca); }
+    if(kakao){ var ca=document.createElement('a');ca.className='dsg-kakao';ca.href=kakao;ca.target='_blank';ca.innerHTML='✓ 시안 확정<br>담당자에게 알리기';ca.style.cssText='display:block;text-align:center;width:100%;box-sizing:border-box;background:#FEE500;color:#191600;font-weight:700;font-size:14px;text-decoration:none;padding:16px 10px;border:3px solid #ece6dd;border-radius:10px;line-height:1.4';leftIsland.appendChild(ca); }
     else { var sp=document.createElement('div');sp.textContent='확인 후 담당자에게 알려주세요.';sp.style.cssText='font-size:12px;color:#8a8378;text-align:center';leftIsland.appendChild(sp); }
     row.appendChild(leftIsland);
     row.appendChild(mainIsland);
     /* 갤러리 아일랜드 — 오른쪽: 다른 공간 썸네일만(스크롤) */
     if(items.length>1){
-      var galIsland=document.createElement('div');galIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:16px;flex:0 0 200px;max-height:90vh;overflow:auto';
+      var galIsland=document.createElement('div');galIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:18px;flex:0 0 220px;max-height:90vh;overflow:auto';
       var hd=document.createElement('div');hd.textContent='다른 공간에서 보기';hd.style.cssText='font-size:12px;font-weight:700;color:#2b2620;margin-bottom:10px;text-align:center';galIsland.appendChild(hd);
       var thumbs=[];
       items.forEach(function(it,idx){
