@@ -13519,14 +13519,66 @@ input[type=range]{accent-color:#777}
     pw.addEventListener('keydown',function(e){if(e.key==='Enter')submit();});
     setTimeout(function(){try{pw.focus();}catch(e){}},120);
   }
-  function showProof(data){
+  function wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
+  function loadImage(url){return new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im);};im.onerror=function(){rej(new Error('IMG_LOAD'));};im.src=url;});}
+  function find(arr,pred){if(!arr)return null;for(var i=0;i<arr.length;i++){if(arr[i]&&pred(arr[i]))return arr[i];}return null;}
+  async function replayScene(scene){
+    var d=scene.design||{}, room=scene.room||{};
+    /* 1. 디자인 복원 */
+    if(d.sizeId&&window.FS){var s=find(window.FS,function(x){return x.id===d.sizeId;});if(s)window.curFSz=s;}
+    if(d.tplId&&window.FTPLS){var t=find(window.FTPLS,function(x){return x.id===d.tplId;});if(t)window.curFTpl=t;}
+    if(d.colorId!=null&&window.FC){var c=find(window.FC,function(x){return x.id===d.colorId||x.fill===d.colorId;});if(c)window.curFCol=c;}
+    ['main','name','name2','date','sub'].forEach(function(k){var e=document.getElementById('f-'+k);if(e)e.value=(d.texts&&d.texts[k])||'';});
+    if(d.photoUrl){try{window.frameImg=await loadImage(d.photoUrl);window.frameImgT=d.imgT||{scale:1,x:0,y:0};}catch(e){}}
+    window.__dennSizeUnset=false; /* 사이즈 게이트 해제(렌더 허용) */
+    if(window.renderFrame){try{window.renderFrame();}catch(e){}}
+    await wait(280);
+    /* 2. 룸 설정 주입 */
+    if(window.ADM){window.ADM.roomBackgroundSettings=window.ADM.roomBackgroundSettings||{};
+      if(room.bgId&&room.settings)window.ADM.roomBackgroundSettings[room.bgId]=room.settings;
+      if(room.common)window.ADM.roomBackgroundSettings['__denn_room_common_default__']=room.common;}
+    /* 3. 내공간보기 열고 RM 적용 후 렌더 */
+    if(window.openRoomMockup){try{window.openRoomMockup();}catch(e){}}
+    await wait(180);
+    if(room.guideBgUrl){try{window.RM.roomImg=await loadImage(room.guideBgUrl);}catch(e){}}
+    if(window.RM){if(room.pos)window.RM.pos={x:room.pos.x,y:room.pos.y};if(room.bgId)window.RM.bgId=room.bgId;if(room.guideIndex!=null)window.RM.guideIndex=room.guideIndex;}
+    if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
+    if(window.rmRender){try{window.rmRender();}catch(e){}}
+    await wait(150);
+  }
+  function showComposed(scene){
+    var card=document.getElementById('dsg-card');if(!card)return;
+    var rc=document.getElementById('rm-canvas');
+    var holder=document.createElement('div');
+    if(rc&&rc.width&&rc.height){ /* 룸 캔버스를 복사 표시(readback 안 함 → CORS taint 오류 회피) */
+      var cv=document.createElement('canvas');cv.width=rc.width;cv.height=rc.height;cv.className='dsg-proof';
+      try{cv.getContext('2d').drawImage(rc,0,0);}catch(e){}
+      holder.appendChild(cv);
+    } else { holder.innerHTML='<p>시안을 표시할 수 없습니다. 새로고침 후 다시 시도해주세요.</p>'; }
+    if(window.closeRoomMockup){try{window.closeRoomMockup();}catch(e){}}
+    var label=scene&&scene.label?('<p class="dsg-label">'+String(scene.label).replace(/[<>&]/g,'')+'</p>'):'';
+    var kakao=(window.ADM&&window.ADM.brand&&window.ADM.brand.kakaoUrl)||'';
+    var confirmRow=kakao?('<a class="dsg-kakao" href="'+kakao+'" target="_blank">✓ 시안 확정 — 담당자에게 알리기</a>')
+      :('<p style="margin-top:14px;font-size:12px;color:#8a8378">확인 후 담당자에게 알려주세요.</p>');
+    card.style.maxWidth='820px';
+    card.innerHTML='<h2>내 공간 시안 확인</h2>'+label;
+    card.appendChild(holder);
+    var foot=document.createElement('div');foot.innerHTML=confirmRow;card.appendChild(foot);
+  }
+  async function showProof(data){
     var card=document.getElementById('dsg-card');if(!card)return;
     data=data||{};
+    if(data.schema==='space-scene-v1'){
+      card.innerHTML='<h2>내 공간 시안 확인</h2><p class="dsg-sub">시안을 불러오는 중입니다…</p>';
+      try{ await replayScene(data); showComposed(data); }
+      catch(e){ console.warn('[space] replay failed',e); card.innerHTML='<h2>내 공간 시안 확인</h2><p class="dsg-sub">시안 표시에 실패했습니다. 새로고침 후 다시 시도해주세요.</p>'; }
+      return;
+    }
+    /* 레거시(이미지형) 호환 */
     var label=data.label?('<p class="dsg-label">'+String(data.label).replace(/[<>&]/g,'')+'</p>'):'';
-    var img=data.imageUrl?('<img class="dsg-proof" src="'+data.imageUrl+'" alt="시안">'):'<p>시안 이미지를 찾을 수 없습니다.</p>';
+    var img=data.imageUrl?('<img class="dsg-proof" src="'+data.imageUrl+'" alt="시안">'):'<p>시안을 찾을 수 없습니다.</p>';
     var kakao=(window.ADM&&window.ADM.brand&&window.ADM.brand.kakaoUrl)||'';
-    var confirmRow=kakao?('<a class="dsg-kakao" href="'+kakao+'" target="_blank">✓ 확인 완료 — 담당자에게 알리기</a>')
-      :('<p style="margin-top:14px;font-size:12px;color:#8a8378">확인 후 담당자에게 알려주세요.</p>');
+    var confirmRow=kakao?('<a class="dsg-kakao" href="'+kakao+'" target="_blank">✓ 확인 완료 — 담당자에게 알리기</a>'):'';
     card.innerHTML='<h2>시안 확인</h2>'+label+img+'<div>'+confirmRow+'</div>';
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);
