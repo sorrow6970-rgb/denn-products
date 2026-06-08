@@ -13741,17 +13741,19 @@ input[type=range]{accent-color:#777}
     var main=document.createElement('canvas');main.className='dsg-proof';
     function setMain(cv){main.width=cv.width;main.height=cv.height;try{main.getContext('2d').drawImage(cv,0,0);}catch(e){}}
     setMain(items[0].canvas);mainIsland.appendChild(main);
-    var detailBtn=document.createElement('button');detailBtn.type='button';detailBtn.textContent='🔍 시안(액자) 원본 크게 보기';detailBtn.style.cssText='margin-top:12px;padding:9px 18px;background:#fff;border:1.5px solid #2b2620;color:#2b2620;border-radius:9px;font-weight:700;cursor:pointer;font-size:12.5px';
+    var detailBtn=document.createElement('button');detailBtn.type='button';detailBtn.textContent='🔍 시안(액자) 원본 크게 보기';detailBtn.style.cssText='margin-top:14px;padding:9px 18px;background:#fff;border:1.5px solid #2b2620;color:#2b2620;border-radius:9px;font-weight:700;cursor:pointer;font-size:12.5px';
     detailBtn.addEventListener('click',showFrameDetail);
     mainIsland.appendChild(detailBtn);
-    var foot=document.createElement('div');foot.style.marginTop='14px';
-    foot.innerHTML=kakao?('<a class="dsg-kakao" href="'+kakao+'" target="_blank">✓ 시안 확정 — 담당자에게 알리기</a>'):'<span style="font-size:12px;color:#8a8378">확인 후 담당자에게 알려주세요.</span>';
-    mainIsland.appendChild(foot);
     row.appendChild(mainIsland);
-    /* 갤러리 아일랜드 — 별도 흰색 패널, 현재 적용 썸네일만 검정 테두리 */
+    /* 확정 버튼(오른쪽 배치) */
+    var confirmEl=document.createElement('div');
+    if(kakao){ confirmEl.innerHTML='<a class="dsg-kakao" href="'+kakao+'" target="_blank" style="display:block;text-align:center;background:#FEE500;color:#191600;font-weight:700;font-size:14px;text-decoration:none;padding:14px 12px;border-radius:12px;line-height:1.4">✓ 시안 확정<br>담당자에게 알리기</a>'; }
+    else { confirmEl.innerHTML='<div style="font-size:12px;color:#8a8378;text-align:center;padding:10px">확인 후 담당자에게 알려주세요.</div>'; }
+    /* 갤러리 아일랜드 — 오른쪽: 다른 공간 썸네일 + 하단 확정 버튼 */
     if(items.length>1){
-      var galIsland=document.createElement('div');galIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:16px;flex:0 0 196px;max-height:90vh;overflow:auto';
-      var hd=document.createElement('div');hd.textContent='다른 공간에서 보기';hd.style.cssText='font-size:12px;font-weight:700;color:#2b2620;margin-bottom:10px;text-align:center';galIsland.appendChild(hd);
+      var galIsland=document.createElement('div');galIsland.style.cssText='background:#fff;border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.14);padding:16px;flex:0 0 200px;max-height:90vh;display:flex;flex-direction:column';
+      var hd=document.createElement('div');hd.textContent='다른 공간에서 보기';hd.style.cssText='font-size:12px;font-weight:700;color:#2b2620;margin-bottom:10px;text-align:center;flex-shrink:0';galIsland.appendChild(hd);
+      var thumbsWrap=document.createElement('div');thumbsWrap.style.cssText='flex:1;min-height:0;overflow:auto';
       var thumbs=[];
       items.forEach(function(it,idx){
         var t=document.createElement('div');t.style.cssText='border:3px solid '+(idx===0?'#111':'#ece6dd')+';border-radius:10px;overflow:hidden;cursor:pointer;background:#fff;margin-bottom:10px;transition:border-color .15s';
@@ -13759,9 +13761,13 @@ input[type=range]{accent-color:#777}
         try{tc.getContext('2d').drawImage(it.canvas,0,0,tc.width,tc.height);}catch(e){}tc.style.cssText='display:block;width:100%';t.appendChild(tc);
         if(it.name){var nm=document.createElement('div');nm.textContent=it.name;nm.style.cssText='font-size:10.5px;color:#5a5248;padding:4px 6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';t.appendChild(nm);}
         t.addEventListener('click',function(){setMain(it.canvas);thumbs.forEach(function(x){x.style.borderColor='#ece6dd';});t.style.borderColor='#111';});
-        thumbs.push(t);galIsland.appendChild(t);
+        thumbs.push(t);thumbsWrap.appendChild(t);
       });
+      galIsland.appendChild(thumbsWrap);
+      confirmEl.style.cssText='margin-top:12px;flex-shrink:0';galIsland.appendChild(confirmEl);
       row.appendChild(galIsland);
+    } else { /* 갤러리 없으면 메인 하단에 확정 */
+      confirmEl.style.marginTop='14px';mainIsland.appendChild(confirmEl);
     }
     card.appendChild(row);
   }
