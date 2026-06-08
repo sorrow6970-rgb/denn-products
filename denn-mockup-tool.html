@@ -12071,10 +12071,12 @@ window.addEventListener('load',later);
   function renderElemList(){
     try{
       var box=document.getElementById('dps-elem-list'); if(!box)return;
+      /* 2026-06-08: 사이즈 미선택 게이트(__dennSizeUnset)면 운영자 기본문구가 필드에 미리 채워져 있어도 요소 리스트는 전부 '비어있음'으로 — 기본틀에 문구가 뜨던 회귀 차단. 사이즈 선택 시 selFSz 래퍼가 재렌더. */
+      var gateOn=!!window.__dennSizeUnset;
       /* E(2026-06-04): 우측 요소행을 좌측 '05 문구 입력'과 동일하게 isFrameTextKeyAllowed로 게이팅 — 편집 불가 템플릿에서 문구행이 뜨던 불일치 해소 */
-      var rows=ELEMS.filter(function(e){return typeof window.isFrameTextKeyAllowed!=='function'||window.isFrameTextKeyAllowed(e[0],window.curFTpl);}).map(function(e){var v=elText(e[2]);return{k:e[0],lab:e[1],val:v,empty:!v};});
-      rows.push({k:'image',lab:'이미지',val:'업로드됨',empty:!imgPresent()});
-      rows.push({k:'clock',lab:'시계',val:'표시',empty:!clockOn()});
+      var rows=ELEMS.filter(function(e){return typeof window.isFrameTextKeyAllowed!=='function'||window.isFrameTextKeyAllowed(e[0],window.curFTpl);}).map(function(e){var v=gateOn?'':elText(e[2]);return{k:e[0],lab:e[1],val:v,empty:!v};});
+      rows.push({k:'image',lab:'이미지',val:'업로드됨',empty:gateOn?true:!imgPresent()});
+      rows.push({k:'clock',lab:'시계',val:'표시',empty:gateOn?true:!clockOn()});
       box.innerHTML='';
       rows.forEach(function(r){
         var row=el('div','dps-elem-row'+(r.empty?' empty':''));
@@ -12086,6 +12088,7 @@ window.addEventListener('load',later);
       });
     }catch(e){}
   }
+  window.__dennRenderElemListV=renderElemList;/* 2026-06-08: 게이트 해제(selFSz) 등 크로스블록에서 요소 리스트 재렌더용 */
   function resetFrameDefaults(){
     if(!window.confirm('기본 설정으로 되돌릴까요?\n입력한 문구·이미지·확대설정이 이 시안의 초기 상태로 돌아갑니다.'))return;
     try{if(typeof window.applyFrameDefaultTexts==='function')window.applyFrameDefaultTexts(window.curFTpl||null,true);}catch(e){}
@@ -12290,7 +12293,7 @@ window.addEventListener('load',later);
   var oldRender=window.renderFrame;
   if(typeof oldRender==='function')window.renderFrame=function(){if(window.__dennSizeUnset){overlay(true);return;}return oldRender.apply(this,arguments)};
   var oldSel=window.selFSz;
-  if(typeof oldSel==='function')window.selFSz=function(){window.__dennSizeUnset=false;overlay(false);lockInputs(false);return oldSel.apply(this,arguments)};
+  if(typeof oldSel==='function')window.selFSz=function(){window.__dennSizeUnset=false;overlay(false);lockInputs(false);var r=oldSel.apply(this,arguments);/* 2026-06-08: 게이트 해제 후 기본문구가 필드에 적용됐으니 우측 요소 리스트도 재렌더(applyFrameDefaultTexts는 input 미발화) */try{if(window.__dennRenderElemListV)setTimeout(window.__dennRenderElemListV,0);}catch(e){}return r};
   function boot(){if(!window.__dennSizeUnset)return;var lab=by('ib-sz');if(lab)lab.textContent='-';gate();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,520)});
   else setTimeout(boot,320);
