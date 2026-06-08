@@ -5,10 +5,14 @@
 
 ---
 
-## 현재 상태 (2026-06-08 기준, 참고용)
-- 최신 main HEAD = `a54a7ca` 직후 (전부 push됨).
-- 이번 세션 처리: 프레임/시계 안내문구 UI 통일, #4 dead code(isUntouched) 제거, 게이트 기본문구 누출 버그 차단(`95e3c0e`), 백로그 #1·#2·#5·#6 stale 검증·교정(이미 완료였음), #7 케이스 섹션번호 제거.
-- 백로그 감사 결론: 옛 백로그 #1·#2·#4·#5·#6은 사실상 완료 상태. 아래 v2 계획이 실제 남은 작업.
+## 현재 상태 (2026-06-08 갱신, 전부 push됨; HEAD≈`b7ffba7`)
+- **작업1 ✅ Phase A/B 완료**(-127줄): 비활성 sun residue/preserve wrap(v43/v44)·v361 ScaleLock 도달불가 본체·renderFrame 순수 no-op(v13) 제거. **pre-v20 renderFrame wrap 8겹(L2363~2594)은 v20(L2702 fresh redefine)이 끊은 orphan=죽은 코드지만, 같은 IIFE에 라이브 부수효과(drawClockLayer·DENN_FRAME_VISIBLE·switchTab/togFrame wrap·DOMContentLoaded)가 섞여 통째 삭제 불가 → 무해해 보류.** 후속 원하면 orphaned 재할당부만 외과 제거.
+- **작업2 ✅** 케이스탭에서 액자(#page-frame) 누출 차단: `#page-case`·셸 비활성(:not(.on)) force-hide. 셀렉터 특이도(셸 1,1,0 이기려면 1,2,0+!important) 주의.
+- **작업3 ✅(골격)** 폰케이스 PC 셸 신설 `denn-v101-pc-shell-case`(방식 A, 액자 denn-v94 미러). 6 드로어: 기종/템플릿/이미지/색상(케이스+휴대폰)/텍스트/설정. 정보바 메뉴 상단 이동. **인터랙션 정밀검증은 미완(케이스 비활성이라 후순위).**
+- **작업4 ✅** 폰케이스 탭 진입 차단 `denn-v102-case-tab-disable`: `__DENN_CASE_ENABLED`(기본 false) 플래그+switchTab 게이트+'(준비중)' 표시+토스트. **재활성=`dennSetCaseTabEnabled(true)` 또는 플래그 한 줄 true.** 토스트 위치도 셸 캔버스 중앙으로 수정(showToast).
+- (이전 세션) 백로그 감사: 옛 #1·#2·#4·#5·#6은 이미 완료, #3(룸스키마 3·4단계)만 잔존. #7 케이스 섹션번호 제거 완료.
+
+### ★ 다음 세션 시작점 = 작업5 (사전평가·결정 완료, 구현만 남음)
 
 ---
 
@@ -44,12 +48,24 @@
 - 단, 내부 케이스 UI(작업 3)는 미리 완성해둔 상태로 둔다. 차단은 진입만 막는 용도.
 - 개발 완료 후 한 줄 토글(플래그)로 즉시 활성화할 수 있게 구현.
 
-## [작업 5] 내공간보기 — 패스워드 개별 설정 탭
+## [작업 5] 내공간보기 — 패스워드 개별 설정 탭  ★다음 세션 시작점(사전평가 완료, 결정 확정)
 - 고객 "내공간보기"를 토큰 + 패스워드 방식으로 개별 접근 가능하게.
-- 시안별/고객별로 패스워드를 따로 설정해 해당 고객만 자기 공간 열람·설정.
-- Firebase 인프라(익명 인증, denn-products, Blaze) 활용.
-- 사전 평가: 토큰 단독 방식 대비 패스워드 추가 시 데이터 모델/저장 위치/공유 URL 흐름 변경 범위 보고.
-- 보호 스토리지 키와 충돌 없이 별도 키로 처리.
+
+### 사전평가 결과(2026-06-08)
+- **현황**: Firebase는 admin(L14503~)에 **Storage + 익명인증만**(Firestore/RTDB 없음). 현 `?share=`(mockup-tool L674~)는 운영자→소비자 어드민 JSON import일 뿐 **고객별 인증 없음**. 내공간=`openRoomMockup`(L1725), roomBackgroundSettings 로컬/IDB. → 작업5는 **완전 신규**.
+- **분량 대(大), 위험 중상~상**(패스워드 보안·Firebase 규칙·신규 접근경로). 기존 `?share=`는 건드리지 말고 **신규 `?space=<token>` 라우트로 분리(가산적)**.
+
+### 재준 확정 결정(2026-06-08)
+1. **백엔드 = Firestore 추가**(SDK + 보안규칙으로 진짜 게이팅). admin의 기존 firebaseConfig(denn-products) 재사용 + firebase-firestore SDK 추가.
+2. **패스워드 설정 주체 = 운영자**(admin에서 시안별 토큰+패스워드 발급 → 고객에게 링크+비번 전달).
+3. **게이트 대상 = 열람만(view-only)**. (조정·저장은 범위 외 → 저장경로 토큰분리 불필요, 작업 단순화.)
+4. 보호키(denn_admin/denn_shared_db/denn_order_requests) 무수정. 신규 Firestore 컬렉션(예 `spaces/{token}`)로 격리.
+
+### 구현 스케치(다음 세션)
+- **데이터모델**: Firestore `spaces/{token}` = `{passwordHash, roomSettings(=내공간 시안 스냅샷), ownerMeta, createdAt}`. 비번은 클라 해시 후 저장, 검증은 **보안규칙 + 입력해시 비교**(view-only라 규칙: 읽기는 인증된 익명유저 허용하되 비번 검증은 클라+문서 분리 설계 — 1단계에서 정밀화).
+- **admin UI**: 시안별 "공유 공간 발급"(토큰 생성·비번 설정·`?space=<token>` 링크 복사).
+- **mockup-tool**: `?space=<token>` 감지 → 비번 프롬프트 → Firestore 읽기/검증 → 그 roomSettings로 내공간 렌더(읽기전용).
+- **단계**: 1) Firestore SDK+규칙+데이터모델 2) admin 발급 UI 3) mockup `?space` 게이트+로드 4) 검증. 각 단계 커밋.
 
 ## [작업 6] 1차 온라인 업로드 (모바일 최적화 전)
 - 모바일 최적화 본격 작업 전에 먼저 라이브로 배포(Cafe24 호스팅 업로드).
