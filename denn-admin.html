@@ -202,9 +202,9 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
     <div class="tp" id="tp-proof-space">
       <div class="card">
         <div class="ct">🔐 고객 시안 확인 — 내공간 시안 발급</div>
-        <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px">운영자가 <b style="color:var(--txt)">고객 사진+프레임을 가이드배경 룸에 배치</b>해 비공개 패스워드 공간으로 발급합니다. 고객은 링크+비밀번호로 본인 시안을 <b style="color:var(--txt)">내공간보기</b>로 확인·확정(카카오 채널)합니다.<br><span style="color:var(--faint)">※ 어드민 '액자 설정'(공통 디폴트)·'주문의뢰'(고객→운영자)와 분리된, 고객별 개별 발급 기능입니다.</span></p>
+        <p style="font-size:13px;color:var(--txt);line-height:1.8;margin-bottom:14px">운영자가 <b style="color:var(--gold)">고객 사진+프레임을 가이드배경 룸에 배치</b>해 비공개 패스워드 공간으로 발급합니다. 고객은 링크+비밀번호로 본인 시안을 <b style="color:var(--gold)">내공간보기</b>로 확인·확정(카카오 채널)합니다.<br><span style="color:var(--muted);font-size:12px">※ 어드민 '액자 설정'(공통 디폴트)·'주문의뢰'(고객→운영자)와 분리된, 고객별 개별 발급 기능입니다.</span></p>
         <button class="tb-btn primary" onclick="dennOpenSpaceCreate()" style="font-size:13px;padding:12px 18px">🏠 내공간 시안 만들기 · 가이드배경 설정 →</button>
-        <p style="font-size:11px;color:var(--faint);margin-top:10px">새 창에서 시안(사진·프레임·배경·위치)을 구성하고 <b style="color:var(--txt)">'비공개 공간 발급'</b>을 누르면 링크가 생성됩니다.</p>
+        <p style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.7">새 창에서 시안(사진·프레임·배경·위치)을 구성하고 <b style="color:var(--txt)">'비공개 공간 발급'</b>을 누르면 링크가 생성됩니다.</p>
       </div>
       <div class="card">
         <div class="ct">발급한 공간 목록 <span class="badge">이 브라우저 기준</span></div>
@@ -15865,7 +15865,10 @@ window.addEventListener('resize',scheduleSettle);
       window.open(base+'?spaceCreate=1','_blank');
     }catch(e){ alert('새 창 열기 실패: '+((e&&e.message)||e)); }
   };
-  function renderList(){try{var box=by('proof-list');if(!box)return;var a=JSON.parse(localStorage.getItem('denn_proof_spaces')||'[]');if(!a.length){box.textContent='아직 발급한 공간이 없습니다.';return;}box.innerHTML=a.map(function(s){return '<div style="padding:7px 0;border-bottom:1px solid var(--bdr)"><b style="color:var(--txt)">'+((s.label||'(라벨없음)')).replace(/[<>&]/g,'')+'</b> &middot; <span style="font-family:monospace">'+s.token+'</span>'+(s.pw?' &middot; 비번 <b style="color:var(--txt)">'+String(s.pw).replace(/[<>&]/g,'')+'</b>':'')+'<br><a href="'+s.url+'" target="_blank" style="font-size:10px;color:var(--blue);word-break:break-all">'+s.url+'</a></div>';}).join('');}catch(e){}}
+  function esc(s){return String(s==null?'':s).replace(/[<>&]/g,function(c){return c==='<'?'&lt;':c==='>'?'&gt;':'&amp;';});}
+  function fmtDate(iso){try{var d=new Date(iso);if(isNaN(d))return '';var p=function(n){return ('0'+n).slice(-2);};return d.getFullYear()+'.'+p(d.getMonth()+1)+'.'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}catch(e){return '';}}
+  function renderList(){try{var box=by('proof-list');if(!box)return;var a=JSON.parse(localStorage.getItem('denn_proof_spaces')||'[]');if(!a.length){box.textContent='아직 발급한 공간이 없습니다.';return;}box.innerHTML=a.map(function(s){var dstr=fmtDate(s.at);return '<div style="padding:9px 0;border-bottom:1px solid var(--bdr);display:flex;gap:10px;align-items:flex-start"><div style="flex:1;min-width:0"><b style="color:var(--txt)">'+esc(s.label||'(라벨없음)')+'</b> <span style="font-family:monospace;color:var(--muted)">'+esc(s.token)+'</span>'+(s.pw?' &middot; 비번 <b style="color:var(--txt)">'+esc(s.pw)+'</b>':'')+(dstr?' <span style="color:var(--faint);font-size:10px">&middot; '+dstr+'</span>':'')+'<br><a href="'+esc(s.url)+'" target="_blank" style="font-size:10px;color:var(--blue);word-break:break-all">'+esc(s.url)+'</a></div><button onclick="dennProofDelete(\''+esc(s.token)+'\')" style="flex-shrink:0;background:none;border:1px solid var(--bdr);color:var(--red);border-radius:6px;padding:4px 9px;font-size:11px;cursor:pointer">삭제</button></div>';}).join('');}catch(e){}}
+  window.dennProofDelete=function(token){try{if(!confirm('이 발급 목록에서 삭제할까요?\n(목록에서만 제거됩니다 — 링크 접근 차단은 추후 지원)'))return;var k='denn_proof_spaces',a=JSON.parse(localStorage.getItem(k)||'[]').filter(function(s){return s.token!==token;});localStorage.setItem(k,JSON.stringify(a));renderList();}catch(e){}};
   window.dennRenderProofList=renderList;
   document.addEventListener('DOMContentLoaded',renderList);setTimeout(renderList,600);
   /* 다른 탭/창(mockup 발급)에서 목록 갱신되면 반영 */
