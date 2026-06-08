@@ -442,6 +442,18 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
             </div>
             <input type="range" id="rm-size" min="1" max="85" step="0.5" value="20" style="width:100%" oninput="var v=Math.round(parseFloat(this.value||20)*2)/2;this.value=v;document.getElementById('rm-size-v').textContent=v+'%';rmRender()">
           </div>
+          <div id="rm-size-anchor-row" style="display:none;border:1px solid var(--border);border-radius:8px;background:#FAF6EE;padding:8px;margin-bottom:9px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+              <div style="font-size:10.5px;font-weight:600;color:var(--ink)">사이즈 기준 위치</div>
+              <span id="rm-size-anchor-v" style="font-size:10px;color:var(--ink);font-weight:500">중앙</span>
+            </div>
+            <div style="font-size:8.8px;color:var(--warm);margin-bottom:8px">크기 조절 시 이 높이를 고정(탁자 위 배경은 '하단')</div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+              <span style="font-size:9px;color:var(--warm)">상단</span>
+              <input type="range" id="rm-size-anchor" min="0" max="100" step="1" value="50" style="writing-mode:vertical-lr;width:22px;height:84px" oninput="if(window.dennSetSizeAnchorV)dennSetSizeAnchorV(this.value);else if(window.dennUpdateSizeAnchorReadoutV)dennUpdateSizeAnchorReadoutV(this.value)">
+              <span style="font-size:9px;color:var(--warm)">하단</span>
+            </div>
+          </div>
           <div style="border:1px solid var(--border);border-radius:8px;background:#FAF6EE;padding:8px;margin-bottom:9px">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px">
               <div>
@@ -1734,6 +1746,7 @@ function openRoomMockup(){
   RM.ctx=RM.canvas.getContext('2d');
   rmBindEvents();
   rmLoadGuideBgs();
+  var __anchRow=document.getElementById('rm-size-anchor-row');if(__anchRow)__anchRow.style.display=(window.dennIsAdminSetupV&&dennIsAdminSetupV())?'block':'none';
   if(RM.roomImg)rmRender();
 }
 
@@ -2027,7 +2040,7 @@ function rmBindEvents(){
     if(window.dennSyncGuideXYDisplayCenterV89)window.dennSyncGuideXYDisplayCenterV89();
     rmRender();
   });
-  document.addEventListener('mouseup',function(){RM.sunDrag=false;if(RM.dragging){RM.dragging=false;if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51();if(c)c.style.cursor='grab';}});
+  document.addEventListener('mouseup',function(){RM.sunDrag=false;if(RM.dragging){RM.dragging=false;if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51();if(window.dennCaptureAnchorTargetV)dennCaptureAnchorTargetV();if(c)c.style.cursor='grab';}});
   /* 위치 슬라이더(위치 X/Y)를 소비자가 직접 조정해도 '옮김'으로 간주 → 운영자 ② 강제 해제(세션 한정) */
   /* 소비자가 룸/가이드 컨트롤(기준 스케일·위치 X/Y·프레임 크기 등)을 직접 조정하면 '조절함'으로 간주 → 운영자 디폴트 강제 해제(세션 한정, 새로고침/기본설정으로만 다시 디폴트). */
   document.addEventListener('input',function(e){var t=e&&e.target;if(t&&/^(sg-|rm-)/.test(t.id||'')&&window.RM)RM.__userMoved=true;},true);
@@ -2048,7 +2061,7 @@ function rmBindEvents(){
     if(window.dennSyncGuideXYDisplayCenterV89)window.dennSyncGuideXYDisplayCenterV89();
     rmRender();
   };
-  c.ontouchend=function(){RM.dragging=false;if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51();};
+  c.ontouchend=function(){RM.dragging=false;if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51();if(window.dennCaptureAnchorTargetV)dennCaptureAnchorTargetV();};
   // Wheel = resize
   c.addEventListener('wheel',function(e){
     e.preventDefault();
@@ -2926,6 +2939,7 @@ function currentSettingsV33(){
     frameX:window.RM&&RM.pos?num(RM.pos.x*100,50):50,
     frameY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
     frameScale:num((by('rm-size')||{}).value,20)/100,
+    frameSizeAnchor:num((by('rm-size-anchor')||{}).value,50),
     frameTiltEnabled:!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),
     frameTiltDeg:num((by('rm-tilt')||{}).value,0),
     framePerspectiveX:num((by('rm-persp-x')||{}).value,0),
@@ -3697,7 +3711,16 @@ function drawFrame(ctx2,W,H){
   var tiltOn=!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),sizePct=num((by('rm-size')||{}).value,20),tiltDeg=tiltOn?num((by('rm-tilt')||{}).value,0):0,perspX=tiltOn?num((by('rm-persp-x')||{}).value,0):0,perspY=tiltOn?num((by('rm-persp-y')||{}).value,0):0,cm=frameCm(),pxPerCm=Math.max(1,(measureBase(W,H)/150)*(num((by('sg-scale-r')||{}).value,100)/100)),fallbackBoost=(!cm&&isRoomMobile())?1.25:1,fw=cm?cm.w*pxPerCm*(sizePct/20):W*sizePct/100*fallbackBoost,fh=cm?cm.h*pxPerCm*(sizePct/20):fw*(RM.frameSnap.height/RM.frameSnap.width),cxp=(RM.pos&&RM.pos.x||.5),cyp=(RM.pos&&RM.pos.y||.4),cx=W*cxp,cy=H*cyp,sy=1,shOp=num((by('rm-sh-op')||{}).value,0),shDir=num((by('rm-sh-dir')||{}).value,180),shDist=num((by('rm-sh-dist')||{}).value,0),shBlur=num((by('rm-sh-blur')||{}).value,0),shRad=(shDir-90)*Math.PI/180,distPx=fw*shDist/100;
   /* ★ B(2026-06-05): 배경 없는 기본 상태에선 액자를 캔버스에 fit-contain(여백 6%) → 큰 스케일에서도 액자 전체가 캔버스(=흰 영역) 안에 보이게(잘림 방지). 배경 사진 있을 땐 실제 스케일 유지, 운영자 편집모드 제외. */
   if(window.RM&&!(RM.roomImg&&RM.roomImg.naturalWidth)&&String(RM.bgId||'default-room')==='default-room'&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){var __fit=Math.min(1,(W*0.94)/Math.max(1,fw),(H*0.94)/Math.max(1,fh));if(__fit<1){fw*=__fit;fh*=__fit;}}
+  /* 사이즈 기준 위치(앵커) 강제 — 관리자 배경설정 모드 + 비중앙 앵커에서만. 어떤 경로가 RM.pos를
+     중심으로 되돌려도 그릴 때 앵커 높이(RM.__anchorYabs)로 cy 재계산 → 크기/표시사이즈 변경 시 안 뜸.
+     드래그 중엔 자유 이동(스킵). 앵커=중앙(기본 50)이면 전부 무영향(소비자·게이트 회귀 없음). */
+  var __ay=(by('rm-size-anchor'))?num(by('rm-size-anchor').value,50)/100:0.5;
+  if(window.RM&&window.dennIsAdminSetupV&&dennIsAdminSetupV()&&Math.abs(__ay-0.5)>1e-6&&H>0){
+    if(RM.__anchorYabs==null){RM.__anchorYabs=cyp+(__ay-0.5)*(fh/H);}
+    else if(!RM.dragging){cy=RM.__anchorYabs*H-(__ay-0.5)*fh;cyp=cy/H;if(RM.pos)RM.pos.y=Math.max(0.02,Math.min(0.98,cyp));}
+  }
   RM.frameHit={cx:cx,cy:cy,w:fw,h:fh,tilt:tiltDeg,sy:sy};
+  RM.__lastFH=fh;RM.__lastCY=cy;RM.__lastH=H;RM.__lastSize=sizePct;/* 앵커 타깃 캡처용 직전 렌더 기하 */
   ctx2.save();ctx2.translate(cx,cy);ctx2.rotate(tiltDeg*Math.PI/180);ctx2.scale(1,sy);
   if(shOp>0){ctx2.shadowColor='rgba(0,0,0,'+(shOp/100)+')';ctx2.shadowBlur=fw*shBlur/100;ctx2.shadowOffsetX=Math.cos(shRad)*distPx;ctx2.shadowOffsetY=Math.sin(shRad)*distPx}
   if(Math.abs(perspX)>.5||Math.abs(perspY)>.5){
@@ -3742,6 +3765,26 @@ window.rmRender=function(){
     requestSaveSettingsV33();
     if(window.SG&&SG.on)requestAnimationFrame(window.sgDraw);
   }catch(e){try{var c2=by('rm-canvas'),x=ctx(c2);if(x){drawFallback(x,c2.width||900,c2.height||600)}}catch(_){}}
+};
+/* ── 사이즈 기준 위치(앵커) — 관리자 배경설정 모드 전용 ──────────
+   value v(0=상단 … 50=중앙 … 100=하단), ay=v/100. 강제 로직은 drawFrame 안에 있음(단일 렌더 지점).
+   여기 헬퍼는 (1)표시 텍스트 (2)앵커 타깃 높이(RM.__anchorYabs) 캡처만 담당.
+   타깃은 '드래그 끝' / '앵커 슬라이더 변경' 시점의 현재 액자 위치에서 잡는다 → 이후 크기 변경은 그 높이 고정. */
+window.dennUpdateSizeAnchorReadoutV=function(v){var s=by('rm-size-anchor-v');if(!s)return;v=num(v,50);s.textContent=(v<=8?'상단':(v>=92?'하단':(Math.abs(v-50)<=4?'중앙':v+'%')));};
+window.dennAnchorAyV=function(){var el=by('rm-size-anchor');return el?num(el.value,50)/100:0.5;};
+window.dennCaptureAnchorTargetV=function(){
+  try{
+    if(!window.RM||!RM.pos)return;
+    var ay=dennAnchorAyV();
+    if(Math.abs(ay-0.5)<1e-6){RM.__anchorYabs=null;return;}
+    if(!RM.__lastFH||!RM.__lastH)return;
+    RM.__anchorYabs=RM.pos.y+(ay-0.5)*(RM.__lastFH/RM.__lastH);
+  }catch(e){}
+};
+window.dennSetSizeAnchorV=function(v){
+  if(window.dennUpdateSizeAnchorReadoutV)dennUpdateSizeAnchorReadoutV(v);
+  if(window.dennCaptureAnchorTargetV)dennCaptureAnchorTargetV();
+  if(window.rmRender)rmRender();
 };
 window.sgBuildSizes=function(){
   var btn=by('sg-size-btns');if(!btn)return;
@@ -5087,6 +5130,10 @@ function applyRoomSettings(s){
   setVal('sg-oy-r',num(s.guideY,25));setVal('sg-oy-n',num(s.guideY,25));
   setVal('sg-alpha-r',Math.round(num(s.guideOpacity,.75)*1000)/10);setVal('sg-alpha-n',Math.round(num(s.guideOpacity,.75)*1000)/10);
   setVal('rm-size',Math.round(num(s.frameScale,.2)*200)/2);
+  setVal('rm-size-anchor',num(s.frameSizeAnchor,50));
+  if(window.RM)RM.__anchorYabs=null;/* 배경 로드 시 앵커 타깃 리셋 → 새 배경의 저장 중심에서 재설정(첫 렌더 lazy-init) */
+  if(window.dennUpdateSizeAnchorReadoutV)dennUpdateSizeAnchorReadoutV(num(s.frameSizeAnchor,50));
+  var __anchRow=by('rm-size-anchor-row');if(__anchRow)__anchRow.style.display=(window.dennIsAdminSetupV&&dennIsAdminSetupV())?'block':'none';
   setVal('rm-bg-scale',Math.round(num(s.bgScale,uiBgScale())*100));
   setVal('rm-sh-op',Math.round(num(s.shadowOpacity,.6)*100));
   setVal('rm-sh-dir',num(s.shadowDirection,180));
@@ -5122,6 +5169,7 @@ function currentRoomSettingsV48(){
     frameX:window.RM&&RM.pos?num(RM.pos.x*100,50):50,
     frameY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
     frameScale:num((by('rm-size')||{}).value,20)/100,
+    frameSizeAnchor:num((by('rm-size-anchor')||{}).value,50),
     frameTiltEnabled:!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),
     frameTiltDeg:num((by('rm-tilt')||{}).value,0),
     framePerspectiveX:num((by('rm-persp-x')||{}).value,0),
@@ -13426,7 +13474,8 @@ input[type=range]{accent-color:#777}
       design:{
         tplId: tpl.id||null, sizeId: sz.id||null, colorId: (col.id!=null?col.id:(col.fill||null)),
         texts:{ main:tv('f-main'), name:tv('f-name'), name2:tv('f-name2'), date:tv('f-date'), sub:tv('f-sub') },
-        imgT: clone(window.frameImgT)
+        imgT: clone(window.frameImgT),
+        clockOn: (function(){try{return (typeof window.clockVisible==='function')?!!window.clockVisible(window.curFSz,window.curFTpl):!!(window.opts&&window.opts.clock);}catch(e){return !!(window.opts&&window.opts.clock);}})()
       },
       room:{
         bgId: key, guideIndex: (RM.guideIndex!=null?RM.guideIndex:null),
@@ -13455,6 +13504,7 @@ input[type=range]{accent-color:#777}
     if(d.colorId!=null&&window.FC){var c=find(window.FC,function(x){return x.id===d.colorId||x.fill===d.colorId;});if(c)window.curFCol=c;}
     ['main','name','name2','date','sub'].forEach(function(k){var e=document.getElementById('f-'+k);if(e)e.value=(d.texts&&d.texts[k])||'';});
     if(d.photoUrl){try{window.frameImg=await loadImage(d.photoUrl);window.frameImgT=d.imgT||{scale:1,x:0,y:0};}catch(e){}}
+    if(typeof d.clockOn==='boolean'){if(window.opts)window.opts.clock=d.clockOn;var __tg=document.getElementById('tog-clock');if(__tg){if(d.clockOn)__tg.classList.add('on');else __tg.classList.remove('on');}} /* 시계 토글 복원 */
     window.__dennSizeUnset=false;
     if(window.renderFrame){try{window.renderFrame();}catch(e){}}
     await wait(300);
@@ -13618,6 +13668,7 @@ input[type=range]{accent-color:#777}
     if(d.colorId!=null&&window.FC){var c=find(window.FC,function(x){return x.id===d.colorId||x.fill===d.colorId;});if(c)window.curFCol=c;}
     ['main','name','name2','date','sub'].forEach(function(k){var e=document.getElementById('f-'+k);if(e)e.value=(d.texts&&d.texts[k])||'';});
     if(d.photoUrl){try{window.frameImg=await loadImage(d.photoUrl);window.frameImgT=d.imgT||{scale:1,x:0,y:0};}catch(e){}}
+    if(typeof d.clockOn==='boolean'){if(window.opts)window.opts.clock=d.clockOn;var __tg=document.getElementById('tog-clock');if(__tg){if(d.clockOn)__tg.classList.add('on');else __tg.classList.remove('on');}} /* 시계 토글 복원(게이트 시계 표시) */
     window.__dennSizeUnset=false; /* 사이즈 게이트 해제(렌더 허용) */
     if(window.renderFrame){try{window.renderFrame();}catch(e){}}
     await wait(280);
