@@ -46,12 +46,12 @@ git log --oneline -6   # HEAD = 25f7e9d
 
 ## 4. 앞으로 남은 작업 (우선순위순 — 메모리 인덱스 기준)
 
-### 높음 — 기반/안정성
-1. **Storage 단일 진실 — 단계 D2/단계3** ([[project_storage_single_source]]): `__opRev` 단조 리비전으로 운영자 ② durability 확보(단계 A 완료). 통과 후 D2 → 운영자 디폴트 전파 단계3.
-2. **운영자 디폴트 전파 — 왕복유지 복원** ([[project_operator_default_propagation]]): 현재 미러 모델로 "절대 안 틀어짐" 확보했으나 **세션 조정 왕복유지는 의도적 포기** 상태. 살리려면 멀티스토어/위치 다중표현 기반 정리 선행 필요.
+### 높음 — 기반/안정성 (2026-06-08 검증: #1·#2 사실상 종결)
+1. **Storage 단일 진실 — 단계 A 완료** ([[project_storage_single_source]]): `__opRev` 단조 리비전(3-funnel bump + max-rev merge + LS clobber guard)으로 운영자 ② durability 확보 — `5995e8a`에서 구현 완료. ✅ 메모상 후속이던 D2/단계3은 별도 코드 미착수지만, durability 목표는 __opRev + 미러/왕복유지(#2)로 이미 달성 → **사실상 moot(필요시에만 하드닝)**.
+2. ~~운영자 디폴트 전파 — 왕복유지 복원~~ → ✅ **완료(2026-06-04~05)** ([[project_operator_default_propagation]]): `4b44d82`(세션 왕복 조정값 유지, race-safe: `__dennMirrorReqV`/`__dennSeededKeysV` 게이트 — 컨텍스트 진입/첫 시드만 미러, 단순 재오픈은 보존) + `b949e40`(초기엔 ②, 이후 자유조절, `__userMoved` 플래그; 새로고침/기본설정으로/배경선택에서만 리셋). ⚠️ 이 항목의 "복원 필요"는 06-02 미러 핸드오프에서 stale 복붙된 것 — **다음 세션 재추적 금지**.
 
 ### 중간 — 컷오버/정리
-3. **룸 스키마 컷오버 3·4단계 (격리/청결)** ([[project_cutover_room_schema]]): 공유 모듈 추출 필요해 보류. 1/2a/2b(오염 차단)는 완료.
+3. **룸 스키마 컷오버 3·4단계 (격리/청결) — 진짜 보류** ([[project_cutover_room_schema]]): 1/2a/2b(오염 차단·tombstone)는 완료. 3·4(운영자 도구 격리/flat 쓰기 분기 청결)는 **iframe 비권장 결론(docs/2026-06-01-phase3-iframe-assessment.md) + 공유 렌더모듈(rmRender/sgDraw/RM/SG) 1500~2000줄 추출 필요**해 미착수. 실질 남은 대형 작업.
 4. **Dead code 청소 — 2026-06-08 완료/교정**: 실제 죽은 코드는 `isUntouched`(10줄) **하나뿐**이었고 제거함(90e5a82 이후 커밋). buildSeed·단계3 플래그(`__dennDefaultRoomFreshSeededV82`)는 이미 제거돼 있었음. ⚠️ **이전 리스트 오류 정정**: `V79`(공통디폴트 상속 아키텍처)·`rmSelectGuide`("orphan v33")는 **죽은 코드가 아니라 활성 핵심 경로** — 건드리지 말 것. 상세 [[project_dead_code_audit]].
 
 ### 중간 — Phase C (placeholder / 색상 / textless)
