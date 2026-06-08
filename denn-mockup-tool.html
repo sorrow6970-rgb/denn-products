@@ -13520,23 +13520,18 @@ input[type=range]{accent-color:#777}
       if(psrc){ scene.design.photoUrl = isData(psrc) ? await window.dennSpace.uploadDataUrl(psrc,'proofs/'+Date.now()+'-photo.png') : psrc; }
       var gsrc=window.RM&&window.RM.roomImg&&window.RM.roomImg.src;
       if(gsrc){ scene.room.guideBgUrl = isData(gsrc) ? await window.dennSpace.uploadDataUrl(gsrc,'proofs/'+Date.now()+'-bg.png') : gsrc; }
-      // 갤러리: 운영자 가이드배경 전부 → 각 배경의 운영자 위치/스케일까지 캡처(배경별로 액자가 다르게)
+      // 갤러리: 운영자 가이드배경 전부 + 각 배경의 운영자 저장 프리셋(roomBackgroundSettings[bgId]) 직접 캡처.
+      // (소비자 모드에선 가이드선택이 ②를 미러하므로 순회 대신 프리셋을 직접 읽어 배경별 위치/스케일/햇빛 보존)
       try{
         var bgs=(window.ADM&&window.ADM.guideBackgrounds)||[];
+        var rbs2=(window.ADM&&window.ADM.roomBackgroundSettings)||{};
         scene.room.gallery=[];
-        var primIdx=(window.RM&&RM.guideIndex!=null)?RM.guideIndex:-1;
         for(var gi=0;gi<bgs.length;gi++){
           var bg=bgs[gi]; if(!bg||!bg.dataUrl)continue;
-          if(window.rmSelectGuide){ try{window.rmSelectGuide(gi);}catch(e){} await wait(500); } /* 그 배경의 운영자 위치/스케일 적용 */
+          var bid=bg.id||('guide-'+gi);
           var burl=isData(bg.dataUrl)?await window.dennSpace.uploadDataUrl(bg.dataUrl,'proofs/'+Date.now()+'-g'+gi+'.png'):bg.dataUrl;
-          scene.room.gallery.push({
-            name:bg.name||('배경 '+(gi+1)), bgId:bg.id||('guide-'+gi), url:burl,
-            controls: captureControls(),
-            pos:(window.RM&&RM.pos)?{x:RM.pos.x,y:RM.pos.y}:null,
-            sunOn: !!(window.RM&&RM.sunOn), sunPos:(window.RM&&RM.sunPos)?{x:RM.sunPos.x,y:RM.sunPos.y}:null
-          });
+          scene.room.gallery.push({ name:bg.name||('배경 '+(gi+1)), bgId:bid, url:burl, settings: rbs2[bid]?clone(rbs2[bid]):null });
         }
-        if(primIdx>=0&&window.rmSelectGuide){ try{window.rmSelectGuide(primIdx);}catch(e){} await wait(350); } /* 원래 배경 복원 */
       }catch(e){}
       var r=await window.dennSpace.create({roomSettings:scene,password:pw,ownerMeta:{label:label},token:editToken||undefined});
       remember(r.token,label,r.url,pw);
@@ -13646,11 +13641,45 @@ input[type=range]{accent-color:#777}
     }
   }
   function copyCanvas(rc){var cv=document.createElement('canvas');cv.width=rc.width;cv.height=rc.height;try{cv.getContext('2d').drawImage(rc,0,0);}catch(e){}return cv;}
-  async function renderFrameOnBg(item){ /* 액자를 그 배경의 운영자 위치/스케일대로 합성 → 캔버스 복사본 */
+  function nv(v,d){v=parseFloat(v);return isFinite(v)?v:d;}
+  function setSV(id,v){var e=document.getElementById(id);if(e&&v!=null){e.value=v;try{e.dispatchEvent(new Event('input',{bubbles:true}));}catch(err){}}}
+  /* 운영자 저장 프리셋(roomBackgroundSettings[bgId]) → 슬라이더/RM 역매핑 (currentRoomSettingsV48 역방향) */
+  function applyBgSettings(s){
+    if(!s)return;
+    if(window.RM){
+      window.RM.pos=window.RM.pos||{x:.5,y:.4};
+      window.RM.pos.x=nv((s.frameCenterX!=null?s.frameCenterX:s.frameX),50)/100;
+      window.RM.pos.y=nv((s.frameCenterY!=null?s.frameCenterY:s.frameY),40)/100;
+      window.RM.sunOn=!!s.sunlightEnabled;
+      window.RM.sunPos=window.RM.sunPos||{x:.75,y:.2};
+      if(s.sunX!=null)window.RM.sunPos.x=nv(s.sunX,.75);
+      if(s.sunY!=null)window.RM.sunPos.y=nv(s.sunY,.2);
+      window.RM.__userMoved=true;
+    }
+    setSV('rm-size',Math.round(nv(s.frameScale,.2)*100));
+    setSV('rm-tilt',nv(s.frameTiltDeg,0));
+    setSV('rm-persp-x',nv(s.framePerspectiveX,0));
+    setSV('rm-persp-y',nv(s.framePerspectiveY,0));
+    if(s.bgScale!=null)setSV('rm-bg-scale',Math.round(nv(s.bgScale,1)*100));
+    setSV('rm-sh-op',Math.round(nv(s.shadowOpacity,.6)*100));
+    setSV('rm-sh-blur',nv(s.shadowBlur,20));
+    setSV('rm-sh-dir',nv(s.shadowDirection,180));
+    setSV('rm-sh-dist',nv(s.shadowDistance,8));
+    setSV('rm-sun-int',Math.round(nv(s.sunlightOpacity,.5)*100));
+    setSV('rm-sun-ang',nv(s.sunlightAngle,-30));
+    setSV('rm-sun-spread',Math.round(nv(s.sunlightSpread,.6)*100));
+    setSV('rm-sun-warm',Math.round(nv(s.sunlightWarm,.7)*100));
+    setSV('rm-sun-rays',nv(s.sunlightRays,0));
+  }
+  async function renderFrameOnBg(item, primary, room){ /* 액자를 그 배경에 합성 → 캔버스 복사본 */
     try{window.RM.roomImg=await loadImage(item.url);}catch(e){return null;}
     if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
-    applyControls(item.controls); /* 배경별 스케일/기울기/그림자/밝기 */
-    if(window.RM){ if(item.pos)window.RM.pos={x:item.pos.x,y:item.pos.y}; window.RM.__userMoved=true; if(item.sunOn!=null)window.RM.sunOn=!!item.sunOn; if(item.sunPos)window.RM.sunPos={x:item.sunPos.x,y:item.sunPos.y}; }
+    if(primary){ /* 주 배경 = 고객별 실제 조정값 */
+      applyControls(room.controls);
+      if(window.RM){ if(room.pos)window.RM.pos={x:room.pos.x,y:room.pos.y}; window.RM.__userMoved=true; if(room.sunOn!=null)window.RM.sunOn=!!room.sunOn; if(room.sunPos)window.RM.sunPos={x:room.sunPos.x,y:room.sunPos.y}; }
+    } else { /* 다른 배경 = 그 배경의 운영자 저장 프리셋 */
+      applyBgSettings(item.settings);
+    }
     if(window.rmSizeCanvas){try{window.rmSizeCanvas();}catch(e){}}
     if(window.rmRender){try{window.rmRender();}catch(e){}}
     await wait(90);
@@ -13666,7 +13695,7 @@ input[type=range]{accent-color:#777}
     if(gallery){
       var prim=room.bgId;
       var ordered=gallery.slice().sort(function(a,b){return (b.bgId===prim?1:0)-(a.bgId===prim?1:0);});
-      for(var i=0;i<ordered.length;i++){ var c=await renderFrameOnBg(ordered[i]); if(c)items.push({name:ordered[i].name||'',canvas:c}); }
+      for(var i=0;i<ordered.length;i++){ var c=await renderFrameOnBg(ordered[i], ordered[i].bgId===prim, room); if(c)items.push({name:ordered[i].name||'',canvas:c}); }
     }
     if(!items.length){ var rc0=document.getElementById('rm-canvas'); if(rc0&&rc0.width)items.push({name:'',canvas:copyCanvas(rc0)}); }
     if(window.closeRoomMockup){try{window.closeRoomMockup();}catch(e){}}
