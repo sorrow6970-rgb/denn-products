@@ -12166,6 +12166,9 @@ window.addEventListener('load',later);
         else if(node.classList&&node.classList.contains('legend')){groups.opt.appendChild(node);} // 범례
         else {act.appendChild(node);} // 저장 버튼 등 → 액션 컬럼
       });
+      /* 정보바(기종/칼선)는 케이스에선 미리보기 안에 있음 → 액자 패리티로 메뉴 상단 고정 이동 */
+      var ibar=preview.querySelector('.info-bar');
+      if(ibar){moved.push({node:ibar,parent:preview});menu.appendChild(ibar);}
       menu.appendChild(gbox);
       moved.push({node:preview,parent:pc}); cvs.appendChild(preview);
       ICONS.forEach(function(it,idx){
