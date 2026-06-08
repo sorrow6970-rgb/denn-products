@@ -13661,6 +13661,10 @@ input[type=range]{accent-color:#777}
     setSV('rm-persp-x',nv(s.framePerspectiveX,0));
     setSV('rm-persp-y',nv(s.framePerspectiveY,0));
     if(s.bgScale!=null)setSV('rm-bg-scale',Math.round(nv(s.bgScale,1)*100));
+    /* 실제 프레임 크기는 가이드 스케일(sg-scale)에 크게 의존(L3697) — 반드시 같이 적용 */
+    if(s.guideScale!=null){setSV('sg-scale-r',Math.round(nv(s.guideScale,1)*100));setSV('sg-scale-n',Math.round(nv(s.guideScale,1)*100));}
+    if(s.guideX!=null){setSV('sg-ox-r',nv(s.guideX,40));setSV('sg-ox-n',nv(s.guideX,40));}
+    if(s.guideY!=null){setSV('sg-oy-r',nv(s.guideY,25));setSV('sg-oy-n',nv(s.guideY,25));}
     setSV('rm-sh-op',Math.round(nv(s.shadowOpacity,.6)*100));
     setSV('rm-sh-blur',nv(s.shadowBlur,20));
     setSV('rm-sh-dir',nv(s.shadowDirection,180));
