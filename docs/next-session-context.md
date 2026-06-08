@@ -61,11 +61,20 @@
 3. **게이트 대상 = 열람만(view-only)**. (조정·저장은 범위 외 → 저장경로 토큰분리 불필요, 작업 단순화.)
 4. 보호키(denn_admin/denn_shared_db/denn_order_requests) 무수정. 신규 Firestore 컬렉션(예 `spaces/{token}`)로 격리.
 
-### 구현 스케치(다음 세션)
-- **데이터모델**: Firestore `spaces/{token}` = `{passwordHash, roomSettings(=내공간 시안 스냅샷), ownerMeta, createdAt}`. 비번은 클라 해시 후 저장, 검증은 **보안규칙 + 입력해시 비교**(view-only라 규칙: 읽기는 인증된 익명유저 허용하되 비번 검증은 클라+문서 분리 설계 — 1단계에서 정밀화).
-- **admin UI**: 시안별 "공유 공간 발급"(토큰 생성·비번 설정·`?space=<token>` 링크 복사).
-- **mockup-tool**: `?space=<token>` 감지 → 비번 프롬프트 → Firestore 읽기/검증 → 그 roomSettings로 내공간 렌더(읽기전용).
-- **단계**: 1) Firestore SDK+규칙+데이터모델 2) admin 발급 UI 3) mockup `?space` 게이트+로드 4) 검증. 각 단계 커밋.
+### ★ 재설계(2026-06-08, 의도 2회 정정 후 확정) — flat 이미지 ❌ / 내공간 씬 재현 ⭕
+**최종 흐름**: 운영자가 admin '고객 시안 확인' 탭 → "내공간 시안 만들기" 버튼 → mockup `?spaceCreate=1` 창에서 **고객 사진+프레임+가이드배경+위치**를 시안별로 구성 → 그 창에서 "비공개 공간 발급"(현재 씬 스냅샷+비번) → 링크 생성 → 고객에게 전달 → 고객 `?space=<token>`+비번 → **운영자가 설정한 내공간보기 씬이 그대로 열림(view-only)** → 확정 시 카카오 채널 연동.
+**확정 결정**: 프레임 내용=고객 사진/디자인 포함 · 구성=기존 admin 룸셋업 엔진 재사용(단 발급버튼은 '고객 시안 확인' 탭에, 공통설정과 분리) · 가이드배경/위치=시안별 개별 지정.
+
+**완료(이번 세션)**:
+- ✅ **stage1**: Firestore 암호화 기반 — `dennSpace.create/load`(PBKDF2+AES-GCM, `spaces/{token}.enc`), docs/firestore.rules(read 익명·create-once·update/delete 차단). Firebase 콘솔 Firestore 활성화+규칙 게시 완료. **payload만 씬 스냅샷으로 바꿔 재사용**.
+- ✅ **stage2(재설계)**: admin '고객 시안 확인' 탭 = **런처**(`dennOpenSpaceCreate`→ mockup `?spaceCreate=1` 새 창) + 발급공간 목록(localStorage `denn_proof_spaces`, storage 이벤트 반영). 이미지 업로드 방식 폐기.
+
+**남음(다음 — mockup-tool 핵심, ~200줄)**:
+- **stage3a `?spaceCreate=1` 발급**: 플로팅 "비공개 공간 발급" 버튼 → 현재 씬 스냅샷 캡처 → 사진/가이드배경 dataUrl은 Storage 업로드(URL), 나머지 설정은 인라인 → `dennSpace.create({roomSettings:scene, password})` → `denn_proof_spaces`에 {token,label,pw,url} 기록 + 링크 표시.
+  - **스냅샷 모델 `space-scene-v1`**: `design{tplId:curFTpl.id, sizeId:curFSz.id, colorId:curFCol.id, texts:{main,name,name2,date,sub}, photoUrl(Storage), imgT:frameImgT}` + `room{bgId:RM.bgId, guideIndex:RM.guideIndex, guideBgUrl(Storage/URL), pos:RM.pos, settings:currentRoomSettingsV48()}`.
+- **stage3b `?space=<token>` 게이트 재현**: 비번 통과 후(현재 게이트는 이미지표시 → **씬 재현으로 교체**): 사진/배경 로드 → `selFTplByRef`로 tpl 선택 → size/color/texts 적용 → RM(bgId/guideIndex/pos)+room settings 적용 → `openRoomMockup` 호출 **view-only**(편집 비활성) → 카카오 확정 버튼(브랜드 kakaoUrl).
+- **참고 코드**: RM(L1678~), `openRoomMockup`(L1725), `currentRoomSettingsV48`(L5116), `selFTplByRef`(L1070), `applyFrameDefaultTexts`(L1058). 기존 게이트(이미지표시 showProof)·CSS는 재현용으로 교체.
+- **단계**: 3a 발급 → 검증 → 3b 게이트 재현 → end-to-end 검증. 각 커밋.
 
 ## [작업 6] 1차 온라인 업로드 (모바일 최적화 전)
 - 모바일 최적화 본격 작업 전에 먼저 라이브로 배포(Cafe24 호스팅 업로드).
