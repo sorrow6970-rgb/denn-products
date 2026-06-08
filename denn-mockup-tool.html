@@ -12581,6 +12581,26 @@ input[type=range]{accent-color:#777}
 #page-frame .denn-scale-scroll::-webkit-scrollbar-corner{background:#f5f5f5}
 #page-frame .denn-scale-scroll{scrollbar-width:auto;scrollbar-color:#bdbdbd #f5f5f5}
 </style>
+<!-- DENN V99: '프레임 표시' 안내문구를 '시계 표시'와 동일하게(토글 박스 밖 별도 박스) 통일 -->
+<style id="denn-v99-frame-vis-hint-unify">
+/* 2026-06-08: 프레임 표시 안내문구를 시계 표시(#clock-hint-msg)처럼
+   토글 박스 밖 별도 박스로 통일. 래퍼 투명화 + .row 박스화 + .hint 별도 박스화.
+   주입 JS·DOM 구조 무수정(CSS만). 잠금상태(L6101 amber hint)는 더 높은 특이도라 보존. */
+#denn-frame-visible-row{
+  background:transparent!important;border:0!important;border-top:0!important;
+  border-radius:0!important;padding:0!important;gap:7px!important;
+}
+/* 토글 행 → 시계 .tog-row와 동일한 박스 */
+#denn-frame-visible-row .row{
+  padding:8px 11px;background:#fff;border:1px solid var(--border);border-radius:7px;
+}
+/* 안내문구 → 시계 #clock-hint-msg와 동일한 별도 박스 */
+#denn-frame-visible-row .hint{
+  background:#FAFAFA!important;color:var(--warm)!important;
+  border:1px solid #e6e6e6;border-radius:6px;padding:7px 9px;
+  line-height:1.5;font-size:9.5px;margin-top:0;
+}
+</style>
 <script id="denn-v95-room-modal-3col">
 (function(){
   'use strict';
