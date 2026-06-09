@@ -1719,6 +1719,17 @@ var RM={
   canvas:null,ctx:null
 };
 
+function rmIsAdminSetup(){try{return new URLSearchParams(location.search||'').has('adminRoomSetup')}catch(e){return false}}
+function rmSizeAllowsBg(bg){
+  // 배경별 표시사이즈 화이트리스트(allowedSizeIds). 빈/없음=전체허용, 사이즈 미선택=전체허용.
+  try{
+    var wl=bg&&bg.allowedSizeIds;
+    if(!wl||!wl.length)return true;
+    var sz=(typeof curFSz!=='undefined'&&curFSz)||window.curFSz;
+    if(!sz)return true;
+    return wl.indexOf(sz.id||sz.name)>=0;
+  }catch(e){return true}
+}
 function rmLoadGuideBgs(){
   var bgs=(ADM&&ADM.guideBackgrounds)||[];
   var sec=document.getElementById('rm-guide-section');
@@ -1726,12 +1737,15 @@ function rmLoadGuideBgs(){
   if(!sec||!grid)return;
   if(!bgs.length){sec.style.display='none';return;}
   sec.style.display='block';
-  grid.innerHTML=bgs.map(function(bg,i){
+  var adminMode=rmIsAdminSetup();  // 관리자 배경설정 모드에선 필터 미적용(모든 배경 구성 가능)
+  var html=bgs.map(function(bg,i){
+    if(!adminMode&&!rmSizeAllowsBg(bg))return '';  // 인덱스 보존: 비허용은 빈 문자열로 skip
     return '<div onclick="rmSelectGuide('+i+')" style="cursor:pointer;border-radius:7px;overflow:hidden;position:relative;border:2px solid transparent;transition:all .15s" id="rm-guide-'+i+'" onmouseover="this.style.borderColor=\'var(--gold)\'" onmouseout="this.style.borderColor=\'transparent\'">'
       +'<img src="'+bg.dataUrl+'" style="width:100%;height:55px;object-fit:cover;display:block">'
       +'<div style="position:absolute;bottom:0;left:0;right:0;padding:3px 6px;background:rgba(25,22,15,.6);color:#fff;font-size:9px">'+bg.name+'</div>'
     +'</div>';
   }).join('');
+  grid.innerHTML=html||'<div style="grid-column:1/-1;font-size:10px;color:var(--muted);text-align:center;padding:14px;line-height:1.6">선택한 사이즈에 맞는 공간 배경이 없습니다.<br>다른 사이즈를 선택해 주세요.</div>';
 }
 
 function rmSelectGuide(i){
@@ -3810,7 +3824,15 @@ window.sgBuildSizes=function(){
   var btn=by('sg-size-btns');if(!btn)return;
   window.SG=window.SG||{on:true,active:{},_sizes:[],ori:'portrait'};
   SG.active=SG.active||{};
-  var sizes=actualSizes();SG._sizes=sizes;
+  var sizes=actualSizes();
+  try{  // 사이즈 가이드도 선택한 배경의 표시사이즈 화이트리스트로 제한(고객 모드). 비허용 사이즈 클릭→액자 과대/과소 방지. 관리자 배경설정 모드는 전체.
+    if(!new URLSearchParams(location.search||'').has('adminRoomSetup')){
+      var __bg=(ADM&&ADM.guideBackgrounds||[])[(window.RM&&RM.guideIndex)];
+      var __wl=__bg&&__bg.allowedSizeIds;
+      if(__wl&&__wl.length){var __f=sizes.filter(function(s){return __wl.indexOf(s.id||s.name)>=0});if(__f.length)sizes=__f;}
+    }
+  }catch(e){}
+  SG._sizes=sizes;
   Object.keys(SG.active).forEach(function(k){if(!sizes.some(function(s){return s.id===k}))delete SG.active[k]});
   if(!sizes.length){SG.active={};btn.innerHTML='<div style="font-size:9.5px;color:var(--warm);line-height:1.5">등록된 액자 사이즈가 없습니다</div>';return}
   if(!sizes.some(function(s){return SG.active[s.id]})){var def=preferredRoomDefaultSize(sizes)||sizes[0];SG.active[def.id]=true;SG.primarySizeId=def.id;if(window.RM)RM.activeGuideSizeId=def.id}

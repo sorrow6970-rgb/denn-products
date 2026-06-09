@@ -5649,6 +5649,33 @@ window.addEventListener('load',function(){setTimeout(init,1000);setTimeout(init,
   flex:1 1 auto;text-align:center;
   color:var(--muted);font-size:10px;font-weight:600;
 }
+#guide-bg-grid .denn-v98-size-wl{
+  margin-top:8px;border-radius:7px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.07);
+  font-size:10px;
+}
+#guide-bg-grid .denn-v98-size-wl>summary{
+  list-style:none;cursor:pointer;
+  padding:7px 9px;color:var(--muted);font-weight:600;
+  user-select:none;
+}
+#guide-bg-grid .denn-v98-size-wl>summary::-webkit-details-marker{display:none}
+#guide-bg-grid .denn-v98-size-wl>summary::before{content:'▸ ';color:var(--faint)}
+#guide-bg-grid .denn-v98-size-wl[open]>summary::before{content:'▾ '}
+#guide-bg-grid .denn-v98-size-wl[open]>summary{color:#f7f2ea}
+#guide-bg-grid .denn-v98-wl-box{
+  display:flex;flex-direction:column;gap:2px;
+  padding:2px 9px 4px;
+}
+#guide-bg-grid .denn-v98-wl-item{
+  display:flex;align-items:center;gap:7px;
+  padding:3px 0;color:#e7e1d6;cursor:pointer;
+}
+#guide-bg-grid .denn-v98-wl-item input{margin:0;flex:0 0 auto;cursor:pointer}
+#guide-bg-grid .denn-v98-wl-hint,#guide-bg-grid .denn-v98-wl-empty{
+  padding:2px 9px 8px;color:var(--faint);font-size:9px;line-height:1.5;
+}
 </style>
 <script id="denn-v35-guide-bg-card-ui-polish">
 (function(){
@@ -5677,8 +5704,38 @@ function renderPolishedGuideCards(){
     card.querySelector('.tb-btn').onclick=function(){window.openGuideBgDetail&&window.openGuideBgDetail(i)};
     card.querySelector('.del-tpl-btn').onclick=function(){window.delGuideBg&&window.delGuideBg(i)};
     Array.prototype.forEach.call(card.querySelectorAll('.denn-v98-move-btn'),function(btn){btn.onclick=function(){window.moveGuideBg&&window.moveGuideBg(i,parseInt(btn.getAttribute('data-dir'),10))};});
+    card.appendChild(buildSizeWhitelist(bg));
     grid.appendChild(card);
   });
+}
+function buildSizeWhitelist(bg){
+  // 배경별 '표시 사이즈' 화이트리스트 → bg.allowedSizeIds(사이즈 id 배열). 빈 배열/없음 = 전체 허용.
+  var sizes=(window.S&&S.frameSizes)||[];
+  var d=document.createElement('details');d.className='denn-v98-size-wl';
+  function count(){return Array.isArray(bg.allowedSizeIds)?bg.allowedSizeIds.length:0}
+  function sumText(){var n=count();return '표시 사이즈 · '+(n?(n+'개 허용'):'전체 허용')}
+  var sum=document.createElement('summary');sum.textContent=sumText();d.appendChild(sum);
+  if(!sizes.length){var e=document.createElement('div');e.className='denn-v98-wl-empty';e.textContent='등록된 액자 사이즈 없음';d.appendChild(e);return d}
+  var box=document.createElement('div');box.className='denn-v98-wl-box';
+  sizes.forEach(function(sz){
+    var sid=sz.id||sz.name;if(!sid)return;
+    var lab=document.createElement('label');lab.className='denn-v98-wl-item';
+    var cb=document.createElement('input');cb.type='checkbox';
+    cb.checked=Array.isArray(bg.allowedSizeIds)&&bg.allowedSizeIds.indexOf(sid)>=0;
+    cb.onchange=function(){
+      var cur=Array.isArray(bg.allowedSizeIds)?bg.allowedSizeIds.slice():[];
+      var p=cur.indexOf(sid);
+      if(cb.checked){if(p<0)cur.push(sid)}else if(p>=0)cur.splice(p,1);
+      bg.allowedSizeIds=cur;  // 빈 배열 = 전체 허용
+      saveNow();sum.textContent=sumText();
+    };
+    lab.appendChild(cb);
+    var t=document.createElement('span');t.textContent=sz.name||sid;lab.appendChild(t);
+    box.appendChild(lab);
+  });
+  d.appendChild(box);
+  var hint=document.createElement('div');hint.className='denn-v98-wl-hint';hint.textContent='아무것도 선택 안 하면 전체 사이즈 허용';d.appendChild(hint);
+  return d;
 }
 window.renderGuideBgs=function(){renderPolishedGuideCards()};
 window.moveGuideBg=function(i,dir){
@@ -5727,7 +5784,10 @@ function renderGuideSoon(){
 }
 document.addEventListener('change',function(ev){
   if(!ev.target)return;
-  if(ev.target.closest&&ev.target.closest('#guide-bg-grid')){saveSoon(80);renderGuideSoon()}
+  if(ev.target.closest&&ev.target.closest('#guide-bg-grid')){
+    if(ev.target.closest('.denn-v98-size-wl')){saveSoon(80);return;}/* 화이트리스트 체크는 자체 핸들러가 저장·summary 갱신. 전체 재렌더 시 details 닫혀 연속 체크 불편 → 재렌더 skip */
+    saveSoon(80);renderGuideSoon();
+  }
 },true);
 window.addEventListener('storage',function(ev){
   if(ev.key==='denn_admin')renderGuideSoon();
