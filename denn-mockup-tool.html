@@ -856,7 +856,7 @@ function init(){
   var am=ADM&&ADM.models;
   if(am&&am.length){MODELS=am.map(function(a){var b=BM[a.id];return b?Object.assign({},b,{name:a.name,sub:a.sub,info:a.info,brand:a.brand,dieline:a.dieline,magsafeDL:a.magsafeDL,printArea:a.printArea,safeMargin:a.safeMargin}):{id:a.id,name:a.name,sub:a.sub||'',info:a.info||'',brand:a.brand||'galaxy',w:a.w||320,h:a.h||620,r:36,safeInset:a.safeMargin||16,safeMargin:a.safeMargin,magCy:(a.h||620)*0.52,magR:(a.w||320)*0.35}});}
   else{MODELS=Object.values(BM);}
-  FS=ADM&&ADM.frameSizes?ADM.frameSizes:[{id:'s4x4',name:'정사각 소형',sub:'10×10 cm',aspect:1},{id:'m4x6',name:'직사각 M (A5)',sub:'15×21 cm',aspect:1.4},{id:'l_a4',name:'A4',sub:'21×29.7 cm',aspect:1.414},{id:'sq_lg',name:'정사각 대형',sub:'30×30 cm',aspect:1},{id:'wide',name:'와이드형',sub:'21×10 cm',aspect:0.476},{id:'tall',name:'세로형',sub:'15×25 cm',aspect:1.667}];
+  FS=ADM&&ADM.frameSizes?ADM.frameSizes.filter(function(s){return !(s&&s.hideInMockup)}):[{id:'s4x4',name:'정사각 소형',sub:'10×10 cm',aspect:1},{id:'m4x6',name:'직사각 M (A5)',sub:'15×21 cm',aspect:1.4},{id:'l_a4',name:'A4',sub:'21×29.7 cm',aspect:1.414},{id:'sq_lg',name:'정사각 대형',sub:'30×30 cm',aspect:1},{id:'wide',name:'와이드형',sub:'21×10 cm',aspect:0.476},{id:'tall',name:'세로형',sub:'15×25 cm',aspect:1.667}];
   FC=ADM&&ADM.frameColors?ADM.frameColors:[{id:'black',name:'블랙',fill:'#1A1A1A',grain:false},{id:'white',name:'화이트',fill:'#EEEEEE',grain:false},{id:'oak',name:'원목 오크',fill:'#A07848',grain:true},{id:'walnut',name:'원목 월넛',fill:'#5A3418',grain:true},{id:'gold',name:'골드',fill:'#C8A864',grain:false},{id:'silver',name:'실버',fill:'#A8AEB4',grain:false}];
   FCATS=ADM&&ADM.frameCategories?ADM.frameCategories:[{id:'wedding',name:'웨딩'},{id:'travel',name:'여행'},{id:'pet',name:'반려동물'},{id:'magazine',name:'매거진'},{id:'daily',name:'일상'}];
   var builtinFT=[{id:'full',name:'Full Photo',type:'builtin',icon:'🖼'},{id:'top_text',name:'Photo+문구',type:'builtin',icon:'📝'},{id:'duo',name:'사진 2장',type:'builtin',icon:'⬛'},{id:'trio',name:'사진 3장',type:'builtin',icon:'▦'},{id:'text_only',name:'텍스트 전용',type:'builtin',icon:'Aa'},{id:'circle',name:'원형 사진',type:'builtin',icon:'⭕'}];
@@ -3206,7 +3206,7 @@ function alignDirectUploadStart(key){
   });
 }
 function normalizeSize(sz,i){sz=sz||{};var w=num(sz.wcm||sz.width||sz.widthCm,0),h=num(sz.hcm||sz.height||sz.heightCm,0);if(!(w>0&&h>0)){var m=String(sz.sub||'').match(/([\d.]+)\s*[×xX]\s*([\d.]+)/);if(m){w=num(m[1],0);h=num(m[2],0)}}if(!(w>0&&h>0))return null;return{id:sz.id||('sz'+i),name:sz.name||('Size '+(i+1)),wcm:w,hcm:h}}
-function actualSizes(){return (adm().frameSizes||[]).map(normalizeSize).filter(Boolean)}
+function actualSizes(){return (adm().frameSizes||[]).filter(function(s){return !(s&&s.hideInMockup)}).map(normalizeSize).filter(Boolean)}
 function preferredRoomDefaultSize(list){
   list=list||actualSizes();
   if(!list.length)return null;
@@ -5005,7 +5005,7 @@ function normSize(sz,i){
 }
 function sizeList(){
   var A=adm(),src=(A.frameSizes&&A.frameSizes.length?A.frameSizes:window.FS)||[];
-  return src.map(normSize).filter(Boolean);
+  return src.filter(function(s){return !(s&&s.hideInMockup)}).map(normSize).filter(Boolean);
 }
 function pickSize(st){
   var id=(st&&(st.defaultSizeId||st.sizeId||st.frameSizeId||st.primarySizeId))||(window.SG&&SG.primarySizeId)||(window.RM&&RM.activeGuideSizeId)||(window.curFSz&&(curFSz.id||curFSz.name));

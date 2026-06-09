@@ -1453,7 +1453,7 @@ function renderFrames(){
     var clkVal=(sz.clock&&sz.clock.size)?sz.clock.size:'';
     var clkX=(sz.clock&&sz.clock.x)?sz.clock.x:'';
     var clkY=(sz.clock&&sz.clock.y)?sz.clock.y:'';
-    return '<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:9px 11px;margin-bottom:7px"><div class="list-row" style="background:transparent;border:none;padding:0;margin-bottom:0"><div class="sw-box" style="background:var(--surf);aspect-ratio:'+(1/sz.aspect)+';width:auto;height:22px;border:1px solid var(--bdr2);border-radius:2px"></div><div class="lname">'+sz.name+' <span class="lsub">'+sz.sub+'</span></div><div class="lact"><button class="mb" onclick="editSz('+i+')" style="margin-right:3px;background:var(--surf);border-color:var(--gold);color:var(--gold)">수정</button><button class="mb danger" onclick="rmSz('+i+')">삭제</button></div></div><div class="sz-clock-row" title="미입력시 기본 시계 설정 사용"><label>⏰ 시계 크기%</label><input type="number" id="sz-clock-'+i+'" min="5" max="50" placeholder="기본" value="'+clkVal+'" style="width:52px"><label>X%</label><input type="number" id="sz-clock-x-'+i+'" min="5" max="95" placeholder="기본" value="'+clkX+'" style="width:48px"><label>Y%</label><input type="number" id="sz-clock-y-'+i+'" min="5" max="95" placeholder="기본" value="'+clkY+'" style="width:48px"><span style="font-size:8.5px;color:var(--faint)">(비워두면 기본값 사용)</span></div></div>';
+    return '<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:9px 11px;margin-bottom:7px"><div class="list-row" style="background:transparent;border:none;padding:0;margin-bottom:0"><div class="sw-box" style="background:var(--surf);aspect-ratio:'+(1/sz.aspect)+';width:auto;height:22px;border:1px solid var(--bdr2);border-radius:2px"></div><div class="lname">'+sz.name+' <span class="lsub">'+sz.sub+'</span></div><div class="lact"><label class="denn-v99-use-toggle" title="해제하면 목업툴·시안 어디에서도 이 사이즈가 노출되지 않습니다(어드민에는 유지)" style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);margin-right:8px;cursor:pointer;white-space:nowrap"><input type="checkbox" onchange="toggleSzMockup('+i+',this.checked)" '+(sz.hideInMockup?'':'checked')+' style="margin:0;cursor:pointer">목업툴 사용</label><button class="mb" onclick="editSz('+i+')" style="margin-right:3px;background:var(--surf);border-color:var(--gold);color:var(--gold)">수정</button><button class="mb danger" onclick="rmSz('+i+')">삭제</button></div></div><div class="sz-clock-row" title="미입력시 기본 시계 설정 사용"><label>⏰ 시계 크기%</label><input type="number" id="sz-clock-'+i+'" min="5" max="50" placeholder="기본" value="'+clkVal+'" style="width:52px"><label>X%</label><input type="number" id="sz-clock-x-'+i+'" min="5" max="95" placeholder="기본" value="'+clkX+'" style="width:48px"><label>Y%</label><input type="number" id="sz-clock-y-'+i+'" min="5" max="95" placeholder="기본" value="'+clkY+'" style="width:48px"><span style="font-size:8.5px;color:var(--faint)">(비워두면 기본값 사용)</span></div></div>';
   }).join('');
   document.getElementById('fc-list').innerHTML=S.frameColors.map(function(fc,i){return '<div class="list-row"><div class="sw-box" style="background:'+fc.fill+';border-radius:5px;border:1px solid var(--bdr2)"></div><div class="lname">'+fc.name+(fc.grain?' <span class="tag new">나뭇결</span>':'')+'</div><div class="lact"><button class="mb danger" onclick="rmFc('+i+')">삭제</button></div></div>';}).join('');
   var thick=S.frameThickness||5.5;document.getElementById('frame-thick').value=thick;document.getElementById('thick-v').textContent=thick+'%';
@@ -1466,6 +1466,14 @@ function renderFrames(){
   if(S.frameMockup){document.getElementById('frame-mku-prev').style.display='block';document.getElementById('frame-mku-empty').style.display='none';document.getElementById('frame-mku-thumb').src=S.frameMockup;}
   renderGuideBgs();
 }
+
+window.toggleSzMockup=function(i,checked){
+  // 목업툴 사용 토글. 해제(checked=false) → hideInMockup=true. 사이즈 객체/값은 보존(소비자 노출만 제외).
+  if(!S.frameSizes||!S.frameSizes[i])return;
+  if(checked)delete S.frameSizes[i].hideInMockup; else S.frameSizes[i].hideInMockup=true;
+  try{if(typeof window.persistState==='function')window.persistState();else if(typeof dennPersistAdminStateV351==='function')dennPersistAdminStateV351(S);}catch(e){}
+  if(window.toast)toast(checked?'목업툴 사용':'목업툴 노출 제외');
+};
 
 function previewSz(){
   var w=parseFloat(v('s-wcm'))||21,h=parseFloat(v('s-hcm'))||29.7;
