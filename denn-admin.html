@@ -5633,6 +5633,22 @@ window.addEventListener('load',function(){setTimeout(init,1000);setTimeout(init,
 #guide-bg-grid .denn-v35-guide-card-actions .del-tpl-btn{
   margin-top:0!important;
 }
+#guide-bg-grid .denn-v98-guide-reorder{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:6px;margin-bottom:7px;
+}
+#guide-bg-grid .denn-v98-move-btn{
+  width:34px;height:26px;flex:0 0 auto;
+  border:1px solid rgba(200,168,100,.42);border-radius:7px;
+  background:#2b2839;color:#f7f2ea;
+  font-family:inherit;font-size:13px;font-weight:700;line-height:1;cursor:pointer;
+}
+#guide-bg-grid .denn-v98-move-btn:hover:not(:disabled){background:#c8a864;color:#17130d}
+#guide-bg-grid .denn-v98-move-btn:disabled{opacity:.32;cursor:default}
+#guide-bg-grid .denn-v98-move-pos{
+  flex:1 1 auto;text-align:center;
+  color:var(--muted);font-size:10px;font-weight:600;
+}
 </style>
 <script id="denn-v35-guide-bg-card-ui-polish">
 (function(){
@@ -5655,14 +5671,24 @@ function renderPolishedGuideCards(){
   S.guideBackgrounds.forEach(function(bg,i){
     var key=bgKey(bg,i),st=S.roomBackgroundSettings[key]||{},card=document.createElement('div');
     card.className='tpl-ca denn-v35-guide-card';
-    card.innerHTML='<div class="tpl-thumb-a fr"><img src="'+bg.dataUrl+'" style="width:100%;height:100%;object-fit:cover"></div><input class="edit-name" value="'+esc(bg.name||'')+'" placeholder="배경 이름"><div class="denn-v35-guide-card-meta">'+setupText(st)+'</div><div class="denn-v35-guide-card-actions"><button class="tb-btn primary" type="button">실제 화면 설정</button><button class="del-tpl-btn" type="button">삭제</button></div>';
+    var last=S.guideBackgrounds.length-1;
+    card.innerHTML='<div class="denn-v98-guide-reorder"><button class="denn-v98-move-btn" type="button" data-dir="-1" title="앞으로"'+(i===0?' disabled':'')+'>←</button><span class="denn-v98-move-pos">'+(i+1)+' / '+(last+1)+'</span><button class="denn-v98-move-btn" type="button" data-dir="1" title="뒤로"'+(i===last?' disabled':'')+'>→</button></div><div class="tpl-thumb-a fr"><img src="'+bg.dataUrl+'" style="width:100%;height:100%;object-fit:cover"></div><input class="edit-name" value="'+esc(bg.name||'')+'" placeholder="배경 이름"><div class="denn-v35-guide-card-meta">'+setupText(st)+'</div><div class="denn-v35-guide-card-actions"><button class="tb-btn primary" type="button">실제 화면 설정</button><button class="del-tpl-btn" type="button">삭제</button></div>';
     card.querySelector('.edit-name').onchange=function(){S.guideBackgrounds[i].name=this.value;saveNow()};
     card.querySelector('.tb-btn').onclick=function(){window.openGuideBgDetail&&window.openGuideBgDetail(i)};
     card.querySelector('.del-tpl-btn').onclick=function(){window.delGuideBg&&window.delGuideBg(i)};
+    Array.prototype.forEach.call(card.querySelectorAll('.denn-v98-move-btn'),function(btn){btn.onclick=function(){window.moveGuideBg&&window.moveGuideBg(i,parseInt(btn.getAttribute('data-dir'),10))};});
     grid.appendChild(card);
   });
 }
 window.renderGuideBgs=function(){renderPolishedGuideCards()};
+window.moveGuideBg=function(i,dir){
+  if(!window.S||!S.guideBackgrounds)return;
+  var arr=S.guideBackgrounds,j=i+dir;
+  if(j<0||j>=arr.length)return;
+  var t=arr[i];arr[i]=arr[j];arr[j]=t;  // per-bg 설정은 bgKey(bg.id) 기준이라 배열 재정렬에도 무손상
+  saveNow();renderPolishedGuideCards();
+  if(window.toast)toast('순서 변경됨');
+};
 function init(){renderPolishedGuideCards()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,400);setTimeout(init,1400)});
 else{setTimeout(init,0);setTimeout(init,900)}
