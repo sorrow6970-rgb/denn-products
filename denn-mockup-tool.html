@@ -905,7 +905,7 @@ function buildUI(){
   ctg.innerHTML=CTPLS.map(function(t,i){return '<div class="tpl-card'+(i===0?' on':'')+'" onclick="selCTpl(this,'+i+')"><div class="tpl-thumb ph">'+(t.dataUrl?'<img src="'+t.dataUrl+'">':t.icon||'📷')+'</div><div class="tpl-name">'+t.name+'</div></div>';}).join('');
   curModel=MODELS[0];curFSz=FS[0];curFCol=FC[0];curFTpl=FTPLS[0];curCTpl=CTPLS[0];
   if(curModel){document.getElementById('model-info').textContent=curModel.info;document.getElementById('ib-model').textContent=curModel.name;var c=document.getElementById('caseCanvas');c.width=curModel.w;c.height=curModel.h; var brand=getModelBrand(curModel); var sel=document.getElementById('model-sel-'+brand); if(sel)sel.value='0';}
-  if(curFSz)document.getElementById('ib-sz').textContent=curFSz.name;
+  if(curFSz&&!window.__dennSizeUnset)document.getElementById('ib-sz').textContent=curFSz.name;/* 고객 미선택 게이트 중엔 '-' 유지(v97). 관리자 모드는 __dennSizeUnset 미설정이라 그대로 표시 */
   if(curFCol)document.getElementById('ib-fc').textContent=curFCol.name;
   buildFrameTextStyleControls();
   setupDrag();renderCase();renderFrame();
@@ -996,6 +996,7 @@ function templateFrameSizeKeys(t){
 }
 function templateMatchesCurrentFrameSize(t){
   if(!t||t.type==='builtin')return true;
+  if(!window.curFSz||window.__dennSizeUnset)return true;/* 사이즈 미선택(게이트) = 전체 사이즈 템플릿 노출. curFSz는 init에 FS[0]로 미리 차므로 __dennSizeUnset로 판정 */
   var keys=templateFrameSizeKeys(t);
   if(!keys.length)return true;
   var cur=currentFrameSizeKeys();
@@ -1026,7 +1027,7 @@ function dennRenderCardCompositeThumbV(tpl,thumbEl){
 function buildFrameTplGrid(catId){
   var tg=document.getElementById('frame-tpl-grid');
   /* ② thumb 비율을 실제 액자 비율(curFSz.aspect=H/W)에 맞춤 → 합성 canvas(cover)·일반 img(contain) 모두 빈 여백/크롭 없이 꽉 참. CSS var로 .tpl-thumb.fr에 상속. */
-  try{var __fra=(window.curFSz&&curFSz.aspect>0)?(1/curFSz.aspect):0;if(tg){if(__fra>0)tg.style.setProperty('--fr-aspect',__fra);else tg.style.removeProperty('--fr-aspect');}}catch(e){}
+  try{var __fra=(window.curFSz&&!window.__dennSizeUnset&&curFSz.aspect>0)?(1/curFSz.aspect):0;if(tg){if(__fra>0)tg.style.setProperty('--fr-aspect',__fra);else tg.style.removeProperty('--fr-aspect');}}catch(e){}
   var filtered=FTPLS.filter(function(t){
     if(!templateMatchesCurrentFrameSize(t))return false;
     /* 시계 그룹 Top tab 필터 */
@@ -7243,19 +7244,19 @@ window.dennRollbackRoomGuideResetDefaultsV73=function(){
   function sizeCatHasTpl(s,catId){return tpls().some(function(t){return tplMatchesSize(t,s)&&tplMatchesCat(t,catId)&&tplMatchesGroup(t)})}
   function ensureUsableSize(catId){
     /* 사이즈 자동 전환하지 않음. 현재 사이즈+카테고리+시계그룹에 템플릿 유무만 판정해 입력 잠금. */
-    var s=window.curFSz,has=!!(s&&sizeCatHasTpl(s,catId||window.curCatId||'all'));
+    var s=window.__dennSizeUnset?null:window.curFSz,has=s?!!sizeCatHasTpl(s,catId||window.curCatId||'all'):true;/* 사이즈 미선택(게이트)=전체 브라우징 허용(잠금 안 함). __dennSizeUnset로 판정 */
     setNoTemplateLock(!has);
     if(!has)window.curFTpl=null;
     return has;
   }
   function refreshButtons(catId){
-    var s=window.curFSz;
+    var s=window.__dennSizeUnset?null:window.curFSz;/* 사이즈 미선택(게이트)이면 카테고리 전부 활성 */
     /* 사이즈 칩: 항상 활성(상위 필터) — 비활성 전부 해제 */
     var chips=by('frame-sz-chips');
     if(chips)Array.prototype.forEach.call(chips.querySelectorAll('.chip'),function(chip){chip.classList.remove('denn-size-disabled');chip.setAttribute('aria-disabled','false');chip.setAttribute('data-denn-disabled','0');chip.title=''});
     /* 카테고리 칩: 현재 사이즈+시계그룹에 템플릿 없는 카테고리 비활성 */
     var cc=by('frame-cat-chips');
-    if(cc)Array.prototype.forEach.call(cc.querySelectorAll('.cat-chip'),function(c){var cid=c.getAttribute('data-cat-id')||'all';var ok=!!(s&&sizeCatHasTpl(s,cid));c.classList.toggle('denn-cat-disabled',!ok);c.setAttribute('data-denn-cat-disabled',ok?'0':'1');c.title=ok?'':'이 사이즈에는 해당 카테고리 템플릿이 없습니다'});
+    if(cc)Array.prototype.forEach.call(cc.querySelectorAll('.cat-chip'),function(c){var cid=c.getAttribute('data-cat-id')||'all';var ok=s?!!sizeCatHasTpl(s,cid):true;/* 사이즈 미선택=전체 카테고리 활성(전체 사이즈 브라우징) */c.classList.toggle('denn-cat-disabled',!ok);c.setAttribute('data-denn-cat-disabled',ok?'0':'1');c.title=ok?'':'이 사이즈에는 해당 카테고리 템플릿이 없습니다'});
   }
   function sync(catId,render){
     var cat=catId||window.curCatId||'all';
@@ -12372,6 +12373,15 @@ window.addEventListener('load',later);
   if(window.__DENN_SIZE_DROPDOWN_V96)return; window.__DENN_SIZE_DROPDOWN_V96=true;
   // 사이즈 칩 → 드롭다운으로 대체(확장성+모바일). 기존 칩은 숨겨두고, select가 칩 클릭을 대리해
   // selFSz 래퍼(v36 기본문구/v80 사이즈권한)·size-disabled·템플릿 필터를 그대로 활용. JS 실패 시 칩 fallback.
+  function selectAllSizes(){
+    /* 2026-06-09: '전체 사이즈' = 사이즈 무관 전체 템플릿 브라우징. __dennSizeUnset 재활성 + 칩 선택 해제 + grid 재빌드(메인 캔버스는 구체 사이즈 선택 전까지 오버레이). */
+    window.__dennSizeAll=true; window.__dennSizeUnset=true;
+    try{Array.prototype.forEach.call(document.querySelectorAll('#frame-sz-chips .chip'),function(c){c.classList.remove('on')});}catch(e){}
+    var lab=document.getElementById('ib-sz'); if(lab)lab.textContent='전체';
+    try{if(window.buildFrameTplGrid)window.buildFrameTplGrid(window.curCatId||'all');}catch(e){}
+    try{sync();}catch(e){}
+  }
+  window.dennSelectAllSizesV=selectAllSizes;
   function sync(){
     try{
       var chips=document.getElementById('frame-sz-chips'); if(!chips)return;
@@ -12380,6 +12390,8 @@ window.addEventListener('load',later);
       if(!sel){
         sel=document.createElement('select'); sel.id='frame-sz-select'; sel.className='inp'; sel.style.width='100%';
         sel.addEventListener('change',function(){
+          if(sel.value==='__all__'){selectAllSizes();return;}
+          if(sel.value==='__none__'){return;}
           var c=document.querySelectorAll('#frame-sz-chips .chip')[+sel.value];
           if(c&&!c.classList.contains('denn-size-disabled'))c.click();
         });
@@ -12392,11 +12404,13 @@ window.addEventListener('load',later);
         if(c.classList.contains('on'))active=i;
         return '<option value="'+i+'"'+(c.classList.contains('denn-size-disabled')?' disabled':'')+'>'+name+(sub?' · '+sub:'')+'</option>';
       }).join('');
-      /* E(2026-06-04): 사이즈 미선택(초기) 상태면 '사이즈를 선택하세요' placeholder 노출 */
-      var __none=!!window.__dennSizeUnset||active<0;
+      if(active>=0)window.__dennSizeAll=false;/* 구체 사이즈 선택되면 전체 모드 해제 */
+      /* E(2026-06-04): 사이즈 미선택(초기) 상태면 '사이즈를 선택하세요' placeholder 노출. 2026-06-09: '전체 사이즈' 옵션 추가(사이즈 무관 브라우징) */
+      var __none=(!!window.__dennSizeUnset||active<0)&&!window.__dennSizeAll;
+      html='<option value="__all__">전체 사이즈</option>'+html;
       if(__none)html='<option value="__none__">사이즈를 선택하세요</option>'+html;
       if(sel.innerHTML!==html)sel.innerHTML=html;
-      var __want=__none?'__none__':String(active);
+      var __want=window.__dennSizeAll?'__all__':(__none?'__none__':String(active));
       if(sel.value!==__want)sel.value=__want;
       chips.style.display='none';
     }catch(e){}
@@ -12439,14 +12453,15 @@ window.addEventListener('load',later);
   }
   function disableCats(){var cc=by('frame-cat-chips');if(cc)Array.prototype.forEach.call(cc.querySelectorAll('.cat-chip'),function(c){c.classList.add('denn-cat-disabled');c.setAttribute('data-denn-cat-disabled','1')})}
   function gridPrompt(){var tg=by('frame-tpl-grid');if(tg)tg.innerHTML='<div style="grid-column:1/-1;font-size:11px;color:var(--warm);text-align:center;padding:20px 16px;line-height:1.6">먼저, <strong>액자 사이즈</strong>를 선택해 주세요.</div>'}
-  function gate(){gridPrompt();disableCats();overlay(true);lockInputs(true);}
+  /* 2026-06-09: 사이즈-우선 게이트 완화 → 템플릿↔사이즈 상호 필터. 미선택 상태에서도 카테고리/시계그룹으로 전체 사이즈 템플릿 브라우징 허용. 단 메인 캔버스 렌더는 사이즈 선택 전까지 오버레이 유지(액자 렌더에 사이즈 필요). */
+  function gate(){overlay(true);lockInputs(true);}
   var oldBuild=window.buildFrameTplGrid;
-  if(typeof oldBuild==='function')window.buildFrameTplGrid=function(catId){if(window.__dennSizeUnset){gate();return;}return oldBuild.apply(this,arguments)};
+  if(typeof oldBuild==='function')window.buildFrameTplGrid=function(catId){var r=oldBuild.apply(this,arguments);if(window.__dennSizeUnset){overlay(true);lockInputs(true);}return r;};
   var oldRender=window.renderFrame;
   if(typeof oldRender==='function')window.renderFrame=function(){if(window.__dennSizeUnset){overlay(true);return;}return oldRender.apply(this,arguments)};
   var oldSel=window.selFSz;
   if(typeof oldSel==='function')window.selFSz=function(){window.__dennSizeUnset=false;overlay(false);lockInputs(false);var r=oldSel.apply(this,arguments);/* 2026-06-08: 게이트 해제 후 기본문구가 필드에 적용됐으니 우측 요소 리스트도 재렌더(applyFrameDefaultTexts는 input 미발화) */try{if(window.__dennRenderElemListV)setTimeout(window.__dennRenderElemListV,0);}catch(e){}return r};
-  function boot(){if(!window.__dennSizeUnset)return;var lab=by('ib-sz');if(lab)lab.textContent='-';gate();}
+  function boot(){if(!window.__dennSizeUnset)return;var lab=by('ib-sz');if(lab)lab.textContent='-';gate();try{if(window.buildFrameTplGrid)window.buildFrameTplGrid(window.curCatId||'all');}catch(e){}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,520)});
   else setTimeout(boot,320);
   window.addEventListener('load',function(){setTimeout(boot,1000)});
