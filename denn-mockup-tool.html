@@ -12054,7 +12054,7 @@ window.addEventListener('load',later);
   #page-frame .panel[data-msheet]{
     position:fixed!important;left:0;right:0;bottom:0;order:0;
     width:100%;max-width:none!important;box-sizing:border-box;
-    height:var(--msheet-h,46vh);max-height:88vh;
+    height:var(--msheet-h,74vh);max-height:90vh;
     background:var(--surface,#FDFAF4);border-top:1px solid var(--border,#DDD5C8);
     border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.22);
     z-index:920;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
@@ -13188,6 +13188,82 @@ input[type=range]{accent-color:#777}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',restructure);
   else restructure();
   window.addEventListener('load',function(){setTimeout(restructure,200)});
+})();
+</script>
+<style id="denn-v104-room-sheet-css">
+/* 작업7: 내 공간(룸 모달) 모바일 바텀시트 — 캔버스 풀 + 하단 탭바 + 슬라이드업 시트 + 반투명.
+   ★ body(모달 본문) 기준 position:absolute 사용 — #room-modal의 backdrop-filter 컨테이닝블록/flex stretch 회피(v104 1차 버그 수정).
+   DOM 재구성은 모바일 폭에서만(JS 가드) → PC(≥861) 무영향. */
+@media(max-width:860px){
+  #room-modal>div>div:nth-child(2){position:relative!important;display:block!important;height:100%!important;min-height:0!important;overflow:hidden!important}
+  #room-modal #rm-canvas-area{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;min-height:0!important;flex:none!important;overflow:auto!important;transition:opacity .2s}
+  #room-modal.denn-rm-open #rm-canvas-area{opacity:.34}
+  #room-modal #rm-mobile-resize-handle{display:none!important}
+  #room-modal .rm-right-panel{display:none!important}
+
+  /* 하단 바(액션 2×2 위 + 탭바 아래) — body 기준 absolute */
+  #room-modal .denn-rm-bar{position:absolute!important;left:0;right:0;bottom:0;z-index:30;display:flex;flex-direction:column}
+  /* 탭바 = 프레임 탭바와 동일(컴팩트 58px, 카드 테두리 제거) */
+  #room-modal .denn-rm-bar .rm-tabs{margin:0!important;border-radius:0!important;background:var(--surface,#FDFAF4)!important;border-top:1px solid var(--border,#DDD5C8)!important;box-shadow:0 -2px 10px rgba(0,0,0,.06);padding:0!important;display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:0!important;height:58px!important;align-items:stretch!important;box-sizing:border-box}
+  #room-modal .denn-rm-bar .rm-tab{height:100%!important;min-height:0!important;padding:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;background:transparent!important;box-shadow:none!important;border:none!important;color:var(--warm,#8A7D6E)!important}
+  #room-modal .denn-rm-bar .rm-tab.on{background:transparent!important;box-shadow:none!important;color:var(--gold2,#8C6E3C)!important}
+  #room-modal .denn-rm-bar .rm-tab-ico{width:22px!important;height:22px!important;font-size:18px!important}
+  #room-modal .denn-rm-bar .rm-tab-ico svg{width:22px!important;height:22px!important}
+  #room-modal .denn-rm-bar .rm-tab-lab{font-size:10px!important;font-weight:500!important}
+  #room-modal .denn-rm-bar .rm-right-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;padding:8px 10px!important;margin:0!important;background:var(--surface,#FDFAF4)!important;border-top:1px solid var(--border,#DDD5C8)!important}
+  #room-modal.denn-rm-open .denn-rm-bar .rm-right-actions{display:none!important}
+  #room-modal .denn-rm-bar .rm-action-btn{height:36px!important;min-height:0!important;font-size:11px!important;font-weight:600!important;border-radius:8px!important;padding:0 6px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0!important}
+
+  /* 시트(leftPanel)=섹션 패널 — body 기준 absolute, 탭바 위. 활성 pane만(기존 핸들러 inline display) */
+  #room-modal .rm-left-panel-msheet{position:absolute!important;left:0;right:0;bottom:58px;z-index:25;width:100%!important;max-width:none!important;box-sizing:border-box;background:var(--surface,#FDFAF4)!important;border:none!important;border-radius:16px 16px 0 0!important;box-shadow:0 -10px 30px rgba(0,0,0,.2)!important;max-height:64vh!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;padding:6px 14px 16px!important;display:block!important;transform:translateY(118%);transition:transform .26s cubic-bezier(.4,0,.2,1)}
+  #room-modal.denn-rm-open .rm-left-panel-msheet{transform:translateY(0)}
+  #room-modal .denn-rm-grip{width:46px;height:5px;border-radius:3px;background:var(--warm,#8A7D6E);opacity:.5;margin:2px auto 10px}
+}
+</style>
+<script id="denn-v104-room-sheet">
+(function(){
+  'use strict';
+  if(window.__DENN_ROOM_SHEET_V104)return; window.__DENN_ROOM_SHEET_V104=true;
+  var MAXW=860;
+  function build(){
+    if(window.innerWidth>MAXW)return false;               /* 모바일 폭에서만 DOM 재구성 → PC 안전 */
+    var modal=document.getElementById('room-modal'); if(!modal||!modal.__dennRestruct)return false;
+    if(modal.__dennRoomSheet)return true;
+    var inner=modal.children[0]; var body=inner&&inner.children[1]; if(!body)return false;
+    var leftPanel=body.children[0];
+    var tabRow=leftPanel&&leftPanel.querySelector('.rm-tabs');
+    var right=body.querySelector('.rm-right-panel');
+    var actions=right&&right.querySelector('.rm-right-actions');
+    var guideScroll=right&&right.querySelector('.rm-right-scroll');
+    if(!leftPanel||!tabRow)return false;
+    modal.__dennRoomSheet=true;
+    leftPanel.classList.add('rm-left-panel-msheet');
+    if(!leftPanel.querySelector('.denn-rm-grip')){var g=document.createElement('div');g.className='denn-rm-grip';leftPanel.insertBefore(g,leftPanel.firstChild);}
+    /* 가이드 갤러리 → 배경 pane으로 이동 */
+    var bgPane=leftPanel.querySelector('[data-rm-pane="bg"]');
+    if(guideScroll&&bgPane)bgPane.appendChild(guideScroll);
+    /* 긴 라벨 축약(2×2 폭) */
+    if(actions)Array.prototype.forEach.call(actions.children,function(b){if(b&&/돌아가기/.test(b.textContent||''))b.textContent='← 돌아가기';});
+    /* 하단 바: 액션(위) + 탭바(아래) — body(모달 본문)에 append → absolute 기준 */
+    var bar=document.createElement('div');bar.className='denn-rm-bar';
+    if(actions)bar.appendChild(actions);
+    bar.appendChild(tabRow);
+    body.appendChild(bar);
+    function closeSheet(){modal.classList.remove('denn-rm-open');leftPanel.querySelectorAll('[data-rm-pane]').forEach(function(p){p.style.display='none';});tabRow.querySelectorAll('.rm-tab').forEach(function(b){b.classList.remove('on');});modal.__rmCurKey=null;}
+    function openKey(key){modal.classList.add('denn-rm-open');modal.__rmCurKey=key;leftPanel.scrollTop=0;}
+    closeSheet();                                          /* 기본=닫힘 */
+    tabRow.addEventListener('click',function(e){
+      var btn=e.target&&e.target.closest?e.target.closest('.rm-tab'):null; if(!btn)return;
+      var key=btn.getAttribute('data-tab');
+      if(modal.classList.contains('denn-rm-open')&&modal.__rmCurKey===key)closeSheet();
+      else openKey(key);
+    });
+    window.dennRoomSheet={open:openKey,close:closeSheet};
+    return true;
+  }
+  var tries=0,iv=setInterval(function(){tries++;if(build()||tries>80)clearInterval(iv);},200);
+  document.addEventListener('DOMContentLoaded',build);
+  window.addEventListener('resize',function(){try{build();}catch(e){}});
 })();
 </script>
 
