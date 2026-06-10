@@ -10,7 +10,7 @@
 ### ★★ 다음 세션(내일) 시작점 — 사용자 지정 순서
 1. **가이드배경 순서 변경** [안전·소, 조사완료] — admin 카드에 ←/→ + `moveGuideBg(i,dir)`. 안정 id라 재정렬 무손상. (상세: docs/2026-06-08-session-handoff.md §2)
 2. **가이드배경별 표시가능 사이즈 화이트리스트** [중상, 사전평가 필요] — 배경별 allowedSizeIds 저장→내공간보기/게이트 사이즈 필터.
-3. (여유 시) **가이드배경 dataUrl→Firebase Storage 이전**(LS 경량화·clobber 근본대책) — 큰 작업, 별도 평가.
+3. ~~가이드배경 dataUrl→Firebase Storage 이전~~ → ✅ **이미 완료(2026-06-10 검증)**. admin 마이그 인프라(`dennFirebase.uploadDataUrl` L14648 → `migrateGuideBgs` L14891 → `sweepHeavyV2` L14989 자동트리거)가 가동돼 가이드배경 4개 전부 `dataUrl=https URL`+`storagePath`로 in-memory·localStorage 영속화(reload-safe, LS 경량화 달성). reader(`bg.dataUrl` 직접)는 URL이라 무수정 동작. ⚠️ `slimSnapshotState`(L5865) guideBg slim 조건이 frameTemplates(L5881)보다 허술하나 **undo 스냅샷 링(SNAP_KEY) 전용**이라 메인 데이터 무영향 — 옛 스냅샷 복원 시 가이드 깨질 잠재버그만 남음(우선순위 낮음, 미수정).
 
 ### 오늘(2026-06-08) 완료분 — 작업5 마감 + 손실 재발방지
 - **작업5 고객 시안확인**: 게이트 3컬럼 UI 확대·버튼테두리 통일·상하여백 대칭(`3042dab`,`2b53595`) + **배경별 사이즈 기준위치(앵커)**(`54ea908`, drawFrame 단일지점 강제·관리자모드 전용) + **게이트 시계 표시 복원**(`54ea908`, clockOn 캡처/복원; ⚠️기존 발급분은 재발급/수정저장 필요).
