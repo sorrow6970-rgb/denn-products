@@ -12044,7 +12044,7 @@ window.addEventListener('load',later);
   header .tabbar{display:none!important}
 
   /* 미리보기(상단 flex, 가변) + 메뉴(하단, 가변높이 분할) + 고정 탭바. 컨테이너 하단패딩=탭바58 */
-  #page-frame.main.on{display:flex!important;flex-direction:column!important;height:calc(100vh - 95px)!important;height:calc(100svh - 95px)!important;overflow:hidden!important;padding-bottom:106px!important;box-sizing:border-box}
+  #page-frame.main.on{display:flex!important;flex-direction:column!important;height:calc(100vh - 95px)!important;height:calc(100svh - 95px)!important;overflow:hidden!important;padding-bottom:158px!important;box-sizing:border-box}
   #page-frame.main.on>.preview-area{order:1;flex:1 1 auto!important;height:auto!important;min-height:120px;width:100%;padding:4px 2px!important;overflow:hidden;transition:opacity .2s}
   /* 메뉴 열림 시 액자 반투명(메뉴가 그 위를 덮음, 액자-메뉴 비연동) */
   #page-frame.denn-msheet-active>.preview-area{opacity:.32}
@@ -12101,15 +12101,21 @@ window.addEventListener('load',later);
   /* 항시 액션바 (탭바 위): 내공간 / 시안저장 — 메뉴 닫힘일 때만 */
   .denn-msheet-actionbar{
     position:fixed;left:0;right:0;bottom:58px;z-index:929;
-    display:flex;gap:8px;padding:8px 10px;background:linear-gradient(to top,var(--surface,#FDFAF4) 72%,rgba(253,250,244,0));
+    display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:8px 10px;
+    background:linear-gradient(to top,var(--surface,#FDFAF4) 82%,rgba(253,250,244,0));
   }
   #page-frame.denn-msheet-active .denn-msheet-actionbar{display:none!important}
-  .denn-msheet-actionbar button{
-    flex:1;height:40px;border-radius:9px;border:1px solid var(--gold2,#8C6E3C);
-    font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;
+  .denn-msheet-actionbar button,.denn-msheet-actionbar a{
+    height:40px;border-radius:9px;border:1px solid var(--border,#DDD5C8);
+    font-size:12px;font-weight:600;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;
+    text-decoration:none;box-sizing:border-box;white-space:nowrap;padding:0 6px;
   }
+  .denn-msheet-actionbar svg{width:15px;height:15px;flex:none;display:block}
+  .denn-msheet-actionbar span{display:inline-flex;align-items:center;line-height:1}
+  .denn-msheet-ab-order{background:#FAE100;color:#3a2e00;border-color:#FAE100;font-weight:700}
+  .denn-msheet-ab-home{background:#fff;color:var(--warm,#8A7D6E)}
   .denn-msheet-ab-room{background:#fff;color:var(--gold2,#8C6E3C)}
-  .denn-msheet-ab-save{background:var(--gold2,#8C6E3C);color:#fff}
+  .denn-msheet-ab-save{background:var(--gold2,#8C6E3C);color:#fff;border-color:var(--gold2,#8C6E3C)}
 }
 </style>
 <script id="denn-v103-mobile-sheet">
@@ -12135,8 +12141,8 @@ window.addEventListener('load',later);
       if(ch.className&&(''+ch.className).indexOf('denn-msheet-head')>=0)return;
       if(ch.getAttribute('data-mgrp'))return;              /* idempotent */
       if(ch.tagName==='HR'){ch.setAttribute('data-mgrp','_hr');return;}
-      /* 액션스택(내공간/저장/주문제작/홈)은 설정 탭에 배치 — 주문제작·홈 링크 노출 */
-      if(ch.id==='denn-frame-action-stack'){ch.setAttribute('data-mgrp','clock');return;}
+      /* 액션스택은 시트에 숨김(원본 주문제작/홈 버튼 보존) — 액션바에서 위임 클릭 */
+      if(ch.id==='denn-frame-action-stack'){ch.setAttribute('data-mgrp','_act');return;}
       for(var i=0;i<MAP.length;i++){ if(ch.querySelector&&ch.querySelector(MAP[i][0])){ch.setAttribute('data-mgrp',MAP[i][1]);return;} }
     });
   }
@@ -12155,11 +12161,16 @@ window.addEventListener('load',later);
       setupGrip(head.querySelector('.denn-msheet-grip'),panel);
     }
     var ab=document.createElement('div');ab.className='denn-msheet-actionbar';
-    var bRoom=document.createElement('button');bRoom.type='button';bRoom.className='denn-msheet-ab-room';bRoom.innerHTML='🏠 내 공간';
+    /* 주문제작(카카오 옐로우, 주 CTA) — 실제 주입버튼 click 위임(라벨/모달/상태 그대로 재사용) */
+    var bOrder=document.createElement('button');bOrder.type='button';bOrder.className='denn-msheet-ab-order';bOrder.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-8.5 8.5 9 9 0 01-3.4-.6L3 21l1.6-5.1A8.38 8.38 0 014 11.5 8.5 8.5 0 0112.5 3 8.38 8.38 0 0121 11.5z"/></svg><span>주문제작 의뢰하기</span>';
+    bOrder.addEventListener('click',function(){var r=document.getElementById('denn-v36-order-btn-frame');if(r)r.click();else if(window.DENNOrderRequestV36&&window.DENNOrderRequestV36.open)window.DENNOrderRequestV36.open('frame');});
+    /* 홈 — 원본 홈 링크의 href/target 미러 */
+    var aHome=document.createElement('a');aHome.className='denn-msheet-ab-home';var hsrc=document.getElementById('denn-sales-home-btn');aHome.href=(hsrc&&hsrc.getAttribute('href'))||'https://dennproducts.com/';aHome.target=(hsrc&&hsrc.getAttribute('target'))||'_self';aHome.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span>홈페이지로 돌아가기</span>';
+    var bRoom=document.createElement('button');bRoom.type='button';bRoom.className='denn-msheet-ab-room';bRoom.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M9.5 20v-5h5v5"/></svg><span>내 공간에서 보기</span>';
     bRoom.addEventListener('click',function(){if(typeof window.openRoomMockup==='function')window.openRoomMockup();});
-    var bSave=document.createElement('button');bSave.type='button';bSave.className='denn-msheet-ab-save';bSave.innerHTML='⬇ 시안저장';
+    var bSave=document.createElement('button');bSave.type='button';bSave.className='denn-msheet-ab-save';bSave.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 20h14"/></svg><span>시안 이미지 저장</span>';
     bSave.addEventListener('click',function(){if(typeof window.dlCanvas==='function')window.dlCanvas('frame');});
-    ab.appendChild(bRoom);ab.appendChild(bSave);pf.appendChild(ab);
+    ab.appendChild(bRoom);ab.appendChild(aHome);ab.appendChild(bOrder);ab.appendChild(bSave);pf.appendChild(ab);
     var tb=document.createElement('div');tb.className='denn-msheet-tabbar';
     TABS.forEach(function(t){
       var b=document.createElement('button');b.type='button';b.className='denn-msheet-tab';b.setAttribute('data-g',t[0]);
