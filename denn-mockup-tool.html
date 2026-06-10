@@ -9527,8 +9527,8 @@ window.addEventListener('load',run);
       var __dennFH=(__dennOriV64&&__dennOriV64.mode==='landscape')?aw:ah;
       var fit=Math.min(1.45,__dennFW/s.w,__dennFH/s.h);
       var mob=previewMode()==='mobile';
-      var raw=fit*(mob?.56:.868)*(userScale()/100);
-      var scale=mob?Math.max(.34,Math.min(1.45,raw)):Math.max(.14,Math.min(4,raw));
+      var raw=fit*(mob?.92:.868)*(userScale()/100);/* 모바일 배율 .56→.92: 바텀시트 풀스크린 미리보기에서 액자 확대(2026-06-10) */
+      var scale=mob?Math.max(.34,Math.min(1.55,raw)):Math.max(.14,Math.min(4,raw));
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
       wrap.style.setProperty('transform','scale('+scale+')','important');
@@ -12033,6 +12033,199 @@ window.addEventListener('load',later);
   #page-frame.denn-pc-shell-on #frame-preview-scale-box{top:auto!important;bottom:16px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important}
 }
 </style>
+<style id="denn-v103-mobile-sheet-css">
+/* 작업7: 액자 탭(#page-frame) 모바일 바텀시트 — @media max-width:860px 한정, PC(≥861) 완전 무영향.
+   노드 이동 없이 .panel을 바텀시트로 변신 + CSS 그룹 필터(data-mgrp). PC 셸과 시·공간 배타. */
+@media(min-width:861px){
+  .denn-msheet-tabbar,.denn-msheet-actionbar,.denn-msheet-backdrop{display:none!important}
+}
+@media(max-width:860px){
+  /* 상단 헤더 탭(액자·프레임 / 폰케이스) 제거 — 모바일 풀스크린 */
+  header .tabbar{display:none!important}
+
+  /* 미리보기(상단 flex, 가변) + 메뉴(하단, 가변높이 분할) + 고정 탭바. 컨테이너 하단패딩=탭바58 */
+  #page-frame.main.on{display:flex!important;flex-direction:column!important;height:calc(100vh - 95px)!important;height:calc(100svh - 95px)!important;overflow:hidden!important;padding-bottom:106px!important;box-sizing:border-box}
+  #page-frame.main.on>.preview-area{order:1;flex:1 1 auto!important;height:auto!important;min-height:120px;width:100%;padding:4px 2px!important;overflow:hidden;transition:opacity .2s}
+  /* 메뉴 열림 시 액자 반투명(메뉴가 그 위를 덮음, 액자-메뉴 비연동) */
+  #page-frame.denn-msheet-active>.preview-area{opacity:.32}
+  #page-frame .mobile-split-handle{display:none!important}
+
+  /* 메뉴(.panel): 오버레이 바텀시트(액자와 비연동). 그립 드래그로 높이 조절 */
+  #page-frame .panel[data-msheet]{
+    position:fixed!important;left:0;right:0;bottom:0;order:0;
+    width:100%;max-width:none!important;box-sizing:border-box;
+    height:var(--msheet-h,46vh);max-height:88vh;
+    background:var(--surface,#FDFAF4);border-top:1px solid var(--border,#DDD5C8);
+    border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.22);
+    z-index:920;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+    transform:translateY(110%);transition:transform .26s cubic-bezier(.4,0,.2,1);
+    padding:0 14px calc(64px + env(safe-area-inset-bottom))!important;/* 하단 탭바(58) 가림 방지 */
+  }
+  #page-frame .panel[data-msheet].denn-msheet-open{transform:translateY(0)}
+  #page-frame .panel[data-msheet].denn-msheet-drag{transition:none}
+  /* 헤더(그립+타이틀+X) sticky */
+  #page-frame .panel[data-msheet] .denn-msheet-head{
+    position:sticky;top:0;background:var(--surface,#FDFAF4);z-index:2;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 2px 8px;margin:0 0 6px;border-bottom:1px solid var(--border,#DDD5C8);
+  }
+  #page-frame .panel[data-msheet] .denn-msheet-grip{
+    position:absolute;top:5px;left:50%;transform:translateX(-50%);
+    width:48px;height:5px;border-radius:3px;background:var(--warm,#8A7D6E);opacity:.5;
+    cursor:row-resize;touch-action:none;
+  }
+  #page-frame .panel[data-msheet] .denn-msheet-title{font-size:14px;font-weight:700;color:var(--ink,#2c2418)}
+  #page-frame .panel[data-msheet] .denn-msheet-x{font-size:23px;line-height:1;padding:2px 10px;cursor:pointer;color:var(--warm,#8A7D6E)}
+  /* 그룹 필터: 기본 전부 숨김 → 헤더 + 활성 그룹만 노출 */
+  #page-frame .panel[data-msheet] > *{display:none!important}
+  #page-frame .panel[data-msheet] > .denn-msheet-head{display:flex!important}
+  #page-frame .panel[data-msheet][data-grp="tpl"]   > [data-mgrp="tpl"]{display:block!important}
+  #page-frame .panel[data-msheet][data-grp="img"]   > [data-mgrp="img"]{display:block!important}
+  #page-frame .panel[data-msheet][data-grp="text"]  > [data-mgrp="text"]{display:block!important}
+  #page-frame .panel[data-msheet][data-grp="color"] > [data-mgrp="color"]{display:block!important}
+  #page-frame .panel[data-msheet][data-grp="clock"] > [data-mgrp="clock"]{display:block!important}
+
+  /* 하단 고정 탭바 (5탭) */
+  .denn-msheet-tabbar{
+    position:fixed;left:0;right:0;bottom:0;height:58px;z-index:930;
+    display:flex;background:var(--surface,#FDFAF4);border-top:1px solid var(--border,#DDD5C8);
+    box-shadow:0 -2px 10px rgba(0,0,0,.06);padding-bottom:env(safe-area-inset-bottom);
+  }
+  .denn-msheet-tab{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    font-size:10px;color:var(--warm,#8A7D6E);cursor:pointer;border:none;background:none;padding:0;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .denn-msheet-tab svg{width:22px;height:22px}
+  .denn-msheet-tab.denn-msheet-on{color:var(--gold2,#8C6E3C)}
+  /* 항시 액션바 (탭바 위): 내공간 / 시안저장 — 메뉴 닫힘일 때만 */
+  .denn-msheet-actionbar{
+    position:fixed;left:0;right:0;bottom:58px;z-index:929;
+    display:flex;gap:8px;padding:8px 10px;background:linear-gradient(to top,var(--surface,#FDFAF4) 72%,rgba(253,250,244,0));
+  }
+  #page-frame.denn-msheet-active .denn-msheet-actionbar{display:none!important}
+  .denn-msheet-actionbar button{
+    flex:1;height:40px;border-radius:9px;border:1px solid var(--gold2,#8C6E3C);
+    font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;
+  }
+  .denn-msheet-ab-room{background:#fff;color:var(--gold2,#8C6E3C)}
+  .denn-msheet-ab-save{background:var(--gold2,#8C6E3C);color:#fff}
+}
+</style>
+<script id="denn-v103-mobile-sheet">
+(function(){
+  'use strict';
+  if(window.__DENN_MSHEET_V103)return; window.__DENN_MSHEET_V103=true;
+  var SVG={
+    tpl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 9.5l-9 9-2-2 9-9z"/><path d="M13 8l3 3"/><path d="M18 3v2M18 7v2M15.5 5h2M19.5 5h2"/><path d="M20 13l.6 1.4 1.4.6-1.4.6L20 17l-.6-1.4L18 15l1.4-.6z"/></svg>',
+    img:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h10a2 2 0 012 2v10"/><rect x="3" y="7" width="14" height="14" rx="1.5"/><circle cx="7.5" cy="11.5" r="1.1"/><path d="M3 18l4-4 3 3 4-4 3 3"/></svg>',
+    text:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6V3h3"/><path d="M21 6V3h-3"/><path d="M3 18v3h3"/><path d="M21 18v3h-3"/><path d="M8 8h8"/><line x1="12" y1="8" x2="12" y2="16"/></svg>',
+    color:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12c0 1.5 1 2 2 2h2.5a2.5 2.5 0 010 5c0 1.5 2 3 5.5 3z"/><circle cx="7.5" cy="10.5" r=".9"/><circle cx="11.5" cy="7" r=".9"/><circle cx="16" cy="9" r=".9"/><circle cx="16.5" cy="14" r=".9"/></svg>',
+    clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="11" y2="6"/><line x1="15" y1="6" x2="20" y2="6"/><circle cx="13" cy="6" r="2"/><line x1="4" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="20" y2="12"/><circle cx="9" cy="12" r="2"/><line x1="4" y1="18" x2="14" y2="18"/><line x1="18" y1="18" x2="20" y2="18"/><circle cx="16" cy="18" r="2"/></svg>'
+  };
+  var TABS=[['tpl','템플릿'],['img','이미지'],['text','문구'],['color','색상'],['clock','설정']];
+  var LABEL={tpl:'템플릿',img:'이미지',text:'문구',color:'색상',clock:'설정'};
+  /* PC 셸 build()(L12143~)과 동일한 marker-ID 분류 규칙. 부모에 data-mgrp 부여(querySelector 자손검색 무파괴). */
+  var MAP=[['#frame-sz-chips','tpl'],['#frame-tpl-grid','tpl'],['#frame-color-chips','color'],['#frame-text-style-box','color'],['#frame-drop','img'],['#f-main','text'],['#tog-clock','clock']];
+  function byId(id){return document.getElementById(id);}
+  function panelOf(){var pf=byId('page-frame');return pf&&pf.querySelector('.panel');}
+  function tagGroups(panel){
+    Array.prototype.forEach.call(panel.children,function(ch){
+      if(!ch.getAttribute)return;
+      if(ch.className&&(''+ch.className).indexOf('denn-msheet-head')>=0)return;
+      if(ch.getAttribute('data-mgrp'))return;              /* idempotent */
+      if(ch.tagName==='HR'){ch.setAttribute('data-mgrp','_hr');return;}
+      /* 액션스택(내공간/저장/주문제작/홈)은 설정 탭에 배치 — 주문제작·홈 링크 노출 */
+      if(ch.id==='denn-frame-action-stack'){ch.setAttribute('data-mgrp','clock');return;}
+      for(var i=0;i<MAP.length;i++){ if(ch.querySelector&&ch.querySelector(MAP[i][0])){ch.setAttribute('data-mgrp',MAP[i][1]);return;} }
+    });
+  }
+  var built=false;
+  function build(){
+    if(built)return;
+    var pf=byId('page-frame'),panel=panelOf(); if(!pf||!panel)return;
+    built=true;
+    panel.setAttribute('data-msheet','1');
+    tagGroups(panel);
+    if(!panel.querySelector('.denn-msheet-head')){
+      var head=document.createElement('div');head.className='denn-msheet-head';
+      head.innerHTML='<span class="denn-msheet-grip" role="separator" aria-label="크기조절"></span><span class="denn-msheet-title"></span><span class="denn-msheet-x" role="button" aria-label="닫기">×</span>';
+      panel.insertBefore(head,panel.firstChild);
+      head.querySelector('.denn-msheet-x').addEventListener('click',closeSheet);
+      setupGrip(head.querySelector('.denn-msheet-grip'),panel);
+    }
+    var ab=document.createElement('div');ab.className='denn-msheet-actionbar';
+    var bRoom=document.createElement('button');bRoom.type='button';bRoom.className='denn-msheet-ab-room';bRoom.innerHTML='🏠 내 공간';
+    bRoom.addEventListener('click',function(){if(typeof window.openRoomMockup==='function')window.openRoomMockup();});
+    var bSave=document.createElement('button');bSave.type='button';bSave.className='denn-msheet-ab-save';bSave.innerHTML='⬇ 시안저장';
+    bSave.addEventListener('click',function(){if(typeof window.dlCanvas==='function')window.dlCanvas('frame');});
+    ab.appendChild(bRoom);ab.appendChild(bSave);pf.appendChild(ab);
+    var tb=document.createElement('div');tb.className='denn-msheet-tabbar';
+    TABS.forEach(function(t){
+      var b=document.createElement('button');b.type='button';b.className='denn-msheet-tab';b.setAttribute('data-g',t[0]);
+      b.innerHTML=(SVG[t[0]]||'')+'<span>'+t[1]+'</span>';
+      b.addEventListener('click',function(){toggleSheet(t[0]);});
+      tb.appendChild(b);
+    });
+    pf.appendChild(tb);
+  }
+  function setActiveTab(g){
+    var pf=byId('page-frame');if(!pf)return;
+    Array.prototype.forEach.call(pf.querySelectorAll('.denn-msheet-tab'),function(b){b.classList.toggle('denn-msheet-on',b.getAttribute('data-g')===g);});
+  }
+  function openSheet(g){
+    var pf=byId('page-frame'),panel=panelOf();if(!pf||!panel)return;
+    panel.setAttribute('data-grp',g);
+    var t=panel.querySelector('.denn-msheet-title');if(t)t.textContent=LABEL[g]||'';
+    panel.classList.add('denn-msheet-open');
+    pf.classList.add('denn-msheet-active');
+    setActiveTab(g);panel.scrollTop=0;
+  }
+  function closeSheet(){
+    var pf=byId('page-frame'),panel=panelOf();if(!pf)return;
+    if(panel)panel.classList.remove('denn-msheet-open');
+    pf.classList.remove('denn-msheet-active');setActiveTab('');
+  }
+  function toggleSheet(g){
+    var panel=panelOf();if(!panel)return;
+    if(panel.classList.contains('denn-msheet-open')&&panel.getAttribute('data-grp')===g)closeSheet();
+    else openSheet(g);
+  }
+  /* 그립 드래그 → 메뉴 높이 조절(--msheet-h). 탭(이동<4px)이면 두 높이 토글. pointer로 터치+마우스 겸용. */
+  function setupGrip(grip,panel){
+    if(!grip)return;
+    var dragging=false,moved=false,startY=0,startH=0;
+    function down(e){
+      dragging=true;moved=false;
+      startY=(e.touches?e.touches[0].clientY:e.clientY);
+      startH=panel.getBoundingClientRect().height||window.innerHeight*0.44;
+      panel.classList.add('denn-msheet-drag');
+      document.addEventListener('pointermove',move,{passive:false});
+      document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up);
+      if(e.preventDefault)e.preventDefault();
+    }
+    function move(e){
+      if(!dragging)return;
+      var y=(e.touches?e.touches[0].clientY:e.clientY);
+      var dy=startY-y;if(Math.abs(dy)>4)moved=true;
+      var nh=Math.max(window.innerHeight*0.20,Math.min(window.innerHeight*0.85,startH+dy));
+      panel.style.setProperty('--msheet-h',nh+'px');
+      if(e.cancelable&&e.preventDefault)e.preventDefault();
+    }
+    function up(){
+      if(!dragging)return;dragging=false;
+      panel.classList.remove('denn-msheet-drag');
+      document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',up);
+      if(!moved){var h=panel.getBoundingClientRect().height;panel.style.setProperty('--msheet-h',(h>window.innerHeight*0.6?window.innerHeight*0.42:window.innerHeight*0.80)+'px');}
+    }
+    grip.addEventListener('pointerdown',down);
+  }
+  window.dennMSheet={open:openSheet,close:closeSheet,toggle:toggleSheet,rebuild:function(){var p=panelOf();if(p)tagGroups(p);}};
+  function init(){build();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  setTimeout(function(){var p=panelOf();if(p)tagGroups(p);},800);
+})();
+</script>
 <script id="denn-v94-pc-shell-frame">
 (function(){
   'use strict';
