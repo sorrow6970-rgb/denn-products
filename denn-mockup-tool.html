@@ -13249,10 +13249,13 @@ input[type=range]{accent-color:#777}
   #room-modal .denn-rm-bar .rm-tab-lab{font-size:10px!important;font-weight:500!important}
   #room-modal .denn-rm-bar .rm-right-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;padding:8px 10px!important;margin:0!important;background:var(--surface,#FDFAF4)!important;border-top:1px solid var(--border,#DDD5C8)!important}
   #room-modal.denn-rm-open .denn-rm-bar .rm-right-actions{display:none!important}
-  #room-modal .denn-rm-bar .rm-action-btn{height:40px!important;min-height:0!important;font-size:12px!important;font-weight:600!important;border-radius:9px!important;padding:0 6px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0!important}
-  /* 톤 = 프레임 탭 액션바와 동일(흰 배경 2 + 옐로우 주문제작 + 골드 저장) */
+  #room-modal .denn-rm-bar .rm-action-btn{height:40px!important;min-height:0!important;font-size:12px!important;font-weight:600!important;line-height:1!important;border-radius:9px!important;gap:5px!important;padding:0 6px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0!important}
+  /* 아이콘 = 프레임 액션바와 동일 15px (save 인라인 svg + order ::before) */
+  #room-modal .denn-rm-bar .rm-action-btn svg{width:15px!important;height:15px!important;flex:none}
+  /* 톤 = 프레임 탭 액션바와 동일(흰 배경 2 + 옐로우 주문제작 + 골드 저장), 그림자 없음 */
   #room-modal .denn-rm-bar .rm-action-btn{background:#fff!important;border-color:var(--border,#DDD5C8)!important;color:var(--warm,#8A7D6E)!important;box-shadow:none!important}
-  #room-modal .denn-rm-bar .rm-action-order{background:#FAE100!important;border-color:#FAE100!important;color:#3a2e00!important;font-weight:700!important}
+  #room-modal .denn-rm-bar .rm-action-order{background:#FAE100!important;border-color:#FAE100!important;color:#3a2e00!important;font-weight:700!important;box-shadow:none!important}
+  #room-modal .denn-rm-bar .rm-action-order::before{width:15px!important;height:15px!important}
   #room-modal .denn-rm-bar .rm-action-save{background:var(--gold2,#8C6E3C)!important;border-color:var(--gold2,#8C6E3C)!important;color:#fff!important}
 
   /* 시트(leftPanel)=섹션 패널 — body 기준 absolute, 탭바 위. 활성 pane만(기존 핸들러 inline display) */
