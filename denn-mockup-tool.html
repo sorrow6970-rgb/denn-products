@@ -13265,8 +13265,16 @@ input[type=range]{accent-color:#777}
   #room-modal .denn-rm-bar .rm-action-save{order:4!important}
 
   /* 시트(leftPanel)=섹션 패널 — body 기준 absolute, 탭바 위. 활성 pane만(기존 핸들러 inline display) */
-  #room-modal .rm-left-panel-msheet{position:absolute!important;left:0;right:0;bottom:58px;z-index:25;width:100%!important;max-width:none!important;box-sizing:border-box;background:var(--surface,#FDFAF4)!important;border:none!important;border-radius:16px 16px 0 0!important;box-shadow:0 -10px 30px rgba(0,0,0,.2)!important;max-height:64vh!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;padding:6px 14px 16px!important;display:block!important;transform:translateY(118%);transition:transform .26s cubic-bezier(.4,0,.2,1)}
+  #room-modal .rm-left-panel-msheet{position:absolute!important;left:0;right:0;bottom:58px;z-index:25;width:100%!important;max-width:none!important;box-sizing:border-box;background:var(--surface,#FDFAF4)!important;border:none!important;border-radius:16px 16px 0 0!important;box-shadow:0 -10px 30px rgba(0,0,0,.2)!important;height:var(--rm-msheet-h,66vh)!important;max-height:calc(100vh - 72px)!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;padding:0 14px 16px!important;display:block!important;transform:translateY(118%);transition:transform .26s cubic-bezier(.4,0,.2,1)}
   #room-modal.denn-rm-open .rm-left-panel-msheet{transform:translateY(0)}
+  #room-modal .rm-left-panel-msheet.denn-rm-drag{transition:none!important}
+  /* L2894/L2919(≤720/≤480 스택 레이아웃)의 max-height:34vh/32vh가 바텀시트 높이를 캡 → 동일 경로+클래스로 특이도(1,2,3>1,1,3) 상회해 무력화 */
+  #room-modal>div>div:nth-child(2)>div.rm-left-panel-msheet{height:var(--rm-msheet-h,66vh)!important;max-height:calc(100vh - 72px)!important}
+  /* 시트 헤더 = 프레임 .denn-msheet-head 미러 (grip + 타이틀 + X 닫기, sticky). 헤더=드래그/탭 토글 핸들 */
+  #room-modal .denn-rm-sheet-head{position:sticky;top:0;z-index:3;background:var(--surface,#FDFAF4);display:flex;align-items:center;justify-content:space-between;padding:14px 2px 8px;margin:0 0 6px;border-bottom:1px solid var(--border,#DDD5C8);touch-action:none;cursor:row-resize;user-select:none}
+  #room-modal .denn-rm-sheet-head .denn-rm-grip{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:46px;height:5px;border-radius:3px;background:var(--warm,#8A7D6E);opacity:.5;margin:0}
+  #room-modal .denn-rm-sheet-title{font-size:14px;font-weight:700;color:var(--ink,#2c2418)}
+  #room-modal .denn-rm-sheet-x{font-size:23px;line-height:1;padding:2px 10px;cursor:pointer;color:var(--warm,#8A7D6E);-webkit-tap-highlight-color:transparent}
   #room-modal .denn-rm-grip{width:46px;height:5px;border-radius:3px;background:var(--warm,#8A7D6E);opacity:.5;margin:2px auto 10px}
 }
 </style>
@@ -13288,7 +13296,11 @@ input[type=range]{accent-color:#777}
     if(!leftPanel||!tabRow)return false;
     modal.__dennRoomSheet=true;
     leftPanel.classList.add('rm-left-panel-msheet');
-    if(!leftPanel.querySelector('.denn-rm-grip')){var g=document.createElement('div');g.className='denn-rm-grip';leftPanel.insertBefore(g,leftPanel.firstChild);}
+    if(!leftPanel.querySelector('.denn-rm-sheet-head')){
+      var head=document.createElement('div');head.className='denn-rm-sheet-head';
+      head.innerHTML='<span class="denn-rm-grip"></span><span class="denn-rm-sheet-title"></span><span class="denn-rm-sheet-x" role="button" aria-label="닫기">×</span>';
+      leftPanel.insertBefore(head,leftPanel.firstChild);
+    }
     /* 가이드 갤러리 → 배경 pane으로 이동 */
     var bgPane=leftPanel.querySelector('[data-rm-pane="bg"]');
     if(guideScroll&&bgPane)bgPane.appendChild(guideScroll);
@@ -13300,7 +13312,38 @@ input[type=range]{accent-color:#777}
     bar.appendChild(tabRow);
     body.appendChild(bar);
     function closeSheet(){modal.classList.remove('denn-rm-open');leftPanel.querySelectorAll('[data-rm-pane]').forEach(function(p){p.style.display='none';});tabRow.querySelectorAll('.rm-tab').forEach(function(b){b.classList.remove('on');});modal.__rmCurKey=null;}
-    function openKey(key){modal.classList.add('denn-rm-open');modal.__rmCurKey=key;leftPanel.scrollTop=0;}
+    function openKey(key){modal.classList.add('denn-rm-open');modal.__rmCurKey=key;leftPanel.scrollTop=0;var ttl=leftPanel.querySelector('.denn-rm-sheet-title');if(ttl){var tb=tabRow.querySelector('.rm-tab[data-tab="'+key+'"]'),tl=tb&&tb.querySelector('.rm-tab-lab');ttl.textContent=tl?tl.textContent:'';}}
+    var sheetX=leftPanel.querySelector('.denn-rm-sheet-x');if(sheetX&&!sheetX.__dennBound){sheetX.__dennBound=1;sheetX.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();closeSheet();});}
+    /* 그립 드래그 → 시트 높이 조절(--rm-msheet-h). 탭(이동<4px)이면 두 높이(42vh↔80vh) 토글. 프레임 setupGrip 미러 */
+    (function(){
+      var head=leftPanel.querySelector('.denn-rm-sheet-head');if(!head||head.__dennGrip)return;head.__dennGrip=1;
+      var dragging=false,moved=false,startY=0,startH=0;
+      function down(e){
+        if(e.target&&e.target.closest&&e.target.closest('.denn-rm-sheet-x'))return; /* X는 닫기 전용 */
+        dragging=true;moved=false;
+        startY=(e.touches?e.touches[0].clientY:e.clientY);
+        startH=leftPanel.getBoundingClientRect().height||window.innerHeight*0.5;
+        leftPanel.classList.add('denn-rm-drag');
+        document.addEventListener('pointermove',move,{passive:false});
+        document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up);
+        if(e.preventDefault)e.preventDefault();
+      }
+      function move(e){
+        if(!dragging)return;
+        var y=(e.touches?e.touches[0].clientY:e.clientY);
+        var dy=startY-y;if(Math.abs(dy)>4)moved=true;
+        var nh=Math.max(window.innerHeight*0.22,Math.min(window.innerHeight*0.86,startH+dy));
+        leftPanel.style.setProperty('--rm-msheet-h',nh+'px');
+        if(e.cancelable&&e.preventDefault)e.preventDefault();
+      }
+      function up(){
+        if(!dragging)return;dragging=false;
+        leftPanel.classList.remove('denn-rm-drag');
+        document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',up);
+        if(!moved){var h=leftPanel.getBoundingClientRect().height;leftPanel.style.setProperty('--rm-msheet-h',(h>window.innerHeight*0.6?window.innerHeight*0.42:window.innerHeight*0.80)+'px');}
+      }
+      head.addEventListener('pointerdown',down);
+    })();
     closeSheet();                                          /* 기본=닫힘 */
     tabRow.addEventListener('click',function(e){
       var btn=e.target&&e.target.closest?e.target.closest('.rm-tab'):null; if(!btn)return;
