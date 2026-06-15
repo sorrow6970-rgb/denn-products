@@ -416,7 +416,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <button onclick="dlRoomMockup()" style="padding:9px 18px;background:var(--ink);color:var(--cream);border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>배경 이미지 저장</button>
-        <button onclick="closeRoomMockup()" style="width:34px;height:34px;border:1.5px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:15px;color:var(--ink)">✕</button>
+        <button onclick="closeRoomMockup()" style="width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:#fff;cursor:pointer;font-size:15px;color:var(--warm)">✕</button>
       </div>
     </div>
     <!-- Body -->
@@ -2888,7 +2888,7 @@ html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!i
 #room-modal.denn-room-fullscreen-active{display:flex!important;position:fixed!important;inset:0!important;padding:0!important;background:#000!important;z-index:2147483647!important;backdrop-filter:none!important}
 #room-modal.denn-room-fullscreen-active>div{width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;border-radius:0!important;background:#000!important}
 @media(max-width:720px){
-  #room-modal #rm-fullscreen-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:9px 12px;background:#fff;color:var(--ink);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
+  #room-modal #rm-fullscreen-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:9px 12px;background:#fff;color:var(--warm);border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
   #rm-canvas-area #rm-usage-guide-v33{top:36px;font-size:9px;white-space:normal;max-width:86%;padding:6px 9px}
   #room-modal>div>div:nth-child(2){flex-direction:column!important;overflow:auto!important}
   #room-modal>div>div:nth-child(2)>div:first-child{width:auto!important;max-height:34vh!important;border-right:none!important;border-bottom:1px solid var(--border)!important;display:grid!important;grid-template-columns:1fr!important;gap:12px!important;overflow:auto!important}
@@ -2934,7 +2934,7 @@ html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!i
   }
 }
 @media(max-height:540px) and (orientation:landscape){
-  #room-modal #rm-fullscreen-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:8px 12px;background:#fff;color:var(--ink);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
+  #room-modal #rm-fullscreen-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:8px 12px;background:#fff;color:var(--warm);border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
   #room-modal>div>div:first-child{padding:8px 14px!important}
   #room-modal>div>div:first-child>div:first-child>div>div:first-child{font-size:12px!important}
   #room-modal>div>div:first-child>div:first-child>div>div:nth-child(2){display:none!important}
@@ -13249,14 +13249,20 @@ input[type=range]{accent-color:#777}
   #room-modal .denn-rm-bar .rm-tab-lab{font-size:10px!important;font-weight:500!important}
   #room-modal .denn-rm-bar .rm-right-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;padding:8px 10px!important;margin:0!important;background:var(--surface,#FDFAF4)!important;border-top:1px solid var(--border,#DDD5C8)!important}
   #room-modal.denn-rm-open .denn-rm-bar .rm-right-actions{display:none!important}
-  #room-modal .denn-rm-bar .rm-action-btn{height:40px!important;min-height:0!important;font-size:12px!important;font-weight:600!important;line-height:1!important;border-radius:9px!important;gap:5px!important;padding:0 6px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0!important}
-  /* 아이콘 = 프레임 액션바와 동일 15px (save 인라인 svg + order ::before) */
-  #room-modal .denn-rm-bar .rm-action-btn svg{width:15px!important;height:15px!important;flex:none}
-  /* 톤 = 프레임 탭 액션바와 동일(흰 배경 2 + 옐로우 주문제작 + 골드 저장), 그림자 없음 */
-  #room-modal .denn-rm-bar .rm-action-btn{background:#fff!important;border-color:var(--border,#DDD5C8)!important;color:var(--warm,#8A7D6E)!important;box-shadow:none!important}
+  /* 프레임 .denn-msheet-actionbar button과 동일 베이스. PC 베이스 .rm-action-btn(L12849)은
+     @media(min-width:861px) 안이라 모바일 미적용 → flex 정렬·border·box-shadow 직접 전부 명시.
+     (누락 시: flex 부재로 글자 세로정렬 틀어짐 + border width/style 부재로 기본 outset 3D 테두리=그림자처럼 보임) */
+  #room-modal .denn-rm-bar .rm-action-btn{height:40px!important;min-height:0!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;border:1px solid var(--border,#DDD5C8)!important;border-radius:9px!important;font-family:inherit!important;font-size:12px!important;font-weight:600!important;line-height:1!important;cursor:pointer!important;box-sizing:border-box!important;padding:0 6px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0!important;background:#fff!important;color:var(--warm,#8A7D6E)!important;box-shadow:none!important}
+  #room-modal .denn-rm-bar .rm-action-btn svg{width:15px!important;height:15px!important;flex:none;display:block}
   #room-modal .denn-rm-bar .rm-action-order{background:#FAE100!important;border-color:#FAE100!important;color:#3a2e00!important;font-weight:700!important;box-shadow:none!important}
-  #room-modal .denn-rm-bar .rm-action-order::before{width:15px!important;height:15px!important}
+  /* 아이콘 = 프레임 주문제작과 동일한 외곽선 말풍선(stroke, fill:none) */
+  #room-modal .denn-rm-bar .rm-action-order::before{content:'';width:15px!important;height:15px!important;flex-shrink:0;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233a2e00' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M21 11.5a8.38 8.38 0 01-8.5 8.5 9 9 0 01-3.4-.6L3 21l1.6-5.1A8.38 8.38 0 014 11.5 8.5 8.5 0 0112.5 3 8.38 8.38 0 0121 11.5z'/></svg>") center/contain no-repeat}
   #room-modal .denn-rm-bar .rm-action-save{background:var(--gold2,#8C6E3C)!important;border-color:var(--gold2,#8C6E3C)!important;color:#fff!important}
+  /* 버튼 배치 = 프레임 패턴(흰·흰 / 노랑·회색): reset → back → order → save. DOM 순서(reset,save,order,back) 무변경, 모바일 그리드에서만 order로 재배치(PC 세로스택 무영향) */
+  #room-modal .denn-rm-bar .rm-action-reset{order:1!important}
+  #room-modal .denn-rm-bar .rm-action-btn:not(.rm-action-reset):not(.rm-action-order):not(.rm-action-save){order:2!important}
+  #room-modal .denn-rm-bar .rm-action-order{order:3!important}
+  #room-modal .denn-rm-bar .rm-action-save{order:4!important}
 
   /* 시트(leftPanel)=섹션 패널 — body 기준 absolute, 탭바 위. 활성 pane만(기존 핸들러 inline display) */
   #room-modal .rm-left-panel-msheet{position:absolute!important;left:0;right:0;bottom:58px;z-index:25;width:100%!important;max-width:none!important;box-sizing:border-box;background:var(--surface,#FDFAF4)!important;border:none!important;border-radius:16px 16px 0 0!important;box-shadow:0 -10px 30px rgba(0,0,0,.2)!important;max-height:64vh!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;padding:6px 14px 16px!important;display:block!important;transform:translateY(118%);transition:transform .26s cubic-bezier(.4,0,.2,1)}
