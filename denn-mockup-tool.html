@@ -235,8 +235,8 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
 <header>
   <div class="logo" id="hdr-logo">DENN <em>PRODUCTS</em></div>
   <div class="tabbar">
-    <div class="tab on" onclick="switchTab('frame')">🖼 액자 · 프레임</div>
-    <div class="tab" onclick="switchTab('case')">📱 폰케이스</div>
+    <div class="tab on" onclick="switchTab('frame')">액자 · 프레임</div>
+    <div class="tab" onclick="switchTab('case')">폰케이스</div>
   </div>
   <div class="tagline" id="hdr-tag">사진과 문구를 자유롭게 배치하며 원하는 스타일로 직접 디자인해보세요</div>
 </header>
@@ -397,7 +397,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
   </div>
   <div class="preview-area" id="frame-preview-area">
     <div class="mockup-bg" id="frame-mockup-bg"></div>
-    <div class="prev-top"><div class="prev-label">실시간 시안 확인</div></div>
+    <div class="prev-top"><div class="prev-label">실시간 시안 확인</div><div class="prev-scale-mini" id="frame-prev-scale-mini"><span>액자</span><input type="range" id="frame-prev-scale-mini-r" min="80" max="220" step="1" value="140" oninput="dennFramePrevScaleMini(this.value)" aria-label="액자 스케일"><b id="frame-prev-scale-mini-v">140%</b></div></div>
     <div class="empty-state" id="frame-empty"><p>이미지를 업로드하면<br>시안이 표시됩니다</p></div>
     <div class="canvas-wrap" style="position:relative;display:inline-block"><canvas id="frameCanvas" width="400" height="400" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.22)) drop-shadow(0 6px 14px rgba(0,0,0,.10)) drop-shadow(0 24px 48px rgba(0,0,0,.14));background:transparent"></canvas><img id="wm-ov-frame" style="position:absolute;bottom:8px;right:8px;max-width:25%;display:none;pointer-events:none;object-fit:contain" src="" alt=""></div>
   </div>
@@ -9582,6 +9582,42 @@ window.addEventListener('load',run);
 })();
 </script>
 
+<style id="denn-v105-mobile-prev-scale-mini">
+/* 모바일(≤768) 프리뷰 상단 바: 액자 스케일 미니 슬라이더.
+   #frame-preview-scale-box가 ≤768에서 숨겨져(가이드 핸들 부재) 스케일 조정 수단이 없어
+   prev-top 우측에 컴팩트 슬라이더 제공. V361 스케일러(DENNFramePreviewScaleV361.set)에
+   직결 — 별도 스케일 경로 없음. PC(>768)는 기존 박스 사용, 미니는 display:none. */
+.prev-scale-mini{display:none}
+@media(max-width:768px){
+  .prev-scale-mini{display:flex;align-items:center;gap:5px;pointer-events:auto}
+  .prev-scale-mini span{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--warm)}
+  .prev-scale-mini input[type=range]{width:84px;height:18px;accent-color:var(--gold2,#8C6E3C);cursor:pointer;margin:0}
+  .prev-scale-mini b{font-size:9px;font-weight:600;color:var(--ink);min-width:30px;text-align:right}
+}
+</style>
+<script id="denn-v105-mobile-prev-scale-mini-js">
+(function(){
+  function lab(){return document.getElementById('frame-prev-scale-mini-v');}
+  function rng(){return document.getElementById('frame-prev-scale-mini-r');}
+  window.dennFramePrevScaleMini=function(v){
+    var l=lab();if(l)l.textContent=Math.round(v)+'%';
+    try{if(window.DENNFramePreviewScaleV361)window.DENNFramePreviewScaleV361.set(v,'mobile');}catch(_){}
+  };
+  function sync(){
+    try{
+      if(!window.DENNFramePreviewScaleV361)return;
+      var v=window.DENNFramePreviewScaleV361.get('mobile'),r=rng(),l=lab();
+      if(r&&String(r.value)!==String(v))r.value=v;
+      if(l)l.textContent=Math.round(v)+'%';
+    }catch(_){}
+  }
+  [200,600,1200,2200].forEach(function(ms){setTimeout(sync,ms);});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(sync,300);});
+  else setTimeout(sync,0);
+  window.addEventListener('resize',function(){clearTimeout(window.__dennPrevScaleMiniRz);window.__dennPrevScaleMiniRz=setTimeout(sync,200);});
+})();
+</script>
+
 <script id="denn-v36-1-frame-release-mode">
 (function(){
   if(window.__DENN_V36_1_FRAME_RELEASE_MODE__)return;
@@ -12040,8 +12076,8 @@ window.addEventListener('load',later);
   .denn-msheet-tabbar,.denn-msheet-actionbar,.denn-msheet-backdrop{display:none!important}
 }
 @media(max-width:860px){
-  /* 상단 헤더 탭(액자·프레임/폰케이스) = 로고 아래 둘째 줄 중앙 정렬(컴팩트 알약 토글) */
-  header .tabbar{display:flex!important;flex-basis:100%;width:100%;justify-content:center;gap:6px;margin-top:4px}
+  /* 상단 헤더 탭(액자·프레임/폰케이스) = 로고 아래 둘째 줄 좌측 정렬(컴팩트 알약 토글) */
+  header .tabbar{display:flex!important;flex-basis:100%;width:100%;justify-content:flex-start;gap:6px;margin-top:0}
   header .tab{padding:6px 13px!important;font-size:11px!important}
 
   /* 미리보기(상단 flex, 가변) + 메뉴(하단, 가변높이 분할) + 고정 탭바. 컨테이너 하단패딩=탭바58 */
@@ -12708,7 +12744,7 @@ body{background:#fff}
 .tpl-card:hover{border-color:#777!important}
 
 /* ===== MOIITEE식 밝은 상단 바: 로고 알약 + 탭 알약 토글 + 태그라인 ===== */
-header{background:#fff!important;border-bottom:1px solid #e6e6e6!important;height:auto!important;min-height:60px;gap:18px!important;padding:10px 22px!important;flex-wrap:wrap}
+header{background:#fff!important;border-bottom:1px solid #e6e6e6!important;height:auto!important;min-height:60px;column-gap:18px!important;row-gap:10px!important;padding:10px 22px!important;flex-wrap:wrap}
 .logo{color:#777!important;border:1px solid #e6e6e6;border-radius:24px;padding:7px 16px;line-height:1;display:inline-flex;align-items:center;height:38px;font-size:14px;background:#fff;font-family:'Playfair Display',serif;letter-spacing:.08em}
 .logo em{color:#777!important;font-style:normal;font-weight:700;margin-left:6px}
 .tagline{color:#888!important;font-size:11px;font-weight:500;margin-left:auto;max-width:420px;line-height:1.45;text-align:right}
@@ -12719,7 +12755,7 @@ header .tab{flex:0 0 auto!important;padding:8px 16px!important;border:1px solid 
 header .tab:hover{background:#ebebeb!important;color:#777!important}
 header .tab.on{background:#777!important;color:#fff!important;border-color:#777!important}
 @media(max-width:640px){
-  header{padding:8px 12px!important;gap:10px!important}
+  header{padding:10px 12px!important;column-gap:10px!important;row-gap:10px!important}
   .tagline{display:none}
   header .tab{padding:7px 12px!important;font-size:11px!important}
 }
