@@ -13360,6 +13360,46 @@ input[type=range]{accent-color:#777}
 })();
 </script>
 
+<script id="denn-v106-room-bg-cover">
+/* 내공간 배경 "꽉 채움"(모바일): 캔버스가 배경 이미지 비율로 contain 사이징(L1828/L3477)돼
+   세로가 긴 바텀시트 영역(inset:0)보다 작아 영역의 회색 그라데이션이 노출되던 문제.
+   활성 rmRender는 drawCover로 그리므로, 캔버스 치수를 cover(균일 확대로 영역 덮기)로 재설정하면
+   회색 제거 + 왜곡 없음 + fraction 기반 좌표(드래그)·사이즈가이드 비율 무손상.
+   PC(>860)·엔진 본체 무수정 — rmSizeCanvas 래핑 + resize만. */
+(function(){
+  if(window.__DENN_ROOM_BG_COVER_V106)return;window.__DENN_ROOM_BG_COVER_V106=true;
+  function coverFit(){
+    try{
+      if(window.innerWidth>860)return false;
+      var RM=window.RM;if(!RM||!RM.canvas)return false;
+      var area=document.getElementById('rm-canvas-area');if(!area)return false;
+      var aw=area.clientWidth,ah=area.clientHeight;if(aw<40||ah<40)return false;
+      var w,h;
+      if(RM.roomImg&&RM.roomImg.naturalWidth){
+        var iw=RM.roomImg.naturalWidth,ih=RM.roomImg.naturalHeight,sc=Math.max(aw/iw,ah/ih); /* cover: 균일 스케일로 영역 덮기 */
+        w=Math.round(iw*sc);h=Math.round(ih*sc);
+      }else{ w=aw;h=ah; }                              /* 기본 배경(이미지 없음): 영역 크기로 채움 */
+      if(RM.canvas.width===w&&RM.canvas.height===h)return false; /* 이미 채움 → skip(무한루프 방지) */
+      RM.canvas.width=w;RM.canvas.height=h;
+      RM.canvas.style.width=w+'px';RM.canvas.style.height=h+'px';
+      var sg=document.getElementById('sg-canvas');
+      if(sg){sg.width=w;sg.height=h;sg.style.width=w+'px';sg.style.height=h+'px';}
+      return true;
+    }catch(e){return false}
+  }
+  function kick(){if(coverFit()){try{window.rmRender&&window.rmRender();window.sgDraw&&window.sgDraw();}catch(e){}}}
+  var origSize=window.rmSizeCanvas;
+  if(typeof origSize==='function'){
+    window.rmSizeCanvas=function(){var r=origSize.apply(this,arguments);coverFit();return r;};
+  }
+  var origRender=window.rmRender;
+  if(typeof origRender==='function'){
+    window.rmRender=function(){var r=origRender.apply(this,arguments);if(coverFit()){try{origRender.call(window);window.sgDraw&&window.sgDraw();}catch(e){}}return r;}; /* 렌더 후 미충족이면 cover 적용 + 1회 재렌더(coverFit 가드로 무한루프 방지) */
+  }
+  window.addEventListener('resize',function(){clearTimeout(window.__dennRoomCoverRz);window.__dennRoomCoverRz=setTimeout(kick,150);});
+  [300,800,1500].forEach(function(ms){setTimeout(kick,ms);});
+})();
+</script>
 <script id="denn-v100-canvas-rotate-DEFERRED">
 /* (작업3 Q6 — 다음 세션 처리) 액자 방향 '가로' = 캔버스 통째 90° CSS 회전.
    현 상태: 비활성(no-op). 시도 결과 v36.1 스케일러(DENNFramePreviewScaleV361 / applyFramePreviewScaleV36)가
