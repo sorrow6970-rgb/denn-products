@@ -1743,6 +1743,19 @@ function rmSizeAllowsBg(bg){
     return wl.indexOf(sz.id||sz.name)>=0;
   }catch(e){return true}
 }
+/* 단계0 후속(2026-06-16): admin-setup(?adminRoomSetup=<bgId>)은 '그 배경 하나만' 편집하는 에디터.
+   bgKey()가 URL bgId에 고정돼(L2968), 창 안에서 다른 배경을 고르면 이미지만 바뀌고 저장/로드 키는 그대로
+   → 다른 배경 값이 stale하게 유지되는 혼란. 그래서 대상 외 배경은 갤러리에서 선택 잠금.
+   URL 파라미터가 실제 가이드배경과 매칭될 때만(공통디폴트 __denn_room_common_default__ 등은 잠금 안 함, -1 반환). */
+function dennAdminSetupTargetIdxV(bgs){
+  try{
+    var k=new URLSearchParams(location.search||'').get('adminRoomSetup')||'';
+    if(!k)return -1;
+    for(var i=0;i<bgs.length;i++){if(String((bgs[i]||{}).id||(bgs[i]||{}).name||'')===String(k))return i;}
+  }catch(e){}
+  return -1;
+}
+window.dennAdminSetupTargetIdxV=dennAdminSetupTargetIdxV;
 function rmLoadGuideBgs(){
   var bgs=(ADM&&ADM.guideBackgrounds)||[];
   var sec=document.getElementById('rm-guide-section');
@@ -1751,8 +1764,16 @@ function rmLoadGuideBgs(){
   if(!bgs.length){sec.style.display='none';return;}
   sec.style.display='block';
   var adminMode=rmIsAdminSetup();  // 관리자 배경설정 모드에선 필터 미적용(모든 배경 구성 가능)
+  var lockIdx=adminMode?dennAdminSetupTargetIdxV(bgs):-1;  // 단일배경 에디터: 대상 외 잠금 기준(-1=잠금 안 함)
   var html=bgs.map(function(bg,i){
     if(!adminMode&&!rmSizeAllowsBg(bg))return '';  // 인덱스 보존: 비허용은 빈 문자열로 skip
+    var locked=(lockIdx>=0&&i!==lockIdx);  // 대상 외 배경: 선택 잠금(키 고정으로 인한 stale 값 방지)
+    if(locked){
+      return '<div style="cursor:not-allowed;border-radius:7px;overflow:hidden;position:relative;border:2px solid transparent;opacity:.38;filter:grayscale(.65)" id="rm-guide-'+i+'" title="이 창은 \''+((bgs[lockIdx]||{}).name||'대상')+'\' 배경 전용입니다 — 다른 배경은 관리자에서 따로 \'실제 화면에서 설정\'으로 여세요">'
+        +'<img src="'+bg.dataUrl+'" style="width:100%;height:55px;object-fit:cover;display:block">'
+        +'<div style="position:absolute;bottom:0;left:0;right:0;padding:3px 6px;background:rgba(25,22,15,.6);color:#fff;font-size:9px">'+bg.name+' 🔒</div>'
+      +'</div>';
+    }
     return '<div onclick="rmSelectGuide('+i+')" style="cursor:pointer;border-radius:7px;overflow:hidden;position:relative;border:2px solid transparent;transition:all .15s" id="rm-guide-'+i+'" onmouseover="this.style.borderColor=\'var(--gold)\'" onmouseout="this.style.borderColor=\'transparent\'">'
       +'<img src="'+bg.dataUrl+'" style="width:100%;height:55px;object-fit:cover;display:block">'
       +'<div style="position:absolute;bottom:0;left:0;right:0;padding:3px 6px;background:rgba(25,22,15,.6);color:#fff;font-size:9px">'+bg.name+'</div>'
@@ -3045,6 +3066,11 @@ function applySettingsV33(s){
   setGuideVal('sg-alpha-r',num(s.guideOpacity,.75)*100,'%');setGuideVal('sg-alpha-n',num(s.guideOpacity,.75)*100,'%');
   if(ruler)ruler.checked=s.showRuler!==false;
   setVal('rm-size',Math.round(num(s.frameScale,.2)*200)/2,'%');
+  /* 단계0(2026-06-16): 사이즈기준위치(앵커) 복원 — applyRoomSettings(L5188~5191)와 동형. V33 경로(loadSettingsV33→여기)가 앵커를 슬라이더에 안 돌려놔 운영자 재진입/배경전환 시 "저장 안 된 듯" 50으로 리셋되던 PC 버그 해결. 소비자는 drawFrame 게이트가 운영자 전용이라 값만 세팅·렌더 무영향(회귀 0). */
+  setVal('rm-size-anchor',num(s.frameSizeAnchor,50));
+  if(window.RM)RM.__anchorYabs=null;
+  if(window.dennUpdateSizeAnchorReadoutV)dennUpdateSizeAnchorReadoutV(num(s.frameSizeAnchor,50));
+  var __anchRowV33=by('rm-size-anchor-row');if(__anchRowV33)__anchRowV33.style.display=(window.dennIsAdminSetupV&&dennIsAdminSetupV())?'block':'none';
   if(window.setRoomTiltEnabledV40)window.setRoomTiltEnabledV40(!!s.frameTiltEnabled,false);
   else{var tt=by('rm-tilt-tog'),tb=by('rm-tilt-body');if(tt)tt.classList.toggle('on',!!s.frameTiltEnabled);if(tb)tb.style.display=s.frameTiltEnabled?'block':'none'}
   setVal('rm-tilt',num(s.frameTiltDeg,0),'°');
