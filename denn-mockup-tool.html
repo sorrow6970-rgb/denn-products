@@ -3094,6 +3094,7 @@ function applySettingsV33(s){
 var SIZE_KEYS_MIRROR_V=['defaultSizeId','sizeId','frameSizeId','primarySizeId','adminGuideSizeId','adminGuideSizeName','adminGuideSizeWcm','adminGuideSizeHcm','adminGuideOrientation','guideSizeId','guideSizeName','guideSizeWcm','guideSizeHcm','guideOrientation','runtimeGuideSizeId','runtimeGuideSizeName','runtimeGuideSizeWcm','runtimeGuideSizeHcm','runtimeGuideOrientation'];
 /* A(2026-06-04): 컨텍스트 진입(select/clear/upload/preset/reset)이 호출 → 다음 loadSettingsV33가 현재 키를 ② 미러하도록 요청. 인메모리(비영속) → refresh 시 소멸. */
 function dennCurScopedKeyV(){try{return window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey()}catch(e){try{return bgKey()}catch(_){return 'default-room'}}}
+window.dennCurScopedKeyV=dennCurScopedKeyV;/* 현재 컨텍스트 스코프드 저장 키(콘솔 검증/진단용 — bgKey가 IIFE-local이라 전역에서 못 부르는 문제 해소) */
 function dennReqMirrorV(){try{(window.__dennMirrorReqV||(window.__dennMirrorReqV={}))[dennCurScopedKeyV()]=true;if(window.RM)window.RM.__userMoved=false;/* 컨텍스트 진입(배경 선택/클리어/업로드/프리셋/기본설정으로)=운영자 디폴트로 리셋 → __userMoved 해제해 강제 재개. 그 외 세션 조절은 유지. */}catch(e){}}
 window.dennReqMirrorV=dennReqMirrorV;
 /* E(2026-06-04): per-section "기본값" 버튼(액자/기울기/그림자/햇빛) 공통 소스. 소비자=운영자 ②(공통 디폴트, 토글 포함), 운영자 편집모드/② 없음=null(각 함수의 공장 폴백). */
@@ -3141,10 +3142,28 @@ function loadSettingsV33(){
   applySettingsV33(Object.assign({},base,st[key]));
   persist(A);
 }
+/* ── 단계1(2026-06-17): 모바일/PC 설정 격리 — 단일 저장 라우팅 ─────────────────
+   모델: base=roomBackgroundSettings[key] (=PC/데스크탑). 모바일 전용값은 key.mobile 하위에만 격리.
+   ★ base에는 모바일 필드를 절대 쓰지 않는다(소비자 PC 읽기 무영향). 저장 컨텍스트 판정은 viewAs=mobile로
+   좁힘(소비자 폰은 viewAs 없음 → 우발 저장 차단). 읽기 병합은 단계3(dennMergeMobileV)에서 isRoomMobile() 기준.
+   격리 필드=레이아웃만(위치·크기·앵커·가이드 스케일/위치·배경). 조명/그림자/기울기는 base 공유. */
+var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY'];
+function dennIsMobileEditCtxV(){try{return new URLSearchParams(location.search||'').get('viewAs')==='mobile'}catch(e){return false}}
+function dennPickMobileFieldsV(o){var out={};if(o)DENN_MOBILE_FIELDS_V.forEach(function(k){if(o[k]!=null)out[k]=o[k]});return out;}
+function dennRouteSaveV(prev,merged){
+  if(!dennIsMobileEditCtxV())return merged;              /* PC/데스크탑: 기존대로 base 저장(merged엔 prev.mobile 보존됨) */
+  var keep=Object.assign({},prev||{});                    /* 모바일 편집: base(PC) 그대로 보존 */
+  keep.mobile=Object.assign({},(prev&&prev.mobile)||{},dennPickMobileFieldsV(merged));
+  return keep;
+}
+window.dennIsMobileEditCtxV=dennIsMobileEditCtxV;
+window.dennPickMobileFieldsV=dennPickMobileFieldsV;
+window.dennRouteSaveV=dennRouteSaveV;
+window.DENN_MOBILE_FIELDS_V=DENN_MOBILE_FIELDS_V;
 function saveSettingsV33(){
   var A=adm(),st=store(A),key=window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey(),prev=st[key]||{},base=null,c=null;
   try{c=window.__dennRoomGuideBaselineV92b||{};base=prev.__guideResetDefaults||c[key]||null}catch(e){}
-  st[key]=Object.assign(defaults(),prev,currentSettingsV33());
+  st[key]=dennRouteSaveV(prev,Object.assign(defaults(),prev,currentSettingsV33()));
   if(base&&typeof base==='object')st[key].__guideResetDefaults=JSON.parse(JSON.stringify(base));
   try{if(dennIsAdminSetupV()&&isOpKeyV(key))stampOpRevV(st[key]);}catch(e){}
   persist(A);
@@ -5370,7 +5389,9 @@ function saveCurrentRoomKeyV48(key,extra){
   var prev=A.roomBackgroundSettings[key]||{},base=null,c=null;
   var savedSun=(!isAdminRoomSetupV48()&&hasPreset(prev))?pickRoomSunV48(prev):null;
   try{c=window.__dennRoomGuideBaselineV92b||{};base=prev.__guideResetDefaults||c[key]||null}catch(e){}
-  A.roomBackgroundSettings[key]=Object.assign({},defaultRoomSettings(A),prev,currentRoomSettingsV48(),extra||{});
+  var __mergedV48=Object.assign({},defaultRoomSettings(A),prev,currentRoomSettingsV48(),extra||{});
+  /* 단계1: 모바일 편집(viewAs=mobile)이면 base 보존+key.mobile만 갱신, 아니면 기존 base 저장. 단일 라우팅(V33과 공유). */
+  A.roomBackgroundSettings[key]=(window.dennRouteSaveV?window.dennRouteSaveV(prev,__mergedV48):__mergedV48);
   restoreRoomSunV48(A.roomBackgroundSettings[key],savedSun);
   if(base&&typeof base==='object')A.roomBackgroundSettings[key].__guideResetDefaults=JSON.parse(JSON.stringify(base));
   try{if(dennIsAdminSetupV()&&isOpKeyV(key))stampOpRevV(A.roomBackgroundSettings[key]);}catch(e){}
