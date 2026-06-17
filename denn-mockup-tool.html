@@ -3160,13 +3160,16 @@ function loadSettingsV33(){
   applySettingsV33(Object.assign({},base,st[key]));
   persist(A);
 }
+window.loadSettingsV33=loadSettingsV33;/* PC|모바일 토글 전환 시 현재 키 설정 재적용(.mobile 병합 반영)용 노출 */
 /* ── 단계1(2026-06-17): 모바일/PC 설정 격리 — 단일 저장 라우팅 ─────────────────
    모델: base=roomBackgroundSettings[key] (=PC/데스크탑). 모바일 전용값은 key.mobile 하위에만 격리.
    ★ base에는 모바일 필드를 절대 쓰지 않는다(소비자 PC 읽기 무영향). 저장 컨텍스트 판정은 viewAs=mobile로
    좁힘(소비자 폰은 viewAs 없음 → 우발 저장 차단). 읽기 병합은 단계3(dennMergeMobileV)에서 isRoomMobile() 기준.
    격리 필드=레이아웃만(위치·크기·앵커·가이드 스케일/위치·배경). 조명/그림자/기울기는 base 공유. */
 var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY'];
-function dennIsMobileEditCtxV(){try{return new URLSearchParams(location.search||'').get('viewAs')==='mobile'}catch(e){return false}}
+/* 모바일 편집 컨텍스트 판정 — 런타임 토글(__dennAdminMobileV, PC 편집기 내 'PC|모바일' 탭) 우선,
+   하위호환으로 URL viewAs=mobile도 인정. 저장 라우팅·읽기 병합·measureBase가 공유. */
+function dennIsMobileEditCtxV(){try{if(window.__dennAdminMobileV)return true;return new URLSearchParams(location.search||'').get('viewAs')==='mobile'}catch(e){return false}}
 function dennPickMobileFieldsV(o){var out={};if(o)DENN_MOBILE_FIELDS_V.forEach(function(k){if(o[k]!=null)out[k]=o[k]});return out;}
 function dennRouteSaveV(prev,merged){
   if(!dennIsMobileEditCtxV())return merged;              /* PC/데스크탑: 기존대로 base 저장(merged엔 prev.mobile 보존됨) */
@@ -8541,7 +8544,7 @@ function ensure(){
   var bar=document.createElement('div');
   bar.id='denn-admin-room-setup-bar';
   bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:999999;background:#1e1b2a;color:#fff;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px;padding:8px 14px;font:12px Arial,sans-serif';
-  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
+  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><span id="denn-admin-viewseg" style="display:inline-flex;border:1px solid rgba(255,255,255,.28);border-radius:7px;overflow:hidden;margin-left:8px"><button id="denn-admin-view-pc" type="button" style="background:#d1ad5f;color:#111;border:0;padding:7px 12px;font-weight:700;cursor:pointer">💻 PC</button><button id="denn-admin-view-mobile" type="button" style="background:transparent;color:#fff;border:0;border-left:1px solid rgba(255,255,255,.28);padding:7px 12px;font-weight:700;cursor:pointer">📱 모바일</button></span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
   document.body.appendChild(bar);
   var save=document.getElementById('denn-admin-room-save');
   var close=document.getElementById('denn-admin-room-close');
@@ -8550,6 +8553,21 @@ function ensure(){
     if(typeof window.saveAdminRoomPreset==='function')return window.saveAdminRoomPreset();
   };
   if(close)close.onclick=function(){try{window.close()}catch(e){}};
+  /* PC|모바일 토글 — 같은 편집기 안에서 캔버스만 세로 폰 형태로 전환(컨트롤 패널은 PC 그대로).
+     저장은 토글이 모바일이면 key.mobile로 라우팅(dennRouteSaveV), PC면 base. 전환 시 현재 키 설정 재적용. */
+  var vpc=document.getElementById('denn-admin-view-pc');
+  var vmob=document.getElementById('denn-admin-view-mobile');
+  function setMode(mob){
+    window.__dennAdminMobileV=!!mob;
+    if(vpc){vpc.style.background=mob?'transparent':'#d1ad5f';vpc.style.color=mob?'#fff':'#111';}
+    if(vmob){vmob.style.background=mob?'#d1ad5f':'transparent';vmob.style.color=mob?'#111':'#fff';}
+    try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}
+    try{if(window.rmSizeCanvas)window.rmSizeCanvas();}catch(e){}
+    try{if(window.rmRender)window.rmRender();}catch(e){}
+    try{if(window.sgDraw)window.sgDraw();}catch(e){}
+  }
+  if(vpc)vpc.onclick=function(){setMode(false)};
+  if(vmob)vmob.onclick=function(){setMode(true)};
 }
 function schedule(){setTimeout(ensure,80);setTimeout(ensure,450);setTimeout(ensure,1200)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule);else schedule();
@@ -13503,6 +13521,36 @@ input[type=range]{accent-color:#777}
   }
   window.addEventListener('resize',function(){clearTimeout(window.__dennRoomCoverRz);window.__dennRoomCoverRz=setTimeout(kick,150);});
   [300,800,1500].forEach(function(ms){setTimeout(kick,ms);});
+})();
+</script>
+<script id="denn-v107-admin-mobile-preview-box">
+/* PC 관리자 편집기 내 'PC|모바일' 토글(__dennAdminMobileV) — 넓은 PC 창에서 캔버스만 세로 폰 박스로 렌더.
+   컨트롤 패널은 PC 그대로(좁은 폭 미디어쿼리 안 탐). 저장/읽기병합/measureBase는 dennIsMobileEditCtxV가 처리.
+   실폰/좁은 창(<=860)은 기존 coverFit(V106)이 담당하므로 여기선 제외. rmSizeCanvas/rmRender 최종 래핑(맨 뒤). */
+(function(){
+  if(window.__DENN_ADMIN_MOBILE_PREVIEW_V107)return;window.__DENN_ADMIN_MOBILE_PREVIEW_V107=true;
+  var RATIO=0.62;/* 폰 세로 가로/세로 비(≈9:14.5) */
+  function box(){
+    try{
+      if(!(window.dennIsMobileEditCtxV&&window.dennIsMobileEditCtxV()))return false;
+      if(window.innerWidth<=860)return false;
+      var RM=window.RM;if(!RM||!RM.canvas)return false;
+      var area=document.getElementById('rm-canvas-area');if(!area)return false;
+      var ah=Math.max(240,(area.clientHeight||620)-12),aw=Math.max(200,(area.clientWidth||900)-12);
+      var h=ah,w=Math.round(h*RATIO);
+      if(w>aw){w=aw;h=Math.round(w/RATIO);}
+      if(RM.canvas.width===w&&RM.canvas.height===h)return false;
+      RM.canvas.width=w;RM.canvas.height=h;RM.canvas.style.width=w+'px';RM.canvas.style.height=h+'px';
+      var sg=document.getElementById('sg-canvas');
+      if(sg){sg.width=w;sg.height=h;sg.style.width=w+'px';sg.style.height=h+'px';}
+      return true;
+    }catch(e){return false}
+  }
+  window.__dennAdminMobilePreviewBoxV107=box;
+  var origSize=window.rmSizeCanvas;
+  if(typeof origSize==='function')window.rmSizeCanvas=function(){var r=origSize.apply(this,arguments);box();return r;};
+  var origRender=window.rmRender;
+  if(typeof origRender==='function')window.rmRender=function(){var r=origRender.apply(this,arguments);if(box()){try{origRender.call(window);window.sgDraw&&window.sgDraw();}catch(e){}}return r;};
 })();
 </script>
 <script id="denn-v100-canvas-rotate-DEFERRED">
