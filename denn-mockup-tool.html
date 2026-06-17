@@ -13634,8 +13634,7 @@ input[type=range]{accent-color:#777}
   if(window.__DENN_ROTATE_FS_V108)return;window.__DENN_ROTATE_FS_V108=true;
   try{
     var st=document.createElement('style');st.id='denn-v108-css';
-    st.textContent='@media(max-width:760px){#rm-fullscreen-btn{display:none!important}}'+
-      '#denn-rotate-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;z-index:40;background:rgba(18,16,12,.84);color:#fff;font-size:12px;font-weight:600;padding:9px 15px;border-radius:20px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.28)}';
+    st.textContent='#denn-rotate-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;z-index:40;background:rgba(18,16,12,.84);color:#fff;font-size:12px;font-weight:600;padding:9px 15px;border-radius:20px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.28)}';
     (document.head||document.documentElement).appendChild(st);
   }catch(e){}
   function isMob(){try{return innerWidth<760||((window.matchMedia&&matchMedia('(pointer:coarse)').matches)&&Math.min(innerWidth,innerHeight)<760)}catch(e){return innerWidth<760}}
@@ -13652,9 +13651,14 @@ input[type=range]{accent-color:#777}
     }
     h.style.display='block';
   }
+  function hideFsBtn(){
+    /* 기존 CSS(#room-modal #rm-fullscreen-btn, ID 2개)보다 특이도가 높게 — 인라인 !important로 모바일에서 숨김(회전 안내로 대체). PC는 원복. */
+    var b=document.getElementById('rm-fullscreen-btn');if(!b)return;
+    if(isMob())b.style.setProperty('display','none','important');else b.style.removeProperty('display');
+  }
   function onChange(){
     try{
-      hint();
+      hideFsBtn();hint();
       if(!isMob()||!roomOpen())return;
       var landscape=innerWidth>innerHeight,fs=isFs();
       if(landscape&&!fs){window.__dennAutoFsV108=true;if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}
