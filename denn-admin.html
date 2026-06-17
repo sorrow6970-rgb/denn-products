@@ -5685,6 +5685,16 @@ window.addEventListener('load',function(){setTimeout(init,1000);setTimeout(init,
 #guide-bg-grid .denn-v98-wl-hint,#guide-bg-grid .denn-v98-wl-empty{
   padding:2px 9px 8px;color:var(--faint);font-size:9px;line-height:1.5;
 }
+#guide-bg-grid .denn-v109-mobilebg{
+  margin-top:8px;padding:8px 9px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.03);
+}
+#guide-bg-grid .denn-mbg-head{font-size:10px;color:var(--muted);margin-bottom:6px}
+#guide-bg-grid .denn-mbg-head b{color:#f7f2ea}
+#guide-bg-grid .denn-mbg-thumb{width:100%;max-height:120px;object-fit:contain;border-radius:6px;background:#000;margin-bottom:6px;display:block}
+#guide-bg-grid .denn-mbg-actions{display:flex;gap:6px}
+#guide-bg-grid .denn-mbg-up{flex:1;display:flex;align-items:center;justify-content:center;height:30px;border:1px solid var(--border);border-radius:6px;font-size:10.5px;font-weight:600;color:#c8a864;cursor:pointer;background:rgba(200,168,100,.08)}
+#guide-bg-grid .denn-mbg-del{flex:0 0 auto;height:30px;padding:0 11px;border:1px solid var(--border);border-radius:6px;font-size:10.5px;color:var(--muted);cursor:pointer;background:transparent;font-family:inherit}
+#guide-bg-grid .denn-mbg-hint{margin-top:5px;font-size:8.5px;color:var(--faint);line-height:1.45}
 </style>
 <script id="denn-v35-guide-bg-card-ui-polish">
 (function(){
@@ -5714,8 +5724,41 @@ function renderPolishedGuideCards(){
     card.querySelector('.del-tpl-btn').onclick=function(){window.delGuideBg&&window.delGuideBg(i)};
     Array.prototype.forEach.call(card.querySelectorAll('.denn-v98-move-btn'),function(btn){btn.onclick=function(){window.moveGuideBg&&window.moveGuideBg(i,parseInt(btn.getAttribute('data-dir'),10))};});
     card.appendChild(buildSizeWhitelist(bg));
+    card.appendChild(buildMobileBgRow(bg,i));
     grid.appendChild(card);
   });
+}
+function buildMobileBgRow(bg,i){
+  var wrap=document.createElement('div');wrap.className='denn-v109-mobilebg';
+  var has=typeof bg.mobileDataUrl==='string'&&bg.mobileDataUrl.length>30;
+  wrap.innerHTML='<div class="denn-mbg-head">📱 모바일 세로(4:5) 배경 · '+(has?'<b>설정됨</b>':'없음(가로 배경 사용)')+'</div>'+
+    (has?'<img class="denn-mbg-thumb" src="'+bg.mobileDataUrl+'" alt="">':'')+
+    '<div class="denn-mbg-actions"><label class="denn-mbg-up">'+(has?'교체':'세로 배경 올리기')+'<input type="file" accept="image/*" style="display:none"></label>'+(has?'<button type="button" class="denn-mbg-del">제거</button>':'')+'</div>'+
+    '<div class="denn-mbg-hint">세로 모바일에서만 이 배경이 보입니다. 가로·PC는 위 기본(가로) 배경을 사용합니다.</div>';
+  var inp=wrap.querySelector('input[type=file]');
+  if(inp)inp.onchange=function(){
+    var f=this.files&&this.files[0];if(!f)return;
+    function store(dataUrl){S.guideBackgrounds[i].mobileDataUrl=dataUrl;delete S.guideBackgrounds[i].mobileStoragePath;saveNow();if(window.renderGuideBgs)renderGuideBgs();if(window.toast)toast('모바일 세로 배경 설정됨');}
+    var r=new FileReader();
+    r.onload=function(e){
+      /* localStorage 용량 보호 — 최대 1400px·JPEG 0.85로 다운스케일 후 저장. */
+      var img=new Image();
+      img.onload=function(){
+        try{
+          var w=img.naturalWidth||img.width||1,h=img.naturalHeight||img.height||1,mx=1400,sc=Math.min(1,mx/Math.max(w,h));
+          var cw=Math.max(1,Math.round(w*sc)),ch=Math.max(1,Math.round(h*sc)),cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+          cv.getContext('2d').drawImage(img,0,0,cw,ch);
+          store(cv.toDataURL('image/jpeg',0.85));
+        }catch(err){store(e.target.result)}
+      };
+      img.onerror=function(){store(e.target.result)};
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(f);
+  };
+  var del=wrap.querySelector('.denn-mbg-del');
+  if(del)del.onclick=function(){if(!confirm('모바일 세로 배경을 제거할까요?'))return;delete S.guideBackgrounds[i].mobileDataUrl;delete S.guideBackgrounds[i].mobileStoragePath;saveNow();if(window.renderGuideBgs)renderGuideBgs();if(window.toast)toast('제거됨');};
+  return wrap;
 }
 function buildSizeWhitelist(bg){
   // 배경별 '표시 사이즈' 화이트리스트 → bg.allowedSizeIds(사이즈 id 배열). 빈 배열/없음 = 전체 허용.

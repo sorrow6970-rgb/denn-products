@@ -1770,6 +1770,16 @@ function dennAdminSetupTargetIdxV(bgs){
   return -1;
 }
 window.dennAdminSetupTargetIdxV=dennAdminSetupTargetIdxV;
+/* 세로(4:5) 전용 배경: 세로 모바일이면 bg.mobileDataUrl 사용, 아니면(가로·PC) 기존 bg.dataUrl.
+   가로는 PC와 비율 동일 → 원본(가로) 배경 그대로. mobileDataUrl 없으면 기존 배경 폴백. */
+function dennGuideBgSrcV(bg){
+  try{
+    if(!bg)return '';
+    if(window.isRoomPortrait&&window.isRoomPortrait()&&typeof bg.mobileDataUrl==='string'&&bg.mobileDataUrl.length>50)return bg.mobileDataUrl;
+  }catch(e){}
+  return bg&&bg.dataUrl;
+}
+window.dennGuideBgSrcV=dennGuideBgSrcV;
 function rmLoadGuideBgs(){
   var bgs=(ADM&&ADM.guideBackgrounds)||[];
   var sec=document.getElementById('rm-guide-section');
@@ -1813,7 +1823,8 @@ function rmSelectGuide(i){
     if(sel)sel.style.borderColor='var(--gold2)';
     rmSizeCanvas();rmRender();
   };
-  img.src=bgs[i].dataUrl;
+  img.src=(window.dennGuideBgSrcV?dennGuideBgSrcV(bgs[i]):bgs[i].dataUrl)||bgs[i].dataUrl;
+  RM.__bgIndexForSwap=i;
 }
 
 function openRoomMockup(){
@@ -4917,17 +4928,19 @@ function applyRoomPresetSize(st){
 }
 function loadGuideImage(hit,done){
   if(!hit||!hit.bg||!hit.bg.dataUrl){done&&done(false);return}
+  var src=(window.dennGuideBgSrcV?dennGuideBgSrcV(hit.bg):hit.bg.dataUrl)||hit.bg.dataUrl;/* 세로 모바일=mobileDataUrl */
   var img=new Image();
   img.onload=function(){
     window.RM=window.RM||{};
     RM.roomImg=img;
-    RM.roomSrc=hit.bg.dataUrl;
+    RM.roomSrc=src;
+    RM.__bgIndexForSwap=hit&&hit.index;/* 회전 시 src 스왑용 */
     setRoomKey(hit);
     updateGuideListUi(hit);
     done&&done(true);
   };
   img.onerror=function(){done&&done(false)};
-  img.src=hit.bg.dataUrl;
+  img.src=src;
 }
 function applyPresetByKey(key,opts){
   opts=opts||{};
@@ -5041,6 +5054,7 @@ function installAdminBar(){
     window.__dennAdminMobileV=!!mob;
     if(vpc){vpc.style.background=mob?'transparent':'#d1ad5f';vpc.style.color=mob?'#fff':'#111';}
     if(vmob){vmob.style.background=mob?'#d1ad5f':'transparent';vmob.style.color=mob?'#111':'#fff';}
+    try{if(window.dennSwapRoomBgV)window.dennSwapRoomBgV();}catch(e){}/* 세로 토글이면 mobileDataUrl 배경으로 스왑 */
     try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}
     try{if(window.rmSizeCanvas)window.rmSizeCanvas();}catch(e){}
     try{if(window.rmRender)window.rmRender();}catch(e){}
@@ -8578,6 +8592,7 @@ function ensure(){
     window.__dennAdminMobileV=!!mob;
     if(vpc){vpc.style.background=mob?'transparent':'#d1ad5f';vpc.style.color=mob?'#fff':'#111';}
     if(vmob){vmob.style.background=mob?'#d1ad5f':'transparent';vmob.style.color=mob?'#111':'#fff';}
+    try{if(window.dennSwapRoomBgV)window.dennSwapRoomBgV();}catch(e){}/* 세로 토글이면 mobileDataUrl 배경으로 스왑 */
     try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}
     try{if(window.rmSizeCanvas)window.rmSizeCanvas();}catch(e){}
     try{if(window.rmRender)window.rmRender();}catch(e){}
@@ -8635,6 +8650,7 @@ function build(){
   }
   function setMode(mob){
     window.__dennAdminMobileV=!!mob;paint(!!mob);
+    try{if(window.dennSwapRoomBgV)window.dennSwapRoomBgV();}catch(e){}/* 세로 토글이면 mobileDataUrl 배경으로 스왑 */
     try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}
     try{if(window.rmSizeCanvas)window.rmSizeCanvas();}catch(e){}
     try{if(window.rmRender)window.rmRender();}catch(e){}
@@ -13713,9 +13729,24 @@ input[type=range]{accent-color:#777}
     var b=document.getElementById('rm-fullscreen-btn');if(!b)return;
     if(isMob())b.style.setProperty('display','none','important');else b.style.removeProperty('display');
   }
+  /* 회전 시 배경 이미지 스왑 — 세로면 mobileDataUrl(4:5), 가로/PC면 원본. 세로전용 배경(mobileDataUrl) 있는 가이드만. */
+  function swapBgForOrientation(){
+    try{
+      var RM=window.RM;if(!RM||!RM.roomImg||!window.dennGuideBgSrcV)return;
+      var bgs=(window.ADM&&ADM.guideBackgrounds)||[],idx=(RM.guideIndex!=null)?RM.guideIndex:RM.__bgIndexForSwap;
+      if(idx==null||idx<0)return;
+      var bg=bgs[idx];if(!bg||!bg.mobileDataUrl)return;
+      var want=dennGuideBgSrcV(bg)||bg.dataUrl;
+      if(!want||want===RM.roomSrc)return;
+      var img=new Image();
+      img.onload=function(){RM.roomImg=img;RM.roomSrc=want;try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}};
+      img.src=want;
+    }catch(e){}
+  }
+  window.dennSwapRoomBgV=swapBgForOrientation;/* 관리자 PC|모바일 토글에서도 세로면 mobileDataUrl 배경으로 스왑 */
   function onChange(){
     try{
-      hideFsBtn();ensureExitBtn();
+      hideFsBtn();ensureExitBtn();swapBgForOrientation();
       var mob=isMob(),open=roomOpen(),landscapeNow=innerWidth>innerHeight;
       /* 프레임(액자) 편집 화면(룸 모달 닫힘) + 모바일 + 가로 → 세로 전용 오버레이로 차단. */
       framePortraitPrompt(mob&&!open&&landscapeNow);
