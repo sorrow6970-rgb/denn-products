@@ -13640,10 +13640,21 @@ input[type=range]{accent-color:#777}
       'html.denn-rotate-fs #denn-rotate-exit{display:flex}'+
       'html.denn-rotate-fs #room-modal>div>div:first-child{display:none!important}'+
       'html.denn-rotate-fs #room-modal .denn-rm-bar{display:none!important}'+
+      'html.denn-rotate-fs #room-modal .rm-right-panel{display:none!important}'+
+      'html.denn-rotate-fs #room-modal>div>div:nth-child(2)>div:first-child{display:none!important}'+/* 좌측 패널/시트 */
+      'html.denn-rotate-fs #room-modal .rm-left-panel-msheet{display:none!important}'+
+      'html.denn-rotate-fs #rm-mobile-resize-handle{display:none!important}'+
       'html.denn-rotate-fs #rm-usage-guide-v33{display:none!important}'+
       'html.denn-rotate-fs #denn-rotate-hint{display:none!important}'+
       'html.denn-rotate-fs #room-modal #rm-canvas-area{width:100vw!important;height:100vh!important;height:100dvh!important;min-height:0!important;max-height:none!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;background:#000!important}'+
-      'html.denn-rotate-fs #room-modal #rm-canvas,html.denn-rotate-fs #room-modal #sg-canvas{max-width:100vw!important;max-height:100dvh!important}';
+      'html.denn-rotate-fs #room-modal #rm-canvas,html.denn-rotate-fs #room-modal #sg-canvas{max-width:100vw!important;max-height:100dvh!important}'+
+      /* 프레임(액자) 편집 화면: 모바일 가로 회전 차단 — 세로 전용 오버레이. */
+      '#denn-frame-portrait-prompt{position:fixed;inset:0;z-index:2147483646;background:rgba(20,18,28,.96);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:13px;text-align:center;padding:24px;font-family:inherit}'+
+      '#denn-frame-portrait-prompt.on{display:flex}'+
+      '#denn-frame-portrait-prompt .dfp-ico{font-size:46px;animation:dfpRot 2.2s ease-in-out infinite}'+
+      '#denn-frame-portrait-prompt .dfp-t{font-size:16px;font-weight:700}'+
+      '#denn-frame-portrait-prompt .dfp-s{font-size:12.5px;opacity:.78;line-height:1.6}'+
+      '@keyframes dfpRot{0%,100%{transform:rotate(0)}50%{transform:rotate(-90deg)}}';
     (document.head||document.documentElement).appendChild(st);
   }catch(e){}
   function isMob(){try{return innerWidth<760||((window.matchMedia&&matchMedia('(pointer:coarse)').matches)&&Math.min(innerWidth,innerHeight)<760)}catch(e){return innerWidth<760}}
@@ -13656,6 +13667,14 @@ input[type=range]{accent-color:#777}
     b.onclick=exitRotateFs;document.body.appendChild(b);
   }
   function setRotateFs(on){document.documentElement.classList.toggle('denn-rotate-fs',!!on);ensureExitBtn();}
+  function framePortraitPrompt(show){
+    var p=document.getElementById('denn-frame-portrait-prompt');
+    if(show){
+      if(!p){p=document.createElement('div');p.id='denn-frame-portrait-prompt';p.innerHTML='<div class="dfp-ico">📱</div><div class="dfp-t">세로로 돌려주세요</div><div class="dfp-s">액자 편집은 세로 화면에서<br>진행해 주세요</div>';document.body.appendChild(p);}
+      p.classList.add('on');
+      try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait-primary')['catch'](function(){});}catch(e){}/* 안드로이드: 세로 강제(실패 무시) */
+    }else if(p){p.classList.remove('on');}
+  }
   function exitRotateFs(){
     window.__dennRotateDismissed=true;/* 사용자가 ✕로 닫음 → 가로 유지 중엔 자동 재진입 안 함 */
     document.documentElement.classList.remove('denn-rotate-fs');
@@ -13682,9 +13701,11 @@ input[type=range]{accent-color:#777}
   function onChange(){
     try{
       hideFsBtn();ensureExitBtn();
-      var mob=isMob(),open=roomOpen();
+      var mob=isMob(),open=roomOpen(),landscapeNow=innerWidth>innerHeight;
+      /* 프레임(액자) 편집 화면(룸 모달 닫힘) + 모바일 + 가로 → 세로 전용 오버레이로 차단. */
+      framePortraitPrompt(mob&&!open&&landscapeNow);
       if(!mob||!open){setRotateFs(false);hint();return;}
-      var landscape=innerWidth>innerHeight,fs=isFs();
+      var landscape=landscapeNow,fs=isFs();
       if(landscape){
         if(window.__dennRotateDismissed){setRotateFs(false);}
         else{
