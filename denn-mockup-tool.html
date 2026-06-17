@@ -13290,10 +13290,10 @@ input[type=range]{accent-color:#777}
       });
       if(window.dennSyncShadowTogV)window.dennSyncShadowTogV();/* E: 생성 직후 현재 rm-sh-op 값으로 핀/dim 초기화 — 무조건 'on' 시작 버그 제거 */
     })();
-    /* '배경 밝기' / '배경 크기' 슬라이더 — 원래 액자 섹션 안에 있었지만 배경 관련이므로 '배경' 탭으로 이동 */
+    /* '배경 밝기' / '배경 크기' / '배경 좌우·상하 이동' 슬라이더 — 원래 액자 섹션 안에 있었지만 배경 관련이므로 '배경' 탭으로 이동(단계4: bg-ox/oy 추가) */
     var bgSection=leftPanel.querySelector('[data-rm-pane="bg"]');
     if(bgSection){
-      ['rm-bright','rm-bg-scale'].forEach(function(id){
+      ['rm-bright','rm-bg-scale','rm-bg-ox','rm-bg-oy'].forEach(function(id){
         var inp=document.getElementById(id);
         if(inp){
           var wrap=inp.parentElement;
