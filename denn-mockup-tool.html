@@ -5026,11 +5026,25 @@ function installAdminBar(){
   var bar=document.createElement('div');
   bar.id='denn-admin-room-setup-bar';
   bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:999999;background:#1e1b2a;color:#fff;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px;padding:8px 14px;font:12px DM Sans,sans-serif';
-  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
+  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><span id="denn-admin-viewseg" style="display:inline-flex;border:1px solid rgba(255,255,255,.28);border-radius:7px;overflow:hidden;margin-left:8px"><button id="denn-admin-view-pc" type="button" style="background:#d1ad5f;color:#111;border:0;padding:7px 12px;font-weight:700;cursor:pointer">💻 PC</button><button id="denn-admin-view-mobile" type="button" style="background:transparent;color:#fff;border:0;border-left:1px solid rgba(255,255,255,.28);padding:7px 12px;font-weight:700;cursor:pointer">📱 모바일</button></span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
   document.body.appendChild(bar);
   var save=by('denn-admin-room-save'),close=by('denn-admin-room-close');
   if(save)save.onclick=saveAdminRoomPreset;
   if(close)close.onclick=function(){try{window.close()}catch(e){}};
+  /* PC|모바일 토글 — 같은 편집기 안에서 캔버스만 세로 폰 형태로 전환(컨트롤 패널은 PC 그대로).
+     저장은 토글이 모바일이면 key.mobile로 라우팅(dennRouteSaveV), PC면 base. 전환 시 현재 키 설정 재적용. */
+  var vpc=by('denn-admin-view-pc'),vmob=by('denn-admin-view-mobile');
+  function setMode(mob){
+    window.__dennAdminMobileV=!!mob;
+    if(vpc){vpc.style.background=mob?'transparent':'#d1ad5f';vpc.style.color=mob?'#fff':'#111';}
+    if(vmob){vmob.style.background=mob?'#d1ad5f':'transparent';vmob.style.color=mob?'#111':'#fff';}
+    try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}
+    try{if(window.rmSizeCanvas)window.rmSizeCanvas();}catch(e){}
+    try{if(window.rmRender)window.rmRender();}catch(e){}
+    try{if(window.sgDraw)window.sgDraw();}catch(e){}
+  }
+  if(vpc)vpc.onclick=function(){setMode(false)};
+  if(vmob)vmob.onclick=function(){setMode(true)};
 }
 function openAdminSetupRoom(){
   var key=qs().get('adminRoomSetup');
