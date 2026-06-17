@@ -520,7 +520,21 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
               <div style="font-size:10px;color:var(--warm)">배경 크기</div>
               <span id="rm-bg-scale-v" style="font-size:10px;color:var(--ink);font-weight:500">100%</span>
             </div>
-            <input type="range" id="rm-bg-scale" min="50" max="200" value="100" style="width:100%" oninput="document.getElementById('rm-bg-scale-v').textContent=this.value+'%';rmRender()">
+            <input type="range" id="rm-bg-scale" min="50" max="200" value="100" style="width:100%" oninput="document.getElementById('rm-bg-scale-v').textContent=this.value+'%';if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <div style="font-size:10px;color:var(--warm)">배경 좌우 이동</div>
+              <span id="rm-bg-ox-v" style="font-size:10px;color:var(--ink);font-weight:500">0</span>
+            </div>
+            <input type="range" id="rm-bg-ox" min="-50" max="50" value="0" style="width:100%" oninput="document.getElementById('rm-bg-ox-v').textContent=this.value;if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <div style="font-size:10px;color:var(--warm)">배경 상하 이동</div>
+              <span id="rm-bg-oy-v" style="font-size:10px;color:var(--ink);font-weight:500">0</span>
+            </div>
+            <input type="range" id="rm-bg-oy" min="-50" max="50" value="0" style="width:100%" oninput="document.getElementById('rm-bg-oy-v').textContent=this.value;if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
           </div>
         </div>
 
@@ -3013,6 +3027,8 @@ function currentSettingsV33(){
     framePerspectiveX:num((by('rm-persp-x')||{}).value,0),
     framePerspectiveY:num((by('rm-persp-y')||{}).value,0),
     bgScale:num((by('rm-bg-scale')||{}).value,Math.round(uiBgScale()*100))/100,
+    bgOffsetX:num((by('rm-bg-ox')||{}).value,0),
+    bgOffsetY:num((by('rm-bg-oy')||{}).value,0),
     shadowEnabled:num((by('rm-sh-op')||{}).value,60)>0,
     shadowOpacity:num((by('rm-sh-op')||{}).value,60)/100,
     shadowBlur:num((by('rm-sh-blur')||{}).value,20),
@@ -3078,6 +3094,7 @@ function applySettingsV33(s){
   setVal('rm-persp-x',num(s.framePerspectiveX,0),'');
   setVal('rm-persp-y',num(s.framePerspectiveY,0),'');
   setVal('rm-bg-scale',Math.round(num(s.bgScale,uiBgScale())*100),'%');
+  setVal('rm-bg-ox',num(s.bgOffsetX,0));setVal('rm-bg-oy',num(s.bgOffsetY,0));/* 단계4: 배경 이동 복원 */
   setVal('rm-sh-op',Math.round(num(s.shadowOpacity,.6)*100),'%');
   setVal('rm-sh-dir',num(s.shadowDirection,180),'°');
   setVal('rm-sh-dist',num(s.shadowDistance,8),'');
@@ -3395,7 +3412,7 @@ function drawFallback(ctx2,W,H){
   ctx2.fillStyle='rgba(80,80,80,.55)';ctx2.font='13px DM Sans,sans-serif';ctx2.textAlign='center';ctx2.fillText('배경을 선택하거나 업로드하세요',W/2,H*.18);
 }
 function drawContain(ctx2,img,x,y,w,h,scale){scale=clamp(scale==null?1:scale,0.5,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';var ar=(img.naturalWidth||1)/(img.naturalHeight||1),tw=w,th=tw/ar;if(th>h){th=h;tw=th*ar}tw*=scale;th*=scale;var dx=x+(w-tw)/2,dy=y+(h-th)/2;ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}}
-function drawCover(ctx2,img,x,y,w,h,scale){scale=clamp(scale==null?1:scale,1,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';var iw=img.naturalWidth||1,ih=img.naturalHeight||1,s=Math.max(w/iw,h/ih)*scale,tw=iw*s,th=ih*s,dx=x+(w-tw)/2,dy=y+(h-th)/2;ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}}
+function drawCover(ctx2,img,x,y,w,h,scale,ox,oy){scale=clamp(scale==null?1:scale,1,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';var iw=img.naturalWidth||1,ih=img.naturalHeight||1,s=Math.max(w/iw,h/ih)*scale,tw=iw*s,th=ih*s,px=clamp(num(ox,0),-0.5,0.5),py=clamp(num(oy,0),-0.5,0.5),dx=x+(w-tw)/2+px*(tw-w),dy=y+(h-th)/2+py*(th-h);ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}}
 function isDirectRoomUploadBg(){return !!(window.RM&&RM.roomImg&&(RM.bgId==='direct-room-upload'||RM.bgId==='uploaded-room'||RM.roomImg.__dennDirectUpload))}
 function directRoomImageAspect(){return isDirectRoomUploadBg()&&window.RM&&RM.roomImg&&RM.roomImg.naturalWidth&&RM.roomImg.naturalHeight?(RM.roomImg.naturalWidth/RM.roomImg.naturalHeight):0}
 /* 단계2(2026-06-17): viewAs=mobile(운영자 모바일 편집기)면 창 폭과 무관하게 모바일·portrait 강제
@@ -3874,7 +3891,7 @@ window.rmRender=function(){
     showCanvas();
     var c=RM.canvas,ctx2=RM.ctx,W=c.width,H=c.height,bright=num((by('rm-bright')||{}).value,100);
     ctx2.clearRect(0,0,W,H);ctx2.fillStyle='#D8D3CB';ctx2.fillRect(0,0,W,H);
-    if(RM.roomImg&&RM.roomImg.naturalWidth){ctx2.save();ctx2.filter='brightness('+bright+'%)';var bgScale=num((by('rm-bg-scale')||{}).value,Math.round(uiBgScale()*100))/100;if(isDirectRoomUploadBg())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale));else if(isRoomPortrait())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1.02,bgScale*1.04));else drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale));ctx2.restore()}else drawFallback(ctx2,W,H);
+    if(RM.roomImg&&RM.roomImg.naturalWidth){ctx2.save();ctx2.filter='brightness('+bright+'%)';var bgScale=num((by('rm-bg-scale')||{}).value,Math.round(uiBgScale()*100))/100,bgOx=num((by('rm-bg-ox')||{}).value,0)/100,bgOy=num((by('rm-bg-oy')||{}).value,0)/100;if(isDirectRoomUploadBg())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy);else if(isRoomPortrait())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1.02,bgScale*1.04),bgOx,bgOy);else drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy);ctx2.restore()}else drawFallback(ctx2,W,H);
     drawFrame(ctx2,W,H);
     drawSun(ctx2,W,H);
     drawDirectUploadNotice(ctx2,W,H);
@@ -5268,6 +5285,7 @@ function applyRoomSettings(s){
   if(window.dennUpdateSizeAnchorReadoutV)dennUpdateSizeAnchorReadoutV(num(s.frameSizeAnchor,50));
   var __anchRow=by('rm-size-anchor-row');if(__anchRow)__anchRow.style.display=(window.dennIsAdminSetupV&&dennIsAdminSetupV())?'block':'none';
   setVal('rm-bg-scale',Math.round(num(s.bgScale,uiBgScale())*100));
+  setVal('rm-bg-ox',num(s.bgOffsetX,0));setVal('rm-bg-oy',num(s.bgOffsetY,0));/* 단계4: 배경 이동 복원 */
   setVal('rm-sh-op',Math.round(num(s.shadowOpacity,.6)*100));
   setVal('rm-sh-dir',num(s.shadowDirection,180));
   setVal('rm-sh-dist',num(s.shadowDistance,8));
@@ -5308,6 +5326,8 @@ function currentRoomSettingsV48(){
     framePerspectiveX:num((by('rm-persp-x')||{}).value,0),
     framePerspectiveY:num((by('rm-persp-y')||{}).value,0),
     bgScale:num((by('rm-bg-scale')||{}).value,Math.round(uiBgScale()*100))/100,
+    bgOffsetX:num((by('rm-bg-ox')||{}).value,0),
+    bgOffsetY:num((by('rm-bg-oy')||{}).value,0),
     shadowEnabled:num((by('rm-sh-op')||{}).value,60)>0,
     shadowOpacity:num((by('rm-sh-op')||{}).value,60)/100,
     shadowBlur:num((by('rm-sh-blur')||{}).value,20),
@@ -5889,7 +5909,7 @@ function applyDefaultSize(A,st){
   if(!(shouldUseSavedGuideSizeV48(st)&&applyGuideSizeFromSettingsV48(st))&&!guideSizeUserOverride)syncGuideSizeToCurrentFrameV48();
 }
 function syncOutputs(){
-  ['rm-size','rm-tilt','rm-persp-x','rm-persp-y','rm-bg-scale','rm-sh-op','rm-sh-dir','rm-sh-dist','rm-sh-blur','rm-sun-int','rm-sun-spread','rm-sun-warm','rm-sun-rays','rm-ray-thick','rm-sun-ang','sg-scale-r','sg-scale-n','sg-ox-r','sg-ox-n','sg-oy-r','sg-oy-n','sg-alpha-r','sg-alpha-n'].forEach(function(id){
+  ['rm-size','rm-tilt','rm-persp-x','rm-persp-y','rm-bg-scale','rm-bg-ox','rm-bg-oy','rm-sh-op','rm-sh-dir','rm-sh-dist','rm-sh-blur','rm-sun-int','rm-sun-spread','rm-sun-warm','rm-sun-rays','rm-ray-thick','rm-sun-ang','sg-scale-r','sg-scale-n','sg-ox-r','sg-ox-n','sg-oy-r','sg-oy-n','sg-alpha-r','sg-alpha-n'].forEach(function(id){
     var el=by(id);if(el)setOut(id,el.value);
   });
 }
@@ -14279,6 +14299,7 @@ input[type=range]{accent-color:#777}
     setSV('rm-persp-x',nv(s.framePerspectiveX,0));
     setSV('rm-persp-y',nv(s.framePerspectiveY,0));
     if(s.bgScale!=null)setSV('rm-bg-scale',Math.round(nv(s.bgScale,1)*100));
+    if(s.bgOffsetX!=null)setSV('rm-bg-ox',nv(s.bgOffsetX,0));if(s.bgOffsetY!=null)setSV('rm-bg-oy',nv(s.bgOffsetY,0));/* 단계4: 배경 이동도 내보내기 렌더에 반영 */
     /* 실제 프레임 크기는 가이드 스케일(sg-scale)에 크게 의존(L3697) — 반드시 같이 적용 */
     if(s.guideScale!=null){setSV('sg-scale-r',Math.round(nv(s.guideScale,1)*100));setSV('sg-scale-n',Math.round(nv(s.guideScale,1)*100));}
     if(s.guideX!=null){setSV('sg-ox-r',nv(s.guideX,40));setSV('sg-ox-n',nv(s.guideX,40));}
