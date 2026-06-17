@@ -13634,7 +13634,8 @@ input[type=range]{accent-color:#777}
   if(window.__DENN_ROTATE_FS_V108)return;window.__DENN_ROTATE_FS_V108=true;
   try{
     var st=document.createElement('style');st.id='denn-v108-css';
-    st.textContent='#denn-rotate-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;z-index:40;background:rgba(18,16,12,.84);color:#fff;font-size:12px;font-weight:600;padding:9px 15px;border-radius:20px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.28)}'+
+    st.textContent='#denn-rotate-hint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(18,16,12,.62);color:#fff;font-size:12px;font-weight:600;padding:10px 16px;border-radius:22px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.22);opacity:1;transition:opacity .7s ease}'+
+      '#denn-rotate-hint.dfade{opacity:0}'+
       /* 가로 전체화면(denn-rotate-fs): 모든 메뉴 숨기고 배경만 화면 꽉 차게 + 우상단 ✕ 하나. */
       '#denn-rotate-exit{position:fixed;top:12px;right:12px;z-index:2147483647;width:44px;height:44px;border-radius:50%;background:rgba(18,16,12,.74);color:#fff;border:1px solid rgba(255,255,255,.42);font-size:21px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.35);font-family:inherit;padding:0}'+
       'html.denn-rotate-fs #denn-rotate-exit{display:flex}'+
@@ -13686,13 +13687,13 @@ input[type=range]{accent-color:#777}
   function hint(){
     var h=document.getElementById('denn-rotate-hint');
     var show=isMob()&&roomOpen()&&!isFs()&&(innerHeight>=innerWidth)&&!document.documentElement.classList.contains('denn-rotate-fs');
-    if(!show){if(h)h.style.display='none';return;}
-    var area=document.getElementById('rm-canvas-area');
-    if(!h){
-      h=document.createElement('div');h.id='denn-rotate-hint';h.textContent='↻ 휴대폰을 가로로 돌리면 배경 전체가 보여요';
-      if(area){if(getComputedStyle(area).position==='static')area.style.position='relative';area.appendChild(h);}else document.body.appendChild(h);
-    }
-    h.style.display='block';
+    if(!show){if(h)h.style.display='none';window.__dennHintShown=false;clearTimeout(window.__dennHintFadeT);return;}
+    if(window.__dennHintShown)return;/* 세로 진입당 1회만 — 5초 후 페이드아웃, 다시 세로로 진입하면 재표시 */
+    window.__dennHintShown=true;
+    if(!h){h=document.createElement('div');h.id='denn-rotate-hint';h.textContent='↻ 휴대폰을 가로로 돌리면 배경 전체가 보여요';document.body.appendChild(h);}
+    h.style.display='block';h.classList.remove('dfade');
+    clearTimeout(window.__dennHintFadeT);
+    window.__dennHintFadeT=setTimeout(function(){var hh=document.getElementById('denn-rotate-hint');if(hh)hh.classList.add('dfade');},5000);
   }
   function hideFsBtn(){
     var b=document.getElementById('rm-fullscreen-btn');if(!b)return;
