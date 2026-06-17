@@ -13626,6 +13626,53 @@ input[type=range]{accent-color:#777}
   if(typeof origRender==='function')window.rmRender=function(){var r=origRender.apply(this,arguments);if(box()){try{origRender.call(window);window.sgDraw&&window.sgDraw();}catch(e){}}return r;};
 })();
 </script>
+<script id="denn-v108-rotate-fullscreen">
+/* 소비자 모바일: 세로=일반(좌우 잘림 감수), 가로로 돌리면 자동 전체화면 → 배경 풀샷(PC 비율).
+   '전체화면 보기' 버튼은 모바일에서 숨기고 회전 안내 문구로 대체. 별도 모바일 이미지 업로드 없이 회전으로 해결.
+   브라우저 Fullscreen API(제스처 필요)는 안 쓰고 setRoomFullscreenLayout(CSS 풀스크린)만 사용. PC/관리자 프리뷰 무영향. */
+(function(){
+  if(window.__DENN_ROTATE_FS_V108)return;window.__DENN_ROTATE_FS_V108=true;
+  try{
+    var st=document.createElement('style');st.id='denn-v108-css';
+    st.textContent='@media(max-width:760px){#rm-fullscreen-btn{display:none!important}}'+
+      '#denn-rotate-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;z-index:40;background:rgba(18,16,12,.84);color:#fff;font-size:12px;font-weight:600;padding:9px 15px;border-radius:20px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.28)}';
+    (document.head||document.documentElement).appendChild(st);
+  }catch(e){}
+  function isMob(){try{return innerWidth<760||((window.matchMedia&&matchMedia('(pointer:coarse)').matches)&&Math.min(innerWidth,innerHeight)<760)}catch(e){return innerWidth<760}}
+  function roomOpen(){var m=document.getElementById('room-modal');if(!m)return false;try{return getComputedStyle(m).display!=='none'}catch(e){return false}}
+  function isFs(){var m=document.getElementById('room-modal');return !!(m&&m.classList&&m.classList.contains('denn-room-fullscreen-active'));}
+  function hint(){
+    var h=document.getElementById('denn-rotate-hint');
+    var show=isMob()&&roomOpen()&&!isFs()&&(innerHeight>=innerWidth);/* 세로 모바일 + 룸 열림 + 비전체화면 */
+    if(!show){if(h)h.style.display='none';return;}
+    var area=document.getElementById('rm-canvas-area');
+    if(!h){
+      h=document.createElement('div');h.id='denn-rotate-hint';h.textContent='↻ 휴대폰을 가로로 돌리면 배경 전체가 보여요';
+      if(area){if(getComputedStyle(area).position==='static')area.style.position='relative';area.appendChild(h);}else document.body.appendChild(h);
+    }
+    h.style.display='block';
+  }
+  function onChange(){
+    try{
+      hint();
+      if(!isMob()||!roomOpen())return;
+      var landscape=innerWidth>innerHeight,fs=isFs();
+      if(landscape&&!fs){window.__dennAutoFsV108=true;if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}
+      else if(!landscape&&fs&&window.__dennAutoFsV108){window.__dennAutoFsV108=false;if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(false);}
+      setTimeout(hint,90);
+    }catch(e){}
+  }
+  window.__dennRotateFsOnChangeV108=onChange;
+  window.addEventListener('resize',function(){clearTimeout(window.__dennRotFsRz);window.__dennRotFsRz=setTimeout(onChange,120);});
+  window.addEventListener('orientationchange',function(){setTimeout(onChange,150);setTimeout(onChange,420);});
+  var prevOpen=window.openRoomMockup;
+  if(typeof prevOpen==='function'&&!prevOpen.__rotFsV108){
+    window.openRoomMockup=function(){var r=prevOpen.apply(this,arguments);setTimeout(onChange,220);setTimeout(onChange,650);return r;};
+    window.openRoomMockup.__rotFsV108=true;
+  }
+  [500,1200].forEach(function(ms){setTimeout(onChange,ms);});
+})();
+</script>
 <script id="denn-v100-canvas-rotate-DEFERRED">
 /* (작업3 Q6 — 다음 세션 처리) 액자 방향 '가로' = 캔버스 통째 90° CSS 회전.
    현 상태: 비활성(no-op). 시도 결과 v36.1 스케일러(DENNFramePreviewScaleV361 / applyFramePreviewScaleV36)가
