@@ -13658,7 +13658,10 @@ input[type=range]{accent-color:#777}
       '#denn-frame-portrait-prompt .dfp-ico{font-size:46px;animation:dfpRot 2.2s ease-in-out infinite}'+
       '#denn-frame-portrait-prompt .dfp-t{font-size:16px;font-weight:700}'+
       '#denn-frame-portrait-prompt .dfp-s{font-size:12.5px;opacity:.78;line-height:1.6}'+
-      '@keyframes dfpRot{0%,100%{transform:rotate(0)}50%{transform:rotate(-90deg)}}';
+      '@keyframes dfpRot{0%,100%{transform:rotate(0)}50%{transform:rotate(-90deg)}}'+
+      /* 룸 진입 시 위치·배경 정착 점프 가림 — 캔버스를 잠깐 숨겼다 페이드인. */
+      '#room-modal #rm-canvas,#room-modal #sg-canvas{transition:opacity .26s ease}'+
+      'html.denn-room-entering #room-modal #rm-canvas,html.denn-room-entering #room-modal #sg-canvas{opacity:0!important}';
     (document.head||document.documentElement).appendChild(st);
   }catch(e){}
   function isMob(){try{return innerWidth<760||((window.matchMedia&&matchMedia('(pointer:coarse)').matches)&&Math.min(innerWidth,innerHeight)<760)}catch(e){return innerWidth<760}}
@@ -13733,7 +13736,13 @@ input[type=range]{accent-color:#777}
   window.addEventListener('orientationchange',function(){setTimeout(onChange,150);setTimeout(onChange,420);});
   var prevOpen=window.openRoomMockup;
   if(typeof prevOpen==='function'&&!prevOpen.__rotFsV108){
-    window.openRoomMockup=function(){var r=prevOpen.apply(this,arguments);setTimeout(onChange,220);setTimeout(onChange,650);return r;};
+    window.openRoomMockup=function(){
+      try{document.documentElement.classList.add('denn-room-entering');}catch(e){}/* 진입 점프 가림 */
+      var r=prevOpen.apply(this,arguments);
+      setTimeout(onChange,220);setTimeout(onChange,650);
+      setTimeout(function(){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}},480);/* 정착 후 페이드인 */
+      return r;
+    };
     window.openRoomMockup.__rotFsV108=true;
   }
   [500,1200].forEach(function(ms){setTimeout(onChange,ms);});
