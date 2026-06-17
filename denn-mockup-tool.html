@@ -13634,15 +13634,39 @@ input[type=range]{accent-color:#777}
   if(window.__DENN_ROTATE_FS_V108)return;window.__DENN_ROTATE_FS_V108=true;
   try{
     var st=document.createElement('style');st.id='denn-v108-css';
-    st.textContent='#denn-rotate-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;z-index:40;background:rgba(18,16,12,.84);color:#fff;font-size:12px;font-weight:600;padding:9px 15px;border-radius:20px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.28)}';
+    st.textContent='#denn-rotate-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;z-index:40;background:rgba(18,16,12,.84);color:#fff;font-size:12px;font-weight:600;padding:9px 15px;border-radius:20px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.28)}'+
+      /* 가로 전체화면(denn-rotate-fs): 모든 메뉴 숨기고 배경만 화면 꽉 차게 + 우상단 ✕ 하나. */
+      '#denn-rotate-exit{position:fixed;top:12px;right:12px;z-index:2147483647;width:44px;height:44px;border-radius:50%;background:rgba(18,16,12,.74);color:#fff;border:1px solid rgba(255,255,255,.42);font-size:21px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.35);font-family:inherit;padding:0}'+
+      'html.denn-rotate-fs #denn-rotate-exit{display:flex}'+
+      'html.denn-rotate-fs #room-modal>div>div:first-child{display:none!important}'+
+      'html.denn-rotate-fs #room-modal .denn-rm-bar{display:none!important}'+
+      'html.denn-rotate-fs #rm-usage-guide-v33{display:none!important}'+
+      'html.denn-rotate-fs #denn-rotate-hint{display:none!important}'+
+      'html.denn-rotate-fs #room-modal #rm-canvas-area{width:100vw!important;height:100vh!important;height:100dvh!important;min-height:0!important;max-height:none!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;background:#000!important}'+
+      'html.denn-rotate-fs #room-modal #rm-canvas,html.denn-rotate-fs #room-modal #sg-canvas{max-width:100vw!important;max-height:100dvh!important}';
     (document.head||document.documentElement).appendChild(st);
   }catch(e){}
   function isMob(){try{return innerWidth<760||((window.matchMedia&&matchMedia('(pointer:coarse)').matches)&&Math.min(innerWidth,innerHeight)<760)}catch(e){return innerWidth<760}}
   function roomOpen(){var m=document.getElementById('room-modal');if(!m)return false;try{return getComputedStyle(m).display!=='none'}catch(e){return false}}
   function isFs(){var m=document.getElementById('room-modal');return !!(m&&m.classList&&m.classList.contains('denn-room-fullscreen-active'));}
+  function redraw(){setTimeout(function(){try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}},120);}
+  function ensureExitBtn(){
+    if(document.getElementById('denn-rotate-exit'))return;
+    var b=document.createElement('button');b.id='denn-rotate-exit';b.type='button';b.title='세로로 돌아가기';b.setAttribute('aria-label','닫기');b.innerHTML='✕';
+    b.onclick=exitRotateFs;document.body.appendChild(b);
+  }
+  function setRotateFs(on){document.documentElement.classList.toggle('denn-rotate-fs',!!on);ensureExitBtn();}
+  function exitRotateFs(){
+    window.__dennRotateDismissed=true;/* 사용자가 ✕로 닫음 → 가로 유지 중엔 자동 재진입 안 함 */
+    document.documentElement.classList.remove('denn-rotate-fs');
+    window.__dennAutoFsV108=false;
+    try{if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(false);}catch(e){}
+    try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait-primary')['catch'](function(){});}catch(e){}/* 가능하면 세로 강제(안드로이드 한정, 실패 무시) */
+    redraw();
+  }
   function hint(){
     var h=document.getElementById('denn-rotate-hint');
-    var show=isMob()&&roomOpen()&&!isFs()&&(innerHeight>=innerWidth);/* 세로 모바일 + 룸 열림 + 비전체화면 */
+    var show=isMob()&&roomOpen()&&!isFs()&&(innerHeight>=innerWidth)&&!document.documentElement.classList.contains('denn-rotate-fs');
     if(!show){if(h)h.style.display='none';return;}
     var area=document.getElementById('rm-canvas-area');
     if(!h){
@@ -13652,18 +13676,27 @@ input[type=range]{accent-color:#777}
     h.style.display='block';
   }
   function hideFsBtn(){
-    /* 기존 CSS(#room-modal #rm-fullscreen-btn, ID 2개)보다 특이도가 높게 — 인라인 !important로 모바일에서 숨김(회전 안내로 대체). PC는 원복. */
     var b=document.getElementById('rm-fullscreen-btn');if(!b)return;
     if(isMob())b.style.setProperty('display','none','important');else b.style.removeProperty('display');
   }
   function onChange(){
     try{
-      hideFsBtn();hint();
-      if(!isMob()||!roomOpen())return;
+      hideFsBtn();ensureExitBtn();
+      var mob=isMob(),open=roomOpen();
+      if(!mob||!open){setRotateFs(false);hint();return;}
       var landscape=innerWidth>innerHeight,fs=isFs();
-      if(landscape&&!fs){window.__dennAutoFsV108=true;if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}
-      else if(!landscape&&fs&&window.__dennAutoFsV108){window.__dennAutoFsV108=false;if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(false);}
-      setTimeout(hint,90);
+      if(landscape){
+        if(window.__dennRotateDismissed){setRotateFs(false);}
+        else{
+          if(!fs){window.__dennAutoFsV108=true;if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}
+          setRotateFs(true);redraw();
+        }
+      }else{/* 세로 */
+        window.__dennRotateDismissed=false;
+        setRotateFs(false);
+        if(fs&&window.__dennAutoFsV108){window.__dennAutoFsV108=false;if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(false);}
+      }
+      hint();
     }catch(e){}
   }
   window.__dennRotateFsOnChangeV108=onChange;
