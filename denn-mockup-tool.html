@@ -13637,7 +13637,7 @@ input[type=range]{accent-color:#777}
   if(window.__DENN_ROTATE_FS_V108)return;window.__DENN_ROTATE_FS_V108=true;
   try{
     var st=document.createElement('style');st.id='denn-v108-css';
-    st.textContent='#denn-rotate-hint{position:absolute;left:50%;top:76px;bottom:auto;transform:translateX(-50%);z-index:60;background:rgba(18,16,12,.7);color:#fff;font-size:12px;font-weight:600;padding:10px 16px;border-radius:22px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.22);opacity:1;transition:opacity .7s ease}'+
+    st.textContent='#denn-rotate-hint{position:absolute;left:50%;bottom:130px;top:auto;transform:translateX(-50%);z-index:60;background:rgba(18,16,12,.7);color:#fff;font-size:12px;font-weight:600;padding:10px 16px;border-radius:22px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.22);opacity:1;transition:opacity .7s ease}'+
       '#denn-rotate-hint.dfade{opacity:0}'+
       /* 가로 전체화면(denn-rotate-fs): 모든 메뉴 숨기고 배경만 화면 꽉 차게 + 우상단 ✕ 하나. */
       '#denn-rotate-exit{position:fixed;top:12px;right:12px;z-index:2147483647;width:44px;height:44px;border-radius:50%;background:rgba(18,16,12,.74);color:#fff;border:1px solid rgba(255,255,255,.42);font-size:21px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.35);font-family:inherit;padding:0}'+
@@ -13661,7 +13661,9 @@ input[type=range]{accent-color:#777}
       '@keyframes dfpRot{0%,100%{transform:rotate(0)}50%{transform:rotate(-90deg)}}'+
       /* 룸 진입 시 위치·배경 정착 점프 가림 — 캔버스를 잠깐 숨겼다 페이드인. */
       '#room-modal #rm-canvas,#room-modal #sg-canvas{transition:opacity .26s ease}'+
-      'html.denn-room-entering #room-modal #rm-canvas,html.denn-room-entering #room-modal #sg-canvas{opacity:0!important}';
+      'html.denn-room-entering #room-modal #rm-canvas,html.denn-room-entering #room-modal #sg-canvas{opacity:0!important}'+
+      /* 모바일: 가이드배경 선택 카드(썸네일) 키움 — 55px는 너무 작음. */
+      '@media(max-width:760px){#rm-guide-grid>div img{height:104px!important}#rm-guide-grid>div>div{font-size:11px!important;padding:5px 9px!important}}';
     (document.head||document.documentElement).appendChild(st);
   }catch(e){}
   function isMob(){try{return innerWidth<760||((window.matchMedia&&matchMedia('(pointer:coarse)').matches)&&Math.min(innerWidth,innerHeight)<760)}catch(e){return innerWidth<760}}
@@ -13701,6 +13703,8 @@ input[type=range]{accent-color:#777}
       var area=document.getElementById('rm-canvas-area');
       if(area){if(getComputedStyle(area).position==='static')area.style.position='relative';area.appendChild(h);}else document.body.appendChild(h);
     }
+    /* 하단 메뉴바(.denn-rm-bar=액션+탭바) 바로 위에 배치 — 메뉴 높이가 기기마다 달라 측정해 보정. */
+    try{var bar=document.querySelector('#room-modal .denn-rm-bar'),bh=bar?bar.getBoundingClientRect().height:0;h.style.bottom=((bh>20?bh:118)+14)+'px';}catch(e){}
     h.style.display='block';h.classList.remove('dfade');
     clearTimeout(window.__dennHintFadeT);
     window.__dennHintFadeT=setTimeout(function(){var hh=document.getElementById('denn-rotate-hint');if(hh)hh.classList.add('dfade');},3000);
