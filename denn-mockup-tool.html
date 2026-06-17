@@ -3057,6 +3057,7 @@ function dennSyncShadowTogV(){
 window.dennSyncShadowTogV=dennSyncShadowTogV;
 function applySettingsV33(s){
   s=Object.assign(defaults(),s||{});
+  if(window.dennMergeMobileV)s=window.dennMergeMobileV(s);/* 단계3: 모바일 컨텍스트면 .mobile 격리값 병합(데스크탑은 무영향) */
   var on=by('sg-on'),body=by('sg-body'),ruler=by('sg-ruler');
   if(on)on.checked=s.guideEnabled!==false;
   if(body)body.style.display=(s.guideEnabled!==false)?'block':'none';
@@ -3160,6 +3161,18 @@ window.dennIsMobileEditCtxV=dennIsMobileEditCtxV;
 window.dennPickMobileFieldsV=dennPickMobileFieldsV;
 window.dennRouteSaveV=dennRouteSaveV;
 window.DENN_MOBILE_FIELDS_V=DENN_MOBILE_FIELDS_V;
+/* 단계3(2026-06-17): 읽기 병합 — 모바일 컨텍스트(실폰 isRoomMobile() 또는 viewAs=mobile 편집기)면
+   base 위에 key.mobile의 격리 필드만 덮어 효과값 반환(부분설정 허용). 데스크탑/PC는 base 그대로.
+   ★ 저장(viewAs)·읽기(isRoomMobile) 판정 분리: 소비자 실폰은 viewAs 없이도 모바일값을 본다. */
+function dennMergeMobileV(base){
+  try{
+    if(!base||typeof base!=='object')return base;
+    if(!(window.isRoomMobile&&window.isRoomMobile()))return base;
+    var m=base.mobile;if(!m||typeof m!=='object')return base;
+    return Object.assign({},base,dennPickMobileFieldsV(m));
+  }catch(e){return base}
+}
+window.dennMergeMobileV=dennMergeMobileV;
 function saveSettingsV33(){
   var A=adm(),st=store(A),key=window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey(),prev=st[key]||{},base=null,c=null;
   try{c=window.__dennRoomGuideBaselineV92b||{};base=prev.__guideResetDefaults||c[key]||null}catch(e){}
@@ -3385,9 +3398,12 @@ function drawContain(ctx2,img,x,y,w,h,scale){scale=clamp(scale==null?1:scale,0.5
 function drawCover(ctx2,img,x,y,w,h,scale){scale=clamp(scale==null?1:scale,1,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';var iw=img.naturalWidth||1,ih=img.naturalHeight||1,s=Math.max(w/iw,h/ih)*scale,tw=iw*s,th=ih*s,dx=x+(w-tw)/2,dy=y+(h-th)/2;ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}}
 function isDirectRoomUploadBg(){return !!(window.RM&&RM.roomImg&&(RM.bgId==='direct-room-upload'||RM.bgId==='uploaded-room'||RM.roomImg.__dennDirectUpload))}
 function directRoomImageAspect(){return isDirectRoomUploadBg()&&window.RM&&RM.roomImg&&RM.roomImg.naturalWidth&&RM.roomImg.naturalHeight?(RM.roomImg.naturalWidth/RM.roomImg.naturalHeight):0}
-function isRoomMobile(){try{return innerWidth<760||((window.matchMedia&&matchMedia('(pointer:coarse)').matches)&&Math.min(innerWidth,innerHeight)<760)}catch(e){return innerWidth<760}}
-function isRoomPortrait(){return isRoomMobile()&&innerHeight>=innerWidth}
+/* 단계2(2026-06-17): viewAs=mobile(운영자 모바일 편집기)면 창 폭과 무관하게 모바일·portrait 강제
+   → measureBase=max 통일(폰 레이아웃으로 렌더). 소비자 실폰은 자연 감지(innerWidth<760)로 동일. */
+function isRoomMobile(){try{if(window.dennIsMobileEditCtxV&&window.dennIsMobileEditCtxV())return true;return innerWidth<760||((window.matchMedia&&matchMedia('(pointer:coarse)').matches)&&Math.min(innerWidth,innerHeight)<760)}catch(e){return innerWidth<760}}
+function isRoomPortrait(){if(window.dennIsMobileEditCtxV&&window.dennIsMobileEditCtxV())return true;return isRoomMobile()&&innerHeight>=innerWidth}
 function isRoomLandscape(){return isRoomMobile()&&innerWidth>innerHeight}
+window.isRoomMobile=isRoomMobile;/* 단계3: 읽기 병합(dennMergeMobileV)이 단일 모바일 판정을 공유하도록 노출 */
 function measureBase(W,H){return isRoomPortrait()?Math.max(W,H):Math.min(W,H)}
 function activeGuideSize(){
   var list=actualSizes(),pick=null,primary=(window.RM&&RM.activeGuideSizeId)||(window.SG&&SG.primarySizeId);
@@ -3846,6 +3862,7 @@ window.rmRender=function(){
        저장은 scopedKeyV2로 user: 키에만 → 운영자 프리셋 원본 불변. */
     if(!RM.__userMoved&&!RM.dragging&&!RM.sunDrag&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){
       var __op=window.dennCurrentOperatorPresetV&&window.dennCurrentOperatorPresetV();
+      if(__op&&window.dennMergeMobileV)__op=window.dennMergeMobileV(__op);/* 단계3: 소비자 실폰이면 운영자 프리셋에 .mobile 병합(누락 시 모바일 위치가 PC로 덮임) */
       if(__op){
         if(isFinite(__op.guideScale)){var __scv=Math.round(__op.guideScale*1000)/10;setVal('sg-scale-r',__scv);setVal('sg-scale-n',__scv);}
         var __px=num(__op.frameCenterX!=null?__op.frameCenterX:__op.frameX,50),__py=num(__op.frameCenterY!=null?__op.frameCenterY:__op.frameY,40);
@@ -5235,6 +5252,7 @@ function refreshSunStateV48(){
 }
 function applyRoomSettings(s){
   s=s||defaultRoomSettings();
+  if(window.dennMergeMobileV)s=window.dennMergeMobileV(s);/* 단계3: 모바일 컨텍스트면 .mobile 격리값 병합(데스크탑은 무영향) */
   var on=by('sg-on'),body=by('sg-body'),ruler=by('sg-ruler');
   if(s.guideOrientation&&window.SG&&shouldUseSavedGuideSizeV48(s))SG.ori=s.guideOrientation;
   if(on)on.checked=s.guideEnabled!==false;
@@ -5526,6 +5544,7 @@ function applyGuideSizeFromSettingsV48(st){
   return false;
 }
 function measureBaseV48(W,H){
+  if(window.dennIsMobileEditCtxV&&window.dennIsMobileEditCtxV())return Math.max(W,H);/* 단계2: 모바일 편집기 portrait 강제 */
   var mobile=false;
   try{mobile=innerWidth<760||((window.matchMedia&&matchMedia('(pointer:coarse)').matches)&&Math.min(innerWidth,innerHeight)<760)}catch(e){mobile=innerWidth<760}
   return mobile&&innerHeight>=innerWidth?Math.max(W,H):Math.min(W,H);
@@ -5880,6 +5899,7 @@ function applyGuide(i,bg,img){
   RM.roomImg=img;RM.roomSrc=bgSrc(bg);RM.guideIndex=i;RM.bgId=key;
   /* 소비자: 기준 스케일은 현재 컨텍스트의 운영자 프리셋을 따른다(가이드배경=그 배경값, 기본/촬영=②). ★ RM(guideIndex/bgId) 갱신 '후' 호출해야 dennCurrentOperatorPresetV가 새로 선택한 배경 키를 봄(이전엔 갱신 전이라 ②로 덮였음). 사이즈/위치/투명도 무수정, 운영자 편집모드 제외. */
   try{ if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){ var __op=window.dennCurrentOperatorPresetV&&window.dennCurrentOperatorPresetV(); if(__op&&isFinite(__op.guideScale)) st.guideScale=__op.guideScale; } }catch(e){}
+  try{if(window.dennMergeMobileV)st=window.dennMergeMobileV(st);}catch(e){}/* 단계3: 모바일 컨텍스트면 st 자체를 .mobile 병합 → 이후 enforceGuideSettings 등 다운스트림이 모바일값 사용(PC 클로버 방지) */
   updateGuideUi(i,img.src);
   applyRoomSettings(st);
   applyDefaultSize(A,st);
@@ -5899,6 +5919,7 @@ function stabilizeCurrentGuide(){
   var hasSaved=hasSavedSettings(saved),st=hasSaved?Object.assign({},defaultRoomSettings(A),saved):defaultRoomSettings(A);
   /* 소비자: 기준 스케일은 현재 컨텍스트의 운영자 프리셋을 따른다(가이드배경=그 배경값, 기본/촬영=②). 사이즈/위치/투명도 무수정, 운영자 편집모드 제외. */
   try{ if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){ var __op=window.dennCurrentOperatorPresetV&&window.dennCurrentOperatorPresetV(); if(__op&&isFinite(__op.guideScale)) st.guideScale=__op.guideScale; } }catch(e){}
+  try{if(window.dennMergeMobileV)st=window.dennMergeMobileV(st);}catch(e){}/* 단계3: 모바일 컨텍스트면 st 자체를 .mobile 병합 → 이후 enforceGuideSettings 등 다운스트림이 모바일값 사용(PC 클로버 방지) */
   applyRoomSettings(st);
   applyDefaultSize(A,st);
   restoreUserFrameForRoom();

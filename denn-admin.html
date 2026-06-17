@@ -5552,18 +5552,30 @@ function by(id){return document.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function saveNow(){try{if(typeof window.persistState==='function')return window.persistState();dennPersistAdminStateV351(window.S||{})}catch(e){try{dennPersistAdminStateV351(window.S||{})}catch(_){}}}
 function bgKey(bg,i){return bg&&(bg.id||bg.name)?(bg.id||('guide-'+i)):'guide-'+i}
-function mockupUrlFor(bg,i){
+function mockupUrlFor(bg,i,viewAs){
   var key=bgKey(bg,i);
   var file='denn-mockup-tool.html';
+  var extra=(viewAs==='mobile')?'&viewAs=mobile':'';/* 단계2: 모바일 편집 컨텍스트 — 저장은 key.mobile로 라우팅(dennRouteSaveV) */
   try{
     var base=location.href.replace(/[^\/\\]*$/,'');
-    return base+file+'?adminRoomSetup='+encodeURIComponent(key)+'&roomOnly=1';
-  }catch(e){return file+'?adminRoomSetup='+encodeURIComponent(key)+'&roomOnly=1'}
+    return base+file+'?adminRoomSetup='+encodeURIComponent(key)+'&roomOnly=1'+extra;
+  }catch(e){return file+'?adminRoomSetup='+encodeURIComponent(key)+'&roomOnly=1'+extra}
 }
 window.openGuideBgDetail=function(i){
   if(!window.S||!S.guideBackgrounds||!S.guideBackgrounds[i])return;
   var bg=S.guideBackgrounds[i],url=mockupUrlFor(bg,i);
   var done=function(){window.open(url,'_blank')};
+  try{
+    var saved=saveNow();
+    if(saved&&typeof saved.then==='function')saved.then(done).catch(done);
+    else done();
+  }catch(e){done()}
+};
+/* 단계2: 모바일 전용 설정 — 같은 배경을 viewAs=mobile로 세로 폰박스 팝업에서 편집(base PC값 불변, .mobile만 저장). */
+window.openGuideBgMobile=function(i){
+  if(!window.S||!S.guideBackgrounds||!S.guideBackgrounds[i])return;
+  var bg=S.guideBackgrounds[i],url=mockupUrlFor(bg,i,'mobile');
+  var done=function(){window.open(url,'_blank','width=420,height=900,menubar=no,toolbar=no,location=no')};
   try{
     var saved=saveNow();
     if(saved&&typeof saved.then==='function')saved.then(done).catch(done);
@@ -5623,7 +5635,7 @@ window.addEventListener('load',function(){setTimeout(init,1000);setTimeout(init,
 }
 #guide-bg-grid .denn-v35-guide-card-actions{
   display:grid!important;
-  grid-template-columns:1fr 74px!important;
+  grid-template-columns:1fr 1fr!important;/* 단계2: PC·모바일 설정 2열, 삭제는 아래 전체폭 */
   gap:7px!important;
   margin-top:8px!important;
 }
@@ -5639,6 +5651,7 @@ window.addEventListener('load',function(){setTimeout(init,1000);setTimeout(init,
   line-height:1!important;
 }
 #guide-bg-grid .denn-v35-guide-card-actions .del-tpl-btn{
+  grid-column:1 / -1!important;/* 단계2: 삭제 버튼은 한 줄 전체폭(PC·모바일 아래) */
   margin-top:0!important;
 }
 #guide-bg-grid .denn-v98-guide-reorder{
@@ -5707,9 +5720,10 @@ function renderPolishedGuideCards(){
     var key=bgKey(bg,i),st=S.roomBackgroundSettings[key]||{},card=document.createElement('div');
     card.className='tpl-ca denn-v35-guide-card';
     var last=S.guideBackgrounds.length-1;
-    card.innerHTML='<div class="denn-v98-guide-reorder"><button class="denn-v98-move-btn" type="button" data-dir="-1" title="앞으로"'+(i===0?' disabled':'')+'>←</button><span class="denn-v98-move-pos">'+(i+1)+' / '+(last+1)+'</span><button class="denn-v98-move-btn" type="button" data-dir="1" title="뒤로"'+(i===last?' disabled':'')+'>→</button></div><div class="tpl-thumb-a fr"><img src="'+bg.dataUrl+'" style="width:100%;height:100%;object-fit:cover"></div><input class="edit-name" value="'+esc(bg.name||'')+'" placeholder="배경 이름"><div class="denn-v35-guide-card-meta">'+setupText(st)+'</div><div class="denn-v35-guide-card-actions"><button class="tb-btn primary" type="button">실제 화면 설정</button><button class="del-tpl-btn" type="button">삭제</button></div>';
+    card.innerHTML='<div class="denn-v98-guide-reorder"><button class="denn-v98-move-btn" type="button" data-dir="-1" title="앞으로"'+(i===0?' disabled':'')+'>←</button><span class="denn-v98-move-pos">'+(i+1)+' / '+(last+1)+'</span><button class="denn-v98-move-btn" type="button" data-dir="1" title="뒤로"'+(i===last?' disabled':'')+'>→</button></div><div class="tpl-thumb-a fr"><img src="'+bg.dataUrl+'" style="width:100%;height:100%;object-fit:cover"></div><input class="edit-name" value="'+esc(bg.name||'')+'" placeholder="배경 이름"><div class="denn-v35-guide-card-meta">'+setupText(st)+'</div><div class="denn-v35-guide-card-actions"><button class="tb-btn primary denn-pc-setup" type="button">💻 PC 설정</button><button class="tb-btn outline denn-mobile-setup" type="button">📱 모바일 설정</button><button class="del-tpl-btn" type="button">삭제</button></div>';
     card.querySelector('.edit-name').onchange=function(){S.guideBackgrounds[i].name=this.value;saveNow()};
-    card.querySelector('.tb-btn').onclick=function(){window.openGuideBgDetail&&window.openGuideBgDetail(i)};
+    card.querySelector('.denn-pc-setup').onclick=function(){window.openGuideBgDetail&&window.openGuideBgDetail(i)};
+    card.querySelector('.denn-mobile-setup').onclick=function(){window.openGuideBgMobile&&window.openGuideBgMobile(i)};
     card.querySelector('.del-tpl-btn').onclick=function(){window.delGuideBg&&window.delGuideBg(i)};
     Array.prototype.forEach.call(card.querySelectorAll('.denn-v98-move-btn'),function(btn){btn.onclick=function(){window.moveGuideBg&&window.moveGuideBg(i,parseInt(btn.getAttribute('data-dir'),10))};});
     card.appendChild(buildSizeWhitelist(bg));
