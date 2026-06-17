@@ -575,28 +575,28 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
                 <div style="font-size:10px;color:var(--warm)">강도</div>
                 <span id="rm-sun-int-v" style="font-size:10px;color:var(--ink);font-weight:500">50%</span>
               </div>
-              <input type="range" id="rm-sun-int" min="0" max="100" value="50" style="width:100%" oninput="document.getElementById('rm-sun-int-v').textContent=this.value+'%';rmRender()">
+              <input type="range" id="rm-sun-int" min="0" max="100" value="50" style="width:100%" oninput="document.getElementById('rm-sun-int-v').textContent=this.value+'%';rmRenderRAF()">
             </div>
             <div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
                 <div style="font-size:10px;color:var(--warm)">퍼짐 범위</div>
                 <span id="rm-sun-spread-v" style="font-size:10px;color:var(--ink);font-weight:500">60%</span>
               </div>
-              <input type="range" id="rm-sun-spread" min="10" max="120" value="60" style="width:100%" oninput="document.getElementById('rm-sun-spread-v').textContent=this.value+'%';rmRender()">
+              <input type="range" id="rm-sun-spread" min="10" max="120" value="60" style="width:100%" oninput="document.getElementById('rm-sun-spread-v').textContent=this.value+'%';rmRenderRAF()">
             </div>
             <div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
                 <div style="font-size:10px;color:var(--warm)">색온도 ☀️황금 ↔ ⬜흰빛</div>
                 <span id="rm-sun-warm-v" style="font-size:10px;color:var(--ink);font-weight:500">70%</span>
               </div>
-              <input type="range" id="rm-sun-warm" min="0" max="100" value="70" style="width:100%" oninput="document.getElementById('rm-sun-warm-v').textContent=this.value+'%';rmRender()">
+              <input type="range" id="rm-sun-warm" min="0" max="100" value="70" style="width:100%" oninput="document.getElementById('rm-sun-warm-v').textContent=this.value+'%';rmRenderRAF()">
             </div>
             <div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
                 <div style="font-size:10px;color:var(--warm)">빛줄기 (창문 효과)</div>
                 <span id="rm-sun-rays-v" style="font-size:10px;color:var(--ink);font-weight:500">0</span>
               </div>
-              <input type="range" id="rm-sun-rays" min="0" max="12" step="1" value="0" style="width:100%" oninput="document.getElementById('rm-sun-rays-v').textContent=this.value;rmRender()">
+              <input type="range" id="rm-sun-rays" min="0" max="12" step="1" value="0" style="width:100%" oninput="document.getElementById('rm-sun-rays-v').textContent=this.value;rmRenderRAF()">
             </div>
             
             <div>
@@ -604,14 +604,14 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
                 <div style="font-size:10px;color:var(--warm)">빛줄기 두께 %</div>
                 <span id="rm-ray-thick-v" style="font-size:10px;color:var(--ink);font-weight:500">3%</span>
               </div>
-              <input type="range" id="rm-ray-thick" min="1" max="20" value="3" style="width:100%" oninput="document.getElementById('rm-ray-thick-v').textContent=this.value+'%';rmRender()">
+              <input type="range" id="rm-ray-thick" min="1" max="20" value="3" style="width:100%" oninput="document.getElementById('rm-ray-thick-v').textContent=this.value+'%';rmRenderRAF()">
             </div>
             <div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
                 <div style="font-size:10px;color:var(--warm)">빛줄기 각도</div>
                 <span id="rm-sun-ang-v" style="font-size:10px;color:var(--ink);font-weight:500">-30°</span>
               </div>
-              <input type="range" id="rm-sun-ang" min="-80" max="80" value="-30" style="width:100%" oninput="document.getElementById('rm-sun-ang-v').textContent=this.value+'°';rmRender()">
+              <input type="range" id="rm-sun-ang" min="-80" max="80" value="-30" style="width:100%" oninput="document.getElementById('rm-sun-ang-v').textContent=this.value+'°';rmRenderRAF()">
             </div>
           </div>
           <button type="button" id="rm-sun-reset" style="width:100%;height:27px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--warm);font-family:inherit;font-size:10px;cursor:pointer;margin-top:9px">↩ 햇빛 기본값</button>
@@ -3784,13 +3784,20 @@ function drawFrame(ctx2,W,H){
   var tiltOn=!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),sizePct=num((by('rm-size')||{}).value,20),tiltDeg=tiltOn?num((by('rm-tilt')||{}).value,0):0,perspX=tiltOn?num((by('rm-persp-x')||{}).value,0):0,perspY=tiltOn?num((by('rm-persp-y')||{}).value,0):0,cm=frameCm(),pxPerCm=Math.max(1,(measureBase(W,H)/150)*(num((by('sg-scale-r')||{}).value,100)/100)),fallbackBoost=(!cm&&isRoomMobile())?1.25:1,fw=cm?cm.w*pxPerCm*(sizePct/20):W*sizePct/100*fallbackBoost,fh=cm?cm.h*pxPerCm*(sizePct/20):fw*(RM.frameSnap.height/RM.frameSnap.width),cxp=(RM.pos&&RM.pos.x||.5),cyp=(RM.pos&&RM.pos.y||.4),cx=W*cxp,cy=H*cyp,sy=1,shOp=num((by('rm-sh-op')||{}).value,0),shDir=num((by('rm-sh-dir')||{}).value,180),shDist=num((by('rm-sh-dist')||{}).value,0),shBlur=num((by('rm-sh-blur')||{}).value,0),shRad=(shDir-90)*Math.PI/180,distPx=fw*shDist/100;
   /* ★ B(2026-06-05): 배경 없는 기본 상태에선 액자를 캔버스에 fit-contain(여백 6%) → 큰 스케일에서도 액자 전체가 캔버스(=흰 영역) 안에 보이게(잘림 방지). 배경 사진 있을 땐 실제 스케일 유지, 운영자 편집모드 제외. */
   if(window.RM&&!(RM.roomImg&&RM.roomImg.naturalWidth)&&String(RM.bgId||'default-room')==='default-room'&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){var __fit=Math.min(1,(W*0.94)/Math.max(1,fw),(H*0.94)/Math.max(1,fh));if(__fit<1){fw*=__fit;fh*=__fit;}}
-  /* 사이즈 기준 위치(앵커) 강제 — 관리자 배경설정 모드 + 비중앙 앵커에서만. 어떤 경로가 RM.pos를
-     중심으로 되돌려도 그릴 때 앵커 높이(RM.__anchorYabs)로 cy 재계산 → 크기/표시사이즈 변경 시 안 뜸.
-     드래그 중엔 자유 이동(스킵). 앵커=중앙(기본 50)이면 전부 무영향(소비자·게이트 회귀 없음). */
+  /* 사이즈 기준 위치(앵커) — 관리자 배경설정 모드 + 비중앙 앵커에서만. ★ 표시 크기(sizePct)가 바뀐
+     렌더에서만 앵커 높이(RM.__anchorYabs)로 cy를 재계산해 액자가 안 뜨게 핀. 크기 변동이 없는 단순
+     재렌더(햇빛 토글/기본값·그림자 등)에서는 사용자가 드래그로 옮긴 Y를 존중하고 앵커 높이만 현재
+     위치에 동기화 → 스냅백 금지. 드래그 중엔 자유 이동(스킵). 앵커=중앙(50)이면 전부 무영향. */
   var __ay=(by('rm-size-anchor'))?num(by('rm-size-anchor').value,50)/100:0.5;
   if(window.RM&&window.dennIsAdminSetupV&&dennIsAdminSetupV()&&Math.abs(__ay-0.5)>1e-6&&H>0){
-    if(RM.__anchorYabs==null){RM.__anchorYabs=cyp+(__ay-0.5)*(fh/H);}
-    else if(!RM.dragging){cy=RM.__anchorYabs*H-(__ay-0.5)*fh;cyp=cy/H;if(RM.pos)RM.pos.y=Math.max(0.02,Math.min(0.98,cyp));}
+    if(RM.__anchorYabs==null){RM.__anchorYabs=cyp+(__ay-0.5)*(fh/H);RM.__anchorSize=sizePct;}
+    else if(!RM.dragging){
+      if(RM.__anchorSize!=null&&Math.abs(sizePct-RM.__anchorSize)<1e-6){
+        RM.__anchorYabs=cyp+(__ay-0.5)*(fh/H);/* 크기 그대로 → 옮긴 위치 존중, 앵커 높이만 재동기화 */
+      }else{
+        cy=RM.__anchorYabs*H-(__ay-0.5)*fh;cyp=cy/H;if(RM.pos)RM.pos.y=Math.max(0.02,Math.min(0.98,cyp));RM.__anchorSize=sizePct;/* 크기 변경 → 앵커 점 고정 */
+      }
+    }
   }
   RM.frameHit={cx:cx,cy:cy,w:fw,h:fh,tilt:tiltDeg,sy:sy};
   RM.__lastFH=fh;RM.__lastCY=cy;RM.__lastH=H;RM.__lastSize=sizePct;/* 앵커 타깃 캡처용 직전 렌더 기하 */
@@ -3839,6 +3846,13 @@ window.rmRender=function(){
     if(window.SG&&SG.on)requestAnimationFrame(window.sgDraw);
   }catch(e){try{var c2=by('rm-canvas'),x=ctx(c2);if(x){drawFallback(x,c2.width||900,c2.height||600)}}catch(_){}}
 };
+/* 슬라이더 끊김 완화 — oninput이 프레임보다 빠르게 연사돼도 rmRender를 프레임당 1회로 합침(rAF coalesce).
+   숫자 표시 텍스트는 oninput에서 즉시 갱신, 무거운 캔버스 재그리기만 다음 프레임으로 모음. */
+window.rmRenderRAF=function(){
+  if(!window.RM)return;
+  if(RM.__renderRaf)return;
+  RM.__renderRaf=requestAnimationFrame(function(){RM.__renderRaf=0;try{window.rmRender()}catch(e){}});
+};
 /* ── 사이즈 기준 위치(앵커) — 관리자 배경설정 모드 전용 ──────────
    value v(0=상단 … 50=중앙 … 100=하단), ay=v/100. 강제 로직은 drawFrame 안에 있음(단일 렌더 지점).
    여기 헬퍼는 (1)표시 텍스트 (2)앵커 타깃 높이(RM.__anchorYabs) 캡처만 담당.
@@ -3852,6 +3866,7 @@ window.dennCaptureAnchorTargetV=function(){
     if(Math.abs(ay-0.5)<1e-6){RM.__anchorYabs=null;return;}
     if(!RM.__lastFH||!RM.__lastH)return;
     RM.__anchorYabs=RM.pos.y+(ay-0.5)*(RM.__lastFH/RM.__lastH);
+    RM.__anchorSize=RM.__lastSize;/* 드래그로 옮긴 위치의 기준 크기 기록 → 이후 동일 크기 재렌더는 위치 존중 */
   }catch(e){}
 };
 window.dennSetSizeAnchorV=function(v){
@@ -8694,7 +8709,9 @@ window.dennSelectAdminRoomGuideSizeV79e=choose;
       btn.__dennV93SunReset=true;
       btn.onclick=function(ev){
         if(ev){ev.preventDefault();ev.stopPropagation()}
-        applySun(savedSun());
+        /* 운영자 배경설정 모드: 공장 초기값으로 리셋(조명 OFF+팩토리 슬라이더). 소비자: 운영자 ②(savedSun) 복원. */
+        var adminSetup=false;try{adminSetup=!!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())}catch(e){}
+        applySun(adminSetup?defaultSun():savedSun());
         return false;
       };
     }
