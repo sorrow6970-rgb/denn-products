@@ -13559,14 +13559,32 @@ input[type=range]{accent-color:#777}
    실폰/좁은 창(<=860)은 기존 coverFit(V106)이 담당하므로 여기선 제외. rmSizeCanvas/rmRender 최종 래핑(맨 뒤). */
 (function(){
   if(window.__DENN_ADMIN_MOBILE_PREVIEW_V107)return;window.__DENN_ADMIN_MOBILE_PREVIEW_V107=true;
-  var RATIO=0.62;/* 폰 세로 가로/세로 비(≈9:14.5) */
+  var RATIO=0.462;/* 실제 폰 세로 비 ≈ 9:19.5(현대 스마트폰) */
+  /* 폰 외형(라운드 베젤) + 모바일 모드 시 주변 UI 반투명 — html.denn-admin-mobileview 클래스로 적용(넓은 PC 창 한정). */
+  try{
+    var stEl=document.createElement('style');stEl.id='denn-v107-mobileview-css';
+    stEl.textContent=
+      'html.denn-admin-mobileview #rm-canvas,html.denn-admin-mobileview #sg-canvas{border-radius:32px!important;box-shadow:0 0 0 9px #16131d,0 0 0 11px #322c3d,0 20px 54px rgba(0,0,0,.5)!important}'+
+      'html.denn-admin-mobileview #rm-canvas-area{background:#100f18!important}'+
+      'html.denn-admin-mobileview #room-modal .rm-right-panel{opacity:.42;transition:opacity .2s}'+
+      'html.denn-admin-mobileview #room-modal>div>div:nth-child(2)>div:first-child{opacity:.5;transition:opacity .2s}';
+    (document.head||document.documentElement).appendChild(stEl);
+  }catch(e){}
+  function syncClass(){
+    try{
+      var on=!!(window.dennIsMobileEditCtxV&&window.dennIsMobileEditCtxV())&&window.innerWidth>860;
+      document.documentElement.classList.toggle('denn-admin-mobileview',on);
+    }catch(e){}
+  }
+  window.__dennSyncAdminMobileViewClassV107=syncClass;
   function box(){
     try{
+      syncClass();
       if(!(window.dennIsMobileEditCtxV&&window.dennIsMobileEditCtxV()))return false;
       if(window.innerWidth<=860)return false;
       var RM=window.RM;if(!RM||!RM.canvas)return false;
       var area=document.getElementById('rm-canvas-area');if(!area)return false;
-      var ah=Math.max(240,(area.clientHeight||620)-12),aw=Math.max(200,(area.clientWidth||900)-12);
+      var ah=Math.max(240,(area.clientHeight||620)-28),aw=Math.max(180,(area.clientWidth||900)-28);
       var h=ah,w=Math.round(h*RATIO);
       if(w>aw){w=aw;h=Math.round(w/RATIO);}
       if(RM.canvas.width===w&&RM.canvas.height===h)return false;
