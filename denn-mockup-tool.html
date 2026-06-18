@@ -1780,6 +1780,18 @@ function dennGuideBgSrcV(bg){
   return bg&&bg.dataUrl;
 }
 window.dennGuideBgSrcV=dennGuideBgSrcV;
+/* 방향별 배경(원본 가로 + 4:5 세로) 이미지를 미리 디코드 캐시 → 회전 시 스왑이 즉시(캐시 히트) 완료되어
+   '늦게 도착한 이미지로 다시 리사이즈'(가로 한참 뒤 스케일 바뀜) 근본 제거. */
+function dennPreloadGuideBgV(bg){
+  try{
+    if(!bg)return;
+    var cache=window.__dennRoomBgCacheV||(window.__dennRoomBgCacheV={});
+    [bg.dataUrl,bg.mobileDataUrl].forEach(function(src){
+      if(src&&typeof src==='string'&&src.length>30&&!cache[src]){var im=new Image();cache[src]=im;im.src=src;}
+    });
+  }catch(e){}
+}
+window.dennPreloadGuideBgV=dennPreloadGuideBgV;
 function rmLoadGuideBgs(){
   var bgs=(ADM&&ADM.guideBackgrounds)||[];
   var sec=document.getElementById('rm-guide-section');
@@ -1811,7 +1823,8 @@ function rmSelectGuide(i){
   if(!bgs[i])return;
   var img=new Image();
   img.onload=function(){
-    RM.roomImg=img;
+    RM.roomImg=img;RM.roomSrc=img.src;/* roomSrc 동기화 — 스왑 가드/세로배경 stale 비교 방지 */
+    try{(window.__dennRoomBgCacheV||(window.__dennRoomBgCacheV={}))[img.src]=img;}catch(e){}
     document.getElementById('rm-drop').style.display='none';
     document.getElementById('rm-room-prev').style.display='block';
     document.getElementById('rm-room-thumb').src=img.src;
@@ -1825,6 +1838,7 @@ function rmSelectGuide(i){
   };
   img.src=(window.dennGuideBgSrcV?dennGuideBgSrcV(bgs[i]):bgs[i].dataUrl)||bgs[i].dataUrl;
   RM.__bgIndexForSwap=i;
+  dennPreloadGuideBgV(bgs[i]);/* 양방향(원본+4:5) 미리 디코드 → 회전 스왑 즉시 */
 }
 
 function openRoomMockup(){
@@ -3148,9 +3162,11 @@ function loadSettingsV33(){
       var __doMirror=(!!__reqMap[key])||!__seededMap[key];
       if(__doMirror){
         var __rs=A.roomBackgroundSettings||{},__srcKey=null;
-        if(window.RM&&window.RM.roomImg)__srcKey='__denn_room_common_default__'; /* 촬영배경(사진) → ②. 키 변종(direct-room-upload/uploaded-room/user:*) 무관하게 RM.roomImg로 감지 */
+        /* ★ 2026-06-18 FIX: 가이드배경(user:<bgId>) 판정을 RM.roomImg 검사보다 먼저 — 가이드 이미지도 RM.roomImg에
+           로드되므로, 기존엔 가이드배경이 '촬영사진'으로 오판돼 공통 ②에서 미러(가이드 운영자 프리셋·.mobile 무시)되던 버그. */
+        if(key.indexOf('user:')===0)__srcKey=key.slice(5); /* 가이드배경: user:bgId → 그 배경의 운영자 프리셋(.mobile 포함) 우선 */
+        else if(window.RM&&window.RM.roomImg)__srcKey='__denn_room_common_default__'; /* 촬영배경(업로드 사진) → ② */
         else if(key==='default-room')__srcKey='__denn_room_common_default__';
-        else if(key.indexOf('user:')===0)__srcKey=key.slice(5); /* 가이드배경: user:bgId → 운영자 bgId */
         if(__srcKey){
           var __useful=function(o){return o&&typeof o==='object'&&Object.keys(o).filter(function(k){return k.indexOf('__')!==0}).length>0;};
           var __c=__rs[__srcKey];
@@ -3391,9 +3407,11 @@ function restoreFullscreenViewState(){
   var sizeV=by('rm-size-v'),tiltV=by('rm-tilt-v'),pxV=by('rm-persp-x-v'),pyV=by('rm-persp-y-v');if(sizeV&&st['rm-size']!=null)sizeV.textContent=st['rm-size']+'%';if(tiltV&&st['rm-tilt']!=null)tiltV.textContent=st['rm-tilt']+'°';if(pxV&&st['rm-persp-x']!=null)pxV.textContent=st['rm-persp-x'];if(pyV&&st['rm-persp-y']!=null)pyV.textContent=st['rm-persp-y'];
 }
 function redrawRoomSoon(preserveCanvas){
-  [40,140,320].forEach(function(delay){
-    setTimeout(function(){try{if(preserveCanvas)restoreFullscreenViewState();else{clearRoomCanvasInlineSize();window.rmSizeCanvas&&rmSizeCanvas()}window.rmRender&&rmRender();window.sgDraw&&sgDraw();centerRoomCanvasScroll()}catch(e){}},delay);
-  });
+  /* 2026-06-18 안정화: 회전/풀스크린 전환 시 3중 리사이즈(요동) → 단일 디바운스 패스로 통일(여러 호출도 합침). */
+  clearTimeout(window.__dennRedrawSoonT);
+  window.__dennRedrawSoonT=setTimeout(function(){
+    try{if(preserveCanvas)restoreFullscreenViewState();else{clearRoomCanvasInlineSize();window.rmSizeCanvas&&rmSizeCanvas()}window.rmRender&&rmRender();window.sgDraw&&sgDraw();centerRoomCanvasScroll()}catch(e){}
+  },240);
 }
 function setRoomFullscreenLayout(on){
   var modal=by('room-modal'),btn=by('rm-fullscreen-btn');
@@ -4935,6 +4953,8 @@ function loadGuideImage(hit,done){
     RM.roomImg=img;
     RM.roomSrc=src;
     RM.__bgIndexForSwap=hit&&hit.index;/* 회전 시 src 스왑용 */
+    try{(window.__dennRoomBgCacheV||(window.__dennRoomBgCacheV={}))[src]=img;}catch(e){}
+    if(window.dennPreloadGuideBgV)dennPreloadGuideBgV(hit.bg);/* 양방향 미리 디코드 */
     setRoomKey(hit);
     updateGuideListUi(hit);
     done&&done(true);
@@ -13722,7 +13742,7 @@ input[type=range]{accent-color:#777}
   function isMob(){try{return innerWidth<760||((window.matchMedia&&matchMedia('(pointer:coarse)').matches)&&Math.min(innerWidth,innerHeight)<760)}catch(e){return innerWidth<760}}
   function roomOpen(){var m=document.getElementById('room-modal');if(!m)return false;try{return getComputedStyle(m).display!=='none'}catch(e){return false}}
   function isFs(){var m=document.getElementById('room-modal');return !!(m&&m.classList&&m.classList.contains('denn-room-fullscreen-active'));}
-  function redraw(){setTimeout(function(){try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}},120);}
+  function redraw(){clearTimeout(window.__dennRotRedrawT);window.__dennRotRedrawT=setTimeout(function(){try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}},120);}/* 디바운스: 회전 다중 호출 합침 */
   function ensureExitBtn(){
     if(document.getElementById('denn-rotate-exit'))return;
     var b=document.createElement('button');b.id='denn-rotate-exit';b.type='button';b.title='세로로 돌아가기';b.setAttribute('aria-label','닫기');b.innerHTML='✕';
@@ -13774,10 +13794,17 @@ input[type=range]{accent-color:#777}
       if(idx==null||idx<0)return;
       var bg=bgs[idx];if(!bg||!bg.mobileDataUrl)return;
       var want=dennGuideBgSrcV(bg)||bg.dataUrl;
-      if(!want||want===RM.roomSrc)return;
-      var img=new Image();
-      img.onload=function(){RM.roomImg=img;RM.roomSrc=want;try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}};
-      img.src=want;
+      if(!want||(RM.roomImg&&RM.roomImg.src===want))return;/* 실제 표시 이미지 기준 — stale roomSrc 회피 */
+      var cache=window.__dennRoomBgCacheV||(window.__dennRoomBgCacheV={});
+      var im=cache[want];
+      if(im&&im.complete&&im.naturalWidth){               /* 캐시 디코드 완료 → 동기 스왑(늦은 리사이즈 없음) */
+        RM.roomImg=im;RM.roomSrc=want;
+        try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
+        return;
+      }
+      im=im||new Image();cache[want]=im;                  /* 미캐시(드묾): 로드 후 1회 적용 */
+      im.onload=function(){RM.roomImg=im;RM.roomSrc=want;try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}};
+      if(!im.src)im.src=want;
     }catch(e){}
   }
   window.dennSwapRoomBgV=swapBgForOrientation;/* 관리자 PC|모바일 토글에서도 세로면 mobileDataUrl 배경으로 스왑 */
