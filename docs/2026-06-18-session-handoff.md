@@ -1,12 +1,14 @@
 # 2026-06-18 세션 핸드오프 — 모바일 토글/회전/세로배경 안정화 + 가이드배경 미러 버그 수정
 
-> 상태: 모두 origin 미push 여부 확인 필요(로컬 커밋 완료). HEAD `f382b14`.
+> 상태: HEAD `2c75a36` (origin/main push 완료).
 > 시작점: 06-17 핸드오프의 "미검증 3종"(세로배경/회전풀스크린/PC|모바일토글) 검증.
 
 ## 1. 커밋 순서 (이번 세션)
 - `776e7ee` 룸모달 모바일↔PC 비가역 복원(v104 teardown) + PC|모바일 토글 **제거** + L4157 가드 + 관리자 바 nowrap CSS.
 - `747eb65` PC|모바일 토글 **재추가** (v104 teardown으로 PC 복원 안정화돼 재도입).
 - `f382b14` **가이드배경 미러 버그 수정**(핵심) + 4:5 자동로드(roomSrc/스왑가드/프리캐시) + redrawRoomSoon 단일패스.
+- `f45c8e4` 핸드오프 문서.
+- `2c75a36` **회전 시 방향별 설정 재병합**(가로=base(PC)/세로=.mobile 전환 정확도) — v108 onChange 방향전환 감지 → loadSettingsV33 재실행.
 
 ## 2. 이번 세션에서 잡은 것 (검증 완료)
 ### A. v104 룸시트 비가역 → PC 복귀 teardown (✓)
@@ -19,6 +21,11 @@
 
 ### C. 4:5 세로배경 자동로드 (f382b14)
 - `rmSelectGuide`가 `RM.roomSrc` 미세팅 → `swapBgForOrientation` 가드(`want===roomSrc`)가 stale 오판해 세로배경 자동적용 실패. → roomSrc 동기화 + 가드를 `RM.roomImg.src` 기준으로 교정. 방향별 이미지 프리캐시(`dennPreloadGuideBgV`) + 캐시 동기 스왑.
+
+### D. 회전 시 방향별 설정 재병합 (정착값 ✓, 2c75a36)
+- `dennMergeMobileV`(병합)는 `applySettingsV33`/`loadSettingsV33` 호출 시에만 평가 → **회전 시 재호출 안 돼** 세로 진입 후 가로로 돌리면 PC원본 이미지에 세로(.mobile) 배경설정이 남던 빈틈.
+- 수정: v108 `onChange`에 방향전환 감지(`__dennRotOriV2`) → 바뀌면 `loadSettingsV33()` 재실행. **정착값 검증 완료**(가로 `100/-26/0` PC원본, 세로 `102/-1/-50` 4:5).
+- ⚠️단, 전환 **순간**의 깜빡임(요동)은 여전 — 정착 전 다중 패스 churn(아래 §3 회전요동과 동일 뿌리).
 
 ## 3. ★미해결 — 다음 세션 (사용자 결정: 신중히)
 ### WYSIWYG: 배경 크롭이 캔버스 비율에 종속 → 컨텍스트별 다르게 보임
