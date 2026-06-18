@@ -5042,12 +5042,27 @@ function installAdminBar(){
   var bar=document.createElement('div');
   bar.id='denn-admin-room-setup-bar';
   bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:999999;background:#1e1b2a;color:#fff;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px;padding:8px 14px;font:12px DM Sans,sans-serif';
-  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
+  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><span id="denn-admin-viewseg" style="display:inline-flex;border:1px solid rgba(255,255,255,.28);border-radius:7px;overflow:hidden;margin-left:8px"><button id="denn-admin-view-pc" type="button" style="background:#d1ad5f;color:#111;border:0;padding:7px 12px;font-weight:700;cursor:pointer">💻 PC</button><button id="denn-admin-view-mobile" type="button" style="background:transparent;color:#fff;border:0;border-left:1px solid rgba(255,255,255,.28);padding:7px 12px;font-weight:700;cursor:pointer">📱 모바일</button></span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
   document.body.appendChild(bar);
   var save=by('denn-admin-room-save'),close=by('denn-admin-room-close');
   if(save)save.onclick=saveAdminRoomPreset;
   if(close)close.onclick=function(){try{window.close()}catch(e){}};
-  /* PC|모바일 토글 제거(2026-06-18): 모바일 풀레이아웃 비가역(PC 복원 불가) 때문에 폐기 — 모바일 편집은 ?viewAs=mobile 경로 사용. */
+  /* PC|모바일 토글 — 같은 편집기 안에서 캔버스만 세로 폰 형태로 전환(컨트롤 패널은 PC 그대로).
+     저장은 토글이 모바일이면 key.mobile로 라우팅(dennRouteSaveV), PC면 base. 전환 시 현재 키 설정 재적용.
+     ★ PC 복원 안정성: v104 teardown(>860 시 룸시트 해체) + L4157 가드로 확보(2026-06-18 재추가). */
+  var vpc=by('denn-admin-view-pc'),vmob=by('denn-admin-view-mobile');
+  function setMode(mob){
+    window.__dennAdminMobileV=!!mob;
+    if(vpc){vpc.style.background=mob?'transparent':'#d1ad5f';vpc.style.color=mob?'#fff':'#111';}
+    if(vmob){vmob.style.background=mob?'#d1ad5f':'transparent';vmob.style.color=mob?'#111':'#fff';}
+    try{if(window.dennSwapRoomBgV)window.dennSwapRoomBgV();}catch(e){}/* 세로 토글이면 mobileDataUrl 배경으로 스왑 */
+    try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}
+    try{if(window.rmSizeCanvas)window.rmSizeCanvas();}catch(e){}
+    try{if(window.rmRender)window.rmRender();}catch(e){}
+    try{if(window.sgDraw)window.sgDraw();}catch(e){}
+  }
+  if(vpc)vpc.onclick=function(){setMode(false)};
+  if(vmob)vmob.onclick=function(){setMode(true)};
 }
 function openAdminSetupRoom(){
   var key=qs().get('adminRoomSetup');
@@ -8561,7 +8576,7 @@ function ensure(){
   var bar=document.createElement('div');
   bar.id='denn-admin-room-setup-bar';
   bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:999999;background:#1e1b2a;color:#fff;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px;padding:8px 14px;font:12px Arial,sans-serif';
-  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
+  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><span id="denn-admin-viewseg" style="display:inline-flex;border:1px solid rgba(255,255,255,.28);border-radius:7px;overflow:hidden;margin-left:8px"><button id="denn-admin-view-pc" type="button" style="background:#d1ad5f;color:#111;border:0;padding:7px 12px;font-weight:700;cursor:pointer">💻 PC</button><button id="denn-admin-view-mobile" type="button" style="background:transparent;color:#fff;border:0;border-left:1px solid rgba(255,255,255,.28);padding:7px 12px;font-weight:700;cursor:pointer">📱 모바일</button></span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
   document.body.appendChild(bar);
   var save=document.getElementById('denn-admin-room-save');
   var close=document.getElementById('denn-admin-room-close');
@@ -8570,7 +8585,21 @@ function ensure(){
     if(typeof window.saveAdminRoomPreset==='function')return window.saveAdminRoomPreset();
   };
   if(close)close.onclick=function(){try{window.close()}catch(e){}};
-  /* PC|모바일 토글 제거(2026-06-18): 모바일 풀레이아웃 비가역(PC 복원 불가) 때문에 폐기 — 모바일 편집은 ?viewAs=mobile 경로 사용. */
+  /* PC|모바일 토글 (2026-06-18 재추가) */
+  var vpc=document.getElementById('denn-admin-view-pc');
+  var vmob=document.getElementById('denn-admin-view-mobile');
+  function setMode(mob){
+    window.__dennAdminMobileV=!!mob;
+    if(vpc){vpc.style.background=mob?'transparent':'#d1ad5f';vpc.style.color=mob?'#fff':'#111';}
+    if(vmob){vmob.style.background=mob?'#d1ad5f':'transparent';vmob.style.color=mob?'#111':'#fff';}
+    try{if(window.dennSwapRoomBgV)window.dennSwapRoomBgV();}catch(e){}/* 세로 토글이면 mobileDataUrl 배경으로 스왑 */
+    try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}
+    try{if(window.rmSizeCanvas)window.rmSizeCanvas();}catch(e){}
+    try{if(window.rmRender)window.rmRender();}catch(e){}
+    try{if(window.sgDraw)window.sgDraw();}catch(e){}
+  }
+  if(vpc)vpc.onclick=function(){setMode(false)};
+  if(vmob)vmob.onclick=function(){setMode(true)};
 }
 function schedule(){setTimeout(ensure,80);setTimeout(ensure,450);setTimeout(ensure,1200)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule);else schedule();
@@ -8579,10 +8608,11 @@ window.addEventListener('load',schedule);
 </script>
 <style id="denn-admin-bar-fit">
 /* 관리자 배경 설정 바: 좁은 폭에서 글자 줄바꿈으로 뭉개지던 문제 방지 — 한 줄 고정 + 넘치면 가로 스크롤.
-   좁은 폭(≤860)에선 설명문구 숨겨 바를 컴팩트하게(제목·저장·닫기만). */
+   폰박스 프리뷰(PC|모바일 토글)는 넓은 PC(>860)에서만 작동 → 좁은 폭에선 토글·설명문구 숨겨 바를 컴팩트하게. */
 #denn-admin-room-setup-bar{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch}
 #denn-admin-room-setup-bar>*{flex:0 0 auto;white-space:nowrap}
 @media(max-width:860px){
+  #denn-admin-viewseg{display:none!important}
   #denn-admin-room-setup-bar>span[style*="opacity"]{display:none!important}
 }
 </style>
@@ -8617,12 +8647,28 @@ function build(){
     document.body.appendChild(bar);
   }
   bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:2147483647;background:#1e1b2a;color:#fff;border-bottom:1px solid rgba(255,255,255,.14);display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;gap:10px;padding:8px 14px;font:12px Arial,sans-serif;pointer-events:auto!important';
-  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700;cursor:pointer">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px;cursor:pointer">닫기</button>';
+  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><span id="denn-admin-viewseg" style="display:inline-flex;border:1px solid rgba(255,255,255,.28);border-radius:7px;overflow:hidden;margin-left:8px"><button id="denn-admin-view-pc" type="button" style="background:#d1ad5f;color:#111;border:0;padding:7px 12px;font-weight:700;cursor:pointer">💻 PC</button><button id="denn-admin-view-mobile" type="button" style="background:transparent;color:#fff;border:0;border-left:1px solid rgba(255,255,255,.28);padding:7px 12px;font-weight:700;cursor:pointer">📱 모바일</button></span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700;cursor:pointer">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px;cursor:pointer">닫기</button>';
   var saveBtn=document.getElementById('denn-admin-room-save');
   var closeBtn=document.getElementById('denn-admin-room-close');
   if(saveBtn)saveBtn.onclick=save;
   if(closeBtn)closeBtn.onclick=closeSetup;
-  /* PC|모바일 토글 제거(2026-06-18): 모바일 풀레이아웃 비가역(PC 복원 불가) 때문에 폐기 — 모바일 편집은 ?viewAs=mobile 경로 사용. */
+  /* PC|모바일 토글 — build()가 반복 실행돼도(tick) 현재 플래그 상태로 다시 칠하고 핸들러 재바인딩. (2026-06-18 재추가) */
+  var vpc=document.getElementById('denn-admin-view-pc'),vmob=document.getElementById('denn-admin-view-mobile');
+  function paint(mob){
+    if(vpc){vpc.style.background=mob?'transparent':'#d1ad5f';vpc.style.color=mob?'#fff':'#111';}
+    if(vmob){vmob.style.background=mob?'#d1ad5f':'transparent';vmob.style.color=mob?'#111':'#fff';}
+  }
+  function setMode(mob){
+    window.__dennAdminMobileV=!!mob;paint(!!mob);
+    try{if(window.dennSwapRoomBgV)window.dennSwapRoomBgV();}catch(e){}/* 세로 토글이면 mobileDataUrl 배경으로 스왑 */
+    try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}
+    try{if(window.rmSizeCanvas)window.rmSizeCanvas();}catch(e){}
+    try{if(window.rmRender)window.rmRender();}catch(e){}
+    try{if(window.sgDraw)window.sgDraw();}catch(e){}
+  }
+  paint(!!window.__dennAdminMobileV);
+  if(vpc)vpc.onclick=function(){setMode(false)};
+  if(vmob)vmob.onclick=function(){setMode(true)};
   document.documentElement.classList.add('denn-admin-room-boot');
 }
 function tick(){build();setTimeout(build,80);setTimeout(build,300);setTimeout(build,900);setTimeout(build,1800)}
