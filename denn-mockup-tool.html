@@ -4154,7 +4154,7 @@ function refreshOnViewportChange(){
   try{
     var modal=by('room-modal');if(!modal||modal.style.display==='none')return;
     if(modal.classList.contains('denn-room-fullscreen-active')){redrawRoomSoon(false);return}
-    if(isRoomMobile()){forceMobileCenterStart();centerRoomCanvasScroll();return}
+    if(isRoomMobile()&&!(window.dennIsMobileEditCtxV&&window.dennIsMobileEditCtxV()&&window.innerWidth>860)){forceMobileCenterStart();centerRoomCanvasScroll();return}/* 토글ON+넓은PC(관리자 폰박스 프리뷰)는 모바일 센터링 건너뛰고 정상경로→V107 box() 재적용(F12 왕복 깨짐 방지) */
     if(window.rmSizeCanvas)rmSizeCanvas();
     if(window.sgBuildSizes)sgBuildSizes();
     if(typeof guideCenterAnchorV52==='function'&&guideCenterAnchorV52()){if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51()}
@@ -5042,26 +5042,12 @@ function installAdminBar(){
   var bar=document.createElement('div');
   bar.id='denn-admin-room-setup-bar';
   bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:999999;background:#1e1b2a;color:#fff;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px;padding:8px 14px;font:12px DM Sans,sans-serif';
-  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><span id="denn-admin-viewseg" style="display:inline-flex;border:1px solid rgba(255,255,255,.28);border-radius:7px;overflow:hidden;margin-left:8px"><button id="denn-admin-view-pc" type="button" style="background:#d1ad5f;color:#111;border:0;padding:7px 12px;font-weight:700;cursor:pointer">💻 PC</button><button id="denn-admin-view-mobile" type="button" style="background:transparent;color:#fff;border:0;border-left:1px solid rgba(255,255,255,.28);padding:7px 12px;font-weight:700;cursor:pointer">📱 모바일</button></span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
+  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
   document.body.appendChild(bar);
   var save=by('denn-admin-room-save'),close=by('denn-admin-room-close');
   if(save)save.onclick=saveAdminRoomPreset;
   if(close)close.onclick=function(){try{window.close()}catch(e){}};
-  /* PC|모바일 토글 — 같은 편집기 안에서 캔버스만 세로 폰 형태로 전환(컨트롤 패널은 PC 그대로).
-     저장은 토글이 모바일이면 key.mobile로 라우팅(dennRouteSaveV), PC면 base. 전환 시 현재 키 설정 재적용. */
-  var vpc=by('denn-admin-view-pc'),vmob=by('denn-admin-view-mobile');
-  function setMode(mob){
-    window.__dennAdminMobileV=!!mob;
-    if(vpc){vpc.style.background=mob?'transparent':'#d1ad5f';vpc.style.color=mob?'#fff':'#111';}
-    if(vmob){vmob.style.background=mob?'#d1ad5f':'transparent';vmob.style.color=mob?'#111':'#fff';}
-    try{if(window.dennSwapRoomBgV)window.dennSwapRoomBgV();}catch(e){}/* 세로 토글이면 mobileDataUrl 배경으로 스왑 */
-    try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}
-    try{if(window.rmSizeCanvas)window.rmSizeCanvas();}catch(e){}
-    try{if(window.rmRender)window.rmRender();}catch(e){}
-    try{if(window.sgDraw)window.sgDraw();}catch(e){}
-  }
-  if(vpc)vpc.onclick=function(){setMode(false)};
-  if(vmob)vmob.onclick=function(){setMode(true)};
+  /* PC|모바일 토글 제거(2026-06-18): 모바일 풀레이아웃 비가역(PC 복원 불가) 때문에 폐기 — 모바일 편집은 ?viewAs=mobile 경로 사용. */
 }
 function openAdminSetupRoom(){
   var key=qs().get('adminRoomSetup');
@@ -8575,7 +8561,7 @@ function ensure(){
   var bar=document.createElement('div');
   bar.id='denn-admin-room-setup-bar';
   bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:999999;background:#1e1b2a;color:#fff;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px;padding:8px 14px;font:12px Arial,sans-serif';
-  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><span id="denn-admin-viewseg" style="display:inline-flex;border:1px solid rgba(255,255,255,.28);border-radius:7px;overflow:hidden;margin-left:8px"><button id="denn-admin-view-pc" type="button" style="background:#d1ad5f;color:#111;border:0;padding:7px 12px;font-weight:700;cursor:pointer">💻 PC</button><button id="denn-admin-view-mobile" type="button" style="background:transparent;color:#fff;border:0;border-left:1px solid rgba(255,255,255,.28);padding:7px 12px;font-weight:700;cursor:pointer">📱 모바일</button></span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
+  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px">닫기</button>';
   document.body.appendChild(bar);
   var save=document.getElementById('denn-admin-room-save');
   var close=document.getElementById('denn-admin-room-close');
@@ -8584,28 +8570,22 @@ function ensure(){
     if(typeof window.saveAdminRoomPreset==='function')return window.saveAdminRoomPreset();
   };
   if(close)close.onclick=function(){try{window.close()}catch(e){}};
-  /* PC|모바일 토글 — 같은 편집기 안에서 캔버스만 세로 폰 형태로 전환(컨트롤 패널은 PC 그대로).
-     저장은 토글이 모바일이면 key.mobile로 라우팅(dennRouteSaveV), PC면 base. 전환 시 현재 키 설정 재적용. */
-  var vpc=document.getElementById('denn-admin-view-pc');
-  var vmob=document.getElementById('denn-admin-view-mobile');
-  function setMode(mob){
-    window.__dennAdminMobileV=!!mob;
-    if(vpc){vpc.style.background=mob?'transparent':'#d1ad5f';vpc.style.color=mob?'#fff':'#111';}
-    if(vmob){vmob.style.background=mob?'#d1ad5f':'transparent';vmob.style.color=mob?'#111':'#fff';}
-    try{if(window.dennSwapRoomBgV)window.dennSwapRoomBgV();}catch(e){}/* 세로 토글이면 mobileDataUrl 배경으로 스왑 */
-    try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}
-    try{if(window.rmSizeCanvas)window.rmSizeCanvas();}catch(e){}
-    try{if(window.rmRender)window.rmRender();}catch(e){}
-    try{if(window.sgDraw)window.sgDraw();}catch(e){}
-  }
-  if(vpc)vpc.onclick=function(){setMode(false)};
-  if(vmob)vmob.onclick=function(){setMode(true)};
+  /* PC|모바일 토글 제거(2026-06-18): 모바일 풀레이아웃 비가역(PC 복원 불가) 때문에 폐기 — 모바일 편집은 ?viewAs=mobile 경로 사용. */
 }
 function schedule(){setTimeout(ensure,80);setTimeout(ensure,450);setTimeout(ensure,1200)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule);else schedule();
 window.addEventListener('load',schedule);
 })();
 </script>
+<style id="denn-admin-bar-fit">
+/* 관리자 배경 설정 바: 좁은 폭에서 글자 줄바꿈으로 뭉개지던 문제 방지 — 한 줄 고정 + 넘치면 가로 스크롤.
+   좁은 폭(≤860)에선 설명문구 숨겨 바를 컴팩트하게(제목·저장·닫기만). */
+#denn-admin-room-setup-bar{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#denn-admin-room-setup-bar>*{flex:0 0 auto;white-space:nowrap}
+@media(max-width:860px){
+  #denn-admin-room-setup-bar>span[style*="opacity"]{display:none!important}
+}
+</style>
 <script id="denn-v79d-admin-room-savebar-authority">
 (function(){
 'use strict';
@@ -8637,28 +8617,12 @@ function build(){
     document.body.appendChild(bar);
   }
   bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:2147483647;background:#1e1b2a;color:#fff;border-bottom:1px solid rgba(255,255,255,.14);display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;gap:10px;padding:8px 14px;font:12px Arial,sans-serif;pointer-events:auto!important';
-  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><span id="denn-admin-viewseg" style="display:inline-flex;border:1px solid rgba(255,255,255,.28);border-radius:7px;overflow:hidden;margin-left:8px"><button id="denn-admin-view-pc" type="button" style="background:#d1ad5f;color:#111;border:0;padding:7px 12px;font-weight:700;cursor:pointer">💻 PC</button><button id="denn-admin-view-mobile" type="button" style="background:transparent;color:#fff;border:0;border-left:1px solid rgba(255,255,255,.28);padding:7px 12px;font-weight:700;cursor:pointer">📱 모바일</button></span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700;cursor:pointer">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px;cursor:pointer">닫기</button>';
+  bar.innerHTML='<strong>관리자 배경 설정 모드</strong><span style="opacity:.72">실제 내 공간 화면에서 조정 후 저장합니다.</span><button id="denn-admin-room-save" type="button" style="margin-left:8px;background:#d1ad5f;color:#111;border:0;border-radius:7px;padding:7px 13px;font-weight:700;cursor:pointer">관리자 저장</button><button id="denn-admin-room-close" type="button" style="background:#11101a;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:7px 12px;cursor:pointer">닫기</button>';
   var saveBtn=document.getElementById('denn-admin-room-save');
   var closeBtn=document.getElementById('denn-admin-room-close');
   if(saveBtn)saveBtn.onclick=save;
   if(closeBtn)closeBtn.onclick=closeSetup;
-  /* PC|모바일 토글 — build()가 반복 실행돼도(tick) 현재 플래그 상태로 다시 칠하고 핸들러 재바인딩. */
-  var vpc=document.getElementById('denn-admin-view-pc'),vmob=document.getElementById('denn-admin-view-mobile');
-  function paint(mob){
-    if(vpc){vpc.style.background=mob?'transparent':'#d1ad5f';vpc.style.color=mob?'#fff':'#111';}
-    if(vmob){vmob.style.background=mob?'#d1ad5f':'transparent';vmob.style.color=mob?'#111':'#fff';}
-  }
-  function setMode(mob){
-    window.__dennAdminMobileV=!!mob;paint(!!mob);
-    try{if(window.dennSwapRoomBgV)window.dennSwapRoomBgV();}catch(e){}/* 세로 토글이면 mobileDataUrl 배경으로 스왑 */
-    try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}
-    try{if(window.rmSizeCanvas)window.rmSizeCanvas();}catch(e){}
-    try{if(window.rmRender)window.rmRender();}catch(e){}
-    try{if(window.sgDraw)window.sgDraw();}catch(e){}
-  }
-  paint(!!window.__dennAdminMobileV);
-  if(vpc)vpc.onclick=function(){setMode(false)};
-  if(vmob)vmob.onclick=function(){setMode(true)};
+  /* PC|모바일 토글 제거(2026-06-18): 모바일 풀레이아웃 비가역(PC 복원 불가) 때문에 폐기 — 모바일 편집은 ?viewAs=mobile 경로 사용. */
   document.documentElement.classList.add('denn-admin-room-boot');
 }
 function tick(){build();setTimeout(build,80);setTimeout(build,300);setTimeout(build,900);setTimeout(build,1800)}
@@ -13455,6 +13419,7 @@ input[type=range]{accent-color:#777}
   'use strict';
   if(window.__DENN_ROOM_SHEET_V104)return; window.__DENN_ROOM_SHEET_V104=true;
   var MAXW=860;
+  var ST=null;                                            /* 모바일 시트 빌드 시 옮긴 노드 참조 보관 → PC 복귀 teardown용 */
   function build(){
     if(window.innerWidth>MAXW)return false;               /* 모바일 폭에서만 DOM 재구성 → PC 안전 */
     var modal=document.getElementById('room-modal'); if(!modal||!modal.__dennRestruct)return false;
@@ -13518,17 +13483,43 @@ input[type=range]{accent-color:#777}
     })();
     closeSheet();                                          /* 기본=닫힘 */
     tabRow.addEventListener('click',function(e){
+      if(window.innerWidth>MAXW)return;                    /* PC 복원 후엔 시트 토글 금지 — PC per-button 핸들러(pane 표시)만 동작 */
       var btn=e.target&&e.target.closest?e.target.closest('.rm-tab'):null; if(!btn)return;
       var key=btn.getAttribute('data-tab');
       if(modal.classList.contains('denn-rm-open')&&modal.__rmCurKey===key)closeSheet();
       else openKey(key);
     });
     window.dennRoomSheet={open:openKey,close:closeSheet};
+    ST={modal:modal,leftPanel:leftPanel,right:right,tabRow:tabRow,actions:actions,guideScroll:guideScroll,bgPane:bgPane,bar:bar};
     return true;
   }
+  /* PC(>860) 복귀 시 모바일 시트 해체 → 옮긴 노드 원위치 복원(가이드→우측, 탭바→좌측 상단, 액션→우측) + pane 표시 복원.
+     build()가 비가역이라 이게 없으면 좁혔다 넓힐 때 좌우 메뉴가 영구히 빈다(F12 기기툴바 왕복/창 리사이즈). */
+  function teardown(){
+    if(!ST||!ST.modal||!ST.modal.__dennRoomSheet)return;
+    var s=ST,m=s.modal;
+    try{
+      m.classList.remove('denn-rm-open');
+      if(s.leftPanel){
+        s.leftPanel.classList.remove('rm-left-panel-msheet');
+        var sh=s.leftPanel.querySelector('.denn-rm-sheet-head');if(sh&&sh.parentNode)sh.parentNode.removeChild(sh);
+      }
+      if(s.right){                                        /* 원래 순서: 가이드 scroll → 액션 */
+        if(s.guideScroll)s.right.appendChild(s.guideScroll);
+        if(s.actions)s.right.appendChild(s.actions);
+      }
+      if(s.tabRow&&s.leftPanel)s.leftPanel.insertBefore(s.tabRow,s.leftPanel.firstChild);
+      if(s.bar&&s.bar.parentNode)s.bar.parentNode.removeChild(s.bar);
+      if(s.leftPanel)s.leftPanel.querySelectorAll('[data-rm-pane]').forEach(function(p){p.style.display=p.getAttribute('data-rm-pane')==='bg'?'':'none';});
+      if(s.tabRow)s.tabRow.querySelectorAll('.rm-tab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tab')==='bg');});
+    }catch(e){}
+    m.__dennRoomSheet=false;m.__rmCurKey=null;ST=null;
+    try{if(window.rmSizeCanvas)window.rmSizeCanvas();if(window.rmRender)window.rmRender();if(window.sgDraw)window.sgDraw();}catch(e){}
+  }
+  window.__dennRoomSheetTeardownV104=teardown;
   var tries=0,iv=setInterval(function(){tries++;if(build()||tries>80)clearInterval(iv);},200);
   document.addEventListener('DOMContentLoaded',build);
-  window.addEventListener('resize',function(){try{build();}catch(e){}});
+  window.addEventListener('resize',function(){try{if(window.innerWidth>MAXW)teardown();else build();}catch(e){}});
 })();
 </script>
 
