@@ -13810,6 +13810,11 @@ input[type=range]{accent-color:#777}
   window.dennSwapRoomBgV=swapBgForOrientation;/* 관리자 PC|모바일 토글에서도 세로면 mobileDataUrl 배경으로 스왑 */
   function onChange(){
     try{
+      /* ★ 2026-06-18: 방향 전환 시 설정 재병합 — loadSettingsV33→dennMergeMobileV가 가로=base(PC)/세로=.mobile를
+         재평가해 배경 스케일·위치·액자 위치를 방향에 맞게 전환. (회전 시 재호출 안 돼 세로값이 가로에 남던 빈틈 해결) */
+      var __ori=(innerWidth>innerHeight)?'l':'p';
+      if(window.__dennRotOriV2&&window.__dennRotOriV2!==__ori&&roomOpen()){try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}}
+      window.__dennRotOriV2=__ori;
       hideFsBtn();ensureExitBtn();swapBgForOrientation();
       var mob=isMob(),open=roomOpen(),landscapeNow=innerWidth>innerHeight;
       /* 프레임(액자) 편집 화면(룸 모달 닫힘) + 모바일 + 가로 → 세로 전용 오버레이로 차단. */
