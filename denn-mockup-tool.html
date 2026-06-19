@@ -518,21 +518,33 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="font-size:10px;color:var(--warm)">배경 크기</div>
-              <span id="rm-bg-scale-v" style="font-size:10px;color:var(--ink);font-weight:500">100%</span>
+              <div style="display:flex;align-items:center;gap:4px">
+                <button type="button" onclick="dennBgNudgeV('rm-bg-scale',-0.5)" style="width:19px;height:19px;border:1px solid var(--border);background:#fff;border-radius:4px;font-size:13px;line-height:1;cursor:pointer;color:var(--ink);padding:0">−</button>
+                <span id="rm-bg-scale-v" style="font-size:10px;color:var(--ink);font-weight:500;min-width:34px;text-align:center">100%</span>
+                <button type="button" onclick="dennBgNudgeV('rm-bg-scale',0.5)" style="width:19px;height:19px;border:1px solid var(--border);background:#fff;border-radius:4px;font-size:13px;line-height:1;cursor:pointer;color:var(--ink);padding:0">+</button>
+              </div>
             </div>
             <input type="range" id="rm-bg-scale" min="50" max="200" value="100" step="0.5" style="width:100%" oninput="document.getElementById('rm-bg-scale-v').textContent=this.value+'%';if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="font-size:10px;color:var(--warm)">배경 좌우 이동</div>
-              <span id="rm-bg-ox-v" style="font-size:10px;color:var(--ink);font-weight:500">0</span>
+              <div style="display:flex;align-items:center;gap:4px">
+                <button type="button" onclick="dennBgNudgeV('rm-bg-ox',-0.5)" style="width:19px;height:19px;border:1px solid var(--border);background:#fff;border-radius:4px;font-size:13px;line-height:1;cursor:pointer;color:var(--ink);padding:0">−</button>
+                <span id="rm-bg-ox-v" style="font-size:10px;color:var(--ink);font-weight:500;min-width:34px;text-align:center">0</span>
+                <button type="button" onclick="dennBgNudgeV('rm-bg-ox',0.5)" style="width:19px;height:19px;border:1px solid var(--border);background:#fff;border-radius:4px;font-size:13px;line-height:1;cursor:pointer;color:var(--ink);padding:0">+</button>
+              </div>
             </div>
             <input type="range" id="rm-bg-ox" min="-50" max="50" value="0" step="0.1" style="width:100%" oninput="document.getElementById('rm-bg-ox-v').textContent=this.value;if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="font-size:10px;color:var(--warm)">배경 상하 이동</div>
-              <span id="rm-bg-oy-v" style="font-size:10px;color:var(--ink);font-weight:500">0</span>
+              <div style="display:flex;align-items:center;gap:4px">
+                <button type="button" onclick="dennBgNudgeV('rm-bg-oy',-0.5)" style="width:19px;height:19px;border:1px solid var(--border);background:#fff;border-radius:4px;font-size:13px;line-height:1;cursor:pointer;color:var(--ink);padding:0">−</button>
+                <span id="rm-bg-oy-v" style="font-size:10px;color:var(--ink);font-weight:500;min-width:34px;text-align:center">0</span>
+                <button type="button" onclick="dennBgNudgeV('rm-bg-oy',0.5)" style="width:19px;height:19px;border:1px solid var(--border);background:#fff;border-radius:4px;font-size:13px;line-height:1;cursor:pointer;color:var(--ink);padding:0">+</button>
+              </div>
             </div>
             <input type="range" id="rm-bg-oy" min="-50" max="50" value="0" step="0.1" style="width:100%" oninput="document.getElementById('rm-bg-oy-v').textContent=this.value;if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
           </div>
@@ -2949,7 +2961,7 @@ html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!i
 #room-modal.denn-room-fullscreen-active>div{width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;border-radius:0!important;background:#000!important}
 @media(max-width:720px){
   #room-modal #rm-fullscreen-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:9px 12px;background:#fff;color:var(--warm);border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
-  #rm-canvas-area #rm-usage-guide-v33{top:36px;font-size:9px;white-space:normal;max-width:86%;padding:6px 9px}
+  #rm-canvas-area #rm-usage-guide-v33{display:none!important}/* 2026-06-19: 모바일(터치)은 드래그/휠 안내 불필요 → 숨김 */
   #room-modal>div>div:nth-child(2){flex-direction:column!important;overflow:auto!important}
   #room-modal>div>div:nth-child(2)>div:first-child{width:auto!important;max-height:34vh!important;border-right:none!important;border-bottom:1px solid var(--border)!important;display:grid!important;grid-template-columns:1fr!important;gap:12px!important;overflow:auto!important}
   #room-modal #rm-canvas-area{width:100%!important;min-height:58vh!important;flex:0 0 auto!important;overflow:auto!important;align-items:center!important;justify-content:center!important;touch-action:pan-x pan-y!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
@@ -3478,6 +3490,8 @@ window.dennSnapshotBgV=dennSnapshotBgV;
 /* 2026-06-19: focus 모델 비활성화 — 슬라이더 직접 조작해도 focus 전환 안 함(레거시 유지). no-op. */
 function dennBgOnInputV(){}
 window.dennBgOnInputV=dennBgOnInputV;
+/* 2026-06-19: 배경 슬라이더 ±버튼 미세 nudge — 마우스로 드래그가 힘들어 클릭으로 정밀 조정. d만큼 가감, 범위 clamp. */
+window.dennBgNudgeV=function(id,d){try{var el=document.getElementById(id);if(!el)return;var mn=parseFloat(el.min),mx=parseFloat(el.max),v=parseFloat(el.value)||0;v=Math.max(mn,Math.min(mx,Math.round((v+d)*10)/10));el.value=v;var out=document.getElementById(id+'-v');if(out)out.textContent=v+(id==='rm-bg-scale'?'%':'');if(window.rmRenderRAF)rmRenderRAF();else if(window.rmRender)rmRender();}catch(e){}};
 function isDirectRoomUploadBg(){return !!(window.RM&&RM.roomImg&&(RM.bgId==='direct-room-upload'||RM.bgId==='uploaded-room'||RM.roomImg.__dennDirectUpload))}
 function directRoomImageAspect(){return isDirectRoomUploadBg()&&window.RM&&RM.roomImg&&RM.roomImg.naturalWidth&&RM.roomImg.naturalHeight?(RM.roomImg.naturalWidth/RM.roomImg.naturalHeight):0}
 /* 단계2(2026-06-17): viewAs=mobile(운영자 모바일 편집기)면 창 폭과 무관하게 모바일·portrait 강제
@@ -13778,6 +13792,7 @@ input[type=range]{accent-color:#777}
       'html.denn-rotate-fs #room-modal .rm-left-panel-msheet{display:none!important}'+
       'html.denn-rotate-fs #rm-mobile-resize-handle{display:none!important}'+
       'html.denn-rotate-fs #rm-usage-guide-v33{display:none!important}'+
+      'html.denn-admin-mobileview #rm-usage-guide-v33{display:none!important}'+/* 2026-06-19: 어드민 모바일 프리뷰에서도 안내 문구 숨김 */
       'html.denn-rotate-fs #denn-rotate-hint{display:none!important}'+
       /* 2026-06-19 ②: 모달 자체를 풀블리드(흰 카드 테두리·둥근모서리·분홍 페이지여백 제거) → 배경이 화면 끝까지. */
       'html.denn-rotate-fs #room-modal{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;max-width:none!important;max-height:none!important;background:#000!important}'+
