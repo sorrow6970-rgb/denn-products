@@ -520,21 +520,21 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
               <div style="font-size:10px;color:var(--warm)">배경 크기</div>
               <span id="rm-bg-scale-v" style="font-size:10px;color:var(--ink);font-weight:500">100%</span>
             </div>
-            <input type="range" id="rm-bg-scale" min="50" max="200" value="100" style="width:100%" oninput="document.getElementById('rm-bg-scale-v').textContent=this.value+'%';if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
+            <input type="range" id="rm-bg-scale" min="50" max="200" value="100" style="width:100%" oninput="document.getElementById('rm-bg-scale-v').textContent=this.value+'%';if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="font-size:10px;color:var(--warm)">배경 좌우 이동</div>
               <span id="rm-bg-ox-v" style="font-size:10px;color:var(--ink);font-weight:500">0</span>
             </div>
-            <input type="range" id="rm-bg-ox" min="-50" max="50" value="0" style="width:100%" oninput="document.getElementById('rm-bg-ox-v').textContent=this.value;if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
+            <input type="range" id="rm-bg-ox" min="-50" max="50" value="0" style="width:100%" oninput="document.getElementById('rm-bg-ox-v').textContent=this.value;if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="font-size:10px;color:var(--warm)">배경 상하 이동</div>
               <span id="rm-bg-oy-v" style="font-size:10px;color:var(--ink);font-weight:500">0</span>
             </div>
-            <input type="range" id="rm-bg-oy" min="-50" max="50" value="0" style="width:100%" oninput="document.getElementById('rm-bg-oy-v').textContent=this.value;if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
+            <input type="range" id="rm-bg-oy" min="-50" max="50" value="0" style="width:100%" oninput="document.getElementById('rm-bg-oy-v').textContent=this.value;if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
           </div>
         </div>
 
@@ -3043,7 +3043,7 @@ function installGuidePrecision(){
 }
 function currentSettingsV33(){
   var shDir=num((by('rm-sh-dir')||{}).value,180),shDist=num((by('rm-sh-dist')||{}).value,8),rad=(shDir-90)*Math.PI/180;
-  return {
+  return dennSnapshotBgV({
     frameX:window.RM&&RM.pos?num(RM.pos.x*100,50):50,
     frameY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
     frameScale:num((by('rm-size')||{}).value,20)/100,
@@ -3080,7 +3080,7 @@ function currentSettingsV33(){
     guideCenterY:window.RM&&RM.pos?num(RM.pos.y*100,40):num((by('sg-oy-r')||{}).value,25),
     guideOpacity:num((by('sg-alpha-r')||{}).value,75)/100,
     showRuler:by('sg-ruler')?!!by('sg-ruler').checked:true
-  };
+  });
 }
 function setSun(on){
   window.RM=window.RM||{};
@@ -3119,8 +3119,7 @@ function applySettingsV33(s){
   setVal('rm-tilt',num(s.frameTiltDeg,0),'°');
   setVal('rm-persp-x',num(s.framePerspectiveX,0),'');
   setVal('rm-persp-y',num(s.framePerspectiveY,0),'');
-  setVal('rm-bg-scale',Math.round(num(s.bgScale,uiBgScale())*100),'%');
-  setVal('rm-bg-ox',num(s.bgOffsetX,0));setVal('rm-bg-oy',num(s.bgOffsetY,0));/* 단계4: 배경 이동 복원 */
+  dennApplyBgSlidersV(s);/* 2026-06-19 focus 모델(이중경로): bgZoom 있으면 focus 슬라이더 인코딩, 없으면 레거시 bgScale/bgOffsetX/Y */
   setVal('rm-sh-op',Math.round(num(s.shadowOpacity,.6)*100),'%');
   setVal('rm-sh-dir',num(s.shadowDirection,180),'°');
   setVal('rm-sh-dist',num(s.shadowDistance,8),'');
@@ -3194,7 +3193,7 @@ window.loadSettingsV33=loadSettingsV33;/* PC|모바일 토글 전환 시 현재 
    ★ base에는 모바일 필드를 절대 쓰지 않는다(소비자 PC 읽기 무영향). 저장 컨텍스트 판정은 viewAs=mobile로
    좁힘(소비자 폰은 viewAs 없음 → 우발 저장 차단). 읽기 병합은 단계3(dennMergeMobileV)에서 isRoomMobile() 기준.
    격리 필드=레이아웃만(위치·크기·앵커·가이드 스케일/위치·배경). 조명/그림자/기울기는 base 공유. */
-var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY'];
+var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY','bgZoom','bgFocusX','bgFocusY'];/* 2026-06-19: focus 모델 신규 필드도 .mobile 격리 라우팅(레거시 3필드는 구 프리셋 호환 위해 유지) */
 /* 모바일 편집 컨텍스트 판정 — 런타임 토글(__dennAdminMobileV, PC 편집기 내 'PC|모바일' 탭) 우선,
    하위호환으로 URL viewAs=mobile도 인정. 저장 라우팅·읽기 병합·measureBase가 공유. */
 function dennIsMobileEditCtxV(){try{if(window.__dennAdminMobileV)return true;return new URLSearchParams(location.search||'').get('viewAs')==='mobile'}catch(e){return false}}
@@ -3447,15 +3446,46 @@ function drawFallback(ctx2,W,H){
 }
 function drawContain(ctx2,img,x,y,w,h,scale){scale=clamp(scale==null?1:scale,0.5,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';var ar=(img.naturalWidth||1)/(img.naturalHeight||1),tw=w,th=tw/ar;if(th>h){th=h;tw=th*ar}tw*=scale;th*=scale;var dx=x+(w-tw)/2,dy=y+(h-th)/2;ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}}
 function drawCover(ctx2,img,x,y,w,h,scale,ox,oy){scale=clamp(scale==null?1:scale,1,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';var iw=img.naturalWidth||1,ih=img.naturalHeight||1,s=Math.max(w/iw,h/ih)*scale,tw=iw*s,th=ih*s,px=clamp(num(ox,0),-0.5,0.5),py=clamp(num(oy,0),-0.5,0.5),dx=x+(w-tw)/2+px*(tw-w),dy=y+(h-th)/2+py*(th-h);ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}}
+/* 2026-06-19 WYSIWYG focus 모델(이중경로): 캔버스 비율 무관 이미지기준 좌표(bgZoom + bgFocusX/Y).
+   focus점을 캔버스 중앙에 두려 하고 cover-fill이 깨지지 않게 clamp → 관리자/소비자/실폰/회전 동일 구도.
+   기존 drawCover(레거시 경로)는 무수정 보존. 신규 필드(bgZoom)가 있는 프리셋만 이 경로 사용. */
+function drawCoverFocus(ctx2,img,x,y,w,h,zoom,fx,fy){
+  zoom=clamp(zoom==null?1:zoom,1,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';
+  var iw=img.naturalWidth||1,ih=img.naturalHeight||1,s=Math.max(w/iw,h/ih)*zoom,tw=iw*s,th=ih*s,
+      cfx=clamp(num(fx,.5),0,1),cfy=clamp(num(fy,.5),0,1),
+      dx=clamp(x+w/2-cfx*tw,x+w-tw,x),dy=clamp(y+h/2-cfy*th,y+h-th,y);
+  ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}
+}
+function dennBgIsFocusModel(s){return !!(s&&s.bgZoom!=null&&isFinite(parseFloat(s.bgZoom)))}
+window.dennBgIsFocusModel=dennBgIsFocusModel;
+/* settings → 배경 슬라이더 역매핑(모델 판정 포함). focus면 zoom→배경크기슬라이더(%)·focusX/Y→좌우/상하슬라이더(중앙0, -50..50),
+   아니면 레거시 bgScale/bgOffsetX/Y. RM.__bgUseFocusV로 렌더 분기를 고정한다(모든 apply 경로 공용). */
+function dennApplyBgSlidersV(s){
+  var focus=dennBgIsFocusModel(s);if(window.RM)RM.__bgUseFocusV=focus;
+  if(focus){setVal('rm-bg-scale',Math.round(clamp(num(s.bgZoom,1),1,2)*100),'%');setVal('rm-bg-ox',Math.round((clamp(num(s.bgFocusX,.5),0,1)-.5)*100));setVal('rm-bg-oy',Math.round((clamp(num(s.bgFocusY,.5),0,1)-.5)*100))}
+  else{setVal('rm-bg-scale',Math.round(num(s.bgScale,uiBgScale())*100),'%');setVal('rm-bg-ox',num(s.bgOffsetX,0));setVal('rm-bg-oy',num(s.bgOffsetY,0))}
+}
+window.dennApplyBgSlidersV=dennApplyBgSlidersV;
+/* 슬라이더 스냅샷 → 현재 모델로 bg 필드 기록. focus모드면 bgZoom/bgFocusX/Y(레거시 제거), 아니면 레거시 유지. */
+function dennSnapshotBgV(o){
+  if(window.RM&&RM.__bgUseFocusV){o.bgZoom=clamp(num((by('rm-bg-scale')||{}).value,100)/100,1,2);o.bgFocusX=clamp(.5+num((by('rm-bg-ox')||{}).value,0)/100,0,1);o.bgFocusY=clamp(.5+num((by('rm-bg-oy')||{}).value,0)/100,0,1);delete o.bgScale;delete o.bgOffsetX;delete o.bgOffsetY}
+  return o
+}
+window.dennSnapshotBgV=dennSnapshotBgV;
+/* 운영자가 배경 슬라이더를 직접 조작(event.isTrusted)하면 그 시점부터 focus 모델로 전환(레거시 프리셋의 점진 마이그레이션).
+   프로그램적 setSV(dispatch input)은 isTrusted=false라 무영향 → 슬라이더 인라인 oninput에서 isTrusted 게이트와 함께 호출. */
+function dennBgOnInputV(){try{if(window.RM)RM.__bgUseFocusV=true}catch(e){}}
+window.dennBgOnInputV=dennBgOnInputV;
 function isDirectRoomUploadBg(){return !!(window.RM&&RM.roomImg&&(RM.bgId==='direct-room-upload'||RM.bgId==='uploaded-room'||RM.roomImg.__dennDirectUpload))}
 function directRoomImageAspect(){return isDirectRoomUploadBg()&&window.RM&&RM.roomImg&&RM.roomImg.naturalWidth&&RM.roomImg.naturalHeight?(RM.roomImg.naturalWidth/RM.roomImg.naturalHeight):0}
 /* 단계2(2026-06-17): viewAs=mobile(운영자 모바일 편집기)면 창 폭과 무관하게 모바일·portrait 강제
    → measureBase=max 통일(폰 레이아웃으로 렌더). 소비자 실폰은 자연 감지(innerWidth<760)로 동일. */
 function isRoomMobile(){try{if(window.dennIsMobileEditCtxV&&window.dennIsMobileEditCtxV())return true;return innerWidth<760||((window.matchMedia&&matchMedia('(pointer:coarse)').matches)&&Math.min(innerWidth,innerHeight)<760)}catch(e){return innerWidth<760}}
-function isRoomPortrait(){if(window.dennIsMobileEditCtxV&&window.dennIsMobileEditCtxV())return true;return isRoomMobile()&&innerHeight>=innerWidth}
-function isRoomLandscape(){return isRoomMobile()&&innerWidth>innerHeight}
+function isRoomPortrait(){if(window.__dennForcePortraitV)return true;/* X로 강제 세로 — 가로 뷰포트여도 세로로 취급 */if(window.dennIsMobileEditCtxV&&window.dennIsMobileEditCtxV())return true;return isRoomMobile()&&innerHeight>=innerWidth}
+function isRoomLandscape(){if(window.__dennForcePortraitV)return false;return isRoomMobile()&&innerWidth>innerHeight}
 window.isRoomMobile=isRoomMobile;/* 단계3: 읽기 병합(dennMergeMobileV)이 단일 모바일 판정을 공유하도록 노출 */
 window.isRoomPortrait=isRoomPortrait;/* 모바일 가로는 PC와 비율 동일 → .mobile은 세로(portrait)에서만 적용, 가로는 base(PC) 사용 */
+window.isRoomLandscape=isRoomLandscape;/* 2026-06-19: 진단 probe·외부 호출용 노출(미노출이라 window.isRoomLandscape가 undefined로 오판되던 문제) */
 function measureBase(W,H){return isRoomPortrait()?Math.max(W,H):Math.min(W,H)}
 function activeGuideSize(){
   var list=actualSizes(),pick=null,primary=(window.RM&&RM.activeGuideSizeId)||(window.SG&&SG.primarySizeId);
@@ -3532,8 +3562,7 @@ function forceMobileCenterStart(){
         window.rmSizeCanvas();
         if(window.sgToggle)window.sgToggle();
         ensureMobileFallbackFrameSize();
-        centerGuideOnMobile();
-        alignFrameToGuide();
+        if(window.isRoomPortrait&&isRoomPortrait()){centerGuideOnMobile();alignFrameToGuide();}/* 2026-06-19: 가로(landscape)=PC base 위치 유지 — 세로(portrait)에서만 중앙정렬. 배경만 PC고 액자가 어긋나던 문제 */
         if(window.rmRender)window.rmRender();
         if(window.sgDraw)window.sgDraw();
       }catch(e){}
@@ -3556,7 +3585,7 @@ function syncInitialGuideFrame(){
         if(window.rmSizeCanvas)window.rmSizeCanvas();
         if(window.sgBuildSizes)window.sgBuildSizes();
         setFrameToGuideBaseScale();
-        if(isRoomMobile()){centerGuideOnMobile();alignFrameToGuide()}
+        if(isRoomMobile()&&window.isRoomPortrait&&isRoomPortrait()){centerGuideOnMobile();alignFrameToGuide()}/* 2026-06-19: 세로만 중앙정렬, 가로=PC base */
         if(!guideCenterAnchorV52())alignGuideToFrameTopLeft();
         else if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51();
         rememberRoomGuideInitialDefaults(true);
@@ -3576,7 +3605,7 @@ function syncGuideForSelectedSize(){
         window.SG=window.SG||{on:true,active:{},_sizes:[],ori:'portrait'};SG.on=true;
         if(window.rmSizeCanvas)window.rmSizeCanvas();
         setFrameToGuideBaseScale();
-        if(isRoomMobile()){centerGuideOnMobile();alignFrameToGuide()}
+        if(isRoomMobile()&&window.isRoomPortrait&&isRoomPortrait()){centerGuideOnMobile();alignFrameToGuide()}/* 2026-06-19: 세로만 중앙정렬, 가로=PC base */
         if(!guideCenterAnchorV52())alignGuideToFrameTopLeft();
         else if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51();
         rememberRoomGuideInitialDefaults(true);
@@ -3590,10 +3619,12 @@ function syncGuideForSelectedSize(){
 window.rmSizeCanvas=function(){
   window.RM=window.RM||{};
   RM.canvas=by('rm-canvas');RM.ctx=ctx(RM.canvas);if(!RM.canvas)return;
+  /* 2026-06-19 ②: 가로 전체화면(denn-rotate-fs)이면 방향 판정(isRoomLandscape)과 무관하게 캔버스를 뷰포트 꽉 채움 → 회색/여백 테두리 제거. drawCover가 cover로 채워 왜곡 없음. V106(>860 off)·V107(소비자 off) 미간섭. */
+  if(document.documentElement.classList.contains('denn-rotate-fs')){var fw=innerWidth,fh=innerHeight;RM.canvas.width=fw;RM.canvas.height=fh;RM.canvas.style.width=fw+'px';RM.canvas.style.height=fh+'px';var sgF=by('sg-canvas');if(sgF){sgF.width=fw;sgF.height=fh;sgF.style.width=fw+'px';sgF.style.height=fh+'px'}return}
   /* v95: canvas-area padding 4px 기준으로 subtraction 축소(-20→-8), cap도 살짝 키워 전체 렌더 스케일 ↑ → 아일랜드 꽉 차게 */
   var area=by('rm-canvas-area'),A=adm(),ui=A.uiSettings||{},uc=A.uiCustom||{},pref=num(ui.previewMaxW,uc.prevMaxW||960),rawW=Math.max(320,((area&&area.clientWidth)||900)-8),maxH=Math.max(240,((area&&area.clientHeight)||620)-8),cap=innerWidth>=1500?2200:1900,mobilePortrait=isRoomPortrait(),mobileLandscape=isRoomLandscape();
-  if(mobilePortrait){rawW=Math.max(320,((area&&area.clientWidth)||innerWidth||360)-12);maxH=Math.max(maxH,Math.round((innerHeight||720)*.56));var mw=Math.round(rawW),mh=Math.round(maxH);RM.canvas.width=mw;RM.canvas.height=mh;RM.canvas.style.width=mw+'px';RM.canvas.style.height=mh+'px';var sgM=by('sg-canvas');if(sgM){sgM.style.width=mw+'px';sgM.style.height=mh+'px'}return}
-  if(mobileLandscape){rawW=Math.max(360,((area&&area.clientWidth)||innerWidth||760)-16);maxH=Math.max(260,((area&&area.clientHeight)||innerHeight||420)-16);cap=pref}
+  if(mobilePortrait){rawW=Math.max(320,((area&&area.clientWidth)||innerWidth||360)-12);maxH=Math.max(maxH,Math.round((innerHeight||720)*.56));var mw=Math.round(rawW),mh=Math.round(maxH);if(window.__dennForcePortraitV&&innerWidth>innerHeight){/* 강제 세로(가로 뷰포트): 세로형 박스로 letterbox — 세로 크롭/.mobile 설정이 정상 적용되도록 */mh=Math.max(240,Math.round(((area&&area.clientHeight)||innerHeight||420)-8));mw=Math.min(rawW,Math.max(200,Math.round(mh*0.62)))}RM.canvas.width=mw;RM.canvas.height=mh;RM.canvas.style.width=mw+'px';RM.canvas.style.height=mh+'px';var sgM=by('sg-canvas');if(sgM){sgM.style.width=mw+'px';sgM.style.height=mh+'px'}return}
+  if(mobileLandscape){if(document.documentElement.classList.contains('denn-rotate-fs')){rawW=innerWidth;maxH=innerHeight;cap=innerWidth;/* 2026-06-19: 가로 전체화면=뷰포트 꽉 채움(좌/상/우/하 회색 여백 제거). drawCover가 cover로 채워 왜곡 없음 */}else{rawW=Math.max(360,((area&&area.clientWidth)||innerWidth||760)-16);maxH=Math.max(260,((area&&area.clientHeight)||innerHeight||420)-16);cap=pref}}
   if(innerWidth<760)cap=pref;
   var maxW=Math.min(rawW,Math.max(pref,cap));
   function fit(){return{w:Math.max(1,Math.round(maxW)),h:Math.max(1,Math.round(maxH))}}
@@ -3641,6 +3672,20 @@ function drawDirectUploadNotice(ctx2,W,H){
   ctx2.font=subFont;
   ctx2.fillText(lines[1],x+boxW/2,y+padY+lineH+gap+lineH/2);
   ctx2.restore();
+}
+/* 2026-06-19: 어드민 배경설정 전용 중앙 정렬 가이드선(십자). 배경 중앙 맞추기용. 소비자/비-셋업에선 미표시. PC·모바일 토글 무관(dennIsAdminSetupV 기준). */
+function dennDrawCenterGuideV(ctx2,W,H){
+  try{
+    if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV()))return;
+    var cx=Math.round(W/2)+0.5,cy=Math.round(H/2)+0.5;
+    ctx2.save();
+    ctx2.setLineDash([8,7]);ctx2.lineWidth=1.5;
+    ctx2.strokeStyle='rgba(0,0,0,.28)';/* 밝은 배경 대비용 그림자선 먼저 */
+    ctx2.beginPath();ctx2.moveTo(cx+1,0);ctx2.lineTo(cx+1,H);ctx2.moveTo(0,cy+1);ctx2.lineTo(W,cy+1);ctx2.stroke();
+    ctx2.strokeStyle='rgba(255,90,90,.85)';ctx2.lineWidth=1;
+    ctx2.beginPath();ctx2.moveTo(cx,0);ctx2.lineTo(cx,H);ctx2.moveTo(0,cy);ctx2.lineTo(W,cy);ctx2.stroke();
+    ctx2.restore();
+  }catch(e){}
 }
 function roomClientToCanvas(clientX,clientY){
   var c=window.RM&&RM.canvas;if(!c)return null;
@@ -3926,10 +3971,11 @@ window.rmRender=function(){
     showCanvas();
     var c=RM.canvas,ctx2=RM.ctx,W=c.width,H=c.height,bright=num((by('rm-bright')||{}).value,100);
     ctx2.clearRect(0,0,W,H);ctx2.fillStyle='#D8D3CB';ctx2.fillRect(0,0,W,H);
-    if(RM.roomImg&&RM.roomImg.naturalWidth){ctx2.save();ctx2.filter='brightness('+bright+'%)';var bgScale=num((by('rm-bg-scale')||{}).value,Math.round(uiBgScale()*100))/100,bgOx=num((by('rm-bg-ox')||{}).value,0)/100,bgOy=num((by('rm-bg-oy')||{}).value,0)/100;if(isDirectRoomUploadBg())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy);else if(isRoomPortrait())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1.02,bgScale*1.04),bgOx,bgOy);else drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy);ctx2.restore()}else drawFallback(ctx2,W,H);
+    if(RM.roomImg&&RM.roomImg.naturalWidth){ctx2.save();ctx2.filter='brightness('+bright+'%)';if(window.RM&&RM.__bgUseFocusV){var bgZoom=num((by('rm-bg-scale')||{}).value,100)/100,bgFx=.5+num((by('rm-bg-ox')||{}).value,0)/100,bgFy=.5+num((by('rm-bg-oy')||{}).value,0)/100;if(isDirectRoomUploadBg())drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgZoom),bgFx,bgFy);else if(isRoomPortrait())drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1.02,bgZoom*1.04),bgFx,bgFy);else drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgZoom),bgFx,bgFy)}else{var bgScale=num((by('rm-bg-scale')||{}).value,Math.round(uiBgScale()*100))/100,bgOx=num((by('rm-bg-ox')||{}).value,0)/100,bgOy=num((by('rm-bg-oy')||{}).value,0)/100;if(isDirectRoomUploadBg())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy);else if(isRoomPortrait())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1.02,bgScale*1.04),bgOx,bgOy);else drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy)}ctx2.restore()}else drawFallback(ctx2,W,H);
     drawFrame(ctx2,W,H);
     drawSun(ctx2,W,H);
     drawDirectUploadNotice(ctx2,W,H);
+    dennDrawCenterGuideV(ctx2,W,H);/* 2026-06-19: 어드민 배경설정(PC·모바일)에서 중앙 정렬용 십자 가이드선 */
     requestSaveSettingsV33();
     if(window.SG&&SG.on)requestAnimationFrame(window.sgDraw);
   }catch(e){try{var c2=by('rm-canvas'),x=ctx(c2);if(x){drawFallback(x,c2.width||900,c2.height||600)}}catch(_){}}
@@ -5339,8 +5385,8 @@ function applyRoomSettings(s){
   if(window.RM)RM.__anchorYabs=null;/* 배경 로드 시 앵커 타깃 리셋 → 새 배경의 저장 중심에서 재설정(첫 렌더 lazy-init) */
   if(window.dennUpdateSizeAnchorReadoutV)dennUpdateSizeAnchorReadoutV(num(s.frameSizeAnchor,50));
   var __anchRow=by('rm-size-anchor-row');if(__anchRow)__anchRow.style.display=(window.dennIsAdminSetupV&&dennIsAdminSetupV())?'block':'none';
-  setVal('rm-bg-scale',Math.round(num(s.bgScale,uiBgScale())*100));
-  setVal('rm-bg-ox',num(s.bgOffsetX,0));setVal('rm-bg-oy',num(s.bgOffsetY,0));/* 단계4: 배경 이동 복원 */
+  if(window.dennApplyBgSlidersV){window.dennApplyBgSlidersV(s)}/* 2026-06-19 focus 모델(이중경로) 공용 역매핑 */
+  else{setVal('rm-bg-scale',Math.round(num(s.bgScale,uiBgScale())*100));setVal('rm-bg-ox',num(s.bgOffsetX,0));setVal('rm-bg-oy',num(s.bgOffsetY,0))}
   setVal('rm-sh-op',Math.round(num(s.shadowOpacity,.6)*100));
   setVal('rm-sh-dir',num(s.shadowDirection,180));
   setVal('rm-sh-dist',num(s.shadowDistance,8));
@@ -5432,6 +5478,7 @@ function currentRoomSettingsV48(){
   }
   var anchor=currentFrameAnchorV48();
   if(anchor)Object.assign(st,anchor);
+  if(window.dennSnapshotBgV)window.dennSnapshotBgV(st);/* 2026-06-19 focus 모델(이중경로): focus모드면 bgZoom/bgFocusX/Y 기록 */
   return st;
 }
 function adminSnapshotV48(){try{return JSON.stringify(adm())}catch(e){return ''}}
@@ -5971,7 +6018,7 @@ function syncOutputs(){
 function applyGuide(i,bg,img){
   var A=adm(),key=bgKey(bg,i),saved=A.roomBackgroundSettings&&A.roomBackgroundSettings[key]||{},hasSaved=hasSavedSettings(saved),st=hasSaved?Object.assign({},defaultRoomSettings(A),saved):defaultRoomSettings(A);
   window.RM=window.RM||{};
-  RM.roomImg=img;RM.roomSrc=bgSrc(bg);RM.guideIndex=i;RM.bgId=key;
+  RM.roomImg=img;RM.roomSrc=(img&&img.src)||bgSrc(bg);RM.guideIndex=i;RM.bgId=key;/* 2026-06-19 ①: 실제 로드된 이미지(방향별) src로 동기화 */
   /* 소비자: 기준 스케일은 현재 컨텍스트의 운영자 프리셋을 따른다(가이드배경=그 배경값, 기본/촬영=②). ★ RM(guideIndex/bgId) 갱신 '후' 호출해야 dennCurrentOperatorPresetV가 새로 선택한 배경 키를 봄(이전엔 갱신 전이라 ②로 덮였음). 사이즈/위치/투명도 무수정, 운영자 편집모드 제외. */
   try{ if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){ var __op=window.dennCurrentOperatorPresetV&&window.dennCurrentOperatorPresetV(); if(__op&&isFinite(__op.guideScale)) st.guideScale=__op.guideScale; } }catch(e){}
   try{if(window.dennMergeMobileV)st=window.dennMergeMobileV(st);}catch(e){}/* 단계3: 모바일 컨텍스트면 st 자체를 .mobile 병합 → 이후 enforceGuideSettings 등 다운스트림이 모바일값 사용(PC 클로버 방지) */
@@ -6016,7 +6063,7 @@ function loadImg(src,done){
 window.rmSelectGuide=function(i){
   if(roomDirty)saveCurrentRoomKeyV48(currentBgKeyV48());
   pauseRoomAutoSave(1600);
-  var A=adm(),bgs=A.guideBackgrounds||[],bg=bgs[i],src=bgSrc(bg);
+  var A=adm(),bgs=A.guideBackgrounds||[],bg=bgs[i],src=(window.dennGuideBgSrcV?dennGuideBgSrcV(bg):bgSrc(bg))||bgSrc(bg);/* 2026-06-19 ①: 방향 인지 로드 — 세로=4:5 mobileDataUrl. bgSrc는 PC만 반환해 세로 진입 시 PC 이미지가 뜨고 회전해야 4:5로 바뀌던 근본 원인 */
   if(!bg||!src){return typeof prevSelect==='function'?prevSelect.apply(this,arguments):false}
   var token=++seq;
   setLoading(i,true);
@@ -13697,7 +13744,14 @@ input[type=range]{accent-color:#777}
   }
   window.__dennAdminMobilePreviewBoxV107=box;
   var origSize=window.rmSizeCanvas;
-  if(typeof origSize==='function')window.rmSizeCanvas=function(){var r=origSize.apply(this,arguments);box();return r;};
+  if(typeof origSize==='function')window.rmSizeCanvas=function(){var r=origSize.apply(this,arguments);box();
+    /* 2026-06-19 ②③: 가로 전체화면이면 캔버스를 '배경 이미지 비율(PC와 동일 합성)'로 두고 뷰포트를 cover하도록 확대 →
+       PC 비율 유지(액자·배경 크기 동일) + 레터박스 없이 꽉 참(위/아래만 살짝 잘림). 영역 overflow:hidden로 클립. 반응형(매 호출 재계산). */
+    try{if(document.documentElement.classList.contains('denn-rotate-fs')){var RMf=window.RM;if(RMf&&RMf.canvas){var vw=Math.round(innerWidth),vh=Math.round(innerHeight),im=RMf.roomImg,ar=(im&&im.naturalWidth&&im.naturalHeight)?(im.naturalWidth/im.naturalHeight):(vw/vh);var ch=vh,cw=Math.round(ch*ar);if(cw<vw){cw=vw;ch=Math.round(cw/ar);}if(RMf.canvas.width!==cw||RMf.canvas.height!==ch){RMf.canvas.width=cw;RMf.canvas.height=ch;RMf.canvas.style.width=cw+'px';RMf.canvas.style.height=ch+'px';var sgF=document.getElementById('sg-canvas');if(sgF){sgF.width=cw;sgF.height=ch;sgF.style.width=cw+'px';sgF.style.height=ch+'px'}}
+      /* 진입 시 1회 세로 가운데로 — 계산값(ch-vh)/2로 결정적 설정(scrollHeight 타이밍 비의존). 사용자 스크롤은 이후 보존. */
+      if(!window.__dennRotCentered){var aEl=document.getElementById('rm-canvas-area');if(aEl&&ch>vh+4){aEl.scrollTop=Math.round((ch-vh)/2);window.__dennRotCentered=true;}}
+    }}}catch(e){}
+    return r;};
   var origRender=window.rmRender;
   if(typeof origRender==='function')window.rmRender=function(){var r=origRender.apply(this,arguments);if(box()){try{origRender.call(window);window.sgDraw&&window.sgDraw();}catch(e){}}return r;};
 })();
@@ -13723,7 +13777,21 @@ input[type=range]{accent-color:#777}
       'html.denn-rotate-fs #rm-mobile-resize-handle{display:none!important}'+
       'html.denn-rotate-fs #rm-usage-guide-v33{display:none!important}'+
       'html.denn-rotate-fs #denn-rotate-hint{display:none!important}'+
-      'html.denn-rotate-fs #room-modal #rm-canvas-area{width:100vw!important;height:100vh!important;height:100dvh!important;min-height:0!important;max-height:none!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;background:#000!important}'+
+      /* 2026-06-19 ②: 모달 자체를 풀블리드(흰 카드 테두리·둥근모서리·분홍 페이지여백 제거) → 배경이 화면 끝까지. */
+      'html.denn-rotate-fs #room-modal{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;max-width:none!important;max-height:none!important;background:#000!important}'+
+      'html.denn-rotate-fs #room-modal>div{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;max-width:none!important;max-height:none!important;background:#000!important;box-shadow:none!important}'+
+      /* 2026-06-19: 가로 전체화면은 cover로 캔버스가 뷰포트보다 세로로 김 → 세로 스크롤 허용(천장·바닥까지 보기). block 레이아웃이라야 위쪽도 스크롤로 닿음(flex center는 상단 클립). */
+      'html.denn-rotate-fs #room-modal #rm-canvas-area{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;display:block!important;overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;background:#000!important}'+
+      /* 캔버스는 cover로 확대(뷰포트보다 큼) → max 제한 풀고, 가로 중앙정렬(block+margin auto), 세로는 스크롤(touch-action:pan-y). */
+      'html.denn-rotate-fs #room-modal #rm-canvas{max-width:none!important;max-height:none!important;border-radius:0!important;display:block!important;margin:0 auto!important;touch-action:pan-y!important}'+
+      'html.denn-rotate-fs #room-modal #sg-canvas{max-width:none!important;max-height:none!important;border-radius:0!important;touch-action:pan-y!important}'+
+      /* 네이티브 스크롤바 숨기고, 커스텀 반투명 '상시 노출' 조절바(#denn-rot-scrollbar)로 대체 — 드래그/스와이프 이동. */
+      'html.denn-rotate-fs #room-modal #rm-canvas-area{scrollbar-width:none!important}'+
+      'html.denn-rotate-fs #room-modal #rm-canvas-area::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}'+
+      '#denn-rot-scrollbar{position:fixed;top:64px;bottom:18px;right:10px;width:9px;z-index:2147483646;display:none;background:rgba(255,255,255,.16);border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.28)}'+
+      'html.denn-rotate-fs #denn-rot-scrollbar.on{display:block}'+
+      '#denn-rot-scrollthumb{position:absolute;left:0;top:0;width:100%;height:44px;background:rgba(255,255,255,.5);border-radius:6px;cursor:grab;touch-action:none;transition:background .12s}'+
+      '#denn-rot-scrollthumb:active{background:rgba(255,255,255,.74);cursor:grabbing}'+
       'html.denn-rotate-fs #room-modal #rm-canvas,html.denn-rotate-fs #room-modal #sg-canvas{max-width:100vw!important;max-height:100dvh!important;touch-action:none!important}'+
       /* 프레임(액자) 편집 화면: 모바일 가로 회전 차단 — 세로 전용 오버레이. */
       '#denn-frame-portrait-prompt{position:fixed;inset:0;z-index:2147483646;background:rgba(20,18,28,.96);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:13px;text-align:center;padding:24px;font-family:inherit}'+
@@ -13749,21 +13817,26 @@ input[type=range]{accent-color:#777}
     b.onclick=exitRotateFs;document.body.appendChild(b);
   }
   function setRotateFs(on){document.documentElement.classList.toggle('denn-rotate-fs',!!on);ensureExitBtn();}
-  function framePortraitPrompt(show){
+  function framePortraitPrompt(show,roomMode){
     var p=document.getElementById('denn-frame-portrait-prompt');
     if(show){
-      if(!p){p=document.createElement('div');p.id='denn-frame-portrait-prompt';p.innerHTML='<div class="dfp-ico">📱</div><div class="dfp-t">세로로 돌려주세요</div><div class="dfp-s">액자 편집은 세로 화면에서<br>진행해 주세요</div>';document.body.appendChild(p);}
+      if(!p){p=document.createElement('div');p.id='denn-frame-portrait-prompt';p.innerHTML='<div class="dfp-ico">📱</div><div class="dfp-t">세로로 돌려주세요</div><div class="dfp-s"></div>';document.body.appendChild(p);}
+      var sub=p.querySelector('.dfp-s');if(sub)sub.innerHTML=roomMode?'내 공간 보기는 세로 화면에서<br>확인해 주세요':'액자 편집은 세로 화면에서<br>진행해 주세요';
       p.classList.add('on');
       try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait-primary')['catch'](function(){});}catch(e){}/* 안드로이드: 세로 강제(실패 무시) */
     }else if(p){p.classList.remove('on');}
   }
   function exitRotateFs(){
     window.__dennRotateDismissed=true;/* 사용자가 ✕로 닫음 → 가로 유지 중엔 자동 재진입 안 함 */
+    window.__dennForcePortraitV=false;
+    window.__dennAwaitPortraitV=true;/* 2026-06-19: 강제 레이아웃 대신 '세로로 돌려주세요' 안내 — 기기 세로 복귀 시 onChange가 해제하고 정상 세로 화면. */
     document.documentElement.classList.remove('denn-rotate-fs');
     window.__dennAutoFsV108=false;
     try{if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(false);}catch(e){}
-    try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait-primary')['catch'](function(){});}catch(e){}/* 가능하면 세로 강제(안드로이드 한정, 실패 무시) */
+    try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait-primary')['catch'](function(){});}catch(e){}/* 안드로이드 한정 물리 세로 회전 시도(되면 자동으로 안내 사라짐) */
+    if(innerWidth>innerHeight)framePortraitPrompt(true,true);/* 아직 가로면 세로 안내 오버레이로 가림(프레임툴과 동일 UX) */
     redraw();
+    try{if(window.__dennUpdateRotScrollbarV)__dennUpdateRotScrollbarV();}catch(e){}/* 조절바 숨김 */
   }
   function hint(){
     var h=document.getElementById('denn-rotate-hint');
@@ -13808,6 +13881,38 @@ input[type=range]{accent-color:#777}
     }catch(e){}
   }
   window.dennSwapRoomBgV=swapBgForOrientation;/* 관리자 PC|모바일 토글에서도 세로면 mobileDataUrl 배경으로 스왑 */
+  /* 2026-06-19: 가로 전체화면 커스텀 반투명 '상시 노출' 조절바 — 네이티브 스크롤바 대신 드래그/스와이프로 세로 이동. */
+  function ensureRotScrollbarV(){
+    var sb=document.getElementById('denn-rot-scrollbar');if(sb)return sb;
+    sb=document.createElement('div');sb.id='denn-rot-scrollbar';
+    var thumb=document.createElement('div');thumb.id='denn-rot-scrollthumb';sb.appendChild(thumb);
+    document.body.appendChild(sb);
+    var dragging=false,startY=0,startScroll=0;
+    function areaEl(){return document.getElementById('rm-canvas-area');}
+    thumb.addEventListener('pointerdown',function(e){var a=areaEl();if(!a)return;dragging=true;startY=e.clientY;startScroll=a.scrollTop;try{thumb.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault();e.stopPropagation();});
+    thumb.addEventListener('pointermove',function(e){if(!dragging)return;var a=areaEl();if(!a)return;var th=thumb.offsetHeight,track=sb.clientHeight,maxThumb=track-th,maxScroll=a.scrollHeight-a.clientHeight;if(maxThumb<=0)return;a.scrollTop=startScroll+(e.clientY-startY)*(maxScroll/maxThumb);e.preventDefault();});
+    function end(e){if(!dragging)return;dragging=false;try{thumb.releasePointerCapture(e.pointerId)}catch(_){}}
+    thumb.addEventListener('pointerup',end);thumb.addEventListener('pointercancel',end);
+    return sb;
+  }
+  function updateRotScrollbarV(){
+    try{
+      var sb=ensureRotScrollbarV(),a=document.getElementById('rm-canvas-area');
+      var fs=document.documentElement.classList.contains('denn-rotate-fs');
+      var maxScroll=a?(a.scrollHeight-a.clientHeight):0;
+      if(!fs||!a||maxScroll<=2){sb.classList.remove('on');return;}
+      sb.classList.add('on');
+      var thumb=document.getElementById('denn-rot-scrollthumb'),track=sb.clientHeight;
+      var th=Math.max(44,Math.round(track*(a.clientHeight/a.scrollHeight)));
+      var maxThumb=Math.max(0,track-th),pos=maxScroll>0?Math.round((a.scrollTop/maxScroll)*maxThumb):0;
+      thumb.style.height=th+'px';thumb.style.transform='translateY('+pos+'px)';
+    }catch(e){}
+  }
+  window.__dennUpdateRotScrollbarV=updateRotScrollbarV;
+  if(!window.__dennRotScrollbarBound){
+    window.__dennRotScrollbarBound=true;var _rsRaf=0;
+    document.addEventListener('scroll',function(e){if(e.target&&e.target.id==='rm-canvas-area'){if(_rsRaf)return;_rsRaf=requestAnimationFrame(function(){_rsRaf=0;updateRotScrollbarV()});}},true);
+  }
   function onChange(){
     try{
       /* ★ 2026-06-18: 방향 전환 시 설정 재병합 — loadSettingsV33→dennMergeMobileV가 가로=base(PC)/세로=.mobile를
@@ -13817,22 +13922,25 @@ input[type=range]{accent-color:#777}
       window.__dennRotOriV2=__ori;
       hideFsBtn();ensureExitBtn();swapBgForOrientation();
       var mob=isMob(),open=roomOpen(),landscapeNow=innerWidth>innerHeight;
-      /* 프레임(액자) 편집 화면(룸 모달 닫힘) + 모바일 + 가로 → 세로 전용 오버레이로 차단. */
-      framePortraitPrompt(mob&&!open&&landscapeNow);
+      /* 프레임 편집(룸 모달 닫힘) + 가로 → 세로 안내 오버레이. 또한 룸 보기에서 X로 닫고 가로 유지 중(__dennAwaitPortraitV)이면 동일 안내로 가림. */
+      var __awaitRoomPortrait=window.__dennAwaitPortraitV&&open&&landscapeNow;
+      framePortraitPrompt((mob&&!open&&landscapeNow)||__awaitRoomPortrait,__awaitRoomPortrait);
       if(!mob||!open){setRotateFs(false);hint();return;}
       var landscape=landscapeNow,fs=isFs();
       if(landscape){
-        if(window.__dennRotateDismissed){setRotateFs(false);}
+        if(window.__dennRotateDismissed){setRotateFs(false);}/* X로 닫음 → 가로에선 재진입 안 함(세로 안내 프롬프트가 떠 있음) */
         else{
-          if(!fs){window.__dennAutoFsV108=true;if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}
-          setRotateFs(true);redraw();
+          if(!fs){window.__dennAutoFsV108=true;window.__dennRotCentered=false;/* 새 진입 → 센터 1회 재허용 */try{document.documentElement.classList.add('denn-room-entering')}catch(e){}setTimeout(function(){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}},440);/* 진입 리사이즈·센터 순간을 페이드로 가림(점프 완화) */if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}
+          setRotateFs(true);redraw();setTimeout(updateRotScrollbarV,90);setTimeout(updateRotScrollbarV,340);
         }
       }else{/* 세로 */
         window.__dennRotateDismissed=false;
+        window.__dennAwaitPortraitV=false;/* 세로 복귀 → 회전 안내 해제, 정상 세로 화면 */
+        window.__dennRotCentered=false;/* 다음 가로 진입 때 다시 센터 */
         setRotateFs(false);
         if(fs&&window.__dennAutoFsV108){window.__dennAutoFsV108=false;if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(false);}
       }
-      hint();
+      hint();updateRotScrollbarV();
     }catch(e){}
   }
   window.__dennRotateFsOnChangeV108=onChange;
@@ -13842,12 +13950,25 @@ input[type=range]{accent-color:#777}
   if(typeof prevOpen==='function'&&!prevOpen.__rotFsV108){
     window.openRoomMockup=function(){
       try{document.documentElement.classList.add('denn-room-entering');}catch(e){}/* 진입 점프 가림 */
+      window.__dennForcePortraitV=false;/* 새 진입 시 강제세로 초기화 */
       var r=prevOpen.apply(this,arguments);
-      setTimeout(onChange,220);setTimeout(onChange,650);
-      setTimeout(function(){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}},480);/* 정착 후 페이드인 */
+      /* 2026-06-19 ①: 초기 진입 시 캔버스/세로판정(isRoomPortrait) 정착 전에 loadSettingsV33가 돌아 운영자값(특히 .mobile 세로)이 안 맞던 문제 — 정착 후 재적용. denn-room-entering 페이드(480ms)가 점프 가림. */
+      [220,650].forEach(function(ms){setTimeout(function(){try{if(window.loadSettingsV33)loadSettingsV33();}catch(e){}onChange();redraw();/* 재적용 후 리사이즈+렌더(loadSettingsV33은 슬라이더만 세팅) */},ms);});
+      setTimeout(function(){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}},760);/* 정착 후 페이드인 — 650ms 재적용+redraw까지 가림 */
       return r;
     };
     window.openRoomMockup.__rotFsV108=true;
+  }
+  /* 2026-06-19 ①: 가이드배경 "선택" 직후엔 방향(세로) 정착 전이라 4:5(mobileDataUrl) 스왑·.mobile 설정이 안 잡히고
+     PC 이미지로 떴다가 회전해야 4:5로 바뀌던 문제 — 선택 후 정착 시점에 강제 스왑+설정 재적용+렌더. */
+  var prevSelV108=window.rmSelectGuide;
+  if(typeof prevSelV108==='function'&&!prevSelV108.__rotV108sel){
+    window.rmSelectGuide=function(){
+      var r=prevSelV108.apply(this,arguments);
+      [220,560].forEach(function(ms){setTimeout(function(){try{swapBgForOrientation();if(window.loadSettingsV33)loadSettingsV33();}catch(e){}redraw();},ms);});
+      return r;
+    };
+    window.rmSelectGuide.__rotV108sel=true;
   }
   [500,1200].forEach(function(ms){setTimeout(onChange,ms);});
 })();
@@ -14645,8 +14766,9 @@ input[type=range]{accent-color:#777}
     setSV('rm-tilt',nv(s.frameTiltDeg,0));
     setSV('rm-persp-x',nv(s.framePerspectiveX,0));
     setSV('rm-persp-y',nv(s.framePerspectiveY,0));
-    if(s.bgScale!=null)setSV('rm-bg-scale',Math.round(nv(s.bgScale,1)*100));
-    if(s.bgOffsetX!=null)setSV('rm-bg-ox',nv(s.bgOffsetX,0));if(s.bgOffsetY!=null)setSV('rm-bg-oy',nv(s.bgOffsetY,0));/* 단계4: 배경 이동도 내보내기 렌더에 반영 */
+    /* 2026-06-19 focus 모델(이중경로): bgZoom 있으면 focus 인코딩으로 슬라이더 세팅 + RM 플래그. setSV는 dispatch input(isTrusted=false)이라 dennBgOnInputV 미발동(레거시 오플립 방지). */
+    if(window.dennBgIsFocusModel&&window.dennBgIsFocusModel(s)){if(window.RM)window.RM.__bgUseFocusV=true;setSV('rm-bg-scale',Math.round(Math.max(1,Math.min(2,nv(s.bgZoom,1)))*100));setSV('rm-bg-ox',Math.round((Math.max(0,Math.min(1,nv(s.bgFocusX,.5)))-.5)*100));setSV('rm-bg-oy',Math.round((Math.max(0,Math.min(1,nv(s.bgFocusY,.5)))-.5)*100));}
+    else{if(window.RM&&s.bgScale!=null)window.RM.__bgUseFocusV=false;if(s.bgScale!=null)setSV('rm-bg-scale',Math.round(nv(s.bgScale,1)*100));if(s.bgOffsetX!=null)setSV('rm-bg-ox',nv(s.bgOffsetX,0));if(s.bgOffsetY!=null)setSV('rm-bg-oy',nv(s.bgOffsetY,0));/* 단계4: 배경 이동도 내보내기 렌더에 반영 */}
     /* 실제 프레임 크기는 가이드 스케일(sg-scale)에 크게 의존(L3697) — 반드시 같이 적용 */
     if(s.guideScale!=null){setSV('sg-scale-r',Math.round(nv(s.guideScale,1)*100));setSV('sg-scale-n',Math.round(nv(s.guideScale,1)*100));}
     if(s.guideX!=null){setSV('sg-ox-r',nv(s.guideX,40));setSV('sg-ox-n',nv(s.guideX,40));}
