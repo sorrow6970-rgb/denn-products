@@ -3456,7 +3456,8 @@ function drawCoverFocus(ctx2,img,x,y,w,h,zoom,fx,fy){
       dx=clamp(x+w/2-cfx*tw,x+w-tw,x),dy=clamp(y+h/2-cfy*th,y+h-th,y);
   ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}
 }
-function dennBgIsFocusModel(s){return !!(s&&s.bgZoom!=null&&isFinite(parseFloat(s.bgZoom)))}
+/* 2026-06-19: focus 모델 비활성화(레거시 전용 복귀) — focus 저장값이 소비자 V48 읽기 경로에 안 물려 운영자→소비자 배경위치 전달 실패. 항상 false로 두어 apply/snapshot/render 전부 레거시(bgScale/bgOffsetX/Y) 사용. 운영자 배경조정은 레거시로 저장되어 기존 미러(f382b14)로 소비자에 정상 전달됨. */
+function dennBgIsFocusModel(s){return false}
 window.dennBgIsFocusModel=dennBgIsFocusModel;
 /* settings → 배경 슬라이더 역매핑(모델 판정 포함). focus면 zoom→배경크기슬라이더(%)·focusX/Y→좌우/상하슬라이더(중앙0, -50..50),
    아니면 레거시 bgScale/bgOffsetX/Y. RM.__bgUseFocusV로 렌더 분기를 고정한다(모든 apply 경로 공용). */
@@ -3474,7 +3475,8 @@ function dennSnapshotBgV(o){
 window.dennSnapshotBgV=dennSnapshotBgV;
 /* 운영자가 배경 슬라이더를 직접 조작(event.isTrusted)하면 그 시점부터 focus 모델로 전환(레거시 프리셋의 점진 마이그레이션).
    프로그램적 setSV(dispatch input)은 isTrusted=false라 무영향 → 슬라이더 인라인 oninput에서 isTrusted 게이트와 함께 호출. */
-function dennBgOnInputV(){try{if(window.RM)RM.__bgUseFocusV=true}catch(e){}}
+/* 2026-06-19: focus 모델 비활성화 — 슬라이더 직접 조작해도 focus 전환 안 함(레거시 유지). no-op. */
+function dennBgOnInputV(){}
 window.dennBgOnInputV=dennBgOnInputV;
 function isDirectRoomUploadBg(){return !!(window.RM&&RM.roomImg&&(RM.bgId==='direct-room-upload'||RM.bgId==='uploaded-room'||RM.roomImg.__dennDirectUpload))}
 function directRoomImageAspect(){return isDirectRoomUploadBg()&&window.RM&&RM.roomImg&&RM.roomImg.naturalWidth&&RM.roomImg.naturalHeight?(RM.roomImg.naturalWidth/RM.roomImg.naturalHeight):0}
