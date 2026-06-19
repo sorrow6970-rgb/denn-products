@@ -58,6 +58,10 @@ JS 런타임 부재로 자동 구문검사 못 함(수동 정독만). 콘솔 검
 - **⚠️ isRoomLandscape 미노출 함정**: probe의 `window.isRoomLandscape`가 undefined라 `landscape:false` 오판 → `window.isRoomLandscape` 노출 추가로 해소.
 - **어드민 배경설정 중앙 가이드선**: `dennDrawCenterGuideV`(rmRender L3937 base, 활성) — 어드민 셋업(PC·모바일 무관)에서 캔버스 정중앙 빨강 점선 십자(어두운 underlay). 배경 중앙 맞추기용. 소비자 미표시.
 
+## 6c. 후속 미세조정 (커밋 2)
+- **배경 슬라이더 미세조정**: `rm-bg-scale` step 0.5, `rm-bg-ox/oy` step 0.1 (픽셀 단위 미세조정). focus apply(`dennApplyBgSlidersV`)도 0.5/0.1 정밀 보존(정수 반올림 제거).
+- **가로 중앙 시작 + 점프**: V107 센터링을 `scrollHeight` 기반(읽기=리플로우 강제)으로 신뢰성 ↑. 진입 페이드(`denn-room-entering`)를 **세로→가로 전환 시점(onChange 상단)** 으로 이동 → loadSettingsV33+이미지스왑+cover+센터 정착(640ms)까지 가려 점프 숨김. `__dennRotCentered`도 상단에서 리셋.
+
 ## 7. 별건(이번 범위 밖)
 - 회전 "요동"(전환 순간 깜빡임) — 캔버스 크기 변화 시퀀스 로깅 선행 필요. 미착수.
 - 메모리: [[project_mobile_pc_guide_settings_attempt]] [[feedback_verification_workflow]] [[feedback_mockup_iife_scoping]]

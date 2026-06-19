@@ -520,21 +520,21 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
               <div style="font-size:10px;color:var(--warm)">배경 크기</div>
               <span id="rm-bg-scale-v" style="font-size:10px;color:var(--ink);font-weight:500">100%</span>
             </div>
-            <input type="range" id="rm-bg-scale" min="50" max="200" value="100" style="width:100%" oninput="document.getElementById('rm-bg-scale-v').textContent=this.value+'%';if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
+            <input type="range" id="rm-bg-scale" min="50" max="200" value="100" step="0.5" style="width:100%" oninput="document.getElementById('rm-bg-scale-v').textContent=this.value+'%';if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="font-size:10px;color:var(--warm)">배경 좌우 이동</div>
               <span id="rm-bg-ox-v" style="font-size:10px;color:var(--ink);font-weight:500">0</span>
             </div>
-            <input type="range" id="rm-bg-ox" min="-50" max="50" value="0" style="width:100%" oninput="document.getElementById('rm-bg-ox-v').textContent=this.value;if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
+            <input type="range" id="rm-bg-ox" min="-50" max="50" value="0" step="0.1" style="width:100%" oninput="document.getElementById('rm-bg-ox-v').textContent=this.value;if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="font-size:10px;color:var(--warm)">배경 상하 이동</div>
               <span id="rm-bg-oy-v" style="font-size:10px;color:var(--ink);font-weight:500">0</span>
             </div>
-            <input type="range" id="rm-bg-oy" min="-50" max="50" value="0" style="width:100%" oninput="document.getElementById('rm-bg-oy-v').textContent=this.value;if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
+            <input type="range" id="rm-bg-oy" min="-50" max="50" value="0" step="0.1" style="width:100%" oninput="document.getElementById('rm-bg-oy-v').textContent=this.value;if(event&&event.isTrusted&&window.dennBgOnInputV)dennBgOnInputV();if(window.rmRenderRAF)rmRenderRAF();else rmRender()">
           </div>
         </div>
 
@@ -3462,7 +3462,7 @@ window.dennBgIsFocusModel=dennBgIsFocusModel;
    아니면 레거시 bgScale/bgOffsetX/Y. RM.__bgUseFocusV로 렌더 분기를 고정한다(모든 apply 경로 공용). */
 function dennApplyBgSlidersV(s){
   var focus=dennBgIsFocusModel(s);if(window.RM)RM.__bgUseFocusV=focus;
-  if(focus){setVal('rm-bg-scale',Math.round(clamp(num(s.bgZoom,1),1,2)*100),'%');setVal('rm-bg-ox',Math.round((clamp(num(s.bgFocusX,.5),0,1)-.5)*100));setVal('rm-bg-oy',Math.round((clamp(num(s.bgFocusY,.5),0,1)-.5)*100))}
+  if(focus){setVal('rm-bg-scale',Math.round(clamp(num(s.bgZoom,1),1,2)*200)/2,'%');setVal('rm-bg-ox',Math.round((clamp(num(s.bgFocusX,.5),0,1)-.5)*1000)/10);setVal('rm-bg-oy',Math.round((clamp(num(s.bgFocusY,.5),0,1)-.5)*1000)/10)}/* 0.5/0.1 정밀 보존(슬라이더 step과 일치) */
   else{setVal('rm-bg-scale',Math.round(num(s.bgScale,uiBgScale())*100),'%');setVal('rm-bg-ox',num(s.bgOffsetX,0));setVal('rm-bg-oy',num(s.bgOffsetY,0))}
 }
 window.dennApplyBgSlidersV=dennApplyBgSlidersV;
@@ -13748,8 +13748,8 @@ input[type=range]{accent-color:#777}
     /* 2026-06-19 ②③: 가로 전체화면이면 캔버스를 '배경 이미지 비율(PC와 동일 합성)'로 두고 뷰포트를 cover하도록 확대 →
        PC 비율 유지(액자·배경 크기 동일) + 레터박스 없이 꽉 참(위/아래만 살짝 잘림). 영역 overflow:hidden로 클립. 반응형(매 호출 재계산). */
     try{if(document.documentElement.classList.contains('denn-rotate-fs')){var RMf=window.RM;if(RMf&&RMf.canvas){var vw=Math.round(innerWidth),vh=Math.round(innerHeight),im=RMf.roomImg,ar=(im&&im.naturalWidth&&im.naturalHeight)?(im.naturalWidth/im.naturalHeight):(vw/vh);var ch=vh,cw=Math.round(ch*ar);if(cw<vw){cw=vw;ch=Math.round(cw/ar);}if(RMf.canvas.width!==cw||RMf.canvas.height!==ch){RMf.canvas.width=cw;RMf.canvas.height=ch;RMf.canvas.style.width=cw+'px';RMf.canvas.style.height=ch+'px';var sgF=document.getElementById('sg-canvas');if(sgF){sgF.width=cw;sgF.height=ch;sgF.style.width=cw+'px';sgF.style.height=ch+'px'}}
-      /* 진입 시 1회 세로 가운데로 — 계산값(ch-vh)/2로 결정적 설정(scrollHeight 타이밍 비의존). 사용자 스크롤은 이후 보존. */
-      if(!window.__dennRotCentered){var aEl=document.getElementById('rm-canvas-area');if(aEl&&ch>vh+4){aEl.scrollTop=Math.round((ch-vh)/2);window.__dennRotCentered=true;}}
+      /* 진입 시 1회 가운데 — 캔버스 사이징이 막 끝난 직후(아직 __dennRotCentered=false면) scrollHeight로 즉시 결정. 페이드(denn-room-entering)가 이 순간을 가려 점프 안 보임. */
+      if(!window.__dennRotCentered){var aEl=document.getElementById('rm-canvas-area');if(aEl){var sh=aEl.scrollHeight;if(sh>aEl.clientHeight+4){aEl.scrollTop=Math.round((sh-aEl.clientHeight)/2);window.__dennRotCentered=true;}}}
     }}}catch(e){}
     return r;};
   var origRender=window.rmRender;
@@ -13918,7 +13918,9 @@ input[type=range]{accent-color:#777}
       /* ★ 2026-06-18: 방향 전환 시 설정 재병합 — loadSettingsV33→dennMergeMobileV가 가로=base(PC)/세로=.mobile를
          재평가해 배경 스케일·위치·액자 위치를 방향에 맞게 전환. (회전 시 재호출 안 돼 세로값이 가로에 남던 빈틈 해결) */
       var __ori=(innerWidth>innerHeight)?'l':'p';
-      if(window.__dennRotOriV2&&window.__dennRotOriV2!==__ori&&roomOpen()){try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}}
+      var __oriCh=window.__dennRotOriV2&&window.__dennRotOriV2!==__ori;
+      if(__oriCh&&__ori==='l'&&roomOpen()){/* 세로→가로 진입: 설정재적용·이미지스왑·cover리사이즈·센터 정착까지 페이드로 가려 점프 숨김 */window.__dennRotCentered=false;try{document.documentElement.classList.add('denn-room-entering')}catch(e){}clearTimeout(window.__dennRotFadeT);window.__dennRotFadeT=setTimeout(function(){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}},640);}
+      if(__oriCh&&roomOpen()){try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}}
       window.__dennRotOriV2=__ori;
       hideFsBtn();ensureExitBtn();swapBgForOrientation();
       var mob=isMob(),open=roomOpen(),landscapeNow=innerWidth>innerHeight;
@@ -13930,8 +13932,8 @@ input[type=range]{accent-color:#777}
       if(landscape){
         if(window.__dennRotateDismissed){setRotateFs(false);}/* X로 닫음 → 가로에선 재진입 안 함(세로 안내 프롬프트가 떠 있음) */
         else{
-          if(!fs){window.__dennAutoFsV108=true;window.__dennRotCentered=false;/* 새 진입 → 센터 1회 재허용 */try{document.documentElement.classList.add('denn-room-entering')}catch(e){}setTimeout(function(){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}},440);/* 진입 리사이즈·센터 순간을 페이드로 가림(점프 완화) */if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}
-          setRotateFs(true);redraw();setTimeout(updateRotScrollbarV,90);setTimeout(updateRotScrollbarV,340);
+          if(!fs){window.__dennAutoFsV108=true;if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}/* 페이드·센터 리셋은 상단 p→l 전환에서 처리 */
+          setRotateFs(true);redraw();setTimeout(updateRotScrollbarV,90);setTimeout(updateRotScrollbarV,360);
         }
       }else{/* 세로 */
         window.__dennRotateDismissed=false;
