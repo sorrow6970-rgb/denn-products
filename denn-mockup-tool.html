@@ -3983,6 +3983,10 @@ window.rmRender=function(){
         RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=clamp(__px/100,.02,.98);RM.pos.y=clamp(__py/100,.02,.98);
         RM.frameAnchorV48={frameCenterX:__px,frameCenterY:__py,frameAnchor:'center'};
         var __gx=num(__op.guideX,__px),__gy=num(__op.guideY,__py);setVal('sg-ox-r',__gx);setVal('sg-ox-n',__gx);setVal('sg-oy-r',__gy);setVal('sg-oy-n',__gy);
+        /* 2026-06-22 FIX: 배경 3필드(bgScale/bgOffsetX/bgOffsetY)도 운영자 프리셋(.mobile 병합 __op)으로 강제 — 배경 드로우(L3995)가 rm-bg-* 슬라이더를 직접 읽는데, 기존 force 블록이 프레임/가이드만 세팅하고 배경은 빠뜨려 stale user:키 값(loadSettingsV33가 세팅)이 그려지던 버그. __userMoved 전(미조작)에만 강제 → 왕복유지 보존. 운영자→소비자 모바일 배경위치 전달의 마지막 누락 경로. */
+        if(isFinite(__op.bgScale)){var __bsc=Math.round(num(__op.bgScale,1)*100);setVal('rm-bg-scale',__bsc,'%');}
+        if(__op.bgOffsetX!=null)setVal('rm-bg-ox',num(__op.bgOffsetX,0));
+        if(__op.bgOffsetY!=null)setVal('rm-bg-oy',num(__op.bgOffsetY,0));
       }
     }
     showCanvas();
