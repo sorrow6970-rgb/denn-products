@@ -13847,8 +13847,8 @@ input[type=range]{accent-color:#777}
       '#room-modal #rm-canvas,#room-modal #sg-canvas{transition:opacity .26s ease}'+
       'html.denn-room-entering #room-modal #rm-canvas,html.denn-room-entering #room-modal #sg-canvas{opacity:0!important}'+
       /* 2026-06-22: 진입/회전 대기(이미지 로드) 동안 빈 화면 대신 로딩 스피너 — denn-room-entering일 때만 표시. */
-      '#denn-room-spinner{position:fixed;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border:3px solid rgba(140,130,110,.28);border-top-color:rgba(120,110,95,.92);border-radius:50%;z-index:2147483640;display:none;pointer-events:none;animation:dennRoomSpin .7s linear infinite}'+
-      'html.denn-room-entering #denn-room-spinner{display:block}'+
+      '#denn-room-spinner{position:fixed;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border:3px solid rgba(140,130,110,.28);border-top-color:rgba(120,110,95,.92);border-radius:50%;z-index:2147483640;opacity:0;pointer-events:none;transition:opacity .22s ease;animation:dennRoomSpin .7s linear infinite}'+
+      'html.denn-room-spin #denn-room-spinner{opacity:1}'+/* 2026-06-22: 지연(180ms)+페이드 — 빠른 캐시 로드엔 스피너 안 뜨고, 느린 첫 로드만 부드럽게 표시 */
       '@keyframes dennRoomSpin{to{transform:rotate(360deg)}}'+
       /* 모바일: 가이드배경 선택 카드(썸네일) 키움 — 55px는 너무 작음. */
       '@media(max-width:760px){#rm-guide-grid>div img{height:104px!important}#rm-guide-grid>div>div{font-size:11px!important;padding:5px 9px!important}}';
@@ -13865,9 +13865,10 @@ input[type=range]{accent-color:#777}
     var gen=(++__dennRevealGenV),t0=performance.now(),done=false;
     /* 방향에 맞는 배경 src를 즉시 프리로드 시작(미캐시 대비) → 게이트 대기 단축 */
     try{var R0=window.RM,B0=(window.ADM&&ADM.guideBackgrounds)||[],i0=R0&&(R0.guideIndex!=null?R0.guideIndex:R0.__bgIndexForSwap);if(R0&&i0!=null&&i0>=0&&B0[i0]&&window.dennPreloadGuideBgV)dennPreloadGuideBgV(B0[i0]);}catch(e){}
+    var spinT=setTimeout(function(){if(!done&&gen===__dennRevealGenV){try{document.documentElement.classList.add('denn-room-spin')}catch(e){}}},180);/* 180ms 넘게 기다릴 때만 스피너 표시(빠른 로드엔 안 뜸) */
     /* 현재 방향에 맞는 표시 이미지 src(세로=4:5 mobileDataUrl / 가로=원본 dataUrl). 가이드배경 아니면 null. */
     function wantSrc(){try{var R=window.RM;if(!R)return null;var B=(window.ADM&&ADM.guideBackgrounds)||[],i=(R.guideIndex!=null)?R.guideIndex:R.__bgIndexForSwap;if(i==null||i<0)return null;var b=B[i];if(!b||!b.mobileDataUrl)return null;return (window.dennGuideBgSrcV&&dennGuideBgSrcV(b))||b.dataUrl||null;}catch(e){return null}}
-    function reveal(){if(done||gen!==__dennRevealGenV)return;done=true;try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
+    function reveal(){if(done||gen!==__dennRevealGenV)return;done=true;clearTimeout(spinT);try{document.documentElement.classList.remove('denn-room-spin')}catch(e){}try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
       /* 2026-06-22: 최종 캔버스 크기에서 스크롤 중앙 정렬(가로 전체화면 첫 화면=세로 중앙). __dennRotCentered 조기 set/타이밍 꼬임 우회해 reveal 직전 직접 세팅. */
       try{window.__dennRotCentered=true;var aEl=document.getElementById('rm-canvas-area');if(aEl){if(aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}}catch(e){}
       requestAnimationFrame(function(){if(gen===__dennRevealGenV){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}}});}
@@ -13878,9 +13879,9 @@ input[type=range]{accent-color:#777}
       var imgReady=(!im)||(im.complete&&im.naturalWidth>0);
       var srcReady=(!want)||(im&&im.src===want);/* ★가로 진입: 옛 세로 이미지가 complete라도 가로(want) 이미지로 스왑되기 전엔 노출 금지 — 늦은 대폭 리사이즈(844x1055→844x563) 튐의 원인 */
       if((imgReady&&srcReady)||performance.now()-t0>(maxMs||3000))reveal();
-      else setTimeout(wait,60);
+      else setTimeout(wait,40);
     }
-    setTimeout(wait,150);
+    setTimeout(wait,100);
   }
   window.__dennGatedRevealV=dennGatedRevealV;
   function ensureExitBtn(){
