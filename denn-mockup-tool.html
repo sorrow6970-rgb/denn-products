@@ -3196,6 +3196,17 @@ function loadSettingsV33(){
   }catch(e){}
   if(!st[key])st[key]=Object.assign({},base);
   upgradeGuideScaleDefault(st[key]);
+  /* 2026-06-22: 배경 찌꺼기/튐 제거 — 소비자(!admin) 미조작(!__userMoved) 시 user:키의 배경값(base+mobile)을 운영자 프리셋 현재값으로 미리 정리. 미러 게이팅(__doMirror)이 안 도는 settle-timer 재호출 등에서 stale 배경(-50)이 남아, 첫 applySettingsV33가 -50을 그렸다가 rmRender force가 -37.3으로 보정 → 튐. 여기서 미리 동기화해 첫 페인트부터 일치 + persist로 잔존값 제거. base↔mobile 분리 유지(landscape=base/portrait=mobile), 프레임·가이드·사이즈 무관(배경 3필드만). */
+  try{
+    if(!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())&&!(window.RM&&window.RM.__userMoved)&&st[key]){
+      var __bsrc=(key.indexOf('user:')===0)?key.slice(5):(((window.RM&&window.RM.roomImg)||key==='default-room')?'__denn_room_common_default__':null);
+      var __bop=__bsrc?(A.roomBackgroundSettings||{})[__bsrc]:null;
+      if(__bop&&typeof __bop==='object'){
+        ['bgScale','bgOffsetX','bgOffsetY'].forEach(function(f){if(__bop[f]!=null)st[key][f]=__bop[f];});
+        if(__bop.mobile&&typeof __bop.mobile==='object'){st[key].mobile=st[key].mobile||{};['bgScale','bgOffsetX','bgOffsetY'].forEach(function(f){if(__bop.mobile[f]!=null)st[key].mobile[f]=__bop.mobile[f];});}
+      }
+    }
+  }catch(e){}
   applySettingsV33(Object.assign({},base,st[key]));
   persist(A);
 }
