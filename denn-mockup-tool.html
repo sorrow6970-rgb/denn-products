@@ -13869,9 +13869,10 @@ input[type=range]{accent-color:#777}
     /* 현재 방향에 맞는 표시 이미지 src(세로=4:5 mobileDataUrl / 가로=원본 dataUrl). 가이드배경 아니면 null. */
     function wantSrc(){try{var R=window.RM;if(!R)return null;var B=(window.ADM&&ADM.guideBackgrounds)||[],i=(R.guideIndex!=null)?R.guideIndex:R.__bgIndexForSwap;if(i==null||i<0)return null;var b=B[i];if(!b||!b.mobileDataUrl)return null;return (window.dennGuideBgSrcV&&dennGuideBgSrcV(b))||b.dataUrl||null;}catch(e){return null}}
     function reveal(){if(done||gen!==__dennRevealGenV)return;done=true;clearTimeout(spinT);try{document.documentElement.classList.remove('denn-room-spin')}catch(e){}try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
-      /* 2026-06-22: 최종 캔버스 크기에서 스크롤 중앙 정렬(가로 전체화면 첫 화면=세로 중앙). __dennRotCentered 조기 set/타이밍 꼬임 우회해 reveal 직전 직접 세팅. */
-      try{window.__dennRotCentered=true;var aEl=document.getElementById('rm-canvas-area');if(aEl){if(aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}}catch(e){}
-      requestAnimationFrame(function(){if(gen===__dennRevealGenV){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}}});}
+      window.__dennRotCentered=true;
+      /* 2026-06-22: 스크롤 중앙 정렬 — 빠른(캐시) 재진입에선 reveal 직후 레이아웃 미정착이라 scrollHeight가 stale → 동기 1회 + rAF×2 + 지연(120/260ms) 재시도로 정착 후 정렬 보정. (첫 진입만 되고 세로→가로 재진입 시 안 되던 문제) */
+      var __ctr=function(){try{var aEl=document.getElementById('rm-canvas-area');if(aEl){if(aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}}catch(e){}};
+      __ctr();requestAnimationFrame(function(){__ctr();if(gen===__dennRevealGenV){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}}requestAnimationFrame(__ctr);});setTimeout(__ctr,120);setTimeout(__ctr,260);}
     function wait(){
       if(done||gen!==__dennRevealGenV)return;
       try{if(window.dennSwapRoomBgV)dennSwapRoomBgV();}catch(e){}/* 캐시 완료 시 방향-정확 이미지로 동기 스왑을 앞당김(늦은 im.onload 리사이즈 방지) */
