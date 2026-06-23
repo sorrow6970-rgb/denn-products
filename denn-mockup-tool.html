@@ -13846,7 +13846,7 @@ input[type=range]{accent-color:#777}
       '@keyframes dfpRot{0%,100%{transform:rotate(0)}50%{transform:rotate(-90deg)}}'+
       /* 룸 진입 시 위치·배경 정착 점프 가림 — 캔버스를 잠깐 숨겼다 페이드인. */
       '#room-modal #rm-canvas,#room-modal #sg-canvas{transition:opacity .26s ease}'+
-      'html.denn-room-entering #room-modal #rm-canvas,html.denn-room-entering #room-modal #sg-canvas{opacity:0!important}'+
+      'html.denn-room-entering #room-modal #rm-canvas,html.denn-room-entering #room-modal #sg-canvas{opacity:0!important;transition:none!important}'+/* 2026-06-23: 숨김은 즉시(transition:none) — .26s 페이드아웃 동안 stale 대형 캔버스가 비치던 문제(처음 큰 스케일 짧게 보임) 제거. 노출(클래스 제거)은 위 .26s 페이드인 유지. */
       /* 2026-06-22: 진입/회전 대기(이미지 로드) 동안 빈 화면 대신 로딩 스피너 — denn-room-entering일 때만 표시. */
       '#denn-room-spinner{position:fixed;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border:3px solid rgba(140,130,110,.28);border-top-color:rgba(120,110,95,.92);border-radius:50%;z-index:2147483640;opacity:0;pointer-events:none;transition:opacity .22s ease;animation:dennRoomSpin .7s linear infinite}'+
       'html.denn-room-spin #denn-room-spinner{opacity:1}'+/* 2026-06-22: 지연(180ms)+페이드 — 빠른 캐시 로드엔 스피너 안 뜨고, 느린 첫 로드만 부드럽게 표시 */
@@ -13872,7 +13872,7 @@ input[type=range]{accent-color:#777}
     function reveal(){if(done||gen!==__dennRevealGenV)return;done=true;clearTimeout(spinT);try{document.documentElement.classList.remove('denn-room-spin')}catch(e){}try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
       window.__dennRotCentered=true;
       /* 2026-06-22: 스크롤 중앙 정렬 — 빠른(캐시) 재진입에선 reveal 직후 레이아웃 미정착이라 scrollHeight가 stale → 동기 1회 + rAF×2 + 지연(120/260ms) 재시도로 정착 후 정렬 보정. (첫 진입만 되고 세로→가로 재진입 시 안 되던 문제) */
-      var __ctr=function(){if(gen!==__dennRevealGenV)return;/* 2026-06-22: gen 가드 — 반복 토글 시 이전 회전의 stale __ctr 재시도가 다음 방향 레이아웃에 센터해 누적 틀어짐 유발하던 것 차단(최신 진입만 센터) */try{var aEl=document.getElementById('rm-canvas-area');if(aEl){if(aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}}catch(e){}};
+      var __ctr=function(){if(gen!==__dennRevealGenV)return;/* 2026-06-22: gen 가드 — 반복 토글 시 이전 회전의 stale __ctr 재시도가 다음 방향 레이아웃에 센터해 누적 틀어짐 유발하던 것 차단(최신 진입만 센터) */try{var aEl=document.getElementById('rm-canvas-area');if(aEl){if(aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(document.documentElement.classList.contains('denn-rotate-fs')){if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}else aEl.scrollLeft=0;/* 2026-06-23: 가로 스크롤 센터링은 가로 풀스크린(wide 캔버스)에서만. 세로는 캔버스가 폭에 맞으므로 scrollLeft=0 고정 — 정착 전 과도 폭으로 center→재사이징 후 0 복귀하며 보이던 좌우 이동 차단. */}}catch(e){}};
       __ctr();requestAnimationFrame(function(){__ctr();if(gen===__dennRevealGenV){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}}requestAnimationFrame(__ctr);});setTimeout(__ctr,120);setTimeout(__ctr,260);}
     function wait(){
       if(done||gen!==__dennRevealGenV)return;
