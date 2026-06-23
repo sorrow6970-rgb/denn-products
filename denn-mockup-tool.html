@@ -2278,6 +2278,29 @@ renderFrame = (function(orig){return function(){orig();};})(renderFrame);
 
 window.addEventListener('load',async function(){ ADM=await loadAdminState(); if(ADM) saveCustomerAdminStateToLocalStorage(ADM); init(); });
 
+/* 2026-06-23: 어드민 가이드배경(및 기타 설정) 저장 시 목업툴 자동 반영 — 새로고침 불필요.
+   어드민이 localStorage('denn_admin')에 쓰면 같은 origin의 다른 탭(목업툴)에서 storage 이벤트 발생.
+   e.newValue로 즉시 파싱(IndexedDB 비동기 쓰기 레이스 회피), 실패 시 loadAdminState 폴백. 디바운스로 연속저장 합침.
+   핸들러는 읽기·재렌더만(재persist 안 함→clobber/루프 없음). */
+window.addEventListener('storage',function(e){
+  try{
+    if(e&&e.key&&e.key!=='denn_admin')return;/* denn_admin 키만(전체 clear는 key=null이라 통과) */
+    var parsed=null;
+    if(e&&e.newValue){try{parsed=JSON.parse(e.newValue)}catch(_){}}
+    clearTimeout(window.__dennAdmSyncT);
+    window.__dennAdmSyncT=setTimeout(function(){
+      (parsed?Promise.resolve(parsed):loadAdminState()).then(function(A){
+        if(!A||typeof A!=='object')return;
+        ADM=A;try{window.ADM=A}catch(_){}
+        try{if(window.rmLoadGuideBgs)rmLoadGuideBgs();}catch(_){}/* 가이드배경 갤러리 재렌더 */
+        try{if(window.dennAppendUserBgsRoomModal)dennAppendUserBgsRoomModal();}catch(_){}
+        try{if(window.RM&&window.RM.roomImg&&window.rmRender){rmRender();if(window.sgDraw)sgDraw();}}catch(_){}
+        try{if(window.toast)toast('관리자 설정이 반영되었습니다');}catch(_){}
+      })['catch'](function(){});
+    },180);
+  }catch(_){}
+});
+
 
 /* ===== v3 patch: reliable clock scaling/aspect ===== */
 (function(){
@@ -12408,6 +12431,9 @@ window.addEventListener('load',later);
   #page-frame .panel[data-msheet][data-grp="text"]  > [data-mgrp="text"]{display:block!important}
   #page-frame .panel[data-msheet][data-grp="color"] > [data-mgrp="color"]{display:block!important}
   #page-frame .panel[data-msheet][data-grp="clock"] > [data-mgrp="clock"]{display:block!important}
+  /* 2026-06-23: 템플릿 시트 그리드가 시트 높이까지 확장 — 모바일 .tpl-scroll 190px 캡으로 1줄만 보이고 아래가 비던 것 개선. 사이즈 섹션(#frame-sz-chips)도 tpl 그룹이라, .tpl-scroll 직계자식 가진 템플릿 섹션만 :has로 flex 채움(미지원 브라우저는 max-height:none 폴백=카드 전부 인라인+패널 스크롤). */
+  #page-frame .panel[data-msheet][data-grp="tpl"] > [data-mgrp="tpl"]:has(> .tpl-scroll){flex:1 1 auto;min-height:0;display:flex!important;flex-direction:column}
+  #page-frame .panel[data-msheet][data-grp="tpl"] > [data-mgrp="tpl"] > .tpl-scroll{flex:1 1 auto;min-height:0;max-height:none!important}
 
   /* 하단 고정 탭바 (5탭) */
   .denn-msheet-tabbar{
