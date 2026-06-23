@@ -3503,8 +3503,8 @@ function drawCoverFocus(ctx2,img,x,y,w,h,zoom,fx,fy){
       dx=clamp(x+w/2-cfx*tw,x+w-tw,x),dy=clamp(y+h/2-cfy*th,y+h-th,y);
   ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}
 }
-/* 2026-06-19: focus 모델 비활성화(레거시 전용 복귀) — focus 저장값이 소비자 V48 읽기 경로에 안 물려 운영자→소비자 배경위치 전달 실패. 항상 false로 두어 apply/snapshot/render 전부 레거시(bgScale/bgOffsetX/Y) 사용. 운영자 배경조정은 레거시로 저장되어 기존 미러(f382b14)로 소비자에 정상 전달됨. */
-function dennBgIsFocusModel(s){return false}
+/* 2026-06-23: focus 모델 재활성(Stage 1 배경) — bgZoom 필드가 있는 프리셋만 focus(이미지좌표 일관), 없으면 레거시(bgScale/bgOffsetX/Y) drawCover 그대로. 이중경로라 기존 레거시 프리셋 회귀 0. 운영자가 배경 재조정·저장 시 dennBgOnInputV→focus로 전환 저장(점진 마이그레이션). 가로 전체화면은 focus점을 스크롤로 뷰포트 중앙 배치(dennRoomFocusScrollV)해 캔버스-비율 종속 해소. [2026-06-19 비활성 사유=소비자 V48 미연결은 dennApplyBgSlidersV 자동분기로 해결] */
+function dennBgIsFocusModel(s){return !!(s&&s.bgZoom!=null)}
 window.dennBgIsFocusModel=dennBgIsFocusModel;
 /* settings → 배경 슬라이더 역매핑(모델 판정 포함). focus면 zoom→배경크기슬라이더(%)·focusX/Y→좌우/상하슬라이더(중앙0, -50..50),
    아니면 레거시 bgScale/bgOffsetX/Y. RM.__bgUseFocusV로 렌더 분기를 고정한다(모든 apply 경로 공용). */
@@ -3522,8 +3522,8 @@ function dennSnapshotBgV(o){
 window.dennSnapshotBgV=dennSnapshotBgV;
 /* 운영자가 배경 슬라이더를 직접 조작(event.isTrusted)하면 그 시점부터 focus 모델로 전환(레거시 프리셋의 점진 마이그레이션).
    프로그램적 setSV(dispatch input)은 isTrusted=false라 무영향 → 슬라이더 인라인 oninput에서 isTrusted 게이트와 함께 호출. */
-/* 2026-06-19: focus 모델 비활성화 — 슬라이더 직접 조작해도 focus 전환 안 함(레거시 유지). no-op. */
-function dennBgOnInputV(){}
+/* 2026-06-23: focus 모델 재활성 — 운영자가 배경 슬라이더를 직접 조작(isTrusted)하면 그 시점부터 focus 모델로 전환(다음 저장이 bgZoom/bgFocusX/Y로 스냅샷). 프로그램적 setVal(isTrusted=false)은 인라인 oninput 게이트에서 막혀 무영향(레거시 오플립 방지). */
+function dennBgOnInputV(){if(window.RM)RM.__bgUseFocusV=true;}
 window.dennBgOnInputV=dennBgOnInputV;
 /* 2026-06-19: 배경 슬라이더 ±버튼 미세 nudge — 마우스로 드래그가 힘들어 클릭으로 정밀 조정. d만큼 가감, 범위 clamp. */
 window.dennBgNudgeV=function(id,d){try{var el=document.getElementById(id);if(!el)return;var mn=parseFloat(el.min),mx=parseFloat(el.max),v=parseFloat(el.value)||0;v=Math.max(mn,Math.min(mx,Math.round((v+d)*10)/10));el.value=v;var out=document.getElementById(id+'-v');if(out)out.textContent=v+(id==='rm-bg-scale'?'%':'');if(window.rmRenderRAF)rmRenderRAF();else if(window.rmRender)rmRender();}catch(e){}};
@@ -4018,10 +4018,8 @@ window.rmRender=function(){
         RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=clamp(__px/100,.02,.98);RM.pos.y=clamp(__py/100,.02,.98);
         RM.frameAnchorV48={frameCenterX:__px,frameCenterY:__py,frameAnchor:'center'};
         var __gx=num(__op.guideX,__px),__gy=num(__op.guideY,__py);setVal('sg-ox-r',__gx);setVal('sg-ox-n',__gx);setVal('sg-oy-r',__gy);setVal('sg-oy-n',__gy);
-        /* 2026-06-22 FIX: 배경 3필드(bgScale/bgOffsetX/bgOffsetY)도 운영자 프리셋(.mobile 병합 __op)으로 강제 — 배경 드로우(L3995)가 rm-bg-* 슬라이더를 직접 읽는데, 기존 force 블록이 프레임/가이드만 세팅하고 배경은 빠뜨려 stale user:키 값(loadSettingsV33가 세팅)이 그려지던 버그. __userMoved 전(미조작)에만 강제 → 왕복유지 보존. 운영자→소비자 모바일 배경위치 전달의 마지막 누락 경로. */
-        if(isFinite(__op.bgScale)){var __bsc=Math.round(num(__op.bgScale,1)*100);setVal('rm-bg-scale',__bsc,'%');}
-        if(__op.bgOffsetX!=null)setVal('rm-bg-ox',num(__op.bgOffsetX,0));
-        if(__op.bgOffsetY!=null)setVal('rm-bg-oy',num(__op.bgOffsetY,0));
+        /* 2026-06-23: 배경 슬라이더를 운영자 프리셋으로 강제 — dennApplyBgSlidersV가 __op의 focus(bgZoom/bgFocusX/Y) / 레거시(bgScale/Offset)를 분기 적용 + RM.__bgUseFocusV 세팅. (기존 레거시 3필드 inline 강제를 대체; focus 프리셋도 정확히 소비자에 반영.) bg 필드 있는 프리셋에만 적용(미설정 프리셋은 슬라이더 불변). __userMoved 전(미조작)에만 강제 → 왕복유지 보존. */
+        if(window.dennApplyBgSlidersV&&(__op.bgZoom!=null||__op.bgScale!=null||__op.bgOffsetX!=null||__op.bgOffsetY!=null))dennApplyBgSlidersV(__op);
       }
     }
     showCanvas();
@@ -4031,7 +4029,7 @@ window.rmRender=function(){
     var __lift=(window.isRoomPortrait&&isRoomPortrait()&&!document.documentElement.classList.contains('denn-rotate-fs'))?Math.round(H*0.0545):0;
     if(window.RM)RM.__bgLiftV=__lift;
     ctx2.save();if(__lift)ctx2.translate(0,-__lift);
-    if(RM.roomImg&&RM.roomImg.naturalWidth){ctx2.save();ctx2.filter='brightness('+bright+'%)';if(window.RM&&RM.__bgUseFocusV){var bgZoom=num((by('rm-bg-scale')||{}).value,100)/100,bgFx=.5+num((by('rm-bg-ox')||{}).value,0)/100,bgFy=.5+num((by('rm-bg-oy')||{}).value,0)/100;if(isDirectRoomUploadBg())drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgZoom),bgFx,bgFy);else if(isRoomPortrait())drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1.02,bgZoom*1.04),bgFx,bgFy);else drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgZoom),bgFx,bgFy)}else{var bgScale=num((by('rm-bg-scale')||{}).value,Math.round(uiBgScale()*100))/100,bgOx=num((by('rm-bg-ox')||{}).value,0)/100,bgOy=num((by('rm-bg-oy')||{}).value,0)/100;if(isDirectRoomUploadBg())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy);else if(isRoomPortrait())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1.02,bgScale*1.04),bgOx,bgOy);else drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy)}ctx2.restore()}else drawFallback(ctx2,W,H);
+    if(RM.roomImg&&RM.roomImg.naturalWidth){ctx2.save();ctx2.filter='brightness('+bright+'%)';if(window.RM&&RM.__bgUseFocusV){var bgZoom=num((by('rm-bg-scale')||{}).value,100)/100,bgFx=.5+num((by('rm-bg-ox')||{}).value,0)/100,bgFy=.5+num((by('rm-bg-oy')||{}).value,0)/100,__bgG;if(isDirectRoomUploadBg())__bgG=drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgZoom),bgFx,bgFy);else if(isRoomPortrait())__bgG=drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1.02,bgZoom*1.04),bgFx,bgFy);else __bgG=drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgZoom),bgFx,bgFy);RM.__bgDrawGeomV=__bgG;/* 2026-06-23: 가로 전체화면 focus→스크롤(dennRoomFocusScrollV)용 드로우 기하 저장 */}else{RM.__bgDrawGeomV=null;var bgScale=num((by('rm-bg-scale')||{}).value,Math.round(uiBgScale()*100))/100,bgOx=num((by('rm-bg-ox')||{}).value,0)/100,bgOy=num((by('rm-bg-oy')||{}).value,0)/100;if(isDirectRoomUploadBg())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy);else if(isRoomPortrait())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1.02,bgScale*1.04),bgOx,bgOy);else drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy)}ctx2.restore()}else drawFallback(ctx2,W,H);
     drawFrame(ctx2,W,H);
     drawSun(ctx2,W,H);
     drawDirectUploadNotice(ctx2,W,H);
@@ -13818,7 +13816,7 @@ input[type=range]{accent-color:#777}
       if(imAr>=1)window.__dennLsArV=imAr;
       var ar=window.__dennLsArV||(imAr>0?imAr:(vw/vh));var ch=vh,cw=Math.round(ch*ar);if(cw<vw){cw=vw;ch=Math.round(cw/ar);}if(RMf.canvas.width!==cw||RMf.canvas.height!==ch){RMf.canvas.width=cw;RMf.canvas.height=ch;RMf.canvas.style.width=cw+'px';RMf.canvas.style.height=ch+'px';var sgF=document.getElementById('sg-canvas');if(sgF){sgF.width=cw;sgF.height=ch;sgF.style.width=cw+'px';sgF.style.height=ch+'px'}}
       /* 진입 시 1회 가운데 — 캔버스 사이징이 막 끝난 직후(아직 __dennRotCentered=false면) scrollHeight로 즉시 결정. 페이드(denn-room-entering)가 이 순간을 가려 점프 안 보임. */
-      if(!window.__dennRotCentered){var aEl=document.getElementById('rm-canvas-area');if(aEl){var sh=aEl.scrollHeight;if(sh>aEl.clientHeight+4){aEl.scrollTop=Math.round((sh-aEl.clientHeight)/2);window.__dennRotCentered=true;}}}
+      if(!window.__dennRotCentered){var aEl=document.getElementById('rm-canvas-area');if(aEl){if(window.dennRoomFocusScrollV&&dennRoomFocusScrollV(aEl)){window.__dennRotCentered=true;/* 2026-06-23: focus 프리셋이면 focus점 위치, 레거시면 중앙정렬 */}else{var sh=aEl.scrollHeight;if(sh>aEl.clientHeight+4){aEl.scrollTop=Math.round((sh-aEl.clientHeight)/2);window.__dennRotCentered=true;}}}}
     }}}catch(e){}
     return r;};
   var origRender=window.rmRender;
@@ -13898,7 +13896,7 @@ input[type=range]{accent-color:#777}
     function reveal(){if(done||gen!==__dennRevealGenV)return;done=true;clearTimeout(spinT);try{document.documentElement.classList.remove('denn-room-spin')}catch(e){}try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
       window.__dennRotCentered=true;
       /* 2026-06-22: 스크롤 중앙 정렬 — 빠른(캐시) 재진입에선 reveal 직후 레이아웃 미정착이라 scrollHeight가 stale → 동기 1회 + rAF×2 + 지연(120/260ms) 재시도로 정착 후 정렬 보정. (첫 진입만 되고 세로→가로 재진입 시 안 되던 문제) */
-      var __ctr=function(){if(gen!==__dennRevealGenV)return;/* 2026-06-22: gen 가드 — 반복 토글 시 이전 회전의 stale __ctr 재시도가 다음 방향 레이아웃에 센터해 누적 틀어짐 유발하던 것 차단(최신 진입만 센터) */try{var aEl=document.getElementById('rm-canvas-area');if(aEl){if(aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(document.documentElement.classList.contains('denn-rotate-fs')){if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}else aEl.scrollLeft=0;/* 2026-06-23: 가로 스크롤 센터링은 가로 풀스크린(wide 캔버스)에서만. 세로는 캔버스가 폭에 맞으므로 scrollLeft=0 고정 — 정착 전 과도 폭으로 center→재사이징 후 0 복귀하며 보이던 좌우 이동 차단. */}}catch(e){}};
+      var __ctr=function(){if(gen!==__dennRevealGenV)return;/* 2026-06-22: gen 가드 — 반복 토글 시 이전 회전의 stale __ctr 재시도가 다음 방향 레이아웃에 센터해 누적 틀어짐 유발하던 것 차단(최신 진입만) */try{var aEl=document.getElementById('rm-canvas-area');if(aEl){if(document.documentElement.classList.contains('denn-rotate-fs')){/* 2026-06-23: 가로 전체화면 = focus점을 뷰포트 중앙으로(focus 프리셋); 레거시면 중앙정렬 폴백 */if(!(window.dennRoomFocusScrollV&&dennRoomFocusScrollV(aEl))){if(aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}}else{if(aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);aEl.scrollLeft=0;/* 세로는 가로 스크롤 0 고정 */}}}catch(e){}};
       __ctr();requestAnimationFrame(function(){__ctr();if(gen===__dennRevealGenV){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}}requestAnimationFrame(__ctr);});setTimeout(__ctr,120);setTimeout(__ctr,260);}
     function wait(){
       if(done||gen!==__dennRevealGenV)return;
@@ -14015,11 +14013,27 @@ input[type=range]{accent-color:#777}
     document.addEventListener('scroll',function(e){if(e.target&&e.target.id==='rm-canvas-area'){if(_rsRaf)return;_rsRaf=requestAnimationFrame(function(){_rsRaf=0;updateRotScrollbarV()});}},true);
   }
   /* 2026-06-22: 가로 전체화면 스크롤 중앙 — 타이밍 의존 제거. 진입 후 ~1.3s 창 동안 매 프레임 중앙 유지(레이아웃이 언제 정착하든 그 안에 잡힘). 세대(__dennRotCenterGenV)로 반복 토글 시 옛 루프 자동 중단 + 사용자 스크롤(스크롤바 드래그) 시 gen 증가로 즉시 중단 → 누적 틀어짐·사용자조작 방해 둘 다 방지. */
+  /* 2026-06-23: 가로 전체화면에서 운영자 배경 focus점을 뷰포트 중앙에 오도록 스크롤 위치(이미지-앵커, 비율 무관). RM.__bgDrawGeomV(직전 drawCoverFocus 기하)에서 focus 화면좌표 산출 → scrollLeft/Top. focus 프리셋 아닐 때/기하 없을 때 false 반환(호출측이 중앙정렬 폴백). 여백 없는 축(좁은 이미지 좌우 등)은 clamp로 자연히 끝에 붙음(기하학적 한계). */
+  window.dennRoomFocusScrollV=function(aEl){
+    try{
+      aEl=aEl||document.getElementById('rm-canvas-area');if(!aEl)return false;
+      if(!document.documentElement.classList.contains('denn-rotate-fs'))return false;
+      if(!window.RM)return false;
+      var g=RM.__bgDrawGeomV;if(!g||!(g.w>0)||!(g.h>0))return false;/* 직전 렌더가 focus(drawCoverFocus)였을 때만 기하 존재 → 레거시면 자동 폴백 */
+      var gv=function(i){var e=document.getElementById(i);return e?parseFloat(e.value):NaN};
+      var ox=gv('rm-bg-ox');if(!isFinite(ox))ox=0;var oy=gv('rm-bg-oy');if(!isFinite(oy))oy=0;
+      var fx=.5+ox/100,fy=.5+oy/100;
+      var vw=aEl.clientWidth,vh=aEl.clientHeight,maxX=aEl.scrollWidth-vw,maxY=aEl.scrollHeight-vh;
+      if(maxX>4)aEl.scrollLeft=Math.max(0,Math.min(maxX,Math.round(g.x+fx*g.w-vw/2)));
+      if(maxY>4)aEl.scrollTop=Math.max(0,Math.min(maxY,Math.round(g.y+fy*g.h-vh/2)));
+      return true;
+    }catch(e){return false}
+  };
   function dennRotCenterLoopV(){
     window.__dennRotCenterGenV=(window.__dennRotCenterGenV||0)+1;var myGen=window.__dennRotCenterGenV,deadline=performance.now()+1300;
     function step(){
       if(window.__dennRotCenterGenV!==myGen||performance.now()>deadline)return;
-      try{var aEl=document.getElementById('rm-canvas-area');if(aEl&&document.documentElement.classList.contains('denn-rotate-fs')){if(aEl.scrollHeight>aEl.clientHeight+4){var c=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(Math.abs(aEl.scrollTop-c)>1)aEl.scrollTop=c;}if(aEl.scrollWidth>aEl.clientWidth+4){var cl=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);if(Math.abs(aEl.scrollLeft-cl)>1)aEl.scrollLeft=cl;}}}catch(e){}
+      try{var aEl=document.getElementById('rm-canvas-area');if(aEl&&document.documentElement.classList.contains('denn-rotate-fs')){if(!(window.dennRoomFocusScrollV&&dennRoomFocusScrollV(aEl))){/* focus 프리셋이면 위에서 위치, 아니면 중앙정렬 폴백 */if(aEl.scrollHeight>aEl.clientHeight+4){var c=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(Math.abs(aEl.scrollTop-c)>1)aEl.scrollTop=c;}if(aEl.scrollWidth>aEl.clientWidth+4){var cl=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);if(Math.abs(aEl.scrollLeft-cl)>1)aEl.scrollLeft=cl;}}}}catch(e){}
       requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
