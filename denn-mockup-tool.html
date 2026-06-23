@@ -14006,6 +14006,7 @@ input[type=range]{accent-color:#777}
       var __ori=(innerWidth>innerHeight)?'l':'p';
       var __oriCh=window.__dennRotOriV2&&window.__dennRotOriV2!==__ori;
       if(__oriCh&&__ori==='l'&&roomOpen()){/* 세로→가로 진입: 설정재적용·이미지스왑·cover리사이즈·센터 정착까지 페이드로 가려 점프 숨김. 2026-06-22: 고정 640ms→이미지 로드 게이트(가로 스왑 이미지가 늦게 와도 팝인 안 보이게) */window.__dennRotCentered=false;try{document.documentElement.classList.add('denn-room-entering')}catch(e){}dennGatedRevealV(3000);dennRotCenterLoopV();/* 가로 진입: 이미지 게이트 페이드 + 중앙유지 루프(타이밍 무관 정착). 캔버스 크기 고정(V107 __dennLsArV) 후라 안정 */}
+      if(__oriCh&&__ori==='p'&&roomOpen()){/* 2026-06-23 대칭화: 가로→세로 복귀도 진입과 동일하게 페이드로 가림 — 전체화면 레이아웃 해제·CSS 전환·area 치수 재배치 정착 동안의 다중 리사이즈(여러 스케일 점프) 숨기고 이미지 로드+정착 후 1회 리사이즈로 노출. 가로 전용 중앙유지 루프(dennRotCenterLoopV)는 호출 안 함(세로는 캔버스가 area에 맞아 스크롤 없음). */window.__dennRotCentered=false;try{document.documentElement.classList.add('denn-room-entering')}catch(e){}dennGatedRevealV(1800);}
       if(__oriCh&&roomOpen()){try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}}
       window.__dennRotOriV2=__ori;
       hideFsBtn();ensureExitBtn();swapBgForOrientation();
@@ -14032,8 +14033,11 @@ input[type=range]{accent-color:#777}
     }catch(e){}
   }
   window.__dennRotateFsOnChangeV108=onChange;
-  window.addEventListener('resize',function(){clearTimeout(window.__dennRotFsRz);window.__dennRotFsRz=setTimeout(onChange,120);});
-  window.addEventListener('orientationchange',function(){setTimeout(onChange,150);setTimeout(onChange,420);});
+  function dennRotPreGateV(){/* 2026-06-23: 회전 즉시(onChange 디바운스 120~150ms 전) 페이드를 켜 첫 프레임의 stale 대형 캔버스 플래시("처음 큰 스케일 한번")+정착 전 좌우 요동을 가림. 방향이 실제로 바뀌고 룸이 열렸을 때만. 페이드 제거+최종 사이징은 onChange의 dennGatedRevealV가 정착 후 1회 담당. orientationchange 시 치수 미갱신 브라우저 대비 resize 리스너에도 등록. */
+    try{if(typeof roomOpen!=='function'||!roomOpen())return;var o=(innerWidth>innerHeight)?'l':'p';if(window.__dennRotOriV2&&window.__dennRotOriV2!==o){window.__dennRotCentered=false;document.documentElement.classList.add('denn-room-entering');}}catch(e){}
+  }
+  window.addEventListener('resize',function(){dennRotPreGateV();clearTimeout(window.__dennRotFsRz);window.__dennRotFsRz=setTimeout(onChange,120);});
+  window.addEventListener('orientationchange',function(){dennRotPreGateV();setTimeout(onChange,150);setTimeout(onChange,420);});
   var prevOpen=window.openRoomMockup;
   if(typeof prevOpen==='function'&&!prevOpen.__rotFsV108){
     window.openRoomMockup=function(){
