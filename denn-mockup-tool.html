@@ -3244,11 +3244,14 @@ var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frame
    하위호환으로 URL viewAs=mobile도 인정. 저장 라우팅·읽기 병합·measureBase가 공유. */
 function dennIsMobileEditCtxV(){try{if(window.__dennAdminMobileV)return true;return new URLSearchParams(location.search||'').get('viewAs')==='mobile'}catch(e){return false}}
 function dennPickMobileFieldsV(o){var out={};if(o)DENN_MOBILE_FIELDS_V.forEach(function(k){if(o[k]!=null)out[k]=o[k]});return out;}
+/* 2026-06-23: focus 저장 시 레거시 bg 필드 정리 — dennSnapshotBgV가 스냅샷서 지워도 dennRouteSaveV가 prev와 병합하며 되살려 혼합(bgZoom+bgScale 공존)되던 버그 차단. ★복구 후 정리: 삭제 전 bgScale(전환 중 보존된 원래 크기)을 bgZoom으로 복구 → 세로 .mobile 크기(1.17) 유실 방지. 그 다음 레거시 제거 → 깨끗한 focus. */
+function dennCleanBgModelV(o){try{var fix=function(x){if(x&&x.bgZoom!=null){if(x.bgScale!=null)x.bgZoom=Math.max(1,Math.min(2,num(x.bgScale,x.bgZoom)));delete x.bgScale;delete x.bgOffsetX;delete x.bgOffsetY;}};fix(o);if(o)fix(o.mobile);}catch(e){}return o;}
+window.dennCleanBgModelV=dennCleanBgModelV;
 function dennRouteSaveV(prev,merged){
-  if(!dennIsMobileEditCtxV())return merged;              /* PC/데스크탑: 기존대로 base 저장(merged엔 prev.mobile 보존됨) */
+  if(!dennIsMobileEditCtxV())return dennCleanBgModelV(merged);  /* PC/데스크탑: base 저장(merged엔 prev.mobile 보존됨) + focus면 레거시 정리 */
   var keep=Object.assign({},prev||{});                    /* 모바일 편집: base(PC) 그대로 보존 */
   keep.mobile=Object.assign({},(prev&&prev.mobile)||{},dennPickMobileFieldsV(merged));
-  return keep;
+  return dennCleanBgModelV(keep);
 }
 window.dennIsMobileEditCtxV=dennIsMobileEditCtxV;
 window.dennPickMobileFieldsV=dennPickMobileFieldsV;
@@ -3510,7 +3513,7 @@ window.dennBgIsFocusModel=dennBgIsFocusModel;
    아니면 레거시 bgScale/bgOffsetX/Y. RM.__bgUseFocusV로 렌더 분기를 고정한다(모든 apply 경로 공용). */
 function dennApplyBgSlidersV(s){
   var focus=dennBgIsFocusModel(s);if(window.RM)RM.__bgUseFocusV=focus;
-  if(focus){setVal('rm-bg-scale',Math.round(clamp(num(s.bgZoom,1),1,2)*200)/2,'%');setVal('rm-bg-ox',Math.round((clamp(num(s.bgFocusX,.5),0,1)-.5)*1000)/10);setVal('rm-bg-oy',Math.round((clamp(num(s.bgFocusY,.5),0,1)-.5)*1000)/10)}/* 0.5/0.1 정밀 보존(슬라이더 step과 일치) */
+  if(focus){var __z=(s.bgScale!=null)?num(s.bgScale,num(s.bgZoom,1)):num(s.bgZoom,1);/* 2026-06-23 혼합 복구: 레거시 bgScale 공존 시(전환 중 bgZoom 오염) 크기는 bgScale 원천 우선 → 세로 .mobile 원래 크기(1.17) 보존. 깨끗한 focus 저장(dennRouteSaveV가 레거시 제거) 후엔 bgZoom 사용. */setVal('rm-bg-scale',Math.round(clamp(__z,1,2)*200)/2,'%');setVal('rm-bg-ox',Math.round((clamp(num(s.bgFocusX,.5),0,1)-.5)*1000)/10);setVal('rm-bg-oy',Math.round((clamp(num(s.bgFocusY,.5),0,1)-.5)*1000)/10)}/* 0.5/0.1 정밀 보존(슬라이더 step과 일치) */
   else{setVal('rm-bg-scale',Math.round(num(s.bgScale,uiBgScale())*100),'%');setVal('rm-bg-ox',num(s.bgOffsetX,0));setVal('rm-bg-oy',num(s.bgOffsetY,0))}
 }
 window.dennApplyBgSlidersV=dennApplyBgSlidersV;
