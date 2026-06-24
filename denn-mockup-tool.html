@@ -3614,8 +3614,7 @@ function forceMobileCenterStart(){
         window.rmSizeCanvas();
         if(window.sgToggle)window.sgToggle();
         ensureMobileFallbackFrameSize();
-        if(window.isRoomPortrait&&isRoomPortrait()&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){centerGuideOnMobile();alignFrameToGuide();}/* 2026-06-19: 가로(landscape)=PC base 위치 유지 — 세로(portrait)에서만 중앙정렬. 배경만 PC고 액자가 어긋나던 문제 */
-        /* 2026-06-24: 관리자 편집기(adminRoomSetup)에선 자동 중앙정렬 스킵 — 운영자가 저장한 .mobile.frameCenterX(진실값)를 부트 5연발 타이머가 가이드중앙(=base)으로 스냅→부트 자동저장이 .mobile에 박제→F5마다 중앙회귀+__opRev 폭증하던 클로버. dennIsAdminSetupV는 window 노출(L20)이라 이 블록(denn-v33)에서 호출 가능; isAdminRoomSetupV48은 v48 블록 스코프라 사용불가. 소비자 경로(forceMobileCenterStart 동일 함수)는 별개 후속으로 미수정. */
+        if(window.isRoomPortrait&&isRoomPortrait()){centerGuideOnMobile();alignFrameToGuide();}/* 2026-06-19: 가로(landscape)=PC base 위치 유지 — 세로(portrait)에서만 중앙정렬. 배경만 PC고 액자가 어긋나던 문제 */
         if(window.rmRender)window.rmRender();
         if(window.sgDraw)window.sgDraw();
       }catch(e){}
