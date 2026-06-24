@@ -13721,11 +13721,12 @@ input[type=range]{accent-color:#777}
       var RM=window.RM;if(!RM||!RM.canvas)return false;
       var area=document.getElementById('rm-canvas-area');if(!area)return false;
       var aw=area.clientWidth,ah=area.clientHeight;if(aw<40||ah<40)return false;
-      var w,h;
-      if(RM.roomImg&&RM.roomImg.naturalWidth){
-        var iw=RM.roomImg.naturalWidth,ih=RM.roomImg.naturalHeight,sc=Math.max(aw/iw,ah/ih); /* cover: 균일 스케일로 영역 덮기 */
-        w=Math.round(iw*sc);h=Math.round(ih*sc);
-      }else{ w=aw;h=ah; }                              /* 기본 배경(이미지 없음): 영역 크기로 채움 */
+      /* 2026-06-24: 소비자 모바일 캔버스를 관리자 모바일 프리뷰(v107)와 동일한 고정 종횡비(0.462)로 통일.
+         기존엔 이미지 자연비율(0.80)로 잡아 캔버스 폭이 area보다 넓어(614>390) 액자가 잘리고, 같은 위치%·bgScale인데
+         관리자와 구도가 달랐음. 폰별 화면비 차이는 area-contain 스케일로만 흡수(높이 기준, 넘치면 폭 기준).
+         위치%·bgScale 그대로 적용 → 운영자가 본 구도 = 모든 소비자 폰에서 동일. 저장 무관(순수 렌더 사이징). */
+      var RATIO=0.462,h=ah,w=Math.round(h*RATIO);
+      if(w>aw){w=aw;h=Math.round(w/RATIO);}
       if(RM.canvas.width===w&&RM.canvas.height===h)return false; /* 이미 채움 → skip(무한루프 방지) */
       RM.canvas.width=w;RM.canvas.height=h;
       RM.canvas.style.width=w+'px';RM.canvas.style.height=h+'px';
