@@ -3082,6 +3082,9 @@ function currentSettingsV33(){
   return dennSnapshotBgV({
     frameX:window.RM&&RM.pos?num(RM.pos.x*100,50):50,
     frameY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
+    /* 2026-06-24 재적용(구 d87d36a): frameCenterX/Y도 RM.pos에서 기록 — 읽기(applySettingsV33/applyRoomSettings·소비자)는 frameCenterX를 우선하는데, 이 V33 저장이 frameX만 갱신하고 frameCenterX는 누락 → 지연 V33 저장의 merged가 prev.frameCenterX(base/어제값)로 폴백 → .mobile.frameCenterX를 어제값으로 덮어 관리자 회귀+소비자 미반영. guideCenterX/Y·currentFrameAnchorV48과 동일하게 기록해 write↔read 필드 일치. PC누수 벡터(부트 컨텍스트 불일치 저장)는 Option A(부트 저장 억제)가 차단하므로 안전. */
+    frameCenterX:window.RM&&RM.pos?num(RM.pos.x*100,50):50,
+    frameCenterY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
     frameScale:num((by('rm-size')||{}).value,20)/100,
     frameSizeAnchor:num((by('rm-size-anchor')||{}).value,50),
     frameTiltEnabled:!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),
