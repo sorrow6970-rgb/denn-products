@@ -2162,7 +2162,8 @@ function rmBindEvents(){
   document.addEventListener('mouseup',function(){RM.sunDrag=false;if(RM.dragging){RM.dragging=false;if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51();if(window.dennCaptureAnchorTargetV)dennCaptureAnchorTargetV();if(c)c.style.cursor='grab';}});
   /* 위치 슬라이더(위치 X/Y)를 소비자가 직접 조정해도 '옮김'으로 간주 → 운영자 ② 강제 해제(세션 한정) */
   /* 소비자가 룸/가이드 컨트롤(기준 스케일·위치 X/Y·프레임 크기 등)을 직접 조정하면 '조절함'으로 간주 → 운영자 디폴트 강제 해제(세션 한정, 새로고침/기본설정으로만 다시 디폴트). */
-  document.addEventListener('input',function(e){var t=e&&e.target;if(t&&/^(sg-|rm-)/.test(t.id||'')&&window.RM)RM.__userMoved=true;},true);
+  /* 2026-06-24: __userMoved 거짓양성 차단 — 합성 input(applyControls L14835 등 회전/복원 시 dispatchEvent)도 이 리스너에 잡혀 '사용자가 옮김'으로 오인 → rmRender force 블록(L4012)이 OFF되어 가로↔세로 회전 후 액자위치가 운영자 저장값으로 안 돌아오던 버그. e.isTrusted 게이트로 진짜 슬라이더 드래그(trusted)만 인정. 드래그/휠 등 진짜 조작은 L2156/2177/3819 등에서 별도 직접 세팅하므로 무영향. 씬 리플레이는 applyRoomState가 직후 명시 세팅(L14862). */
+  document.addEventListener('input',function(e){if(e&&e.isTrusted===false)return;var t=e&&e.target;if(t&&/^(sg-|rm-)/.test(t.id||'')&&window.RM)RM.__userMoved=true;},true);
   // Touch drag
   c.ontouchstart=function(e){
     e.preventDefault();RM.dragging=true;
