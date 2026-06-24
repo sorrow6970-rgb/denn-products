@@ -3269,6 +3269,7 @@ function dennMergeMobileV(base){
 }
 window.dennMergeMobileV=dennMergeMobileV;
 function saveSettingsV33(){
+  if(window.__dennRoomBootBlockV&&window.dennIsAdminSetupV&&window.dennIsAdminSetupV())return;/* 2026-06-24 Option A: 관리자 편집기 부트 settle(첫 사용자 조작) 전 persist 차단 — 부트 자동저장이 transient 상태를 .mobile/base에 박제하던 오염 방지. 타이밍만 차단(라우팅·필드 무수정). */
   var A=adm(),st=store(A),key=window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey(),prev=st[key]||{},base=null,c=null;
   try{c=window.__dennRoomGuideBaselineV92b||{};base=prev.__guideResetDefaults||c[key]||null}catch(e){}
   st[key]=dennRouteSaveV(prev,Object.assign(defaults(),prev,currentSettingsV33()));
@@ -5582,6 +5583,7 @@ function restoreRoomSunV48(st,sun){
   });
 }
 function saveCurrentRoomKeyV48(key,extra){
+  if(window.__dennRoomBootBlockV&&window.dennIsAdminSetupV&&window.dennIsAdminSetupV())return false;/* 2026-06-24 Option A: 관리자 부트 settle 전 persist 차단(saveSettingsV33와 동일). */
   key=key||currentBgKeyV48();
   if(window.scopedKeyV2)key=window.scopedKeyV2(key);
   if(!key)return false;
@@ -14522,6 +14524,25 @@ input[type=range]{accent-color:#777}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tryRun);
   else tryRun();
   setTimeout(tryRun,1200);setTimeout(tryRun,3000);
+})();
+</script>
+
+<script id="denn-v109-admin-boot-save-block">
+/* 2026-06-24 Option A — 관리자 편집기 부트 저장 억제(타이밍만).
+   문제: 부트 중 자동저장(sgToggle→saveSettingsV33, applyControls input 디스패치→scheduleUserSaveV48 등)이
+   로드/렌더 settle 전 발사돼, transient 상태(currentSettingsV33 frameCenterX 누락→merged가 base prev로 폴백 /
+   currentFrameAnchorV48 null / forceMobileCenterStart 중앙스냅)를 .mobile/base에 persist → F5마다 위치 오염 + __opRev 폭증.
+   해결: 첫 사용자 조작(isTrusted) 전까지 두 저장함수(saveSettingsV33/saveCurrentRoomKeyV48)의 persist를 차단.
+   사용자가 실제로 바꾸기 전엔 persist할 정당한 변경이 없음(로드 상태는 이미 스토리지에 존재). 관리자(adminRoomSetup)에서만.
+   dennRouteSaveV 라우팅·.mobile/base 필드·소비자 경로·마이그(persistBoth)·미러(persist) 무수정. F5마다 재무장. */
+(function(){
+  if(window.__dennRoomBootBlockInstalled)return; window.__dennRoomBootBlockInstalled=true;
+  window.__dennRoomBootBlockV=true;
+  function release(){window.__dennRoomBootBlockV=false;}
+  ['pointerdown','touchstart','keydown','wheel'].forEach(function(ev){
+    document.addEventListener(ev,function(e){if(e&&e.isTrusted)release();},true);
+  });
+  setTimeout(release,6000);/* 안전망: 부트 타이머 한참 후 해제(데드락 방지). 부트 저장은 이전에 끝남. */
 })();
 </script>
 
