@@ -13725,8 +13725,7 @@ input[type=range]{accent-color:#777}
          기존엔 이미지 자연비율(0.80)로 잡아 캔버스 폭이 area보다 넓어(614>390) 액자가 잘리고, 같은 위치%·bgScale인데
          관리자와 구도가 달랐음. 폰별 화면비 차이는 area-contain 스케일로만 흡수(높이 기준, 넘치면 폭 기준).
          위치%·bgScale 그대로 적용 → 운영자가 본 구도 = 모든 소비자 폰에서 동일. 저장 무관(순수 렌더 사이징). */
-      var RATIO=0.462,h=ah,w=Math.round(h*RATIO);
-      if(w>aw){w=aw;h=Math.round(w/RATIO);}
+      var RATIO=0.462,w=aw,h=Math.round(w/RATIO);/* 2026-06-24: 폭 기준 fill — area 폭을 꽉 채우고 0.462 고정(구도 불변). 높이가 area보다 크면 세로 넘침(crop/scroll 허용) = 좌우 레터박스 제거. 넘치는 상하 끝은 소비자 메뉴존(운영자 회피영역)이라 액자/가이드 가시성 유지. */
       if(RM.canvas.width===w&&RM.canvas.height===h)return false; /* 이미 채움 → skip(무한루프 방지) */
       RM.canvas.width=w;RM.canvas.height=h;
       RM.canvas.style.width=w+'px';RM.canvas.style.height=h+'px';
