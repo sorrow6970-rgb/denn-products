@@ -5146,14 +5146,8 @@ function markSavedAdminPreset(){
   persistAdmin(A);
   try{
     if(window.opener&&!window.opener.closed&&window.opener.S){
-      /* 2026-06-24 클로버 수정: 기존엔 부모(opener)의 stale 인메모리 S를 opener.persistState()가 같은 localStorage에
-         되써넣어, 자식(관리자 편집기)이 방금 저장한 .mobile(예: 14)을 부모 stale값(예: 64.819)으로 덮었음(비결정적).
-         자식이 이미 durable 저장(localStorage+IDB)했으므로, persistState 전에 부모 roomBackgroundSettings를
-         '방금 쓴 최신 localStorage'로 교체(참조 property만 재할당) → persist가 fresh를 씀 = 클로버 제거 + 미래 부모 persist도 안전.
-         저장 본체·dennRouteSaveV 라우팅·소비자 경로 무수정. */
-      var __freshAdmV=null;try{__freshAdmV=JSON.parse(localStorage.getItem('denn_admin')||'null');}catch(_pe){}
-      if(__freshAdmV&&__freshAdmV.roomBackgroundSettings)window.opener.S.roomBackgroundSettings=__freshAdmV.roomBackgroundSettings;
-      else{window.opener.S.roomBackgroundSettings=window.opener.S.roomBackgroundSettings||{};window.opener.S.roomBackgroundSettings[key]=Object.assign({},st);}
+      window.opener.S.roomBackgroundSettings=window.opener.S.roomBackgroundSettings||{};
+      window.opener.S.roomBackgroundSettings[key]=Object.assign({},st);
       if(typeof window.opener.persistState==='function')window.opener.persistState();
       if(typeof window.opener.renderGuideBgs==='function')window.opener.renderGuideBgs();
     }
