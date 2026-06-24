@@ -3082,9 +3082,6 @@ function currentSettingsV33(){
   return dennSnapshotBgV({
     frameX:window.RM&&RM.pos?num(RM.pos.x*100,50):50,
     frameY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
-    /* 2026-06-24: frameCenterX/Y도 함께 기록 — 읽기(applySettingsV33 L3170 / applyRoomSettings)는 frameCenterX를 우선하는데, 자동저장(이 함수)이 frameX만 갱신하고 frameCenterX는 옛 시드값(50=중앙)을 prev 머지로 남겨 → 운영자가 위치를 옮겨도 새로고침하면 frameCenterX(=50)가 frameX를 가려 '중앙으로 복귀'하던 클로버. guideCenterX/Y(아래)·currentFrameAnchorV48과 동일하게 RM.pos에서 center 기록해 write↔read 필드 일치. */
-    frameCenterX:window.RM&&RM.pos?num(RM.pos.x*100,50):50,
-    frameCenterY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
     frameScale:num((by('rm-size')||{}).value,20)/100,
     frameSizeAnchor:num((by('rm-size-anchor')||{}).value,50),
     frameTiltEnabled:!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),
