@@ -61,6 +61,12 @@ var __iaIx=__op.frameImgX,__iaIy=__op.frameImgY;   // __op = dennMergeMobileV �
 ### 4-3. 스케일 글루 재도입
 - `frameImgW=fw/bgRect.w` 저장→소비자 `fw=frameImgW×bgRect.w`. universal서 데이터상 작동했으나 롤백됨. 재도입 시 §2 제약 + 충돌 세터 정리 동반.
 
+### 4-4. ★사이즈 기준위치(frameSizeAnchor) 미작동 — 이전엔 정상(회귀)
+- **기능**: 액자 **크기(rm-size) 변경 시 앵커점(상/중/하, `rm-size-anchor` 0~100)을 기준으로 액자를 핀**(재센터 대신 그 점 고정). **관리자 편집모드 전용**(`dennIsAdminSetupV` 게이트).
+- **코드**: `drawFrame`의 `__ay`/`RM.__anchorYabs` 블록(L~4021-4031): 크기 변동 시 `cy=RM.__anchorYabs*H-(__ay-.5)*fh`로 cy 재계산. 캡처=`RM.__anchorYabs=cyp+(__ay-.5)*(fh/H)`. **리셋 지점**=`applySettingsV33`(L3156 `RM.__anchorYabs=null`)·`setVal('rm-size-anchor')`. UI=`#rm-size-anchor-row`(L465, admin만 표시).
+- **의심**: ① 이번 세션 다수 재렌더/재로드(`loadSettingsV33`·image-anchor 빈발)가 `RM.__anchorYabs`를 자주 null로 리셋해 핀 무력화. ② 앵커 블록 조건(`Math.abs(sizePct-RM.__anchorSize)` 비교)이 안 맞아 재계산 분기 미진입. ③ rollback(bb972ab) 전후 차이.
+- **다음 세션 조사**: 언제 깨졌는지(`stable-pc-mobile-save` vs 그 이전 — 이번 세션 변경 전후), `RM.__anchorYabs` 값 추적(defineProperty watcher), 크기 변경 시 cy 재계산 분기가 도는지. **목표 = 이전 정상 동작 복구.** (사용자: "정상작동하던 것".)
+
 ---
 
 ## 5. 롤백 태그 (복원점)
