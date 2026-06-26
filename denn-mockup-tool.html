@@ -14131,6 +14131,7 @@ input[type=range]{accent-color:#777}
         window.__dennAwaitPortraitV=false;/* 세로 복귀 → 회전 안내 해제, 정상 세로 화면 */
         window.__dennRotCentered=false;/* 다음 가로 진입 때 다시 센터 */
         setRotateFs(false);
+        window.__dennRotCenterGenV=(window.__dennRotCenterGenV||0)+1;/* 2026-06-26 A3: 가로 센터 루프(dennRotCenterLoopV) 즉시 중단 — 세로 전환 후에도 1.3s 살아서 101(가로 센터)을 세로 앵커(8)와 번갈아 세팅하던 회전 떨림 차단. */
         /* 2026-06-26: 세로=풀스크린 무조건 해제 — 기존엔 (fs && __dennAutoFsV108) 조건부라 가로↔세로 반복 중 플래그 desync 시 denn-room-fullscreen-active(max z-index, 캔버스 inset:0 + 하단 메뉴 숨김)가 세로에 잔류해 "하단 메뉴 클릭 자체가 안 됨" 버그 유발. 모바일 세로에선 수동 FS 진입 불가(hideFsBtn)라 세로 풀스크린-active는 항상 잔류 아티팩트 → 무조건 해제 안전. */
         window.__dennAutoFsV108=false;
         if(isFs()&&window.setRoomFullscreenLayout)setRoomFullscreenLayout(false);
