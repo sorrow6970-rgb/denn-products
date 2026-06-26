@@ -3085,6 +3085,9 @@ function currentSettingsV33(){
     /* 2026-06-24 재적용(구 d87d36a): frameCenterX/Y도 RM.pos에서 기록 — 읽기(applySettingsV33/applyRoomSettings·소비자)는 frameCenterX를 우선하는데, 이 V33 저장이 frameX만 갱신하고 frameCenterX는 누락 → 지연 V33 저장의 merged가 prev.frameCenterX(base/어제값)로 폴백 → .mobile.frameCenterX를 어제값으로 덮어 관리자 회귀+소비자 미반영. guideCenterX/Y·currentFrameAnchorV48과 동일하게 기록해 write↔read 필드 일치. PC누수 벡터(부트 컨텍스트 불일치 저장)는 Option A(부트 저장 억제)가 차단하므로 안전. */
     frameCenterX:window.RM&&RM.pos?num(RM.pos.x*100,50):50,
     frameCenterY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
+    /* 2026-06-26 image-anchor: 액자 중심을 배경 cover 이미지 비율로 기록(배경 rect 있을 때만, 없으면 null=레거시). 소비자 초기표시가 기기/화면비 무관하게 같은 방 지점에 글루되게. 저장은 매 렌더 끝(요청)에 돌고 __bgRectV는 직전 렌더 값이라 정상 유효. */
+    frameImgX:(function(){try{var R=window.RM,b=R&&R.__bgRectV;if(R&&R.pos&&R.canvas&&b&&b.w)return clamp((R.pos.x*R.canvas.width-b.x)/b.w,-3,3);}catch(e){}return null})(),
+    frameImgY:(function(){try{var R=window.RM,b=R&&R.__bgRectV;if(R&&R.pos&&R.canvas&&b&&b.h)return clamp((R.pos.y*R.canvas.height-b.y)/b.h,-3,3);}catch(e){}return null})(),
     frameScale:num((by('rm-size')||{}).value,20)/100,
     frameSizeAnchor:num((by('rm-size-anchor')||{}).value,50),
     frameTiltEnabled:!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),
@@ -3243,7 +3246,7 @@ window.loadSettingsV33=loadSettingsV33;/* PC|모바일 토글 전환 시 현재 
    ★ base에는 모바일 필드를 절대 쓰지 않는다(소비자 PC 읽기 무영향). 저장 컨텍스트 판정은 viewAs=mobile로
    좁힘(소비자 폰은 viewAs 없음 → 우발 저장 차단). 읽기 병합은 단계3(dennMergeMobileV)에서 isRoomMobile() 기준.
    격리 필드=레이아웃만(위치·크기·앵커·가이드 스케일/위치·배경). 조명/그림자/기울기는 base 공유. */
-var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY','bgZoom','bgFocusX','bgFocusY'];/* 2026-06-19: focus 모델 신규 필드도 .mobile 격리 라우팅(레거시 3필드는 구 프리셋 호환 위해 유지) */
+var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameImgX','frameImgY','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY','bgZoom','bgFocusX','bgFocusY'];/* 2026-06-19: focus 모델 신규 필드도 .mobile 격리 라우팅(레거시 3필드는 구 프리셋 호환 위해 유지) */
 /* 모바일 편집 컨텍스트 판정 — 런타임 토글(__dennAdminMobileV, PC 편집기 내 'PC|모바일' 탭) 우선,
    하위호환으로 URL viewAs=mobile도 인정. 저장 라우팅·읽기 병합·measureBase가 공유. */
 function dennIsMobileEditCtxV(){try{if(window.__dennAdminMobileV)return true;return new URLSearchParams(location.search||'').get('viewAs')==='mobile'}catch(e){return false}}
@@ -3514,7 +3517,7 @@ function drawFallback(ctx2,W,H){
   ctx2.fillStyle='rgba(80,80,80,.55)';ctx2.font='13px DM Sans,sans-serif';ctx2.textAlign='center';ctx2.fillText('배경을 선택하거나 업로드하세요',W/2,H*.18);
 }
 function drawContain(ctx2,img,x,y,w,h,scale){scale=clamp(scale==null?1:scale,0.5,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';var ar=(img.naturalWidth||1)/(img.naturalHeight||1),tw=w,th=tw/ar;if(th>h){th=h;tw=th*ar}tw*=scale;th*=scale;var dx=x+(w-tw)/2,dy=y+(h-th)/2;ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}}
-function drawCover(ctx2,img,x,y,w,h,scale,ox,oy){scale=clamp(scale==null?1:scale,1,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';var iw=img.naturalWidth||1,ih=img.naturalHeight||1,s=Math.max(w/iw,h/ih)*scale,tw=iw*s,th=ih*s,px=clamp(num(ox,0),-0.5,0.5),py=clamp(num(oy,0),-0.5,0.5),dx=x+(w-tw)/2+px*(tw-w),dy=y+(h-th)/2+py*(th-h);ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}}
+function drawCover(ctx2,img,x,y,w,h,scale,ox,oy){scale=clamp(scale==null?1:scale,1,2);ctx2.imageSmoothingEnabled=true;ctx2.imageSmoothingQuality='high';var iw=img.naturalWidth||1,ih=img.naturalHeight||1,s=Math.max(w/iw,h/ih)*scale,tw=iw*s,th=ih*s,px=clamp(num(ox,0),-0.5,0.5),py=clamp(num(oy,0),-0.5,0.5),dx=x+(w-tw)/2+px*(tw-w),dy=y+(h-th)/2+py*(th-h);ctx2.drawImage(img,dx,dy,tw,th);try{if(window.RM&&window.RM.__bgCapV)window.RM.__bgRectV={x:dx,y:dy,w:tw,h:th}}catch(e){}/* 2026-06-26 image-anchor: 룸 배경 cover rect 캡처(가드 __bgCapV로 썸네일 등 오염 방지) */return{x:dx,y:dy,w:tw,h:th}}
 /* 2026-06-19 WYSIWYG focus 모델(이중경로): 캔버스 비율 무관 이미지기준 좌표(bgZoom + bgFocusX/Y).
    focus점을 캔버스 중앙에 두려 하고 cover-fill이 깨지지 않게 clamp → 관리자/소비자/실폰/회전 동일 구도.
    기존 drawCover(레거시 경로)는 무수정 보존. 신규 필드(bgZoom)가 있는 프리셋만 이 경로 사용. */
@@ -3523,7 +3526,7 @@ function drawCoverFocus(ctx2,img,x,y,w,h,zoom,fx,fy){
   var iw=img.naturalWidth||1,ih=img.naturalHeight||1,s=Math.max(w/iw,h/ih)*zoom,tw=iw*s,th=ih*s,
       cfx=clamp(num(fx,.5),0,1),cfy=clamp(num(fy,.5),0,1),
       dx=clamp(x+w/2-cfx*tw,x+w-tw,x),dy=clamp(y+h/2-cfy*th,y+h-th,y);
-  ctx2.drawImage(img,dx,dy,tw,th);return{x:dx,y:dy,w:tw,h:th}
+  ctx2.drawImage(img,dx,dy,tw,th);try{if(window.RM&&window.RM.__bgCapV)window.RM.__bgRectV={x:dx,y:dy,w:tw,h:th}}catch(e){}/* 2026-06-26 image-anchor: focus 경로 cover rect 캡처 */return{x:dx,y:dy,w:tw,h:th}
 }
 /* 2026-06-19: focus 모델 비활성화(레거시 전용 복귀) — focus 저장값이 소비자 V48 읽기 경로에 안 물려 운영자→소비자 배경위치 전달 실패. 항상 false로 두어 apply/snapshot/render 전부 레거시(bgScale/bgOffsetX/Y) 사용. 운영자 배경조정은 레거시로 저장되어 기존 미러(f382b14)로 소비자에 정상 전달됨. */
 function dennBgIsFocusModel(s){return false}
@@ -4038,6 +4041,7 @@ window.rmRender=function(){
         if(isFinite(__op.guideScale)){var __scv=Math.round(__op.guideScale*1000)/10;setVal('sg-scale-r',__scv);setVal('sg-scale-n',__scv);}
         var __px=num(__op.frameCenterX!=null?__op.frameCenterX:__op.frameX,50),__py=num(__op.frameCenterY!=null?__op.frameCenterY:__op.frameY,40);
         RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=clamp(__px/100,.02,.98);RM.pos.y=clamp(__py/100,.02,.98);
+        RM.__opImgPosV=(__op.frameImgX!=null&&__op.frameImgY!=null)?{x:num(__op.frameImgX,.5),y:num(__op.frameImgY,.5)}:null;/* 2026-06-26 image-anchor: 운영자 프리셋의 이미지-앵커 위치(있으면). 렌더 후단에서 현재 배경 rect로 RM.pos 유도→기기무관 글루. 없으면(레거시) null→글루 안 함(기존 동작). */
         RM.frameAnchorV48={frameCenterX:__px,frameCenterY:__py,frameAnchor:'center'};
         var __gx=num(__op.guideX,__px),__gy=num(__op.guideY,__py);setVal('sg-ox-r',__gx);setVal('sg-ox-n',__gx);setVal('sg-oy-r',__gy);setVal('sg-oy-n',__gy);
         /* 2026-06-22 FIX: 배경 3필드(bgScale/bgOffsetX/bgOffsetY)도 운영자 프리셋(.mobile 병합 __op)으로 강제 — 배경 드로우(L3995)가 rm-bg-* 슬라이더를 직접 읽는데, 기존 force 블록이 프레임/가이드만 세팅하고 배경은 빠뜨려 stale user:키 값(loadSettingsV33가 세팅)이 그려지던 버그. __userMoved 전(미조작)에만 강제 → 왕복유지 보존. 운영자→소비자 모바일 배경위치 전달의 마지막 누락 경로. */
@@ -4053,7 +4057,11 @@ window.rmRender=function(){
     var __lift=(window.isRoomPortrait&&isRoomPortrait()&&!document.documentElement.classList.contains('denn-rotate-fs'))?Math.round(H*0.0545):0;
     if(window.RM)RM.__bgLiftV=__lift;
     ctx2.save();if(__lift)ctx2.translate(0,-__lift);
+    if(window.RM){RM.__bgRectV=null;RM.__bgCapV=true;}/* 2026-06-26 image-anchor: 배경 cover rect 캡처 시작 */
     if(RM.roomImg&&RM.roomImg.naturalWidth){ctx2.save();ctx2.filter='brightness('+bright+'%)';if(window.RM&&RM.__bgUseFocusV){var bgZoom=num((by('rm-bg-scale')||{}).value,100)/100,bgFx=.5+num((by('rm-bg-ox')||{}).value,0)/100,bgFy=.5+num((by('rm-bg-oy')||{}).value,0)/100;if(isDirectRoomUploadBg())drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgZoom),bgFx,bgFy);else if(isRoomPortrait())drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1.02,bgZoom*1.04),bgFx,bgFy);else drawCoverFocus(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgZoom),bgFx,bgFy)}else{var bgScale=num((by('rm-bg-scale')||{}).value,Math.round(uiBgScale()*100))/100,bgOx=num((by('rm-bg-ox')||{}).value,0)/100,bgOy=num((by('rm-bg-oy')||{}).value,0)/100;if(isDirectRoomUploadBg())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy);else if(isRoomPortrait())drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1.02,bgScale*1.04),bgOx,bgOy);else drawCover(ctx2,RM.roomImg,0,0,W,H,Math.max(1,bgScale),bgOx,bgOy)}ctx2.restore()}else drawFallback(ctx2,W,H);
+    if(window.RM)RM.__bgCapV=false;
+    /* 2026-06-26 image-anchor: 소비자 초기표시(미조작)에서 액자를 배경 이미지 좌표(__opImgPosV)에 글루 → 기기/화면비 무관하게 운영자가 둔 자리에 첫화면 고정. __userMoved(소비자 이동/스케일) 이후·관리자·드래그·flag off·레거시(__opImgPosV 없음)는 레거시 RM.pos 유지 → 소비자 자유조작 보존, 기존 데이터 무영향. */
+    try{if(window.__dennImgAnchorV!==false&&RM.__bgRectV&&RM.__opImgPosV&&!RM.__userMoved&&!RM.dragging&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){var __iaBr=RM.__bgRectV;RM.pos=RM.pos||{x:.5,y:.4};if(__iaBr.w)RM.pos.x=clamp((__iaBr.x+RM.__opImgPosV.x*__iaBr.w)/W,.02,.98);if(__iaBr.h)RM.pos.y=clamp((__iaBr.y+RM.__opImgPosV.y*__iaBr.h)/H,.02,.98);}}catch(e){}
     drawFrame(ctx2,W,H);
     drawSun(ctx2,W,H);
     drawDirectUploadNotice(ctx2,W,H);
@@ -5770,7 +5778,10 @@ function currentFrameAnchorV48(){
   if(!(window.RM&&RM.canvas&&RM.pos&&RM.canvas.width&&RM.canvas.height))return null;
   var W=RM.canvas.width,H=RM.canvas.height,b=frameBoxV48(W,H);
   if(!b)return null;
-  return{frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameLeft:(RM.pos.x*W-b.w/2)/W*100,frameTop:(RM.pos.y*H-b.h/2)/H*100,frameAnchor:'center'};
+  var __iaB=window.RM&&RM.__bgRectV,__r={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameLeft:(RM.pos.x*W-b.w/2)/W*100,frameTop:(RM.pos.y*H-b.h/2)/H*100,frameAnchor:'center'};
+  /* 2026-06-26 image-anchor: 배경 cover rect 있을 때만 frameImgX/Y 추가(유효할 때만 → prev 클로버 방지). 소비자 초기표시 기기무관 글루용. */
+  if(__iaB&&__iaB.w&&__iaB.h){__r.frameImgX=clamp((RM.pos.x*W-__iaB.x)/__iaB.w,-3,3);__r.frameImgY=clamp((RM.pos.y*H-__iaB.y)/__iaB.h,-3,3);}
+  return __r;
 }
 window.dennRefreshFrameCenterAnchorV51=function(){
   try{
