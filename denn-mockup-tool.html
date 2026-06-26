@@ -4036,12 +4036,16 @@ window.rmRender=function(){
        저장은 scopedKeyV2로 user: 키에만 → 운영자 프리셋 원본 불변. */
     if(!RM.__userMoved&&!RM.dragging&&!RM.sunDrag&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){
       var __op=window.dennCurrentOperatorPresetV&&window.dennCurrentOperatorPresetV();
+      var __opRawV=__op;/* 2026-06-26 image-anchor: 병합 전 raw(.mobile 접근용) */
       if(__op&&window.dennMergeMobileV)__op=window.dennMergeMobileV(__op);/* 단계3: 소비자 실폰이면 운영자 프리셋에 .mobile 병합(누락 시 모바일 위치가 PC로 덮임) */
       if(__op){
         if(isFinite(__op.guideScale)){var __scv=Math.round(__op.guideScale*1000)/10;setVal('sg-scale-r',__scv);setVal('sg-scale-n',__scv);}
         var __px=num(__op.frameCenterX!=null?__op.frameCenterX:__op.frameX,50),__py=num(__op.frameCenterY!=null?__op.frameCenterY:__op.frameY,40);
         RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=clamp(__px/100,.02,.98);RM.pos.y=clamp(__py/100,.02,.98);
-        RM.__opImgPosV=(__op.frameImgX!=null&&__op.frameImgY!=null)?{x:num(__op.frameImgX,.5),y:num(__op.frameImgY,.5)}:null;/* 2026-06-26 image-anchor: 운영자 프리셋의 이미지-앵커 위치(있으면). 렌더 후단에서 현재 배경 rect로 RM.pos 유도→기기무관 글루. 없으면(레거시) null→글루 안 함(기존 동작). */
+        /* 2026-06-26 image-anchor: frameImgX/Y는 기기독립 → .mobile 우선·없으면 base. iPad 등 비세로 기기(merge가 base만 줌)도 운영자가 .mobile에 저장한 위치를 반영. 없으면(레거시) null→글루 안 함(기존 동작). */
+        var __mImgV=(__opRawV&&__opRawV.mobile)||{};
+        var __iaIx=(__mImgV.frameImgX!=null)?__mImgV.frameImgX:__op.frameImgX,__iaIy=(__mImgV.frameImgY!=null)?__mImgV.frameImgY:__op.frameImgY;
+        RM.__opImgPosV=(__iaIx!=null&&__iaIy!=null)?{x:num(__iaIx,.5),y:num(__iaIy,.5)}:null;
         RM.frameAnchorV48={frameCenterX:__px,frameCenterY:__py,frameAnchor:'center'};
         var __gx=num(__op.guideX,__px),__gy=num(__op.guideY,__py);setVal('sg-ox-r',__gx);setVal('sg-ox-n',__gx);setVal('sg-oy-r',__gy);setVal('sg-oy-n',__gy);
         /* 2026-06-22 FIX: 배경 3필드(bgScale/bgOffsetX/bgOffsetY)도 운영자 프리셋(.mobile 병합 __op)으로 강제 — 배경 드로우(L3995)가 rm-bg-* 슬라이더를 직접 읽는데, 기존 force 블록이 프레임/가이드만 세팅하고 배경은 빠뜨려 stale user:키 값(loadSettingsV33가 세팅)이 그려지던 버그. __userMoved 전(미조작)에만 강제 → 왕복유지 보존. 운영자→소비자 모바일 배경위치 전달의 마지막 누락 경로. */
