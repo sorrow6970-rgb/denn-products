@@ -3088,8 +3088,6 @@ function currentSettingsV33(){
     /* 2026-06-26 image-anchor: 액자 중심을 배경 cover 이미지 비율로 기록(배경 rect 있을 때만, 없으면 null=레거시). 소비자 초기표시가 기기/화면비 무관하게 같은 방 지점에 글루되게. 저장은 매 렌더 끝(요청)에 돌고 __bgRectV는 직전 렌더 값이라 정상 유효. */
     frameImgX:(function(){try{var R=window.RM,b=(R&&R.__bgRectV)||(R&&R.canvas&&window.dennComputeBgRectV&&window.dennComputeBgRectV(R.canvas.width,R.canvas.height));if(R&&R.pos&&R.canvas&&b&&b.w)return clamp((R.pos.x*R.canvas.width-b.x)/b.w,-3,3);}catch(e){}return null})(),
     frameImgY:(function(){try{var R=window.RM,b=(R&&R.__bgRectV)||(R&&R.canvas&&window.dennComputeBgRectV&&window.dennComputeBgRectV(R.canvas.width,R.canvas.height));if(R&&R.pos&&R.canvas&&b&&b.h)return clamp((R.pos.y*R.canvas.height-b.y)/b.h,-3,3);}catch(e){}return null})(),
-    /* 2026-06-26 image-anchor 스케일: 액자 폭을 배경 cover 이미지 폭의 비율로 기록 → 소비자가 fw=frameImgW×현재 bgRect.w로 복원 → 배경 크기에 비례해 액자도 축소/확대(방 대비 크기 일관). frameHit.w=직전 렌더 액자 폭. */
-    frameImgW:(function(){try{var R=window.RM,b=(R&&R.__bgRectV)||(R&&R.canvas&&window.dennComputeBgRectV&&window.dennComputeBgRectV(R.canvas.width,R.canvas.height));if(R&&R.frameHit&&R.frameHit.w&&b&&b.w)return clamp(R.frameHit.w/b.w,0,5);}catch(e){}return null})(),
     frameScale:num((by('rm-size')||{}).value,20)/100,
     frameSizeAnchor:num((by('rm-size-anchor')||{}).value,50),
     frameTiltEnabled:!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),
@@ -3248,7 +3246,7 @@ window.loadSettingsV33=loadSettingsV33;/* PC|모바일 토글 전환 시 현재 
    ★ base에는 모바일 필드를 절대 쓰지 않는다(소비자 PC 읽기 무영향). 저장 컨텍스트 판정은 viewAs=mobile로
    좁힘(소비자 폰은 viewAs 없음 → 우발 저장 차단). 읽기 병합은 단계3(dennMergeMobileV)에서 isRoomMobile() 기준.
    격리 필드=레이아웃만(위치·크기·앵커·가이드 스케일/위치·배경). 조명/그림자/기울기는 base 공유. */
-var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameImgX','frameImgY','frameImgW','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY','bgZoom','bgFocusX','bgFocusY'];/* 2026-06-19: focus 모델 신규 필드도 .mobile 격리 라우팅(레거시 3필드는 구 프리셋 호환 위해 유지) */
+var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameImgX','frameImgY','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY','bgZoom','bgFocusX','bgFocusY'];/* 2026-06-19: focus 모델 신규 필드도 .mobile 격리 라우팅(레거시 3필드는 구 프리셋 호환 위해 유지) */
 /* 모바일 편집 컨텍스트 판정 — 런타임 토글(__dennAdminMobileV, PC 편집기 내 'PC|모바일' 탭) 우선,
    하위호환으로 URL viewAs=mobile도 인정. 저장 라우팅·읽기 병합·measureBase가 공유. */
 function dennIsMobileEditCtxV(){try{if(window.__dennAdminMobileV)return true;return new URLSearchParams(location.search||'').get('viewAs')==='mobile'}catch(e){return false}}
@@ -4014,8 +4012,6 @@ function drawFrame(ctx2,W,H){
   if(!window.RM||!RM.frameSnap||!RM.frameSnap.width||!RM.frameSnap.height){if(window.RM)RM.frameHit=null;return}
   function frameCm(){var list=actualSizes(),pick=null,primary=(window.RM&&RM.activeGuideSizeId)||(window.SG&&SG.primarySizeId);if(primary){for(var p=0;p<list.length;p++){if(list[p].id===primary){pick=list[p];break}}}if(!pick&&window.SG&&SG.active){for(var i=0;i<list.length;i++){if(SG.active[list[i].id]){pick=list[i];break}}}if(!pick&&window.curFSz)pick=normalizeSize(window.curFSz,'cur');if(!pick)pick=preferredRoomDefaultSize(list);if(!pick&&list.length)pick=list[0];if(!pick)return null;var a=num(pick.wcm,0),b=num(pick.hcm,0);if(!(a>0&&b>0))return null;return (window.SG&&SG.ori)==='landscape'?{w:Math.max(a,b),h:Math.min(a,b)}:{w:Math.min(a,b),h:Math.max(a,b)}}
   var tiltOn=!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),sizePct=num((by('rm-size')||{}).value,20),tiltDeg=tiltOn?num((by('rm-tilt')||{}).value,0):0,perspX=tiltOn?num((by('rm-persp-x')||{}).value,0):0,perspY=tiltOn?num((by('rm-persp-y')||{}).value,0):0,cm=frameCm(),pxPerCm=Math.max(1,(measureBase(W,H)/150)*(num((by('sg-scale-r')||{}).value,100)/100)),fallbackBoost=(!cm&&isRoomMobile())?1.25:1,fw=cm?cm.w*pxPerCm*(sizePct/20):W*sizePct/100*fallbackBoost,fh=cm?cm.h*pxPerCm*(sizePct/20):fw*(RM.frameSnap.height/RM.frameSnap.width),cxp=(RM.pos&&RM.pos.x||.5),cyp=(RM.pos&&RM.pos.y||.4),cx=W*cxp,cy=H*cyp,sy=1,shOp=num((by('rm-sh-op')||{}).value,0),shDir=num((by('rm-sh-dir')||{}).value,180),shDist=num((by('rm-sh-dist')||{}).value,0),shBlur=num((by('rm-sh-blur')||{}).value,0),shRad=(shDir-90)*Math.PI/180,distPx=fw*shDist/100;
-  /* 2026-06-26 image-anchor 스케일: 소비자 초기표시(미조작)에서 액자 폭을 배경 이미지 폭 비율(__opImgWV)×현재 bgRect.w로 → 배경이 크든 작든 액자도 비례(방 대비 크기 일관). 조작 후(__userMoved)·관리자·flag off·미저장(__opImgWV 없음)은 위 cm/sizePct 유지. fh는 프레임 종횡비 보존, distPx(그림자) 재계산. */
-  if(window.__dennImgAnchorV!==false&&window.RM&&RM.__opImgWV&&RM.__bgRectV&&RM.__bgRectV.w&&!RM.__userMoved&&!RM.dragging&&!(window.dennIsAdminSetupV&&dennIsAdminSetupV())){fw=RM.__opImgWV*RM.__bgRectV.w;fh=fw*(RM.frameSnap.height/RM.frameSnap.width);distPx=fw*shDist/100;}
   /* ★ B(2026-06-05): 배경 없는 기본 상태에선 액자를 캔버스에 fit-contain(여백 6%) → 큰 스케일에서도 액자 전체가 캔버스(=흰 영역) 안에 보이게(잘림 방지). 배경 사진 있을 땐 실제 스케일 유지, 운영자 편집모드 제외. */
   if(window.RM&&!(RM.roomImg&&RM.roomImg.naturalWidth)&&String(RM.bgId||'default-room')==='default-room'&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){var __fit=Math.min(1,(W*0.94)/Math.max(1,fw),(H*0.94)/Math.max(1,fh));if(__fit<1){fw*=__fit;fh*=__fit;}}
   /* 사이즈 기준 위치(앵커) — 관리자 배경설정 모드 + 비중앙 앵커에서만. ★ 표시 크기(sizePct)가 바뀐
@@ -4071,16 +4067,12 @@ window.rmRender=function(){
         var __mImgV=(__opRawV&&__opRawV.mobile)||{};
         var __iaIx=(__mImgV.frameImgX!=null)?__mImgV.frameImgX:__op.frameImgX,__iaIy=(__mImgV.frameImgY!=null)?__mImgV.frameImgY:__op.frameImgY;
         RM.__opImgPosV=(__iaIx!=null&&__iaIy!=null)?{x:num(__iaIx,.5),y:num(__iaIy,.5)}:null;
-        var __iaIw=(__mImgV.frameImgW!=null)?__mImgV.frameImgW:__op.frameImgW;RM.__opImgWV=(__iaIw!=null)?num(__iaIw,0):null;/* 2026-06-26 image-anchor 스케일: 배경 이미지 폭 대비 액자 폭 비율(.mobile 우선) → drawFrame서 fw=__opImgWV×bgRect.w */
         RM.frameAnchorV48={frameCenterX:__px,frameCenterY:__py,frameAnchor:'center'};
         var __gx=num(__op.guideX,__px),__gy=num(__op.guideY,__py);setVal('sg-ox-r',__gx);setVal('sg-ox-n',__gx);setVal('sg-oy-r',__gy);setVal('sg-oy-n',__gy);
         /* 2026-06-22 FIX: 배경 3필드(bgScale/bgOffsetX/bgOffsetY)도 운영자 프리셋(.mobile 병합 __op)으로 강제 — 배경 드로우(L3995)가 rm-bg-* 슬라이더를 직접 읽는데, 기존 force 블록이 프레임/가이드만 세팅하고 배경은 빠뜨려 stale user:키 값(loadSettingsV33가 세팅)이 그려지던 버그. __userMoved 전(미조작)에만 강제 → 왕복유지 보존. 운영자→소비자 모바일 배경위치 전달의 마지막 누락 경로. */
-        /* 2026-06-26 universal: 배경 위치(scale/offset)도 .mobile 우선 읽기 → iPad·갤럭시탭 등 비세로 기기도 운영자 모바일 배경위치와 동일하게 그림 → image-anchor가 모든 기기서 같은 방 지점·구도에 일관 적용(기기별 분기 무관). */
-        var __bgsc=(__mImgV.bgScale!=null)?__mImgV.bgScale:__op.bgScale;
-        if(isFinite(__bgsc)){var __bsc=Math.round(num(__bgsc,1)*100);setVal('rm-bg-scale',__bsc,'%');}
-        var __bgox=(__mImgV.bgOffsetX!=null)?__mImgV.bgOffsetX:__op.bgOffsetX,__bgoy=(__mImgV.bgOffsetY!=null)?__mImgV.bgOffsetY:__op.bgOffsetY;
-        if(__bgox!=null)setVal('rm-bg-ox',num(__bgox,0));
-        if(__bgoy!=null)setVal('rm-bg-oy',num(__bgoy,0));
+        if(isFinite(__op.bgScale)){var __bsc=Math.round(num(__op.bgScale,1)*100);setVal('rm-bg-scale',__bsc,'%');}
+        if(__op.bgOffsetX!=null)setVal('rm-bg-ox',num(__op.bgOffsetX,0));
+        if(__op.bgOffsetY!=null)setVal('rm-bg-oy',num(__op.bgOffsetY,0));
       }
     }
     showCanvas();
@@ -5813,7 +5805,7 @@ function currentFrameAnchorV48(){
   if(!b)return null;
   var __iaB=(window.RM&&RM.__bgRectV)||(window.dennComputeBgRectV&&window.dennComputeBgRectV(W,H)),__r={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameLeft:(RM.pos.x*W-b.w/2)/W*100,frameTop:(RM.pos.y*H-b.h/2)/H*100,frameAnchor:'center'};
   /* 2026-06-26 image-anchor: 배경 cover rect 있을 때만 frameImgX/Y 추가(유효할 때만 → prev 클로버 방지). 소비자 초기표시 기기무관 글루용. */
-  if(__iaB&&__iaB.w&&__iaB.h){__r.frameImgX=clamp((RM.pos.x*W-__iaB.x)/__iaB.w,-3,3);__r.frameImgY=clamp((RM.pos.y*H-__iaB.y)/__iaB.h,-3,3);if(RM.frameHit&&RM.frameHit.w)__r.frameImgW=clamp(RM.frameHit.w/__iaB.w,0,5);/* 2026-06-26 image-anchor 스케일 */}
+  if(__iaB&&__iaB.w&&__iaB.h){__r.frameImgX=clamp((RM.pos.x*W-__iaB.x)/__iaB.w,-3,3);__r.frameImgY=clamp((RM.pos.y*H-__iaB.y)/__iaB.h,-3,3);}
   return __r;
 }
 window.dennRefreshFrameCenterAnchorV51=function(){
@@ -14129,7 +14121,6 @@ input[type=range]{accent-color:#777}
         window.__dennAwaitPortraitV=false;/* 세로 복귀 → 회전 안내 해제, 정상 세로 화면 */
         window.__dennRotCentered=false;/* 다음 가로 진입 때 다시 센터 */
         setRotateFs(false);
-        window.__dennRotCenterGenV=(window.__dennRotCenterGenV||0)+1;/* 2026-06-26 A3: 가로 센터 루프(dennRotCenterLoopV) 즉시 중단 — 세로 전환 후에도 1.3s 살아서 101(가로 센터)을 세로 앵커(8)와 번갈아 세팅하던 회전 떨림 차단. */
         /* 2026-06-26: 세로=풀스크린 무조건 해제 — 기존엔 (fs && __dennAutoFsV108) 조건부라 가로↔세로 반복 중 플래그 desync 시 denn-room-fullscreen-active(max z-index, 캔버스 inset:0 + 하단 메뉴 숨김)가 세로에 잔류해 "하단 메뉴 클릭 자체가 안 됨" 버그 유발. 모바일 세로에선 수동 FS 진입 불가(hideFsBtn)라 세로 풀스크린-active는 항상 잔류 아티팩트 → 무조건 해제 안전. */
         window.__dennAutoFsV108=false;
         if(isFs()&&window.setRoomFullscreenLayout)setRoomFullscreenLayout(false);
