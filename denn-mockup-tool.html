@@ -14130,7 +14130,9 @@ input[type=range]{accent-color:#777}
   }
   window.__dennRotateFsOnChangeV108=onChange;
   function dennRotPreGateV(){/* 2026-06-23: 회전 즉시(onChange 디바운스 120~150ms 전) 페이드를 켜 첫 프레임의 stale 대형 캔버스 플래시("처음 큰 스케일 한번")+정착 전 좌우 요동을 가림. 방향이 실제로 바뀌고 룸이 열렸을 때만. 페이드 제거+최종 사이징은 onChange의 dennGatedRevealV가 정착 후 1회 담당. orientationchange 시 치수 미갱신 브라우저 대비 resize 리스너에도 등록. */
-    try{if(typeof roomOpen!=='function'||!roomOpen())return;var o=(innerWidth>innerHeight)?'l':'p';if(window.__dennRotOriV2&&window.__dennRotOriV2!==o){window.__dennRotCentered=false;document.documentElement.classList.add('denn-room-entering');}}catch(e){}
+    try{if(typeof roomOpen!=='function'||!roomOpen())return;var o=(innerWidth>innerHeight)?'l':'p';if(window.__dennRotOriV2&&window.__dennRotOriV2!==o){window.__dennRotCentered=false;document.documentElement.classList.add('denn-room-entering');
+      if(o==='p'){window.__dennRotCenterGenV=(window.__dennRotCenterGenV||0)+1;try{document.documentElement.classList.remove('denn-rotate-fs')}catch(e){}}/* 2026-06-26: 세로 전환 '즉시'(onChange 디바운스 전) 가로 스크롤 머신 정지 — 루프 gen 증가(dennRotCenterLoopV 중단)+denn-rotate-fs 제거(rmSizeCanvas/__ctr 가로분기 무력화). 그 사이 가로 센터(101)와 세로 앵커(8)가 scrollTop을 교대로 써서 생기던 가로→세로 떨림 차단. 페이드 안에서 처리. */
+    }}catch(e){}
   }
   window.addEventListener('resize',function(){dennRotPreGateV();clearTimeout(window.__dennRotFsRz);window.__dennRotFsRz=setTimeout(onChange,120);});
   window.addEventListener('orientationchange',function(){dennRotPreGateV();setTimeout(onChange,150);setTimeout(onChange,420);});
