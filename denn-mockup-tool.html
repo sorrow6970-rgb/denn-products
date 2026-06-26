@@ -3626,8 +3626,12 @@ function ensureMobileFallbackFrameSize(){
 }
 function forceMobileCenterStart(){
   if(!isRoomMobile())return;
+  /* 2026-06-26: 떨림 제거 — 액자 재센터/재정렬을 [0..640]ms 5회 반복(정착 방어)하는데 매 단계가 페이드 밖에서 노출돼 액자가 5번 점프(가이드배경 선택창 진입·배경 선택 시 "액자 떨림"). 정착 구간 전체를 denn-room-entering(opacity:0)으로 가리고 마지막(640ms) 후 1회 노출. gen 가드로 중복 호출·기존 reveal과 안전 공존(최신 호출만 노출 담당). */
+  var myFadeGen=(window.__dennFmcsFadeGenV=(window.__dennFmcsFadeGenV||0)+1);
+  try{document.documentElement.classList.add('denn-room-entering');}catch(e){}
   [0,80,180,360,640].forEach(function(delay){
     setTimeout(function(){
+      if(window.__dennFmcsFadeGenV!==myFadeGen)return;/* 새 호출이 들어왔으면 옛 정착 중단 */
       try{
         var modal=by('room-modal');if(modal&&modal.style.display==='none')return;
         var on=by('sg-on');if(on)on.checked=true;
@@ -3641,6 +3645,7 @@ function forceMobileCenterStart(){
       }catch(e){}
     },delay);
   });
+  setTimeout(function(){if(window.__dennFmcsFadeGenV!==myFadeGen)return;try{document.documentElement.classList.remove('denn-room-entering');}catch(e){}},720);/* 마지막 재센터(640ms) 후 노출 */
 }
 function shouldSyncInitialGuideFrame(){
   if(!window.RM)return false;
