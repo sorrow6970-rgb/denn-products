@@ -3248,7 +3248,8 @@ window.loadSettingsV33=loadSettingsV33;/* PC|모바일 토글 전환 시 현재 
    ★ base에는 모바일 필드를 절대 쓰지 않는다(소비자 PC 읽기 무영향). 저장 컨텍스트 판정은 viewAs=mobile로
    좁힘(소비자 폰은 viewAs 없음 → 우발 저장 차단). 읽기 병합은 단계3(dennMergeMobileV)에서 isRoomMobile() 기준.
    격리 필드=레이아웃만(위치·크기·앵커·가이드 스케일/위치·배경). 조명/그림자/기울기는 base 공유. */
-var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameImgX','frameImgY','frameImgW','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY','bgZoom','bgFocusX','bgFocusY'];/* 2026-06-19: focus 모델 신규 필드도 .mobile 격리 라우팅(레거시 3필드는 구 프리셋 호환 위해 유지) */
+/* 2026-06-26 A1: frameImgX/Y/W는 image-anchor(기기 독립 좌표)라 PC/모바일 분리 불필요 → .mobile 라우팅에서 제외하고 base 단일 저장(PC·모바일 어느 모드든 같은 값) → PC저장 반영+.mobile/base 충돌 제거. 읽기는 base 우선·기존 .mobile은 폴백(재저장 불필요). */
+var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY','bgZoom','bgFocusX','bgFocusY'];/* 2026-06-19: focus 모델 신규 필드도 .mobile 격리 라우팅(레거시 3필드는 구 프리셋 호환 위해 유지) */
 /* 모바일 편집 컨텍스트 판정 — 런타임 토글(__dennAdminMobileV, PC 편집기 내 'PC|모바일' 탭) 우선,
    하위호환으로 URL viewAs=mobile도 인정. 저장 라우팅·읽기 병합·measureBase가 공유. */
 function dennIsMobileEditCtxV(){try{if(window.__dennAdminMobileV)return true;return new URLSearchParams(location.search||'').get('viewAs')==='mobile'}catch(e){return false}}
@@ -4069,9 +4070,10 @@ window.rmRender=function(){
         RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=clamp(__px/100,.02,.98);RM.pos.y=clamp(__py/100,.02,.98);
         /* 2026-06-26 image-anchor: frameImgX/Y는 기기독립 → .mobile 우선·없으면 base. iPad 등 비세로 기기(merge가 base만 줌)도 운영자가 .mobile에 저장한 위치를 반영. 없으면(레거시) null→글루 안 함(기존 동작). */
         var __mImgV=(__opRawV&&__opRawV.mobile)||{};
-        var __iaIx=(__mImgV.frameImgX!=null)?__mImgV.frameImgX:__op.frameImgX,__iaIy=(__mImgV.frameImgY!=null)?__mImgV.frameImgY:__op.frameImgY;
+        /* 2026-06-26 A1: base 우선·기존 .mobile 폴백 — frameImgX/Y/W를 base 단일 저장으로 통일(.mobile 라우팅 제외)했으므로 base(=__op, 비.mobile)가 권위. 기존 .mobile-only 프리셋은 폴백으로 읽어 재저장 불필요. PC저장이 이제 반영됨. */
+        var __iaIx=(__op.frameImgX!=null)?__op.frameImgX:__mImgV.frameImgX,__iaIy=(__op.frameImgY!=null)?__op.frameImgY:__mImgV.frameImgY;
         RM.__opImgPosV=(__iaIx!=null&&__iaIy!=null)?{x:num(__iaIx,.5),y:num(__iaIy,.5)}:null;
-        var __iaIw=(__mImgV.frameImgW!=null)?__mImgV.frameImgW:__op.frameImgW;RM.__opImgWV=(__iaIw!=null)?num(__iaIw,0):null;/* 2026-06-26 image-anchor 스케일: 배경 이미지 폭 대비 액자 폭 비율(.mobile 우선) → drawFrame서 fw=__opImgWV×bgRect.w */
+        var __iaIw=(__op.frameImgW!=null)?__op.frameImgW:__mImgV.frameImgW;RM.__opImgWV=(__iaIw!=null)?num(__iaIw,0):null;/* 2026-06-26 image-anchor 스케일: 배경 이미지 폭 대비 액자 폭 비율(.mobile 우선) → drawFrame서 fw=__opImgWV×bgRect.w */
         RM.frameAnchorV48={frameCenterX:__px,frameCenterY:__py,frameAnchor:'center'};
         var __gx=num(__op.guideX,__px),__gy=num(__op.guideY,__py);setVal('sg-ox-r',__gx);setVal('sg-ox-n',__gx);setVal('sg-oy-r',__gy);setVal('sg-oy-n',__gy);
         /* 2026-06-22 FIX: 배경 3필드(bgScale/bgOffsetX/bgOffsetY)도 운영자 프리셋(.mobile 병합 __op)으로 강제 — 배경 드로우(L3995)가 rm-bg-* 슬라이더를 직접 읽는데, 기존 force 블록이 프레임/가이드만 세팅하고 배경은 빠뜨려 stale user:키 값(loadSettingsV33가 세팅)이 그려지던 버그. __userMoved 전(미조작)에만 강제 → 왕복유지 보존. 운영자→소비자 모바일 배경위치 전달의 마지막 누락 경로. */
