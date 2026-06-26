@@ -3086,8 +3086,8 @@ function currentSettingsV33(){
     frameCenterX:window.RM&&RM.pos?num(RM.pos.x*100,50):50,
     frameCenterY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
     /* 2026-06-26 image-anchor: 액자 중심을 배경 cover 이미지 비율로 기록(배경 rect 있을 때만, 없으면 null=레거시). 소비자 초기표시가 기기/화면비 무관하게 같은 방 지점에 글루되게. 저장은 매 렌더 끝(요청)에 돌고 __bgRectV는 직전 렌더 값이라 정상 유효. */
-    frameImgX:(function(){try{var R=window.RM,b=R&&R.__bgRectV;if(R&&R.pos&&R.canvas&&b&&b.w)return clamp((R.pos.x*R.canvas.width-b.x)/b.w,-3,3);}catch(e){}return null})(),
-    frameImgY:(function(){try{var R=window.RM,b=R&&R.__bgRectV;if(R&&R.pos&&R.canvas&&b&&b.h)return clamp((R.pos.y*R.canvas.height-b.y)/b.h,-3,3);}catch(e){}return null})(),
+    frameImgX:(function(){try{var R=window.RM,b=(R&&R.__bgRectV)||(R&&R.canvas&&window.dennComputeBgRectV&&window.dennComputeBgRectV(R.canvas.width,R.canvas.height));if(R&&R.pos&&R.canvas&&b&&b.w)return clamp((R.pos.x*R.canvas.width-b.x)/b.w,-3,3);}catch(e){}return null})(),
+    frameImgY:(function(){try{var R=window.RM,b=(R&&R.__bgRectV)||(R&&R.canvas&&window.dennComputeBgRectV&&window.dennComputeBgRectV(R.canvas.width,R.canvas.height));if(R&&R.pos&&R.canvas&&b&&b.h)return clamp((R.pos.y*R.canvas.height-b.y)/b.h,-3,3);}catch(e){}return null})(),
     frameScale:num((by('rm-size')||{}).value,20)/100,
     frameSizeAnchor:num((by('rm-size-anchor')||{}).value,50),
     frameTiltEnabled:!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),
@@ -3528,6 +3528,27 @@ function drawCoverFocus(ctx2,img,x,y,w,h,zoom,fx,fy){
       dx=clamp(x+w/2-cfx*tw,x+w-tw,x),dy=clamp(y+h/2-cfy*th,y+h-th,y);
   ctx2.drawImage(img,dx,dy,tw,th);try{if(window.RM&&window.RM.__bgCapV)window.RM.__bgRectV={x:dx,y:dy,w:tw,h:th}}catch(e){}/* 2026-06-26 image-anchor: focus 경로 cover rect 캡처 */return{x:dx,y:dy,w:tw,h:th}
 }
+/* 2026-06-26 image-anchor: 현재 캔버스(W,H)+배경 슬라이더로 배경 cover rect를 즉석 계산(drawCover/drawCoverFocus 수식 복제). 저장 시 렌더-캡처된 RM.__bgRectV가 없을 때(특히 관리자 저장 타이밍)도 frameImgX/Y를 항상 기록하기 위함. */
+function dennComputeBgRectV(W,H){
+  try{
+    var R=window.RM,img=R&&R.roomImg;if(!img||!img.naturalWidth||!W||!H)return null;
+    var iw=img.naturalWidth,ih=img.naturalHeight,cover=Math.max(W/iw,H/ih);
+    var portrait=!!(window.isRoomPortrait&&isRoomPortrait()),direct=!!(window.isDirectRoomUploadBg&&isDirectRoomUploadBg());
+    if(R.__bgUseFocusV){
+      var zoom=num((by('rm-bg-scale')||{}).value,100)/100;
+      var z=direct?Math.max(1,zoom):(portrait?Math.max(1.02,zoom*1.04):Math.max(1,zoom));z=Math.max(1,Math.min(2,z));
+      var fx=clamp(.5+num((by('rm-bg-ox')||{}).value,0)/100,0,1),fy=clamp(.5+num((by('rm-bg-oy')||{}).value,0)/100,0,1);
+      var s=cover*z,tw=iw*s,th=ih*s;
+      return {x:clamp(W/2-fx*tw,W-tw,0),y:clamp(H/2-fy*th,H-th,0),w:tw,h:th};
+    }
+    var bgScale=num((by('rm-bg-scale')||{}).value,Math.round((window.uiBgScale?uiBgScale():1)*100))/100;
+    var sc=direct?Math.max(1,bgScale):(portrait?Math.max(1.02,bgScale*1.04):Math.max(1,bgScale));sc=Math.max(1,Math.min(2,sc));
+    var ox=clamp(num((by('rm-bg-ox')||{}).value,0)/100,-0.5,0.5),oy=clamp(num((by('rm-bg-oy')||{}).value,0)/100,-0.5,0.5);
+    var s2=cover*sc,tw2=iw*s2,th2=ih*s2;
+    return {x:(W-tw2)/2+ox*(tw2-W),y:(H-th2)/2+oy*(th2-H),w:tw2,h:th2};
+  }catch(e){return null}
+}
+window.dennComputeBgRectV=dennComputeBgRectV;
 /* 2026-06-19: focus 모델 비활성화(레거시 전용 복귀) — focus 저장값이 소비자 V48 읽기 경로에 안 물려 운영자→소비자 배경위치 전달 실패. 항상 false로 두어 apply/snapshot/render 전부 레거시(bgScale/bgOffsetX/Y) 사용. 운영자 배경조정은 레거시로 저장되어 기존 미러(f382b14)로 소비자에 정상 전달됨. */
 function dennBgIsFocusModel(s){return false}
 window.dennBgIsFocusModel=dennBgIsFocusModel;
@@ -5782,7 +5803,7 @@ function currentFrameAnchorV48(){
   if(!(window.RM&&RM.canvas&&RM.pos&&RM.canvas.width&&RM.canvas.height))return null;
   var W=RM.canvas.width,H=RM.canvas.height,b=frameBoxV48(W,H);
   if(!b)return null;
-  var __iaB=window.RM&&RM.__bgRectV,__r={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameLeft:(RM.pos.x*W-b.w/2)/W*100,frameTop:(RM.pos.y*H-b.h/2)/H*100,frameAnchor:'center'};
+  var __iaB=(window.RM&&RM.__bgRectV)||(window.dennComputeBgRectV&&window.dennComputeBgRectV(W,H)),__r={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameLeft:(RM.pos.x*W-b.w/2)/W*100,frameTop:(RM.pos.y*H-b.h/2)/H*100,frameAnchor:'center'};
   /* 2026-06-26 image-anchor: 배경 cover rect 있을 때만 frameImgX/Y 추가(유효할 때만 → prev 클로버 방지). 소비자 초기표시 기기무관 글루용. */
   if(__iaB&&__iaB.w&&__iaB.h){__r.frameImgX=clamp((RM.pos.x*W-__iaB.x)/__iaB.w,-3,3);__r.frameImgY=clamp((RM.pos.y*H-__iaB.y)/__iaB.h,-3,3);}
   return __r;
