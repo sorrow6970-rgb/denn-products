@@ -4064,8 +4064,8 @@ window.rmRender=function(){
         var __px=num(__op.frameCenterX!=null?__op.frameCenterX:__op.frameX,50),__py=num(__op.frameCenterY!=null?__op.frameCenterY:__op.frameY,40);
         RM.pos=RM.pos||{x:.5,y:.4};RM.pos.x=clamp(__px/100,.02,.98);RM.pos.y=clamp(__py/100,.02,.98);
         /* 2026-06-26 image-anchor: frameImgX/Y는 기기독립 → .mobile 우선·없으면 base. iPad 등 비세로 기기(merge가 base만 줌)도 운영자가 .mobile에 저장한 위치를 반영. 없으면(레거시) null→글루 안 함(기존 동작). */
-        var __mImgV=(__opRawV&&__opRawV.mobile)||{};
-        var __iaIx=(__mImgV.frameImgX!=null)?__mImgV.frameImgX:__op.frameImgX,__iaIy=(__mImgV.frameImgY!=null)?__mImgV.frameImgY:__op.frameImgY;
+        /* 2026-06-26: PC/모바일 분리 정상화 — __op(=dennMergeMobileV 거친 값)가 이미 맥락별 정확(세로=.mobile, 비세로/PC=base). 기존 '.mobile 우선'(iPad 대응)은 PC 저장(base)을 가려 제거. → 모바일 소비자=.mobile, PC 소비자=base 로 분리. iPad(비세로)는 당분간 base 읽음, 추후 검토. */
+        var __iaIx=__op.frameImgX,__iaIy=__op.frameImgY;
         RM.__opImgPosV=(__iaIx!=null&&__iaIy!=null)?{x:num(__iaIx,.5),y:num(__iaIy,.5)}:null;
         RM.frameAnchorV48={frameCenterX:__px,frameCenterY:__py,frameAnchor:'center'};
         var __gx=num(__op.guideX,__px),__gy=num(__op.guideY,__py);setVal('sg-ox-r',__gx);setVal('sg-ox-n',__gx);setVal('sg-oy-r',__gy);setVal('sg-oy-n',__gy);
