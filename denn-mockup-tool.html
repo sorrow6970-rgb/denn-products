@@ -3429,6 +3429,21 @@ function setDisplaySize(el,w,h,important){
   el.style.setProperty('height',h+'px',pr);
   if(important){el.style.setProperty('max-width','none','important');el.style.setProperty('max-height','none','important')}
 }
+/* 2026-06-26: 소비자 세로(width-fill 캔버스가 화면 넘침) 스크롤을 '중앙' 대신 '액자 앵커'로 — 액자가 그려진 비트맵 세로위치(pos.y−liftFrac)를 관리자(contain, 전체 보임)와 같은 화면 비율에 오게 scrollTop 계산 → 폰 화면비 무관하게 액자 위치가 관리자와 동일. 관리자 contain(넘침 없음)·가로 전체화면은 -1로 no-op(기존 센터 유지). liftFrac은 rmRender L4036의 __lift(=H*0.0545)에서 파생해 자동 동기. */
+window.dennPortraitFrameAnchorTopV=function(area){
+  try{
+    var RM=window.RM;
+    if(!RM||!RM.pos||!area)return -1;
+    if(document.documentElement.classList.contains('denn-rotate-fs'))return -1;/* 가로 전체화면 제외 */
+    if(!(window.isRoomPortrait&&isRoomPortrait()))return -1;/* 세로 전용 */
+    var max=area.scrollHeight-area.clientHeight;
+    if(max<=4)return -1;/* 넘침 없으면 스크롤 불필요(=관리자 contain은 여기서 no-op) */
+    var liftFrac=(RM.__bgLiftV&&RM.canvas&&RM.canvas.height)?(RM.__bgLiftV/RM.canvas.height):0.0545;
+    var posY=(RM.pos.y!=null)?RM.pos.y:0.4;
+    var frac=posY-liftFrac;if(frac<0)frac=0;if(frac>1)frac=1;
+    return Math.round(frac*max);
+  }catch(e){return -1}
+};
 function centerRoomCanvasScroll(){
   var area=by('rm-canvas-area');if(!area||!isRoomMobile())return;
   setTimeout(function(){
@@ -3436,7 +3451,9 @@ function centerRoomCanvasScroll(){
       if(document.documentElement.classList.contains('denn-rotate-fs'))return;/* 2026-06-22: 가로 전체화면 스크롤 센터는 dennGatedRevealV(__ctr, gen 가드)가 전담 — 이 경로(redrawRoomSoon 등 비조율 타이밍)가 stale 레이아웃에 센터해 반복 토글 누적 틀어짐 유발하던 것 제외 */
       if(area.scrollWidth>area.clientWidth)area.scrollLeft=Math.max(0,(area.scrollWidth-area.clientWidth)/2);
       var modal=by('room-modal'),fs=modal&&modal.classList&&modal.classList.contains('denn-room-fullscreen-active');
-      if(area.scrollHeight>area.clientHeight)area.scrollTop=Math.max(0,(area.scrollHeight-area.clientHeight)/2);/* 2026-06-22: 가로 전체화면도 중앙(기존 0=맨위 강제 제거) — 사용자 요청, 첫 화면 세로 중앙 정렬 */
+      var __aT=window.dennPortraitFrameAnchorTopV&&dennPortraitFrameAnchorTopV(area);/* 2026-06-26: 세로=액자 앵커 */
+      if(__aT>=0)area.scrollTop=__aT;
+      else if(area.scrollHeight>area.clientHeight)area.scrollTop=Math.max(0,(area.scrollHeight-area.clientHeight)/2);/* 2026-06-22: 가로 전체화면도 중앙(기존 0=맨위 강제 제거) — 사용자 요청, 첫 화면 세로 중앙 정렬 */
     }catch(e){}
   },30);
 }
@@ -13904,7 +13921,7 @@ input[type=range]{accent-color:#777}
     function reveal(){if(done||gen!==__dennRevealGenV)return;done=true;clearTimeout(spinT);try{document.documentElement.classList.remove('denn-room-spin')}catch(e){}try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
       window.__dennRotCentered=true;
       /* 2026-06-22: 스크롤 중앙 정렬 — 빠른(캐시) 재진입에선 reveal 직후 레이아웃 미정착이라 scrollHeight가 stale → 동기 1회 + rAF×2 + 지연(120/260ms) 재시도로 정착 후 정렬 보정. (첫 진입만 되고 세로→가로 재진입 시 안 되던 문제) */
-      var __ctr=function(){if(gen!==__dennRevealGenV)return;/* 2026-06-22: gen 가드 — 반복 토글 시 이전 회전의 stale __ctr 재시도가 다음 방향 레이아웃에 센터해 누적 틀어짐 유발하던 것 차단(최신 진입만 센터) */try{var aEl=document.getElementById('rm-canvas-area');if(aEl){if(aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(document.documentElement.classList.contains('denn-rotate-fs')){if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}else aEl.scrollLeft=0;/* 2026-06-23: 가로 스크롤 센터링은 가로 풀스크린(wide 캔버스)에서만. 세로는 캔버스가 폭에 맞으므로 scrollLeft=0 고정 — 정착 전 과도 폭으로 center→재사이징 후 0 복귀하며 보이던 좌우 이동 차단. */}}catch(e){}};
+      var __ctr=function(){if(gen!==__dennRevealGenV)return;/* 2026-06-22: gen 가드 — 반복 토글 시 이전 회전의 stale __ctr 재시도가 다음 방향 레이아웃에 센터해 누적 틀어짐 유발하던 것 차단(최신 진입만 센터) */try{var aEl=document.getElementById('rm-canvas-area');if(aEl){var __aT=window.dennPortraitFrameAnchorTopV&&dennPortraitFrameAnchorTopV(aEl);/* 2026-06-26: 세로=액자 앵커(관리자와 동일 화면위치), 가로/넘침없음=-1로 기존 센터 유지 */if(__aT>=0)aEl.scrollTop=__aT;else if(aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(document.documentElement.classList.contains('denn-rotate-fs')){if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}else aEl.scrollLeft=0;/* 2026-06-23: 가로 스크롤 센터링은 가로 풀스크린(wide 캔버스)에서만. 세로는 캔버스가 폭에 맞으므로 scrollLeft=0 고정 — 정착 전 과도 폭으로 center→재사이징 후 0 복귀하며 보이던 좌우 이동 차단. */}}catch(e){}};
       __ctr();requestAnimationFrame(function(){__ctr();if(gen===__dennRevealGenV){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}}requestAnimationFrame(__ctr);});setTimeout(__ctr,120);setTimeout(__ctr,260);}
     function wait(){
       if(done||gen!==__dennRevealGenV)return;
