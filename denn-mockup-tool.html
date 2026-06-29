@@ -12455,7 +12455,7 @@ window.addEventListener('load',later);
 /* 작업7: 액자 탭(#page-frame) 모바일 바텀시트 — @media max-width:860px 한정, PC(≥861) 완전 무영향.
    노드 이동 없이 .panel을 바텀시트로 변신 + CSS 그룹 필터(data-mgrp). PC 셸과 시·공간 배타. */
 @media(min-width:861px){
-  .denn-msheet-tabbar,.denn-msheet-actionbar,.denn-msheet-backdrop{display:none!important}
+  .denn-msheet-tabbar,.denn-msheet-actionbar,.denn-msheet-backdrop,.denn-msheet-head{display:none!important}/* 2026-06-29: head(그립+타이틀+×) PC 숨김 추가 — build()가 DOM에 삽입한 모바일 바텀시트 헤더가 PC(≥861)에서 스타일 없이 맨 × 로 액션버튼 위에 떠 보이던 버그. 기존엔 tabbar/actionbar/backdrop만 숨기고 head 누락. */
 }
 @media(max-width:860px){
   /* 상단 헤더 탭(액자·프레임/폰케이스) = 로고 아래 둘째 줄 좌측 정렬(컴팩트 알약 토글) */
