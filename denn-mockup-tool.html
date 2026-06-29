@@ -2166,6 +2166,7 @@ function rmBindEvents(){
   document.addEventListener('input',function(e){if(e&&e.isTrusted===false)return;var t=e&&e.target;if(t&&/^(sg-|rm-)/.test(t.id||'')&&window.RM)RM.__userMoved=true;},true);
   // Touch drag
   c.ontouchstart=function(e){
+    if(window.RM&&RM.sunOn&&e.touches&&e.touches[0]&&window.dennRoomSunHitV42&&dennRoomSunHitV42({clientX:e.touches[0].clientX,clientY:e.touches[0].clientY})){e.preventDefault();return;}/* 2026-06-29(B): 햇빛 ON + 광원 표식 근접 터치는 액자 드래그를 시작하지 않음 — 광원 이동은 v42 pointer가 전담. 기존엔 touchstart가 무조건 RM.dragging=true라 같은 터치에 광원(v42 pointerdown)+액자(여기)가 동시 이동하던 모바일 충돌. preventDefault로 스크롤만 막고 양보. */
     e.preventDefault();RM.dragging=true;
     RM.dragStart={mx:e.touches[0].clientX,my:e.touches[0].clientY,px:RM.pos.x,py:RM.pos.y};
   };
@@ -3893,7 +3894,7 @@ function installFrameOnlyDragEvents(){
   c.__dennFrameOnlyDrag=true;
   c.onmousedown=function(e){
     if(RM.sunOn){
-      var r=c.getBoundingClientRect(),mx=(e.clientX-r.left)*(c.width/r.width),my=(e.clientY-r.top)*(c.height/r.height),lx=RM.sunPos.x*c.width,ly=RM.sunPos.y*c.height;
+      var r=c.getBoundingClientRect(),mx=(e.clientX-r.left)*(c.width/r.width),my=(e.clientY-r.top)*(c.height/r.height),lx=RM.sunPos.x*c.width,ly=RM.sunPos.y*c.height-((window.RM&&RM.__bgLiftV)||0);/* 2026-06-29: __lift 보정(캔버스px) — 그려진 광원이 위로 옮겨진 만큼 히트 ly도 위로 */
       if(Math.abs(mx-lx)<18&&Math.abs(my-ly)<18){RM.sunDrag=true;c.style.cursor='crosshair';return}
     }
     if(!roomFrameOrGuideHitTest(e.clientX,e.clientY))return;
@@ -4784,6 +4785,9 @@ window.setRoomSunEnabledV41=function(on,save){
 };
 window.rmTogSun=function(e){
   if(e&&e.stopPropagation)e.stopPropagation();
+  var now=(window.performance&&performance.now)?performance.now():(+new Date());/* 2026-06-29(B): 더블파이어 가드 — 모바일에서 touchend 토글 + 뒤따르는 합성 click이 둘 다 호출돼 두 번 뒤집혀(제자리/영점 안 맞음) 보이던 문제. 400ms 내 재호출 무시 = 탭 1회당 토글 1회 보장(preventDefault 의존 제거). */
+  if(window.__sunTogLockV&&(now-window.__sunTogLockV)<400)return false;
+  window.__sunTogLockV=now;
   window.setRoomSunEnabledV41(!(window.RM&&RM.sunOn),true);
   return false;
 };
@@ -4793,9 +4797,16 @@ function install(){
     tog.onclick=window.rmTogSun;
     tog.style.pointerEvents='auto';
     tog.style.userSelect='none';
+    tog.style.touchAction='manipulation';
     tog.setAttribute('role','button');
     tog.setAttribute('tabindex','0');
     tog.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();window.rmTogSun(e)}};
+    if(!tog.__sunTouchBoundV29){/* 2026-06-29(B): 모바일 토글 탭 신뢰도 — 작은 div+click만이라 스크롤 시트 안에서 탭에 미세 움직임이 섞이면 스크롤로 먹혀 토글이 안 되던 문제. 이동 임계(10px) 내 탭이면 touchend서 즉시 토글 + click 억제(중복 방지). 한 번만 바인드(install이 타이머·재진입으로 여러 번 도므로 누적 방지). */
+      tog.__sunTouchBoundV29=true;var _sx=0,_sy=0,_mv=false;
+      tog.addEventListener('touchstart',function(e){var t=e.touches&&e.touches[0];if(t){_sx=t.clientX;_sy=t.clientY;_mv=false;}},{passive:true});
+      tog.addEventListener('touchmove',function(e){var t=e.touches&&e.touches[0];if(t&&(Math.abs(t.clientX-_sx)>10||Math.abs(t.clientY-_sy)>10))_mv=true;},{passive:true});
+      tog.addEventListener('touchend',function(e){if(!_mv){e.preventDefault();window.rmTogSun(e);}},{passive:false});
+    }
   }
   syncSunToggle();
 }
@@ -4822,7 +4833,8 @@ function sunHit(ev){
   RM.sunPos=RM.sunPos||{x:.75,y:.2};
   var r=c.getBoundingClientRect();
   if(!r.width||!r.height)return false;
-  var lx=r.left+RM.sunPos.x*r.width,ly=r.top+RM.sunPos.y*r.height;
+  var __lf=(window.RM&&RM.__bgLiftV&&RM.canvas&&RM.canvas.height)?(RM.__bgLiftV/RM.canvas.height):0;/* 2026-06-29: 모바일 세로 __lift(장면을 위로 translate, L4085)만큼 그려진 광원이 sunPos.y보다 위에 있음 → 히트 중심도 위로 보정. 미반영 시 그려진 광원(위)보다 히트영역이 아래로 어긋나 눌러도 안 잡히던 버그. */
+  var lx=r.left+RM.sunPos.x*r.width,ly=r.top+(RM.sunPos.y-__lf)*r.height;
   return Math.abs(ev.clientX-lx)<=44&&Math.abs(ev.clientY-ly)<=44;
 }
 function setSunPosFromEvent(ev){
@@ -4830,8 +4842,9 @@ function setSunPosFromEvent(ev){
   window.RM=window.RM||{};RM.sunPos=RM.sunPos||{x:.75,y:.2};
   var r=c.getBoundingClientRect();
   if(!r.width||!r.height)return;
+  var __lf=(RM.__bgLiftV&&RM.canvas&&RM.canvas.height)?(RM.__bgLiftV/RM.canvas.height):0;/* 2026-06-29: 위 __lift 보정 — 터치 지점을 sunPos로 역산할 때 lift를 더해(그려진 위치와 일치) 모바일 세로서 누른 곳에 광원이 오게. */
   RM.sunPos.x=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width));
-  RM.sunPos.y=Math.max(0,Math.min(1,(ev.clientY-r.top)/r.height));
+  RM.sunPos.y=Math.max(0,Math.min(1,(ev.clientY-r.top)/r.height+__lf));
   if(window.rmRender)window.rmRender();
 }
 function saveSunPos(){
