@@ -3455,7 +3455,7 @@ function centerRoomCanvasScroll(){
       if(area.scrollWidth>area.clientWidth)area.scrollLeft=Math.max(0,(area.scrollWidth-area.clientWidth)/2);
       var modal=by('room-modal'),fs=modal&&modal.classList&&modal.classList.contains('denn-room-fullscreen-active');
       var __aT=window.dennPortraitFrameAnchorTopV&&dennPortraitFrameAnchorTopV(area);/* 2026-06-26: 세로=액자 앵커 */
-      if(__aT>=0)area.scrollTop=__aT;
+      if(__aT>=0){if(document.documentElement.classList.contains('denn-room-entering')||Math.abs(area.scrollTop-__aT)>10)area.scrollTop=__aT;}/* 2026-06-29: 세로 앵커 데드밴드 — 노출(페이드 종료) 후엔 정착 중 max(scrollHeight-clientHeight) 미세변동으로 앵커가 0~8 진동하며 액자가 상하로 떨리던 것 차단. 페이드 중(opacity:0 숨김)엔 자유 정착, 노출 후 10px 이하 변화는 무시(레스트 고정). */
       else if(area.scrollHeight>area.clientHeight)area.scrollTop=Math.max(0,(area.scrollHeight-area.clientHeight)/2);/* 2026-06-22: 가로 전체화면도 중앙(기존 0=맨위 강제 제거) — 사용자 요청, 첫 화면 세로 중앙 정렬 */
     }catch(e){}
   },30);
@@ -13883,7 +13883,7 @@ input[type=range]{accent-color:#777}
       if(imAr>=1)window.__dennLsArV=imAr;
       var ar=window.__dennLsArV||(imAr>0?imAr:(vw/vh));var ch=vh,cw=Math.round(ch*ar);if(cw<vw){cw=vw;ch=Math.round(cw/ar);}if(RMf.canvas.width!==cw||RMf.canvas.height!==ch){RMf.canvas.width=cw;RMf.canvas.height=ch;RMf.canvas.style.width=cw+'px';RMf.canvas.style.height=ch+'px';var sgF=document.getElementById('sg-canvas');if(sgF){sgF.width=cw;sgF.height=ch;sgF.style.width=cw+'px';sgF.style.height=ch+'px'}}
       /* 진입 시 1회 가운데 — 캔버스 사이징이 막 끝난 직후(아직 __dennRotCentered=false면) scrollHeight로 즉시 결정. 페이드(denn-room-entering)가 이 순간을 가려 점프 안 보임. */
-      if(!window.__dennRotCentered){var aEl=document.getElementById('rm-canvas-area');if(aEl){var sh=aEl.scrollHeight;if(sh>aEl.clientHeight+4){aEl.scrollTop=Math.round((sh-aEl.clientHeight)/2);window.__dennRotCentered=true;}}}
+      if(!window.__dennRotCentered&&innerWidth>innerHeight){var aEl=document.getElementById('rm-canvas-area');if(aEl){var sh=aEl.scrollHeight;if(sh>aEl.clientHeight+4){aEl.scrollTop=Math.round((sh-aEl.clientHeight)/2);window.__dennRotCentered=true;}}}/* 2026-06-29: 세로(innerWidth<=innerHeight)면 가로 센터(101)를 쓰지 않음 — 세로 전환 중 denn-rotate-fs가 한 프레임 깜빡여도 101이 누출돼 세로 앵커(8)와 101↔8 상하 요동하던 회귀 차단 */
     }}}catch(e){}
     return r;};
   var origRender=window.rmRender;
@@ -13898,7 +13898,7 @@ input[type=range]{accent-color:#777}
   if(window.__DENN_ROTATE_FS_V108)return;window.__DENN_ROTATE_FS_V108=true;
   try{
     var st=document.createElement('style');st.id='denn-v108-css';
-    st.textContent='#denn-rotate-hint{position:absolute;left:50%;bottom:130px;top:auto;transform:translateX(-50%);z-index:60;background:rgba(18,16,12,.7);color:#fff;font-size:12px;font-weight:600;padding:10px 16px;border-radius:22px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.22);opacity:1;transition:opacity .7s ease}'+
+    st.textContent='#denn-rotate-hint{position:fixed;left:50%;bottom:130px;top:auto;transform:translateX(-50%);z-index:2147483641;background:rgba(18,16,12,.7);color:#fff;font-size:12px;font-weight:600;padding:10px 16px;border-radius:22px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.22);opacity:1;transition:opacity .7s ease}'+
       '#denn-rotate-hint.dfade{opacity:0}'+
       /* 가로 전체화면(denn-rotate-fs): 모든 메뉴 숨기고 배경만 화면 꽉 차게 + 우상단 ✕ 하나. */
       '#denn-rotate-exit{position:fixed;top:12px;right:12px;z-index:2147483647;width:44px;height:44px;border-radius:50%;background:rgba(18,16,12,.74);color:#fff;border:1px solid rgba(255,255,255,.42);font-size:21px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.35);font-family:inherit;padding:0}'+
@@ -13939,7 +13939,8 @@ input[type=range]{accent-color:#777}
       '#room-modal #rm-canvas,#room-modal #sg-canvas{transition:opacity .26s ease}'+
       'html.denn-room-entering #room-modal #rm-canvas,html.denn-room-entering #room-modal #sg-canvas{opacity:0!important;transition:none!important}'+/* 2026-06-23: 숨김은 즉시(transition:none) — .26s 페이드아웃 동안 stale 대형 캔버스가 비치던 문제(처음 큰 스케일 짧게 보임) 제거. 노출(클래스 제거)은 위 .26s 페이드인 유지. */
       /* 2026-06-22: 진입/회전 대기(이미지 로드) 동안 빈 화면 대신 로딩 스피너 — denn-room-entering일 때만 표시. */
-      '#denn-room-spinner{position:fixed;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border:3px solid rgba(140,130,110,.28);border-top-color:rgba(120,110,95,.92);border-radius:50%;z-index:2147483640;opacity:0;pointer-events:none;transition:opacity .22s ease;animation:dennRoomSpin .7s linear infinite}'+
+      'html.denn-room-entering #room-modal,html.denn-room-entering #room-modal>div,html.denn-room-entering #room-modal #rm-canvas-area{background:#fff!important;backdrop-filter:none!important}'+/* 2026-06-29: 회전/진입 페이드(캔버스 opacity:0) 동안 모달 전체를 흰색 통일 — 기존 가로=#000/세로=어두운회색, area만 흰칠하면 흰 박스+주변 어둠으로 이상하게 보여 모달·내부div·area 모두 흰색. 노출되면 캔버스가 덮어 안 보임. */
+      '#denn-room-spinner{position:fixed;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border:3px solid rgba(0,0,0,.12);border-top-color:rgba(0,0,0,.5);border-radius:50%;z-index:2147483640;opacity:0;pointer-events:none;transition:opacity .22s ease;animation:dennRoomSpin .7s linear infinite}'+
       'html.denn-room-spin #denn-room-spinner{opacity:1}'+/* 2026-06-22: 지연(180ms)+페이드 — 빠른 캐시 로드엔 스피너 안 뜨고, 느린 첫 로드만 부드럽게 표시 */
       '@keyframes dennRoomSpin{to{transform:rotate(360deg)}}'+
       /* 모바일: 가이드배경 선택 카드(썸네일) 키움 — 55px는 너무 작음. */
@@ -13963,7 +13964,7 @@ input[type=range]{accent-color:#777}
     function reveal(){if(done||gen!==__dennRevealGenV)return;done=true;clearTimeout(spinT);try{document.documentElement.classList.remove('denn-room-spin')}catch(e){}try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
       window.__dennRotCentered=true;
       /* 2026-06-22: 스크롤 중앙 정렬 — 빠른(캐시) 재진입에선 reveal 직후 레이아웃 미정착이라 scrollHeight가 stale → 동기 1회 + rAF×2 + 지연(120/260ms) 재시도로 정착 후 정렬 보정. (첫 진입만 되고 세로→가로 재진입 시 안 되던 문제) */
-      var __ctr=function(){if(gen!==__dennRevealGenV)return;/* 2026-06-22: gen 가드 — 반복 토글 시 이전 회전의 stale __ctr 재시도가 다음 방향 레이아웃에 센터해 누적 틀어짐 유발하던 것 차단(최신 진입만 센터) */try{var aEl=document.getElementById('rm-canvas-area');if(aEl){var __aT=window.dennPortraitFrameAnchorTopV&&dennPortraitFrameAnchorTopV(aEl);/* 2026-06-26: 세로=액자 앵커(관리자와 동일 화면위치), 가로/넘침없음=-1로 기존 센터 유지 */if(__aT>=0)aEl.scrollTop=__aT;else if(aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(document.documentElement.classList.contains('denn-rotate-fs')){if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}else aEl.scrollLeft=0;/* 2026-06-23: 가로 스크롤 센터링은 가로 풀스크린(wide 캔버스)에서만. 세로는 캔버스가 폭에 맞으므로 scrollLeft=0 고정 — 정착 전 과도 폭으로 center→재사이징 후 0 복귀하며 보이던 좌우 이동 차단. */}}catch(e){}};
+      var __ctr=function(){if(gen!==__dennRevealGenV)return;/* 2026-06-22: gen 가드 — 반복 토글 시 이전 회전의 stale __ctr 재시도가 다음 방향 레이아웃에 센터해 누적 틀어짐 유발하던 것 차단(최신 진입만 센터) */try{var aEl=document.getElementById('rm-canvas-area');if(aEl){var __aT=window.dennPortraitFrameAnchorTopV&&dennPortraitFrameAnchorTopV(aEl);/* 2026-06-26: 세로=액자 앵커(관리자와 동일 화면위치), 가로/넘침없음=-1로 기존 센터 유지 */if(__aT>=0){if(document.documentElement.classList.contains('denn-room-entering')||Math.abs(aEl.scrollTop-__aT)>10)aEl.scrollTop=__aT;}/* 2026-06-29: 세로 앵커 데드밴드(노출 후 10px 이하 변동 무시) — 정착 중 앵커 0~8 진동 상하 떨림 차단 */else if(innerWidth>innerHeight&&aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);/* 2026-06-29: else(가로 센터 101)는 실제 가로(innerWidth>innerHeight)일 때만 — 세로서 denn-rotate-fs 깜빡임에 __aT=-1로 떨어져 101을 쓰던 누출 차단(세로는 8 유지) */if(document.documentElement.classList.contains('denn-rotate-fs')){if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}else aEl.scrollLeft=0;/* 2026-06-23: 가로 스크롤 센터링은 가로 풀스크린(wide 캔버스)에서만. 세로는 캔버스가 폭에 맞으므로 scrollLeft=0 고정 — 정착 전 과도 폭으로 center→재사이징 후 0 복귀하며 보이던 좌우 이동 차단. */}}catch(e){}};
       /* 2026-06-26 떨림 v2: __ctr(스크롤 앵커)은 reveal 재시도(sync/rAF×2/120/260ms)마다 정착 중 변동하는 scrollHeight/clientHeight로 다른 scrollTop(11~18 진동)을 적용함. 값이 수렴 안 하므로 '안정 시 노출'(v1)은 조기 노출(18,18)→뒤의 11/16/14 노출로 떨림이 보이던 버그. → 마지막 재시도(260ms)까지 denn-room-entering(opacity:0) 유지하고 그때 1회 노출. 모든 진동을 숨김에서 처리, 노출 시점=최종값 고정. 노출 후 reveal의 __ctr 호출 없어 자연 정지. gen 가드 유지. */
       var __revealedV=false;
       function __unfadeV(){if(__revealedV||gen!==__dennRevealGenV)return;__revealedV=true;try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}}
@@ -14015,8 +14016,7 @@ input[type=range]{accent-color:#777}
     window.__dennHintShown=true;
     if(!h){
       h=document.createElement('div');h.id='denn-rotate-hint';h.textContent='↻ 휴대폰을 가로로 돌리면 배경 전체가 보여요';
-      var area=document.getElementById('rm-canvas-area');
-      if(area){if(getComputedStyle(area).position==='static')area.style.position='relative';area.appendChild(h);}else document.body.appendChild(h);
+      document.body.appendChild(h);/* 2026-06-29: position:fixed(뷰포트 고정)+최상위 z-index로 body에 부착 — 기존 rm-canvas-area(스크롤·리사이즈) absolute 부착이 회전 정착 중 hint를 상하로 출렁이게 하던 떨림 제거. body+fixed라 모달 위에 안정 표시. */
     }
     /* 하단 메뉴바(.denn-rm-bar=액션+탭바) 바로 위에 배치 — 메뉴 높이가 기기마다 달라 측정해 보정. */
     try{var bar=document.querySelector('#room-modal .denn-rm-bar'),bh=bar?bar.getBoundingClientRect().height:0;h.style.bottom=((bh>20?bh:118)+14)+'px';}catch(e){}
@@ -14087,6 +14087,7 @@ input[type=range]{accent-color:#777}
     window.__dennRotCenterGenV=(window.__dennRotCenterGenV||0)+1;var myGen=window.__dennRotCenterGenV,deadline=performance.now()+1300;
     function step(){
       if(window.__dennRotCenterGenV!==myGen||performance.now()>deadline)return;
+      if(window.innerWidth<=window.innerHeight||window.__dennRotPLockV)return;/* 2026-06-29: 세로(또는 세로 전환 커밋 lock) = 가로 센터 루프 즉시 영구종료. 회전 깜빡임에 denn-rotate-fs가 한 프레임이라도 켜지면 scrollTop=101(가로 센터)이 새어나와 세로 앵커(8)와 101↔8 상하 요동하던 회귀 차단(046f5ba "세로전환시 가로센터루프 중단" 의도를 루프 내부서 enforce — 롤백 390673d로 유실됐던 것). */
       try{var aEl=document.getElementById('rm-canvas-area');if(aEl&&document.documentElement.classList.contains('denn-rotate-fs')){if(aEl.scrollHeight>aEl.clientHeight+4){var c=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);if(Math.abs(aEl.scrollTop-c)>1)aEl.scrollTop=c;}if(aEl.scrollWidth>aEl.clientWidth+4){var cl=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);if(Math.abs(aEl.scrollLeft-cl)>1)aEl.scrollLeft=cl;}}}catch(e){}
       requestAnimationFrame(step);
     }
@@ -14098,13 +14099,15 @@ input[type=range]{accent-color:#777}
       /* ★ 2026-06-18: 방향 전환 시 설정 재병합 — loadSettingsV33→dennMergeMobileV가 가로=base(PC)/세로=.mobile를
          재평가해 배경 스케일·위치·액자 위치를 방향에 맞게 전환. (회전 시 재호출 안 돼 세로값이 가로에 남던 빈틈 해결) */
       var __ori=(innerWidth>innerHeight)?'l':'p';
+      /* 2026-06-29: 가로→세로 떨림 — 세로 전환 커밋 창(dennRotPreGateV의 __dennRotPLockV) 동안 회전 도중 깜빡이는 'l' 재감지를 무시 → 가로 재활성화·dennRotCenterLoopV 재시작(scrollTop 101) 차단. 짧은 창이라 진짜 가로 전환은 lock 만료 후 다음 resize서 정상 처리. */
+      if(window.__dennRotPLockV&&__ori==='l')__ori='p';
       var __oriCh=window.__dennRotOriV2&&window.__dennRotOriV2!==__ori;
       if(__oriCh&&__ori==='l'&&roomOpen()){/* 세로→가로 진입: 설정재적용·이미지스왑·cover리사이즈·센터 정착까지 페이드로 가려 점프 숨김. 2026-06-22: 고정 640ms→이미지 로드 게이트(가로 스왑 이미지가 늦게 와도 팝인 안 보이게) */window.__dennRotCentered=false;try{document.documentElement.classList.add('denn-room-entering')}catch(e){}dennGatedRevealV(3000);dennRotCenterLoopV();/* 가로 진입: 이미지 게이트 페이드 + 중앙유지 루프(타이밍 무관 정착). 캔버스 크기 고정(V107 __dennLsArV) 후라 안정 */}
       if(__oriCh&&__ori==='p'&&roomOpen()){/* 2026-06-23 대칭화: 가로→세로 복귀도 진입과 동일하게 페이드로 가림 — 전체화면 레이아웃 해제·CSS 전환·area 치수 재배치 정착 동안의 다중 리사이즈(여러 스케일 점프) 숨기고 이미지 로드+정착 후 1회 리사이즈로 노출. 가로 전용 중앙유지 루프(dennRotCenterLoopV)는 호출 안 함(세로는 캔버스가 area에 맞아 스크롤 없음). */window.__dennRotCentered=false;try{document.documentElement.classList.add('denn-room-entering')}catch(e){}dennGatedRevealV(1800);}
       if(__oriCh&&roomOpen()){try{if(window.loadSettingsV33)window.loadSettingsV33();}catch(e){}}
       window.__dennRotOriV2=__ori;
       hideFsBtn();ensureExitBtn();swapBgForOrientation();
-      var mob=isMob(),open=roomOpen(),landscapeNow=innerWidth>innerHeight;
+      var mob=isMob(),open=roomOpen(),landscapeNow=(__ori==='l');/* 2026-06-29: __ori 사용 — 세로 전환 lock(__dennRotPLockV) 반영해 가로 활성화/풀스크린/안내프롬프트도 깜빡임에 안 흔들림 */
       /* 프레임 편집(룸 모달 닫힘) + 가로 → 세로 안내 오버레이. 또한 룸 보기에서 X로 닫고 가로 유지 중(__dennAwaitPortraitV)이면 동일 안내로 가림. */
       var __awaitRoomPortrait=window.__dennAwaitPortraitV&&open&&landscapeNow;
       framePortraitPrompt((mob&&!open&&landscapeNow)||__awaitRoomPortrait,__awaitRoomPortrait);
@@ -14131,7 +14134,7 @@ input[type=range]{accent-color:#777}
   window.__dennRotateFsOnChangeV108=onChange;
   function dennRotPreGateV(){/* 2026-06-23: 회전 즉시(onChange 디바운스 120~150ms 전) 페이드를 켜 첫 프레임의 stale 대형 캔버스 플래시("처음 큰 스케일 한번")+정착 전 좌우 요동을 가림. 방향이 실제로 바뀌고 룸이 열렸을 때만. 페이드 제거+최종 사이징은 onChange의 dennGatedRevealV가 정착 후 1회 담당. orientationchange 시 치수 미갱신 브라우저 대비 resize 리스너에도 등록. */
     try{if(typeof roomOpen!=='function'||!roomOpen())return;var o=(innerWidth>innerHeight)?'l':'p';if(window.__dennRotOriV2&&window.__dennRotOriV2!==o){window.__dennRotCentered=false;document.documentElement.classList.add('denn-room-entering');
-      if(o==='p'){window.__dennRotCenterGenV=(window.__dennRotCenterGenV||0)+1;try{document.documentElement.classList.remove('denn-rotate-fs')}catch(e){}}/* 2026-06-26: 세로 전환 '즉시'(onChange 디바운스 전) 가로 스크롤 머신 정지 — 루프 gen 증가(dennRotCenterLoopV 중단)+denn-rotate-fs 제거(rmSizeCanvas/__ctr 가로분기 무력화). 그 사이 가로 센터(101)와 세로 앵커(8)가 scrollTop을 교대로 써서 생기던 가로→세로 떨림 차단. 페이드 안에서 처리. */
+      if(o==='p'){window.__dennRotCenterGenV=(window.__dennRotCenterGenV||0)+1;try{document.documentElement.classList.remove('denn-rotate-fs')}catch(e){}window.__dennRotPLockV=true;clearTimeout(window.__dennRotPLockT);window.__dennRotPLockT=setTimeout(function(){window.__dennRotPLockV=false;},480);/* 2026-06-29: 세로 전환 커밋 lock(480ms) — onChange가 이 창 동안 회전 중 innerWidth>innerHeight 깜빡임으로 'l' 재감지되는 것을 무시(가로 재활성화·dennRotCenterLoopV 재시작 차단). preGate가 매 'p' resize마다 lock 연장. */}/* 2026-06-26: 세로 전환 '즉시'(onChange 디바운스 전) 가로 스크롤 머신 정지 — 루프 gen 증가(dennRotCenterLoopV 중단)+denn-rotate-fs 제거(rmSizeCanvas/__ctr 가로분기 무력화). 그 사이 가로 센터(101)와 세로 앵커(8)가 scrollTop을 교대로 써서 생기던 가로→세로 떨림 차단. 페이드 안에서 처리. */
     }}catch(e){}
   }
   window.addEventListener('resize',function(){dennRotPreGateV();clearTimeout(window.__dennRotFsRz);window.__dennRotFsRz=setTimeout(onChange,120);});
