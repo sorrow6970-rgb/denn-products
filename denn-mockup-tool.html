@@ -2430,7 +2430,10 @@ function sgSetOri(ori){
   sgDraw();
 }
 function sgReset(){
-  var def={scale:60,ox:40,oy:25,alpha:75};
+  /* 2026-06-29: 소비자=운영자 ②(공통디폴트) 복원 / 운영자 편집모드·② 없음=공장값. 기존엔 항상 공장값(② 무시)이라 액자/기울기/그림자 reset과 불일치했음. */
+  var c=null;try{c=window.dennSectionCommonV&&window.dennSectionCommonV()}catch(e){}
+  function gv(v,d){v=parseFloat(v);return isFinite(v)?v:d}
+  var def=c?{scale:Math.round(gv(c.guideScale,.6)*100),ox:gv(c.guideX,40),oy:gv(c.guideY,25),alpha:Math.round(gv(c.guideOpacity,.75)*100)}:{scale:60,ox:40,oy:25,alpha:75};
   ['scale','ox','oy','alpha'].forEach(function(k){
     var r=document.getElementById('sg-'+k+'-r');
     var n=document.getElementById('sg-'+k+'-n');
@@ -2438,8 +2441,9 @@ function sgReset(){
     if(n)n.value=def[k];
   });
   var col=document.getElementById('sg-color');if(col)col.value='#2a2a2a';
-  var ruler=document.getElementById('sg-ruler');if(ruler)ruler.checked=true;
+  var ruler=document.getElementById('sg-ruler');if(ruler)ruler.checked=(c&&c.showRuler!=null)?(c.showRuler!==false):true;
   sgDraw();
+  try{if(window.saveRoomBackgroundSettings)window.saveRoomBackgroundSettings()}catch(e){}/* 2026-06-29: 복원 후 저장 추가 — 기존엔 sgDraw만이라 비영속. */
 }
 
 </script>
@@ -3246,15 +3250,18 @@ window.loadSettingsV33=loadSettingsV33;/* PC|모바일 토글 전환 시 현재 
    모델: base=roomBackgroundSettings[key] (=PC/데스크탑). 모바일 전용값은 key.mobile 하위에만 격리.
    ★ base에는 모바일 필드를 절대 쓰지 않는다(소비자 PC 읽기 무영향). 저장 컨텍스트 판정은 viewAs=mobile로
    좁힘(소비자 폰은 viewAs 없음 → 우발 저장 차단). 읽기 병합은 단계3(dennMergeMobileV)에서 isRoomMobile() 기준.
-   격리 필드=레이아웃만(위치·크기·앵커·가이드 스케일/위치·배경). 조명/그림자/기울기는 base 공유. */
-var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameImgX','frameImgY','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY','bgZoom','bgFocusX','bgFocusY'];/* 2026-06-19: focus 모델 신규 필드도 .mobile 격리 라우팅(레거시 3필드는 구 프리셋 호환 위해 유지) */
+   격리 필드=PC/모바일 별개 저장 대상 전부. 2026-06-29: 운영자 요구로 조명(햇빛)/그림자/기울기 ON·OFF·위치·세기까지 전부 .mobile 격리 추가(기존 'base 공유'에서 전환) — 가이드배경/레이아웃처럼 PC와 모바일 완전 분리. */
+var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameImgX','frameImgY','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','guideOpacity','showRuler','bgScale','bgOffsetX','bgOffsetY','bgZoom','bgFocusX','bgFocusY','sunlightEnabled','sunX','sunY','sunlightOpacity','sunlightSpread','sunlightWarm','sunlightRays','sunlightRayThickness','sunlightAngle','shadowEnabled','shadowOpacity','shadowBlur','shadowDirection','shadowDistance','shadowX','shadowY','frameTiltEnabled','frameTiltDeg','framePerspectiveX','framePerspectiveY'];/* 2026-06-29: 조명/그림자/기울기/가이드투명도/룰러도 .mobile 격리(PC/모바일 완전 분리, 운영자 요구). focus 모델 필드 포함(2026-06-19). */
 /* 모바일 편집 컨텍스트 판정 — 런타임 토글(__dennAdminMobileV, PC 편집기 내 'PC|모바일' 탭) 우선,
    하위호환으로 URL viewAs=mobile도 인정. 저장 라우팅·읽기 병합·measureBase가 공유. */
-function dennIsMobileEditCtxV(){try{if(window.__dennAdminMobileV)return true;return new URLSearchParams(location.search||'').get('viewAs')==='mobile'}catch(e){return false}}
+function dennIsMobileEditCtxV(){try{if(window.__dennAdminMobileV)return true;if(new URLSearchParams(location.search||'').get('viewAs')==='mobile')return true;/* 2026-06-29: 운영자(adminSetup)가 실제 세로 폰에서 편집하면 저장도 .mobile 컨텍스트 — 읽기(dennMergeMobileV=isRoomPortrait)와 동일 기준으로 맞춰 ON/OFF·위치·세기 전부 PC/모바일 분리. 기존엔 저장만 __dennAdminMobileV/viewAs 플래그를 봐서 실제 폰엔 둘 다 없어 base로 저장→PC 연동되던 버그. 소비자(비admin)는 제외→우발 .mobile 저장 차단 유지. */if(window.dennIsAdminSetupV&&window.dennIsAdminSetupV()&&window.isRoomPortrait&&window.isRoomPortrait())return true;return false}catch(e){return false}}
 function dennPickMobileFieldsV(o){var out={};if(o)DENN_MOBILE_FIELDS_V.forEach(function(k){if(o[k]!=null)out[k]=o[k]});return out;}
 function dennRouteSaveV(prev,merged){
   if(!dennIsMobileEditCtxV())return merged;              /* PC/데스크탑: 기존대로 base 저장(merged엔 prev.mobile 보존됨) */
-  var keep=Object.assign({},prev||{});                    /* 모바일 편집: base(PC) 그대로 보존 */
+  prev=prev||{};
+  var keep=Object.assign({},prev);                        /* 모바일 편집: base의 레이아웃은 PC값 그대로 보존 */
+  /* 2026-06-29: 비격리(공유) 필드는 모바일 편집서도 base에 반영(기존 base=prev 통째 보존은 비격리 필드 편집을 드롭). DENN_MOBILE_FIELDS_V(=PC/모바일 별개 저장: 레이아웃+조명/그림자/기울기 전부)만 base서 제외하고 .mobile로 격리. */
+  Object.keys(merged).forEach(function(k){if(k==='mobile'||k.indexOf('__')===0)return;if(DENN_MOBILE_FIELDS_V.indexOf(k)>=0)return;keep[k]=merged[k];});
   keep.mobile=Object.assign({},(prev&&prev.mobile)||{},dennPickMobileFieldsV(merged));
   return keep;
 }
@@ -4074,6 +4081,26 @@ window.rmRender=function(){
         if(isFinite(__op.bgScale)){var __bsc=Math.round(num(__op.bgScale,1)*100);setVal('rm-bg-scale',__bsc,'%');}
         if(__op.bgOffsetX!=null)setVal('rm-bg-ox',num(__op.bgOffsetX,0));
         if(__op.bgOffsetY!=null)setVal('rm-bg-oy',num(__op.bgOffsetY,0));
+        /* 2026-06-29: 햇빛(base 공유 필드: sunlightEnabled/sunX·Y/효과)도 운영자 프리셋으로 강제. 기존 force 블록이 frame/guide/bg만 강제하고 햇빛이 빠져, 운영자가 켠 햇빛이 소비자 stale 키(OFF/다른 위치)로 안 따라가던 누락(배경과 동일 클래스의 마지막 누락 필드). drawSun이 슬라이더+RM.sunOn/sunPos를 읽으므로 둘 다 세팅. __userMoved 전(미조작)에만 강제 → 소비자 조절 보존. */
+        if(__op.sunlightEnabled!=null)RM.sunOn=!!__op.sunlightEnabled;
+        RM.sunPos=RM.sunPos||{x:.75,y:.2};if(__op.sunX!=null)RM.sunPos.x=clamp(num(__op.sunX,.75),0,1);if(__op.sunY!=null)RM.sunPos.y=clamp(num(__op.sunY,.2),0,1);
+        if(__op.sunlightOpacity!=null)setVal('rm-sun-int',Math.round(num(__op.sunlightOpacity,.5)*100),'%');
+        if(__op.sunlightSpread!=null)setVal('rm-sun-spread',Math.round(num(__op.sunlightSpread,.6)*100),'%');
+        if(__op.sunlightWarm!=null)setVal('rm-sun-warm',Math.round(num(__op.sunlightWarm,.7)*100),'%');
+        if(__op.sunlightRays!=null)setVal('rm-sun-rays',num(__op.sunlightRays,0),'');
+        if(__op.sunlightRayThickness!=null)setVal('rm-ray-thick',Math.round(num(__op.sunlightRayThickness,.03)*100),'%');
+        if(__op.sunlightAngle!=null)setVal('rm-sun-ang',num(__op.sunlightAngle,-30),'°');
+        try{if(window.syncRoomSunToggleV41)window.syncRoomSunToggleV41()}catch(e){}
+        /* 2026-06-29: 그림자·기울기(이제 .mobile 격리=방향별)도 운영자 프리셋(__op=방향 병합)으로 강제 — drawFrame이 슬라이더 직접 읽으므로 세팅. 햇빛과 동일 패턴. */
+        if(__op.shadowOpacity!=null)setVal('rm-sh-op',Math.round(num(__op.shadowOpacity,.6)*100),'%');
+        if(__op.shadowDirection!=null)setVal('rm-sh-dir',num(__op.shadowDirection,180),'°');
+        if(__op.shadowDistance!=null)setVal('rm-sh-dist',num(__op.shadowDistance,8),'');
+        if(__op.shadowBlur!=null)setVal('rm-sh-blur',num(__op.shadowBlur,20),'');
+        try{if(window.dennSyncShadowTogV)window.dennSyncShadowTogV()}catch(e){}
+        if(__op.frameTiltEnabled!=null&&window.setRoomTiltEnabledV40)window.setRoomTiltEnabledV40(!!__op.frameTiltEnabled,false);
+        if(__op.frameTiltDeg!=null)setVal('rm-tilt',num(__op.frameTiltDeg,0),'°');
+        if(__op.framePerspectiveX!=null)setVal('rm-persp-x',num(__op.framePerspectiveX,0),'');
+        if(__op.framePerspectiveY!=null)setVal('rm-persp-y',num(__op.framePerspectiveY,0),'');
       }
     }
     showCanvas();
@@ -9051,6 +9078,7 @@ window.dennSelectAdminRoomGuideSizeV79e=choose;
         /* 운영자 배경설정 모드: 공장 초기값으로 리셋(조명 OFF+팩토리 슬라이더). 소비자: 운영자 ②(savedSun) 복원. */
         var adminSetup=false;try{adminSetup=!!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())}catch(e){}
         applySun(adminSetup?defaultSun():savedSun());
+        try{if(window.saveRoomBackgroundSettings)window.saveRoomBackgroundSettings()}catch(e){}/* 2026-06-29: 액자/기울기/그림자 reset과 일관 — 복원 후 저장. 기존엔 미저장이라 새로고침 시 복원 전 값으로 되돌아가던 불일치. (햇빛은 base 공유 필드 → Fix1으로 모바일 편집서도 base 저장됨) */
         return false;
       };
     }
