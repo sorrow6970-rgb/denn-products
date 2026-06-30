@@ -3918,7 +3918,7 @@ function installFrameOnlyDragEvents(){
       if(e.touches&&e.touches.length>=2&&__pzInRoom(e)){var sc=by('sg-scale-r');if(!sc)return;__pz={d0:__pzDist(e.touches),v0:num(sc.value,100)};if(window.RM){RM.dragging=false;RM.sunDrag=false;}e.preventDefault();}
     },{passive:false,capture:true});
     document.addEventListener('touchmove',function(e){
-      if(__pz&&e.touches&&e.touches.length>=2){e.preventDefault();var d=__pzDist(e.touches);if(__pz.d0>0){var sc=by('sg-scale-r'),sn=by('sg-scale-n');if(!sc)return;var mn=num(sc.min,20),mx=num(sc.max,300),v=Math.max(mn,Math.min(mx,__pz.v0*(d/__pz.d0)));v=Math.round(v*10)/10;sc.value=v;if(sn)sn.value=v;if(window.RM)RM.__userMoved=true;if(window.sgDrawRAF)sgDrawRAF();if(window.rmRenderRAF)rmRenderRAF();else if(window.rmRender)rmRender();}}
+      if(__pz&&e.touches&&e.touches.length>=2){e.preventDefault();if(window.RM){RM.dragging=false;RM.sunDrag=false;}/* 2026-06-30: 핀치 중 1손가락 드래그(c.ontouchstart가 액자 위면 dragging=true로 잡음) 확실히 억제 — 매 move마다 재차단해 핀치=크기만 동작. */var d=__pzDist(e.touches);if(__pz.d0>0){var sc=by('sg-scale-r'),sn=by('sg-scale-n');if(!sc)return;var mn=num(sc.min,20),mx=num(sc.max,300),v=Math.max(mn,Math.min(mx,__pz.v0*(d/__pz.d0)));v=Math.round(v*10)/10;sc.value=v;if(sn)sn.value=v;if(window.RM)RM.__userMoved=true;if(window.sgDrawRAF)sgDrawRAF();if(window.rmRenderRAF)rmRenderRAF();else if(window.rmRender)rmRender();}}
     },{passive:false,capture:true});
     var __pzEnd=function(e){if(__pz&&(!e.touches||e.touches.length<2))__pz=null;};
     document.addEventListener('touchend',__pzEnd,true);document.addEventListener('touchcancel',__pzEnd,true);
@@ -4037,13 +4037,15 @@ function drawFrame(ctx2,W,H){
      재렌더(햇빛 토글/기본값·그림자 등)에서는 사용자가 드래그로 옮긴 Y를 존중하고 앵커 높이만 현재
      위치에 동기화 → 스냅백 금지. 드래그 중엔 자유 이동(스킵). 앵커=중앙(50)이면 전부 무영향. */
   var __ay=(by('rm-size-anchor'))?num(by('rm-size-anchor').value,50)/100:0.5;
+  /* 2026-06-30: 앵커 '크기 변화' 감지를 sizePct(rm-size)만이 아니라 유효크기(sizePct × sg-scale/기준스케일)로 — 실제 크기 조절이 '기준 스케일'(sg-scale)로 통일됐는데(rm-size 슬라이더 숨김) 앵커가 sizePct만 봐서 기준스케일로 줄여도 '크기 안 바뀜'으로 판단→중앙 기준 동작하던 버그. sizePct×sgScale은 캔버스 독립(회전/DPR 무영향). */
+  var __effSz=sizePct*(num((by('sg-scale-r')||{}).value,100)/100);
   if(window.RM&&window.dennIsAdminSetupV&&dennIsAdminSetupV()&&Math.abs(__ay-0.5)>1e-6&&H>0){
-    if(RM.__anchorYabs==null){RM.__anchorYabs=cyp+(__ay-0.5)*(fh/H);RM.__anchorSize=sizePct;}
+    if(RM.__anchorYabs==null){RM.__anchorYabs=cyp+(__ay-0.5)*(fh/H);RM.__anchorSize=__effSz;}
     else if(!RM.dragging){
-      if(RM.__anchorSize!=null&&Math.abs(sizePct-RM.__anchorSize)<1e-6){
+      if(RM.__anchorSize!=null&&Math.abs(__effSz-RM.__anchorSize)<1e-6){
         RM.__anchorYabs=cyp+(__ay-0.5)*(fh/H);/* 크기 그대로 → 옮긴 위치 존중, 앵커 높이만 재동기화 */
       }else{
-        cy=RM.__anchorYabs*H-(__ay-0.5)*fh;cyp=cy/H;if(RM.pos)RM.pos.y=Math.max(0.02,Math.min(0.98,cyp));RM.__anchorSize=sizePct;/* 크기 변경 → 앵커 점 고정 */
+        cy=RM.__anchorYabs*H-(__ay-0.5)*fh;cyp=cy/H;if(RM.pos)RM.pos.y=Math.max(0.02,Math.min(0.98,cyp));RM.__anchorSize=__effSz;/* 크기 변경 → 앵커 점 고정 */
       }
     }
   }
