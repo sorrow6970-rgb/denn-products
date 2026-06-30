@@ -10948,7 +10948,7 @@ window.addEventListener('load',function(){setTimeout(install,800);setTimeout(ins
 var COMMON_KEY='__denn_room_common_default__';
 function openCommonDefault(){
   var file='denn-mockup-tool.html';
-  var query='?adminRoomSetup='+encodeURIComponent(COMMON_KEY)+'&adminRoomDefault=1&roomOnly=1#room-fullscreen';
+  var query='?adminRoomSetup='+encodeURIComponent(COMMON_KEY)+'&adminRoomDefault=1&roomOnly=1&_cb='+Date.now()+'#room-fullscreen';/* 2026-06-30: 캐시버스터 — 매 클릭 고유 URL로 열어 브라우저 디스크 캐시(옛 HTML stale 서빙)를 우회. no-cache 서버와 함께 캐시 멈춤 사고 원천 차단. */
   try{
     var base=String(location.href||'').replace(/[^\/\\]*$/,'');
     window.open(base+file+query,'_blank');
@@ -10973,7 +10973,7 @@ window.addEventListener('load',function(){setTimeout(retarget,500);setTimeout(re
 var COMMON_KEY='__denn_room_common_default__';
 function openCommonDefault(){
   var file='denn-mockup-tool.html';
-  var query='?adminRoomSetup='+encodeURIComponent(COMMON_KEY)+'&adminRoomDefault=1&roomOnly=1#room-fullscreen';
+  var query='?adminRoomSetup='+encodeURIComponent(COMMON_KEY)+'&adminRoomDefault=1&roomOnly=1&_cb='+Date.now()+'#room-fullscreen';/* 2026-06-30: 캐시버스터 — 매 클릭 고유 URL로 열어 브라우저 디스크 캐시(옛 HTML stale 서빙)를 우회. no-cache 서버와 함께 캐시 멈춤 사고 원천 차단. */
   try{
     var base=String(location.href||'').replace(/[^\/\\]*$/,'');
     window.open(base+file+query,'_blank');
