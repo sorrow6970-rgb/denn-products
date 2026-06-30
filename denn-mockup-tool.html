@@ -460,7 +460,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
               <div style="font-size:10px;color:var(--warm)">크기</div>
               <span id="rm-size-v" style="font-size:10px;color:var(--ink);font-weight:500">20%</span>
             </div>
-            <input type="range" id="rm-size" min="1" max="85" step="0.5" value="20" style="width:100%" oninput="var v=Math.round(parseFloat(this.value||20)*2)/2;this.value=v;document.getElementById('rm-size-v').textContent=v+'%';rmRender()">
+            <input type="range" id="rm-size" min="1" max="85" step="0.5" value="20" style="width:100%" oninput="var v=Math.round(parseFloat(this.value||20)*2)/2;this.value=v;document.getElementById('rm-size-v').textContent=v+'%';(window.rmRenderRAF?rmRenderRAF():rmRender())">
           </div>
           <div id="rm-size-anchor-row" style="display:none;border:1px solid var(--border);border-radius:8px;background:#FAF6EE;padding:8px;margin-bottom:9px">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
@@ -488,21 +488,21 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
                   <div style="font-size:10px;color:var(--warm)">회전</div>
                   <span id="rm-tilt-v" style="font-size:10px;color:var(--ink);font-weight:500">0°</span>
                 </div>
-                <input type="range" id="rm-tilt" min="-15" max="15" value="0" style="width:100%" oninput="document.getElementById('rm-tilt-v').textContent=this.value+'°';rmRender()">
+                <input type="range" id="rm-tilt" min="-15" max="15" value="0" style="width:100%" oninput="document.getElementById('rm-tilt-v').textContent=this.value+'°';(window.rmRenderRAF?rmRenderRAF():rmRender())">
               </div>
               <div style="margin-bottom:9px">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
                   <div style="font-size:10px;color:var(--warm)">좌우 원근</div>
                   <span id="rm-persp-x-v" style="font-size:10px;color:var(--ink);font-weight:500">0</span>
                 </div>
-                <input type="range" id="rm-persp-x" min="-40" max="40" step="1" value="0" style="width:100%" oninput="document.getElementById('rm-persp-x-v').textContent=this.value;rmRender()">
+                <input type="range" id="rm-persp-x" min="-40" max="40" step="1" value="0" style="width:100%" oninput="document.getElementById('rm-persp-x-v').textContent=this.value;(window.rmRenderRAF?rmRenderRAF():rmRender())">
               </div>
               <div style="margin-bottom:9px">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
                   <div style="font-size:10px;color:var(--warm)">상하 원근</div>
                   <span id="rm-persp-y-v" style="font-size:10px;color:var(--ink);font-weight:500">0</span>
                 </div>
-                <input type="range" id="rm-persp-y" min="-40" max="40" step="1" value="0" style="width:100%" oninput="document.getElementById('rm-persp-y-v').textContent=this.value;rmRender()">
+                <input type="range" id="rm-persp-y" min="-40" max="40" step="1" value="0" style="width:100%" oninput="document.getElementById('rm-persp-y-v').textContent=this.value;(window.rmRenderRAF?rmRenderRAF():rmRender())">
               </div>
               <button type="button" onclick="resetRoomTiltDefaultsV40()" style="width:100%;height:27px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--warm);font-family:inherit;font-size:10px;cursor:pointer">↩ 기울기 기본값</button>
             </div>
@@ -513,7 +513,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
               <div style="font-size:10px;color:var(--warm)">배경 밝기</div>
               <span id="rm-bright-v" style="font-size:10px;color:var(--ink);font-weight:500">100%</span>
             </div>
-            <input type="range" id="rm-bright" min="30" max="160" value="100" style="width:100%" oninput="document.getElementById('rm-bright-v').textContent=this.value+'%';rmRender()">
+            <input type="range" id="rm-bright" min="30" max="160" value="100" style="width:100%" oninput="document.getElementById('rm-bright-v').textContent=this.value+'%';(window.rmRenderRAF?rmRenderRAF():rmRender())">
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -560,28 +560,28 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
               <div style="font-size:10px;color:var(--warm)">진하기 (0 = 없음)</div>
               <span id="rm-sh-op-v" style="font-size:10px;color:var(--ink);font-weight:500">60%</span>
             </div>
-            <input type="range" id="rm-sh-op" min="0" max="100" value="60" style="width:100%" oninput="document.getElementById('rm-sh-op-v').textContent=this.value+'%';rmRender()">
+            <input type="range" id="rm-sh-op" min="0" max="100" value="60" style="width:100%" oninput="document.getElementById('rm-sh-op-v').textContent=this.value+'%';(window.rmRenderRAF?rmRenderRAF():rmRender())">
           </div>
           <div style="margin-bottom:9px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="font-size:10px;color:var(--warm)">방향 (↑0° →90° ↓180°)</div>
               <span id="rm-sh-dir-v" style="font-size:10px;color:var(--ink);font-weight:500">180°</span>
             </div>
-            <input type="range" id="rm-sh-dir" min="0" max="360" value="180" style="width:100%" oninput="document.getElementById('rm-sh-dir-v').textContent=this.value+'°';rmRender()">
+            <input type="range" id="rm-sh-dir" min="0" max="360" value="180" style="width:100%" oninput="document.getElementById('rm-sh-dir-v').textContent=this.value+'°';(window.rmRenderRAF?rmRenderRAF():rmRender())">
           </div>
           <div style="margin-bottom:9px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="font-size:10px;color:var(--warm)">거리</div>
               <span id="rm-sh-dist-v" style="font-size:10px;color:var(--ink);font-weight:500">8</span>
             </div>
-            <input type="range" id="rm-sh-dist" min="0" max="40" value="8" style="width:100%" oninput="document.getElementById('rm-sh-dist-v').textContent=this.value;rmRender()">
+            <input type="range" id="rm-sh-dist" min="0" max="40" value="8" style="width:100%" oninput="document.getElementById('rm-sh-dist-v').textContent=this.value;(window.rmRenderRAF?rmRenderRAF():rmRender())">
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="font-size:10px;color:var(--warm)">번짐 (blur)</div>
               <span id="rm-sh-blur-v" style="font-size:10px;color:var(--ink);font-weight:500">20</span>
             </div>
-            <input type="range" id="rm-sh-blur" min="0" max="60" value="20" style="width:100%" oninput="document.getElementById('rm-sh-blur-v').textContent=this.value;rmRender()">
+            <input type="range" id="rm-sh-blur" min="0" max="60" value="20" style="width:100%" oninput="document.getElementById('rm-sh-blur-v').textContent=this.value;(window.rmRenderRAF?rmRenderRAF():rmRender())">
           </div>
           <button type="button" onclick="resetRoomShadowDefaultsV39()" style="width:100%;height:27px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--warm);font-family:inherit;font-size:10px;cursor:pointer;margin-top:9px">↩ 그림자 기본값</button>
         </div>
@@ -678,23 +678,23 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
               <div class="sg-sec-title">표시 설정</div>
               <div class="sg-ctrl">
                 <label>기준 스케일</label>
-                <input type="range" id="sg-scale-r" min="20" max="300" step="0.5" value="100" oninput="document.getElementById('sg-scale-n').value=this.value;sgDraw()">
-                <input type="number" id="sg-scale-n" value="100" min="20" max="300" step="0.5" oninput="document.getElementById('sg-scale-r').value=this.value;sgDraw()">
+                <input type="range" id="sg-scale-r" min="20" max="300" step="0.5" value="100" oninput="document.getElementById('sg-scale-n').value=this.value;(window.sgDrawRAF?sgDrawRAF():sgDraw())">
+                <input type="number" id="sg-scale-n" value="100" min="20" max="300" step="0.5" oninput="document.getElementById('sg-scale-r').value=this.value;(window.sgDrawRAF?sgDrawRAF():sgDraw())">
               </div>
               <div class="sg-ctrl">
                 <label>위치 X</label>
-                <input type="range" id="sg-ox-r" min="0" max="90" step="0.1" value="40" oninput="document.getElementById('sg-ox-n').value=this.value;sgDraw()">
-                <input type="number" id="sg-ox-n" value="40" min="0" max="90" step="0.1" oninput="document.getElementById('sg-ox-r').value=this.value;sgDraw()">
+                <input type="range" id="sg-ox-r" min="0" max="90" step="0.1" value="40" oninput="document.getElementById('sg-ox-n').value=this.value;(window.sgDrawRAF?sgDrawRAF():sgDraw())">
+                <input type="number" id="sg-ox-n" value="40" min="0" max="90" step="0.1" oninput="document.getElementById('sg-ox-r').value=this.value;(window.sgDrawRAF?sgDrawRAF():sgDraw())">
               </div>
               <div class="sg-ctrl">
                 <label>위치 Y</label>
-                <input type="range" id="sg-oy-r" min="0" max="90" step="0.1" value="25" oninput="document.getElementById('sg-oy-n').value=this.value;sgDraw()">
-                <input type="number" id="sg-oy-n" value="25" min="0" max="90" step="0.1" oninput="document.getElementById('sg-oy-r').value=this.value;sgDraw()">
+                <input type="range" id="sg-oy-r" min="0" max="90" step="0.1" value="25" oninput="document.getElementById('sg-oy-n').value=this.value;(window.sgDrawRAF?sgDrawRAF():sgDraw())">
+                <input type="number" id="sg-oy-n" value="25" min="0" max="90" step="0.1" oninput="document.getElementById('sg-oy-r').value=this.value;(window.sgDrawRAF?sgDrawRAF():sgDraw())">
               </div>
               <div class="sg-ctrl">
                 <label>투명도</label>
-                <input type="range" id="sg-alpha-r" min="10" max="100" step="0.5" value="75" oninput="document.getElementById('sg-alpha-n').value=this.value;sgDraw()">
-                <input type="number" id="sg-alpha-n" value="75" min="10" max="100" step="0.5" oninput="document.getElementById('sg-alpha-r').value=this.value;sgDraw()">
+                <input type="range" id="sg-alpha-r" min="10" max="100" step="0.5" value="75" oninput="document.getElementById('sg-alpha-n').value=this.value;(window.sgDrawRAF?sgDrawRAF():sgDraw())">
+                <input type="number" id="sg-alpha-n" value="75" min="10" max="100" step="0.5" oninput="document.getElementById('sg-alpha-r').value=this.value;(window.sgDrawRAF?sgDrawRAF():sgDraw())">
               </div>
               <div class="sg-color-row">
                 <label>선 색상</label>
@@ -3908,6 +3908,21 @@ function installFrameOnlyDragEvents(){
     e.preventDefault();RM.dragging=true;
     RM.dragStart={mx:e.touches[0].clientX,my:e.touches[0].clientY,px:RM.pos.x,py:RM.pos.y};
   };
+  /* 2026-06-30: 2손가락 핀치 = 액자 크기(기준 스케일 sg-scale) 확대축소 — 모바일 룸 캔버스. 1손가락 드래그(이동)와 별개. sg-scale이 frameBoxV48 pxPerCm을 통해 액자 크기 결정(모바일은 rm-size 슬라이더 숨김→sg-scale로 통일). 핀치 중엔 RM.dragging=false로 1손가락 이동 억제. */
+  if(!window.__dennPinchInstalled){window.__dennPinchInstalled=true;
+    /* 2026-06-30: 2손가락 핀치 = 액자 크기(기준 스케일 sg-scale). document capture로 잡아 sg-canvas 오버레이가 터치를 받아도 동작. 룸 영역(rm-canvas/sg-canvas/rm-canvas-area)서 시작한 2손가락만 처리. 1손가락 이동(RM.dragging)과 별개(핀치 중 dragging=false로 억제). sg-scale이 frameBoxV48 pxPerCm으로 액자 크기 결정(모바일은 rm-size 슬라이더 숨김→sg-scale 통일). */
+    var __pzDist=function(t){var dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY;return Math.sqrt(dx*dx+dy*dy);};
+    var __pzInRoom=function(e){var t=e.target;while(t){if(t.id==='rm-canvas'||t.id==='sg-canvas'||t.id==='rm-canvas-area')return true;t=t.parentElement;}return false;};
+    var __pz=null;
+    document.addEventListener('touchstart',function(e){
+      if(e.touches&&e.touches.length>=2&&__pzInRoom(e)){var sc=by('sg-scale-r');if(!sc)return;__pz={d0:__pzDist(e.touches),v0:num(sc.value,100)};if(window.RM){RM.dragging=false;RM.sunDrag=false;}e.preventDefault();}
+    },{passive:false,capture:true});
+    document.addEventListener('touchmove',function(e){
+      if(__pz&&e.touches&&e.touches.length>=2){e.preventDefault();var d=__pzDist(e.touches);if(__pz.d0>0){var sc=by('sg-scale-r'),sn=by('sg-scale-n');if(!sc)return;var mn=num(sc.min,20),mx=num(sc.max,300),v=Math.max(mn,Math.min(mx,__pz.v0*(d/__pz.d0)));v=Math.round(v*10)/10;sc.value=v;if(sn)sn.value=v;if(window.RM)RM.__userMoved=true;if(window.sgDrawRAF)sgDrawRAF();if(window.rmRenderRAF)rmRenderRAF();else if(window.rmRender)rmRender();}}
+    },{passive:false,capture:true});
+    var __pzEnd=function(e){if(__pz&&(!e.touches||e.touches.length<2))__pz=null;};
+    document.addEventListener('touchend',__pzEnd,true);document.addEventListener('touchcancel',__pzEnd,true);
+  }
 }
 function roomFrameHitTest(clientX,clientY){
   var b=window.RM&&RM.frameHit,pt=roomClientToCanvas(clientX,clientY);
@@ -4105,6 +4120,11 @@ window.rmRenderRAF=function(){
   if(!window.RM)return;
   if(RM.__renderRaf)return;
   RM.__renderRaf=requestAnimationFrame(function(){RM.__renderRaf=0;try{window.rmRender()}catch(e){}});
+};
+/* 2026-06-30: 가이드 슬라이더용 sgDraw rAF 스로틀 — DPR 캔버스(고해상도)서 oninput마다 직접 sgDraw 시 폰 버벅임 → 프레임당 1회 코얼레싱. */
+window.sgDrawRAF=function(){
+  if(window.__sgDrawRaf)return;
+  window.__sgDrawRaf=requestAnimationFrame(function(){window.__sgDrawRaf=0;try{window.sgDraw&&window.sgDraw()}catch(e){}});
 };
 /* ── 사이즈 기준 위치(앵커) — 관리자 배경설정 모드 전용 ──────────
    value v(0=상단 … 50=중앙 … 100=하단), ay=v/100. 강제 로직은 drawFrame 안에 있음(단일 렌더 지점).
@@ -4370,14 +4390,16 @@ function installMobileHoldSliders(){
     cleanup();
     state.el=el;state.value=num(el.value,0);state.x=e.touches[0].clientX;state.y=e.touches[0].clientY;state.active=false;
     state.min=num(el.min,0);state.max=num(el.max,100);state.step=el.step==='any'?0.01:num(el.step,1);state.width=Math.max(80,el.getBoundingClientRect().width||160);
-    state.timer=setTimeout(function(){if(state.el===el){state.active=true;el.classList.add('denn-hold-active')}},250);
+    state.timer=setTimeout(function(){if(state.el===el){state.active=true;el.classList.add('denn-hold-active')}},150);
   },true);
   document.addEventListener('touchmove',function(e){
     if(!state.el||!e.touches||!e.touches[0])return;
     var dx=e.touches[0].clientX-state.x,dy=e.touches[0].clientY-state.y;
     if(!state.active){
-      if(Math.abs(dy)>8||Math.abs(dx)>14){clearTimeout(state.timer);restore()}
-      return;
+      /* 2026-06-30: 방향 기반 즉시 반응 — 가로 우세 이동이면 250ms 홀드 대기 없이 슬라이더 즉시 활성(반응 빠르게). 세로 우세면 시트 스크롤로 양보(취소). 기존엔 'dx>14면 취소'라 가만히 0.25초 누른 뒤에야 잡혀 답답했음. */
+      if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>5){clearTimeout(state.timer);state.active=true;state.el.classList.add('denn-hold-active');}
+      else if(Math.abs(dy)>8){clearTimeout(state.timer);restore();return;}
+      else return;
     }
     e.preventDefault();setByX(e.touches[0].clientX);
   },{capture:true,passive:false});
