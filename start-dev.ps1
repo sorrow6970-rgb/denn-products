@@ -1,7 +1,7 @@
 # DENN Products - local static dev server launcher
 # Purpose: serve repo root over http://localhost to escape file:// origin's
 #          shared 5MB localStorage pool that quota-blocks small (~100KB) writes.
-# Runtime: prefers node (npx serve), falls back to python (http.server).
+# Runtime: prefers python (_denn-devserver.py, no-cache headers), falls back to node.
 # Ports:   8000 -> 8080 -> 5500 (first free wins).
 # Stop:    Ctrl+C
 # Compat:  Windows PowerShell 5.1+ / PowerShell 7+. ASCII-only by design
@@ -49,8 +49,15 @@ $node = Get-Command node -ErrorAction SilentlyContinue
 # npx serve cold-start can take 30-60s on first run (downloads ~40MB),
 # which blows past the launcher's wait window after a reboot.
 if ($python) {
-    Write-Host "[runtime] python found -> http.server (fast cold start)" -ForegroundColor Green
-    & $python.Source -m http.server $port --directory $root
+    Write-Host "[runtime] python found -> _denn-devserver.py (no-cache headers)" -ForegroundColor Green
+    $devserver = Join-Path $root '_denn-devserver.py'
+    if (Test-Path $devserver) {
+        & $python.Source $devserver $port $root
+    }
+    else {
+        Write-Host "[warn] _denn-devserver.py missing -> falling back to http.server (caches!)" -ForegroundColor Yellow
+        & $python.Source -m http.server $port --directory $root
+    }
 }
 elseif ($node) {
     Write-Host "[runtime] node found -> npx --yes serve" -ForegroundColor Green
