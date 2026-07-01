@@ -2156,6 +2156,7 @@ function rmBindEvents(){
     RM.__userMoved=true;
     /* 드래그한 위치를 frameAnchorV48에 반영 → 휠 리사이즈(L5557) 등 재적용 시 사용자 위치 유지(운영자값으로 안 튐) */
     RM.frameAnchorV48={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameAnchor:'center'};
+    if(window.dennCaptureUserAnchorV)window.dennCaptureUserAnchorV();/* 옮긴 위치를 이미지 앵커로 → 회전해도 유지 */
     if(window.dennSyncGuideXYDisplayCenterV89)window.dennSyncGuideXYDisplayCenterV89();
     rmRender();
   });
@@ -2179,6 +2180,7 @@ function rmBindEvents(){
     RM.__userMoved=true;
     /* 드래그한 위치를 frameAnchorV48에 반영 → 휠 리사이즈(L5557) 등 재적용 시 사용자 위치 유지(운영자값으로 안 튐) */
     RM.frameAnchorV48={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameAnchor:'center'};
+    if(window.dennCaptureUserAnchorV)window.dennCaptureUserAnchorV();/* 옮긴 위치를 이미지 앵커로 → 회전해도 유지 */
     if(window.dennSyncGuideXYDisplayCenterV89)window.dennSyncGuideXYDisplayCenterV89();
     rmRender();
   };
@@ -3181,7 +3183,9 @@ var SIZE_KEYS_MIRROR_V=['defaultSizeId','sizeId','frameSizeId','primarySizeId','
 /* A(2026-06-04): 컨텍스트 진입(select/clear/upload/preset/reset)이 호출 → 다음 loadSettingsV33가 현재 키를 ② 미러하도록 요청. 인메모리(비영속) → refresh 시 소멸. */
 function dennCurScopedKeyV(){try{return window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey()}catch(e){try{return bgKey()}catch(_){return 'default-room'}}}
 window.dennCurScopedKeyV=dennCurScopedKeyV;/* 현재 컨텍스트 스코프드 저장 키(콘솔 검증/진단용 — bgKey가 IIFE-local이라 전역에서 못 부르는 문제 해소) */
-function dennReqMirrorV(){try{(window.__dennMirrorReqV||(window.__dennMirrorReqV={}))[dennCurScopedKeyV()]=true;if(window.RM)window.RM.__userMoved=false;/* 컨텍스트 진입(배경 선택/클리어/업로드/프리셋/기본설정으로)=운영자 디폴트로 리셋 → __userMoved 해제해 강제 재개. 그 외 세션 조절은 유지. */}catch(e){}}
+function dennReqMirrorV(){try{(window.__dennMirrorReqV||(window.__dennMirrorReqV={}))[dennCurScopedKeyV()]=true;if(window.RM){window.RM.__userMoved=false;window.RM.__anchorImgV=null;}/* 컨텍스트 진입(배경 선택/클리어/업로드/프리셋/기본설정으로)=운영자 디폴트로 리셋 → __userMoved 해제 + 소비자 앵커 해제(운영자 위치로 복귀). 그 외 세션 조절은 유지. */}catch(e){}}
+/* 2026-07-01: 소비자가 액자를 직접 옮기면 그 위치를 '배경 이미지 좌표'로 캡처 → 회전/기기무관 유지(백분율 대신). 드래그 핸들러서 위치변경 직후 호출. */
+window.dennCaptureUserAnchorV=function(){try{var R=window.RM;if(!R||!R.pos||!R.canvas)return;var b=R.__bgRectV;if(!b||!b.w||!b.h)return;R.__anchorImgV={x:(R.pos.x*R.canvas.width-b.x)/b.w,y:(R.pos.y*R.canvas.height-b.y)/b.h};}catch(e){}};
 window.dennReqMirrorV=dennReqMirrorV;
 /* E(2026-06-04): per-section "기본값" 버튼(액자/기울기/그림자/햇빛) 공통 소스. 소비자=운영자 ②(공통 디폴트, 토글 포함), 운영자 편집모드/② 없음=null(각 함수의 공장 폴백). */
 function dennSectionCommonV(){try{if(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())return null;var rs=adm().roomBackgroundSettings,c=rs&&rs['__denn_room_common_default__'];if(c&&typeof c==='object'&&Object.keys(c).filter(function(k){return k.indexOf('__')!==0}).length>0)return c;}catch(e){}return null;}
@@ -3738,7 +3742,8 @@ function drawSun(ctx2,W,H){
   var sunInt=num((by('rm-sun-int')||{}).value,50)/100,sunSpread=num((by('rm-sun-spread')||{}).value,60)/100,sunWarm=num((by('rm-sun-warm')||{}).value,70)/100,sunRays=parseInt((by('rm-sun-rays')||{}).value||0,10),sunAng=num((by('rm-sun-ang')||{}).value,-30),lx=(RM.sunPos&&RM.sunPos.x||.75)*W,ly=(RM.sunPos&&RM.sunPos.y||.2)*H,radius=Math.max(W,H)*sunSpread,rC=255,gC=Math.round(255-(155*sunWarm)),bC=Math.round(255-(155*sunWarm));
   ctx2.save();ctx2.globalCompositeOperation='screen';var grad=ctx2.createRadialGradient(lx,ly,0,lx,ly,radius);grad.addColorStop(0,'rgba('+rC+','+gC+','+bC+','+Math.min(sunInt*.85,.85)+')');grad.addColorStop(.25,'rgba('+rC+','+gC+','+bC+','+Math.min(sunInt*.45,.45)+')');grad.addColorStop(.6,'rgba('+rC+','+gC+','+bC+','+Math.min(sunInt*.15,.15)+')');grad.addColorStop(1,'rgba('+rC+','+gC+','+bC+',0)');ctx2.fillStyle=grad;ctx2.fillRect(0,0,W,H);
   if(sunRays>0){var radAng=sunAng*Math.PI/180,perpX=Math.cos(radAng+Math.PI/2),perpY=Math.sin(radAng+Math.PI/2),dirX=Math.cos(radAng),dirY=Math.sin(radAng),extLen=Math.max(W,H)*2.5,rayWidth=Math.max(W,H)*num((by('rm-ray-thick')||{}).value,3)/100,raySpacing=Math.max(W,H)*.07;for(var ri=-Math.ceil(sunRays/2);ri<=Math.ceil(sunRays/2);ri++){var ox=lx+perpX*ri*raySpacing,oy=ly+perpY*ri*raySpacing,x1=ox+dirX*extLen,y1=oy+dirY*extLen,x2=ox-dirX*extLen,y2=oy-dirY*extLen,wX=perpX*rayWidth/2,wY=perpY*rayWidth/2,rg=ctx2.createLinearGradient(ox-wX,oy-wY,ox+wX,oy+wY),rA=Math.min(sunInt*.55*(1-Math.abs(ri)/(sunRays/2+1)*.4),.55);rg.addColorStop(0,'rgba('+rC+','+gC+','+bC+',0)');rg.addColorStop(.5,'rgba('+rC+','+gC+','+bC+','+rA+')');rg.addColorStop(1,'rgba('+rC+','+gC+','+bC+',0)');ctx2.beginPath();ctx2.moveTo(x1-wX,y1-wY);ctx2.lineTo(x2-wX,y2-wY);ctx2.lineTo(x2+wX,y2+wY);ctx2.lineTo(x1+wX,y1+wY);ctx2.closePath();ctx2.fillStyle=rg;ctx2.fill()}}
-  ctx2.globalCompositeOperation='source-over';if(!window.__dennSpaceViewOnly){ctx2.beginPath();ctx2.arc(lx,ly,5,0,Math.PI*2);ctx2.strokeStyle='rgba(255,200,50,.8)';ctx2.lineWidth=2;ctx2.stroke();ctx2.beginPath();ctx2.arc(lx,ly,2,0,Math.PI*2);ctx2.fillStyle='rgba(255,220,80,.9)';ctx2.fill();}ctx2.restore();
+  /* 2026-07-01: 광원 표식이 DPR 캔버스(캔버스px=CSSpx×~3.5)에서 고정 5/2px라 폰서 안 보이던 것 → 캔버스 크기 비례(작게)로. 대비용 어두운 외곽선 1겹. */
+  ctx2.globalCompositeOperation='source-over';if(!window.__dennSpaceViewOnly){var __mr=Math.max(5,Math.round(Math.min(W,H)*0.011)),__mlw=Math.max(2,Math.round(__mr*0.3));ctx2.beginPath();ctx2.arc(lx,ly,__mr,0,Math.PI*2);ctx2.strokeStyle='rgba(60,40,0,.5)';ctx2.lineWidth=__mlw+2;ctx2.stroke();ctx2.strokeStyle='rgba(255,200,50,.95)';ctx2.lineWidth=__mlw;ctx2.stroke();ctx2.beginPath();ctx2.arc(lx,ly,Math.max(2,Math.round(__mr*0.42)),0,Math.PI*2);ctx2.fillStyle='rgba(255,220,80,.95)';ctx2.fill();}ctx2.restore();
 }
 function drawDirectUploadNotice(ctx2,W,H){
   return;
@@ -3867,6 +3872,7 @@ function installGuideDragEvents(){
       /* ★ 이 포인터 드래그가 실제 액자 이동 핸들러 — 위치를 '사용자 소유'로 표시(운영자 디폴트 강제/앵커 재적용이 위치를 안 되돌리도록). 드래그 종료 후 휠/스케일 변경에도 위치 유지. */
       RM.__userMoved=true;
       RM.frameAnchorV48={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameAnchor:'center'};
+      if(window.dennCaptureUserAnchorV)window.dennCaptureUserAnchorV();/* 옮긴 위치를 이미지 앵커로 → 회전해도 유지 */
       if(window.dennSyncGuideXYDisplayCenterV89)window.dennSyncGuideXYDisplayCenterV89();
       if(window.rmRender)window.rmRender();
       if(window.sgDraw)window.sgDraw();
@@ -4107,6 +4113,9 @@ window.rmRender=function(){
     if(window.RM)RM.__bgCapV=false;
     /* 2026-06-26 image-anchor: 소비자 초기표시(미조작)에서 액자를 배경 이미지 좌표(__opImgPosV)에 글루 → 기기/화면비 무관하게 운영자가 둔 자리에 첫화면 고정. __userMoved(소비자 이동/스케일) 이후·관리자·드래그·flag off·레거시(__opImgPosV 없음)는 레거시 RM.pos 유지 → 소비자 자유조작 보존, 기존 데이터 무영향. */
     try{if(window.__dennImgAnchorV!==false&&RM.__bgRectV&&RM.__opImgPosV&&!RM.__userMoved&&!RM.dragging&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){var __iaBr=RM.__bgRectV;RM.pos=RM.pos||{x:.5,y:.4};if(__iaBr.w)RM.pos.x=clamp((__iaBr.x+RM.__opImgPosV.x*__iaBr.w)/W,.02,.98);if(__iaBr.h)RM.pos.y=clamp((__iaBr.y+RM.__opImgPosV.y*__iaBr.h)/H,.02,.98);}}catch(e){}
+    /* 2026-07-01 조작후 회전 유지: 소비자가 뭔가 조작(__userMoved)한 뒤에도 액자를 배경 이미지 좌표에 글루 → 회전 시 백분율로 되돌아가 선반에서 뜨던 것 방지.
+       유효앵커 = 액자를 직접 옮겼으면 그 위치(__anchorImgV), 아니면 운영자 위치(__opImgPosV=햇빛/스케일만 만진 경우). ★위 미조작 블록은 그대로 두고 이 블록만 추가 → A(미조작) 회귀 불가능. */
+    try{if(window.__dennImgAnchorV!==false&&RM.__bgRectV&&RM.__userMoved&&!RM.dragging&&!(window.dennIsAdminSetupV&&window.dennIsAdminSetupV())){var __iaBr2=RM.__bgRectV,__iaA2=RM.__anchorImgV||RM.__opImgPosV;if(__iaA2){RM.pos=RM.pos||{x:.5,y:.4};if(__iaBr2.w)RM.pos.x=clamp((__iaBr2.x+__iaA2.x*__iaBr2.w)/W,.02,.98);if(__iaBr2.h)RM.pos.y=clamp((__iaBr2.y+__iaA2.y*__iaBr2.h)/H,.02,.98);}}}catch(e){}
     drawFrame(ctx2,W,H);
     drawSun(ctx2,W,H);
     drawDirectUploadNotice(ctx2,W,H);
