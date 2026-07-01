@@ -1833,6 +1833,8 @@ function rmLoadGuideBgs(){
 function rmSelectGuide(i){
   var bgs=(ADM&&ADM.guideBackgrounds)||[];
   if(!bgs[i])return;
+  /* 2026-07-01: 배경 선택 = 그 배경의 운영자 저장값을 '처음부터' 표시 → um 즉시 리셋(wrapper 타이밍/체인 의존 없이 확실히). 소비자가 이후 조절하면 그때 um=1(자유). 기본설정으로 안 눌러도 되게. */
+  if(window.RM){window.RM.__userMoved=false;window.RM.__anchorImgV=null;}
   var img=new Image();
   img.onload=function(){
     RM.roomImg=img;RM.roomSrc=img.src;/* roomSrc 동기화 — 스왑 가드/세로배경 stale 비교 방지 */
@@ -4048,7 +4050,7 @@ function drawFrame(ctx2,W,H){
   var __effSz=sizePct*(num((by('sg-scale-r')||{}).value,100)/100);
   if(window.RM&&Math.abs(__ay-0.5)>1e-6&&H>0&&!RM.dragging){
     var __isAdminSz=!!(window.dennIsAdminSetupV&&dennIsAdminSetupV());
-    if(!__isAdminSz&&!RM.__userMoved&&RM.__opAnchorRefHV>0&&cm&&cm.h>0&&(window.isRoomPortrait&&isRoomPortrait())){
+    if(!__isAdminSz&&!RM.__userMoved&&RM.__opAnchorRefHV>0&&cm&&cm.h>0){
       /* ★ 2026-07-01 소비자 하단(사이즈기준위치) 앵커 — 사이즈 무관 동일 라인 (미조작 시. 소비자가 직접 옮기면 __userMoved=true라 스킵→자유):
          ★2026-07-01(2) 세로 전용 게이트 추가 — 가로(전체보기)는 배경 크롭·cm 방향스왑이 달라 이 핀이 액자를 밀어 'PC값과 다름' 유발했음. 가로는 순수 image-anchor(운영자 위치)로 두는 게 맞음(회귀 복구).
          중앙은 frameImgY(이미지앵커)로 이미 정확히 전달됨. 여기서 '기준사이즈(cm) − 고른사이즈(cm)' 높이차의 절반만큼 중앙을 이동 → 앵커 모서리(하단 등)를 운영자 위치에 고정.
@@ -4216,7 +4218,7 @@ window.sgDraw=function(){
     if(showRuler){ctx2.strokeStyle=rgbaTick;ctx2.fillStyle=rgbaTick;ctx2.font='8.5px DM Sans,sans-serif';ctx2.lineWidth=.8;for(var cm=0;cm<=400;cm+=10){var px=gx+cm*pxPerCm;if(px>W+5)break;var maj=cm%50===0;ctx2.beginPath();ctx2.moveTo(px,gy-(maj?12:6));ctx2.lineTo(px,gy);ctx2.stroke();if(cm>0&&maj){ctx2.fillStyle=rgba;ctx2.fillText(cm+'cm',px-10,gy-14);ctx2.fillStyle=rgbaTick}}for(var cm2=0;cm2<=400;cm2+=10){var py=gy+cm2*pxPerCm;if(py>H+5)break;var maj2=cm2%50===0;ctx2.beginPath();ctx2.moveTo(gx-(maj2?12:6),py);ctx2.lineTo(gx,py);ctx2.stroke();if(cm2>0&&maj2){ctx2.fillStyle=rgba;ctx2.fillText(cm2+'cm',gx-40,py+3);ctx2.fillStyle=rgbaTick}}ctx2.strokeStyle=rgbaTick;ctx2.lineWidth=1;ctx2.beginPath();ctx2.moveTo(gx,gy-20);ctx2.lineTo(gx,H);ctx2.stroke();ctx2.beginPath();ctx2.moveTo(0,gy);ctx2.lineTo(W,gy);ctx2.stroke()}
     /* 2026-07-01: 사이즈기준위치 비중앙(하단 등)이면 가이드 사각형들도 같은 앵커선 공유 → 여러 사이즈 켜도 하단 정렬(작은 게 중앙으로 안 뜸). 기준선 = primary 사이즈의 앵커 모서리(중앙배치 기준). */
     var __sgAy=(by('rm-size-anchor'))?num(by('rm-size-anchor').value,50)/100:0.5,__sgAnchorLine=null;
-    if(Math.abs(__sgAy-0.5)>1e-6&&(window.isRoomPortrait&&isRoomPortrait())){var __pid=(window.SG&&SG.primarySizeId)||(window.RM&&RM.activeGuideSizeId),__ps=null,__pk;/* 2026-07-01(2): 세로 전용 — 가로는 하단정렬 미적용(회귀 복구) */for(__pk=0;__pk<sizes.length;__pk++){if(sizes[__pk].id===__pid){__ps=sizes[__pk];break;}}if(!__ps){for(__pk=0;__pk<sizes.length;__pk++){if(SG.active[sizes[__pk].id]){__ps=sizes[__pk];break;}}}if(__ps){var __pa=num(__ps.wcm,0),__pb=num(__ps.hcm,0),__pdW,__pdH;if(SG.ori==='landscape'){__pdW=Math.max(__pa,__pb);__pdH=Math.min(__pa,__pb);}else{__pdW=Math.min(__pa,__pb);__pdH=Math.max(__pa,__pb);}var __pph=__pdH*pxPerCm,__pby;if(centerModeV52){var __pcp=guideCenterPointV52(W,H,{w:__pdW,h:__pdH},pxPerCm);__pby=__pcp.y-__pph/2;}else{__pby=gy;}__sgAnchorLine=__pby+__sgAy*__pph;}}
+    if(Math.abs(__sgAy-0.5)>1e-6){var __pid=(window.SG&&SG.primarySizeId)||(window.RM&&RM.activeGuideSizeId),__ps=null,__pk;/* 2026-07-01(3): 가로도 하단정렬 개방(cm 기반이라 크롭 안전) */for(__pk=0;__pk<sizes.length;__pk++){if(sizes[__pk].id===__pid){__ps=sizes[__pk];break;}}if(!__ps){for(__pk=0;__pk<sizes.length;__pk++){if(SG.active[sizes[__pk].id]){__ps=sizes[__pk];break;}}}if(__ps){var __pa=num(__ps.wcm,0),__pb=num(__ps.hcm,0),__pdW,__pdH;if(SG.ori==='landscape'){__pdW=Math.max(__pa,__pb);__pdH=Math.min(__pa,__pb);}else{__pdW=Math.min(__pa,__pb);__pdH=Math.max(__pa,__pb);}var __pph=__pdH*pxPerCm,__pby;if(centerModeV52){var __pcp=guideCenterPointV52(W,H,{w:__pdW,h:__pdH},pxPerCm);__pby=__pcp.y-__pph/2;}else{__pby=gy;}__sgAnchorLine=__pby+__sgAy*__pph;}}
     sizes.forEach(function(s){if(!SG.active[s.id])return;var a=num(s.wcm,0),b=num(s.hcm,0),drawW,drawH;if(SG.ori==='landscape'){drawW=Math.max(a,b);drawH=Math.min(a,b)}else{drawW=Math.min(a,b);drawH=Math.max(a,b)}var pw=drawW*pxPerCm,ph=drawH*pxPerCm,bx=gx,by=gy;if(centerModeV52){var cp=guideCenterPointV52(W,H,{w:drawW,h:drawH},pxPerCm);bx=cp.x-pw/2;by=cp.y-ph/2}if(__sgAnchorLine!=null)by=__sgAnchorLine-__sgAy*ph;ctx2.strokeStyle=rgba;ctx2.lineWidth=1.5;ctx2.fillStyle=rgbaFill;ctx2.fillRect(bx,by,pw,ph);ctx2.strokeRect(bx,by,pw,ph);/* E(2026-06-04): 사이즈 라벨 — 사각형 밖 우상단, 컴팩트 크기 */var __lw=92,__lh=25;var __lx=(bx+pw+6+__lw<=W)?(bx+pw+6):Math.max(0,bx+pw-__lw);var __ly=Math.max(0,by);ctx2.fillStyle='rgba(255,255,255,.78)';ctx2.fillRect(__lx,__ly,__lw,__lh);ctx2.strokeStyle=rgba;ctx2.lineWidth=1;ctx2.strokeRect(__lx,__ly,__lw,__lh);ctx2.fillStyle=rgba;ctx2.font='bold 9.5px DM Sans,sans-serif';ctx2.fillText(s.name,__lx+6,__ly+11);ctx2.font='8.5px DM Sans,sans-serif';ctx2.fillText(drawW+'×'+drawH+'cm',__lx+6,__ly+21)});
     ctx2.restore();ctx2.restore();requestSaveSettingsV33();/* 2026-06-30: 두 번째 restore = __sgS 스케일 save 해제(첫 번째는 lift translate). */
   }catch(e){}
