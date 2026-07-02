@@ -11,6 +11,7 @@
 | `75b4068` | **`?dbgUM=1` 온스크린 진단 오버레이 재삽입**(기본 OFF, 게이트 밖 no-op). anc[] 필드: `um umBy ay cmH refH fh fy sz sg mb cv iy bg op`. RM 정의 직후 IIFE + drawFrame frameHit 직전 push. sessionStorage 래치(share import reload로 쿼리 지워져도 유지). | ✓ |
 | `b07257a` | **★사이즈 하단앵커 refH 전달 수정(3곳)** | ✓ 검증완료 |
 | `35140bb` | 진단 오버레이에 `__userMoved` 감시자 + `umBy`(um 켠 라인번호) 추가 | ✓ |
+| `6028817` | **사이즈앵커가 스케일 조작(um=1)에도 유지** — 게이트 `!userMoved`→`!__anchorImgV` + 앵커값 always-run | ✓ 검증완료 |
 
 ---
 
@@ -34,6 +35,22 @@
 ### 검증 결과 (실폰, 오버레이 숫자)
 - 수정 전: `refH=- op=0`, b5 fy=0.476/0.489(떠 있음).
 - 수정 후: **`refH=60 op=1`**, b5 fy=0.558(가로)/0.545(세로) → **바닥이 선반 라인에 붙음**. 세로·가로 둘 다 A2↔b5 바닥 고정 확인.
+
+---
+
+## 2b. ★★ 2차 버그 해결 — 사이즈앵커가 스케일 조작 시 꺼짐 (`6028817`)
+### 증상
+소비자가 **기준스케일 슬라이더를 만지면**(um=1) 운영자 사이즈앵커(상단/중앙/하단)가 **통째로 꺼져**, 그 뒤 사이즈를 바꿔도 하단정렬 안 되고 작은 사이즈가 공중에 뜸. (초기 진입 후 스케일/사이즈 건드리면 재현. 진단 오버레이 `um=1 refH=- op=0 umBy=:2207`(input 리스너)로 확정.)
+### 근본
+- drawFrame 핀 게이트가 `!RM.__userMoved` → 스케일/사이즈 조작(input 리스너 L2207가 sg-/rm- trusted input에 um=true)도 앵커 해제.
+- 앵커값(refH·방향)이 `!um` force 블록(L4160) 안에만 세팅 → um=1이면 refH가 안 실려 op=0.
+### 수정 (옵션1 안전형 — 사용자 선택)
+- **핀 게이트 `!RM.__userMoved`→`!RM.__anchorImgV`**(L4098): `__anchorImgV`는 **직접 드래그로만** 세팅(dennCaptureUserAnchorV; 스케일/핀치/사이즈선택 무관). → 스케일·사이즈 조정은 앵커 유지, **직접 드래그만** 앵커 해제(그 위치 자유, 튐 없음).
+- **앵커값 always-run 블록**(force 블록 직후, 소비자·`!admin`): `RM.__opAnchorRefHV`+`rm-size-anchor`+`RM.__opImgPosV`를 **um 무관** 운영자 프리셋서 세팅. 위치/스케일/배경은 여전히 force(`!um`)만 강제(자유조작 보존).
+- 핀은 **스테이트리스**(매 렌더 운영자 refH 재계산)라 image-anchor 재글루와 충돌/드리프트 없음. 방향은 `(ay-0.5)` 부호로 상단(0)/하단(1) 자동, 중앙(0.5) 무영향. **배경별 앵커설정 존중.** 관리자 편집 브랜치는 원본 유지(위험0).
+### ★설계 함정 (검토 중 폐기한 접근)
+- 단순 "핀 항상 적용"(`!um` 제거만) → **드래그 후 놓는 순간 핀이 튕김**(cy=드래그중심+`(ay-.5)(refH-fh)` 오프셋). 폐기.
+- 세션 엣지 앵커(`__anchorYabs` fh-키잉) → **image-anchor 블록이 매 렌더 중심을 재글루 → 스테이트풀 엣지와 싸워 드리프트**. 폐기. **결론=스테이트리스 핀 + 드래그(`__anchorImgV`)만 예외가 이 아키텍처에 맞음.**
 
 ---
 
@@ -65,8 +82,16 @@ dennShareCreate({state:JSON.parse(localStorage.getItem('denn_admin'))}).then(u=>
 
 ---
 
+## 3b. ★ 실운영 공유 stale 점검 결과 (Explore 에이전트 매핑)
+**실운영엔 Firebase 자동 발행이 아예 없음.** 운영자 저장(saveCurrentRoomKeyV48/saveSettingsV33→writeAdminV48)은 **localStorage `denn_admin` + IndexedDB(기기 로컬)** 뿐. denn-admin `persistState`도 로컬 전용, Firebase "auto-sync"는 **이미지 오프로딩만**(templates/·proofs/·placeholders/), 상태 JSON 미업로드. 소비자(denn-mockup-tool, `?share=` 없이)는 **localStorage/IndexedDB만** 읽음(loadAdminState/loadAdminFresh) — 부팅 Firebase fetch 없음.
+- 소비자가 운영자 데이터를 받는 경로 = **오직 수동 링크**: `?share=`(dennShareCreate→temp-share JSON, **window.S 공유**) / `?space=`(암호화 Firestore spaces/{token}, 단일 씬) / 같은 브라우저.
+- ⚠️**결론: 실제 소비자도 stale 위험 있음** — `?share=` 링크가 `window.S`를 공유하므로, 운영자가 mockup 편집기 저장 후 denn-admin 새로고침 없이 링크 만들면 refH 없는 옛 데이터가 감. **권장 수정=dennShareCreate가 stale window.S 대신 localStorage(denn_admin)를 기본으로 읽기**(우리가 우회로 쓴 `{state:...}`를 기본값화). 미착수(다음 후보).
+- Firebase config: bucket `denn-products.firebasestorage.app`, 익명 auth. 고정경로=templates/·placeholders/·proofs/·temp-share/(임시)·Firestore spaces/{token}.
+
+---
+
 ## 6. 다음 작업 후보
-1. **실운영 공유 경로의 window.S stale 점검**(§3) — 실제 소비자도 refH 못 받을 가능성.
+1. **dennShareCreate stale 수정**(§3b) — `state=opts.state||window.S`의 기본을 localStorage로. 실운영 소비자도 최신 refH 받게. (작고 안전)
 2. §6(전 핸드오프) **사이즈 미선택+템플릿 선택 시 저장 사이즈 자동 적용** — 미착수.
 3. 진단 오버레이/감시자 제거(원인 다 잡히면).
 
