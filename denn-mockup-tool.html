@@ -1769,6 +1769,16 @@ var RM={
     try{if(new URLSearchParams(location.search||'').has('dbgUM')){__on=true;sessionStorage.setItem('denn_dbgUM','1');}}catch(e){}
     try{if(!__on&&sessionStorage.getItem('denn_dbgUM')==='1')__on=true;}catch(e){}
     if(!__on)return;
+    /* 2026-07-02 진단: RM.__userMoved가 true로 켜지는 순간의 호출 스택(라인번호) 포착 → 오버레이 umBy로 표시.
+       "안 만졌는데 um=1" 범인 확정용(핸드오프 감시자 기법). configurable getter/setter라 기존 read/write 투명. */
+    try{
+      if(window.RM){
+        var __umv=window.RM.__userMoved;
+        Object.defineProperty(window.RM,'__userMoved',{configurable:true,enumerable:true,
+          get:function(){return __umv;},
+          set:function(v){if(v&&!__umv){try{var st=(new Error().stack||'');var ln=(st.match(/:(\d+):\d+/g)||[]).slice(0,4).join(',');window.RM.__umSetByV=ln||'?';}catch(e){}}__umv=v;}});
+      }
+    }catch(e){}
     function mount(){
       if(window.__dennUMDbg&&window.__dennUMDbg.el)return;
       var el=document.createElement('div');
@@ -4106,6 +4116,7 @@ function drawFrame(ctx2,W,H){
     window.__dennUMDbg.push({
       __ori:__ori,
       um:(RM.__userMoved?1:0),
+      umBy:(RM.__userMoved&&RM.__umSetByV)?RM.__umSetByV:'-',
       ay:__r2(__ay,2),
       cmH:(cm&&cm.h!=null)?__r2(cm.h,1):'-',
       refH:(RM.__opAnchorRefHV!=null)?__r2(RM.__opAnchorRefHV,1):'-',
