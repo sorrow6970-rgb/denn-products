@@ -1,0 +1,36 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      "**/.git/**",
+      "docs/**",
+      "스크린샷/**",
+      "*.md",
+      "*.ps1",
+      "*.bat",
+      "*.py",
+      "backup.json",
+      "*.rules",
+      "denn-stage5-prototype.html"
+    ],
+    "rewrites": [
+      { "source": "/", "destination": "/denn-mockup-tool.html" }
+    ],
+    "headers": [
+      {
+        "source": "**/*.html",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate" }
+        ]
+      }
+    ]
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

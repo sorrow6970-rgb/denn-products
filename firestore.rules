@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// DENN Products — Firestore 보안 규칙
+// spaces/{token}: 암호화된 고객 시안 '스페이스'(dennSpace). 토큰을 아는 사람만 접근(URL ?space=<token>).
+//   내용은 클라이언트에서 AES-GCM 암호화되어 저장되므로, read 공개여도 비번 없이는 복호화 불가.
+// ⚠️ Auth 미도입 상태 → create 익명 허용. 도입 시 non-anonymous로 좁힐 수 있음.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /spaces/{token} {
+      allow read: if true;                 // 토큰(문서ID)을 알아야 접근 가능 + 내용은 암호화됨
+      allow create: if true;               // 시안 스페이스 생성(운영자/고객)
+      allow update, delete: if false;      // 생성 후 변경/삭제 금지(무결성)
+    }
+
+    // 그 외 컬렉션 기본 거부.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

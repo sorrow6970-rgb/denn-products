@@ -177,7 +177,7 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
 </div>
 
 <div class="main-area">
-  <div class="topbar"><h1 id="ttl">대시보드</h1><div style="display:flex;gap:8px"><button class="tb-btn outline" onclick="openCustomerMockupV35()">↗ 고객 화면</button><button class="tb-btn outline" onclick="pwChange()" style="font-size:10px">🔑 비번변경</button><button class="tb-btn outline" onclick="pwLogout()" style="font-size:10px">🔒 잠금</button></div></div>
+  <div class="topbar"><h1 id="ttl">대시보드</h1><div style="display:flex;gap:8px"><button class="tb-btn" id="denn-publish-btn" onclick="dennPublishBtnClickV()" style="background:#2F65D8;color:#fff;border-color:#2F65D8;font-weight:700" title="현재 관리자 설정을 소비자 화면에 반영(게시)">📢 게시</button><button class="tb-btn outline" onclick="openCustomerMockupV35()">↗ 고객 화면</button><button class="tb-btn outline" onclick="pwChange()" style="font-size:10px">🔑 비번변경</button><button class="tb-btn outline" onclick="pwLogout()" style="font-size:10px">🔒 잠금</button></div></div>
   <div class="content">
 
     <!-- DASHBOARD -->
@@ -1943,6 +1943,18 @@ function guideBgMergeKey(bg,i){return (bg&&(bg.id||bg.dataUrl||bg.name))||('guid
 function deletedMapSafe(a,b){var m={};(a&&a.deletedGuideBackgroundKeys||[]).concat(b&&b.deletedGuideBackgroundKeys||[]).forEach(function(k){if(k)m[k]=true});return m}
 function mergeAdminStateSafe(a,b){a=a&&typeof a==='object'?a:{};b=b&&typeof b==='object'?b:{};var primary=adminStateScore(a)>=adminStateScore(b)?a:b,secondary=primary===a?b:a,out=Object.assign({},secondary,primary),deleted=deletedMapSafe(a,b);out.deletedGuideBackgroundKeys=Object.keys(deleted);out.guideBackgrounds=mergeUniqueSafe(primary.guideBackgrounds,secondary.guideBackgrounds,guideBgMergeKey).filter(function(bg,i){return !deleted[guideBgMergeKey(bg,i)]});out.uploadedFrameTemplates=mergeUniqueSafe(primary.uploadedFrameTemplates,secondary.uploadedFrameTemplates,function(t,i){return (t&&(t.id||t.dataUrl||t.name))||('tpl-'+i)});out.frameTemplates=mergeUniqueSafe(primary.frameTemplates,secondary.frameTemplates,function(t,i){return (t&&(t.id||t.name))||('base-tpl-'+i)});out.frameSizes=mergeUniqueSafe(primary.frameSizes,secondary.frameSizes,function(s,i){return (s&&(s.id||s.name))||('size-'+i)});out.roomBackgroundSettings=Object.assign({},secondary.roomBackgroundSettings||{},primary.roomBackgroundSettings||{});return out}
 async function persistState(){var state=window.S||{};saveAdminStateToLocalStorage(state);await saveAdminStateToIndexedDB(state);return state;}
+/* 2026-07-02 게시 버튼 핸들러: 현재 상태를 localStorage에 확정(persist) 후 Firebase 고정경로에 게시 → 소비자 부팅 시 자동 반영. */
+async function dennPublishBtnClickV(){
+  var btn=document.getElementById('denn-publish-btn');
+  if(!window.dennPublishState){try{toast('게시 준비 중 — 잠시 후 다시 눌러 주세요','e')}catch(e){}return;}
+  try{
+    if(btn){btn.disabled=true;btn.dataset.o=btn.textContent;btn.textContent='게시 중…';}
+    if(typeof persistState==='function')await persistState();/* 최신 상태 localStorage 반영 후 게시 */
+    await window.dennPublishState();
+  }catch(e){try{toast('게시 실패: '+((e&&e.message)||e),'e')}catch(_){}}
+  finally{if(btn){btn.disabled=false;btn.textContent=(btn.dataset.o)||'📢 게시';}}
+}
+window.dennPublishBtnClickV=dennPublishBtnClickV;
 async function hydrateState(){try{var fromDb=await dbGet('denn_admin_state'),fromLocal=null;try{fromLocal=JSON.parse(localStorage.getItem('denn_admin')||'null')}catch(_){fromLocal=null}S=mergeAdminStateSafe(fromDb,fromLocal);if(!S||!Object.keys(S).length)load();else if(adminStateScore(S)>adminStateScore(fromDb)||adminStateScore(S)>adminStateScore(fromLocal)){try{await dbSet('denn_admin_state',S)}catch(_){}try{dennPersistAdminStateV351(S)}catch(_){}}}catch(e){load();} Object.keys(DEF).forEach(function(k){if(S[k]===undefined)S[k]=deep(DEF[k]);}); if(!S.guideBackgrounds)S.guideBackgrounds=[]; if(S.frameSizes)S.frameSizes.forEach(function(sz){if(!sz.clock)sz.clock=null;});}
 
 function inferFontMeta(fileName){
@@ -14745,6 +14757,29 @@ window.addEventListener('resize',scheduleSettle);
       return finalUrl;
     };
     console.log('[share] dennShareCreate() 사용 가능. 기본: hash fragment (#share=). opts.useQuery=true로 ?share=.');
+
+    /* 2026-07-02 자동발행(방식 B): 관리자 상태를 Firebase 고정 경로(published/state.json)에 게시 →
+       소비자는 배포된 사이트를 열면 부팅 시 이 JSON을 자동 fetch(별도 링크 불필요). "게시" 버튼/콘솔에서 호출.
+       상태는 공유(dennShareCreate)와 동일: window.S(오프로드 이미지 URL 유지) 베이스 + localStorage 최신 roomBackgroundSettings.
+       __publishedAt(발행 시각)로 소비자가 최신 여부 판별. */
+    window.dennPublishState = async function(){
+      if (!_ready) { await _readyPromise; }
+      var state = window.S;
+      try {
+        var __ls = JSON.parse(localStorage.getItem('denn_admin')||'null');
+        if (__ls && __ls.roomBackgroundSettings) {
+          state = Object.assign({}, window.S, { roomBackgroundSettings: __ls.roomBackgroundSettings });
+        }
+      } catch(e){}
+      state = Object.assign({}, state, { __publishedAt: Date.now() });
+      var json = JSON.stringify(state);
+      var dataUrl = 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(json)));
+      await window.dennFirebase.uploadDataUrl(dataUrl, 'published/state.json');
+      console.log('[publish] ✓ 게시 완료 published/state.json ('+json.length+'b) @'+state.__publishedAt);
+      try { if (window.toast) toast('✓ 소비자 화면에 게시 완료'); } catch(e){}
+      return state.__publishedAt;
+    };
+    console.log('[publish] dennPublishState() 사용 가능 — 소비자에게 현재 관리자 상태 게시.');
 
     /* ============================================================
        작업5 (내공간 패스워드 개별 접근) — 1단계 기반
