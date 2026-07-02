@@ -63,6 +63,8 @@ function saveCustomerAdminStateToLocalStorage(A){
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--cream:#F6F1E9;--ink:#777;--warm:#8A7D6E;--border:#DDD5C8;--gold:#C8A864;--gold2:#8C6E3C;--surface:#FDFAF4;--red:#E53E3E;--blue:#3182CE}
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;overflow-x:hidden}
+/* 2026-07-02: 룸 미리보기(전체화면 전 포함) 열려 있는 동안 페이지 스크롤 잠금 → 배경 터치 시 브라우저 상/하단 주소창 토글로 뷰포트 리사이즈(화면 흔들림) 방지. 모달 내부 시트/슬라이더 스크롤은 영향 없음(overflow:hidden은 문서 레벨만). */
+html.denn-room-scroll-lock,html.denn-room-scroll-lock body{overflow:hidden!important;overscroll-behavior:none!important;height:100%!important}
 html.denn-admin-room-boot body{background:#0f0c08}
 html.denn-admin-room-boot header,
 html.denn-admin-room-boot .tabbar,
@@ -1901,6 +1903,7 @@ function openRoomMockup(){
   RM.frameSnap.width=fc.width;RM.frameSnap.height=fc.height;
   RM.frameSnap.getContext('2d').drawImage(fc,0,0);
   document.getElementById('room-modal').style.display='flex';
+  try{document.documentElement.classList.add('denn-room-scroll-lock');}catch(e){}/* 2026-07-02: 페이지 스크롤 잠금(브라우저 크롬 토글=화면 흔들림 방지) */
   RM.canvas=document.getElementById('rm-canvas');
   RM.ctx=RM.canvas.getContext('2d');
   rmBindEvents();
@@ -1909,7 +1912,7 @@ function openRoomMockup(){
   if(RM.roomImg)rmRender();
 }
 
-function closeRoomMockup(){document.getElementById('room-modal').style.display='none';}
+function closeRoomMockup(){document.getElementById('room-modal').style.display='none';try{document.documentElement.classList.remove('denn-room-scroll-lock');}catch(e){}/* 스크롤 잠금 해제 */}
 
 function rmDropRoom(e){e.preventDefault();var f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))rmHandleRoom(f);}
 function rmLoadRoom(inp){if(inp.files[0])rmHandleRoom(inp.files[0]);}
@@ -13830,7 +13833,8 @@ input[type=range]{accent-color:#777}
   #room-modal #rm-canvas-area{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;min-height:0!important;flex:none!important;overflow:auto!important;transition:opacity .2s;scrollbar-width:none!important;-ms-overflow-style:none!important;scrollbar-gutter:auto!important}
   /* 2026-06-26: 네이티브 세로 스크롤바 숨김 — 캔버스가 폭(area.clientWidth)에 맞춰 사이징되는데(v106 w=aw,h=w/0.462) 세로 넘침으로 스크롤바가 나타나면 clientWidth가 ~15px 줄어 캔버스 재사이징→넘침 토글→스크롤바 깜빡이는 피드백 루프(배경 흔들림) 유발. 스크롤바 0폭으로 clientWidth 안정화 → 루프 차단. overflow:auto라 프로그램 scrollTop(액자 앵커)은 그대로. */
   #room-modal #rm-canvas-area::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
-  #room-modal.denn-rm-open #rm-canvas-area{opacity:.34}
+  /* 2026-07-02: 바텀시트(메뉴) 열려도 캔버스 선명하게 — 조정 중(햇빛/그림자 등) 배경에 반영되는 효과를 바로 보려면 dim 제거. (기존 opacity:.34 → 1) */
+  #room-modal.denn-rm-open #rm-canvas-area{opacity:1}
   #room-modal #rm-mobile-resize-handle{display:none!important}
   #room-modal .rm-right-panel{display:none!important}
 
