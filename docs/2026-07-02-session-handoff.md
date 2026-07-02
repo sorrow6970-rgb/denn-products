@@ -12,6 +12,7 @@
 | `b07257a` | **★사이즈 하단앵커 refH 전달 수정(3곳)** | ✓ 검증완료 |
 | `35140bb` | 진단 오버레이에 `__userMoved` 감시자 + `umBy`(um 켠 라인번호) 추가 | ✓ |
 | `6028817` | **사이즈앵커가 스케일 조작(um=1)에도 유지** — 게이트 `!userMoved`→`!__anchorImgV` + 앵커값 always-run | ✓ 검증완료 |
+| `2530ae2` | **공유 stale 방지**(dennShareCreate=localStorage roomBackgroundSettings 덮어씀) + **가로 회전 시 방향별 기준스케일(sg) 재적용** | ✓ 검증완료 |
 
 ---
 
@@ -90,10 +91,18 @@ dennShareCreate({state:JSON.parse(localStorage.getItem('denn_admin'))}).then(u=>
 
 ---
 
+## 3c. ★ 공유 stale 수정 + 가로 회전 sg 재적용 완료 (`2530ae2`, 검증✓)
+### (1) dennShareCreate stale 방지 (denn-admin L14713)
+`state=opts.state||window.S`였던 것 → `opts.state` 없으면 **window.S 베이스 + localStorage['denn_admin']의 최신 `roomBackgroundSettings` 덮어씀**. window.S는 denn-admin 로드 스냅샷이라 mockup 편집기(별도 탭/iframe) 저장이 반영 안 됨(storage 리스너 없음). roomBackgroundSettings는 경량 설정값(이미지 없음)이라 덮어도 공유 안 무거워짐(검증: 491KB). 이미지는 window.S의 Firebase 오프로드 URL 유지. → **운영자가 denn-admin 새로고침 없이 평소 공유해도 소비자가 최신 refH 받음.**
+### (2) 가로 회전 시 방향별 sg 재적용 (denn-mockup, always-run 블록)
+증상: 소비자가 세로서 스케일 슬라이더 만지면(um=1) → 가로 회전 시 액자 바닥 뜸. 원인=**sg(기준스케일)는 세로(.mobile)/가로(base)가 다른데(예 세로50/가로74), um=1이면 force가 스킵돼 회전해도 옛 방향 sg 잔존** → 액자 크기 틀림(fh∝sg) → 앵커 바닥 어긋남(앵커 바닥=cy_iy+0.5·refH·K, K∝sg). 진단=오버레이 성공(sg=74)/실패(sg=50) fh비율 일치. 수정=**`RM.__lastOriV` 비교로 '방향 전환 시에만'** 그 방향 운영자 `guideScale` 재적용(um 무관). ★한 방향 안에선 소비자 핀치-줌(sg-scale) 유지 — 매 렌더 강제하면 모바일 핀치 먹통되므로 회전 시에만. ★★교훈=**사이즈앵커 절대위치(바닥)는 sg에 종속**(cm기반이라도 K∝sg). 소비자가 sg를 바꾸면 앵커 바닥이 드리프트 → 방향별 sg 일관성이 앵커 정확도의 전제. (image기반 바닥앵커=frameAnchorImgY는 07-01 롤백됨, 크로스컨텍스트 픽셀오차.)
+
+---
+
 ## 6. 다음 작업 후보
-1. **dennShareCreate stale 수정**(§3b) — `state=opts.state||window.S`의 기본을 localStorage로. 실운영 소비자도 최신 refH 받게. (작고 안전)
-2. §6(전 핸드오프) **사이즈 미선택+템플릿 선택 시 저장 사이즈 자동 적용** — 미착수.
-3. 진단 오버레이/감시자 제거(원인 다 잡히면).
+1. §6(전 핸드오프) **사이즈 미선택+템플릿 선택 시 저장 사이즈 자동 적용** — 미착수.
+2. 진단 오버레이/감시자 제거(원인 다 잡히면).
+3. (선택) 소비자 핀치-줌(sg 변경) 시 앵커 바닥 드리프트 — 현재는 방향 전환서만 리셋. 완전 고정 원하면 image기반 바닥앵커 재검토(위험).
 
 ---
 
