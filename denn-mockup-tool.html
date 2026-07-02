@@ -4194,6 +4194,11 @@ window.rmRender=function(){
         RM.__opImgPosV=(__iaIxA!=null&&__iaIyA!=null)?{x:num(__iaIxA,.5),y:num(__iaIyA,.5)}:RM.__opImgPosV;/* 운영자 위치(드래그 안 했으면 image-anchor 폴백으로 사용) */
         RM.__opAnchorRefHV=(__opA.frameAnchorRefCmH!=null&&isFinite(__opA.frameAnchorRefCmH))?num(__opA.frameAnchorRefCmH,0):null;
         if(__opA.frameSizeAnchor!=null){var __fsaA=num(__opA.frameSizeAnchor,50);setVal('rm-size-anchor',__fsaA);if(window.dennUpdateSizeAnchorReadoutV)dennUpdateSizeAnchorReadoutV(__fsaA);}
+        /* 2026-07-02: 기준스케일(sg)은 세로(.mobile)/가로(base)가 다른데 um=1이면 force가 스킵돼 회전해도 옛 방향 sg가
+           남음 → 가로에서 액자 크기가 틀려 앵커 바닥이 뜸. '방향 전환 시에만' 그 방향의 운영자 sg 재적용(um 무관).
+           한 방향 안에선 소비자 핀치-줌(sg-scale) 유지(매 렌더 강제 아님 → 핀치 먹통 방지). */
+        var __oriNowA=(window.isRoomPortrait&&window.isRoomPortrait())?'p':'l';
+        if(RM.__lastOriV!==__oriNowA){RM.__lastOriV=__oriNowA;if(isFinite(__opA.guideScale)){var __gsA=Math.round(__opA.guideScale*1000)/10;setVal('sg-scale-r',__gsA);setVal('sg-scale-n',__gsA);}}
       }
     }
     showCanvas();

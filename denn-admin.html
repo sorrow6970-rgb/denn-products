@@ -14713,7 +14713,22 @@ window.addEventListener('resize',scheduleSettle);
     window.dennShareCreate = async function(opts){
       opts = opts || {};
       if (!_ready) { await _readyPromise; }
-      const state = opts.state || window.S;
+      /* 2026-07-02 stale 수정: window.S는 denn-admin 로드 시점 스냅샷이라, 이후 mockup 편집기(별도 탭/iframe,
+         ?adminRoomSetup=)가 localStorage['denn_admin']에 저장한 room/frame 레이아웃(사이즈앵커 refH 등)이
+         window.S엔 반영 안 됨(denn-admin은 storage 리스너 없음) → 소비자가 옛 refH 받는 stale 공유.
+         이미지(frameTemplates/guideBackgrounds 등)는 window.S가 Firebase URL로 오프로드된 상태라 그대로 쓰고,
+         localStorage의 최신 roomBackgroundSettings(경량 설정값=이미지 없음)만 덮어써 최신 레이아웃을 공유.
+         opts.state 명시 시 그대로 우선(디버그/특수 공유). */
+      let state = opts.state;
+      if (!state) {
+        state = window.S;
+        try {
+          const __ls = JSON.parse(localStorage.getItem('denn_admin')||'null');
+          if (__ls && __ls.roomBackgroundSettings) {
+            state = Object.assign({}, window.S, { roomBackgroundSettings: __ls.roomBackgroundSettings });
+          }
+        } catch(e){}
+      }
       const json = JSON.stringify(state);
       const dataUrl = 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(json)));
       const path = 'temp-share/' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.json';
