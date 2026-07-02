@@ -13247,6 +13247,73 @@ window.addEventListener('load',later);
   window.addEventListener('load',function(){setTimeout(boot,1000)});
 })();
 </script>
+<script id="denn-v110-template-to-size">
+/* 2026-07-02: 양방향 선택 — 사이즈 미선택(__dennSizeUnset) 상태에서 템플릿을 누르면 그 템플릿에 저장된
+   사이즈를 자동 선택(게이트 해제)한 뒤 템플릿 적용. 기존엔 눌러도 게이트 오버레이에 가려 무반응이었음.
+   템플릿에 특정 사이즈가 없으면(전체사이즈 공용) → 반투명 "사이즈 선택" 안내 후 사라짐(폴백).
+   최외곽 래퍼(모든 selFTplByRef 래핑 이후)로 설치. 자체 완결(IIFE 스코프 함수 의존 안 함). */
+(function(){
+  function key(v){return String(v==null?'':v).trim().toLowerCase()}
+  function allKey(v){var k=key(v);return !k||k==='__denn_all_frame_sizes__'||k==='__all_frame_sizes__'||k==='all'||k==='*'||k==='전체 사이즈 공용'||k==='전체사이즈공용'}
+  function tplKeys(t){
+    if(!t)return [];
+    if(t.allFrameSizes===true||t.sizeScope==='all'||t.sizeMode==='all')return [];
+    var vals=[];
+    ['sizeId','frameSizeId','frameSize','targetSizeId','targetFrameSizeId','sizeKey','frameSizeKey'].forEach(function(k){if(t[k]!=null)vals.push(t[k])});
+    if(Array.isArray(t.sizeIds))vals=vals.concat(t.sizeIds);
+    if(Array.isArray(t.frameSizeIds))vals=vals.concat(t.frameSizeIds);
+    if(Array.isArray(t.targetSizeIds))vals=vals.concat(t.targetSizeIds);
+    if(Array.isArray(t.frameTargetSizeIds))vals=vals.concat(t.frameTargetSizeIds);
+    if(t.size&&typeof t.size==='object')['id','sizeId','frameSizeId','name','sub'].forEach(function(k){if(t.size[k]!=null)vals.push(t.size[k])});
+    var out=[];vals.forEach(function(v){v=key(v);if(v&&!allKey(v)&&out.indexOf(v)<0)out.push(v)});
+    return out;
+  }
+  function sizeKeys(s){var out=[];[s&&s.id,s&&s.name,s&&s.sub,s&&s.sizeId,s&&s.frameSizeId].forEach(function(v){v=key(v);if(v&&out.indexOf(v)<0)out.push(v)});return out}
+  function resolveSizeIdx(t){
+    var tk=tplKeys(t);if(!tk.length)return -1;
+    var FS=window.FS||[];
+    for(var j=0;j<FS.length;j++){var sk=sizeKeys(FS[j]);if(sk.some(function(k){return tk.indexOf(k)>=0}))return j;}
+    return -1;
+  }
+  function byIdxOnclick(sel,i){
+    var els=document.querySelectorAll(sel);
+    for(var c=0;c<els.length;c++){if((els[c].getAttribute('onclick')||'').indexOf('this,'+i+')')>=0)return els[c];}
+    return els[i]||null;
+  }
+  function showSelectSizeToast(){
+    try{
+      var id='denn-select-size-toast',ex=document.getElementById(id);if(ex&&ex.parentNode)ex.parentNode.removeChild(ex);
+      var d=document.createElement('div');d.id=id;d.textContent='먼저 액자 사이즈를 선택해 주세요';
+      d.style.cssText='position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:2147483000;pointer-events:none;'
+        +'background:rgba(30,26,20,.78);color:#fff;font-size:14px;font-weight:600;padding:13px 22px;border-radius:12px;'
+        +'box-shadow:0 6px 24px rgba(0,0,0,.28);max-width:80vw;text-align:center;opacity:0;transition:opacity .25s';
+      (document.body||document.documentElement).appendChild(d);
+      requestAnimationFrame(function(){d.style.opacity='1'});
+      setTimeout(function(){d.style.opacity='0';setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d)},350)},1600);
+    }catch(e){}
+  }
+  window.__dennSelectSizeToastV=showSelectSizeToast;
+  var oldTplSel=window.selFTplByRef;
+  if(typeof oldTplSel==='function'){
+    window.selFTplByRef=function(el,i){
+      try{
+        if(window.__dennSizeUnset){
+          var t=(window.FTPLS||[])[i],idx=resolveSizeIdx(t);
+          if(idx>=0){
+            var chip=byIdxOnclick('#frame-sz-chips .chip',idx);
+            if(chip&&window.selFSz){window.selFSz(chip,idx);}/* 게이트 해제 + 그 사이즈로 그리드 재빌드(동기) */
+            var card=byIdxOnclick('#frame-tpl-grid .tpl-card',i)||el;/* 재빌드된 그리드서 그 템플릿 카드 */
+            return oldTplSel.call(this,card,i);
+          }
+          showSelectSizeToast();/* 전체사이즈 템플릿=특정 사이즈 없음 → 안내 후 종료 */
+          return;
+        }
+      }catch(e){}
+      return oldTplSel.apply(this,arguments);
+    };
+  }
+})();
+</script>
 <!-- v95 toggle guardian 롤백 — race condition으로 사용자 재클릭 막던 버그. 시계 토글 동작도 함께 원복.
      프레임 토글의 진짜 fix는 normalizeFrameToggle(line 2638)에서 .on + window.DENN_FRAME_VISIBLE
      둘 다 sync하는 것으로 충분. v17~v19 원본 onclick의 의도를 v21이 단순화하며 빠뜨린 부분을 복구. -->
