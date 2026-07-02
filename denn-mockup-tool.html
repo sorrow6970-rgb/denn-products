@@ -1758,6 +1758,29 @@ var RM={
   canvas:null,ctx:null
 };
 
+/* 2026-07-02 진단 전용(기본 OFF): ?dbgUM=1 일 때만 온스크린 오버레이 활성 → 실폰 가로/세로에서
+   drawFrame 최종 기하(anc[]) 판독용. 게이트 밖이면 완전 no-op(무해). 앵커/렌더 로직 무수정.
+   목적: 가로 하단앵커가 PC값과 다른 원인을 화면추측이 아니라 숫자로 확정(핸드오프 2026-07-01 §3/§8). */
+(function(){
+  try{
+    if(!new URLSearchParams(location.search||'').has('dbgUM'))return;
+    function mount(){
+      if(window.__dennUMDbg&&window.__dennUMDbg.el)return;
+      var el=document.createElement('div');
+      el.id='denn-um-dbg';
+      el.style.cssText='position:fixed;top:0;left:0;z-index:2147483647;pointer-events:none;'
+        +'font:10px/1.3 monospace;background:rgba(0,0,0,.72);color:#0f0;padding:4px 6px;'
+        +'white-space:pre;max-width:100vw;word-break:break-all';
+      (document.body||document.documentElement).appendChild(el);
+      window.__dennUMDbg={el:el,push:function(obj){try{
+        var parts=[];for(var k in obj){if(Object.prototype.hasOwnProperty.call(obj,k))parts.push(k+'='+obj[k]);}
+        el.textContent='anc['+(obj.__ori||'?')+'] '+parts.filter(function(p){return p.indexOf('__ori=')!==0}).join(' ');
+      }catch(e){}}};
+    }
+    if(document.body)mount();else document.addEventListener('DOMContentLoaded',mount);
+  }catch(e){}
+})();
+
 function rmIsAdminSetup(){try{return new URLSearchParams(location.search||'').has('adminRoomSetup')}catch(e){return false}}
 function rmSizeAllowsBg(bg){
   // 배경별 표시사이즈 화이트리스트(allowedSizeIds). 빈/없음=전체허용, 사이즈 미선택=전체허용.
@@ -4064,6 +4087,27 @@ function drawFrame(ctx2,W,H){
       else{cy=RM.__anchorYabs*H-(__ay-0.5)*fh;cyp=cy/H;if(RM.pos)RM.pos.y=Math.max(0.02,Math.min(0.98,cyp));RM.__anchorSize=__effSz;}
     }
   }
+  /* 2026-07-02 진단 훅(?dbgUM=1 시에만): cm/pxPerCm/fh/cy/__ay 확정 시점 스냅샷 → 실폰 가로/세로 비교. */
+  if(window.__dennUMDbg&&window.__dennUMDbg.push){try{
+    var __r2=function(v,d){var p=Math.pow(10,d||0);return Math.round(num(v,0)*p)/p;};
+    var __ori=document.documentElement.classList.contains('denn-rotate-fs')?'L(fs)':((window.isRoomPortrait&&isRoomPortrait())?'P':'L');
+    window.__dennUMDbg.push({
+      __ori:__ori,
+      um:(RM.__userMoved?1:0),
+      ay:__r2(__ay,2),
+      cmH:(cm&&cm.h!=null)?__r2(cm.h,1):'-',
+      refH:(RM.__opAnchorRefHV!=null)?__r2(RM.__opAnchorRefHV,1):'-',
+      fh:__r2(fh,0),
+      fy:__r2(cyp,3),
+      sz:__r2(sizePct,1),
+      sg:__r2((by('sg-scale-r')||{}).value,0),
+      mb:__r2(measureBase(W,H),0),
+      cv:W+'x'+H,
+      iy:(RM.__opImgPosV&&RM.__opImgPosV.y!=null)?__r2(RM.__opImgPosV.y,3):'-',
+      bg:String(RM.bgId||'default-room'),
+      op:(RM.__opAnchorRefHV!=null?1:0)
+    });
+  }catch(e){}}
   RM.frameHit={cx:cx,cy:cy,w:fw,h:fh,tilt:tiltDeg,sy:sy};
   RM.__lastFH=fh;RM.__lastCY=cy;RM.__lastH=H;RM.__lastSize=sizePct;RM.__lastCmH=(cm&&cm.h)||0;/* 앵커 타깃 캡처용 직전 렌더 기하 + 기준 cm 높이(저장용) */
   ctx2.save();ctx2.translate(cx,cy);ctx2.rotate(tiltDeg*Math.PI/180);ctx2.scale(1,sy);
