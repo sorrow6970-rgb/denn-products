@@ -1955,6 +1955,41 @@ async function dennPublishBtnClickV(){
   finally{if(btn){btn.disabled=false;btn.textContent=(btn.dataset.o)||'📢 게시';}}
 }
 window.dennPublishBtnClickV=dennPublishBtnClickV;
+/* 2026-07-02 게시 로컬 자동 백업: 게시할 때마다 발행본을 IndexedDB(용량 넉넉)에 최근 10개 링으로 보관.
+   남이 Firebase 발행본을 훼손해도 운영자 localStorage로 재게시하면 복구되지만, 브라우저 청소/기기변경 대비
+   이중 안전망. 복구=dennRestorePublishedBackupV(index) 후 확인→📢게시. 목록=dennListPublishedBackupsV().
+   ※기기 이전까지 대비하려면 주기적으로 '내보내기'(.json 디스크 파일)도 권장. */
+async function dennSavePublishedBackupV(json,at){
+  try{
+    var ring=[];try{ring=(await dbGet('denn_published_backups'))||[];}catch(e){}
+    if(!Array.isArray(ring))ring=[];
+    ring.unshift({at:at||Date.now(),json:json});
+    ring=ring.slice(0,10);
+    await dbSet('denn_published_backups',ring);
+  }catch(e){console.warn('[publish] 로컬 백업 저장 실패',e);}
+}
+function dennListPublishedBackupsV(){
+  return dbGet('denn_published_backups').then(function(ring){
+    ring=Array.isArray(ring)?ring:[];
+    console.log('[publish] 로컬 발행 백업 '+ring.length+'개 (dennRestorePublishedBackupV(index)로 복구):');
+    ring.forEach(function(b,i){try{console.log('  ['+i+'] '+new Date(b.at).toLocaleString()+'  ('+((b.json&&b.json.length)||0)+'b)')}catch(e){}});
+    return ring;
+  });
+}
+async function dennRestorePublishedBackupV(i){
+  i=i||0;
+  var ring=(await dbGet('denn_published_backups'))||[];
+  if(!ring[i]){console.warn('[publish] 백업 없음 index',i);try{toast('해당 백업 없음','e')}catch(e){}return;}
+  var json=ring[i].json;
+  try{localStorage.setItem('denn_admin',json);}catch(e){}
+  try{window.S=JSON.parse(json);if(typeof persistState==='function')await persistState();}catch(e){}
+  try{if(window.renderDash)renderDash();if(window.updateStats)updateStats();}catch(e){}
+  console.log('[publish] ✓ 백업 복구('+i+', '+new Date(ring[i].at).toLocaleString()+'). 확인 후 📢게시로 재발행하세요.');
+  try{toast('✓ 백업 복구됨 — 확인 후 📢게시');}catch(e){}
+}
+window.dennSavePublishedBackupV=dennSavePublishedBackupV;
+window.dennListPublishedBackupsV=dennListPublishedBackupsV;
+window.dennRestorePublishedBackupV=dennRestorePublishedBackupV;
 async function hydrateState(){try{var fromDb=await dbGet('denn_admin_state'),fromLocal=null;try{fromLocal=JSON.parse(localStorage.getItem('denn_admin')||'null')}catch(_){fromLocal=null}S=mergeAdminStateSafe(fromDb,fromLocal);if(!S||!Object.keys(S).length)load();else if(adminStateScore(S)>adminStateScore(fromDb)||adminStateScore(S)>adminStateScore(fromLocal)){try{await dbSet('denn_admin_state',S)}catch(_){}try{dennPersistAdminStateV351(S)}catch(_){}}}catch(e){load();} Object.keys(DEF).forEach(function(k){if(S[k]===undefined)S[k]=deep(DEF[k]);}); if(!S.guideBackgrounds)S.guideBackgrounds=[]; if(S.frameSizes)S.frameSizes.forEach(function(sz){if(!sz.clock)sz.clock=null;});}
 
 function inferFontMeta(fileName){
@@ -14775,6 +14810,7 @@ window.addEventListener('resize',scheduleSettle);
       var json = JSON.stringify(state);
       var dataUrl = 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(json)));
       await window.dennFirebase.uploadDataUrl(dataUrl, 'published/state.json');
+      try { if (window.dennSavePublishedBackupV) await window.dennSavePublishedBackupV(json, state.__publishedAt); } catch(e){}/* 로컬 자동 백업(IndexedDB 링) */
       console.log('[publish] ✓ 게시 완료 published/state.json ('+json.length+'b) @'+state.__publishedAt);
       try { if (window.toast) toast('✓ 소비자 화면에 게시 완료'); } catch(e){}
       return state.__publishedAt;
