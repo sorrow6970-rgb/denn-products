@@ -116,6 +116,44 @@ dennShareCreate({state:JSON.parse(localStorage.getItem('denn_admin'))}).then(u=>
 
 ---
 
+## 5. ★★ 배포(Firebase Hosting) 진행 상황 — 내일 이어감
+
+### 결정된 방향
+- **자동발행 방식 B 채택**(관리자 📢게시 → 소비자 부팅 자동 fetch). 링크 뿌리기(A) 아님. [[project_frame_size_category_filter]] 아님 — 데이터 전달 구조.
+- **보안 = A로 시작**(익명 쓰기 허용, 뒷문 안 잠금) → **내일 B(운영자 Firebase Auth) 추가 예정**. Auth 추가는 소비자 무영향(운영자 쓰기 경로만), 재배포 1회. Auth·Hosting·Storage·Firestore 전부 **무료 티어**로 충분(비용 이슈 아님, A/B 차이는 작업량+보안).
+- **회귀 전수 테스트 = 스킵**(각 수정마다 실폰 검증 누적). 단 **B(게시→소비자 반영) 라이브 스모크 테스트는 배포 후 필수**.
+- **진단 오버레이(`?dbgUM=1`) 제거 = 스킵**(게이트라 무해 + 라이브 디버깅 도구로 유지).
+
+### 코드 = 전부 완료·커밋·푸시 (HEAD `21c41db`)
+- 관리자 `dennPublishState()` + 툴바 **📢게시 버튼**(`dennPublishBtnClickV`) → `published/state.json` 고정경로 업로드(`__publishedAt` 스탬프). 상태=window.S + localStorage 최신 roomBackgroundSettings.
+- 관리자 **게시 로컬 자동 백업**: IndexedDB `denn_published_backups` 링 10개. 복구=`dennRestorePublishedBackupV(i)`→확인 후 📢게시, 목록=`dennListPublishedBackupsV()`. (기기 이전 대비는 '내보내기' .json 권장)
+- 소비자 부팅: `?share=` 없으면 `published/state.json` 자동 fetch → `__publishedAt` 비교 최신이면 reload, `sessionStorage.denn_pub_synced` 루프가드. adminRoomSetup·이미최신·발행본없음(첫배포전)은 스킵(무해).
+- `firebase.json`(**★`*.json` gitignore라 `git add -f`로 추가함**): hosting public=repo, `/`→`denn-mockup-tool.html`, **HTML `no-cache`**(옛코드 사고 방지) + storage/firestore 규칙.
+- `storage.rules`: 읽기 공개 + 쓰기 20MB 상한(전 경로 커버: published/temp-share/templates/placeholders/guides/mockups/editor-overlays/proofs). `firestore.rules`: spaces read+create. `.firebaserc`: project **denn-products**.
+- quota 방어 확인 ✅(admin=QuotaExceeded 자동retry+dennCleanupHeavySnapshots / 소비자=graceful skip, B는 setItem 전 플래그세팅으로 루프없음).
+- 안정 태그 **`pre-deploy-20260702`**(@3f93b39, push).
+
+### 환경 설치 진행(오늘 완료분)
+- **Node.js v24.18.0 + npm 11.16.0 설치 완료**(winget: `winget install OpenJS.NodeJS.LTS --source winget --accept-source-agreements --accept-package-agreements`).
+- **firebase-tools 15.22.4 전역 설치 완료**(`C:\Users\써드플로어\AppData\Roaming\npm\firebase`).
+- ⚠️**현재 `!` 세션=Git Bash라 PATH 미갱신 → `firebase` 못 찾음.** **재부팅(또는 새 터미널 창)** 하면 `%APPDATA%\npm`이 PATH에 잡혀 해결. (재부팅 못 해 오늘 여기서 중단.)
+
+### ▶ 내일 이어갈 순서 (재부팅 후)
+1. **새 PowerShell 창**(또는 재부팅 후) → `cd C:\repo\denn-products` → `firebase --version`(15.22.4 확인)
+2. `firebase login` → 브라우저서 **denn-products 만든 구글 계정** 로그인→허용 (대화형=사용자 직접, 1회만)
+3. `firebase deploy --only hosting` → `Hosting URL: https://denn-products.web.app`
+4. **라이브 B 스모크 테스트**(필수): `denn-products.web.app/denn-admin.html`→로그인→수정→📢게시 → 시크릿창 `denn-products.web.app`(share없이)서 반영 확인. 재접속 시 "이미 최신"(리로드 안 함).
+5. 게시 403(권한)이면 → `firebase deploy --only storage`(내 규칙 적용). Firestore도: `firebase deploy --only storage,firestore:rules`(활성화 안됐으면 storage만).
+6. 배포·검증 OK → **B(운영자 Firebase Auth) 작업 착수**: 이메일/비번 로그인 연결 + storage.rules published/ write를 `request.auth!=null && sign_in_provider!='anonymous'`로 좁힘(소비자 write=temp-share/proofs는 익명 유지). 재배포.
+7. 이후 운영: 코드 변경 시만 `firebase deploy --only hosting` 재배포. **데이터 변경은 관리자 📢게시**만(재배포 불필요).
+
+### 배포 트러블슈팅
+- `firebase: command not found`(Git Bash/구세션) → 재부팅/새 터미널.
+- `Not in a Firebase project directory` → `firebase.json` 있는 `C:\repo\denn-products`에서 실행.
+- 배포됐는데 옛 화면 → 시크릿창/Ctrl+Shift+R(단 HTML no-cache라 보통 OK).
+
+---
+
 ## 6. 다음 작업 후보
 1. 진단 오버레이/감시자(`?dbgUM=1`) 제거(원인 다 잡히면).
 2. (선택) 소비자 핀치-줌(sg 변경) 시 앵커 바닥 드리프트 — 현재는 방향 전환서만 리셋. 완전 고정 원하면 image기반 바닥앵커 재검토(위험, 07-01 롤백 이력).
