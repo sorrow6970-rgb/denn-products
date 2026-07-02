@@ -14,6 +14,7 @@
 | `6028817` | **사이즈앵커가 스케일 조작(um=1)에도 유지** — 게이트 `!userMoved`→`!__anchorImgV` + 앵커값 always-run | ✓ 검증완료 |
 | `2530ae2` | **공유 stale 방지**(dennShareCreate=localStorage roomBackgroundSettings 덮어씀) + **가로 회전 시 방향별 기준스케일(sg) 재적용** | ✓ 검증완료 |
 | `e46f59f` | **양방향 사이즈↔템플릿** — 사이즈 미선택 시 템플릿 클릭하면 저장 사이즈 자동적용(denn-v110 최외곽 래퍼) | ✓ 검증완료 |
+| `1815b8d` | 룸 메뉴 열 때 **캔버스 dim 제거**(opacity .34→1) + 룸 열림 중 **페이지 스크롤 잠금**(화면 흔들림 방지) | ✓ 검증완료 |
 
 ---
 
@@ -108,9 +109,17 @@ dennShareCreate({state:JSON.parse(localStorage.getItem('denn_admin'))}).then(u=>
 
 ---
 
+## 3e. 룸 UX 2건 완료 (`1815b8d`, 검증✓)
+- **메뉴 열 때 캔버스 dim 제거**: `#room-modal.denn-rm-open #rm-canvas-area{opacity:.34→1}`(L~13834). 바텀시트(햇빛/그림자 등) 열어도 배경 선명 → 조정 중 효과 즉시 확인.
+- **룸 열림 중 페이지 스크롤 잠금**: `html.denn-room-scroll-lock`(overflow:hidden+overscroll-behavior:none), openRoomMockup서 add·closeRoomMockup서 remove. 배경 터치 시 브라우저 주소창 토글로 뷰포트 리사이즈되며 흔들리던 것 방지. 모든 닫기 경로가 closeRoomMockup(1915) 경유라 잠금 해제 보장.
+- ★**자동 전체화면(옵션A)은 미채택** — 사용자 결정. 주소창 완전 숨김은 iOS 뒤로가기 스와이프 사라짐 부작용 + 기존 가로 fullscreen/회전 로직 충돌 리스크. iPhone은 requestFullscreen 미지원이라 어차피 스크롤잠금 폴백=동일. 현재 "주소창 보이되 안 흔들림"이 안전한 최종 상태. (향후 A 원하면 feature-detect+동기호출+가로회전 왕복검증 필수.)
+
+---
+
 ## 6. 다음 작업 후보
 1. 진단 오버레이/감시자(`?dbgUM=1`) 제거(원인 다 잡히면).
 2. (선택) 소비자 핀치-줌(sg 변경) 시 앵커 바닥 드리프트 — 현재는 방향 전환서만 리셋. 완전 고정 원하면 image기반 바닥앵커 재검토(위험, 07-01 롤백 이력).
+3. (보류) 룸 세로 자동 전체화면(옵션A) — 안드로이드 주소창 제거용. iOS 폴백/가로회전 충돌 검증 필요해 미착수.
 
 ---
 
