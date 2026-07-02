@@ -13,6 +13,7 @@
 | `35140bb` | 진단 오버레이에 `__userMoved` 감시자 + `umBy`(um 켠 라인번호) 추가 | ✓ |
 | `6028817` | **사이즈앵커가 스케일 조작(um=1)에도 유지** — 게이트 `!userMoved`→`!__anchorImgV` + 앵커값 always-run | ✓ 검증완료 |
 | `2530ae2` | **공유 stale 방지**(dennShareCreate=localStorage roomBackgroundSettings 덮어씀) + **가로 회전 시 방향별 기준스케일(sg) 재적용** | ✓ 검증완료 |
+| `e46f59f` | **양방향 사이즈↔템플릿** — 사이즈 미선택 시 템플릿 클릭하면 저장 사이즈 자동적용(denn-v110 최외곽 래퍼) | ✓ 검증완료 |
 
 ---
 
@@ -99,10 +100,17 @@ dennShareCreate({state:JSON.parse(localStorage.getItem('denn_admin'))}).then(u=>
 
 ---
 
+## 3d. ★ 양방향 사이즈↔템플릿 선택 완료 (`e46f59f`, 검증✓)
+사이즈 미선택(`__dennSizeUnset`=전체 브라우징) 상태에서 템플릿 클릭 시 **무반응이던 문제**(캔버스가 게이트 오버레이에 가려짐). 수정=**최외곽 `selFTplByRef` 래퍼**(`denn-v110-template-to-size`, gate 완화 블록 13248 직후 삽입):
+- `__dennSizeUnset` 시 클릭 템플릿의 저장 사이즈(sizeId/frameSizeId/frameSizeIds/size.* 등, `tplKeys`로 추출) → `window.FS`와 매칭해 인덱스 해석 → 그 사이즈 칩으로 `window.selFSz(chip,idx)` 호출(게이트 해제+그리드 동기 재빌드) → 재빌드된 그리드서 `byIdxOnclick('this,'+i+')')`로 카드 찾아 `oldTplSel(card,i)` 선택.
+- 특정 사이즈 없는 전체사이즈 공용 템플릿 → `window.__dennSelectSizeToastV()` 반투명 안내(1.6s 페이드) 후 종료(폴백).
+- 사이즈 이미 선택됐으면 기존 동작 무영향. ★자체 완결(V95/본체 IIFE 스코프 함수 의존 안 함 — tplKeys/sizeKeys 인라인 복제). ★selFTplByRef 다중래핑(6522~12380) 위에 최외곽으로 얹어 모든 클릭 진입점 커버.
+
+---
+
 ## 6. 다음 작업 후보
-1. §6(전 핸드오프) **사이즈 미선택+템플릿 선택 시 저장 사이즈 자동 적용** — 미착수.
-2. 진단 오버레이/감시자 제거(원인 다 잡히면).
-3. (선택) 소비자 핀치-줌(sg 변경) 시 앵커 바닥 드리프트 — 현재는 방향 전환서만 리셋. 완전 고정 원하면 image기반 바닥앵커 재검토(위험).
+1. 진단 오버레이/감시자(`?dbgUM=1`) 제거(원인 다 잡히면).
+2. (선택) 소비자 핀치-줌(sg 변경) 시 앵커 바닥 드리프트 — 현재는 방향 전환서만 리셋. 완전 고정 원하면 image기반 바닥앵커 재검토(위험, 07-01 롤백 이력).
 
 ---
 
