@@ -1763,7 +1763,12 @@ var RM={
    목적: 가로 하단앵커가 PC값과 다른 원인을 화면추측이 아니라 숫자로 확정(핸드오프 2026-07-01 §3/§8). */
 (function(){
   try{
-    if(!new URLSearchParams(location.search||'').has('dbgUM'))return;
+    /* dbgUM은 쿼리로 켜지지만, share import 후 reload 시 history.replaceState(pathname)로
+       쿼리가 지워짐 → sessionStorage에 래치해 reload 후에도 오버레이 유지(같은 탭 세션). */
+    var __on=false;
+    try{if(new URLSearchParams(location.search||'').has('dbgUM')){__on=true;sessionStorage.setItem('denn_dbgUM','1');}}catch(e){}
+    try{if(!__on&&sessionStorage.getItem('denn_dbgUM')==='1')__on=true;}catch(e){}
+    if(!__on)return;
     function mount(){
       if(window.__dennUMDbg&&window.__dennUMDbg.el)return;
       var el=document.createElement('div');
@@ -3278,7 +3283,7 @@ window.loadSettingsV33=loadSettingsV33;/* PC|모바일 토글 전환 시 현재 
    ★ base에는 모바일 필드를 절대 쓰지 않는다(소비자 PC 읽기 무영향). 저장 컨텍스트 판정은 viewAs=mobile로
    좁힘(소비자 폰은 viewAs 없음 → 우발 저장 차단). 읽기 병합은 단계3(dennMergeMobileV)에서 isRoomMobile() 기준.
    격리 필드=PC/모바일 별개 저장 대상. 2026-06-30 Stage A: 운영자 요구로 조명(햇빛)/그림자/기울기도 .mobile 격리 추가(기존 'base 공유'에서 전환). ★재귀 함정 회피: dennIsMobileEditCtxV는 절대 isRoomPortrait/isRoomMobile 호출 금지(WIP 606f3ad 무한행 원인). PC편집기 '모바일' 탭(__dennAdminMobileV=true)이 이미 .mobile 컨텍스트라 추가 분기 불필요. */
-var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameImgX','frameImgY','frameScale','frameSizeAnchor','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY','bgZoom','bgFocusX','bgFocusY','sunlightEnabled','sunX','sunY','sunlightOpacity','sunlightSpread','sunlightWarm','sunlightRays','sunlightRayThickness','sunlightAngle','shadowEnabled','shadowOpacity','shadowBlur','shadowDirection','shadowDistance','shadowX','shadowY','frameTiltEnabled','frameTiltDeg','framePerspectiveX','framePerspectiveY'];/* 2026-06-19: focus 모델 신규 필드(bgZoom/bgFocusX/Y)도 격리. 2026-06-30: sun(9)+shadow(7)+tilt(4) 격리 추가. */
+var DENN_MOBILE_FIELDS_V=['frameX','frameY','frameCenterX','frameCenterY','frameImgX','frameImgY','frameScale','frameSizeAnchor','frameAnchorRefCmH','guideScale','guideX','guideY','guideCenterX','guideCenterY','guideAnchor','bgScale','bgOffsetX','bgOffsetY','bgZoom','bgFocusX','bgFocusY','sunlightEnabled','sunX','sunY','sunlightOpacity','sunlightSpread','sunlightWarm','sunlightRays','sunlightRayThickness','sunlightAngle','shadowEnabled','shadowOpacity','shadowBlur','shadowDirection','shadowDistance','shadowX','shadowY','frameTiltEnabled','frameTiltDeg','framePerspectiveX','framePerspectiveY'];/* 2026-06-19: focus 모델 신규 필드(bgZoom/bgFocusX/Y)도 격리. 2026-06-30: sun(9)+shadow(7)+tilt(4) 격리 추가. */
 /* 모바일 편집 컨텍스트 판정 — 런타임 토글(__dennAdminMobileV, PC 편집기 내 'PC|모바일' 탭) 우선,
    하위호환으로 URL viewAs=mobile도 인정. 저장 라우팅·읽기 병합·measureBase가 공유. */
 function dennIsMobileEditCtxV(){try{if(window.__dennAdminMobileV)return true;return new URLSearchParams(location.search||'').get('viewAs')==='mobile'}catch(e){return false}}
@@ -3287,6 +3292,13 @@ function dennRouteSaveV(prev,merged){
   if(!dennIsMobileEditCtxV())return merged;              /* PC/데스크탑: 기존대로 base 저장(merged엔 prev.mobile 보존됨) */
   var keep=Object.assign({},prev||{});                    /* 모바일 편집: base(PC) 그대로 보존 */
   keep.mobile=Object.assign({},(prev&&prev.mobile)||{},dennPickMobileFieldsV(merged));
+  /* 2026-07-02: 사이즈앵커(방향 frameSizeAnchor + 기준cm높이 frameAnchorRefCmH)는 기기·화면비 무관 불변량.
+     mobile 편집이어도 base에도 기록해야 소비자 가로(전체화면=base 읽기)에서도 하단앵커가 걸림.
+     (.mobile에도 위에서 이미 들어감 → 세로는 병합으로 획득. base 미기록이 refH=- / op=0 의 근본원인이었음.) */
+  if(merged){
+    if(merged.frameSizeAnchor!=null)keep.frameSizeAnchor=merged.frameSizeAnchor;
+    keep.frameAnchorRefCmH=(merged.frameAnchorRefCmH!=null?merged.frameAnchorRefCmH:null);
+  }
   return keep;
 }
 window.dennIsMobileEditCtxV=dennIsMobileEditCtxV;
@@ -5646,6 +5658,9 @@ function currentRoomSettingsV48(){
     frameY:window.RM&&RM.pos?num(RM.pos.y*100,40):40,
     frameScale:num((by('rm-size')||{}).value,20)/100,
     frameSizeAnchor:num((by('rm-size-anchor')||{}).value,50),
+    /* 2026-07-02: V33 저장(L3125)과 대칭 — 사이즈앵커 기준 cm높이. V48이 이걸 계산 안 해 prev(base) 폴백만 의존하던
+       탓에 mobile 편집 시 base에 refH가 안 실려(→소비자 refH=-/op=0) 하단앵커가 안 걸렸음. 중앙앵커(0.5)면 null. */
+    frameAnchorRefCmH:(function(){try{var R=window.RM,ael=by('rm-size-anchor'),ay=ael?num(ael.value,50)/100:0.5;if(Math.abs(ay-0.5)<1e-6)return null;var h=(R&&R.__lastCmH)||0;return h>0?h:null;}catch(e){}return null})(),
     frameTiltEnabled:!!(by('rm-tilt-tog')&&by('rm-tilt-tog').classList.contains('on')),
     frameTiltDeg:num((by('rm-tilt')||{}).value,0),
     framePerspectiveX:num((by('rm-persp-x')||{}).value,0),
