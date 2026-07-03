@@ -753,6 +753,11 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     try{console.log('[share]',s)}catch(e){}
     if(hide)setTimeout(function(){try{msg.remove()}catch(e){}},hide);
   }
+  /* 2026-07-03: 발행본 준비 신호(앱 init이 await) + 발행본 객체를 메모리로 직접 전달(window.__dennPublishedDataV) →
+     리로드/IDB 라운드트립 의존 제거. 시크릿·모바일 등에서 리로드/IDB 커밋이 불안정해 490KB가 유실되던 근본 원인 해결. */
+  window.__dennPubReadyV=new Promise(function(res){window.__dennPubDoneResolveV=res;});
+  function __pubDone(){window.__dennPubLoadingV=false;try{if(window.__dennPubDoneResolveV){window.__dennPubDoneResolveV();window.__dennPubDoneResolveV=null;}}catch(e){}}
+  setTimeout(__pubDone,8000);/* 안전 타임아웃 — 무슨 일이 있어도 init 진행 */
   // denn_shared_db/kv/denn_admin_state 에 share JSON을 직접 저장.
   // loadAdminFresh가 idb를 머지 primary로 잡는 케이스 방지용 — share import 시 양쪽 동기화.
   function saveAdminToIdb(json){
@@ -792,28 +797,30 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
         var __isAdminEd=new URLSearchParams(location.search||'').has('adminRoomSetup');
         var __pubSynced=false;try{__pubSynced=sessionStorage.getItem('denn_pub_synced')==='1'}catch(_){}
         if(!__isAdminEd&&!__pubSynced){
-          window.__dennPubLoadingV=true;/* 2026-07-03: 발행본 로드 중 = 앱의 기본값 저장 차단(레이스 방지). 적용 후 reload가 리셋, 실패 시 대비 안전 타임아웃. */
-          setTimeout(function(){window.__dennPubLoadingV=false;},8000);
+          window.__dennPubLoadingV=true;/* 2026-07-03: 발행본 로드 중 = 앱의 기본값 저장 차단(레이스 방지). __pubDone()이 해제+init 신호. */
           var __pubUrl='https://firebasestorage.googleapis.com/v0/b/denn-products.firebasestorage.app/o/'+encodeURIComponent('published/state.json')+'?alt=media&cb='+(new Date().getTime());
           step('발행본 확인 중…','#666',3000);
           fetch(__pubUrl).then(function(r){return r.ok?r.json():null;}).then(function(pj){
             /* 2026-07-03 FIX: 가드는 '적용+reload' 및 '이미최신' 경로에서만 세팅 — 발행본 없음(404)/에러(=게시 전 방문)에
                세팅하면 그 세션이 poison돼 게시 후에도 재fetch 안 함(모바일서 JSON 영영 안 받음). 없음/에러는 가드 안 걸어
                다음 로드 재시도. reload 루프는 __publishedAt 비교(적용 후 local==remote→'이미최신'→reload 안 함)가 이중으로 차단. */
-            if(!pj){window.__dennPubLoadingV=false;step('발행본 없음(로컬 사용)','#666',2500);return;}
+            if(!pj){__pubDone();step('발행본 없음(로컬 사용)','#666',2500);return;}
             var __localPub=0;try{var __l=JSON.parse(localStorage.getItem('denn_admin')||'null');__localPub=(__l&&__l.__publishedAt)||0;}catch(e){}
             var __remotePub=pj.__publishedAt||0;
-            if(__remotePub&&__remotePub<=__localPub){window.__dennPubLoadingV=false;try{sessionStorage.setItem('denn_pub_synced','1')}catch(_){}step('이미 최신','#666',2000);return;}/* 최신이면 reload 안 함 */
-            try{localStorage.setItem('denn_admin',JSON.stringify(pj))}catch(e){window.__dennPubLoadingV=false;step('저장 실패: '+e.message,'#c33',5000);return;}
-            try{sessionStorage.setItem('denn_pub_synced','1')}catch(_){}/* 적용 직전 세팅 → reload 후 재적용/재reload 방지 */
-            step('최신 발행본 적용 중…','#080');
-            /* __dennPubLoadingV는 여기서 안 끔 — reload로 리셋됨. 그 사이 앱의 기본값 저장이 492KB를 못 덮게 계속 차단. */
-            saveAdminToIdb(JSON.stringify(pj)).then(function(){setTimeout(function(){try{location.reload()}catch(e){location.href=location.pathname;}},300);});
-          }).catch(function(e){window.__dennPubLoadingV=false;step('발행본 로드 건너뜀','#666',2000);});
-        }else{try{msg.remove()}catch(_){}}/* 2026-07-03 FIX: 가드 세팅됨/운영자 편집기 → fetch 스킵. '[share] 부트 중…' 박스를 즉시 제거(잔류 방지 — 스킵 경로가 박스를 안 지워 모바일서 계속 떠 있던 버그). */
+            if(__remotePub&&__remotePub<=__localPub){__pubDone();try{sessionStorage.setItem('denn_pub_synced','1')}catch(_){}step('이미 최신','#666',2000);return;}/* 최신이면 로컬 사용 */
+            /* ★2026-07-03: 발행본 객체를 메모리로 직접 전달 → init이 리로드/IDB 없이 바로 사용(시크릿/모바일서 490KB 유실 방지). */
+            window.__dennPublishedDataV=pj;
+            try{localStorage.setItem('denn_admin',JSON.stringify(pj))}catch(e){}/* 로컬 백업(실패해도 메모리 데이터로 진행) */
+            try{sessionStorage.setItem('denn_pub_synced','1')}catch(_){}
+            try{saveAdminToIdb(JSON.stringify(pj))}catch(_){}/* IDB 백업(베스트에포트, 리로드 안 함) */
+            step('최신 발행본 적용됨','#080',1500);
+            __pubDone();/* ★ 리로드 제거 — init에 데이터 준비 완료 신호(await 해제) */
+          }).catch(function(e){__pubDone();step('발행본 로드 건너뜀','#666',2000);});
+        }else{__pubDone();try{msg.remove()}catch(_){}}/* 2026-07-03 FIX: 가드 세팅됨/운영자 편집기 → fetch 스킵. '[share] 부트 중…' 박스를 즉시 제거(잔류 방지 — 스킵 경로가 박스를 안 지워 모바일서 계속 떠 있던 버그). */
       }catch(e){}
       return;
     }
+    __pubDone();/* 2026-07-03: share 경로는 자체 fetch+reload 처리 → init이 발행본 await로 안 막히게 즉시 해제 */
     step('1/5 share 감지 ('+source+'): '+shareParam.slice(0,60));
     // share 있으면 무조건 import (사용자가 명시 의도). 기존 denn_admin은 백업.
     var existing=localStorage.getItem('denn_admin');
@@ -2362,7 +2369,12 @@ function drawClockLayer(ctx,IX,IY,IW,IH,CS){
 
 renderFrame = (function(orig){return function(){orig();};})(renderFrame);
 
-window.addEventListener('load',async function(){ ADM=await loadAdminState(); if(ADM) saveCustomerAdminStateToLocalStorage(ADM); init(); });
+window.addEventListener('load',async function(){
+  try{ if(window.__dennPubReadyV) await window.__dennPubReadyV; }catch(e){}/* 2026-07-03: 발행본 fetch 완료까지 대기(안전 타임아웃 내장) → 빈 데이터로 렌더/기본값저장 레이스 방지 */
+  ADM = window.__dennPublishedDataV || await loadAdminState();/* 발행본 있으면 메모리서 직접(IDB/리로드 무의존), 없으면 로컬 */
+  if(ADM){ try{window.ADM=ADM}catch(_){}; try{saveCustomerAdminStateToLocalStorage(ADM)}catch(_){} }
+  init();
+});
 
 /* 2026-06-23: 어드민 가이드배경(및 기타 설정) 저장 시 목업툴 자동 반영 — 새로고침 불필요.
    어드민이 localStorage('denn_admin')에 쓰면 같은 origin의 다른 탭(목업툴)에서 storage 이벤트 발생.
