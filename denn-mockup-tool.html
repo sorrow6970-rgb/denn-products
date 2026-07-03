@@ -798,6 +798,9 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
       try{
         var __isAdminEd=new URLSearchParams(location.search||'').has('adminRoomSetup');
         var __pubSynced=false;try{__pubSynced=sessionStorage.getItem('denn_pub_synced')==='1'}catch(_){}
+        /* 2026-07-03 자가치유: 가드가 켜졌어도 로컬 데이터가 무효(frameSizes 없음 = 이전 레이스 버그로 1037B 저장된 오염 세션)면
+           가드 무시하고 재fetch. 이미 데이터 못 받은 기기(모바일 등)도 새로고침만으로 스스로 복구. 성공 후엔 유효데이터라 재발 안 함. */
+        try{if(__pubSynced){var __lchk=JSON.parse(localStorage.getItem('denn_admin')||'null');if(!(__lchk&&__lchk.frameSizes&&__lchk.frameSizes.length>0)){__pubSynced=false;try{sessionStorage.removeItem('denn_pub_synced')}catch(_){}}}}catch(e){}
         if(!__isAdminEd&&!__pubSynced){
           var __pubUrl='https://firebasestorage.googleapis.com/v0/b/denn-products.firebasestorage.app/o/'+encodeURIComponent('published/state.json')+'?alt=media&cb='+(new Date().getTime());
           step('발행본 확인 중…','#666',3000);
