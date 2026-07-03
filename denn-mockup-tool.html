@@ -3245,7 +3245,7 @@ var SIZE_KEYS_MIRROR_V=['defaultSizeId','sizeId','frameSizeId','primarySizeId','
 /* A(2026-06-04): 컨텍스트 진입(select/clear/upload/preset/reset)이 호출 → 다음 loadSettingsV33가 현재 키를 ② 미러하도록 요청. 인메모리(비영속) → refresh 시 소멸. */
 function dennCurScopedKeyV(){try{return window.scopedKeyV2?window.scopedKeyV2(bgKey()):bgKey()}catch(e){try{return bgKey()}catch(_){return 'default-room'}}}
 window.dennCurScopedKeyV=dennCurScopedKeyV;/* 현재 컨텍스트 스코프드 저장 키(콘솔 검증/진단용 — bgKey가 IIFE-local이라 전역에서 못 부르는 문제 해소) */
-function dennReqMirrorV(){try{(window.__dennMirrorReqV||(window.__dennMirrorReqV={}))[dennCurScopedKeyV()]=true;if(window.RM){window.RM.__userMoved=false;window.RM.__anchorImgV=null;}/* 컨텍스트 진입(배경 선택/클리어/업로드/프리셋/기본설정으로)=운영자 디폴트로 리셋 → __userMoved 해제 + 소비자 앵커 해제(운영자 위치로 복귀). 그 외 세션 조절은 유지. */}catch(e){}}
+function dennReqMirrorV(){try{(window.__dennMirrorReqV||(window.__dennMirrorReqV={}))[dennCurScopedKeyV()]=true;if(window.RM){window.RM.__userMoved=false;window.RM.__anchorImgV=null;window.RM.__sunMovedV=false;}/* 컨텍스트 진입(배경 선택/클리어/업로드/프리셋/기본설정으로)=운영자 디폴트로 리셋 → __userMoved 해제 + 소비자 앵커 해제 + 햇빛 소유 해제(운영자 위치로 복귀). 그 외 세션 조절은 유지. */}catch(e){}}
 /* 2026-07-01: 소비자가 액자를 직접 옮기면 그 위치를 '배경 이미지 좌표'로 캡처 → 회전/기기무관 유지(백분율 대신). 드래그 핸들러서 위치변경 직후 호출. */
 window.dennCaptureUserAnchorV=function(){try{var R=window.RM;if(!R||!R.pos||!R.canvas)return;var b=R.__bgRectV;if(!b||!b.w||!b.h)return;R.__anchorImgV={x:(R.pos.x*R.canvas.width-b.x)/b.w,y:(R.pos.y*R.canvas.height-b.y)/b.h};}catch(e){}};
 window.dennReqMirrorV=dennReqMirrorV;
@@ -4214,6 +4214,22 @@ window.rmRender=function(){
         RM.__opImgPosV=(__iaIxA!=null&&__iaIyA!=null)?{x:num(__iaIxA,.5),y:num(__iaIyA,.5)}:RM.__opImgPosV;/* 운영자 위치(드래그 안 했으면 image-anchor 폴백으로 사용) */
         RM.__opAnchorRefHV=(__opA.frameAnchorRefCmH!=null&&isFinite(__opA.frameAnchorRefCmH))?num(__opA.frameAnchorRefCmH,0):null;
         if(__opA.frameSizeAnchor!=null){var __fsaA=num(__opA.frameSizeAnchor,50);setVal('rm-size-anchor',__fsaA);if(window.dennUpdateSizeAnchorReadoutV)dennUpdateSizeAnchorReadoutV(__fsaA);}
+        /* 2026-07-03 FIX(햇빛 전달): 햇빛(sunOn/sunPos/sunlight*)도 배경별 운영자 레이아웃 의도 → 사이즈앵커와 동형으로
+           um 무관 '항상 실행' 블록서 운영자 프리셋(__opA=.mobile 병합) 강제. drawSun(L4240 호출)이 RM.sunPos·rm-sun-*
+           슬라이더를 직접 읽는데, 기존 force(!um) 블록에 sun이 없어 loadSettingsV33가 매 로드 세팅한 base/.mobile 경쟁값이
+           그려지며 (1)위치 미전달 (2)로드 시 위치 플리커('저장값 2개처럼')가 발생. 소비자가 직접 햇빛을 드래그(__sunMovedV)
+           하기 전까지만 강제 → 드래그하면 그 위치 유지. sunDrag 중 제외. 관리자 편집기=위 블록 게이트(!adminSetup)로 제외. */
+        if(!RM.__sunMovedV&&!RM.sunDrag){
+          if(__opA.sunlightEnabled!=null)setSun(!!__opA.sunlightEnabled);
+          if(__opA.sunlightOpacity!=null)setVal('rm-sun-int',Math.round(num(__opA.sunlightOpacity,.5)*100),'%');
+          if(__opA.sunlightAngle!=null)setVal('rm-sun-ang',num(__opA.sunlightAngle,-30),'°');
+          if(__opA.sunlightSpread!=null)setVal('rm-sun-spread',Math.round(num(__opA.sunlightSpread,.6)*100),'%');
+          if(__opA.sunlightWarm!=null)setVal('rm-sun-warm',Math.round(num(__opA.sunlightWarm,.7)*100),'%');
+          if(__opA.sunlightRays!=null)setVal('rm-sun-rays',num(__opA.sunlightRays,0),'');
+          if(__opA.sunlightRayThickness!=null)setVal('rm-ray-thick',Math.round(num(__opA.sunlightRayThickness,.03)*100),'%');
+          var __sunXop=(__opA.sunX!=null?__opA.sunX:__opA.sunlightX),__sunYop=(__opA.sunY!=null?__opA.sunY:__opA.sunlightY);
+          if(__sunXop!=null||__sunYop!=null){RM.sunPos=RM.sunPos||{x:.75,y:.2};if(__sunXop!=null)RM.sunPos.x=clamp(num(__sunXop,.75),0,1);if(__sunYop!=null)RM.sunPos.y=clamp(num(__sunYop,.2),0,1);}
+        }
         /* 2026-07-02: 기준스케일(sg)은 세로(.mobile)/가로(base)가 다른데 um=1이면 force가 스킵돼 회전해도 옛 방향 sg가
            남음 → 가로에서 액자 크기가 틀려 앵커 바닥이 뜸. '방향 전환 시에만' 그 방향의 운영자 sg 재적용(um 무관).
            한 방향 안에선 소비자 핀치-줌(sg-scale) 유지(매 렌더 강제 아님 → 핀치 먹통 방지). */
@@ -5004,6 +5020,7 @@ function setSunPosFromEvent(ev){
   var __lf=(RM.__bgLiftV&&RM.canvas&&RM.canvas.height)?(RM.__bgLiftV/RM.canvas.height):0;/* 2026-06-29: 위 __lift 보정 — 터치 지점을 sunPos로 역산할 때 lift를 더해(그려진 위치와 일치) 모바일 세로서 누른 곳에 광원이 오게. */
   RM.sunPos.x=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width));
   RM.sunPos.y=Math.max(0,Math.min(1,(ev.clientY-r.top)/r.height+__lf));
+  RM.__sunMovedV=true;/* 2026-07-03: 소비자가 햇빛을 직접 옮기면 '사용자 소유' → always-run 운영자 강제(L4217)가 안 되돌림. dennReqMirrorV(배경전환/기본설정으로)에서만 해제. */
   if(window.rmRender)window.rmRender();
 }
 function saveSunPos(){
