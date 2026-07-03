@@ -1,46 +1,29 @@
 rules_version = '2';
 
-// DENN Products — Firebase Storage 보안 규칙 (보안 B: 운영자 Auth 도입)
+// DENN Products — Firebase Storage 보안 규칙 (보안 B: 운영자 Auth)
 //
-// 경로: admin/(운영자 상태, 비공개) · published/(발행본) · temp-share/(공유) · templates/ ·
-//   placeholders/ · guides/ · mockups/ · editor-overlays/ · proofs/ (이미지).
+// ★단일 match + 경로별 조건: Firebase 규칙은 겹치는 match를 OR(하나라도 허용하면 통과)하므로,
+//   catch-all(read:if true)과 admin/ 매치를 따로 두면 catch-all이 admin/까지 열어버림(겹침 버그).
+//   → 하나의 재귀 match 안에서 경로(allPaths)로 분기해 겹침을 원천 제거.
 //
-// 정책(경로 열거 없이 안전):
-//   - admin/          : 운영자 상태 = 비공개. 로그인 운영자(non-anonymous)만 read+write.
-//   - temp-share/·proofs/ : 소비자가 익명으로 write(공유 스냅샷/시안) → 익명 write 유지. read 공개.
-//   - 그 외(published/·templates/·guides/·mockups/·editor-overlays/·placeholders/ …):
-//                       공개 read(소비자 발행본/이미지) + 운영자(non-anonymous)만 write.
-//   → 운영자 전용 에셋 경로를 일일이 나열하지 않아도 catch-all이 '운영자만 쓰기'로 커버(누락 위험 제거).
-//
-// ⚠️ read 규칙엔 request.resource.size를 쓰지 말 것(read 시 request.resource=null → 항상 거부됨). size는 write에만.
+// 정책:
+//   - read : admin/* 는 로그인 운영자(non-anon)만 / 그 외는 공개(소비자 발행본·이미지 읽기).
+//   - write: temp-share/*·proofs/* 는 익명 허용(소비자 공유/시안) / 그 외(admin·published·에셋)는 운영자만.
+//     둘 다 20MB 상한.
+// ⚠️ read 조건에 request.resource.size 금지(read시 resource=null → 항상 거부).
 
 service firebase.storage {
-  match /b/{bucket}/o {
+  match /b/{bucket}/o/{allPaths=**} {
     function op() {
       return request.auth != null
         && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
-
-    // 관리자 상태 — 비공개(로그인 운영자만)
-    match /admin/{p=**} {
-      allow read: if op();
-      allow write: if op() && request.resource.size < 20 * 1024 * 1024;
+    function consumerWrite() {
+      return allPaths.matches('temp-share/.*') || allPaths.matches('proofs/.*');
     }
 
-    // 소비자 익명 write 경로 — 공유 스냅샷 / 시안 이미지
-    match /temp-share/{p=**} {
-      allow read: if true;
-      allow write: if request.resource.size < 20 * 1024 * 1024;
-    }
-    match /proofs/{p=**} {
-      allow read: if true;
-      allow write: if request.resource.size < 20 * 1024 * 1024;
-    }
-
-    // 그 외(발행본·에셋) — 공개 읽기 + 운영자만 쓰기
-    match /{p=**} {
-      allow read: if true;
-      allow write: if op() && request.resource.size < 20 * 1024 * 1024;
-    }
+    allow read: if allPaths.matches('admin/.*') ? op() : true;
+    allow write: if request.resource.size < 20 * 1024 * 1024
+                 && ( consumerWrite() ? true : op() );
   }
 }
