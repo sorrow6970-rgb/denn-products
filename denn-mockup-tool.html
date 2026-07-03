@@ -10098,7 +10098,7 @@ window.addEventListener('load',run);
       var raw=fit*(mob?.92:.868)*(userScale()/100);/* 모바일 배율 .92: 바텀시트 풀스크린 미리보기에서 액자 확대(2026-06-10) */
       /* 2026-07-03: 모바일 상한 1.55→1.2 — 슬라이더 220%서 액자가 화면 위로 넘쳐 잘리던 것 방지(데이터상 scale 1.29+에서 오버플로).
          이제 상단은 '화면 꽉 참' 근처에서 멈춤. 값이 덜 차거나(↑) 넘치면(↓) 이 1.2만 조정. PC(scale≤4, 스크롤)는 무수정. */
-      var scale=mob?Math.max(.34,Math.min(1.2,raw)):Math.max(.14,Math.min(4,raw));
+      var scale=mob?Math.max(.34,Math.min(.9,raw)):Math.max(.14,Math.min(4,raw));
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
       wrap.style.setProperty('transform','scale('+scale+')','important');
