@@ -54,6 +54,7 @@ function guardGuideBgsLSV(A){
 }
 try{window.guardGuideBgsLSV=guardGuideBgsLSV;}catch(e){}
 function saveCustomerAdminStateToLocalStorage(A){
+  if(window.__dennPubLoadingV)return false;/* 2026-07-03: 발행본 로드 중엔 기본값 저장 차단 — 깨끗한 프로필서 빈 ADM이 492KB 발행본을 덮어쓰던 레이스 버그 방지 */
   try{A=guardOpKeysLSV(A||window.ADM||{});}catch(e){}
   try{A=guardGuideBgsLSV(A);}catch(e){}
   try{return dennSetLocalStorageV351('denn_admin',JSON.stringify(A||window.ADM||{}))}catch(e){console.warn('DENN v35.1 customer stringify failed',e);return false}
@@ -791,21 +792,24 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
         var __isAdminEd=new URLSearchParams(location.search||'').has('adminRoomSetup');
         var __pubSynced=false;try{__pubSynced=sessionStorage.getItem('denn_pub_synced')==='1'}catch(_){}
         if(!__isAdminEd&&!__pubSynced){
+          window.__dennPubLoadingV=true;/* 2026-07-03: 발행본 로드 중 = 앱의 기본값 저장 차단(레이스 방지). 적용 후 reload가 리셋, 실패 시 대비 안전 타임아웃. */
+          setTimeout(function(){window.__dennPubLoadingV=false;},8000);
           var __pubUrl='https://firebasestorage.googleapis.com/v0/b/denn-products.firebasestorage.app/o/'+encodeURIComponent('published/state.json')+'?alt=media&cb='+(new Date().getTime());
           step('발행본 확인 중…','#666',3000);
           fetch(__pubUrl).then(function(r){return r.ok?r.json():null;}).then(function(pj){
             /* 2026-07-03 FIX: 가드는 '적용+reload' 및 '이미최신' 경로에서만 세팅 — 발행본 없음(404)/에러(=게시 전 방문)에
                세팅하면 그 세션이 poison돼 게시 후에도 재fetch 안 함(모바일서 JSON 영영 안 받음). 없음/에러는 가드 안 걸어
                다음 로드 재시도. reload 루프는 __publishedAt 비교(적용 후 local==remote→'이미최신'→reload 안 함)가 이중으로 차단. */
-            if(!pj){step('발행본 없음(로컬 사용)','#666',2500);return;}
+            if(!pj){window.__dennPubLoadingV=false;step('발행본 없음(로컬 사용)','#666',2500);return;}
             var __localPub=0;try{var __l=JSON.parse(localStorage.getItem('denn_admin')||'null');__localPub=(__l&&__l.__publishedAt)||0;}catch(e){}
             var __remotePub=pj.__publishedAt||0;
-            if(__remotePub&&__remotePub<=__localPub){try{sessionStorage.setItem('denn_pub_synced','1')}catch(_){}step('이미 최신','#666',2000);return;}/* 최신이면 reload 안 함 */
-            try{localStorage.setItem('denn_admin',JSON.stringify(pj))}catch(e){step('저장 실패: '+e.message,'#c33',5000);return;}
+            if(__remotePub&&__remotePub<=__localPub){window.__dennPubLoadingV=false;try{sessionStorage.setItem('denn_pub_synced','1')}catch(_){}step('이미 최신','#666',2000);return;}/* 최신이면 reload 안 함 */
+            try{localStorage.setItem('denn_admin',JSON.stringify(pj))}catch(e){window.__dennPubLoadingV=false;step('저장 실패: '+e.message,'#c33',5000);return;}
             try{sessionStorage.setItem('denn_pub_synced','1')}catch(_){}/* 적용 직전 세팅 → reload 후 재적용/재reload 방지 */
             step('최신 발행본 적용 중…','#080');
+            /* __dennPubLoadingV는 여기서 안 끔 — reload로 리셋됨. 그 사이 앱의 기본값 저장이 492KB를 못 덮게 계속 차단. */
             saveAdminToIdb(JSON.stringify(pj)).then(function(){setTimeout(function(){try{location.reload()}catch(e){location.href=location.pathname;}},300);});
-          }).catch(function(e){step('발행본 로드 건너뜀','#666',2000);});
+          }).catch(function(e){window.__dennPubLoadingV=false;step('발행본 로드 건너뜀','#666',2000);});
         }else{try{msg.remove()}catch(_){}}/* 2026-07-03 FIX: 가드 세팅됨/운영자 편집기 → fetch 스킵. '[share] 부트 중…' 박스를 즉시 제거(잔류 방지 — 스킵 경로가 박스를 안 지워 모바일서 계속 떠 있던 버그). */
       }catch(e){}
       return;
@@ -5210,6 +5214,7 @@ function loadAdminFresh(){
 }
 function persistAdmin(A){
   A=A||window.ADM||readLocalAdmin()||{};
+  if(window.__dennPubLoadingV)return A;/* 2026-07-03: 발행본 로드 중 기본값 저장 차단(dbSet 직접호출이 게이트 우회하던 것 포함) */
   setAdmin(A);
   try{saveCustomerAdminStateToLocalStorage(A)}catch(e){}
   dbSet('denn_admin_state',A);
@@ -5811,6 +5816,7 @@ function adminSnapshotV48(){try{return JSON.stringify(adm())}catch(e){return ''}
 function restoreAdminSnapshotV48(snap){if(!snap)return;try{window.ADM=JSON.parse(snap)}catch(e){}}
 function writeAdminDbV48(A){
   try{
+    if(window.__dennPubLoadingV)return;/* 2026-07-03: 발행본 로드 중 IDB 기본값 저장 차단(레이스 방지) */
     if(!window.indexedDB)return;
     var req=indexedDB.open('denn_shared_db');
     req.onupgradeneeded=function(){try{req.result.createObjectStore('kv')}catch(e){}};
