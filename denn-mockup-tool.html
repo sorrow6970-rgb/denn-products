@@ -10097,10 +10097,12 @@ window.addEventListener('load',run);
       var __dennFH=(__dennOriV64&&__dennOriV64.mode==='landscape')?aw:ah;
       var fit=Math.min(1.45,__dennFW/s.w,__dennFH/s.h);
       var mob=previewMode()==='mobile';
+      var MOB_CAP=0.9;/* 2026-07-03: 모바일 '화면 꽉 참' 상한. 덜 차면(↑)/넘치면(↓) 이 값만 조정. */
       var raw=fit*(mob?.92:.868)*(userScale()/100);/* 모바일 배율 .92: 바텀시트 풀스크린 미리보기에서 액자 확대(2026-06-10) */
-      /* 2026-07-03: 모바일 상한 1.55→1.2 — 슬라이더 220%서 액자가 화면 위로 넘쳐 잘리던 것 방지(데이터상 scale 1.29+에서 오버플로).
-         이제 상단은 '화면 꽉 참' 근처에서 멈춤. 값이 덜 차거나(↑) 넘치면(↓) 이 1.2만 조정. PC(scale≤4, 스크롤)는 무수정. */
-      var scale=mob?Math.max(.34,Math.min(.9,raw)):Math.max(.14,Math.min(4,raw));
+      var scale=mob?Math.max(.34,Math.min(MOB_CAP,raw)):Math.max(.14,Math.min(4,raw));
+      /* 2026-07-03: 슬라이더 데드존 제거 — scale이 MOB_CAP(꽉참)에 도달하는 userScale%(fillU)를 계산해 미니 슬라이더 max를 거기로.
+         그 이상은 어차피 안 커지므로(반응 없음) 잘라냄. fit이 프레임/화면마다 달라 고정값 대신 동적. 값이 max 초과면 clamp. */
+      if(mob){try{var __fillU=Math.max(110,Math.min(220,Math.round(MOB_CAP*100/(Math.max(0.01,fit)*0.92))));var __mr=document.getElementById('frame-prev-scale-mini-r');if(__mr){if(String(__mr.max)!==String(__fillU))__mr.max=__fillU;if(+__mr.value>__fillU){__mr.value=__fillU;var __ml=document.getElementById('frame-prev-scale-mini-v');if(__ml)__ml.textContent=__fillU+'%';}}}catch(_e){}}
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
       wrap.style.setProperty('transform','scale('+scale+')','important');
