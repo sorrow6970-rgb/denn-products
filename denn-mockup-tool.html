@@ -4194,7 +4194,7 @@ window.rmRender=function(){
         /* 2026-06-26: PC/모바일 분리 정상화 — __op(=dennMergeMobileV 거친 값)가 이미 맥락별 정확(세로=.mobile, 비세로/PC=base). 기존 '.mobile 우선'(iPad 대응)은 PC 저장(base)을 가려 제거. → 모바일 소비자=.mobile, PC 소비자=base 로 분리. iPad(비세로)는 당분간 base 읽음, 추후 검토. */
         var __iaIx=__op.frameImgX,__iaIy=__op.frameImgY;
         RM.__opImgPosV=(__iaIx!=null&&__iaIy!=null)?{x:num(__iaIx,.5),y:num(__iaIy,.5)}:null;
-        RM.__opAnchorRefHV=(__op.frameAnchorRefCmH!=null&&isFinite(__op.frameAnchorRefCmH))?num(__op.frameAnchorRefCmH,0):null;/* 2026-07-01: 운영자 기준사이즈 cm높이 — 소비자 pin이 사이즈무관 하단정렬에 사용 */
+        RM.__opAnchorRefHV=(__op.frameAnchorRefCmH!=null&&isFinite(__op.frameAnchorRefCmH))?num(__op.frameAnchorRefCmH,0):(num(__op.adminGuideSizeHcm||__op.runtimeGuideSizeHcm||__op.guideSizeHcm,0)||null);/* 2026-07-01: 운영자 기준사이즈 cm높이 — 소비자 pin이 사이즈무관 하단정렬에 사용. 2026-07-03: refH 없으면(07-02 캡처수정 전 저장 배경) 저장된 가이드사이즈 높이로 폴백 → 재저장 없이 바닥앵커 작동(refH≡가이드기준높이, default1서 60=60 확인). 중앙앵커는 (ay-.5)=0이라 무영향. */
         RM.frameAnchorV48={frameCenterX:__px,frameCenterY:__py,frameAnchor:'center'};
         var __gx=num(__op.guideX,__px),__gy=num(__op.guideY,__py);setVal('sg-ox-r',__gx);setVal('sg-ox-n',__gx);setVal('sg-oy-r',__gy);setVal('sg-oy-n',__gy);
         /* 2026-06-22 FIX: 배경 3필드(bgScale/bgOffsetX/bgOffsetY)도 운영자 프리셋(.mobile 병합 __op)으로 강제 — 배경 드로우(L3995)가 rm-bg-* 슬라이더를 직접 읽는데, 기존 force 블록이 프레임/가이드만 세팅하고 배경은 빠뜨려 stale user:키 값(loadSettingsV33가 세팅)이 그려지던 버그. __userMoved 전(미조작)에만 강제 → 왕복유지 보존. 운영자→소비자 모바일 배경위치 전달의 마지막 누락 경로. */
@@ -4215,7 +4215,7 @@ window.rmRender=function(){
       if(__opA){
         var __iaIxA=__opA.frameImgX,__iaIyA=__opA.frameImgY;
         RM.__opImgPosV=(__iaIxA!=null&&__iaIyA!=null)?{x:num(__iaIxA,.5),y:num(__iaIyA,.5)}:RM.__opImgPosV;/* 운영자 위치(드래그 안 했으면 image-anchor 폴백으로 사용) */
-        RM.__opAnchorRefHV=(__opA.frameAnchorRefCmH!=null&&isFinite(__opA.frameAnchorRefCmH))?num(__opA.frameAnchorRefCmH,0):null;
+        RM.__opAnchorRefHV=(__opA.frameAnchorRefCmH!=null&&isFinite(__opA.frameAnchorRefCmH))?num(__opA.frameAnchorRefCmH,0):(num(__opA.adminGuideSizeHcm||__opA.runtimeGuideSizeHcm||__opA.guideSizeHcm,0)||null);/* 2026-07-03: refH 없으면 저장된 가이드사이즈 높이로 폴백(재저장 없이 바닥앵커 작동, refH≡가이드기준높이). */
         if(__opA.frameSizeAnchor!=null){var __fsaA=num(__opA.frameSizeAnchor,50);setVal('rm-size-anchor',__fsaA);if(window.dennUpdateSizeAnchorReadoutV)dennUpdateSizeAnchorReadoutV(__fsaA);}
         /* 2026-07-03 FIX(햇빛 전달): 햇빛(sunOn/sunPos/sunlight*)도 배경별 운영자 레이아웃 의도 → 사이즈앵커와 동형으로
            um 무관 '항상 실행' 블록서 운영자 프리셋(__opA=.mobile 병합) 강제. drawSun(L4240 호출)이 RM.sunPos·rm-sun-*
