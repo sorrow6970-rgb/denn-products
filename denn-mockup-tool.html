@@ -12598,6 +12598,9 @@ window.addEventListener('load',later);
 @media(max-width:860px){
   /* 모바일/태블릿: 래퍼들을 박스트리에서 제거 → canvas-wrap이 직속 자식처럼 동작(기존 모바일 레이아웃 유지) */
   #page-frame .denn-scale-sizer,#page-frame .denn-scale-scroll{display:contents!important}
+  /* 2026-07-03: 액자 이미지를 아래로 드래그하면 브라우저 주소창이 뜨던 문제 — 캔버스에 touch-action:none으로 기본 터치
+     제스처(스크롤/주소창) 차단, 팬은 JS 핸들러 전담(룸 캔버스 L3080과 동일 방식). 모바일만 — PC는 액자>뷰포트 시 네이티브 스크롤 유지. */
+  #frameCanvas{touch-action:none!important}
 }
 </style>
 <style id="denn-v93-infobar-panel-css">
