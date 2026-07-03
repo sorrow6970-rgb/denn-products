@@ -738,11 +738,14 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
   var msg=document.createElement('div');
   msg.style.cssText='position:fixed;top:12px;left:12px;right:12px;padding:12px 16px;background:#777;color:#fff;border-radius:8px;font:13px sans-serif;z-index:99999;max-width:none;word-break:break-all;text-align:left;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,.3)';
   msg.textContent='[share] 부트 중...';
+  /* 2026-07-03: 소비자에겐 부트 상태박스('[share] 부트 중…'/'발행본 확인 중…' 등) 숨김 — 디버그용이라 화면 노출은 불필요.
+     ?debug=1(search 또는 hash)일 때만 화면 표시, 평소엔 step() 내부 console.log만 유지(진단 가능). */
+  var __bootDbg=false;try{__bootDbg=/[?&#]debug=1/.test((location.search||'')+(location.hash||''))}catch(_){}
   function attach(){
     if(document.documentElement)document.documentElement.appendChild(msg);
     else setTimeout(attach,10);
   }
-  attach();
+  if(__bootDbg)attach();
   function step(s,color,hide){
     msg.innerHTML=s;
     if(color)msg.style.background=color;
