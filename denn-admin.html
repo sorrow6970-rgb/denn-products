@@ -150,8 +150,9 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
   <div class="pw-box">
     <div class="pw-logo">DENN <em>PRODUCTS</em></div>
     <div class="pw-sub">관리자 패널</div>
-    <div class="pw-label">비밀번호를 입력하세요</div>
-    <input type="password" class="pw-inp" id="pw-inp" placeholder="••••••••" onkeydown="if(event.key==='Enter')pwLogin()">
+    <div class="pw-label">운영자 로그인</div>
+    <input type="email" class="pw-inp" id="pw-email" placeholder="이메일" autocomplete="username" style="margin-bottom:8px" onkeydown="if(event.key==='Enter')document.getElementById('pw-inp').focus()">
+    <input type="password" class="pw-inp" id="pw-inp" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter')pwLogin()">
     <button class="pw-btn" onclick="pwLogin()">🔓 로그인</button>
     <div class="pw-err" id="pw-err"></div>
   </div>
@@ -721,36 +722,105 @@ function dennPersistAdminStateV351(state){
   state=state||window.S||{};
   saveAdminStateToLocalStorage(state);
   saveAdminStateToIndexedDB(state);
+  try{ if(window.dennScheduleCloudSaveV) window.dennScheduleCloudSaveV(); }catch(_){}/* 2026-07-03: 로컬 저장 시 클라우드 자동 백업 예약(디바운스) */
   return state;
 }
-window.DENN_V351_STORAGE={safeSetLocalStorage:dennSetLocalStorageV351,saveAdminStateToLocalStorage:saveAdminStateToLocalStorage,saveAdminStateToIndexedDB:saveAdminStateToIndexedDB,persist:dennPersistAdminStateV351};/* ── PASSWORD ── */
-var DEFAULT_PW='denn2024';
+window.DENN_V351_STORAGE={safeSetLocalStorage:dennSetLocalStorageV351,saveAdminStateToLocalStorage:saveAdminStateToLocalStorage,saveAdminStateToIndexedDB:saveAdminStateToIndexedDB,persist:dennPersistAdminStateV351};
+/* ── CLOUD SYNC (2026-07-03): 관리자 상태를 Firebase Storage admin/state.json에 자동 백업/로드 ──
+   저장 펀넬(dennPersistAdminStateV351/persistState)에서 디바운스 예약 → 운영자(non-anon) 세션에서만 업로드.
+   로드는 로그인 성공(dennOnAuthStateV) 시 트리거. 충돌=__cloudRev 최신 우선 + mergeAdminStateSafe 병합. */
+var __dennCloudSaveTimer=null;
+window.dennScheduleCloudSaveV=function(immediate){
+  try{
+    if(__dennCloudSaveTimer)clearTimeout(__dennCloudSaveTimer);
+    __dennCloudSaveTimer=setTimeout(function(){__dennCloudSaveTimer=null;dennCloudSaveAdminV();},immediate?0:3000);
+  }catch(e){}
+};
+async function dennCloudSaveAdminV(){
+  try{
+    if(!(window.dennFirebase&&window.dennFirebase.uploadDataUrl&&window.dennFirebase.isReady))return;
+    if(!window.dennFirebase.isReady())return;                       /* 미로그인 → 로컬만 유지 */
+    var u=window.dennFirebase.currentUser&&window.dennFirebase.currentUser();
+    if(!u||u.isAnonymous)return;                                    /* 운영자만 admin/ 쓰기 */
+    window.S.__cloudRev=Date.now();
+    try{saveAdminStateToLocalStorage(window.S);}catch(_){}          /* rev 로컬 반영(leaf 호출 → 재예약 없음) */
+    var json=JSON.stringify(window.S);
+    var dataUrl='data:application/json;base64,'+btoa(unescape(encodeURIComponent(json)));
+    await window.dennFirebase.uploadDataUrl(dataUrl,'admin/state.json');
+    console.log('[cloud] admin state saved '+json.length+'b @'+window.S.__cloudRev);
+  }catch(e){console.warn('[cloud] save fail',e&&e.code,e&&e.message);}
+}
+window.dennCloudSaveAdminV=dennCloudSaveAdminV;
+async function dennCloudLoadAdminV(){
+  try{
+    if(!(window.dennFirebase&&window.dennFirebase.downloadJson))return;
+    await window.dennFirebase.ready();
+    for(var __hw=0;__hw<120&&!window.__dennHydratedV;__hw++){ await new Promise(function(r){setTimeout(r,50);}); }/* 로컬 hydrateState 완료 대기 → 클라우드 로드가 로컬 로드를 덮어쓰지 않게(레이스 방지) */
+    var remote=null;
+    try{ remote=await window.dennFirebase.downloadJson('admin/state.json'); }
+    catch(e){
+      var c=(e&&e.code)||'';
+      if(c.indexOf('object-not-found')>=0){ dennScheduleCloudSaveV(true); return; }/* 클라우드 비었음 → 로컬을 업로드(첫 마이그) */
+      console.warn('[cloud] load fail',c,e&&e.message); return;
+    }
+    if(!remote||typeof remote!=='object')return;
+    var localRev=(window.S&&window.S.__cloudRev)||0, remoteRev=remote.__cloudRev||0;
+    if(remoteRev>localRev){
+      try{localStorage.setItem('denn_admin_pre_cloud_'+Date.now(),JSON.stringify(window.S));}catch(_){}/* 채택 전 로컬 백업 */
+      window.S=(typeof mergeAdminStateSafe==='function')?mergeAdminStateSafe(remote,window.S):remote;/* 병합(배열 union+tombstone 보존) */
+      window.S.__cloudRev=remoteRev;
+      try{Object.keys(DEF).forEach(function(k){if(window.S[k]===undefined)window.S[k]=deep(DEF[k]);});}catch(_){}
+      dennPersistAdminStateV351(window.S);
+      try{ if(typeof goTab==='function') goTab('dashboard',document.querySelector('.ni')); }catch(_){}
+      try{ if(typeof refreshGuideBgCards==='function') refreshGuideBgCards(); }catch(_){}
+      try{ if(window.toast) toast('☁ 클라우드 최신 상태 로드됨'); }catch(_){}
+    }else if(localRev>remoteRev){
+      dennScheduleCloudSaveV(true);/* 로컬이 최신 → 클라우드 업로드 */
+    }
+  }catch(e){console.warn('[cloud] load err',e);}
+}
+window.dennCloudLoadAdminV=dennCloudLoadAdminV;
+/* ── PASSWORD ── */
+/* 2026-07-03: 로컬 하드코딩 비번(denn2024) → Firebase Auth 이메일/비번 로그인으로 교체.
+   계정은 Firebase 콘솔에서 생성. 세션은 Firebase가 유지 → 재방문 시 dennOnAuthStateV가 자동 진입. */
+function dennAuthErrMsgV(e){
+  var c=(e&&e.code)||'';
+  if(c.indexOf('invalid-credential')>=0||c.indexOf('wrong-password')>=0||c.indexOf('user-not-found')>=0)return '이메일 또는 비밀번호가 올바르지 않습니다';
+  if(c.indexOf('invalid-email')>=0)return '이메일 형식이 올바르지 않습니다';
+  if(c.indexOf('too-many-requests')>=0)return '시도가 많습니다. 잠시 후 다시 시도하세요';
+  if(c.indexOf('network')>=0)return '네트워크 오류 — 연결 확인 후 재시도';
+  return '로그인 실패: '+(c||(e&&e.message)||'');
+}
 function pwLogin(){
-  var inp=document.getElementById('pw-inp');
-  var stored=localStorage.getItem('denn_admin_pw')||DEFAULT_PW;
-  if(inp.value===stored){
-    document.getElementById('pw-screen').style.display='none';
-    inp.value='';
-    document.getElementById('pw-err').textContent='';
-  } else {
-    inp.classList.add('err');
-    document.getElementById('pw-err').textContent='비밀번호가 틀렸습니다';
-    setTimeout(function(){inp.classList.remove('err');},400);
-    inp.value='';inp.focus();
+  var email=((document.getElementById('pw-email')||{}).value||'').trim();
+  var pw=(document.getElementById('pw-inp')||{}).value||'';
+  var errEl=document.getElementById('pw-err');
+  if(!email||!pw){ if(errEl)errEl.textContent='이메일과 비밀번호를 입력하세요'; return; }
+  if(!(window.dennFirebase&&window.dennFirebase.signInEmail)){ if(errEl)errEl.textContent='로그인 준비 중 — 잠시 후 다시 눌러주세요'; return; }
+  if(errEl)errEl.textContent='로그인 중…';
+  window.dennFirebase.signInEmail(email,pw).then(function(){
+    /* 성공 → onAuthStateChanged → dennOnAuthStateV가 화면 전환·클라우드 로드 */
+    var inp=document.getElementById('pw-inp'); if(inp)inp.value='';
+    if(errEl)errEl.textContent='';
+  }).catch(function(e){
+    var inp=document.getElementById('pw-inp'); if(inp){inp.classList.add('err');setTimeout(function(){inp.classList.remove('err')},400);inp.value='';}
+    if(errEl)errEl.textContent=dennAuthErrMsgV(e);
+  });
+}
+function pwLogout(){ try{ if(window.dennFirebase&&window.dennFirebase.signOutOp) window.dennFirebase.signOutOp(); }catch(e){} }
+function pwChange(){ alert('비밀번호는 Firebase 콘솔(Authentication → Users)에서 변경하세요.'); }
+/* dennOnAuthStateV: 모듈 onAuthStateChanged가 세션 변화 시 호출 → 로그인 화면 표시/숨김 + 클라우드 상태 로드 */
+window.dennOnAuthStateV=function(u){
+  var authed=!!(u&&!u.isAnonymous);
+  var scr=document.getElementById('pw-screen');
+  if(authed){
+    if(scr)scr.style.display='none';
+    try{ if(window.dennCloudLoadAdminV) window.dennCloudLoadAdminV(); }catch(e){}
+  }else{
+    if(scr)scr.style.display='flex';
+    var em=document.getElementById('pw-email'); if(em)setTimeout(function(){try{em.focus()}catch(_){}}, 50);
   }
-}
-function pwLogout(){document.getElementById('pw-screen').style.display='flex';document.getElementById('pw-inp').focus();}
-function pwChange(){
-  var cur=prompt('현재 비밀번호:');
-  var stored=localStorage.getItem('denn_admin_pw')||DEFAULT_PW;
-  if(cur!==stored){alert('현재 비밀번호가 틀렸습니다.');return;}
-  var nw=prompt('새 비밀번호 (최소 4자):');
-  if(!nw||nw.length<4){alert('비밀번호가 너무 짧습니다.');return;}
-  var nw2=prompt('새 비밀번호 확인:');
-  if(nw!==nw2){alert('비밀번호가 일치하지 않습니다.');return;}
-  localStorage.setItem('denn_admin_pw',nw);
-  alert('✓ 비밀번호가 변경됐습니다.');
-}
+};
 
 /* ============ BUILTIN MODEL PARAMS ============ */
 var BM={
@@ -1942,7 +2012,7 @@ function mergeUniqueSafe(base,extra,keyFn){base=Array.isArray(base)?base.slice()
 function guideBgMergeKey(bg,i){return (bg&&(bg.id||bg.dataUrl||bg.name))||('guide-'+i)}
 function deletedMapSafe(a,b){var m={};(a&&a.deletedGuideBackgroundKeys||[]).concat(b&&b.deletedGuideBackgroundKeys||[]).forEach(function(k){if(k)m[k]=true});return m}
 function mergeAdminStateSafe(a,b){a=a&&typeof a==='object'?a:{};b=b&&typeof b==='object'?b:{};var primary=adminStateScore(a)>=adminStateScore(b)?a:b,secondary=primary===a?b:a,out=Object.assign({},secondary,primary),deleted=deletedMapSafe(a,b);out.deletedGuideBackgroundKeys=Object.keys(deleted);out.guideBackgrounds=mergeUniqueSafe(primary.guideBackgrounds,secondary.guideBackgrounds,guideBgMergeKey).filter(function(bg,i){return !deleted[guideBgMergeKey(bg,i)]});out.uploadedFrameTemplates=mergeUniqueSafe(primary.uploadedFrameTemplates,secondary.uploadedFrameTemplates,function(t,i){return (t&&(t.id||t.dataUrl||t.name))||('tpl-'+i)});out.frameTemplates=mergeUniqueSafe(primary.frameTemplates,secondary.frameTemplates,function(t,i){return (t&&(t.id||t.name))||('base-tpl-'+i)});out.frameSizes=mergeUniqueSafe(primary.frameSizes,secondary.frameSizes,function(s,i){return (s&&(s.id||s.name))||('size-'+i)});out.roomBackgroundSettings=Object.assign({},secondary.roomBackgroundSettings||{},primary.roomBackgroundSettings||{});return out}
-async function persistState(){var state=window.S||{};saveAdminStateToLocalStorage(state);await saveAdminStateToIndexedDB(state);return state;}
+async function persistState(){var state=window.S||{};saveAdminStateToLocalStorage(state);await saveAdminStateToIndexedDB(state);try{ if(window.dennScheduleCloudSaveV) window.dennScheduleCloudSaveV(); }catch(_){}/* 2026-07-03: 클라우드 자동 백업 예약 */return state;}
 /* 2026-07-02 게시 버튼 핸들러: 현재 상태를 localStorage에 확정(persist) 후 Firebase 고정경로에 게시 → 소비자 부팅 시 자동 반영. */
 async function dennPublishBtnClickV(){
   var btn=document.getElementById('denn-publish-btn');
@@ -1990,7 +2060,7 @@ async function dennRestorePublishedBackupV(i){
 window.dennSavePublishedBackupV=dennSavePublishedBackupV;
 window.dennListPublishedBackupsV=dennListPublishedBackupsV;
 window.dennRestorePublishedBackupV=dennRestorePublishedBackupV;
-async function hydrateState(){try{var fromDb=await dbGet('denn_admin_state'),fromLocal=null;try{fromLocal=JSON.parse(localStorage.getItem('denn_admin')||'null')}catch(_){fromLocal=null}S=mergeAdminStateSafe(fromDb,fromLocal);if(!S||!Object.keys(S).length)load();else if(adminStateScore(S)>adminStateScore(fromDb)||adminStateScore(S)>adminStateScore(fromLocal)){try{await dbSet('denn_admin_state',S)}catch(_){}try{dennPersistAdminStateV351(S)}catch(_){}}}catch(e){load();} Object.keys(DEF).forEach(function(k){if(S[k]===undefined)S[k]=deep(DEF[k]);}); if(!S.guideBackgrounds)S.guideBackgrounds=[]; if(S.frameSizes)S.frameSizes.forEach(function(sz){if(!sz.clock)sz.clock=null;});}
+async function hydrateState(){try{var fromDb=await dbGet('denn_admin_state'),fromLocal=null;try{fromLocal=JSON.parse(localStorage.getItem('denn_admin')||'null')}catch(_){fromLocal=null}S=mergeAdminStateSafe(fromDb,fromLocal);if(!S||!Object.keys(S).length)load();else if(adminStateScore(S)>adminStateScore(fromDb)||adminStateScore(S)>adminStateScore(fromLocal)){try{await dbSet('denn_admin_state',S)}catch(_){}try{dennPersistAdminStateV351(S)}catch(_){}}}catch(e){load();} Object.keys(DEF).forEach(function(k){if(S[k]===undefined)S[k]=deep(DEF[k]);}); if(!S.guideBackgrounds)S.guideBackgrounds=[]; if(S.frameSizes)S.frameSizes.forEach(function(sz){if(!sz.clock)sz.clock=null;}); window.__dennHydratedV=true;/* 2026-07-03: 로컬 로드 완료 신호(클라우드 로드 레이스 가드) */}
 
 function inferFontMeta(fileName){
   var base=fileName.replace(/\.[^.]+$/,'');
@@ -14701,8 +14771,8 @@ window.addEventListener('resize',scheduleSettle);
      ============================================================ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getStorage, ref, uploadString, getDownloadURL, deleteObject, getBytes } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
   import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -14724,12 +14794,13 @@ window.addEventListener('resize',scheduleSettle);
     const storage = getStorage(app);
     const db = getFirestore(app);
 
-    // Anonymous sign-in. Storage 규칙에서 request.auth != null 로 쓰기 허용.
-    signInAnonymously(auth).catch(function(err){
-      console.warn('[firebase] anonymous signin failed:', err && err.code, err && err.message);
-    });
+    // 2026-07-03: 운영자 이메일/비번 인증(익명 제거). non-anonymous 세션에서만 _ready → admin/ 등 운영자 쓰기 권한.
+    // 세션은 Firebase가 localStorage에 유지 → 재방문 시 onAuthStateChanged가 로그인 세션을 자동 복원.
     onAuthStateChanged(auth, function(u){
-      if (u) { _ready = true; window.__dennFirebaseReady && window.__dennFirebaseReady(true); }
+      var authed = !!(u && !u.isAnonymous);
+      if (authed) { _ready = true; window.__dennFirebaseReady && window.__dennFirebaseReady(true); }
+      window.__dennAuthUser = u || null;
+      try { if (window.dennOnAuthStateV) window.dennOnAuthStateV(u || null); } catch(e){}
     });
 
     window.dennFirebase = {
@@ -14749,6 +14820,16 @@ window.addEventListener('resize',scheduleSettle);
         if (!path) return;
         await _readyPromise;
         try { await deleteObject(ref(storage, path)); } catch(e){ console.warn('[firebase] delete failed:', e && e.code); }
+      },
+      /* 2026-07-03: 운영자 이메일 로그인/로그아웃/세션 */
+      currentUser() { return auth.currentUser; },
+      signInEmail(email, pw) { return signInWithEmailAndPassword(auth, email, pw); },
+      signOutOp() { return signOut(auth); },
+      /* 비공개 경로(admin/) JSON 다운로드 — 인증 SDK(getBytes)로 규칙 준수(REST ?alt=media는 403). */
+      async downloadJson(path) {
+        var buf = await getBytes(ref(storage, path));
+        var txt = new TextDecoder('utf-8').decode(buf instanceof ArrayBuffer ? new Uint8Array(buf) : buf);
+        return JSON.parse(txt);
       }
     };
     console.log('[firebase] SDK initialized; window.dennFirebase ready');
