@@ -10096,7 +10096,10 @@ window.addEventListener('load',run);
       var fit=Math.min(1.45,__dennFW/s.w,__dennFH/s.h);
       var mob=previewMode()==='mobile';
       var raw=fit*(mob?.92:.868)*(userScale()/100);/* 모바일 배율 .56→.92: 바텀시트 풀스크린 미리보기에서 액자 확대(2026-06-10) */
-      var scale=mob?Math.max(.34,Math.min(1.55,raw)):Math.max(.14,Math.min(4,raw));
+      /* 2026-07-03: '화면 꽉 참' 스케일 = 1.45 캡 없는 실제 fit. 모바일은 이걸 상한으로 → 슬라이더를 끝까지 올려도
+         액자가 뷰포트를 넘지 않음(오버플로/스크롤·터치 충돌 원천 제거). 슬라이더 상단은 꽉참에서 멈춤(데드존). PC는 기존(스크롤). */
+      var fitFull=Math.min(__dennFW/s.w,__dennFH/s.h);
+      var scale=mob?Math.max(.34,Math.min(fitFull,raw)):Math.max(.14,Math.min(4,raw));
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
       wrap.style.setProperty('transform','scale('+scale+')','important');
