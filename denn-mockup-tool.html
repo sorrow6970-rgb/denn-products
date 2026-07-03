@@ -1438,6 +1438,12 @@ function drawImgT(ctx,img,x,y,w,h,T){
   var iw=img.naturalWidth,ih=img.naturalHeight;
   var baseSc=Math.max(w/iw,h/ih);
   var sc=baseSc*T.scale;
+  /* 2026-07-03: 이미지 팬 범위 클램프 — 존 밖으로 끌어 이미지를 놓쳐 못 찾는 것 방지.
+     이미지가 존보다 크면 커버 유지, 작으면(줌아웃) 존 안에 유지 — 둘 다 |오프셋|≤|이미지-존|/2.
+     T를 직접 클램프해 드래그가 경계에서 멈춤. drawImgT는 모든 프리뷰 이미지의 단일 통로(프린트=별도 drawImageT). */
+  var maxTx=Math.abs(iw*sc-w)/2,maxTy=Math.abs(ih*sc-h)/2;
+  T.x=Math.max(-maxTx,Math.min(maxTx,+T.x||0));
+  T.y=Math.max(-maxTy,Math.min(maxTy,+T.y||0));
   var dx=x+(w-iw*sc)/2+T.x;
   var dy=y+(h-ih*sc)/2+T.y;
   ctx.drawImage(img,dx,dy,iw*sc,ih*sc);
