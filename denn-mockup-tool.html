@@ -10102,6 +10102,7 @@ window.addEventListener('load',run);
       var raw=(mob?fitFull:fit)*(mob?.92:.868)*(userScale()/100);
       /* 모바일 상한 = fitFull → 슬라이더 상단에서 화면에 꽉 차고 그 이상은 안 커짐(오버플로/스크롤·터치 충돌 원천 제거). PC(scale≤4, 스크롤)는 무수정. */
       var scale=mob?Math.max(.34,Math.min(fitFull,raw)):Math.max(.14,Math.min(4,raw));
+      if(/dbgScale=1/.test(location.search||'')){try{var _dd=document.getElementById('__dennScaleDbg')||(function(){var e=document.createElement('div');e.id='__dennScaleDbg';e.style.cssText='position:fixed;top:2px;left:2px;z-index:2147483647;background:#000;color:#0f0;font:11px monospace;padding:5px;white-space:pre;pointer-events:none;line-height:1.35';document.body.appendChild(e);return e})();var __r=cv.getBoundingClientRect();_dd.textContent='mob='+mob+' u='+userScale()+'\nsw='+Math.round(s.w)+' sh='+Math.round(s.h)+'\naw='+Math.round(aw)+' ah='+Math.round(ah)+'\nfit='+fit.toFixed(3)+' fitFull='+fitFull.toFixed(3)+'\nraw='+raw.toFixed(3)+' scale='+scale.toFixed(3)+'\ncvW='+cv.width+' cvH='+cv.height+'\nrectW='+Math.round(__r.width)+' rectH='+Math.round(__r.height)+'\nwinW='+window.innerWidth+' winH='+window.innerHeight;}catch(_e){}}
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
       wrap.style.setProperty('transform','scale('+scale+')','important');
