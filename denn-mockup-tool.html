@@ -10094,15 +10094,11 @@ window.addEventListener('load',run);
       var __dennFW=(__dennOriV64&&__dennOriV64.mode==='landscape')?ah:aw;
       var __dennFH=(__dennOriV64&&__dennOriV64.mode==='landscape')?aw:ah;
       var fit=Math.min(1.45,__dennFW/s.w,__dennFH/s.h);
-      /* 2026-07-03: '화면 꽉 참' 스케일 = 1.45 캡 없는 실제 fit(area/frame). */
-      var fitFull=Math.min(__dennFW/s.w,__dennFH/s.h);
       var mob=previewMode()==='mobile';
-      /* 2026-07-03: 모바일 raw 기준을 fit(1.45캡)→fitFull로. 기존엔 1.45 캡 탓에 슬라이더를 끝까지 올려도
-         raw가 fitFull에 못 미쳐 액자가 화면에 꽉 안 찼음. fitFull 기준이면 슬라이더로 꽉참까지 도달. PC는 기존. */
-      var raw=(mob?fitFull:fit)*(mob?.92:.868)*(userScale()/100);
-      /* 모바일 상한 = fitFull → 슬라이더 상단에서 화면에 꽉 차고 그 이상은 안 커짐(오버플로/스크롤·터치 충돌 원천 제거). PC(scale≤4, 스크롤)는 무수정. */
-      var scale=mob?Math.max(.34,Math.min(fitFull,raw)):Math.max(.14,Math.min(4,raw));
-      if(/dbgScale=1/.test(location.search||'')){try{var _dd=document.getElementById('__dennScaleDbg')||(function(){var e=document.createElement('div');e.id='__dennScaleDbg';e.style.cssText='position:fixed;top:2px;left:2px;z-index:2147483647;background:#000;color:#0f0;font:11px monospace;padding:5px;white-space:pre;pointer-events:none;line-height:1.35';document.body.appendChild(e);return e})();var __r=cv.getBoundingClientRect();_dd.textContent='mob='+mob+' u='+userScale()+'\nsw='+Math.round(s.w)+' sh='+Math.round(s.h)+'\naw='+Math.round(aw)+' ah='+Math.round(ah)+'\nfit='+fit.toFixed(3)+' fitFull='+fitFull.toFixed(3)+'\nraw='+raw.toFixed(3)+' scale='+scale.toFixed(3)+'\ncvW='+cv.width+' cvH='+cv.height+'\nrectW='+Math.round(__r.width)+' rectH='+Math.round(__r.height)+'\nwinW='+window.innerWidth+' winH='+window.innerHeight;}catch(_e){}}
+      var raw=fit*(mob?.92:.868)*(userScale()/100);/* 모바일 배율 .92: 바텀시트 풀스크린 미리보기에서 액자 확대(2026-06-10) */
+      /* 2026-07-03: 모바일 상한 1.55→1.2 — 슬라이더 220%서 액자가 화면 위로 넘쳐 잘리던 것 방지(데이터상 scale 1.29+에서 오버플로).
+         이제 상단은 '화면 꽉 참' 근처에서 멈춤. 값이 덜 차거나(↑) 넘치면(↓) 이 1.2만 조정. PC(scale≤4, 스크롤)는 무수정. */
+      var scale=mob?Math.max(.34,Math.min(1.2,raw)):Math.max(.14,Math.min(4,raw));
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
       wrap.style.setProperty('transform','scale('+scale+')','important');
