@@ -791,16 +791,19 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
           var __pubUrl='https://firebasestorage.googleapis.com/v0/b/denn-products.firebasestorage.app/o/'+encodeURIComponent('published/state.json')+'?alt=media&cb='+(new Date().getTime());
           step('발행본 확인 중…','#666',3000);
           fetch(__pubUrl).then(function(r){return r.ok?r.json():null;}).then(function(pj){
-            try{sessionStorage.setItem('denn_pub_synced','1')}catch(_){}
+            /* 2026-07-03 FIX: 가드는 '적용+reload' 및 '이미최신' 경로에서만 세팅 — 발행본 없음(404)/에러(=게시 전 방문)에
+               세팅하면 그 세션이 poison돼 게시 후에도 재fetch 안 함(모바일서 JSON 영영 안 받음). 없음/에러는 가드 안 걸어
+               다음 로드 재시도. reload 루프는 __publishedAt 비교(적용 후 local==remote→'이미최신'→reload 안 함)가 이중으로 차단. */
             if(!pj){step('발행본 없음(로컬 사용)','#666',2500);return;}
             var __localPub=0;try{var __l=JSON.parse(localStorage.getItem('denn_admin')||'null');__localPub=(__l&&__l.__publishedAt)||0;}catch(e){}
             var __remotePub=pj.__publishedAt||0;
-            if(__remotePub&&__remotePub<=__localPub){step('이미 최신','#666',2000);return;}/* 최신이면 reload 안 함 */
+            if(__remotePub&&__remotePub<=__localPub){try{sessionStorage.setItem('denn_pub_synced','1')}catch(_){}step('이미 최신','#666',2000);return;}/* 최신이면 reload 안 함 */
             try{localStorage.setItem('denn_admin',JSON.stringify(pj))}catch(e){step('저장 실패: '+e.message,'#c33',5000);return;}
+            try{sessionStorage.setItem('denn_pub_synced','1')}catch(_){}/* 적용 직전 세팅 → reload 후 재적용/재reload 방지 */
             step('최신 발행본 적용 중…','#080');
             saveAdminToIdb(JSON.stringify(pj)).then(function(){setTimeout(function(){try{location.reload()}catch(e){location.href=location.pathname;}},300);});
-          }).catch(function(e){try{sessionStorage.setItem('denn_pub_synced','1')}catch(_){}step('발행본 로드 건너뜀','#666',2000);});
-        }
+          }).catch(function(e){step('발행본 로드 건너뜀','#666',2000);});
+        }else{try{msg.remove()}catch(_){}}/* 2026-07-03 FIX: 가드 세팅됨/운영자 편집기 → fetch 스킵. '[share] 부트 중…' 박스를 즉시 제거(잔류 방지 — 스킵 경로가 박스를 안 지워 모바일서 계속 떠 있던 버그). */
       }catch(e){}
       return;
     }
