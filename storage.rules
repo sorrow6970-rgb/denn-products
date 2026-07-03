@@ -2,28 +2,41 @@ rules_version = '2';
 
 // DENN Products — Firebase Storage 보안 규칙 (보안 B: 운영자 Auth)
 //
-// ★단일 match + 경로별 조건: Firebase 규칙은 겹치는 match를 OR(하나라도 허용하면 통과)하므로,
-//   catch-all(read:if true)과 admin/ 매치를 따로 두면 catch-all이 admin/까지 열어버림(겹침 버그).
-//   → 하나의 재귀 match 안에서 경로(allPaths)로 분기해 겹침을 원천 제거.
+// ★경로별 명시 match: Firebase는 겹치는 match를 OR(하나라도 허용하면 통과)하므로 catch-all read:if true를
+//   쓰면 admin/까지 노출됨. 그래서 catch-all read 없이 공개 경로를 명시하고, admin/은 자기 match만 둠.
+//   미지정 경로는 매치 없음 → 기본 거부(자동).
 //
 // 정책:
-//   - read : admin/* 는 로그인 운영자(non-anon)만 / 그 외는 공개(소비자 발행본·이미지 읽기).
-//   - write: temp-share/*·proofs/* 는 익명 허용(소비자 공유/시안) / 그 외(admin·published·에셋)는 운영자만.
-//     둘 다 20MB 상한.
+//   - admin/            : 로그인 운영자(non-anon)만 read+write (비공개).
+//   - temp-share/·proofs/: 공개 read + 익명 write(소비자 공유/시안).
+//   - published/·templates/·placeholders/·guides/·mockups/·editor-overlays/: 공개 read + 운영자만 write.
+//   - 그 외             : 거부.
 // ⚠️ read 조건에 request.resource.size 금지(read시 resource=null → 항상 거부).
 
 service firebase.storage {
-  match /b/{bucket}/o/{allPaths=**} {
+  match /b/{bucket}/o {
     function op() {
       return request.auth != null
         && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
-    function consumerWrite() {
-      return allPaths.matches('temp-share/.*') || allPaths.matches('proofs/.*');
+    function okSize() { return request.resource.size < 20 * 1024 * 1024; }
+
+    // 관리자 상태 — 비공개
+    match /admin/{p=**} {
+      allow read: if op();
+      allow write: if op() && okSize();
     }
 
-    allow read: if allPaths.matches('admin/.*') ? op() : true;
-    allow write: if request.resource.size < 20 * 1024 * 1024
-                 && ( consumerWrite() ? true : op() );
+    // 소비자 익명 write — 공유 스냅샷 / 시안 이미지
+    match /temp-share/{p=**} { allow read: if true; allow write: if okSize(); }
+    match /proofs/{p=**}     { allow read: if true; allow write: if okSize(); }
+
+    // 발행본 · 운영자 에셋 — 공개 read + 운영자만 write
+    match /published/{p=**}       { allow read: if true; allow write: if op() && okSize(); }
+    match /templates/{p=**}       { allow read: if true; allow write: if op() && okSize(); }
+    match /placeholders/{p=**}    { allow read: if true; allow write: if op() && okSize(); }
+    match /guides/{p=**}          { allow read: if true; allow write: if op() && okSize(); }
+    match /mockups/{p=**}         { allow read: if true; allow write: if op() && okSize(); }
+    match /editor-overlays/{p=**} { allow read: if true; allow write: if op() && okSize(); }
   }
 }
