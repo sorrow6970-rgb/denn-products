@@ -12773,7 +12773,13 @@ window.addEventListener('load',later);
   header .tab{padding:6px 13px!important;font-size:11px!important}
 
   /* 미리보기(상단 flex, 가변) + 메뉴(하단, 가변높이 분할) + 고정 탭바. 컨테이너 하단패딩=탭바58 */
-  #page-frame.main.on{display:flex!important;flex-direction:column!important;height:calc(100vh - var(--denn-header-h, 95px))!important;height:calc(100lvh - var(--denn-header-h, 95px))!important;overflow:hidden!important;padding-bottom:158px!important;box-sizing:border-box}
+  /* 2026-07-04: 프레임툴 고정 — 페이지 스크롤 잠금(아래 :has 규칙)으로 주소창 토글 제거 → 뷰포트 안정.
+     잠금 상태의 가시 높이 = svh(주소창 표시 기준)라 컨테이너를 svh로 딱 맞춤. (lvh/dvh 흔들림 제거) */
+  #page-frame.main.on{display:flex!important;flex-direction:column!important;height:calc(100vh - var(--denn-header-h, 95px))!important;height:calc(100svh - var(--denn-header-h, 95px))!important;overflow:hidden!important;padding-bottom:158px!important;box-sizing:border-box}
+  /* 프레임 탭 활성 시 페이지 스크롤 잠금 → 주소창 고정(토글 흔들림/점프 원천 제거). 룸뷰(denn-room-scroll-lock)와 동일 개념.
+     :has 미지원 구형 브라우저는 잠금 없이 기존 동작(graceful degrade). 바텀시트 메뉴는 position:fixed+자체 스크롤이라 무영향. */
+  html:has(#page-frame.main.on){overflow:hidden!important;height:100%!important;overscroll-behavior:none!important}
+  html:has(#page-frame.main.on) body{overflow:hidden!important;height:100%!important;overscroll-behavior:none!important}
   #page-frame.main.on>.preview-area{order:1;flex:1 1 auto!important;height:auto!important;min-height:120px;width:100%;padding:4px 2px!important;overflow:hidden;transition:opacity .2s}
   /* 메뉴 열림 시 액자 반투명(메뉴가 그 위를 덮음, 액자-메뉴 비연동) */
   #page-frame.denn-msheet-active>.preview-area{opacity:.32}
