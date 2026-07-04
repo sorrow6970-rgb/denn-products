@@ -10212,8 +10212,8 @@ window.addEventListener('load',run);
       var __dennFH=(__dennOriV64&&__dennOriV64.mode==='landscape')?aw:ah;
       var fit=Math.min(1.45,__dennFW/s.w,__dennFH/s.h);
       var mob=previewMode()==='mobile';
-      var MOB_CAP=0.9;/* 2026-07-03: 모바일 '화면 꽉 참' 상한. 덜 차면(↑)/넘치면(↓) 이 값만 조정. */
-      var raw=fit*(mob?.92:.868)*(userScale()/100);/* 모바일 배율 .92: 바텀시트 풀스크린 미리보기에서 액자 확대(2026-06-10) */
+      var MOB_CAP=0.96;/* 2026-07-04: 프레임툴 고정(svh)로 세로공간 줄어 상한 상향(0.9→0.96). 덜 차면(↑)/넘치면(↓) 이 값만 조정. */
+      var raw=fit*(mob?.97:.868)*(userScale()/100);/* 모바일 배율 .97(2026-07-04, 고정 레이아웃서 액자 확대). */
       var scale=mob?Math.max(.34,Math.min(MOB_CAP,raw)):Math.max(.14,Math.min(4,raw));
       /* 2026-07-03: 슬라이더 데드존 제거 — scale이 MOB_CAP(꽉참)에 도달하는 userScale%(fillU)를 계산해 미니 슬라이더 max를 거기로.
          그 이상은 어차피 안 커지므로(반응 없음) 잘라냄. fit이 프레임/화면마다 달라 고정값 대신 동적. 값이 max 초과면 clamp. */
@@ -12775,7 +12775,7 @@ window.addEventListener('load',later);
   /* 미리보기(상단 flex, 가변) + 메뉴(하단, 가변높이 분할) + 고정 탭바. 컨테이너 하단패딩=탭바58 */
   /* 2026-07-04: 프레임툴 고정 — 페이지 스크롤 잠금(아래 :has 규칙)으로 주소창 토글 제거 → 뷰포트 안정.
      잠금 상태의 가시 높이 = svh(주소창 표시 기준)라 컨테이너를 svh로 딱 맞춤. (lvh/dvh 흔들림 제거) */
-  #page-frame.main.on{display:flex!important;flex-direction:column!important;height:calc(100vh - var(--denn-header-h, 95px))!important;height:calc(100svh - var(--denn-header-h, 95px))!important;overflow:hidden!important;padding-bottom:158px!important;box-sizing:border-box}
+  #page-frame.main.on{display:flex!important;flex-direction:column!important;height:calc(100vh - var(--denn-header-h, 95px))!important;height:calc(100svh - var(--denn-header-h, 95px))!important;overflow:hidden!important;padding-bottom:126px!important;box-sizing:border-box}
   /* 프레임 탭 활성 시 페이지 스크롤 잠금 → 주소창 고정(토글 흔들림/점프 원천 제거). 룸뷰(denn-room-scroll-lock)와 동일 개념.
      :has 미지원 구형 브라우저는 잠금 없이 기존 동작(graceful degrade). 바텀시트 메뉴는 position:fixed+자체 스크롤이라 무영향. */
   html:has(#page-frame.main.on){overflow:hidden!important;height:100%!important;overscroll-behavior:none!important}
