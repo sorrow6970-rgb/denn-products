@@ -10093,7 +10093,15 @@ window.addEventListener('load',run);
     return{w:Math.max(1,num(canvas&&canvas.dataset&&canvas.dataset.dennLogicalW,canvas&&canvas.width||1)),h:Math.max(1,num(canvas&&canvas.dataset&&canvas.dataset.dennLogicalH,canvas&&canvas.height||1)),ratio:Math.max(1,num(canvas&&canvas.dataset&&canvas.dataset.dennHidpiRatio,1))};
   }
   function previewMode(){
-    return window.innerWidth<=num(SCALE_CONFIG.breakpoint,860)?'mobile':'desktop';
+    /* 2026-07-04: 너비 기반(innerWidth<=860)은 가로 폰(예 891px)을 desktop으로 오판 → .868 배율+cap4로 액자 과대.
+       measure-and-fit 리팩터: 터치 기기(폰·태블릿)는 가로/세로 무관하게 mobile로 균일 판정(아이폰 포함).
+       진짜 데스크톱(fine 포인터)만 너비 분기 유지. 관리자 폰박스 프리뷰(데스크톱 마우스)는 coarse=false라 무영향. */
+    try{
+      var bp=num(SCALE_CONFIG.breakpoint,860);
+      var coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
+      if(coarse&&Math.min(window.innerWidth,window.innerHeight)<=900)return 'mobile';
+      return window.innerWidth<=bp?'mobile':'desktop';
+    }catch(e){return window.innerWidth<=860?'mobile':'desktop';}
   }
   function scaleCfg(mode){
     return SCALE_CONFIG[mode||previewMode()]||SCALE_CONFIG.desktop;
