@@ -2808,6 +2808,38 @@ window.addEventListener('load',function(){setTimeout(function(){try{renderFrame&
     window.addEventListener(ev,function(){clearTimeout(t);t=setTimeout(setHdr,120);});});
 })();
 </script>
+<script id="denn-vp-diag">
+/* 2026-07-04: ?debug=1 뷰포트 실시간 진단 패널 — item2(브라우저별 액자 크기 편차) 합동 검증용.
+   각 브라우저(카카오/삼성, 세로/가로)에서 innerH·visualViewport·lvh지원·미디어분기·스케일을 실측. 평소엔 미표시. */
+(function(){
+  var dbg=false;try{dbg=/[?&#]debug=1/.test((location.search||'')+(location.hash||''))}catch(_){}
+  if(!dbg)return;
+  var p=document.createElement('div');
+  p.style.cssText='position:fixed;left:6px;top:6px;z-index:99999;background:rgba(0,0,0,.82);color:#0f0;font:11px/1.35 monospace;padding:7px 9px;border-radius:6px;max-width:62vw;white-space:pre;pointer-events:none';
+  function sup(v){try{return (window.CSS&&CSS.supports&&CSS.supports('height',v))?'Y':'n'}catch(e){return '?'}}
+  function upd(){
+    try{
+      var vv=window.visualViewport, iw=window.innerWidth, ih=window.innerHeight;
+      var area=document.getElementById('frame-preview-area')||document.querySelector('#page-frame .preview-area');
+      var wrap=document.querySelector('#page-frame .canvas-wrap');
+      var m=/matrix\(([^,]+)/.exec(wrap&&wrap.style.transform||'');var sc=m?(+m[1]).toFixed(3):((wrap&&/scale\(([^)]+)/.exec(wrap.style.transform)||[])[1]||'?');
+      p.textContent=
+        'inner '+iw+'x'+ih+'\n'+
+        'vViewport '+(vv?Math.round(vv.width)+'x'+Math.round(vv.height):'n/a')+'\n'+
+        'docClientH '+document.documentElement.clientHeight+'\n'+
+        'lvh:'+sup('100lvh')+' svh:'+sup('100svh')+' dvh:'+sup('100dvh')+'\n'+
+        'media '+(iw>860?'DESKTOP(>860)':'mobile(<=860)')+' mul '+(iw>860?'.868':'.56')+'\n'+
+        'headerH '+(getComputedStyle(document.documentElement).getPropertyValue('--denn-header-h')||'?')+'\n'+
+        'area.clientH '+(area?area.clientHeight:'?')+' scale '+sc;
+    }catch(e){p.textContent='diag err '+e;}
+  }
+  function boot(){document.documentElement.appendChild(p);upd();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  window.addEventListener('load',function(){setTimeout(upd,300);});
+  ['resize','orientationchange'].forEach(function(ev){window.addEventListener(ev,function(){setTimeout(upd,150);});});
+  try{if(window.visualViewport){['resize','scroll'].forEach(function(ev){window.visualViewport.addEventListener(ev,function(){setTimeout(upd,60);});});}}catch(e){}
+})();
+</script>
 <script id="denn-v17-customer-js">
 (function(){
 function by(id){return document.getElementById(id)}function num(v,d){v=parseFloat(v);return isFinite(v)?v:d}
