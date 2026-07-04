@@ -2396,7 +2396,7 @@ window.addEventListener('load',async function(){
   try{window.ADM=ADM||window.ADM}catch(_){}
   window.__dennPubLoadingV=false;/* ★ 실데이터 확정 → 이제부터 저장 허용(이 시점 전까지 모든 기본값 저장 차단됨) */
   try{var __src=window.__dennPublishedDataV?'published':'local';console.log('[boot] ADM set from',__src,'| frameSizes=',(ADM&&ADM.frameSizes||[]).length);}catch(_){}
-  try{if(window.__dennBootDbgV){var __rb=document.createElement('div');__rb.style.cssText='position:fixed;left:6px;right:6px;bottom:6px;z-index:99999;background:'+((ADM&&ADM.frameSizes&&ADM.frameSizes.length)?'#080':'#a00')+';color:#fff;font:12px/1.4 monospace;padding:8px 10px;border-radius:6px;white-space:pre-wrap;word-break:break-all';__rb.textContent='[boot] ADM='+(window.__dennPublishedDataV?'published':'local')+' frameSizes='+(ADM&&ADM.frameSizes||[]).length+' tpl='+(ADM&&ADM.frameTemplates||[]).length+'\nUA='+(navigator.userAgent||'').slice(0,120);document.documentElement.appendChild(__rb);}}catch(_){}
+  try{if(window.__dennBootDbgV){var __rb=document.createElement('div');__rb.style.cssText='position:fixed;left:6px;right:6px;bottom:6px;z-index:99999;background:'+((ADM&&ADM.frameSizes&&ADM.frameSizes.length)?'#080':'#a00')+';color:#fff;font:12px/1.4 monospace;padding:8px 10px;border-radius:6px;white-space:pre-wrap;word-break:break-all;pointer-events:none';__rb.textContent='[boot] ADM='+(window.__dennPublishedDataV?'published':'local')+' frameSizes='+(ADM&&ADM.frameSizes||[]).length+' tpl='+(ADM&&ADM.frameTemplates||[]).length+'\nUA='+(navigator.userAgent||'').slice(0,120);document.documentElement.appendChild(__rb);}}catch(_){}
   if(ADM){ try{saveCustomerAdminStateToLocalStorage(ADM)}catch(_){} }
   init();
 });
