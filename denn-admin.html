@@ -14878,6 +14878,33 @@ window.addEventListener('resize',scheduleSettle);
        소비자는 배포된 사이트를 열면 부팅 시 이 JSON을 자동 fetch(별도 링크 불필요). "게시" 버튼/콘솔에서 호출.
        상태는 공유(dennShareCreate)와 동일: window.S(오프로드 이미지 URL 유지) 베이스 + localStorage 최신 roomBackgroundSettings.
        __publishedAt(발행 시각)로 소비자가 최신 여부 판별. */
+    /* 2026-07-04: 발행 payload 다이어트 — state 내 잔존 base64 이미지를 Storage(published/assets/)로 외부화 + URL 치환.
+       원인: 일부 이미지(guideBackgrounds/clockSettings/watermark 등)가 base64로 박혀 published/state.json이 492KB →
+       느린 모바일망서 '한참 뒤에야 뜸'. 내용해시 경로로 동일 이미지는 같은 파일 재사용(중복 업로드 방지).
+       published/=공개read+op write(storage.rules). 실패한 이미지는 원본(base64) 유지 → 발행 자체는 항상 성공. */
+    window.dennExternalizeState = async function(state){
+      function h32(s){var h=5381,i=s.length;while(i){h=(h*33)^s.charCodeAt(--i);}return (h>>>0).toString(36);}
+      var cache={}, count=0, bytes=0;
+      async function walk(node){
+        if(Array.isArray(node)){for(var i=0;i<node.length;i++){node[i]=await walk(node[i]);}return node;}
+        if(node&&typeof node==='object'){for(var k in node){if(Object.prototype.hasOwnProperty.call(node,k))node[k]=await walk(node[k]);}return node;}
+        if(typeof node==='string'&&node.indexOf('data:image/')===0&&node.indexOf(';base64,')>0){
+          if(cache[node])return cache[node];
+          try{
+            var ext=(node.slice(5,node.indexOf(';')).split('/')[1]||'png').replace(/[^a-z0-9]/gi,'')||'png';
+            var path='published/assets/'+h32(node)+'.'+ext;
+            var r=await window.dennFirebase.uploadDataUrl(node,path);
+            cache[node]=r.url; count++; bytes+=node.length;
+            return r.url;
+          }catch(e){console.warn('[publish] 이미지 외부화 실패(원본 유지):',e&&e.message);return node;}
+        }
+        return node;
+      }
+      var clone=await walk(JSON.parse(JSON.stringify(state)));
+      console.log('[publish] base64 외부화: '+count+'개 이미지, '+Math.round(bytes/1024)+'KB → Storage URL');
+      try{ if(window.toast&&count) toast('이미지 '+count+'개 최적화(-'+Math.round(bytes/1024)+'KB)'); }catch(e){}
+      return clone;
+    };
     window.dennPublishState = async function(){
       if (!_ready) { await _readyPromise; }
       var state = window.S;
@@ -14888,6 +14915,8 @@ window.addEventListener('resize',scheduleSettle);
         }
       } catch(e){}
       state = Object.assign({}, state, { __publishedAt: Date.now() });
+      try { if(window.toast) toast('이미지 최적화 중…'); } catch(e){}
+      try { state = await window.dennExternalizeState(state); } catch(e){ console.warn('[publish] 외부화 스킵:', e && e.message); }
       var json = JSON.stringify(state);
       var dataUrl = 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(json)));
       await window.dennFirebase.uploadDataUrl(dataUrl, 'published/state.json');
