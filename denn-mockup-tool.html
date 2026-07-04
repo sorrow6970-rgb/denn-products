@@ -2785,9 +2785,21 @@ window.addEventListener('load',function(){setTimeout(function(){try{renderFrame&
 #page-frame .preview-area{overflow:hidden!important;min-height:calc(100vh - 95px)!important;display:flex!important;align-items:center!important;justify-content:center!important}
 #page-frame .canvas-wrap{transform-origin:center center!important;will-change:transform!important;max-width:none!important}
 #frameCanvas{border-radius:0!important;display:block!important}
-@media(max-width:860px){#page-frame .preview-area{min-height:50vh!important;padding:12px 8px!important}.main{grid-template-columns:1fr!important}}
-@media(max-width:480px){#page-frame .preview-area{min-height:46vh!important}.info-bar{display:none!important}}
+@media(max-width:860px){#page-frame .preview-area{min-height:0!important;padding:12px 8px!important}.main{grid-template-columns:1fr!important}}
+@media(max-width:480px){#page-frame .preview-area{min-height:0!important}.info-bar{display:none!important}}
 </style>
+<script id="denn-header-h-measure">
+/* 액자 탭 dvh 레이아웃: 실제(모바일서 2행 줄바꿈되는) 헤더 높이를 측정해 --denn-header-h로 발행.
+   #page-frame.main.on{height:calc(100dvh - var(--denn-header-h,95px))}만 소비 → 케이스/룸 무영향. 미실행 시 95px 폴백. */
+(function(){
+  function setHdr(){try{var h=document.querySelector('header');
+    if(h)document.documentElement.style.setProperty('--denn-header-h',h.offsetHeight+'px');}catch(e){}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setHdr);else setHdr();
+  window.addEventListener('load',setHdr);
+  var t;['resize','orientationchange'].forEach(function(ev){
+    window.addEventListener(ev,function(){clearTimeout(t);t=setTimeout(setHdr,120);});});
+})();
+</script>
 <script id="denn-v17-customer-js">
 (function(){
 function by(id){return document.getElementById(id)}function num(v,d){v=parseFloat(v);return isFinite(v)?v:d}
@@ -12713,7 +12725,7 @@ window.addEventListener('load',later);
   header .tab{padding:6px 13px!important;font-size:11px!important}
 
   /* 미리보기(상단 flex, 가변) + 메뉴(하단, 가변높이 분할) + 고정 탭바. 컨테이너 하단패딩=탭바58 */
-  #page-frame.main.on{display:flex!important;flex-direction:column!important;height:calc(100vh - 95px)!important;height:calc(100svh - 95px)!important;overflow:hidden!important;padding-bottom:158px!important;box-sizing:border-box}
+  #page-frame.main.on{display:flex!important;flex-direction:column!important;height:calc(100vh - var(--denn-header-h, 95px))!important;height:calc(100svh - var(--denn-header-h, 95px))!important;height:calc(100dvh - var(--denn-header-h, 95px))!important;overflow:hidden!important;padding-bottom:158px!important;box-sizing:border-box}
   #page-frame.main.on>.preview-area{order:1;flex:1 1 auto!important;height:auto!important;min-height:120px;width:100%;padding:4px 2px!important;overflow:hidden;transition:opacity .2s}
   /* 메뉴 열림 시 액자 반투명(메뉴가 그 위를 덮음, 액자-메뉴 비연동) */
   #page-frame.denn-msheet-active>.preview-area{opacity:.32}
