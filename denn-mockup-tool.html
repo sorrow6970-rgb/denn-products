@@ -2396,9 +2396,12 @@ window.addEventListener('load',async function(){
   try{window.ADM=ADM||window.ADM}catch(_){}
   window.__dennPubLoadingV=false;/* ★ 실데이터 확정 → 이제부터 저장 허용(이 시점 전까지 모든 기본값 저장 차단됨) */
   try{var __src=window.__dennPublishedDataV?'published':'local';console.log('[boot] ADM set from',__src,'| frameSizes=',(ADM&&ADM.frameSizes||[]).length);}catch(_){}
-  try{if(window.__dennBootDbgV){var __rb=document.createElement('div');__rb.style.cssText='position:fixed;left:6px;right:6px;bottom:6px;z-index:99999;background:'+((ADM&&ADM.frameSizes&&ADM.frameSizes.length)?'#080':'#a00')+';color:#fff;font:12px/1.4 monospace;padding:8px 10px;border-radius:6px;white-space:pre-wrap;word-break:break-all;pointer-events:none';__rb.textContent='[boot] ADM='+(window.__dennPublishedDataV?'published':'local')+' frameSizes='+(ADM&&ADM.frameSizes||[]).length+' tpl='+(ADM&&ADM.frameTemplates||[]).length+'\nUA='+(navigator.userAgent||'').slice(0,120);document.documentElement.appendChild(__rb);}}catch(_){}
+  var __rb=null;
+  try{if(window.__dennBootDbgV){__rb=document.createElement('div');__rb.style.cssText='position:fixed;left:6px;right:6px;bottom:6px;z-index:99999;background:'+((ADM&&ADM.frameSizes&&ADM.frameSizes.length)?'#080':'#a00')+';color:#fff;font:12px/1.4 monospace;padding:8px 10px;border-radius:6px;white-space:pre-wrap;word-break:break-all;pointer-events:none';__rb.textContent='[boot] ADM='+(window.__dennPublishedDataV?'published':'local')+' frameSizes='+(ADM&&ADM.frameSizes||[]).length+' tpl='+(ADM&&ADM.frameTemplates||[]).length+'\nUA='+(navigator.userAgent||'').slice(0,120);document.documentElement.appendChild(__rb);}}catch(_){}
   if(ADM){ try{saveCustomerAdminStateToLocalStorage(ADM)}catch(_){} }
-  init();
+  var __initErr='';
+  try{ init(); }catch(__ie){ __initErr=(__ie&&((__ie.name||'Error')+': '+(__ie.message||'')))||'init throw'; try{console.error('[boot] init 실패',__ie)}catch(_){} }
+  try{if(__rb){__rb.textContent+='\nFS='+((window.FS&&FS.length)||0)+' chips='+document.querySelectorAll('#frame-sz-chips .chip').length+(__initErr?(' ★ERR '+__initErr):'');if(__initErr)__rb.style.background='#a00';}}catch(_){}
 });
 
 /* 2026-06-23: 어드민 가이드배경(및 기타 설정) 저장 시 목업툴 자동 반영 — 새로고침 불필요.
