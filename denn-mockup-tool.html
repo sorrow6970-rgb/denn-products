@@ -5906,7 +5906,7 @@ function currentRoomSettingsV48(){
   return st;
 }
 function adminSnapshotV48(){try{return JSON.stringify(adm())}catch(e){return ''}}
-function restoreAdminSnapshotV48(snap){if(!snap)return;try{window.ADM=JSON.parse(snap)}catch(e){}}
+function restoreAdminSnapshotV48(snap){if(!snap)return;try{var __p=JSON.parse(snap);if(!__p||typeof __p!=='object')return;/* 2026-07-05 FIX: 데이터 있는 ADM을 frameSizes 없는 빈 스냅샷으로 되돌려 지우지 않음 */if((!__p.frameSizes||!__p.frameSizes.length)&&window.ADM&&window.ADM.frameSizes&&window.ADM.frameSizes.length)return;window.ADM=__p;}catch(e){}}
 function writeAdminDbV48(A){
   try{
     if(window.__dennPubLoadingV)return;/* 2026-07-03: 발행본 로드 중 IDB 기본값 저장 차단(레이스 방지) */
@@ -6223,7 +6223,15 @@ if(!window.__dennRoomStorageGuardV48){
   window.__dennRoomStorageGuardV48=true;
   window.__dennRoomStorageSetItemV48=Storage.prototype.setItem;
   Storage.prototype.setItem=function(k,v){
-    if(k==='denn_admin'&&Date.now()<(window.__dennRoomViewOnlySavePauseV48||0)){restoreAdminSnapshotV48(window.__dennRoomAdminSnapshotV48);return}
+    if(k==='denn_admin'&&Date.now()<(window.__dennRoomViewOnlySavePauseV48||0)){
+      /* 2026-07-05 FIX: 룸 세이브-포즈 중 denn_admin 쓰기 차단은 '보호할 유효 스냅샷(frameSizes 있음)이 있고, 들어오는 값이 더 빈약할 때'만.
+         부팅 초기 ADM이 비었을 때 캡처된 빈 스냅샷이, 방금 로드한 발행본(9개) 저장을 가로채 window.ADM을 빈 객체로 되돌려 사이즈칩이 안 뜨던 근본버그 차단. */
+      var __snapFS=0,__inFS=0;
+      try{var __sp=window.__dennRoomAdminSnapshotV48?JSON.parse(window.__dennRoomAdminSnapshotV48):null;__snapFS=(__sp&&__sp.frameSizes&&__sp.frameSizes.length)||0;}catch(_){}
+      try{var __iv=(typeof v==='string')?JSON.parse(v):null;__inFS=(__iv&&__iv.frameSizes&&__iv.frameSizes.length)||0;}catch(_){}
+      if(__snapFS>0&&__inFS<=__snapFS){restoreAdminSnapshotV48(window.__dennRoomAdminSnapshotV48);return}
+      /* 스냅샷이 비었거나(보호할 것 없음) 들어오는 값이 더 풍부 → 정상 저장 진행 */
+    }
     return window.__dennRoomStorageSetItemV48.apply(this,arguments);
   };
 }
