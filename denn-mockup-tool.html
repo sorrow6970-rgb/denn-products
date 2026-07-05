@@ -3148,15 +3148,16 @@ window.dlRoomMockup=function(){if(window.RM&&RM.canvas&&RM.canvas.width&&RM.canv
 #room-modal #sg-canvas.on{pointer-events:auto!important;cursor:grab}
 #room-modal #sg-canvas.denn-guide-dragging{cursor:grabbing!important}
 #room-modal #rm-canvas,#room-modal #sg-canvas{max-width:100%!important;max-height:100%!important}
-#room-modal #rm-fullscreen-btn,#room-modal #rm-fullscreen-land-btn{display:none;white-space:nowrap}
 #denn-fs-enter-btn{display:none!important}/* 2026-07-05: 룸 전체화면을 세로/가로 명시 버튼으로 분리 → 기존 플로팅 '전체화면으로 보기' 중복 숨김 */
+/* 2026-07-05: rm-fullscreen 버튼은 하단 액션 그룹(.rm-action-fs)으로 이동 — 옛 상단용 id CSS 제거(액션버튼 스타일 상속). */
+#room-modal .rm-action-fs{order:-1!important}/* 액션 그룹 맨 위(denn-rm-bar order 규칙보다 우선) */
+#room-modal .rm-action-fs-land{background:#fff!important;color:var(--gold2,#8C6E3C)!important;border-color:var(--gold2,#8C6E3C)!important}/* 가로=골드 강조 */
+#rm-fs-exit-float{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:14px;z-index:2147483647;display:none;align-items:center;background:rgba(18,16,12,.82);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:22px;padding:9px 15px;font:600 12.5px/1 'DM Sans',sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 14px rgba(0,0,0,.4)}
 #room-modal #rm-mobile-resize-handle{display:none!important}
 html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!important;overflow:hidden!important;background:#000!important;overscroll-behavior:none!important}
 #room-modal.denn-room-fullscreen-active{display:flex!important;position:fixed!important;inset:0!important;padding:0!important;background:#000!important;z-index:2147483647!important;backdrop-filter:none!important}
 #room-modal.denn-room-fullscreen-active>div{width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;border-radius:0!important;background:#000!important}
 @media(max-width:720px){
-  #room-modal #rm-fullscreen-btn,#room-modal #rm-fullscreen-land-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:9px 12px;background:#fff;color:var(--warm);border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
-  #room-modal #rm-fullscreen-land-btn{color:var(--gold2,#8C6E3C);border-color:var(--gold2,#8C6E3C)}/* 가로=골드 강조로 세로와 구분 */
   #rm-canvas-area #rm-usage-guide-v33{display:none!important}/* 2026-06-19: 모바일(터치)은 드래그/휠 안내 불필요 → 숨김 */
   #room-modal>div>div:nth-child(2){flex-direction:column!important;overflow:auto!important}
   #room-modal>div>div:nth-child(2)>div:first-child{width:auto!important;max-height:34vh!important;max-height:34dvh!important;border-right:none!important;border-bottom:1px solid var(--border)!important;display:grid!important;grid-template-columns:1fr!important;gap:12px!important;overflow:auto!important}
@@ -3174,7 +3175,6 @@ html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!i
   #room-modal.denn-room-fullscreen-active>div>div:first-child{position:absolute!important;top:8px!important;left:8px!important;right:8px!important;z-index:80!important;padding:8px 10px!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:10px!important;background:rgba(18,16,12,.68)!important;backdrop-filter:blur(10px)!important;color:#fff!important}
   #room-modal.denn-room-fullscreen-active>div>div:first-child *{color:#fff!important}
   #room-modal.denn-room-fullscreen-active>div>div:first-child>div:first-child>div>div:nth-child(2){display:none!important}
-  #room-modal.denn-room-fullscreen-active #rm-fullscreen-btn{display:inline-flex!important;background:#fff!important;color:#111!important;border-color:rgba(255,255,255,.55)!important}
   #room-modal.denn-room-fullscreen-active>div>div:nth-child(2){display:block!important;overflow:auto!important}
   #room-modal.denn-room-fullscreen-active>div>div:nth-child(2)>div:first-child{display:none!important}
   #room-modal.denn-room-fullscreen-active #rm-canvas-area{width:100vw!important;height:100vh!important;height:100dvh!important;min-height:100vh!important;min-height:100dvh!important;background:#000!important;padding:112px 12px 28px!important;box-sizing:border-box!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;overflow:auto!important;touch-action:pan-x pan-y!important;-webkit-overflow-scrolling:touch}
@@ -3203,7 +3203,6 @@ html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!i
   }
 }
 @media(max-height:540px) and (orientation:landscape){
-  #room-modal #rm-fullscreen-btn,#room-modal #rm-fullscreen-land-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:8px 12px;background:#fff;color:var(--warm);border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
   #room-modal>div>div:first-child{padding:8px 14px!important}
   #room-modal>div>div:first-child>div:first-child>div>div:first-child{font-size:12px!important}
   #room-modal>div>div:first-child>div:first-child>div>div:nth-child(2){display:none!important}
@@ -3576,11 +3575,7 @@ function installUsageGuide(){
   if(area&&!by('rm-usage-guide-v33')){var g=document.createElement('div');g.id='rm-usage-guide-v33';g.textContent='캔버스 드래그 / 액자 이동 / 휠로 확대축소';area.appendChild(g)}
   if(area&&!by('rm-mobile-resize-handle')){var h=document.createElement('div');h.id='rm-mobile-resize-handle';h.textContent='미리보기 크기 조절 · 가로모드 지원';area.appendChild(h)}
   var actions=document.querySelector('#room-modal>div>div:first-child>div:last-child');
-  if(actions&&!by('rm-fullscreen-btn')){
-    /* 2026-07-05: 룸 전체화면을 세로/가로 두 버튼으로 분리(사용자 요청). 세로=openRoomFullscreenView, 가로=dennEnterFsLandscapeV(가로회전+최대). */
-    var f=document.createElement('button');f.id='rm-fullscreen-btn';f.type='button';f.textContent='세로 전체화면 보기';f.onclick=function(e){e.preventDefault();openRoomFullscreenView()};actions.insertBefore(f,actions.firstChild);
-    if(!by('rm-fullscreen-land-btn')){var fl=document.createElement('button');fl.id='rm-fullscreen-land-btn';fl.type='button';fl.textContent='가로 전체화면 보기';fl.onclick=function(e){e.preventDefault();if(window.dennEnterFsLandscapeV)window.dennEnterFsLandscapeV();else if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);};actions.insertBefore(fl,f.nextSibling);}
-  }
+  /* 2026-07-05: 룸 전체화면 세로/가로 버튼은 하단 액션 그룹(rm-right-actions)으로 이동 → L13883 부근에서 생성. 여기(상단)엔 더 이상 안 만듦. */
   var old=document.querySelector('#room-modal div[style*="line-height:2"][style*="F5F0E7"]');if(old)old.style.display='none';
   var shoot=document.querySelector('#rm-drop + div');if(shoot)shoot.classList.add('denn-v33-shooting-guide');
 }
@@ -3678,9 +3673,25 @@ function setRoomFullscreenLayout(on){
   document.documentElement.classList.toggle('denn-room-fs-page',!!on);
   document.body.classList.toggle('denn-room-fs-page',!!on);
   try{document.body.style.overflow=on?'hidden':'';if(on)window.scrollTo(0,1)}catch(e){}
-  if(btn)btn.textContent=on?'전체화면 종료':'세로 전체화면 보기';
-  try{var __lb=by('rm-fullscreen-land-btn');if(__lb)__lb.style.display=on?'none':'';}catch(e){}/* 전체화면 활성 중엔 가로 버튼 숨김 */
+  /* 2026-07-05: 세로/가로 버튼이 하단 액션바로 이동 → 전체화면 중엔 안 보이므로 '전체화면만 종료(룸뷰 유지)' 플로팅 버튼 제공. */
+  try{ensureRoomFsExitBtn(!!on);}catch(e){}
   redrawRoomSoon(false);
+}
+function ensureRoomFsExitBtn(show){
+  var b=document.getElementById('rm-fs-exit-float');
+  if(show){
+    if(!b){
+      b=document.createElement('button');b.id='rm-fs-exit-float';b.type='button';b.setAttribute('aria-label','전체화면 종료');
+      b.innerHTML='<span style="font-size:15px;line-height:1;margin-right:5px">✕</span>전체화면 종료';
+      b.onclick=function(e){e.preventDefault();
+        try{var xf=document.exitFullscreen||document.webkitExitFullscreen||document.msExitFullscreen;if((document.fullscreenElement||document.webkitFullscreenElement)&&xf)xf.call(document);}catch(_){}
+        try{document.documentElement.classList.remove('denn-rotate-fs');}catch(_){}
+        try{setRoomFullscreenLayout(false);}catch(_){}
+      };
+      document.body.appendChild(b);
+    }
+    b.style.display='inline-flex';
+  }else if(b){b.style.display='none';}
 }
 function openRoomFullscreenView(){
   var modal=by('room-modal');
@@ -13878,9 +13889,14 @@ input[type=range]{accent-color:#777}
       if(typeof window.closeRoomMockup==='function')window.closeRoomMockup();
       setTimeout(function(){var main=document.getElementById('denn-v36-order-btn-frame');if(main)main.click();},150);
     });
-    /* 순서: 기본설정 → 배경저장 → 주문제작 → 돌아가기 (메인 셸 패턴 reset/내공간/save/order/home과 정렬,
-       모달에선 '내공간보기' 의미 없어 skip, '홈' 자리에 '돌아가기') */
-    actionWrap.appendChild(resetBtn); actionWrap.appendChild(saveBtn); actionWrap.appendChild(orderBtn); actionWrap.appendChild(backBtn);
+    /* 2026-07-05: 세로/가로 전체화면 보기 — 하단 액션 그룹에 배치(메인 버튼들과 통일). 프레임툴처럼 클릭 즉시 requestFullscreen으로 주소창 숨김(삼성/안드로이드). iOS는 미지원(패스). */
+    if(!window.__dennRoomFsReqV){window.__dennRoomFsReqV=function(){try{var el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;if(rq){var p=rq.call(el);if(p&&p['catch'])p['catch'](function(){});}}catch(e){}try{window.scrollTo(0,1)}catch(e){}};}
+    var fsPBtn=document.createElement('button');fsPBtn.id='rm-fullscreen-btn';fsPBtn.className='rm-action-btn rm-action-fs';fsPBtn.type='button';fsPBtn.textContent='세로 전체화면 보기';
+    fsPBtn.addEventListener('click',function(e){e.preventDefault();window.__dennRoomFsReqV();try{if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}});
+    var fsLBtn=document.createElement('button');fsLBtn.id='rm-fullscreen-land-btn';fsLBtn.className='rm-action-btn rm-action-fs rm-action-fs-land';fsLBtn.type='button';fsLBtn.textContent='가로 전체화면 보기';
+    fsLBtn.addEventListener('click',function(e){e.preventDefault();window.__dennRoomFsReqV();try{if(window.dennEnterFsLandscapeV)window.dennEnterFsLandscapeV();else if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}});
+    /* 순서: 세로전체화면 → 가로전체화면 → 기본설정 → 배경저장 → 주문제작 → 돌아가기 */
+    actionWrap.appendChild(fsPBtn); actionWrap.appendChild(fsLBtn); actionWrap.appendChild(resetBtn); actionWrap.appendChild(saveBtn); actionWrap.appendChild(orderBtn); actionWrap.appendChild(backBtn);
     right.appendChild(actionWrap); body.appendChild(right);
     /* ===== 좌측 패널 탭 ===== */
     /* sec-label로 섹션 식별 → 직속 자식까지 walk up → data-rm-pane 부여 */
@@ -14493,7 +14509,7 @@ input[type=range]{accent-color:#777}
   window.__dennRotHintShowV=function(){window.__dennHintShown=false;try{hint()}catch(e){}};
   function hideFsBtn(){
     var b=document.getElementById('rm-fullscreen-btn');if(!b)return;
-    if(isMob())b.style.setProperty('display','none','important');else b.style.removeProperty('display');
+    b.style.removeProperty('display');/* 2026-07-05: 모바일 강제 숨김 제거 — 세로/가로 명시 버튼 도입으로 '세로 전체화면 보기'도 모바일서 보여야 함(표시는 CSS @max720이 제어). */
   }
   /* 회전 시 배경 이미지 스왑 — 세로면 mobileDataUrl(4:5), 가로/PC면 원본. 세로전용 배경(mobileDataUrl) 있는 가이드만. */
   function swapBgForOrientation(){
