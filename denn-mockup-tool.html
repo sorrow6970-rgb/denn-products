@@ -3148,13 +3148,15 @@ window.dlRoomMockup=function(){if(window.RM&&RM.canvas&&RM.canvas.width&&RM.canv
 #room-modal #sg-canvas.on{pointer-events:auto!important;cursor:grab}
 #room-modal #sg-canvas.denn-guide-dragging{cursor:grabbing!important}
 #room-modal #rm-canvas,#room-modal #sg-canvas{max-width:100%!important;max-height:100%!important}
-#room-modal #rm-fullscreen-btn{display:none;white-space:nowrap}
+#room-modal #rm-fullscreen-btn,#room-modal #rm-fullscreen-land-btn{display:none;white-space:nowrap}
+#denn-fs-enter-btn{display:none!important}/* 2026-07-05: 룸 전체화면을 세로/가로 명시 버튼으로 분리 → 기존 플로팅 '전체화면으로 보기' 중복 숨김 */
 #room-modal #rm-mobile-resize-handle{display:none!important}
 html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!important;overflow:hidden!important;background:#000!important;overscroll-behavior:none!important}
 #room-modal.denn-room-fullscreen-active{display:flex!important;position:fixed!important;inset:0!important;padding:0!important;background:#000!important;z-index:2147483647!important;backdrop-filter:none!important}
 #room-modal.denn-room-fullscreen-active>div{width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;border-radius:0!important;background:#000!important}
 @media(max-width:720px){
-  #room-modal #rm-fullscreen-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:9px 12px;background:#fff;color:var(--warm);border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
+  #room-modal #rm-fullscreen-btn,#room-modal #rm-fullscreen-land-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:9px 12px;background:#fff;color:var(--warm);border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
+  #room-modal #rm-fullscreen-land-btn{color:var(--gold2,#8C6E3C);border-color:var(--gold2,#8C6E3C)}/* 가로=골드 강조로 세로와 구분 */
   #rm-canvas-area #rm-usage-guide-v33{display:none!important}/* 2026-06-19: 모바일(터치)은 드래그/휠 안내 불필요 → 숨김 */
   #room-modal>div>div:nth-child(2){flex-direction:column!important;overflow:auto!important}
   #room-modal>div>div:nth-child(2)>div:first-child{width:auto!important;max-height:34vh!important;max-height:34dvh!important;border-right:none!important;border-bottom:1px solid var(--border)!important;display:grid!important;grid-template-columns:1fr!important;gap:12px!important;overflow:auto!important}
@@ -3201,7 +3203,7 @@ html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!i
   }
 }
 @media(max-height:540px) and (orientation:landscape){
-  #room-modal #rm-fullscreen-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:8px 12px;background:#fff;color:var(--warm);border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
+  #room-modal #rm-fullscreen-btn,#room-modal #rm-fullscreen-land-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:8px 12px;background:#fff;color:var(--warm);border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
   #room-modal>div>div:first-child{padding:8px 14px!important}
   #room-modal>div>div:first-child>div:first-child>div>div:first-child{font-size:12px!important}
   #room-modal>div>div:first-child>div:first-child>div>div:nth-child(2){display:none!important}
@@ -3574,7 +3576,11 @@ function installUsageGuide(){
   if(area&&!by('rm-usage-guide-v33')){var g=document.createElement('div');g.id='rm-usage-guide-v33';g.textContent='캔버스 드래그 / 액자 이동 / 휠로 확대축소';area.appendChild(g)}
   if(area&&!by('rm-mobile-resize-handle')){var h=document.createElement('div');h.id='rm-mobile-resize-handle';h.textContent='미리보기 크기 조절 · 가로모드 지원';area.appendChild(h)}
   var actions=document.querySelector('#room-modal>div>div:first-child>div:last-child');
-  if(actions&&!by('rm-fullscreen-btn')){var f=document.createElement('button');f.id='rm-fullscreen-btn';f.type='button';f.textContent='전체화면 보기';f.onclick=function(e){e.preventDefault();openRoomFullscreenView()};actions.insertBefore(f,actions.firstChild)}
+  if(actions&&!by('rm-fullscreen-btn')){
+    /* 2026-07-05: 룸 전체화면을 세로/가로 두 버튼으로 분리(사용자 요청). 세로=openRoomFullscreenView, 가로=dennEnterFsLandscapeV(가로회전+최대). */
+    var f=document.createElement('button');f.id='rm-fullscreen-btn';f.type='button';f.textContent='세로 전체화면 보기';f.onclick=function(e){e.preventDefault();openRoomFullscreenView()};actions.insertBefore(f,actions.firstChild);
+    if(!by('rm-fullscreen-land-btn')){var fl=document.createElement('button');fl.id='rm-fullscreen-land-btn';fl.type='button';fl.textContent='가로 전체화면 보기';fl.onclick=function(e){e.preventDefault();if(window.dennEnterFsLandscapeV)window.dennEnterFsLandscapeV();else if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);};actions.insertBefore(fl,f.nextSibling);}
+  }
   var old=document.querySelector('#room-modal div[style*="line-height:2"][style*="F5F0E7"]');if(old)old.style.display='none';
   var shoot=document.querySelector('#rm-drop + div');if(shoot)shoot.classList.add('denn-v33-shooting-guide');
 }
@@ -3672,7 +3678,8 @@ function setRoomFullscreenLayout(on){
   document.documentElement.classList.toggle('denn-room-fs-page',!!on);
   document.body.classList.toggle('denn-room-fs-page',!!on);
   try{document.body.style.overflow=on?'hidden':'';if(on)window.scrollTo(0,1)}catch(e){}
-  if(btn)btn.textContent=on?'전체화면 종료':'전체화면 보기';
+  if(btn)btn.textContent=on?'전체화면 종료':'세로 전체화면 보기';
+  try{var __lb=by('rm-fullscreen-land-btn');if(__lb)__lb.style.display=on?'none':'';}catch(e){}/* 전체화면 활성 중엔 가로 버튼 숨김 */
   redrawRoomSoon(false);
 }
 function openRoomFullscreenView(){
