@@ -15630,12 +15630,12 @@ html.denn-frame-fs-lock,html.denn-frame-fs-lock body{overflow:hidden!important;o
   }
   function open(){
     if(window.__dennSizeUnset){try{if(window.toast)toast('먼저 액자 사이즈를 선택해 주세요');}catch(e){}return;}
-    var data=snapshot();if(!data){try{if(window.toast)toast('먼저 이미지를 올려 시안을 확인해 주세요');}catch(e){}return;}
+    reqFs();/* ★ 주소창 숨김 — 반드시 클릭 제스처 '즉시'(무거운 toDataURL 전) 호출해야 삼성/크롬서 전체화면 허용됨 */
+    var data=snapshot();if(!data){try{if(window.toast)toast('먼저 이미지를 올려 시안을 확인해 주세요');}catch(e){}exitFs();return;}
     build();imgEl.src=data;
     ov.classList.add('on');
     document.documentElement.classList.add('denn-frame-fs-lock');
     window.__dennFrameFsViewV=true;/* V108 편집기 강제세로 스킵 게이트(L14568) */
-    reqFs();/* 주소창 숨김 */
     updateHint();
     window.addEventListener('resize',onVp);window.addEventListener('orientationchange',onVp);
     document.addEventListener('fullscreenchange',onFsChange);document.addEventListener('webkitfullscreenchange',onFsChange);
