@@ -400,7 +400,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
   </div>
   <div class="preview-area" id="frame-preview-area">
     <div class="mockup-bg" id="frame-mockup-bg"></div>
-    <div class="prev-top"><div class="prev-label">실시간 시안 확인</div><div class="prev-scale-mini" id="frame-prev-scale-mini"><span>액자</span><input type="range" id="frame-prev-scale-mini-r" min="80" max="220" step="1" value="135" oninput="dennFramePrevScaleMini(this.value)" aria-label="액자 스케일"><b id="frame-prev-scale-mini-v">135%</b></div></div>
+    <div class="prev-top"><div class="prev-label">실시간 시안 확인</div><div class="prev-scale-mini" id="frame-prev-scale-mini"><span>액자</span><input type="range" id="frame-prev-scale-mini-r" min="50" max="110" step="1" value="100" oninput="dennFramePrevScaleMini(this.value)" aria-label="액자 스케일"><b id="frame-prev-scale-mini-v">100%</b></div></div>
     <div class="empty-state" id="frame-empty"><p>이미지를 업로드하면<br>시안이 표시됩니다</p></div>
     <div class="canvas-wrap" style="position:relative;display:inline-block"><canvas id="frameCanvas" width="400" height="400" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.22)) drop-shadow(0 6px 14px rgba(0,0,0,.10)) drop-shadow(0 24px 48px rgba(0,0,0,.14));background:transparent"></canvas><img id="wm-ov-frame" style="position:absolute;bottom:8px;right:8px;max-width:25%;display:none;pointer-events:none;object-fit:contain" src="" alt=""></div>
   </div>
@@ -10046,7 +10046,7 @@ window.addEventListener('load',run);
   if(window.DENN_FRAME_PREVIEW_HIDPI_V361&&window.DENN_FRAME_PREVIEW_HIDPI_V361.version==='v36.1-frame-preview-hidpi')return;
   var LEGACY_SCALE_KEY='denn_frame_preview_user_scale_v40';
   var SCALE_KEYS={desktop:'denn_frame_preview_user_scale_desktop_v361',mobile:'denn_frame_preview_user_scale_mobile_v361'};
-  var DEFAULT_SCALE_CONFIG={breakpoint:860,desktop:{defaultScale:100,min:60,max:300},mobile:{defaultScale:135,min:80,max:220}};/* 2026-07-03: 모바일 기본 스케일 140→135(사용자 요청) */
+  var DEFAULT_SCALE_CONFIG={breakpoint:860,desktop:{defaultScale:100,min:60,max:300},mobile:{defaultScale:100,min:50,max:110}};/* 2026-07-05: 모바일 스케일 — 100%=기본(사용자 지정 큰 크기, noClipMax×1.57). 50~110% 조절. */
   window.DENN_FRAME_PREVIEW_SCALE_CONFIG_V361=window.DENN_FRAME_PREVIEW_SCALE_CONFIG_V361||DEFAULT_SCALE_CONFIG;
   var SCALE_CONFIG=window.DENN_FRAME_PREVIEW_SCALE_CONFIG_V361;
   /* 2026-07-03: 사용자 선택 — 액자 스케일을 '매 로드 시 기본값으로 리셋'(마지막 값 유지 안 함). 세션 중 조절은 유지되나 새로고침/재접속 시 defaultScale로 복귀. */
@@ -10222,13 +10222,14 @@ window.addEventListener('load',run);
       var __dennFW=(__dennOriV64&&__dennOriV64.mode==='landscape')?ah:aw;
       var __dennFH=(__dennOriV64&&__dennOriV64.mode==='landscape')?aw:ah;
       var fit=Math.min(1.45,__dennFW/s.w,__dennFH/s.h);
+      var noClipMax=Math.min(__dennFW/s.w,__dennFH/s.h);/* 2026-07-05: 1.45캡 없는 실제 '화면 딱맞' 배율 = 이 이상은 화면 밖. 세로로 긴 액자가 슬라이더 최대서 잘리던 것 차단(오버플로 상한). */
       var mob=previewMode()==='mobile';
-      var MOB_CAP=0.96;/* 2026-07-04: 프레임툴 고정(svh)로 세로공간 줄어 상한 상향(0.9→0.96). 덜 차면(↑)/넘치면(↓) 이 값만 조정. */
-      var raw=fit*(mob?.97:.868)*(userScale()/100);/* 모바일 배율 .97(2026-07-04, 고정 레이아웃서 액자 확대). */
-      var scale=mob?Math.max(.34,Math.min(MOB_CAP,raw)):Math.max(.14,Math.min(4,raw));
-      /* 2026-07-03: 슬라이더 데드존 제거 — scale이 MOB_CAP(꽉참)에 도달하는 userScale%(fillU)를 계산해 미니 슬라이더 max를 거기로.
-         그 이상은 어차피 안 커지므로(반응 없음) 잘라냄. fit이 프레임/화면마다 달라 고정값 대신 동적. 값이 max 초과면 clamp. */
-      if(mob){try{var __fillU=Math.max(110,Math.min(220,Math.round(MOB_CAP*100/(Math.max(0.01,fit)*0.92))));var __mr=document.getElementById('frame-prev-scale-mini-r');if(__mr){if(String(__mr.max)!==String(__fillU))__mr.max=__fillU;if(+__mr.value>__fillU){__mr.value=__fillU;var __ml=document.getElementById('frame-prev-scale-mini-v');if(__ml)__ml.textContent=__fillU+'%';}}}catch(_e){}}
+      /* 2026-07-05: 모바일 스케일 — noClipMax 기준 배율(FILL_M). 세로 액자는 noClipMax가 작게 잡혀 ×1.57로 시원하게 채움. 가로 액자는 그대로면 좌우가 삐져나가 ×0.75 보정. userScale 100%=기본, 50~110% 조절. 데스크톱은 기존(fit×.868). */
+      var __landscM=!!(__dennOriV64&&__dennOriV64.mode==='landscape');
+      var FILL_M=1.57*(__landscM?0.75:1);
+      var raw=mob?(noClipMax*FILL_M*(userScale()/100)):(fit*.868*(userScale()/100));
+      var scale=mob?Math.max(.34,Math.min(noClipMax*(__landscM?1.35:1.8),raw)):Math.max(.14,Math.min(4,raw));/* 모바일 상한: 세로 1.8·가로 1.35배(가로 과확대·삐짐 방지) */
+      /* 2026-07-05: fillU 동적 max 제거 — 이제 슬라이더 100%=화면 꽉(noClipMax)이 고정 상한이라 데드존 없음. */
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
       wrap.style.setProperty('transform','scale('+scale+')','important');
