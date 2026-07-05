@@ -15620,6 +15620,14 @@ html.denn-frame-fs-lock,html.denn-frame-fs-lock body{overflow:hidden!important;o
     try{return cv.toDataURL('image/png');}catch(e){return null;}
   }
   function onVp(){updateHint();}
+  function reqFs(){/* 2026-07-05: 주소창(도메인) 숨김 — 네이티브 전체화면 best-effort. iOS Safari 미지원은 조용히 무시(오버레이가 화면 덮음). */
+    try{var el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;if(rq){var p=rq.call(el);if(p&&p['catch'])p['catch'](function(){});}}catch(e){}
+    try{window.scrollTo(0,1);}catch(e){}/* 폴백: 주소창 접기 */
+  }
+  function exitFs(){try{var xf=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;if((document.fullscreenElement||document.webkitFullscreenElement)&&xf){var p=xf.call(document);if(p&&p['catch'])p['catch'](function(){});}}catch(e){}}
+  function onFsChange(){/* 시스템 back/제스처로 네이티브 FS만 빠져나가면 오버레이도 함께 종료(동기화) */
+    try{if(!(document.fullscreenElement||document.webkitFullscreenElement)&&ov&&ov.classList.contains('on'))close();}catch(e){}
+  }
   function open(){
     if(window.__dennSizeUnset){try{if(window.toast)toast('먼저 액자 사이즈를 선택해 주세요');}catch(e){}return;}
     var data=snapshot();if(!data){try{if(window.toast)toast('먼저 이미지를 올려 시안을 확인해 주세요');}catch(e){}return;}
@@ -15627,14 +15635,18 @@ html.denn-frame-fs-lock,html.denn-frame-fs-lock body{overflow:hidden!important;o
     ov.classList.add('on');
     document.documentElement.classList.add('denn-frame-fs-lock');
     window.__dennFrameFsViewV=true;/* V108 편집기 강제세로 스킵 게이트(L14568) */
+    reqFs();/* 주소창 숨김 */
     updateHint();
     window.addEventListener('resize',onVp);window.addEventListener('orientationchange',onVp);
+    document.addEventListener('fullscreenchange',onFsChange);document.addEventListener('webkitfullscreenchange',onFsChange);
   }
   function close(){
     if(ov)ov.classList.remove('on');
     document.documentElement.classList.remove('denn-frame-fs-lock');
     window.__dennFrameFsViewV=false;
     window.removeEventListener('resize',onVp);window.removeEventListener('orientationchange',onVp);
+    document.removeEventListener('fullscreenchange',onFsChange);document.removeEventListener('webkitfullscreenchange',onFsChange);
+    exitFs();/* 네이티브 전체화면 해제 */
     if(imgEl)imgEl.removeAttribute('src');
     /* 종료 시 아직 가로면 편집기 세로 안내 재평가(정상 편집 UX 복귀) */
     try{if(window.__dennRotateFsOnChangeV108)window.__dennRotateFsOnChangeV108();}catch(e){}
