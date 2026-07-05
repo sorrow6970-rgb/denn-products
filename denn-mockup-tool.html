@@ -394,6 +394,7 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     <hr>
     <div class="denn-frame-action-stack" id="denn-frame-action-stack">
       <button class="cta denn-action-btn denn-action-btn-room" onclick="openRoomMockup()">🏠 내 공간에서 보기</button>
+      <button class="cta denn-action-btn denn-action-btn-fsview" onclick="dennOpenFrameFsView()">🔍 전체화면 보기</button>
       <button class="cta denn-action-btn denn-action-btn-save" onclick="dlCanvas('frame')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>시안 이미지 저장</button>
       <a class="denn-action-btn denn-action-btn-home" id="denn-sales-home-btn" href="https://dennproducts.com/" target="_self">← 홈페이지로 돌아가기</a>
     </div>
@@ -12866,6 +12867,7 @@ window.addEventListener('load',later);
   .denn-msheet-ab-home{background:#fff;color:var(--warm,#8A7D6E)}
   .denn-msheet-ab-room{background:#fff;color:var(--gold2,#8C6E3C)}
   .denn-msheet-ab-save{background:var(--gold2,#8C6E3C);color:#fff;border-color:var(--gold2,#8C6E3C)}
+  .denn-msheet-ab-fsview{grid-column:1/-1;background:#fff;color:var(--gold2,#8C6E3C);border-color:var(--gold2,#8C6E3C);font-weight:700}
 }
 </style>
 <script id="denn-v103-mobile-sheet">
@@ -12920,7 +12922,10 @@ window.addEventListener('load',later);
     bRoom.addEventListener('click',function(){if(typeof window.openRoomMockup==='function')window.openRoomMockup();});
     var bSave=document.createElement('button');bSave.type='button';bSave.className='denn-msheet-ab-save';bSave.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 20h14"/></svg><span>시안 이미지 저장</span>';
     bSave.addEventListener('click',function(){if(typeof window.dlCanvas==='function')window.dlCanvas('frame');});
-    ab.appendChild(bRoom);ab.appendChild(aHome);ab.appendChild(bOrder);ab.appendChild(bSave);pf.appendChild(ab);
+    /* 2026-07-05: 전체화면으로 크게 보기(액자 크게, 방향-반응) — 전폭 상단 배치로 가장 잘 보이게 */
+    var bFs=document.createElement('button');bFs.type='button';bFs.className='denn-msheet-ab-fsview';bFs.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span>전체화면으로 크게 보기</span>';
+    bFs.addEventListener('click',function(){if(typeof window.dennOpenFrameFsView==='function')window.dennOpenFrameFsView();});
+    ab.appendChild(bFs);ab.appendChild(bRoom);ab.appendChild(aHome);ab.appendChild(bOrder);ab.appendChild(bSave);pf.appendChild(ab);
     var tb=document.createElement('div');tb.className='denn-msheet-tabbar';
     TABS.forEach(function(t){
       var b=document.createElement('button');b.type='button';b.className='denn-msheet-tab';b.setAttribute('data-g',t[0]);
@@ -14565,7 +14570,8 @@ input[type=range]{accent-color:#777}
       var mob=isMob(),open=roomOpen(),landscapeNow=(__ori==='l');/* 2026-06-29: __ori 사용 — 세로 전환 lock(__dennRotPLockV) 반영해 가로 활성화/풀스크린/안내프롬프트도 깜빡임에 안 흔들림 */
       /* 프레임 편집(룸 모달 닫힘) + 가로 → 세로 안내 오버레이. 또한 룸 보기에서 X로 닫고 가로 유지 중(__dennAwaitPortraitV)이면 동일 안내로 가림. */
       var __awaitRoomPortrait=window.__dennAwaitPortraitV&&open&&landscapeNow;
-      framePortraitPrompt((mob&&!open&&landscapeNow)||__awaitRoomPortrait,__awaitRoomPortrait);
+      /* 2026-07-05: 프레임툴 전체화면-보기(가로 액자를 가로로 크게) 활성 중엔 편집기 강제세로 안내 스킵 → 폰 가로 시 가로 전체화면 노출 */
+      framePortraitPrompt(((mob&&!open&&landscapeNow)&&!window.__dennFrameFsViewV)||__awaitRoomPortrait,__awaitRoomPortrait);
       if(!mob||!open){setRotateFs(false);hint();return;}
       var landscape=landscapeNow,fs=isFs();
       if(landscape){
@@ -15565,6 +15571,78 @@ input[type=range]{accent-color:#777}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);
   else mount();
+})();
+</script>
+<style id="denn-frame-fsview-css">
+/* 2026-07-05: 프레임툴 전체화면 보기(소비자 크게 확인 전용). 방향-반응 — 세로면 세로로, 폰 가로 회전 시 가로로 액자가 화면 꽉(contain). 편집 없음. */
+/* 2026-07-05: 배경 검정→밝은 갤러리 중립(액자가 벽에 걸린 느낌, 검은 프레임 테두리가 배경에 안 묻힘) */
+#denn-frame-fs-view{position:fixed;inset:0;z-index:2147483646;background:radial-gradient(120% 90% at 50% 30%,#f2efe9 0%,#e6e2db 70%,#ddd8d0 100%);display:none;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+#denn-frame-fs-view.on{display:flex}
+#denn-frame-fs-view img.dffs-img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;filter:drop-shadow(0 6px 16px rgba(30,26,20,.18)) drop-shadow(0 22px 46px rgba(30,26,20,.22));border-radius:2px}
+#denn-frame-fs-view .dffs-close{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:14px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.75);color:#3a352e;border:1px solid rgba(0,0,0,.14);box-shadow:0 2px 8px rgba(0,0,0,.14);font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;-webkit-tap-highlight-color:transparent}
+#denn-frame-fs-view .dffs-close:active{background:rgba(255,255,255,.95)}
+#denn-frame-fs-view .dffs-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);background:rgba(20,20,25,.84);color:#fff;border:1px solid rgba(255,255,255,.22);border-radius:22px;padding:9px 16px;font:600 12.5px/1.35 'DM Sans',sans-serif;display:none;align-items:center;gap:7px;pointer-events:none;text-align:center;max-width:84vw;transition:opacity .5s;z-index:2}
+#denn-frame-fs-view .dffs-hint.on{display:flex}
+html.denn-frame-fs-lock,html.denn-frame-fs-lock body{overflow:hidden!important;overscroll-behavior:none!important}
+</style>
+<script id="denn-frame-fsview-js">
+(function(){
+  if(window.__dennFrameFsViewInit)return; window.__dennFrameFsViewInit=1;
+  function isAdmin(){try{return new URLSearchParams(location.search||'').has('adminRoomSetup')}catch(e){return false}}
+  var ov,imgEl,hintEl,hintT;
+  function frameIsLandscape(){
+    try{var o=window.DENN_FRAME_ORIENTATION_V64;if(o&&o.mode==='landscape')return true;if(o&&o.mode==='portrait')return false;}catch(e){}
+    try{var cv=document.getElementById('frameCanvas');var w=+cv.getAttribute('width')||1,h=+cv.getAttribute('height')||1;if(cv.dataset&&cv.dataset.dennLogicalW){w=+cv.dataset.dennLogicalW||w;h=+cv.dataset.dennLogicalH||h;}return w>h;}catch(e){return false;}
+  }
+  function vpLandscape(){return window.innerWidth>window.innerHeight;}
+  function isMobile(){return (window.matchMedia&&matchMedia('(pointer:coarse)').matches)||window.innerWidth<=860;}
+  function build(){
+    if(ov)return ov;
+    ov=document.createElement('div');ov.id='denn-frame-fs-view';
+    imgEl=document.createElement('img');imgEl.className='dffs-img';imgEl.alt='액자 전체화면';
+    var c=document.createElement('button');c.type='button';c.className='dffs-close';c.setAttribute('aria-label','닫기');c.innerHTML='×';c.onclick=function(e){e.preventDefault();e.stopPropagation();close();};
+    hintEl=document.createElement('div');hintEl.className='dffs-hint';
+    ov.appendChild(imgEl);ov.appendChild(c);ov.appendChild(hintEl);
+    ov.addEventListener('click',function(e){if(e.target===ov)close();});/* 여백 탭=닫기, 이미지 탭은 유지 */
+    document.body.appendChild(ov);
+    return ov;
+  }
+  function updateHint(){
+    if(!hintEl)return;
+    if(isMobile()&&(frameIsLandscape()!==vpLandscape())){
+      hintEl.innerHTML=frameIsLandscape()?'📱↻ 가로로 돌리면 더 크게 보여요':'📱↻ 세로로 돌리면 더 크게 보여요';
+      hintEl.classList.add('on');hintEl.style.opacity='1';
+      clearTimeout(hintT);hintT=setTimeout(function(){if(!hintEl)return;hintEl.style.opacity='0';setTimeout(function(){if(hintEl)hintEl.classList.remove('on');},560);},3400);
+    }else{clearTimeout(hintT);hintEl.classList.remove('on');}
+  }
+  function snapshot(){
+    var cv=document.getElementById('frameCanvas');if(!cv)return null;
+    try{return cv.toDataURL('image/png');}catch(e){return null;}
+  }
+  function onVp(){updateHint();}
+  function open(){
+    if(window.__dennSizeUnset){try{if(window.toast)toast('먼저 액자 사이즈를 선택해 주세요');}catch(e){}return;}
+    var data=snapshot();if(!data){try{if(window.toast)toast('먼저 이미지를 올려 시안을 확인해 주세요');}catch(e){}return;}
+    build();imgEl.src=data;
+    ov.classList.add('on');
+    document.documentElement.classList.add('denn-frame-fs-lock');
+    window.__dennFrameFsViewV=true;/* V108 편집기 강제세로 스킵 게이트(L14568) */
+    updateHint();
+    window.addEventListener('resize',onVp);window.addEventListener('orientationchange',onVp);
+  }
+  function close(){
+    if(ov)ov.classList.remove('on');
+    document.documentElement.classList.remove('denn-frame-fs-lock');
+    window.__dennFrameFsViewV=false;
+    window.removeEventListener('resize',onVp);window.removeEventListener('orientationchange',onVp);
+    if(imgEl)imgEl.removeAttribute('src');
+    /* 종료 시 아직 가로면 편집기 세로 안내 재평가(정상 편집 UX 복귀) */
+    try{if(window.__dennRotateFsOnChangeV108)window.__dennRotateFsOnChangeV108();}catch(e){}
+  }
+  window.dennOpenFrameFsView=open;
+  window.dennCloseFrameFsView=close;
+  function hideForAdmin(){try{if(isAdmin()){var b=document.querySelector('.denn-action-btn-fsview');if(b)b.style.display='none';}}catch(e){}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hideForAdmin);else hideForAdmin();
 })();
 </script>
 </body>
