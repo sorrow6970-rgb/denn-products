@@ -3165,6 +3165,8 @@ html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!i
 html.denn-rotate-fs #room-modal #rm-canvas-area{padding:0!important;align-items:center!important;justify-content:center!important;background:#000!important;overflow:hidden!important}
 html.denn-rotate-fs #room-modal #rm-canvas,html.denn-rotate-fs #room-modal #sg-canvas{max-width:100vw!important;max-height:100dvh!important}
 html.denn-rotate-fs #room-modal>div>div:first-child{display:none!important}
+/* 2026-07-06: 가로 전체화면 종료버튼 중복 제거 — "✕ 전체화면 종료"(rm-fs-exit-float)가 가로 종료(denn-rotate-fs 제거+FS해제)까지 처리하므로 뒤에 겹치던 동그란 ✕(denn-rotate-exit) 숨김. body 셀렉터로 특이도(1,1,2)>주입규칙(1,1,1) 상회. */
+html.denn-rotate-fs body #denn-rotate-exit{display:none!important}
 @media(max-width:720px){
   #rm-canvas-area #rm-usage-guide-v33{display:none!important}/* 2026-06-19: 모바일(터치)은 드래그/휠 안내 불필요 → 숨김 */
   #room-modal>div>div:nth-child(2){flex-direction:column!important;overflow:auto!important}
