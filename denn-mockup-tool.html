@@ -13900,11 +13900,14 @@ input[type=range]{accent-color:#777}
     if(!window.__dennRoomFsReqV){window.__dennRoomFsReqV=function(){try{var el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;if(rq){var p=rq.call(el);if(p&&p['catch'])p['catch'](function(){});}}catch(e){}try{window.scrollTo(0,1)}catch(e){}};}
     var fsPBtn=document.createElement('button');fsPBtn.id='rm-fullscreen-btn';fsPBtn.className='rm-action-btn rm-action-fs';fsPBtn.type='button';fsPBtn.textContent='세로 전체화면 보기';
     /* 2026-07-06: ★세로 전체화면 = 하이브리드. (1)CSS 레이아웃(denn-room-fullscreen-active)을 '먼저' 동기 적용 → 첫 프레임부터 메뉴 숨김+검정 커버로 즉시 전환(떨림/두 번 탭 제거). (2)비iOS(삼성/카카오/안드로이드)는 네이티브 requestFullscreen으로 주소창까지 숨겨 '꽉차게'. ★카카오/안드로이드 웹뷰가 전체화면 진입 시 기본 가로회전 → portrait-primary 잠금 + __dennPortraitFsIntentV 가드(onChange의 가로 rotate-fs 억제)로 세로 유지. (3)iOS 사파리는 element 전체화면 미지원 → CSS만(주소창 남지만 안정·동일). 종료=rm-fs-exit-float. */
-    if(window.__dennIsIOSv==null){window.__dennIsIOSv=/iPad|iPhone|iPod/.test(navigator.userAgent||'')||((navigator.platform||'')==='MacIntel'&&navigator.maxTouchPoints>1);}
+    if(window.__dennIsIOSv==null){var __ua=navigator.userAgent||'';
+      window.__dennIsIOSv=/iPad|iPhone|iPod/.test(__ua)||((navigator.platform||'')==='MacIntel'&&navigator.maxTouchPoints>1);
+      /* 2026-07-06: ★네이티브 전체화면을 '쓰면 안 되는' 환경 — iOS(미지원) + 카카오/인앱 웹뷰. 카카오 웹뷰는 requestFullscreen 진입 시 orientation.lock을 무시하고 기기를 강제 가로회전시킴(세로 고정 불가) → 이런 환경은 네이티브 FS를 쓰지 않고 CSS 전용으로 세로를 '강제 고정'. 인앱 판정: KAKAOTALK / Android WebView("; wv)") / 주요 인앱(Instagram·FB·Line·Naver). 삼성 인터넷·크롬은 미해당(정상적으로 세로 잠금 지원) → 네이티브 FS로 꽉차게. */
+      window.__dennNoNativeFsV=window.__dennIsIOSv||/KAKAOTALK/i.test(__ua)||/;\s*wv\)/i.test(__ua)||/Instagram|FBAN|FBAV|FB_IAB|Line\/|NAVER\(/i.test(__ua);}
     fsPBtn.addEventListener('click',function(e){e.preventDefault();
       window.__dennPortraitFsIntentV=true;
       try{if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}
-      if(!window.__dennIsIOSv){
+      if(!window.__dennNoNativeFsV){
         try{var el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;
           var lockP=function(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait-primary')['catch'](function(){});}catch(_){}};
           if(rq){var p=rq.call(el);if(p&&p.then)p.then(lockP)['catch'](lockP);else lockP();}else lockP();
