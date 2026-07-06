@@ -13898,14 +13898,8 @@ input[type=range]{accent-color:#777}
     /* 2026-07-05: 세로/가로 전체화면 보기 — 하단 액션 그룹에 배치(메인 버튼들과 통일). 프레임툴처럼 클릭 즉시 requestFullscreen으로 주소창 숨김(삼성/안드로이드). iOS는 미지원(패스). */
     if(!window.__dennRoomFsReqV){window.__dennRoomFsReqV=function(){try{var el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;if(rq){var p=rq.call(el);if(p&&p['catch'])p['catch'](function(){});}}catch(e){}try{window.scrollTo(0,1)}catch(e){}};}
     var fsPBtn=document.createElement('button');fsPBtn.id='rm-fullscreen-btn';fsPBtn.className='rm-action-btn rm-action-fs';fsPBtn.type='button';fsPBtn.textContent='세로 전체화면 보기';
-    /* 2026-07-06: 세로 버튼도 '세로 잠금'(가로 버튼이 landscape 잠그는 것과 대칭). ★카카오/일부 안드로이드 웹뷰는 requestFullscreen 진입 시 기본 '가로'로 자동회전 → V108 onChange가 가로 감지→setRotateFs(true)로 가로 전체화면으로 빠지던 "세로 눌렀는데 가로 회전" 버그. portrait-primary 잠금으로 차단. 잠금 미지원(iOS 등)은 조용히 무시. */
-    fsPBtn.addEventListener('click',function(e){e.preventDefault();
-      try{var el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;
-        var lockP=function(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait-primary')['catch'](function(){});}catch(_){}};
-        if(rq){var p=rq.call(el);if(p&&p.then)p.then(lockP)['catch'](lockP);else lockP();}else lockP();
-      }catch(_){}
-      try{window.scrollTo(0,1)}catch(_){}
-      try{if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}});
+    /* 2026-07-06: ★세로 전체화면 = CSS 전용(네이티브 requestFullscreen·orientation.lock 미사용). 브라우저별 Fullscreen/Orientation API 편차(삼성=정상 / 카카오=진입 시 가로 자동회전→가로 전체화면으로 빠짐 / iOS 사파리=element 전체화면 미지원)를 원천 제거 → 전 브라우저 100% 동일 동작. denn-room-fullscreen-active가 100dvh로 뷰포트를 덮고 하단 메뉴 숨김+스크롤 잠금. 종료=rm-fs-exit-float. 떨림/두 번 탭도 함께 해소(비동기 fullscreen 리사이즈 없음). 트레이드오프: 주소창(URL바)이 브라우저에 따라 상단에 얇게 남을 수 있음. */
+    fsPBtn.addEventListener('click',function(e){e.preventDefault();try{if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}});
     var fsLBtn=document.createElement('button');fsLBtn.id='rm-fullscreen-land-btn';fsLBtn.className='rm-action-btn rm-action-fs rm-action-fs-land';fsLBtn.type='button';fsLBtn.textContent='가로 전체화면 보기';
     fsLBtn.addEventListener('click',function(e){e.preventDefault();window.__dennRoomFsReqV();try{if(window.dennEnterFsLandscapeV)window.dennEnterFsLandscapeV();else if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}});
     /* 순서: 세로전체화면 → 가로전체화면 → 기본설정 → 배경저장 → 주문제작 → 돌아가기 */
