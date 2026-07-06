@@ -3174,13 +3174,14 @@ html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!i
   #room-modal #rm-canvas,#room-modal #sg-canvas{touch-action:none!important}
   #room-modal input[type=range]{min-height:28px;touch-action:pan-y}
   #room-modal input[type=range].denn-hold-active{filter:drop-shadow(0 0 4px rgba(178,77,196,.6))}
-  #room-modal.denn-room-fullscreen-active>div>div:first-child{position:absolute!important;top:8px!important;left:8px!important;right:8px!important;z-index:80!important;padding:8px 10px!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:10px!important;background:rgba(18,16,12,.68)!important;backdrop-filter:blur(10px)!important;color:#fff!important}
+  /* 2026-07-06: 전체화면 중 헤더바 숨김 — 우상단 rm-fs-exit-float와 겹치던 "상단 버튼 겹침" 해소 + 상단 112px 확보로 액자 더 크게(꽉차게). 종료는 exit float 버튼이 담당. */
+  #room-modal.denn-room-fullscreen-active>div>div:first-child{display:none!important}
   #room-modal.denn-room-fullscreen-active>div>div:first-child *{color:#fff!important}
   #room-modal.denn-room-fullscreen-active>div>div:first-child>div:first-child>div>div:nth-child(2){display:none!important}
   #room-modal.denn-room-fullscreen-active>div>div:nth-child(2){display:block!important;overflow:auto!important}
   #room-modal.denn-room-fullscreen-active>div>div:nth-child(2)>div:first-child{display:none!important}
-  #room-modal.denn-room-fullscreen-active #rm-canvas-area{width:100vw!important;height:100vh!important;height:100dvh!important;min-height:100vh!important;min-height:100dvh!important;background:#000!important;padding:112px 12px 28px!important;box-sizing:border-box!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;overflow:auto!important;touch-action:pan-x pan-y!important;-webkit-overflow-scrolling:touch}
-  #room-modal.denn-room-fullscreen-active #rm-canvas,#room-modal.denn-room-fullscreen-active #sg-canvas{max-width:calc(100vw - 24px)!important;max-height:calc(100dvh - 146px)!important}
+  #room-modal.denn-room-fullscreen-active #rm-canvas-area{width:100vw!important;height:100vh!important;height:100dvh!important;min-height:100vh!important;min-height:100dvh!important;background:#000!important;padding:56px 10px 22px!important;box-sizing:border-box!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;overflow:auto!important;touch-action:pan-x pan-y!important;-webkit-overflow-scrolling:touch}/* 2026-07-06: 헤더 숨김 → top 112→56px(공간 확보하되 우상단 종료버튼~46px과 안 겹치게) */
+  #room-modal.denn-room-fullscreen-active #rm-canvas,#room-modal.denn-room-fullscreen-active #sg-canvas{max-width:calc(100vw - 20px)!important;max-height:calc(100dvh - 84px)!important}/* 2026-07-06: 헤더 제거분 반영(146→84) — 세로 액자가 가용 높이 더 사용 */
   #room-modal.denn-room-fullscreen-active #rm-usage-guide-v33{top:118px!important;background:rgba(255,255,255,.32)!important}
   #room-modal.denn-room-fullscreen-active #rm-mobile-resize-handle{display:none!important}
 }
@@ -3670,7 +3671,7 @@ function redrawRoomSoon(preserveCanvas){
 }
 function setRoomFullscreenLayout(on){
   var modal=by('room-modal'),btn=by('rm-fullscreen-btn');
-  if(on)window.__dennRoomFsState=captureFullscreenViewState();else{window.__dennRoomFsState=null;clearFullscreenDisplayOverrides()}
+  if(on)window.__dennRoomFsState=captureFullscreenViewState();else{window.__dennRoomFsState=null;clearFullscreenDisplayOverrides();window.__dennPortraitFsIntentV=false;/* 2026-07-06: 전체화면 종료 시 세로 의도 가드 해제 */}
   if(modal)modal.classList.toggle('denn-room-fullscreen-active',!!on);
   document.documentElement.classList.toggle('denn-room-fs-page',!!on);
   document.body.classList.toggle('denn-room-fs-page',!!on);
@@ -13898,10 +13899,20 @@ input[type=range]{accent-color:#777}
     /* 2026-07-05: 세로/가로 전체화면 보기 — 하단 액션 그룹에 배치(메인 버튼들과 통일). 프레임툴처럼 클릭 즉시 requestFullscreen으로 주소창 숨김(삼성/안드로이드). iOS는 미지원(패스). */
     if(!window.__dennRoomFsReqV){window.__dennRoomFsReqV=function(){try{var el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;if(rq){var p=rq.call(el);if(p&&p['catch'])p['catch'](function(){});}}catch(e){}try{window.scrollTo(0,1)}catch(e){}};}
     var fsPBtn=document.createElement('button');fsPBtn.id='rm-fullscreen-btn';fsPBtn.className='rm-action-btn rm-action-fs';fsPBtn.type='button';fsPBtn.textContent='세로 전체화면 보기';
-    /* 2026-07-06: ★세로 전체화면 = CSS 전용(네이티브 requestFullscreen·orientation.lock 미사용). 브라우저별 Fullscreen/Orientation API 편차(삼성=정상 / 카카오=진입 시 가로 자동회전→가로 전체화면으로 빠짐 / iOS 사파리=element 전체화면 미지원)를 원천 제거 → 전 브라우저 100% 동일 동작. denn-room-fullscreen-active가 100dvh로 뷰포트를 덮고 하단 메뉴 숨김+스크롤 잠금. 종료=rm-fs-exit-float. 떨림/두 번 탭도 함께 해소(비동기 fullscreen 리사이즈 없음). 트레이드오프: 주소창(URL바)이 브라우저에 따라 상단에 얇게 남을 수 있음. */
-    fsPBtn.addEventListener('click',function(e){e.preventDefault();try{if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}});
+    /* 2026-07-06: ★세로 전체화면 = 하이브리드. (1)CSS 레이아웃(denn-room-fullscreen-active)을 '먼저' 동기 적용 → 첫 프레임부터 메뉴 숨김+검정 커버로 즉시 전환(떨림/두 번 탭 제거). (2)비iOS(삼성/카카오/안드로이드)는 네이티브 requestFullscreen으로 주소창까지 숨겨 '꽉차게'. ★카카오/안드로이드 웹뷰가 전체화면 진입 시 기본 가로회전 → portrait-primary 잠금 + __dennPortraitFsIntentV 가드(onChange의 가로 rotate-fs 억제)로 세로 유지. (3)iOS 사파리는 element 전체화면 미지원 → CSS만(주소창 남지만 안정·동일). 종료=rm-fs-exit-float. */
+    if(window.__dennIsIOSv==null){window.__dennIsIOSv=/iPad|iPhone|iPod/.test(navigator.userAgent||'')||((navigator.platform||'')==='MacIntel'&&navigator.maxTouchPoints>1);}
+    fsPBtn.addEventListener('click',function(e){e.preventDefault();
+      window.__dennPortraitFsIntentV=true;
+      try{if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}
+      if(!window.__dennIsIOSv){
+        try{var el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;
+          var lockP=function(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait-primary')['catch'](function(){});}catch(_){}};
+          if(rq){var p=rq.call(el);if(p&&p.then)p.then(lockP)['catch'](lockP);else lockP();}else lockP();
+        }catch(_){}
+      }
+      try{window.scrollTo(0,1)}catch(_){}});
     var fsLBtn=document.createElement('button');fsLBtn.id='rm-fullscreen-land-btn';fsLBtn.className='rm-action-btn rm-action-fs rm-action-fs-land';fsLBtn.type='button';fsLBtn.textContent='가로 전체화면 보기';
-    fsLBtn.addEventListener('click',function(e){e.preventDefault();window.__dennRoomFsReqV();try{if(window.dennEnterFsLandscapeV)window.dennEnterFsLandscapeV();else if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}});
+    fsLBtn.addEventListener('click',function(e){e.preventDefault();window.__dennPortraitFsIntentV=false;/* 가로 의도 → 세로 가드 해제 */window.__dennRoomFsReqV();try{if(window.dennEnterFsLandscapeV)window.dennEnterFsLandscapeV();else if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}});
     /* 순서: 세로전체화면 → 가로전체화면 → 기본설정 → 배경저장 → 주문제작 → 돌아가기 */
     actionWrap.appendChild(fsPBtn); actionWrap.appendChild(fsLBtn); actionWrap.appendChild(resetBtn); actionWrap.appendChild(saveBtn); actionWrap.appendChild(orderBtn); actionWrap.appendChild(backBtn);
     right.appendChild(actionWrap); body.appendChild(right);
@@ -14607,7 +14618,8 @@ input[type=range]{accent-color:#777}
       if(!mob||!open){setRotateFs(false);hint();return;}
       var landscape=landscapeNow,fs=isFs();
       if(landscape){
-        if(window.__dennRotateDismissed){setRotateFs(false);}/* X로 닫음 → 가로에선 재진입 안 함(세로 안내 프롬프트가 떠 있음) */
+        if(window.__dennPortraitFsIntentV){setRotateFs(false);}/* 2026-07-06: 세로 전체화면 의도 중엔 웹뷰 강제 가로회전을 무시(rotate-fs 억제) — portrait 잠금이 정착될 때까지 세로 CSS 유지. "세로 눌렀는데 가로로 빠짐" 차단. */
+        else if(window.__dennRotateDismissed){setRotateFs(false);}/* X로 닫음 → 가로에선 재진입 안 함(세로 안내 프롬프트가 떠 있음) */
         else{
           if(!fs){window.__dennAutoFsV108=true;if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}/* 페이드·센터 리셋은 상단 p→l 전환에서 처리 */
           setRotateFs(true);redraw();setTimeout(updateRotScrollbarV,90);setTimeout(updateRotScrollbarV,360);
@@ -14619,7 +14631,7 @@ input[type=range]{accent-color:#777}
         setRotateFs(false);
         /* 2026-06-26: 세로=풀스크린 무조건 해제 — 기존엔 (fs && __dennAutoFsV108) 조건부라 가로↔세로 반복 중 플래그 desync 시 denn-room-fullscreen-active(max z-index, 캔버스 inset:0 + 하단 메뉴 숨김)가 세로에 잔류해 "하단 메뉴 클릭 자체가 안 됨" 버그 유발. 모바일 세로에선 수동 FS 진입 불가(hideFsBtn)라 세로 풀스크린-active는 항상 잔류 아티팩트 → 무조건 해제 안전. */
         window.__dennAutoFsV108=false;
-        if(isFs()&&window.setRoomFullscreenLayout)setRoomFullscreenLayout(false);
+        if(isFs()&&!window.__dennPortraitFsIntentV&&window.setRoomFullscreenLayout)setRoomFullscreenLayout(false);/* 2026-07-06: ★세로 전체화면 '의도적' 진입(__dennPortraitFsIntentV)은 해제하지 않음 — 네이티브 FS 진입 resize로 onChange가 돌 때 방금 켠 세로 전체화면을 즉시 꺼버려 "불안정/안 켜짐"이던 근본원인. 잔여물 정리(가로→세로 전환 후 stale FS)는 플래그 없을 때만. */
       }
       hint();updateRotScrollbarV();
     }catch(e){}
