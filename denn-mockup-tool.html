@@ -14303,6 +14303,27 @@ input[type=range]{accent-color:#777}
   }
   window.addEventListener('resize',function(){clearTimeout(window.__dennRoomCoverRz);window.__dennRoomCoverRz=setTimeout(kick,150);});
   [300,800,1500].forEach(function(ms){setTimeout(kick,ms);});
+  /* 2026-07-06 [2단계]: ★rm-canvas-area 실측 크기 변화 감지 → rmSizeCanvas 재실행. 회전/전체화면 전환은 CSS 레이아웃 변화라 window 'resize'가 안 떠서, 회전 '중'(영역 폭<320 붕괴 순간)에 잡힌 stale 캔버스(320×333)가 영역 정착(891×411) 후에도 재사이징 안 되던 근본원인. 영역이 실제로 바뀔 때만(≥2px, last-size 가드로 루프 차단) debounce 재사이징. 영역 크기는 뷰포트 종속이라 캔버스 변경이 영역을 바꾸지 않음. */
+  try{
+    if(window.ResizeObserver&&!window.__dennRoomAreaROV){
+      var __lastAW=0,__lastAH=0;
+      var __attachRO=function(){
+        var a=document.getElementById('rm-canvas-area');if(!a)return false;
+        window.__dennRoomAreaROV=new ResizeObserver(function(){
+          var el=document.getElementById('rm-canvas-area');if(!el)return;
+          var w=Math.round(el.clientWidth),h=Math.round(el.clientHeight);
+          if(Math.abs(w-__lastAW)<2&&Math.abs(h-__lastAH)<2)return;
+          __lastAW=w;__lastAH=h;
+          clearTimeout(window.__dennRoomAreaROT);
+          window.__dennRoomAreaROT=setTimeout(function(){
+            try{var rm=document.getElementById('room-modal');if(rm&&getComputedStyle(rm).display!=='none'&&window.rmSizeCanvas){window.rmSizeCanvas();window.rmRender&&window.rmRender();window.sgDraw&&window.sgDraw();}}catch(e){}
+          },90);
+        });
+        window.__dennRoomAreaROV.observe(a);return true;
+      };
+      if(!__attachRO()){var __rot=0,__roiv=setInterval(function(){__rot++;if(__attachRO()||__rot>60)clearInterval(__roiv);},200);}
+    }
+  }catch(e){}
 })();
 </script>
 <script id="denn-v107-admin-mobile-preview-box">
