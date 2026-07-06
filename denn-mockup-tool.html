@@ -2835,16 +2835,13 @@ window.addEventListener('load',function(){setTimeout(function(){try{renderFrame&
         'lvh:'+sup('100lvh')+' svh:'+sup('100svh')+' dvh:'+sup('100dvh')+'\n'+
         'media '+(iw>860?'DESKTOP(>860)':'mobile(<=860)')+' mul '+(iw>860?'.868':'.56')+'\n'+
         'headerH '+(getComputedStyle(document.documentElement).getPropertyValue('--denn-header-h')||'?')+'\n'+
-        'area.clientH '+(area?area.clientHeight:'?')+' scale '+sc+
-        /* 2026-07-06: 룸 전체화면 상태 진단(삼성 가로 원인 추적) — rotate-fs/fullscreen-active 클래스 여부 + rm-canvas 실제 표시크기. */
-        (function(){try{var rm=document.getElementById('room-modal'),cv=document.getElementById('rm-canvas'),ra=document.getElementById('rm-canvas-area');var rot=document.documentElement.classList.contains('denn-rotate-fs')?'Y':'n';var fsa=(rm&&rm.classList.contains('denn-room-fullscreen-active'))?'Y':'n';var open=(rm&&getComputedStyle(rm).display!=='none')?'Y':'n';var cvs=cv?((cv.style.width||'?')+'x'+(cv.style.height||'?')):'-';var arR=ra&&ra.getBoundingClientRect?ra.getBoundingClientRect():null;var cvR=cv&&cv.getBoundingClientRect?cv.getBoundingClientRect():null;var rmI=(window.RM&&RM.roomImg)?(RM.roomImg.naturalWidth+'x'+RM.roomImg.naturalHeight):'noimg';var cs=cv?getComputedStyle(cv):null;var rmOp=cs?cs.opacity:'?';var rmVis=cs?cs.visibility:'?';var enter=document.documentElement.classList.contains('denn-room-entering')?'Y':'n';var imgOk=(window.RM&&RM.roomImg)?(RM.roomImg.complete?'c':'load')+(RM.roomImg.naturalWidth?'+':'0'):'no';var areaOv=ra?getComputedStyle(ra).overflow:'?';return '\nROOM open:'+open+' rotFS:'+rot+' fsAct:'+fsa+'\nrmCanvas style '+cvs+'\nareaRect '+(arR?Math.round(arR.width)+'x'+Math.round(arR.height):'?')+' cvRect '+(cvR?Math.round(cvR.width)+'x'+Math.round(cvR.height):'?')+'\nroomImg '+rmI+' img:'+imgOk+'\nrmOp:'+rmOp+' vis:'+rmVis+' enter:'+enter+' aOv:'+areaOv+'\nrsz '+((window.__dennRszLog||[]).join('\n    ')||'(none)');}catch(e){return '\nROOM err '+e;}})();
+        'area.clientH '+(area?area.clientHeight:'?')+' scale '+sc;
       try{if(document.documentElement.lastElementChild!==p)document.documentElement.appendChild(p);}catch(_){}/* 2026-07-06: 전체화면 진입 후 패널이 모달 뒤로 가지 않게 html 마지막 자식으로 유지(가로 전체화면서 측정값 보이게) */
     }catch(e){p.textContent='diag err '+e;}
   }
   function boot(){document.documentElement.appendChild(p);upd();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   window.addEventListener('load',function(){setTimeout(upd,300);});
-  setInterval(upd,700);/* 2026-07-06: 주기 갱신 — 전체화면 진입 후 쌓이는 rsz 로그/캔버스 크기 실시간 반영(이벤트만으론 정착 후 갱신 누락) */
   ['resize','orientationchange'].forEach(function(ev){window.addEventListener(ev,function(){setTimeout(upd,150);});});
   try{if(window.visualViewport){['resize','scroll'].forEach(function(ev){window.visualViewport.addEventListener(ev,function(){setTimeout(upd,60);});});}}catch(e){}
 })();
@@ -3164,7 +3161,9 @@ html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!i
 #room-modal.denn-room-fullscreen-active>div{width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;border-radius:0!important;background:#000!important}
 /* 2026-07-06: 전체화면(세로=denn-room-fullscreen-active / 가로=html.denn-rotate-fs) 중 하단 액션+탭바 숨김 — 캔버스-only 보기. 종료는 rm-fs-exit-float(우상단 플로팅)/denn-rotate-exit(✕). 하단바가 absolute;bottom:0;z-index:30(L14053)이라 fullscreen CSS가 안 덮던 것. */
 #room-modal.denn-room-fullscreen-active .denn-rm-bar,html.denn-rotate-fs #room-modal .denn-rm-bar{display:none!important}
-/* 2026-07-06 [2단계]: 가로 전체화면(rotate-fs) 헤더 숨김만 유지. (이전의 @media landscape 레터박스 오버라이드=overflow:hidden·max-height캡은 사용자 의도인 cover+세로스크롤을 깨뜨려 제거. 캔버스 스크롤/사이징은 원래 rotate-fs CSS(L14473~ overflow-y:auto)+dpr !important 인라인이 담당.) */
+/* 2026-07-06: 가로 전체화면(rotate-fs) — rmSizeCanvas가 룸 세로비율로 '높이맞춤'한 캔버스를 캡/왜곡 없이 중앙 배치(좌우 검은 레터박스), 헤더 숨김. 기존 landscape CSS(L3223/3224: max-height 100dvh-134 캡·padding)는 옛 풀블리드 전제라 새 사이즈를 세로로 눌러 왜곡시킴 → rotate-fs 전용 오버라이드(특이도 2,1,1 > 2,1,0)로 무력화. */
+html.denn-rotate-fs #room-modal #rm-canvas-area{padding:0!important;align-items:center!important;justify-content:center!important;background:#000!important;overflow:hidden!important}
+html.denn-rotate-fs #room-modal #rm-canvas,html.denn-rotate-fs #room-modal #sg-canvas{max-width:100vw!important;max-height:100dvh!important}
 html.denn-rotate-fs #room-modal>div>div:first-child{display:none!important}
 /* 2026-07-06: 가로 전체화면 종료버튼 중복 제거 — "✕ 전체화면 종료"(rm-fs-exit-float)가 가로 종료(denn-rotate-fs 제거+FS해제)까지 처리하므로 뒤에 겹치던 동그란 ✕(denn-rotate-exit) 숨김. body 셀렉터로 특이도(1,1,2)>주입규칙(1,1,1) 상회. */
 html.denn-rotate-fs body #denn-rotate-exit{display:none!important}
@@ -3933,10 +3932,7 @@ window.rmSizeCanvas=function(){
   /* 2026-06-30: 고DPI(레티나/폰) 화질 — 캔버스 픽셀버퍼를 devicePixelRatio배로(상한 3) 키우고 style은 CSS px 유지 → 선명. rmRender/히트테스트/스크롤이 전부 canvas.width 비례 또는 area.clientWidth(CSS) 기준이라 위치 무영향. */
   var __dpr=Math.max(1,Math.min(window.devicePixelRatio||1,4));
   /* 2026-06-19 ②: 가로 전체화면(denn-rotate-fs)이면 방향 판정(isRoomLandscape)과 무관하게 캔버스를 뷰포트 꽉 채움 → 회색/여백 테두리 제거. drawCover가 cover로 채워 왜곡 없음. V106(>860 off)·V107(소비자 off) 미간섭. */
-  /* 2026-07-06 [2단계]: '가로 컨테이너 전체화면'을 rotate-fs 여부와 무관하게 통일 판정. 삼성은 가로 전체화면서 denn-rotate-fs가 안 붙고 denn-room-fullscreen-active+가로뷰포트로만 진입 → 옛 cover-zoom 경로로 빠져 액자 과대(탄색 여백). '가로 뷰포트 전체화면'이면 전부 아래 높이맞춤 레터박스로 → 삼성=카카오 동일. */
-  var __dennRmFsLand=document.documentElement.classList.contains('denn-rotate-fs');
-  if(!__dennRmFsLand){try{var __rmM=by('room-modal');if(__rmM&&__rmM.classList.contains('denn-room-fullscreen-active')&&innerWidth>innerHeight)__dennRmFsLand=true;}catch(e){}}
-  if(__dennRmFsLand){
+  if(document.documentElement.classList.contains('denn-rotate-fs')){
     /* 2026-07-06: ★가로 전체화면 과확대 근본수정. 기존=캔버스를 뷰포트(innerWidth×innerHeight)로 풀블리드 → 액자 폭 fw=W*sizePct/100이 W(가로 915 등)에 정비례해 세로 대비 ~2.2배 과대 + 브라우저별 innerWidth 편차로 크기 제각각. 변경=룸 배경(세로) 종횡비대로 뷰포트 '높이'에 맞춘 세로 박스 → 액자 폭이 작은 캔버스폭 기준이라 방향·브라우저 무관하게 정상 크기(카카오 기준). 좌우는 검은 레터박스(canvas-area justify-center + bg #000). */
     var __vw=innerWidth,__vh=innerHeight;
     var __arS=(RM.roomImg&&RM.roomImg.naturalWidth&&RM.roomImg.naturalHeight)?(RM.roomImg.naturalWidth/RM.roomImg.naturalHeight):0.62;
@@ -5716,7 +5712,6 @@ function shouldCover(st){
 }
 function layoutAspect(){
   /* ★ 2026-06-05 cover: 캔버스는 항상 프리뷰 영역 비율로 가득 채움(배경 유무 무관) → 흰 여백 0. 배경 이미지는 drawCover가 영역을 덮음(양끝 크롭, 작은 이미지도 업스케일해 꽉 채움). 배경 크기/위치 슬라이더로 조정 가능. */
-  /* 2026-07-06 [2단계]: (이전의 가로=이미지비율 오버라이드는 contain(레터박스)용이라 cover 복원과 함께 철회 — V107 rotate블록이 cover 사이징 전담. V47은 원래대로 영역 비율.) */
   try{var a=areaSize();if(a&&a.w>0&&a.h>0)return clamp(a.w/a.h,.75,3.2)}catch(e){}
   var st=setting();
   return clamp(num(st.layoutAspect||st.__layoutAspectV47,0)||16/9,.75,3.2);
@@ -14295,7 +14290,6 @@ input[type=range]{accent-color:#777}
   }
   window.addEventListener('resize',function(){clearTimeout(window.__dennRoomCoverRz);window.__dennRoomCoverRz=setTimeout(kick,150);});
   [300,800,1500].forEach(function(ms){setTimeout(kick,ms);});
-  /* 2026-07-06 [2단계]: (rm-canvas-area ResizeObserver 재사이징 제거 — stale 320×333 오진으로 넣었으나 진짜 원인은 dpr 렌더버그였고, 이 observer가 rmSizeCanvas를 반복 호출(=캔버스 clear)해 방 사진이 그려진 뒤 다시 지워지는 검은화면 thrashing 유발. 원래 렌더 흐름(redraw/onChange/dennGatedRevealV)에 맡김.) */
 })();
 </script>
 <script id="denn-v107-admin-mobile-preview-box">
@@ -14373,46 +14367,13 @@ input[type=range]{accent-color:#777}
     try{if(document.documentElement.classList.contains('denn-rotate-fs')){var RMf=window.RM;if(RMf&&RMf.canvas){var vw=Math.round(innerWidth),vh=Math.round(innerHeight),im=RMf.roomImg,imAr=(im&&im.naturalWidth&&im.naturalHeight)?(im.naturalWidth/im.naturalHeight):0;
       /* 2026-06-22 캔버스 크기 고정: 가로 전체화면 캔버스는 '가로(원본, ar>=1) 이미지' 비율로만 사이징하고 그 비율을 캐시(__dennLsArV) 재사용. 스왑 전 옛 세로(4:5, ar<1) 이미지로는 ar을 안 바꿔 캔버스 통째 리사이즈(844x1055↔844x563) 점프를 원천 차단. 첫 진입(캐시 전)엔 현재 이미지/뷰포트 폴백. */
       if(imAr>=1)window.__dennLsArV=imAr;
-      var ar=window.__dennLsArV||(imAr>0?imAr:(vw/vh));var ch=vh,cw=Math.round(ch*ar);if(cw<vw){cw=vw;ch=Math.round(cw/ar);}/* 2026-07-06 [2단계]: ★cover 복원(사용자 의도=좌우 꽉참+세로스크롤+첫화면 중앙). contain(레터박스)은 잘못된 방향이었음. cw<vw면 폭을 뷰포트에 맞춰 확대(높이 넘침→스크롤). 액자 과대의 진짜 원인은 아래 dpr 렌더버그(백킹스토어)였고 그건 !important로 해결. 스크롤 중앙은 L14410/dennRotCenterLoopV가 담당. */var pw=Math.round(cw),ph=Math.round(ch);/* 2026-07-06 [2단계]: ★백킹스토어를 cw×dpr → cw로 (dpr배 제거). width:auto!important(L13734)로 캔버스가 백킹크기로 렌더되는데, drawCover는 표시크기(cw)만큼만 그림 → 고dpr(삼성/크롬 3.5)서 백킹(cw×3.5)의 28% 구석만 채우고 나머지 검정(저dpr 카카오는 백킹≈cw라 정상). 백킹=cw로 두면 백킹=그리는영역 일치 → 전 dpr서 방 정상 렌더(카카오처럼). 트레이드오프=고해상 폰서 살짝 소프트(프리뷰라 수용). */if(RMf.canvas.width!==pw||RMf.canvas.height!==ph){RMf.canvas.width=pw;RMf.canvas.height=ph;RMf.canvas.style.setProperty('width',cw+'px','important');RMf.canvas.style.setProperty('height',ch+'px','important');var sgF=document.getElementById('sg-canvas');if(sgF){sgF.width=pw;sgF.height=ph;sgF.style.setProperty('width',cw+'px','important');sgF.style.setProperty('height',ch+'px','important')}
-      /* 2026-07-06 [2단계]: 캔버스 backing(canvas.width) 재설정 = clear. 계측 확정: rmOp:1·visible·img로드인데 검정 = clear 후 rmRender 미동반(빈 투명 캔버스). 리사이즈 직후 '동기' 렌더로 방 사진 즉시 그림(디바운스는 리사이즈 사이에 그려져 다시 지워짐). 재진입 가드로 rmRender→rmSizeCanvas 루프 차단. */
-      if(!window.__dennRotRndReentryV){window.__dennRotRndReentryV=true;try{window.rmRender&&window.rmRender();window.sgDraw&&window.sgDraw();}catch(e){}window.__dennRotRndReentryV=false;}
-      }/* 2026-06-30: 가로 전체화면 캔버스도 DPR배 픽셀버퍼(style은 cw/ch CSS px 유지) — 가로 화질 깨짐 수정. 2026-07-06 [2단계]: ★style을 !important로 — L13734 `#rm-canvas-area #rm-canvas{width:auto!important}`가 non-important 인라인을 이겨 캔버스가 백킹스토어(cw×dpr, 삼성 dpr3.5=2160)로 렌더돼 과대. 인라인-important가 stylesheet-important를 이겨 dpr 무관 cw px 렌더(카카오=저dpr이라 원래 정상, 삼성/크롬=고dpr서 3.5배 과대이던 것 해결). */
+      var ar=window.__dennLsArV||(imAr>0?imAr:(vw/vh));var ch=vh,cw=Math.round(ch*ar);if(cw<vw){cw=vw;ch=Math.round(cw/ar);}var pw=Math.round(cw),ph=Math.round(ch);if(RMf.canvas.width!==pw||RMf.canvas.height!==ph){RMf.canvas.width=pw;RMf.canvas.height=ph;RMf.canvas.style.width=cw+'px';RMf.canvas.style.height=ch+'px';var sgF=document.getElementById('sg-canvas');if(sgF){sgF.width=pw;sgF.height=ph;sgF.style.width=cw+'px';sgF.style.height=ch+'px'}}/* 2026-06-30: 가로 전체화면 캔버스 DPR배 픽셀버퍼. 2026-07-06 [2단계]: ★백킹을 cw×dpr→cw로(DPR배 제거). width:auto!important(L13734)로 캔버스가 백킹크기 렌더되는데 drawCover는 표시크기(cw)만 그림 → 고dpr(삼성/크롬 3.5)서 백킹의 28%만 채우고 나머지 검정/과확대. 저dpr 카카오는 백킹≈cw라 원래 정상. 백킹=cw면 백킹=그리는영역 일치 → 전 기기 정상(cover+스크롤 유지). 트레이드오프=고해상서 살짝 소프트. */
       /* 진입 시 1회 가운데 — 캔버스 사이징이 막 끝난 직후(아직 __dennRotCentered=false면) scrollHeight로 즉시 결정. 페이드(denn-room-entering)가 이 순간을 가려 점프 안 보임. */
       if(!window.__dennRotCentered&&innerWidth>innerHeight){var aEl=document.getElementById('rm-canvas-area');if(aEl){var sh=aEl.scrollHeight;if(sh>aEl.clientHeight+4){aEl.scrollTop=Math.round((sh-aEl.clientHeight)/2);window.__dennRotCentered=true;}}}/* 2026-06-29: 세로(innerWidth<=innerHeight)면 가로 센터(101)를 쓰지 않음 — 세로 전환 중 denn-rotate-fs가 한 프레임 깜빡여도 101이 누출돼 세로 앵커(8)와 101↔8 상하 요동하던 회귀 차단 */
     }}}catch(e){}
     return r;};
   var origRender=window.rmRender;
   if(typeof origRender==='function')window.rmRender=function(){var r=origRender.apply(this,arguments);if(box()){try{origRender.call(window);window.sgDraw&&window.sgDraw();}catch(e){}}return r;};
-})();
-</script>
-<script id="denn-rsz-instrument-debug">
-/* 2026-07-06 임시계측: ?debug=1일 때만 rmSizeCanvas 최외곽 래핑해 매 호출을 기록(호출여부·rotFS·innerWidth·결과 캔버스 style). '가로 rotFS서 rmSizeCanvas가 호출되나/무엇을 만드나' 판별용. 여러 지연으로 최종 체인 감쌈. */
-(function(){
-  try{var dbg=/[?&#]debug=1/.test((location.search||'')+(location.hash||''));if(!dbg)return;}catch(e){return;}
-  window.__dennRszLog=window.__dennRszLog||[];
-  function wrap(){
-    try{
-      var orig=window.rmSizeCanvas;
-      if(typeof orig!=='function'||orig.__dennRszInstrumented)return;
-      var w=function(){
-        var r;
-        try{r=orig.apply(this,arguments);}catch(err){window.__dennRszLog.push('THROW '+err);if(window.__dennRszLog.length>6)window.__dennRszLog.shift();throw err;}
-        try{
-          var cv=document.getElementById('rm-canvas');
-          var rot=document.documentElement.classList.contains('denn-rotate-fs')?'R':'-';
-          var e=rot+' iw'+window.innerWidth+' cv'+(cv?((cv.style.width||'?')+'x'+(cv.style.height||'?')):'?');
-          var L=window.__dennRszLog;
-          if(!L.length||L[L.length-1]!==e){L.push(e);if(L.length>6)L.shift();}
-        }catch(_){}
-        return r;
-      };
-      w.__dennRszInstrumented=true;
-      window.rmSizeCanvas=w;
-    }catch(_){}
-  }
-  wrap();
-  [500,1500,3000].forEach(function(ms){setTimeout(wrap,ms);});
-  window.addEventListener('load',function(){setTimeout(wrap,300);});
 })();
 </script>
 <script id="denn-v108-rotate-fullscreen">
