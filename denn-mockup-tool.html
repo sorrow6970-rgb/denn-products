@@ -5719,6 +5719,12 @@ function shouldCover(st){
 }
 function layoutAspect(){
   /* ★ 2026-06-05 cover: 캔버스는 항상 프리뷰 영역 비율로 가득 채움(배경 유무 무관) → 흰 여백 0. 배경 이미지는 drawCover가 영역을 덮음(양끝 크롭, 작은 이미지도 업스케일해 꽉 채움). 배경 크기/위치 슬라이더로 조정 가능. */
+  /* 2026-07-06 [2단계 진짜수정]: ★가로 전체화면(rotate-fs 또는 fullscreen-active+가로뷰포트)은 '영역(가로) 종횡비' 대신 '룸 이미지(세로) 종횡비'를 사용 → 캔버스가 이미지와 같은 세로 박스가 돼 (a)drawCover가 세로 방 사진을 안 크롭(액자 정상 크기), (b)좌우 검은 레터박스, (c)영역 폭이 브라우저마다 달라도(삼성 2.17/카카오 등) 이미지 비율은 동일 → 삼성=카카오 완전 통일. 세로 이미지(0.5~0.62)는 기존 하한 0.75 미만이라 이 케이스만 0.4로 완화. ※실제 rmSizeCanvas 사이저는 이 V47 — L3933(rmSizeCanvas 원본)은 V47이 단락시켜 죽은 코드. */
+  try{
+    var __m=by('room-modal');
+    var __fsLand=document.documentElement.classList.contains('denn-rotate-fs')||(__m&&__m.classList&&__m.classList.contains('denn-room-fullscreen-active')&&innerWidth>innerHeight);
+    if(__fsLand){var __ia=imageAspect();if(__ia>0)return clamp(__ia,.4,3.2);}
+  }catch(e){}
   try{var a=areaSize();if(a&&a.w>0&&a.h>0)return clamp(a.w/a.h,.75,3.2)}catch(e){}
   var st=setting();
   return clamp(num(st.layoutAspect||st.__layoutAspectV47,0)||16/9,.75,3.2);
