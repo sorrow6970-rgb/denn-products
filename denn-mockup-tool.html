@@ -2835,7 +2835,9 @@ window.addEventListener('load',function(){setTimeout(function(){try{renderFrame&
         'lvh:'+sup('100lvh')+' svh:'+sup('100svh')+' dvh:'+sup('100dvh')+'\n'+
         'media '+(iw>860?'DESKTOP(>860)':'mobile(<=860)')+' mul '+(iw>860?'.868':'.56')+'\n'+
         'headerH '+(getComputedStyle(document.documentElement).getPropertyValue('--denn-header-h')||'?')+'\n'+
-        'area.clientH '+(area?area.clientHeight:'?')+' scale '+sc;
+        'area.clientH '+(area?area.clientHeight:'?')+' scale '+sc+
+        /* 2026-07-06: 룸 전체화면 상태 진단(삼성 가로 원인 추적) — rotate-fs/fullscreen-active 클래스 여부 + rm-canvas 실제 표시크기. */
+        (function(){try{var rm=document.getElementById('room-modal'),cv=document.getElementById('rm-canvas');var rot=document.documentElement.classList.contains('denn-rotate-fs')?'Y':'n';var fsa=(rm&&rm.classList.contains('denn-room-fullscreen-active'))?'Y':'n';var open=(rm&&getComputedStyle(rm).display!=='none')?'Y':'n';var cvs=cv?((cv.style.width||'?')+'x'+(cv.style.height||'?')):'-';return '\nROOM open:'+open+' rotFS:'+rot+' fsAct:'+fsa+'\nrmCanvas '+cvs;}catch(e){return '\nROOM err';}})();
       try{if(document.documentElement.lastElementChild!==p)document.documentElement.appendChild(p);}catch(_){}/* 2026-07-06: 전체화면 진입 후 패널이 모달 뒤로 가지 않게 html 마지막 자식으로 유지(가로 전체화면서 측정값 보이게) */
     }catch(e){p.textContent='diag err '+e;}
   }
