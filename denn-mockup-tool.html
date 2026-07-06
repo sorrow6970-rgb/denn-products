@@ -3784,6 +3784,9 @@ function isRoomLandscape(){if(window.__dennForcePortraitV)return false;return is
 window.isRoomMobile=isRoomMobile;/* 단계3: 읽기 병합(dennMergeMobileV)이 단일 모바일 판정을 공유하도록 노출 */
 window.isRoomPortrait=isRoomPortrait;/* 모바일 가로는 PC와 비율 동일 → .mobile은 세로(portrait)에서만 적용, 가로는 base(PC) 사용 */
 window.isRoomLandscape=isRoomLandscape;/* 2026-06-19: 진단 probe·외부 호출용 노출(미노출이라 window.isRoomLandscape가 undefined로 오판되던 문제) */
+/* 2026-07-06: ★전체화면 세로 버튼이 메뉴 안 숨기던 진짜 원인 — 이 IIFE의 setRoomFullscreenLayout/openRoomFullscreenView가 window 미노출이라, 외부(세로 버튼 L13897·dennEnterFsLandscapeV L14462/14491·V108 L14607/14617)의 `if(window.setRoomFullscreenLayout)` 가드가 항상 false → 네이티브 전체화면(OS 힌트)만 뜨고 denn-room-fullscreen-active 클래스 미적용 → 하단바 그대로. 노출로 해결. */
+window.setRoomFullscreenLayout=setRoomFullscreenLayout;
+window.openRoomFullscreenView=openRoomFullscreenView;
 function measureBase(W,H){return isRoomPortrait()?Math.max(W,H):Math.min(W,H)}
 function activeGuideSize(){
   var list=actualSizes(),pick=null,primary=(window.RM&&RM.activeGuideSizeId)||(window.SG&&SG.primarySizeId);
