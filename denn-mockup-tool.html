@@ -10087,7 +10087,7 @@ window.addEventListener('load',run);
   if(window.DENN_FRAME_PREVIEW_HIDPI_V361&&window.DENN_FRAME_PREVIEW_HIDPI_V361.version==='v36.1-frame-preview-hidpi')return;
   var LEGACY_SCALE_KEY='denn_frame_preview_user_scale_v40';
   var SCALE_KEYS={desktop:'denn_frame_preview_user_scale_desktop_v361',mobile:'denn_frame_preview_user_scale_mobile_v361'};
-  var DEFAULT_SCALE_CONFIG={breakpoint:860,desktop:{defaultScale:100,min:60,max:300},mobile:{defaultScale:100,min:50,max:100}};/* 2026-07-05: 모바일 스케일 — 100%=기본이자 최대(사용자 지정 큰 크기, noClipMax×1.57). 50~100% 조절(그 이상 확대 없음). */
+  var DEFAULT_SCALE_CONFIG={breakpoint:860,desktop:{defaultScale:100,min:50,max:150},mobile:{defaultScale:100,min:50,max:150}};/* 2026-07-06 [사이징 통일 1단계]: mobile/desktop 슬라이더 범위 동일화(50~150%, 기본 100). 100%=noClipMax×FIT_BASE(화면 딱맞 여백). 방향·기기·브라우저 무관 동일 동작. */
   window.DENN_FRAME_PREVIEW_SCALE_CONFIG_V361=window.DENN_FRAME_PREVIEW_SCALE_CONFIG_V361||DEFAULT_SCALE_CONFIG;
   var SCALE_CONFIG=window.DENN_FRAME_PREVIEW_SCALE_CONFIG_V361;
   /* 2026-07-03: 사용자 선택 — 액자 스케일을 '매 로드 시 기본값으로 리셋'(마지막 값 유지 안 함). 세션 중 조절은 유지되나 새로고침/재접속 시 defaultScale로 복귀. */
@@ -10265,13 +10265,10 @@ window.addEventListener('load',run);
       var fit=Math.min(1.45,__dennFW/s.w,__dennFH/s.h);
       var noClipMax=Math.min(__dennFW/s.w,__dennFH/s.h);/* 2026-07-05: 1.45캡 없는 실제 '화면 딱맞' 배율 = 이 이상은 화면 밖. 세로로 긴 액자가 슬라이더 최대서 잘리던 것 차단(오버플로 상한). */
       var mob=previewMode()==='mobile';
-      /* 2026-07-05: 모바일 스케일 — noClipMax 기준 배율(FILL_M). 세로 액자는 noClipMax가 작게 잡혀 ×1.57로 시원하게 채움. 가로 액자는 그대로면 좌우가 삐져나가 ×0.75 보정. userScale 100%=기본, 50~110% 조절. 데스크톱은 기존(fit×.868). */
-      var __landscM=!!(__dennOriV64&&__dennOriV64.mode==='landscape');
-      /* 2026-07-06: 세로 FILL_M 1.57→1.0 — 100%=noClipMax(화면 딱맞 fit). 기존 1.57은 딱맞의 157%라 세로 액자가 화면을 넘쳐 "너무 큼". 가로는 1.18 유지(1.57×0.75, 좌우 삐짐 방지분). */
-      var FILL_M=(__landscM?1.18:1.0);
-      var raw=mob?(noClipMax*FILL_M*(userScale()/100)):(fit*.868*(userScale()/100));
-      var scale=mob?Math.max(.34,Math.min(noClipMax*(__landscM?1.35:1.8),raw)):Math.max(.14,Math.min(4,raw));/* 모바일 상한: 세로 1.8·가로 1.35배(가로 과확대·삐짐 방지) */
-      /* 2026-07-05: fillU 동적 max 제거 — 이제 슬라이더 100%=화면 꽉(noClipMax)이 고정 상한이라 데드존 없음. */
+      /* 2026-07-06 [사이징 통일 1단계]: mobile/desktop·세로/가로 분기(FILL_M 1.57/.868/1.45캡)를 전면 제거 → 단일 'contain-fit × 사용자스케일'. noClipMax=측정영역(__dennFW/FH, 가로는 위에서 이미 swap)에 액자가 자름 없이 딱 맞는 배율 = 진짜 measure-and-fit 기준. 100%=noClipMax×FIT_BASE로 전 기기·방향·브라우저 동일 여백. 전체 크기는 FIT_BASE 상수 하나로 일괄 조절(개별 브라우저 튜닝 불필요). */
+      var FIT_BASE=0.95;
+      var raw=noClipMax*FIT_BASE*(userScale()/100);
+      var scale=Math.max(0.1,Math.min(noClipMax*1.4,raw));
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
       wrap.style.setProperty('transform','scale('+scale+')','important');
