@@ -2837,13 +2837,14 @@ window.addEventListener('load',function(){setTimeout(function(){try{renderFrame&
         'headerH '+(getComputedStyle(document.documentElement).getPropertyValue('--denn-header-h')||'?')+'\n'+
         'area.clientH '+(area?area.clientHeight:'?')+' scale '+sc+
         /* 2026-07-06: 룸 전체화면 상태 진단(삼성 가로 원인 추적) — rotate-fs/fullscreen-active 클래스 여부 + rm-canvas 실제 표시크기. */
-        (function(){try{var rm=document.getElementById('room-modal'),cv=document.getElementById('rm-canvas'),ra=document.getElementById('rm-canvas-area');var rot=document.documentElement.classList.contains('denn-rotate-fs')?'Y':'n';var fsa=(rm&&rm.classList.contains('denn-room-fullscreen-active'))?'Y':'n';var open=(rm&&getComputedStyle(rm).display!=='none')?'Y':'n';var cvs=cv?((cv.style.width||'?')+'x'+(cv.style.height||'?')):'-';var arR=ra&&ra.getBoundingClientRect?ra.getBoundingClientRect():null;var cvR=cv&&cv.getBoundingClientRect?cv.getBoundingClientRect():null;var rmI=(window.RM&&RM.roomImg)?(RM.roomImg.naturalWidth+'x'+RM.roomImg.naturalHeight):'noimg';return '\nROOM open:'+open+' rotFS:'+rot+' fsAct:'+fsa+'\nrmCanvas style '+cvs+'\nareaRect '+(arR?Math.round(arR.width)+'x'+Math.round(arR.height):'?')+' cvRect '+(cvR?Math.round(cvR.width)+'x'+Math.round(cvR.height):'?')+'\nroomImg '+rmI;}catch(e){return '\nROOM err '+e;}})();
+        (function(){try{var rm=document.getElementById('room-modal'),cv=document.getElementById('rm-canvas'),ra=document.getElementById('rm-canvas-area');var rot=document.documentElement.classList.contains('denn-rotate-fs')?'Y':'n';var fsa=(rm&&rm.classList.contains('denn-room-fullscreen-active'))?'Y':'n';var open=(rm&&getComputedStyle(rm).display!=='none')?'Y':'n';var cvs=cv?((cv.style.width||'?')+'x'+(cv.style.height||'?')):'-';var arR=ra&&ra.getBoundingClientRect?ra.getBoundingClientRect():null;var cvR=cv&&cv.getBoundingClientRect?cv.getBoundingClientRect():null;var rmI=(window.RM&&RM.roomImg)?(RM.roomImg.naturalWidth+'x'+RM.roomImg.naturalHeight):'noimg';return '\nROOM open:'+open+' rotFS:'+rot+' fsAct:'+fsa+'\nrmCanvas style '+cvs+'\nareaRect '+(arR?Math.round(arR.width)+'x'+Math.round(arR.height):'?')+' cvRect '+(cvR?Math.round(cvR.width)+'x'+Math.round(cvR.height):'?')+'\nroomImg '+rmI+'\nrsz '+((window.__dennRszLog||[]).join('\n    ')||'(none)');}catch(e){return '\nROOM err '+e;}})();
       try{if(document.documentElement.lastElementChild!==p)document.documentElement.appendChild(p);}catch(_){}/* 2026-07-06: 전체화면 진입 후 패널이 모달 뒤로 가지 않게 html 마지막 자식으로 유지(가로 전체화면서 측정값 보이게) */
     }catch(e){p.textContent='diag err '+e;}
   }
   function boot(){document.documentElement.appendChild(p);upd();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   window.addEventListener('load',function(){setTimeout(upd,300);});
+  setInterval(upd,700);/* 2026-07-06: 주기 갱신 — 전체화면 진입 후 쌓이는 rsz 로그/캔버스 크기 실시간 반영(이벤트만으론 정착 후 갱신 누락) */
   ['resize','orientationchange'].forEach(function(ev){window.addEventListener(ev,function(){setTimeout(upd,150);});});
   try{if(window.visualViewport){['resize','scroll'].forEach(function(ev){window.visualViewport.addEventListener(ev,function(){setTimeout(upd,60);});});}}catch(e){}
 })();
@@ -14408,6 +14409,36 @@ input[type=range]{accent-color:#777}
     return r;};
   var origRender=window.rmRender;
   if(typeof origRender==='function')window.rmRender=function(){var r=origRender.apply(this,arguments);if(box()){try{origRender.call(window);window.sgDraw&&window.sgDraw();}catch(e){}}return r;};
+})();
+</script>
+<script id="denn-rsz-instrument-debug">
+/* 2026-07-06 임시계측: ?debug=1일 때만 rmSizeCanvas 최외곽 래핑해 매 호출을 기록(호출여부·rotFS·innerWidth·결과 캔버스 style). '가로 rotFS서 rmSizeCanvas가 호출되나/무엇을 만드나' 판별용. 여러 지연으로 최종 체인 감쌈. */
+(function(){
+  try{var dbg=/[?&#]debug=1/.test((location.search||'')+(location.hash||''));if(!dbg)return;}catch(e){return;}
+  window.__dennRszLog=window.__dennRszLog||[];
+  function wrap(){
+    try{
+      var orig=window.rmSizeCanvas;
+      if(typeof orig!=='function'||orig.__dennRszInstrumented)return;
+      var w=function(){
+        var r;
+        try{r=orig.apply(this,arguments);}catch(err){window.__dennRszLog.push('THROW '+err);if(window.__dennRszLog.length>6)window.__dennRszLog.shift();throw err;}
+        try{
+          var cv=document.getElementById('rm-canvas');
+          var rot=document.documentElement.classList.contains('denn-rotate-fs')?'R':'-';
+          var e=rot+' iw'+window.innerWidth+' cv'+(cv?((cv.style.width||'?')+'x'+(cv.style.height||'?')):'?');
+          var L=window.__dennRszLog;
+          if(!L.length||L[L.length-1]!==e){L.push(e);if(L.length>6)L.shift();}
+        }catch(_){}
+        return r;
+      };
+      w.__dennRszInstrumented=true;
+      window.rmSizeCanvas=w;
+    }catch(_){}
+  }
+  wrap();
+  [500,1500,3000].forEach(function(ms){setTimeout(wrap,ms);});
+  window.addEventListener('load',function(){setTimeout(wrap,300);});
 })();
 </script>
 <script id="denn-v108-rotate-fullscreen">
