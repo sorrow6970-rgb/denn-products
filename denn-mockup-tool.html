@@ -10266,9 +10266,9 @@ window.addEventListener('load',run);
       var noClipMax=Math.min(__dennFW/s.w,__dennFH/s.h);/* 2026-07-05: 1.45캡 없는 실제 '화면 딱맞' 배율 = 이 이상은 화면 밖. 세로로 긴 액자가 슬라이더 최대서 잘리던 것 차단(오버플로 상한). */
       var mob=previewMode()==='mobile';
       /* 2026-07-06 [사이징 통일 1단계]: mobile/desktop·세로/가로 분기(옛 FILL_M 1.57/.868/1.45캡)를 단일 'noClipMax(측정영역 contain-fit) × FIT_BASE × 사용자스케일'로 통일. 방향은 __dennFW/FH swap이 측정 기반으로 처리 → 모바일 브라우저 간 크기 완전 동일(검증됨). ★FIT_BASE가 mob/desktop로 다른 건 area.clientHeight 측정 특성 차이(모바일은 실제 가시공간의 ~60%로 작게 측정 → 보정 필요, 데스크톱은 정상) 때문. 이 값 '하나'로 각 문맥 전체 크기 일괄 조절(브라우저별 튜닝 불필요). 모바일 1.35=가시영역 채우되 넘침 방지(옛 1.57은 과대). */
-      var FIT_BASE=(mob?1.35:0.9);
+      var FIT_BASE=(mob?1.5:0.95);
       var raw=noClipMax*FIT_BASE*(userScale()/100);
-      var scale=Math.max(0.1,Math.min(noClipMax*(mob?1.55:1.15),raw));
+      var scale=Math.max(0.1,Math.min(noClipMax*(mob?1.75:1.2),raw));
       wrap.dataset.dennBasePreviewScale='1';
       wrap.dataset.dennUserPreviewScale='1';
       wrap.style.setProperty('transform','scale('+scale+')','important');
