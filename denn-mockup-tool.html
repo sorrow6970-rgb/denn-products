@@ -4724,7 +4724,8 @@ window.closeRoomMockup=function(){setRoomFullscreenLayout(false);
   try{var __xf=document.exitFullscreen||document.webkitExitFullscreen||document.msExitFullscreen;if((document.fullscreenElement||document.webkitFullscreenElement)&&__xf)__xf.call(document);}catch(e){}
   try{if(window.__dennUpdateRotScrollbarV)window.__dennUpdateRotScrollbarV();}catch(e){}/* 회전 조절바 숨김 */
   try{if(prevCloseRoom)return prevCloseRoom.apply(this,arguments)}catch(e){}var modal=by('room-modal');if(modal)modal.style.display='none'};
-if(!window.__dennRoomFullscreenEvents){window.__dennRoomFullscreenEvents=true;['fullscreenchange','webkitfullscreenchange','msfullscreenchange'].forEach(function(ev){document.addEventListener(ev,function(){if(!document.fullscreenElement&&!document.webkitFullscreenElement&&!document.msFullscreenElement){var modal=by('room-modal');if(modal&&modal.classList.contains('denn-room-fullscreen-active'))redrawRoomSoon(false)}})})}
+/* 2026-07-06: fullscreenchange를 진입/이탈 '모두' 처리(이전엔 이탈만) — 네이티브 전체화면 진입 시 뷰포트 리사이즈가 비동기로 늦게 도착하는데, 진입 미처리라 캔버스가 진입前 뷰포트 크기로 남아 첫 탭에 떨리고 두 번째 탭에서야 정착하던 것 해결. 이제 진입 리사이즈가 settled된 뒤 redrawRoomSoon(단일 240ms 디바운스)이 올바른 크기로 1회 재사이즈 → 한 번에 안정 진입. */
+if(!window.__dennRoomFullscreenEvents){window.__dennRoomFullscreenEvents=true;['fullscreenchange','webkitfullscreenchange','msfullscreenchange'].forEach(function(ev){document.addEventListener(ev,function(){var modal=by('room-modal');if(modal&&modal.classList.contains('denn-room-fullscreen-active'))redrawRoomSoon(false)})})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,1600)});else setTimeout(init,120);
 window.addEventListener('load',function(){setTimeout(init,2000)});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',openHashRoomFullscreen);else openHashRoomFullscreen();
@@ -13897,7 +13898,14 @@ input[type=range]{accent-color:#777}
     /* 2026-07-05: 세로/가로 전체화면 보기 — 하단 액션 그룹에 배치(메인 버튼들과 통일). 프레임툴처럼 클릭 즉시 requestFullscreen으로 주소창 숨김(삼성/안드로이드). iOS는 미지원(패스). */
     if(!window.__dennRoomFsReqV){window.__dennRoomFsReqV=function(){try{var el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;if(rq){var p=rq.call(el);if(p&&p['catch'])p['catch'](function(){});}}catch(e){}try{window.scrollTo(0,1)}catch(e){}};}
     var fsPBtn=document.createElement('button');fsPBtn.id='rm-fullscreen-btn';fsPBtn.className='rm-action-btn rm-action-fs';fsPBtn.type='button';fsPBtn.textContent='세로 전체화면 보기';
-    fsPBtn.addEventListener('click',function(e){e.preventDefault();window.__dennRoomFsReqV();try{if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}});
+    /* 2026-07-06: 세로 버튼도 '세로 잠금'(가로 버튼이 landscape 잠그는 것과 대칭). ★카카오/일부 안드로이드 웹뷰는 requestFullscreen 진입 시 기본 '가로'로 자동회전 → V108 onChange가 가로 감지→setRotateFs(true)로 가로 전체화면으로 빠지던 "세로 눌렀는데 가로 회전" 버그. portrait-primary 잠금으로 차단. 잠금 미지원(iOS 등)은 조용히 무시. */
+    fsPBtn.addEventListener('click',function(e){e.preventDefault();
+      try{var el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;
+        var lockP=function(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait-primary')['catch'](function(){});}catch(_){}};
+        if(rq){var p=rq.call(el);if(p&&p.then)p.then(lockP)['catch'](lockP);else lockP();}else lockP();
+      }catch(_){}
+      try{window.scrollTo(0,1)}catch(_){}
+      try{if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}});
     var fsLBtn=document.createElement('button');fsLBtn.id='rm-fullscreen-land-btn';fsLBtn.className='rm-action-btn rm-action-fs rm-action-fs-land';fsLBtn.type='button';fsLBtn.textContent='가로 전체화면 보기';
     fsLBtn.addEventListener('click',function(e){e.preventDefault();window.__dennRoomFsReqV();try{if(window.dennEnterFsLandscapeV)window.dennEnterFsLandscapeV();else if(window.setRoomFullscreenLayout)setRoomFullscreenLayout(true);}catch(_){}});
     /* 순서: 세로전체화면 → 가로전체화면 → 기본설정 → 배경저장 → 주문제작 → 돌아가기 */
