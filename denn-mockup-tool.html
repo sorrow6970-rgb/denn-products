@@ -2836,24 +2836,12 @@ window.addEventListener('load',function(){setTimeout(function(){try{renderFrame&
         'media '+(iw>860?'DESKTOP(>860)':'mobile(<=860)')+' mul '+(iw>860?'.868':'.56')+'\n'+
         'headerH '+(getComputedStyle(document.documentElement).getPropertyValue('--denn-header-h')||'?')+'\n'+
         'area.clientH '+(area?area.clientHeight:'?')+' scale '+sc;
-      /* 2026-07-07: 화질/사이저 진단 — dpr·rm-canvas 백킹(canvas.width) vs 표시(rect)·전체화면 클래스. 삼성 화질깨짐(백킹=cw 업스케일) 원인 실측용. */
-      try{
-        var rc=document.getElementById('rm-canvas'),rr=rc&&rc.getBoundingClientRect&&rc.getBoundingClientRect();
-        var mdl=document.getElementById('room-modal');
-        var cls=(document.documentElement.classList.contains('denn-rotate-fs')?'rotate-fs ':'')+(mdl&&mdl.classList&&mdl.classList.contains('denn-room-fullscreen-active')?'fs-active':'');
-        p.textContent+='\n'+
-          'dpr '+(window.devicePixelRatio||'?')+'\n'+
-          'canvas back '+(rc?rc.width+'x'+rc.height:'?')+'\n'+
-          'canvas css '+(rr?Math.round(rr.width)+'x'+Math.round(rr.height):'?')+'\n'+
-          'fsCls ['+(cls||'none')+']';
-      }catch(e2){p.textContent+='\ncanvas diag err '+e2;}
       try{if(document.documentElement.lastElementChild!==p)document.documentElement.appendChild(p);}catch(_){}/* 2026-07-06: 전체화면 진입 후 패널이 모달 뒤로 가지 않게 html 마지막 자식으로 유지(가로 전체화면서 측정값 보이게) */
     }catch(e){p.textContent='diag err '+e;}
   }
   function boot(){document.documentElement.appendChild(p);upd();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   window.addEventListener('load',function(){setTimeout(upd,300);});
-  try{setInterval(upd,500);}catch(e){}/* 2026-07-07: 진단 전용 상시 갱신 — resize 이벤트 안 뜨는 stale 사이징(320x333)도 실시간 반영해 실측 오판 방지 */
   ['resize','orientationchange'].forEach(function(ev){window.addEventListener(ev,function(){setTimeout(upd,150);});});
   try{if(window.visualViewport){['resize','scroll'].forEach(function(ev){window.visualViewport.addEventListener(ev,function(){setTimeout(upd,60);});});}}catch(e){}
 })();
