@@ -2234,25 +2234,6 @@ function rmTogSun(){
   rmRender();
 }
 
-/* 2026-07-07: 룸 캔버스 터치 3모드(햇빛/액자/배경) 명확 구분용 헬퍼.
-   - dennRoomTouchDistinctV: 소비자 룸뷰(관리자 편집 아님)면 구분 적용. 관리자 편집은 기존(아무데나 드래그=액자 이동) 워크플로 유지.
-     ★세로/가로 모두 적용 — 세로에서의 배경 우발 터치가 __userMoved를 켜 가로 회전 시 액자가 어긋나던 문제(#2) 차단.
-   - dennTouchOnFrameV: 터치점이 마지막 렌더된 액자 사각형(RM.frameHit, drawFrame L4300에서 캔버스px 저장) 안인가(손가락 그랩 여유 pad).
-   목적: 배경 터치는 액자 이동/__userMoved 발동 없이 '수동 스크롤'로 상하 이동만 → (a) 터치 구분+매끄러운 스크롤 (b) __userMoved 거짓양성 스케일 축소 드리프트 차단. */
-function dennRoomTouchDistinctV(){
-  try{if(window.dennIsAdminSetupV&&dennIsAdminSetupV())return false;}catch(e){}
-  return true;
-}
-function dennTouchOnFrameV(clientX,clientY){
-  try{
-    var RMx=window.RM,c=RMx&&RMx.canvas,fh=RMx&&RMx.frameHit;
-    if(!c||!fh||!(fh.w>0&&fh.h>0))return false;
-    var r=c.getBoundingClientRect();if(!(r.width>0&&r.height>0))return false;
-    var tx=(clientX-r.left)*(c.width/r.width),ty=(clientY-r.top)*(c.height/r.height);
-    var padX=Math.max(fh.w*0.2,c.width*0.04),padY=Math.max(fh.h*0.2,c.height*0.04);/* 손가락 그랩 여유(작은 액자도 잘 잡히게 최소 캔버스 4%) */
-    return Math.abs(tx-fh.cx)<=fh.w/2+padX&&Math.abs(ty-fh.cy)<=fh.h/2+padY;
-  }catch(e){return false}
-}
 function rmBindEvents(){
   var c=RM.canvas;
   c.onmousedown=function(e){
@@ -2297,25 +2278,12 @@ function rmBindEvents(){
   document.addEventListener('input',function(e){if(e&&e.isTrusted===false)return;var t=e&&e.target;if(t&&/^(sg-|rm-)/.test(t.id||'')&&window.RM)RM.__userMoved=true;},true);
   // Touch drag
   c.ontouchstart=function(e){
-    var __t=e.touches&&e.touches[0];
-    /* 모드1 — 햇빛 ON + 광원 표식 근접: 광원 이동은 v42 pointer가 전담, 여기선 양보(액자/스크롤 시작 안 함). */
-    if(window.RM&&RM.sunOn&&__t&&window.dennRoomSunHitV42&&dennRoomSunHitV42({clientX:__t.clientX,clientY:__t.clientY})){e.preventDefault();RM.dragging=false;RM.__scrollDrag=null;return;}
-    /* 모드3 — 소비자 배경(액자 밖) 터치: 액자 이동/__userMoved 없이 '수동 스크롤'로 상하 이동(캔버스가 뷰포트보다 길 때). touch-action:none이라 네이티브와 경합 없음 → 매끄럽고, 액자 드래그와 명확히 분리. */
-    if(__t&&dennRoomTouchDistinctV()&&!dennTouchOnFrameV(__t.clientX,__t.clientY)){
-      var __a=document.getElementById('rm-canvas-area');RM.dragging=false;
-      if(__a&&(__a.scrollHeight-__a.clientHeight)>2){RM.__scrollDrag={y:__t.clientY,top:__a.scrollTop,area:__a};e.preventDefault();}
-      else{RM.__scrollDrag=null;}
-      return;
-    }
-    /* 모드2 — 액자 위 터치(또는 관리자 편집): 기존대로 액자 드래그. */
-    e.preventDefault();RM.dragging=true;RM.__scrollDrag=null;
-    RM.dragStart={mx:__t.clientX,my:__t.clientY,px:RM.pos.x,py:RM.pos.y};
+    if(window.RM&&RM.sunOn&&e.touches&&e.touches[0]&&window.dennRoomSunHitV42&&dennRoomSunHitV42({clientX:e.touches[0].clientX,clientY:e.touches[0].clientY})){e.preventDefault();return;}/* 2026-06-29(B): 햇빛 ON + 광원 표식 근접 터치는 액자 드래그를 시작하지 않음 — 광원 이동은 v42 pointer가 전담. 기존엔 touchstart가 무조건 RM.dragging=true라 같은 터치에 광원(v42 pointerdown)+액자(여기)가 동시 이동하던 모바일 충돌. preventDefault로 스크롤만 막고 양보. */
+    e.preventDefault();RM.dragging=true;
+    RM.dragStart={mx:e.touches[0].clientX,my:e.touches[0].clientY,px:RM.pos.x,py:RM.pos.y};
   };
   c.ontouchmove=function(e){
-    /* 배경 스크롤 모드: 터치 세로 이동만큼 area.scrollTop 직접 이동(수동, 1:1). __userMoved 세팅 안 함. */
-    if(RM.__scrollDrag){var __t2=e.touches&&e.touches[0];if(!__t2)return;var __sd=RM.__scrollDrag;__sd.area.scrollTop=__sd.top-(__t2.clientY-__sd.y);if(window.__dennUpdateRotScrollbarV)window.__dennUpdateRotScrollbarV();e.preventDefault();return;}
-    if(!RM.dragging)return;/* 어느 모드도 아니면 반환 */
-    e.preventDefault();
+    e.preventDefault();if(!RM.dragging)return;
     var dx=(e.touches[0].clientX-RM.dragStart.mx)/c.width;
     var dy=(e.touches[0].clientY-RM.dragStart.my)/c.height;
     RM.pos.x=Math.max(0.05,Math.min(0.95,RM.dragStart.px+dx));
@@ -2327,8 +2295,7 @@ function rmBindEvents(){
     if(window.dennSyncGuideXYDisplayCenterV89)window.dennSyncGuideXYDisplayCenterV89();
     rmRender();
   };
-  c.ontouchend=function(){RM.dragging=false;RM.__scrollDrag=null;if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51();if(window.dennCaptureAnchorTargetV)dennCaptureAnchorTargetV();};
-  c.ontouchcancel=function(){RM.dragging=false;RM.__scrollDrag=null;};
+  c.ontouchend=function(){RM.dragging=false;if(window.dennRefreshFrameCenterAnchorV51)window.dennRefreshFrameCenterAnchorV51();if(window.dennCaptureAnchorTargetV)dennCaptureAnchorTargetV();};
   // Wheel = resize
   c.addEventListener('wheel',function(e){
     e.preventDefault();
@@ -14437,9 +14404,9 @@ input[type=range]{accent-color:#777}
       'html.denn-rotate-fs #room-modal>div{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;max-width:none!important;max-height:none!important;background:#000!important;box-shadow:none!important}'+
       /* 2026-06-19: 가로 전체화면은 cover로 캔버스가 뷰포트보다 세로로 김 → 세로 스크롤 허용(천장·바닥까지 보기). block 레이아웃이라야 위쪽도 스크롤로 닿음(flex center는 상단 클립). */
       'html.denn-rotate-fs #room-modal #rm-canvas-area{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;display:block!important;overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;background:#000!important}'+
-      /* 캔버스는 cover로 확대(뷰포트보다 큼) → max 제한 풀고, 가로 중앙정렬(block+margin auto). 2026-07-07: touch-action:none — 배경 스크롤은 JS 수동 처리(ontouchmove)라 네이티브 pan-y와 경합 제거 → 액자 드래그 매끄럽고 배경 동시이동 방지, 스크롤도 우리가 제어. */
-      'html.denn-rotate-fs #room-modal #rm-canvas{max-width:none!important;max-height:none!important;border-radius:0!important;display:block!important;margin:0 auto!important;touch-action:none!important}'+
-      'html.denn-rotate-fs #room-modal #sg-canvas{max-width:none!important;max-height:none!important;border-radius:0!important;touch-action:none!important}'+
+      /* 캔버스는 cover로 확대(뷰포트보다 큼) → max 제한 풀고, 가로 중앙정렬(block+margin auto), 세로는 스크롤(touch-action:pan-y). */
+      'html.denn-rotate-fs #room-modal #rm-canvas{max-width:none!important;max-height:none!important;border-radius:0!important;display:block!important;margin:0 auto!important;touch-action:pan-y!important}'+
+      'html.denn-rotate-fs #room-modal #sg-canvas{max-width:none!important;max-height:none!important;border-radius:0!important;touch-action:pan-y!important}'+
       /* 네이티브 스크롤바 숨기고, 커스텀 반투명 '상시 노출' 조절바(#denn-rot-scrollbar)로 대체 — 드래그/스와이프 이동. */
       'html.denn-rotate-fs #room-modal #rm-canvas-area{scrollbar-width:none!important}'+
       'html.denn-rotate-fs #room-modal #rm-canvas-area::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}'+
