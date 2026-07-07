@@ -2853,6 +2853,7 @@ window.addEventListener('load',function(){setTimeout(function(){try{renderFrame&
   function boot(){document.documentElement.appendChild(p);upd();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   window.addEventListener('load',function(){setTimeout(upd,300);});
+  try{setInterval(upd,500);}catch(e){}/* 2026-07-07: 진단 전용 상시 갱신 — resize 이벤트 안 뜨는 stale 사이징(320x333)도 실시간 반영해 실측 오판 방지 */
   ['resize','orientationchange'].forEach(function(ev){window.addEventListener(ev,function(){setTimeout(upd,150);});});
   try{if(window.visualViewport){['resize','scroll'].forEach(function(ev){window.visualViewport.addEventListener(ev,function(){setTimeout(upd,60);});});}}catch(e){}
 })();
