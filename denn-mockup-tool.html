@@ -3190,7 +3190,6 @@ window.dlRoomMockup=function(){if(window.RM&&RM.canvas&&RM.canvas.width&&RM.canv
 #denn-fs-enter-btn{display:none!important}/* 2026-07-05: 룸 전체화면을 세로/가로 명시 버튼으로 분리 → 기존 플로팅 '전체화면으로 보기' 중복 숨김 */
 /* 2026-07-05: rm-fullscreen 버튼은 하단 액션 그룹(.rm-action-fs)으로 이동 — 옛 상단용 id CSS 제거(액션버튼 스타일 상속). */
 #room-modal .rm-action-fs{order:-1!important}/* 액션 그룹 맨 위(denn-rm-bar order 규칙보다 우선) */
-#room-modal .rm-action-fs-land{background:#fff!important;color:var(--gold2,#8C6E3C)!important;border-color:var(--gold2,#8C6E3C)!important}/* 가로=골드 강조 */
 #rm-fs-exit-float{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:14px;z-index:2147483647;display:none;align-items:center;background:rgba(18,16,12,.82);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:22px;padding:9px 15px;font:600 12.5px/1 'DM Sans',sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 14px rgba(0,0,0,.4)}
 #room-modal #rm-mobile-resize-handle{display:none!important}
 html.denn-room-fs-page,body.denn-room-fs-page{width:100%!important;height:100%!important;overflow:hidden!important;background:#000!important;overscroll-behavior:none!important}
@@ -13851,11 +13850,17 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
 #page-frame .denn-action-btn-save,
 #page-frame .denn-action-btn-secondary,
 #page-frame .denn-action-btn-room,
+#page-frame .denn-action-btn-fsview,
 #page-frame .denn-action-btn-home{background:#efefef!important;color:#777!important;border-color:#e0e0e0!important;box-shadow:none!important}
 #page-frame .denn-action-btn-save:hover,
 #page-frame .denn-action-btn-secondary:hover,
 #page-frame .denn-action-btn-room:hover,
+#page-frame .denn-action-btn-fsview:hover,
 #page-frame .denn-action-btn-home:hover{background:#e4e4e4!important;border-color:#cfcfcf!important}
+/* PC에서는 화면 여유가 충분해 내공간 안의 룸 전체화면 진입 버튼만 숨김. 모바일 하단 액션은 유지. */
+@media(min-width:861px){
+  #room-modal .rm-action-fs{display:none!important}
+}
 /* 액션 버튼 이모지/아이콘 컬러 유지(사용자 요청 — 내공간보기 등 아이콘 원색 유지) */
 /* 메인 셸 '↺ 기본설정으로' 버튼 — 다른 액션 버튼(.denn-action-btn)과 사이즈 통일 + 흰 배경(아웃라인) */
 .denn-pc-shell .dps-reset-btn{min-height:40px!important;padding:10px 12px!important;border:1px solid #e0e0e0!important;border-radius:9px!important;background:#fff!important;color:#444!important;font-size:12.5px!important;font-weight:600!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important}
