@@ -15274,7 +15274,7 @@ input[type=range]{accent-color:#777}
      패스워드 파생키(PBKDF2)+AES-GCM 복호화. 보안규칙: docs/firestore.rules.
      ============================================================ -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
@@ -15287,17 +15287,54 @@ input[type=range]{accent-color:#777}
     appId: "1:66131680180:web:b45f5008b659936b0a70e1",
     measurementId: "G-ZBJWLS0GKB"
   };
-  let _ready = false;
-  const _readyPromise = new Promise(function(resolve){ window.__dennSpaceFbReady = resolve; });
+  let _ready = false, _authReady = false, _authError = null, _authDoneResolve = null;
+  const _authDonePromise = new Promise(function(resolve){ _authDoneResolve = resolve; });
+  function _markAuthDone(ok){
+    if(ok)_authReady=true;
+    if(_authDoneResolve){ _authDoneResolve(!!ok); _authDoneResolve=null; }
+  }
+  function _authCode(err){ return (err && (err.code || err.message)) ? String(err.code || err.message) : ''; }
+  function _friendlyFirebaseError(err, job){
+    var c=_authCode(err), m=(err&&err.message)||c||String(err||'');
+    if(c.indexOf('permission-denied')>=0){
+      return new Error(job+' 권한에서 막혔습니다. Firestore/Storage rules의 spaces/proofs 생성 허용 배포 상태를 확인해주세요. ('+c+')');
+    }
+    if(c.indexOf('auth/operation-not-allowed')>=0){
+      return new Error('Firebase Anonymous Auth가 꺼져 있습니다. 현재 규칙이 공개 생성이면 저장은 계속 시도하지만, 권한 오류가 나면 Anonymous Auth 활성화 또는 rules 배포가 필요합니다. ('+c+')');
+    }
+    return new Error(m);
+  }
+  function _withTimeout(promise, ms, label){
+    return Promise.race([
+      promise,
+      new Promise(function(resolve,reject){ setTimeout(function(){ reject(new Error(label+' 시간이 초과되었습니다. 네트워크 또는 Firebase 연결을 확인해주세요.')); }, ms); })
+    ]);
+  }
   try {
     /* 어드민 이메일 세션과 같은 origin/localStorage를 공유하지 않도록 내공간 익명 Auth는 별도 app+메모리 세션으로 격리. */
-    const app = initializeApp(firebaseConfig, 'denn-space-viewer');
+    const SPACE_APP_NAME = 'denn-space-viewer';
+    const app = getApps().some(function(a){ return a && a.name === SPACE_APP_NAME; }) ? getApp(SPACE_APP_NAME) : initializeApp(firebaseConfig, SPACE_APP_NAME);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const storage = getStorage(app);
-    try{ await setPersistence(auth, inMemoryPersistence); }catch(e){ console.warn('[space] auth persistence fallback:', e && e.code); }
-    signInAnonymously(auth).catch(function(err){ console.warn('[space] anon signin failed:', err && err.code); });
-    onAuthStateChanged(auth, function(u){ if(u){ _ready=true; window.__dennSpaceFbReady && window.__dennSpaceFbReady(true); } });
+    _ready = true;
+    window.__dennSpaceFbReady = function(){ _markAuthDone(true); };
+    try{
+      Promise.resolve()
+        .then(function(){ return setPersistence(auth, inMemoryPersistence); })
+        .catch(function(e){ console.warn('[space] auth persistence fallback:', e && e.code); })
+        .then(function(){ return signInAnonymously(auth); })
+        .then(function(){ _markAuthDone(true); })
+        .catch(function(err){ _authError=err; console.warn('[space] anon signin failed:', err && err.code); _markAuthDone(false); });
+      onAuthStateChanged(auth, function(u){ if(u){ _markAuthDone(true); } });
+    }catch(authBootErr){ _authError=authBootErr; _markAuthDone(false); }
+    const _optionalAuth = async function(timeoutMs){
+      if(_authReady || _authError) return _authReady;
+      return await Promise.race([
+        _authDonePromise,
+        new Promise(function(resolve){ setTimeout(function(){ resolve(false); }, timeoutMs || 3500); })
+      ]);
+    };
     const _b64 = function(u8){ var s=''; for(var i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]); return btoa(s); };
     const _ub64 = function(b){ var s=atob(b), u=new Uint8Array(s.length); for(var i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; };
     const _deriveKey = async function(password, salt){
@@ -15318,31 +15355,38 @@ input[type=range]{accent-color:#777}
     const _genToken = function(){ var u=crypto.getRandomValues(new Uint8Array(12)), s=''; for(var i=0;i<u.length;i++) s+=('0'+u[i].toString(16)).slice(-2); return s; };
     window.dennSpace = window.dennSpace || {};
     window.dennSpace.isReady = function(){ return _ready; };
-    window.dennSpace.ready = function(){ return _readyPromise; };
+    window.dennSpace.isAuthReady = function(){ return _authReady; };
+    window.dennSpace.ready = function(){ return Promise.resolve(_ready); };
     /* dataUrl → Firebase Storage 업로드 → download URL */
     window.dennSpace.uploadDataUrl = async function(dataUrl, pathHint){
-      await _readyPromise;
-      const r = ref(storage, pathHint || ('proofs/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.png'));
-      const snap = await uploadString(r, dataUrl, 'data_url');
-      return await getDownloadURL(snap.ref);
+      await _optionalAuth(2500);
+      try{
+        const r = ref(storage, pathHint || ('proofs/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.png'));
+        const snap = await _withTimeout(uploadString(r, dataUrl, 'data_url'), 45000, '시안 이미지 업로드');
+        return await _withTimeout(getDownloadURL(snap.ref), 15000, '시안 이미지 URL 생성');
+      }catch(e){ throw _friendlyFirebaseError(e,'시안 이미지 업로드'); }
     };
     /* dennSpace.create({roomSettings, password, ownerMeta, token}) → {token, url} */
     window.dennSpace.create = async function(opts){
       opts = opts || {};
       if(!opts.password) throw new Error('NO_PASSWORD');
       if(!opts.roomSettings) throw new Error('NO_SCENE');
-      await _readyPromise;
+      await _optionalAuth(2500);
       const token = opts.token || _genToken();
       const enc = await _encryptJson(opts.roomSettings, opts.password);
-      await setDoc(doc(db, 'spaces', token), { enc: enc, ownerMeta: opts.ownerMeta || {}, createdAt: new Date().toISOString(), schema: 'space-v1' });
+      try{
+        await _withTimeout(setDoc(doc(db, 'spaces', token), { enc: enc, ownerMeta: opts.ownerMeta || {}, createdAt: new Date().toISOString(), schema: 'space-v1' }), 20000, '고객 시안 발급');
+      }catch(e){ throw _friendlyFirebaseError(e,'고객 시안 발급'); }
       const base = location.origin + location.pathname.replace(/[^/]+$/, '') + 'denn-mockup-tool.html';
       return { token: token, url: base + '?space=' + encodeURIComponent(token) };
     };
     /* dennSpace.load(token, password) → roomSettings | throws('NOT_FOUND' | 'BAD_PASSWORD') */
     window.dennSpace.load = async function(token, password){
       if(!token) throw new Error('NO_TOKEN');
-      await _readyPromise;
-      const snap = await getDoc(doc(db, 'spaces', token));
+      await _optionalAuth(2500);
+      let snap;
+      try{ snap = await _withTimeout(getDoc(doc(db, 'spaces', token)), 20000, '고객 시안 불러오기'); }
+      catch(e){ throw _friendlyFirebaseError(e,'고객 시안 불러오기'); }
       if(!snap.exists()) throw new Error('NOT_FOUND');
       const data = snap.data();
       if(!data || !data.enc) throw new Error('BAD_DOC');
