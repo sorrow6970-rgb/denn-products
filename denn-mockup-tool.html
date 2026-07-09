@@ -64,6 +64,13 @@ function saveCustomerAdminStateToLocalStorage(A){
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--cream:#F6F1E9;--ink:#777;--warm:#8A7D6E;--border:#DDD5C8;--gold:#C8A864;--gold2:#8C6E3C;--surface:#FDFAF4;--red:#E53E3E;--blue:#3182CE}
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;overflow-x:hidden}
+/* 2026-07-09: 새로고침 부트 커버 — 초기 레이아웃 정착(프레임 스케일·모바일 시트·폰트 로드) 동안 전체를 크림색으로 덮어 잔상/튐을 가림. 첫 페인트부터 불투명(정적 HTML+헤드 CSS), 정착 후 .denn-boot-done으로 페이드아웃. */
+#denn-boot-cover{position:fixed;inset:0;z-index:2147483647;background:var(--cream);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:15px;transition:opacity .4s ease}
+#denn-boot-cover.denn-boot-done{opacity:0;pointer-events:none}
+#denn-boot-cover .dbc-logo{font-family:'Playfair Display',serif;color:var(--warm);font-size:17px;letter-spacing:.14em}
+#denn-boot-cover .dbc-logo em{color:var(--gold);font-style:normal}
+#denn-boot-cover .dbc-spin{width:26px;height:26px;border:2.5px solid rgba(140,110,60,.18);border-top-color:var(--gold);border-radius:50%;animation:dbcSpin .7s linear infinite}
+@keyframes dbcSpin{to{transform:rotate(360deg)}}
 /* 2026-07-02: 룸 미리보기(전체화면 전 포함) 열려 있는 동안 페이지 스크롤 잠금 → 배경 터치 시 브라우저 상/하단 주소창 토글로 뷰포트 리사이즈(화면 흔들림) 방지. 모달 내부 시트/슬라이더 스크롤은 영향 없음(overflow:hidden은 문서 레벨만). */
 html.denn-room-scroll-lock,html.denn-room-scroll-lock body{overflow:hidden!important;overscroll-behavior:none!important;height:100%!important}
 html.denn-admin-room-boot body{background:#0f0c08}
@@ -235,6 +242,26 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
 </style>
 </head>
 <body>
+<!-- 2026-07-09: 새로고침 부트 커버(첫 페인트부터 불투명, 정착 후 페이드아웃) — 초기 레이아웃 튐/잔상 가림. -->
+<div id="denn-boot-cover"><div class="dbc-logo">DENN <em>PRODUCTS</em></div><div class="dbc-spin"></div></div>
+<script>
+(function(){
+  var done=false;
+  function reveal(){if(done)return;done=true;try{var c=document.getElementById('denn-boot-cover');if(!c)return;c.classList.add('denn-boot-done');setTimeout(function(){if(c&&c.parentNode)c.parentNode.removeChild(c)},480);}catch(e){}}
+  setTimeout(reveal,1800);/* 안전 상한: 폰트/스크립트 지연·오류에도 무조건 노출 */
+  function afterDcl(){
+    var t0=(window.performance&&performance.now)?performance.now():Date.now();
+    function fire(){
+      var now=(window.performance&&performance.now)?performance.now():Date.now();
+      var wait=Math.max(0,700-(now-t0));/* DCL 후 최소 700ms — 초기 레이아웃 조정(renderFrame·프리뷰 스케일·모바일 시트, 200~600ms) 소화 */
+      setTimeout(function(){requestAnimationFrame(function(){requestAnimationFrame(reveal)})},wait);
+    }
+    if(document.fonts&&document.fonts.ready&&document.fonts.ready.then){document.fonts.ready.then(fire);setTimeout(fire,1300);/* 폰트 로드 폴백 */}
+    else fire();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',afterDcl);else afterDcl();
+})();
+</script>
 <header>
   <div class="logo" id="hdr-logo">DENN <em>PRODUCTS</em></div>
   <div class="tabbar">
