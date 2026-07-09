@@ -2238,9 +2238,6 @@ function rmTogSun(){
    rotate-fs=삼성 네이티브 가로 회전 전체화면(항상 landscape). 이 컨텍스트에선 터치 경로를 양보하고 pointer 핸들러가 전담. */
 function dennRoomLandFsActiveV(){try{return window.innerWidth>window.innerHeight&&document.documentElement.classList.contains('denn-rotate-fs')}catch(e){return false}}
 try{window.dennRoomLandFsActiveV=dennRoomLandFsActiveV}catch(e){}
-/* 2026-07-09 진단(검증 후 제거): 가로 전체화면 터치 모드(F=액자/S=스크롤)+scrollTop 좌하단 표시. */
-function dennTouchDbgV(t){try{var d=document.getElementById('denn-touch-dbg');if(!d){d=document.createElement('div');d.id='denn-touch-dbg';d.style.cssText='position:fixed;left:6px;bottom:6px;z-index:2147483647;background:rgba(0,0,0,.65);color:#0f0;font:13px monospace;padding:3px 7px;border-radius:4px;pointer-events:none';document.documentElement.appendChild(d);}d.textContent=t;}catch(e){}}
-try{window.dennTouchDbgV=dennTouchDbgV}catch(e){}
 function rmBindEvents(){
   var c=RM.canvas;
   c.onmousedown=function(e){
@@ -4172,7 +4169,6 @@ function roomFrameHitTest(clientX,clientY){
   var LP={mode:null,pid:null,area:null,startY:0,startScroll:0};
   function lpArea(){return document.getElementById('rm-canvas-area');}
   function landFs(){try{return window.dennRoomLandFsActiveV?window.dennRoomLandFsActiveV():(window.innerWidth>window.innerHeight&&document.documentElement.classList.contains('denn-rotate-fs'))}catch(e){return false}}
-  function dbg(t){try{window.dennTouchDbgV&&window.dennTouchDbgV(t)}catch(e){}}
   document.addEventListener('pointerdown',function(ev){
     if(!landFs())return;
     if(LP.mode&&ev.pointerId!==LP.pid){/* 2번째 손가락=핀치 → 진행 중 모드 취소하고 핀치(touch 2손가락 L4180)에 양보 */LP.mode=null;LP.pid=null;if(window.RM)RM.dragging=false;return;}
@@ -4183,19 +4179,19 @@ function roomFrameHitTest(clientX,clientY){
       LP.mode='frame';window.RM=window.RM||{};RM.pos=RM.pos||{x:.5,y:.4};RM.dragging=true;RM.__scrollDrag=null;
       RM.dragStart={mx:ev.clientX,my:ev.clientY,px:RM.pos.x,py:RM.pos.y};
       try{ev.target&&ev.target.setPointerCapture&&ev.target.setPointerCapture(ev.pointerId)}catch(_){}
-      dbg('F');ev.preventDefault();
+      ev.preventDefault();
     }else{
       LP.mode='scroll';var a=lpArea();LP.area=a;LP.startY=ev.clientY;LP.startScroll=a?a.scrollTop:0;
       if(window.RM)RM.dragging=false;
       try{window.__dennRotCenterGenV=(window.__dennRotCenterGenV||0)+1;window.__dennRotCentered=true;}catch(_){}/* 중앙유지 루프+원샷 센터 중단(스크롤 되돌림 방지) */
       try{ev.target&&ev.target.setPointerCapture&&ev.target.setPointerCapture(ev.pointerId)}catch(_){}
-      dbg('S '+LP.startScroll);ev.preventDefault();
+      ev.preventDefault();
     }
   },{capture:true,passive:false});
   document.addEventListener('pointermove',function(ev){
     if(!LP.mode||ev.pointerId!==LP.pid)return;
     if(LP.mode==='scroll'){
-      var a=LP.area||lpArea();if(a){a.scrollTop=LP.startScroll-(ev.clientY-LP.startY);if(window.__dennUpdateRotScrollbarV)window.__dennUpdateRotScrollbarV();dbg('S '+Math.round(a.scrollTop));}
+      var a=LP.area||lpArea();if(a){a.scrollTop=LP.startScroll-(ev.clientY-LP.startY);if(window.__dennUpdateRotScrollbarV)window.__dennUpdateRotScrollbarV();}
       ev.preventDefault();return;
     }
     var c=window.RM&&RM.canvas;if(!c)return;var r=c.getBoundingClientRect();if(!r.width||!r.height)return;
@@ -4213,31 +4209,10 @@ function roomFrameHitTest(clientX,clientY){
     if(LP.pid==null||ev.pointerId!==LP.pid)return;
     try{ev.target&&ev.target.releasePointerCapture&&ev.target.releasePointerCapture(ev.pointerId)}catch(_){}
     if(LP.mode==='frame'&&window.RM){RM.dragging=false;try{window.dennRefreshFrameCenterAnchorV51&&dennRefreshFrameCenterAnchorV51()}catch(_){}try{window.dennCaptureAnchorTargetV&&dennCaptureAnchorTargetV()}catch(_){}}
-    LP.mode=null;LP.pid=null;LP.area=null;dbg('-');
+    LP.mode=null;LP.pid=null;LP.area=null;
   }
   document.addEventListener('pointerup',lpEnd,{capture:true});
   document.addEventListener('pointercancel',lpEnd,{capture:true});
-})();
-/* 2026-07-09 진단(검증 후 제거): 터치 없이 회전만 해도 스케일 바뀌는 원인 특정 — 방향/sg슬라이더/운영자 base·mobile guideScale/캔버스/um/measureBase를 좌상단 표시. base≠mob면 회전 스케일 변동 원인=.mobile/base 분리 확정. */
-(function(){
-  if(window.__dennRotDbgBoundV)return;window.__dennRotDbgBoundV=true;
-  function dbg(t){try{var d=document.getElementById('denn-rot-dbg');if(!d){d=document.createElement('div');d.id='denn-rot-dbg';d.style.cssText='position:fixed;left:6px;top:6px;z-index:2147483647;background:rgba(0,0,40,.7);color:#6cf;font:12px monospace;padding:3px 7px;border-radius:4px;pointer-events:none;white-space:pre';document.documentElement.appendChild(d);}d.textContent=t;}catch(e){}}
-  function dump(){
-    try{
-      var ori=(window.isRoomPortrait&&window.isRoomPortrait())?'P':'L';
-      var sg=(document.getElementById('sg-scale-r')||{}).value;
-      var c=window.RM&&RM.canvas,cv=c?(c.width+'x'+c.height):'?';
-      var um=(window.RM&&RM.__userMoved)?1:0;
-      var mb=(c&&window.measureBase)?Math.round(measureBase(c.width,c.height)):'?';
-      var op=window.dennCurrentOperatorPresetV&&window.dennCurrentOperatorPresetV();
-      var bgs=(op&&isFinite(op.guideScale))?Math.round(op.guideScale*1000)/10:'-';
-      var mgs=(op&&op.mobile&&isFinite(op.mobile.guideScale))?Math.round(op.mobile.guideScale*1000)/10:'-';
-      dbg(ori+' sg'+sg+' um'+um+'\nbase'+bgs+' mob'+mgs+'\ncv'+cv+' mb'+mb);
-    }catch(e){}
-  }
-  window.__dennRotDbgDumpV=dump;
-  ['orientationchange','resize'].forEach(function(ev){window.addEventListener(ev,function(){setTimeout(dump,450);setTimeout(dump,1000);});});
-  setTimeout(dump,1500);
 })();
 function roomFrameOrGuideHitTest(clientX,clientY){
   try{
