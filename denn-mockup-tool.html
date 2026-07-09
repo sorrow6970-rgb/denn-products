@@ -2234,29 +2234,13 @@ function rmTogSun(){
   rmRender();
 }
 
-/* 2026-07-07: 가로 전체화면에서만 '액자 vs 배경' 터치 구분. 배경(액자 밖) 터치는 액자 이동/__userMoved 없이 네이티브 세로 스크롤에 양보(삼성서 스크롤 정상 작동). 액자 위 터치만 드래그 이동. 세로/PC/관리자·화질·사이징 무영향. */
-function dennRoomLandTouchCtxV(){
-  try{
-    if(window.innerWidth<=window.innerHeight)return false;/* 가로에서만 */
-    var a=document.getElementById('rm-canvas-area');
-    if(a&&(a.scrollHeight-a.clientHeight)>2)return true;/* ★세로 스크롤 여지 있으면 = 스크롤 컨텍스트. 클래스(rotate-fs/fs-active) 감지 실패해도 동작하도록 견고화 */
-    if(document.documentElement.classList.contains('denn-rotate-fs'))return true;
-    var m=document.getElementById('room-modal');
-    return !!(m&&m.classList&&m.classList.contains('denn-room-fullscreen-active'));
-  }catch(e){return false}
-}
-function dennTouchOnFrameV(clientX,clientY){
-  try{
-    var RMx=window.RM,c=RMx&&RMx.canvas,fh=RMx&&RMx.frameHit;
-    if(!c||!fh||!(fh.w>0&&fh.h>0))return false;
-    var r=c.getBoundingClientRect();if(!(r.width>0&&r.height>0))return false;
-    var tx=(clientX-r.left)*(c.width/r.width),ty=(clientY-r.top)*(c.height/r.height);
-    var padX=fh.w*0.15,padY=fh.h*0.15;/* 액자 그랩 여유(엣지 오분류 완화) */
-    return Math.abs(tx-fh.cx)<=fh.w/2+padX&&Math.abs(ty-fh.cy)<=fh.h/2+padY;
-  }catch(e){return false}
-}
-/* 2026-07-07 임시 진단: 가로 전체화면 터치 모드(F=액자/S=스크롤)+scrollTop 구석 표시. 원인 특정용, 확인 후 제거. */
+/* 2026-07-09: 가로 전체화면(denn-rotate-fs) 판정 — 캔버스 pointer 통합 핸들러(v33 블록)와 터치 바일 게이트 공용.
+   rotate-fs=삼성 네이티브 가로 회전 전체화면(항상 landscape). 이 컨텍스트에선 터치 경로를 양보하고 pointer 핸들러가 전담. */
+function dennRoomLandFsActiveV(){try{return window.innerWidth>window.innerHeight&&document.documentElement.classList.contains('denn-rotate-fs')}catch(e){return false}}
+try{window.dennRoomLandFsActiveV=dennRoomLandFsActiveV}catch(e){}
+/* 2026-07-09 진단(검증 후 제거): 가로 전체화면 터치 모드(F=액자/S=스크롤)+scrollTop 좌하단 표시. */
 function dennTouchDbgV(t){try{var d=document.getElementById('denn-touch-dbg');if(!d){d=document.createElement('div');d.id='denn-touch-dbg';d.style.cssText='position:fixed;left:6px;bottom:6px;z-index:2147483647;background:rgba(0,0,0,.65);color:#0f0;font:13px monospace;padding:3px 7px;border-radius:4px;pointer-events:none';document.documentElement.appendChild(d);}d.textContent=t;}catch(e){}}
+try{window.dennTouchDbgV=dennTouchDbgV}catch(e){}
 function rmBindEvents(){
   var c=RM.canvas;
   c.onmousedown=function(e){
@@ -2302,29 +2286,14 @@ function rmBindEvents(){
   // Touch drag
   c.ontouchstart=function(e){
     if(window.RM&&RM.sunOn&&e.touches&&e.touches[0]&&window.dennRoomSunHitV42&&dennRoomSunHitV42({clientX:e.touches[0].clientX,clientY:e.touches[0].clientY})){e.preventDefault();return;}/* 2026-06-29(B): 햇빛 ON + 광원 표식 근접 터치는 액자 드래그를 시작하지 않음 — 광원 이동은 v42 pointer가 전담. 기존엔 touchstart가 무조건 RM.dragging=true라 같은 터치에 광원(v42 pointerdown)+액자(여기)가 동시 이동하던 모바일 충돌. preventDefault로 스크롤만 막고 양보. */
-    var __t=e.touches&&e.touches[0];
-    /* 2026-07-07 임시 진단(무조건): 모든 터치에 판정 입력값 표시 → 가로 컨텍스트 false 원인 특정. */
-    try{var __ad=document.getElementById('rm-canvas-area');dennTouchDbgV('iw'+window.innerWidth+' ih'+window.innerHeight+' sc'+(__ad?(__ad.scrollHeight-__ad.clientHeight):'?')+' rot'+(document.documentElement.classList.contains('denn-rotate-fs')?1:0)+' fsA'+((document.getElementById('room-modal')||{classList:{contains:function(){return false}}}).classList.contains('denn-room-fullscreen-active')?1:0)+' L'+(dennRoomLandTouchCtxV()?1:0)+' F'+((__t&&dennTouchOnFrameV(__t.clientX,__t.clientY))?1:0));}catch(_){}
-    /* 2026-07-07: 가로 전체화면(캔버스 touch-action:none) — 액자 위 터치=드래그, 배경(액자 밖)=JS 수동 스크롤. 세로/PC/관리자는 기존대로. */
-    if(__t&&dennRoomLandTouchCtxV()){
-      if(dennTouchOnFrameV(__t.clientX,__t.clientY)){
-        dennTouchDbgV('F');/* 액자 드래그 — touch-action:none이라 중간에 안 풀림 */
-        e.preventDefault();RM.dragging=true;RM.__scrollDrag=null;
-        RM.dragStart={mx:__t.clientX,my:__t.clientY,px:RM.pos.x,py:RM.pos.y};return;
-      }
-      /* 배경 → 수동 스크롤. 중앙유지 루프(L14628)+원샷 센터(L14394) 중단해 되돌림 방지. */
-      var __a=document.getElementById('rm-canvas-area');RM.dragging=false;
-      try{window.__dennRotCenterGenV=(window.__dennRotCenterGenV||0)+1;window.__dennRotCentered=true;}catch(_){}
-      RM.__scrollDrag={y:__t.clientY,top:__a?__a.scrollTop:0,area:__a};
-      dennTouchDbgV('S '+(__a?__a.scrollTop:'?'));
-      e.preventDefault();return;
-    }
+    /* 2026-07-09: 가로 전체화면(denn-rotate-fs)은 pointer 통합 핸들러(v33 블록)가 액자 드래그+배경 스크롤을 전담 → 터치 경로는 양보(이중처리 방지). 세로/PC/관리자는 기존대로. */
+    if(dennRoomLandFsActiveV())return;
+    var __t=e.touches&&e.touches[0];if(!__t)return;
     e.preventDefault();RM.dragging=true;RM.__scrollDrag=null;
     RM.dragStart={mx:__t.clientX,my:__t.clientY,px:RM.pos.x,py:RM.pos.y};
   };
   c.ontouchmove=function(e){
-    /* 배경 수동 스크롤: 터치 세로 이동만큼 area.scrollTop 직접(1:1). */
-    if(RM.__scrollDrag&&RM.__scrollDrag.area){var __t2=e.touches&&e.touches[0];if(__t2){RM.__scrollDrag.area.scrollTop=RM.__scrollDrag.top-(__t2.clientY-RM.__scrollDrag.y);dennTouchDbgV('S '+RM.__scrollDrag.area.scrollTop);if(window.__dennUpdateRotScrollbarV)window.__dennUpdateRotScrollbarV();}e.preventDefault();return;}
+    if(dennRoomLandFsActiveV())return;/* 가로 전체화면=pointer 핸들러 전담 */
     if(!RM.dragging)return;
     e.preventDefault();
     var dx=(e.touches[0].clientX-RM.dragStart.mx)/c.width;
@@ -4194,6 +4163,61 @@ function roomFrameHitTest(clientX,clientY){
   var lx=dx*cos-dy*sin,ly=(dx*sin+dy*cos)/(b.sy||1),pad=Math.max(28,Math.min(b.w,b.h)*.18);
   return Math.abs(lx)<=b.w/2+pad&&Math.abs(ly)<=b.h/2+pad;
 }
+/* 2026-07-09: 가로 전체화면(denn-rotate-fs) 룸 캔버스 pointer 통합 핸들러.
+   ① 액자 위 터치 = 드래그(setPointerCapture로 진행 중 브라우저에 안 뺏김 → '드래그 순간 풀림' 근절, 스크롤바 thumb L14622 검증 패턴).
+   ② 배경(액자 밖) 터치 = 수동 세로 스크롤(area.scrollTop). ③ __userMoved는 액자 드래그에만 세팅 → 배경 스크롤이 운영자 스케일 복원을 꺼 액자가 축소되던 거짓양성 근절.
+   document capture라 캔버스가 작아(사이징 타이밍) 배경이 레터박스(rm-canvas-area)에 떨어져도 잡힘 → 이전 'ontouchstart가 캔버스 밖 터치를 놓쳐 S모드 미진입'을 회피. 세로/PC/관리자/핀치(2손가락)/햇빛 광원 무간섭. */
+(function(){
+  if(window.__dennRoomLandPtrBoundV)return;window.__dennRoomLandPtrBoundV=true;
+  var LP={mode:null,pid:null,area:null,startY:0,startScroll:0};
+  function lpArea(){return document.getElementById('rm-canvas-area');}
+  function landFs(){try{return window.dennRoomLandFsActiveV?window.dennRoomLandFsActiveV():(window.innerWidth>window.innerHeight&&document.documentElement.classList.contains('denn-rotate-fs'))}catch(e){return false}}
+  function dbg(t){try{window.dennTouchDbgV&&window.dennTouchDbgV(t)}catch(e){}}
+  document.addEventListener('pointerdown',function(ev){
+    if(!landFs())return;
+    if(LP.mode&&ev.pointerId!==LP.pid){/* 2번째 손가락=핀치 → 진행 중 모드 취소하고 핀치(touch 2손가락 L4180)에 양보 */LP.mode=null;LP.pid=null;if(window.RM)RM.dragging=false;return;}
+    if(window.RM&&RM.sunOn&&window.dennRoomSunHitV42&&window.dennRoomSunHitV42(ev))return;/* 햇빛 광원 근접 = 전용 pointer 핸들러(L5235)에 양보 */
+    var onFrame=false;try{onFrame=roomFrameHitTest(ev.clientX,ev.clientY)}catch(_){}
+    LP.pid=ev.pointerId;
+    if(onFrame){
+      LP.mode='frame';window.RM=window.RM||{};RM.pos=RM.pos||{x:.5,y:.4};RM.dragging=true;RM.__scrollDrag=null;
+      RM.dragStart={mx:ev.clientX,my:ev.clientY,px:RM.pos.x,py:RM.pos.y};
+      try{ev.target&&ev.target.setPointerCapture&&ev.target.setPointerCapture(ev.pointerId)}catch(_){}
+      dbg('F');ev.preventDefault();
+    }else{
+      LP.mode='scroll';var a=lpArea();LP.area=a;LP.startY=ev.clientY;LP.startScroll=a?a.scrollTop:0;
+      if(window.RM)RM.dragging=false;
+      try{window.__dennRotCenterGenV=(window.__dennRotCenterGenV||0)+1;window.__dennRotCentered=true;}catch(_){}/* 중앙유지 루프+원샷 센터 중단(스크롤 되돌림 방지) */
+      try{ev.target&&ev.target.setPointerCapture&&ev.target.setPointerCapture(ev.pointerId)}catch(_){}
+      dbg('S '+LP.startScroll);ev.preventDefault();
+    }
+  },{capture:true,passive:false});
+  document.addEventListener('pointermove',function(ev){
+    if(!LP.mode||ev.pointerId!==LP.pid)return;
+    if(LP.mode==='scroll'){
+      var a=LP.area||lpArea();if(a){a.scrollTop=LP.startScroll-(ev.clientY-LP.startY);if(window.__dennUpdateRotScrollbarV)window.__dennUpdateRotScrollbarV();dbg('S '+Math.round(a.scrollTop));}
+      ev.preventDefault();return;
+    }
+    var c=window.RM&&RM.canvas;if(!c)return;var r=c.getBoundingClientRect();if(!r.width||!r.height)return;
+    var dx=(ev.clientX-RM.dragStart.mx)/r.width,dy=(ev.clientY-RM.dragStart.my)/r.height;
+    RM.pos.x=Math.max(0.05,Math.min(0.95,RM.dragStart.px+dx));
+    RM.pos.y=Math.max(0.05,Math.min(0.95,RM.dragStart.py+dy));
+    RM.__userMoved=true;
+    RM.frameAnchorV48={frameCenterX:RM.pos.x*100,frameCenterY:RM.pos.y*100,frameAnchor:'center'};
+    try{window.dennCaptureUserAnchorV&&window.dennCaptureUserAnchorV()}catch(_){}
+    try{window.dennSyncGuideXYDisplayCenterV89&&window.dennSyncGuideXYDisplayCenterV89()}catch(_){}
+    try{window.rmRender&&rmRender()}catch(_){}
+    ev.preventDefault();
+  },{capture:true,passive:false});
+  function lpEnd(ev){
+    if(LP.pid==null||ev.pointerId!==LP.pid)return;
+    try{ev.target&&ev.target.releasePointerCapture&&ev.target.releasePointerCapture(ev.pointerId)}catch(_){}
+    if(LP.mode==='frame'&&window.RM){RM.dragging=false;try{window.dennRefreshFrameCenterAnchorV51&&dennRefreshFrameCenterAnchorV51()}catch(_){}try{window.dennCaptureAnchorTargetV&&dennCaptureAnchorTargetV()}catch(_){}}
+    LP.mode=null;LP.pid=null;LP.area=null;dbg('-');
+  }
+  document.addEventListener('pointerup',lpEnd,{capture:true});
+  document.addEventListener('pointercancel',lpEnd,{capture:true});
+})();
 function roomFrameOrGuideHitTest(clientX,clientY){
   try{
     if(window.RM&&RM.canvas&&RM.canvas.width&&RM.canvas.height&&RM.pos){
@@ -14447,8 +14471,9 @@ input[type=range]{accent-color:#777}
       'html.denn-rotate-fs #room-modal{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;max-width:none!important;max-height:none!important;background:#000!important}'+
       'html.denn-rotate-fs #room-modal>div{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;max-width:none!important;max-height:none!important;background:#000!important;box-shadow:none!important}'+
       /* 2026-06-19: 가로 전체화면은 cover로 캔버스가 뷰포트보다 세로로 김 → 세로 스크롤 허용(천장·바닥까지 보기). block 레이아웃이라야 위쪽도 스크롤로 닿음(flex center는 상단 클립). */
-      'html.denn-rotate-fs #room-modal #rm-canvas-area{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;display:block!important;overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;background:#000!important}'+
-      /* 캔버스는 cover로 확대(뷰포트보다 큼) → max 제한 풀고, 가로 중앙정렬(block+margin auto). 2026-07-07: touch-action:none — 브라우저가 세로 제스처를 못 가로채므로 액자 드래그가 절대 안 풀림. 배경 스크롤은 JS 수동(ontouchmove __scrollDrag). */
+      /* 2026-07-09: touch-action:none — 배경/액자 터치를 pointer 통합 핸들러(v33)가 전담(액자=드래그·배경=수동 scrollTop). 네이티브 세로 스크롤을 끄면 캔버스(touch-action:none)와 area가 일관돼 브라우저가 제스처를 가로채지 못함. programmatic scrollTop은 그대로 동작(overflow-y:auto 유지). */
+      'html.denn-rotate-fs #room-modal #rm-canvas-area{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;display:block!important;overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;touch-action:none!important;background:#000!important}'+
+      /* 캔버스는 cover로 확대(뷰포트보다 큼) → max 제한 풀고, 가로 중앙정렬(block+margin auto). touch-action:none — 브라우저가 제스처를 못 가로챔. 2026-07-09: 액자 드래그+배경 스크롤 모두 pointer 통합 핸들러(v33, roomFrameHitTest 근처)가 전담. */
       'html.denn-rotate-fs #room-modal #rm-canvas{max-width:none!important;max-height:none!important;border-radius:0!important;display:block!important;margin:0 auto!important;touch-action:none!important}'+
       'html.denn-rotate-fs #room-modal #sg-canvas{max-width:none!important;max-height:none!important;border-radius:0!important;touch-action:none!important}'+
       /* 네이티브 스크롤바 숨기고, 커스텀 반투명 '상시 노출' 조절바(#denn-rot-scrollbar)로 대체 — 드래그/스와이프 이동. */
