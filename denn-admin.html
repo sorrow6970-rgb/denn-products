@@ -807,18 +807,32 @@ function pwLogin(){
     if(errEl)errEl.textContent=dennAuthErrMsgV(e);
   });
 }
-function pwLogout(){ try{ if(window.dennFirebase&&window.dennFirebase.signOutOp) window.dennFirebase.signOutOp(); }catch(e){} }
+function pwLogout(){ window.__dennExplicitLogoutV=true; try{ if(window.dennFirebase&&window.dennFirebase.signOutOp) window.dennFirebase.signOutOp(); }catch(e){} }
 function pwChange(){ alert('비밀번호는 Firebase 콘솔(Authentication → Users)에서 변경하세요.'); }
 /* dennOnAuthStateV: 모듈 onAuthStateChanged가 세션 변화 시 호출 → 로그인 화면 표시/숨김 + 클라우드 상태 로드 */
+var __dennAdminAuthSeenV=false,__dennAdminAuthLockTimerV=null;
+function showAdminLoginV(){
+  var scr=document.getElementById('pw-screen');
+  if(scr)scr.style.display='flex';
+  var em=document.getElementById('pw-email'); if(em)setTimeout(function(){try{em.focus()}catch(_){}},50);
+}
 window.dennOnAuthStateV=function(u){
   var authed=!!(u&&!u.isAnonymous);
   var scr=document.getElementById('pw-screen');
   if(authed){
+    __dennAdminAuthSeenV=true;window.__dennExplicitLogoutV=false;
+    if(__dennAdminAuthLockTimerV){clearTimeout(__dennAdminAuthLockTimerV);__dennAdminAuthLockTimerV=null;}
     if(scr)scr.style.display='none';
     try{ if(window.dennCloudLoadAdminV) window.dennCloudLoadAdminV(); }catch(e){}
   }else{
-    if(scr)scr.style.display='flex';
-    var em=document.getElementById('pw-email'); if(em)setTimeout(function(){try{em.focus()}catch(_){}}, 50);
+    if(window.__dennExplicitLogoutV||!__dennAdminAuthSeenV){showAdminLoginV();return;}
+    if(__dennAdminAuthLockTimerV)clearTimeout(__dennAdminAuthLockTimerV);
+    __dennAdminAuthLockTimerV=setTimeout(function(){
+      __dennAdminAuthLockTimerV=null;
+      var cur=null;try{cur=window.dennFirebase&&window.dennFirebase.currentUser&&window.dennFirebase.currentUser();}catch(e){}
+      if(cur&&!cur.isAnonymous){window.dennOnAuthStateV(cur);return;}
+      showAdminLoginV();
+    },1600);
   }
 };
 
@@ -14771,7 +14785,7 @@ window.addEventListener('resize',scheduleSettle);
      ============================================================ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getStorage, ref, uploadString, getDownloadURL, deleteObject, getBytes } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
   import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -14786,30 +14800,46 @@ window.addEventListener('resize',scheduleSettle);
   };
 
   let _ready = false;
-  const _readyPromise = new Promise(function(resolve){ window.__dennFirebaseReady = resolve; });
+  let _readyResolve = function(){};
+  const _readyPromise = new Promise(function(resolve){ _readyResolve = resolve; window.__dennFirebaseReady = resolve; });
 
   try {
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const storage = getStorage(app);
     const db = getFirestore(app);
+    try { await setPersistence(auth, browserLocalPersistence); } catch(e){ console.warn('[firebase] auth persistence fallback:', e && e.code); }
+
+    const currentAdminUser = function(){
+      const u = auth.currentUser;
+      return (u && !u.isAnonymous) ? u : null;
+    };
+    const ensureAdminAuth = async function(){
+      if (currentAdminUser()) return currentAdminUser();
+      if (!_ready) await Promise.race([_readyPromise, new Promise(function(resolve){ setTimeout(resolve,1200); })]);
+      if (currentAdminUser()) return currentAdminUser();
+      const err = new Error('운영자 로그인이 필요합니다. 다시 로그인한 뒤 시도해 주세요.');
+      err.code = 'admin/auth-required';
+      throw err;
+    };
 
     // 2026-07-03: 운영자 이메일/비번 인증(익명 제거). non-anonymous 세션에서만 _ready → admin/ 등 운영자 쓰기 권한.
     // 세션은 Firebase가 localStorage에 유지 → 재방문 시 onAuthStateChanged가 로그인 세션을 자동 복원.
     onAuthStateChanged(auth, function(u){
       var authed = !!(u && !u.isAnonymous);
-      if (authed) { _ready = true; window.__dennFirebaseReady && window.__dennFirebaseReady(true); }
+      _ready = authed;
+      if (authed) { _readyResolve(true); window.__dennFirebaseReady && window.__dennFirebaseReady(true); }
       window.__dennAuthUser = u || null;
       try { if (window.dennOnAuthStateV) window.dennOnAuthStateV(u || null); } catch(e){}
     });
 
     window.dennFirebase = {
       app, auth, storage,
-      isReady: function(){ return _ready; },
+      isReady: function(){ return !!currentAdminUser(); },
       ready: function(){ return _readyPromise; },
       async uploadDataUrl(dataUrl, pathHint) {
         if (!dataUrl || dataUrl.indexOf('data:') !== 0) throw new Error('uploadDataUrl: dataUrl 필요');
-        await _readyPromise; // 익명 인증 완료 대기
+        await ensureAdminAuth();
         const path = pathHint || ('templates/' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.png');
         const r = ref(storage, path);
         const snap = await uploadString(r, dataUrl, 'data_url');
@@ -14818,7 +14848,7 @@ window.addEventListener('resize',scheduleSettle);
       },
       async deletePath(path) {
         if (!path) return;
-        await _readyPromise;
+        await ensureAdminAuth();
         try { await deleteObject(ref(storage, path)); } catch(e){ console.warn('[firebase] delete failed:', e && e.code); }
       },
       /* 2026-07-03: 운영자 이메일 로그인/로그아웃/세션 */
@@ -14827,6 +14857,7 @@ window.addEventListener('resize',scheduleSettle);
       signOutOp() { return signOut(auth); },
       /* 비공개 경로(admin/) JSON 다운로드 — 인증 SDK(getBytes)로 규칙 준수(REST ?alt=media는 403). */
       async downloadJson(path) {
+        await ensureAdminAuth();
         var buf = await getBytes(ref(storage, path));
         var txt = new TextDecoder('utf-8').decode(buf instanceof ArrayBuffer ? new Uint8Array(buf) : buf);
         return JSON.parse(txt);
@@ -14840,7 +14871,7 @@ window.addEventListener('resize',scheduleSettle);
     // opts.fullUrl=true: 짧은 path 대신 Firebase download URL 그대로.
     window.dennShareCreate = async function(opts){
       opts = opts || {};
-      if (!_ready) { await _readyPromise; }
+      await ensureAdminAuth();
       /* 2026-07-02 stale 수정: window.S는 denn-admin 로드 시점 스냅샷이라, 이후 mockup 편집기(별도 탭/iframe,
          ?adminRoomSetup=)가 localStorage['denn_admin']에 저장한 room/frame 레이아웃(사이즈앵커 refH 등)이
          window.S엔 반영 안 됨(denn-admin은 storage 리스너 없음) → 소비자가 옛 refH 받는 stale 공유.
@@ -14906,7 +14937,7 @@ window.addEventListener('resize',scheduleSettle);
       return clone;
     };
     window.dennPublishState = async function(){
-      if (!_ready) { await _readyPromise; }
+      await ensureAdminAuth();
       var state = window.S;
       try {
         var __ls = JSON.parse(localStorage.getItem('denn_admin')||'null');
@@ -14957,7 +14988,7 @@ window.addEventListener('resize',scheduleSettle);
       opts = opts || {};
       if (!opts.password) throw new Error('dennSpace.create: password 필요');
       if (!opts.roomSettings) throw new Error('dennSpace.create: roomSettings 필요');
-      await _readyPromise;
+      await ensureAdminAuth();
       const token = opts.token || _genToken();
       const enc = await _encryptJson(opts.roomSettings, opts.password);
       const payload = { enc: enc, ownerMeta: opts.ownerMeta || {}, createdAt: new Date().toISOString(), schema: 'space-v1' };

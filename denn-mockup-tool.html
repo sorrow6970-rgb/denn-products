@@ -15275,7 +15275,7 @@ input[type=range]{accent-color:#777}
      ============================================================ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
   const firebaseConfig = {
@@ -15290,10 +15290,12 @@ input[type=range]{accent-color:#777}
   let _ready = false;
   const _readyPromise = new Promise(function(resolve){ window.__dennSpaceFbReady = resolve; });
   try {
-    const app = initializeApp(firebaseConfig);
+    /* 어드민 이메일 세션과 같은 origin/localStorage를 공유하지 않도록 내공간 익명 Auth는 별도 app+메모리 세션으로 격리. */
+    const app = initializeApp(firebaseConfig, 'denn-space-viewer');
     const auth = getAuth(app);
     const db = getFirestore(app);
     const storage = getStorage(app);
+    try{ await setPersistence(auth, inMemoryPersistence); }catch(e){ console.warn('[space] auth persistence fallback:', e && e.code); }
     signInAnonymously(auth).catch(function(err){ console.warn('[space] anon signin failed:', err && err.code); });
     onAuthStateChanged(auth, function(u){ if(u){ _ready=true; window.__dennSpaceFbReady && window.__dennSpaceFbReady(true); } });
     const _b64 = function(u8){ var s=''; for(var i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]); return btoa(s); };
