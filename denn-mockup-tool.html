@@ -4218,6 +4218,27 @@ function roomFrameHitTest(clientX,clientY){
   document.addEventListener('pointerup',lpEnd,{capture:true});
   document.addEventListener('pointercancel',lpEnd,{capture:true});
 })();
+/* 2026-07-09 진단(검증 후 제거): 터치 없이 회전만 해도 스케일 바뀌는 원인 특정 — 방향/sg슬라이더/운영자 base·mobile guideScale/캔버스/um/measureBase를 좌상단 표시. base≠mob면 회전 스케일 변동 원인=.mobile/base 분리 확정. */
+(function(){
+  if(window.__dennRotDbgBoundV)return;window.__dennRotDbgBoundV=true;
+  function dbg(t){try{var d=document.getElementById('denn-rot-dbg');if(!d){d=document.createElement('div');d.id='denn-rot-dbg';d.style.cssText='position:fixed;left:6px;top:6px;z-index:2147483647;background:rgba(0,0,40,.7);color:#6cf;font:12px monospace;padding:3px 7px;border-radius:4px;pointer-events:none;white-space:pre';document.documentElement.appendChild(d);}d.textContent=t;}catch(e){}}
+  function dump(){
+    try{
+      var ori=(window.isRoomPortrait&&window.isRoomPortrait())?'P':'L';
+      var sg=(document.getElementById('sg-scale-r')||{}).value;
+      var c=window.RM&&RM.canvas,cv=c?(c.width+'x'+c.height):'?';
+      var um=(window.RM&&RM.__userMoved)?1:0;
+      var mb=(c&&window.measureBase)?Math.round(measureBase(c.width,c.height)):'?';
+      var op=window.dennCurrentOperatorPresetV&&window.dennCurrentOperatorPresetV();
+      var bgs=(op&&isFinite(op.guideScale))?Math.round(op.guideScale*1000)/10:'-';
+      var mgs=(op&&op.mobile&&isFinite(op.mobile.guideScale))?Math.round(op.mobile.guideScale*1000)/10:'-';
+      dbg(ori+' sg'+sg+' um'+um+'\nbase'+bgs+' mob'+mgs+'\ncv'+cv+' mb'+mb);
+    }catch(e){}
+  }
+  window.__dennRotDbgDumpV=dump;
+  ['orientationchange','resize'].forEach(function(ev){window.addEventListener(ev,function(){setTimeout(dump,450);setTimeout(dump,1000);});});
+  setTimeout(dump,1500);
+})();
 function roomFrameOrGuideHitTest(clientX,clientY){
   try{
     if(window.RM&&RM.canvas&&RM.canvas.width&&RM.canvas.height&&RM.pos){
