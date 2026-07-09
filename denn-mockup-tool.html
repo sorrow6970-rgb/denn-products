@@ -10846,6 +10846,7 @@ window.addEventListener('load',run);
     });
     syncStyleRows(fields);
     syncToStatic();
+    try{if(window.__dennRenderElemListV)setTimeout(window.__dennRenderElemListV,0)}catch(e){}
   }
   var oldApply=window.applyFrameDefaultTexts;
   if(typeof oldApply==='function'&&!oldApply.__dennV363DynamicFields){
@@ -13146,7 +13147,28 @@ window.addEventListener('load',later);
     shell.querySelectorAll('.dps-icon').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-g')===g)});
   }
   // ── 우측 요소 리스트(행별 삭제) + 기본설정 버튼 ──
-  var ELEMS=[['main','메인 문구','f-main'],['name','이름','f-name'],['date','날짜','f-date'],['sub','추가 문구','f-sub']];
+  var STATIC_ELEMS=[['main','메인 문구','f-main'],['name','이름','f-name'],['name2','이름 2','f-name2'],['date','날짜','f-date'],['sub','추가 문구','f-sub']];
+  function elemSafeKey(k){return String(k||'').replace(/[^a-zA-Z0-9_-]/g,'')}
+  function elemDynId(k){return 'f-dyn-'+elemSafeKey(k)}
+  function elemAllowed(k){
+    try{return typeof window.isFrameTextKeyAllowed!=='function'||window.isFrameTextKeyAllowed(k,window.curFTpl)}
+    catch(e){return true}
+  }
+  function frameTextElemDefs(){
+    var defs=[],seen={};
+    function add(k,lab,id){
+      k=elemSafeKey(k);
+      if(!k||seen[k]||!elemAllowed(k)||!document.getElementById(id))return;
+      seen[k]=true;defs.push({k:k,lab:lab||k,id:id});
+    }
+    try{
+      if(window.DENNFrameDynamicTextsV363&&DENNFrameDynamicTextsV363.fields){
+        (DENNFrameDynamicTextsV363.fields(window.curFTpl)||[]).forEach(function(f){if(f)add(f.key,f.label,elemDynId(f.key));});
+      }
+    }catch(e){}
+    STATIC_ELEMS.forEach(function(e){add(e[0],e[1],e[2]);});
+    return defs;
+  }
   function elText(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
   function imgPresent(){var p=document.getElementById('frame-prev');if(p&&getComputedStyle(p).display!=='none')return true;var t=document.getElementById('frame-thumb');return !!(t&&t.getAttribute('src'));}
   function clockOn(){var c=document.getElementById('tog-clock');return !!(c&&c.classList.contains('on'));}
@@ -13154,7 +13176,7 @@ window.addEventListener('load',later);
     try{
       if(k==='image'){if(typeof window.resetImg==='function')window.resetImg('frame');}
       else if(k==='clock'){if(clockOn()&&typeof window.togFrame==='function')window.togFrame('clock');}
-      else{var f=document.getElementById('f-'+k);if(f){f.value='';f.dispatchEvent(new Event('input',{bubbles:true}));}}
+      else{var f=document.getElementById(elemDynId(k))||document.getElementById('f-'+k);if(f){f.value='';f.dispatchEvent(new Event('input',{bubbles:true}));}}
     }catch(e){}
     renderElemList();
   }
@@ -13163,8 +13185,8 @@ window.addEventListener('load',later);
       var box=document.getElementById('dps-elem-list'); if(!box)return;
       /* 2026-06-08: 사이즈 미선택 게이트(__dennSizeUnset)면 운영자 기본문구가 필드에 미리 채워져 있어도 요소 리스트는 전부 '비어있음'으로 — 기본틀에 문구가 뜨던 회귀 차단. 사이즈 선택 시 selFSz 래퍼가 재렌더. */
       var gateOn=!!window.__dennSizeUnset;
-      /* E(2026-06-04): 우측 요소행을 좌측 '05 문구 입력'과 동일하게 isFrameTextKeyAllowed로 게이팅 — 편집 불가 템플릿에서 문구행이 뜨던 불일치 해소 */
-      var rows=ELEMS.filter(function(e){return typeof window.isFrameTextKeyAllowed!=='function'||window.isFrameTextKeyAllowed(e[0],window.curFTpl);}).map(function(e){var v=gateOn?'':elText(e[2]);return{k:e[0],lab:e[1],val:v,empty:!v};});
+      /* E(2026-07-09): 우측 요소행도 동적 textFields/textZones 기반으로 구성 — 프레임툴 문구 추가/수정/삭제가 PC 행별 삭제 목록과 동기화되도록 함 */
+      var rows=frameTextElemDefs().map(function(e){var v=gateOn?'':elText(e.id);return{k:e.k,lab:e.lab,val:v,empty:!v};});
       rows.push({k:'image',lab:'이미지',val:'업로드됨',empty:gateOn?true:!imgPresent()});
       rows.push({k:'clock',lab:'시계',val:'표시',empty:gateOn?true:!clockOn()});
       box.innerHTML='';
@@ -13189,7 +13211,12 @@ window.addEventListener('load',later);
   }
   function ensureElemListeners(){
     if(window.__dennElemListenersOn)return; window.__dennElemListenersOn=true;
-    ['f-main','f-name','f-date','f-sub'].forEach(function(id){var f=document.getElementById(id);if(f)f.addEventListener('input',renderElemList);});
+    document.addEventListener('input',function(e){
+      var t=e&&e.target,id=(t&&t.id)||'';
+      if(/^(f-main|f-name|f-name2|f-date|f-sub)$/.test(id)||id.indexOf('f-dyn-')===0)renderElemList();
+    },true);
+    var txt=document.querySelector('#page-frame .f-txt-group');
+    if(txt)new MutationObserver(renderElemList).observe(txt,{childList:true,subtree:true});
     // 이미지 가시성(display) + 썸네일 src 변경 감지 → 업로드/제거 시 리스트 갱신
     var prev=document.getElementById('frame-prev');
     if(prev)new MutationObserver(renderElemList).observe(prev,{attributes:true,attributeFilter:['style']});
