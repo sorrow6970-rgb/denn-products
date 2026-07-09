@@ -13804,8 +13804,9 @@ header .tab.on{background:#777!important;color:#fff!important;border-color:#777!
   #room-modal #rm-canvas-area{padding:4px!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}
   /* 캔버스/사이즈가이드 — 디스플레이 stretch 금지(JS rmRender의 intrinsic 그리기와 mismatch 방지).
      intrinsic size 그대로 + max-width/height:100%로 area 초과만 축소. width/height:auto로 비율 유지. */
-  #room-modal #rm-canvas-area #rm-canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;display:block!important}
-  #room-modal #rm-canvas-area #sg-canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;display:block!important}
+  /* 2026-07-09: html:not(.denn-rotate-fs)로 가로 전체화면 제외 — 이 규칙의 width:auto!important(특이도 3 IDs)가 rotate-fs 캔버스 표시크기를 백킹(intrinsic)에 묶어, 백킹을 dpr배로 올리면 표시까지 dpr배 부풀어 검정화면 유발하던 결합. rotate-fs에선 이 규칙 미매칭 → V107 인라인 style.width(cw)가 표시크기 지배 → 백킹만 dpr배로 선명화 가능. */
+  html:not(.denn-rotate-fs) #room-modal #rm-canvas-area #rm-canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;display:block!important}
+  html:not(.denn-rotate-fs) #room-modal #rm-canvas-area #sg-canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;display:block!important}
 }
 
 /* ===== PC 셸(≥861) 2톤 + 아일랜드 ===== */
@@ -14454,7 +14455,9 @@ input[type=range]{accent-color:#777}
     try{if(document.documentElement.classList.contains('denn-rotate-fs')){var RMf=window.RM;if(RMf&&RMf.canvas){var vw=Math.round(innerWidth),vh=Math.round(innerHeight),im=RMf.roomImg,imAr=(im&&im.naturalWidth&&im.naturalHeight)?(im.naturalWidth/im.naturalHeight):0;
       /* 2026-06-22 캔버스 크기 고정: 가로 전체화면 캔버스는 '가로(원본, ar>=1) 이미지' 비율로만 사이징하고 그 비율을 캐시(__dennLsArV) 재사용. 스왑 전 옛 세로(4:5, ar<1) 이미지로는 ar을 안 바꿔 캔버스 통째 리사이즈(844x1055↔844x563) 점프를 원천 차단. 첫 진입(캐시 전)엔 현재 이미지/뷰포트 폴백. */
       if(imAr>=1)window.__dennLsArV=imAr;
-      var ar=window.__dennLsArV||(imAr>0?imAr:(vw/vh));var ch=vh,cw=Math.round(ch*ar);if(cw<vw){cw=vw;ch=Math.round(cw/ar);}var pw=Math.round(cw),ph=Math.round(ch);if(RMf.canvas.width!==pw||RMf.canvas.height!==ph){RMf.canvas.width=pw;RMf.canvas.height=ph;RMf.canvas.style.width=cw+'px';RMf.canvas.style.height=ch+'px';var sgF=document.getElementById('sg-canvas');if(sgF){sgF.width=pw;sgF.height=ph;sgF.style.width=cw+'px';sgF.style.height=ch+'px'}}/* 백킹=cw(dpr 미적용). ★2026-07-07 dpr배 백킹 재시도했다가 검정화면 회귀(width:auto 결합 구조상 위험) → 되돌림. 화질(soft)은 이 baseline 유지, 더 안 건드림. */
+      var ar=window.__dennLsArV||(imAr>0?imAr:(vw/vh));var ch=vh,cw=Math.round(ch*ar);if(cw<vw){cw=vw;ch=Math.round(cw/ar);}
+      /* 2026-07-09 화질: 백킹=cw*dpr(선명), 표시=cw(인라인!important 고정). L13807 width:auto 규칙을 rotate-fs에서 제외했으므로 dpr배 백킹이 표시크기를 안 부풀림(검정화면 결합 해소). 메모리 위해 dpr 3캡. 렌더/좌표/스크롤은 전부 backing·display 비율 자동보정이라 무영향. */
+      var __dprL=Math.max(1,Math.min(window.devicePixelRatio||1,3));var pw=Math.round(cw*__dprL),ph=Math.round(ch*__dprL);if(RMf.canvas.width!==pw||RMf.canvas.height!==ph){RMf.canvas.width=pw;RMf.canvas.height=ph;RMf.canvas.style.setProperty('width',cw+'px','important');RMf.canvas.style.setProperty('height',ch+'px','important');var sgF=document.getElementById('sg-canvas');if(sgF){sgF.width=pw;sgF.height=ph;sgF.style.setProperty('width',cw+'px','important');sgF.style.setProperty('height',ch+'px','important')}}
       /* 진입 시 1회 가운데 — 캔버스 사이징이 막 끝난 직후(아직 __dennRotCentered=false면) scrollHeight로 즉시 결정. 페이드(denn-room-entering)가 이 순간을 가려 점프 안 보임. */
       if(!window.__dennRotCentered&&innerWidth>innerHeight){var aEl=document.getElementById('rm-canvas-area');if(aEl){var sh=aEl.scrollHeight;if(sh>aEl.clientHeight+4){aEl.scrollTop=Math.round((sh-aEl.clientHeight)/2);window.__dennRotCentered=true;}}}/* 2026-06-29: 세로(innerWidth<=innerHeight)면 가로 센터(101)를 쓰지 않음 — 세로 전환 중 denn-rotate-fs가 한 프레임 깜빡여도 101이 누출돼 세로 앵커(8)와 101↔8 상하 요동하던 회귀 차단 */
     }}}catch(e){}
