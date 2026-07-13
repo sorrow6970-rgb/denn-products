@@ -3758,9 +3758,14 @@ function ensureRoomFsExitBtn(show){
       b=document.createElement('button');b.id='rm-fs-exit-float';b.type='button';b.setAttribute('aria-label','전체화면 종료');
       b.innerHTML='<span style="font-size:15px;line-height:1;margin-right:5px">✕</span>전체화면 종료';
       b.onclick=function(e){e.preventDefault();
+        /* 2026-07-13: 전체화면→모달 복귀 렌더링 튐 — FS 해제는 방향전환이 아니라(onChange의 dennGatedRevealV
+           게이트 밖) 캔버스가 전체화면 치수에서 모달 치수로 리레이아웃되는 게 그대로 노출됨. 진입/회전과 동일하게
+           denn-room-entering 페이드로 가리고, 정착 후 dennGatedRevealV가 리사이즈+렌더+노출을 1회 담당. */
+        try{document.documentElement.classList.add('denn-room-entering');}catch(_){}
         try{var xf=document.exitFullscreen||document.webkitExitFullscreen||document.msExitFullscreen;if((document.fullscreenElement||document.webkitFullscreenElement)&&xf)xf.call(document);}catch(_){}
         try{document.documentElement.classList.remove('denn-rotate-fs');}catch(_){}
         try{setRoomFullscreenLayout(false);}catch(_){}
+        try{if(window.__dennGatedRevealV)window.__dennGatedRevealV(900);else document.documentElement.classList.remove('denn-room-entering');}catch(_){}
       };
       document.body.appendChild(b);
     }
