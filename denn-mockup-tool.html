@@ -11812,6 +11812,21 @@ window.addEventListener('load',later);
   // Canvas 직접 swap cache — preload(Image decode 50-100ms) 우회.
   // build resolve 시 compose 결과 canvas를 즉시 등록 → drawImage wrap이 canvas로 sync swap → preload 시간 0ms.
   var renderCanvasCache=Object.create(null); // dataUrl → HTMLCanvasElement (composed, ready for sync drawImage)
+  // 2026-07-13(#6): 슬라이더 조작마다 새 dataUrl 엔트리가 renderCanvasCache/renderImgCache에
+  // 무한 누적(full-res canvas+Image)돼 메모리 누수 → 유계 LRU로 정리. 현재 tintCache가 가리키는
+  // 활성 dataUrl은 절대 evict 금지(sync-swap flicker 방지의 핵심 소스). 오래된(삽입순) 비활성만 삭제.
+  function pruneRenderCaches(){
+    var LIMIT=12;
+    var active=Object.create(null);
+    for(var tk in tintCache){var c=tintCache[tk];if(!c)continue;if(c.dataUrl)active[c.dataUrl]=1;if(c.lastValidDataUrl)active[c.lastValidDataUrl]=1;}
+    function prune(cache){
+      var keys=Object.keys(cache), over=keys.length-LIMIT;
+      if(over<=0)return;
+      for(var i=0;i<keys.length&&over>0;i++){if(!active[keys[i]]){delete cache[keys[i]];over--;}}
+    }
+    prune(renderCanvasCache);
+    prune(renderImgCache);
+  }
   // build 결과를 canvas로 즉시 cache + image preload는 background (fallback용).
   // race-safe: cur.inFlightKey/key 비교로 옛 build resolve가 새 cache 안 덮어쓰도록.
   function commitBuiltTinted(tplKey, key, dataUrl, srcUrl, params){
@@ -11826,6 +11841,7 @@ window.addEventListener('load',later);
     }
     preloadAndCache(dataUrl); // background — image cache는 fallback
     tintCache[tplKey]={key:key,dataUrl:dataUrl,lastValidDataUrl:dataUrl};
+    pruneRenderCaches(); // #6: 활성 dataUrl 보호하며 유계 LRU로 누수 방지
     return true;
   }
   // compose의 canvas 버전 (toDataURL 안 함 — 즉시 canvas 반환)
