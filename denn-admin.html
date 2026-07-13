@@ -1219,7 +1219,7 @@ function cbRenderZoneList(){
   el.innerHTML=CB.zones.map(function(z,i){return '<div class="zone-item'+(i===CB.selIdx?' sel':'')+'" onclick="cbSelZone('+i+')"><span class="zi">'+(z.type==='circle'?'⭕':'⬜')+'</span><div class="zinfo"><div class="zname">'+(z.label||('영역 '+(i+1)))+'</div><div class="zpos">'+Math.round(z.x)+'×'+Math.round(z.y)+' '+Math.round(z.w)+'×'+Math.round(z.h)+'px</div></div><button class="zdel" onclick="event.stopPropagation();cbDelZone('+i+')">✕</button></div>';}).join('');
 }
 function cbSelZone(i){CB.selIdx=i;var z=CB.zones[i];document.getElementById('cb-zone-label').value=z.label||'';cbRender();cbRenderZoneList();}
-function cbDelZone(i){CB.history.push(JSON.stringify(CB.zones));CB.zones.splice(i,1);if(CB.selIdx>=CB.zones.length)CB.selIdx=null;cbRender();cbRenderZoneList();}
+function cbDelZone(i){CB.history.push(JSON.stringify(CB.zones));CB.zones.splice(i,1);/* 2026-07-13 FIX(#22): 삭제 인덱스에 맞춰 selIdx 시프트 — 선택영역보다 아래를 지우면 selIdx가 엉뚱한 영역을 가리키던 off-by-one 보정(null-safe) */if(CB.selIdx===i)CB.selIdx=null;else if(CB.selIdx!==null&&CB.selIdx>i)CB.selIdx--;if(CB.selIdx!==null&&CB.selIdx>=CB.zones.length)CB.selIdx=null;cbRender();cbRenderZoneList();}
 
 function cbExport(){
   if(!CB.model){toast('기종을 선택하세요','e');return;}
@@ -1422,7 +1422,7 @@ function fbRenderZoneList(){
   el.innerHTML=FB.zones.map(function(z,i){return '<div class="zone-item'+(i===FB.selIdx?' sel':'')+'" onclick="fbSelZone('+i+')"><span class="zi">'+(z.type==='circle'?'⭕':'⬜')+'</span><div class="zinfo"><div class="zname">'+(z.label||('영역 '+(i+1)))+'</div><div class="zpos">x:'+Math.round(z.x)+'% y:'+Math.round(z.y)+'% w:'+Math.round(z.w)+'% h:'+Math.round(z.h)+'%</div></div><button class="zdel" onclick="event.stopPropagation();fbDelZone('+i+')">✕</button></div>';}).join('');
 }
 function fbSelZone(i){FB.selIdx=i;var z=FB.zones[i];document.getElementById('fb-zone-label').value=z.label||'';fbRender();fbRenderZoneList();}
-function fbDelZone(i){FB.history.push(JSON.stringify(FB.zones));FB.zones.splice(i,1);if(FB.selIdx>=FB.zones.length)FB.selIdx=null;fbRender();fbRenderZoneList();}
+function fbDelZone(i){FB.history.push(JSON.stringify(FB.zones));FB.zones.splice(i,1);/* 2026-07-13 FIX(#23): cbDelZone과 동일한 selIdx off-by-one 보정(null-safe) */if(FB.selIdx===i)FB.selIdx=null;else if(FB.selIdx!==null&&FB.selIdx>i)FB.selIdx--;if(FB.selIdx!==null&&FB.selIdx>=FB.zones.length)FB.selIdx=null;fbRender();fbRenderZoneList();}
 
 function fbExport(){
   if(FB.sizeId===null||!S.frameSizes[FB.sizeId]){toast('사이즈를 선택하세요','e');return;}
