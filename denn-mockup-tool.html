@@ -875,9 +875,17 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
     var existing=localStorage.getItem('denn_admin');
     if(existing&&existing.length>0){
       try{
+        /* 2026-07-13 FIX: share 진입마다 denn_admin_pre_share_<ts> 백업(~490KB)이 무한 누적돼
+           localStorage 쿼터를 넘기면 이후 시안 링크 import·소비자 룸 저장이 전면 실패하던 버그.
+           백업은 직전 상태 복구용이라 최신 1개면 충분 → 새 백업 쓰기 전에 옛 백업키를 모두 정리. */
+        try{
+          var __oldBk=[];
+          for(var __i=0;__i<localStorage.length;__i++){var __k=localStorage.key(__i);if(__k&&__k.indexOf('denn_admin_pre_share_')===0)__oldBk.push(__k);}
+          for(var __j=0;__j<__oldBk.length;__j++){try{localStorage.removeItem(__oldBk[__j])}catch(_){}}
+        }catch(_){}
         var backupKey='denn_admin_pre_share_'+Date.now();
         localStorage.setItem(backupKey, existing);
-        console.log('[share] 기존 denn_admin 백업: '+backupKey+' ('+existing.length+'b)');
+        console.log('[share] 기존 denn_admin 백업: '+backupKey+' ('+existing.length+'b), 옛 백업 정리 완료');
       }catch(e){console.warn('[share] 백업 실패:',e)}
     }
     // share 값이 'http'로 시작 안 하면 Firebase Storage path로 간주 → 짧은 URL 지원
