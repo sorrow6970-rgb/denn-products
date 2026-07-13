@@ -738,7 +738,8 @@ async function dennCloudSaveAdminV(){
     var json=JSON.stringify(window.S);
     var dataUrl='data:application/json;base64,'+btoa(unescape(encodeURIComponent(json)));
     await window.dennFirebase.uploadDataUrl(dataUrl,'admin/state.json');
-    console.log('[cloud] admin state saved '+json.length+'b @'+window.S.__cloudRev);
+    /* 2026-07-13(#21): 매 자동저장마다 찍혀 콘솔을 도배하던 로그 → ?debug=1 게이트. 실패(warn)는 항상 유지. */
+    if((location.search||'').indexOf('debug=1')>=0)console.log('[cloud] admin state saved '+json.length+'b @'+window.S.__cloudRev);
   }catch(e){console.warn('[cloud] save fail',e&&e.code,e&&e.message);}
 }
 window.dennCloudSaveAdminV=dennCloudSaveAdminV;
