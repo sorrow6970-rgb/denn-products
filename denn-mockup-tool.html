@@ -905,7 +905,12 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
       // IndexedDB(denn_shared_db/kv/denn_admin_state)에도 동일 데이터 저장.
       // 안 그러면 reload 후 loadAdminFresh가 idb를 머지 primary로 잡아 share 데이터가 묻힘.
       step('5/5 IndexedDB 저장 중...','#080');
-      saveAdminToIdb(json).then(function(idbOk){
+      /* 2026-07-13(#9): reload/finalize를 saveAdminToIdb 프로미스에만 의존하면 IDB가
+         resolve/reject 어느 쪽도 안 낼 때(일부 브라우저 hang) reload가 영영 안 걸려 '5/5'에서 멈춤.
+         → finalize를 1회-가드 함수로 추출하고, IDB 성공/실패/무응답 모두에서 진행(타임아웃 1.5s 폴백). */
+      var __shareFinalized=false;
+      function __finalizeShare(idbOk){
+        if(__shareFinalized)return; __shareFinalized=true;
         // reload 후 init 진단 토스트 표시용 플래그
         try{sessionStorage.setItem('denn_share_just_imported','1')}catch(_){}
         // hash/search 제거: location.replace에 hash 그대로 두면 같은 URL로 인식돼 reload가 안 됨.
@@ -922,7 +927,9 @@ input:checked+.sg-sw-slider:before{transform:translateX(14px)}
             location.href=location.pathname;
           }
         },800);
-      });
+      }
+      saveAdminToIdb(json).then(function(idbOk){__finalizeShare(idbOk)},function(){__finalizeShare(false)});
+      setTimeout(function(){__finalizeShare(false)},1500); // IDB 무응답 폴백
     }).catch(function(e){
       step('✕ 실패: '+(e.message||String(e))+'<br><small>URL: '+shareUrl.slice(0,100)+'</small>','#c33');
       try{console.error('[share] error:',e)}catch(_){}
@@ -2618,7 +2625,7 @@ function sgReset(){
 .canvas-wrap{transition:transform .22s ease,opacity .22s ease;will-change:transform,opacity}.canvas-wrap.rendering{opacity:.72;transform:scale(.985)}.tpl-card,.chip,.sw,.brand-tab,.cat-chip{transition:all .18s ease}@media(max-width:860px){header{height:48px;padding:0 16px}.tab{padding:11px 8px;font-size:12px}.main{grid-template-columns:1fr!important;min-height:auto}.panel{border-right:none;border-bottom:1px solid var(--border);max-height:none;padding:12px;gap:10px}.preview-area{min-height:52vh;padding:18px 10px}.tpl-scroll{max-height:190px!important}.chips.c2,.chips.c3{grid-template-columns:repeat(2,1fr)!important}.info-bar{bottom:8px;max-width:92vw;overflow:auto}.info-bar span{font-size:8.5px}}@media(max-width:480px){.logo{font-size:13px}.tagline{display:none}.panel{padding:10px}.preview-area{min-height:48vh}.chip{font-size:10px;padding:6px 4px}.tpl-name{font-size:8px}#caseCanvas,#frameCanvas{max-width:92vw;height:auto}}
 </style>
 <script id="denn-customer-final-js">
-(function(){function normFrameRatio(sz){var w=parseFloat(sz&&sz.wcm),h=parseFloat(sz&&sz.hcm),a=parseFloat(sz&&sz.aspect)||0;if(w>0&&h>0)return Math.max(w,h)/Math.min(w,h);if(a>0)return a<1?1/a:a;return 1.428571}window.dennFinalNormFrameRatio=normFrameRatio;function pulse(){var w=document.querySelector('.canvas-wrap');if(!w)return;w.classList.add('rendering');setTimeout(function(){w.classList.remove('rendering')},180)}['click','change','input'].forEach(function(ev){document.addEventListener(ev,function(e){if(e.target.closest&&e.target.closest('.panel'))pulse()},true)});var orf=window.renderFrame;if(orf){window.renderFrame=function(){var sz=window.curFSz||(window.FS&&FS[0]);if(sz)sz.aspect=normFrameRatio(sz);return orf.apply(this,arguments)}}var oi=window.init;if(oi){window.init=function(){var r=oi.apply(this,arguments);try{(window.FS||[]).forEach(function(sz){sz.aspect=normFrameRatio(sz)})}catch(e){}return r}}window.addEventListener('resize',function(){if(window.renderCase)renderCase();if(window.renderFrame)renderFrame()})})();
+(function(){function normFrameRatio(sz){var w=parseFloat(sz&&sz.wcm),h=parseFloat(sz&&sz.hcm),a=parseFloat(sz&&sz.aspect)||0;if(w>0&&h>0)return Math.max(w,h)/Math.min(w,h);if(a>0)return a<1?1/a:a;return 1.428571}window.dennFinalNormFrameRatio=normFrameRatio;function pulse(){var w=document.querySelector('.canvas-wrap');if(!w)return;w.classList.add('rendering');setTimeout(function(){w.classList.remove('rendering')},180)}['click','change','input'].forEach(function(ev){document.addEventListener(ev,function(e){if(e.target.closest&&e.target.closest('.panel'))pulse()},true)});var orf=window.renderFrame;if(orf){window.renderFrame=function(){var sz=window.curFSz||(window.FS&&FS[0]);if(sz)sz.aspect=normFrameRatio(sz);return orf.apply(this,arguments)}}var oi=window.init;if(oi){window.init=function(){var r=oi.apply(this,arguments);try{(window.FS||[]).forEach(function(sz){sz.aspect=normFrameRatio(sz)})}catch(e){}return r}}window.addEventListener('resize',function(){clearTimeout(window.__dennFinalRz);window.__dennFinalRz=setTimeout(function(){if(window.renderCase)renderCase();if(window.renderFrame)renderFrame()},140)})/* 2026-07-13(#8): 디바운스 추가 — 유일하게 미디바운스라 모바일 visualViewport resize 폭풍 시 매 이벤트 전체 재렌더로 프리뷰 튐 */})();
 </script>
 
 
