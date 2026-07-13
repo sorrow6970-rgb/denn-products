@@ -12533,8 +12533,17 @@ window.addEventListener('load',later);
   else boot();
   setTimeout(boot, 500);
   setTimeout(boot, 2000);
-  setInterval(applyGating, 1500);
-  setInterval(function(){ensureImageRow();dedupRows()}, 1500); // body가 늦게 그려질 경우 + 중복 정리
+  /* 2026-07-13(#20): 페이지 수명 내내 1.5s마다 영구 폴링하던 유지보수 인터벌 2개를
+     하나로 합치고, 안정화 구간(약 60s) 후 자동 정지하도록 유계화. 늦은 body 렌더/초기 중복은
+     이 구간에서 커버되고, 이후 gating은 render 경로에서도 재적용되므로 영구 폴링은 불필요.
+     (단순 삭제는 금물 — 유계 self-clear로 안전망은 유지) */
+  (function(){
+    var __pcTicks=0;
+    var __pcIv=setInterval(function(){
+      try{applyGating();ensureImageRow();dedupRows();}catch(e){}
+      if(++__pcTicks>=40)clearInterval(__pcIv); // 40 × 1.5s ≈ 60s 후 정지
+    }, 1500);
+  })();
   console.log('[phase-c-customer] installed (템플릿 문구 zone row)');
 
   // === 자동 검증/실행 헬퍼 ===
