@@ -12,8 +12,7 @@
       "*.bat",
       "*.py",
       "backup.json",
-      "*.rules",
-      "denn-stage5-prototype.html"
+      "*.rules"
     ],
     "rewrites": [
       { "source": "/", "destination": "/denn-mockup-tool.html" }
