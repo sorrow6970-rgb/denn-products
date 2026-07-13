@@ -3765,7 +3765,7 @@ function ensureRoomFsExitBtn(show){
         try{var xf=document.exitFullscreen||document.webkitExitFullscreen||document.msExitFullscreen;if((document.fullscreenElement||document.webkitFullscreenElement)&&xf)xf.call(document);}catch(_){}
         try{document.documentElement.classList.remove('denn-rotate-fs');}catch(_){}
         try{setRoomFullscreenLayout(false);}catch(_){}
-        try{if(window.__dennGatedRevealV)window.__dennGatedRevealV(900);else document.documentElement.classList.remove('denn-room-entering');}catch(_){}
+        try{if(window.__dennFsExitRevealV)window.__dennFsExitRevealV();else if(window.__dennGatedRevealV)window.__dennGatedRevealV(900);else document.documentElement.classList.remove('denn-room-entering');}catch(_){}
       };
       document.body.appendChild(b);
     }
@@ -14658,6 +14658,27 @@ input[type=range]{accent-color:#777}
     setTimeout(wait,100);
   }
   window.__dennGatedRevealV=dennGatedRevealV;
+  /* 2026-07-13: 전체화면→모달 복귀 전용 노출. dennGatedRevealV는 '이미지 준비' 시 노출하는데 FS 종료는
+     같은 방향이라 이미지가 이미 로드→즉시 노출→그 뒤 도착하는 네이티브 FS 종료 비동기 리사이즈에 캔버스가
+     다시 튐. 이건 '레이아웃(뷰포트/area 치수) 정착'을 감지해 노출(타이밍 매직넘버 없음). 흰 마스크 유지 →
+     치수가 연속 프레임 안정되면 rmSizeCanvas+rmRender 1회 후 노출. 최대 1200ms 안전 폴백. */
+  function dennFsExitRevealV(){
+    try{document.documentElement.classList.add('denn-room-entering');}catch(e){}
+    var last='',stable=0,t0=performance.now();
+    function step(){
+      var a=document.getElementById('rm-canvas-area');
+      var key=window.innerWidth+'x'+window.innerHeight+'|'+(a?(a.clientWidth+'x'+a.clientHeight):'');
+      if(key===last)stable++;else{stable=0;last=key;}
+      if(stable>=3||performance.now()-t0>1200){
+        try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
+        requestAnimationFrame(function(){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}});
+        return;
+      }
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  window.__dennFsExitRevealV=dennFsExitRevealV;
   function ensureExitBtn(){
     if(document.getElementById('denn-rotate-exit'))return;
     var b=document.createElement('button');b.id='denn-rotate-exit';b.type='button';b.title='세로로 돌아가기';b.setAttribute('aria-label','닫기');b.innerHTML='✕';
