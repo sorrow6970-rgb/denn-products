@@ -548,15 +548,6 @@ hr{border:none;border-top:1px solid var(--bdr);margin:9px 0}
       <div class="card"><div class="ct">브랜드 정보</div><div class="field"><label>브랜드명</label><input id="b-name" value="DENN PRODUCTS"></div><div class="field"><label>서브타이틀</label><input id="b-sub" value="시안 확인 시스템"></div><div class="field"><label>카카오채널 URL</label><input id="b-kakao" placeholder="http://pf.kakao.com/_xxxxx"></div><div class="field"><label>업로드 안내 문구 (케이스)</label><input id="b-msgcase" value="JPG · PNG · WEBP 권장"></div></div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <div class="card"><div class="ct">컬러</div><div class="field"><label>주요 강조색</label><div class="cf"><div class="cp" id="cp-acc" style="background:#C8A864"><input type="color" id="c-acc" value="#C8A864" oninput="syncC('acc',this.value)"></div><input id="h-acc" value="#C8A864" oninput="syncCT('acc',this.value)" style="flex:1;background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:5px 9px;font-family:inherit;font-size:11px;color:var(--txt);outline:none"></div></div><div class="field"><label>보조 강조색</label><div class="cf"><div class="cp" id="cp-acc2" style="background:#8C6E3C"><input type="color" id="c-acc2" value="#8C6E3C" oninput="syncC('acc2',this.value)"></div><input id="h-acc2" value="#8C6E3C" oninput="syncCT('acc2',this.value)" style="flex:1;background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:5px 9px;font-family:inherit;font-size:11px;color:var(--txt);outline:none"></div></div></div>
-          <div class="card">
-            <div class="ct">🔑 관리자 비밀번호</div>
-            <div style="font-size:10.5px;color:var(--muted);margin-bottom:10px;line-height:1.8">초기 비밀번호: <b style="color:var(--gold)">denn2024</b><br>보안을 위해 반드시 변경하세요.</div>
-            <div class="field"><label>현재 비밀번호</label><input type="password" id="pw-cur" placeholder="현재 비밀번호"></div>
-            <div class="field"><label>새 비밀번호</label><input type="password" id="pw-new" placeholder="최소 4자"></div>
-            <div class="field"><label>새 비밀번호 확인</label><input type="password" id="pw-new2" placeholder="동일하게 입력"></div>
-            <button class="tb-btn primary" onclick="pwChangeForm()" style="width:100%">비밀번호 변경</button>
-            <div id="pw-change-msg" style="font-size:10px;margin-top:6px;min-height:14px"></div>
-          </div>
         </div>
 
       <!-- Watermark card -->
@@ -1977,20 +1968,9 @@ function updateSlotInputs(){document.getElementById('slot-x').value=Math.round(S
 function updateSlotFromInputs(){SE.slot={x:parseFloat(document.getElementById('slot-x').value)||0,y:parseFloat(document.getElementById('slot-y').value)||0,w:parseFloat(document.getElementById('slot-w').value)||90,h:parseFloat(document.getElementById('slot-h').value)||90};slotRender();}
 function saveSlot(){S.caseTemplates[SE.tplIdx].photoSlot=Object.assign({},SE.slot);closeSlotEditor();renderCTpls();toast('✓ 사진 위치 저장');}
 
-function pwChangeForm(){
-  var cur=document.getElementById('pw-cur').value;
-  var nw=document.getElementById('pw-new').value;
-  var nw2=document.getElementById('pw-new2').value;
-  var msg=document.getElementById('pw-change-msg');
-  var stored=localStorage.getItem('denn_admin_pw')||DEFAULT_PW;
-  if(cur!==stored){msg.style.color='var(--red)';msg.textContent='✕ 현재 비밀번호가 틀렸습니다';return;}
-  if(nw.length<4){msg.style.color='var(--red)';msg.textContent='✕ 최소 4자 이상 입력하세요';return;}
-  if(nw!==nw2){msg.style.color='var(--red)';msg.textContent='✕ 새 비밀번호가 일치하지 않습니다';return;}
-  localStorage.setItem('denn_admin_pw',nw);
-  msg.style.color='var(--green)';msg.textContent='✓ 비밀번호가 변경됐습니다';
-  document.getElementById('pw-cur').value='';document.getElementById('pw-new').value='';document.getElementById('pw-new2').value='';
-  setTimeout(function(){msg.textContent='';},3000);
-}
+/* 2026-07-13: 레거시 pwChangeForm 제거 — 실제 로그인은 Firebase(signInEmail),
+   비번변경은 pwChange()가 Firebase 콘솔로 안내. denn_admin_pw는 어떤 로그인 경로도 읽지 않았고
+   DEFAULT_PW 미정의로 ReferenceError를 던지던 죽은-보이는 폼이었음(감사 #17). */
 
 function syncC(k,val){document.getElementById('cp-'+k).style.background=val;document.getElementById('h-'+k).value=val;S.brand[k]=val;}
 
