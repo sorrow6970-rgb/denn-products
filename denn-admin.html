@@ -1985,8 +1985,11 @@ function renderWatermarkUI(){if(!S.watermark)return;var tog=document.getElementB
 function syncCT(k,val){if(/^#[0-9A-Fa-f]{6}$/.test(val)){document.getElementById('cp-'+k).style.background=val;document.getElementById('c-'+k).value=val;S.brand[k]=val;}}
 function exportJSON(){var blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='denn_settings_'+new Date().toISOString().slice(0,10)+'.json';a.click();toast('✓ 다운로드');}
 function copyJSON(){navigator.clipboard.writeText(JSON.stringify(S,null,2));toast('✓ 복사');}
-function importJSON(inp){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{S=JSON.parse(e.target.result);dennPersistAdminStateV351(S);renderDash();updateStats();toast('✓ 가져오기 완료');}catch(err){toast('파일 오류','e');}};r.readAsText(f);}
-function resetAll(){if(!confirm('전체 초기화?'))return;S=deep(DEF);saveAll();renderDash();}
+function importJSON(inp){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{S=JSON.parse(e.target.result);/* 2026-07-13(#19): 구버전/부분 JSON을 통째 교체하면 신규 스키마 키 누락 시 후속 null 참조 → load/hydrate와 동일하게 DEF 기본키 백필 */try{Object.keys(DEF).forEach(function(k){if(S[k]===undefined)S[k]=deep(DEF[k]);});}catch(_){}dennPersistAdminStateV351(S);renderDash();updateStats();toast('✓ 가져오기 완료');}catch(err){toast('파일 오류','e');}};r.readAsText(f);}
+/* 2026-07-13(#11): 기존 resetAll은 saveAll()(DOM 리드)을 호출해 초기화 직후에도 stale 입력값을
+   다시 영속화 → 불완전 초기화. saveAll 본체(8중 래핑, 여러 저장흐름 공유)는 건드리지 않고,
+   DEF를 DOM 경유 없이 직접 영속화한 뒤 reload로 전 입력창을 DEF로 재초기화. */
+function resetAll(){if(!confirm('전체 초기화?'))return;S=deep(DEF);try{dennPersistAdminStateV351(S);}catch(e){}location.reload();}
 function clearDL(){if(!confirm('칼선 전체 삭제?'))return;S.models.forEach(function(m){m.dieline=null;m.dlFile=null;m.magsafeDL=null;});toast('삭제됨');}
 function clearCTpls(){if(!confirm('케이스 템플릿 삭제?'))return;S.caseTemplates=[];renderCTpls();updateStats();toast('삭제됨');}
 function clearFTpls(){if(!confirm('업로드 액자 템플릿 삭제?'))return;S.frameTemplates=S.frameTemplates.filter(function(t){return t.type==='builtin';});renderFTplsByCategory(curFCat);updateStats();toast('삭제됨');}
@@ -2006,7 +2009,7 @@ function adminStateScore(A){if(!A||!Object.keys(A).length)return 0;return arrLen
 function mergeUniqueSafe(base,extra,keyFn){base=Array.isArray(base)?base.slice():[];extra=Array.isArray(extra)?extra:[];var seen={};base.forEach(function(v,i){seen[keyFn(v,i)]=true});extra.forEach(function(v,i){var k=keyFn(v,i);if(!seen[k]){seen[k]=true;base.push(v)}});return base}
 function guideBgMergeKey(bg,i){return (bg&&(bg.id||bg.dataUrl||bg.name))||('guide-'+i)}
 function deletedMapSafe(a,b){var m={};(a&&a.deletedGuideBackgroundKeys||[]).concat(b&&b.deletedGuideBackgroundKeys||[]).forEach(function(k){if(k)m[k]=true});return m}
-function mergeAdminStateSafe(a,b){a=a&&typeof a==='object'?a:{};b=b&&typeof b==='object'?b:{};var primary=adminStateScore(a)>=adminStateScore(b)?a:b,secondary=primary===a?b:a,out=Object.assign({},secondary,primary),deleted=deletedMapSafe(a,b);out.deletedGuideBackgroundKeys=Object.keys(deleted);out.guideBackgrounds=mergeUniqueSafe(primary.guideBackgrounds,secondary.guideBackgrounds,guideBgMergeKey).filter(function(bg,i){return !deleted[guideBgMergeKey(bg,i)]});out.uploadedFrameTemplates=mergeUniqueSafe(primary.uploadedFrameTemplates,secondary.uploadedFrameTemplates,function(t,i){return (t&&(t.id||t.dataUrl||t.name))||('tpl-'+i)});out.frameTemplates=mergeUniqueSafe(primary.frameTemplates,secondary.frameTemplates,function(t,i){return (t&&(t.id||t.name))||('base-tpl-'+i)});out.frameSizes=mergeUniqueSafe(primary.frameSizes,secondary.frameSizes,function(s,i){return (s&&(s.id||s.name))||('size-'+i)});out.roomBackgroundSettings=Object.assign({},secondary.roomBackgroundSettings||{},primary.roomBackgroundSettings||{});return out}
+function mergeAdminStateSafe(a,b){a=a&&typeof a==='object'?a:{};b=b&&typeof b==='object'?b:{};/* 배열(가이드배경/템플릿/사이즈)은 개수점수 기준 union+tombstone 유지 */var primary=adminStateScore(a)>=adminStateScore(b)?a:b,secondary=primary===a?b:a,deleted=deletedMapSafe(a,b);/* 2026-07-13(#3): 스칼라/객체 필드는 '개수점수'가 아니라 리비전(__cloudRev/__opRev)이 큰 쪽이 이기게. 기존엔 가이드배경 많은 기기가 리비전과 무관하게 brand/watermark/frameThickness/roomBackgroundSettings 등 최신 스칼라 편집을 구값으로 덮어써 다기기 로그인 시 설정 소실+재전파되던 버그. rev 없거나 같으면 기존 점수 폴백(무회귀). */function revOf(x){return Math.max((x&&x.__cloudRev)||0,(x&&x.__opRev)||0);}var ra=revOf(a),rb=revOf(b),revPri=(ra!==rb)?(ra>rb?a:b):primary,revSec=(revPri===a)?b:a,out=Object.assign({},revSec,revPri);out.deletedGuideBackgroundKeys=Object.keys(deleted);out.guideBackgrounds=mergeUniqueSafe(primary.guideBackgrounds,secondary.guideBackgrounds,guideBgMergeKey).filter(function(bg,i){return !deleted[guideBgMergeKey(bg,i)]});out.uploadedFrameTemplates=mergeUniqueSafe(primary.uploadedFrameTemplates,secondary.uploadedFrameTemplates,function(t,i){return (t&&(t.id||t.dataUrl||t.name))||('tpl-'+i)});out.frameTemplates=mergeUniqueSafe(primary.frameTemplates,secondary.frameTemplates,function(t,i){return (t&&(t.id||t.name))||('base-tpl-'+i)});out.frameSizes=mergeUniqueSafe(primary.frameSizes,secondary.frameSizes,function(s,i){return (s&&(s.id||s.name))||('size-'+i)});/* roomBackgroundSettings 키-머지: 충돌 키는 리비전 큰 쪽이 이김(소비자 위치전파 load-bearing) */out.roomBackgroundSettings=Object.assign({},revSec.roomBackgroundSettings||{},revPri.roomBackgroundSettings||{});return out}
 async function persistState(){var state=window.S||{};saveAdminStateToLocalStorage(state);await saveAdminStateToIndexedDB(state);try{ if(window.dennScheduleCloudSaveV) window.dennScheduleCloudSaveV(); }catch(_){}/* 2026-07-03: 클라우드 자동 백업 예약 */return state;}
 /* 2026-07-02 게시 버튼 핸들러: 현재 상태를 localStorage에 확정(persist) 후 Firebase 고정경로에 게시 → 소비자 부팅 시 자동 반영. */
 async function dennPublishBtnClickV(){
@@ -6727,6 +6730,9 @@ function persistIfChanged(changed){
 }
 function refreshGuideBgCards(){
   if(refreshing)return;
+  /* 2026-07-13(#16): focus/storage 이벤트가 하이드레이트+가이드그리드 재렌더를 유발해
+     편집 중(이름칸 등) 입력을 날리던 문제 → 편집 중이면 재렌더를 미룸(입력 보존). */
+  try{var __ae=document.activeElement;if(__ae&&(__ae.tagName==='INPUT'||__ae.tagName==='TEXTAREA')&&!__ae.disabled&&!__ae.readOnly){clearTimeout(window.__dennGuideRefreshDefer);window.__dennGuideRefreshDefer=setTimeout(refreshGuideBgCards,800);return;}}catch(_){}
   refreshing=true;
   Promise.resolve(typeof window.hydrateState==='function'?window.hydrateState():null).then(function(){
     persistIfChanged(normalizeRoomCenters());
