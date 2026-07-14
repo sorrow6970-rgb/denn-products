@@ -14679,14 +14679,27 @@ input[type=range]{accent-color:#777}
     }
     function finish(){
       try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
-      /* 사이징 반영 뒤(다음 프레임) 스크롤 앵커 재조정 → 그 다음 프레임에 마스크 해제(노출) */
-      requestAnimationFrame(function(){anchorScroll();requestAnimationFrame(function(){try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}});});
+      /* 사이징 직후 동기 앵커 + 노출 직전 프레임마다 재앵커 */
+      anchorScroll();
+      requestAnimationFrame(function(){anchorScroll();requestAnimationFrame(function(){
+        anchorScroll();
+        try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}
+        /* 2026-07-14: ★노출 후 앵커 고정(pin) — 스샷 sT로그 확정: 리셋(scrollTop→0)은 마스크가 걷힌 뒤에도 ~286ms까지 계속됨(디바운스 redraw 120ms 등 늦은 재렌더). 노출 시점에만 앵커를 박으면 그 뒤 리셋이 다시 튐. → rAF 루프로 목표 스크롤을 매 프레임(paint 직전) 재기입해 늦은 리셋을 흡수(회전 경로 dennRotCenterLoopV와 동일 패턴, gen 가드로 다음 진입/종료가 취소). */
+        var g=(window.__dennFsPinGenV=(window.__dennFsPinGenV||0)+1),end=performance.now()+600;
+        (function pin(){if(g!==window.__dennFsPinGenV)return;anchorScroll();if(performance.now()<end)requestAnimationFrame(pin);})();
+      });});
     }
     function step(){
+      /* 2026-07-14: ★스샷영상 sT로그 확정 — 캔버스 크기(411x890)는 진입/종료 내내 일정. 튐의 정체는 '스크롤 위치'가
+         노출 후에도 0↔앵커(예 103)로 튀는 것(마스크 걷힌 +161ms에 sT0=액자 위쪽 → +286ms에 sT103으로 툭 떨어짐).
+         게이트는 scrollTop을 '순수 관찰'(직접 세팅 X)하여 리사이즈/재렌더가 멈춰 스크롤이 실제 정착할 때까지 마스크 유지.
+         (직접 세팅 후 측정하면 늘 목표값으로 읽혀 조기노출 → finish의 pin 루프가 노출 후 리셋을 최종 흡수) */
       var a=document.getElementById('rm-canvas-area');
-      var key=window.innerWidth+'x'+window.innerHeight+'|'+(a?(a.clientWidth+'x'+a.clientHeight):'');
+      var c=document.getElementById('rm-canvas');
+      var r=c&&c.getBoundingClientRect?c.getBoundingClientRect():null;
+      var key=window.innerWidth+'x'+window.innerHeight+'|'+(a?(a.clientWidth+'x'+a.clientHeight):'')+'|'+(r?(Math.round(r.width)+'x'+Math.round(r.height)):'')+'|'+(a?Math.round(a.scrollTop):'');/* ★scrollTop 순수 관찰 */
       if(key===last)stable++;else{stable=0;last=key;}
-      if(stable>=3||performance.now()-t0>1200){finish();return;}
+      if(stable>=4||performance.now()-t0>1500){finish();return;}
       requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
@@ -15983,40 +15996,6 @@ html.denn-frame-fs-lock,html.denn-frame-fs-lock body{overflow:hidden!important;o
   window.dennCloseFrameFsView=close;
   function hideForAdmin(){try{if(isAdmin()){var b=document.querySelector('.denn-action-btn-fsview');if(b)b.style.display='none';}}catch(e){}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hideForAdmin);else hideForAdmin();
-})();
-</script>
-<script>
-/* 2026-07-13 진단(?fsdbg=1 시에만): 세로 전체화면 진입/종료 시 캔버스/뷰포트 치수가 프레임별로 어떻게
-   변하는지 온스크린 로그 → 실기기에서 튐의 정확한 리사이즈 시퀀스 포착. 해결 후 제거 예정. */
-(function(){
-  try{if((location.search||'').indexOf('fsdbg=1')>=0)sessionStorage.setItem('denn_fsdbg','1');}catch(e){}
-  var on=false;try{on=(location.search||'').indexOf('fsdbg=1')>=0||sessionStorage.getItem('denn_fsdbg')==='1';}catch(e){}
-  if(!on)return;
-  var ov=document.createElement('div');
-  ov.style.cssText='position:fixed;top:0;left:0;z-index:2147483647;max-width:100vw;max-height:62vh;overflow:auto;background:rgba(0,0,0,.85);color:#0f0;font:10px/1.35 monospace;padding:4px 6px;white-space:pre;pointer-events:none';
-  function attach(){try{document.body.appendChild(ov);}catch(e){}}
-  if(document.body)attach();else document.addEventListener('DOMContentLoaded',attach);
-  function pad(s,n){s=String(s);while(s.length<n)s+=' ';return s;}
-  function dims(){
-    var c=document.getElementById('rm-canvas'),a=document.getElementById('rm-canvas-area'),m=document.getElementById('room-modal'),h=document.documentElement;
-    var r=c&&c.getBoundingClientRect?c.getBoundingClientRect():null;
-    var fl=((document.fullscreenElement||document.webkitFullscreenElement)?'F':'-')+((m&&m.classList.contains('denn-room-fullscreen-active'))?'A':'-')+(h.classList.contains('denn-room-entering')?'E':'-')+(h.classList.contains('denn-rotate-fs')?'R':'-');
-    return 'iw'+window.innerWidth+'x'+window.innerHeight+' cv'+(c?c.width+'x'+c.height:'?')+'/'+(r?Math.round(r.width)+'x'+Math.round(r.height):'?')+' ar'+(a?a.clientWidth+'x'+a.clientHeight:'?')+' ['+fl+']';
-  }
-  var t0=performance.now(),lines=[];
-  function log(ev){var t=Math.round(performance.now()-t0);lines.push(pad('+'+t+'ms',8)+pad(ev,8)+dims());if(lines.length>26)lines.shift();ov.textContent=lines.join('\n');}
-  var lastSig='',rafOn=false,rafEnd=0;
-  function sample(){if(performance.now()>rafEnd){rafOn=false;return;}var s=dims();if(s!==lastSig){lastSig=s;log('~frame');}requestAnimationFrame(sample);}
-  function startSample(ms){rafEnd=performance.now()+ms;lastSig=dims();if(!rafOn){rafOn=true;requestAnimationFrame(sample);}}
-  ['resize','orientationchange'].forEach(function(e){window.addEventListener(e,function(){log(e);startSample(1200);},true);});
-  ['fullscreenchange','webkitfullscreenchange','msfullscreenchange'].forEach(function(e){document.addEventListener(e,function(){log('fschg');startSample(1200);},true);});
-  document.addEventListener('click',function(e){
-    var el=e.target,id=(el&&el.id)||'';
-    try{if(!id&&el&&el.closest){var b=el.closest('button');if(b)id=b.id||'';}}catch(_){}
-    if(id==='rm-fullscreen-btn'){t0=performance.now();lines=[];log('ENTER');startSample(1600);}
-    else if(id==='rm-fs-exit-float'){log('EXIT');startSample(1600);}
-  },true);
-  log('init');
 })();
 </script>
 </body>
