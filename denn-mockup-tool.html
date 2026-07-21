@@ -16081,12 +16081,25 @@ html.denn-frame-fs-lock,html.denn-frame-fs-lock body{overflow:hidden!important;o
     var fl=((document.fullscreenElement||document.webkitFullscreenElement)?'F':'-')+((m&&m.classList.contains('denn-room-fullscreen-active'))?'A':'-')+(h.classList.contains('denn-room-entering')?'E':'-')+(h.classList.contains('denn-rotate-fs')?'R':'-');
     return 'iw'+window.innerWidth+'x'+window.innerHeight+' cv'+(c?c.width+'x'+c.height:'?')+'/'+(r?Math.round(r.width)+'x'+Math.round(r.height):'?')+' ar'+(a?a.clientWidth+'x'+a.clientHeight:'?')+' sT'+(a?a.scrollTop:'?')+' ['+fl+']';
   }
-  var FSVER='714o';/* 버전스탬프 — 기기 캐시 판별 */
+  var FSVER='s34b';/* 버전스탬프 — 기기 캐시 판별 */
+  /* 2026-07-21: scrollTop writer 추적 — dims 고정인데 sT가 0↔앵커 진동하는 EXIT→모달 떨림의 '0 writer' 특정.
+     rm-canvas-area 인스턴스의 scrollTop setter를 래핑해 마지막 세팅값+호출부(스택 3번째 줄)를 기록. 0 근처 세팅은 별도 보관. */
+  function installSTtrace(){
+    try{
+      var a=document.getElementById('rm-canvas-area');if(!a||a.__stTraced)return;
+      var d=Object.getOwnPropertyDescriptor(Element.prototype,'scrollTop');if(!d||!d.set||!d.get)return;
+      a.__stTraced=true;
+      Object.defineProperty(a,'scrollTop',{configurable:true,
+        get:function(){return d.get.call(this)},
+        set:function(v){var vi=Math.round(v);try{var ln=((new Error().stack||'').split('\n')[2]||'').replace(/^\s*at\s*/,'').slice(-34);window.__dennSTlast=vi+'<-'+ln;if(vi<=5)window.__dennST0=vi+'<-'+ln;}catch(e){}return d.set.call(this,v);}
+      });
+    }catch(e){}
+  }
   var t0=performance.now(),lines=[];
-  function log(ev){var t=Math.round(performance.now()-t0);lines.push(pad('+'+t+'ms',8)+pad(ev,8)+dims());if(lines.length>26)lines.shift();ov.textContent='[FSFIX '+FSVER+']\n'+lines.join('\n');}
+  function log(ev){var t=Math.round(performance.now()-t0);lines.push(pad('+'+t+'ms',8)+pad(ev,8)+dims());if(lines.length>26)lines.shift();ov.textContent='[FSFIX '+FSVER+']\nZ:'+(window.__dennST0||'-')+'\nL:'+(window.__dennSTlast||'-')+'\n'+lines.join('\n');}
   var lastSig='',rafOn=false,rafEnd=0;
   function sample(){if(performance.now()>rafEnd){rafOn=false;return;}var s=dims();if(s!==lastSig){lastSig=s;log('~frame');}requestAnimationFrame(sample);}
-  function startSample(ms){rafEnd=performance.now()+ms;lastSig=dims();if(!rafOn){rafOn=true;requestAnimationFrame(sample);}}
+  function startSample(ms){installSTtrace();rafEnd=performance.now()+ms;lastSig=dims();if(!rafOn){rafOn=true;requestAnimationFrame(sample);}}
   ['resize','orientationchange'].forEach(function(e){window.addEventListener(e,function(){log(e);startSample(2000);},true);});
   ['fullscreenchange','webkitfullscreenchange','msfullscreenchange'].forEach(function(e){document.addEventListener(e,function(){log('fschg');startSample(2000);},true);});
   document.addEventListener('click',function(e){
