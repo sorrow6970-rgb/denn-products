@@ -1,6 +1,6 @@
 # 현재 상태
 
-상태: **001 POC 구현·로컬 자동검증 완료 + Codex 1차(3건)·2차(orientation lock 비동기 경합 1건) 보완 완료 — 실기기 검증 및 Codex 재검증 대기**
+상태: **001 POC 구현·로컬 자동검증 완료 + Codex 1차(3건)·2차(lock 비동기 경합)·3차(StrictMode 재attach 생명주기) 보완 완료 — 실기기 검증 및 Codex 재검증 대기**
 
 ## 현재 결론
 
@@ -34,6 +34,12 @@
 - 문제: `so.lock('landscape')` await 중 FS 종료·detach 시, 늦은 성공이 stale하게 `locked`/결과 `locked`를 복원 + 종료 후 결과가 `locked`에서 안 풀림.
 - 수정(`fullscreen.ts`): (1) 세대 토큰 `lockGen`(모든 시도 시작 시 ++, 종료·detach 시 ++로 무효화). (2) 순수 `isLockStillValid({attemptGen,currentGen,detached,state,inFullscreen})`로 Promise 완료 시 재확인 — 유효할 때만 `locked` 기록. (3) 늦은 성공(무효)은 `releaseOrientation()`으로 안전 unlock. (4) 종료(settling) 시 결과 `locked→idle` 초기화. (5) `detached` 플래그로 detach 후 `setLockResult`/`dispatch` 통지 차단. 단일 권위·단일 rAF 유지, 임의 timer 없음. 경합 유닛 5건 추가(총 18/18).
 - 재검증: typecheck/unit(18)/build(JS gzip 66.25KB)/e2e(10/10) 통과. 운영파일 무변경. **실기기 lock 동작은 NOT TESTED 유지.**
+
+### Codex 3차 판정 "수정 후 재검증" — React StrictMode 재attach 생명주기 1건 보완
+- 문제: StrictMode(dev)가 effect를 attach→detach→attach로 재실행. `detach()`가 `detached=true`로 두는데 `attach()`가 복구 안 해, 재attach 후 `dispatch`/`setLockResult`가 계속 조기 return → FS 관측·lock 처리 비활성.
+- 수정(`fullscreen.ts` attach): (1) 재attach 시 `detached=false` 복구. (2) `lockGen++`로 새 세션 시작(이전 세대 in-flight lock은 `isLockStillValid`로 계속 무효 — 세대 분리 유지). (3) 단일 attach 정책: 기존 handler 제거 후 등록. (4) 각 detach는 자기 handler만 제거(클로저 캡처). 임의 timer 없음.
+- 테스트: `tests/unit/fullscreen-controller.test.ts`(DOM 목, attach→detach→attach 재활성·단일 listener·중복 attach 3건) + `tests/e2e/fullscreen.spec.ts`(FS 버튼 클릭 → 상태처리/정상 fallback 관측, 실제 FS 성공 강제 안 함).
+- 재검증: typecheck/unit(**21/21**, 3파일)/build(JS gzip 66.27KB)/e2e(**11**: viewport 10 + fullscreen 1) 통과. 운영파일 무변경. **실기기 NOT TESTED 유지.**
 
 ## 실기기 검증 — 대기 (NOT TESTED)
 
