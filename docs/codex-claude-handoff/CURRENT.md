@@ -1,6 +1,6 @@
 # 현재 상태
 
-상태: **001 POC 구현·로컬 자동검증 완료 — 실기기 검증 및 Codex 재검증 대기**
+상태: **001 POC 구현·로컬 자동검증 완료 + Codex 1차 판정(수정 후 재검증) 3건 보완 완료 — 실기기 검증 및 Codex 재검증 대기**
 
 ## 현재 결론
 
@@ -23,6 +23,12 @@
 - 자동검증 PASS: `npm ci` / `tsc --noEmit`(strict) / `vitest`(10/10) / `vite build`(JS gzip 65.5KB·CSS 3.3KB) / `playwright`(viewport 10/10).
 - ★ 명암비 발견: 흰색/테라코타 `#C0614A` = **4.16:1**(일반텍스트 AA 미달, AA-large/UI 통과). 토큰 미변경, 대안 계산 제안(`#B85A44` 4.58:1 등) — spec §3.
 - 접근성: scrollable-region-focusable 해결. color-contrast는 토큰 발견사항으로 기록(하드페일 제외).
+
+### Codex 1차 판정 "수정 후 재검증" — 3건 보완 완료 (POC 범위 내)
+1. **orientation lock 실제 시도**: `fullscreen.ts`에 순수 `orientationLockPlan(supported, inFullscreen)` + 컨트롤러가 상태 'active'(전체화면 확인) 후에만 `screen.orientation.lock('landscape')` 시도. 미지원/거부/실패는 비치명적으로 결과만 관측(`OrientationLockResult`), 화면(섹션 E)에 표시. 종료(settling)·detach 시 unlock. 단일 권위·추가 timer 없음. 유닛 3건 추가(총 13/13).
+2. **LAN 주소 고정 제거**: device-matrix에서 특정 IP를 기준으로 기록하지 않고 `http://<현재-PC-LAN-IP>:4173` + 현재 IP 확인 안내(예시 IP는 예시로만 명시).
+3. **NOT TESTED 명확화**: 14항목·메타 표 바로 위에 "빈 셀=NOT TESTED, 실제 결과 전 PASS/FAIL 금지" 규칙 명시.
+- 재검증: typecheck/unit(13)/build(JS gzip 66.1KB)/e2e(10/10) 전부 통과. 운영파일 무변경.
 
 ## 실기기 검증 — 대기 (NOT TESTED)
 
