@@ -758,7 +758,13 @@ async function dennCloudLoadAdminV(){
     if(!remote||typeof remote!=='object')return;
     var localRev=(window.S&&window.S.__cloudRev)||0, remoteRev=remote.__cloudRev||0;
     if(remoteRev>localRev){
-      try{localStorage.setItem('denn_admin_pre_cloud_'+Date.now(),JSON.stringify(window.S));}catch(_){}/* 채택 전 로컬 백업 */
+      try{localStorage.setItem('denn_admin_pre_cloud_'+Date.now(),JSON.stringify(window.S));
+        /* 2026-07-21: pre_cloud 백업 누적 방지 — 최신 2개만 유지. 클라우드 로드마다 ~600KB 백업이
+           정리 없이 무한 누적 → localStorage 5MB 포화 → 쿼터 데드락 재발의 진짜 근본 원인이었음.
+           데이터는 클라우드(admin/state.json)+IndexedDB에 안전하므로 오래된 로컬 백업은 폐기 안전. */
+        try{var __pc=Object.keys(localStorage).filter(function(k){return k.indexOf('denn_admin_pre_cloud_')===0;}).sort();
+          while(__pc.length>2){localStorage.removeItem(__pc.shift());}}catch(_p){}
+      }catch(_){}/* 채택 전 로컬 백업 */
       window.S=(typeof mergeAdminStateSafe==='function')?mergeAdminStateSafe(remote,window.S):remote;/* 병합(배열 union+tombstone 보존) */
       window.S.__cloudRev=remoteRev;
       try{Object.keys(DEF).forEach(function(k){if(window.S[k]===undefined)window.S[k]=deep(DEF[k]);});}catch(_){}
