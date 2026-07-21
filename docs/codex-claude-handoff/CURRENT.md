@@ -1,13 +1,13 @@
 # 현재 상태
 
-상태: **⛔ FAIL 2건 로컬 수정 완료·실기기 재검증 대기 — (1) 확대 접근성(스펙 002) (2) Canvas 3:4 비율(스펙 003). 둘 다 로컬 자동검증 통과, 사용자 실기기 재검증 전까지 FAIL·001 종료·Tailwind 확정 보류 유지**
+상태: **✅ 스펙 002·003 자동/실기기 4환경 재검증 PASS — 확대 접근성·Canvas 3:4 FAIL 해소, 다음 작업 = 카라멜 앰버 반영 스펙**
 
 > 기본 배율 1~14: iPhone Safari·Samsung Internet·카카오 인앱 = 전체 **PASS**(Android Chrome NOT TESTED). 자동검증 Codex 승인 기준 HEAD `f4dae95`.
-> **확대(200%/핀치) 접근성 게이트 = 4환경 공통 FAIL(발견).** 브라우저 표준 핀치 확대 동작과 POC의 `position:fixed` 하단 CTA 레이아웃 선택 사이의 호환성 결함 → 접근성 결정서 §4·§14 출시 차단.
+> **확대(200%/핀치) 접근성 게이트:** 최초 4환경 공통 FAIL을 발견했으나 스펙 002 수정·재검증으로 해소.
 > **스펙 002 구현 완료(로컬):** 순수 `computeViewportLayout(scale>1.01→isZoomed, keyboardInset=0)`로 확대/키보드 구분 → `.page[data-zoomed]`로 확대 시 `.bottomnav` fixed→흐름 전환 + `.content` 120px 예약여백 정상화 + 키보드 inset 오인 제거. 색상·sheet·역스케일 미변경. 자동검증 typecheck 0 / unit 30 / build(JS gzip 66.44KB) / e2e 11 통과.
-> **다음 = 사용자 실기기 4환경(iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱) 확대 재검증.** 4환경 PASS 전까지 접근성 FAIL·001 종료·Tailwind 확정 **보류 유지**(스펙 002 DONE §5).
+> **스펙 002 실기기 완료:** iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 확대 재검증 전부 **PASS**. 접근성 확대 FAIL 해소.
 > 색상 결정 복구: **카라멜 앰버 `#B0894E` / `#C6A46B` / `#F2E9DA` 확정**. POC 코드·테스트·PNG 반영은 별도 후속 색상 스펙(스펙 002 구현에 미혼합).
-> ⛔ **Canvas 3:4 비율 FAIL — 스펙 003 로컬 구현 완료:** `.canvas-wrap`를 `width:min(100%,45vh)+aspect-ratio:3/4+margin-inline:auto`로 단일화(`max-height:60vh`·`calc` 제거) + 전체 viewport E2E 비율 검사(`abs(w/h-0.75)<=0.01`) 추가. Canvas JS/DPR·색상·sheet·Fullscreen·002 코드 미변경. 자동검증 typecheck 0/unit 30/build/e2e 11 통과, landscape 3개 전부 ratio 0.75. **다음 = 사용자 실기기 4환경 세로↔가로 회전 재검증**(NOT TESTED 유지). 스펙 002·색상과 분리.
+> **스펙 003 실기기 완료:** 4환경 세로↔가로 Canvas `3:4`·DPR 재검증 전부 **PASS**. 카카오 가로 FAIL 해소. Android Chrome 전체 1~14는 여전히 일부 미검증이지만 확대·Canvas 게이트는 PASS 근거 확보.
 
 ## 현재 결론
 
@@ -16,7 +16,7 @@
 - Modern Studio(B) 디자인 방향은 확정됐다.
 - 기술 스택은 아직 후보이며 전체 스캐폴드 승인이 나지 않았다.
 - 001 POC가 구현되고 로컬 자동검증을 통과했다.
-- **Tailwind v4/v3.4는 실기기 CSS.supports 근거 부족으로 결정 보류.**
+- **Tailwind v4 기능 근거는 4환경에서 확보됨.** 최종 v4/v3.4 결정은 카라멜 앰버 반영 후 사용자 승인 대기.
 
 ## 브랜치/기준
 
@@ -61,12 +61,10 @@
 
 ## 다음 작업
 
-0. **(차단) 스펙 002 실기기 재검증** — 구현·로컬 자동검증 완료. 남은 것 = **사용자가 실기기 4환경에서 확대 재검증** → device-matrix 확대 게이트 행 갱신. 4환경 PASS 전까지 아래 진행 금지·FAIL/보류 유지.
-0-b. **(차단) 스펙 003 실기기 재검증** — CSS 최소 수정·전체 viewport E2E 비율 검사 **구현·로컬 자동검증 완료**. 남은 것 = **사용자 실기기 4환경 세로↔가로 회전 재검증** → device-matrix Canvas 게이트 행 갱신. 4환경 PASS 전까지 FAIL/보류 유지.
-1. (선택) **Android Chrome 실기기 검증** → device-matrix 마지막 열 채우기.
-2. **Tailwind v4/v3.4 확정** — 실기기 CSS.supports 근거 확보됨(3환경 전부 v4 기능 지원 → v4 지지). **단 001 종료 보류 중이라 확정도 보류.** Codex 판정 + 사용자 승인으로 확정.
-3. **별도 색상 반영 스펙** — 카라멜 앰버 `#B0894E` / `#C6A46B` / `#F2E9DA`를 POC·테스트·PNG에 일괄 반영하고 명암비 재검증.
-4. 이후 Tailwind·전체 스택 확정 → 다음 신규 스펙.
+1. **별도 색상 반영 스펙** — 카라멜 앰버 `#B0894E` / `#C6A46B` / `#F2E9DA`를 POC·테스트·PNG에 일괄 반영하고 명암비 재검증.
+2. **Tailwind v4/v3.4 확정** — 4환경 기능 근거를 정리해 Codex 판정 + 사용자 승인.
+3. (선택) Android Chrome 나머지 기본배율 항목을 채워 전체 1~14 매트릭스 완성.
+4. 이후 전체 스택 확정 → 다음 신규 스펙.
 - **주의:** 팔레트 결정은 문서화됐지만 스펙 002 구현에 색상 변경을 섞지 않는다.
 
 ## 시작 조건
