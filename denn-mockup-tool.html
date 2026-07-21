@@ -14739,7 +14739,7 @@ input[type=range]{accent-color:#777}
       if(!__cov){__cov=document.createElement('div');__cov.id='denn-fs-cover';__cov.innerHTML='<div class="dbc-logo">DENN <em>PRODUCTS</em></div><div class="dbc-spin"></div>';(document.body||document.documentElement).appendChild(__cov);}
       __cov.classList.add('on');
     }catch(e){}
-    var last='',stable=0,t0=performance.now();
+    var last='',t0=performance.now(),lastClampMs=t0,dimsChangeMs=t0;
     function tgtNow(a){return (a&&window.dennPortraitFrameAnchorTopV)?dennPortraitFrameAnchorTopV(a):-1;}
     function anchorScroll(){
       try{var a=document.getElementById('rm-canvas-area');if(a)window.dennApplyRoomScrollV(a,{force:true});}catch(e){}/* 2026-07-21: 단일 권위로 통합(무조건 적용=force:true). 구 else 미가드 센터는 통합 함수의 06-29 innerWidth 가드가 흡수(세로 101누출 방지). */
@@ -14759,21 +14759,19 @@ input[type=range]{accent-color:#777}
     }
     function step(){
       var a=document.getElementById('rm-canvas-area');
-      /* 2026-07-21 v2: ★'클램프 정지'까지 마스크 유지 — 영상 확정(s35): dims(iw/ih/ar) 오버레이 샘플상 안정이어도
-         종료 시 모바일 URL바 정착 애니메이션이 그 뒤로도 scrollTop을 계속 0으로 클램프(Z=항상 '-'=코드 아님, 브라우저).
-         dims 기준 마스크 걷힘은 클램프가 아직 진행 중인데 걷어버려 떨림 노출. → 보정(anchorScroll) '전'에 sT가 앵커에서
-         떨어졌는지(=이번 프레임 클램프 발생)를 직접 감지하고, dims 안정 + 클램프 없음이 연속될 때만 마스크 걷음.
-         클램프 신호가 곧 'URL바 정착 완료' 신호. */
+      /* 2026-07-21 v3: ★'마지막 클램프 이후 400ms'까지 마스크 유지 — 영상 확정(s36): 종료 시 모바일 URL바 정착이
+         scrollTop을 0으로 '드문드문'(~200-280ms 간격) 클램프(Z=항상 '-'=브라우저, 코드 아님). s36의 '클램프 없는 8프레임
+         (~130ms) 연속' 조건은 클램프 간격(>130ms)보다 좁아 그 사이에 마스크를 걷어 잔여 떨림 노출. → 시간 기반으로 전환:
+         마지막 클램프 후 400ms 무클램프 + dims 120ms 무변화일 때만 걷음(드문 클램프까지 흡수). 캡 4000ms. */
+      var now=performance.now();
       var tprev=tgtNow(a);
-      var clamped=(tprev>=0&&a&&(tprev-a.scrollTop)>3);
+      if(tprev>=0&&a&&(tprev-a.scrollTop)>3)lastClampMs=now;/* 이번 프레임 브라우저 클램프 감지(보정 전) */
       anchorScroll();
       var c=document.getElementById('rm-canvas');
       var r=c&&c.getBoundingClientRect?c.getBoundingClientRect():null;
       var key=window.innerWidth+'x'+window.innerHeight+'|'+(a?(a.clientWidth+'x'+a.clientHeight):'')+'|'+(r?(Math.round(r.width)+'x'+Math.round(r.height)):'');
-      if(key!==last){last=key;stable=0;}
-      else if(clamped){stable=0;}
-      else{stable++;}
-      if((stable>=8&&performance.now()-t0>=420)||performance.now()-t0>3200){finish();return;}
+      if(key!==last){last=key;dimsChangeMs=now;}
+      if((now-dimsChangeMs>=120&&now-lastClampMs>=400&&now-t0>=420)||now-t0>4000){finish();return;}
       requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
@@ -16089,7 +16087,7 @@ html.denn-frame-fs-lock,html.denn-frame-fs-lock body{overflow:hidden!important;o
     var fl=((document.fullscreenElement||document.webkitFullscreenElement)?'F':'-')+((m&&m.classList.contains('denn-room-fullscreen-active'))?'A':'-')+(h.classList.contains('denn-room-entering')?'E':'-')+(h.classList.contains('denn-rotate-fs')?'R':'-');
     return 'iw'+window.innerWidth+'x'+window.innerHeight+' cv'+(c?c.width+'x'+c.height:'?')+'/'+(r?Math.round(r.width)+'x'+Math.round(r.height):'?')+' ar'+(a?a.clientWidth+'x'+a.clientHeight:'?')+' sT'+(a?a.scrollTop:'?')+' ['+fl+']';
   }
-  var FSVER='s36';/* 버전스탬프 — 기기 캐시 판별 */
+  var FSVER='s37';/* 버전스탬프 — 기기 캐시 판별 */
   /* 2026-07-21: scrollTop writer 추적 — dims 고정인데 sT가 0↔앵커 진동하는 EXIT→모달 떨림의 '0 writer' 특정.
      rm-canvas-area 인스턴스의 scrollTop setter를 래핑해 마지막 세팅값+호출부(스택 3번째 줄)를 기록. 0 근처 세팅은 별도 보관. */
   function installSTtrace(){
