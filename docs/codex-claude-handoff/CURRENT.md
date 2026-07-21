@@ -1,6 +1,6 @@
 # 현재 상태
 
-상태: **001 POC 구현·로컬 자동검증 완료 + Codex 1차 판정(수정 후 재검증) 3건 보완 완료 — 실기기 검증 및 Codex 재검증 대기**
+상태: **001 POC 구현·로컬 자동검증 완료 + Codex 1차(3건)·2차(orientation lock 비동기 경합 1건) 보완 완료 — 실기기 검증 및 Codex 재검증 대기**
 
 ## 현재 결론
 
@@ -29,6 +29,11 @@
 2. **LAN 주소 고정 제거**: device-matrix에서 특정 IP를 기준으로 기록하지 않고 `http://<현재-PC-LAN-IP>:4173` + 현재 IP 확인 안내(예시 IP는 예시로만 명시).
 3. **NOT TESTED 명확화**: 14항목·메타 표 바로 위에 "빈 셀=NOT TESTED, 실제 결과 전 PASS/FAIL 금지" 규칙 명시.
 - 재검증: typecheck/unit(13)/build(JS gzip 66.1KB)/e2e(10/10) 전부 통과. 운영파일 무변경.
+
+### Codex 2차 판정 "수정 후 재검증" — orientation lock 비동기 종료 경합 1건 보완
+- 문제: `so.lock('landscape')` await 중 FS 종료·detach 시, 늦은 성공이 stale하게 `locked`/결과 `locked`를 복원 + 종료 후 결과가 `locked`에서 안 풀림.
+- 수정(`fullscreen.ts`): (1) 세대 토큰 `lockGen`(모든 시도 시작 시 ++, 종료·detach 시 ++로 무효화). (2) 순수 `isLockStillValid({attemptGen,currentGen,detached,state,inFullscreen})`로 Promise 완료 시 재확인 — 유효할 때만 `locked` 기록. (3) 늦은 성공(무효)은 `releaseOrientation()`으로 안전 unlock. (4) 종료(settling) 시 결과 `locked→idle` 초기화. (5) `detached` 플래그로 detach 후 `setLockResult`/`dispatch` 통지 차단. 단일 권위·단일 rAF 유지, 임의 timer 없음. 경합 유닛 5건 추가(총 18/18).
+- 재검증: typecheck/unit(18)/build(JS gzip 66.25KB)/e2e(10/10) 통과. 운영파일 무변경. **실기기 lock 동작은 NOT TESTED 유지.**
 
 ## 실기기 검증 — 대기 (NOT TESTED)
 
