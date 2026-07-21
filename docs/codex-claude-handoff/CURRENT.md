@@ -1,11 +1,12 @@
 # 현재 상태
 
-상태: **⛔ 확대 접근성 FAIL — 스펙 002 발행, Claude 구현 대기(001 종료·Tailwind 확정 보류)**
+상태: **⛔ 확대 접근성 FAIL — 스펙 002 로컬 구현 완료·자동검증 통과, 사용자 실기기 4환경 재검증 대기(001 종료·Tailwind 확정 보류 유지)**
 
 > 기본 배율 1~14: iPhone Safari·Samsung Internet·카카오 인앱 = 전체 **PASS**(Android Chrome NOT TESTED). 자동검증 Codex 승인 기준 HEAD `f4dae95`.
-> **그러나 확대(200%/핀치) 접근성 게이트 = 4환경 공통 FAIL.** 브라우저 표준 핀치 확대 동작과 POC의 `position:fixed` 하단 CTA 레이아웃 선택 사이의 호환성 결함 → 접근성 결정서 §4·§14 출시 차단.
-> 처리: 원인분석 완료. 확대 시 `.bottomnav` 흐름 전환과 확대 축소분의 키보드 inset 오인을 함께 해결하는 **`docs/rebuild/specs/002-mobile-zoom-cta-accessibility.md` 발행 완료**. 다음 = Claude의 스펙 범위 구현·자동검증 → 사용자 실기기 4환경 재검증. 001 종료·Tailwind 확정은 계속 **보류**.
-> 색상 결정 복구: **카라멜 앰버 `#B0894E` / `#C6A46B` / `#F2E9DA` 확정**. 결정 문서화 완료, POC 코드·테스트·PNG 반영은 스펙 002 완료 후 별도 작업으로 대기.
+> **확대(200%/핀치) 접근성 게이트 = 4환경 공통 FAIL(발견).** 브라우저 표준 핀치 확대 동작과 POC의 `position:fixed` 하단 CTA 레이아웃 선택 사이의 호환성 결함 → 접근성 결정서 §4·§14 출시 차단.
+> **스펙 002 구현 완료(로컬):** 순수 `computeViewportLayout(scale>1.01→isZoomed, keyboardInset=0)`로 확대/키보드 구분 → `.page[data-zoomed]`로 확대 시 `.bottomnav` fixed→흐름 전환 + `.content` 120px 예약여백 정상화 + 키보드 inset 오인 제거. 색상·sheet·역스케일 미변경. 자동검증 typecheck 0 / unit 30 / build(JS gzip 66.44KB) / e2e 11 통과.
+> **다음 = 사용자 실기기 4환경(iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱) 확대 재검증.** 4환경 PASS 전까지 접근성 FAIL·001 종료·Tailwind 확정 **보류 유지**(스펙 002 DONE §5).
+> 색상 결정 복구: **카라멜 앰버 `#B0894E` / `#C6A46B` / `#F2E9DA` 확정**. POC 코드·테스트·PNG 반영은 별도 후속 색상 스펙(스펙 002 구현에 미혼합).
 
 ## 현재 결론
 
@@ -59,7 +60,7 @@
 
 ## 다음 작업
 
-0. **(차단) 스펙 002 구현·재검증** — `docs/rebuild/specs/002-mobile-zoom-cta-accessibility.md`에 따라 Claude 구현·자동검증 → 사용자 실기기 4환경 재검증. 완료 전까지 아래 1~3 진행 금지.
+0. **(차단) 스펙 002 실기기 재검증** — 구현·로컬 자동검증 완료. 남은 것 = **사용자가 실기기 4환경에서 확대 재검증** → device-matrix 확대 게이트 행 갱신. 4환경 PASS 전까지 아래 1~3 진행 금지·FAIL/보류 유지.
 1. (선택) **Android Chrome 실기기 검증** → device-matrix 마지막 열 채우기.
 2. **Tailwind v4/v3.4 확정** — 실기기 CSS.supports 근거 확보됨(3환경 전부 v4 기능 지원 → v4 지지). **단 001 종료 보류 중이라 확정도 보류.** Codex 판정 + 사용자 승인으로 확정.
 3. **별도 색상 반영 스펙** — 카라멜 앰버 `#B0894E` / `#C6A46B` / `#F2E9DA`를 POC·테스트·PNG에 일괄 반영하고 명암비 재검증.

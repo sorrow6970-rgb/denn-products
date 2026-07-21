@@ -123,6 +123,12 @@ canvas {
   display: grid;
   gap: 14px;
 }
+/* Zoom state (spec 002): the fixed CTA drops into document flow, so the 120px bottom reserve —
+   which existed only to clear the fixed bar — becomes an unwanted empty gap. Restore normal
+   content spacing. Reverts automatically when the zoom flag clears. */
+.page[data-zoomed='true'] .content {
+  padding-bottom: 14px;
+}
 .card {
   background: var(--card);
   border: 1px solid var(--line);
@@ -283,6 +289,13 @@ canvas {
 .bottomnav .btn {
   flex: 1 1 0;
   min-width: 0;
+}
+/* Zoom state (spec 002): un-fix the CTA. A position:fixed bar is anchored to the layout
+   viewport, so pinch-zoom magnifies it to a full-layout-width bar that clips at the edges and
+   covers the content. When zoomed it flows at document end (already after <main>) and is reached
+   by scrolling; --kbd-inset is 0 while zoomed so it does not inflate. Reverts on zoom end. */
+.page[data-zoomed='true'] .bottomnav {
+  position: static;
 }
 
 /* Bottom sheet */

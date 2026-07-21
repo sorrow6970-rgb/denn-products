@@ -82,6 +82,47 @@ export function measureUnits(): UnitMeasurements {
   return { vh100: make('vh'), svh100: make('svh'), dvh100: make('dvh') };
 }
 
+/** Pinch-zoom threshold: a visual-viewport scale above this counts as zoomed. Single source
+ *  of truth for the magic number (spec 002 §1) — do not duplicate this value elsewhere. */
+export const ZOOM_SCALE_THRESHOLD = 1.01;
+
+export interface ViewportLayoutInput {
+  innerHeight: number;
+  vvHeight: number;
+  offsetTop: number;
+  scale: number;
+}
+
+export interface ViewportLayout {
+  /** True when the user has pinch-zoomed (visual viewport magnified). */
+  isZoomed: boolean;
+  /** Virtual-keyboard inset in integer px; forced to 0 while zoomed so the fixed CTA does not
+   *  mistake the zoom-induced viewport shrink for a keyboard and balloon its bottom padding. */
+  keyboardInset: number;
+}
+
+/**
+ * Single pure layout decision for the viewport owner (spec 002 §1).
+ *
+ * Pinch-zoom also shrinks `visualViewport.height`, so the original
+ * `innerHeight - vvHeight - offsetTop` keyboard heuristic mistakes zoom for a keyboard and inflates
+ * the fixed CTA. When `scale` exceeds the threshold we treat it as zoom (inset 0, CTA drops to
+ * document flow via `isZoomed`); otherwise the original keyboard-inset meaning is preserved.
+ * Missing/NaN/abnormal numbers fall back to the safe default (not zoomed, no inset).
+ */
+export function computeViewportLayout(input: ViewportLayoutInput): ViewportLayout {
+  const { innerHeight, vvHeight, offsetTop, scale } = input;
+  const finite = (n: number): boolean => Number.isFinite(n);
+  if (!finite(innerHeight) || !finite(vvHeight) || !finite(offsetTop) || !finite(scale)) {
+    return { isZoomed: false, keyboardInset: 0 };
+  }
+  if (scale > ZOOM_SCALE_THRESHOLD) {
+    return { isZoomed: true, keyboardInset: 0 };
+  }
+  const keyboardInset = Math.max(0, Math.round(innerHeight - vvHeight - offsetTop));
+  return { isZoomed: false, keyboardInset };
+}
+
 export function readDiagnostics(): Diagnostics {
   const vv = window.visualViewport;
   const so = (screen as Screen & { orientation?: { type?: string } }).orientation;

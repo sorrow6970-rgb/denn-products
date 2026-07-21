@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { readDiagnostics, type Diagnostics } from './lib/diagnostics';
+import { computeViewportLayout, readDiagnostics, type Diagnostics } from './lib/diagnostics';
 import { contrastRatio, round2, wcagLevel } from './lib/contrast';
 import {
   FullscreenController,
@@ -52,21 +52,36 @@ function useSafeErrors(): string[] {
   return errors;
 }
 
-/** Single layout owner: one place reacts to viewport/keyboard changes and writes CSS vars. */
-function useViewportOwner(): Diagnostics {
-  const [diag, setDiag] = useState<Diagnostics>(() => readDiagnostics());
+interface ViewportOwnerState {
+  diag: Diagnostics;
+  /** Pinch-zoom flag from the single pure layout decision (spec 002). */
+  isZoomed: boolean;
+}
+
+/** Single layout owner: one place reacts to viewport/keyboard changes and writes CSS state.
+ *  Zoom vs keyboard is decided by the pure computeViewportLayout — no second state authority. */
+function useViewportOwner(): ViewportOwnerState {
+  const [state, setState] = useState<ViewportOwnerState>(() => ({
+    diag: readDiagnostics(),
+    isZoomed: false,
+  }));
   useEffect(() => {
     let raf = 0;
     const update = (): void => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
         const next = readDiagnostics();
-        // keyboard inset: how much the visual viewport is shrunk from the layout viewport
-        const kbd = next.visualViewport
-          ? Math.max(0, window.innerHeight - next.visualViewport.height - next.visualViewport.offsetTop)
-          : 0;
-        document.documentElement.style.setProperty('--kbd-inset', `${Math.round(kbd)}px`);
-        setDiag(next);
+        const vv = window.visualViewport;
+        // One pure decision distinguishes pinch-zoom from a virtual-keyboard shrink so the
+        // fixed CTA neither inflates (zoom mistaken for keyboard) nor loses keyboard handling.
+        const layout = computeViewportLayout({
+          innerHeight: window.innerHeight,
+          vvHeight: vv ? vv.height : Number.NaN,
+          offsetTop: vv ? vv.offsetTop : Number.NaN,
+          scale: vv ? vv.scale : Number.NaN,
+        });
+        document.documentElement.style.setProperty('--kbd-inset', `${layout.keyboardInset}px`);
+        setState({ diag: next, isZoomed: layout.isZoomed });
       });
     };
     update();
@@ -83,7 +98,7 @@ function useViewportOwner(): Diagnostics {
       vv?.removeEventListener('scroll', update);
     };
   }, []);
-  return diag;
+  return state;
 }
 
 interface CanvasInfo {
@@ -157,7 +172,7 @@ function SupportBadge({ ok, label }: { ok: boolean; label: string }): React.JSX.
 }
 
 export function App(): React.JSX.Element {
-  const diag = useViewportOwner();
+  const { diag, isZoomed } = useViewportOwner();
   const errors = useSafeErrors();
   const { ref: canvasRef, info: canvasInfo } = useCanvasDpr();
 
@@ -196,7 +211,7 @@ export function App(): React.JSX.Element {
   const caps = controllerRef.current.getCapabilities();
 
   return (
-    <div className="page">
+    <div className="page" data-zoomed={isZoomed ? 'true' : undefined}>
       <header className="brandbar">
         <h1>DENN · 플랫폼 호환성 POC</h1>
         <span className="note" style={{ color: 'rgba(255,255,255,.85)' }}>{diag.browserCategory}</span>
