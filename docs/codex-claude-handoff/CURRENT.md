@@ -1,10 +1,11 @@
 # 현재 상태
 
-상태: **001 POC Codex 최종 승인 + 실기기 검증 완료(iPhone·Samsung·카카오 PASS, Android Chrome NOT TESTED) — 다음 작업 = Tailwind 확정**
+상태: **⛔ 확대 접근성 FAIL — 001 최종 종료·Tailwind 확정 보류(원인분석 완료 · 수정 방향 A 확정 · Codex 구현 스펙 대기)**
 
-> Codex 최종 재검증: 001 플랫폼 호환성 POC 로컬 구현·자동검증 **승인 가능**. 승인 기준 HEAD `f4dae95`.
-> 실기기 검증(2026-07-21): iPhone Safari·Samsung Internet·카카오 인앱 = 1~14 전체 **PASS**. Android Chrome = **NOT TESTED**(추정 금지).
-> Tailwind v4/v3.4 = 실기기 CSS.supports 근거 확보(v4 지지) · 확정은 Codex/사용자 · Firebase·전체 스캐폴드·배포 계속 대기.
+> 기본 배율 1~14: iPhone Safari·Samsung Internet·카카오 인앱 = 전체 **PASS**(Android Chrome NOT TESTED). 자동검증 Codex 승인 기준 HEAD `f4dae95`.
+> **그러나 확대(200%/핀치) 접근성 게이트 = 4환경 공통 FAIL.** 브라우저 표준 핀치 확대 동작과 POC의 `position:fixed` 하단 CTA 레이아웃 선택 사이의 호환성 결함 → 접근성 결정서 §4·§14 출시 차단.
+> 처리: 즉흥 패치 금지. 원인분석 완료 + 수정 방향 A 확정(확대 시 `.bottomnav`를 흐름 전환, 중복 CTA·역스케일 미사용, 시트 미수정 — 상세는 001 핸드오프). 다음 = **Codex 구현 스펙 발행 → Claude 구현 → 실기기 재검증**. 그 전까지 코드·CSS·테스트 무변경, 001 종료·Tailwind 확정 **보류**.
+> 주의(사용자 지시): 색상 토큰 내일 카라멜 계열 일괄 변경 예정 → 오늘 색상 변경 금지.
 
 ## 현재 결론
 
@@ -58,8 +59,9 @@
 
 ## 다음 작업
 
+0. **(차단) 확대 접근성 FAIL 수정** — 원인분석 완료 + 수정 방향 A 확정. 다음 = **Codex 구현 스펙 발행** → Claude 구현 → 실기기 재검증. 스펙 발행 전까지 코드·CSS·테스트 무변경, 아래 1~3 진행 금지.
 1. (선택) **Android Chrome 실기기 검증** → device-matrix 마지막 열 채우기.
-2. **Tailwind v4/v3.4 확정** — 실기기 CSS.supports 근거 확보됨(3환경 전부 v4 기능 지원 → v4 지지). Codex 판정 + 사용자 승인으로 확정.
+2. **Tailwind v4/v3.4 확정** — 실기기 CSS.supports 근거 확보됨(3환경 전부 v4 기능 지원 → v4 지지). **단 001 종료 보류 중이라 확정도 보류.** Codex 판정 + 사용자 승인으로 확정.
 3. 이후 전체 스택 확정 → 스펙 002.
 - **주의(사용자 지시): 색상 토큰 내일 카라멜 계열로 일괄 변경 예정 → 오늘 색상·코드·테스트·스캐폴드·배포 금지.**
 
