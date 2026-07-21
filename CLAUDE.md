@@ -8,7 +8,7 @@
 - 기존 `denn-mockup-tool.html`, `denn-admin.html`, 현재 Hosting 경로는 cutover 전까지 이동·삭제·이름 변경하지 않는다.
 - 리빌드는 기능·데이터 계약을 검증하며 점진적으로 진행한다.
 - UI/UX는 **Modern Studio(B)**로 리뉴얼한다.
-- 확정 포인트 색상은 **테라코타 `#C0614A`**, 카카오 CTA는 `#FEE500`이다.
+- 최신 확정 포인트 팔레트는 **카라멜 앰버 `#B0894E` / `#C6A46B` / `#F2E9DA`**, 카카오 CTA는 `#FEE500`이다. 현재 POC 코드·테스트·PNG 반영은 별도 스펙 대기 상태다.
 - Codex는 분석·스펙·검증을 담당하고 Claude Code는 구현·테스트·커밋·푸시·승인된 배포를 담당한다.
 - 기술 스택은 아직 후보 상태다. 사용자 최종 확정 전 패키지를 설치하거나 스캐폴드를 만들지 않는다.
 
@@ -77,6 +77,7 @@
 - 접근성: `docs/codex-claude-handoff/decisions/2026-07-21-accessibility.md`
 - 의존성·기술 선택: `docs/codex-claude-handoff/decisions/2026-07-21-dependency-and-technology-policy.md`
 - PC 간 핸드오프·재개: `docs/codex-claude-handoff/decisions/2026-07-21-cross-device-handoff-and-resume.md`
+- 디자인 팔레트: `docs/codex-claude-handoff/decisions/2026-07-21-caramel-amber-palette.md`
 
 ## 7. 확정 디자인과 참고 자료
 

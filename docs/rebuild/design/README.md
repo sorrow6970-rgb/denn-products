@@ -1,10 +1,11 @@
 # DENN 디자인 시스템 — 방향 확정: **Modern Studio (무드 B)**
 
 > 확정: 2026-07-21. 리빌드의 모든 신규 UI는 이 토큰/규격을 기준으로 만든다.
-> 시안 이미지: 이 폴더의 `*-B.png` (데스크톱 목업툴 / 모바일 / 어드민 / 시안공간).
+> 최신 팔레트 결정: `../../codex-claude-handoff/decisions/2026-07-21-caramel-amber-palette.md`.
+> 시안 이미지 `*-B.png` 4종은 현재 기존 테라코타 버전이며, 카라멜 앰버 재렌더·검증 대기 상태다.
 
 ## 방향 요약
-깨끗한 화이트 베이스 + 뉴트럴 그레이 구조 + **테라코타 포인트 1색** + 부드러운 라운드 카드/그림자.
+깨끗한 화이트 베이스 + 뉴트럴 그레이 구조 + **카라멜 앰버 포인트 1색** + 부드러운 라운드 카드/그림자.
 미니멀·세련되면서 따뜻함이 있는 "모던 스튜디오" 톤. 정보 많은 어드민·에디터에 강하고, 카카오 옐로와 충돌 없음.
 
 ## 컬러 토큰
@@ -17,10 +18,10 @@
 | `--ink` | `#191A1D` | 기본 텍스트/제목 |
 | `--muted` | `#71717A` | 보조 텍스트·아이콘 |
 | `--line` | `#EAEAED` | 보더·구분선 |
-| `--accent` | `#C0614A` | **포인트(테라코타)** — 주요 버튼, 활성 상태, 강조 |
-| `--accent-2` | `#D8846F` | 그라데이션/호버용 밝은 테라코타 |
-| `--accent-ink` | `#FFFFFF` | accent 위 텍스트 |
-| `--accent-soft` | `#F6E6E1` | accent 배경 틴트(활성 칩/태그/뱃지) |
+| `--accent` | `#B0894E` | **포인트(카라멜 앰버)** — 주요 버튼, 활성 상태, 강조 |
+| `--accent-2` | `#C6A46B` | 그라데이션/호버용 밝은 카라멜 앰버 |
+| `--accent-ink` | **명암비 검증 후 확정** | accent 위 텍스트(흰색을 확정값으로 간주하지 않음) |
+| `--accent-soft` | `#F2E9DA` | accent 배경 틴트(활성 칩/태그/뱃지) |
 | `--kakao` | `#FEE500` / 텍스트 `#191600` | 카카오 주문 버튼(**브랜드 고정, 변경 금지**) |
 | 성공 | `#5BA35B` / 배경 `#E4EFE4` | 정상·확정 상태 |
 
@@ -37,10 +38,10 @@
 - 보더: 1px `--line`. 활성 요소는 `--accent` 보더 + 얇은 링.
 
 ## 컴포넌트 규격
-- **Button / primary**: bg `--accent`, text 흰색, radius 12, padding 11×16, weight 600, 아이콘+라벨 gap 8.
+- **Button / primary**: bg `--accent`, text `--accent-ink`(명암비 검증 후 확정), radius 12, padding 11×16, weight 600, 아이콘+라벨 gap 8.
 - **Button / ghost**: bg surface, 1px line 보더, text ink.
 - **Button / kakao**: bg `#FEE500`, text `#191600`, weight 700. (주문 CTA 전용)
-- **Chip(사이즈 등)**: radius 10, 1px line; 활성 = accent bg + 흰 텍스트.
+- **Chip(사이즈 등)**: radius 10, 1px line; 활성 = accent bg + 검증된 `--accent-ink` 텍스트.
 - **Swatch(색상)**: 34×34, radius 10; 활성 = accent 보더 + 2px 링.
 - **Card / Pane**: surface, 1px line, radius 18; 헤더 13.5px 700 + 우측 muted 액션.
 - **Input**: 1px line, radius 12, padding 11×13, placeholder muted.
@@ -58,7 +59,8 @@ CSS 변수를 root에 깔고 Tailwind는 그 변수를 참조:
 :root{
   --bg:#F4F4F5; --surface:#fff; --panel:#F7F7F8;
   --ink:#191A1D; --muted:#71717A; --line:#EAEAED;
-  --accent:#C0614A; --accent-2:#D8846F; --accent-ink:#fff; --accent-soft:#F6E6E1;
+  --accent:#B0894E; --accent-2:#C6A46B; --accent-soft:#F2E9DA;
+  /* --accent-ink는 WCAG 명암비 검증 후 확정 */
   --radius:12px; --radius-lg:18px;
   --shadow:0 20px 50px -28px rgb(20 20 25 / .45);
   --shadow-soft:0 10px 26px -18px rgb(20 20 25 / .30);
