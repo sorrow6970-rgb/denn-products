@@ -3717,13 +3717,13 @@ window.dennApplyRoomScrollV=function(area,opts){
     var __aT=(window.dennPortraitFrameAnchorTopV)?dennPortraitFrameAnchorTopV(area):-1;
     if(__aT>=0){
       if(opts.force||html.classList.contains('denn-room-entering')||Math.abs(area.scrollTop-__aT)>10)area.scrollTop=__aT;
-      area.scrollLeft=0;
     }else if(html.classList.contains('denn-rotate-fs')){
       if(area.scrollHeight>area.clientHeight+4)area.scrollTop=Math.round((area.scrollHeight-area.clientHeight)/2);
-      area.scrollLeft=(area.scrollWidth>area.clientWidth)?Math.round((area.scrollWidth-area.clientWidth)/2):0;
     }else if(window.innerWidth>window.innerHeight&&area.scrollHeight>area.clientHeight+4){
       area.scrollTop=Math.round((area.scrollHeight-area.clientHeight)/2);
     }
+    /* scrollLeft: 가로 전체화면(wide 캔버스)만 센터, 그 외 전부 0 (06-23 세로 좌잠금 + __ctr/anchorScroll 공통 규칙) */
+    area.scrollLeft=(html.classList.contains('denn-rotate-fs')&&area.scrollWidth>area.clientWidth)?Math.round((area.scrollWidth-area.clientWidth)/2):0;
   }catch(e){}
 };
 function centerRoomCanvasScroll(){
@@ -14688,7 +14688,7 @@ input[type=range]{accent-color:#777}
     function reveal(){if(done||gen!==__dennRevealGenV)return;done=true;clearTimeout(spinT);try{document.documentElement.classList.remove('denn-room-spin')}catch(e){}try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
       window.__dennRotCentered=true;
       /* 2026-06-22: 스크롤 중앙 정렬 — 빠른(캐시) 재진입에선 reveal 직후 레이아웃 미정착이라 scrollHeight가 stale → 동기 1회 + rAF×2 + 지연(120/260ms) 재시도로 정착 후 정렬 보정. (첫 진입만 되고 세로→가로 재진입 시 안 되던 문제) */
-      var __ctr=function(){if(gen!==__dennRevealGenV)return;/* 2026-06-22: gen 가드 — 반복 토글 시 이전 회전의 stale __ctr 재시도가 다음 방향 레이아웃에 센터해 누적 틀어짐 유발하던 것 차단(최신 진입만 센터) */try{var aEl=document.getElementById('rm-canvas-area');if(aEl){var __aT=window.dennPortraitFrameAnchorTopV&&dennPortraitFrameAnchorTopV(aEl);/* 2026-06-26: 세로=액자 앵커(관리자와 동일 화면위치), 가로/넘침없음=-1로 기존 센터 유지 */if(__aT>=0){if(document.documentElement.classList.contains('denn-room-entering')||Math.abs(aEl.scrollTop-__aT)>10)aEl.scrollTop=__aT;}/* 2026-06-29: 세로 앵커 데드밴드(노출 후 10px 이하 변동 무시) — 정착 중 앵커 0~8 진동 상하 떨림 차단 */else if(innerWidth>innerHeight&&aEl.scrollHeight>aEl.clientHeight+4)aEl.scrollTop=Math.round((aEl.scrollHeight-aEl.clientHeight)/2);/* 2026-06-29: else(가로 센터 101)는 실제 가로(innerWidth>innerHeight)일 때만 — 세로서 denn-rotate-fs 깜빡임에 __aT=-1로 떨어져 101을 쓰던 누출 차단(세로는 8 유지) */if(document.documentElement.classList.contains('denn-rotate-fs')){if(aEl.scrollWidth>aEl.clientWidth+4)aEl.scrollLeft=Math.round((aEl.scrollWidth-aEl.clientWidth)/2);}else aEl.scrollLeft=0;/* 2026-06-23: 가로 스크롤 센터링은 가로 풀스크린(wide 캔버스)에서만. 세로는 캔버스가 폭에 맞으므로 scrollLeft=0 고정 — 정착 전 과도 폭으로 center→재사이징 후 0 복귀하며 보이던 좌우 이동 차단. */}}catch(e){}};
+      var __ctr=function(){if(gen!==__dennRevealGenV)return;/* 2026-06-22: gen 가드 — 반복 토글 시 이전 회전의 stale __ctr 재시도가 다음 방향 레이아웃에 센터해 누적 틀어짐 유발하던 것 차단(최신 진입만 센터) */try{var aEl=document.getElementById('rm-canvas-area');if(aEl)window.dennApplyRoomScrollV(aEl,{force:false});/* 2026-07-21: 단일 권위로 통합(구 인라인 앵커/데드밴드/센터/좌잠금 로직 대체) */}catch(e){}};
       /* 2026-06-26 떨림 v2: __ctr(스크롤 앵커)은 reveal 재시도(sync/rAF×2/120/260ms)마다 정착 중 변동하는 scrollHeight/clientHeight로 다른 scrollTop(11~18 진동)을 적용함. 값이 수렴 안 하므로 '안정 시 노출'(v1)은 조기 노출(18,18)→뒤의 11/16/14 노출로 떨림이 보이던 버그. → 마지막 재시도(260ms)까지 denn-room-entering(opacity:0) 유지하고 그때 1회 노출. 모든 진동을 숨김에서 처리, 노출 시점=최종값 고정. 노출 후 reveal의 __ctr 호출 없어 자연 정지. gen 가드 유지. */
       var __revealedV=false;
       function __unfadeV(){if(__revealedV||gen!==__dennRevealGenV)return;__revealedV=true;try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}try{var __cv=document.getElementById('denn-fs-cover');if(__cv)__cv.classList.remove('on');}catch(e){}/* 브랜디드 커버 페이드아웃 */try{setTimeout(function(){if(gen===__dennRevealGenV)__gStopPin();},1000);}catch(e){}/* 노출 후 1s간 scroll-pin 유지해 late drop 흡수 */}
@@ -14721,11 +14721,7 @@ input[type=range]{accent-color:#777}
     var last='',stable=0,t0=performance.now();
     function tgtNow(a){return (a&&window.dennPortraitFrameAnchorTopV)?dennPortraitFrameAnchorTopV(a):-1;}
     function anchorScroll(){
-      try{var a=document.getElementById('rm-canvas-area');if(!a)return;
-        var t=tgtNow(a);
-        if(t>=0)a.scrollTop=t;else if(a.scrollHeight>a.clientHeight+4)a.scrollTop=Math.round((a.scrollHeight-a.clientHeight)/2);
-        a.scrollLeft=(document.documentElement.classList.contains('denn-rotate-fs')&&a.scrollWidth>a.clientWidth)?Math.round((a.scrollWidth-a.clientWidth)/2):0;
-      }catch(e){}
+      try{var a=document.getElementById('rm-canvas-area');if(a)window.dennApplyRoomScrollV(a,{force:true});}catch(e){}/* 2026-07-21: 단일 권위로 통합(무조건 적용=force:true). 구 else 미가드 센터는 통합 함수의 06-29 innerWidth 가드가 흡수(세로 101누출 방지). */
     }
     /* 2026-07-14 v714f: ★잔여 '짧고 빠른 튐' 근본해결 — portrait엔 scrollTop=0을 세팅하는 코드가 없음(로그 확인). sT0 딥은
        리사이즈/재렌더 시 '브라우저가 스크롤을 리셋'하는 것. rAF 교정은 다음 프레임에야 되돌려 1프레임 번쩍(pin/게이트로 못 잡음).
