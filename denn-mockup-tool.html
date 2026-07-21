@@ -14759,18 +14759,21 @@ input[type=range]{accent-color:#777}
     }
     function step(){
       var a=document.getElementById('rm-canvas-area');
+      /* 2026-07-21 v2: ★'클램프 정지'까지 마스크 유지 — 영상 확정(s35): dims(iw/ih/ar) 오버레이 샘플상 안정이어도
+         종료 시 모바일 URL바 정착 애니메이션이 그 뒤로도 scrollTop을 계속 0으로 클램프(Z=항상 '-'=코드 아님, 브라우저).
+         dims 기준 마스크 걷힘은 클램프가 아직 진행 중인데 걷어버려 떨림 노출. → 보정(anchorScroll) '전'에 sT가 앵커에서
+         떨어졌는지(=이번 프레임 클램프 발생)를 직접 감지하고, dims 안정 + 클램프 없음이 연속될 때만 마스크 걷음.
+         클램프 신호가 곧 'URL바 정착 완료' 신호. */
+      var tprev=tgtNow(a);
+      var clamped=(tprev>=0&&a&&(tprev-a.scrollTop)>3);
       anchorScroll();
       var c=document.getElementById('rm-canvas');
       var r=c&&c.getBoundingClientRect?c.getBoundingClientRect():null;
-      /* 2026-07-21: ★key에서 scrollTop 제거 — 확장 계측 확정: 어떤 JS도 sT를 0으로 안 쓴다(Z=항상 '-'). sT0 딥은
-         전체화면 종료 시 모바일 URL바 재등장으로 뷰포트(innerHeight)가 출렁 → 브라우저가 scrollTop을 비동기(paint 후)
-         클램프하는 것. scroll-pin은 paint 후 도착 클램프를 못 잡아 1프레임 번쩍. 구 key는 sT를 포함해, pin↔클램프로
-         sT가 출렁이면 key가 절대 수렴 못 해 1500ms 캡까지 갔다가 'URL바가 아직 출렁이는 중' 마스크를 걷어버려 떨림 노출.
-         → key를 뷰포트/레이아웃 dims만으로 판정(sT 제외). dims 안정=URL바 정착이므로, 그때까지 마스크가 유지되고 pin이
-         뒤에서 앵커를 잡는다. 캡도 1500→2600ms(종료 시 URL바 정착이 더 오래 걸림). */
       var key=window.innerWidth+'x'+window.innerHeight+'|'+(a?(a.clientWidth+'x'+a.clientHeight):'')+'|'+(r?(Math.round(r.width)+'x'+Math.round(r.height)):'');
-      if(key===last)stable++;else{stable=0;last=key;}
-      if((stable>=5&&performance.now()-t0>=420)||performance.now()-t0>2600){finish();return;}
+      if(key!==last){last=key;stable=0;}
+      else if(clamped){stable=0;}
+      else{stable++;}
+      if((stable>=8&&performance.now()-t0>=420)||performance.now()-t0>3200){finish();return;}
       requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
@@ -16086,7 +16089,7 @@ html.denn-frame-fs-lock,html.denn-frame-fs-lock body{overflow:hidden!important;o
     var fl=((document.fullscreenElement||document.webkitFullscreenElement)?'F':'-')+((m&&m.classList.contains('denn-room-fullscreen-active'))?'A':'-')+(h.classList.contains('denn-room-entering')?'E':'-')+(h.classList.contains('denn-rotate-fs')?'R':'-');
     return 'iw'+window.innerWidth+'x'+window.innerHeight+' cv'+(c?c.width+'x'+c.height:'?')+'/'+(r?Math.round(r.width)+'x'+Math.round(r.height):'?')+' ar'+(a?a.clientWidth+'x'+a.clientHeight:'?')+' sT'+(a?a.scrollTop:'?')+' ['+fl+']';
   }
-  var FSVER='s35';/* 버전스탬프 — 기기 캐시 판별 */
+  var FSVER='s36';/* 버전스탬프 — 기기 캐시 판별 */
   /* 2026-07-21: scrollTop writer 추적 — dims 고정인데 sT가 0↔앵커 진동하는 EXIT→모달 떨림의 '0 writer' 특정.
      rm-canvas-area 인스턴스의 scrollTop setter를 래핑해 마지막 세팅값+호출부(스택 3번째 줄)를 기록. 0 근처 세팅은 별도 보관. */
   function installSTtrace(){
