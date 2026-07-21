@@ -43,32 +43,32 @@
 
 | # | 확인 항목 | iPhone Safari | Android Chrome | Samsung Internet | 카카오 인앱 |
 |---:|---|:---:|:---:|:---:|:---:|
-| 1 | 첫 화면 정상 로드 | | | | |
-| 2 | 좌우 가로 스크롤 없음 | | | | |
-| 3 | 텍스트/버튼 잘림·밀림 없음 | | | | |
-| 4 | 작은 화면에서 버튼 누를 수 있음 | | | | |
-| 5 | 세로↔가로 회전 후 레이아웃 정상 | | | | |
-| 6 | 상·하단 safe-area 침범 없음 | | | | |
-| 7 | 주소창 표시/숨김 시 높이 안 깨짐 | | | | |
-| 8 | 입력 포커스 시 키보드가 버튼/입력 안 가림 | | | | |
-| 9 | 키보드 닫은 후 레이아웃 복구 | | | | |
-| 10 | Canvas 흐림·잘림 없음 (DPR 표시 확인) | | | | |
-| 11 | Fullscreen 지원 또는 정상 fallback | | | | |
-| 12 | orientation 미지원이어도 화면 안 깨짐 | | | | |
-| 13 | CSS.supports 배지 결과 (dvh/color-mix/@property) 기록 | | | | |
-| 14 | 콘솔/화면에 치명적 오류 없음 (오류 관측 카드) | | | | |
+| 1 | 첫 화면 정상 로드 | PASS | | PASS | PASS |
+| 2 | 좌우 가로 스크롤 없음 | PASS | | PASS | PASS |
+| 3 | 텍스트/버튼 잘림·밀림 없음 | PASS | | PASS | PASS |
+| 4 | 작은 화면에서 버튼 누를 수 있음 | PASS | | PASS | PASS |
+| 5 | 세로↔가로 회전 후 레이아웃 정상 | PASS | | PASS | PASS |
+| 6 | 상·하단 safe-area 침범 없음 | PASS | | PASS | PASS |
+| 7 | 주소창 표시/숨김 시 높이 안 깨짐 | PASS | | PASS | PASS |
+| 8 | 입력 포커스 시 키보드가 버튼/입력 안 가림 | PASS | | PASS | PASS |
+| 9 | 키보드 닫은 후 레이아웃 복구 | PASS | | PASS | PASS |
+| 10 | Canvas 흐림·잘림 없음 (DPR 표시 확인) | PASS | | PASS | PASS |
+| 11 | Fullscreen 지원 또는 정상 fallback | PASS | | PASS | PASS |
+| 12 | orientation 미지원이어도 화면 안 깨짐 | PASS | | PASS | PASS |
+| 13 | CSS.supports 배지 결과 (dvh/color-mix/@property) 기록 | PASS | | PASS | PASS |
+| 14 | 콘솔/화면에 치명적 오류 없음 (오류 관측 카드) | PASS | | PASS | PASS |
 
 ### 기기 메타 (사용자 기록)
 | 항목 | iPhone Safari | Android Chrome | Samsung Internet | 카카오 인앱 |
 |---|---|---|---|---|
-| 기기명/모델 | | | | |
-| OS·버전 | | | | |
-| 브라우저·버전 | | | | |
-| 테스트 날짜 | | | | |
-| CSS.supports (dvh/color-mix/@property) | | | | |
-| 스크린샷/영상 파일명 | | | | |
-| **종합 판정** | **NOT TESTED** | **NOT TESTED** | **NOT TESTED** | **NOT TESTED** |
-| 비고·재현 절차 | | | | |
+| 기기명/모델 | 미기록 | | 미기록 | 미기록 |
+| OS·버전 | 미기록 | | 미기록 | 미기록 |
+| 브라우저·버전 | 미기록 | | 미기록 | 미기록 |
+| 테스트 날짜 | 2026-07-21 | | 2026-07-21 | 2026-07-21 |
+| CSS.supports (dvh/color-mix/@property) | 지원/지원/지원 | | 지원/지원/지원 | 지원/지원/지원 |
+| 스크린샷/영상 파일명 | `KakaoTalk_20260721_210031114.png` | | `KakaoTalk_20260721_210414899_01.jpg` | `KakaoTalk_20260721_210414899.jpg`, `KakaoTalk_20260721_210705947.jpg` |
+| **종합 판정** | **PASS** | **NOT TESTED** | **PASS** | **PASS** |
+| 비고·재현 절차 | DPR 3, 402×714. Fullscreen·orientation lock 미지원 시 정상 fallback. | | DPR 3.5, 411×740. | DPR 3.5, 411×731. Fullscreen 진입 성공, orientation lock 실패 후 정상 fallback. 물리 회전 시 가로 레이아웃 정상. |
 
 ## 판정 규칙
 - **PASS**: 해당 환경 실기기에서 14항목이 모두 정상.

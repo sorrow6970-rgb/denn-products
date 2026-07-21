@@ -1,9 +1,10 @@
 # 현재 상태
 
-상태: **001 POC 로컬 구현·자동검증 Codex 최종 승인(승인 가능, 기준 HEAD `f4dae95`) — 다음 작업 = 실기기 검증**
+상태: **001 POC Codex 최종 승인 + 실기기 검증 완료(iPhone·Samsung·카카오 PASS, Android Chrome NOT TESTED) — 다음 작업 = Tailwind 확정**
 
 > Codex 최종 재검증: 001 플랫폼 호환성 POC 로컬 구현·자동검증 **승인 가능**. 승인 기준 HEAD `f4dae95`.
-> 실기기 검증 전부 NOT TESTED(다음 작업 보류) · Tailwind v4/v3.4 결정 보류 · Firebase·전체 스캐폴드·배포 계속 대기.
+> 실기기 검증(2026-07-21): iPhone Safari·Samsung Internet·카카오 인앱 = 1~14 전체 **PASS**. Android Chrome = **NOT TESTED**(추정 금지).
+> Tailwind v4/v3.4 = 실기기 CSS.supports 근거 확보(v4 지지) · 확정은 Codex/사용자 · Firebase·전체 스캐폴드·배포 계속 대기.
 
 ## 현재 결론
 
@@ -44,20 +45,27 @@
 - 테스트: `tests/unit/fullscreen-controller.test.ts`(DOM 목, attach→detach→attach 재활성·단일 listener·중복 attach 3건) + `tests/e2e/fullscreen.spec.ts`(FS 버튼 클릭 → 상태처리/정상 fallback 관측, 실제 FS 성공 강제 안 함).
 - 재검증: typecheck/unit(**21/21**, 3파일)/build(JS gzip 66.27KB)/e2e(**11**: viewport 10 + fullscreen 1) 통과. 운영파일 무변경. **실기기 NOT TESTED 유지.**
 
-## 실기기 검증 — 대기 (NOT TESTED)
+## 실기기 검증 — 완료(3환경) / Android Chrome 대기
 
-- iPhone Safari / Android Chrome / Samsung Internet / 카카오 인앱 = **전부 NOT TESTED**.
-- LAN 접근: `npm run preview -- --host` → `http://192.168.0.31:4173`(같은 Wi-Fi, 방화벽 승인 필요, 인터넷 비공개).
-- 체크리스트·기록표: `poc/platform-compatibility/results/device-matrix.md`.
+- **완료(2026-07-21, 사용자 수행 · Codex가 device-matrix 기록):**
+  - iPhone Safari = 1~14 **PASS**. `fullscreenEnabled=false`·`orientation.lock=false`지만 정상 fallback. CSS.supports 전부 지원.
+  - Samsung Internet = 1~14 **PASS**. 전부 정상. CSS.supports 전부 지원.
+  - 카카오 인앱 웹뷰 = 1~14 **PASS**. Fullscreen 진입 성공(state=active), orientation lock 실패했으나 정상 fallback, 물리 가로 회전 시 가로 레이아웃 정상. CSS.supports 전부 지원.
+- **대기: Android Chrome = NOT TESTED**(추정으로 PASS 금지).
+- 증거: `KakaoTalk_20260721_210031114.png`, `_210414899.jpg`, `_210414899_01.jpg`, `_210705947.jpg`.
+- 상세 기록: `poc/platform-compatibility/results/device-matrix.md`.
+- LAN 접근(재현): `npm run preview -- --host` → `http://<이-PC-LAN-IP>:4173`(같은 Wi-Fi, 방화벽 승인 필요, 인터넷 비공개).
 
-## 다음 작업 (한 가지)
+## 다음 작업
 
-**사용자 실기기 검증** → `device-matrix.md` 채우기 → 그 근거로 Tailwind v4/v3.4 결정.
-(POC 코드 자체는 Codex 승인 완료 — 추가 코드 수정 없이 실기기 결과 수집이 다음 단계.)
+1. (선택) **Android Chrome 실기기 검증** → device-matrix 마지막 열 채우기.
+2. **Tailwind v4/v3.4 확정** — 실기기 CSS.supports 근거 확보됨(3환경 전부 v4 기능 지원 → v4 지지). Codex 판정 + 사용자 승인으로 확정.
+3. 이후 전체 스택 확정 → 스펙 002.
+- **주의(사용자 지시): 색상 토큰 내일 카라멜 계열로 일괄 변경 예정 → 오늘 색상·코드·테스트·스캐폴드·배포 금지.**
 
 ## 시작 조건
 
-- 사용자가 실기기(특히 카카오 인앱)에서 POC 접속·14항목 확인·결과 전달.
+- (Android Chrome 검증 시) 사용자가 해당 기기에서 POC 접속·14항목 확인·결과 전달.
 - LAN 접근 불가 시: 임시 HTTPS 채널 필요성·안전조치 보고 후 사용자 승인(임의 외부배포 금지).
 
 ## Claude Code 금지 (유지)
