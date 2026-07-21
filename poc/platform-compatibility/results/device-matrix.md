@@ -2,27 +2,69 @@
 
 > 규칙(spec §6): **사용자가 실제 기기에서 검증하지 않은 항목은 추정으로 PASS 처리하지 않는다.**
 > 데스크톱 Playwright/에뮬레이션은 실제 인앱 웹뷰 동작을 대체하지 못한다(spec RISK).
-> 아래는 **자동 검사 통과 후** 사용자가 실기기로 채우는 표다. Claude는 임의로 PASS를 채우지 않는다.
+> Claude는 사용자가 전달하지 않은 기기/결과를 만들어내지 않는다. 아래 판정은 **모두 NOT TESTED**이며
+> 사용자 실기기 결과를 받은 뒤에만 갱신된다.
 
-측정 항목(각 환경): CSS 기능(color-mix/@property/dvh) · 버튼 밀림·겹침·수평 overflow · 키보드 전후 viewport
-· 회전 전후 상태 · Canvas DPR·비율 · Fullscreen/orientation 결과 · 스크린샷/영상 파일명.
+---
 
-접근 방법(QUESTIONS): 실기기 접근 URL은 구현 후 사용자 승인 아래 별도 결정(외부 공개 배포는 본 스펙 범위 밖).
-로컬 접근 예: 같은 Wi-Fi에서 `npm run preview -- --host` 후 PC LAN IP:4173 접속(사용자 환경에서만).
+## 로컬 LAN 접근 방법 (사용자 실행)
 
-| 환경 | 기기/OS/앱 버전 | CSS 기능 | 버튼/overflow | 키보드 | 회전 | Canvas DPR | Fullscreen/orient | 스크린샷 | 판정 |
-|---|---|---|---|---|---|---|---|---|---|
-| iPhone Safari | (기록) | | | | | | | | **NOT TESTED** |
-| Android Chrome | (기록) | | | | | | | | **NOT TESTED** |
-| 카카오톡 인앱 | (기록) | | | | | | | | **NOT TESTED** |
-| Samsung Internet | (기록) | | | | | | | | **NOT TESTED** |
+1. PC 터미널에서 POC 디렉터리로 이동 후:
+   ```bash
+   cd poc/platform-compatibility
+   npm run build          # 아직 빌드 안 했으면
+   npm run preview -- --host
+   ```
+2. 실기기(같은 Wi-Fi)에서 브라우저로 접속:
+   **http://192.168.0.31:4173**   (PC LAN IPv4 = 192.168.0.31, 포트 4173)
+3. 테스트 동안 **터미널을 열어 두어야** 합니다. 종료 = 터미널에서 **Ctrl + C**.
+4. 최초 실행 시 **Windows 방화벽이 Node.js 허용을 물으면 사용자가 승인**해야 LAN 접근됩니다(자동 처리 안 함).
+5. 노출 범위: **같은 Wi-Fi(LAN) 내부에서만** 접근 가능. 인터넷 공개 아님(라우터 포트포워딩 안 함).
+6. 서빙 대상: **`poc/platform-compatibility/dist`만**. 기존 앱·Firebase·운영 데이터와 무관.
+
+카카오 인앱 브라우저는 URL을 카카오톡 대화(나에게 보내기 등)로 보내 열면 됩니다.
+
+---
+
+## 기기별 14항목 체크 (각 항목 PASS / FAIL / — 로 기록)
+
+각 기기에서 아래를 확인하고 결과를 적어 주세요.
+
+| # | 확인 항목 | iPhone Safari | Android Chrome | Samsung Internet | 카카오 인앱 |
+|---:|---|:---:|:---:|:---:|:---:|
+| 1 | 첫 화면 정상 로드 | | | | |
+| 2 | 좌우 가로 스크롤 없음 | | | | |
+| 3 | 텍스트/버튼 잘림·밀림 없음 | | | | |
+| 4 | 작은 화면에서 버튼 누를 수 있음 | | | | |
+| 5 | 세로↔가로 회전 후 레이아웃 정상 | | | | |
+| 6 | 상·하단 safe-area 침범 없음 | | | | |
+| 7 | 주소창 표시/숨김 시 높이 안 깨짐 | | | | |
+| 8 | 입력 포커스 시 키보드가 버튼/입력 안 가림 | | | | |
+| 9 | 키보드 닫은 후 레이아웃 복구 | | | | |
+| 10 | Canvas 흐림·잘림 없음 (DPR 표시 확인) | | | | |
+| 11 | Fullscreen 지원 또는 정상 fallback | | | | |
+| 12 | orientation 미지원이어도 화면 안 깨짐 | | | | |
+| 13 | CSS.supports 배지 결과 (dvh/color-mix/@property) 기록 | | | | |
+| 14 | 콘솔/화면에 치명적 오류 없음 (오류 관측 카드) | | | | |
+
+### 기기 메타 (사용자 기록)
+| 항목 | iPhone Safari | Android Chrome | Samsung Internet | 카카오 인앱 |
+|---|---|---|---|---|
+| 기기명/모델 | | | | |
+| OS·버전 | | | | |
+| 브라우저·버전 | | | | |
+| 테스트 날짜 | | | | |
+| CSS.supports (dvh/color-mix/@property) | | | | |
+| 스크린샷/영상 파일명 | | | | |
+| **종합 판정** | **NOT TESTED** | **NOT TESTED** | **NOT TESTED** | **NOT TESTED** |
+| 비고·재현 절차 | | | | |
 
 ## 판정 규칙
-- **PASS**: 해당 환경 실기기에서 위 항목이 모두 정상.
+- **PASS**: 해당 환경 실기기에서 14항목이 모두 정상.
 - **FAIL**: 하나라도 버튼 밀림·겹침·수평 overflow·회전 후 상태 손실·키보드 가림 재현(출시 차단 결함).
 - **NOT TESTED**: 실기기 미검증. 추정 금지.
 
 ## 자동(에뮬레이션) 참고
-- `npm run test:e2e` 결과는 `results/e2e-report.json`, 스크린샷은 `results/screenshots/`.
-- 자동 통과는 **레이아웃 회귀의 1차 방어**일 뿐, 인앱 웹뷰의 Fullscreen/orientation/스크롤 클램프 등
+- `npm run test:e2e` 결과 = viewport 10/10 PASS(데스크톱 Chromium). 스크린샷 `results/screenshots/`.
+- 자동 통과는 **레이아웃 회귀의 1차 방어**일 뿐, 인앱 웹뷰의 Fullscreen/orientation/키보드/스크롤 클램프 등
   **동작 특성**은 위 실기기 표로만 확정된다.
