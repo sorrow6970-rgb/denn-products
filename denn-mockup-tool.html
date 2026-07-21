@@ -6698,7 +6698,11 @@ var ro=null;
 function installObserver(){
   if(ro||!window.ResizeObserver)return;
   var area=by('rm-canvas-area');if(!area)return;
-  ro=new ResizeObserver(function(){renderStable({size:true,guide:true,delay:140})});
+  ro=new ResizeObserver(function(){
+    /* 2026-07-21 (Stage 4): pin↔RO 피드백 차단 — 리빌/pin이 스크롤을 소유하는 동안엔 RO 발(renderStable→rmSizeCanvas→scrollHeight 변화→scrollTop 클램프→pin 복귀→모바일 URL바/dvh 변화→RO 재발)의 무한 루프(0↔앵커 진동=떨림)를 끊는다. 리빌이 자체 rmSizeCanvas+render를 수행하므로 안전. pin 해제(tail 경과)+entering 해제 후엔 정상 재정렬 재개. */
+    if(window.__dennScrollPinActive||document.documentElement.classList.contains('denn-room-entering'))return;
+    renderStable({size:true,guide:true,delay:140});
+  });
   ro.observe(area);
 }
 if(typeof prevOpen==='function'&&!prevOpen.__interactionStabilityV48){
@@ -14663,6 +14667,31 @@ input[type=range]{accent-color:#777}
   function redraw(){clearTimeout(window.__dennRotRedrawT);window.__dennRotRedrawT=setTimeout(function(){try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}},120);}/* 디바운스: 회전 다중 호출 합침 */
   /* 2026-06-22: 진입/회전 페이드 해제를 '배경 이미지 로드 완료'에 맞춤(고정 타이머 폐기). 늦게 도착하는 배경(4:5 mobileDataUrl·Firebase URL 등)이 캔버스 노출 후 팝인하며 보이던 다중 재렌더(회색 clearRect 플래시)가 진입 튐의 원인 — 트레이스에서 페이드인(~1.37s) 후 2.4s 공백→3.7s 보이는 렌더로 확인. 이미지 준비(complete+naturalWidth)되면 1회 렌더 후 다음 프레임에 페이드인, 안전 캡 maxMs(브로큰/무이미지 대비). 세대(gen) 가드로 새 진입이 옛 poller의 조기 노출을 막음. */
   var __dennRevealGenV=0;
+  /* 2026-07-21: ★단일 스크롤 pin 매니저 (Stage 3) — dennGatedRevealV(구 __gOnScroll)·dennFsRevealV(구 onScroll)가
+     각각 별개 gen으로 scroll pin을 걸어 겹치던(이중 pin → 0↔앵커 진동=떨림) 것을 하나로 통합. enable()이 단일 gen을
+     올리고 리스너를 재부착 → 이전 pin 자동 무효화(리스너 1개 보장). 핸들러=세로 앵커 유지만(가로/넘침없음은 no-op,
+     scrollLeft 미조작) — 구 두 핸들러와 byte-동일 동작. window.__dennScrollPinActive는 Stage 4 RO 게이트가 읽음. */
+  var __dennPinGenV=0,__dennPinAreaV=null,__dennPinBusyV=false,__dennPinLastTV=-1;
+  function __dennPinHandlerV(){
+    if(__dennPinBusyV)return;
+    var a=document.getElementById('rm-canvas-area');if(!a)return;
+    var t=(window.dennPortraitFrameAnchorTopV)?dennPortraitFrameAnchorTopV(a):-1;if(t>=0)__dennPinLastTV=t;else t=__dennPinLastTV;
+    if(t>=0&&Math.abs(a.scrollTop-t)>2){__dennPinBusyV=true;a.scrollTop=t;__dennPinBusyV=false;}
+  }
+  function dennScrollPinEnableV(){
+    var gen=(++__dennPinGenV);window.__dennScrollPinActive=true;
+    var a=document.getElementById('rm-canvas-area');
+    if(__dennPinAreaV&&__dennPinAreaV!==a){try{__dennPinAreaV.removeEventListener('scroll',__dennPinHandlerV,true)}catch(e){}}
+    __dennPinAreaV=a;__dennPinLastTV=-1;
+    if(a){try{a.removeEventListener('scroll',__dennPinHandlerV,true)}catch(e){}a.addEventListener('scroll',__dennPinHandlerV,true);}
+    return gen;
+  }
+  function dennScrollPinDisableV(gen){
+    if(gen!==__dennPinGenV)return;/* 더 최신 pin이 이미 활성 → 무시(취소하지 않음) */
+    window.__dennScrollPinActive=false;
+    if(__dennPinAreaV){try{__dennPinAreaV.removeEventListener('scroll',__dennPinHandlerV,true)}catch(e){}}
+    __dennPinAreaV=null;
+  }
   function dennGatedRevealV(maxMs){
     var gen=(++__dennRevealGenV),t0=performance.now(),done=false;
     try{/* 2026-07-14: 가로/회전 전환도 세로와 동일한 DENN PRODUCTS 브랜디드 커버로 정착 튐을 가림(불투명) */
@@ -14670,16 +14699,8 @@ input[type=range]{accent-color:#777}
       if(!__cv){__cv=document.createElement('div');__cv.id='denn-fs-cover';__cv.innerHTML='<div class="dbc-logo">DENN <em>PRODUCTS</em></div><div class="dbc-spin"></div>';(document.body||document.documentElement).appendChild(__cv);}
       __cv.classList.add('on');
     }catch(e){}
-    /* 2026-07-14: ★가로→세로 복귀 '뒤늦게 떨어짐'(late drop) 해결 — sT로그 확정: 마스크 걷힌 뒤(+16563 sT28 [----]) 다음 프레임(+16623 sT0)에 브라우저가 스크롤을 리셋해 액자가 툭 떨어짐. dennFsRevealV의 scroll-event pin을 여기도 이식: scrollTop이 세로 앵커에서 벗어나는 순간 paint 전에 동기 복귀. 가로/회전 중엔 dennPortraitFrameAnchorTopV=-1이라 no-op(가로 영향 없음), 세로 복귀 시에만 앵커 고정. */
-    var __gArea=document.getElementById('rm-canvas-area'),__gPinBusy=false,__gLastT=-1;
-    function __gOnScroll(){
-      if(gen!==__dennRevealGenV)return;if(__gPinBusy)return;
-      var a=document.getElementById('rm-canvas-area');if(!a)return;
-      var t=(window.dennPortraitFrameAnchorTopV)?dennPortraitFrameAnchorTopV(a):-1;if(t>=0)__gLastT=t;else t=__gLastT;
-      if(t>=0&&Math.abs(a.scrollTop-t)>2){__gPinBusy=true;a.scrollTop=t;__gPinBusy=false;}
-    }
-    if(__gArea)__gArea.addEventListener('scroll',__gOnScroll,true);
-    function __gStopPin(){try{if(__gArea)__gArea.removeEventListener('scroll',__gOnScroll,true);}catch(e){}}
+    /* 2026-07-14 late-drop pin → 2026-07-21 단일 pin 매니저로 통합(Stage 3). 가로→세로 복귀 시 마스크 걷힌 뒤 브라우저 스크롤 리셋을 세로 앵커로 동기 복귀. 가로/회전 중엔 앵커=-1이라 no-op. */
+    var __pinGenV=dennScrollPinEnableV();
     /* 방향에 맞는 배경 src를 즉시 프리로드 시작(미캐시 대비) → 게이트 대기 단축 */
     try{var R0=window.RM,B0=(window.ADM&&ADM.guideBackgrounds)||[],i0=R0&&(R0.guideIndex!=null?R0.guideIndex:R0.__bgIndexForSwap);if(R0&&i0!=null&&i0>=0&&B0[i0]&&window.dennPreloadGuideBgV)dennPreloadGuideBgV(B0[i0]);}catch(e){}
     var spinT=setTimeout(function(){if(!done&&gen===__dennRevealGenV){try{document.documentElement.classList.add('denn-room-spin')}catch(e){}}},180);/* 180ms 넘게 기다릴 때만 스피너 표시(빠른 로드엔 안 뜸) */
@@ -14691,7 +14712,7 @@ input[type=range]{accent-color:#777}
       var __ctr=function(){if(gen!==__dennRevealGenV)return;/* 2026-06-22: gen 가드 — 반복 토글 시 이전 회전의 stale __ctr 재시도가 다음 방향 레이아웃에 센터해 누적 틀어짐 유발하던 것 차단(최신 진입만 센터) */try{var aEl=document.getElementById('rm-canvas-area');if(aEl)window.dennApplyRoomScrollV(aEl,{force:false});/* 2026-07-21: 단일 권위로 통합(구 인라인 앵커/데드밴드/센터/좌잠금 로직 대체) */}catch(e){}};
       /* 2026-06-26 떨림 v2: __ctr(스크롤 앵커)은 reveal 재시도(sync/rAF×2/120/260ms)마다 정착 중 변동하는 scrollHeight/clientHeight로 다른 scrollTop(11~18 진동)을 적용함. 값이 수렴 안 하므로 '안정 시 노출'(v1)은 조기 노출(18,18)→뒤의 11/16/14 노출로 떨림이 보이던 버그. → 마지막 재시도(260ms)까지 denn-room-entering(opacity:0) 유지하고 그때 1회 노출. 모든 진동을 숨김에서 처리, 노출 시점=최종값 고정. 노출 후 reveal의 __ctr 호출 없어 자연 정지. gen 가드 유지. */
       var __revealedV=false;
-      function __unfadeV(){if(__revealedV||gen!==__dennRevealGenV)return;__revealedV=true;try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}try{var __cv=document.getElementById('denn-fs-cover');if(__cv)__cv.classList.remove('on');}catch(e){}/* 브랜디드 커버 페이드아웃 */try{setTimeout(function(){if(gen===__dennRevealGenV)__gStopPin();},1000);}catch(e){}/* 노출 후 1s간 scroll-pin 유지해 late drop 흡수 */}
+      function __unfadeV(){if(__revealedV||gen!==__dennRevealGenV)return;__revealedV=true;try{document.documentElement.classList.remove('denn-room-entering')}catch(e){}try{var __cv=document.getElementById('denn-fs-cover');if(__cv)__cv.classList.remove('on');}catch(e){}/* 브랜디드 커버 페이드아웃 */try{setTimeout(function(){dennScrollPinDisableV(__pinGenV);},1000);}catch(e){}/* 노출 후 1s간 scroll-pin 유지해 late drop 흡수(단일 매니저) */}
       __ctr();requestAnimationFrame(function(){__ctr();requestAnimationFrame(__ctr);});setTimeout(__ctr,120);setTimeout(function(){__ctr();__unfadeV();},260);}
     function wait(){
       if(done||gen!==__dennRevealGenV)return;
@@ -14723,21 +14744,8 @@ input[type=range]{accent-color:#777}
     function anchorScroll(){
       try{var a=document.getElementById('rm-canvas-area');if(a)window.dennApplyRoomScrollV(a,{force:true});}catch(e){}/* 2026-07-21: 단일 권위로 통합(무조건 적용=force:true). 구 else 미가드 센터는 통합 함수의 06-29 innerWidth 가드가 흡수(세로 101누출 방지). */
     }
-    /* 2026-07-14 v714f: ★잔여 '짧고 빠른 튐' 근본해결 — portrait엔 scrollTop=0을 세팅하는 코드가 없음(로그 확인). sT0 딥은
-       리사이즈/재렌더 시 '브라우저가 스크롤을 리셋'하는 것. rAF 교정은 다음 프레임에야 되돌려 1프레임 번쩍(pin/게이트로 못 잡음).
-       → 'scroll' 이벤트 리스너로 scrollTop이 목표에서 벗어나는 순간(브라우저 리셋 포함) paint 전에 동기적으로 즉시 되돌림.
-       진입/종료 전환+짧은 tail 동안만 활성(그 뒤 사용자 스크롤 자유), gen 가드로 다음 토글이 취소. */
-    var area0=document.getElementById('rm-canvas-area');
-    var pinResyncing=false,lastGoodT=-1;
-    function onScroll(){
-      if(gen!==window.__dennFsRevealGenV)return;
-      if(pinResyncing)return;/* 자기 재기입 재귀 방지 */
-      var a=document.getElementById('rm-canvas-area');if(!a)return;
-      var t=tgtNow(a);if(t>=0)lastGoodT=t;else t=lastGoodT;/* 앵커가 순간 -1(정착 중) 반환해도 마지막 유효 목표로 되돌림 */
-      if(t>=0&&Math.abs(a.scrollTop-t)>2){pinResyncing=true;a.scrollTop=t;pinResyncing=false;}
-    }
-    if(area0)area0.addEventListener('scroll',onScroll,true);
-    function stopPin(){try{if(area0)area0.removeEventListener('scroll',onScroll,true);}catch(e){}}
+    /* 2026-07-14 v714f 잔여 '짧고 빠른 튐' → 2026-07-21 단일 pin 매니저로 통합(Stage 3). 리사이즈/재렌더 시 브라우저가 scrollTop을 리셋하는 딥을 'scroll' 이벤트로 paint 전 동기 복귀. 진입/종료 전환+짧은 tail 동안만 활성. */
+    var __pinGenV=dennScrollPinEnableV();
     function finish(){
       try{window.rmSizeCanvas&&rmSizeCanvas();window.rmRender&&rmRender();window.sgDraw&&sgDraw();}catch(e){}
       anchorScroll();
@@ -14746,7 +14754,7 @@ input[type=range]{accent-color:#777}
         try{document.documentElement.classList.remove('denn-room-entering','denn-fs-soft')}catch(e){}
         try{var __cov=document.getElementById('denn-fs-cover');if(__cov)__cov.classList.remove('on');}catch(e){}/* 브랜디드 커버 .3s 페이드아웃 → 캔버스 등장 */
         /* 노출 후에도 scroll-pin을 짧은 tail 동안 유지해 늦은 리셋(디바운스 redraw 등)을 흡수, 그 뒤 해제 */
-        setTimeout(function(){if(gen===window.__dennFsRevealGenV)stopPin();},1200);
+        setTimeout(function(){dennScrollPinDisableV(__pinGenV);},1200);/* 2026-07-21: 단일 매니저 disable */
       });});
     }
     function step(){
