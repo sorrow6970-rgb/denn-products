@@ -52,7 +52,7 @@
 | 7 | 주소창 표시/숨김 시 높이 안 깨짐 | PASS | | PASS | PASS |
 | 8 | 입력 포커스 시 키보드가 버튼/입력 안 가림 | PASS | | PASS | PASS |
 | 9 | 키보드 닫은 후 레이아웃 복구 | PASS | | PASS | PASS |
-| 10 | Canvas 흐림·잘림 없음 (DPR 표시 확인) | PASS | | PASS | PASS |
+| 10 | Canvas 흐림·잘림 없음 (DPR 표시 확인) | PASS | | PASS | **FAIL**¹ |
 | 11 | Fullscreen 지원 또는 정상 fallback | PASS | | PASS | PASS |
 | 12 | orientation 미지원이어도 화면 안 깨짐 | PASS | | PASS | PASS |
 | 13 | CSS.supports 배지 결과 (dvh/color-mix/@property) 기록 | PASS | | PASS | PASS |
@@ -67,8 +67,10 @@
 | 테스트 날짜 | 2026-07-21 | | 2026-07-21 | 2026-07-21 |
 | CSS.supports (dvh/color-mix/@property) | 지원/지원/지원 | | 지원/지원/지원 | 지원/지원/지원 |
 | 스크린샷/영상 파일명 | `KakaoTalk_20260721_210031114.png` | | `KakaoTalk_20260721_210414899_01.jpg` | `KakaoTalk_20260721_210414899.jpg`, `KakaoTalk_20260721_210705947.jpg` |
-| **종합 판정** | **PASS** | **NOT TESTED** | **PASS** | **PASS** |
-| 비고·재현 절차 | DPR 3, 402×714. Fullscreen·orientation lock 미지원 시 정상 fallback. | | DPR 3.5, 411×740. | DPR 3.5, 411×731. Fullscreen 진입 성공, orientation lock 실패 후 정상 fallback. 물리 회전 시 가로 레이아웃 정상. |
+| **종합 판정** | **PASS** | **NOT TESTED** | **PASS** | **FAIL**¹ |
+| 비고·재현 절차 | DPR 3, 402×714. Fullscreen·orientation lock 미지원 시 정상 fallback. | | DPR 3.5, 411×740. | 세로 기본배율은 정상이었으나 **가로 화면에서 #10 Canvas 비율 FAIL(¹)** → 종합 FAIL로 정정. DPR 3.5, 411×731. Fullscreen 진입 성공, orientation lock 실패 후 정상 fallback. 물리 회전 시 레이아웃은 정상이나 Canvas 비율 깨짐. |
+
+¹ **카카오 인앱 가로 화면 Canvas 비율 FAIL** — 아래 "Canvas 비율(3:4) 게이트" 참조. 기존 카카오 #10·종합 PASS를 정정. iPhone/Samsung은 가로 Canvas 비율 별도 미검증(추정 정정 안 함, 아래 위험 참조).
 
 ## 확대(200%/핀치) 접근성 게이트 — **FAIL** (기본배율 14항목과 별도)
 
@@ -86,9 +88,25 @@
 - **처리 상태:** 스펙 002 **로컬 구현 완료**(확대 시 `.bottomnav` fixed→흐름 전환 + 키보드 inset 오인 제거, 순수함수 `computeViewportLayout`). 자동검증 typecheck 0/unit 30/build/e2e 11 통과. **남은 것 = 사용자 실기기 4환경 확대 재검증** → 아래 게이트 행 갱신. 4환경 PASS 전까지 판정 **FAIL 유지**, 001 종료·Tailwind 확정 보류(스펙 002 DONE §5).
 - **재검증 체크(각 환경):** 핀치 확대 시 (a) 하단 CTA가 키보드 inset으로 세로 팽창 안 함 (b) CTA가 본문 지속 가림 없음 (c) 문서 끝에서 `시안 저장`·`주문 제작 의뢰하기` 전체 도달·클릭 (d) 확대 해제 시 fixed 복구 (e) 기본배율 1~14 회귀 없음. *확대로 보이는 영역이 좁아지는 것은 정상, 결함 아님.*
 
+## Canvas 비율(3:4) 게이트 — **FAIL** (가로 화면, #10 세부)
+
+> 발견: 2026-07-21 카카오톡 인앱 웹뷰 **가로 화면**. 증거 `KakaoTalk_20260721_220932985.jpg`.
+> 확대 접근성(스펙 002, 커밋 `f581242`)과 **별개 결함** — 분리 처리.
+
+| 항목 | iPhone Safari | Android Chrome | Samsung Internet | 카카오 인앱(가로) |
+|---|:---:|:---:|:---:|:---:|
+| Canvas DPR | PASS | — | (미측정) | **PASS**(DPR 2) |
+| Canvas 3:4 비율 유지 | (가로 미검증) | — | (가로 미검증) | **FAIL** |
+
+- **증상:** 카카오 인앱 가로에서 Canvas CSS **794×247**, backing **1588×494**(DPR 2 정상). 의도한 **3:4(0.75)**가 실제 약 **3.2:1**로 깨짐.
+- **원인 후보:** `.canvas-wrap`의 `width:100%` + `aspect-ratio:3/4` + `max-height:60vh` 조합에서, 가로 화면은 `max-height`가 **높이만** 제한하고 **폭(100%)은 그대로** 남아 aspect-ratio가 무력화됨. 상세는 001 핸드오프 "Canvas 비율 결함 분석".
+- **판정:** Canvas DPR = **PASS** / Canvas 3:4 비율 유지 = **FAIL** / 카카오 인앱 #10·종합 PASS **취소(FAIL로 정정)**.
+- **위험(미검증):** 같은 CSS라 iPhone Safari·Samsung Internet **가로**에서도 재현 가능성 있으나 **실기기 재검증 전까지 추정 정정 금지**(세로 기록만 PASS 유지). 세로 화면은 이번 결함 대상 아님.
+- **처리 상태:** 즉흥 수정 금지. 원인·최소 수정안·자동 비율 회귀 테스트·실기기 재검증안 **보고 후** 별도 스펙/커밋으로 수정. `f581242`와 분리.
+
 ## 판정 규칙
 - **PASS**: 해당 환경 실기기에서 14항목이 모두 정상.
-- **FAIL**: 하나라도 버튼 밀림·겹침·수평 overflow·회전 후 상태 손실·키보드 가림 재현(출시 차단 결함). **확대 게이트 결함(위)도 출시 차단 FAIL.**
+- **FAIL**: 하나라도 버튼 밀림·겹침·수평 overflow·회전 후 상태 손실·키보드 가림·**Canvas 비율 깨짐** 재현(출시 차단 결함). **확대 게이트·Canvas 비율 게이트 결함(위)도 출시 차단 FAIL.**
 - **NOT TESTED**: 실기기 미검증. 추정 금지.
 
 ## 자동(에뮬레이션) 참고
