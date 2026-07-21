@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { readDiagnostics, type Diagnostics } from './lib/diagnostics';
 import { contrastRatio, round2, wcagLevel } from './lib/contrast';
-import { FullscreenController, type FsState } from './lib/fullscreen';
+import {
+  FullscreenController,
+  type FsState,
+  type OrientationLockResult,
+} from './lib/fullscreen';
 
 const TOKENS = {
   accent: '#C0614A',
@@ -9,6 +13,15 @@ const TOKENS = {
   accentSoft: '#F6E6E1',
   kakao: '#FEE500',
 } as const;
+
+const LOCK_LABEL: Record<OrientationLockResult, string> = {
+  idle: '대기 (전체화면 진입 시 시도)',
+  unsupported: '미지원 (API 없음)',
+  'not-fullscreen': '전체화면 아님 → 시도 안 함',
+  locked: '잠금 성공',
+  denied: '권한 거부 (정상 fallback)',
+  error: '실패 (정상 fallback)',
+};
 
 const TOOL_LABELS = [
   '배경 밝기 조절',
@@ -151,6 +164,7 @@ export function App(): React.JSX.Element {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [fsState, setFsState] = useState<FsState>('idle');
   const [fsMessage, setFsMessage] = useState<string>('');
+  const [lockResult, setLockResult] = useState<OrientationLockResult>('idle');
   const controllerRef = useRef<FullscreenController | null>(null);
   if (!controllerRef.current) controllerRef.current = new FullscreenController();
 
@@ -158,9 +172,11 @@ export function App(): React.JSX.Element {
     const c = controllerRef.current;
     if (!c) return;
     const unsub = c.subscribe((s) => setFsState(s));
+    const unsubLock = c.subscribeLock((r) => setLockResult(r));
     const detach = c.attach();
     return () => {
       unsub();
+      unsubLock();
       detach();
     };
   }, []);
@@ -290,6 +306,10 @@ export function App(): React.JSX.Element {
             <SupportBadge ok={caps.orientationLockSupported} label="orientation.lock" />
           </div>
           <p className="note" style={{ marginTop: 8 }}>상태 머신: <strong>{fsState}</strong></p>
+          <p className="note" role="status" data-testid="lock-result">
+            orientation lock: <strong>{LOCK_LABEL[lockResult]}</strong>
+            <span className="note"> — 전체화면 진입이 확인된 뒤에만 시도. 미지원·거부·실패는 화면만 안내(계속 사용 가능).</span>
+          </p>
           <div className="toolrow">
             <button type="button" className="btn" onClick={requestFs} data-testid="fs-request">전체화면 요청</button>
             <button type="button" className="btn secondary" onClick={exitFs}>전체화면 종료</button>

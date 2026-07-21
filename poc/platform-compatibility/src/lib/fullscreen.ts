@@ -26,20 +26,44 @@ export function fsReduce(state: FsState, event: FsEvent): FsState {
   }
 }
 
+export type OrientationLockResult =
+  | 'idle'
+  | 'unsupported'
+  | 'not-fullscreen'
+  | 'locked'
+  | 'denied'
+  | 'error';
+
+/** Pure decision (spec §E): attempt orientation lock only when supported AND in fullscreen. */
+export function orientationLockPlan(
+  supported: boolean,
+  inFullscreen: boolean,
+): 'unsupported' | 'not-fullscreen' | 'attempt' {
+  if (!supported) return 'unsupported';
+  if (!inFullscreen) return 'not-fullscreen';
+  return 'attempt';
+}
+
 export interface FullscreenCapabilities {
   fullscreenEnabled: boolean;
   requestSupported: boolean;
   orientationLockSupported: boolean;
 }
 
+type ScreenOrientationLike = {
+  lock?: (orientation: string) => Promise<void>;
+  unlock?: () => void;
+};
+function orientationApi(): ScreenOrientationLike | undefined {
+  return (screen as Screen & { orientation?: ScreenOrientationLike }).orientation;
+}
+
 export function detectFullscreenCapabilities(): FullscreenCapabilities {
-  const el = document.documentElement as HTMLElement & {
-    webkitRequestFullscreen?: unknown;
-  };
+  const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: unknown };
   const requestSupported =
     typeof el.requestFullscreen === 'function' ||
     typeof el.webkitRequestFullscreen === 'function';
-  const so = (screen as Screen & { orientation?: { lock?: unknown } }).orientation;
+  const so = orientationApi();
   return {
     fullscreenEnabled: Boolean(document.fullscreenEnabled),
     requestSupported,
@@ -47,15 +71,21 @@ export function detectFullscreenCapabilities(): FullscreenCapabilities {
   };
 }
 
-type Listener = (state: FsState) => void;
+type StateListener = (state: FsState) => void;
+type LockListener = (result: OrientationLockResult) => void;
 
-/** DOM controller wrapping the pure reducer. Single owner of fullscreen transitions. */
+/** DOM controller wrapping the pure reducer. Single owner of fullscreen + orientation-lock. */
 export class FullscreenController {
   private state: FsState = 'idle';
-  private readonly listeners = new Set<Listener>();
+  private readonly listeners = new Set<StateListener>();
   private readonly caps = detectFullscreenCapabilities();
   private onChange: (() => void) | null = null;
   private rafId = 0;
+
+  // orientation lock (single owner; attempted only after fullscreen is active)
+  private lockResult: OrientationLockResult = 'idle';
+  private readonly lockListeners = new Set<LockListener>();
+  private locked = false;
 
   getState(): FsState {
     return this.state;
@@ -63,9 +93,21 @@ export class FullscreenController {
   getCapabilities(): FullscreenCapabilities {
     return this.caps;
   }
-  subscribe(fn: Listener): () => void {
+  getLockResult(): OrientationLockResult {
+    return this.lockResult;
+  }
+  subscribe(fn: StateListener): () => void {
     this.listeners.add(fn);
     return () => this.listeners.delete(fn);
+  }
+  subscribeLock(fn: LockListener): () => void {
+    this.lockListeners.add(fn);
+    return () => this.lockListeners.delete(fn);
+  }
+
+  private setLockResult(r: OrientationLockResult): void {
+    this.lockResult = r;
+    this.lockListeners.forEach((l) => l(r));
   }
 
   private dispatch(event: FsEvent): void {
@@ -73,9 +115,57 @@ export class FullscreenController {
     if (next === this.state) return; // block duplicate/no-op transitions
     this.state = next;
     this.listeners.forEach((l) => l(next));
+    if (next === 'active') void this.tryLockOrientation();
     if (next === 'settling') {
+      this.doUnlockOrientation();
       // single, purposeful rAF (not an arbitrary timer stack)
       this.rafId = requestAnimationFrame(() => this.dispatch('settled'));
+    }
+  }
+
+  /** Attempt orientation lock — only supported + in fullscreen. Denial/failure is non-fatal. */
+  private async tryLockOrientation(): Promise<void> {
+    const plan = orientationLockPlan(
+      this.caps.orientationLockSupported,
+      Boolean(document.fullscreenElement),
+    );
+    if (plan === 'unsupported') {
+      this.setLockResult('unsupported');
+      return;
+    }
+    if (plan === 'not-fullscreen') {
+      this.setLockResult('not-fullscreen');
+      return;
+    }
+    const so = orientationApi();
+    if (!so || typeof so.lock !== 'function') {
+      this.setLockResult('unsupported');
+      return;
+    }
+    try {
+      await so.lock('landscape');
+      this.locked = true;
+      this.setLockResult('locked');
+    } catch (err) {
+      // 권한 거부/실패는 치명적 오류가 아니다 — 화면 관측용 결과만 남기고 계속 사용 가능.
+      const name = err instanceof Error ? err.name : 'UnknownError';
+      this.setLockResult(name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'error');
+    }
+  }
+
+  /** Release orientation lock on fullscreen exit (if we locked it). Non-fatal on failure. */
+  private doUnlockOrientation(): void {
+    if (!this.locked) return;
+    this.locked = false;
+    const so = orientationApi();
+    if (so && typeof so.unlock === 'function') {
+      try {
+        so.unlock();
+      } catch (err) {
+        // 비치명적: unlock 실패는 브라우저가 FS 종료 시 자연 해제. 관측용 결과만 반영.
+        void err;
+        this.setLockResult('error');
+      }
     }
   }
 
@@ -83,8 +173,10 @@ export class FullscreenController {
   attach(): () => void {
     const handler = (): void => {
       if (document.fullscreenElement) this.dispatch('entered');
-      else if (this.state === 'active') this.dispatch('exit'), this.dispatch('exited');
-      else if (this.state === 'entering') this.dispatch('fail');
+      else if (this.state === 'active') {
+        this.dispatch('exit');
+        this.dispatch('exited');
+      } else if (this.state === 'entering') this.dispatch('fail');
       else if (this.state === 'exiting') this.dispatch('exited');
     };
     this.onChange = handler;
@@ -93,6 +185,7 @@ export class FullscreenController {
       if (this.onChange) document.removeEventListener('fullscreenchange', this.onChange);
       this.onChange = null;
       if (this.rafId) cancelAnimationFrame(this.rafId);
+      this.doUnlockOrientation();
     };
   }
 
