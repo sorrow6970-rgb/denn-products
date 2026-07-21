@@ -15313,6 +15313,34 @@ window.addEventListener('resize',scheduleSettle);
     return true;
   };
 
+  // 2026-07-21: 콘솔 수동 트리거 — 남은 base64 템플릿을 즉시 Storage로 마이그.
+  window.dennSweepTemplates=function(){
+    try{sweep()}catch(e){console.warn('[firebase] dennSweepTemplates error',e)}
+    return true;
+  };
+
+  // 2026-07-21: Firebase-ready 레이스 방어 (localStorage 쿼터 데드락 재발 방지).
+  // 고정 sweep 창(boot 2500ms / fbExport 200·1500ms)은 Firebase 인증이 그 이후 완료되거나
+  // processFTpls(이미지 직접 업로드) 경로로 추가하면 base64를 놓친다 → 잔존분이 LS 쿼터를 넘김.
+  // 주기 스캔으로 잔존 base64를 흡수: 대상 없거나 Firebase 미준비면 no-op(저비용 스캔).
+  var __retrySweepTimer=null;
+  function templatesPending(){
+    var arr=tplArr();
+    for(var i=0;i<arr.length;i++){var t=arr[i];if(!t)continue;
+      for(var j=0;j<FIELDS.length;j++){var f=FIELDS[j];
+        if(typeof t[f[0]]==='string'&&t[f[0]].indexOf('data:')===0&&!t[f[1]])return true;}}
+    return false;
+  }
+  function startRetrySweep(){
+    if(__retrySweepTimer)return;
+    __retrySweepTimer=setInterval(function(){
+      try{
+        if(!templatesPending())return;
+        if(window.dennFirebase&&window.dennFirebase.uploadDataUrl){sweep();}
+      }catch(e){}
+    },15000);
+  }
+
   function install(){
     var fbOk=wrapFbExport();
     var guideOk=wrapProcessGuideBgs();
@@ -15325,6 +15353,7 @@ window.addEventListener('resize',scheduleSettle);
     setTimeout(install,1000);
     setTimeout(sweep,2500);
     installUploadGuidesHook(); // B v3: ZE overlay 업로드 후크 (document-level, 즉시 안전)
+    startRetrySweep(); // 2026-07-21: Firebase-ready 레이스/누락 add 경로 잔존 base64 자동 흡수
   }
   if(document.readyState==='complete')boot();
   else window.addEventListener('load',boot);
