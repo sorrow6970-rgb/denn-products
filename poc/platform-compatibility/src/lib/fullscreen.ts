@@ -216,8 +216,23 @@ export class FullscreenController {
     if (this.lockResult === 'locked') this.setLockResult('idle');
   }
 
-  /** Attach the single fullscreenchange owner. Returns detach cleanup. */
+  /**
+   * Attach the single fullscreenchange owner. Returns detach cleanup.
+   * Safely re-attachable (React StrictMode dev runs effects as attach→detach→attach):
+   * - single-attach: any prior handler is removed before adding a new one.
+   * - re-enable: `detached` is reset to false so dispatch/setLockResult work again.
+   * - generation separation: `lockGen++` starts a fresh session, so any late lock Promise
+   *   from the previous session fails isLockStillValid and cannot restore the new session.
+   */
   attach(): () => void {
+    // single-attach policy: drop any previously-attached handler first
+    if (this.onChange) {
+      document.removeEventListener('fullscreenchange', this.onChange);
+      this.onChange = null;
+    }
+    this.detached = false; // re-enable notifications after a prior detach
+    this.lockGen++; // new attach session → invalidates any prior in-flight lock
+
     const handler = (): void => {
       if (document.fullscreenElement) this.dispatch('entered');
       else if (this.state === 'active') {
@@ -228,12 +243,13 @@ export class FullscreenController {
     };
     this.onChange = handler;
     document.addEventListener('fullscreenchange', handler);
+
     return () => {
       // detach: stop all notifications, invalidate in-flight locks, release any held lock.
       this.detached = true;
       this.lockGen++;
-      if (this.onChange) document.removeEventListener('fullscreenchange', this.onChange);
-      this.onChange = null;
+      document.removeEventListener('fullscreenchange', handler); // remove THIS handler only
+      if (this.onChange === handler) this.onChange = null;
       if (this.rafId) cancelAnimationFrame(this.rafId);
       if (this.locked) {
         this.locked = false;
