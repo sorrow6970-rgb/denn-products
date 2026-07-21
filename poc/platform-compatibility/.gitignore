@@ -1,0 +1,18 @@
+# The repo-root .gitignore ignores *.json. Re-include the POC's own config + frozen lockfile
+# so the POC is reproducible (npm ci). node_modules/dist stay ignored below.
+!package.json
+!package-lock.json
+!tsconfig.json
+
+# POC build/install artifacts — not committed (deployment decision §2)
+node_modules/
+dist/
+.vite/
+
+# Playwright / test artifacts (regenerable evidence)
+results/playwright-artifacts/
+results/screenshots/
+results/e2e-report.json
+results/viewport-summary.json
+test-results/
+playwright-report/
