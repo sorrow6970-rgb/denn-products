@@ -1,6 +1,6 @@
 # 현재 상태
 
-상태: **리빌드 구현 시작 전 — 문서 통합 및 기술 스택 확정 준비**
+상태: **첫 구현 스펙 작성 완료 — 사용자 승인 및 Claude Code 착수 대기**
 
 ## 현재 결론
 
@@ -8,24 +8,32 @@
 - 신규 리빌드는 별도 디렉터리에 추가한다.
 - Modern Studio(B) 디자인 방향은 확정됐다.
 - 세부 디자인 규격은 접근성·반응형 보완을 적용한다.
-- 기술 스택은 아직 후보이며 설치·스캐폴드 승인이 나지 않았다.
-- 구현 스펙 `001`은 아직 발행하지 않았다.
+- 기술 스택은 아직 후보이며 전체 스캐폴드 승인이 나지 않았다.
+- 첫 스펙 `docs/rebuild/specs/001-platform-compatibility-poc.md`가 발행됐다.
+- `001`은 전체 앱이 아닌 삭제 가능한 플랫폼 호환성 POC다.
 
 ## 현재 선행 작업
 
-1. Claude Code가 킥오프 문서 부산물과 Git 상태를 정리해 보고
-2. 실제 production과 기준 커밋의 일치 근거 확인
-3. 기준선 태그·리빌드 브랜치·롤백안 사용자 승인
-4. 기술 스택 공식 검증과 최종 확정
-5. Codex가 `docs/rebuild/specs/001-*.md` 작성
+완료:
+
+- production 기준선 태그 `prod-baseline-20260721` → `df856db`
+- docs-only 커밋 `805b61d`
+- 리빌드 브랜치 `rebuild/modern-studio` → `805b61d`
+
+다음:
+
+1. 사용자가 `001-platform-compatibility-poc.md` 실행 승인
+2. Claude Code가 POC만 구현하고 결과 제출
+3. 실제 기기 검증
+4. POC 결과를 바탕으로 기술 스택 최종 확정
 
 기존 `instructions/2026-07-21-001-freeze-and-baseline.md`는 준비 이력이며 현재 구현 스펙이 아니다.
 
 ## Claude Code 금지
 
 - 기존 HTML 이동·삭제
-- 신규 패키지 설치
-- 리빌드 코드 생성
+- POC 범위를 벗어난 패키지 설치
+- 전체 앱 스캐폴드와 제품 기능 구현
 - Firebase·운영 데이터 변경
 - Preview·production 배포
 

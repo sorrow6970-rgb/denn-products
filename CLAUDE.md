@@ -76,6 +76,7 @@
 - 성능 예산: `docs/codex-claude-handoff/decisions/2026-07-21-performance-and-resource-budgets.md`
 - 접근성: `docs/codex-claude-handoff/decisions/2026-07-21-accessibility.md`
 - 의존성·기술 선택: `docs/codex-claude-handoff/decisions/2026-07-21-dependency-and-technology-policy.md`
+- PC 간 핸드오프·재개: `docs/codex-claude-handoff/decisions/2026-07-21-cross-device-handoff-and-resume.md`
 
 ## 7. 확정 디자인과 참고 자료
 

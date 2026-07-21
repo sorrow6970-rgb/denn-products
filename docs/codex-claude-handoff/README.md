@@ -33,6 +33,7 @@ Codex는 사용자가 별도로 명시하지 않는 한 애플리케이션 코�
 번들·이미지·Canvas·저장소·성능 작업은 `decisions/2026-07-21-performance-and-resource-budgets.md`를 필수로 적용한다.
 모든 UI·Canvas 조작·폼 작업은 `decisions/2026-07-21-accessibility.md`를 필수로 적용한다.
 스캐폴드·패키지 설치·업데이트 작업은 `decisions/2026-07-21-dependency-and-technology-policy.md`를 필수로 적용한다.
+PC 변경·세션 종료·작업 재개에는 `decisions/2026-07-21-cross-device-handoff-and-resume.md`를 필수로 적용한다. 사용자가 “이어가자”라고 하면 구현 전에 재개 점검부터 수행한다.
 
 ## 작업 원칙
 
