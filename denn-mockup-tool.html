@@ -1143,10 +1143,27 @@ function templateMatchesCurrentFrameSize(t){
   return keys.some(function(k){return cur.indexOf(k)>=0;});
 }
 /* E(2026-06-04): uploaded(빌더/투명) 템플릿 카드 썸네일을 본 캔버스와 동일하게 합성 — 업로드 사진을 photoZones(특정 사각)에만 클립 + 아트 오버레이. 기존 풀샷 <img> 대체. renderFrame 본체 무수정, 헬퍼만 재사용. live canvas append라 toDataURL/CORS 무관. */
+/* 2026-07-21: 템플릿의 실제 액자 비율(H/W). 사이즈 선택 시=curFSz.aspect(전부 동일). 미선택(전체 브라우징) 시=
+   각 템플릿 자신의 sizeId→FS 매칭 비율. 이게 없으면 썸네일이 정사각(1)·기본(0.667)로 렌더돼 object-fit:cover가
+   크롭/스트레치 → '퍼짐'. 카드 박스(--fr-aspect)와 합성 캔버스가 이 값을 공유해 왜곡 제거. */
+window.dennTplAspectV=function(t){
+  try{
+    if(window.curFSz&&!window.__dennSizeUnset&&window.curFSz.aspect>0)return window.curFSz.aspect;
+    var keys=(typeof templateFrameSizeKeys==='function')?templateFrameSizeKeys(t):[];
+    if(keys.length&&window.FS&&typeof frameSizeKey==='function'){
+      for(var i=0;i<FS.length;i++){
+        var sk=[FS[i].id,FS[i].name,FS[i].sub,FS[i].sizeId,FS[i].frameSizeId].map(frameSizeKey).filter(Boolean);
+        if(sk.some(function(k){return keys.indexOf(k)>=0;})&&FS[i].aspect>0)return FS[i].aspect;
+      }
+    }
+    if(window.curFSz&&window.curFSz.aspect>0)return window.curFSz.aspect;
+  }catch(e){}
+  return 1.414;/* 기본(A2 근사) */
+};
 function dennRenderCardCompositeThumbV(tpl,thumbEl){
   var Hh=window.dennZoneCompositeHelpersV;if(!Hh||!Hh.drawPhotos)return;
   try{
-    var aspect=(window.curFSz&&curFSz.aspect)||1,W=240,H=Math.max(1,Math.round(W*(aspect||1)));
+    var aspect=window.dennTplAspectV(tpl)||1,W=240,H=Math.max(1,Math.round(W*(aspect||1)));
     var c=document.createElement('canvas');c.width=W;c.height=H;c.style.cssText='width:100%;height:100%;display:block;object-fit:cover';
     var ctx=c.getContext('2d');if(!ctx)return;
     var bg=Hh.bg&&Hh.bg(tpl),src=Hh.realSrc?Hh.realSrc(tpl):null;
@@ -1190,7 +1207,7 @@ function buildFrameTplGrid(catId){
       .sort(function(a,b){return (a.g-b.g)||(a.i-b.i);}).map(function(x){return x.t;});
   }
   if(!filtered.length){tg.innerHTML='<div style="grid-column:1/-1;font-size:11px;color:var(--warm);text-align:center;padding:20px 16px;line-height:1.6">이 사이즈에는 표시할 템플릿이 없습니다.<br>위에서 <strong>다른 사이즈를 선택</strong>해 주세요.</div>';return;}
-  tg.innerHTML=filtered.map(function(t){var i=FTPLS.indexOf(t),src=(typeof realTemplateSrc==='function'?realTemplateSrc(t):(t&&!t.generatedDetailPreview?t.dataUrl:null));return '<div class="tpl-card'+(curFTpl&&curFTpl.id===t.id?' on':'')+'" onclick="selFTplByRef(this,'+i+')"><div class="tpl-thumb fr">'+(src?'<img src="'+src+'">':t.icon||'🎨')+'</div><div class="tpl-name">'+t.name+'</div></div>';}).join('');
+  tg.innerHTML=filtered.map(function(t){var i=FTPLS.indexOf(t),src=(typeof realTemplateSrc==='function'?realTemplateSrc(t):(t&&!t.generatedDetailPreview?t.dataUrl:null));var __far=(1/(window.dennTplAspectV(t)||1.414)).toFixed(4);/* 2026-07-21: 카드별 실제 비율 → 사이즈 미선택시에도 퍼짐 없음 */return '<div class="tpl-card'+(curFTpl&&curFTpl.id===t.id?' on':'')+'" onclick="selFTplByRef(this,'+i+')"><div class="tpl-thumb fr" style="--fr-aspect:'+__far+'">'+(src?'<img src="'+src+'">':t.icon||'🎨')+'</div><div class="tpl-name">'+t.name+'</div></div>';}).join('');
   try{var __H=window.dennZoneCompositeHelpersV;if(__H&&__H.drawPhotos){var __ccards=tg.querySelectorAll('.tpl-card');filtered.forEach(function(t,__ci){if(!(t&&t.type==='uploaded'&&__H.realSrc&&__H.realSrc(t)))return;var __cd=__ccards[__ci];if(!__cd)return;var __th=__cd.querySelector('.tpl-thumb');if(__th)dennRenderCardCompositeThumbV(t,__th)})}}catch(__e){}
   if(!curFTpl||!filtered.find(function(t){return t.id===curFTpl.id;})){curFTpl=filtered[0];document.querySelectorAll('#frame-tpl-grid .tpl-card').forEach(function(c,i){c.classList.toggle('on',i===0);});applyFrameDefaultTexts(curFTpl,false);}
   renderFrame();
