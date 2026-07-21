@@ -62,6 +62,38 @@ test.describe('viewport matrix', () => {
       });
       expect(smallButtons, `${v.name}: sub-44 touch targets`).toEqual([]);
 
+      // 3b) Canvas keeps its 3:4 CSS box on every viewport (spec 003 §2). The DPR/backing store
+      //     is a separate contract (§3): observed and attached below, never mixed into this verdict.
+      const cv = await page.locator('canvas').first().evaluate((el) => {
+        const c = el as HTMLCanvasElement;
+        const r = c.getBoundingClientRect();
+        return { cssW: r.width, cssH: r.height, backW: c.width, backH: c.height };
+      });
+      const ratio = cv.cssW / cv.cssH;
+      expect(cv.cssW, `${v.name}: canvas css width ${cv.cssW}`).toBeGreaterThan(0);
+      expect(cv.cssH, `${v.name}: canvas css height ${cv.cssH}`).toBeGreaterThan(0);
+      expect(
+        Math.abs(ratio - 0.75),
+        `${v.name}: canvas ratio ${ratio.toFixed(4)} (css ${cv.cssW.toFixed(1)}x${cv.cssH.toFixed(1)}) not within 0.75±0.01`,
+      ).toBeLessThanOrEqual(0.01);
+      // §3 observation only — no assertion (a 1px rounding delta is not a defect): backing ≈ css × DPR(≤2).
+      await testInfo.attach(`canvas-${v.name}`, {
+        body: JSON.stringify(
+          {
+            cssW: Math.round(cv.cssW * 10) / 10,
+            cssH: Math.round(cv.cssH * 10) / 10,
+            ratio: Math.round(ratio * 1000) / 1000,
+            backW: cv.backW,
+            backH: cv.backH,
+            backingRatioW: cv.cssW > 0 ? Math.round((cv.backW / cv.cssW) * 100) / 100 : null,
+            backingRatioH: cv.cssH > 0 ? Math.round((cv.backH / cv.cssH) * 100) / 100 : null,
+          },
+          null,
+          2,
+        ),
+        contentType: 'application/json',
+      });
+
       // 4) screenshot regression artifact
       await page.screenshot({ path: `results/screenshots/${v.name}.png`, fullPage: true });
 

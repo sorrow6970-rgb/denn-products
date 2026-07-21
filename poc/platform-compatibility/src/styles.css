@@ -255,10 +255,14 @@ canvas {
 }
 
 .canvas-wrap {
-  width: 100%;
-  min-width: 0;
+  /* spec 003: single width constraint drives the 3:4 box. In landscape the old
+     `width:100% + max-height:60vh` clamped only the height and left the width at 100%, so the
+     aspect-ratio was overridden (box went ~3.2:1). `min(100%, 45vh)` caps width so height stays
+     45vh*4/3 = 60vh at most while the ratio always holds. No max-height, calc, or media query. */
+  width: min(100%, 45vh);
   aspect-ratio: 3 / 4;
-  max-height: 60vh;
+  margin-inline: auto;
+  min-width: 0;
   display: grid;
   place-items: center;
   background: var(--accent-soft);
