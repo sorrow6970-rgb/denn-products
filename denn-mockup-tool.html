@@ -3703,16 +3703,35 @@ window.dennPortraitFrameAnchorTopV=function(area){
     return Math.round(frac*max);
   }catch(e){return -1}
 };
+/* 2026-07-21: ★단일 스크롤 앵커 권위(single authority). 그간 6개 코드가 rm-canvas-area scrollTop/Left를
+   각자 조작해 충돌(0↔앵커 진동=떨림)하던 것을 하나로 통합. 상태별 목표:
+   · 세로(dennPortraitFrameAnchorTopV>=0): 액자 앵커 + scrollLeft=0(06-23 세로 좌잠금).
+     force거나 진입중(denn-room-entering)이거나 10px 초과 이탈시에만 적용(06-29 데드밴드 — 정착 중 미세진동 무시).
+   · 가로 전체화면(denn-rotate-fs): 세로/가로 센터.
+   · 그 외 넘침(가로 방향일 때만, 06-29 101누출 가드): 세로 센터.
+   force=true → anchorScroll처럼 무조건 적용(데드밴드 무시). force 미지정 → __ctr/#1처럼 데드밴드 적용. */
+window.dennApplyRoomScrollV=function(area,opts){
+  try{
+    if(!area)return;opts=opts||{};
+    var html=document.documentElement;
+    var __aT=(window.dennPortraitFrameAnchorTopV)?dennPortraitFrameAnchorTopV(area):-1;
+    if(__aT>=0){
+      if(opts.force||html.classList.contains('denn-room-entering')||Math.abs(area.scrollTop-__aT)>10)area.scrollTop=__aT;
+      area.scrollLeft=0;
+    }else if(html.classList.contains('denn-rotate-fs')){
+      if(area.scrollHeight>area.clientHeight+4)area.scrollTop=Math.round((area.scrollHeight-area.clientHeight)/2);
+      area.scrollLeft=(area.scrollWidth>area.clientWidth)?Math.round((area.scrollWidth-area.clientWidth)/2):0;
+    }else if(window.innerWidth>window.innerHeight&&area.scrollHeight>area.clientHeight+4){
+      area.scrollTop=Math.round((area.scrollHeight-area.clientHeight)/2);
+    }
+  }catch(e){}
+};
 function centerRoomCanvasScroll(){
   var area=by('rm-canvas-area');if(!area||!isRoomMobile())return;
   setTimeout(function(){
     try{
       if(document.documentElement.classList.contains('denn-rotate-fs'))return;/* 2026-06-22: 가로 전체화면 스크롤 센터는 dennGatedRevealV(__ctr, gen 가드)가 전담 — 이 경로(redrawRoomSoon 등 비조율 타이밍)가 stale 레이아웃에 센터해 반복 토글 누적 틀어짐 유발하던 것 제외 */
-      if(area.scrollWidth>area.clientWidth)area.scrollLeft=Math.max(0,(area.scrollWidth-area.clientWidth)/2);
-      var modal=by('room-modal'),fs=modal&&modal.classList&&modal.classList.contains('denn-room-fullscreen-active');
-      var __aT=window.dennPortraitFrameAnchorTopV&&dennPortraitFrameAnchorTopV(area);/* 2026-06-26: 세로=액자 앵커 */
-      if(__aT>=0){if(document.documentElement.classList.contains('denn-room-entering')||Math.abs(area.scrollTop-__aT)>10)area.scrollTop=__aT;}/* 2026-06-29: 세로 앵커 데드밴드 — 노출(페이드 종료) 후엔 정착 중 max(scrollHeight-clientHeight) 미세변동으로 앵커가 0~8 진동하며 액자가 상하로 떨리던 것 차단. 페이드 중(opacity:0 숨김)엔 자유 정착, 노출 후 10px 이하 변화는 무시(레스트 고정). */
-      else if(area.scrollHeight>area.clientHeight)area.scrollTop=Math.max(0,(area.scrollHeight-area.clientHeight)/2);/* 2026-06-22: 가로 전체화면도 중앙(기존 0=맨위 강제 제거) — 사용자 요청, 첫 화면 세로 중앙 정렬 */
+      window.dennApplyRoomScrollV(area,{force:false});/* 2026-07-21: 단일 권위로 통합(구 인라인 앵커/센터 로직 대체) */
     }catch(e){}
   },30);
 }
