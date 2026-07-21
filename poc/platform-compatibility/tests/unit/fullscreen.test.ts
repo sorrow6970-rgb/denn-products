@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { fsReduce, orientationLockPlan, type FsState } from '../../src/lib/fullscreen';
+import {
+  fsReduce,
+  isLockStillValid,
+  orientationLockPlan,
+  type FsState,
+} from '../../src/lib/fullscreen';
 
 describe('fullscreen state machine', () => {
   it('runs the full happy path idle→entering→active→exiting→settling→idle', () => {
@@ -44,5 +49,36 @@ describe('orientationLockPlan (spec §E: supported AND fullscreen only)', () => 
 
   it('attempts only when supported AND fullscreen', () => {
     expect(orientationLockPlan(true, true)).toBe('attempt');
+  });
+});
+
+describe('isLockStillValid (async lock 종료 경합 가드)', () => {
+  const base = {
+    attemptGen: 1,
+    currentGen: 1,
+    detached: false,
+    state: 'active' as FsState,
+    inFullscreen: true,
+  };
+
+  it('valid only when gen matches, not detached, active, and in fullscreen', () => {
+    expect(isLockStillValid(base)).toBe(true);
+  });
+
+  it('late success after a newer attempt (gen bumped) is invalid', () => {
+    expect(isLockStillValid({ ...base, currentGen: 2 })).toBe(false);
+  });
+
+  it('late success after detach is invalid', () => {
+    expect(isLockStillValid({ ...base, detached: true })).toBe(false);
+  });
+
+  it('late success after fullscreen exit (state no longer active) is invalid', () => {
+    expect(isLockStillValid({ ...base, state: 'settling' })).toBe(false);
+    expect(isLockStillValid({ ...base, state: 'idle' })).toBe(false);
+  });
+
+  it('late success while document is no longer fullscreen is invalid', () => {
+    expect(isLockStillValid({ ...base, inFullscreen: false })).toBe(false);
   });
 });
