@@ -45,9 +45,9 @@
 - **Swatch(색상)**: 34×34, radius 10; 활성 = accent 보더 + 2px 링.
 - **Card / Pane**: surface, 1px line, radius 18; 헤더 13.5px 700 + 우측 muted 액션.
 - **Input**: 1px line, radius 12, padding 11×13, placeholder muted.
-- **Nav item(어드민)**: radius 12, muted → 활성 시 `--accent-soft` bg + `--ink` text + accent 아이콘·보더(라벨은 accent-soft 위에서 accent 미달 2.67:1이므로 ink).
+- **Nav item(어드민)**: radius 12, muted → 활성 시 `--accent-soft` bg + `--ink` text·아이콘. 의미 있는 아이콘도 `--ink`(accent는 accent-soft 위 2.67:1로 **비텍스트 UI 3:1도 미달**). 상태 경계가 식별에 필요하면 `--ink` 또는 3:1 이상 검증된 색을 쓰고, `--accent` 보더·링은 **흰색·surface처럼 3:1 이상 확보된 배경 위에서만** 사용. 활성은 색만으로 표현하지 않는다(bg + 텍스트/아이콘 병행).
 - **Stat tile**: surface 카드, 라벨(muted+아이콘) → 큰 값(700) → 델타(muted).
-- **Table**: th는 uppercase muted 11px, 행 구분 1px line, 상태는 pill(신규=accent-soft/accent, 확정=성공색).
+- **Table**: th는 uppercase muted 11px, 행 구분 1px line, 상태 pill — 신규=`--accent-soft` 배경 + `--ink` 텍스트(accent 텍스트는 2.67:1 미달), 필요한 accent 포인트는 대비 확보된 외곽/비필수 장식으로 제한. 확정=성공색(`#5BA35B`/배경 `#E4EFE4`) — 실제 명암비 미확인이므로 자동 통과로 단정하지 말고 **별도 검증 대상**으로 표시.
 - **Tag/Badge**: `--accent-soft` bg + `--ink` text(accent는 accent-soft 위 2.67:1 미달), radius 999, 11px 700, 아이콘 gap 6.
 - **Bottom sheet(모바일)**: surface, 상단 radius 26, 그래버 44×5 line, 상단 필터 칩 가로 스크롤, 하단 CTA 카카오.
 

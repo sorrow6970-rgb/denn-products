@@ -33,6 +33,22 @@ describe('contrast', () => {
     expect(wcagLevel(ratio)).toBe('AA');
   });
 
+  it('white on accent-2 #C6A46B is below UI/large 3:1', () => {
+    const ratio = contrastRatio('#ffffff', '#C6A46B');
+    expect(ratio).toBeLessThan(3); // fails even non-text UI / large-text 3:1 → no white on accent-2
+  });
+
+  it('accent #B0894E on accent-soft #F2E9DA is below normal-text AA', () => {
+    const ratio = contrastRatio('#B0894E', '#F2E9DA');
+    expect(ratio).toBeLessThan(4.5); // accent text on the soft tint fails normal-text AA
+  });
+
+  it('ink #191A1D on accent-soft #F2E9DA passes normal-text AA', () => {
+    const ratio = contrastRatio('#191A1D', '#F2E9DA');
+    expect(ratio).toBeGreaterThanOrEqual(4.5); // ink is the correct text/icon on the soft tint (≈14.45:1)
+    expect(wcagLevel(ratio)).not.toBe('fail');
+  });
+
   it('dark ink on kakao yellow passes AA', () => {
     const ratio = contrastRatio('#1A1400', '#FEE500');
     expect(ratio).toBeGreaterThanOrEqual(4.5);
