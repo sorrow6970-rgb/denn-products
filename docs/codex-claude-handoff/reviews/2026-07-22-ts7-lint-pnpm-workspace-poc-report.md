@@ -32,8 +32,9 @@
 `poc/toolchain-workspace/` 내부에만 생성. 저장소 루트 무변경.
 
 ```
-package.json          private:true · packageManager pnpm@11.15.1 · engines.node>=24 · 중앙 devDeps(biome/tsc/@types/node)
-pnpm-workspace.yaml   apps/* · packages/*  (+ pnpm11이 minimumReleaseAgeExclude 자동 추가, §5)
+package.json          private:true · packageManager pnpm@11.15.1 · engines.node ">=24 <25" · 중앙 devDeps(biome/tsc/@types/node)
+.nvmrc                24 (Node 24 LTS 고정, engines와 일치)
+pnpm-workspace.yaml   apps/* · packages/*  (+ pnpm11 기본 release-age 정책 allowlist 9항목, §5)
 pnpm-lock.yaml        단일 lockfile
 biome.json            linter.rules.preset=recommended + formatter(space/2/100)
 tsconfig.base.json    strict · nodenext · noUnused* · verbatimModuleSyntax · types:[]
@@ -77,7 +78,14 @@ scripts/verify-fixtures.mjs  게이트 실패 재현기
 
 - **frozen install 재현**: `pnpm install --frozen-lockfile` = "Already up to date", **lockfile git diff 0**.
 - **단일 lockfile**: `pnpm-lock.yaml` 1개. `package-lock.json`·`yarn.lock` 없음.
-- **설치 경고**: peer·deprecated·lifecycle-script·취약점 경고 **없음**. pnpm 11이 공급망 보호 기능으로 `pnpm-workspace.yaml`에 `minimumReleaseAgeExclude`(biome 9개 항목)를 자동 추가함 — 최근 배포 패키지의 age-gate 예외 목록이며, 재현 설치를 위해 그대로 커밋. `latest`/force 아님.
+- **설치 경고**: peer·deprecated·lifecycle-script·취약점 경고 **없음**.
+- **★ release-age 정책 실측 (config 조회값 ≠ 실제 동작):**
+  - `pnpm config get minimumReleaseAge` = **`undefined`**, POC/상위/홈에 `.npmrc` 없음. 그럼에도 **pnpm 11.15.1의 내장 기본 release-age 정책이 실제로 작동**한다(cutoff가 매 실행 라이브 계산됨).
+  - **Biome 2.5.5가 검증 시점 cutoff 안에 있어**(2026-07-21 배포) frozen install에서 거부됨.
+  - `pnpm-workspace.yaml`의 `minimumReleaseAgeExclude`는 **정확 버전 `2.5.5` 및 플랫폼별 optional package(@biomejs/cli-*)만 제한적으로 allowlist**한다(9개 항목, 최초 install 시 pnpm이 생성).
+  - **allowlist 제거 시 `pnpm install --frozen-lockfile` EXIT 1**("The lockfile contains entries that the active policies reject"), **유지 시 EXIT 0**. 따라서 exclude는 재현 설치에 **필수**(불필요한 예외가 아님).
+  - **프로젝트의 release-age 기간·장기 공급망 정책은 NOT DECIDED.** `minimumReleaseAge=0` 비활성화는 이번 범위에서 하지 않았고, release-age 기간을 프로젝트 설정으로 새로 고정하지도 않았다.
+  - **후속:** Biome이 pnpm 기본 임계 기간을 지난 뒤 또는 실제 스캐폴드 시점에 allowlist 필요성을 재검증하고, 불필요하면 제거한다.
 - **Corepack 캐시**: pnpm 바이너리는 Corepack 사용자 캐시(저장소 밖)에 존재. 전역 활성화·시스템 설정 변경 없음.
 
 ## 6. 채택 권고

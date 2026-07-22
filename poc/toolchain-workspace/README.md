@@ -10,8 +10,9 @@ TypeScript 7 린트 전략과 최소 pnpm workspace 구조를 검증하는 **격
 ## 구조
 
 ```
-package.json            # private, packageManager=pnpm@11.15.1, engines.node>=24, 중앙 devDeps(biome/tsc/@types/node)
-pnpm-workspace.yaml     # apps/*, packages/*  (+ pnpm11 minimumReleaseAgeExclude 자동 생성)
+package.json            # private, packageManager=pnpm@11.15.1, engines.node ">=24 <25", 중앙 devDeps(biome/tsc/@types/node)
+.nvmrc                  # 24 (Node 24 LTS, engines와 일치)
+pnpm-workspace.yaml     # apps/*, packages/*  (+ minimumReleaseAgeExclude 9항목 = pnpm11 기본 release-age 정책의 Biome allowlist)
 pnpm-lock.yaml          # 단일 lockfile
 biome.json              # linter recommended(preset) + formatter
 tsconfig.base.json      # 공통 strict 옵션
@@ -40,6 +41,7 @@ corepack pnpm run verify:fixtures         # 각 게이트가 나쁜 입력을 �
 - 정상 상태: typecheck / lint / format / test **모두 PASS**.
 - fixture: lint(사용하지 않는 import) / format(잘못된 공백) / type(타입 오류) 각각 게이트를 **정상 실패**시킴(영구 실패 파일 미커밋).
 - frozen install 재현, lockfile diff 0, npm/yarn lockfile 없음, app→shared는 패키지명 import.
+- **release-age:** `pnpm config get minimumReleaseAge`는 `undefined`지만 **pnpm 11.15.1 기본 정책이 실제 작동**한다. Biome 2.5.5가 검증 시점 cutoff 안이라, `pnpm-workspace.yaml`의 `minimumReleaseAgeExclude`(Biome 2.5.5 + 플랫폼별 optional 9항목)를 **유지해야 frozen install EXIT 0**(제거 시 EXIT 1). 프로젝트 release-age 기간·장기 공급망 정책은 **NOT DECIDED**이며 `minimumReleaseAge=0` 비활성화는 하지 않는다. Biome이 임계 기간을 지나거나 실제 스캐폴드 시점에 allowlist 필요성을 재검증한다.
 - 상세 근거·정확 버전: `docs/codex-claude-handoff/reviews/2026-07-22-ts7-lint-pnpm-workspace-poc-report.md`.
 
 이 POC는 도구·경계·lockfile 동작만 증명한다. 실제 `apps/mockup`·`apps/admin`·공유 packages 확장은 별도 스캐폴드 스펙에서 수행한다.

@@ -14,6 +14,7 @@
 
 - Node v24.18.0 · Corepack 0.35.0. pnpm은 PATH에 없어 **Corepack로 실행**(전역 설치·enable·PATH 변경 없음, `COREPACK_ENABLE_DOWNLOAD_PROMPT=0`). 관리자 권한 불필요, pnpm 캐시는 저장소 밖.
 - pnpm 11.15.1 · typescript 7.0.2 · @biomejs/biome 2.5.5 · @types/node 24.13.3 (npm registry metadata).
+- POC 루트 `engines.node ">=24 <25"` + `.nvmrc`=`24` (Node 24 LTS major 고정).
 
 ## 게이트 실측
 
@@ -29,7 +30,8 @@
 | fixtures | `verify:fixtures`(lint/format/type) | ✅ 각 exit 1(정상 거부) |
 
 - 경계: app→shared는 **패키지명 import만**(상대 src 침투 0). `pnpm list -r --depth 0`로 도구 중앙화·app의 유일 런타임 dep(shared workspace link) 확인.
-- 설치 경고: peer/deprecated/lifecycle/취약점 **없음**. pnpm11이 `minimumReleaseAgeExclude`(biome 9항목)를 `pnpm-workspace.yaml`에 자동 추가 → 재현 위해 커밋(force 아님).
+- 설치 경고: peer/deprecated/lifecycle/취약점 **없음**.
+- **★ release-age 정책(config≠실측):** `pnpm config get minimumReleaseAge`=`undefined`·`.npmrc` 없음이나 **pnpm 11.15.1 기본 release-age 정책이 실제 작동**. Biome 2.5.5가 검증 시점 cutoff 안이라, `pnpm-workspace.yaml`의 `minimumReleaseAgeExclude`(Biome 2.5.5 + 플랫폼별 optional 9항목)를 **유지해야 frozen install EXIT 0**(제거 시 EXIT 1 — 실측). release-age 기간·장기 공급망 정책은 **NOT DECIDED**, `minimumReleaseAge=0` 비활성화 안 함, 기간을 프로젝트 설정으로 고정하지 않음. Biome이 임계 기간을 지나거나 스캐폴드 시점에 allowlist 필요성 재검증·불필요 시 제거.
 - 역할 분리: Biome≠타입검사. `tsc --noEmit` 필수 병행. `noUnusedImports`는 warning이라 게이트 실패엔 `--error-on-warnings` 필요.
 
 ## 커밋 구성 (분리)
