@@ -1,4 +1,7 @@
-# 2026-07-22 핸드오프 — 스펙 004 카라멜 앰버 팔레트 전환 (Codex 재검증 대기)
+# 2026-07-22 핸드오프 — 스펙 004 카라멜 앰버 팔레트 전환 (✅ Codex 최종 승인)
+
+> ✅ **Codex 최종 재검증 = 승인 가능.** 승인 기준 HEAD `7406460`. 스펙 004 자동검증 단계 종료.
+> 새 팔레트 실기기 색상 = **NOT TESTED**. 다음 작업 = 새 팔레트 실기기 표시 검증. PNG·Tailwind·스캐폴드·Firebase·배포 계속 대기.
 
 > 스펙: `docs/rebuild/specs/004-caramel-amber-palette-migration.md`
 > 결정 정본: `docs/codex-claude-handoff/decisions/2026-07-21-caramel-amber-palette.md` (accent-ink `#191A1D` 후속 확정 포함)
@@ -114,3 +117,12 @@ Modern Studio(B)의 포인트 팔레트를 확정 카라멜 앰버로 전환하�
 
 - POC UI에 nav/table 컴포넌트가 없어 신규 컴포넌트 생성 없음 — 디자인 규격 문서 + 명암비 테스트 보강만.
 - 팔레트 무관 코드 수정 없음. 실기기 색상 NOT TESTED·002/003 실기기 결과·CURRENT 다음 단계 유지. 실기기·PNG·Tailwind·배포 계속 대기.
+
+---
+
+## 종료 — Codex 최종 승인 (2026-07-22)
+
+- **Codex 최종 판정: 승인 가능.** 승인 기준 HEAD `7406460`.
+- 승인 범위: 스펙 004 팔레트 전환 · accent-ink `#191A1D` · 디자인 접근성 규격 · POC 코드/CSS · 명암비 단위 테스트 · color-contrast 포함 자동검증 · 002/003 자동 회귀검증.
+- **스펙 004 자동검증 단계 완료.** 애플리케이션/POC 코드·CSS·테스트는 더 수정하지 않는다.
+- **다음 작업 = 새 팔레트 실기기 표시 검증**(현재 NOT TESTED). PNG 재생성·Tailwind 확정·전체 스캐폴드·Firebase·배포는 계속 대기.

@@ -1,6 +1,6 @@
 # 004 — 카라멜 앰버 팔레트 전환
 
-상태: **READY FOR CLAUDE CODE IMPLEMENTATION**
+상태: **✅ DONE · Codex 최종 승인(승인 가능, 기준 HEAD `7406460`, 2026-07-22)** — 자동검증 단계 완료. 새 팔레트 실기기 색상은 NOT TESTED.
 
 ## 목표 (WHY)
 
@@ -165,4 +165,11 @@ Codex가 전체 방향·nav 라벨 ink화는 승인, 접근성 문서·테스트
 - **contrast.test.ts +3**: 흰색/accent-2 `#C6A46B` **3:1 미달**(2.35), accent/accent-soft **4.5:1 미달**(2.67), ink/accent-soft **AA 통과**(14.45). 총 **34/34**.
 - 재검증(로컬): typecheck 0 / unit **34/34** / build(JS gzip 66.47KB) / e2e **11/11**(color-contrast serious/critical 0). 운영·PNG diff 없음. 002 확대·003 Canvas 회귀 없음.
 - POC UI엔 nav/table 컴포넌트가 없어 신규 컴포넌트 생성 없음(디자인 규격 문서 + 명암비 테스트 보강만). 실기기·PNG·Tailwind·배포 계속 대기.
+
+#### Codex 최종 판정 — 승인 가능 (2026-07-22)
+
+- **판정: 승인 가능.** 승인 기준 HEAD `7406460`.
+- 승인 범위: 팔레트 전환·accent-ink `#191A1D`·디자인 접근성 규격·POC 코드/CSS·명암비 단위 테스트·color-contrast 포함 자동검증·002/003 자동 회귀검증.
+- 확인: Nav 활성 text·의미 있는 icon=ink, Table 신규 pill=accent-soft+ink, accent/accent-soft 미달 조합 제거, 성공색은 별도 검증 대상 유지, 운영 HTML·Firebase·PNG·device-matrix 무변경, 실기기 새 팔레트 결과 NOT TESTED 유지.
+- **스펙 004 자동검증 단계 완료.** 다음 작업 = 새 팔레트 실기기 표시 검증. PNG·Tailwind·스캐폴드·Firebase·배포는 계속 대기.
 
