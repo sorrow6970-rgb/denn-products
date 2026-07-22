@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@11.15.1",
   "engines": {
-    "node": ">=24"
+    "node": ">=24 <25"
   },
   "description": "Deletable spec 009 POC: TS7 lint strategy (Biome + tsc) + minimal pnpm workspace. No product code, no Firebase, no root apps/packages.",
   "scripts": {
