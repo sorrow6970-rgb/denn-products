@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 008 웜 토프 실기기 표시 검증 4환경 전부 PASS(사용자 확인) — 다음 작업 = 스펙 008 Codex 재검증 → 소형 POC(TS7 린트 + 최소 pnpm workspace)**
+상태: **✅ 스펙 008 웜 토프 실기기 표시 검증 Codex 최종 승인(승인 가능, 기준 HEAD `4df8181`) — 다음 작업 = 스펙 009 TS7 린트 전략 + 최소 pnpm workspace 소형 POC**
+
+> Codex 최종 승인(2026-07-22): 스펙 008 웜 토프 실기기 표시 = **승인 가능**(기준 HEAD `4df8181`). 4환경×12항목 PASS·영상 관측과 직접 확인 근거 구분·device-matrix 41줄 append-only·001~007 보존·코드/CSS/토큰/테스트/PNG/운영/Firebase/Rules 무변경·영상 저장소 미추가·preview 종료 확인. 주의: 실기기 "오류 없음"은 화면 오류 관측 카드 기준(네이티브 콘솔 원격 디버깅 아님), 데스크톱 자동검증 콘솔 0과 혼동 금지.
 
 > 스펙 008(2026-07-22): 웜 토프 실기기 표시 = iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 **4환경 12항목 전부 PASS**(FAIL 없음). 증거=영상 `screen shot/KakaoTalk_20260722_153026136.mp4`(저장소 미추가)에서 카카오·Samsung 관측 + 사용자 추가 직접 확인, iPhone·Android는 사용자 직접 확인. Samsung·카카오 수동 회전·핀치/200% 확대 정상, 카카오 orientation lock 강제 실패→정상 fallback. 상세 기기·OS·브라우저 버전 = 미기록(추정 안 함). 코드·CSS·토큰·테스트·PNG·운영본·Firebase 무변경, preview 종료. 기록=`device-matrix.md` 스펙 008 별도 섹션(001~007 무변경). 핸드오프 `docs/2026-07-22-spec-008-warm-taupe-device-handoff.md`.
 
@@ -79,9 +81,8 @@
 
 ## 다음 작업
 
-1. **스펙 008 Codex 재검증** — 4환경 PASS 결과·증거·기존 001~007 보존·무변경 판정.
-2. **소형 POC — TS7 린트 전략 + 최소 pnpm workspace** (설치는 그 POC 범위에서만). 스펙 006 미확정 2건 해소.
-3. **사용자·Codex 전체 스택 최종 확정** → 이후 별도 스캐폴드 스펙(설치·workspace 생성은 그 스펙에서만).
+1. **스펙 009 소형 POC — TS7 린트 전략 + 최소 pnpm workspace** (설치는 그 POC 범위에서만). 스펙 006 미확정 2건 해소. Codex가 스펙 009 작성 후 진행.
+2. **사용자·Codex 전체 스택 최종 확정** → 이후 별도 스캐폴드 스펙(설치·workspace 생성은 그 스펙에서만).
 - **주의:** PNG 재생성은 렌더 소스와 방법을 확정한 별도 스펙이며 004에 섞지 않는다.
 
 ## 시작 조건
