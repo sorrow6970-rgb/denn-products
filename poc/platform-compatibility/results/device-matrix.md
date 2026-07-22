@@ -156,3 +156,44 @@
 - **iPhone Safari = PASS · Android Chrome = PASS · Samsung Internet = PASS · 카카오 인앱 = PASS** (4환경 전부 12항목, 사용자 직접 확인).
 - 기기명·OS·브라우저 상세 버전 = 미기록. 스크린샷 = **카카오 인앱만 사용자 1장 제공**(Codex 채팅 첨부 `codex-clipboard-a8e46ce7-1893-4cb7-817a-2b5875c08b73.png`, 저장소에 이미지 미추가), iPhone·Android·Samsung은 없음. 기존 07-21 테라코타 이미지는 스펙 005 증거로 재사용하지 않음. CSS.supports 4환경 모두 기존 기록과 동일.
 - 육안 검증(색도계 아님), 로컬 HTTP LAN preview 기준. 기존 001·002·003 기능 결과는 별도로 보존됨.
+
+---
+
+## 웜 토프 실기기 표시 검증 — 스펙 008 (웜 토프 팔레트)
+
+> 스펙 `docs/rebuild/specs/008-warm-taupe-device-visual-validation.md`. **위 001~007 표와 별개**로 웜 토프(accent `#9F887A` / accent-2 `#BAA598` / accent-soft `#EEE8E1` / accent-ink `#191A1D`) 실기기 표시만 기록한다.
+> **⚠️ 빈 셀 = NOT TESTED.** 사용자가 실제 확인한 항목만 PASS/FAIL. 기존 001~007 결과는 변경하지 않는다.
+> 접속 URL(당일 LAN): `http://192.168.0.31:4173/` (고정 기준 아님). 자동검증(사전): typecheck 0 / unit 34 / build(JS gzip 66.47KB) / e2e 11(color-contrast serious/critical 0).
+
+| # | 확인 항목 | iPhone Safari | Android Chrome | Samsung Internet | 카카오 인앱 |
+|---:|---|:---:|:---:|:---:|:---:|
+| 1 | 브랜드바 웜 토프(카라멜·테라코타 잔존 없음) | PASS | PASS | PASS | PASS |
+| 2 | 브랜드바 제목·범주 글자 어두운 색 선명 | PASS | PASS | PASS | PASS |
+| 3 | primary 버튼 어두운 라벨 배경과 구분(비활성 아님) | PASS | PASS | PASS | PASS |
+| 4 | secondary 라벨·카드 제목·본문 밝은 배경에서 선명 | PASS | PASS | PASS | PASS |
+| 5 | 연한 웜 토프 probe·Canvas 배경 위 글자·선 구분 | PASS | PASS | PASS | PASS |
+| 6 | badge·오류 관측 상태를 색상뿐 아니라 텍스트로 구분 | PASS | PASS | PASS | PASS |
+| 7 | 카카오 CTA 노란 배경+진한 텍스트 기존과 동일 | PASS | PASS | PASS | PASS |
+| 8 | 세로↔가로 회전 후 색상·fallback·레이아웃 정상 | PASS | PASS | PASS | PASS |
+| 9 | 핀치/200% 확대에서 버튼·라벨 읽고 핵심 CTA 접근 | PASS | PASS | PASS | PASS |
+| 10 | 흰색-on-웜토프 일반 라벨·저대비 텍스트 없음 | PASS | PASS | PASS | PASS |
+| 11 | CSS.supports 배지 기존 기록과 일치 | PASS | PASS | PASS | PASS |
+| 12 | 오류 관측 카드·콘솔에 새 치명적 오류 없음 | PASS | PASS | PASS | PASS |
+
+### 기기 메타 (스펙 008)
+| 항목 | iPhone Safari | Android Chrome | Samsung Internet | 카카오 인앱 |
+|---|---|---|---|---|
+| 기기명/모델 | 미기록 | 미기록 | 미기록 | 미기록 |
+| OS·버전 | 미기록 | 미기록 | 미기록 | 미기록 |
+| 브라우저·버전 | 미기록 | 미기록 | 미기록 | 미기록 |
+| 테스트 날짜 | 2026-07-22 | 2026-07-22 | 2026-07-22 | 2026-07-22 |
+| CSS.supports (dvh/color-mix/@property) | 기존 기록과 동일 | 기존 기록과 동일 | 기존 기록과 동일 | 기존 기록과 동일 |
+| 증거 | 사용자 직접 확인(스크린샷·영상 없음) | 사용자 직접 확인(스크린샷·영상 없음) | 영상 `KakaoTalk_20260722_153026136.mp4`(저장소 미추가) 관측 + 사용자 직접 확인 | 영상 `KakaoTalk_20260722_153026136.mp4`(저장소 미추가) 관측 + 사용자 직접 확인 |
+| **종합 판정** | **PASS** | **PASS** | **PASS** | **PASS** |
+| 비고·재현 절차 | 12항목 전부 PASS. 상세 버전 미기록. | 12항목 전부 PASS. 상세 버전 미기록. | 12항목 전부 PASS. 수동 세로↔가로 회전 정상, 핀치/200% 확대 정상. 전체화면 진입 성공·웜 토프 정상 렌더. | 12항목 전부 PASS. orientation lock 강제 적용은 실패하나 정상 fallback, 수동 세로↔가로 회전 정상, 핀치/200% 확대 정상. |
+
+### 최종 결과 (스펙 008) — 2026-07-22
+- **iPhone Safari = PASS · Android Chrome = PASS · Samsung Internet = PASS · 카카오 인앱 = PASS** (4환경 전부 12항목). **FAIL 없음.**
+- 증거: 영상 `screen shot/KakaoTalk_20260722_153026136.mp4`(저장소에 추가·변환·커밋하지 않음)에서 **카카오 인앱·Samsung Internet** 웜 토프 표시·버튼·카카오 CTA·Canvas 3:4·오류 없음 관측 + 사용자 추가 직접 확인. **iPhone Safari·Android Chrome은 사용자 직접 확인**(영상·스크린샷 없음).
+- 회전·확대: Samsung·카카오는 사용자 수동 회전·핀치/200% 확대 정상 확인. 카카오 orientation lock 강제는 실패→정상 fallback.
+- 기기·OS·브라우저 상세 버전 = 4환경 모두 **미기록**(추정 안 함). 육안 검증(색도계 아님), 로컬 HTTP LAN preview 기준.

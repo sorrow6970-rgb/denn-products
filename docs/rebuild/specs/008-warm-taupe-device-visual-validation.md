@@ -114,4 +114,14 @@
 
 - LAN 접속이 불가능한 경우에만 임시 HTTPS 검증 채널 사용 승인 여부를 사용자에게 질문한다.
 
-### DONE (Claude) — 작성 대기
+### DONE (Claude) — 2026-07-22
+
+- **결과:** 웜 토프 실기기 표시 검증 = **4환경 전부 PASS**(FAIL 없음).
+  - iPhone Safari · Android Chrome · Samsung Internet · 카카오 인앱 = 각 **12항목 전부 PASS**.
+  - Samsung·카카오: 수동 세로↔가로 회전 정상 + 핀치/200% 확대 정상. 카카오 orientation lock 강제는 실패→정상 fallback.
+- **증거:** 영상 `screen shot/KakaoTalk_20260722_153026136.mp4`(저장소에 추가·변환·커밋하지 않음)에서 카카오 인앱·Samsung Internet 웜 토프 브랜드바·어두운 라벨·primary/secondary 버튼·카카오 CTA 노랑·Canvas 3:4·오류 관측 "예상하지 않은 오류 없음" 관측(읽기 전용 프레임 분석) + 사용자 추가 직접 확인. iPhone Safari·Android Chrome은 사용자 직접 확인(영상·스크린샷 없음).
+- **기록 위치:** `poc/platform-compatibility/results/device-matrix.md`의 "웜 토프 실기기 표시 검증 — 스펙 008" 별도 섹션(append). 기존 001~007 표는 무변경.
+- **사전 자동검증(스펙 007 승인 결과와 동일):** `npm ci` ✅ / typecheck ✅ 0 / unit ✅ 34/34 / build ✅ JS gzip 66.47KB / e2e ✅ 11/11(color-contrast serious/critical 0). preview `npm run preview -- --host` → 당일 Network `http://192.168.0.31:4173/`.
+- **기기·OS·브라우저 상세 버전 = 4환경 모두 미기록**(추정 안 함). 육안 검증(색도계 아님).
+- **preview 서버 종료 완료**, 포트 4173·잔류 프로세스 없음. **코드·CSS·토큰·테스트·PNG·운영본·Firebase 무변경**, 영상 파일 저장소 미추가.
+- **다음:** Codex 재검증 → 이후 소형 POC(TS7 린트 전략 + 최소 pnpm workspace).

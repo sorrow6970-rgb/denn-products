@@ -1,8 +1,8 @@
 # 현재 상태
 
-상태: **🟡 스펙 008 웜 토프 실기기 표시 검증 준비 완료 — 사전 자동검증 후 사용자 실기기 결과 대기**
+상태: **✅ 스펙 008 웜 토프 실기기 표시 검증 4환경 전부 PASS(사용자 확인) — 다음 작업 = 스펙 008 Codex 재검증 → 소형 POC(TS7 린트 + 최소 pnpm workspace)**
 
-> 스펙 008(2026-07-22): `docs/rebuild/specs/008-warm-taupe-device-visual-validation.md`. 기준 HEAD `6b3ec7c`. POC 자동검증을 재확인한 뒤 LAN preview에서 iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 4환경 × 12항목을 사용자 직접 확인한다. 실제 결과 전 PASS 기록 금지, 미확인은 NOT TESTED, FAIL은 즉시 패치하지 않고 재현 조건부터 보고한다. 코드·CSS·토큰·테스트·PNG·운영본·Firebase·배포는 무변경.
+> 스펙 008(2026-07-22): 웜 토프 실기기 표시 = iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 **4환경 12항목 전부 PASS**(FAIL 없음). 증거=영상 `screen shot/KakaoTalk_20260722_153026136.mp4`(저장소 미추가)에서 카카오·Samsung 관측 + 사용자 추가 직접 확인, iPhone·Android는 사용자 직접 확인. Samsung·카카오 수동 회전·핀치/200% 확대 정상, 카카오 orientation lock 강제 실패→정상 fallback. 상세 기기·OS·브라우저 버전 = 미기록(추정 안 함). 코드·CSS·토큰·테스트·PNG·운영본·Firebase 무변경, preview 종료. 기록=`device-matrix.md` 스펙 008 별도 섹션(001~007 무변경). 핸드오프 `docs/2026-07-22-spec-008-warm-taupe-device-handoff.md`.
 
 > Codex 최종 승인(2026-07-22): 스펙 007 웜 토프 마이그레이션 = **승인 가능**(기준 HEAD `95c8445`). 토큰 중앙화·양 계층 일치·accent-ink `#191A1D`·명암비 정합·color-contrast 포괄 제외 없음·이전 리터럴 잔존 0·002/003/fullscreen 회귀 없음·운영/Firebase/001~006 무변경 확인. 자동검증 단계 완료, 새 팔레트 실기기 색상 = NOT TESTED(스펙 008에서 검증).
 
@@ -79,7 +79,7 @@
 
 ## 다음 작업
 
-1. **스펙 008 웜 토프 실기기 표시 검증** — 4환경 표시 확인(현재 NOT TESTED). Codex가 스펙 008 작성 후 진행.
+1. **스펙 008 Codex 재검증** — 4환경 PASS 결과·증거·기존 001~007 보존·무변경 판정.
 2. **소형 POC — TS7 린트 전략 + 최소 pnpm workspace** (설치는 그 POC 범위에서만). 스펙 006 미확정 2건 해소.
 3. **사용자·Codex 전체 스택 최종 확정** → 이후 별도 스캐폴드 스펙(설치·workspace 생성은 그 스펙에서만).
 - **주의:** PNG 재생성은 렌더 소스와 방법을 확정한 별도 스펙이며 004에 섞지 않는다.
