@@ -81,3 +81,4 @@ Claude Code  →  스펙 읽고 코드 구현 → 검증 실행 → 스펙 하�
 | 007 | 웜 토프 팔레트 마이그레이션 | DONE | POC 코드·명암비 테스트 마이그레이션·자동검증 통과, 실기기 표시 NOT TESTED |
 | 008 | 웜 토프 실기기 표시 검증 | DONE | 4환경 12항목 PASS(사용자 확인), 실기기 표시 검증 완료 |
 | 009 | TS7 린트 + 최소 pnpm workspace POC | DONE | Biome+tsc·최소 workspace 채택 권고, typescript-eslint↔TS7 비호환 재현 |
+| 010 | 실제 리빌드 모노레포 스캐폴드 | READY | 루트 workspace·2 apps·5 packages 생성 대기 |

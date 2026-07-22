@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 009 TS7 린트 + 최소 pnpm workspace POC Codex 최종 승인(승인 가능, 기준 HEAD `1f3e67d`) — 스펙 006 미확정 2건 해소, 다음 작업 = 스펙 010 실제 모노레포 스캐폴드**
+상태: **🟡 스펙 010 실제 리빌드 모노레포 스캐폴드 작성 완료 — Claude 구현·검증 대기**
+
+> 스펙 010(2026-07-22): `docs/rebuild/specs/010-monorepo-scaffold.md`. 기준 HEAD `64ca533`. 승인 스택으로 실제 루트 pnpm workspace, `apps/mockup`·`apps/admin`, `packages/shared|firebase|spaces|render|ui` 최소 골격과 공통 품질 게이트를 생성한다. 제품 기능·Firebase SDK/연결·암호화·Canvas 구현·Router/Zustand/shadcn·기존 HTML 이동·배포는 제외한다. 운영 HTML·firebase config/Rules·기존 POC 무변경을 hash로 증명하고, 현재 Hosting `public: "."` 상태이므로 deploy를 절대 실행하지 않는다.
 
 > Codex 최종 승인(2026-07-22): 스펙 009 = **승인 가능**(기준 HEAD `1f3e67d`). 확정: Node 24 LTS major(engines `">=24 <25"`+`.nvmrc`=24) · pnpm 11.15.1+Corepack+단일 lockfile · TS 7.0.2 · **Biome 2.5.5(lint+format,`--error-on-warnings`)+`tsc --noEmit` 채택** · typescript-eslint TS7 미지원 미도입 · 최소 pnpm workspace 채택 · minimumReleaseAgeExclude Biome 9항목 유지 · minimumReleaseAge=0 안 함 · 장기 release-age 정책 NOT DECIDED · 스캐폴드 시 allowlist 재검증. **스펙 006 미확정 2건(TS7 린트·최소 workspace) 해소.** 실제 루트 apps/packages/workspace는 스펙 010에서만 생성.
 
