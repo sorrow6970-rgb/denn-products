@@ -105,3 +105,9 @@ viewport: 320×568 · 360×800 · 390×844(P) · 844×390(L) · 430×932(P) · 9
 
 - **결론:** accent(#B0894E)는 흰색과 양방향 3.21:1이라 **일반 크기 텍스트 색으로 부적합** → 채움·보더·포인트 전용. 텍스트는 accent-ink(on-accent) 또는 ink(on-light)로 확정 적용. WCAG 2.2 AA 충족.
 - **실기기 색상 표시**는 새 팔레트로 재확인 전까지 `device-matrix.md`에서 **NOT TESTED**로 분리 유지.
+
+### 재검증 라운드 2 (2026-07-22 · Codex "수정 후 재검증")
+
+- 접근성 규격 보완(Nav item·Table pill: accent-soft 위 텍스트/아이콘=ink, accent는 3:1 이상 배경 위 보더·링 한정) + 명암비 테스트 +3.
+- 추가 고정: 흰색/accent-2 `#C6A46B` 3:1 미달(2.35), accent/accent-soft `#F2E9DA` 4.5:1 미달(2.67), ink/accent-soft AA 통과(14.45).
+- 게이트: typecheck 0 / **unit 34/34**(+3) / build(JS gzip 66.47KB) / **e2e 11/11**(color-contrast serious/critical 0). 운영·PNG diff 없음.

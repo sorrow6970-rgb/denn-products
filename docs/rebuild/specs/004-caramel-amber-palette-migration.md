@@ -156,3 +156,13 @@ POC 구현·검증:
 - **범위 밖 발견(Codex 확인 요청):** `#B0894E`가 흰색과 양방향 3.21:1이라 accent-를-텍스트로 쓴 `card h2`·`btn.secondary`·nav 활성 라벨도 미달 → 디자인 토큰 역할(제목/텍스트=ink, ghost=ink)에 따라 ink로 지정. 스펙 §1은 Tag/Badge만 명시했으므로 nav item 변경은 재검증 시 확인 요망.
 - **후속 스펙 제안:** (1) 새 팔레트 실기기 색상 재검증, (2) 디자인 PNG 4종 카라멜 앰버 재생성(렌더 소스 확정), (3) Tailwind v4/v3.4 확정.
 
+#### 재검증 라운드 2 — Codex "수정 후 재검증" 반영 (2026-07-22)
+
+Codex가 전체 방향·nav 라벨 ink화는 승인, 접근성 문서·테스트 보완만 지시. 재설계 없음.
+
+- **design/README.md Nav item**: 활성 text·의미 있는 icon 모두 `--ink`(accent는 accent-soft 위 2.67:1로 비텍스트 3:1도 미달). accent 보더·링은 3:1 이상 확보된 배경(흰색·surface)에서만. 색만으로 상태 표현 금지 유지.
+- **design/README.md Table pill**: 신규 pill = accent-soft 배경 + `--ink` 텍스트, accent는 대비 확보된 외곽/비필수 장식으로 제한. 확정=성공색은 명암비 미확인이므로 **별도 검증 대상**으로 표시(자동 통과 단정 금지).
+- **contrast.test.ts +3**: 흰색/accent-2 `#C6A46B` **3:1 미달**(2.35), accent/accent-soft **4.5:1 미달**(2.67), ink/accent-soft **AA 통과**(14.45). 총 **34/34**.
+- 재검증(로컬): typecheck 0 / unit **34/34** / build(JS gzip 66.47KB) / e2e **11/11**(color-contrast serious/critical 0). 운영·PNG diff 없음. 002 확대·003 Canvas 회귀 없음.
+- POC UI엔 nav/table 컴포넌트가 없어 신규 컴포넌트 생성 없음(디자인 규격 문서 + 명암비 테스트 보강만). 실기기·PNG·Tailwind·배포 계속 대기.
+

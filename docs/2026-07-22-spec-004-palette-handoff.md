@@ -80,3 +80,37 @@ Modern Studio(B)의 포인트 팔레트를 확정 카라멜 앰버로 전환하�
 ## Codex 재검증 요청
 
 읽기 전용 diff로 `승인 가능 / 수정 후 재검증 / 재설계 필요` 판정 요청. 중점: (1) accent-on-white 해소를 위한 h2·secondary·nav 라벨 ink화의 스펙 정합성, (2) color-contrast 하드페일 전환 타당성, (3) 과거 테라코타 기록·002/003 실기기 결과 보존 여부.
+
+---
+
+## 재검증 라운드 2 — Codex "수정 후 재검증" 반영 (2026-07-22)
+
+> Codex 판정: **수정 후 재검증**. 전체 구현 방향·nav 라벨 ink화는 **승인**, 재설계 불필요. 접근성 문서·테스트 보완만 수행.
+> 최초 검증 결과(위)는 보존한다. 아래는 보완 라운드다.
+
+### 변경 파일 / 커밋
+
+1. (수정 커밋) `docs/rebuild/design/design 규격` — Nav item·Table pill 접근성 규격 강화 + `tests/unit/contrast.test.ts` +3
+2. (handoff 커밋) `specs/004`(DONE 재검증 라운드) · 이 핸드오프 · `results/auto-check-summary.md`(재검증 노트)
+
+### 보완 내용
+
+- **Nav item(design/README.md):** 활성 text·의미 있는 icon 모두 `--ink`. accent는 accent-soft 위 2.67:1로 **비텍스트 UI 3:1도 미달**이므로 보더·링은 흰색·surface 등 3:1 이상 배경에서만. 색만으로 활성 표현 금지.
+- **Table pill(design/README.md):** 신규 pill = accent-soft 배경 + `--ink` 텍스트, accent는 대비 확보된 외곽/비필수 장식 한정. 확정=성공색은 명암비 미확인 → **별도 검증 대상**으로 표시(자동 통과 단정 금지).
+- **명암비 테스트 +3(contrast.test.ts):** 흰색/accent-2 `#C6A46B` 3:1 미달(2.35), accent/accent-soft `#F2E9DA` 4.5:1 미달(2.67), ink/accent-soft AA 통과(14.45).
+
+### 재검증 결과 (로컬 desktop Chromium)
+
+| 게이트 | 결과 |
+|---|---|
+| `npm run typecheck` | ✅ 0 오류 |
+| `npm run test:unit` | ✅ **34/34** (+3 명암비) |
+| `npm run build` | ✅ JS gzip 66.47KB / CSS gzip 3.35KB |
+| `npm run test:e2e` | ✅ **11/11** (color-contrast serious/critical 0) |
+| 운영 HTML·Firebase·PNG diff | 변경 없음 ✅ |
+| 002 확대·003 Canvas 회귀 | 없음 ✅ |
+
+### 범위 준수
+
+- POC UI에 nav/table 컴포넌트가 없어 신규 컴포넌트 생성 없음 — 디자인 규격 문서 + 명암비 테스트 보강만.
+- 팔레트 무관 코드 수정 없음. 실기기 색상 NOT TESTED·002/003 실기기 결과·CURRENT 다음 단계 유지. 실기기·PNG·Tailwind·배포 계속 대기.
