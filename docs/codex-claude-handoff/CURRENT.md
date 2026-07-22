@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 007 웜 토프 팔레트 마이그레이션 Codex 최종 승인(승인 가능, 기준 HEAD `95c8445`) — 다음 작업 = 스펙 008 웜 토프 실기기 표시 검증**
+상태: **🟡 스펙 008 웜 토프 실기기 표시 검증 준비 완료 — 사전 자동검증 후 사용자 실기기 결과 대기**
+
+> 스펙 008(2026-07-22): `docs/rebuild/specs/008-warm-taupe-device-visual-validation.md`. 기준 HEAD `6b3ec7c`. POC 자동검증을 재확인한 뒤 LAN preview에서 iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 4환경 × 12항목을 사용자 직접 확인한다. 실제 결과 전 PASS 기록 금지, 미확인은 NOT TESTED, FAIL은 즉시 패치하지 않고 재현 조건부터 보고한다. 코드·CSS·토큰·테스트·PNG·운영본·Firebase·배포는 무변경.
 
 > Codex 최종 승인(2026-07-22): 스펙 007 웜 토프 마이그레이션 = **승인 가능**(기준 HEAD `95c8445`). 토큰 중앙화·양 계층 일치·accent-ink `#191A1D`·명암비 정합·color-contrast 포괄 제외 없음·이전 리터럴 잔존 0·002/003/fullscreen 회귀 없음·운영/Firebase/001~006 무변경 확인. 자동검증 단계 완료, 새 팔레트 실기기 색상 = NOT TESTED(스펙 008에서 검증).
 
