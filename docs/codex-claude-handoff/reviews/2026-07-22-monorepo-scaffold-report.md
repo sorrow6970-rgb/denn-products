@@ -51,7 +51,7 @@ packages/shared|firebase|spaces|render|ui  최소 경계·export
   - `@denn/shared`: `BRAND`, `APP_IDS`(distinct), `Result`, `Id` 타입만.
   - `@denn/ui`: 웜 토프 토큰 상수(`WARM_TAUPE`, accent-ink `#191A1D`) + `theme.css` **단일 원본**(두 앱이 import, 복제 없음) + `UI_CLASS`.
   - `@denn/firebase`: repository **port** 타입 + `FIREBASE_NOT_IMPLEMENTED`. SDK·network·config·env 없음.
-  - `@denn/spaces`: `SpaceToken`/`SpaceSchemaVersion` 타입만. PBKDF2/AES 없음, 링크 호환 주장 없음.
+  - `@denn/spaces`: `SpaceToken` 타입 + **`SPACE_SCENE_VERSION = "space-scene-v1"`(기존 근거)** 상수, `SpaceSchemaVersion = typeof SPACE_SCENE_VERSION`(v1 전용, 근거 없는 v2 미생성), `SpaceRef`. PBKDF2/AES·payload·마이그레이션 없음, 링크 호환 주장 없음.
   - `@denn/render`: `RenderInput`/`RenderOutput`/`RenderResult` 인터페이스만. Canvas 없음.
 - 공유 패키지는 `window.*` 전역 미생성.
 
@@ -85,7 +85,7 @@ packages/shared|firebase|spaces|render|ui  최소 경계·export
 | format | `biome format …` | ✅ 0 |
 | lint | `biome lint --error-on-warnings …` | ✅ 0 |
 | typecheck | `tsc --noEmit`(7 프로젝트) | ✅ 0 |
-| unit | `vitest run` | ✅ **4/4**(shared exports·distinct app id·웜토프 토큰·accent-ink=ink) |
+| unit | `vitest run` | ✅ **6/6**(shared exports·distinct app id·웜토프 토큰·accent-ink=ink·spaces SPACE_SCENE_VERSION=space-scene-v1·SpaceRef 정합) |
 | build | `vite build apps/mockup && vite build apps/admin` | ✅ 독립 빌드 |
 | e2e | `playwright test` | ✅ **4/4**(2 앱 × 320/desktop) |
 | check(집계) | `node scripts/check.mjs` | ✅ 0 |

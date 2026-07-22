@@ -198,7 +198,7 @@ shared → 다른 @denn 패키지 금지
 - **release-age:** latest(react 19.2.8/plugin-react 6.0.4)가 pnpm 기본 cutoff 안이라 **aged·POC 검증 patch(19.2.7/6.0.3) 고정 → `minimumReleaseAgeExclude` 없이 frozen install EXIT 0**. Biome 2.5.5 allowlist는 임계 지나 불필요. `minimumReleaseAge=0` 미사용, 장기 정책 NOT DECIDED.
 - **`.gitignore` 정상화:** 데이터 백업 무시 유지 + 설정 JSON negation(`!**/package.json`·`!**/tsconfig*.json`·`!biome.json`) → **`git add -f` 불필요**. firebase.json/.firebaserc 무변경·무untrack, 데이터 JSON staged 0.
 - **경계:** app→shared/ui `workspace:*`+패키지명 import(상대 src 침투 0, 순환 0), firebase/render→shared(허용), shared는 @denn 미의존. 각 패키지 placeholder(미구현 명시), `window.*` 없음.
-- **게이트(로컬):** frozen install EXIT 0·lockfile diff 0 / format 0 / lint(`--error-on-warnings`) 0 / typecheck 0(7 프로젝트) / unit 4/4 / build 독립(mockup·admin JS gzip 60.16KB·CSS 1.82KB, 예산 내) / e2e 4/4(2 앱×320/desktop: title·heading·status·교차앱 부재·overflow 0·console 0·axe serious 0·color-contrast 포괄 제외 없음) / check 0.
+- **게이트(로컬):** frozen install EXIT 0·lockfile diff 0 / format 0 / lint(`--error-on-warnings`) 0 / typecheck 0(7 프로젝트) / unit 6/6(spaces v1 계약 포함) / build 독립(mockup·admin JS gzip 60.16KB·CSS 1.82KB, 예산 내) / e2e 4/4(2 앱×320/desktop: title·heading·status·교차앱 부재·overflow 0·console 0·axe serious 0·color-contrast 포괄 제외 없음) / check 0.
 - **NOT APPLICABLE:** Firebase/Rules 테스트 = SDK/Rules 무변경(PASS로 꾸미지 않음).
 - **운영본 보존(hash UNCHANGED):** denn-mockup-tool.html·denn-admin.html·firebase.json·.firebaserc·firestore.rules·storage.rules. 기존 POC 두 디렉터리 diff 0. Router/Zustand/Radix/shadcn/firebase SDK 미설치. 소스 network/firebase/secret 0. **Firebase deploy 미실행.**
 - **커밋 분리:** scaffold code/config ↔ 결과(보고서·핸드오프·상태).

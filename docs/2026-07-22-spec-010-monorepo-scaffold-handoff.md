@@ -22,7 +22,7 @@ react/react-dom **19.2.7** · @vitejs/plugin-react **6.0.3** · typescript 7.0.2
 |---|---|
 | frozen install | ✅ EXIT 0, lockfile diff 0 |
 | format / lint(`--error-on-warnings`) / typecheck | ✅ 0 |
-| unit(vitest) | ✅ 4/4 |
+| unit(vitest) | ✅ 6/6 (spaces SPACE_SCENE_VERSION=space-scene-v1 포함) |
 | build(mockup·admin 독립) | ✅ mockup JS gzip 60.16KB / admin 60.16KB / CSS 1.82KB (예산 내) |
 | e2e(playwright, 2 앱 × 320/desktop) | ✅ 4/4 (title·heading·status·교차앱 부재·overflow 0·console 0·axe serious 0) |
 | check(집계) | ✅ 0 |
