@@ -1,6 +1,10 @@
 # 현재 상태
 
-상태: **✅ 스펙 006 프런트엔드 기술 스택 Codex 최종 승인(승인 가능, 기준 HEAD `94f6da9`) — 다음 작업 = TS7 린트 + 최소 pnpm workspace 소형 POC**
+상태: **✅ 스펙 007 웜 토프 팔레트 POC 마이그레이션·자동검증 완료(Codex 재검증 대기) — 새 팔레트 실기기 색상 = NOT TESTED**
+
+> 스펙 007 구현 완료(로컬, 2026-07-22): POC 토큰을 웜 토프 `#9F887A`/`#BAA598`/`#EEE8E1`(accent-ink `#191A1D`·kakao 유지)로 중앙 계층에서 교체. 흰색/accent 3.35(미달)→accent-ink 5.20(AA), accent-soft 위 텍스트=ink(14.31). 이전 팔레트 리터럴 실행 코드 잔존 0. 자동검증 typecheck 0 / unit 34 / build(JS gzip 66.47KB) / e2e 11(color-contrast serious/critical 0), 002 확대·003 Canvas·fullscreen 회귀 없음. 코드↔핸드오프 커밋 분리, 디자인 PNG·운영본·001~006 결과는 code 커밋 미포함. 핸드오프 `docs/2026-07-22-spec-007-warm-taupe-handoff.md`. 실기기 표시는 별도 후속 검증.
+
+> 최신 디자인 결정(2026-07-22): Modern Studio(B) 포인트색은 **웜 토프 `#9F887A` / `#BAA598` / `#EEE8E1`**, accent-ink `#191A1D`, 카카오 `#FEE500`으로 최종 확정. 결정서 `docs/codex-claude-handoff/decisions/2026-07-22-warm-taupe-palette.md`, 구현 계약 `docs/rebuild/specs/007-warm-taupe-palette-migration.md`. 이전 카라멜 앰버 스펙 004·005는 당시 검증 이력으로 보존하며 현재 팔레트 기준으로 사용하지 않는다. TS7 린트·최소 pnpm workspace POC는 스펙 007 이후로 순서를 조정한다.
 
 > Codex 최종 승인(2026-07-22): 스펙 006 기술 스택 조사·정정 = **승인 가능**. 승인 기준: Node 24 LTS 기본 · pnpm(Corepack+packageManager+단일 lockfile) · React19/Vite8/TS7/Tailwind v4 기본 후보 · Vitest4/Playwright/axe 검증도구 · Router·Zustand 미도입(요구 시) · Radix/shadcn 컴포넌트별 · 정확 patch는 스캐폴드 직전 lockfile 고정. **미확정=TS7 린트 조합·최소 pnpm workspace 구조(소형 POC).**
 
@@ -71,9 +75,10 @@
 
 ## 다음 작업
 
-1. **소형 POC — TS7 린트 전략 + 최소 pnpm workspace** (설치는 그 POC 범위에서만). 스펙 006 미확정 2건 해소.
-2. **사용자·Codex 전체 스택 최종 확정** — 승인 기준 + POC 결과로 최소 설치 목록·정확 patch 확정.
-3. 이후 별도 스캐폴드 스펙 작성(설치·workspace 생성은 그 스펙에서만).
+1. **스펙 007 Codex 재검증** — 웜 토프 POC 마이그레이션·자동검증 판정.
+2. **새 웜 토프 실기기 표시 검증** — 4환경 표시 확인(현재 NOT TESTED, 별도 단계).
+3. **소형 POC — TS7 린트 전략 + 최소 pnpm workspace** (설치는 그 POC 범위에서만). 스펙 006 미확정 2건 해소.
+4. **사용자·Codex 전체 스택 최종 확정** → 이후 별도 스캐폴드 스펙(설치·workspace 생성은 그 스펙에서만).
 - **주의:** PNG 재생성은 렌더 소스와 방법을 확정한 별도 스펙이며 004에 섞지 않는다.
 
 ## 시작 조건

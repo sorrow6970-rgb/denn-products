@@ -111,3 +111,37 @@ viewport: 320×568 · 360×800 · 390×844(P) · 844×390(L) · 430×932(P) · 9
 - 접근성 규격 보완(Nav item·Table pill: accent-soft 위 텍스트/아이콘=ink, accent는 3:1 이상 배경 위 보더·링 한정) + 명암비 테스트 +3.
 - 추가 고정: 흰색/accent-2 `#C6A46B` 3:1 미달(2.35), accent/accent-soft `#F2E9DA` 4.5:1 미달(2.67), ink/accent-soft AA 통과(14.45).
 - 게이트: typecheck 0 / **unit 34/34**(+3) / build(JS gzip 66.47KB) / **e2e 11/11**(color-contrast serious/critical 0). 운영·PNG diff 없음.
+
+---
+
+## 2026-07-22 · 스펙 007 웜 토프 팔레트 재검증 (현재 결과)
+
+> 위 카라멜 앰버(스펙 004) 수치는 **당시 사실로 보존**한다. 아래는 사용자 최종 확정 **웜 토프**로 전환한 현재 측정값이다.
+> 실기기 색상 표시는 별도 후속 단계(NOT TESTED).
+
+### 자동 게이트
+
+| 게이트 | 명령 | 결과 |
+|---|---|---|
+| frozen lockfile 설치 | `npm ci` | ✅ 취약점 0 |
+| 타입 검사(strict) | `npm run typecheck` | ✅ 0 오류 |
+| 유닛 테스트 | `npm run test:unit` | ✅ **34/34**(명암비 웜 토프 값 반영) |
+| 프로덕션 빌드 | `npm run build` | ✅ JS gzip **66.47 KB** / CSS gzip **3.35 KB**(예산 내) |
+| viewport e2e | `npm run test:e2e` | ✅ **11/11**(color-contrast **포괄 제외 없음** — serious/critical 0) |
+
+- 스펙 002 확대 CTA·스펙 003 Canvas 3:4/DPR·fullscreen 상호작용 회귀 없음(동일 e2e 재실행).
+- 이전 팔레트 리터럴(`#B0894E`/`#C6A46B`/`#F2E9DA`)은 POC 실행 코드에서 **잔존 0**(rg 확인). 신규 토큰은 App 표시값·CSS 양 계층 일치.
+
+### 명암비 측정값 (웜 토프, `src/lib/contrast.ts` 계산)
+
+| 조합 | 대비 | 일반텍스트 AA(4.5) | 큰텍스트/UI(3.0) | 적용 |
+|---|---:|:---:|:---:|---|
+| 흰색 `#FFFFFF` / accent `#9F887A` | **3.35:1** | ❌ | ✅ | 일반 크기 텍스트 **미사용** |
+| accent-ink `#191A1D` / accent `#9F887A` | **5.20:1** | ✅ | ✅ | primary 버튼·브랜드바·활성 칩 라벨 |
+| 흰색 / accent-2 `#BAA598` | **2.35:1** | ❌ | ❌ | accent-2 위 흰색·일반 텍스트 금지 |
+| accent `#9F887A` / accent-soft `#EEE8E1` | **2.75:1** | ❌ | ❌ | accent-soft 위 텍스트는 **ink** 사용 |
+| ink `#191A1D` / accent-soft `#EEE8E1` | **14.31:1** | ✅ | ✅ | 태그·뱃지·nav 활성 텍스트/아이콘 |
+| 진회색 `#1A1400` / 카카오 `#FEE500` | 14.35:1 | ✅ | ✅ | 카카오 CTA(무변경) |
+
+- **결론:** accent(#9F887A)는 흰색과 3.35:1이라 일반 크기 텍스트 색으로 부적합 → 채움·보더·포인트 전용. 텍스트는 accent-ink(on-accent) 또는 ink(on-light). WCAG 2.2 AA 충족.
+- **실기기 색상 표시**는 새 웜 토프로 재확인 전까지 `device-matrix.md`에서 **NOT TESTED**로 분리 유지(추정 PASS 금지).

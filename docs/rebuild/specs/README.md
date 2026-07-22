@@ -20,7 +20,7 @@ Claude Code  →  스펙 읽고 코드 구현 → 검증 실행 → 스펙 하�
 ## 파일명
 
 `NNN-<slug>.md` — `NNN`은 3자리 순번(001부터), `<slug>`는 소문자-하이픈.
-예: `001-monorepo-scaffold.md`, `012-room-mockup-engine.md`, `020-space-gate-viewonly.md`
+예: `007-warm-taupe-palette-migration.md`, `012-room-mockup-engine.md`, `020-space-gate-viewonly.md`
 
 ## 스펙 템플릿
 
@@ -77,4 +77,5 @@ Claude Code  →  스펙 읽고 코드 구현 → 검증 실행 → 스펙 하�
 | 003 | 가로 Canvas 3:4 비율 | DONE | 4환경 재검증 PASS |
 | 004 | 카라멜 앰버 팔레트 전환 | DONE | 자동검증 Codex 승인, PNG 별도 후속 |
 | 005 | 카라멜 앰버 실기기 표시 검증 | DONE | 4환경 PASS, Codex 승인 |
-| 006 | 프런트엔드 기술 스택 최종 검토 | READY | 읽기 전용 근거 보고, 설치 금지 |
+| 006 | 프런트엔드 기술 스택 최종 검토 | DONE | Codex 승인, 후속 소형 POC 2건 남음 |
+| 007 | 웜 토프 팔레트 마이그레이션 | DONE | POC 코드·명암비 테스트 마이그레이션·자동검증 통과, 실기기 표시 NOT TESTED |
