@@ -97,7 +97,7 @@ test.describe('viewport matrix', () => {
       // 4) screenshot regression artifact
       await page.screenshot({ path: `results/screenshots/${v.name}.png`, fullPage: true });
 
-      // 5) axe accessibility — spec 004: color-contrast is NOT blanket-excluded. The caramel amber
+      // 5) axe accessibility — spec 007: color-contrast is NOT blanket-excluded. The warm taupe
       //    palette uses accent-ink #191A1D on accent and ink on light surfaces so every text node
       //    meets WCAG AA; any remaining serious/critical violation (incl. color-contrast) fails.
       const axe = await new AxeBuilder({ page }).analyze();

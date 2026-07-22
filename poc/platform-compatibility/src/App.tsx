@@ -8,14 +8,14 @@ import {
 } from './lib/fullscreen';
 
 const TOKENS = {
-  accent: '#B0894E',
-  accent2: '#C6A46B',
-  accentSoft: '#F2E9DA',
+  accent: '#9F887A',
+  accent2: '#BAA598',
+  accentSoft: '#EEE8E1',
   kakao: '#FEE500',
 } as const;
 
-/** Text placed on the accent surface. Caramel amber fails 4.5:1 vs white (3.21:1);
- *  ink #191A1D reaches 5.41:1 (WCAG AA for normal text) — see decision 2026-07-21 palette. */
+/** Text placed on the accent surface. Warm taupe fails 4.5:1 vs white (3.35:1);
+ *  ink #191A1D reaches 5.20:1 (WCAG AA for normal text) — see decision 2026-07-22 warm taupe. */
 const ACCENT_INK = '#191A1D';
 
 const LOCK_LABEL: Record<OrientationLockResult, string> = {
@@ -134,8 +134,8 @@ function useCanvasDpr(): { ref: React.RefObject<HTMLCanvasElement | null>; info:
       const w = rect.width;
       const h = rect.height;
       ctx.clearRect(0, 0, w, h);
-      // baseline grid to verify aspect preservation across rotate/resize (caramel amber #B0894E)
-      ctx.strokeStyle = 'rgba(176,137,78,0.25)';
+      // baseline grid to verify aspect preservation across rotate/resize (warm taupe #9F887A)
+      ctx.strokeStyle = 'rgba(159,136,122,0.25)';
       ctx.lineWidth = 1;
       for (let i = 1; i < 4; i++) {
         ctx.beginPath();
@@ -153,7 +153,7 @@ function useCanvasDpr(): { ref: React.RefObject<HTMLCanvasElement | null>; info:
       ctx.strokeStyle = TOKENS.accent;
       ctx.lineWidth = 3;
       ctx.strokeRect(fx, Math.max(6, fy), fw, Math.min(fh, h - 12));
-      // ink label stays legible on the accent-soft canvas (accent on soft = 2.67:1)
+      // ink label stays legible on the accent-soft canvas (accent on soft = 2.75:1)
       ctx.fillStyle = ACCENT_INK;
       ctx.font = '600 14px system-ui, sans-serif';
       ctx.textAlign = 'center';
@@ -251,7 +251,7 @@ export function App(): React.JSX.Element {
             <SupportBadge ok={diag.css.fieldSizing} label="field-sizing" />
           </div>
           <div className="tw-probe" style={{ marginTop: 10 }} data-testid="tw-probe">
-            Tailwind v4 color-mix 프로브 — 이 박스 배경이 연한 카라멜 앰버면 color-mix 렌더 정상.
+            Tailwind v4 color-mix 프로브 — 이 박스 배경이 연한 웜 토프면 color-mix 렌더 정상.
           </div>
           <p className="note" style={{ marginTop: 8 }}>
             safe-area:{' '}
@@ -271,18 +271,18 @@ export function App(): React.JSX.Element {
         <section className="card" aria-labelledby="h-contrast">
           <h2 id="h-contrast">명암비 (Modern Studio 토큰)</h2>
           <dl className="kv">
-            <dt>흰색 / accent #B0894E</dt>
+            <dt>흰색 / accent #9F887A</dt>
             <dd>
               {whiteOnAccent}:1 · {wcagLevel(whiteOnAccent) === 'fail' ? 'AA 미달' : wcagLevel(whiteOnAccent)} · 일반 텍스트 미사용
             </dd>
-            <dt>accent-ink #191A1D / accent #B0894E</dt>
+            <dt>accent-ink #191A1D / accent #9F887A</dt>
             <dd>{inkOnAccent}:1 · {wcagLevel(inkOnAccent)}</dd>
             <dt>진회색 / 카카오 #FEE500</dt>
             <dd>{inkOnKakao}:1 · {wcagLevel(inkOnKakao)}</dd>
           </dl>
           <p className="note">
             일반 텍스트 AA=4.5:1. accent 위 텍스트는 accent-ink #191A1D({inkOnAccent}:1) 사용 —
-            흰색({whiteOnAccent}:1)은 일반 크기 텍스트에 쓰지 않는다(spec 004).
+            흰색({whiteOnAccent}:1)은 일반 크기 텍스트에 쓰지 않는다(spec 007).
           </p>
         </section>
 

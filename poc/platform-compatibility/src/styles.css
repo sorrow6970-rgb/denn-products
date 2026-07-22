@@ -3,11 +3,11 @@
    text and buttons. The diagnostics panel probes CSS.supports() at runtime. */
 @import 'tailwindcss';
 
-/* Modern Studio 확정 토큰 (카라멜 앰버, spec 004) — Tailwind theme + plain CSS 양쪽에서 사용 */
+/* Modern Studio 확정 토큰 (웜 토프, spec 007) — Tailwind theme + plain CSS 양쪽에서 사용 */
 @theme {
-  --color-accent: #b0894e;
-  --color-accent-2: #c6a46b;
-  --color-accent-soft: #f2e9da;
+  --color-accent: #9f887a;
+  --color-accent-2: #baa598;
+  --color-accent-soft: #eee8e1;
   --color-accent-ink: #191a1d;
   --color-kakao: #fee500;
 }
@@ -15,9 +15,9 @@
 /* ---- Plain-CSS fallback layer: NO color-mix / NO @property. Works far below the
         Tailwind v4 floor so the page never becomes unusable in an old webview. ---- */
 :root {
-  --accent: #b0894e;
-  --accent-2: #c6a46b;
-  --accent-soft: #f2e9da;
+  --accent: #9f887a;
+  --accent-2: #baa598;
+  --accent-soft: #eee8e1;
   --accent-ink: #191a1d;
   --kakao: #fee500;
   --ink: #1a1410;
@@ -109,7 +109,7 @@ canvas {
   gap: 12px;
   padding: 10px calc(14px + var(--safe-right)) 10px calc(14px + var(--safe-left));
   background: var(--accent);
-  /* caramel amber accent fails 4.5:1 vs white (3.21:1); accent-ink #191A1D = 5.41:1 (spec 004) */
+  /* warm taupe accent fails 4.5:1 vs white (3.35:1); accent-ink #191A1D = 5.20:1 (spec 007) */
   color: var(--accent-ink);
   padding-top: calc(10px + var(--safe-top));
 }
@@ -143,7 +143,7 @@ canvas {
   font-size: 13px;
   font-weight: 700;
   margin: 0 0 10px;
-  /* heading = ink (design token). accent as small text on white = 3.21:1 (AA fail) */
+  /* heading = ink (design token). accent as small text on white = 3.35:1 (AA fail) */
   color: var(--ink);
 }
 .kv {
@@ -206,7 +206,7 @@ canvas {
 }
 .btn.secondary {
   background: #fff;
-  /* accent border keeps the point identity; label = ink (accent on white = 3.21:1 AA fail) */
+  /* accent border keeps the point identity; label = ink (accent on white = 3.35:1 AA fail) */
   color: var(--ink);
 }
 .btn.kakao {
