@@ -110,3 +110,49 @@
 - `npm run test:e2e` 결과 = viewport 10/10 PASS(데스크톱 Chromium). 스크린샷 `results/screenshots/`.
 - 자동 통과는 **레이아웃 회귀의 1차 방어**일 뿐, 인앱 웹뷰의 Fullscreen/orientation/키보드/스크롤 클램프 등
   **동작 특성**은 위 실기기 표로만 확정된다.
+
+---
+
+## 새 팔레트 실기기 표시 검증 — 스펙 005 (카라멜 앰버)
+
+> 스펙 `docs/rebuild/specs/005-caramel-amber-device-visual-validation.md`. **위 001·002·003 표와 별개**로 새 팔레트(accent `#B0894E` / accent-2 `#C6A46B` / accent-soft `#F2E9DA` / accent-ink `#191A1D`)의 실기기 색상 표시만 기록한다.
+> **⚠️ 빈 셀 = NOT TESTED.** 사용자가 실제 확인한 항목만 PASS/FAIL로 채운다. 다른 환경 결과로 추정하지 않는다. 기존 001·002·003 결과는 변경하지 않는다.
+> 접속 URL(당일 LAN): `http://192.168.0.31:4173/` (고정 기준 아님, 매 세션 Vite `Network:` 값으로 대체).
+
+| # | 확인 항목 | iPhone Safari | Android Chrome | Samsung Internet | 카카오 인앱 |
+|---:|---|:---:|:---:|:---:|:---:|
+| 1 | 브랜드바 카라멜 앰버 표시(구 테라코타 잔존 없음) | PASS | PASS | PASS | PASS |
+| 2 | 브랜드바 제목·브라우저 범주 글자 어두운 색 선명 | PASS | PASS | PASS | PASS |
+| 3 | primary 버튼 어두운 라벨 배경과 구분(비활성처럼 안 보임) | PASS | PASS | PASS | PASS |
+| 4 | secondary 라벨·카드 제목·본문 밝은 배경에서 선명 | PASS | PASS | PASS | PASS |
+| 5 | 연한 카라멜 앰버 probe·Canvas 배경 위 글자·선 구분 | PASS | PASS | PASS | PASS |
+| 6 | badge·오류 관측 상태를 색상만이 아닌 텍스트로 구분 | PASS | PASS | PASS | PASS |
+| 7 | 카카오 CTA 노란 배경+진한 텍스트 기존과 동일 | PASS | PASS | PASS | PASS |
+| 8 | 세로↔가로 회전 후 색상 누락·투명화·fallback 차이 없음 | PASS | PASS | PASS | PASS |
+| 9 | 핀치/200% 확대에서도 버튼·라벨 읽고 핵심 CTA 접근 | PASS | PASS | PASS | PASS |
+| 10 | 흰색-on-카라멜 일반 라벨·읽기 어려운 저대비 텍스트 없음 | PASS | PASS | PASS | PASS |
+| 11 | CSS.supports 배지 기존 기록과 일치(다르면 실제값) | PASS | PASS | PASS | PASS |
+| 12 | 오류 관측 카드·콘솔에 새 치명적 오류 없음 | PASS | PASS | PASS | PASS |
+
+### 기기 메타 (스펙 005)
+| 항목 | iPhone Safari | Android Chrome | Samsung Internet | 카카오 인앱 |
+|---|---|---|---|---|
+| 기기명/모델 | 미기록 | 미기록 | 미기록 | 미기록 |
+| OS·버전 | 미기록 | 미기록 | 미기록 | 미기록 |
+| 브라우저·버전 | 미기록 | 미기록 | 미기록 | 미기록 |
+| 테스트 날짜 | 2026-07-22 | 2026-07-22 | 2026-07-22 | 2026-07-22 |
+| CSS.supports (dvh/color-mix/@property) | 기존 기록과 동일 | 기존 기록과 동일 | 기존 기록과 동일 | 기존 기록과 동일 |
+| 스크린샷/영상 파일명 | 없음 | 없음 | 없음 | 없음 |
+| **종합 판정** | **PASS** | **PASS** | **PASS** | **PASS** |
+| 비고·재현 절차 | 12항목 전부 PASS. 카라멜 앰버 표시·텍스트 가독성 정상, primary·secondary 버튼 정상, 세로↔가로 회전 정상, 핀치/200% 확대 정상, 카카오 CTA 정상, CSS.supports 기존과 동일, 치명적 오류 없음. 색도계 검증 아님(육안). | 12항목 전부 PASS. 카라멜 앰버 표시·텍스트 가독성 정상, primary·secondary 버튼 정상, 세로↔가로 회전 정상, 핀치/200% 확대 정상, 카카오 CTA 정상, CSS.supports 기존과 동일, 치명적 오류 없음. 색도계 검증 아님(육안). | 12항목 전부 PASS. 카라멜 앰버 표시·텍스트 가독성 정상, 세로↔가로 회전 정상, 핀치/200% 확대 정상, CSS.supports 기존과 동일, 치명적 오류 없음. 색도계 검증 아님(육안). | 12항목 전부 PASS. 카라멜 앰버 표시·텍스트 가독성 정상, primary·secondary 버튼 정상, 세로↔가로 회전 정상, 핀치/200% 확대 정상, 카카오 CTA 정상, CSS.supports 기존과 동일, 치명적 오류 없음. 스크린샷 없음(사용자 미촬영). 색도계 검증 아님(육안). |
+
+### 판정
+- **PASS:** 12개 항목 모두 실제 확인·문제 없음.
+- **FAIL:** 읽기 어려운 텍스트·구 팔레트 잔존·fallback 색상 누락·회전/확대 시 색상·텍스트 결함 중 하나라도 재현.
+- **NOT TESTED:** 사용자 미확인 또는 결과 불완전.
+- FAIL 시 즉시 색상 패치를 만들지 않고 재현 조건·원인을 분석해 Codex에 수정 스펙을 요청한다.
+
+### 최종 결과 (스펙 005) — 2026-07-22
+- **iPhone Safari = PASS · Android Chrome = PASS · Samsung Internet = PASS · 카카오 인앱 = PASS** (4환경 전부 12항목, 사용자 직접 확인).
+- 기기명·OS·브라우저 상세 버전 = 미기록, 스크린샷 = 없음(사용자 미촬영). CSS.supports 4환경 모두 기존 기록과 동일.
+- 육안 검증(색도계 아님), 로컬 HTTP LAN preview 기준. 기존 001·002·003 기능 결과는 별도로 보존됨.
