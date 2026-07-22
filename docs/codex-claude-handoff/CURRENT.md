@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 008 웜 토프 실기기 표시 검증 Codex 최종 승인(승인 가능, 기준 HEAD `4df8181`) — 다음 작업 = 스펙 009 TS7 린트 전략 + 최소 pnpm workspace 소형 POC**
+상태: **🟡 스펙 009 TS7 린트 전략 + 최소 pnpm workspace 소형 POC 작성 완료 — Claude 구현·검증 대기**
+
+> 스펙 009(2026-07-22): `docs/rebuild/specs/009-ts7-lint-pnpm-workspace-poc.md`. 기준 HEAD `5987734`. `poc/toolchain-workspace/` 내부에서만 Biome+`tsc --noEmit` 역할 분리, 오류 fixture, pnpm `workspace:*`, package export, 단일 lockfile·frozen install을 검증한다. typescript-eslint↔TS7 충돌은 force 설치 없이 metadata로 판정한다. 실제 루트 `apps/`·`packages/`·workspace, 운영본·Firebase·기존 POC·디자인은 무변경.
 
 > Codex 최종 승인(2026-07-22): 스펙 008 웜 토프 실기기 표시 = **승인 가능**(기준 HEAD `4df8181`). 4환경×12항목 PASS·영상 관측과 직접 확인 근거 구분·device-matrix 41줄 append-only·001~007 보존·코드/CSS/토큰/테스트/PNG/운영/Firebase/Rules 무변경·영상 저장소 미추가·preview 종료 확인. 주의: 실기기 "오류 없음"은 화면 오류 관측 카드 기준(네이티브 콘솔 원격 디버깅 아님), 데스크톱 자동검증 콘솔 0과 혼동 금지.
 
