@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 009 TS7 린트 + 최소 pnpm workspace POC 구현·검증 완료(Codex 재검증 대기) — 다음 = 전체 스택 최종 확정**
+상태: **✅ 스펙 009 TS7 린트 + 최소 pnpm workspace POC Codex 최종 승인(승인 가능, 기준 HEAD `1f3e67d`) — 스펙 006 미확정 2건 해소, 다음 작업 = 스펙 010 실제 모노레포 스캐폴드**
+
+> Codex 최종 승인(2026-07-22): 스펙 009 = **승인 가능**(기준 HEAD `1f3e67d`). 확정: Node 24 LTS major(engines `">=24 <25"`+`.nvmrc`=24) · pnpm 11.15.1+Corepack+단일 lockfile · TS 7.0.2 · **Biome 2.5.5(lint+format,`--error-on-warnings`)+`tsc --noEmit` 채택** · typescript-eslint TS7 미지원 미도입 · 최소 pnpm workspace 채택 · minimumReleaseAgeExclude Biome 9항목 유지 · minimumReleaseAge=0 안 함 · 장기 release-age 정책 NOT DECIDED · 스캐폴드 시 allowlist 재검증. **스펙 006 미확정 2건(TS7 린트·최소 workspace) 해소.** 실제 루트 apps/packages/workspace는 스펙 010에서만 생성.
 
 > 스펙 009 구현 완료(로컬, 2026-07-22): 격리 POC `poc/toolchain-workspace/`. Corepack로 pnpm 11.15.1 실행(전역 설치·PATH 변경 없음). **채택 권고: Biome 2.5.5(lint+format, --error-on-warnings) + tsc 7.0.2 --noEmit + 최소 pnpm workspace.** typescript-eslint↔TS7 = 재현된 비호환(peer `<6.1.0`)으로 미설치(force 없음). 정상 게이트 typecheck/lint/format/test 전부 PASS, fixture 3종(lint/format/type) 정상 실패, `workspace:*`+export 경계(상대 침투 0), 단일 lockfile frozen 재현. Node 24 LTS major 고정(engines `">=24 <25"` + `.nvmrc`=24). **release-age: pnpm config=undefined이나 pnpm11 기본 정책 실제 작동 → Biome 2.5.5 allowlist(minimumReleaseAgeExclude 9항목) 유지 시 frozen EXIT 0/제거 시 EXIT 1; release-age 기간·장기 공급망 정책 NOT DECIDED, minimumReleaseAge=0 비활성화 안 함.** 설정 json은 루트 `.gitignore` `*.json` 때문에 `git add -f`. 루트 apps/packages/lockfile·운영본·Firebase·기존 POC·디자인 무변경. 보고서 `docs/codex-claude-handoff/reviews/2026-07-22-ts7-lint-pnpm-workspace-poc-report.md`, 핸드오프 `docs/2026-07-22-spec-009-toolchain-poc-handoff.md`.
 
@@ -83,9 +85,8 @@
 
 ## 다음 작업
 
-1. **스펙 009 Codex 재검증** — POC 결과·격리·metadata 판정.
-2. **사용자·Codex 전체 스택 최종 확정** — 스펙 006 승인 + 스펙 009 POC 결과(Biome+tsc·최소 pnpm workspace)로 최소 설치 목록·정확 patch 확정.
-3. 이후 별도 리빌드 스캐폴드 스펙(설치·실제 apps/packages 생성은 그 스펙에서만).
+1. **스펙 010 실제 모노레포 스캐폴드** — 승인된 스택(Node 24 / pnpm 11 / TS7 / Vite8 / Tailwind v4 / Biome+tsc / 최소 pnpm workspace)으로 실제 루트 `apps/`·`packages/`·workspace 생성. Codex가 스펙 010 작성 후 진행. (실제 apps/packages/workspace는 그 스펙에서만 생성)
+2. 이후 기능 구현 스펙(렌더·데이터·화면 등) 순차 진행.
 - **주의:** PNG 재생성은 렌더 소스와 방법을 확정한 별도 스펙이며 004에 섞지 않는다.
 
 ## 시작 조건

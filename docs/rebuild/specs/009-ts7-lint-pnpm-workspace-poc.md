@@ -172,3 +172,10 @@
 - **저장소 영향:** 신규 파일은 `poc/toolchain-workspace/` 내부만(설정 json은 루트 `.gitignore` `*.json` 때문에 `git add -f`, node_modules/dist는 gitignore). 루트 `package.json`·`pnpm-workspace.yaml`·lockfile·실제 `apps/`·`packages/`·`legacy/` 미생성. 기존 `platform-compatibility`·운영 HTML·Firebase·디자인 PNG 무변경.
 - **커밋 분리:** POC 코드/설정 커밋 ↔ 결과(보고서·핸드오프·상태) 커밋 분리.
 - **다음:** Codex 재검증 → 전체 스택 최종 확정 → 별도 스캐폴드 스펙.
+
+#### Codex 최종 판정 — 승인 가능 (2026-07-22)
+
+- **판정: 승인 가능.** 승인 기준 HEAD **`1f3e67d`**.
+- 승인된 결론: ①Node 24 LTS major 고정(engines `">=24 <25"` + `.nvmrc`=24) ②pnpm 11.15.1 + Corepack + 단일 `pnpm-lock.yaml` ③TypeScript 7.0.2 유지 ④Biome 2.5.5(lint+format, `--error-on-warnings`) + `tsc --noEmit` 채택 ⑤typescript-eslint TS7 미지원으로 미도입 ⑥최소 pnpm workspace 구조 채택 ⑦`minimumReleaseAgeExclude`의 Biome 2.5.5 관련 9항목 유지 ⑧`minimumReleaseAge=0`으로 기본 정책 끄지 않음 ⑨장기 release-age 기간 정책 NOT DECIDED ⑩실제 스캐폴드 시 allowlist 필요성 재검증·불필요 시 제거.
+- **스펙 006의 미확정 2건(TS7 린트 조합·최소 pnpm workspace 구조)이 이 POC로 해소됨.**
+- **다음 작업 = 스펙 010 실제 모노레포 스캐폴드.** 실제 루트 `apps/`·`packages/`·workspace는 그 스펙에서만 생성.
