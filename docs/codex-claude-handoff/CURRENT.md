@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 006 프런트엔드 기술 스택 읽기 전용 검토 보고서 작성 완료(Codex 재검증 대기) — Tailwind v4 채택 확정**
+상태: **✅ 스펙 006 프런트엔드 기술 스택 Codex 최종 승인(승인 가능, 기준 HEAD `94f6da9`) — 다음 작업 = TS7 린트 + 최소 pnpm workspace 소형 POC**
+
+> Codex 최종 승인(2026-07-22): 스펙 006 기술 스택 조사·정정 = **승인 가능**. 승인 기준: Node 24 LTS 기본 · pnpm(Corepack+packageManager+단일 lockfile) · React19/Vite8/TS7/Tailwind v4 기본 후보 · Vitest4/Playwright/axe 검증도구 · Router·Zustand 미도입(요구 시) · Radix/shadcn 컴포넌트별 · 정확 patch는 스캐폴드 직전 lockfile 고정. **미확정=TS7 린트 조합·최소 pnpm workspace 구조(소형 POC).**
 
 > 스펙 006(2026-07-22): 읽기 전용 근거 보고 `docs/codex-claude-handoff/reviews/2026-07-22-frontend-stack-finalization-report.md`. npm registry metadata + Tailwind 공식 문서 근거. 설치·스캐폴드·package.json/lockfile 무변경. 핵심: 스택 세대(React19/TS7/Vite8/Tailwind v4/Vitest4/Playwright1.61)는 확정 가능·전부 patch 차이. **리스크=typescript-eslint(≤6.0)↔TS 7.0.2 비호환 → 린트 전략 소형 POC 필요**. 권고: **Node 24 LTS**(POC가 24.18.0 통과, 지원 2028-04까지)·Tailwind v4·pnpm 단일 lockfile(Corepack `packageManager` 고정). @vitejs/plugin-react optional peer는 metadata상 optional=true로 **VERIFIED**. 남은 결정=라우팅/상태/UI 도입 시점·TS7 린트 전략.
 
@@ -69,10 +71,9 @@
 
 ## 다음 작업
 
-1. **스펙 006 보고서 Codex 재검증** — 읽기 전용 근거 보고서 판정.
-2. **소형 POC 결정** — TS7 린트 전략 및 최소 workspace 필요성 확인용 소형 POC(설치는 그 POC 범위에서만).
-3. **사용자·Codex 전체 스택 승인** — 권고안(Node 24 LTS·Tailwind v4·pnpm 단일 lockfile) 기준 최소 설치 목록 확정.
-4. 이후 별도 스캐폴드 스펙 작성(설치·workspace 생성은 그 스펙에서만).
+1. **소형 POC — TS7 린트 전략 + 최소 pnpm workspace** (설치는 그 POC 범위에서만). 스펙 006 미확정 2건 해소.
+2. **사용자·Codex 전체 스택 최종 확정** — 승인 기준 + POC 결과로 최소 설치 목록·정확 patch 확정.
+3. 이후 별도 스캐폴드 스펙 작성(설치·workspace 생성은 그 스펙에서만).
 - **주의:** PNG 재생성은 렌더 소스와 방법을 확정한 별도 스펙이며 004에 섞지 않는다.
 
 ## 시작 조건

@@ -107,4 +107,16 @@
 
 - 보고서 작성 후 사용자와 Codex가 최종 스택을 승인한다.
 
-### DONE (Claude) — 작성 대기
+### DONE (Claude) — 2026-07-22
+
+- **산출물:** 읽기 전용 근거 보고서 `docs/codex-claude-handoff/reviews/2026-07-22-frontend-stack-finalization-report.md` (npm registry metadata + Tailwind 공식 문서 근거, 설치·스캐폴드 없음).
+- **조사 결과 요약:**
+  - 스택 세대 확정 가능: React 19 / react-dom 19 / TypeScript 7 / Vite 8 + @vitejs/plugin-react 6 / Tailwind v4 + @tailwindcss/vite / Vitest 4 / Playwright 1.61 + @axe-core/playwright. POC↔후보 차이는 전부 patch 단계.
+  - @vitejs/plugin-react 6 optional peer = **VERIFIED**(peerDependenciesMeta optional=true, 필수 peer는 vite ^8.0.0뿐).
+  - 라이선스 전부 permissive(axe MPL-2.0 devDep).
+  - **리스크: typescript-eslint(≤6.0) ↔ TypeScript 7.0.2 비호환** → 린트 전략 미확정.
+- **Codex 최종 판정 = 승인 가능.** 승인 기준 HEAD **`94f6da9`**.
+- **승인된 기준:** ①Node 24 LTS 기본 런타임 ②pnpm = Corepack + `packageManager` 정확 버전 + 단일 `pnpm-lock.yaml` ③React 19 / Vite 8 / TS 7 / Tailwind v4 기본 후보 ④Vitest 4 / Playwright / axe 검증 도구 ⑤Router·Zustand는 실제 요구 시까지 미도입 ⑥Radix/shadcn은 필요한 컴포넌트만 선택 도입 ⑦정확 patch는 스캐폴드 직전 재확인·lockfile 고정.
+- **미확정(후속):** TypeScript 7 린트 조합 · 최소 pnpm workspace 구조.
+- **다음 단계:** "TS7 린트 전략 + 최소 pnpm workspace" 소형 POC.
+- **무변경:** package.json·lockfile·node_modules·apps/·packages/·workspace·Firebase·앱 코드·PNG·운영본.
