@@ -1,6 +1,6 @@
 # 현재 상태
 
-상태: **✅ 스펙 005 카라멜 앰버 실기기 표시 검증 4환경 전부 PASS(사용자 확인) — 다음 작업 = 스펙 005 결과 Codex 재검증**
+상태: **✅ 스펙 005 실기기 4환경 PASS·Codex 승인 — Tailwind v4 채택, 다음 작업 = 스펙 006 기술 스택 최종 검토**
 
 > 스펙 005(2026-07-22): 새 팔레트 실기기 표시 = iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 **4환경 12항목 전부 PASS**(사용자 직접 확인, 육안). 스크린샷 = 카카오 인앱만 사용자 1장 제공(Codex 채팅 첨부 `codex-clipboard-a8e46ce7-1893-4cb7-817a-2b5875c08b73.png`, 저장소 미추가)·나머지 3환경 없음, 상세 버전 미기록, CSS.supports 기존과 동일. 코드·CSS·토큰·PNG 무변경, preview 종료. 기록=`device-matrix.md` 스펙 005 별도 섹션(001·002·003 무변경). 핸드오프 `docs/2026-07-22-spec-005-device-validation-handoff.md`.
 
@@ -67,10 +67,9 @@
 
 ## 다음 작업
 
-1. **스펙 005 결과 Codex 재검증** — 4환경 PASS 결과·기존 001·002·003 기록 보존·코드/CSS/토큰/PNG 무변경 판정.
-2. **Tailwind v4/v3.4 확정** — 실기기 기능 근거를 정리해 Codex 판정 + 사용자 승인.
-3. (선택) Android Chrome 나머지 기본배율 항목을 채워 전체 1~14 매트릭스 완성.
-4. 이후 전체 스택 확정 → 다음 신규 스펙.
+1. **스펙 006 기술 스택 최종 검토** — 공식 버전·Node·peer dependency·라이선스·최소 설치 목록 보고.
+2. **사용자·Codex 전체 스택 승인** — 설치 전 최종 결정.
+3. 이후 별도 스캐폴드 스펙 작성.
 - **주의:** PNG 재생성은 렌더 소스와 방법을 확정한 별도 스펙이며 004에 섞지 않는다.
 
 ## 시작 조건
@@ -80,7 +79,7 @@
 
 ## Claude Code 금지 (유지)
 
-- 기존 HTML 이동·삭제·수정 / Firebase 연결 / 운영 데이터 접근·쓰기 / 전체 앱·모노레포 스캐폴드 / Preview·production 배포 / 근거 없는 Tailwind 버전 확정 / force push·reset --hard·clean·자동 merge.
+- 기존 HTML 이동·삭제·수정 / Firebase 연결 / 운영 데이터 접근·쓰기 / 전체 앱·모노레포 스캐폴드 / Preview·production 배포 / Tailwind v3.4 병행 설치·무근거 버전 변경 / force push·reset --hard·clean·자동 merge.
 
 ## 검증 요청 형식
 
