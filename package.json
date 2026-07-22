@@ -1,0 +1,34 @@
+{
+  "name": "denn-rebuild",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@11.15.1",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "description": "DENN PRODUCTS rebuild monorepo scaffold (spec 010). Minimal skeleton only — no product features, no Firebase SDK/connection, no deploy.",
+  "scripts": {
+    "format:check": "biome format apps packages tests scripts vitest.config.ts playwright.config.ts",
+    "lint": "biome lint --error-on-warnings apps packages tests scripts vitest.config.ts playwright.config.ts",
+    "typecheck": "tsc --noEmit -p packages/shared/tsconfig.json && tsc --noEmit -p packages/firebase/tsconfig.json && tsc --noEmit -p packages/spaces/tsconfig.json && tsc --noEmit -p packages/render/tsconfig.json && tsc --noEmit -p packages/ui/tsconfig.json && tsc --noEmit -p apps/mockup/tsconfig.json && tsc --noEmit -p apps/admin/tsconfig.json",
+    "test:unit": "vitest run",
+    "build": "vite build apps/mockup && vite build apps/admin",
+    "test:e2e": "playwright test",
+    "check": "node scripts/check.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@biomejs/biome": "2.5.5",
+    "@playwright/test": "1.61.1",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.3",
+    "tailwindcss": "4.3.3",
+    "typescript": "7.0.2",
+    "vite": "8.1.5",
+    "vitest": "4.1.10"
+  }
+}

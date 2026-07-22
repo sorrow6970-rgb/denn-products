@@ -2,6 +2,29 @@
 *.json
 DENN-current-data-*.json
 DENN-data-*.json
+backup.json
+
+# 리빌드 설정 JSON은 정상 추적 (데이터 백업 *.json 무시와 양립; git add -f 불필요)
+!package.json
+!**/package.json
+!tsconfig*.json
+!**/tsconfig*.json
+!biome.json
+!**/biome.json
+# firebase.json / .firebaserc 는 기존 추적 유지(운영 설정, 무변경). *.json 무시는 신규 데이터 JSON에만 적용.
+
+# 리빌드 빌드 산출물 / 도구 출력
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+coverage/
+**/coverage/
+playwright-report/
+**/playwright-report/
+test-results/
+**/test-results/
+*.tsbuildinfo
 
 # 임시 파일
 *.tmp

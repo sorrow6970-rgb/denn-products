@@ -1,0 +1,12 @@
+{
+  "name": "@denn/app-admin",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@denn/shared": "workspace:*",
+    "@denn/ui": "workspace:*",
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
+  }
+}
