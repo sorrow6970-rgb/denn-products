@@ -54,18 +54,37 @@
 - 위험: 세 항목 모두 **patch 단계** 차이 → 회귀 위험 낮음. 스캐폴드 직전 정확 패치를 lockfile에 고정하고 typecheck/unit/build/e2e 재실행으로 확인 권고(결정서 버전 정책 준수).
 - major 변경은 없음(전부 동일 세대 유지).
 
-## 3. Node·pnpm 고정안 (제안, 사용자 확정 필요)
+## 3. Node·pnpm 고정안 (권고)
 
-- **결합 Node 하한(현 최소 세트 기준):** vite/plugin-react `>=20.19|22.12`, vitest `>=20|22|24`, pnpm 11 `>=22.13` → 실질 하한 **Node 22.13**. react-router v8 채택 시 **Node 22.22**로 상승.
-- **제안:** Node **22.x Active LTS("Jod")** 고정(하한 22.13+) 또는 24.x LTS. `.nvmrc` + `package.json` `engines.node`로 명시.
-- **pnpm:** `packageManager` 필드 + Corepack 로 pnpm 11.15.1(또는 스캐폴드 시점 최신 11.x) 핀. Node 22.13+ 전제.
-- **@types/node:** 선택한 Node major에 맞춰 동일 major로 핀(예: Node 22 → @types/node@22). latest 26은 dev 최신값일 뿐 Node major에 종속.
-- **단일 lockfile 정책:** pnpm 단일 `pnpm-lock.yaml`, 설치는 `pnpm install --frozen-lockfile`. npm/yarn lockfile 혼재 금지. (POC는 npm 사용 — 스캐폴드부터 pnpm 단일화.)
+- **기본 권고 = Node 24 LTS.** 근거: 2026-07-22 기준 **현재 LTS 라인**, **지원 기간 2028년 4월까지**, 기존 **POC가 Node 24.18.0에서 통과**, Vite/Vitest/pnpm 후보 요구사항 충족. Node 정확 patch는 **스캐폴드 직전 공식 배포본으로 재확인**.
+  - 공식 근거: `https://nodejs.org/en/about/previous-releases` · `https://nodejs.org/en/blog/migrations/v22-to-v24`
+- **Node 22는 호환 가능한 대안으로만 기록**(기본안 아님). 하한 22.13, react-router v8 채택 시 22.22.
+- **참고 — 결합 Node 하한:** vite/plugin-react `>=20.19|22.12`, vitest `>=20|22|24`, pnpm 11 `>=22.13` → 최소 세트 하한 22.13. Node 24 LTS는 이 모두를 충족.
+- **@types/node:** **Node 24 major에 맞춰 고정**(`@types/node@24`). latest 26은 dev 최신값일 뿐, 선택 Node major에 종속.
+- **pnpm — 패키지 관리자(앱 dependency/devDependency 아님):**
+  - **Corepack**으로 활성화한다.
+  - `package.json`의 **`packageManager` 필드에 정확 버전을 고정**한다(예: pnpm 11.15.1 또는 스캐폴드 시점 최신 11.x).
+  - **단일 `pnpm-lock.yaml`**만 사용하고 npm/yarn lockfile을 혼재하지 않는다. 설치는 `pnpm install --frozen-lockfile`. (POC는 npm 사용 — 스캐폴드부터 pnpm 단일화.)
 
 ## 4. peer dependency·호환성 요점
 
 - react-dom→react, @types/react-dom→@types/react, @axe-core/playwright→playwright-core, @tailwindcss/vite→vite(^8 포함), vitest→vite(^8 포함): **모두 현재 후보 세트와 정합**.
-- @vitejs/plugin-react 6의 `@rolldown/plugin-babel`·`babel-plugin-react-compiler` peer는 **optional(peerMeta)**로 판단 — React Compiler 미사용 시 불필요. NOT VERIFIED(스캐폴드 시 optional 여부 최종 확인 권고).
+- **@vitejs/plugin-react 6.0.4 optional peer = VERIFIED** (npm registry metadata, 2026-07-22 재조회 원문):
+
+```
+peerDependencies = {
+  '@rolldown/plugin-babel': '^0.1.7 || ^0.2.0',
+  'babel-plugin-react-compiler': '^1.0.0',
+  vite: '^8.0.0'
+}
+peerDependenciesMeta = {
+  '@rolldown/plugin-babel': { optional: true },
+  'babel-plugin-react-compiler': { optional: true }
+}
+engines = { node: '^20.19.0 || >=22.12.0' }
+```
+
+  → 필수 peer는 **`vite ^8.0.0`뿐**. `@rolldown/plugin-babel`·`babel-plugin-react-compiler`는 `optional: true`이므로 **React Compiler 미사용 시 설치 불필요**(실제 제약 아님, VERIFIED).
 - **충돌 1건(핵심): typescript-eslint 8.65.0 peer `typescript >=4.8.4 <6.1.0` → TS 7.0.2 미지원.** §5.
 
 ## 5. ★ 생태계 호환 리스크 — TypeScript 7 + 타입 인지 린트
@@ -89,7 +108,8 @@
 - 스타일(v4): `tailwindcss`, `@tailwindcss/vite`
 - 단위 테스트: `vitest` (DOM 필요 테스트가 있으면 `jsdom` 또는 `happy-dom` 택1 — POC는 DOM 목으로 jsdom 미사용)
 - e2e/접근성: `@playwright/test`, `@axe-core/playwright` (playwright-core는 전이)
-- 도구 고정: `@types/node`(선택 Node major), pnpm(Corepack/packageManager)
+- 타입 도구: `@types/node@24`(Node 24 major에 맞춤)
+- **패키지 관리자 = pnpm** — 앱 dependency/devDependency로 설치하지 않는다. **Corepack 활성화 + `package.json` `packageManager` 필드에 정확 버전 고정 + 단일 `pnpm-lock.yaml`**.
 
 ## 8. 도입 보류(선택) 패키지 — 필요 시점에 개별 도입
 
@@ -105,19 +125,25 @@
 - 이들은 POC에서 typecheck/unit 34/34/build/e2e 11/11·axe serious 0으로 검증됐고 peer·라이선스 정합. **정확 patch는 스캐폴드 직전 재확인 후 lockfile 고정**(결정서 정책).
 - **패키지 매니저 = pnpm 단일 + 단일 pnpm-lock.yaml + frozen install.**
 
-## 10. 사용자 결정 필요 항목
+## 10. 권고안 및 남은 사용자 결정
 
-1. **Node LTS 라인:** 22.x(하한 22.13) vs 24.x. react-router **v8 채택 시 22.22 floor**로 상승.
-2. **라우팅 세대:** react-router **v8(8.2.0, Node 22.22)** vs **v7(7.18.1, Node 20)**. 앱 라우팅 필요 시점·Node 정책과 함께 결정.
-3. **린트 전략(§5 연동):** Biome vs ESLint(타입 인지 여부/ TS 세대 조정).
-4. **상태관리 채택 여부·시점:** zustand vs 표준 Context.
-5. **UI primitive 범위:** Radix/shadcn 소유 코드로 어디까지 가져올지.
-6. **정확 patch 상향 여부:** react 19.2.7→19.2.8, plugin-react 6.0.3→6.0.4 반영 여부.
+### 현재 권고(기본안)
+- **Node 24 LTS** — 현재 LTS 라인, 지원 2028-04까지, POC 24.18.0 통과. exact patch는 스캐폴드 직전 공식 배포본 확인. (@types/node@24)
+- **Tailwind v4** — 결정서 확정.
+- **pnpm 단일 lockfile** — Corepack + `packageManager` 필드 고정.
+- **Router** — 실제 라우트가 생기는 스펙까지 **설치 보류**.
+- **Zustand** — 전역 상태 필요성이 확인될 때까지 **보류**(초기엔 로컬 상태/Context).
+- **Radix/shadcn** — **컴포넌트별 도입**(소유 코드 생성).
+- **React/@vitejs/plugin-react patch 상향**(19.2.7→19.2.8, 6.0.3→6.0.4) — 스캐폴드 직전 exact metadata 확인 후 **작은 검증과 함께 적용**.
+- **TS7 린트 전략** — 추가 **소형 POC 필요**(§5·§11).
+
+### 남은 사용자 결정(명시 승인 필요)
+- 위 권고안 승인 여부(특히 Node 24 기본안, TS7 린트 소형 POC 진행).
+- 라우팅 세대(v8 Node 22.22 vs v7 Node 20)는 라우트 스펙 시점에 Node 정책과 함께 확정.
 
 ## 11. 추가 POC 필요 항목
 
 - **TS7 + 린트 조합(§5):** typescript-eslint 비호환 하에서 (a) Biome, (b) 타입 비인지 ESLint + tsc, (c) TS 세대 조정 중 무엇을 채택할지 소형 POC로 확인.
-- **@vitejs/plugin-react 6 optional peer**(rolldown/babel/react-compiler)의 실제 필요 여부 — React Compiler 미사용 스캐폴드에서 optional 처리 확인.
 - **pnpm workspace 필요성:** 단일 패키지로 시작 가능한지 vs 초기부터 workspace 분리(코어/앱). 최소 workspace POC로 판단(스펙 006 검토 대상 항목).
 - **vitest DOM 환경:** 실제 테스트가 jsdom/happy-dom 중 무엇을 요구하는지(POC는 미사용) — 필요 시 택1 검증.
 
@@ -135,7 +161,7 @@
 - [x] POC 검증값과 차이 설명(§2, 전부 patch 단계)
 - [x] Tailwind v4 결정 준수(v3.4 미포함)
 - [x] 기술별 필요성·대안·도입 시점 구분(§7/§8)
-- [x] 미확인 항목 NOT VERIFIED 표기(plugin-react optional peer 등)
+- [x] 미확인 항목 표기(Node exact patch·TS7 린트 조합은 스캐폴드 전 재확인/POC). @vitejs/plugin-react optional peer는 §4에서 metadata 원문으로 **VERIFIED** 확정.
 - [x] 저장소 코드·설정·lockfile 무변경(§13)
 
 ## 13. 저장소 무변경 확인

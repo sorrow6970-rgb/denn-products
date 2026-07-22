@@ -2,12 +2,12 @@
 
 상태: **✅ 스펙 006 프런트엔드 기술 스택 읽기 전용 검토 보고서 작성 완료(Codex 재검증 대기) — Tailwind v4 채택 확정**
 
-> 스펙 006(2026-07-22): 읽기 전용 근거 보고 `docs/codex-claude-handoff/reviews/2026-07-22-frontend-stack-finalization-report.md`. npm registry metadata + Tailwind 공식 문서 근거. 설치·스캐폴드·package.json/lockfile 무변경. 핵심: 스택 세대(React19/TS7/Vite8/Tailwind v4/Vitest4/Playwright1.61)는 확정 가능·전부 patch 차이. **리스크=typescript-eslint(≤6.0)↔TS 7.0.2 비호환 → 린트 전략 추가 결정 필요**. Node 하한 22.13(react-router v8 채택 시 22.22), pnpm 단일 lockfile 제안. 사용자 결정=Node LTS·라우팅 세대·린트(Biome/ESLint)·상태관리·UI 범위.
+> 스펙 006(2026-07-22): 읽기 전용 근거 보고 `docs/codex-claude-handoff/reviews/2026-07-22-frontend-stack-finalization-report.md`. npm registry metadata + Tailwind 공식 문서 근거. 설치·스캐폴드·package.json/lockfile 무변경. 핵심: 스택 세대(React19/TS7/Vite8/Tailwind v4/Vitest4/Playwright1.61)는 확정 가능·전부 patch 차이. **리스크=typescript-eslint(≤6.0)↔TS 7.0.2 비호환 → 린트 전략 소형 POC 필요**. 권고: **Node 24 LTS**(POC가 24.18.0 통과, 지원 2028-04까지)·Tailwind v4·pnpm 단일 lockfile(Corepack `packageManager` 고정). @vitejs/plugin-react optional peer는 metadata상 optional=true로 **VERIFIED**. 남은 결정=라우팅/상태/UI 도입 시점·TS7 린트 전략.
 
 > 스펙 005(2026-07-22): 새 팔레트 실기기 표시 = iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 **4환경 12항목 전부 PASS**(사용자 직접 확인, 육안). 스크린샷 = 카카오 인앱만 사용자 1장 제공(Codex 채팅 첨부 `codex-clipboard-a8e46ce7-1893-4cb7-817a-2b5875c08b73.png`, 저장소 미추가)·나머지 3환경 없음, 상세 버전 미기록, CSS.supports 기존과 동일. 코드·CSS·토큰·PNG 무변경, preview 종료. 기록=`device-matrix.md` 스펙 005 별도 섹션(001·002·003 무변경). 핸드오프 `docs/2026-07-22-spec-005-device-validation-handoff.md`.
 
 > Codex 최종 재검증(2026-07-22): 스펙 004 팔레트 전환·accent-ink `#191A1D`·디자인 접근성 규격·POC 코드/CSS·명암비 테스트·color-contrast 포함 자동검증·002/003 자동 회귀 = **승인 가능**. 승인 기준 HEAD `7406460`.
-> 스펙 004 자동검증 단계 완료. **새 팔레트 실기기 색상 = NOT TESTED.** PNG·Tailwind·전체 스캐폴드·Firebase·배포는 계속 대기.
+> 스펙 004 자동검증 단계 완료. 새 팔레트 실기기 색상은 이후 **스펙 005에서 4환경 PASS·Codex 승인**으로 해소됨. **Tailwind v4 채택 확정**(결정서 2026-07-22). PNG·전체 스캐폴드·Firebase·배포는 계속 대기.
 
 > 기본 배율 1~14: iPhone Safari·Samsung Internet·카카오 인앱 = 전체 **PASS**(Android Chrome NOT TESTED). 자동검증 Codex 승인 기준 HEAD `f4dae95`.
 > **확대(200%/핀치) 접근성 게이트:** 최초 4환경 공통 FAIL을 발견했으나 스펙 002 수정·재검증으로 해소.
@@ -22,9 +22,9 @@
 - 기존 운영 HTML과 Hosting 경로는 그대로 유지한다(무변경 확인).
 - 신규 리빌드는 별도 디렉터리에 추가한다. POC = `poc/platform-compatibility/`(삭제 가능).
 - Modern Studio(B) 디자인 방향은 확정됐다.
-- 기술 스택은 아직 후보이며 전체 스캐폴드 승인이 나지 않았다.
+- 기술 스택은 스펙 006에서 읽기 전용 검토했고, 전체 스캐폴드 승인은 아직 나지 않았다.
 - 001 POC가 구현되고 로컬 자동검증을 통과했다.
-- **Tailwind v4 기능 근거는 4환경에서 확보됨.** 최종 v4/v3.4 결정은 카라멜 앰버 반영 후 사용자 승인 대기.
+- **Tailwind v4 채택 확정**(4환경 기능 근거 확보, 결정서 2026-07-22). v3.4 병행 설치 금지.
 
 ## 브랜치/기준
 
@@ -70,8 +70,9 @@
 ## 다음 작업
 
 1. **스펙 006 보고서 Codex 재검증** — 읽기 전용 근거 보고서 판정.
-2. **사용자·Codex 전체 스택 승인** — Node LTS·라우팅 세대·린트 전략(TS7 이슈)·상태관리·UI 범위 결정 후 최소 설치 목록 확정.
-3. 이후 별도 스캐폴드 스펙 작성(설치·workspace 생성은 그 스펙에서만).
+2. **소형 POC 결정** — TS7 린트 전략 및 최소 workspace 필요성 확인용 소형 POC(설치는 그 POC 범위에서만).
+3. **사용자·Codex 전체 스택 승인** — 권고안(Node 24 LTS·Tailwind v4·pnpm 단일 lockfile) 기준 최소 설치 목록 확정.
+4. 이후 별도 스캐폴드 스펙 작성(설치·workspace 생성은 그 스펙에서만).
 - **주의:** PNG 재생성은 렌더 소스와 방법을 확정한 별도 스펙이며 004에 섞지 않는다.
 
 ## 시작 조건

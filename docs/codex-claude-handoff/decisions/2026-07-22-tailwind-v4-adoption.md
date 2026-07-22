@@ -74,4 +74,3 @@ Tailwind 공식 문서 기준 v4 핵심 브라우저 하한:
 - exact version 확인 없는 `latest` 설치
 - 검증 없이 선택적 최신 CSS 기능을 핵심 흐름에 사용
 - 스타일 변경과 Firebase·데이터 변경 혼합
-
