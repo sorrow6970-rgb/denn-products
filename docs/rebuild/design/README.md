@@ -1,11 +1,11 @@
 # DENN 디자인 시스템 — 방향 확정: **Modern Studio (무드 B)**
 
-> 확정: 2026-07-21. 리빌드의 모든 신규 UI는 이 토큰/규격을 기준으로 만든다.
-> 최신 팔레트 결정: `../../codex-claude-handoff/decisions/2026-07-21-caramel-amber-palette.md`.
-> 시안 이미지 `*-B.png` 4종은 현재 기존 테라코타 버전이며, 카라멜 앰버 재렌더·검증 대기 상태다.
+> 최신 팔레트 확정: 2026-07-22. 리빌드의 모든 신규 UI는 이 토큰/규격을 기준으로 만든다.
+> 결정서: `../../codex-claude-handoff/decisions/2026-07-22-warm-taupe-palette.md`.
+> 시안 이미지: 이 폴더의 `*-B.png` (데스크톱 목업툴 / 모바일 / 어드민 / 시안공간).
 
 ## 방향 요약
-깨끗한 화이트 베이스 + 뉴트럴 그레이 구조 + **카라멜 앰버 포인트 1색** + 부드러운 라운드 카드/그림자.
+깨끗한 화이트 베이스 + 뉴트럴 그레이 구조 + **웜 토프 포인트 1색** + 부드러운 라운드 카드/그림자.
 미니멀·세련되면서 따뜻함이 있는 "모던 스튜디오" 톤. 정보 많은 어드민·에디터에 강하고, 카카오 옐로와 충돌 없음.
 
 ## 컬러 토큰
@@ -18,10 +18,10 @@
 | `--ink` | `#191A1D` | 기본 텍스트/제목 |
 | `--muted` | `#71717A` | 보조 텍스트·아이콘 |
 | `--line` | `#EAEAED` | 보더·구분선 |
-| `--accent` | `#B0894E` | **포인트(카라멜 앰버)** — 주요 버튼면·활성 상태·보더·강조(채움/보더 전용) |
-| `--accent-2` | `#C6A46B` | 그라데이션/호버용 밝은 카라멜 앰버(채움 전용, 위에 흰색·일반 텍스트 금지) |
-| `--accent-ink` | `#191A1D` | accent 배경 위 일반 크기 텍스트(WCAG 검증: 흰색 3.21:1 미달 → ink 5.41:1) |
-| `--accent-soft` | `#F2E9DA` | accent 배경 틴트(활성 칩/태그/뱃지) — 위 텍스트는 `--ink` 사용 |
+| `--accent` | `#9F887A` | **포인트(웜 토프)** — 주요 버튼, 활성 상태, 강조 |
+| `--accent-2` | `#BAA598` | 그라데이션/호버용 밝은 웜 토프 |
+| `--accent-ink` | `#191A1D` | accent 위 일반 크기 텍스트(흰색은 약 3.35:1로 AA 미달, ink는 약 5.20:1로 AA 통과) |
+| `--accent-soft` | `#EEE8E1` | accent 배경 틴트(활성 칩/태그/뱃지) |
 | `--kakao` | `#FEE500` / 텍스트 `#191600` | 카카오 주문 버튼(**브랜드 고정, 변경 금지**) |
 | 성공 | `#5BA35B` / 배경 `#E4EFE4` | 정상·확정 상태 |
 
@@ -38,17 +38,17 @@
 - 보더: 1px `--line`. 활성 요소는 `--accent` 보더 + 얇은 링.
 
 ## 컴포넌트 규격
-- **Button / primary**: bg `--accent`, text `--accent-ink`(`#191A1D`), radius 12, padding 11×16, weight 600, 아이콘+라벨 gap 8.
-- **Button / ghost**: bg surface, 1px line 보더, text ink. (accent를 포인트로 쓸 땐 보더/링만, 라벨은 ink)
+- **Button / primary**: bg `--accent`, text `--accent-ink`, radius 12, padding 11×16, weight 600, 아이콘+라벨 gap 8.
+- **Button / ghost**: bg surface, 1px line 보더, text ink.
 - **Button / kakao**: bg `#FEE500`, text `#191600`, weight 700. (주문 CTA 전용)
-- **Chip(사이즈 등)**: radius 10, 1px line; 활성 = accent bg + `--accent-ink`(`#191A1D`) 텍스트.
+- **Chip(사이즈 등)**: radius 10, 1px line; 활성 = accent bg + `--accent-ink` 텍스트.
 - **Swatch(색상)**: 34×34, radius 10; 활성 = accent 보더 + 2px 링.
 - **Card / Pane**: surface, 1px line, radius 18; 헤더 13.5px 700 + 우측 muted 액션.
 - **Input**: 1px line, radius 12, padding 11×13, placeholder muted.
-- **Nav item(어드민)**: radius 12, muted → 활성 시 `--accent-soft` bg + `--ink` text·아이콘. 의미 있는 아이콘도 `--ink`(accent는 accent-soft 위 2.67:1로 **비텍스트 UI 3:1도 미달**). 상태 경계가 식별에 필요하면 `--ink` 또는 3:1 이상 검증된 색을 쓰고, `--accent` 보더·링은 **흰색·surface처럼 3:1 이상 확보된 배경 위에서만** 사용. 활성은 색만으로 표현하지 않는다(bg + 텍스트/아이콘 병행).
+- **Nav item(어드민)**: radius 12, muted → 활성 시 `--accent-soft` bg + `--ink` text/icon. 상태는 색만으로 표현하지 않는다.
 - **Stat tile**: surface 카드, 라벨(muted+아이콘) → 큰 값(700) → 델타(muted).
-- **Table**: th는 uppercase muted 11px, 행 구분 1px line, 상태 pill — 신규=`--accent-soft` 배경 + `--ink` 텍스트(accent 텍스트는 2.67:1 미달), 필요한 accent 포인트는 대비 확보된 외곽/비필수 장식으로 제한. 확정=성공색(`#5BA35B`/배경 `#E4EFE4`) — 실제 명암비 미확인이므로 자동 통과로 단정하지 말고 **별도 검증 대상**으로 표시.
-- **Tag/Badge**: `--accent-soft` bg + `--ink` text(accent는 accent-soft 위 2.67:1 미달), radius 999, 11px 700, 아이콘 gap 6.
+- **Table**: th는 uppercase muted 11px, 행 구분 1px line, 상태 pill은 `--accent-soft` bg + `--ink` text. 성공색 조합은 별도 명암비 검증 전 자동 통과로 단정하지 않는다.
+- **Tag/Badge**: `--accent-soft` bg + `--ink` text, radius 999, 11px 700, 아이콘 gap 6.
 - **Bottom sheet(모바일)**: surface, 상단 radius 26, 그래버 44×5 line, 상단 필터 칩 가로 스크롤, 하단 CTA 카카오.
 
 ## 구현 매핑 (권장 스택 기준)
@@ -59,7 +59,7 @@ CSS 변수를 root에 깔고 Tailwind는 그 변수를 참조:
 :root{
   --bg:#F4F4F5; --surface:#fff; --panel:#F7F7F8;
   --ink:#191A1D; --muted:#71717A; --line:#EAEAED;
-  --accent:#B0894E; --accent-2:#C6A46B; --accent-soft:#F2E9DA; --accent-ink:#191A1D;
+  --accent:#9F887A; --accent-2:#BAA598; --accent-ink:#191A1D; --accent-soft:#EEE8E1;
   --radius:12px; --radius-lg:18px;
   --shadow:0 20px 50px -28px rgb(20 20 25 / .45);
   --shadow-soft:0 10px 26px -18px rgb(20 20 25 / .30);
@@ -89,5 +89,6 @@ fontFamily:{ sans:['DM Sans','Nanum Gothic','sans-serif'] },
 - `2-mockup-mobile-B.png` — 모바일 바텀시트
 - `3-admin-B.png` — 어드민 대시보드(사이드바 · 스탯 타일 · 주문 테이블 · 시안공간 목록)
 - `4-space-B.png` — `?space` 비공개 시안(룸 씬 재현 + 주문 확정)
+- `5-styleguide-B.png` — 컴포넌트 스타일가이드(팔레트·버튼·태그·칩·스와치·입력·스탯 타일) — 구현 시 이 규격 그대로 사용
 
 시안은 감성용 플레이스홀더 사진 기준이며, 실제 사진/템플릿 적용 시 최종 룩은 더 살아난다.

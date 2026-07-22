@@ -5,10 +5,10 @@
 ## 현재 상태
 
 - 방향: 기존 운영본 유지 + 신규 리빌드 병행 구축
-- 디자인: Modern Studio(B), 카라멜 앰버 `#B0894E` / `#C6A46B` / `#F2E9DA`, accent-ink `#191A1D`, 카카오 `#FEE500`(문서·POC 코드·테스트=스펙 004 반영, PNG 재생성=별도 스펙)
-- 기술 스택: 후보 상태, 최종 확정 전
-- 구현: 시작 전
-- 현재 단계: 문서·기준선 정리 및 기술 스택 결정 준비
+- 디자인: Modern Studio(B), 웜 토프 `#9F887A` / `#BAA598` / `#EEE8E1`, accent-ink `#191A1D`, 카카오 `#FEE500`. 디자인 시안은 갱신됐고 POC 코드·테스트·실기기 검증은 스펙 007에서 수행한다.
+- 기술 스택: 스펙 006 승인(Node 24 LTS, React 19, Vite 8, TypeScript 7, Tailwind v4, pnpm 단일 lockfile). TS7 린트·최소 workspace는 후속 POC 대기.
+- 구현: 플랫폼 POC와 스펙 001~005 검증 완료, 전체 앱 스캐폴드는 미시작
+- 현재 단계: 스펙 007 웜 토프 팔레트 마이그레이션
 
 ## 읽기 순서
 
@@ -59,7 +59,7 @@
 - 성능 예산 및 리소스 관리
 - 접근성
 - 의존성 및 기술 선택
-- Modern Studio 카라멜 앰버 팔레트
+- Modern Studio 웜 토프 팔레트(2026-07-22 최신 결정)
 
 상세 링크는 `/CLAUDE.md` §6과 `../codex-claude-handoff/README.md`를 따른다.
 
