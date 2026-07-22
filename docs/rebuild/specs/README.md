@@ -80,4 +80,4 @@ Claude Code  →  스펙 읽고 코드 구현 → 검증 실행 → 스펙 하�
 | 006 | 프런트엔드 기술 스택 최종 검토 | DONE | Codex 승인, 후속 소형 POC 2건 남음 |
 | 007 | 웜 토프 팔레트 마이그레이션 | DONE | POC 코드·명암비 테스트 마이그레이션·자동검증 통과, 실기기 표시 NOT TESTED |
 | 008 | 웜 토프 실기기 표시 검증 | DONE | 4환경 12항목 PASS(사용자 확인), 실기기 표시 검증 완료 |
-| 009 | TS7 린트 + 최소 pnpm workspace POC | READY | 격리 POC 구현·근거 보고 대기 |
+| 009 | TS7 린트 + 최소 pnpm workspace POC | DONE | Biome+tsc·최소 workspace 채택 권고, typescript-eslint↔TS7 비호환 재현 |

@@ -156,4 +156,18 @@
 
 - Corepack이 현재 Node 환경에서 제공되지 않거나 pnpm 실행에 저장소 밖의 영구 설정 변경이 필요하면, 실행 전에 사용자에게 허용 범위를 질문한다.
 
-### DONE (Claude) — 작성 대기
+### DONE (Claude) — 2026-07-22
+
+- **산출물:** 격리 POC `poc/toolchain-workspace/` + 근거 보고서 `docs/codex-claude-handoff/reviews/2026-07-22-ts7-lint-pnpm-workspace-poc-report.md`.
+- **환경:** Node v24.18.0 · Corepack 0.35.0. pnpm은 PATH에 없어 **Corepack로 실행**(전역 설치·`corepack enable`·PATH/레지스트리 변경 없음). 관리자 권한 불필요.
+- **정확 버전(metadata):** pnpm 11.15.1 · typescript 7.0.2 · @biomejs/biome 2.5.5 · @types/node 24.13.3. (eslint 10.7.0 / typescript-eslint 8.65.0은 미설치)
+- **typescript-eslint↔TS7 = 재현된 비호환:** peer `typescript >=4.8.4 <6.1.0` → TS 7.0.2 미지원. `--force`/`--legacy-peer-deps`/peer 무시 없이 metadata로 판정, **미설치**.
+- **구조/경계:** 루트 devDeps 중앙화(biome/tsc/@types/node), `apps/probe`가 `@probe/shared-probe`를 `workspace:*`+패키지 export로 참조. 상대 src 침투 **0**. 단일 `pnpm-lock.yaml`.
+- **게이트(정상):** typecheck ✅0 / lint ✅0(`biome lint --error-on-warnings`) / format:check ✅0(`biome format`) / test ✅2/2(app→shared 경계 런타임) / check(집계) ✅0 / `pnpm -r` 2 leaf ✅.
+- **fixture(실패 재현, `verify:fixtures`):** 사용하지 않는 import→lint exit1 · 잘못된 공백→format exit1 · 타입 오류→tsc exit1. 영구 실패 파일 미커밋.
+- **역할 분리 확인:** Biome는 타입검사 대체 불가 → `tsc --noEmit` 필수 병행. `noUnusedImports`는 warning이라 게이트 실패엔 `--error-on-warnings` 필요.
+- **pnpm workspace:** `--frozen-lockfile` 재현(lockfile diff 0), npm/yarn lockfile 없음, peer/deprecated/취약점 경고 없음. pnpm11이 `minimumReleaseAgeExclude`(biome 9항목) 자동 추가 — 재현 위해 커밋(force 아님).
+- **채택 권고:** ① **Biome + tsc --noEmit** 조합 채택 권고(TS7에서 lint/format/type 각각 정상). ② ESLint 미채택(TS7 미지원). ③ TS 세대 유지(임의 하향 금지). ④ **최소 pnpm workspace 채택 권고**(경계·단일 lockfile·루트 게이트·frozen 재현 작동, `apps/mockup`·`apps/admin`·`packages/*` 확장 가능, 이번엔 미생성).
+- **저장소 영향:** 신규 파일은 `poc/toolchain-workspace/` 내부만(설정 json은 루트 `.gitignore` `*.json` 때문에 `git add -f`, node_modules/dist는 gitignore). 루트 `package.json`·`pnpm-workspace.yaml`·lockfile·실제 `apps/`·`packages/`·`legacy/` 미생성. 기존 `platform-compatibility`·운영 HTML·Firebase·디자인 PNG 무변경.
+- **커밋 분리:** POC 코드/설정 커밋 ↔ 결과(보고서·핸드오프·상태) 커밋 분리.
+- **다음:** Codex 재검증 → 전체 스택 최종 확정 → 별도 스캐폴드 스펙.

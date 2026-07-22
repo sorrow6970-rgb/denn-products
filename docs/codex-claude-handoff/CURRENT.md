@@ -1,8 +1,8 @@
 # 현재 상태
 
-상태: **🟡 스펙 009 TS7 린트 전략 + 최소 pnpm workspace 소형 POC 작성 완료 — Claude 구현·검증 대기**
+상태: **✅ 스펙 009 TS7 린트 + 최소 pnpm workspace POC 구현·검증 완료(Codex 재검증 대기) — 다음 = 전체 스택 최종 확정**
 
-> 스펙 009(2026-07-22): `docs/rebuild/specs/009-ts7-lint-pnpm-workspace-poc.md`. 기준 HEAD `5987734`. `poc/toolchain-workspace/` 내부에서만 Biome+`tsc --noEmit` 역할 분리, 오류 fixture, pnpm `workspace:*`, package export, 단일 lockfile·frozen install을 검증한다. typescript-eslint↔TS7 충돌은 force 설치 없이 metadata로 판정한다. 실제 루트 `apps/`·`packages/`·workspace, 운영본·Firebase·기존 POC·디자인은 무변경.
+> 스펙 009 구현 완료(로컬, 2026-07-22): 격리 POC `poc/toolchain-workspace/`. Corepack로 pnpm 11.15.1 실행(전역 설치·PATH 변경 없음). **채택 권고: Biome 2.5.5(lint+format, --error-on-warnings) + tsc 7.0.2 --noEmit + 최소 pnpm workspace.** typescript-eslint↔TS7 = 재현된 비호환(peer `<6.1.0`)으로 미설치(force 없음). 정상 게이트 typecheck/lint/format/test 전부 PASS, fixture 3종(lint/format/type) 정상 실패, `workspace:*`+export 경계(상대 침투 0), 단일 lockfile frozen 재현. 설정 json은 루트 `.gitignore` `*.json` 때문에 `git add -f`. 루트 apps/packages/lockfile·운영본·Firebase·기존 POC·디자인 무변경. 보고서 `docs/codex-claude-handoff/reviews/2026-07-22-ts7-lint-pnpm-workspace-poc-report.md`, 핸드오프 `docs/2026-07-22-spec-009-toolchain-poc-handoff.md`.
 
 > Codex 최종 승인(2026-07-22): 스펙 008 웜 토프 실기기 표시 = **승인 가능**(기준 HEAD `4df8181`). 4환경×12항목 PASS·영상 관측과 직접 확인 근거 구분·device-matrix 41줄 append-only·001~007 보존·코드/CSS/토큰/테스트/PNG/운영/Firebase/Rules 무변경·영상 저장소 미추가·preview 종료 확인. 주의: 실기기 "오류 없음"은 화면 오류 관측 카드 기준(네이티브 콘솔 원격 디버깅 아님), 데스크톱 자동검증 콘솔 0과 혼동 금지.
 
@@ -83,8 +83,9 @@
 
 ## 다음 작업
 
-1. **스펙 009 소형 POC — TS7 린트 전략 + 최소 pnpm workspace** (설치는 그 POC 범위에서만). 스펙 006 미확정 2건 해소. Codex가 스펙 009 작성 후 진행.
-2. **사용자·Codex 전체 스택 최종 확정** → 이후 별도 스캐폴드 스펙(설치·workspace 생성은 그 스펙에서만).
+1. **스펙 009 Codex 재검증** — POC 결과·격리·metadata 판정.
+2. **사용자·Codex 전체 스택 최종 확정** — 스펙 006 승인 + 스펙 009 POC 결과(Biome+tsc·최소 pnpm workspace)로 최소 설치 목록·정확 patch 확정.
+3. 이후 별도 리빌드 스캐폴드 스펙(설치·실제 apps/packages 생성은 그 스펙에서만).
 - **주의:** PNG 재생성은 렌더 소스와 방법을 확정한 별도 스펙이며 004에 섞지 않는다.
 
 ## 시작 조건
