@@ -4,7 +4,7 @@ import { contrastRatio, hexToRgb, relativeLuminance, round2, wcagLevel } from '.
 describe('contrast', () => {
   it('parses shorthand and full hex', () => {
     expect(hexToRgb('#fff')).toEqual({ r: 255, g: 255, b: 255 });
-    expect(hexToRgb('#C0614A')).toEqual({ r: 192, g: 97, b: 74 });
+    expect(hexToRgb('#B0894E')).toEqual({ r: 176, g: 137, b: 78 });
   });
 
   it('rejects invalid hex', () => {
@@ -20,11 +20,17 @@ describe('contrast', () => {
     expect(round2(relativeLuminance('#000000'))).toBe(0);
   });
 
-  it('white on Modern Studio terracotta #C0614A is below normal-text AA', () => {
-    const ratio = contrastRatio('#ffffff', '#C0614A');
-    expect(ratio).toBeGreaterThan(3); // passes AA-large / UI
-    expect(ratio).toBeLessThan(4.5); // fails normal-text AA
+  it('white on caramel amber accent #B0894E is below normal-text AA', () => {
+    const ratio = contrastRatio('#ffffff', '#B0894E');
+    expect(ratio).toBeGreaterThan(3); // passes AA-large / UI (non-text, large/bold only)
+    expect(ratio).toBeLessThan(4.5); // fails normal-text AA → not used as normal label
     expect(wcagLevel(ratio)).toBe('AA-large');
+  });
+
+  it('accent-ink #191A1D on caramel amber accent #B0894E passes normal-text AA', () => {
+    const ratio = contrastRatio('#191A1D', '#B0894E');
+    expect(ratio).toBeGreaterThanOrEqual(4.5); // normal-text AA
+    expect(wcagLevel(ratio)).toBe('AA');
   });
 
   it('dark ink on kakao yellow passes AA', () => {

@@ -97,21 +97,22 @@ test.describe('viewport matrix', () => {
       // 4) screenshot regression artifact
       await page.screenshot({ path: `results/screenshots/${v.name}.png`, fullPage: true });
 
-      // 5) axe accessibility
+      // 5) axe accessibility — spec 004: color-contrast is NOT blanket-excluded. The caramel amber
+      //    palette uses accent-ink #191A1D on accent and ink on light surfaces so every text node
+      //    meets WCAG AA; any remaining serious/critical violation (incl. color-contrast) fails.
       const axe = await new AxeBuilder({ page }).analyze();
       const serious = axe.violations.filter(
         (x) => x.impact === 'serious' || x.impact === 'critical',
       );
-      // color-contrast는 확정 Modern Studio 토큰 #C0614A(흰색 대비 4.16:1) 특성에서 비롯.
-      // spec §3: 확정 토큰을 임의 변경하지 않고 계산·대안만 보고 → 하드페일에서 제외하고 기록만 한다.
-      const contrast = serious.filter((x) => x.id === 'color-contrast');
-      const otherSerious = serious.filter((x) => x.id !== 'color-contrast');
+      const contrastNodes = serious
+        .filter((x) => x.id === 'color-contrast')
+        .flatMap((c) => c.nodes.map((n) => n.target));
       await testInfo.attach(`axe-${v.name}`, {
         body: JSON.stringify(
           {
             total: axe.violations.length,
             serious: serious.map((s) => ({ id: s.id, impact: s.impact })),
-            colorContrastNodes: contrast.flatMap((c) => c.nodes.map((n) => n.target)),
+            colorContrastNodes: contrastNodes,
           },
           null,
           2,
@@ -119,11 +120,11 @@ test.describe('viewport matrix', () => {
         contentType: 'application/json',
       });
 
-      // 6) no unexpected console errors + no serious a11y OTHER than the documented token contrast
+      // 6) no unexpected console errors + no serious/critical a11y (color-contrast now enforced)
       expect(consoleErrors, `${v.name}: console errors`).toEqual([]);
       expect(
-        otherSerious.map((s) => s.id),
-        `${v.name}: serious/critical a11y (color-contrast 제외)`,
+        serious.map((s) => s.id),
+        `${v.name}: serious/critical a11y (color-contrast 포함)`,
       ).toEqual([]);
     });
   }

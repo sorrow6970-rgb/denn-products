@@ -8,11 +8,15 @@ import {
 } from './lib/fullscreen';
 
 const TOKENS = {
-  accent: '#C0614A',
-  accent2: '#D8846F',
-  accentSoft: '#F6E6E1',
+  accent: '#B0894E',
+  accent2: '#C6A46B',
+  accentSoft: '#F2E9DA',
   kakao: '#FEE500',
 } as const;
+
+/** Text placed on the accent surface. Caramel amber fails 4.5:1 vs white (3.21:1);
+ *  ink #191A1D reaches 5.41:1 (WCAG AA for normal text) — see decision 2026-07-21 palette. */
+const ACCENT_INK = '#191A1D';
 
 const LOCK_LABEL: Record<OrientationLockResult, string> = {
   idle: '대기 (전체화면 진입 시 시도)',
@@ -130,8 +134,8 @@ function useCanvasDpr(): { ref: React.RefObject<HTMLCanvasElement | null>; info:
       const w = rect.width;
       const h = rect.height;
       ctx.clearRect(0, 0, w, h);
-      // baseline grid to verify aspect preservation across rotate/resize
-      ctx.strokeStyle = 'rgba(192,97,74,0.25)';
+      // baseline grid to verify aspect preservation across rotate/resize (caramel amber #B0894E)
+      ctx.strokeStyle = 'rgba(176,137,78,0.25)';
       ctx.lineWidth = 1;
       for (let i = 1; i < 4; i++) {
         ctx.beginPath();
@@ -149,7 +153,8 @@ function useCanvasDpr(): { ref: React.RefObject<HTMLCanvasElement | null>; info:
       ctx.strokeStyle = TOKENS.accent;
       ctx.lineWidth = 3;
       ctx.strokeRect(fx, Math.max(6, fy), fw, Math.min(fh, h - 12));
-      ctx.fillStyle = TOKENS.accent;
+      // ink label stays legible on the accent-soft canvas (accent on soft = 2.67:1)
+      ctx.fillStyle = ACCENT_INK;
       ctx.font = '600 14px system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('DPR ' + dpr.toFixed(2), w / 2, 22);
@@ -207,6 +212,7 @@ export function App(): React.JSX.Element {
   }, []);
 
   const whiteOnAccent = round2(contrastRatio('#FFFFFF', TOKENS.accent));
+  const inkOnAccent = round2(contrastRatio(ACCENT_INK, TOKENS.accent));
   const inkOnKakao = round2(contrastRatio('#1A1400', TOKENS.kakao));
   const caps = controllerRef.current.getCapabilities();
 
@@ -214,7 +220,7 @@ export function App(): React.JSX.Element {
     <div className="page" data-zoomed={isZoomed ? 'true' : undefined}>
       <header className="brandbar">
         <h1>DENN · 플랫폼 호환성 POC</h1>
-        <span className="note" style={{ color: 'rgba(255,255,255,.85)' }}>{diag.browserCategory}</span>
+        <span className="note" style={{ color: 'var(--accent-ink)' }}>{diag.browserCategory}</span>
       </header>
 
       <main className="content">
@@ -245,7 +251,7 @@ export function App(): React.JSX.Element {
             <SupportBadge ok={diag.css.fieldSizing} label="field-sizing" />
           </div>
           <div className="tw-probe" style={{ marginTop: 10 }} data-testid="tw-probe">
-            Tailwind v4 color-mix 프로브 — 이 박스 배경이 연한 테라코타면 color-mix 렌더 정상.
+            Tailwind v4 color-mix 프로브 — 이 박스 배경이 연한 카라멜 앰버면 color-mix 렌더 정상.
           </div>
           <p className="note" style={{ marginTop: 8 }}>
             safe-area:{' '}
@@ -265,15 +271,18 @@ export function App(): React.JSX.Element {
         <section className="card" aria-labelledby="h-contrast">
           <h2 id="h-contrast">명암비 (Modern Studio 토큰)</h2>
           <dl className="kv">
-            <dt>흰색 / 테라코타 #C0614A</dt>
+            <dt>흰색 / accent #B0894E</dt>
             <dd>
-              {whiteOnAccent}:1 · {wcagLevel(whiteOnAccent) === 'fail' ? 'AA 미달' : wcagLevel(whiteOnAccent)}
+              {whiteOnAccent}:1 · {wcagLevel(whiteOnAccent) === 'fail' ? 'AA 미달' : wcagLevel(whiteOnAccent)} · 일반 텍스트 미사용
             </dd>
+            <dt>accent-ink #191A1D / accent #B0894E</dt>
+            <dd>{inkOnAccent}:1 · {wcagLevel(inkOnAccent)}</dd>
             <dt>진회색 / 카카오 #FEE500</dt>
             <dd>{inkOnKakao}:1 · {wcagLevel(inkOnKakao)}</dd>
           </dl>
           <p className="note">
-            일반 텍스트 AA=4.5:1. 미달 시 토큰을 임의 변경하지 않고 결과 보고에 대안 계산값만 제안(spec §3).
+            일반 텍스트 AA=4.5:1. accent 위 텍스트는 accent-ink #191A1D({inkOnAccent}:1) 사용 —
+            흰색({whiteOnAccent}:1)은 일반 크기 텍스트에 쓰지 않는다(spec 004).
           </p>
         </section>
 
