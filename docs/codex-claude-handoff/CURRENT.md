@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 010 실제 리빌드 모노레포 스캐폴드 구현·검증 완료(Codex 재검증 대기) — 다음 = 기능 구현 스펙**
+상태: **✅ 스펙 010 실제 리빌드 모노레포 스캐폴드 Codex 최종 승인(승인 가능, 기준 HEAD `1d30a2c`) — 오늘 작업 종료, 다음 = 기능 구현 스펙(대기)**
+
+> Codex 최종 승인(2026-07-22): 스펙 010 = **승인 가능**(기준 HEAD `1d30a2c`). 모노레포 구조·품질 게이트 타당, @denn/spaces v1-only 계약 정정 완료. frozen diff 0/format·lint·typecheck 0/unit 6/6/build 독립(gzip 60.16KB)/e2e 4/4/경계(상대 침투 0·순환 0)/release-age allowlist 불필요/운영 HTML·firebase.json·.firebaserc·Rules 6 hash UNCHANGED·POC 무변경·Router/Zustand/shadcn/Firebase SDK 미설치·deploy 미실행 확인. **다음 스펙·기능 구현은 미착수(대기).**
 
 > 스펙 010 구현 완료(로컬, 2026-07-22): 루트 pnpm workspace + `apps/mockup`·`apps/admin` + `packages/shared|firebase|spaces|render|ui`(2 apps + 5 packages). react/react-dom 19.2.7·plugin-react 6.0.3(aged patch)·TS 7.0.2·Vite 8.1.5·Tailwind v4·Biome 2.5.5·Node 24. release-age allowlist **불필요**(aged patch로 frozen EXIT 0). 게이트 전부 통과: frozen diff 0 / format·lint·typecheck 0 / unit 4/4 / build 독립(mockup·admin JS gzip 60.16KB, 예산 내) / e2e 4/4(overflow 0·console 0·axe serious 0·교차앱 격리). 경계 `workspace:*`+export(상대 침투 0·순환 0), 각 패키지 placeholder(미구현 명시). **운영 HTML·firebase.json·.firebaserc·Rules hash 전부 UNCHANGED**, POC 무변경, Router/Zustand/shadcn/Firebase SDK 미설치, **deploy 미실행**. `.gitignore` 정상화(설정 JSON `add -f` 불필요, 데이터 백업 무시 유지). 보고서 `docs/codex-claude-handoff/reviews/2026-07-22-monorepo-scaffold-report.md`, 핸드오프 `docs/2026-07-22-spec-010-monorepo-scaffold-handoff.md`.
 

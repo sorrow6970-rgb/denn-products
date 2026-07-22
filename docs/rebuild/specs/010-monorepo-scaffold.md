@@ -203,3 +203,10 @@ shared → 다른 @denn 패키지 금지
 - **운영본 보존(hash UNCHANGED):** denn-mockup-tool.html·denn-admin.html·firebase.json·.firebaserc·firestore.rules·storage.rules. 기존 POC 두 디렉터리 diff 0. Router/Zustand/Radix/shadcn/firebase SDK 미설치. 소스 network/firebase/secret 0. **Firebase deploy 미실행.**
 - **커밋 분리:** scaffold code/config ↔ 결과(보고서·핸드오프·상태).
 - **다음:** Codex 재검증 → 기능 구현 스펙(Firebase 연결·암호화·Canvas·카탈로그/주문 등)과 Hosting 격리·배포는 각각 후속 스펙.
+
+#### Codex 최종 판정 — 승인 가능 (2026-07-22)
+
+- **판정: 승인 가능.** 승인 기준 HEAD **`1d30a2c`**.
+- 전체 모노레포 구조·품질 게이트 타당(재설계 불필요). @denn/spaces v1-only 계약(`SPACE_SCENE_VERSION="space-scene-v1"`, 근거 없는 v2 제거) 정정 반영 완료.
+- 확인: frozen diff 0 / format·lint·typecheck 0 / unit 6/6 / build 독립(gzip 60.16KB, 예산 내) / e2e 4/4(overflow 0·console 0·axe serious 0·교차앱 격리) / 경계 workspace:*+export(상대 침투 0·순환 0) / release-age allowlist 불필요 / 운영 HTML·firebase.json·.firebaserc·Rules 6 hash UNCHANGED · 기존 POC 무변경 · Router/Zustand/shadcn/Firebase SDK 미설치 · deploy 미실행 · 설정 JSON add -f 없이 추적.
+- **스펙 010 완료.** 다음 = 기능 구현 스펙(각각 별도)·Hosting 격리·배포(별도 cutover 스펙).
