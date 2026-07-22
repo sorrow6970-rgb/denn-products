@@ -72,4 +72,7 @@ Claude Code  →  스펙 읽고 코드 구현 → 검증 실행 → 스펙 하�
 
 | Spec | 제목 | 상태 | 비고 |
 |------|------|------|------|
-| 001  | (예) monorepo scaffold | TODO | |
+| 001 | 모바일 플랫폼 호환성 POC | 승인·실기기 기록 존재 | 기본 Android Chrome 일부 NOT TESTED |
+| 002 | 모바일 확대 CTA 접근성 | DONE | 4환경 재검증 PASS |
+| 003 | 가로 Canvas 3:4 비율 | DONE | 4환경 재검증 PASS |
+| 004 | 카라멜 앰버 팔레트 전환 | READY | PNG는 별도 후속 |
