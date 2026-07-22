@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 005 실기기 4환경 PASS·Codex 승인 — Tailwind v4 채택, 다음 작업 = 스펙 006 기술 스택 최종 검토**
+상태: **✅ 스펙 006 프런트엔드 기술 스택 읽기 전용 검토 보고서 작성 완료(Codex 재검증 대기) — Tailwind v4 채택 확정**
+
+> 스펙 006(2026-07-22): 읽기 전용 근거 보고 `docs/codex-claude-handoff/reviews/2026-07-22-frontend-stack-finalization-report.md`. npm registry metadata + Tailwind 공식 문서 근거. 설치·스캐폴드·package.json/lockfile 무변경. 핵심: 스택 세대(React19/TS7/Vite8/Tailwind v4/Vitest4/Playwright1.61)는 확정 가능·전부 patch 차이. **리스크=typescript-eslint(≤6.0)↔TS 7.0.2 비호환 → 린트 전략 추가 결정 필요**. Node 하한 22.13(react-router v8 채택 시 22.22), pnpm 단일 lockfile 제안. 사용자 결정=Node LTS·라우팅 세대·린트(Biome/ESLint)·상태관리·UI 범위.
 
 > 스펙 005(2026-07-22): 새 팔레트 실기기 표시 = iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 **4환경 12항목 전부 PASS**(사용자 직접 확인, 육안). 스크린샷 = 카카오 인앱만 사용자 1장 제공(Codex 채팅 첨부 `codex-clipboard-a8e46ce7-1893-4cb7-817a-2b5875c08b73.png`, 저장소 미추가)·나머지 3환경 없음, 상세 버전 미기록, CSS.supports 기존과 동일. 코드·CSS·토큰·PNG 무변경, preview 종료. 기록=`device-matrix.md` 스펙 005 별도 섹션(001·002·003 무변경). 핸드오프 `docs/2026-07-22-spec-005-device-validation-handoff.md`.
 
@@ -67,9 +69,9 @@
 
 ## 다음 작업
 
-1. **스펙 006 기술 스택 최종 검토** — 공식 버전·Node·peer dependency·라이선스·최소 설치 목록 보고.
-2. **사용자·Codex 전체 스택 승인** — 설치 전 최종 결정.
-3. 이후 별도 스캐폴드 스펙 작성.
+1. **스펙 006 보고서 Codex 재검증** — 읽기 전용 근거 보고서 판정.
+2. **사용자·Codex 전체 스택 승인** — Node LTS·라우팅 세대·린트 전략(TS7 이슈)·상태관리·UI 범위 결정 후 최소 설치 목록 확정.
+3. 이후 별도 스캐폴드 스펙 작성(설치·workspace 생성은 그 스펙에서만).
 - **주의:** PNG 재생성은 렌더 소스와 방법을 확정한 별도 스펙이며 004에 섞지 않는다.
 
 ## 시작 조건
