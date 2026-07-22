@@ -4,7 +4,11 @@
 
 export type SpaceToken = string & { readonly __spaceBrand: "space-token" };
 
-export type SpaceSchemaVersion = 1 | 2;
+/** The only currently-defined space scene identifier (기존 근거: space-scene-v1).
+ *  근거 없는 v2 계약을 스캐폴드에서 선행 생성하지 않는다. */
+export const SPACE_SCENE_VERSION = "space-scene-v1" as const;
+
+export type SpaceSchemaVersion = typeof SPACE_SCENE_VERSION;
 
 export interface SpaceRef {
   readonly token: SpaceToken;
