@@ -1,8 +1,8 @@
 # 현재 상태
 
-상태: **🟡 스펙 010 실제 리빌드 모노레포 스캐폴드 작성 완료 — Claude 구현·검증 대기**
+상태: **✅ 스펙 010 실제 리빌드 모노레포 스캐폴드 구현·검증 완료(Codex 재검증 대기) — 다음 = 기능 구현 스펙**
 
-> 스펙 010(2026-07-22): `docs/rebuild/specs/010-monorepo-scaffold.md`. 기준 HEAD `64ca533`. 승인 스택으로 실제 루트 pnpm workspace, `apps/mockup`·`apps/admin`, `packages/shared|firebase|spaces|render|ui` 최소 골격과 공통 품질 게이트를 생성한다. 제품 기능·Firebase SDK/연결·암호화·Canvas 구현·Router/Zustand/shadcn·기존 HTML 이동·배포는 제외한다. 운영 HTML·firebase config/Rules·기존 POC 무변경을 hash로 증명하고, 현재 Hosting `public: "."` 상태이므로 deploy를 절대 실행하지 않는다.
+> 스펙 010 구현 완료(로컬, 2026-07-22): 루트 pnpm workspace + `apps/mockup`·`apps/admin` + `packages/shared|firebase|spaces|render|ui`(2 apps + 5 packages). react/react-dom 19.2.7·plugin-react 6.0.3(aged patch)·TS 7.0.2·Vite 8.1.5·Tailwind v4·Biome 2.5.5·Node 24. release-age allowlist **불필요**(aged patch로 frozen EXIT 0). 게이트 전부 통과: frozen diff 0 / format·lint·typecheck 0 / unit 4/4 / build 독립(mockup·admin JS gzip 60.16KB, 예산 내) / e2e 4/4(overflow 0·console 0·axe serious 0·교차앱 격리). 경계 `workspace:*`+export(상대 침투 0·순환 0), 각 패키지 placeholder(미구현 명시). **운영 HTML·firebase.json·.firebaserc·Rules hash 전부 UNCHANGED**, POC 무변경, Router/Zustand/shadcn/Firebase SDK 미설치, **deploy 미실행**. `.gitignore` 정상화(설정 JSON `add -f` 불필요, 데이터 백업 무시 유지). 보고서 `docs/codex-claude-handoff/reviews/2026-07-22-monorepo-scaffold-report.md`, 핸드오프 `docs/2026-07-22-spec-010-monorepo-scaffold-handoff.md`.
 
 > Codex 최종 승인(2026-07-22): 스펙 009 = **승인 가능**(기준 HEAD `1f3e67d`). 확정: Node 24 LTS major(engines `">=24 <25"`+`.nvmrc`=24) · pnpm 11.15.1+Corepack+단일 lockfile · TS 7.0.2 · **Biome 2.5.5(lint+format,`--error-on-warnings`)+`tsc --noEmit` 채택** · typescript-eslint TS7 미지원 미도입 · 최소 pnpm workspace 채택 · minimumReleaseAgeExclude Biome 9항목 유지 · minimumReleaseAge=0 안 함 · 장기 release-age 정책 NOT DECIDED · 스캐폴드 시 allowlist 재검증. **스펙 006 미확정 2건(TS7 린트·최소 workspace) 해소.** 실제 루트 apps/packages/workspace는 스펙 010에서만 생성.
 
@@ -87,9 +87,9 @@
 
 ## 다음 작업
 
-1. **스펙 010 실제 모노레포 스캐폴드** — 승인된 스택(Node 24 / pnpm 11 / TS7 / Vite8 / Tailwind v4 / Biome+tsc / 최소 pnpm workspace)으로 실제 루트 `apps/`·`packages/`·workspace 생성. Codex가 스펙 010 작성 후 진행. (실제 apps/packages/workspace는 그 스펙에서만 생성)
-2. 이후 기능 구현 스펙(렌더·데이터·화면 등) 순차 진행.
-- **주의:** PNG 재생성은 렌더 소스와 방법을 확정한 별도 스펙이며 004에 섞지 않는다.
+1. **스펙 010 Codex 재검증** — 스캐폴드 구조·경계·운영본 hash 무변경·배포 미실행 판정.
+2. 이후 기능 구현 스펙 순차 진행(각각 별도 스펙): @denn/ui 컴포넌트 확장 · @denn/render Canvas · @denn/firebase SDK 연결 · @denn/spaces 암호화 · 카탈로그/주문/시안 기능 · Hosting public 격리·cutover·배포.
+- **주의:** Hosting `public: "."` 상태이므로 배포 격리 전에는 어떤 Firebase deploy도 하지 않는다.
 
 ## 시작 조건
 

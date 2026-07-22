@@ -191,4 +191,15 @@ shared → 다른 @denn 패키지 금지
 - 정확 patch metadata가 승인 세대와 충돌하거나 필수 peer가 새로 발생하면 설치하지 말고 보고한다.
 - Firebase SDK 또는 실제 기능 코드가 skeleton 빌드에 필요해 보이면 임의 도입하지 말고 후속 스펙으로 분리한다.
 
-### DONE (Claude) — 작성 대기
+### DONE (Claude) — 2026-07-22
+
+- **산출물:** 루트 pnpm workspace + `apps/mockup`·`apps/admin` + `packages/shared|firebase|spaces|render|ui`(2 apps + 5 packages = 7). 근거 보고서 `docs/codex-claude-handoff/reviews/2026-07-22-monorepo-scaffold-report.md`.
+- **정확 버전(세대 무변경):** react/react-dom **19.2.7** · @vitejs/plugin-react **6.0.3** · typescript 7.0.2 · vite 8.1.5 · tailwindcss/@tailwindcss/vite 4.3.3 · vitest 4.1.10 · @playwright/test 1.61.1 · @axe-core/playwright 4.12.1 · @types/node 24.13.3 · @types/react(-dom) 19.2.17/19.2.3 · @biomejs/biome 2.5.5. Node `>=24 <25`, `.nvmrc`=24, pnpm 11.15.1(Corepack, 전역 설치 없음).
+- **release-age:** latest(react 19.2.8/plugin-react 6.0.4)가 pnpm 기본 cutoff 안이라 **aged·POC 검증 patch(19.2.7/6.0.3) 고정 → `minimumReleaseAgeExclude` 없이 frozen install EXIT 0**. Biome 2.5.5 allowlist는 임계 지나 불필요. `minimumReleaseAge=0` 미사용, 장기 정책 NOT DECIDED.
+- **`.gitignore` 정상화:** 데이터 백업 무시 유지 + 설정 JSON negation(`!**/package.json`·`!**/tsconfig*.json`·`!biome.json`) → **`git add -f` 불필요**. firebase.json/.firebaserc 무변경·무untrack, 데이터 JSON staged 0.
+- **경계:** app→shared/ui `workspace:*`+패키지명 import(상대 src 침투 0, 순환 0), firebase/render→shared(허용), shared는 @denn 미의존. 각 패키지 placeholder(미구현 명시), `window.*` 없음.
+- **게이트(로컬):** frozen install EXIT 0·lockfile diff 0 / format 0 / lint(`--error-on-warnings`) 0 / typecheck 0(7 프로젝트) / unit 4/4 / build 독립(mockup·admin JS gzip 60.16KB·CSS 1.82KB, 예산 내) / e2e 4/4(2 앱×320/desktop: title·heading·status·교차앱 부재·overflow 0·console 0·axe serious 0·color-contrast 포괄 제외 없음) / check 0.
+- **NOT APPLICABLE:** Firebase/Rules 테스트 = SDK/Rules 무변경(PASS로 꾸미지 않음).
+- **운영본 보존(hash UNCHANGED):** denn-mockup-tool.html·denn-admin.html·firebase.json·.firebaserc·firestore.rules·storage.rules. 기존 POC 두 디렉터리 diff 0. Router/Zustand/Radix/shadcn/firebase SDK 미설치. 소스 network/firebase/secret 0. **Firebase deploy 미실행.**
+- **커밋 분리:** scaffold code/config ↔ 결과(보고서·핸드오프·상태).
+- **다음:** Codex 재검증 → 기능 구현 스펙(Firebase 연결·암호화·Canvas·카탈로그/주문 등)과 Hosting 격리·배포는 각각 후속 스펙.
