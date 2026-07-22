@@ -138,5 +138,21 @@ POC 구현·검증:
 
 - 없음. PNG 재생성 방법은 별도 스펙에서 결정한다.
 
-### DONE (Claude) — 작성 대기
+### DONE (Claude) — 2026-07-22
+
+- **변경 파일/커밋:**
+  - `9c63d19` spec 004: design tokens — `docs/rebuild/design/README.md`, `docs/rebuild/README.md`
+  - `58faa30` spec 004: POC palette + tests — `src/App.tsx`, `src/styles.css`, `tests/unit/contrast.test.ts`, `tests/e2e/viewport.spec.ts`
+  - (verification 커밋) `results/auto-check-summary.md`, `CURRENT.md`, 이 DONE, `docs/2026-07-22-spec-004-palette-handoff.md`
+- **검증 결과(로컬 desktop Chromium):**
+  - `git diff denn-mockup-tool.html denn-admin.html firebase.json` → 변경 없음 ✅
+  - `npm ci` ✅ / `npm run typecheck` ✅ 0오류 / `npm run test:unit` ✅ 31/31 / `npm run build` ✅ JS gzip 66.47KB / `npm run test:e2e` ✅ 11/11
+  - 명암비 계산=테스트 기대값 일치(흰색/accent 3.21 미달, accent-ink/accent 5.41 통과) ✅
+  - 일반 크기 accent 버튼·활성 칩·태그에 흰색 텍스트 없음 ✅ (brandbar·primary→accent-ink, secondary·h2→ink, tag/badge→ink)
+  - 카카오 색상·텍스트 무변경 ✅ / 320~1440 overflow·터치영역 회귀 없음 ✅
+  - 스펙 002 확대 접근성·스펙 003 Canvas 3:4·DPR 회귀 없음(동일 e2e 재실행) ✅
+  - serious/critical axe 위반 0 (color-contrast 포괄 제외 제거 후) ✅
+  - `device-matrix.md` 실기기 결과 보존, 새 팔레트 실기기 색상은 NOT TESTED ✅ / PNG 4종 무변경 ✅ / Firebase·스캐폴드·배포 미진행 ✅
+- **범위 밖 발견(Codex 확인 요청):** `#B0894E`가 흰색과 양방향 3.21:1이라 accent-를-텍스트로 쓴 `card h2`·`btn.secondary`·nav 활성 라벨도 미달 → 디자인 토큰 역할(제목/텍스트=ink, ghost=ink)에 따라 ink로 지정. 스펙 §1은 Tag/Badge만 명시했으므로 nav item 변경은 재검증 시 확인 요망.
+- **후속 스펙 제안:** (1) 새 팔레트 실기기 색상 재검증, (2) 디자인 PNG 4종 카라멜 앰버 재생성(렌더 소스 확정), (3) Tailwind v4/v3.4 확정.
 

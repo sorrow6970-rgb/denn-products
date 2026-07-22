@@ -71,3 +71,37 @@ viewport: 320×568 · 360×800 · 390×844(P) · 844×390(L) · 430×932(P) · 9
 - **Tailwind v4 vs v3.4**: v4의 브라우저 하한(Chrome 111 / Safari 16.4 / Firefox 128)이 **카카오 인앱 웹뷰 실기기 검증 통과 시 v4 유지 권고**.
   실기기에서 `color-mix`/`@property` 미지원 확인되면 v3.4 비교 필요. → 실기기 결과에 종속(현재 NOT TESTED).
 - TS 7.0.2(네이티브 컴파일러)는 본 POC 빌드·타입검사에서 문제 없음.
+
+---
+
+## 2026-07-22 · 스펙 004 카라멜 앰버 팔레트 재검증 (현재 결과)
+
+> 위 2026-07-21 섹션의 테라코타 수치는 **당시 사실로 보존**한다. 아래는 카라멜 앰버 전환 후의 **현재** 측정값이다.
+> 실행 환경: Node / npm · Playwright Chromium(desktop-emulated). 실기기 색상 검증은 별도(NOT TESTED).
+
+### 자동 게이트
+
+| 게이트 | 명령 | 결과 |
+|---|---|---|
+| frozen lockfile 설치 | `npm ci` | ✅ 취약점 0 |
+| 타입 검사(strict) | `npm run typecheck` | ✅ 0 오류 |
+| 유닛 테스트 | `npm run test:unit` | ✅ **31/31** (명암비 accent-ink 통과 케이스 추가) |
+| 프로덕션 빌드 | `npm run build` | ✅ JS gzip **66.47 KB** / CSS gzip **3.35 KB** (예산 내) |
+| viewport e2e | `npm run test:e2e` | ✅ **11/11** (color-contrast **포괄 제외 제거** — serious/critical 0) |
+
+- **color-contrast 정책 변경(스펙 004):** 과거(테라코타)에는 확정 토큰 특성상 하드페일에서 제외·기록만 했으나, 카라멜 앰버 전환에서는 accent 위 텍스트를 accent-ink로, accent-soft/흰색 위 텍스트를 ink로 지정해 **미달 노드를 제거**했다. 이제 e2e는 color-contrast를 포함한 모든 serious/critical을 하드페일한다. 10개 viewport 전부 위반 0.
+- 스펙 002(확대 접근성)·스펙 003(Canvas 3:4·DPR) 검사도 동일 e2e에서 재실행되어 회귀 없음.
+
+### 명암비 측정값 (카라멜 앰버, `src/lib/contrast.ts` 계산)
+
+| 조합 | 대비 | 일반텍스트 AA(4.5) | 큰텍스트/UI(3.0) | 적용 |
+|---|---:|:---:|:---:|---|
+| 흰색 `#FFFFFF` / accent `#B0894E` | **3.21:1** | ❌ | ✅ | 일반 크기 텍스트 **미사용** |
+| accent-ink `#191A1D` / accent `#B0894E` | **5.41:1** | ✅ | ✅ | **primary 버튼·브랜드바·활성 칩 라벨** |
+| 흰색 / accent-2 `#C6A46B` | **2.35:1** | ❌ | ❌ | accent-2 위 흰색·일반 텍스트 금지 |
+| accent `#B0894E` / accent-soft `#F2E9DA` | **2.67:1** | ❌ | ❌ | accent-soft 위 텍스트는 **ink** 사용 |
+| ink `#191A1D` / 흰색 | 17.4:1 | ✅ | ✅ | 제목·본문·secondary 버튼 라벨 |
+| 진회색 `#1A1400` / 카카오 `#FEE500` | 14.35:1 | ✅ | ✅ | 카카오 CTA(무변경) |
+
+- **결론:** accent(#B0894E)는 흰색과 양방향 3.21:1이라 **일반 크기 텍스트 색으로 부적합** → 채움·보더·포인트 전용. 텍스트는 accent-ink(on-accent) 또는 ink(on-light)로 확정 적용. WCAG 2.2 AA 충족.
+- **실기기 색상 표시**는 새 팔레트로 재확인 전까지 `device-matrix.md`에서 **NOT TESTED**로 분리 유지.
