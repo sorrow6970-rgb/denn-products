@@ -142,7 +142,7 @@ FAIL 발생 시 즉시 색상 패치를 만들지 않는다. 공통 결함인지
   - iPhone Safari = **PASS**(12항목) · Android Chrome = **PASS**(12항목) · Samsung Internet = **PASS**(12항목) · 카카오 인앱 = **PASS**(12항목)
   - 카라멜 앰버 표시·텍스트 가독성 정상, primary/secondary 버튼 정상, 세로↔가로 회전 정상, 핀치/200% 확대 정상, 카카오 CTA 정상, CSS.supports 4환경 모두 기존 기록과 동일, 치명적 오류 없음.
   - 기기명·OS·브라우저 상세 버전 = 미기록. 스크린샷 = **카카오 인앱만 사용자 1장 제공**(Codex 채팅 첨부 `codex-clipboard-a8e46ce7-1893-4cb7-817a-2b5875c08b73.png`, 저장소에 이미지 미추가), iPhone·Android·Samsung은 없음. 07-21 카카오 스크린샷은 팔레트 변경 전이라 스펙 005 증거로 재사용하지 않음.
-- **기록 위치:** `poc/platform-compatibility/results/device-matrix.md`의 "새 팔레트 실기기 표시 검증 — 스펙 005" 별도 섹션(append). 기존 001·002·003 표는 무변경(45줄 추가·0줄 삭제).
+- **기록 위치:** `poc/platform-compatibility/results/device-matrix.md`의 "새 팔레트 실기기 표시 검증 — 스펙 005" 별도 섹션(append). 기존 001·002·003 표는 무변경(46줄 추가·0줄 삭제).
 - **사전 자동검증(스펙 004 승인 결과와 동일):** typecheck 0 / unit 34 / build(JS gzip 66.47KB) / e2e 11(color-contrast serious/critical 0). preview `npm run preview -- --host` → 당일 Network `http://192.168.0.31:4173/`.
 - **코드·CSS·토큰·PNG 무변경.** preview 서버 종료 완료. FAIL 없음(즉시 패치 사항 없음).
 - **완료 정의 충족:** 사용자 실기기 결과 전달·사실 기록·기존 결과 보존·모든 대상 PASS·preview 종료·CURRENT/handoff 일치·결과 문서만 커밋.
