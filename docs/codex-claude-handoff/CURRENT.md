@@ -2,7 +2,7 @@
 
 상태: **✅ 스펙 005 카라멜 앰버 실기기 표시 검증 4환경 전부 PASS(사용자 확인) — 다음 작업 = 스펙 005 결과 Codex 재검증**
 
-> 스펙 005(2026-07-22): 새 팔레트 실기기 표시 = iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 **4환경 12항목 전부 PASS**(사용자 직접 확인, 육안). 스크린샷 4환경 모두 없음(미촬영), 상세 버전 미기록, CSS.supports 기존과 동일. 코드·CSS·토큰·PNG 무변경, preview 종료. 기록=`device-matrix.md` 스펙 005 별도 섹션(001·002·003 무변경). 핸드오프 `docs/2026-07-22-spec-005-device-validation-handoff.md`.
+> 스펙 005(2026-07-22): 새 팔레트 실기기 표시 = iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 **4환경 12항목 전부 PASS**(사용자 직접 확인, 육안). 스크린샷 = 카카오 인앱만 사용자 1장 제공(Codex 채팅 첨부 `codex-clipboard-a8e46ce7-1893-4cb7-817a-2b5875c08b73.png`, 저장소 미추가)·나머지 3환경 없음, 상세 버전 미기록, CSS.supports 기존과 동일. 코드·CSS·토큰·PNG 무변경, preview 종료. 기록=`device-matrix.md` 스펙 005 별도 섹션(001·002·003 무변경). 핸드오프 `docs/2026-07-22-spec-005-device-validation-handoff.md`.
 
 > Codex 최종 재검증(2026-07-22): 스펙 004 팔레트 전환·accent-ink `#191A1D`·디자인 접근성 규격·POC 코드/CSS·명암비 테스트·color-contrast 포함 자동검증·002/003 자동 회귀 = **승인 가능**. 승인 기준 HEAD `7406460`.
 > 스펙 004 자동검증 단계 완료. **새 팔레트 실기기 색상 = NOT TESTED.** PNG·Tailwind·전체 스캐폴드·Firebase·배포는 계속 대기.
