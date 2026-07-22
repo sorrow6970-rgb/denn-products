@@ -1,6 +1,6 @@
 # 2026-07-22 작업 종료 핸드오프 — 스펙 004~010 완료
 
-> 브랜치 `rebuild/modern-studio`. 종료 HEAD **`<이 커밋 후 값>`**(직전 승인 HEAD `1d30a2c`). main(`805b61d`)·production(`df856db`, 태그 `prod-baseline-20260721`) 무변경.
+> 브랜치 `rebuild/modern-studio`. 종료 HEAD **`0a4d50f`**(스펙 010 승인 기준 HEAD `1d30a2c` + 종료 문서 커밋). main(`805b61d`)·production(`df856db`, 태그 `prod-baseline-20260721`) 무변경.
 > 오늘 스펙 004~010이 전부 Codex **승인 가능**으로 종료. 다음 스펙·기능 구현은 **미착수(대기)**.
 
 ## 오늘 완료 (전부 Codex 승인)
