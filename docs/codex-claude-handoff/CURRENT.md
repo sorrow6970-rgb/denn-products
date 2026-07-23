@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **🟡 스펙 014 실제 공개 카탈로그 읽기 검증 = READY. 실제 GET 최대 2회(Node adapter 1 + Browser CORS 1), 원문 저장·출력 금지. 앱 연결·Firebase 변경·배포 미착수.**
+상태: **✅ 스펙 014 실제 공개 카탈로그 읽기 검증 구현·실행 완료(로컬) — Codex 재검증 대기. 실제 GET 2회(Node 1+Browser 1) 모두 성공, 원문 미저장.**
+
+> 스펙 014 구현·실행 완료(로컬, 2026-07-23): 스펙 013 고정 공개 reader를 opt-in으로 실제 검증. **실제 GET = Node 1 + Browser 1 = 2회**(예산 준수), 둘 다 **성공**. Node: success/OK, `source:"network"`, 스펙 012 통과. Browser: success/OK, corsBlocked false, HTTP 200, responseType `cors`, byteLength **192419**(≈188 KiB ≤5 MiB), jsonParseOk true, elapsedMs 4227. 순수 sanitizer(`safe-summary.ts`)가 counts/codes/status/byte/elapsed/존재 boolean만 남기고 이름/ID/token/URL/base64/path/원문 0(issue는 code별 개수, path 제거). live는 `*.live.test.ts`(기본 Vitest 제외)+별도 Playwright config, opt-in(`DENN_LIVE_PUBLIC_CATALOG_READ=1`) 없으면 요청 전 실패(위장 없음). 기본 게이트 network-free: frozen diff 0(deps 무변경)/format·lint·typecheck/**unit 107**(sanitizer 11 신규, live 제외)/build 독립/**e2e 4/4**/check PASS. repo·임시경로에 response/json/tmp/log/HAR/trace/video/screenshot 0(`test-results/.last-run.json`=status만·gitignored), 포트 free. 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG·**앱 소스 전부 hash UNCHANGED**, Firebase SDK/Auth/write/Rules/CORS·deploy 0, 신규 의존성 0. 도구/테스트 커밋과 결과 문서 커밋 분리. 보고서 `reviews/2026-07-23-live-public-catalog-read-report.md`(§6 허용 필드만), 핸드오프 `docs/2026-07-23-spec-014-live-public-catalog-handoff.md`. **유지: 실행 시점 스냅샷(장기 가용성·offline 미보장), 실패해도 5 MiB·timeout·Rules·CORS 임의 변경 금지, 앱 연결·Firebase 변경·배포 없음.**
 
 > 스펙 014(2026-07-23): `docs/rebuild/specs/014-live-public-catalog-read-validation.md`. 스펙 013의 고정 공개 `published/state.json` reader를 실제 환경에서 격리 검증한다. 기본 게이트는 network-free로 유지하고 명시적 opt-in에서만 Node adapter 1회와 로컬 browser CORS 1회(총 2회 이하)를 수행한다. 원문·이름·ID·URL·이미지 경로·base64·token은 저장/출력/커밋하지 않고 byte·elapsed·status·collection/issue code 개수 등 안전 집계만 문서화한다. 실패 시 5 MiB·timeout·Rules·CORS를 즉시 바꾸지 않고 safe code만 보고한다. 앱 연결·Firebase SDK/Auth/write·Rules/CORS·Hosting·배포는 제외한다.
 

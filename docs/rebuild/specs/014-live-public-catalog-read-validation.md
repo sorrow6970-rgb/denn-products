@@ -149,3 +149,29 @@
 ### QUESTIONS
 
 - 없음. 실제 응답이 실패하거나 민감해 보이는 구조를 포함하면 값을 출력하지 말고 safe code와 개수만 보고한 뒤 중단한다.
+
+### DONE (Claude) — 2026-07-23
+
+**요약:** 스펙 013 고정 공개 reader를 실제 환경에서 opt-in으로 격리 검증했다. **실제 GET = Node 1 + Browser 1 = 총 2회**(예산 준수), 두 채널 모두 **성공**. 원문·식별값은 어디에도 저장/출력/커밋하지 않고 안전 집계만 문서화했다. 앱 연결·Firebase 변경·배포 없음.
+
+**변경 파일 (도구/테스트 — 별도 커밋):**
+- `packages/firebase/src/public-catalog/live/safe-summary.ts` — 순수 sanitizer(`buildNodeSummary`/`buildBrowserSummary`). counts/codes/status/byte/elapsed/존재 boolean만. issue는 code별 개수만(path 제거). 비유한·음수·비정수 count·미정의 필드 거부.
+- `.../live/safe-summary.test.ts` — fake 민감 fixture로 직렬화 요약·오류에 이름/ID/token/URL/base64/path 0건 검증(+숫자 거부).
+- `.../live/node-live.live.test.ts` — `*.live.test.ts`(기본 Vitest 제외). opt-in Node 실제 read 1회(기존 adapter·10s·5 MiB), 안전 요약만 `process.stdout.write`. opt-in 없으면 **요청 전 실패**.
+- `tests/e2e-live/public-catalog-cors.live.spec.ts` — 별도 Playwright config. opt-in browser CORS 1회, 안전 primitive만 반환. trace/video/screenshot off.
+- `vitest.config.ts`(live 제외) · `vitest.live.config.ts` · `playwright.live.config.ts` · `package.json`(scripts `test:live:node`/`test:live:browser`) · `scripts/check.mjs`(biome 대상).
+
+**실제 요청 결과(안전 집계):**
+- Node: **success / OK**, requests 1, `source:"network"`, 스펙 012 `readLegacyCatalog` 통과. (해당 실행에서 세부 count는 stdout 미출력=Vitest console 인터셉트; 재현용 `process.stdout.write` 고정, 예산 위해 재실행 안 함.)
+- Browser: **success / OK**, requests 1, corsBlocked **false**, httpStatus **200**, responseType `cors`, contentTypePresent true, byteLength **192419**(≈188 KiB, `0<n≤5 MiB`), jsonParseOk **true**, elapsedMs 4227.
+- 합계 실제 GET **2회**(retry/HEAD/cache-buster 0). 보고서 `docs/codex-claude-handoff/reviews/2026-07-23-live-public-catalog-read-report.md`(§6 허용 필드만).
+
+**게이트(기본, network-free):** frozen install lock diff **0**(deps 무변경) · format/lint/typecheck PASS · **unit 107**(sanitizer 11 신규, live 제외) · build 독립 · **e2e 4/4** · check PASS. opt-in 없을 때 live 명령은 요청 전 실패(성공/skip 위장 없음) 확인.
+
+**정리·가드:** 로컬 preview 서버 종료·포트 free 확인. repo/임시경로에 response/json/tmp/log/HAR/trace/video/screenshot **0**(`test-results/.last-run.json`은 status만·gitignored). `git status`에 승인된 도구·문서 외 파일 없음, 운영 데이터 파일 없음. 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG·**앱 소스 전부 hash UNCHANGED**, Firebase SDK/Auth/write/Rules/CORS·deploy 0, 신규 의존성 0.
+
+**미검증/위험:** 실행 시점 스냅샷(장기 가용성·offline 미보장). Node/Browser byte 동일성은 완료 조건 아님. 5 MiB·timeout·Rules·CORS는 실패해도 임의 변경하지 않음. 세부 Node 안전 집계 미출력은 도구 세부(데이터 무관).
+
+### 종료 대기 — Codex 재검증
+
+- 다음: Codex 스펙 014 재검증 대기. 다음 스펙·앱 연결 미착수.
