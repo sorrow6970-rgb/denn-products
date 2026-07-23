@@ -240,3 +240,10 @@ Codex "수정 후 재검증" 2건만 최소 보완. 컴포넌트 API·토큰·�
 
 **재검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0** · format/lint/typecheck PASS · unit **26/26**(esbuild/oxc 경고 0) · build 독립(JS gzip ≈61.09KB) · e2e **4/4**(disabled Chip 검증 포함). 운영 HTML·Firebase 설정/Rules·`poc/**`·디자인 PNG **UNCHANGED**, 신규 설치·배포 0. 코드 커밋 `611707d` / 문서 커밋 분리.
 
+### 종료 — Codex 최종 승인 (2026-07-23)
+
+- **판정: 승인 가능. 승인 기준 HEAD `9c17dc9`.** 스펙 011 종료.
+- 게이트 최종: frozen diff 0 / format·lint·typecheck / unit 26 / build 독립 / e2e 4 / oxc·esbuild 경고 0. 경계 상대 침투 0·순환 0, 신규 설치(Firebase SDK/Router/Zustand/Radix/shadcn) 0, 배포 0, 운영본·Firebase·POC·PNG 무변경.
+- 유지(종료 시점 사실): 실기기 4환경 검증은 이번 스펙의 완료 조건이 **아니었음**. 브라우저 200% 육안 재확인은 **미수행**. 실제 제품 레이아웃 첫 적용 시 별도 실기기 스펙으로 분리 검증.
+- 다음: Codex 다음 스펙 대기. 기능 구현 미착수.
+

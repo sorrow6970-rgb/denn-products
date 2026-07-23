@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 011 공유 UI 기반 프리미티브 구현 완료 + Codex 1차 재검증 보완(2건) 반영 — 재검증 대기**
+상태: **✅ 스펙 011 공유 UI 기반 프리미티브 = Codex 최종 승인(승인 가능, 기준 HEAD `9c17dc9`) — 종료. 다음 = Codex 다음 스펙 대기(기능 구현 미착수)**
+
+> Codex 최종 승인(2026-07-23): 스펙 011 = **승인 가능**(기준 HEAD `9c17dc9`). 프리미티브 6종(Button/Card/Badge/Chip/TextField/VisuallyHidden) + 웜 토프 토큰 계약 확립. 게이트 최종: frozen diff 0 / format·lint·typecheck / unit **26** / build 독립 / e2e **4** / **oxc·esbuild 경고 0**. 재검증 보완 2건(vitest ignored esbuild 옵션 제거·Chip disabled 계약 완성) 반영 완료. 경계 상대 침투 0·순환 0, 신규 설치(Firebase SDK/Router/Zustand/Radix/shadcn) 0, 배포 0, 운영본·Firebase·POC·PNG 무변경. **유지: 실기기 4환경은 이번 완료 조건 아니었음, 브라우저 200% 육안 재확인 미수행.** **다음 스펙·기능 구현 미착수(대기).**
 
 > 스펙 011 재검증 보완(2026-07-23, HEAD `9baec46`→`611707d`): Codex "수정 후 재검증" 2건 최소 보완. (1) `vitest.config.ts`의 ignored `esbuild.jsx` 제거 → Vite 8 **oxc/esbuild 충돌 경고 0**(oxc가 .tsx를 automatic JSX로 기본 처리, 새 변환기/의존성 없음). (2) Chip disabled 계약 완성 → `.denn-chip:disabled`(cursor:not-allowed+dim) + hover에 `:not(:disabled)`, 정적 테스트에 native disabled 전달 검증, 두 앱 데모에 disabled Chip 1개씩 + e2e에서 존재·disabled·44px 검증. 재검증: frozen diff 0 / format·lint·typecheck / unit **26/26**(경고 0) / build 독립(JS gzip ≈61.09KB) / e2e **4/4**. 운영본·POC·PNG·Firebase 무변경, 배포 0. 코드 커밋 `611707d` / 문서 커밋 분리.
 
