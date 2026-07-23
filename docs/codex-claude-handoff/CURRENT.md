@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 015 고객 앱 공개 카탈로그 연결 = Codex 최종 승인(승인 가능, 기준 HEAD `6951685`) — 종료. 다음 = Codex 다음 스펙 대기(상품 UI·Canvas·배포 미착수)**
+상태: **🟡 스펙 016 고객 카탈로그 탐색 selector 계약 = READY. 모델·카테고리·사이즈·템플릿 관계만 `@denn/shared`에 고정하며 앱 UI·실제 GET·Canvas·배포는 미착수.**
+
+> 스펙 016(2026-07-23): `docs/rebuild/specs/016-catalog-browse-selector-contract.md`. 스펙 015가 메모리에 보유한 Catalog V1에서 고객 탐색용 최소 view를 만드는 순수 selector 계약이다. case/frame `categoryId` 정확 관계, frame size의 레거시 단일·배열·nested 별칭과 전체 사이즈 sentinel, hidden size, all/restricted/unmatched를 중앙화한다. reserved category·orphan relation·unknown type/size는 조용히 삭제하지 않고 값/path 없는 안전 진단으로 남긴다. 원본 순서·불변·멱등을 지키며 raw item·unknown·이미지/base64를 output에 복제하지 않는다. 앱 import/call·UI·실제 Firebase GET·live 명령·Firebase/배포는 제외한다.
 
 > Codex 최종 승인(2026-07-23): 스펙 015 = **승인 가능**(기준 HEAD `6951685`). `apps/mockup` mount 시 스펙 013 공개 reader로 카탈로그 1회 read하는 최소 연결 셸(loading/ready/error/수동 retry). 재검증 보완(검증 2건: StrictMode+실제 reader 병합 통합 테스트·고정 sleep 제거) 반영. 게이트 최종: frozen diff 0 / format·lint·typecheck / **unit 117** / build 독립(mockup JS gzip 64.40KB) / **e2e 11**(admin 2+mockup 9) / check PASS. **유지: loading/ready/error/수동 retry 흐름 완료, StrictMode `start()→detach()→start()`에서 underlying fetch 1회(첫 caller REQUEST_ABORTED·두 번째 caller OK·최종 ready), 자동 retry/polling/persistent cache 없음, 성공 document는 메모리에만, 상품 탐색·Canvas·이미지·선택·저장·주문 미착수, 실제 endpoint 재요청 없음, Firebase SDK/Auth/write·Rules/CORS·Hosting·배포 무변경.** **다음 스펙·기능 미착수(대기).**
 
