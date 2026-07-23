@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **▶ 스펙 011 Modern Studio 공유 UI 기반 프리미티브 — Codex 스펙 작성 완료, Claude Code 구현 대기**
+상태: **✅ 스펙 011 공유 UI 기반 프리미티브 구현 완료(로컬, 자동검증 전부 통과) — Codex 재검증 대기**
+
+> 스펙 011 구현 완료(로컬, 2026-07-23): `@denn/ui`에 Button/Card/Badge/Chip/TextField/VisuallyHidden 6종 + 웜 토프 토큰 계약 완성. 게이트 전부 통과: frozen install diff 0 / format·lint·typecheck 0 / unit **25/25**(토큰↔CSS 드리프트 가드 + 컴포넌트 ARIA 계약) / build 독립(mockup·admin JS gzip ≈61.07/61.08KB, CSS 2.62KB) / e2e **4/4**(키보드 focus-visible·44px 터치·320/1280 overflow 0·axe serious/critical 0·console 0). React 의미 계약은 저장소 기존 `react-dom/server` renderToStaticMarkup으로 검증(**jsdom/happy-dom/RTL 미도입**), @denn/ui react/react-dom peer+dev는 기존 lockfile 버전이라 **신규 다운로드 0**. 토큰 드리프트는 이름·값 명시 검증(전체 스냅샷 아님). axe: muted가 페이지 bg(#F4F4F5) 위 4.39 미달 → 식별 문단을 흰 Card로 이동해 해소(토큰 무변경). 운영 HTML·`firebase.json`·`.firebaserc`·Rules 2종·`poc/**`·디자인 PNG **hash UNCHANGED**, Firebase SDK/Router/Zustand/Radix/shadcn 신규 설치 0, **deploy 미실행**. 코드/설정 커밋과 문서/핸드오프 커밋 분리. 핸드오프 `docs/2026-07-23-spec-011-ui-primitives-handoff.md`, DONE는 스펙 하단.
 
 > 스펙 011(2026-07-23): `docs/rebuild/specs/011-ui-foundation-primitives.md`. `@denn/ui`의 웜 토프 토큰 계약과 Button/Card/Badge/Chip/TextField/VisuallyHidden 최소 프리미티브를 고정한다. 두 앱의 스캐폴드 셸에서 패키지 소비·모바일 44px 터치·focus-visible·ARIA·320px overflow·axe를 검증한다. 제품 기능·최종 레이아웃·Canvas·Firebase·Router/Zustand·Radix/shadcn·배포는 제외한다.
 

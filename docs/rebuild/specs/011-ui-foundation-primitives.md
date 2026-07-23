@@ -184,4 +184,50 @@
 ### QUESTIONS
 
 - 없음. 구현 중 현재 도구만으로 React 의미 계약을 검증할 수 없어 새 테스트 의존성이 필요하다고 판단되면 설치 전에 여기에 근거·후보·영향을 기록하고 대기한다.
+- (해소) React 의미/ARIA 계약은 **이미 저장소에 있는 `react-dom/server`의 `renderToStaticMarkup`**으로 node 환경에서 정적 HTML을 렌더해 검증했다. jsdom/happy-dom/RTL을 **도입하지 않았다**. `@denn/ui`에 react/react-dom(peer + 기존 lockfile 버전과 동일한 dev), @types/react·@types/react-dom(dev)만 추가했고 신규 다운로드 0(lockfile은 importer 항목만 추가). 따라서 임의 신규 의존성 없음.
+
+### DONE (Claude) — 2026-07-23
+
+**요약:** `@denn/ui`에 6개 프리미티브(Button/Card/Badge/Chip/TextField/VisuallyHidden)와 웜 토프 토큰 계약을 구현하고, 두 앱이 패키지 경계로 소비하도록 데모 셸을 재구성했다. 모든 자동 게이트 통과. 운영본·Firebase·POC·PNG·배포 무변경.
+
+**변경 파일 (코드/설정):**
+- `packages/ui/package.json` — react/react-dom `peerDependencies`(`^19.2.0`) + dev(react 19.2.7 / react-dom 19.2.7 / @types/react 19.2.17 / @types/react-dom 19.2.3, 전부 기존 lockfile 버전). 신규 다운로드 0.
+- `packages/ui/src/index.ts` — 단일 public export(WARM_TAUPE + 6 컴포넌트 + 타입). 좁은 union(`ButtonVariant`)만 노출.
+- `packages/ui/src/components/{Button,Card,Badge,Chip,TextField,VisuallyHidden}.tsx` — 프리미티브 구현.
+- `packages/ui/src/theme.css` — 누락 토큰(`--panel`/`--radius`/`--radius-lg`/`--shadow-soft`/`--shadow` + success) 보강, @theme·:root 두 계층 동일화, 프리미티브 CSS(44px 터치, focus-visible 링, hover는 `@media (hover:hover)`, `prefers-reduced-motion`).
+- `packages/ui/src/index.test.ts` — 토큰 값 + **CSS↔WARM_TAUPE 드리프트 가드**(토큰 이름·값 명시 검증, 전체 스냅샷 아님).
+- `packages/ui/src/components/components.test.tsx` — Button 기본/명시 type·disabled·variant, Chip aria-pressed, TextField label·description·error ARIA 연결을 `renderToStaticMarkup`로 검증.
+- `packages/ui/tsconfig.json` — 토큰 테스트의 `node:fs`용 `types:["node"]`(앱과 동일 패턴).
+- `apps/mockup/src/App.tsx`·`apps/admin/src/App.tsx` — @denn/ui 프리미티브 6종 실렌더 데모 셸. 클릭 부작용 없음(사이즈/보기 칩은 로컬 UI 상태만). 앱 식별자·격리 유지.
+- `tests/e2e/scaffold.spec.ts` — 키보드 focus-visible 링·44px 터치 타깃·320/데스크톱 overflow 0·axe serious/critical 0·console 0. 프리미티브 실렌더 확인.
+- `vitest.config.ts` — `.tsx` 테스트 포함 + `esbuild.jsx:"automatic"`(jsdom 미도입).
+- `pnpm-lock.yaml` — packages/ui importer devDependencies만 추가(신규 패키지 0).
+
+**실행 명령·결과 (Node 24.18.0 / pnpm 11.15.1, Corepack):**
+- `pnpm install --frozen-lockfile` → 성공, 전후 `pnpm-lock.yaml` diff **0**.
+- `pnpm run format:check` → PASS.
+- `pnpm run lint`(`--error-on-warnings`) → PASS.
+- `pnpm run typecheck`(7 프로젝트 `tsc --noEmit`) → PASS.
+- `pnpm run test`(unit) → **25/25 PASS**(토큰 드리프트 + 컴포넌트 계약).
+- `pnpm run build` → mockup·admin **독립 빌드** PASS(각 JS gzip ≈ **61.07/61.08KB**, CSS gzip 2.62KB; React 단일 번들).
+- `pnpm run test:e2e` → **4/4 PASS**(mockup/admin × 320·1280).
+- `pnpm run check`(aggregate) → PASS.
+
+**계약/경계 확인:**
+- 앱→`@denn/ui`는 패키지 export로만 접근(상대 `src` 침투 0), `@denn/ui`→앱 의존 0(순환 0).
+- 토큰 드리프트 가드: accent/accent-2/accent-soft/accent-ink/kakao가 @theme(`--color-*`)·:root(`--*`)·WARM_TAUPE에서 동일해야 통과. `--accent` 위 텍스트=`--accent-ink`, kakao=`#191600`. 흰색-on-웜토프 일반 텍스트 없음(테스트로 고정).
+- 신규 설치 0: Firebase SDK/React Router/Zustand/Radix/shadcn 미설치(package.json·lockfile 확인). 네트워크 요청·배포 0.
+
+**무변경 확인(baseline hash 대조):** `denn-mockup-tool.html`·`denn-admin.html`·`firebase.json`·`.firebaserc`·`firestore.rules`·`storage.rules`·`poc/**`·`docs/rebuild/design/*.png` **전부 UNCHANGED**.
+
+**수동 확인(이번 세션, 데스크톱 Chrome 실측):**
+- ✅ primary(웜토프)·ghost(화이트+라인)·kakao(옐로+볼드)·disabled가 시각적으로 구분됨(스크린샷 확인).
+- ✅ 키보드 Tab으로 첫 컨트롤(“기본”)에 도달, focus-visible 링(짙은 ink 아웃라인+offset)이 명확히 보임(스크린샷 확인).
+- ✅ 선택 칩(A4)은 색 외에 **채워진 사각 마크 + 볼드**로 상태 전달, 오류 필드는 **빨간 보더 + “필수 항목입니다” 텍스트 + aria-invalid**로 색 외 신호 제공.
+- 320px overflow 0 및 44px 터치 타깃은 **e2e 프로그램 검증(scrollWidth≤clientWidth, boundingBox≥44)**으로 확정. 브라우저 창 축소 캡처는 고정 해상도라 별도 신호가 없어 e2e 결과를 정본으로 사용.
+
+**미검증/위험:**
+- 브라우저 200% 확대의 **사람 육안** 재확인은 이번 세션에서 별도로 수행하지 않음(스펙상 실기기 4환경은 이번 스펙의 자동 완료 조건 아님). 반응형 flex-wrap + e2e overflow 0으로 위험 낮음. 실제 제품 레이아웃 첫 적용 시 실기기 스펙으로 분리 검증.
+- 폰트는 시스템 fallback(외부 폰트 요청 없음) — OS별 자간 차이 가능성은 후속 폰트 자산 정책으로 남김.
+- 데모 셸의 시각 변경은 제품 기능 완성이 아님(데모 컨트롤에 실제 부작용 없음).
 
