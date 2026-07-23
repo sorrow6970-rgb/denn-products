@@ -1,0 +1,215 @@
+# 012 — 레거시 카탈로그 읽기 계약·정규화·fixture
+
+## 목표 (WHY)
+
+신규 리빌드가 기존 `S`/`ADM` 카탈로그를 화면과 렌더러에서 임시 보정하지 않고, `@denn/shared`의 단일 경계에서 안전하게 읽도록 한다.
+
+이번 스펙은 운영 데이터를 옮기거나 저장하는 마이그레이션이 아니다. 저장소에 포함된 레거시 기본 구조와 합성 fixture만으로 입력 검증, 순수 정규화, 오류·경고 보고, 원본 불변성을 자동검증하여 이후 Firebase 읽기와 Canvas 구현의 데이터 기반을 마련한다.
+
+## 범위 (SCOPE)
+
+### 포함
+
+- `@denn/shared`의 카탈로그 타입과 런타임 읽기 경계
+- 버전 없는 레거시 입력(`legacy-v0`) 판별
+- 신규 내부 읽기 모델 `CatalogDocumentV1`(`schemaVersion: 1`)
+- 최소 공통 영역: `brand`, `models`, case/frame categories·templates, `frameSizes`, `frameColors`, `frameThickness`, `clockSettings`, `customFonts`, case/frame mockup, `guideBackgrounds`, `watermark`
+- 레거시 flat `roomBackgroundSettings`
+- `__opRev`, `__cloudRev`, `__publishedAt`
+- `dataUrl`·`storagePath` 이미지 참조 분류
+- 합성 정상/오류 fixture
+- 오류·경고·통계 보고, 원본 불변·결정성·V1 재입력 검증
+
+### 제외(하지 않을 것)
+
+- 실제 `backup.json`, 고객·운영 데이터, Firebase 운영 데이터 열람·복사·커밋
+- localStorage, IndexedDB, 파일 선택기, 네트워크, Firebase SDK 연결
+- 운영/개발 경로 쓰기, 앱 시작 시 자동 변환·저장
+- 레거시 `denn-*.html` 수정 또는 내부 함수 import
+- 카탈로그 편집 UI·앱 연결·Canvas·이미지 다운로드·CORS 실검증
+- flat room 설정을 목표 `roomSettings.operator/user`로 변환
+- `space-scene-v1`, 주문 데이터 파싱
+- base64 외부화·업로드·원본 삭제
+- Firebase Rules·Hosting·배포
+- Zod 등 런타임 스키마 의존성
+- 신규 영속 포맷 write serializer
+
+## 대상 (WHERE)
+
+- `packages/shared/src/catalog/*` 또는 동등한 책임 구조
+- `packages/shared/src/index.ts`
+- `packages/shared/src/**/*.test.ts`
+- `packages/shared/test-fixtures/catalog/*` 또는 동등한 fixture 위치
+- 검증에 꼭 필요한 기존 테스트 설정
+
+읽기 근거:
+
+- `docs/rebuild/00-legacy-analysis.md` §4, §7
+- `docs/codex-claude-handoff/decisions/2026-07-21-data-compatibility-and-migration.md`
+- `docs/codex-claude-handoff/decisions/2026-07-21-security-and-privacy.md`
+- `denn-admin.html` 최초 `DEF`/`load`와 후속 필드 보강 코드
+- `denn-mockup-tool.html`의 `ADM` 소비 경로
+
+레거시 HTML은 읽기 전용 근거다. 신규 패키지에서 호출·import하지 않는다.
+
+## 구현 지시 (WHAT / HOW)
+
+1. **기준선·운영 가드**
+   - `rebuild/modern-studio`, HEAD=origin, clean을 확인한다.
+   - 운영 HTML, Firebase 설정/Rules, POC, PNG의 기준 hash를 기록하고 종료 시 무변경을 확인한다.
+   - 실제 고객 이름·연락처·사진·시안 토큰·비밀번호·운영 백업을 저장소에 추가하지 않는다.
+
+2. **공개 API와 의존성**
+   - `@denn/shared`는 다른 `@denn/*`, React, Firebase에 의존하지 않는다.
+   - 타입, guard/normalizer, 오류 코드, 보고서 타입을 책임별로 분리하고 `src/index.ts`에서 명시적으로 export한다.
+   - 다음 책임을 분리한다. 이름은 동등하게 더 명확히 조정할 수 있다.
+
+     ```ts
+     readLegacyCatalog(input: unknown): CatalogReadResult
+     isCatalogDocumentV1(input: unknown): input is CatalogDocumentV1
+     ```
+
+   - 정상 제어 흐름에서 throw하지 않고 성공/실패가 구분되는 `Result` 계열을 반환한다.
+   - 실패 시 기본 카탈로그를 성공값으로 반환하지 않는다.
+
+3. **버전 계약**
+   - 버전 없는 `S`/`ADM` 입력은 `sourceVersion: "legacy-v0"`로 기록한다.
+   - 성공 출력은 다음 의미의 wrapper로 제한한다.
+
+     ```ts
+     type CatalogDocumentV1 = {
+       schemaVersion: 1;
+       migratedFrom: "legacy-v0";
+       data: CatalogV1;
+     };
+     ```
+
+   - `migratedAt`은 넣지 않는다. 실행 시각이 결정성을 깨면 안 된다.
+   - V1은 신규 내부 읽기 모델이며 Firebase 저장·운영 write 승인을 뜻하지 않는다.
+   - V1 재입력은 검증 후 동등한 결과여야 하며 중첩 wrapper를 만들지 않는다.
+   - 지원하지 않는 `schemaVersion`은 추정하지 않고 `UNSUPPORTED_SCHEMA_VERSION` 실패로 반환한다.
+
+4. **필드 모델링**
+   - 레거시에서 확인된 필드만 타입에 넣고 근거 없는 enum·필수값·기본값을 만들지 않는다.
+   - 소비에 필수인 `id`, `name`은 존재와 타입을 검증한다.
+   - 선택 필드는 누락 가능성을 타입으로 표현한다.
+   - `frameTemplate.type`의 미확인 문자열을 강제로 거부하지 않는다. known value를 구분하되 unknown 문자열은 경고와 함께 보존한다.
+   - zone/clock/mockup 등 세부 계약이 후속 렌더 스펙에 속하는 객체는 JSON-safe opaque/extensions로 보존한다.
+   - 함수, DOM 객체, `Blob`, 순환 참조처럼 JSON 카탈로그가 될 수 없는 값은 거부한다.
+
+5. **정규화**
+   - 루트는 null이 아닌 plain object여야 한다.
+   - collection은 배열이어야 하며 잘못된 타입을 빈 배열로 바꾸지 않는다.
+   - 최초 `DEF` 근거로 누락 가능한 최상위 collection만 명시적 default로 보강하고 `defaultsApplied`에 경로를 기록한다.
+   - 문자열은 보존한다. 표시 편의를 위한 trim·번역·대소문자 변경을 하지 않는다. 빈 ID는 오류다.
+   - 숫자는 finite 여부를 검사한다. 크기·비율·두께처럼 양수여야 하는 필드의 0/음수/`NaN`/무한대를 거부한다.
+   - 같은 collection의 중복 ID는 오류이며 마지막 값 우선으로 덮지 않는다.
+   - 배열 순서와 `null`/누락 차이를 근거 없이 바꾸지 않는다.
+   - 원본 object/array를 mutate하지 않는다.
+
+6. **이미지 참조**
+   - 최소 다음을 구분한다.
+
+     ```ts
+     type LegacyImageReference =
+       | { kind: "none" }
+       | { kind: "data-url"; dataUrl: string }
+       | { kind: "storage-path"; storagePath: string }
+       | { kind: "dual"; dataUrl: string; storagePath: string };
+     ```
+
+   - `dataUrl`은 문자열과 `data:` 스킴까지만 검사한다. 디코딩·MIME·크기·CORS는 후속 스펙이다.
+   - `storagePath`는 문자열로 보존하되 `javascript:` 같은 URL 스킴을 Storage path로 받지 않는다.
+   - 둘 다 있으면 하나를 버리지 않고 `dual`로 보고한다.
+   - fetch, 디코딩, 업로드를 하지 않는다.
+
+7. **unknown 보존과 보고서**
+   - unknown 필드를 조용히 버리지 않는다. JSON-safe 값을 `extensions` 또는 동등한 명시적 컨테이너에 경로별로 보존한다.
+   - 최소 보고서:
+
+     ```ts
+     type CatalogReadReport = {
+       sourceVersion: "legacy-v0" | "catalog-v1";
+       defaultsApplied: string[];
+       warnings: CatalogIssue[];
+       unknownPaths: string[];
+       counts: Record<string, number>;
+       imageReferences: { dataUrl: number; storagePath: number; dual: number };
+     };
+     ```
+
+   - issue는 안정적인 `code`와 `path`를 포함한다. 원문 고객 데이터·base64·토큰을 message/log에 복사하지 않는다.
+   - warning과 fatal을 구분하고 fatal이 하나라도 있으면 전체 성공으로 표시하지 않는다.
+
+8. **fixture**
+   - 실제 운영 export를 사용하지 않는다.
+   - 최소 fixture:
+     - `DEF` 근거 최소 legacy-v0
+     - 허용된 누락 필드와 defaults 보고
+     - dataUrl/storagePath/dual
+     - flat `roomBackgroundSettings`
+     - 리비전 필드
+     - unknown top-level/nested JSON-safe 필드
+     - 중복 ID, collection 타입 오류, 비정상 숫자, 위험한 storage path
+     - 지원하지 않는 version, 함수·순환 참조
+   - 실제 사진 base64 대신 짧은 합성 문자열만 사용한다.
+   - 실제처럼 보이는 이름·전화번호·토큰을 넣지 않는다.
+
+9. **테스트**
+   - 동일 입력을 두 번 읽으면 출력과 보고서가 동일해야 한다.
+   - deep-freeze 입력에서도 성공하고 전후 deep equality가 유지돼야 한다.
+   - legacy→V1 후 V1 재입력이 동등해야 한다.
+   - unknown/extensions와 배열 순서가 유지돼야 한다.
+   - 오류 fixture는 정해진 code/path로 실패하고 기본값 성공으로 둔갑하지 않아야 한다.
+   - collection·이미지 참조 count가 보고서와 일치해야 한다.
+   - 테스트 중 fetch, Firebase, localStorage, IndexedDB, 파일 쓰기가 발생하지 않아야 한다.
+
+10. **앱 영향**
+    - 이번 스펙에서 두 앱은 새 파서를 호출하지 않는다.
+    - UI·라우팅·상태·Canvas와 연결하지 않는다.
+    - 앱 bundle과 E2E가 기준선에서 비정상적으로 변하지 않아야 한다.
+
+11. **문서·커밋**
+    - 실제 확인 필드와 의도적으로 opaque/extensions로 남긴 영역을 보고서에서 구분한다.
+    - 이 스펙 하단 `### DONE (Claude)`에 변경 파일, fixture, 오류 코드, 결과, 미검증, 위험을 append한다.
+    - 코드/fixture/test와 문서/핸드오프 커밋을 분리하고 `spec 012:` 접두사를 사용한다.
+    - push 후 HEAD=origin, ahead/behind `0/0`, clean을 확인한다.
+
+## 검증 절차 (VERIFY)
+
+- [ ] frozen install 성공, lockfile diff 0
+- [ ] format / lint / typecheck / test / build / e2e / check 통과
+- [ ] legacy-v0 성공 fixture와 V1 재입력 검증
+- [ ] deep-freeze·불변성·결정성
+- [ ] defaults 경로 보고 일치
+- [ ] unknown top-level/nested 보존 및 경고
+- [ ] collection 순서·개수·중복 ID
+- [ ] dataUrl/storagePath/dual count와 원문 참조 보존
+- [ ] flat room 설정·리비전 보존
+- [ ] unsupported version·잘못된 collection/숫자/path/JSON 입력 실패
+- [ ] 실패 결과에 민감 원문/base64 없음
+- [ ] 앱에서 파서 사용 0, 네트워크·브라우저 저장소·파일 쓰기 0
+- [ ] `@denn/shared`의 다른 `@denn/*`·React·Firebase 의존 0
+- [ ] 운영 HTML·Firebase 설정/Rules·POC·PNG 무변경, deploy 0
+
+## 완료 정의 (DONE)
+
+- `@denn/shared`에 레거시 카탈로그 단일 public read boundary가 존재한다.
+- legacy-v0와 Catalog V1을 구분하고 미지원 버전을 거부한다.
+- 성공 시 알려진 필드, extensions, 리비전, 이미지 참조와 읽기 보고서를 반환한다.
+- 잘못된 입력은 기본값으로 덮지 않고 code/path가 있는 실패가 된다.
+- 원본 불변·결정성·V1 재입력·unknown 보존이 자동검증된다.
+- 운영 데이터·Firebase·앱 기능·배포는 건드리지 않는다.
+
+## 위험 (RISK)
+
+- 레거시는 같은 개념을 여러 형태로 가진다. 근거가 약한 중첩 구조를 억지로 통합하지 않고 extensions로 남긴다.
+- 합성 fixture는 실제 약 35MB 백업의 모든 변형을 대표하지 못한다. 실제 샘플은 개인정보 제거·사용자 승인·읽기 전용 절차를 갖춘 별도 스펙에서 검증한다.
+- V1은 내부 읽기 모델이지 write/cutover 계약이 아니다.
+- unknown 보존은 메모리를 늘릴 수 있다. 이번에는 정확성을 우선하고 대용량 성능은 익명화 fixture 확보 후 측정한다.
+- 롤백은 스펙 012 코드/fixture/test와 문서 커밋을 역순 revert한다. 운영/Firebase 롤백은 없어야 한다.
+
+### QUESTIONS
+
+- 없음. 실제 근거 없이 필드를 필수화하거나 여러 형태를 합쳐야 한다면 임의 결정하지 말고 해당 경로·관측 형태·선택지를 기록하고 대기한다.
+

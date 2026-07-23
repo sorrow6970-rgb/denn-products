@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 011 공유 UI 기반 프리미티브 = Codex 최종 승인(승인 가능, 기준 HEAD `9c17dc9`) — 종료. 다음 = Codex 다음 스펙 대기(기능 구현 미착수)**
+상태: **▶ 스펙 012 레거시 카탈로그 읽기 계약·정규화·fixture — Codex 스펙 작성 완료, Claude Code 구현 대기**
+
+> 스펙 012(2026-07-23): `docs/rebuild/specs/012-legacy-catalog-read-contract.md`. 운영 데이터·Firebase·앱에 연결하지 않고 `@denn/shared`에서 legacy-v0 `S`/`ADM`을 `CatalogDocumentV1` 내부 읽기 모델로 검증·정규화한다. unknown/extensions·flat room 설정·리비전·dataUrl/storagePath를 보존하고 오류 code/path·통계·원본 불변·결정성·V1 재입력을 합성 fixture로 검증한다. 실제 백업·개인정보·운영 write·자동 마이그레이션·Canvas·배포는 제외한다.
 
 > Codex 최종 승인(2026-07-23): 스펙 011 = **승인 가능**(기준 HEAD `9c17dc9`). 프리미티브 6종(Button/Card/Badge/Chip/TextField/VisuallyHidden) + 웜 토프 토큰 계약 확립. 게이트 최종: frozen diff 0 / format·lint·typecheck / unit **26** / build 독립 / e2e **4** / **oxc·esbuild 경고 0**. 재검증 보완 2건(vitest ignored esbuild 옵션 제거·Chip disabled 계약 완성) 반영 완료. 경계 상대 침투 0·순환 0, 신규 설치(Firebase SDK/Router/Zustand/Radix/shadcn) 0, 배포 0, 운영본·Firebase·POC·PNG 무변경. **유지: 실기기 4환경은 이번 완료 조건 아니었음, 브라우저 200% 육안 재확인 미수행.** **다음 스펙·기능 구현 미착수(대기).**
 

@@ -82,4 +82,5 @@ Claude Code  →  스펙 읽고 코드 구현 → 검증 실행 → 스펙 하�
 | 008 | 웜 토프 실기기 표시 검증 | DONE | 4환경 12항목 PASS(사용자 확인), 실기기 표시 검증 완료 |
 | 009 | TS7 린트 + 최소 pnpm workspace POC | DONE | Biome+tsc·최소 workspace 채택 권고, typescript-eslint↔TS7 비호환 재현 |
 | 010 | 실제 리빌드 모노레포 스캐폴드 | DONE | 루트 workspace·2 apps·5 packages, 게이트 통과·운영본 hash 무변경 |
-| 011 | Modern Studio 공유 UI 기반 프리미티브 | READY | `@denn/ui` 토큰·Button/Card/Badge/Chip/TextField/VisuallyHidden 및 접근성 계약 |
+| 011 | Modern Studio 공유 UI 기반 프리미티브 | DONE | Codex 승인, 토큰·프리미티브·접근성 계약 및 자동 게이트 통과 |
+| 012 | 레거시 카탈로그 읽기 계약·정규화·fixture | READY | `@denn/shared` legacy-v0→Catalog V1 순수 읽기 경계, unknown 보존·오류 보고 |
