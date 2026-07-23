@@ -25,7 +25,9 @@ const BIOME_TARGETS = [
   "tests",
   "scripts",
   "vitest.config.ts",
+  "vitest.live.config.ts",
   "playwright.config.ts",
+  "playwright.live.config.ts",
 ];
 const steps = [
   ["format", "biome", ["format", ...BIOME_TARGETS]],

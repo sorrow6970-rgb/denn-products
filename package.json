@@ -9,13 +9,15 @@
   },
   "description": "DENN PRODUCTS rebuild monorepo scaffold (spec 010). Minimal skeleton only — no product features, no Firebase SDK/connection, no deploy.",
   "scripts": {
-    "format:check": "biome format apps packages tests scripts vitest.config.ts playwright.config.ts",
-    "lint": "biome lint --error-on-warnings apps packages tests scripts vitest.config.ts playwright.config.ts",
+    "format:check": "biome format apps packages tests scripts vitest.config.ts vitest.live.config.ts playwright.config.ts playwright.live.config.ts",
+    "lint": "biome lint --error-on-warnings apps packages tests scripts vitest.config.ts vitest.live.config.ts playwright.config.ts playwright.live.config.ts",
     "typecheck": "tsc --noEmit -p packages/shared/tsconfig.json && tsc --noEmit -p packages/firebase/tsconfig.json && tsc --noEmit -p packages/spaces/tsconfig.json && tsc --noEmit -p packages/render/tsconfig.json && tsc --noEmit -p packages/ui/tsconfig.json && tsc --noEmit -p apps/mockup/tsconfig.json && tsc --noEmit -p apps/admin/tsconfig.json",
     "test:unit": "vitest run",
     "build": "vite build apps/mockup && vite build apps/admin",
     "test:e2e": "playwright test",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "test:live:node": "vitest run -c vitest.live.config.ts",
+    "test:live:browser": "playwright test -c playwright.live.config.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
