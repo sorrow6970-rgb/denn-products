@@ -117,21 +117,27 @@ const URL_SCHEME_RE = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
 const isFinitePositive = (n: unknown): boolean =>
   typeof n === "number" && Number.isFinite(n) && n > 0;
 
+/** Join a base path with a child segment, avoiding a leading dot at the root (path === ""). */
+const joinPath = (base: string, segment: string): string => (base ? `${base}.${segment}` : segment);
+
 /**
- * True for a well-formed Catalog V1 wrapper. Strengthened shallow guard: exactly the three
- * expected keys, schemaVersion === 1, migratedFrom === "legacy-v0", and a plain-object
- * `data` (contents are not deep-validated here).
+ * True for a well-formed Catalog V1 wrapper AND a fully-valid `data`. Beyond the shallow
+ * shape (exactly the three keys, schemaVersion 1, migratedFrom "legacy-v0", plain-object
+ * data), it reuses `readLegacyCatalog` so the deep contract (collection types, JSON-safety /
+ * non-finite, item id/name, unsafe storagePath, …) cannot diverge. No circular call:
+ * `readLegacyCatalog` never invokes this guard.
  */
 export function isCatalogDocumentV1(input: unknown): input is CatalogDocumentV1 {
   if (!isPlainObject(input)) return false;
+  const keys = Object.keys(input);
+  if (keys.length !== 3) return false;
+  if (!keys.every((k) => k === "schemaVersion" || k === "migratedFrom" || k === "data")) {
+    return false;
+  }
   if (input.schemaVersion !== 1) return false;
   if (input.migratedFrom !== "legacy-v0") return false;
   if (!isPlainObject(input.data)) return false;
-  const keys = Object.keys(input);
-  return (
-    keys.length === 3 &&
-    keys.every((k) => k === "schemaVersion" || k === "migratedFrom" || k === "data")
-  );
+  return readLegacyCatalog(input).ok;
 }
 
 /**
@@ -334,19 +340,25 @@ function collectImages(
   let hasPath = false;
 
   if (typeof rawData === "string" && rawData.length > 0) {
-    if (/^data:/i.test(rawData)) hasData = true;
-    else warnings.push({ code: "INVALID_DATA_URL", path: `${path}.dataUrl` });
+    // Check a trimmed copy so leading whitespace can't smuggle a non-data scheme;
+    // the original value is preserved unchanged in the document.
+    if (/^data:/i.test(rawData.trimStart())) hasData = true;
+    else warnings.push({ code: "INVALID_DATA_URL", path: joinPath(path, "dataUrl") });
   }
   if (typeof rawPath === "string" && rawPath.length > 0) {
-    if (URL_SCHEME_RE.test(rawPath))
-      fatals.push({ code: "UNSAFE_STORAGE_PATH", path: `${path}.storagePath` });
-    else hasPath = true;
+    // trimStart the check value only (original preserved) so " https://" / "\tjavascript:"
+    // can't bypass the scheme guard.
+    if (URL_SCHEME_RE.test(rawPath.trimStart())) {
+      fatals.push({ code: "UNSAFE_STORAGE_PATH", path: joinPath(path, "storagePath") });
+    } else {
+      hasPath = true;
+    }
   }
   if (hasData && hasPath) tally.dual++;
   else if (hasData) tally.dataUrl++;
   else if (hasPath) tally.storagePath++;
 
   for (const key of Object.keys(node)) {
-    collectImages(node[key], path ? `${path}.${key}` : key, tally, warnings, fatals);
+    collectImages(node[key], joinPath(path, key), tally, warnings, fatals);
   }
 }

@@ -122,6 +122,17 @@ export const errHttpStoragePath: unknown = {
     { id: "x", name: "x", type: "uploaded", storagePath: "https://example.com/x.png" },
   ],
 };
+/** Leading-whitespace must not smuggle a URL scheme past the storagePath guard. */
+export const errWhitespaceHttpStoragePath: unknown = {
+  frameTemplates: [
+    { id: "x", name: "x", type: "uploaded", storagePath: " https://example.com/x.png" },
+  ],
+};
+export const errTabJavascriptStoragePath: unknown = {
+  frameTemplates: [{ id: "x", name: "x", type: "uploaded", storagePath: "\tjavascript:alert(1)" }],
+};
+/** storagePath directly on the ROOT object → error path must be "storagePath" (no leading dot). */
+export const errRootStoragePath: unknown = { storagePath: "javascript:alert(1)" };
 /** Non-finite number nested inside an unknown/extensions subtree. */
 export const errNonFiniteUnknown: unknown = { labConfig: { bad: Number.NaN } };
 /** Non-finite number in a known field. */

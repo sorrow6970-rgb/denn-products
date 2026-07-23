@@ -23,6 +23,22 @@ describe("isCatalogDocumentV1 (strengthened shallow guard)", () => {
     expect(isCatalogDocumentV1(null)).toBe(false);
     expect(isCatalogDocumentV1({ schemaVersion: 1, data: {} })).toBe(false);
   });
+
+  it("rejects a V1 whose data fails the deep contract (shared with readLegacyCatalog)", () => {
+    const shape = (data: unknown) => ({ schemaVersion: 1, migratedFrom: "legacy-v0", data });
+    // malformed collection
+    expect(isCatalogDocumentV1(shape({ models: "invalid" }))).toBe(false);
+    // non-finite nested value
+    expect(isCatalogDocumentV1(shape({ labConfig: { bad: Number.NaN } }))).toBe(false);
+    // unsafe storagePath
+    expect(
+      isCatalogDocumentV1(
+        shape({ frameTemplates: [{ id: "x", name: "x", storagePath: "javascript:x" }] }),
+      ),
+    ).toBe(false);
+    // a valid V1 still passes
+    expect(isCatalogDocumentV1(shape({ models: [{ id: "m", name: "M" }] }))).toBe(true);
+  });
 });
 
 function deepFreeze<T>(o: T): T {
@@ -194,6 +210,24 @@ describe("readLegacyCatalog — failures (no default-catalog success)", () => {
       "labConfig.bad",
     ],
     ["non-finite in a known field", fx.errInfinityField, "NON_FINITE_NUMBER", "frameThickness"],
+    [
+      "leading-space URL storage path",
+      fx.errWhitespaceHttpStoragePath,
+      "UNSAFE_STORAGE_PATH",
+      "frameTemplates[0].storagePath",
+    ],
+    [
+      "leading-tab javascript storage path",
+      fx.errTabJavascriptStoragePath,
+      "UNSAFE_STORAGE_PATH",
+      "frameTemplates[0].storagePath",
+    ],
+    [
+      "root storage path (no leading dot)",
+      fx.errRootStoragePath,
+      "UNSAFE_STORAGE_PATH",
+      "storagePath",
+    ],
   ];
 
   for (const [label, input, code, path] of cases) {
