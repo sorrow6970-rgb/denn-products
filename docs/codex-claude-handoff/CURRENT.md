@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 012 레거시 카탈로그 읽기 계약 = Codex 최종 승인(승인 가능, 기준 HEAD `a6fd990`) — 종료. 다음 = Codex 다음 스펙 대기(기능 구현 미착수)**
+상태: **▶ 스펙 013 Firebase 공개 카탈로그 읽기 어댑터 — Codex 스펙 작성 완료, Claude Code 구현 대기**
+
+> 스펙 013(2026-07-23): `docs/rebuild/specs/013-public-catalog-read-adapter.md`. `@denn/firebase`에 고정 공개 Storage 객체 `published/state.json` read-only REST adapter를 만든다. 주입 fake fetch로 URL·timeout/abort·5MiB·HTTP/JSON/Catalog V1 오류·민감정보 비노출·동시 요청 병합을 검증한다. 실제 네트워크·Firebase SDK·앱 연결·cache/retry·쓰기·Rules·배포는 제외한다.
 
 > Codex 최종 승인(2026-07-23): 스펙 012 = **승인 가능**(기준 HEAD `a6fd990`). `@denn/shared` legacy 카탈로그 단일 read boundary(`readLegacyCatalog`/`isCatalogDocumentV1`) 확립. 재검증 보완 2라운드 반영(1차 4건: guard 강화·nested-unknown extensions·non-finite 거부·전체 이미지 순회; 2차 2건: deep V1 guard(read 재사용)·storagePath trimStart scheme·joinPath leading-dot). 게이트 최종: frozen diff 0 / format·lint·typecheck / **unit 61**(catalog 35) / build 독립 / e2e 4 / check PASS. shared React/Firebase/`@denn/*` 의존 0·IO 0·앱 파서 0·신규 의존성 0, 운영본·Firebase·`poc/**`·PNG 무변경, deploy 0. **유지: 합성 fixture만 검증(실제 ~35MB `backup.json` 미검증), Catalog V1은 내부 읽기 모델(write/cutover 승인 아님), flat roomBackgroundSettings는 보존만(변환 안 함).** **다음 스펙·기능 구현 미착수(대기).**
 
