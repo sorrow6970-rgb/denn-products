@@ -14,14 +14,13 @@ export const PUBLIC_CATALOG_LOCATION: PublicCatalogLocation = {
 } as const;
 
 /**
- * Build the deterministic Storage media REST URL:
+ * Build the deterministic Storage media REST URL for the fixed public location:
  *   https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<encoded-object>?alt=media
- * The whole object path is percent-encoded so `/` becomes `%2F`. No cache-buster,
- * token, or user input is ever added — the URL is a pure function of the location.
+ * The whole object path is percent-encoded so `/` becomes `%2F`. No parameters, cache-buster,
+ * token, or user input — the URL is a constant. The endpoint is NOT caller-injectable.
  */
-export function buildPublicCatalogUrl(
-  location: PublicCatalogLocation = PUBLIC_CATALOG_LOCATION,
-): string {
-  const encoded = encodeURIComponent(location.objectPath);
-  return `https://firebasestorage.googleapis.com/v0/b/${location.bucket}/o/${encoded}?alt=media`;
+export function buildPublicCatalogUrl(): string {
+  const { bucket, objectPath } = PUBLIC_CATALOG_LOCATION;
+  const encoded = encodeURIComponent(objectPath);
+  return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encoded}?alt=media`;
 }

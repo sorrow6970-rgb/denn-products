@@ -183,6 +183,91 @@ describe("network / timeout / abort", () => {
   });
 });
 
+describe("timeout is enforced regardless of transport cooperation", () => {
+  it("times out even if the transport ignores the signal and stays pending", async () => {
+    vi.useFakeTimers();
+    const fetch: FetchLike = () => new Promise<FetchLikeResponse>(() => {}); // never settles
+    const p = createPublicCatalogReader({ fetch, timeoutMs: 1000 }).load({ correlationId: "c" });
+    await vi.advanceTimersByTimeAsync(1000);
+    const res = await p;
+    expect(res).toMatchObject({ ok: false, error: { code: "NETWORK_TIMEOUT" } });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("times out even if response.text() ignores the signal and stays pending", async () => {
+    vi.useFakeTimers();
+    const fetch: FetchLike = async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      text: () => new Promise<string>(() => {}), // never settles
+    });
+    const p = createPublicCatalogReader({ fetch, timeoutMs: 1000 }).load({ correlationId: "c" });
+    await vi.advanceTimersByTimeAsync(1000);
+    const res = await p;
+    expect(res).toMatchObject({ ok: false, error: { code: "NETWORK_TIMEOUT" } });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("does not let a late transport success overwrite the timeout result", async () => {
+    vi.useFakeTimers();
+    const d = deferred<FetchLikeResponse>();
+    const fetch: FetchLike = () => d.promise; // ignores signal
+    const p = createPublicCatalogReader({ fetch, timeoutMs: 1000 }).load({ correlationId: "c" });
+    await vi.advanceTimersByTimeAsync(1000);
+    const res = await p;
+    expect(res).toMatchObject({ ok: false, error: { code: "NETWORK_TIMEOUT" } });
+    // late success arrives → must not change the already-settled result
+    d.resolve(response({ text: LEGACY }));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(res.ok).toBe(false);
+  });
+
+  it("clears in-flight on timeout so the next load starts a new fetch", async () => {
+    vi.useFakeTimers();
+    let calls = 0;
+    const fetch: FetchLike = () => {
+      calls++;
+      return new Promise<FetchLikeResponse>(() => {});
+    };
+    const reader = createPublicCatalogReader({ fetch, timeoutMs: 1000 });
+    const p1 = reader.load({ correlationId: "c1" });
+    await vi.advanceTimersByTimeAsync(1000);
+    await p1;
+    expect(calls).toBe(1);
+    const p2 = reader.load({ correlationId: "c2" });
+    await vi.advanceTimersByTimeAsync(1000);
+    await p2;
+    expect(calls).toBe(2);
+  });
+
+  it("produces no unhandled rejection when the transport rejects late", async () => {
+    vi.useFakeTimers();
+    const rejections: unknown[] = [];
+    const onUnhandled = (r: unknown): void => {
+      rejections.push(r);
+    };
+    process.on("unhandledRejection", onUnhandled);
+    try {
+      let rejectFn: ((e: unknown) => void) | undefined;
+      const fetch: FetchLike = () =>
+        new Promise<FetchLikeResponse>((_res, rej) => {
+          rejectFn = rej;
+        });
+      const p = createPublicCatalogReader({ fetch, timeoutMs: 1000 }).load({ correlationId: "c" });
+      await vi.advanceTimersByTimeAsync(1000);
+      const res = await p;
+      expect(res).toMatchObject({ ok: false, error: { code: "NETWORK_TIMEOUT" } });
+      rejectFn?.(new Error("late reject"));
+      await vi.advanceTimersByTimeAsync(0);
+      await Promise.resolve();
+      expect(rejections).toEqual([]);
+    } finally {
+      process.removeListener("unhandledRejection", onUnhandled);
+    }
+  });
+});
+
 describe("in-flight dedup + per-caller cancellation (caller isolation)", () => {
   it("aborting one caller does not fail the other; underlying fetch continues (1 fetch)", async () => {
     let calls = 0;
@@ -284,15 +369,20 @@ describe("JSON / catalog validation", () => {
 });
 
 describe("validation of request/config", () => {
-  it("rejects empty correlationId as INVALID_REQUEST before any fetch", async () => {
-    let calls = 0;
-    const fetch: FetchLike = async () => {
-      calls++;
-      return response({ text: LEGACY });
-    };
-    const res = await createPublicCatalogReader({ fetch }).load({ correlationId: "" });
-    expect(res).toMatchObject({ ok: false, error: { code: "INVALID_REQUEST", correlationId: "" } });
-    expect(calls).toBe(0);
+  it("rejects empty and whitespace-only correlationId before any fetch", async () => {
+    for (const id of ["", "   ", "\t\n"]) {
+      let calls = 0;
+      const fetch: FetchLike = async () => {
+        calls++;
+        return response({ text: LEGACY });
+      };
+      const res = await createPublicCatalogReader({ fetch }).load({ correlationId: id });
+      expect(res).toMatchObject({
+        ok: false,
+        error: { code: "INVALID_REQUEST", correlationId: id },
+      });
+      expect(calls).toBe(0);
+    }
   });
 
   for (const bad of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {

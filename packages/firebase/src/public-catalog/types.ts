@@ -1,7 +1,6 @@
 // Public catalog reader contract types (spec 013).
 
 import type { CatalogDocumentV1, CatalogIssue, CatalogReadReport } from "@denn/shared";
-import type { PublicCatalogLocation } from "./location";
 
 /** Minimal response shape so tests can inject a fake without a full DOM `Response`. */
 export interface FetchLikeResponse {
@@ -72,7 +71,7 @@ export interface PublicCatalogReaderOptions {
   readonly timeoutMs?: number;
   /** Default 5 MiB. Must be finite > 0. */
   readonly maxBytes?: number;
-  readonly location?: PublicCatalogLocation;
+  // The endpoint is fixed (PUBLIC_CATALOG_LOCATION) and NOT caller-injectable.
 }
 
 export interface PublicCatalogReader {

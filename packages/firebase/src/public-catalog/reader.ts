@@ -4,7 +4,7 @@
 
 import { readLegacyCatalog } from "@denn/shared";
 import type { CatalogDocumentV1, CatalogIssue, CatalogReadReport } from "@denn/shared";
-import { buildPublicCatalogUrl, PUBLIC_CATALOG_LOCATION } from "./location";
+import { buildPublicCatalogUrl } from "./location";
 import type {
   FetchLike,
   PublicCatalogError,
@@ -105,64 +105,78 @@ export function createPublicCatalogReader(
 ): PublicCatalogReader {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
-  const url = buildPublicCatalogUrl(options.location ?? PUBLIC_CATALOG_LOCATION);
+  // Endpoint is fixed — callers cannot inject bucket/objectPath/URL.
+  const url = buildPublicCatalogUrl();
 
   // One shared in-flight fetch is reused by all concurrent callers; cleared on settle.
   let inFlight: Promise<SharedOutcome> | null = null;
 
-  async function runFetch(transport: FetchLike): Promise<SharedOutcome> {
-    const controller = new AbortController();
-    let timedOut = false;
-    const timer = setTimeout(() => {
-      timedOut = true;
-      controller.abort();
-    }, timeoutMs);
+  /** The transport→response→validate pipeline. Timeout is enforced by the caller, not here. */
+  async function doWork(transport: FetchLike, signal: AbortSignal): Promise<SharedOutcome> {
+    let response: Awaited<ReturnType<FetchLike>>;
     try {
-      let response: Awaited<ReturnType<FetchLike>>;
-      try {
-        response = await transport(url, {
-          method: "GET",
-          cache: "no-store",
-          signal: controller.signal,
-        });
-      } catch {
-        return timedOut ? { kind: "timeout" } : { kind: "network" };
-      }
-
-      if (!response.ok) return { kind: "http", status: response.status };
-
-      // Pre-check Content-Length before consuming the body, when present and valid.
-      const cl = response.headers.get("content-length");
-      if (cl != null && cl !== "") {
-        const declared = Number(cl);
-        if (Number.isFinite(declared) && declared > maxBytes) return { kind: "too-large" };
-      }
-
-      let text: string;
-      try {
-        text = await response.text();
-      } catch {
-        return timedOut ? { kind: "timeout" } : { kind: "network" };
-      }
-
-      // Enforce the cap on actual UTF-8 byte length (not string.length).
-      if (new TextEncoder().encode(text).length > maxBytes) return { kind: "too-large" };
-
-      let json: unknown;
-      try {
-        json = JSON.parse(text);
-      } catch {
-        return { kind: "invalid-json" };
-      }
-
-      const read = readLegacyCatalog(json);
-      if (!read.ok) return { kind: "invalid-catalog", issues: read.errors };
-      return { kind: "success", document: read.document, report: read.report };
+      response = await transport(url, { method: "GET", cache: "no-store", signal });
     } catch {
-      return { kind: "unexpected" };
-    } finally {
-      clearTimeout(timer);
+      return { kind: "network" };
     }
+
+    if (!response.ok) return { kind: "http", status: response.status };
+
+    // Pre-check Content-Length before consuming the body, when present and valid.
+    const cl = response.headers.get("content-length");
+    if (cl != null && cl !== "") {
+      const declared = Number(cl);
+      if (Number.isFinite(declared) && declared > maxBytes) return { kind: "too-large" };
+    }
+
+    let text: string;
+    try {
+      text = await response.text();
+    } catch {
+      return { kind: "network" };
+    }
+
+    // Enforce the cap on actual UTF-8 byte length (not string.length).
+    if (new TextEncoder().encode(text).length > maxBytes) return { kind: "too-large" };
+
+    let json: unknown;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      return { kind: "invalid-json" };
+    }
+
+    const read = readLegacyCatalog(json);
+    if (!read.ok) return { kind: "invalid-catalog", issues: read.errors };
+    return { kind: "success", document: read.document, report: read.report };
+  }
+
+  /**
+   * Single-state-machine race: whichever of (a) the timeout timer or (b) the work pipeline
+   * settles FIRST wins. At timeoutMs the outcome is forced to `timeout` even if the transport
+   * or response.text() ignores the AbortSignal and stays pending. A late work resolve/reject
+   * is a no-op (never overwrites) and its rejection is caught (no unhandled rejection).
+   */
+  function runFetch(transport: FetchLike): Promise<SharedOutcome> {
+    const controller = new AbortController();
+    return new Promise<SharedOutcome>((resolve) => {
+      let settled = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const settle = (outcome: SharedOutcome): void => {
+        if (settled) return;
+        settled = true;
+        if (timer !== undefined) clearTimeout(timer);
+        resolve(outcome);
+      };
+      timer = setTimeout(() => {
+        controller.abort(); // cleanup hint; correctness does not depend on the transport honoring it
+        settle({ kind: "timeout" });
+      }, timeoutMs);
+      doWork(transport, controller.signal).then(
+        (outcome) => settle(outcome),
+        () => settle({ kind: "unexpected" }),
+      );
+    });
   }
 
   /** Await the shared outcome while letting THIS caller's signal fail only this caller. */
@@ -200,15 +214,16 @@ export function createPublicCatalogReader(
 
   return {
     async load(request: PublicCatalogLoadRequest): Promise<PublicCatalogLoadResult> {
-      const correlationId = typeof request?.correlationId === "string" ? request.correlationId : "";
-      if (correlationId.length === 0) return fail("VALIDATION", "INVALID_REQUEST", false, "");
+      const rawId = typeof request?.correlationId === "string" ? request.correlationId : "";
+      // Reject empty AND whitespace-only correlationIds before any request (original value echoed).
+      if (rawId.trim().length === 0) return fail("VALIDATION", "INVALID_REQUEST", false, rawId);
       if (!isFinitePositive(timeoutMs) || !isFinitePositive(maxBytes))
-        return fail("VALIDATION", "INVALID_REQUEST", false, correlationId);
+        return fail("VALIDATION", "INVALID_REQUEST", false, rawId);
 
       const transport = resolveFetch(options.fetch);
-      if (!transport) return fail("VALIDATION", "INVALID_REQUEST", false, correlationId);
+      if (!transport) return fail("VALIDATION", "INVALID_REQUEST", false, rawId);
 
-      if (request.signal?.aborted) return fail("NETWORK", "REQUEST_ABORTED", false, correlationId);
+      if (request.signal?.aborted) return fail("NETWORK", "REQUEST_ABORTED", false, rawId);
 
       let shared = inFlight;
       if (!shared) {
@@ -219,7 +234,7 @@ export function createPublicCatalogReader(
           if (inFlight === shared) inFlight = null;
         });
       }
-      return finalizeForCaller(shared, correlationId, request.signal);
+      return finalizeForCaller(shared, rawId, request.signal);
     },
   };
 }
