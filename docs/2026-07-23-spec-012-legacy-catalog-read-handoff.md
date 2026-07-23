@@ -36,6 +36,16 @@
 - 운영 HTML·`firebase.json`·`.firebaserc`·`firestore.rules`·`storage.rules`·`poc/**`·`docs/rebuild/design/*.png` **hash UNCHANGED**.
 - 실제 `backup.json`·운영 데이터·PII 저장소 미추가. Firebase/localStorage/IndexedDB/fetch·자동 마이그레이션·앱/Canvas 연결·배포 **0**.
 
+## 재검증 보완 (2026-07-23, HEAD 32eab2e → aae7187)
+
+Codex "수정 후 재검증" 4건:
+1. `isCatalogDocumentV1` 얕은 guard 강화 — 정확히 3키({schemaVersion:1, migratedFrom:"legacy-v0", plain-object data})만 true.
+2. nested unknown 보존·경고 + 명시적 타입 계약 — known 객체/아이템의 추가 필드를 nested `unknownPaths`+경고로 보고, `report.extensions`(`CatalogExtensions` = path→JsonValue)로 노출. 근거 없는 컬렉션·깊은 중첩은 opaque.
+3. `cloneJsonSafe`가 NaN/±Infinity를 어디서든(unknown/extensions 포함) `NON_FINITE_NUMBER`로 거부.
+4. 카탈로그 전체 재귀 순회로 모든 `dataUrl`/`storagePath` 집계, `storagePath`의 **모든 URL scheme** 거부(`UNSAFE_STORAGE_PATH`).
+
+재검증: frozen diff 0 · format/lint/typecheck · unit **57/57**(catalog 31) · build 독립 · e2e **4/4**. 운영본·POC·PNG·Firebase 무변경, 배포 0. 주의: URL scheme storagePath는 이제 fatal(별도 스펙에서 URL 필드 분리).
+
 ## 다음
 
 - Codex 스펙 012 재검증 대기. 이후 후보: `@denn/firebase` 읽기 연결 · `@denn/render` Canvas · flat room → `roomSettings.operator/user` 변환(별도 스펙) · `?space=` 복호화 라운드트립 · 주문/시안 데이터. **새 스펙 없이 임의 착수 금지.**

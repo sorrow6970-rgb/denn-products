@@ -251,3 +251,17 @@
 - flat `roomBackgroundSettings`는 목표 `roomSettings.operator/user`로 **변환하지 않고** 보존만 한다(후속 스펙).
 - unknown 보존은 메모리를 늘릴 수 있음(정확성 우선, 대용량 성능은 익명화 fixture 후 측정).
 
+### DONE (Claude) — 2026-07-23 재검증 보완 (기준 HEAD 32eab2e → aae7187)
+
+Codex "수정 후 재검증" 4건만 보완. 컴포넌트 API 축소/토큰/앱 구조 변경 없음, 신규 의존성 0.
+
+1. **`isCatalogDocumentV1` 얕은 guard 강화** — `input`이 plain object이고 **정확히 3키**(`schemaVersion:1`, `migratedFrom:"legacy-v0"`, plain-object `data`)일 때만 true. 추가 키·잘못된 필드·비객체 `data`·다른 version·비객체 입력은 false. 읽기 경로의 V1 감지에는 영향 없음(감지는 `schemaVersion` 존재로 별도 수행).
+2. **nested unknown 보존·경고 + 명시적 타입 계약** — known 객체(`brand`/`clockSettings`/`watermark`)와 known 아이템(`models`/`caseCategories`/`frameCategories`/`frameSizes`/`frameColors`/`frameTemplates`, 근거 DEF L846-856)의 **추가 필드를 nested `unknownPaths`+`UNKNOWN_FIELD` 경고로 보고하고 제자리 보존**한다. 명시적 타입 계약 = `report.extensions: CatalogExtensions`(= `Record<path, JsonValue>`), 경로별 보존값을 타입으로 노출. 스키마 근거 없는 컬렉션(`caseTemplates`/`guideBackgrounds`/`customFonts`)과 더 깊은 중첩은 §4대로 opaque(과잉 필수화 방지).
+3. **non-finite 거부** — `cloneJsonSafe`가 NaN/±Infinity를 트리 어디서든(unknown/extensions 포함) `NON_FINITE_NUMBER`로 거부(JSON 라운드트립·결정성 보호). 유한 0/음수는 여전히 필드 단위 `INVALID_NUMBER`.
+4. **카탈로그 전체 이미지 순회·집계 + 모든 URL scheme 거부** — 클론 전체를 재귀 순회해 **어느 깊이의** `dataUrl`/`storagePath`든 분류·집계(예: `watermark.dataUrl`, 중첩 `editorOverlayImages[].storagePath`). `storagePath`는 **선행 URI scheme이 있으면 전부**(`javascript:`뿐 아니라 `https:` 등) `UNSAFE_STORAGE_PATH`로 거부(스토리지 경로는 상대경로여야 함). `dataUrl`은 `data:` 스킴만 유효, 그 외 문자열은 `INVALID_DATA_URL` 경고.
+
+**추가 fixture/test:** guard accept/reject, nested-unknown extensions, 전체 카탈로그 이미지 집계(watermark+중첩 overlay), `https:` storagePath 거부, unknown 내부 NaN 거부, known 필드 Infinity 거부.
+
+**재검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0**(shared package.json 무변경) · format/lint/typecheck PASS · **unit 57/57**(catalog 31) · build 독립(JS gzip ≈61.09KB) · **e2e 4/4**(앱 무변경) · check PASS. `@denn/shared`의 React/Firebase/다른 `@denn/*` 의존 0, IO 0, 앱 파서 사용 0. 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG **UNCHANGED**, deploy 0. 코드 커밋 `aae7187` / 문서 커밋 분리.
+
+**주의(설계 결정):** URL scheme을 가진 `storagePath`(예: 전체 `https://` 다운로드 URL)는 이제 fatal이다. 레거시에 그런 값이 있으면 별도 스펙에서 URL 필드 분리·정규화로 다룬다(이번엔 Codex 지시대로 전부 거부).
