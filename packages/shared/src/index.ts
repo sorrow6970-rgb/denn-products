@@ -1,5 +1,9 @@
-// @denn/shared — harmless constants and Result/ID-level types only.
-// No other @denn package is imported here (dependency root). Legacy schemas are NOT guessed.
+// @denn/shared — harmless constants, Result/ID-level types, and the legacy catalog
+// read boundary. No other @denn package, React, or Firebase is imported here
+// (dependency root). Only legacy fields with evidence are modeled; the rest stay opaque.
+
+// Legacy catalog read boundary (spec 012).
+export * from "./catalog";
 
 export const BRAND = "DENN PRODUCTS" as const;
 
