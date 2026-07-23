@@ -1,7 +1,12 @@
-// @denn/firebase — repository PORT + init-state types only.
-// NO Firebase SDK, NO network calls, NO env vars, NO firebase config.
-// Real implementation (SDK wiring) is a later spec. Direction @denn/firebase -> @denn/shared is allowed.
+// @denn/firebase — repository PORT + init-state types + the read-only PUBLIC catalog adapter.
+// NO Firebase SDK, NO Auth/Firestore/Storage write, NO env vars, NO firebase config here.
+// The public catalog adapter (spec 013) is a plain REST read of a public object; it does NOT
+// implement the full DesignRepositoryPort or any SDK wiring. Direction @denn/firebase ->
+// @denn/shared is allowed.
 import type { Result } from "@denn/shared";
+
+// Read-only public catalog adapter (spec 013).
+export * from "./public-catalog";
 
 export type FirebaseInitState = "unconfigured" | "ready";
 
@@ -12,6 +17,9 @@ export interface DesignRepositoryPort {
 
 export type LoadResult<T> = Result<T, "not-implemented">;
 
-/** Explicit boundary marker so a placeholder is never mistaken for a real implementation. */
+/**
+ * Explicit boundary marker: SDK wiring, Auth, Firestore, and Storage write/delete are NOT
+ * implemented. The public catalog REST read (spec 013) does not count as SDK/port implementation.
+ */
 export const FIREBASE_NOT_IMPLEMENTED =
-  "firebase SDK wiring is implemented in a later spec" as const;
+  "firebase SDK/auth/write wiring is implemented in a later spec (public catalog REST read is separate)" as const;
