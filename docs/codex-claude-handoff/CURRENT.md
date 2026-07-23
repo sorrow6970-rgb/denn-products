@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **▶ 스펙 013 Firebase 공개 카탈로그 읽기 어댑터 — Codex 스펙 작성 완료, Claude Code 구현 대기**
+상태: **✅ 스펙 013 Firebase 공개 카탈로그 읽기 어댑터 구현 완료(로컬, 자동검증 전부 통과) — Codex 재검증 대기**
+
+> 스펙 013 구현 완료(로컬, 2026-07-23): `@denn/firebase`에 `createPublicCatalogReader` read-only REST adapter. 고정 공개 `published/state.json` 결정적 media URL(`encodeURIComponent`→`%2F`·`?alt=media`·cache-buster 없음, 근거 mockup L848). 주입 `FetchLike`(GET·no-store·auth/body 없음·body 1회), import 시 네트워크 미접촉(미주입 시 load 시점 global fetch lazy, 없으면 `INVALID_REQUEST`). 내부 AbortController timeout(기본 10s) + caller signal, **옵션 A** 취소 격리(한 caller abort는 그 caller만 `REQUEST_ABORTED`, 공유 fetch 유지→타 caller 정상). 동시 fetch 1회 병합·settle 후 새 fetch·늦은 완료 미덮음, timer/listener 정리. 5 MiB: Content-Length 사전검사 + `TextEncoder` UTF-8 byte 재검사(string.length 아님). 안전 오류 계약(category/code/retryable/correlationId + httpStatus/스펙012 issue code·path만, body/base64/token/URL 미노출), retry/cache/stale 없음. 성공은 스펙 012 `readLegacyCatalog` 통과분만, warning은 report로 전달. 게이트 전부 통과: frozen diff 0(firebase package.json 무변경) / format·lint·typecheck / **unit 91**(firebase 30 신규) / build 독립(JS gzip ≈61.09KB) / e2e 4(앱 무변경). **Firebase SDK·신규 의존성 0**, `@denn/firebase`→`@denn/shared` 방향 유지, 앱 import/call 0, 실제 network/브라우저 저장소 0. 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG **UNCHANGED**, deploy 0(Rules/deploy=NOT APPLICABLE). 코드/test 커밋과 문서/핸드오프 커밋 분리. 핸드오프 `docs/2026-07-23-spec-013-public-catalog-adapter-handoff.md`, DONE는 스펙 하단.
 
 > 스펙 013(2026-07-23): `docs/rebuild/specs/013-public-catalog-read-adapter.md`. `@denn/firebase`에 고정 공개 Storage 객체 `published/state.json` read-only REST adapter를 만든다. 주입 fake fetch로 URL·timeout/abort·5MiB·HTTP/JSON/Catalog V1 오류·민감정보 비노출·동시 요청 병합을 검증한다. 실제 네트워크·Firebase SDK·앱 연결·cache/retry·쓰기·Rules·배포는 제외한다.
 

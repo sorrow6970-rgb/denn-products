@@ -220,4 +220,38 @@
 ### QUESTIONS
 
 - 없음. 안전한 병합·caller 취소를 위해 API 변경이 필요하면 임의 결정하지 말고 선택지·영향을 기록하고 대기한다.
+- (해소) §6 caller 취소는 **옵션 A**를 채택: caller abort는 해당 caller만 `REQUEST_ABORTED`로 실패시키고 공유 fetch는 계속 진행(다른 caller는 정상 완료). 테스트로 고정. API 변경 불필요.
+
+### DONE (Claude) — 2026-07-23
+
+**요약:** `@denn/firebase`에 고정 공개 `published/state.json` read-only REST adapter(`createPublicCatalogReader`)를 구현. 주입 fake fetch만으로 URL·timeout/abort·5MiB·HTTP/JSON/Catalog V1 오류·민감정보 비노출·동시 병합을 검증. 실제 네트워크·Firebase SDK·앱 연결·retry/cache 없음.
+
+**변경 파일 (코드/test):**
+- `packages/firebase/src/public-catalog/location.ts` — `PUBLIC_CATALOG_LOCATION`(bucket `denn-products.firebasestorage.app` · object `published/state.json`) + `buildPublicCatalogUrl`(결정적 media URL, `encodeURIComponent`→`%2F`, `?alt=media`, cache-buster 없음).
+- `packages/firebase/src/public-catalog/types.ts` — `FetchLike`/`FetchLikeResponse`, error category/code, `PublicCatalogError`, `PublicCatalogLoadResult`, reader/options 계약.
+- `packages/firebase/src/public-catalog/reader.ts` — `createPublicCatalogReader`, 검증·매핑·timeout·dedup.
+- `packages/firebase/src/public-catalog/index.ts` — public 배럴.
+- `packages/firebase/src/index.ts` — `export * from "./public-catalog"`, `FIREBASE_NOT_IMPLEMENTED` 문구를 SDK/auth/write 미구현으로 정정(REST read는 별개).
+- `packages/firebase/src/public-catalog/reader.test.ts` — 계약 테스트.
+
+**endpoint 근거:** `denn-mockup-tool.html` L848의 공개 fetch `https://firebasestorage.googleapis.com/v0/b/denn-products.firebasestorage.app/o/`+`encodeURIComponent('published/state.json')`+`?alt=media`. 레거시의 `&cb=<timestamp>`는 결정성 위해 **제거**. 이 위치는 공개 Firebase 설정이며 비밀 아님.
+
+**transport:** 주입 `FetchLike`(GET·`cache:"no-store"`·auth header/body 없음·body 1회). import 시 네트워크 미접촉, 미주입 시 load 시점에 `globalThis.fetch` lazy 확인(없으면 `INVALID_REQUEST`). 테스트는 전부 주입, global fetch 호출 0(스파이로 확인).
+
+**timeout·취소:** 기본 `DEFAULT_TIMEOUT_MS=10_000`, 0/음수/비유한 → `INVALID_REQUEST`. 내부 AbortController로 timeout, caller signal 선행 abort=`REQUEST_ABORTED`(fetch 미시작). fake timer + 제어 Promise로 검증, 고정 sleep 없음. 모든 종료 경로에서 timer·caller listener 정리(`getTimerCount()===0`, `removeEventListener` 호출 확인). 늦은 완료가 확정 결과를 덮지 않음.
+
+**동시 병합(옵션 A):** 진행 중 요청은 fetch 1회로 병합, settle 후 in-flight 비워 다음 load는 새 fetch. shared outcome은 correlation-agnostic로 만들고 caller별 correlationId로 매핑. **caller abort는 그 caller만 실패, 공유 fetch 유지 → 다른 caller 정상 완료**(테스트 고정).
+
+**응답 크기:** `DEFAULT_MAX_BYTES=5 MiB`, 잘못된 상한 → `INVALID_REQUEST`. 유효 `Content-Length` 초과 → body 소비 전 `RESPONSE_TOO_LARGE`(text 미호출 확인). 수신 후 `TextEncoder` UTF-8 byte 길이 재검사(“가”×5=15B>10 → 초과, string.length 5는 미달로 byte 기준 증명). body/base64 오류 미포함.
+
+**오류 계약(표 그대로):** VALIDATION `INVALID_REQUEST`/`RESPONSE_TOO_LARGE`/`INVALID_JSON`/`INVALID_CATALOG`, NETWORK `REQUEST_ABORTED`(false)/`NETWORK_TIMEOUT`(true)/`NETWORK_UNAVAILABLE`(true)/`PUBLIC_CATALOG_NOT_FOUND`(404,false)/`PUBLIC_CATALOG_RATE_LIMITED`(429,true)/`PUBLIC_CATALOG_SERVER_ERROR`(5xx,true)/`PUBLIC_CATALOG_HTTP_ERROR`(기타 non-2xx, **retryable=false** 명시), AUTH `PUBLIC_CATALOG_FORBIDDEN`(401/403,false), UNKNOWN `UNEXPECTED_PUBLIC_CATALOG_ERROR`. error는 `{category,code,retryable,correlationId}` + 선택 `httpStatus`/`catalogIssues`(스펙 012 code/path)만. 원문 body/base64/token/전체 URL 없음(직렬화 검사로 고정). 빈 catch·console·기본 카탈로그 fallback 없음.
+
+**JSON·Catalog:** text 1회→크기→`JSON.parse`→`readLegacyCatalog`. legacy-v0·유효 V1 성공, warning은 report로 그대로 전달(숨기지 않음), 스펙 012 fatal은 `INVALID_CATALOG`. adapter는 카탈로그를 추가 수정하지 않음.
+
+**검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0**(firebase package.json 무변경) · format/lint/typecheck PASS · **unit 91/91**(firebase 30 신규) · build 독립(JS gzip ≈61.09KB) · **e2e 4/4**(앱 무변경) · check PASS. **Firebase SDK·신규 의존성 0**, `@denn/firebase`→`@denn/shared` 방향 유지, 앱 import/call **0**, 실제 network/브라우저 저장소 **0**. 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG **UNCHANGED**, deploy 0. Rules/deploy 검증 = **NOT APPLICABLE**(변경 없음, PASS로 꾸미지 않음).
+
+**미검증/위험:**
+- fake fetch는 실제 Firebase **CORS·cache header·실지연**을 검증하지 못함 — 실제 read는 사용자 승인·별도 스펙.
+- 5 MiB는 관측 ~492KB에 여유를 둔 초기값. 초과 시 몰래 올리지 않고 자산 외부화·성능 검토.
+- `no-store`는 fresh-read 의도이며 offline 지원 아님.
 
