@@ -285,6 +285,18 @@
 
 **미검증/위험:** built-in 템플릿 공급원은 이번 selector 범위 밖(후속 제품 스펙). 합성 fixture만 사용(실 운영·스펙 014 응답 미사용). 모델→템플릿 직접 관계·가격·정렬 우선순위는 근거 없어 미구현.
 
-### 종료 대기 — Codex 재검증
+### 종료 — Codex 최종 승인 (2026-07-23)
 
-- 다음: Codex 스펙 016 재검증 대기. 다음 기능 미착수.
+- **판정: 승인 가능. 승인 기준 HEAD `d7fc334`.** 스펙 016 종료.
+- 게이트 최종: frozen diff 0 / format·lint·typecheck / unit 184(browse 67) / build 독립 / e2e 11(스펙 015 무회귀) / check PASS.
+- 유지(종료 시점 사실):
+  - **고객 탐색용 모델·카테고리·사이즈·템플릿 selector 계약 완료.**
+  - **`categoryId` 정확 일치.**
+  - **레거시 size alias·전체 사이즈 sentinel 전부 반영**(single 7·array 4·nested 5 + sentinel 6 + all flag 3).
+  - **reserved/orphan/unknown 관계는 안전 진단으로 보존**(조용히 유실 없음).
+  - **raw item·unknown·이미지·base64는 selector output에 없음.**
+  - **built-in 템플릿은 새로 생성하지 않음.**
+  - **모델→템플릿 직접 관계·가격·노출 우선순위는 미확정**(후속 스펙).
+  - **합성 fixture만 검증.**
+  - **앱 UI 연결·Canvas·실제 네트워크·Firebase·배포 미착수.**
+- 다음: Codex 다음 스펙 대기. 다음 기능 미착수.
