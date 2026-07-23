@@ -258,3 +258,33 @@
 ### QUESTIONS
 
 - 없음. 실제 레거시 근거 밖의 모델→템플릿 직접 관계, 가격, 노출 우선순위가 필요해지면 임의 추론하지 말고 별도 스펙으로 남긴다.
+
+### DONE (Claude) — 2026-07-23
+
+**요약:** `@denn/shared`에 검증된 `CatalogDocumentV1`에서 고객 탐색 view를 만드는 **순수 selector**를 구현. category/frame-size 관계·레거시 별칭/sentinel·hidden size·all/restricted/unmatched·안전 진단을 한 곳에 고정. 앱 import/call 0, 실제 GET/live 0, 두 앱·운영본 무변경.
+
+**변경 파일 (코드/test):**
+- `packages/shared/src/catalog/browse/keys.ts` — `normalizeSizeKey`·`isAllSizeKey`·`ALL_SIZE_SENTINELS`·`sizeItemKeys`·`templateSizeKeys`.
+- `.../browse/types.ts` — `BrowseOption/Category/Size/Template`·`CatalogBrowseDiagnostic(+code)`·`CatalogBrowseIndex`.
+- `.../browse/build.ts` — `buildCatalogBrowseIndex`.
+- `.../browse/select.ts` — 6 selectors.
+- `.../browse/{index.ts}` 배럴, `packages/shared/src/catalog/index.ts`에서 `export * from "./browse"`.
+- 테스트 3종(`keys/build/select`, 67 케이스).
+
+**레거시 근거:** `frameSizeKey`(`String(v).trim().toLowerCase()`)·`isAllFrameSizeKey`·`templateFrameSizeKeys`·`currentFrameSizeKeys`(mockup L1120-1143), case/frame `categoryId` 필터, `hideInMockup`(mockup init). 스펙 §9의 array 별칭 `targetSizeIds`/`frameTargetSizeIds`는 레거시 2종(`sizeIds`/`frameSizeIds`)의 확장으로 스펙 계약대로 포함. 근거 밖 모델→템플릿 관계·가격·우선순위는 만들지 않음.
+
+**public view model:** `id`(검증 string)·`label`(검증 `name`)·`description`(문자열 `sub`만)·`sourceIndex`, category `kind`(all/builtin/catalog), size `aspect`(유한 양수만), template `kind`(builtin/uploaded/other)·`categoryId?`·`sizeScope`. **원본 item·unknown·image/base64·zone·path를 output/diagnostic에 복제하지 않음**(직렬화 검사로 고정).
+
+**all/restricted/unmatched(§10):** `type==="builtin"` / `allFrameSizes===true` / `sizeScope|sizeMode==="all"` / size key 없음 / all-sentinel key → **all**. 명시 key가 visible size와 매칭 → **restricted**. 명시 key인데 매칭 0 → **unmatched** + `UNKNOWN_SIZE_REFERENCE`. size 미선택=all/restricted/unmatched 전체, size 선택=all + 교집합 restricted(unmatched 제외), hidden/unknown size 질의=빈 결과.
+
+**진단 표:** `RESERVED_CATEGORY_ID`(catalog id가 `all`/frame `builtin` 충돌, 별도 탭 미노출·중복 없음), `ORPHAN_CATEGORY_REFERENCE`(존재하지 않는 categoryId 참조, 전체 목록엔 유지), `UNSUPPORTED_TEMPLATE_TYPE`(그 외 type 문자열→kind other, builtin/catalog 결과 제외), `UNKNOWN_SIZE_REFERENCE`, `INVALID_DISPLAY_FIELD`(id/name 무효 시 option 제외). code/collection/sourceIndex만, 중복 제거·결정적 순서(collection→sourceIndex→code). 실제 값/path/base64 없음.
+
+**불변/멱등/성능:** 입력 deep-freeze에서 성공+원본 무변경, 반복 실행 deep-equal, JSON 딥클론 없음, unknown/base64 미순회, 인덱스 1회 생성 후 filter는 사전계산 entry에 대해 선형.
+
+**검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0**(shared package.json 무변경) · format/lint/typecheck PASS · **unit 184**(browse 67 신규) · build 독립 · **e2e 11**(스펙 015 무회귀) · check PASS. `@denn/shared` React/Firebase/`@denn/*` 의존 0, IO 0, 앱 import/call 0. 실제 Firebase GET·`test:live:*` 미실행. 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG·**두 앱 소스 hash UNCHANGED**, Firebase SDK/Auth/write/Rules/CORS·Hosting·deploy 0, 신규 의존성 0.
+
+**미검증/위험:** built-in 템플릿 공급원은 이번 selector 범위 밖(후속 제품 스펙). 합성 fixture만 사용(실 운영·스펙 014 응답 미사용). 모델→템플릿 직접 관계·가격·정렬 우선순위는 근거 없어 미구현.
+
+### 종료 대기 — Codex 재검증
+
+- 다음: Codex 스펙 016 재검증 대기. 다음 기능 미착수.
