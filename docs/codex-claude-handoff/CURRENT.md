@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 013 Firebase 공개 카탈로그 읽기 어댑터 = Codex 최종 승인(승인 가능, 기준 HEAD `ed553b2`) — 종료. 다음 = Codex 다음 스펙 대기(앱 연결 미착수)**
+상태: **🟡 스펙 014 실제 공개 카탈로그 읽기 검증 = READY. 실제 GET 최대 2회(Node adapter 1 + Browser CORS 1), 원문 저장·출력 금지. 앱 연결·Firebase 변경·배포 미착수.**
+
+> 스펙 014(2026-07-23): `docs/rebuild/specs/014-live-public-catalog-read-validation.md`. 스펙 013의 고정 공개 `published/state.json` reader를 실제 환경에서 격리 검증한다. 기본 게이트는 network-free로 유지하고 명시적 opt-in에서만 Node adapter 1회와 로컬 browser CORS 1회(총 2회 이하)를 수행한다. 원문·이름·ID·URL·이미지 경로·base64·token은 저장/출력/커밋하지 않고 byte·elapsed·status·collection/issue code 개수 등 안전 집계만 문서화한다. 실패 시 5 MiB·timeout·Rules·CORS를 즉시 바꾸지 않고 safe code만 보고한다. 앱 연결·Firebase SDK/Auth/write·Rules/CORS·Hosting·배포는 제외한다.
 
 > Codex 최종 승인(2026-07-23): 스펙 013 = **승인 가능**(기준 HEAD `ed553b2`). `@denn/firebase` `createPublicCatalogReader` read-only 공개 카탈로그 REST adapter 확립. 재검증 보완 2라운드 반영(1라운드: 구현; 2라운드: transport-독립 timeout 상태머신·endpoint 고정·correlationId 공백 거부). 게이트 최종: frozen diff 0 / format·lint·typecheck / **unit 96**(firebase 35) / build 독립 / e2e 4 / check PASS. Firebase SDK·신규 의존성 0, `@denn/firebase`→`@denn/shared` 방향 유지, 앱 import/call 0, 실제 network/브라우저 저장소 0, 운영본·Firebase·Rules·`poc/**`·PNG 무변경, deploy 0. **유지: fake fetch만 검증(실제 CORS·캐시 header·지연 미검증, 실제 published/state.json 미요청), 5 MiB 초기 안전 상한, persistent cache·retry·offline fallback 없음, Firebase SDK·Auth·write·Rules·앱 연결·배포 무변경.** **다음 스펙·앱 연결 미착수(대기).**
 
