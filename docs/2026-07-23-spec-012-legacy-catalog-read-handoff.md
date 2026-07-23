@@ -46,6 +46,15 @@ Codex "수정 후 재검증" 4건:
 
 재검증: frozen diff 0 · format/lint/typecheck · unit **57/57**(catalog 31) · build 독립 · e2e **4/4**. 운영본·POC·PNG·Firebase 무변경, 배포 0. 주의: URL scheme storagePath는 이제 fatal(별도 스펙에서 URL 필드 분리).
 
+## 2차 재검증 보완 (2026-07-23, HEAD b85810a → fba378b)
+
+Codex 3건 승인·2건 보완:
+1. `isCatalogDocumentV1`가 3키 shell + `readLegacyCatalog(input).ok` 재사용으로 deep contract 검사(malformed collection·non-finite·unsafe storagePath 등 V1 false, 규칙 단일 출처, 순환 없음).
+2. storagePath scheme 검사 시 검사값만 `trimStart`(원본 보존) → `" https://"`·`"\tjavascript:"` 우회 차단.
+3. `joinPath` helper로 leading-dot 방지(루트 storagePath 오류 path=`"storagePath"`).
+
+재검증: frozen diff 0 · format/lint/typecheck · unit **61/61**(catalog 35) · build 독립 · e2e **4/4**. 무변경 유지.
+
 ## 다음
 
 - Codex 스펙 012 재검증 대기. 이후 후보: `@denn/firebase` 읽기 연결 · `@denn/render` Canvas · flat room → `roomSettings.operator/user` 변환(별도 스펙) · `?space=` 복호화 라운드트립 · 주문/시안 데이터. **새 스펙 없이 임의 착수 금지.**

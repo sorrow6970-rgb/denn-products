@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 012 레거시 카탈로그 읽기 계약 구현 + Codex 재검증 보완(4건) 반영 — 재검증 대기**
+상태: **✅ 스펙 012 레거시 카탈로그 읽기 계약 + Codex 2차 재검증 보완(2건) 반영 — 재검증 대기**
+
+> 스펙 012 2차 재검증 보완(2026-07-23, HEAD `b85810a`→`fba378b`): Codex "수정 후 재검증"(3건 승인·2건 보완). (1) `isCatalogDocumentV1`가 3키 shell + **`readLegacyCatalog(input).ok` 재사용**으로 deep contract 검사 → `{schemaVersion:1,migratedFrom:"legacy-v0",data:{models:"invalid"}}` 등 read가 fatal로 보는 V1은 guard도 false, 규칙 단일 출처(순환 없음). (2) storagePath scheme 검사 시 **검사값만 `trimStart`**(원본 보존) → `" https://"`·`"\tjavascript:"`도 `UNSAFE_STORAGE_PATH`. (3) `joinPath` helper로 leading-dot 방지 → 루트 storagePath 오류 path=`"storagePath"`(no dot). 재검증: frozen diff 0 / format·lint·typecheck / **unit 61**(catalog 35) / build 독립 / e2e 4. shared React/Firebase/@denn/* 의존 0, IO 0, 앱 파서 0, 신규 의존성 0. 운영본·POC·PNG·Firebase **UNCHANGED**, deploy 0. 코드 `fba378b`/문서 커밋 분리.
 
 > 스펙 012 재검증 보완(2026-07-23, HEAD `32eab2e`→`aae7187`): Codex "수정 후 재검증" 4건. (1) `isCatalogDocumentV1` 얕은 guard 강화(정확히 3키 {schemaVersion:1, migratedFrom:"legacy-v0", plain-object data}만 true). (2) nested unknown 보존·경고 + 명시적 타입 계약 — known 객체/아이템(DEF L846-856 근거)의 추가 필드를 nested `unknownPaths`+`UNKNOWN_FIELD`로 보고하고 `report.extensions`(`CatalogExtensions`=path→JsonValue)로 노출, 근거 없는 컬렉션·깊은 중첩은 opaque. (3) `cloneJsonSafe`가 NaN/±Infinity를 어디서든(unknown/extensions 포함) `NON_FINITE_NUMBER`로 거부. (4) 카탈로그 전체 재귀 순회로 모든 `dataUrl`/`storagePath` 집계(watermark·중첩 editorOverlayImages 포함), `storagePath`의 **모든 URL scheme**(`javascript:`뿐 아니라 `https:` 등) `UNSAFE_STORAGE_PATH` 거부. 재검증: frozen diff 0 / format·lint·typecheck / **unit 57**(catalog 31) / build 독립(JS gzip ≈61.09KB) / e2e 4. shared React/Firebase/@denn/* 의존 0, IO 0, 앱 파서 0, 신규 의존성 0. 운영본·POC·PNG·Firebase **UNCHANGED**, deploy 0. 코드 `aae7187`/문서 커밋 분리. 주의: URL scheme storagePath는 이제 fatal(별도 스펙).
 

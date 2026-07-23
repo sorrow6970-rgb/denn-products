@@ -265,3 +265,15 @@ Codex "수정 후 재검증" 4건만 보완. 컴포넌트 API 축소/토큰/앱 
 **재검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0**(shared package.json 무변경) · format/lint/typecheck PASS · **unit 57/57**(catalog 31) · build 독립(JS gzip ≈61.09KB) · **e2e 4/4**(앱 무변경) · check PASS. `@denn/shared`의 React/Firebase/다른 `@denn/*` 의존 0, IO 0, 앱 파서 사용 0. 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG **UNCHANGED**, deploy 0. 코드 커밋 `aae7187` / 문서 커밋 분리.
 
 **주의(설계 결정):** URL scheme을 가진 `storagePath`(예: 전체 `https://` 다운로드 URL)는 이제 fatal이다. 레거시에 그런 값이 있으면 별도 스펙에서 URL 필드 분리·정규화로 다룬다(이번엔 Codex 지시대로 전부 거부).
+
+### DONE (Claude) — 2026-07-23 재검증 보완 2 (기준 HEAD b85810a → fba378b)
+
+Codex "수정 후 재검증" 2건(3건 승인, 2건 보완).
+
+1. **`isCatalogDocumentV1` 실제 deep contract 검사** — 3키 shell 검사에 더해 **`readLegacyCatalog(input).ok`를 재사용**한다. 따라서 `{schemaVersion:1, migratedFrom:"legacy-v0", data:{models:"invalid"}}`처럼 read가 fatal로 판단하는 V1은 guard도 **false**. collection 타입·non-finite nested·unsafe storagePath·item id/name 등 규칙이 **한 곳(read)**에서만 정의돼 갈라지지 않는다. 순환 없음(`readLegacyCatalog`는 guard를 호출하지 않음). 정상 V1은 계속 true.
+2. **storagePath scheme 선행 공백 우회 차단** — scheme 검사 시 **검사값만 `trimStart`**(원본 보존)하여 `" https://…"`·`"\tjavascript:…"`도 `UNSAFE_STORAGE_PATH`로 실패한다. `dataUrl`의 `data:` 검사도 동일하게 trim된 값으로 수행.
+3. **경로 leading-dot 방지** — `joinPath(base, seg)` helper 도입(`base===""`면 seg만). 이미지 issue 경로·자식 재귀 모두 사용 → 루트 객체에 직접 `storagePath`가 있으면 오류 path는 `".storagePath"`가 아니라 정확히 `"storagePath"`. 중첩 경로는 그대로(`frameTemplates[0].storagePath`).
+
+**추가 fixture/test:** guard deep-contract false(malformed collection·non-finite nested·unsafe storagePath) + 정상 V1 true, `" https://"`·`"\tjavascript:"` storagePath 거부, 루트 storagePath 오류 path=`"storagePath"`(no leading dot).
+
+**재검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0** · format/lint/typecheck PASS · **unit 61/61**(catalog 35) · build 독립(JS gzip ≈61.09KB) · **e2e 4/4**(앱 무변경) · check PASS. shared React/Firebase/`@denn/*` 의존 0, IO 0, 앱 파서 0, 신규 의존성 0. 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG **UNCHANGED**, deploy 0. 코드 커밋 `fba378b` / 문서 커밋 분리.
