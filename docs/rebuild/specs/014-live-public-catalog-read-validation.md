@@ -172,6 +172,14 @@
 
 **미검증/위험:** 실행 시점 스냅샷(장기 가용성·offline 미보장). Node/Browser byte 동일성은 완료 조건 아님. 5 MiB·timeout·Rules·CORS는 실패해도 임의 변경하지 않음. 세부 Node 안전 집계 미출력은 도구 세부(데이터 무관).
 
-### 종료 대기 — Codex 재검증
+### 종료 — Codex 최종 승인 (2026-07-23)
 
-- 다음: Codex 스펙 014 재검증 대기. 다음 스펙·앱 연결 미착수.
+- **판정: 승인 가능. 승인 기준 HEAD `7c5d04a`.** 스펙 014 종료.
+- 실제 검증: **Node 1회 + Browser 1회 = 총 GET 2회**, 둘 다 성공(Node source:network·스펙 012 통과, Browser CORS 미차단·HTTP 200·byteLength 192419≈188 KiB≤5 MiB·JSON parse OK). 기본 게이트 network-free(unit 107·e2e 4·check PASS), opt-in 없을 때 요청 전 실패.
+- 유지(종료 시점 사실):
+  - 실제 검증은 **실행 시점 스냅샷**이다.
+  - **Node 1회 + Browser 1회, 총 GET 2회.**
+  - **장기 가용성·offline은 미검증.**
+  - **앱 연결·Firebase SDK/Auth/write·Rules/CORS·Hosting·배포는 미착수.**
+  - **운영 카탈로그 원문·식별값은 저장소에 남지 않음.**
+- 다음: Codex 다음 스펙 대기. 앱 연결 미착수.
