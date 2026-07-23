@@ -44,6 +44,15 @@
 - 5 MiB는 관측 ~492KB에 여유를 둔 초기값(초과 시 몰래 상향 금지).
 - `no-store`는 fresh-read 의도이며 offline 지원 아님.
 
+## 재검증 보완 (2026-07-23, HEAD 03f5eeb → d99c046)
+
+Codex 2건 + 소형 1건:
+1. timeout을 transport 협조와 무관하게 강제 — `runFetch`를 단일 상태머신(`settle` 1회)으로 재작성, timeout timer vs work 경쟁. transport/`response.text()`가 signal 무시·pending이어도 `timeoutMs`에 `NETWORK_TIMEOUT`. 늦은 resolve/reject no-op + `doWork` 내부 catch로 unhandled 없음, in-flight 정리→다음 load 새 fetch.
+2. endpoint 고정 — `options.location` 제거, 항상 `PUBLIC_CATALOG_LOCATION`. `buildPublicCatalogUrl()` 인자 없는 고정 builder. 호출자 URL 주입 불가.
+3. correlationId 공백 거부 — `""`+공백만(`"   "`)도 요청 전 `INVALID_REQUEST`(원본 echo, 정상값 무변경).
+
+재검증: frozen diff 0 · format/lint/typecheck · unit **96/96**(firebase 35) · build 독립 · e2e **4/4**. firebase tsconfig에 `types:["node"]` 추가(unhandledRejection 관측). 무변경 유지.
+
 ## 다음
 
 - Codex 스펙 013 재검증 대기. 이후 후보: 실제 공개 read(사용자 승인·CORS 실검증) · `@denn/render` Canvas · flat room 변환 · `?space=` 복호화 · 주문/시안 · 앱 연결. **새 스펙 없이 임의 착수 금지.**

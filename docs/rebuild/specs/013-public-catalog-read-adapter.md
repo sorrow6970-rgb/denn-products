@@ -255,3 +255,15 @@
 - 5 MiB는 관측 ~492KB에 여유를 둔 초기값. 초과 시 몰래 올리지 않고 자산 외부화·성능 검토.
 - `no-store`는 fresh-read 의도이며 offline 지원 아님.
 
+### DONE (Claude) — 2026-07-23 재검증 보완 (기준 HEAD 03f5eeb → d99c046)
+
+Codex "수정 후 재검증" 2건 + 소형 확인 1건.
+
+1. **timeout을 transport 협조와 무관하게 강제** — `runFetch`를 **단일 상태머신**(`settle` 1회)으로 재작성: timeout timer와 work 파이프라인(`doWork`) 중 **먼저 settle하는 쪽이 승리**. `timeoutMs` 시점에 transport나 `response.text()`가 signal을 무시하고 pending이어도 반드시 `NETWORK_TIMEOUT`으로 settle한다. `controller.abort()`는 자원 정리 힌트로 계속 호출(정확성은 transport 협조에 의존하지 않음). timeout 이후 늦은 work resolve/reject는 **no-op(덮어쓰지 않음)**, `doWork`가 transport 오류를 내부 catch하므로 **unhandled rejection 없음**. in-flight는 timeout 결과로 정리되어 **다음 load가 새 fetch** 수행.
+2. **reader endpoint 고정** — `PublicCatalogReaderOptions.location` **제거**. `createPublicCatalogReader`는 항상 `PUBLIC_CATALOG_LOCATION`만 사용하고 호출자는 bucket/objectPath/URL을 주입할 수 없다. `buildPublicCatalogUrl()`은 **인자 없는 고정 URL builder**로 축소. reader는 항상 정확한 `EXPECTED_URL`만 호출(테스트 유지).
+3. **correlationId 공백 거부** — `""`뿐 아니라 **공백만 있는 값**(`"   "`, `"\t\n"`)도 `trim().length===0`으로 요청 전 `INVALID_REQUEST` 거부. 정상 값은 변경하지 않고 원본을 그대로 사용(오류에도 원본 echo).
+
+**추가 fixture/test:** transport가 signal 무시·pending → NETWORK_TIMEOUT, `response.text()` pending → timeout, timeout 후 늦은 success → 결과 timeout 유지, timeout settle 후 다음 load 새 fetch, 늦은 reject에서 unhandled rejection 0, 공백 correlationId 거부. `packages/firebase/tsconfig.json`에 `types:["node"]` 추가(unhandledRejection 관측용, 꼭 필요한 테스트 설정).
+
+**재검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0**(firebase package.json 무변경) · format/lint/typecheck PASS · **unit 96/96**(firebase 35) · build 독립(JS gzip ≈61.09KB) · **e2e 4/4**(앱 무변경) · check PASS. **Firebase SDK·신규 의존성 0**, `@denn/firebase`→`@denn/shared` 방향 유지, 앱 import/call 0, 실제 network/브라우저 저장소 0. 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG **UNCHANGED**, deploy 0. 코드 커밋 `d99c046` / 문서 커밋 분리.
+
