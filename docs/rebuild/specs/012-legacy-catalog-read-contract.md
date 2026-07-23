@@ -277,3 +277,15 @@ Codex "수정 후 재검증" 2건(3건 승인, 2건 보완).
 **추가 fixture/test:** guard deep-contract false(malformed collection·non-finite nested·unsafe storagePath) + 정상 V1 true, `" https://"`·`"\tjavascript:"` storagePath 거부, 루트 storagePath 오류 path=`"storagePath"`(no leading dot).
 
 **재검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0** · format/lint/typecheck PASS · **unit 61/61**(catalog 35) · build 독립(JS gzip ≈61.09KB) · **e2e 4/4**(앱 무변경) · check PASS. shared React/Firebase/`@denn/*` 의존 0, IO 0, 앱 파서 0, 신규 의존성 0. 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG **UNCHANGED**, deploy 0. 코드 커밋 `fba378b` / 문서 커밋 분리.
+
+### 종료 — Codex 최종 승인 (2026-07-23)
+
+- **판정: 승인 가능. 승인 기준 HEAD `a6fd990`.** 스펙 012 종료.
+- 게이트 최종: frozen diff 0 / format·lint·typecheck / unit 61 / build 독립 / e2e 4 / check PASS. `@denn/shared`의 React/Firebase/`@denn/*` 의존 0·IO 0·앱 파서 0·신규 의존성 0, 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG 무변경, deploy 0.
+- 유지(종료 시점 사실):
+  - **합성 fixture만** 검증됨.
+  - 실제 약 **35MB 운영 백업(`backup.json`)은 아직 검증하지 않음** — 개인정보 제거·사용자 승인·읽기 전용 절차를 갖춘 별도 스펙.
+  - **Catalog V1은 내부 읽기 모델**이며 write/cutover 승인이 아님.
+  - flat `roomBackgroundSettings`는 **보존만** 하며 `roomSettings.operator/user`로 변환하지 않음(후속 스펙).
+  - Firebase·앱·Canvas·운영 데이터·배포 무변경.
+- 다음: Codex 다음 스펙 대기. 기능 구현 미착수.

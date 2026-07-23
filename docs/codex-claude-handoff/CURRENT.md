@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 012 레거시 카탈로그 읽기 계약 + Codex 2차 재검증 보완(2건) 반영 — 재검증 대기**
+상태: **✅ 스펙 012 레거시 카탈로그 읽기 계약 = Codex 최종 승인(승인 가능, 기준 HEAD `a6fd990`) — 종료. 다음 = Codex 다음 스펙 대기(기능 구현 미착수)**
+
+> Codex 최종 승인(2026-07-23): 스펙 012 = **승인 가능**(기준 HEAD `a6fd990`). `@denn/shared` legacy 카탈로그 단일 read boundary(`readLegacyCatalog`/`isCatalogDocumentV1`) 확립. 재검증 보완 2라운드 반영(1차 4건: guard 강화·nested-unknown extensions·non-finite 거부·전체 이미지 순회; 2차 2건: deep V1 guard(read 재사용)·storagePath trimStart scheme·joinPath leading-dot). 게이트 최종: frozen diff 0 / format·lint·typecheck / **unit 61**(catalog 35) / build 독립 / e2e 4 / check PASS. shared React/Firebase/`@denn/*` 의존 0·IO 0·앱 파서 0·신규 의존성 0, 운영본·Firebase·`poc/**`·PNG 무변경, deploy 0. **유지: 합성 fixture만 검증(실제 ~35MB `backup.json` 미검증), Catalog V1은 내부 읽기 모델(write/cutover 승인 아님), flat roomBackgroundSettings는 보존만(변환 안 함).** **다음 스펙·기능 구현 미착수(대기).**
 
 > 스펙 012 2차 재검증 보완(2026-07-23, HEAD `b85810a`→`fba378b`): Codex "수정 후 재검증"(3건 승인·2건 보완). (1) `isCatalogDocumentV1`가 3키 shell + **`readLegacyCatalog(input).ok` 재사용**으로 deep contract 검사 → `{schemaVersion:1,migratedFrom:"legacy-v0",data:{models:"invalid"}}` 등 read가 fatal로 보는 V1은 guard도 false, 규칙 단일 출처(순환 없음). (2) storagePath scheme 검사 시 **검사값만 `trimStart`**(원본 보존) → `" https://"`·`"\tjavascript:"`도 `UNSAFE_STORAGE_PATH`. (3) `joinPath` helper로 leading-dot 방지 → 루트 storagePath 오류 path=`"storagePath"`(no dot). 재검증: frozen diff 0 / format·lint·typecheck / **unit 61**(catalog 35) / build 독립 / e2e 4. shared React/Firebase/@denn/* 의존 0, IO 0, 앱 파서 0, 신규 의존성 0. 운영본·POC·PNG·Firebase **UNCHANGED**, deploy 0. 코드 `fba378b`/문서 커밋 분리.
 
