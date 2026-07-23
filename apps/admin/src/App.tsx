@@ -42,6 +42,7 @@ export function App(): React.JSX.Element {
                   {view === v ? <VisuallyHidden> 선택됨</VisuallyHidden> : null}
                 </Chip>
               ))}
+              <Chip disabled>비활성</Chip>
             </div>
           </fieldset>
         </Card>

@@ -60,7 +60,13 @@ for (const app of APPS) {
         `${app.name} ${vp.name}: horizontal overflow ${overflow.scrollWidth} > ${overflow.clientWidth}`,
       ).toBeLessThanOrEqual(overflow.clientWidth + 1);
 
+      // a disabled Chip is present and actually disabled (native, not visual-only)
+      const disabledChip = page.locator(".denn-chip:disabled");
+      await expect(disabledChip).toHaveCount(1);
+      await expect(disabledChip).toBeDisabled();
+
       // interactive controls meet the 44x44 CSS px minimum touch target
+      // (the disabled chip is included — it must keep its size, not shrink away)
       const controls = page.locator(".denn-btn, .denn-chip");
       const count = await controls.count();
       expect(count).toBeGreaterThan(0);

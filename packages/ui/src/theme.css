@@ -190,8 +190,12 @@ body {
   border-color: var(--accent-ink);
   background: var(--accent-ink);
 }
+.denn-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
 @media (hover: hover) {
-  .denn-chip:hover:not(.denn-chip--on) {
+  .denn-chip:hover:not(.denn-chip--on):not(:disabled) {
     border-color: var(--accent-2);
   }
 }

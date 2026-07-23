@@ -37,6 +37,17 @@ describe("Chip", () => {
   it("defaults to type=button", () => {
     expect(html(<Chip>A4</Chip>)).toContain('type="button"');
   });
+
+  it("passes native disabled through", () => {
+    const out = html(
+      <Chip disabled selected>
+        A4
+      </Chip>,
+    );
+    expect(out).toContain("disabled");
+    // still reflects its selected state while disabled
+    expect(out).toContain('aria-pressed="true"');
+  });
 });
 
 describe("TextField", () => {
