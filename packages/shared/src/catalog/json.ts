@@ -19,8 +19,9 @@ export function isPlainObject(value: unknown): value is JsonObject {
  * - Functions, symbols, bigints, undefined, and non-plain objects (Date/Map/Blob/DOM/…)
  *   are rejected via `onIssue({ code: "NON_JSON_VALUE", path })`.
  * - Circular references are rejected via `onIssue({ code: "CIRCULAR_REFERENCE", path })`.
- * - Numbers (including non-finite) are preserved as-is; positivity of specific fields is
- *   validated later by the normalizer, so it can report INVALID_NUMBER with field paths.
+ * - Non-finite numbers (NaN / ±Infinity) are rejected via `onIssue({ code:
+ *   "NON_FINITE_NUMBER", path })` anywhere in the tree — including unknown/extensions —
+ *   because they cannot round-trip through JSON and would break determinism.
  * Returns the clone, or `undefined` if the value at that node was not JSON-safe. Callers
  * treat any reported issue as fatal, so a partially-substituted clone is never surfaced.
  */
@@ -33,7 +34,14 @@ export function cloneJsonSafe(
   function walk(value: unknown, path: string): JsonValue | undefined {
     if (value === null) return null;
     const t = typeof value;
-    if (t === "string" || t === "boolean" || t === "number") return value as JsonValue;
+    if (t === "string" || t === "boolean") return value as JsonValue;
+    if (t === "number") {
+      if (!Number.isFinite(value)) {
+        onIssue({ code: "NON_FINITE_NUMBER", path });
+        return undefined;
+      }
+      return value as number;
+    }
     if (t === "undefined" || t === "function" || t === "symbol" || t === "bigint") {
       onIssue({ code: "NON_JSON_VALUE", path });
       return undefined;

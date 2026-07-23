@@ -5,10 +5,10 @@
 import { cloneJsonSafe, isPlainObject, type JsonObject, type JsonValue } from "./json";
 import type {
   CatalogDocumentV1,
+  CatalogExtensions,
   CatalogIssue,
   CatalogReadReport,
   CatalogReadResult,
-  LegacyImageReference,
 } from "./types";
 
 /** Top-level keys recognized by the catalog contract (DEF + legacy-analysis §4). */
@@ -58,22 +58,79 @@ const REQUIRE_NAME = new Set<string>([
   "frameColors",
 ]);
 
-/** Collections carrying dataUrl/storagePath image references (evidence: legacy-analysis §4). */
-const IMAGE_COLLECTIONS = ["frameTemplates", "caseTemplates", "guideBackgrounds"] as const;
+/**
+ * Known item field allow-lists (evidence: DEF L846-856 + legacy-analysis §4). Extra item
+ * fields for these collections are preserved and reported as nested UNKNOWN_FIELD.
+ * Collections NOT listed here (caseTemplates, guideBackgrounds, customFonts) have no
+ * evidenced item schema, so their items are treated as opaque — only `id` is validated.
+ */
+const ITEM_KNOWN: Record<string, Set<string>> = {
+  models: new Set([
+    "id",
+    "name",
+    "sub",
+    "info",
+    "w",
+    "h",
+    "dieline",
+    "magsafeDL",
+    "printArea",
+    "custom",
+  ]),
+  caseCategories: new Set(["id", "name"]),
+  frameCategories: new Set(["id", "name"]),
+  frameSizes: new Set(["id", "name", "sub", "aspect", "custom", "clock"]),
+  frameColors: new Set(["id", "name", "fill", "grain", "custom"]),
+  frameTemplates: new Set([
+    "id",
+    "name",
+    "type",
+    "dataUrl",
+    "storagePath",
+    "textZones",
+    "zones",
+    "photoSlot",
+    "categoryId",
+    "sizeId",
+    "clock",
+    "allowColorChange",
+    "maskMode",
+    "editorOverlayImages",
+    "clockEnabled",
+    "builtBy",
+  ]),
+};
+
+/** Known field allow-lists for top-level objects (nested unknowns reported one level deep). */
+const OBJECT_KNOWN: Record<string, Set<string>> = {
+  brand: new Set(["name", "sub", "kakaoUrl", "msgCase", "acc", "acc2"]),
+  clockSettings: new Set(["x", "y", "size", "customImg"]),
+  watermark: new Set(["enabled", "dataUrl", "opacity", "position"]),
+};
 
 /** frameTemplate.type values seen in the legacy code; others are preserved with a warning. */
 const KNOWN_FRAME_TEMPLATE_TYPES = new Set<string>(["builtin", "uploaded"]);
 
+/** A storagePath must be a relative path, never a URL — reject ANY leading URI scheme. */
+const URL_SCHEME_RE = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
+
 const isFinitePositive = (n: unknown): boolean =>
   typeof n === "number" && Number.isFinite(n) && n > 0;
 
-/** True for a well-formed Catalog V1 wrapper (shallow — does not deep-validate `data`). */
+/**
+ * True for a well-formed Catalog V1 wrapper. Strengthened shallow guard: exactly the three
+ * expected keys, schemaVersion === 1, migratedFrom === "legacy-v0", and a plain-object
+ * `data` (contents are not deep-validated here).
+ */
 export function isCatalogDocumentV1(input: unknown): input is CatalogDocumentV1 {
+  if (!isPlainObject(input)) return false;
+  if (input.schemaVersion !== 1) return false;
+  if (input.migratedFrom !== "legacy-v0") return false;
+  if (!isPlainObject(input.data)) return false;
+  const keys = Object.keys(input);
   return (
-    isPlainObject(input) &&
-    input.schemaVersion === 1 &&
-    input.migratedFrom === "legacy-v0" &&
-    isPlainObject((input as JsonObject).data)
+    keys.length === 3 &&
+    keys.every((k) => k === "schemaVersion" || k === "migratedFrom" || k === "data")
   );
 }
 
@@ -87,6 +144,7 @@ export function readLegacyCatalog(input: unknown): CatalogReadResult {
   const warnings: CatalogIssue[] = [];
   const defaultsApplied: string[] = [];
   const unknownPaths: string[] = [];
+  const extensions: CatalogExtensions = {};
   const counts: Record<string, number> = {};
   const imageReferences = { dataUrl: 0, storagePath: 0, dual: 0 };
 
@@ -97,17 +155,24 @@ export function readLegacyCatalog(input: unknown): CatalogReadResult {
     defaultsApplied,
     warnings,
     unknownPaths,
+    extensions,
     counts,
     imageReferences,
   });
   const fail = (): CatalogReadResult => ({ ok: false, errors: fatals, report: report() });
 
+  const recordUnknown = (path: string, value: JsonValue): void => {
+    unknownPaths.push(path);
+    extensions[path] = value;
+    warnings.push({ code: "UNKNOWN_FIELD", path });
+  };
+
   // 1. Version detection: raw legacy has no schemaVersion; a V1 wrapper has schemaVersion:1.
   let raw: unknown = input;
   if (isPlainObject(input) && "schemaVersion" in input) {
-    const sv = (input as JsonObject).schemaVersion;
+    const sv = input.schemaVersion;
     if (sv === 1) {
-      if ((input as JsonObject).migratedFrom !== "legacy-v0" || !isPlainObject(input.data)) {
+      if (input.migratedFrom !== "legacy-v0" || !isPlainObject(input.data)) {
         fatals.push({ code: "MALFORMED_V1_DOCUMENT", path: "" });
         return fail();
       }
@@ -125,20 +190,30 @@ export function readLegacyCatalog(input: unknown): CatalogReadResult {
     return fail();
   }
 
-  // 3. JSON-safe deep clone (rejects functions / non-plain objects / circular refs).
+  // 3. JSON-safe deep clone (rejects functions / non-plain objects / circular / non-finite).
   const clone = cloneJsonSafe(raw, (issue) => fatals.push(issue));
   if (fatals.length > 0) return fail();
   const catalog = clone as JsonObject;
 
-  // 4. Unknown top-level keys: preserved in place, reported (not dropped).
+  // 4. Whole-catalog image aggregation + storage-path safety (any dataUrl/storagePath, any depth).
+  collectImages(catalog, "", imageReferences, warnings, fatals);
+
+  // 5. Unknown top-level keys: preserved in place, reported (not dropped).
   for (const key of Object.keys(catalog)) {
-    if (!KNOWN_TOP_LEVEL.has(key)) {
-      unknownPaths.push(key);
-      warnings.push({ code: "UNKNOWN_FIELD", path: key });
+    if (!KNOWN_TOP_LEVEL.has(key)) recordUnknown(key, catalog[key]);
+  }
+
+  // 6. Nested unknown keys inside known top-level objects (one level; opaque deeper).
+  for (const key of Object.keys(OBJECT_KNOWN)) {
+    const obj = catalog[key];
+    if (!isPlainObject(obj)) continue;
+    const known = OBJECT_KNOWN[key];
+    for (const sub of Object.keys(obj)) {
+      if (!known.has(sub)) recordUnknown(`${key}.${sub}`, obj[sub]);
     }
   }
 
-  // 5. Missing collections → explicit empty default; present-but-wrong-type → fatal.
+  // 7. Missing collections → explicit empty default; present-but-wrong-type → fatal.
   for (const key of COLLECTION_KEYS) {
     if (catalog[key] === undefined) {
       catalog[key] = [];
@@ -148,7 +223,7 @@ export function readLegacyCatalog(input: unknown): CatalogReadResult {
     }
   }
 
-  // 6. Validate id/name/dup and per-collection numeric/image/type rules.
+  // 8. Per-collection: id/name/dup, numbers, template type, and nested item unknowns.
   for (const key of COLLECTION_KEYS) {
     const arr = catalog[key];
     if (!Array.isArray(arr)) continue; // already reported as COLLECTION_NOT_ARRAY
@@ -156,7 +231,7 @@ export function readLegacyCatalog(input: unknown): CatalogReadResult {
     if (key === "customFonts") continue; // opaque array — no id/name evidence
 
     const requireName = REQUIRE_NAME.has(key);
-    const isImageCollection = (IMAGE_COLLECTIONS as readonly string[]).includes(key);
+    const itemKnown = ITEM_KNOWN[key];
     const seen = new Set<string>();
 
     arr.forEach((item, i) => {
@@ -173,11 +248,15 @@ export function readLegacyCatalog(input: unknown): CatalogReadResult {
       }
       if (key === "frameSizes") validatePositive(item.aspect, `${p}.aspect`, fatals);
       if (key === "frameTemplates") validateFrameTemplateType(item.type, p, warnings);
-      if (isImageCollection) classifyImage(item, p, imageReferences, warnings, fatals);
+      if (itemKnown) {
+        for (const sub of Object.keys(item)) {
+          if (!itemKnown.has(sub)) recordUnknown(`${p}.${sub}`, item[sub]);
+        }
+      }
     });
   }
 
-  // 7. Top-level number + revision fields.
+  // 9. Top-level number + revision fields.
   if (catalog.frameThickness !== undefined)
     validatePositive(catalog.frameThickness, "frameThickness", fatals);
   validateRevision(catalog.__opRev, "__opRev", warnings);
@@ -229,43 +308,45 @@ function validateRevision(value: JsonValue, path: string, warnings: CatalogIssue
   }
 }
 
-/** Classify an item's dataUrl/storagePath; tally counts; reject unsafe storage path schemes. */
-function classifyImage(
-  item: JsonObject,
+/**
+ * Recursively walk the entire clone; wherever an object has `dataUrl`/`storagePath` string
+ * keys, classify and tally them. `dataUrl` must use the `data:` scheme (else INVALID_DATA_URL);
+ * `storagePath` must not be a URL — any leading URI scheme is rejected as UNSAFE_STORAGE_PATH.
+ */
+function collectImages(
+  node: JsonValue,
   path: string,
   tally: { dataUrl: number; storagePath: number; dual: number },
   warnings: CatalogIssue[],
   fatals: CatalogIssue[],
-): LegacyImageReference {
-  const rawData = item.dataUrl;
-  const rawPath = item.storagePath;
+): void {
+  if (Array.isArray(node)) {
+    node.forEach((child, i) => {
+      collectImages(child, `${path}[${i}]`, tally, warnings, fatals);
+    });
+    return;
+  }
+  if (!isPlainObject(node)) return;
 
-  let dataUrl: string | undefined;
+  const rawData = node.dataUrl;
+  const rawPath = node.storagePath;
+  let hasData = false;
+  let hasPath = false;
+
   if (typeof rawData === "string" && rawData.length > 0) {
-    if (/^data:/i.test(rawData)) dataUrl = rawData;
+    if (/^data:/i.test(rawData)) hasData = true;
     else warnings.push({ code: "INVALID_DATA_URL", path: `${path}.dataUrl` });
   }
-
-  let storagePath: string | undefined;
   if (typeof rawPath === "string" && rawPath.length > 0) {
-    if (/^\s*(javascript|vbscript):/i.test(rawPath)) {
+    if (URL_SCHEME_RE.test(rawPath))
       fatals.push({ code: "UNSAFE_STORAGE_PATH", path: `${path}.storagePath` });
-    } else {
-      storagePath = rawPath;
-    }
+    else hasPath = true;
   }
+  if (hasData && hasPath) tally.dual++;
+  else if (hasData) tally.dataUrl++;
+  else if (hasPath) tally.storagePath++;
 
-  if (dataUrl !== undefined && storagePath !== undefined) {
-    tally.dual++;
-    return { kind: "dual", dataUrl, storagePath };
+  for (const key of Object.keys(node)) {
+    collectImages(node[key], path ? `${path}.${key}` : key, tally, warnings, fatals);
   }
-  if (dataUrl !== undefined) {
-    tally.dataUrl++;
-    return { kind: "data-url", dataUrl };
-  }
-  if (storagePath !== undefined) {
-    tally.storagePath++;
-    return { kind: "storage-path", storagePath };
-  }
-  return { kind: "none" };
 }

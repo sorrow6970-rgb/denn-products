@@ -74,6 +74,25 @@ export const legacyUnknownTemplateType: unknown = {
   frameTemplates: [{ id: "t1", name: "weird", type: "hologram" }],
 };
 
+/** Nested unknown fields inside known objects/items (preserved + reported via extensions). */
+export const legacyNestedUnknown: unknown = {
+  brand: { name: "B", mystery: "keep" },
+  frameSizes: [{ id: "s", name: "S", aspect: 1.2, weird: { a: 1 } }],
+};
+
+/** dataUrl/storagePath spread across the whole catalog (top-level object + nested array). */
+export const legacyImagesEverywhere: unknown = {
+  watermark: { enabled: true, dataUrl: "data:image/png;base64,QQ", opacity: 30, position: "br" },
+  frameTemplates: [
+    {
+      id: "t",
+      name: "t",
+      type: "uploaded",
+      editorOverlayImages: [{ storagePath: "editor-overlays/t/1.png" }],
+    },
+  ],
+};
+
 // ---- error fixtures -------------------------------------------------------
 
 export const errUnsupportedVersion: unknown = { schemaVersion: 2, data: {} };
@@ -97,6 +116,16 @@ export const errBadAspect: unknown = { frameSizes: [{ id: "s", name: "s", aspect
 export const errUnsafeStoragePath: unknown = {
   frameTemplates: [{ id: "x", name: "x", type: "uploaded", storagePath: "javascript:alert(1)" }],
 };
+/** A storagePath that is a URL (any scheme) is rejected — not only dangerous schemes. */
+export const errHttpStoragePath: unknown = {
+  frameTemplates: [
+    { id: "x", name: "x", type: "uploaded", storagePath: "https://example.com/x.png" },
+  ],
+};
+/** Non-finite number nested inside an unknown/extensions subtree. */
+export const errNonFiniteUnknown: unknown = { labConfig: { bad: Number.NaN } };
+/** Non-finite number in a known field. */
+export const errInfinityField: unknown = { frameThickness: Number.POSITIVE_INFINITY };
 
 /** Non-JSON value (a function) nested in an otherwise valid catalog. */
 export function makeCatalogWithFunction(): unknown {

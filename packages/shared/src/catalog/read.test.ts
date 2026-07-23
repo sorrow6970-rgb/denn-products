@@ -2,6 +2,29 @@ import { describe, expect, it } from "vitest";
 import { type CatalogReadResult, isCatalogDocumentV1, readLegacyCatalog } from "../index";
 import * as fx from "./fixtures";
 
+describe("isCatalogDocumentV1 (strengthened shallow guard)", () => {
+  it("accepts exactly the three-key V1 wrapper", () => {
+    expect(isCatalogDocumentV1({ schemaVersion: 1, migratedFrom: "legacy-v0", data: {} })).toBe(
+      true,
+    );
+  });
+
+  it("rejects extra keys, wrong fields, non-object data, other versions, and non-objects", () => {
+    expect(
+      isCatalogDocumentV1({ schemaVersion: 1, migratedFrom: "legacy-v0", data: {}, extra: 1 }),
+    ).toBe(false);
+    expect(isCatalogDocumentV1({ schemaVersion: 1, migratedFrom: "other", data: {} })).toBe(false);
+    expect(isCatalogDocumentV1({ schemaVersion: 1, migratedFrom: "legacy-v0", data: 5 })).toBe(
+      false,
+    );
+    expect(isCatalogDocumentV1({ schemaVersion: 2, migratedFrom: "legacy-v0", data: {} })).toBe(
+      false,
+    );
+    expect(isCatalogDocumentV1(null)).toBe(false);
+    expect(isCatalogDocumentV1({ schemaVersion: 1, data: {} })).toBe(false);
+  });
+});
+
 function deepFreeze<T>(o: T): T {
   if (o && typeof o === "object") {
     Object.freeze(o);
@@ -114,6 +137,24 @@ describe("readLegacyCatalog — success", () => {
     // biome-ignore lint/suspicious/noExplicitAny: reading preserved value
     expect((res.document.data.frameTemplates as any)[0].type).toBe("hologram");
   });
+
+  it("reports and preserves NESTED unknown fields via the explicit extensions contract", () => {
+    const res = ok(readLegacyCatalog(fx.legacyNestedUnknown));
+    expect(res.report.unknownPaths).toContain("brand.mystery");
+    expect(res.report.unknownPaths).toContain("frameSizes[0].weird");
+    expect(res.report.extensions["brand.mystery"]).toBe("keep");
+    expect(res.report.extensions["frameSizes[0].weird"]).toEqual({ a: 1 });
+    expect(res.report.warnings.every((w) => w.code === "UNKNOWN_FIELD")).toBe(true);
+    // biome-ignore lint/suspicious/noExplicitAny: reading preserved nested data
+    const data = res.document.data as any;
+    expect(data.brand.mystery).toBe("keep");
+    expect(data.frameSizes[0].weird).toEqual({ a: 1 });
+  });
+
+  it("aggregates dataUrl/storagePath across the whole catalog (watermark + nested overlays)", () => {
+    const res = ok(readLegacyCatalog(fx.legacyImagesEverywhere));
+    expect(res.report.imageReferences).toEqual({ dataUrl: 1, storagePath: 1, dual: 0 });
+  });
 });
 
 describe("readLegacyCatalog — failures (no default-catalog success)", () => {
@@ -135,11 +176,24 @@ describe("readLegacyCatalog — failures (no default-catalog success)", () => {
     ["bad thickness", fx.errBadNumber, "INVALID_NUMBER", "frameThickness"],
     ["bad aspect", fx.errBadAspect, "INVALID_NUMBER", "frameSizes[0].aspect"],
     [
-      "unsafe storage path",
+      "unsafe storage path (javascript:)",
       fx.errUnsafeStoragePath,
       "UNSAFE_STORAGE_PATH",
       "frameTemplates[0].storagePath",
     ],
+    [
+      "storage path with any URL scheme (https:)",
+      fx.errHttpStoragePath,
+      "UNSAFE_STORAGE_PATH",
+      "frameTemplates[0].storagePath",
+    ],
+    [
+      "non-finite inside unknown/extensions",
+      fx.errNonFiniteUnknown,
+      "NON_FINITE_NUMBER",
+      "labConfig.bad",
+    ],
+    ["non-finite in a known field", fx.errInfinityField, "NON_FINITE_NUMBER", "frameThickness"],
   ];
 
   for (const [label, input, code, path] of cases) {

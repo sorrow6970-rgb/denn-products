@@ -4,6 +4,7 @@ export { isPlainObject } from "./json";
 export { isCatalogDocumentV1, readLegacyCatalog } from "./read";
 export type {
   CatalogDocumentV1,
+  CatalogExtensions,
   CatalogIssue,
   CatalogIssueCode,
   CatalogItemV1,

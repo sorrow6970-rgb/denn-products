@@ -12,6 +12,7 @@ export type CatalogIssueCode =
   | "UNSUPPORTED_SCHEMA_VERSION"
   | "MALFORMED_V1_DOCUMENT"
   | "NON_JSON_VALUE"
+  | "NON_FINITE_NUMBER"
   | "CIRCULAR_REFERENCE"
   | "COLLECTION_NOT_ARRAY"
   | "ITEM_NOT_OBJECT"
@@ -75,6 +76,14 @@ export interface CatalogDocumentV1 {
   data: CatalogV1;
 }
 
+/**
+ * Explicit contract for preserved-but-unknown values: a map from the JSON-ish path of
+ * each unknown field (top-level or nested inside a known object) to its preserved,
+ * JSON-safe value. Nothing is silently dropped; every entry is also listed in
+ * `report.unknownPaths` and flagged with an `UNKNOWN_FIELD` warning.
+ */
+export type CatalogExtensions = Record<string, JsonValue>;
+
 /** Image reference classification. Decoding / MIME / size / CORS are later specs. */
 export type LegacyImageReference =
   | { kind: "none" }
@@ -87,10 +96,13 @@ export interface CatalogReadReport {
   /** Top-level collections that were absent and filled with an explicit empty default. */
   defaultsApplied: string[];
   warnings: CatalogIssue[];
-  /** Unknown top-level keys, preserved in place. */
+  /** Unknown field paths (top-level and nested), preserved in place. */
   unknownPaths: string[];
+  /** Explicit typed container of preserved unknown values, keyed by the same paths. */
+  extensions: CatalogExtensions;
   /** Per-collection item counts. */
   counts: Record<string, number>;
+  /** Aggregated across the WHOLE catalog (every dataUrl/storagePath, at any depth). */
   imageReferences: { dataUrl: number; storagePath: number; dual: number };
 }
 
