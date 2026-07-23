@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 010 실제 리빌드 모노레포 스캐폴드 Codex 최종 승인(승인 가능, 기준 HEAD `1d30a2c`) — 오늘 작업 종료, 다음 = 기능 구현 스펙(대기)**
+상태: **▶ 스펙 011 Modern Studio 공유 UI 기반 프리미티브 — Codex 스펙 작성 완료, Claude Code 구현 대기**
+
+> 스펙 011(2026-07-23): `docs/rebuild/specs/011-ui-foundation-primitives.md`. `@denn/ui`의 웜 토프 토큰 계약과 Button/Card/Badge/Chip/TextField/VisuallyHidden 최소 프리미티브를 고정한다. 두 앱의 스캐폴드 셸에서 패키지 소비·모바일 44px 터치·focus-visible·ARIA·320px overflow·axe를 검증한다. 제품 기능·최종 레이아웃·Canvas·Firebase·Router/Zustand·Radix/shadcn·배포는 제외한다.
 
 > Codex 최종 승인(2026-07-22): 스펙 010 = **승인 가능**(기준 HEAD `1d30a2c`). 모노레포 구조·품질 게이트 타당, @denn/spaces v1-only 계약 정정 완료. frozen diff 0/format·lint·typecheck 0/unit 6/6/build 독립(gzip 60.16KB)/e2e 4/4/경계(상대 침투 0·순환 0)/release-age allowlist 불필요/운영 HTML·firebase.json·.firebaserc·Rules 6 hash UNCHANGED·POC 무변경·Router/Zustand/shadcn/Firebase SDK 미설치·deploy 미실행 확인. **다음 스펙·기능 구현은 미착수(대기).**
 
