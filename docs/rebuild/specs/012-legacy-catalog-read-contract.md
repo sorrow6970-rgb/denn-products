@@ -213,3 +213,41 @@
 
 - 없음. 실제 근거 없이 필드를 필수화하거나 여러 형태를 합쳐야 한다면 임의 결정하지 말고 해당 경로·관측 형태·선택지를 기록하고 대기한다.
 
+### DONE (Claude) — 2026-07-23
+
+**요약:** `@denn/shared`에 legacy-v0 `S`/`ADM` 카탈로그(또는 Catalog V1 wrapper)를 내부 읽기 모델 `CatalogDocumentV1`으로 검증·정규화하는 **단일 read boundary**를 구현. 순수·결정적·부작용 없음(원본 불변). 운영 데이터·Firebase·앱·Canvas·배포 무변경, 신규 의존성 0.
+
+**변경 파일 (코드/fixture/test):**
+- `packages/shared/src/catalog/json.ts` — `JsonValue`/`JsonObject`, `isPlainObject`, `cloneJsonSafe`(원본 비변형 JSON-safe 딥클론; 함수·심볼·bigint·비평범객체(Date/Map/Blob/DOM)·순환 거부).
+- `packages/shared/src/catalog/types.ts` — `CatalogV1`(known 필드 뷰), `CatalogItemV1`, `CatalogDocumentV1`, `LegacyImageReference`, `CatalogIssue`/`CatalogIssueCode`, `CatalogReadReport`, `CatalogReadResult`.
+- `packages/shared/src/catalog/read.ts` — `readLegacyCatalog(input): CatalogReadResult`, `isCatalogDocumentV1`.
+- `packages/shared/src/catalog/index.ts` — 카탈로그 public 배럴.
+- `packages/shared/src/index.ts` — `export * from "./catalog"`.
+- `packages/shared/src/catalog/fixtures/index.ts` — 합성 fixture(실제 데이터·PII·실제 base64 없음). 함수/순환은 팩토리.
+- `packages/shared/src/catalog/read.test.ts` — 계약 테스트.
+
+**모델링 근거(실제 확인 vs opaque):**
+- 실제 확인 필드(denn-admin.html `DEF` L846 + legacy-analysis §4): `brand`, `models{id,name,w,h,…}`, `caseCategories`, `caseTemplates`, `frameTemplates{id,name,type,dataUrl,storagePath,…}`, `frameCategories`, `frameSizes{id,name,aspect,…}`, `frameColors`, `frameThickness`, `clockSettings`, `customFonts`, `caseMockup`, `frameMockup`, `guideBackgrounds{id,dataUrl,storagePath,…}`, `watermark`, flat `roomBackgroundSettings`, `__opRev`/`__opRevAt`/`__cloudRev`/`__publishedAt`.
+- **의도적 opaque/보존(후속 렌더 스펙 소관):** zone/clock/mockup 등 아이템 내부 세부 객체와 known 컨테이너의 추가 필드는 검증하지 않고 그대로 보존한다.
+- **id/name:** 모든 아이템 `id`(비어있지 않은 string) 검증. `name`(string)은 DEF 인스턴스가 name을 가진 컬렉션에만 요구(`models`·`caseCategories`·`frameCategories`·`frameTemplates`·`frameSizes`·`frameColors`). `guideBackgrounds`·`caseTemplates`·`customFonts`는 name 근거 없어 **요구하지 않음**.
+- **frameTemplate.type known 값** = `{builtin, uploaded}`(레거시 `type:'…'`·`.type===` grep 근거). 그 외 문자열은 **거부하지 않고 경고+보존**(`UNKNOWN_FRAME_TEMPLATE_TYPE`).
+- **양수 숫자 검증**: `frameThickness`·`frameSizes[].aspect`·`models[].w`·`models[].h`(present일 때 finite>0, 아니면 `INVALID_NUMBER`).
+- 근거 없이 enum·필수값·기본값을 만들지 않았고, 여러 형태를 억지로 통합하지 않았다(QUESTIONS 불필요).
+
+**unknown/보고 설계:** unknown **top-level** 키는 제자리 보존 + `unknownPaths`·`UNKNOWN_FIELD` 경고. unknown 키의 nested 값(객체/배열)은 통째로 보존(라운드트립으로 검증). known 컨테이너 내부의 추가 필드는 §4 지시대로 opaque 보존(개별 열거 안 함). `defaultsApplied`는 누락된 최상위 collection을 빈 배열로 보강한 경로만 기록(내용 위조 없음).
+
+**오류 코드(fatal / warning):**
+- fatal: `ROOT_NOT_OBJECT`, `UNSUPPORTED_SCHEMA_VERSION`, `MALFORMED_V1_DOCUMENT`, `NON_JSON_VALUE`, `CIRCULAR_REFERENCE`, `COLLECTION_NOT_ARRAY`, `ITEM_NOT_OBJECT`, `MISSING_ID`, `INVALID_ID`, `MISSING_NAME`, `INVALID_NAME`, `DUPLICATE_ID`, `INVALID_NUMBER`, `UNSAFE_STORAGE_PATH`(`javascript:`/`vbscript:` 스킴 거부).
+- warning: `UNKNOWN_FIELD`, `UNKNOWN_FRAME_TEMPLATE_TYPE`, `INVALID_DATA_URL`(문자열이나 `data:` 스킴 아님), `INVALID_REVISION`.
+- issue는 `{code, path}`만 — 원문 고객 데이터·base64·토큰을 담지 않는다(테스트로 고정).
+
+**이미지 참조:** `frameTemplates`·`caseTemplates`·`guideBackgrounds` 아이템의 `dataUrl`/`storagePath`를 `none|data-url|storage-path|dual`로 분류. 둘 다 있으면 `dual`(하나 버리지 않음). `dataUrl`은 문자열+`data:` 스킴만 검사(디코딩·MIME·CORS는 후속). fetch/업로드 없음.
+
+**검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0**(shared package.json 무변경) · format/lint/typecheck PASS · **unit 50/50**(catalog 24 신규: 결정성·deep-freeze 불변성·legacy→V1 재입력 동등·unknown 보존·이미지 count·오류 code/path fixture) · build 독립(JS gzip ≈61.09KB) · **e2e 4/4**(앱 무변경) · check PASS. `@denn/shared`의 React/Firebase/다른 `@denn/*` 의존 **0**, IO(fetch/localStorage/IndexedDB) **0**, 앱 파서 사용 **0**. 운영 HTML·Firebase 설정/Rules·`poc/**`·디자인 PNG **UNCHANGED**, deploy 0.
+
+**미검증/위험:**
+- 합성 fixture는 실제 ~35MB 백업의 모든 변형을 대표하지 못한다. 실제 샘플 검증은 개인정보 제거·사용자 승인·읽기 전용 절차를 갖춘 별도 스펙.
+- V1은 **내부 읽기 모델**이며 Firebase 저장/운영 write/cutover 계약이 아니다.
+- flat `roomBackgroundSettings`는 목표 `roomSettings.operator/user`로 **변환하지 않고** 보존만 한다(후속 스펙).
+- unknown 보존은 메모리를 늘릴 수 있음(정확성 우선, 대용량 성능은 익명화 fixture 후 측정).
+

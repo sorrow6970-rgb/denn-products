@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **▶ 스펙 012 레거시 카탈로그 읽기 계약·정규화·fixture — Codex 스펙 작성 완료, Claude Code 구현 대기**
+상태: **✅ 스펙 012 레거시 카탈로그 읽기 계약 구현 완료(로컬, 자동검증 전부 통과) — Codex 재검증 대기**
+
+> 스펙 012 구현 완료(로컬, 2026-07-23): `@denn/shared`에 `readLegacyCatalog`/`isCatalogDocumentV1` 단일 read boundary. legacy-v0 `S`/`ADM`(또는 V1 wrapper)를 `CatalogDocumentV1` 내부 읽기 모델로 검증·정규화. JSON-safe 딥클론(함수·비평범객체·순환 거부, **원본 비변형**), unknown top-level 제자리 보존+`unknownPaths`, flat `roomBackgroundSettings`·`__opRev/__cloudRev/__publishedAt`·`dataUrl/storagePath/dual` 보존. 근거 있는 필드만 모델링(DEF L846 + legacy-analysis §4), zone/clock/mockup 내부는 opaque, unknown `frameTemplate.type`은 경고+보존. 오류 `{code,path}`만(원문·base64·토큰 없음), warning/fatal 구분, `UNSUPPORTED_SCHEMA_VERSION`·`MALFORMED_V1` 거부. 게이트 전부 통과: frozen diff 0(shared package.json 무변경) / format·lint·typecheck / **unit 50**(catalog 24 신규: 결정성·deep-freeze 불변성·legacy→V1 재입력 동등·unknown 보존·이미지 count·오류 code/path) / build 독립(JS gzip ≈61.09KB) / e2e 4(앱 무변경). **신규 스키마 라이브러리(Zod) 미설치**, React/Firebase/다른 `@denn/*` 의존 0, IO 0, 앱 파서 사용 0, 합성 fixture만(PII·실제 base64 없음). 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG **UNCHANGED**, deploy 0. 코드/fixture/test 커밋과 문서/핸드오프 커밋 분리. 핸드오프 `docs/2026-07-23-spec-012-legacy-catalog-read-handoff.md`, DONE는 스펙 하단.
 
 > 스펙 012(2026-07-23): `docs/rebuild/specs/012-legacy-catalog-read-contract.md`. 운영 데이터·Firebase·앱에 연결하지 않고 `@denn/shared`에서 legacy-v0 `S`/`ADM`을 `CatalogDocumentV1` 내부 읽기 모델로 검증·정규화한다. unknown/extensions·flat room 설정·리비전·dataUrl/storagePath를 보존하고 오류 code/path·통계·원본 불변·결정성·V1 재입력을 합성 fixture로 검증한다. 실제 백업·개인정보·운영 write·자동 마이그레이션·Canvas·배포는 제외한다.
 
