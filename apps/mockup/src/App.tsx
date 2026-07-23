@@ -1,59 +1,61 @@
-import { useState } from "react";
 import { APP_IDS, BRAND } from "@denn/shared";
-import { Badge, Button, Card, Chip, TextField, VisuallyHidden } from "@denn/ui";
+import { Badge, Button, Card } from "@denn/ui";
+import { safeCatalogMessage } from "./catalog/messages";
+import { publicCatalogReader } from "./catalog/reader";
+import type { PublicCatalogUiState } from "./catalog/types";
+import { usePublicCatalog } from "./catalog/usePublicCatalog";
 
-// Primitive showcase shell only (spec 011): renders @denn/ui primitives to verify the
-// package boundary and real render. No product features, no click side effects
-// (the size chips toggle local UI state only — no save / network / navigation).
-const SIZES = ["A4", "A3", "50×70"] as const;
-
+// Minimal public-catalog connection shell (spec 015): reads the fixed public catalog once on
+// mount and shows loading / ready / error / manual-retry only. No product list, Canvas, image,
+// selection, save, or order — the success document is held in memory for later specs.
 export function App(): React.JSX.Element {
-  const [size, setSize] = useState<string>("A4");
+  const { state, retry } = usePublicCatalog(publicCatalogReader);
   return (
     <main className="denn-shell">
       <div className="denn-shell__inner">
         <Card>
-          <Badge>고객 셸 · UI 프리미티브 데모</Badge>
+          <Badge>고객 셸 · 공개 카탈로그 연결</Badge>
           <h1>{BRAND} Mockup Rebuild</h1>
           <p data-testid="app-id">{APP_IDS.mockup}</p>
         </Card>
-
         <Card>
-          <div className="denn-stack">
-            <p>버튼 (데모 — 동작 없음)</p>
-            <div className="denn-row">
-              <Button variant="primary">기본</Button>
-              <Button variant="ghost">보조</Button>
-              <Button variant="kakao">카카오로 주문</Button>
-              <Button variant="ghost" disabled>
-                비활성
-              </Button>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <fieldset className="denn-fieldset">
-            <legend className="denn-fieldset__legend">사이즈 선택 (데모 — 저장 없음)</legend>
-            <div className="denn-row">
-              {SIZES.map((s) => (
-                <Chip key={s} selected={size === s} onClick={() => setSize(s)}>
-                  {s}
-                  {size === s ? <VisuallyHidden> 선택됨</VisuallyHidden> : null}
-                </Chip>
-              ))}
-              <Chip disabled>비활성</Chip>
-            </div>
-          </fieldset>
-        </Card>
-
-        <Card>
-          <div className="denn-stack">
-            <TextField label="시안 이름" description="예: 거실 A4 액자" placeholder="시안 이름" />
-            <TextField label="연락처" error="필수 항목입니다" />
-          </div>
+          <CatalogStatus state={state} onRetry={retry} />
         </Card>
       </div>
     </main>
+  );
+}
+
+function CatalogStatus({
+  state,
+  onRetry,
+}: {
+  state: PublicCatalogUiState;
+  onRetry: () => void;
+}): React.JSX.Element {
+  if (state.status === "idle" || state.status === "loading") {
+    return (
+      <div className="denn-stack" role="status" aria-live="polite">
+        <p data-testid="catalog-status">카탈로그를 불러오는 중…</p>
+      </div>
+    );
+  }
+  if (state.status === "ready") {
+    return (
+      <div className="denn-stack">
+        <p data-testid="catalog-status">카탈로그 준비 완료</p>
+        {state.warningCount > 0 ? <Badge>일부 이전 데이터가 호환 처리되었습니다</Badge> : null}
+      </div>
+    );
+  }
+  return (
+    <div className="denn-stack" role="alert">
+      <p data-testid="catalog-status">{safeCatalogMessage(state.code)}</p>
+      {state.retryable ? (
+        <Button variant="primary" onClick={onRetry} data-testid="catalog-retry">
+          다시 시도
+        </Button>
+      ) : null}
+    </div>
   );
 }

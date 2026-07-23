@@ -62,6 +62,9 @@ importers:
 
   apps/mockup:
     dependencies:
+      '@denn/firebase':
+        specifier: workspace:*
+        version: link:../../packages/firebase
       '@denn/shared':
         specifier: workspace:*
         version: link:../../packages/shared
