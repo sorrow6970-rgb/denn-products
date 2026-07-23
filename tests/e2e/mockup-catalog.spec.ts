@@ -52,28 +52,28 @@ function collectConsoleErrors(page: Page): string[] {
 
 const status = (page: Page) => page.getByTestId("catalog-status");
 
-test("delayed response shows loading then ready", async ({ page }) => {
+test("gated response shows loading then ready (production initial mount request is exactly once)", async ({
+  page,
+}) => {
   const errors = collectConsoleErrors(page);
+  // Hold the response open with a test-controlled gate instead of a fixed sleep.
+  let releaseGate!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    releaseGate = resolve;
+  });
   const route = await routeCatalog(page, async (r) => {
-    await new Promise((res) => setTimeout(res, 200));
+    await gate;
     await fulfillJson(r, LEGACY);
   });
+
   await page.goto(MOCKUP_URL);
-  await expect(status(page)).toHaveText("카탈로그를 불러오는 중…");
-  await expect(status(page)).toHaveText("카탈로그 준비 완료");
-  expect(route.hits()).toBe(1);
+  await expect(status(page)).toHaveText("카탈로그를 불러오는 중…"); // loading while gated
+  releaseGate(); // release the response
+  await expect(status(page)).toHaveText("카탈로그 준비 완료"); // then ready
+
+  expect(route.hits()).toBe(1); // production build: one mount → one underlying request
   expect(route.unexpected()).toBe(0);
   expect(errors).toEqual([]);
-});
-
-test("StrictMode initial underlying request is exactly once", async ({ page }) => {
-  const route = await routeCatalog(page, async (r) => {
-    await new Promise((res) => setTimeout(res, 150));
-    await fulfillJson(r, LEGACY);
-  });
-  await page.goto(MOCKUP_URL);
-  await expect(status(page)).toHaveText("카탈로그 준비 완료");
-  expect(route.hits()).toBe(1);
 });
 
 test("warning fixture surfaces the safe compatibility notice", async ({ page }) => {
