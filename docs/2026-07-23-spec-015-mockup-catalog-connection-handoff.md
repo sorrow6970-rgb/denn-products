@@ -46,6 +46,13 @@
 - 실제 endpoint 재요청 없음(스펙 014 결과 유지). offline은 실패 UI가 정상(기본 카탈로그로 숨기지 않음).
 - 데이터 연결 확인 단계이며 상품 탐색 화면이 아님(후속 스펙). document 전체 메모리 보유 → 후속 selector 대형 복제 주의.
 
+## 재검증 보완 (2026-07-23, 검증 2건 · production 코드 무변경)
+
+1. StrictMode 생명주기 + **실제 reader** 병합 통합 테스트 추가(framework-free): `createPublicCatalogReader({fetch:controlledFakeFetch})`를 controller에 주입, `start()→detach()→start()`(첫 shared fetch pending 중) → gate resolve → **underlying fetch 1회**·최종 ready·첫 caller `REQUEST_ABORTED`(signal aborted)·두 번째 caller `OK`·stale 미덮음. timer-free.
+2. `mockup-catalog.spec.ts` 고정 sleep 제거(setTimeout 200/150 → 테스트 제어 gate: 진입→loading→gate resolve→ready). Playwright 초기 요청 테스트명 `production initial mount request is exactly once`로 정정.
+
+재검증: frozen diff 0 · format/lint/typecheck · **unit 117**(통합 1 신규, 3회 안정) · build 독립 · **e2e 11**(admin 2 + mockup 9) · check PASS. production 코드/API/UI 무변경, 신규 의존성 0.
+
 ## 다음
 
 - Codex 스펙 015 재검증 대기. 이후 후보: 검증된 read model 기반 상품/사이즈/색상 화면 단계적 구축 · `@denn/render` Canvas · flat room 변환 · `?space=` 복호화. **새 스펙 없이 임의 착수 금지.**

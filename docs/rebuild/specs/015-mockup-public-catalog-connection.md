@@ -246,6 +246,27 @@
 
 **미검증/위험:** 실제 endpoint는 이번에 재요청하지 않음(스펙 014 결과 유지). persistent cache 없어 offline은 실패 UI가 정상 동작(기본 카탈로그로 숨기지 않음). 이번 셸은 데이터 연결 확인 단계이며 상품 탐색 화면이 아님(후속 스펙). document 전체 메모리 보유 — 후속 selector에서 대형 복제 주의.
 
+### DONE (Claude) — 2026-07-23 재검증 보완 (검증 2건, production 코드 무변경)
+
+Codex "수정 후 재검증" 2건. **production 코드/API/UI/오류매핑/reader 계약 무변경** — 테스트만 보완.
+
+1. **StrictMode 생명주기 + 실제 reader 병합 통합 테스트 추가** — `apps/mockup/src/catalog/strictmode-reader-integration.test.ts`(framework-free, 기본 unit 포함).
+   - **실제 `createPublicCatalogReader({ fetch: controlledFakeFetch })` 사용**(dedup은 실제 reader 소유), 그 reader를 `PublicCatalogController`에 주입(얇은 관찰 래퍼로 caller signal/result만 기록).
+   - **정확한 호출 순서**: `controller.start()`(mount1) → `controller.detach()`(cleanup) → `controller.start()`(mount2) — 모두 **첫 shared fetch가 pending인 동안** 실행.
+   - controlled body gate resolve 후 검증: **underlying fetch 호출 수 = 1**, 최종 상태 **ready**, **첫 caller signal aborted=true**·두 번째 caller signal aborted=false, **첫 caller 결과 `REQUEST_ABORTED`**·두 번째 caller 결과 `OK`, stale/REQUEST_ABORTED가 ready를 덮지 않음.
+   - 고정 sleep 0(timer-free microtask flush). Playwright는 production build라 StrictMode effect 재실행을 하지 못하므로 이 통합 테스트가 실제 생명주기를 검증한다.
+2. **고정 sleep 제거** — `mockup-catalog.spec.ts`의 `setTimeout(200/150)` 제거. route responder를 **테스트 제어 gate**로 대기시키고 `page 진입 → loading 확인 → gate resolve → ready 확인` 순서로 변경. 남은 고정 sleep **0**. Playwright 초기 요청 테스트 이름을 `production initial mount request is exactly once`로 정정.
+
+**재검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0**(의존성 무변경) · format/lint/typecheck PASS · **unit 117**(StrictMode 통합 1 신규, 3회 반복 안정) · build 독립 · **e2e 11**(admin 2 + mockup 9, gated 병합) PASS · check PASS. 실제 Firebase GET·`test:live:*` 미실행, production 코드/UI 무변경.
+
+**재보고 요약:**
+- StrictMode 시뮬레이션 호출 순서: `start()` → `detach()` → `start()` (첫 shared fetch pending 중).
+- 실제 `createPublicCatalogReader` 사용: **예**(dedup 소유), 얇은 래퍼는 관찰만.
+- underlying fetch 최종 호출 수: **1**.
+- 첫 caller abort / 두 번째 caller 완료: 첫 caller signal aborted + 결과 `REQUEST_ABORTED`, 두 번째 caller 결과 `OK` → 최종 ready.
+- 고정 sleep: **0**.
+- 최종 게이트: unit **117** / e2e **11** / check PASS.
+
 ### 종료 대기 — Codex 재검증
 
 - 다음: Codex 스펙 015 재검증 대기. 다음 기능 미착수.
