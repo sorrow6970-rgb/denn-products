@@ -217,3 +217,35 @@
 ### QUESTIONS
 
 - 없음. 기존 `@denn/ui`만으로 접근 가능한 상태 UI를 만들 수 없거나 StrictMode 1-fetch를 API 변경 없이 보장할 수 없으면 임의 확장하지 말고 근거와 선택지를 보고한다.
+- (해소) `@denn/ui`의 Card/Button/Badge만으로 loading/ready/error/retry UI를 구성했고 새 primitive 불필요. StrictMode 1-fetch는 스펙 013 reader의 in-flight 병합(옵션 A)+generation guard로 **API 변경 없이** 보장(E2E hit count로 고정).
+
+### DONE (Claude) — 2026-07-23
+
+**요약:** `apps/mockup`을 mount 시 스펙 013 공개 reader로 카탈로그를 **1회** 읽는 최소 연결 셸로 전환. loading/ready/error/수동 retry만 구현하고 성공 document는 메모리에만 유지. StrictMode에서도 underlying fetch 정확히 1회. admin·운영본·Firebase·배포 무변경.
+
+**변경 파일 (코드/test):**
+- `apps/mockup/package.json` — `@denn/firebase: workspace:*` 추가(importer link만, 신규 다운로드 0).
+- `apps/mockup/src/catalog/reader.ts` — 모듈 단위 **singleton** `createPublicCatalogReader()`(import 시 네트워크 없음).
+- `.../catalog/types.ts` — `PublicCatalogUiState`(idle/loading/ready/error; document는 ready에만, issue path/URL/correlationId 미저장).
+- `.../catalog/controller.ts` — framework-free 상태머신: generation 증가·per-load AbortController·stale/detach guard·자체 REQUEST_ABORTED 비치명 처리.
+- `.../catalog/usePublicCatalog.ts` — `useSyncExternalStore`+`useRef` hook(mount→start, unmount→detach).
+- `.../catalog/messages.ts` — code→안전 한국어 메시지(코드/status/URL/path 미노출).
+- `apps/mockup/src/App.tsx` — 프리미티브 데모 제거, 접근 가능한 연결 상태 셸(loading `role=status`, ready + warning Badge, error `role=alert`+retryable 시 Button).
+- `.../catalog/controller.test.ts` — 순수 컨트롤러 테스트(fake reader+제어 Promise).
+- `tests/e2e/mockup-catalog.spec.ts` — route interception 시나리오. `tests/e2e/scaffold.spec.ts` — **admin 전용**+admin endpoint 0 가드. `vitest.config.ts` — apps 테스트 include(live 제외 유지).
+
+**상태 전이·경합:** idle→loading→ready/error. 각 load에 generation 부여, 완료 시 generation 일치+active(마운트)일 때만 반영 → **stale·unmount 갱신 0**. detach는 현재 caller signal만 abort(공유 fetch 유지). 자체 REQUEST_ABORTED는 error로 깜박이지 않음. `setTimeout`/고정 sleep 없음.
+
+**StrictMode 1-fetch 근거:** reader **singleton**의 in-flight 병합(스펙 013 옵션 A)으로 mount1·mount2 두 caller가 **하나의 underlying fetch**를 공유 → route hit 1회(E2E `StrictMode initial underlying request is exactly once`로 고정). retry는 이전 load settle 후 **새 fetch 1회**(500→retry→200 시 총 2회 고정).
+
+**오류 메시지 매핑(§8):** timeout/offline/server/rate-limit→"…잠시 후 다시 시도해 주세요."(retryable→재시도 버튼), forbidden/not-found→"…관리자에게 문의…"(버튼 없음), invalid json/catalog/size→"카탈로그 데이터에 문제가 있습니다…"(버튼 없음), 그 외→일반 안전 메시지. code/status/URL/path 미노출, console 출력 0.
+
+**검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0**(mockup importer에 `@denn/firebase` link만, 신규 패키지 0) · format/lint/typecheck PASS · **unit 116**(controller 9 신규) · build 독립(mockup JS gzip **64.40 KB**, 250KB 예산 내) · **e2e 12**(admin 2 + mockup 10) PASS · check PASS. E2E는 **route interception+합성 fixture만**, 실제 Firebase network **0**, `*.live.test.ts`·`test:live:*` 미실행. admin endpoint 요청 0·셸 무변경 확인. mockup src에 console 0, 성공 document는 DOM/console/storage 직렬화 0.
+
+**무변경 가드:** 운영 HTML·`firebase.json`·`.firebaserc`·`firestore.rules`·`storage.rules`·`poc/**`·PNG·**admin 앱 소스 hash UNCHANGED**. Firebase SDK/Auth/write/Rules/CORS·Hosting·deploy 0, Router/Zustand/data-fetching lib 0, 신규 의존성 0. `test-results/.last-run.json`(status만·gitignored) 외 산출물 0.
+
+**미검증/위험:** 실제 endpoint는 이번에 재요청하지 않음(스펙 014 결과 유지). persistent cache 없어 offline은 실패 UI가 정상 동작(기본 카탈로그로 숨기지 않음). 이번 셸은 데이터 연결 확인 단계이며 상품 탐색 화면이 아님(후속 스펙). document 전체 메모리 보유 — 후속 selector에서 대형 복제 주의.
+
+### 종료 대기 — Codex 재검증
+
+- 다음: Codex 스펙 015 재검증 대기. 다음 기능 미착수.
