@@ -231,3 +231,12 @@
 - 폰트는 시스템 fallback(외부 폰트 요청 없음) — OS별 자간 차이 가능성은 후속 폰트 자산 정책으로 남김.
 - 데모 셸의 시각 변경은 제품 기능 완성이 아님(데모 컨트롤에 실제 부작용 없음).
 
+### DONE (Claude) — 2026-07-23 재검증 보완 (기준 HEAD 9baec46 → 611707d)
+
+Codex "수정 후 재검증" 2건만 최소 보완. 컴포넌트 API·토큰·앱 구조 리팩터링 없음, 신규 의존성 없음.
+
+1. **Vitest 무효 설정 경고 제거** — `vitest.config.ts`의 `esbuild:{ jsx:"automatic" }` 제거. Vite 8은 oxc 변환기를 쓰므로 이 esbuild 옵션은 무시되며 `"Both esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored."` 경고를 냈다. **oxc가 `.tsx` 테스트를 automatic JSX 런타임으로 기본 처리**하므로 옵션·잘못된 주석 제거만으로 충분(새 변환기/테스트 의존성 없음). 재실행 결과: unit 여전히 **25→26 PASS**, 해당 경고 **0**.
+2. **Chip disabled 계약 완성** — Chip은 이미 native `disabled`를 `...rest`로 전달하므로 컴포넌트 변경 없음. `theme.css`에 `.denn-chip:disabled{cursor:not-allowed;opacity:.55}` 추가(Button과 동일 원칙), hover 규칙에 `:not(:disabled)` 추가로 비활성 Chip hover 표현 제외. 정적 테스트에 **Chip이 native disabled를 전달(+ disabled여도 aria-pressed 유지)** 검증 추가(unit 26). 두 앱 데모에 disabled Chip 1개씩 배치, e2e에서 **disabled Chip 존재·native disabled·44px 유지**(터치 타깃 루프 포함)를 검증. 제품 기능 추가 없음.
+
+**재검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0** · format/lint/typecheck PASS · unit **26/26**(esbuild/oxc 경고 0) · build 독립(JS gzip ≈61.09KB) · e2e **4/4**(disabled Chip 검증 포함). 운영 HTML·Firebase 설정/Rules·`poc/**`·디자인 PNG **UNCHANGED**, 신규 설치·배포 0. 코드 커밋 `611707d` / 문서 커밋 분리.
+

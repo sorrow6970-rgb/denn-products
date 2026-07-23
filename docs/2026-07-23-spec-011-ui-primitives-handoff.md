@@ -38,6 +38,14 @@
 - primary/ghost/kakao/disabled 시각 구분 ✅, 키보드 focus-visible 링 ✅, 선택 칩 채움 마크+볼드(색 외 신호) ✅, 오류 필드 보더+텍스트+aria-invalid ✅.
 - 320px overflow 0·44px는 e2e 프로그램 검증 정본. **브라우저 200% 육안 재확인은 이번 세션 미수행**(스펙상 실기기 4환경은 이번 자동 완료 조건 아님).
 
+## 재검증 보완 (2026-07-23, HEAD 9baec46 → 611707d)
+
+Codex "수정 후 재검증" 2건만 최소 보완:
+1. `vitest.config.ts`의 ignored `esbuild.jsx` 제거 → Vite 8 oxc/esbuild 충돌 경고 **0**(oxc가 .tsx를 automatic JSX로 기본 처리, 새 변환기/의존성 없음).
+2. Chip disabled 계약 완성 → `.denn-chip:disabled`(cursor+dim) + hover에 `:not(:disabled)`. 정적 테스트에 native disabled 전달 검증 추가. 두 앱 데모에 disabled Chip 1개씩, e2e에서 존재·disabled·44px 검증.
+
+재검증: frozen diff 0 · format/lint/typecheck · unit **26/26**(경고 0) · build 독립 · e2e **4/4**. 운영본·POC·PNG·Firebase 무변경, 배포 0.
+
 ## 다음
 
 - Codex 스펙 011 재검증 대기. 이후 후보: `@denn/render` Canvas · `@denn/firebase` SDK 연결 · `@denn/spaces` 암호화 · 카탈로그/주문/시안 기능 · Hosting 격리·cutover. **새 스펙 없이 임의 착수 금지.**

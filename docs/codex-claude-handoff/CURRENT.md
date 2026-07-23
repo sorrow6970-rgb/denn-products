@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 011 공유 UI 기반 프리미티브 구현 완료(로컬, 자동검증 전부 통과) — Codex 재검증 대기**
+상태: **✅ 스펙 011 공유 UI 기반 프리미티브 구현 완료 + Codex 1차 재검증 보완(2건) 반영 — 재검증 대기**
+
+> 스펙 011 재검증 보완(2026-07-23, HEAD `9baec46`→`611707d`): Codex "수정 후 재검증" 2건 최소 보완. (1) `vitest.config.ts`의 ignored `esbuild.jsx` 제거 → Vite 8 **oxc/esbuild 충돌 경고 0**(oxc가 .tsx를 automatic JSX로 기본 처리, 새 변환기/의존성 없음). (2) Chip disabled 계약 완성 → `.denn-chip:disabled`(cursor:not-allowed+dim) + hover에 `:not(:disabled)`, 정적 테스트에 native disabled 전달 검증, 두 앱 데모에 disabled Chip 1개씩 + e2e에서 존재·disabled·44px 검증. 재검증: frozen diff 0 / format·lint·typecheck / unit **26/26**(경고 0) / build 독립(JS gzip ≈61.09KB) / e2e **4/4**. 운영본·POC·PNG·Firebase 무변경, 배포 0. 코드 커밋 `611707d` / 문서 커밋 분리.
 
 > 스펙 011 구현 완료(로컬, 2026-07-23): `@denn/ui`에 Button/Card/Badge/Chip/TextField/VisuallyHidden 6종 + 웜 토프 토큰 계약 완성. 게이트 전부 통과: frozen install diff 0 / format·lint·typecheck 0 / unit **25/25**(토큰↔CSS 드리프트 가드 + 컴포넌트 ARIA 계약) / build 독립(mockup·admin JS gzip ≈61.07/61.08KB, CSS 2.62KB) / e2e **4/4**(키보드 focus-visible·44px 터치·320/1280 overflow 0·axe serious/critical 0·console 0). React 의미 계약은 저장소 기존 `react-dom/server` renderToStaticMarkup으로 검증(**jsdom/happy-dom/RTL 미도입**), @denn/ui react/react-dom peer+dev는 기존 lockfile 버전이라 **신규 다운로드 0**. 토큰 드리프트는 이름·값 명시 검증(전체 스냅샷 아님). axe: muted가 페이지 bg(#F4F4F5) 위 4.39 미달 → 식별 문단을 흰 Card로 이동해 해소(토큰 무변경). 운영 HTML·`firebase.json`·`.firebaserc`·Rules 2종·`poc/**`·디자인 PNG **hash UNCHANGED**, Firebase SDK/Router/Zustand/Radix/shadcn 신규 설치 0, **deploy 미실행**. 코드/설정 커밋과 문서/핸드오프 커밋 분리. 핸드오프 `docs/2026-07-23-spec-011-ui-primitives-handoff.md`, DONE는 스펙 하단.
 
