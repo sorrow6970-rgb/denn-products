@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 015 고객 앱 공개 카탈로그 연결 + Codex 재검증 보완(검증 2건) 반영 — 재검증 대기. mount 시 1회 read·StrictMode 1-fetch·수동 retry, 상품 UI·Canvas·배포 미착수.**
+상태: **✅ 스펙 015 고객 앱 공개 카탈로그 연결 = Codex 최종 승인(승인 가능, 기준 HEAD `6951685`) — 종료. 다음 = Codex 다음 스펙 대기(상품 UI·Canvas·배포 미착수)**
+
+> Codex 최종 승인(2026-07-23): 스펙 015 = **승인 가능**(기준 HEAD `6951685`). `apps/mockup` mount 시 스펙 013 공개 reader로 카탈로그 1회 read하는 최소 연결 셸(loading/ready/error/수동 retry). 재검증 보완(검증 2건: StrictMode+실제 reader 병합 통합 테스트·고정 sleep 제거) 반영. 게이트 최종: frozen diff 0 / format·lint·typecheck / **unit 117** / build 독립(mockup JS gzip 64.40KB) / **e2e 11**(admin 2+mockup 9) / check PASS. **유지: loading/ready/error/수동 retry 흐름 완료, StrictMode `start()→detach()→start()`에서 underlying fetch 1회(첫 caller REQUEST_ABORTED·두 번째 caller OK·최종 ready), 자동 retry/polling/persistent cache 없음, 성공 document는 메모리에만, 상품 탐색·Canvas·이미지·선택·저장·주문 미착수, 실제 endpoint 재요청 없음, Firebase SDK/Auth/write·Rules/CORS·Hosting·배포 무변경.** **다음 스펙·기능 미착수(대기).**
 
 > 스펙 015 재검증 보완(2026-07-23, 검증 2건·**production 코드 무변경**): (1) StrictMode 생명주기 + **실제 reader** 병합 통합 테스트 추가(`strictmode-reader-integration.test.ts`, framework-free): `createPublicCatalogReader({fetch:controlledFakeFetch})`를 `PublicCatalogController`에 주입, `start()→detach()→start()`를 첫 shared fetch pending 중 실행 → gate resolve → **underlying fetch 1회**·최종 ready·첫 caller signal aborted+결과 `REQUEST_ABORTED`·두 번째 caller `OK`·stale 미덮음(timer-free microtask flush). (2) `mockup-catalog.spec.ts` 고정 sleep 제거(setTimeout 200/150 → 테스트 제어 gate: 진입→loading→gate resolve→ready), Playwright 초기 요청 테스트명 `production initial mount request is exactly once`로 정정. 재검증: frozen diff 0(의존성 무변경)/format·lint·typecheck/**unit 117**(통합 1 신규, 3회 안정)/build 독립/**e2e 11**(admin 2+mockup 9)/check PASS. production 코드/API/UI/오류매핑/reader 계약 무변경, 실제 Firebase GET·`test:live:*` 미실행, 신규 의존성 0. 코드/test 커밋과 문서 커밋 분리.
 

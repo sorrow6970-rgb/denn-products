@@ -267,6 +267,17 @@ Codex "수정 후 재검증" 2건. **production 코드/API/UI/오류매핑/reade
 - 고정 sleep: **0**.
 - 최종 게이트: unit **117** / e2e **11** / check PASS.
 
-### 종료 대기 — Codex 재검증
+### 종료 — Codex 최종 승인 (2026-07-23)
 
-- 다음: Codex 스펙 015 재검증 대기. 다음 기능 미착수.
+- **판정: 승인 가능. 승인 기준 HEAD `6951685`.** 스펙 015 종료.
+- 게이트 최종: frozen diff 0 / format·lint·typecheck / unit 117(StrictMode 통합 1 포함) / build 독립 / e2e 11(admin 2 + mockup 9) / check PASS.
+- 유지(종료 시점 사실):
+  - 고객 앱의 **loading/ready/error/수동 retry** 데이터 흐름 완료.
+  - **StrictMode `start()→detach()→start()`에서 underlying fetch 1회** 검증(실제 reader 통합 테스트).
+  - **첫 caller `REQUEST_ABORTED`, 두 번째 caller `OK`, 최종 ready.**
+  - **자동 retry/polling/persistent cache 없음.**
+  - **성공 document는 메모리에만 유지**(DOM/console/storage 직렬화 0).
+  - **상품 탐색·Canvas·이미지·선택·저장·주문은 미착수.**
+  - **실제 endpoint 재요청 없음**(스펙 014 결과 유지).
+  - **Firebase SDK/Auth/write·Rules/CORS·Hosting·배포 무변경.**
+- 다음: Codex 다음 스펙 대기. 다음 기능 미착수.
