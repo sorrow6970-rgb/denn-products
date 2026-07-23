@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 013 Firebase 공개 카탈로그 읽기 어댑터 + Codex 재검증 보완(2건+공백) 반영 — 재검증 대기**
+상태: **✅ 스펙 013 Firebase 공개 카탈로그 읽기 어댑터 = Codex 최종 승인(승인 가능, 기준 HEAD `ed553b2`) — 종료. 다음 = Codex 다음 스펙 대기(앱 연결 미착수)**
+
+> Codex 최종 승인(2026-07-23): 스펙 013 = **승인 가능**(기준 HEAD `ed553b2`). `@denn/firebase` `createPublicCatalogReader` read-only 공개 카탈로그 REST adapter 확립. 재검증 보완 2라운드 반영(1라운드: 구현; 2라운드: transport-독립 timeout 상태머신·endpoint 고정·correlationId 공백 거부). 게이트 최종: frozen diff 0 / format·lint·typecheck / **unit 96**(firebase 35) / build 독립 / e2e 4 / check PASS. Firebase SDK·신규 의존성 0, `@denn/firebase`→`@denn/shared` 방향 유지, 앱 import/call 0, 실제 network/브라우저 저장소 0, 운영본·Firebase·Rules·`poc/**`·PNG 무변경, deploy 0. **유지: fake fetch만 검증(실제 CORS·캐시 header·지연 미검증, 실제 published/state.json 미요청), 5 MiB 초기 안전 상한, persistent cache·retry·offline fallback 없음, Firebase SDK·Auth·write·Rules·앱 연결·배포 무변경.** **다음 스펙·앱 연결 미착수(대기).**
 
 > 스펙 013 재검증 보완(2026-07-23, HEAD `03f5eeb`→`d99c046`): Codex "수정 후 재검증" 2건+소형 1건. (1) **timeout을 transport 협조와 무관하게 강제** — `runFetch`를 단일 상태머신(`settle` 1회)으로 재작성, timeout timer vs work 파이프라인 경쟁. transport나 `response.text()`가 signal 무시·pending이어도 `timeoutMs`에 반드시 `NETWORK_TIMEOUT` settle, `controller.abort()`는 정리 힌트. 늦은 resolve/reject no-op(덮어쓰지 않음)+`doWork` 내부 catch로 unhandled rejection 없음, in-flight 정리→다음 load 새 fetch. (2) **endpoint 고정** — `PublicCatalogReaderOptions.location` 제거, 항상 `PUBLIC_CATALOG_LOCATION`, `buildPublicCatalogUrl()` 인자 없는 고정 builder, 호출자 URL 주입 불가. (3) **correlationId 공백 거부** — `""`+공백만(`"   "`)도 `trim`으로 요청 전 `INVALID_REQUEST`(원본 echo, 정상값 무변경). 재검증: frozen diff 0 / format·lint·typecheck / **unit 96**(firebase 35) / build 독립 / e2e 4. firebase tsconfig `types:["node"]` 추가(unhandledRejection 관측). Firebase SDK·신규 의존성 0, 앱 0 usage, 운영본·Rules·POC·PNG **UNCHANGED**, deploy 0. 코드 `d99c046`/문서 커밋 분리.
 

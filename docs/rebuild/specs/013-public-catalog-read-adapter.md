@@ -267,3 +267,16 @@ Codex "수정 후 재검증" 2건 + 소형 확인 1건.
 
 **재검증 결과(Node 24.18.0 / pnpm 11.15.1):** frozen install lock diff **0**(firebase package.json 무변경) · format/lint/typecheck PASS · **unit 96/96**(firebase 35) · build 독립(JS gzip ≈61.09KB) · **e2e 4/4**(앱 무변경) · check PASS. **Firebase SDK·신규 의존성 0**, `@denn/firebase`→`@denn/shared` 방향 유지, 앱 import/call 0, 실제 network/브라우저 저장소 0. 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG **UNCHANGED**, deploy 0. 코드 커밋 `d99c046` / 문서 커밋 분리.
 
+### 종료 — Codex 최종 승인 (2026-07-23)
+
+- **판정: 승인 가능. 승인 기준 HEAD `ed553b2`.** 스펙 013 종료.
+- 게이트 최종: frozen diff 0 / format·lint·typecheck / unit 96(firebase 35) / build 독립 / e2e 4 / check PASS. Firebase SDK·신규 의존성 0, `@denn/firebase`→`@denn/shared` 방향 유지, 앱 import/call 0, 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG 무변경, deploy 0(Rules/deploy=NOT APPLICABLE).
+- 유지(종료 시점 사실):
+  - **fake fetch만** 검증됨.
+  - 실제 **Firebase CORS·캐시 header·지연은 미검증**.
+  - 실제 `published/state.json`은 **아직 요청하지 않음**.
+  - **5 MiB는 초기 안전 상한**(몰래 상향 금지).
+  - **persistent cache·retry·offline fallback 없음**.
+  - Firebase SDK·Auth·write·Rules·앱 연결·배포 무변경.
+- 다음: Codex 다음 스펙 대기. 다음 스펙·앱 연결 미착수.
+
