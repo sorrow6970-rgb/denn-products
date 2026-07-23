@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 014 실제 공개 카탈로그 읽기 검증 = Codex 최종 승인(승인 가능, 기준 HEAD `7c5d04a`) — 종료. 다음 = Codex 다음 스펙 대기(앱 연결 미착수)**
+상태: **🟡 스펙 015 고객 앱 공개 카탈로그 연결 = READY. 최소 loading·ready·error·수동 retry 흐름만 연결하며 전체 상품 UI·Canvas·저장·주문·배포는 미착수.**
+
+> 스펙 015(2026-07-23): `docs/rebuild/specs/015-mockup-public-catalog-connection.md`. `apps/mockup`이 mount될 때 스펙 013 reader로 공개 카탈로그를 읽는 첫 제품 연결이다. production reader singleton+in-flight 병합으로 React StrictMode에서도 초기 underlying fetch 1회를 보장하고, generation/abort로 stale·unmount 경합을 차단한다. UI는 접근 가능한 loading/ready/error와 retryable 오류의 수동 재시도만 제공한다. 자동검증은 fake reader와 Playwright route interception만 사용하며 실제 GET·live 명령은 0이다. 상품/템플릿 UI·Canvas·이미지·선택·저장·주문·Router/Zustand·cache·Firebase SDK/Auth/write·Rules/CORS·Hosting·배포는 제외한다.
 
 > Codex 최종 승인(2026-07-23): 스펙 014 = **승인 가능**(기준 HEAD `7c5d04a`). 스펙 013 고정 공개 reader를 opt-in으로 실제 검증(**Node 1 + Browser 1 = GET 2회**, 둘 다 성공: Node source:network·스펙 012 통과, Browser CORS 미차단·HTTP 200·byteLength 192419≈188 KiB≤5 MiB·JSON parse OK). 순수 sanitizer가 안전 집계만(이름/ID/token/URL/base64/path/원문 0, issue는 code별 개수), live는 `*.live.test.ts` 기본 제외+별도 Playwright config·opt-in 없으면 요청 전 실패. 기본 게이트 network-free: frozen diff 0/format·lint·typecheck/**unit 107**/build 독립/e2e 4/check PASS. repo·임시경로 산출물 0(`test-results/.last-run.json`=status만·gitignored), 운영 HTML·Firebase 설정/Rules·`poc/**`·PNG·앱 소스 hash UNCHANGED, Firebase SDK/Auth/write/Rules/CORS·deploy 0, 신규 의존성 0. 도구·결과 문서 커밋 분리. 보고서 `reviews/2026-07-23-live-public-catalog-read-report.md`. **유지: 실행 시점 스냅샷·장기 가용성/offline 미검증, 총 GET 2회, 앱 연결·Firebase 변경·배포 미착수, 운영 카탈로그 원문·식별값 저장소에 없음.** **다음 스펙·앱 연결 미착수(대기).**
 

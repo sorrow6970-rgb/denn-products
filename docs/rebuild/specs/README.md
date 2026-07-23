@@ -85,4 +85,5 @@ Claude Code  →  스펙 읽고 코드 구현 → 검증 실행 → 스펙 하�
 | 011 | Modern Studio 공유 UI 기반 프리미티브 | DONE | Codex 승인, 토큰·프리미티브·접근성 계약 및 자동 게이트 통과 |
 | 012 | 레거시 카탈로그 읽기 계약·정규화·fixture | DONE | Codex 승인, legacy-v0→Catalog V1 읽기·검증 계약 확립 |
 | 013 | Firebase 공개 카탈로그 읽기 어댑터 | DONE | fake fetch 기반 read-only REST adapter, Codex 승인 |
-| 014 | 실제 공개 카탈로그 읽기 검증 | READY | 실제 GET 최대 2회(Node adapter+Browser CORS), 원문 저장·출력 금지 |
+| 014 | 실제 공개 카탈로그 읽기 검증 | DONE | Node adapter+Browser CORS 실제 GET 2회 성공, Codex 승인 |
+| 015 | 고객 앱 공개 카탈로그 연결 | READY | loading·ready·error·수동 retry, StrictMode 초기 fetch 1회 |
