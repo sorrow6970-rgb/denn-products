@@ -1,28 +1,52 @@
-/* @denn/ui/theme.css — SINGLE SOURCE of Modern Studio warm-taupe tokens (spec 010).
+/* @denn/ui/theme.css — SINGLE SOURCE of Modern Studio warm-taupe tokens + primitive styles.
    Both apps import this file; tokens are never duplicated per app.
-   Tailwind v4 theme layer + plain-CSS fallback so text/background survive old webviews. */
+   Two layers must stay semantically equal:
+     - @theme         : Tailwind v4 token layer (--color-*, --radius-*, --shadow-*)
+     - :root fallback : plain-CSS variables so text/background survive old webviews.
+   Values here must mirror packages/ui/src/index.ts (WARM_TAUPE) — a unit test fails on drift. */
 @import "tailwindcss";
 
 @theme {
+  --color-bg: #f4f4f5;
+  --color-surface: #ffffff;
+  --color-panel: #f7f7f8;
+  --color-ink: #191a1d;
+  --color-muted: #71717a;
+  --color-line: #eaeaed;
   --color-accent: #9f887a;
   --color-accent-2: #baa598;
   --color-accent-soft: #eee8e1;
   --color-accent-ink: #191a1d;
   --color-kakao: #fee500;
+  --color-success: #5ba35b;
+  --color-success-soft: #e4efe4;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --shadow-soft: 0 10px 26px -18px rgb(20 20 25 / 0.3);
+  --shadow: 0 20px 50px -28px rgb(20 20 25 / 0.45);
 }
 
-/* Plain-CSS fallback layer (no color-mix / @property) */
+/* Plain-CSS fallback layer — same names/values, no color-mix / @property. */
 :root {
+  --bg: #f4f4f5;
+  --surface: #ffffff;
+  --panel: #f7f7f8;
+  --ink: #191a1d;
+  --muted: #71717a;
+  --line: #eaeaed;
   --accent: #9f887a;
   --accent-2: #baa598;
   --accent-soft: #eee8e1;
   --accent-ink: #191a1d;
   --kakao: #fee500;
-  --ink: #191a1d;
-  --muted: #71717a;
-  --line: #eaeaed;
-  --bg: #f4f4f5;
-  --surface: #ffffff;
+  --kakao-ink: #191600;
+  --success: #5ba35b;
+  --success-soft: #e4efe4;
+  --danger-ink: #b42318;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --shadow-soft: 0 10px 26px -18px rgb(20 20 25 / 0.3);
+  --shadow: 0 20px 50px -28px rgb(20 20 25 / 0.45);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -41,47 +65,245 @@ html {
 }
 body {
   font-family:
-    "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, "Segoe UI", Roboto,
-    sans-serif;
+    "DM Sans", "Apple SD Gothic Neo", "Malgun Gothic", "Nanum Gothic", system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
   color: var(--ink);
   background: var(--bg);
   line-height: 1.5;
   overflow-x: hidden;
 }
 
-.scaffold-shell {
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: calc(16px + var(--safe-top)) 16px calc(16px + var(--safe-bottom));
+/* Focus is always a distinguishable ring against the page — never outline:none alone. */
+.denn-btn:focus-visible,
+.denn-chip:focus-visible,
+.denn-field__input:focus-visible {
+  outline: 3px solid var(--accent-ink);
+  outline-offset: 2px;
 }
-.scaffold-card {
+
+/* ---- Button --------------------------------------------------------------- */
+.denn-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 11px 16px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.denn-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.denn-btn--primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.denn-btn--ghost {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+.denn-btn--kakao {
+  background: var(--kakao);
+  color: var(--kakao-ink);
+  font-weight: 700;
+}
+@media (hover: hover) {
+  .denn-btn--primary:hover:not(:disabled) {
+    background: var(--accent-2);
+  }
+  .denn-btn--ghost:hover:not(:disabled) {
+    background: var(--panel);
+  }
+  .denn-btn--kakao:hover:not(:disabled) {
+    background: #ffe94d;
+  }
+}
+
+/* ---- Card ----------------------------------------------------------------- */
+.denn-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 24px;
-  max-width: 480px;
-  width: 100%;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  padding: 20px;
   min-width: 0;
 }
-.scaffold-card h1 {
-  font-size: 20px;
+
+/* ---- Badge ---------------------------------------------------------------- */
+.denn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 11px;
   font-weight: 700;
-  margin: 12px 0 6px;
+  letter-spacing: 0.02em;
+}
+
+/* ---- Chip (selection toggle) --------------------------------------------- */
+.denn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+/* Non-color cue: hollow ring -> filled square + heavier border/weight when selected. */
+.denn-chip__mark {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  border: 2px solid var(--muted);
+  background: transparent;
+  flex: 0 0 auto;
+}
+.denn-chip--on {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.denn-chip--on .denn-chip__mark {
+  border-color: var(--accent-ink);
+  background: var(--accent-ink);
+}
+@media (hover: hover) {
+  .denn-chip:hover:not(.denn-chip--on) {
+    border-color: var(--accent-2);
+  }
+}
+
+/* ---- TextField ------------------------------------------------------------ */
+.denn-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.denn-field__label {
+  font-size: 13.5px;
+  font-weight: 600;
   color: var(--ink);
 }
-.scaffold-card p {
-  margin: 4px 0;
+.denn-field__input {
+  min-height: 44px;
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+.denn-field__input::placeholder {
+  color: var(--muted);
+}
+.denn-field--error .denn-field__input {
+  border-color: var(--danger-ink);
+}
+.denn-field__desc {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.denn-field__err {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--danger-ink);
+}
+
+/* ---- VisuallyHidden (stays in a11y tree; not display/visibility hidden) --- */
+.denn-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Demo shell (both apps use this to render primitives; not a product UI) */
+.denn-shell {
+  min-height: 100dvh;
+  padding: calc(20px + var(--safe-top)) 16px calc(20px + var(--safe-bottom));
+  display: flex;
+  justify-content: center;
+}
+.denn-shell__inner {
+  width: 100%;
+  max-width: 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.denn-shell__inner h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 4px 0 0;
+  color: var(--ink);
+}
+.denn-shell__inner p {
+  margin: 0;
   font-size: 13.5px;
   color: var(--muted);
 }
-/* accent 배경 위 라벨 = accent-ink (흰색 아님). */
-.scaffold-badge {
-  display: inline-block;
-  background: var(--accent);
-  color: var(--accent-ink);
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 12px;
-  font-weight: 700;
+.denn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+/* Reset fieldset so it groups chips (semantic) without borders/overflow quirks. */
+.denn-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.denn-fieldset__legend {
+  padding: 0;
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.denn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .denn-btn,
+  .denn-chip {
+    transition: none;
+  }
 }

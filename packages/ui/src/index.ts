@@ -1,6 +1,7 @@
-// @denn/ui — single source of the Modern Studio warm-taupe tokens + minimal layout
-// primitive constants/types. React component expansion is left to a later spec.
-// The CSS single source is ./theme.css (exported as "@denn/ui/theme.css").
+// @denn/ui — Modern Studio warm-taupe design tokens + shared React primitives.
+// This file is the ONE public entry point (package "exports" maps "." here); apps
+// must not reach into ./src/* directly. The CSS single source is ./theme.css
+// (exported as "@denn/ui/theme.css"). Token values here must mirror that CSS.
 
 /** Warm taupe token values (design decision 2026-07-22). Must mirror ./theme.css. */
 export const WARM_TAUPE = {
@@ -14,9 +15,16 @@ export const WARM_TAUPE = {
 
 export type WarmTaupeToken = keyof typeof WARM_TAUPE;
 
-/** Minimal layout primitive class names owned by @denn/ui (no React components yet). */
-export const UI_CLASS = {
-  shell: "scaffold-shell",
-  card: "scaffold-card",
-  badge: "scaffold-badge",
-} as const;
+// Public primitives (narrow, explicit API — spec 011).
+export { Badge } from "./components/Badge";
+export type { BadgeProps } from "./components/Badge";
+export { Button } from "./components/Button";
+export type { ButtonProps, ButtonVariant } from "./components/Button";
+export { Card } from "./components/Card";
+export type { CardProps } from "./components/Card";
+export { Chip } from "./components/Chip";
+export type { ChipProps } from "./components/Chip";
+export { TextField } from "./components/TextField";
+export type { TextFieldProps } from "./components/TextField";
+export { VisuallyHidden } from "./components/VisuallyHidden";
+export type { VisuallyHiddenProps } from "./components/VisuallyHidden";
