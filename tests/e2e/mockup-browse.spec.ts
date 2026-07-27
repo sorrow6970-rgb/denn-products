@@ -416,11 +416,39 @@ test("image load failure falls back to placeholder; card stays selectable", asyn
   await expect(summary(page)).toContainText("템플릿: 로드 실패");
 });
 
+test("a failing image is requested exactly once (no retry loop)", async ({ page }) => {
+  const c = await routeCatalogWithImages(page, IMAGES);
+  await openFrameImages(page);
+  const card = btn(page, /로드 실패/);
+  await card.scrollIntoViewIfNeeded();
+  await expect(card.locator(".denn-tplthumb--empty")).toBeVisible();
+  // Give the browser room to (not) re-request; the placeholder replaces the img, so no reload loop.
+  await page.waitForTimeout(300);
+  expect(c.fail()).toBe(1);
+});
+
+test("thumbnails unmount cleanly (no console error) when switching product kind", async ({
+  page,
+}) => {
+  const errors = collectConsoleErrors(page);
+  // IMAGES_MATRIX has no aborted image → no browser network noise, so console must be truly empty.
+  await routeCatalogWithImages(page, IMAGES_MATRIX);
+  await openFrameImages(page);
+  await expect(btn(page, /데이터 이미지/).locator("img")).toBeVisible();
+  // Switch to case → all frame thumbnails unmount (IMAGES_MATRIX has no case models).
+  await kindChip(page, "휴대폰 케이스").click();
+  await expect(page.getByTestId("empty-models")).toBeVisible();
+  await expect(page.getByTestId("template-list")).toHaveCount(0);
+  await page.waitForTimeout(200);
+  expect(errors).toEqual([]);
+});
+
 test("image url/token leaks only into img[src] — not text/aria/data/console/storage/location", async ({
   page,
 }) => {
   const errors = collectConsoleErrors(page);
-  await routeCatalogWithImages(page, IMAGES);
+  // IMAGES_MATRIX carries the token-bearing t-fb but no aborted image → no browser network noise.
+  await routeCatalogWithImages(page, IMAGES_MATRIX);
   await openFrameImages(page);
   // The token is present in exactly one thumbnail's img[src].
   await expect(page.locator(`img[src*="${IMG_TOKEN}"]`)).toHaveCount(1);

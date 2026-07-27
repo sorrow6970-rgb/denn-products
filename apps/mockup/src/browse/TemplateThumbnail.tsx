@@ -11,6 +11,7 @@ import {
   projectCatalogTemplateImage,
 } from "@denn/shared";
 import { useMemo, useState } from "react";
+import { isThumbnailFailed } from "./thumbnailState";
 
 export function TemplateThumbnail({
   document,
@@ -32,12 +33,11 @@ export function TemplateThumbnail({
     return resolved.ok ? resolved.src : null;
   }, [document, templateKind, templateId]);
 
-  // Track failure by the specific src that failed. When src changes (new catalog/template) the
-  // failure no longer applies, so the new image is attempted — no effect, no stale-onError bleed.
+  // Track failure by the specific src that failed (pure predicate). A stale failure for a previous
+  // source never marks a new source as failed.
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const failed = failedSrc !== null && failedSrc === src;
 
-  if (src === null || failed) {
+  if (src === null || isThumbnailFailed(src, failedSrc)) {
     // Decorative: the visible card label is the accessible name; no image string anywhere.
     return (
       <span className="denn-tplthumb denn-tplthumb--empty" aria-hidden="true">
@@ -47,8 +47,21 @@ export function TemplateThumbnail({
   }
   return (
     <span className="denn-tplthumb">
-      {/* alt="" — the card already shows the template name as the accessible label. */}
-      <img src={src} alt="" loading="lazy" decoding="async" onError={() => setFailedSrc(src)} />
+      {/* alt="" — the card already shows the template name as the accessible label.
+          key={src} gives EACH source its own DOM node, so a late `error` from a previous source
+          fires on the old, detached node — never on this one. The guard re-checks the event's own
+          node so a stale error can never flip a newer source to the placeholder. Only the src
+          identity is stored; no URL/token is copied into state/ARIA/data/error/log. */}
+      <img
+        key={src}
+        src={src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        onError={(event) => {
+          if (event.currentTarget.getAttribute("src") === src) setFailedSrc(src);
+        }}
+      />
     </span>
   );
 }
