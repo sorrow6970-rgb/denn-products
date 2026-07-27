@@ -65,7 +65,7 @@
 ## 6. 전체 게이트 결과
 
 - `corepack pnpm install --frozen-lockfile` exit 0, `pnpm-lock.yaml` diff 0, 신규 의존성 0.
-- `node scripts/check.mjs`: format / lint(`--error-on-warnings`) / typecheck(7) / **unit 237** / build **PASS(exit 0)**. mockup JS gzip **68.37KB**(스펙 017 67.66 + 0.71, 예산 내), admin 61.09KB 무변경.
+- `node scripts/check.mjs`: format / lint(`--error-on-warnings`) / typecheck(7) / **unit 237** / build **PASS(exit 0)**. mockup JS gzip **68.40KB**(스펙 017 67.66 + 0.74, 예산 내), admin 61.09KB 무변경.
 - `pnpm test:e2e`: **49/49 PASS, exit 0**(scaffold 2 + 스펙 015 mockup-catalog 9 + 스펙 017·018 browse 38). 스펙 012/015/016/017 무회귀. 종료 후 preview 포트 4183/4184 미점유, 저장소 소속 vite/esbuild 잔류 0.
 - `git diff --check` 공백오류 0. `@denn/shared` React/Firebase/IO 의존 0, `@denn/firebase→@denn/shared` 단방향 유지, browse selector output에 image/base64/path 0.
 - 이미지 E2E viewport(320×568·390×844·844×390·932×390·768×1024·1280×800): 수평 overflow 0 / control 44×44 / thumbnail box viewport 내 / axe serious·critical 0 / console 0.
