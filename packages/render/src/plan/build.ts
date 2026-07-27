@@ -25,13 +25,17 @@ import type {
 } from "./types";
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
-// Restricted synthetic identifier grammar (spec 020): must start with an ASCII alphanumeric, then
-// only ASCII alphanumerics and `.` `_` `-`, length 1..MAX_ID_LEN. Applied to BOTH zone.id and
-// imageRef. This rejects URL-shaped values (the `:` a scheme needs, the `/` a path needs),
-// whitespace (incl. leading/trailing), control chars, and typical *padded* base64 (`+`/`=`). It is
-// NOT a secret detector: an unpadded alphanumeric string (e.g. a bare token) still matches. Callers
-// must not pass a URL/token/base64/secret as an imageRef, and a later executor must use imageRef
-// only as an in-memory trusted binding-map key — never as a URL.
+// Restricted synthetic identifier grammar (spec 020) for BOTH zone.id and imageRef. Contract:
+//  - a 1..128 char identifier that starts with an ASCII alphanumeric, then only ASCII alphanumerics
+//    and `.` `_` `-`.
+//  - the grammar rejects URL-shaped values (the `:` a scheme needs, the `/` a path needs),
+//    whitespace, control characters, and typical *padded* base64 (`+` `/` `=`).
+//  - this is NOT a semantic secret detector: it cannot tell whether an all-allowed-char value is a
+//    token, a secret, or unpadded base64 — such a value still matches.
+//  - callers must not pass a URL/base64/token/secret as an imageRef.
+//  - a later executor must NOT use imageRef as a URL; it is only a lookup key into an in-memory
+//    trusted image binding map.
+//  - the builder itself synthesizes and copies no source URL/token/storagePath/raw-catalog value.
 const SAFE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const MAX_ID_LEN = 128;
 

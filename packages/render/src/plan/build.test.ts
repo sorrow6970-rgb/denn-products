@@ -509,8 +509,11 @@ describe("buildPreviewRenderPlan — runtime-malformed input returns errors (no 
   });
 });
 
-// ---- G. safe synthetic identifier (zone.id + imageRef) -------------------------
-describe("buildPreviewRenderPlan — safe identifier grammar", () => {
+// ---- G. restricted identifier grammar (zone.id + imageRef) --------------------
+// Scope: the grammar rejects URL-shaped/whitespace/control/padded-base64 DELIMITER forms. It is NOT
+// a secret detector — an all-allowed-char token/secret/unpadded base64 would still be accepted; that
+// is the caller's responsibility. These tests assert the delimiter/scheme rejection, not "no token".
+describe("buildPreviewRenderPlan — restricted identifier grammar (delimiter/scheme rejection)", () => {
   it.each<[string, string]>([
     ["leading space + https", " https://example.invalid/image"],
     ["leading tab + data", "\tdata:image/png;base64,QQ"],
@@ -522,7 +525,7 @@ describe("buildPreviewRenderPlan — safe identifier grammar", () => {
     ["colon (scheme-like)", "case:body"],
     ["slash", "a/b"],
     ["base64 plus/equals", "AA+/=="],
-  ])("rejects an unsafe imageRef (%s) as INVALID_ID", (_label, imageRef) => {
+  ])("rejects a URL-shaped / delimiter imageRef (%s) as INVALID_ID", (_label, imageRef) => {
     expect(
       buildPreviewRenderPlan({ ...CASE_BASE, zones: [{ id: "z", imageRef, rect: LZONE }] }),
     ).toEqual({ ok: false, code: "INVALID_ID" });
