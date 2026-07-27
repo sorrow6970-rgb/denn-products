@@ -28,7 +28,7 @@
 - `apps/mockup/src/browse/browse.css` (신규) — 앱 전용 레이아웃(토큰만, 새 색상 리터럴 0)
 - `apps/mockup/src/App.tsx` (수정) — ready에서 `buildCatalogBrowseIndex`(useMemo, document identity당 1회) → `BrowseFlow`. 스펙 015 loading/error/retry는 그대로.
 - `tests/e2e/mockup-browse.spec.ts` (신규) — 합성 fixture E2E + 10 viewport matrix + 키보드 전용 흐름 + 스크린샷 2장
-- `tests/e2e/global-teardown.ts` (신규) + `playwright.config.ts` (수정) — 결정적 teardown(포트 강제 해제 + `gracefulShutdown`)
+- `playwright.config.ts` (수정) — 두 preview webServer에 `gracefulShutdown { SIGTERM, 5s }` 추가(포트 기반 강제 종료·globalTeardown 없음)
 
 **문서/핸드오프 커밋**
 - `docs/rebuild/results/spec-017/browse-mobile-390x844.png`, `browse-desktop-1280x800.png` (합성 fixture 시각 근거)
@@ -97,13 +97,14 @@ type CatalogBrowseSelection = {
 
 ### 8-1. E2E 잔류 프로세스 조사 (Codex 지시)
 
-- **방법:** `pnpm test:e2e` 실행 **직전/직후** `Win32_Process`의 `ProcessId/ParentProcessId/CommandLine`를 스냅샷해 PID 차집합을 비교.
-- **결과:** 실행 후 신규 잔류 프로세스로 잡힌 것은 **이 저장소와 무관** — `npm run lint`(다른 세션)과 `D:\repo\custom-o`의 `eslint`/`vite`/`esbuild`뿐. `apps/mockup`·`apps/admin`의 **`vite preview` 프로세스와 그 `esbuild` 자식은 0**, 포트 **4183/4184 LISTENING 0**.
-- **원인:** 이전 보고에서 "잔류 node"로 본 것은 **하네스 런타임(Codex `node_repl.exe`) + 병행 중인 별개 저장소**였고, 스펙 017 E2E의 산출물이 아니었다. Playwright `webServer`(`reuseExistingServer:false`)가 preview 서버를 종료해 포트가 이미 반환된다.
-- **결정적 teardown 보완(그럼에도):** OS tree-kill 편차에 의존하지 않도록
-  - 각 `webServer`에 `gracefulShutdown { signal: "SIGTERM", timeout: 5000 }`
-  - `globalTeardown`(`tests/e2e/global-teardown.ts`): 전체 실행 후 `MOCKUP_PORT/ADMIN_PORT` LISTENING을 netstat+taskkill(win)/lsof+SIGKILL(posix)로 강제 해제. 잔류가 없으면(정상) no-op.
-- **재검증:** 저장소 스코프 before/after 모두 **0**, e2e 34 PASS, **exit 0**, 종료 후 preview 포트 미점유.
+- **방법:** `pnpm test:e2e` 실행 **직전/직후** `Win32_Process`의 `ProcessId/ParentProcessId/CommandLine`를 스냅샷해, command line에 이 저장소 경로가 포함된 신규 프로세스를 차집합으로 비교.
+- **결과(사실):**
+  - 저장소 소속 `vite`/`esbuild`(= `apps/mockup`·`apps/admin` preview) 잔류 = **0**(before 0 → after 0).
+  - 포트 **4183/4184 LISTENING = 0**(Playwright가 preview 서버 종료 → 포트 해제).
+  - Playwright(`pnpm test:e2e`) 프로세스 **exit 0**.
+  - 이전 보고의 "잔류 node"는 **하네스 런타임(Codex `node_repl.exe`) + 병행 중인 별개 저장소(`D:\repo\custom-o`)** 프로세스가 혼입된 것이며, 스펙 017 E2E 산출물이 아니었다.
+- **결론:** 실제 Vite/esbuild 잔류가 0이므로 **포트 기반 강제 종료 안전망을 추가할 근거가 없다.** 다른 프로세스를 `taskkill`/`Stop-Process`/`SIGKILL`로 정리하지 않는다.
+- **유지한 보완:** 각 `webServer`에 `gracefulShutdown { signal: "SIGTERM", timeout: 5000 }`만 추가(Playwright가 SIGTERM→5s→force로 preview 서버를 종료). 별도 `globalTeardown`/port-kill 없음.
 - 프론즌 설치: `pnpm-lock.yaml`·모든 `package.json` 무변경 → lockfile diff 0. 신규 의존성 0(Router/Zustand/Radix/shadcn/data-fetching lib 0).
 
 ### E2E 필수 흐름 (스펙 §14, 전부 PASS)
