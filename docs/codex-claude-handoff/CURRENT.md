@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 016 고객 카탈로그 탐색 selector 계약 = Codex 최종 승인(승인 가능, 기준 HEAD `d7fc334`) — 종료. 다음 = Codex 다음 스펙 대기(앱 UI 연결·Canvas·배포 미착수)**
+상태: **🟡 스펙 017 모바일 우선 고객 카탈로그 탐색 UI = READY. 케이스/액자 단계형 텍스트 선택만 구현하며 이미지·Canvas·저장·주문·실제 GET·배포는 미착수.**
+
+> 스펙 017(2026-07-27): `docs/rebuild/specs/017-mobile-catalog-browse-ui.md`. 스펙 015 ready document와 스펙 016 selector를 `apps/mockup`에 연결한다. 제품 유형을 먼저 고르고 케이스는 모델→카테고리→템플릿, 액자는 사이즈→카테고리→템플릿으로 진행한다. 모델→템플릿 직접 관계는 근거가 없어 필터하지 않는다. 순수 ID reducer로 상위 선택 변경 시 하위 선택을 명시적으로 reset하고, 빈 collection/filter와 browse diagnostics는 가짜 기본값 없이 안전 안내한다. 모바일 320px부터 desktop·landscape의 overflow/44px/keyboard/focus/axe를 합성 route E2E로 검증한다. 실제 4환경·200% 확대는 NOT TESTED로 남긴다. 이미지·Canvas·업로드·저장·주문·Router/Zustand·실제 GET·Firebase/배포는 제외한다.
 
 > Codex 최종 승인(2026-07-23): 스펙 016 = **승인 가능**(기준 HEAD `d7fc334`). `@denn/shared` 순수 browse selector(`buildCatalogBrowseIndex`+6 selectors) 확립. 게이트 최종: frozen diff 0 / format·lint·typecheck / **unit 184**(browse 67) / build 독립 / e2e 11(스펙 015 무회귀) / check PASS. **유지: 고객 탐색용 모델·카테고리·사이즈·템플릿 selector 계약 완료, `categoryId` 정확 일치, 레거시 size alias·전체 사이즈 sentinel 전부 반영, reserved/orphan/unknown은 안전 진단으로 보존, raw item·unknown·이미지·base64는 output에 없음, built-in 템플릿 미생성, 모델→템플릿 직접 관계·가격·노출 우선순위 미확정, 합성 fixture만 검증, 앱 UI 연결·Canvas·실제 네트워크·Firebase·배포 미착수.** **다음 스펙·기능 미착수(대기).**
 
