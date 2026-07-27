@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 017 모바일 우선 고객 카탈로그 탐색 UI = 자동검증 단계 Codex 최종 승인(승인 가능, 기준 HEAD `711bb3e`) — 종료. 다음 = Codex 다음 스펙 대기.**
+상태: **✅ 스펙 017 종료(자동검증 단계 Codex 승인, 기준 HEAD `711bb3e`). 🔎 스펙 018 사전 조사(카탈로그 이미지 참조 계약) 완료 — 구현 미착수. 다음 = Codex 스펙 018 지시 대기.**
+
+> 스펙 018 사전 조사 완료(읽기 전용, 2026-07-27): 고객 탐색 썸네일 추가 전 레거시 이미지 참조 계약을 파일·라인으로 고정. 보고서 `docs/codex-claude-handoff/reviews/2026-07-27-catalog-image-contract-investigation.md`. 핵심: 소비자앱(`denn-mockup-tool.html`)은 `storagePath`로 URL을 만들지 않고(전수 grep 1회=카운트) 전적으로 `dataUrl`에 의존, 마이그레이션이 `getDownloadURL` https URL을 `dataUrl`에 덮어씀(`admin:15098`), 우선 체인 `dataUrl→sourceDataUrl→builderArtDataUrl→artDataUrl→originalDataUrl`+`generatedDetailPreview` 게이트(`mockup:3025/11001`), 케이스=단일 `dataUrl`·액자=동일 체인 공유(썸네일=인쇄), `crossOrigin`은 firebasestorage URL에만 조건부(Canvas 오염 방지용, 단순 썸네일 표시엔 불필요). **현행 read(스펙012)는 `dataUrl`=https URL을 `INVALID_DATA_URL`로 경고하는 모델 갭(`read.ts:346`)** → 후속 보완 필요. dual 런타임 우선순위·Storage 실패 fallback은 근거 없어 NOT DECIDED, published 실데이터 URL/base64 비율은 NOT VERIFIED(실제 GET 금지). 책임 분리안=분류·우선순위 `@denn/shared`(순수, selector output에 base64 미포함) / URL·CORS `@denn/firebase` / DOM·lazy·onerror `apps/mockup`. **구현·Canvas·실제 Firebase GET·배포 미착수.** 코드·설정·테스트·lockfile·운영본 무변경.
 
 > Codex 최종 승인(2026-07-27): 스펙 017 = **승인 가능**(기준 HEAD `711bb3e`). 게이트 최종 **unit 202 / e2e 34 / check PASS**. 키보드 전용 케이스·액자 전체 흐름 Enter+Space+focus-visible 완료 검증, 저장소 소속 preview/Vite/esbuild 잔류 0·포트 4183/4184 LISTENING 0·Playwright exit 0, `globalTeardown`/포트 기반 강제 종료 없이 webServer `gracefulShutdown{SIGTERM,5s}`만 유지. **유지(NOT TESTED/미착수): 실제 iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 4환경과 실제 200% 확대 = NOT TESTED, 실제 Firebase GET·Canvas·이미지·저장·주문·배포 미착수.** 이 승인은 **자동검증 단계 종료**이며 실기기 검증 전 출시 완료가 아니다. **다음 스펙은 Codex 지시 대기.**
 
