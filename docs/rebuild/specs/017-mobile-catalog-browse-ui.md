@@ -291,11 +291,12 @@
   - `apps/mockup/src/browse/BrowseFlow.tsx` — 제품유형→(모델|사이즈)→카테고리→템플릿 단계형 컴포넌트. 옵션은 전부 스펙 016 공개 selector. `document.data` 직접 필터 0.
   - `apps/mockup/src/browse/browse.css` — 앱 전용 레이아웃(웜 토프 토큰만, 새 색상 리터럴 0, 흰색-on-accent 0).
   - `apps/mockup/src/App.tsx` — ready에서만 `buildCatalogBrowseIndex`(`useMemo`, document identity당 1회) → `BrowseFlow`. 스펙 015 loading/error/retry 무변경.
-  - `apps/mockup/src/browse/selection.test.ts`(reducer 18) + `tests/e2e/mockup-browse.spec.ts`(흐름 10 + matrix 10 + keyboard 1 + 스크린샷 2).
+  - `apps/mockup/src/browse/selection.test.ts`(reducer 18) + `tests/e2e/mockup-browse.spec.ts`(흐름 10 + matrix 10 + keyboard 1 + 스크린샷 2) + `tests/e2e/global-teardown.ts`·`playwright.config.ts`(결정적 teardown: 포트 강제 해제 + `gracefulShutdown`).
 - **상태 전이:** 유형 변경=전체 초기화 / 케이스 모델 변경=category·template 유지 / 액자 사이즈 변경=category=all·template=null / category 변경=template=null / 무효·disabled ID=no-op(동일 참조) / 같은 값 재선택=안정 no-op(토글 해제 아님) / catalog 교체=사라진 선택 정리·**첫 항목 자동선택 없음**.
 - **selector 호출 위치:** `App.tsx`(index 생성), `BrowseFlow`(selectModels/CaseCategories/FrameCategories/FrameSizes + templatesFor→selectCase/FrameTemplates + isCategorySelectable + 요약 label 재조회), reducer 헬퍼(membership/validity). raw filter 0.
 - **빈/진단 UI:** 모델/사이즈/템플릿 0개 안전 안내, 0개 카테고리 disabled+"(0)", 진단은 code/path 없는 일반 안내만.
-- **게이트:** frozen lockfile diff 0(의존성 manifest 무변경, 신규 의존성 0) / format·lint·typecheck / **unit 202**(스펙 016 184 + reducer 18 신규) / build 독립(mockup JS gzip **67.66KB** = 64.40KB+3.26KB, 예산 내) / **e2e 34 PASS·exit 0**(admin 2+스펙015+스펙017, 015 무회귀; 종료 후 preview 포트 미점유) / check PASS.
+- **게이트:** frozen lockfile diff 0(의존성 manifest 무변경, 신규 의존성 0) / format·lint·typecheck / **unit 202**(스펙 016 184 + reducer 18 신규) / build 독립(mockup JS gzip **67.66KB** = 64.40KB+3.26KB, 예산 내) / **e2e 34 PASS·exit 0**(admin 2+스펙015+스펙017, 015 무회귀) / check PASS.
+- **E2E 잔류 프로세스 조사(Codex 지시):** 실행 전/후 PID·PPID·CommandLine 차집합 → 저장소 스코프 `vite preview`·esbuild 잔류 0, 포트 4183/4184 LISTENING 0(이전 "잔류 node"는 하네스 런타임+별개 저장소 `custom-o`였음). 결정적 teardown: webServer `gracefulShutdown{SIGTERM,5s}` + `globalTeardown` 포트 강제 해제(잔류 없으면 no-op).
 - **키보드 전용:** Tab 도달 후 케이스·액자 두 흐름을 마우스 없이 각 단계 focus-visible 확인 + Enter/Space 교차 활성화로 완료 요약까지 검증.
 - **viewport matrix(10):** 320×568·360×800·390×844·844×390·430×932·932×390·768×1024·1024×768·1280×800·1440×900 전부 수평 overflow 0 / control 44×44 & 폭 내 / axe serious·critical 0 / console error 0.
 - **누출 0:** DOM에 raw document·이미지·path·diagnostic code·합성 secret marker 미검출(E2E 검증). 정확 catalog URL만 요청(hit 1/unexpected 0), route miss=즉시 실패, admin endpoint 요청 0.
