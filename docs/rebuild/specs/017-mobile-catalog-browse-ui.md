@@ -281,3 +281,24 @@
 ### QUESTIONS
 
 - 없음. 가격·노출 순서·모델별 템플릿 관계·built-in 공급원이 필요하면 임의 생성하지 말고 후속 결정으로 보고한다.
+
+---
+
+### DONE (Claude) — 2026-07-27 (자동검증 단계 완료)
+
+- **구현:** `apps/mockup`에 스펙 015 ready document → 스펙 016 selector 기반 단계형 탐색 UI를 붙였다.
+  - `apps/mockup/src/browse/selection.ts` — 순수 selection reducer(`reduceSelection(state,action,index)`) + 헬퍼(`templatesFor`/`isCategorySelectable`/`isSelectionComplete`/`sanitize→reconcile`). React·IO 의존 0, selector만 사용, ID만 저장.
+  - `apps/mockup/src/browse/BrowseFlow.tsx` — 제품유형→(모델|사이즈)→카테고리→템플릿 단계형 컴포넌트. 옵션은 전부 스펙 016 공개 selector. `document.data` 직접 필터 0.
+  - `apps/mockup/src/browse/browse.css` — 앱 전용 레이아웃(웜 토프 토큰만, 새 색상 리터럴 0, 흰색-on-accent 0).
+  - `apps/mockup/src/App.tsx` — ready에서만 `buildCatalogBrowseIndex`(`useMemo`, document identity당 1회) → `BrowseFlow`. 스펙 015 loading/error/retry 무변경.
+  - `apps/mockup/src/browse/selection.test.ts`(reducer 18) + `tests/e2e/mockup-browse.spec.ts`(흐름 10 + matrix 10 + keyboard 1 + 스크린샷 2).
+- **상태 전이:** 유형 변경=전체 초기화 / 케이스 모델 변경=category·template 유지 / 액자 사이즈 변경=category=all·template=null / category 변경=template=null / 무효·disabled ID=no-op(동일 참조) / 같은 값 재선택=안정 no-op(토글 해제 아님) / catalog 교체=사라진 선택 정리·**첫 항목 자동선택 없음**.
+- **selector 호출 위치:** `App.tsx`(index 생성), `BrowseFlow`(selectModels/CaseCategories/FrameCategories/FrameSizes + templatesFor→selectCase/FrameTemplates + isCategorySelectable + 요약 label 재조회), reducer 헬퍼(membership/validity). raw filter 0.
+- **빈/진단 UI:** 모델/사이즈/템플릿 0개 안전 안내, 0개 카테고리 disabled+"(0)", 진단은 code/path 없는 일반 안내만.
+- **게이트:** frozen lockfile diff 0(의존성 manifest 무변경, 신규 의존성 0) / format·lint·typecheck / **unit 220**(reducer 18 신규) / build 독립(mockup JS gzip **67.66KB** = 64.40KB+3.26KB, 예산 내) / **e2e 34**(admin 2+스펙015+스펙017, 015 무회귀) / check PASS.
+- **viewport matrix(10):** 320×568·360×800·390×844·844×390·430×932·932×390·768×1024·1024×768·1280×800·1440×900 전부 수평 overflow 0 / control 44×44 & 폭 내 / axe serious·critical 0 / console error 0.
+- **누출 0:** DOM에 raw document·이미지·path·diagnostic code·합성 secret marker 미검출(E2E 검증). 정확 catalog URL만 요청(hit 1/unexpected 0), route miss=즉시 실패, admin endpoint 요청 0.
+- **시각 근거:** `docs/rebuild/results/spec-017/browse-{mobile-390x844,desktop-1280x800}.png`(합성 fixture만, 운영 데이터 0). `docs/rebuild/design/*-B.png` 5종 무수정.
+- **NOT TESTED(정직 기록):** 실제 iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱, 실제 200% 확대, 실제 Firebase GET·`test:live:*`. **이 DONE은 자동검증 단계 완료이며 실기기 검증 전 출시 완료가 아님.**
+- **무변경:** 운영 HTML·Firebase 설정/Rules 2종·`poc/**`·디자인 PNG·`apps/admin/**` baseline hash UNCHANGED. Firebase SDK/Auth/write·Rules/CORS·Hosting·deploy 0. Router/Zustand/새 라이브러리 0.
+- **커밋:** 코드/test와 문서/핸드오프 분리(`spec 017:`). 핸드오프 `docs/2026-07-27-spec-017-mobile-catalog-browse-ui-handoff.md`.
