@@ -117,6 +117,15 @@ const URL_SCHEME_RE = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
 const isFinitePositive = (n: unknown): boolean =>
   typeof n === "number" && Number.isFinite(n) && n > 0;
 
+/** True for a parseable `https:` URL string (used to accept migrated download URLs in dataUrl). */
+function isHttpsUrlString(value: string): boolean {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 /** Join a base path with a child segment, avoiding a leading dot at the root (path === ""). */
 const joinPath = (base: string, segment: string): string => (base ? `${base}.${segment}` : segment);
 
@@ -342,7 +351,12 @@ function collectImages(
   if (typeof rawData === "string" && rawData.length > 0) {
     // Check a trimmed copy so leading whitespace can't smuggle a non-data scheme;
     // the original value is preserved unchanged in the document.
-    if (/^data:/i.test(rawData.trimStart())) hasData = true;
+    const trimmedData = rawData.trimStart();
+    // A `data:` value is the pre-migration base64 form. An `https:` value is the legitimate
+    // post-migration Firebase download URL written back into dataUrl (denn-admin.html:15098) — it
+    // is a valid dataUrl-family reference, NOT an INVALID_DATA_URL (spec 018 §3). Any other string
+    // stays an INVALID_DATA_URL warning.
+    if (/^data:/i.test(trimmedData) || isHttpsUrlString(trimmedData)) hasData = true;
     else warnings.push({ code: "INVALID_DATA_URL", path: joinPath(path, "dataUrl") });
   }
   if (typeof rawPath === "string" && rawPath.length > 0) {

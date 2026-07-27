@@ -62,6 +62,50 @@ const NO_TEMPLATES = JSON.stringify({
   frameSizes: [{ id: "fs1", name: "사이즈 하나" }],
 });
 
+// --- spec 018 image fixtures (synthetic only) -------------------------------
+// A 1×1 transparent PNG, used both as a data: image and as the routed Firebase image body.
+const SMALL_PNG_B64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+const SMALL_PNG_BUFFER = Buffer.from(SMALL_PNG_B64, "base64");
+const DATA_IMG = `data:image/png;base64,${SMALL_PNG_B64}`;
+// Token marker: allowed ONLY inside the thumbnail img[src]; forbidden everywhere else.
+const IMG_TOKEN = "SYNTH_TOKEN_MARKER";
+const FB_O = "https://firebasestorage.googleapis.com/v0/b/denn-products.firebasestorage.app/o";
+const FB_OK = `${FB_O}/templates%2Fsynthetic.png?alt=media&token=${IMG_TOKEN}`;
+const FB_FAIL = `${FB_O}/templates%2Ffail.png?alt=media&token=T2`;
+const UNTRUSTED_IMG = "https://untrusted.example.test/x.png";
+
+// One frame size; six builtin frame templates exercising every projection/trust outcome.
+const IMAGES = JSON.stringify({
+  frameSizes: [{ id: "fs1", name: "사이즈 하나" }],
+  frameTemplates: [
+    { id: "t-data", name: "데이터 이미지", type: "builtin", dataUrl: DATA_IMG },
+    { id: "t-fb", name: "파이어베이스 이미지", type: "builtin", dataUrl: FB_OK },
+    { id: "t-untrusted", name: "미신뢰 이미지", type: "builtin", dataUrl: UNTRUSTED_IMG },
+    { id: "t-none", name: "이미지 없음 템플릿", type: "builtin" },
+    {
+      id: "t-preview",
+      name: "프리뷰 템플릿",
+      type: "builtin",
+      dataUrl: DATA_IMG,
+      generatedDetailPreview: true,
+    },
+    { id: "t-fail", name: "로드 실패", type: "builtin", dataUrl: FB_FAIL },
+  ],
+});
+
+// Matrix fixture: same shapes but WITHOUT the aborted "fail" image, so there is no browser
+// network-error console noise. The load-failure path is covered by its own scenario test.
+const IMAGES_MATRIX = JSON.stringify({
+  frameSizes: [{ id: "fs1", name: "사이즈 하나" }],
+  frameTemplates: [
+    { id: "t-data", name: "데이터 이미지", type: "builtin", dataUrl: DATA_IMG },
+    { id: "t-fb", name: "파이어베이스 이미지", type: "builtin", dataUrl: FB_OK },
+    { id: "t-untrusted", name: "미신뢰 이미지", type: "builtin", dataUrl: UNTRUSTED_IMG },
+    { id: "t-none", name: "이미지 없음 템플릿", type: "builtin" },
+  ],
+});
+
 const fulfillJson = (route: Route, body: string, status = 200): Promise<void> =>
   route.fulfill({ status, contentType: "application/json", body });
 
@@ -81,6 +125,56 @@ async function routeCatalog(
     await fulfillJson(route, body);
   });
   return { hits: () => hits, unexpected: () => unexpected };
+}
+
+interface ImageRouteCounters {
+  catalog: () => number;
+  image: () => number;
+  fail: () => number;
+  unexpected: () => number;
+  untrusted: () => number;
+}
+
+// Route the catalog JSON + the ONE allowed synthetic Firebase image, fail the synthetic "fail"
+// image, and abort/track anything else. A separate route counts (and blocks) the untrusted host,
+// which must never be requested because the trust boundary drops it before it becomes an img src.
+async function routeCatalogWithImages(page: Page, body: string): Promise<ImageRouteCounters> {
+  let catalog = 0;
+  let image = 0;
+  let fail = 0;
+  let unexpected = 0;
+  let untrusted = 0;
+  await page.route("**/firebasestorage.googleapis.com/**", async (route) => {
+    const url = route.request().url();
+    if (url === CATALOG_URL) {
+      catalog++;
+      await fulfillJson(route, body);
+      return;
+    }
+    if (url.includes("templates%2Fsynthetic.png")) {
+      image++;
+      await route.fulfill({ status: 200, contentType: "image/png", body: SMALL_PNG_BUFFER });
+      return;
+    }
+    if (url.includes("templates%2Ffail.png")) {
+      fail++;
+      await route.abort();
+      return;
+    }
+    unexpected++;
+    await route.abort();
+  });
+  await page.route("**/untrusted.example.test/**", async (route) => {
+    untrusted++;
+    await route.abort();
+  });
+  return {
+    catalog: () => catalog,
+    image: () => image,
+    fail: () => fail,
+    unexpected: () => unexpected,
+    untrusted: () => untrusted,
+  };
 }
 
 function collectConsoleErrors(page: Page): string[] {
@@ -255,6 +349,157 @@ test("admin app makes no public-catalog request", async ({ page }) => {
   expect(firebaseHits).toBe(0);
 });
 
+// --- spec 018: thumbnails, trust boundary, leak checks ----------------------
+async function openFrameImages(page: Page): Promise<void> {
+  await gotoReady(page);
+  await kindChip(page, "액자").click();
+  await kindChip(page, "사이즈 하나").click();
+  await expect(page.getByTestId("template-list")).toBeVisible();
+}
+
+test("data: image renders as a lazy/async thumbnail", async ({ page }) => {
+  await routeCatalogWithImages(page, IMAGES);
+  await openFrameImages(page);
+  const img = btn(page, /데이터 이미지/).locator("img");
+  await expect(img).toHaveAttribute("src", DATA_IMG);
+  await expect(img).toHaveAttribute("loading", "lazy");
+  await expect(img).toHaveAttribute("decoding", "async");
+  await expect(img).toHaveAttribute("alt", "");
+});
+
+test("template with no image shows a neutral placeholder", async ({ page }) => {
+  await routeCatalogWithImages(page, IMAGES);
+  await openFrameImages(page);
+  const card = btn(page, /이미지 없음 템플릿/);
+  await expect(card.locator(".denn-tplthumb--empty")).toBeVisible();
+  await expect(card.locator("img")).toHaveCount(0);
+});
+
+test("generated-preview template shows a placeholder (not exposed as art)", async ({ page }) => {
+  await routeCatalogWithImages(page, IMAGES);
+  await openFrameImages(page);
+  const card = btn(page, /프리뷰 템플릿/);
+  await expect(card.locator(".denn-tplthumb--empty")).toBeVisible();
+  await expect(card.locator("img")).toHaveCount(0);
+});
+
+test("untrusted HTTPS is blocked before request — placeholder, 0 external hits", async ({
+  page,
+}) => {
+  const c = await routeCatalogWithImages(page, IMAGES);
+  await openFrameImages(page);
+  const card = btn(page, /미신뢰 이미지/);
+  await expect(card.locator(".denn-tplthumb--empty")).toBeVisible();
+  await expect(card.locator("img")).toHaveCount(0);
+  await expect.poll(() => c.untrusted()).toBe(0);
+});
+
+test("allowed Firebase image is served by the route and loads", async ({ page }) => {
+  const c = await routeCatalogWithImages(page, IMAGES);
+  await openFrameImages(page);
+  const img = btn(page, /파이어베이스 이미지/).locator("img");
+  await img.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth))
+    .toBeGreaterThan(0);
+  expect(c.image()).toBe(1);
+  expect(c.unexpected()).toBe(0);
+});
+
+test("image load failure falls back to placeholder; card stays selectable", async ({ page }) => {
+  await routeCatalogWithImages(page, IMAGES);
+  await openFrameImages(page);
+  const card = btn(page, /로드 실패/);
+  await card.scrollIntoViewIfNeeded();
+  await expect(card.locator(".denn-tplthumb--empty")).toBeVisible(); // onError → placeholder
+  await card.click();
+  await expect(summary(page)).toContainText("템플릿: 로드 실패");
+});
+
+test("image url/token leaks only into img[src] — not text/aria/data/console/storage/location", async ({
+  page,
+}) => {
+  const errors = collectConsoleErrors(page);
+  await routeCatalogWithImages(page, IMAGES);
+  await openFrameImages(page);
+  // The token is present in exactly one thumbnail's img[src].
+  await expect(page.locator(`img[src*="${IMG_TOKEN}"]`)).toHaveCount(1);
+  const leak = await page.evaluate((marker) => {
+    const readStore = (s: Storage): string => {
+      let out = "";
+      for (let i = 0; i < s.length; i++) {
+        const k = s.key(i);
+        if (k) out += `${k}=${s.getItem(k)};`;
+      }
+      return out;
+    };
+    const inText = (document.body.innerText || "").includes(marker);
+    const inAttrs = Array.from(document.querySelectorAll("*")).some((el) =>
+      Array.from(el.attributes).some(
+        (a) => a.name.toLowerCase() !== "src" && a.value.includes(marker),
+      ),
+    );
+    const store = (readStore(localStorage) + readStore(sessionStorage)).includes(marker);
+    const loc = (location.href + location.hash + location.search).includes(marker);
+    return { inText, inAttrs, store, loc };
+  }, IMG_TOKEN);
+  expect(leak).toEqual({ inText: false, inAttrs: false, store: false, loc: false });
+  expect(errors).toEqual([]);
+});
+
+const IMAGE_VIEWPORTS = [
+  { name: "320x568", width: 320, height: 568 },
+  { name: "390x844", width: 390, height: 844 },
+  { name: "844x390", width: 844, height: 390 },
+  { name: "932x390", width: 932, height: 390 },
+  { name: "768x1024", width: 768, height: 1024 },
+  { name: "1280x800", width: 1280, height: 800 },
+] as const;
+
+for (const vp of IMAGE_VIEWPORTS) {
+  test(`image matrix @ ${vp.name}: overflow 0, 44px, boxes in-frame, axe 0, console 0`, async ({
+    page,
+  }) => {
+    const errors = collectConsoleErrors(page);
+    await routeCatalogWithImages(page, IMAGES_MATRIX);
+    await page.setViewportSize({ width: vp.width, height: vp.height });
+    await openFrameImages(page);
+
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth + 1);
+
+    // thumbnail boxes stay within the viewport width
+    const thumbs = page.locator(".denn-tplthumb");
+    const tcount = await thumbs.count();
+    expect(tcount).toBeGreaterThan(0);
+    for (let i = 0; i < tcount; i++) {
+      const box = await thumbs.nth(i).boundingBox();
+      if (box) {
+        expect(box.x).toBeGreaterThanOrEqual(-1);
+        expect(box.x + box.width).toBeLessThanOrEqual(vp.width + 1);
+      }
+    }
+
+    const controls = page.locator(".denn-chip, .denn-btn, .denn-tplcard");
+    const count = await controls.count();
+    for (let i = 0; i < count; i++) {
+      const box = await controls.nth(i).boundingBox();
+      if (box) {
+        expect(Math.round(box.width)).toBeGreaterThanOrEqual(44);
+        expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
+      }
+    }
+
+    const axe = await new AxeBuilder({ page }).analyze();
+    const serious = axe.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    expect(serious.map((v) => v.id)).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+}
+
 // --- Responsive + accessibility matrix (mobile contract §10) ----------------
 const MATRIX = [
   { name: "320x568", width: 320, height: 568 },
@@ -365,23 +610,30 @@ test("keyboard-only case and frame flows reach completion (Enter + Space)", asyn
   await expect(summary(page)).toContainText("템플릿: 제한 액자 하나");
 });
 
-// --- representative screenshots (synthetic fixture only) --------------------
+// --- spec 018 representative screenshots (synthetic fixture only) -----------
+// Uses the IMAGES fixture so thumbnails + placeholders are visible. Written to a spec-018 folder;
+// the spec-017 screenshots are NOT regenerated here and stay byte-identical.
 const SHOTS = [
   { name: "mobile-390x844", width: 390, height: 844 },
   { name: "desktop-1280x800", width: 1280, height: 800 },
 ] as const;
 
 for (const shot of SHOTS) {
-  test(`screenshot ${shot.name}`, async ({ page }) => {
-    await routeCatalog(page, RICH);
+  test(`spec018 screenshot ${shot.name}`, async ({ page }) => {
+    const c = await routeCatalogWithImages(page, IMAGES);
     await page.setViewportSize({ width: shot.width, height: shot.height });
-    await gotoReady(page);
-    await kindChip(page, "액자").click();
-    await kindChip(page, "사이즈 하나").click();
-    await btn(page, /제한 액자 하나/).click();
+    await openFrameImages(page);
+    await btn(page, /데이터 이미지/).click();
     await expect(summary(page)).toBeVisible();
+    // Ensure the routed Firebase thumbnail has actually painted before the snapshot.
+    const fbImg = btn(page, /파이어베이스 이미지/).locator("img");
+    await fbImg.scrollIntoViewIfNeeded();
+    await expect.poll(() => c.image()).toBe(1);
+    await expect
+      .poll(() => fbImg.evaluate((el: HTMLImageElement) => el.naturalWidth))
+      .toBeGreaterThan(0);
     await page.screenshot({
-      path: `docs/rebuild/results/spec-017/browse-${shot.name}.png`,
+      path: `docs/rebuild/results/spec-018/browse-${shot.name}.png`,
       fullPage: true,
     });
   });

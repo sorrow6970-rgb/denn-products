@@ -171,6 +171,14 @@ describe("readLegacyCatalog — success", () => {
     const res = ok(readLegacyCatalog(fx.legacyImagesEverywhere));
     expect(res.report.imageReferences).toEqual({ dataUrl: 1, storagePath: 1, dual: 0 });
   });
+
+  it("accepts an HTTPS download URL in dataUrl as a dataUrl reference (no INVALID_DATA_URL)", () => {
+    const res = ok(readLegacyCatalog(fx.legacyHttpsDataUrl));
+    // t-https = dataUrl(https), t-https-dual = dataUrl(https)+storagePath, t-bad = invalid string.
+    expect(res.report.imageReferences).toEqual({ dataUrl: 1, storagePath: 0, dual: 1 });
+    const invalid = res.report.warnings.filter((w) => w.code === "INVALID_DATA_URL");
+    expect(invalid).toEqual([{ code: "INVALID_DATA_URL", path: "frameTemplates[2].dataUrl" }]);
+  });
 });
 
 describe("readLegacyCatalog — failures (no default-catalog success)", () => {

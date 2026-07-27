@@ -7,6 +7,8 @@ import type { Result } from "@denn/shared";
 
 // Read-only public catalog adapter (spec 013).
 export * from "./public-catalog";
+// Remote image trust boundary for catalog thumbnails (spec 018).
+export * from "./public-images";
 
 export type FirebaseInitState = "unconfigured" | "ready";
 

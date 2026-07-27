@@ -50,6 +50,33 @@ export const legacyWithImages: unknown = {
   guideBackgrounds: [{ id: "g1", storagePath: "guides/g1.jpg" }],
 };
 
+/**
+ * Post-migration form: dataUrl holds an HTTPS Firebase download URL (spec 018 §3). This must be a
+ * valid dataUrl-family reference — NOT an INVALID_DATA_URL — and counted as a dataUrl reference.
+ * A second template pairs the https dataUrl with a storagePath (dual). A third holds a non-URL,
+ * non-data string that stays INVALID_DATA_URL.
+ */
+export const legacyHttpsDataUrl: unknown = {
+  frameTemplates: [
+    {
+      id: "t-https",
+      name: "h",
+      type: "uploaded",
+      dataUrl:
+        "https://firebasestorage.googleapis.com/v0/b/denn-products.firebasestorage.app/o/templates%2Fa.png?alt=media&token=x",
+    },
+    {
+      id: "t-https-dual",
+      name: "hd",
+      type: "uploaded",
+      dataUrl:
+        "https://firebasestorage.googleapis.com/v0/b/denn-products.firebasestorage.app/o/templates%2Fb.png?alt=media&token=y",
+      storagePath: "templates/b.png",
+    },
+    { id: "t-bad", name: "b", type: "uploaded", dataUrl: "not-a-url-or-data" },
+  ],
+};
+
 /** Flat roomBackgroundSettings + revision markers preserved. */
 export const legacyWithRoomAndRevisions: unknown = {
   roomBackgroundSettings: {

@@ -7,6 +7,8 @@ import {
   type BrowseOption,
   type BrowseTemplate,
   type CatalogBrowseIndex,
+  type CatalogDocumentV1,
+  type CatalogTemplateKind,
   selectCaseCategories,
   selectFrameCategories,
   selectFrameSizes,
@@ -25,6 +27,7 @@ import {
   reduceSelection,
   templatesFor,
 } from "./selection";
+import { TemplateThumbnail } from "./TemplateThumbnail";
 
 const PRODUCT_KIND_LABEL: Record<ProductKind, string> = {
   case: "휴대폰 케이스",
@@ -43,7 +46,13 @@ function findLabel(options: readonly BrowseOption[], id: string | null): string 
   return options.find((o) => o.id === id)?.label ?? null;
 }
 
-export function BrowseFlow({ index }: { index: CatalogBrowseIndex }): React.JSX.Element {
+export function BrowseFlow({
+  index,
+  document,
+}: {
+  index: CatalogBrowseIndex;
+  document: CatalogDocumentV1;
+}): React.JSX.Element {
   const [selection, setSelection] = useState<CatalogBrowseSelection>(INITIAL_SELECTION);
 
   // When the catalog identity changes (e.g. a retried load), drop selections whose ids vanished.
@@ -81,10 +90,10 @@ export function BrowseFlow({ index }: { index: CatalogBrowseIndex }): React.JSX.
       </fieldset>
 
       {productKind === "case" ? (
-        <CaseSteps index={index} selection={selection} dispatch={dispatch} />
+        <CaseSteps index={index} selection={selection} dispatch={dispatch} document={document} />
       ) : null}
       {productKind === "frame" ? (
-        <FrameSteps index={index} selection={selection} dispatch={dispatch} />
+        <FrameSteps index={index} selection={selection} dispatch={dispatch} document={document} />
       ) : null}
 
       {index.diagnostics.length > 0 ? (
@@ -102,9 +111,10 @@ interface StepProps {
   index: CatalogBrowseIndex;
   selection: CatalogBrowseSelection;
   dispatch: (action: BrowseAction) => void;
+  document: CatalogDocumentV1;
 }
 
-function CaseSteps({ index, selection, dispatch }: StepProps): React.JSX.Element {
+function CaseSteps({ index, selection, dispatch, document }: StepProps): React.JSX.Element {
   const models = selectModels(index);
   return (
     <>
@@ -135,16 +145,23 @@ function CaseSteps({ index, selection, dispatch }: StepProps): React.JSX.Element
             index={index}
             selection={selection}
             dispatch={dispatch}
+            document={document}
             categories={selectCaseCategories(index)}
           />
-          <TemplateStep index={index} selection={selection} dispatch={dispatch} />
+          <TemplateStep
+            index={index}
+            selection={selection}
+            dispatch={dispatch}
+            document={document}
+            templateKind="case"
+          />
         </>
       ) : null}
     </>
   );
 }
 
-function FrameSteps({ index, selection, dispatch }: StepProps): React.JSX.Element {
+function FrameSteps({ index, selection, dispatch, document }: StepProps): React.JSX.Element {
   const sizes = selectFrameSizes(index);
   return (
     <>
@@ -175,9 +192,16 @@ function FrameSteps({ index, selection, dispatch }: StepProps): React.JSX.Elemen
             index={index}
             selection={selection}
             dispatch={dispatch}
+            document={document}
             categories={selectFrameCategories(index)}
           />
-          <TemplateStep index={index} selection={selection} dispatch={dispatch} />
+          <TemplateStep
+            index={index}
+            selection={selection}
+            dispatch={dispatch}
+            document={document}
+            templateKind="frame"
+          />
         </>
       ) : null}
     </>
@@ -215,7 +239,13 @@ function CategoryStep({
   );
 }
 
-function TemplateStep({ index, selection, dispatch }: StepProps): React.JSX.Element {
+function TemplateStep({
+  index,
+  selection,
+  dispatch,
+  document,
+  templateKind,
+}: StepProps & { templateKind: CatalogTemplateKind }): React.JSX.Element {
   const templates = templatesFor(
     index,
     selection.productKind,
@@ -237,6 +267,8 @@ function TemplateStep({ index, selection, dispatch }: StepProps): React.JSX.Elem
                 template={t}
                 selected={selection.templateId === t.id}
                 onSelect={() => dispatch({ type: "selectTemplate", templateId: t.id })}
+                document={document}
+                templateKind={templateKind}
               />
             </li>
           ))}
@@ -250,10 +282,14 @@ function TemplateCard({
   template,
   selected,
   onSelect,
+  document,
+  templateKind,
 }: {
   template: BrowseTemplate;
   selected: boolean;
   onSelect: () => void;
+  document: CatalogDocumentV1;
+  templateKind: CatalogTemplateKind;
 }): React.JSX.Element {
   const kindLabel = templateKindLabel(template.kind);
   const cls = ["denn-tplcard", selected ? "denn-tplcard--on" : ""].filter(Boolean).join(" ");
@@ -262,6 +298,7 @@ function TemplateCard({
       <span className="denn-tplcard__mark" aria-hidden="true">
         {selected ? "✓" : ""}
       </span>
+      <TemplateThumbnail document={document} templateKind={templateKind} templateId={template.id} />
       <span className="denn-tplcard__body">
         <span className="denn-tplcard__label">{template.label}</span>
         {kindLabel !== null ? <Badge>{kindLabel}</Badge> : null}

@@ -29,9 +29,9 @@ export function App(): React.JSX.Element {
         <Card>
           <CatalogStatus state={state} onRetry={retry} />
         </Card>
-        {state.status === "ready" && index ? (
+        {state.status === "ready" && index && document ? (
           <Card>
-            <BrowseFlow index={index} />
+            <BrowseFlow index={index} document={document} />
           </Card>
         ) : null}
       </div>

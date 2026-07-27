@@ -78,6 +78,42 @@
   line-height: 1;
   color: var(--accent-ink);
 }
+
+/* Display-only thumbnail (spec 018). Fixed box reserves space before/after load → no layout shift.
+   Image or neutral placeholder only; tokens only, no new color literals. */
+.denn-tplcard__thumb-wrap {
+  flex: 0 0 auto;
+}
+.denn-tplthumb {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.denn-tplthumb img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+.denn-tplthumb--empty {
+  padding: 2px;
+  font-size: 9.5px;
+  line-height: 1.15;
+  font-weight: 600;
+  text-align: center;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
 .denn-tplcard__body {
   display: flex;
   flex-wrap: wrap;
