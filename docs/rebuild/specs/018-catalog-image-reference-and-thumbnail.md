@@ -406,11 +406,14 @@ viewport:
 - **NOT TESTED(정직 기록):** 실제 4환경·실제 200% 확대·**실제 운영 이미지**·Canvas CORS-clean. published base64/https 비율·token 수명은 NOT VERIFIED. 이 DONE은 자동검증 단계이며 출시 완료가 아님.
 - **커밋:** 코드/test와 문서/핸드오프 분리(`spec 018:`). 핸드오프 `docs/2026-07-27-spec-018-catalog-image-thumbnail-handoff.md`.
 
-### DONE 보완 (Claude) — 2026-07-27 (stale onError 하드닝, Codex "수정 후 재검증")
+### DONE 보완 (Claude) — 2026-07-27 (stale onError 하드닝, Codex "수정 후 재검증" 2회)
 
-- **경합 보완:** `TemplateThumbnail`의 `img`에 **`key={src}`**(source마다 별도 DOM 노드 → 이전 source의 늦은 error는 detach된 옛 노드에서 발생, 새 source에 도달 못 함) + `onError` **event-target 가드**(`event.currentTarget`의 src == 현재 src일 때만 실패). 실패 판정을 순수 헬퍼 `apps/mockup/src/browse/thumbnailState.ts` `isThumbnailFailed(currentSrc, failedSrc)`로 분리. production 변경은 이 경합 보완에 한정, URL/token을 state/오류/로그/data/ARIA에 신규 복제 0.
-- **테스트:** `thumbnailState.test.ts`(순수) — stale A 실패가 B를 실패로 만들지 않음 / 동일 B 실패 1회 안정(재설정·loop 0) / unavailable은 "failed" 아님. e2e — 실패 이미지 정확히 1회 요청(reload loop 0)·product kind 전환 시 thumbnail unmount clean(console error 0).
-- **DOM 한계 보고:** 살아있는 thumbnail 인스턴스의 in-app A→B src 스왑은 UI로 도달 불가(ready→reload 경로 없음, 목록은 template id로 keyed) → 경합은 `key={src}`로 구조적 차단 + 상태 수준(순수) + 도달 가능한 동작(Playwright)으로 검증. **새 DOM 테스트 라이브러리 미설치**(지시 준수).
-- **재검증:** frozen lockfile diff 0 / format·lint·typecheck / **unit 242** / build / **e2e 49 PASS·exit 0**(스펙 012/015/016/017 무회귀) / check PASS / `git diff --check` clean. 운영본·admin·POC·Firebase·디자인 PNG·스펙 017 스크린샷 무변경, 실제 Firebase GET·이미지 다운로드·`test:live:*`·deploy 0. 실기기·운영 이미지·Canvas CORS-clean = NOT TESTED 유지.
+**1차:** `img`에 `key={src}` + `onError` event-target 가드 + 순수 헬퍼 `isThumbnailFailed`(문자열 state).
+
+**2차(현재):** Codex 지적 2건 반영.
+- **URL/token을 React state에서 제거:** `TemplateThumbnail`이 src 계산 후 있으면 **keyed child `<ThumbnailImage key={src} src={src}/>`** 렌더. child는 **`useState<boolean>`(`failed`) 하나만** — URL/base64/token은 props/closure와 실제 `img[src]`에만, state/오류/로그/data/ARIA/storage에 저장 0. 기존 `failedSrc` 문자열 state·`isThumbnailFailed` 헬퍼·해당 test **제거**. source 변경 시 key로 새 child/boolean 생성 → 이전 source의 detached 노드 error는 새 child state에 접근 불가.
+- **고정 sleep 제거:** `waitForTimeout` 전부 삭제. 실패 이미지 = route `fail()` 카운터(2번째 요청이면 `fail()===2`) + placeholder 관측 후 served 이미지 1회 왕복(`expect.poll`)으로 flush → `fail()===1`. unmount = served 응답을 test-controlled gate로 in-flight 보류 → thumbnail unmount → gate resolve(detached) → 결정적 remount+visible 관측으로 console·재등장·오염 0.
+- **DOM 한계 보고:** 살아있는 thumbnail 인스턴스의 in-app A→B src 스왑은 UI로 도달 불가 → 경합은 keyed child+boolean으로 구조적 차단 + 결정적 Playwright로 검증. **새 DOM 테스트 라이브러리 미설치**(지시 준수).
+- **재검증:** frozen lockfile diff 0 / format·lint·typecheck / **unit 237** / build / **e2e 49 PASS·exit 0·고정 sleep 0**(스펙 012/015/016/017 무회귀) / check PASS / `git diff --check` clean. URL/token이 React state에 저장되지 않는 구조 확인. 운영본·admin·POC·Firebase·디자인 PNG·스펙 017 스크린샷 무변경, 실제 Firebase GET·이미지 다운로드·`test:live:*`·deploy 0. 실기기·운영 이미지·Canvas CORS-clean = NOT TESTED 유지.
 
 ### Codex 재검증 요청 — HEAD 갱신 후 판정 대기.

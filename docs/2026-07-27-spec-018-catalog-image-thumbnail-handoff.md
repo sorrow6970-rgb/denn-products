@@ -51,8 +51,9 @@
 
 - 표시 전용 `<img loading="lazy" decoding="async" alt="">` — 카드의 가시 템플릿명이 접근 이름이므로 thumbnail은 장식(`alt=""`). Canvas·crossOrigin·object URL·preload 없음.
 - fixed aspect-ratio box(56px×4:3, `object-fit:contain`)로 **로드 전후 layout shift 0**. placeholder도 같은 박스+"이미지 없음"(`aria-hidden` 장식) → 카드 label로 의미 유지.
-- unavailable 또는 `onError`→placeholder. **stale onError 하드닝(Codex 재검증)**: `img`에 **`key={src}`** → source마다 별도 DOM 노드(이전 source의 늦은 error는 분리·detach된 옛 노드에서 발생, 새 노드에 도달 못 함) + `onError` **event-target 가드**(`event.currentTarget`의 src가 현재 src와 일치할 때만 실패 기록). 실패 판정은 순수 헬퍼 `isThumbnailFailed(currentSrc, failedSrc)`(node 단위 테스트)로 분리 — source A 실패가 다른 source B를 실패로 만들지 않음, 동일 B 실패는 1회 안정(재설정/loop 0), unmount setState/console 0. URL/token은 state/ARIA/data/error/log에 신규 복제 0.
-  - **DOM 참고:** 살아있는 thumbnail 인스턴스의 in-app A→B src 스왑은 UI로 도달 불가(ready→reload 경로 없음, template 목록은 template id로 keyed). 따라서 src-스왑 경합은 `key={src}`로 구조적으로 차단하고, 상태 수준(순수 유닛)+도달 가능한 동작(Playwright: 실패 이미지 1회 요청·unmount clean)으로 검증. 새 DOM 테스트 라이브러리는 설치하지 않음(지시 준수).
+- unavailable 또는 `onError`→placeholder. **stale onError 하드닝(Codex 2차 재검증)**: `TemplateThumbnail`은 src 계산 후 있으면 **keyed child `<ThumbnailImage key={src} src={src}/>`** 렌더. child는 **`useState<boolean>` 하나만**(`failed`) 사용 — **URL/token은 props/closure와 실제 `img[src]`에만 존재, React state·오류·로그·data/ARIA/storage에 저장 0**(기존 `failedSrc` 문자열 state·`isThumbnailFailed` 헬퍼·테스트 제거). source 변경 시 key가 바뀌어 완전히 새 child/boolean 생성 → 이전 source의 detached 노드 error는 새 child state에 접근 불가. 동일 source 실패는 1회 placeholder(img 제거로 loop 0), unmount setState/console 0.
+  - **DOM 참고:** 살아있는 thumbnail 인스턴스의 in-app A→B src 스왑은 UI로 도달 불가(ready→reload 경로 없음, template 목록은 template id로 keyed). src-스왑 경합은 `key={src}`(source별 child+boolean)로 **구조적 차단**하고, 도달 가능한 동작을 결정적 Playwright로 검증. 새 DOM 테스트 라이브러리는 설치하지 않음(지시 준수).
+  - **결정적 E2E(고정 sleep 0):** 실패 이미지는 route `fail()` 카운터로 검증(2번째 요청이면 `fail()===2`로 실패) + 실패→placeholder 관측 후 **served 이미지 1회 왕복**(`expect.poll` hit·naturalWidth)으로 이벤트 루프 flush → `fail()===1` 유지. unmount는 served 이미지 응답을 **test-controlled gate**로 보류해 in-flight 상태에서 thumbnail unmount → gate resolve(detached 노드) → 결정적 remount+visible 관측으로 console error·재등장·오염 0 확인.
 - 이미지 느리거나 실패해도 카드 선택/키보드/focus/44px 유지(색·이미지 외 체크/텍스트/aria로 상태 전달).
 - 토큰/URL/base64는 **thumbnail `img[src]`와 resolver 메모리에만** 존재. text/ARIA/data/error/console/storage/location에 미노출(E2E 검증).
 
@@ -64,7 +65,7 @@
 ## 6. 전체 게이트 결과
 
 - `corepack pnpm install --frozen-lockfile` exit 0, `pnpm-lock.yaml` diff 0, 신규 의존성 0.
-- `node scripts/check.mjs`: format / lint(`--error-on-warnings`) / typecheck(7) / **unit 242** / build **PASS(exit 0)**. mockup JS gzip **68.37KB**(스펙 017 67.66 + 0.71, 예산 내), admin 61.09KB 무변경.
+- `node scripts/check.mjs`: format / lint(`--error-on-warnings`) / typecheck(7) / **unit 237** / build **PASS(exit 0)**. mockup JS gzip **68.37KB**(스펙 017 67.66 + 0.71, 예산 내), admin 61.09KB 무변경.
 - `pnpm test:e2e`: **49/49 PASS, exit 0**(scaffold 2 + 스펙 015 mockup-catalog 9 + 스펙 017·018 browse 38). 스펙 012/015/016/017 무회귀. 종료 후 preview 포트 4183/4184 미점유, 저장소 소속 vite/esbuild 잔류 0.
 - `git diff --check` 공백오류 0. `@denn/shared` React/Firebase/IO 의존 0, `@denn/firebase→@denn/shared` 단방향 유지, browse selector output에 image/base64/path 0.
 - 이미지 E2E viewport(320×568·390×844·844×390·932×390·768×1024·1280×800): 수평 overflow 0 / control 44×44 / thumbnail box viewport 내 / axe serious·critical 0 / console 0.
