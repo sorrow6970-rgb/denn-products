@@ -497,4 +497,10 @@ firebase
 - **무변경:** `apps/**`·shared·firebase·ui·spaces·운영 HTML·Firebase 설정/Rules·POC·PNG. deploy 0.
 - **미검증:** 실제 Canvas 선명도·합성·CORS-clean·인쇄 정확도·실기기 = 순수 geometry로 증명 불가(후속). 커밋: 코드/test와 문서 분리(`spec 019:`). 핸드오프 `docs/2026-07-27-spec-019-canvas-geometry-contract-handoff.md`.
 
-### Codex 재검증 요청 — HEAD 갱신 후 판정 대기.
+### Codex 최종 판정 — 승인 가능 (2026-07-27)
+
+- **판정:** 스펙 019 = **승인 가능**. **승인 기준 HEAD = `d52e5fb`**.
+- **확정 사항:** 5개 공개 함수로 6개 geometry 계약 구현 / 유한 입력의 계산 overflow를 `NON_FINITE_RESULT`로 차단 / **성공 Result에 NaN·Infinity 미포함 계약 고정** / 함수별 극단값 테스트 5건 추가 / 케이스+비회전 액자 cover 코어만 공유(회전·multi-zone·pointer·layer plan·print 미구현) / `dprCap` 필수 입력·제품 정책 미확정.
+- **최종 게이트:** frozen diff 0·신규 의존성 0 / format·lint·typecheck / **unit 297** / build / **e2e 49 PASS·exit 0**(스펙 015~018 회귀만, 새 Canvas E2E 없음) / check PASS / `git diff --check` clean. 금지 의존성(§H) 0.
+- **미검증 범위(NOT TESTED/NOT DECIDED 유지):** 실제 Canvas 선명도·합성·CORS-clean·인쇄 정확도·실기기 = 순수 geometry로 증명 불가(후속 스펙). DPR cap(2 vs 4)·주문차단 계약·zoom 앵커·print DPI/minLong/maxPixels = 제품 정책 미확정. 운영본·Firebase·앱·POC·PNG·배포 무변경.
+- **다음:** 후속 순서(스펙 019 사전 조사 §표10) = deterministic renderer → image/CORS → pointer → text/clock → print. Codex 다음 스펙 지시 대기.
