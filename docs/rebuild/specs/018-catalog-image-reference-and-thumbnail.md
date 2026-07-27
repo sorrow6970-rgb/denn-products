@@ -391,3 +391,19 @@ viewport:
   - Canvas CORS-clean
   - 다운로드 token 수명·회전
   - 실제 이미지 MIME/크기 상한
+
+---
+
+### DONE (Claude) — 2026-07-27 (합성 이미지 자동검증 완료)
+
+- **@denn/shared image projection(순수):** `catalog/images/project.ts` `projectCatalogTemplateImage(document,{templateKind,templateId})` → `available{sourceKind:data-image|https-image,value}` | `unavailable{reason:none|generated-preview|invalid-reference}`. browse selector와 분리(스펙 016 output 이미지 필드 0), 원본 template 미반환·decode/fetch/clone 0·`value`=원본 문자열 1개. 우선순위 frame `dataUrl→sourceDataUrl→builderArtDataUrl→artDataUrl→originalDataUrl`·case `dataUrl`만, `generatedDetailPreview` 게이트, `data:`/`https:` 분류(그 외 건너뜀), unknown id/kind→unavailable(throw 0), storagePath 비소스·dual=dataUrl 계열만.
+- **read.ts 보완:** https dataUrl(마이그레이션 다운로드 URL)을 `INVALID_DATA_URL` 대신 dataUrl 계열 참조로 인정·집계. `data:` 유효 유지·그 외 문자열 경고 유지·storagePath URI-scheme fatal 불변. 스펙 012 무회귀.
+- **@denn/firebase 신뢰 경계(no SDK/네트워크):** `public-images/trust.ts` `resolvePublicImageSource` — data-image 통과, https는 host `firebasestorage.googleapis.com`+bucket path `/v0/b/denn-products.firebasestorage.app/o/`+userinfo 없음만 통과(그 외 untrusted/invalid), token은 성공 `src`에만·실패/오류 미포함, fetch/preload/storagePath→URL 0.
+- **thumbnail(apps/mockup):** `TemplateThumbnail` 표시 전용 `<img loading=lazy decoding=async alt="">`(projection→신뢰 경계), unavailable/onError→중립 placeholder(같은 aspect box=layout shift 0), 실패는 `failedSrc===src` 추적(stale onError·loop·unmount 경고 0), crossOrigin/Canvas/object URL 0. 문자열은 `img[src]`+resolver 메모리에만.
+- **게이트:** frozen install exit 0·lockfile diff 0·신규 의존성 0 / format·lint·typecheck / **unit 237** / build(mockup JS gzip 68.37KB, admin 61.09 무변경) / **e2e 47 PASS·exit 0**(스펙 012/015/016/017 무회귀; 종료 후 preview 포트 미점유·저장소 vite/esbuild 잔류 0) / check PASS / `git diff --check` clean.
+- **E2E(합성+route interception만):** data:image 표시·routed Firebase 이미지 로드(hit 1)·비신뢰 https 요청 전 차단(외부 hit 0)·이미지 없음/preview placeholder·route 실패→placeholder+선택 정상·token marker는 `img[src]`에만(text/aria/data/console/storage/location 0)·admin endpoint 0. 이미지 viewport matrix(320×568·390×844·844×390·932×390·768×1024·1280×800) overflow 0·44×44·box in-frame·axe 0·console 0. 실제 Firebase GET·이미지 다운로드·`test:live:*` 미실행.
+- **시각 근거:** `docs/rebuild/results/spec-018/browse-{mobile-390x844,desktop-1280x800}.png`(합성만, 운영 데이터/URL/token 0). **스펙 017 스크린샷·`docs/rebuild/design/*-B.png`·운영 HTML·Firebase 설정/Rules·admin·POC hash UNCHANGED.**
+- **NOT TESTED(정직 기록):** 실제 4환경·실제 200% 확대·**실제 운영 이미지**·Canvas CORS-clean. published base64/https 비율·token 수명은 NOT VERIFIED. 이 DONE은 자동검증 단계이며 출시 완료가 아님.
+- **커밋:** 코드/test와 문서/핸드오프 분리(`spec 018:`). 핸드오프 `docs/2026-07-27-spec-018-catalog-image-thumbnail-handoff.md`.
+
+### Codex 재검증 요청 — HEAD 갱신 후 판정 대기.
