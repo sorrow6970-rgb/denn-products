@@ -1,7 +1,11 @@
-// @denn/render — framework-independent render input/output interfaces + constants only.
-// NO Canvas implementation, NO image load, NO print/PNG export. Real rendering is a later spec.
-// Direction @denn/render -> @denn/shared is allowed.
+// @denn/render — framework-independent render input/output interfaces + constants, plus the pure
+// geometry contract (spec 019). NO Canvas implementation, NO image load, NO print/PNG export — the
+// real renderer is still a later spec. Direction @denn/render -> @denn/shared is allowed.
 import type { Result } from "@denn/shared";
+
+// Pure geometry contract (spec 019): cover-fit, pan clamp, percent rect, client->logical point,
+// oriented aspect, backing-store size. Pure math only — see ./geometry.
+export * from "./geometry";
 
 export interface RenderInput {
   readonly widthPx: number;
