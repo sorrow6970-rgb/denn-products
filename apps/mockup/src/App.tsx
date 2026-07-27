@@ -9,8 +9,9 @@ import { usePublicCatalog } from "./catalog/usePublicCatalog";
 
 // Public-catalog connection (spec 015) + mobile-first browse UI (spec 017). Loading / error /
 // manual-retry are unchanged; when ready, the success document is turned into a spec 016 browse
-// index (once per document identity) and the step-by-step case/frame selection UI is shown.
-// No image/Canvas/save/order — ids-only selection with a text summary at completion.
+// index (once per document identity) and the step-by-step case/frame selection UI is shown, with
+// display-only template thumbnails (spec 018). No Canvas/save/order — ids-only selection with a
+// text summary at completion.
 export function App(): React.JSX.Element {
   const { state, retry } = usePublicCatalog(publicCatalogReader);
 

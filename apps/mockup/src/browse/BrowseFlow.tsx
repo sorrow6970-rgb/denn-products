@@ -1,6 +1,7 @@
-// Mobile-first, step-by-step catalog browse UI (spec 017). Every option/filter comes from the
-// spec 016 public selectors over a precomputed index — never from raw document.data. State holds
-// ids only; labels are looked up here at render time. No image/Canvas/save/order/CTA.
+// Mobile-first, step-by-step catalog browse UI (spec 017) with display-only template thumbnails
+// (spec 018). Every option/filter comes from the spec 016 public selectors over a precomputed index
+// — never from raw document.data. Selection state holds ids only; labels are looked up here at
+// render time. No Canvas/save/order/CTA.
 
 import {
   type BrowseCategory,
