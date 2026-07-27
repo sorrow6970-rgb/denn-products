@@ -417,29 +417,73 @@ test("image load failure falls back to placeholder; card stays selectable", asyn
 });
 
 test("a failing image is requested exactly once (no retry loop)", async ({ page }) => {
+  // The route counts every hit to the fail image; a second request would make fail() === 2 and
+  // fail the assertion. `routeCatalogWithImages`'s counters are the deterministic gate — no sleep.
   const c = await routeCatalogWithImages(page, IMAGES);
   await openFrameImages(page);
-  const card = btn(page, /로드 실패/);
-  await card.scrollIntoViewIfNeeded();
-  await expect(card.locator(".denn-tplthumb--empty")).toBeVisible();
-  // Give the browser room to (not) re-request; the placeholder replaces the img, so no reload loop.
-  await page.waitForTimeout(300);
+  const failCard = btn(page, /로드 실패/);
+  await failCard.scrollIntoViewIfNeeded();
+  await expect(failCard.locator(".denn-tplthumb--empty")).toBeVisible(); // first failure → placeholder
+  expect(c.fail()).toBe(1);
+  // Deterministic network gate: complete a full round-trip on the served image AFTER the failure.
+  // If the failed thumbnail were re-requesting, that request would land during this round-trip and
+  // push fail() past 1. The keyed child + failed boolean removed the <img>, so it stays exactly 1.
+  const okImg = btn(page, /파이어베이스 이미지/).locator("img");
+  await okImg.scrollIntoViewIfNeeded();
+  await expect.poll(() => c.image()).toBe(1);
+  await expect
+    .poll(() => okImg.evaluate((el: HTMLImageElement) => el.naturalWidth))
+    .toBeGreaterThan(0);
   expect(c.fail()).toBe(1);
 });
 
-test("thumbnails unmount cleanly (no console error) when switching product kind", async ({
+test("thumbnail unmounts cleanly while its image is still in flight (gated, no sleep)", async ({
   page,
 }) => {
   const errors = collectConsoleErrors(page);
-  // IMAGES_MATRIX has no aborted image → no browser network noise, so console must be truly empty.
-  await routeCatalogWithImages(page, IMAGES_MATRIX);
+  // Hold the served image response open with a test-controlled gate so it is in flight at unmount.
+  let releaseImage!: () => void;
+  const imageGate = new Promise<void>((resolve) => {
+    releaseImage = resolve;
+  });
+  let imageHits = 0;
+  let unexpected = 0;
+  await page.route("**/firebasestorage.googleapis.com/**", async (route) => {
+    const url = route.request().url();
+    if (url === CATALOG_URL) {
+      await fulfillJson(route, IMAGES_MATRIX);
+      return;
+    }
+    if (url.includes("templates%2Fsynthetic.png")) {
+      imageHits++;
+      await imageGate; // stay pending until the test releases it
+      await route.fulfill({ status: 200, contentType: "image/png", body: SMALL_PNG_BUFFER });
+      return;
+    }
+    unexpected++;
+    await route.abort();
+  });
+  await page.route("**/untrusted.example.test/**", (route) => route.abort());
+
   await openFrameImages(page);
-  await expect(btn(page, /데이터 이미지/).locator("img")).toBeVisible();
-  // Switch to case → all frame thumbnails unmount (IMAGES_MATRIX has no case models).
+  const okImg = btn(page, /파이어베이스 이미지/).locator("img");
+  await okImg.scrollIntoViewIfNeeded();
+  await expect.poll(() => imageHits).toBe(1); // request is in flight (deterministic, not a sleep)
+
+  // Unmount all frame thumbnails while that image is still pending.
   await kindChip(page, "휴대폰 케이스").click();
   await expect(page.getByTestId("empty-models")).toBeVisible();
   await expect(page.getByTestId("template-list")).toHaveCount(0);
-  await page.waitForTimeout(200);
+
+  // Now settle the in-flight response onto the detached node — no React callback should fire.
+  releaseImage();
+
+  // Deterministic flush: remount thumbnails and observe the list before asserting cleanliness.
+  await kindChip(page, "액자").click();
+  await kindChip(page, "사이즈 하나").click();
+  await expect(page.getByTestId("template-list")).toBeVisible();
+  await expect(btn(page, /데이터 이미지/).locator("img")).toBeVisible();
+  expect(unexpected).toBe(0);
   expect(errors).toEqual([]);
 });
 
