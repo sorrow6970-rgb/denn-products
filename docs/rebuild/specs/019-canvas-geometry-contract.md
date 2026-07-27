@@ -481,12 +481,18 @@ firebase
 
 ### DONE (Claude) — 2026-07-27
 
-- **구현:** `@denn/render`에 순수 geometry 6종. `packages/render/src/geometry/{types,guards,cover,rect,point,aspect,backing,index}.ts` + `src/index.ts`에 `export * from "./geometry"`(기존 placeholder API 유지). 공개 = `computeCoverDrawRect`·`percentRectToLogical`·`clientPointToLogical`·`resolveOrientedAspect`·`computeBackingStoreSize` + 타입(guards 미노출).
+- **구현:** `@denn/render`에 **5개 공개 함수로 6개 geometry 계약**(cover-fit·pan clamp·percent rect·client→logical·oriented aspect·backing; pan clamp는 `computeCoverDrawRect` 내부 계약). `packages/render/src/geometry/{types,guards,cover,rect,point,aspect,backing,index}.ts` + `src/index.ts`에 `export * from "./geometry"`(기존 placeholder API 유지). 공개 = `computeCoverDrawRect`·`percentRectToLogical`·`clientPointToLogical`·`resolveOrientedAspect`·`computeBackingStoreSize` + 타입(guards 미노출).
 - **수식(레거시 근거):** cover `baseScale=max(zone/img)`·pan clamp `abs(draw-zone)/2`(scale<1 abs 그대로, `drawImgT:1543`)·`clampPan:false`는 pan 그대로(print pan-scale 미추가) / percent `container + p/100*size`(`:1664`,`:3074`) / client→logical `(client-rect)*logicalSize/rect`(backing·DPR 미사용, `cPos:1535`) / aspect `landscape?1/portrait:portrait`(=H/W, `:7211`) / backing `max(1,round(css*min(dpr,cap)))`(POC `useCanvasDpr`).
-- **오류 계약:** `GeometryResult<T>={ok:true,value}|{ok:false,code}`, code 5종. **throw 없음**, NaN/Infinity→`NON_FINITE_INPUT`, size/scale/aspect/dpr≤0→각 `NON_POSITIVE_*`, 입력 비변형, payload에 이미지·URL·token 없음.
+- **오류 계약:** `GeometryResult<T>={ok:true,value}|{ok:false,code}`, code 6종. **throw 없음**, NaN/Infinity 입력→`NON_FINITE_INPUT`, size/scale/aspect/dpr≤0→각 `NON_POSITIVE_*`, **유한 입력끼리의 계산 결과가 비유한(overflow)→`NON_FINITE_RESULT`**(입력 오류와 구분). 입력 비변형, payload에 이미지·URL·token 없음. **성공 Result에는 NaN/Infinity가 절대 포함되지 않음**(5개 함수 모두 반환 전 계산 결과 전량 finite 검증, 테스트로 고정).
 - **공유 경계:** cover 코어는 케이스+비회전 액자 공유. 회전·multi-zone·pointer·layer plan·print는 미구현(하나의 불명확 state/옵션 통합 금지).
 - **DPR 미확정:** `dprCap` 필수 입력·기본값 없음. cap 2/4는 입력 사례로만 검증, 제품 정책 미확정(2·4·print DPI·zoom 0.3~5 모두 미확정).
-- **게이트:** frozen diff 0·신규 의존성 0 / format·lint·typecheck / **unit 292**(geometry 55 신규) / build / **e2e 49 PASS·exit 0**(스펙 015~018 회귀만, **새 Canvas E2E 없음**) / check PASS / `git diff --check` clean.
+- **게이트:** frozen diff 0·신규 의존성 0 / format·lint·typecheck / **unit 297**(geometry 60 신규) / build / **e2e 49 PASS·exit 0**(스펙 015~018 회귀만, **새 Canvas E2E 없음**) / check PASS / `git diff --check` clean.
+
+### DONE 보완 (Claude) — 2026-07-27 (Codex "수정 후 재검증" 2건)
+
+- **[1] 비유한 계산 결과 차단:** 유한 입력끼리도 overflow(예 `MAX_VALUE*scale`, `1/MIN_VALUE`, `huge percent × huge container`)로 `Infinity`가 될 수 있어, **5개 공개 함수 모두 반환 전 모든 계산 결과가 finite인지 검증**하고 아니면 신규 코드 **`NON_FINITE_RESULT`**로 실패(`ok:true` 미반환). cover(baseScale/drawScale/drawW/H/maxPan/pan/drawX/Y)·backing(css×dpr 및 round)·aspect(landscape reciprocal)·rect(곱·합)·point(차·곱·나눗셈) 각각 검증. 함수당 극단 유한입력→비유한결과 테스트 1건씩 추가(**render 유닛 55→60**). 정상값·레거시 abs 수식·입력 불변성 유지.
+- **[2] 공개 함수 개수 표현 정정:** `index.ts` 주석 "Six pure functions" → **"5개 공개 함수로 6개 geometry 계약"**(pan clamp는 `computeCoverDrawRect` 내부 계약, 별도 함수 아님). DONE/handoff/CURRENT 동일 정정. 과거 게이트 수치(당시 unit 292)는 이번 라운드에서 unit 297로 갱신.
+- **재검증:** frozen diff 0 / format·lint·typecheck / **unit 297** / build / **e2e 49 PASS·exit 0** / check PASS / `git diff --check` clean. 5개 함수별 극단 유한입력→비유한 성공결과 **0건**. `apps/**`·Firebase·운영본·POC·PNG 무변경, 실제 네트워크·deploy 0.
 - **금지 의존성(§H):** geometry source에 `document/window/HTMLCanvasElement/CanvasRenderingContext2D/getContext/drawImage/setTransform/devicePixelRatio/ResizeObserver/Image/fetch/firebase` 런타임 참조 0. render 외부 import는 `type Result`(placeholder)뿐, React/Firebase/DOM/Canvas/IO 0.
 - **무변경:** `apps/**`·shared·firebase·ui·spaces·운영 HTML·Firebase 설정/Rules·POC·PNG. deploy 0.
 - **미검증:** 실제 Canvas 선명도·합성·CORS-clean·인쇄 정확도·실기기 = 순수 geometry로 증명 불가(후속). 커밋: 코드/test와 문서 분리(`spec 019:`). 핸드오프 `docs/2026-07-27-spec-019-canvas-geometry-contract-handoff.md`.

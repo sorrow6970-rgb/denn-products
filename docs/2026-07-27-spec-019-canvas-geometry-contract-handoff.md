@@ -15,9 +15,9 @@
 - `packages/render/src/geometry/point.ts` (신규) — `clientPointToLogical`
 - `packages/render/src/geometry/aspect.ts` (신규) — `resolveOrientedAspect`
 - `packages/render/src/geometry/backing.ts` (신규) — `computeBackingStoreSize`
-- `packages/render/src/geometry/index.ts` (신규) — 공개 barrel(6 함수 + 타입; guards 미노출)
+- `packages/render/src/geometry/index.ts` (신규) — 공개 barrel(**5개 공개 함수 = 6개 geometry 계약** + 타입; guards 미노출)
 - `packages/render/src/index.ts` (수정) — `export * from "./geometry"` 추가. **기존 `RenderInput`/`RenderOutput`/`RenderResult`/`RENDER_NOT_IMPLEMENTED` 유지**(제거·성공 위장 안 함)
-- `*.test.ts` 5종 — cover 12 + rect 6 + point 6 + aspect 5 + backing 9(개 그룹, 총 55 케이스)
+- `*.test.ts` 5종 — cover 13 + rect 7 + point 7 + aspect 6 + backing 10(개 그룹, 총 60 케이스; 각 함수 overflow 1건 포함)
 
 ## 2. 공개 geometry API + 수식 + 레거시 근거
 
@@ -35,12 +35,13 @@
 ## 3. 오류 Result 계약
 
 ```ts
-type GeometryErrorCode = "NON_FINITE_INPUT" | "NON_POSITIVE_SIZE" | "NON_POSITIVE_SCALE" | "NON_POSITIVE_ASPECT" | "NON_POSITIVE_DPR";
+type GeometryErrorCode = "NON_FINITE_INPUT" | "NON_FINITE_RESULT" | "NON_POSITIVE_SIZE" | "NON_POSITIVE_SCALE" | "NON_POSITIVE_ASPECT" | "NON_POSITIVE_DPR";
 type GeometryResult<T> = { ok: true; value: T } | { ok: false; code: GeometryErrorCode };
 ```
 
 - **정상 잘못된 입력에 throw 없음** — 모두 `{ok:false, code}`.
-- `NaN`/`±Infinity` → `NON_FINITE_INPUT`(양수 검사보다 우선). 크기/scale/aspect/dpr `≤0` → 각 `NON_POSITIVE_*`.
+- `NaN`/`±Infinity` 입력 → `NON_FINITE_INPUT`(양수 검사보다 우선). 크기/scale/aspect/dpr `≤0` → 각 `NON_POSITIVE_*`.
+- **유한 입력끼리의 계산 결과가 overflow로 비유한(`Infinity`/`NaN`)이 되면 → `NON_FINITE_RESULT`**(입력 오류와 구분되는 별도 코드). 5개 함수 모두 반환 전 계산 결과를 전량 finite 검증 → **성공 Result에는 NaN/Infinity가 절대 없음**(계약, 테스트로 고정: 함수당 극단 유한입력→비유한결과 1건).
 - point/pan/rect origin은 유한 음수 허용. 오류 payload에 이미지·URL·token·catalog 없음(code만).
 - `@denn/shared Result`가 아니라 code 기반 최소 payload 사용(스펙 §1 허용).
 
@@ -55,17 +56,18 @@ type GeometryResult<T> = { ok: true; value: T } | { ok: false; code: GeometryErr
 
 ## 6. unit 항목과 실제 개수
 
-- **cover(12):** 동일비율=zone / wide=height cover / tall=width cover / non-zero origin / scale>1 / **scale<1 abs clamp** / pan 한계 내 / pan ± 한계 밖 clamp / `clampPan:false` 유지 / deep-freeze 비변형 / 오류 7종(NaN·Infinity·0·음수 size·0·음수·NaN scale).
+- **cover(13):** 동일비율=zone / wide=height cover / tall=width cover / non-zero origin / scale>1 / **scale<1 abs clamp** / pan 한계 내 / pan ± 한계 밖 clamp / `clampPan:false` 유지 / deep-freeze 비변형 / 오류 7종(NaN·Infinity·0·음수 size·0·음수·NaN scale) / **overflow→`NON_FINITE_RESULT`**.
 - **rect(6):** 0/0/100/100 / non-zero origin / 25/10/50/40 / 음수·>100 비clamp / 오류(0·음수 size·NaN·Infinity) / 비변형.
 - **point(6):** 좌상단→0,0 / 중앙 / CSS 축소·확대 / **DPR/backing 무관(서로 다른 backing 가정)** / rect 밖 비clamp / 오류.
 - **aspect(5):** 4/3 portrait / landscape 3/4 / 1 양방향 / 반복 비변형 / 오류(0·음수·NaN·Infinity).
 - **backing(9):** DPR1 cap2 / DPR2 cap2 / DPR3.5 cap2→eff2 / DPR1.25 소수 round / 최소 1 floor / **cap4 계산되나 정책 아님** / 오류(0·음수 css·0·음수 dpr·NaN·Infinity) / 비변형. Node unit(window/DOM 없이) 실행.
-- **총 render 유닛 = 55**(그룹당 `it.each` 포함 케이스 수 합).
+- 각 함수에 **overflow→`NON_FINITE_RESULT`** 케이스 1건 추가(rect/point/aspect/backing 각 1, cover 1).
+- **총 render 유닛 = 60**(그룹당 `it.each` 포함 케이스 수 합; 55 + overflow 5).
 
 ## 7. 전체 게이트
 
 - `corepack pnpm install --frozen-lockfile` exit 0, `pnpm-lock.yaml` diff 0, **신규 의존성 0**.
-- `node scripts/check.mjs`: format / lint(`--error-on-warnings`) / typecheck(7) / **unit 292**(스펙 018 237 + geometry 55) / build **PASS(exit 0)**.
+- `node scripts/check.mjs`: format / lint(`--error-on-warnings`) / typecheck(7) / **unit 297**(스펙 018 237 + geometry 60) / build **PASS(exit 0)**.
 - `pnpm test:e2e`: **49/49 PASS, exit 0**(스펙 015~018 회귀만; **새 Canvas E2E 없음**). 종료 후 preview 포트 미점유·저장소 vite/esbuild 잔류 0.
 - `git diff --check` clean.
 
