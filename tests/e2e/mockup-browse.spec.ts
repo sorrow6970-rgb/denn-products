@@ -312,22 +312,57 @@ for (const vp of MATRIX) {
   });
 }
 
-// --- keyboard: Enter/Space activate selection controls ----------------------
-test("keyboard Enter/Space selects a product kind", async ({ page }) => {
+// --- keyboard-only: full case + frame flows via Enter AND Space -------------
+// Focus each control with the keyboard (never a mouse click), assert its focus-visible ring, then
+// activate it — alternating Enter and Space so both activations are exercised — all the way to the
+// completion summary.
+async function keyPick(
+  page: Page,
+  locator: ReturnType<Page["getByRole"]>,
+  key: "Enter" | "Space",
+): Promise<void> {
+  await locator.focus();
+  const fv = await locator.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return {
+      focusVisible: el.matches(":focus-visible"),
+      outlineStyle: s.outlineStyle,
+      outlineWidth: s.outlineWidth,
+    };
+  });
+  expect(fv.focusVisible).toBe(true); // keyboard focus → visible ring
+  expect(fv.outlineStyle).not.toBe("none");
+  expect(fv.outlineWidth).not.toBe("0px");
+  await page.keyboard.press(key);
+}
+
+test("keyboard-only case and frame flows reach completion (Enter + Space)", async ({ page }) => {
   await routeCatalog(page, RICH);
   await gotoReady(page);
-  await kindChip(page, "휴대폰 케이스").focus();
-  await page.keyboard.press("Enter");
+
+  // Establish keyboard input modality and confirm Tab reaches the first control.
+  await page.keyboard.press("Tab");
+  const firstFocused = await page.evaluate(() => document.activeElement?.textContent ?? "");
+  expect(firstFocused).toContain("휴대폰 케이스");
+
+  // CASE: kind (Enter) → model (Space) → category (Enter) → template (Space) → summary
+  await keyPick(page, kindChip(page, "휴대폰 케이스"), "Enter");
   await expect(kindChip(page, "휴대폰 케이스")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByText("휴대폰 모델")).toBeVisible();
-  // focus-visible ring exists on a focused control
-  const focus = await page.evaluate(() => {
-    const el = document.activeElement as HTMLElement | null;
-    if (!el) return null;
-    const s = getComputedStyle(el);
-    return { outlineStyle: s.outlineStyle, outlineWidth: s.outlineWidth };
-  });
-  expect(focus?.outlineStyle).not.toBe("none");
+  await keyPick(page, kindChip(page, "모델 하나"), "Space");
+  await expect(kindChip(page, "모델 하나")).toHaveAttribute("aria-pressed", "true");
+  await keyPick(page, btn(page, /분류 A/), "Enter"); // cc1 → only 케이스 알파
+  await keyPick(page, btn(page, /케이스 알파/), "Space");
+  await expect(summary(page)).toContainText("모델: 모델 하나");
+  await expect(summary(page)).toContainText("템플릿: 케이스 알파");
+
+  // FRAME: kind (Space) → size (Enter) → category (Space) → template (Enter) → summary
+  await keyPick(page, kindChip(page, "액자"), "Space");
+  await expect(kindChip(page, "액자")).toHaveAttribute("aria-pressed", "true");
+  await keyPick(page, kindChip(page, "사이즈 하나"), "Enter");
+  await keyPick(page, btn(page, /액자 A/), "Space"); // fc1 → only 제한 액자 하나 under fs1
+  await keyPick(page, btn(page, /제한 액자 하나/), "Enter");
+  await expect(summary(page)).toContainText("사이즈: 사이즈 하나");
+  await expect(summary(page)).toContainText("템플릿: 제한 액자 하나");
 });
 
 // --- representative screenshots (synthetic fixture only) --------------------
