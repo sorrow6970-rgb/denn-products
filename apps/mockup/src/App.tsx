@@ -1,15 +1,23 @@
-import { APP_IDS, BRAND } from "@denn/shared";
+import { APP_IDS, BRAND, buildCatalogBrowseIndex } from "@denn/shared";
 import { Badge, Button, Card } from "@denn/ui";
+import { useMemo } from "react";
+import { BrowseFlow } from "./browse/BrowseFlow";
 import { safeCatalogMessage } from "./catalog/messages";
 import { publicCatalogReader } from "./catalog/reader";
 import type { PublicCatalogUiState } from "./catalog/types";
 import { usePublicCatalog } from "./catalog/usePublicCatalog";
 
-// Minimal public-catalog connection shell (spec 015): reads the fixed public catalog once on
-// mount and shows loading / ready / error / manual-retry only. No product list, Canvas, image,
-// selection, save, or order — the success document is held in memory for later specs.
+// Public-catalog connection (spec 015) + mobile-first browse UI (spec 017). Loading / error /
+// manual-retry are unchanged; when ready, the success document is turned into a spec 016 browse
+// index (once per document identity) and the step-by-step case/frame selection UI is shown.
+// No image/Canvas/save/order — ids-only selection with a text summary at completion.
 export function App(): React.JSX.Element {
   const { state, retry } = usePublicCatalog(publicCatalogReader);
+
+  // Build the browse index only in the ready state, once per document identity (spec 017 §2, §16).
+  const document = state.status === "ready" ? state.document : null;
+  const index = useMemo(() => (document ? buildCatalogBrowseIndex(document) : null), [document]);
+
   return (
     <main className="denn-shell">
       <div className="denn-shell__inner">
@@ -21,6 +29,11 @@ export function App(): React.JSX.Element {
         <Card>
           <CatalogStatus state={state} onRetry={retry} />
         </Card>
+        {state.status === "ready" && index ? (
+          <Card>
+            <BrowseFlow index={index} />
+          </Card>
+        ) : null}
       </div>
     </main>
   );

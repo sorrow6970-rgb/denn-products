@@ -1,0 +1,151 @@
+/* Spec 017 browse layout — app-specific layout ONLY. All colors come from @denn/ui theme tokens
+   (no new literals); primitives (Chip/Card/Badge/Button) are reused, not re-styled here beyond
+   letting long labels wrap. Mobile-first single column; page has zero horizontal overflow. */
+
+.denn-browse {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+
+/* Chips must wrap long Korean/English labels rather than push the row wider (spec 017 §11). */
+.denn-browse .denn-chip {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  text-align: left;
+}
+
+.denn-browse__notice {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+/* Template list: single column on mobile, two columns once there is room. */
+.denn-browse__templates {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  min-width: 0;
+}
+@media (min-width: 640px) {
+  .denn-browse__templates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.denn-browse__templates > li {
+  min-width: 0;
+}
+
+/* Text-only template card (no image). Selected = accent-soft fill + accent border + ✓, never
+   white-on-accent. */
+.denn-tplcard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.denn-tplcard:focus-visible {
+  outline: 3px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+.denn-tplcard__mark {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--muted);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent-ink);
+}
+.denn-tplcard__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.denn-tplcard__label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  font-size: 14px;
+  font-weight: 500;
+}
+.denn-tplcard__state {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-ink);
+}
+.denn-tplcard--on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.denn-tplcard--on .denn-tplcard__mark {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.denn-tplcard--on .denn-tplcard__label {
+  font-weight: 700;
+}
+@media (hover: hover) {
+  .denn-tplcard:not(.denn-tplcard--on):hover {
+    border-color: var(--accent-2);
+  }
+}
+
+/* Completion summary panel (accent-soft fill + ink text — not white-on-accent). */
+.denn-browse__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  min-width: 0;
+}
+/* Specificity (0,2,0) beats theme's `.denn-shell__inner p` (0,1,1) so ink — not muted — wins on
+   the accent-soft panel (muted on accent-soft is only 3.97:1). */
+.denn-browse .denn-browse__summary-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.denn-browse .denn-browse__summary-body {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .denn-tplcard {
+    transition: none;
+  }
+}
