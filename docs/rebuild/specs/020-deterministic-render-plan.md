@@ -432,4 +432,11 @@ Math.random
 - **테스트 +40**(malformed 22·식별자 14·order 5 등) → plan **35→75**. 정상 결과 무변경.
 - **재검증:** frozen diff 0·신규 의존성 0 / format·lint·typecheck / **unit 372** / build / **e2e 49 PASS·exit 0**(기존 회귀만) / check PASS / `git diff --check` clean. malformed table throw 0, 성공 plan·오류 직렬화 URL/base64/token 누출 0. `apps/**`·Firebase·운영본·POC·PNG 무변경.
 
-### Codex 재검증 요청 — HEAD 갱신 후 판정 대기.
+### Codex 최종 판정 — 승인 가능 (2026-07-27)
+
+- **판정:** 스펙 020 = **승인 가능**. **승인 기준 HEAD = `07657fb`**.
+- **확정 계약:** 결정적·JSON-safe preview render-plan(`buildPreviewRenderPlan`), 케이스·액자 입력·layer 순서 분리, 스펙 019 geometry 재사용, malformed runtime 입력 throw 방지, `zone.order` NaN/±Infinity 차단, restricted synthetic identifier 문법(`^[A-Za-z0-9][A-Za-z0-9._-]*$`·1..128) 확정.
+- **식별자 신뢰 경계(정확 기록):** 문법은 URL 형태·공백·control char·일반 padded base64 delimiter를 거부하되 **semantic secret detector가 아님**(허용 문자만의 token/secret/unpadded base64는 판별 불가). **caller는 imageRef에 URL/base64/token/secret을 전달 금지**, **후속 executor는 imageRef를 URL이 아닌 메모리 신뢰 image binding-map lookup key로만 사용**, builder는 source URL/token/storagePath/raw catalog를 생성·복사하지 않음.
+- **최종 게이트:** frozen diff 0·신규 의존성 0 / format·lint·typecheck / **unit 372** / build / **e2e 49 PASS·exit 0**(기존 회귀만, 새 Canvas E2E 없음) / check PASS / `git diff --check` clean. 금지어(§G) 런타임 참조 0.
+- **미검증 범위(후속):** 실제 Canvas 픽셀·CORS-clean·이미지 load·선명도·pointer·회전·text/clock·print·DPR cap·실기기·배포 = **미착수**(plan으로 증명 불가). template-art/camera/magsafe/text/clock 레이어, 주문 실패 정책 = 후속 스펙.
+- **다음:** 후속 순서(스펙 019 사전 조사 §표10) = Canvas executor(deterministic renderer) → image/CORS → pointer → text/clock → print. Codex 다음 스펙 지시 대기.
