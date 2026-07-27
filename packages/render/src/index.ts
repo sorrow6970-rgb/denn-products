@@ -1,11 +1,16 @@
-// @denn/render — framework-independent render input/output interfaces + constants, plus the pure
-// geometry contract (spec 019). NO Canvas implementation, NO image load, NO print/PNG export — the
-// real renderer is still a later spec. Direction @denn/render -> @denn/shared is allowed.
+// @denn/render — framework-independent render input/output interfaces + constants, the pure
+// geometry contract (spec 019), and the deterministic preview render-PLAN contract (spec 020). NO
+// Canvas executor, NO image load, NO print/PNG export — those remain later specs. Direction
+// @denn/render -> @denn/shared is allowed.
 import type { Result } from "@denn/shared";
 
 // Pure geometry contract (spec 019): cover-fit, pan clamp, percent rect, client->logical point,
 // oriented aspect, backing-store size. Pure math only — see ./geometry.
 export * from "./geometry";
+
+// Deterministic preview render-plan contract (spec 020): a pure, JSON-safe plan of draw commands
+// (fill/clip-image/stroke) for case/frame previews. NOT a Canvas executor — see ./plan.
+export * from "./plan";
 
 export interface RenderInput {
   readonly widthPx: number;
@@ -21,4 +26,4 @@ export interface RenderOutput {
 export type RenderResult = Result<RenderOutput, "not-implemented">;
 
 export const RENDER_NOT_IMPLEMENTED =
-  "canvas render math + print export are implemented in a later spec" as const;
+  "the Canvas executor (ctx draw) + print/PNG export are implemented in a later spec (geometry + preview render plan are done)" as const;
