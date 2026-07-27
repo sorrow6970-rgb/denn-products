@@ -1,6 +1,8 @@
 // Deterministic preview render-plan builder (spec 020). Pure: no Date/random/global/DOM/Canvas/
-// React/Firebase/IO. Reuses spec 019 geometry for all image placement. Never throws on ordinary bad
-// input; a success plan is JSON-safe and every number in it is finite.
+// React/Firebase/IO. Reuses spec 019 geometry for all image placement. Never throws — including on
+// runtime-malformed input that bypasses the TypeScript types (null/undefined/primitive/partial
+// objects); such input returns a typed error Result. A success plan is JSON-safe and every number
+// in it is finite.
 
 import {
   computeCoverDrawRect,
@@ -8,7 +10,6 @@ import {
   type ImageTransform,
   percentRectToLogical,
   type Rect,
-  type Size,
 } from "../geometry";
 import type {
   CasePlanInput,
@@ -24,20 +25,34 @@ import type {
 } from "./types";
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
-// Any URI scheme prefix (covers data:/blob:/http:/https:/javascript:). imageRef must be a plain,
-// scheme-less synthetic binding key — never a URL.
-const SCHEME = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
+// Safe synthetic identifier grammar (spec 020 hardening): must start with an ASCII alphanumeric,
+// then only ASCII alphanumerics and `.` `_` `-`, length 1..MAX_ID_LEN. This structurally cannot
+// hold a URI scheme (`:`), whitespace (incl. leading/trailing), control chars, `/`, or base64
+// `+`/`=`/`/`. So it cannot carry a URL/base64/token. Applied to BOTH zone.id and imageRef.
+const SAFE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+const MAX_ID_LEN = 128;
+
+// --- defensive primitives (accept unknown; never throw) ---------------------
+const isObj = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+const isFiniteNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+const isFinitePositive = (v: unknown): v is number => isFiniteNum(v) && v > 0;
+const isHex = (c: unknown): c is HexColor => typeof c === "string" && HEX.test(c);
+const isSafeId = (v: unknown): v is string =>
+  typeof v === "string" && v.length >= 1 && v.length <= MAX_ID_LEN && SAFE_ID.test(v);
+const isSize = (s: unknown): boolean =>
+  isObj(s) && isFinitePositive(s.width) && isFinitePositive(s.height);
+const isRect = (r: unknown): boolean =>
+  isObj(r) &&
+  isFiniteNum(r.x) &&
+  isFiniteNum(r.y) &&
+  isFinitePositive(r.width) &&
+  isFinitePositive(r.height);
+const isTransform = (t: unknown): t is ImageTransform =>
+  isObj(t) && isFiniteNum(t.x) && isFiniteNum(t.y) && isFinitePositive(t.scale);
 
 const fail = (code: RenderPlanErrorCode, causeCode?: GeometryErrorCode): RenderPlanResult =>
   causeCode ? { ok: false, code, causeCode } : { ok: false, code };
-const isFinitePositive = (n: number): boolean => Number.isFinite(n) && n > 0;
-const isSizePositive = (s: { width: number; height: number }): boolean =>
-  isFinitePositive(s.width) && isFinitePositive(s.height);
-const isHex = (c: unknown): c is HexColor => typeof c === "string" && HEX.test(c);
-const isTransformValid = (t: ImageTransform): boolean =>
-  Number.isFinite(t.x) && Number.isFinite(t.y) && isFinitePositive(t.scale);
-const isSafeImageRef = (ref: unknown): ref is string =>
-  typeof ref === "string" && ref.trim().length > 0 && !SCHEME.test(ref);
 
 /** Every rect coord and stroke width in the plan must be finite (final safety net). */
 function commandsAllFinite(commands: readonly PreviewDrawCommand[]): boolean {
@@ -58,27 +73,35 @@ function commandsAllFinite(commands: readonly PreviewDrawCommand[]): boolean {
   return true;
 }
 
-/** Validate an optional stroke spec (color + finite positive width). */
-function validateStroke(stroke: StrokeSpec): RenderPlanErrorCode | null {
+/** Validate an optional stroke spec (object + hex color + finite positive width). */
+function validateStroke(stroke: unknown): StrokeSpec | RenderPlanErrorCode {
+  if (!isObj(stroke)) return "INVALID_ZONE";
   if (!isHex(stroke.color)) return "INVALID_COLOR";
-  if (!Number.isFinite(stroke.width)) return "NON_FINITE_RESULT";
+  if (!isFiniteNum(stroke.width)) return "NON_FINITE_RESULT";
   if (stroke.width <= 0) return "INVALID_ZONE";
-  return null;
+  return { color: stroke.color, width: stroke.width };
 }
 
-/** Resolve a zone rect to a logical rect (percent → geometry conversion), or an error code. */
+/** Validate a zone rect (object + units tag + finite origin + positive finite size). */
+function validateZoneRect(raw: unknown): ZoneRect | null {
+  if (!isObj(raw)) return null;
+  if (raw.units !== "logical" && raw.units !== "percent") return null;
+  if (
+    !isFiniteNum(raw.x) ||
+    !isFiniteNum(raw.y) ||
+    !isFinitePositive(raw.width) ||
+    !isFinitePositive(raw.height)
+  ) {
+    return null;
+  }
+  return { units: raw.units, x: raw.x, y: raw.y, width: raw.width, height: raw.height };
+}
+
+/** Resolve a validated zone rect to a logical rect (percent → geometry), or an error code. */
 function resolveZoneRect(
-  canvas: Size,
+  canvas: { width: number; height: number },
   rect: ZoneRect,
 ): { rect: Rect } | { code: RenderPlanErrorCode; causeCode?: GeometryErrorCode } {
-  if (
-    !Number.isFinite(rect.x) ||
-    !Number.isFinite(rect.y) ||
-    !isFinitePositive(rect.width) ||
-    !isFinitePositive(rect.height)
-  ) {
-    return { code: "INVALID_ZONE" };
-  }
   if (rect.units === "logical")
     return { rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height } };
   const r = percentRectToLogical(
@@ -112,46 +135,74 @@ function coverCommand(
   };
 }
 
+/** A zone whose every field has been validated (safe to build commands from). */
+interface NormalizedZone {
+  readonly id: string;
+  readonly imageRef: string;
+  readonly rect: ZoneRect;
+  readonly transform: ImageTransform;
+  readonly guide?: StrokeSpec;
+  readonly index: number;
+  readonly key: number;
+}
+
 function buildCase(input: CasePlanInput): RenderPlanResult {
-  if (!isSizePositive(input.logicalCanvas)) return fail("INVALID_ZONE");
+  if (!isSize(input.logicalCanvas)) return fail("INVALID_ZONE");
   if (!isHex(input.bodyColor)) return fail("INVALID_COLOR");
-  if (!isSizePositive(input.image)) return fail("INVALID_ZONE");
-  if (!isTransformValid(input.defaultTransform)) return fail("INVALID_TRANSFORM");
+  if (!isSize(input.image)) return fail("INVALID_ZONE");
+  if (!isTransform(input.defaultTransform)) return fail("INVALID_TRANSFORM");
   if (!Array.isArray(input.zones)) return fail("INVALID_ZONE");
 
-  // ids: non-empty, scheme-less imageRef, no duplicates.
   const seen = new Set<string>();
-  for (const zone of input.zones) {
-    if (typeof zone.id !== "string" || zone.id.trim().length === 0) return fail("INVALID_ID");
-    if (!isSafeImageRef(zone.imageRef)) return fail("INVALID_ID");
+  const normalized: NormalizedZone[] = [];
+  const rawZones = input.zones as readonly unknown[];
+  for (let index = 0; index < rawZones.length; index++) {
+    const zone = rawZones[index];
+    if (!isObj(zone)) return fail("INVALID_ZONE"); // null/undefined/primitive item
+    if (!isSafeId(zone.id)) return fail("INVALID_ID");
+    if (!isSafeId(zone.imageRef)) return fail("INVALID_ID");
     if (seen.has(zone.id)) return fail("INVALID_ID"); // duplicate zone id is fatal, not a warning
     seen.add(zone.id);
+
+    const rect = validateZoneRect(zone.rect);
+    if (!rect) return fail("INVALID_ZONE");
+
+    if (zone.order !== undefined && !isFiniteNum(zone.order)) return fail("INVALID_ZONE");
+    const key = isFiniteNum(zone.order) ? zone.order : index;
+
+    let transform: ImageTransform;
+    if (zone.transform === undefined) transform = input.defaultTransform;
+    else if (isTransform(zone.transform)) transform = zone.transform;
+    else return fail("INVALID_TRANSFORM");
+
+    let guide: StrokeSpec | undefined;
+    if (zone.guide !== undefined) {
+      const g = validateStroke(zone.guide);
+      if (typeof g === "string") return fail(g);
+      guide = g;
+    }
+
+    normalized.push({ id: zone.id, imageRef: zone.imageRef, rect, transform, guide, index, key });
   }
 
-  // deterministic order: order ascending (missing order = original index), ties by original index.
-  const ordered = input.zones
-    .map((zone, index) => ({ zone, index, key: zone.order !== undefined ? zone.order : index }))
-    .sort((a, b) => a.key - b.key || a.index - b.index);
+  // deterministic order: `key` ascending (missing order = original index), ties by original index.
+  normalized.sort((a, b) => a.key - b.key || a.index - b.index);
 
   const imageCommands: PreviewDrawCommand[] = [];
   const guideCommands: PreviewDrawCommand[] = [];
-  for (const { zone } of ordered) {
+  for (const zone of normalized) {
     const resolved = resolveZoneRect(input.logicalCanvas, zone.rect);
     if ("code" in resolved) return fail(resolved.code, resolved.causeCode);
-    const transform = zone.transform ?? input.defaultTransform;
-    if (!isTransformValid(transform)) return fail("INVALID_TRANSFORM");
     const image = coverCommand(
       `case:user-image:${zone.id}`,
       zone.imageRef,
       resolved.rect,
       input.image,
-      transform,
+      zone.transform,
     );
     if ("code" in image) return fail(image.code, image.causeCode);
     imageCommands.push(image.command);
     if (zone.guide) {
-      const strokeError = validateStroke(zone.guide);
-      if (strokeError) return fail(strokeError);
       guideCommands.push({
         type: "stroke-rect",
         layerId: `case:guide:${zone.id}`,
@@ -180,15 +231,18 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
 }
 
 function buildFrame(input: FramePlanInput): RenderPlanResult {
-  if (!isSizePositive(input.logicalCanvas)) return fail("INVALID_ZONE");
-  if (!isRectValid(input.frameRect) || !isRectValid(input.imageZone)) return fail("INVALID_ZONE");
+  if (!isSize(input.logicalCanvas)) return fail("INVALID_ZONE");
+  if (!isRect(input.frameRect) || !isRect(input.imageZone)) return fail("INVALID_ZONE");
   if (!isHex(input.frameColor) || !isHex(input.matColor)) return fail("INVALID_COLOR");
-  if (!isSizePositive(input.image)) return fail("INVALID_ZONE");
-  if (!isTransformValid(input.transform)) return fail("INVALID_TRANSFORM");
-  if (!isSafeImageRef(input.imageRef)) return fail("INVALID_ID");
-  if (input.innerBorder) {
-    const strokeError = validateStroke(input.innerBorder);
-    if (strokeError) return fail(strokeError);
+  if (!isSize(input.image)) return fail("INVALID_ZONE");
+  if (!isTransform(input.transform)) return fail("INVALID_TRANSFORM");
+  if (!isSafeId(input.imageRef)) return fail("INVALID_ID");
+
+  let innerBorder: StrokeSpec | undefined;
+  if (input.innerBorder !== undefined) {
+    const b = validateStroke(input.innerBorder);
+    if (typeof b === "string") return fail(b);
+    innerBorder = b;
   }
 
   const image = coverCommand(
@@ -215,13 +269,13 @@ function buildFrame(input: FramePlanInput): RenderPlanResult {
     },
     image.command,
   ];
-  if (input.innerBorder) {
+  if (innerBorder) {
     commands.push({
       type: "stroke-rect",
       layerId: "frame:inner-border",
       rect: rectCopy(input.imageZone),
-      color: input.innerBorder.color,
-      width: input.innerBorder.width,
+      color: innerBorder.color,
+      width: innerBorder.width,
     });
   }
   if (!commandsAllFinite(commands)) return fail("NON_FINITE_RESULT");
@@ -231,22 +285,28 @@ function buildFrame(input: FramePlanInput): RenderPlanResult {
   };
 }
 
-const isRectValid = (r: Rect): boolean =>
-  Number.isFinite(r.x) &&
-  Number.isFinite(r.y) &&
-  isFinitePositive(r.width) &&
-  isFinitePositive(r.height);
-const canvasRect = (s: Size): Rect => ({ x: 0, y: 0, width: s.width, height: s.height });
-const sizeCopy = (s: Size): Size => ({ width: s.width, height: s.height });
+const canvasRect = (s: { width: number; height: number }): Rect => ({
+  x: 0,
+  y: 0,
+  width: s.width,
+  height: s.height,
+});
+const sizeCopy = (s: { width: number; height: number }): { width: number; height: number } => ({
+  width: s.width,
+  height: s.height,
+});
 const rectCopy = (r: Rect): Rect => ({ x: r.x, y: r.y, width: r.width, height: r.height });
 
 /**
  * Build a deterministic, JSON-safe preview render plan for a case or frame input. Case and frame
  * are separate inputs with separate layer orders; all image placement comes from spec 019 geometry.
- * Never throws — ordinary bad input returns a typed error Result. Never emits placeholder commands
- * for template-art/camera/magsafe/text/clock (no data for them in this spec).
+ * Never throws — ordinary (or runtime-malformed) bad input returns a typed error Result. Never emits
+ * placeholder commands for template-art/camera/magsafe/text/clock (no data for them in this spec).
  */
 export function buildPreviewRenderPlan(input: PreviewRenderPlanInput): RenderPlanResult {
-  if (!input || (input.kind !== "case" && input.kind !== "frame")) return fail("INVALID_KIND");
-  return input.kind === "case" ? buildCase(input) : buildFrame(input);
+  if (!isObj(input) || (input.kind !== "case" && input.kind !== "frame"))
+    return fail("INVALID_KIND");
+  return input.kind === "case"
+    ? buildCase(input as CasePlanInput)
+    : buildFrame(input as FramePlanInput);
 }

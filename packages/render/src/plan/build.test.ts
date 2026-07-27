@@ -434,3 +434,164 @@ describe("buildPreviewRenderPlan — errors & leak", () => {
     expect(f).toEqual({ ok: false, code: "INVALID_ID" });
   });
 });
+
+// ---- F. runtime-malformed input never throws (spec 020 hardening) --------------
+// biome-ignore lint/suspicious/noExplicitAny: intentionally malformed runtime input bypassing types
+const omit = (o: any, k: string): unknown => {
+  const c = { ...o };
+  delete c[k];
+  return c;
+};
+const LZONE = { units: "logical", x: 0, y: 0, width: 10, height: 10 } as const;
+
+describe("buildPreviewRenderPlan — runtime-malformed input returns errors (no throw)", () => {
+  it.each<[string, unknown, string]>([
+    ["null input", null, "INVALID_KIND"],
+    ["primitive input", 5, "INVALID_KIND"],
+    ["case zones item null", { ...CASE_BASE, zones: [null] }, "INVALID_ZONE"],
+    ["case zones item primitive", { ...CASE_BASE, zones: [42] }, "INVALID_ZONE"],
+    ["case zones not array", { ...CASE_BASE, zones: {} }, "INVALID_ZONE"],
+    ["case logicalCanvas null", { ...CASE_BASE, logicalCanvas: null }, "INVALID_ZONE"],
+    ["case logicalCanvas missing", omit(CASE_BASE, "logicalCanvas"), "INVALID_ZONE"],
+    ["case image null", { ...CASE_BASE, image: null }, "INVALID_ZONE"],
+    ["case defaultTransform null", { ...CASE_BASE, defaultTransform: null }, "INVALID_TRANSFORM"],
+    ["case defaultTransform missing", omit(CASE_BASE, "defaultTransform"), "INVALID_TRANSFORM"],
+    [
+      "case zone.rect null",
+      { ...CASE_BASE, zones: [{ id: "z", imageRef: "i", rect: null }] },
+      "INVALID_ZONE",
+    ],
+    [
+      "case zone.rect no units",
+      {
+        ...CASE_BASE,
+        zones: [{ id: "z", imageRef: "i", rect: { x: 0, y: 0, width: 10, height: 10 } }],
+      },
+      "INVALID_ZONE",
+    ],
+    [
+      "case zone.transform null",
+      { ...CASE_BASE, zones: [{ id: "z", imageRef: "i", rect: LZONE, transform: null }] },
+      "INVALID_TRANSFORM",
+    ],
+    [
+      "case zone.transform partial",
+      { ...CASE_BASE, zones: [{ id: "z", imageRef: "i", rect: LZONE, transform: { scale: 1 } }] },
+      "INVALID_TRANSFORM",
+    ],
+    [
+      "case zone.guide null",
+      { ...CASE_BASE, zones: [{ id: "z", imageRef: "i", rect: LZONE, guide: null }] },
+      "INVALID_ZONE",
+    ],
+    ["frame frameRect null", { ...FRAME_BASE, frameRect: null }, "INVALID_ZONE"],
+    ["frame frameRect missing", omit(FRAME_BASE, "frameRect"), "INVALID_ZONE"],
+    ["frame imageZone primitive", { ...FRAME_BASE, imageZone: 5 }, "INVALID_ZONE"],
+    ["frame transform null", { ...FRAME_BASE, transform: null }, "INVALID_TRANSFORM"],
+    ["frame transform missing", omit(FRAME_BASE, "transform"), "INVALID_TRANSFORM"],
+    ["frame innerBorder null", { ...FRAME_BASE, innerBorder: null }, "INVALID_ZONE"],
+    [
+      "frame innerBorder no width",
+      { ...FRAME_BASE, innerBorder: { color: "#000000" } },
+      "NON_FINITE_RESULT",
+    ],
+  ])("%s → %s (no throw)", (_label, input, code) => {
+    let r: RenderPlanResult;
+    expect(() => {
+      r = buildPreviewRenderPlan(input as never);
+    }).not.toThrow();
+    // biome-ignore lint/style/noNonNullAssertion: assigned above in the non-throwing callback
+    expect(r!).toEqual(expect.objectContaining({ ok: false, code }));
+  });
+});
+
+// ---- G. safe synthetic identifier (zone.id + imageRef) -------------------------
+describe("buildPreviewRenderPlan — safe identifier grammar", () => {
+  it.each<[string, string]>([
+    ["leading space + https", " https://example.invalid/image"],
+    ["leading tab + data", "\tdata:image/png;base64,QQ"],
+    ["leading newline + javascript", "\njavascript:alert(1)"],
+    ["trailing space", "img-1 "],
+    ["internal newline", "im\nage"],
+    ["tab", "im\tage"],
+    ["control char", "img"],
+    ["colon (scheme-like)", "case:body"],
+    ["slash", "a/b"],
+    ["base64 plus/equals", "AA+/=="],
+  ])("rejects an unsafe imageRef (%s) as INVALID_ID", (_label, imageRef) => {
+    expect(
+      buildPreviewRenderPlan({ ...CASE_BASE, zones: [{ id: "z", imageRef, rect: LZONE }] }),
+    ).toEqual({ ok: false, code: "INVALID_ID" });
+    expect(buildPreviewRenderPlan({ ...FRAME_BASE, imageRef })).toEqual({
+      ok: false,
+      code: "INVALID_ID",
+    });
+  });
+
+  it("a URL-form zone.id is rejected and never reaches a layerId", () => {
+    const r = buildPreviewRenderPlan({
+      ...CASE_BASE,
+      zones: [{ id: "https://evil.example/x", imageRef: "i", rect: LZONE }],
+    });
+    expect(r).toEqual({ ok: false, code: "INVALID_ID" });
+    expect(JSON.stringify(r)).not.toContain("evil.example");
+  });
+
+  it("accepts normal synthetic ids (alnum + . _ - up to 128 chars)", () => {
+    const id = `${"a".repeat(120)}.b_c-3`;
+    expect(id.length).toBeGreaterThan(120);
+    const p = plan(
+      buildPreviewRenderPlan({ ...CASE_BASE, zones: [{ id, imageRef: "img.0_a-1", rect: LZONE }] }),
+    );
+    expect(layerIds(p)).toEqual(["case:body", `case:user-image:${id}`]);
+  });
+
+  it("rejects an over-length id (>128)", () => {
+    const id = "a".repeat(129);
+    expect(
+      buildPreviewRenderPlan({ ...CASE_BASE, zones: [{ id, imageRef: "i", rect: LZONE }] }),
+    ).toEqual({ ok: false, code: "INVALID_ID" });
+  });
+});
+
+// ---- H. zone.order finiteness -------------------------------------------------
+describe("buildPreviewRenderPlan — zone.order validation", () => {
+  it.each<[string, number]>([
+    ["NaN", Number.NaN],
+    ["Infinity", Number.POSITIVE_INFINITY],
+    ["-Infinity", Number.NEGATIVE_INFINITY],
+  ])("rejects a %s order as INVALID_ZONE", (_label, order) => {
+    expect(
+      buildPreviewRenderPlan({
+        ...CASE_BASE,
+        zones: [{ id: "z", imageRef: "i", rect: LZONE, order }],
+      }),
+    ).toEqual({ ok: false, code: "INVALID_ZONE" });
+  });
+
+  it("allows finite negative/decimal order and keeps ascending semantics", () => {
+    const p = plan(
+      buildPreviewRenderPlan({
+        ...CASE_BASE,
+        zones: [
+          { id: "b", imageRef: "i0", rect: LZONE, order: 0.5 },
+          { id: "a", imageRef: "i1", rect: LZONE, order: -1.5 },
+        ],
+      }),
+    );
+    expect(layerIds(p)).toEqual(["case:body", "case:user-image:a", "case:user-image:b"]);
+  });
+
+  it("without order, falls back to source index order", () => {
+    const p = plan(
+      buildPreviewRenderPlan({
+        ...CASE_BASE,
+        zones: [
+          { id: "first", imageRef: "i0", rect: LZONE },
+          { id: "second", imageRef: "i1", rect: LZONE },
+        ],
+      }),
+    );
+    expect(layerIds(p)).toEqual(["case:body", "case:user-image:first", "case:user-image:second"]);
+  });
+});
