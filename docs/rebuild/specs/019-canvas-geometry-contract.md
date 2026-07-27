@@ -476,3 +476,19 @@ firebase
   - multi-zone transform 상태
   - print DPI/minLong/maxPixels
   - 인쇄 실패 시 주문 차단 vs preview-only fallback
+
+---
+
+### DONE (Claude) — 2026-07-27
+
+- **구현:** `@denn/render`에 순수 geometry 6종. `packages/render/src/geometry/{types,guards,cover,rect,point,aspect,backing,index}.ts` + `src/index.ts`에 `export * from "./geometry"`(기존 placeholder API 유지). 공개 = `computeCoverDrawRect`·`percentRectToLogical`·`clientPointToLogical`·`resolveOrientedAspect`·`computeBackingStoreSize` + 타입(guards 미노출).
+- **수식(레거시 근거):** cover `baseScale=max(zone/img)`·pan clamp `abs(draw-zone)/2`(scale<1 abs 그대로, `drawImgT:1543`)·`clampPan:false`는 pan 그대로(print pan-scale 미추가) / percent `container + p/100*size`(`:1664`,`:3074`) / client→logical `(client-rect)*logicalSize/rect`(backing·DPR 미사용, `cPos:1535`) / aspect `landscape?1/portrait:portrait`(=H/W, `:7211`) / backing `max(1,round(css*min(dpr,cap)))`(POC `useCanvasDpr`).
+- **오류 계약:** `GeometryResult<T>={ok:true,value}|{ok:false,code}`, code 5종. **throw 없음**, NaN/Infinity→`NON_FINITE_INPUT`, size/scale/aspect/dpr≤0→각 `NON_POSITIVE_*`, 입력 비변형, payload에 이미지·URL·token 없음.
+- **공유 경계:** cover 코어는 케이스+비회전 액자 공유. 회전·multi-zone·pointer·layer plan·print는 미구현(하나의 불명확 state/옵션 통합 금지).
+- **DPR 미확정:** `dprCap` 필수 입력·기본값 없음. cap 2/4는 입력 사례로만 검증, 제품 정책 미확정(2·4·print DPI·zoom 0.3~5 모두 미확정).
+- **게이트:** frozen diff 0·신규 의존성 0 / format·lint·typecheck / **unit 292**(geometry 55 신규) / build / **e2e 49 PASS·exit 0**(스펙 015~018 회귀만, **새 Canvas E2E 없음**) / check PASS / `git diff --check` clean.
+- **금지 의존성(§H):** geometry source에 `document/window/HTMLCanvasElement/CanvasRenderingContext2D/getContext/drawImage/setTransform/devicePixelRatio/ResizeObserver/Image/fetch/firebase` 런타임 참조 0. render 외부 import는 `type Result`(placeholder)뿐, React/Firebase/DOM/Canvas/IO 0.
+- **무변경:** `apps/**`·shared·firebase·ui·spaces·운영 HTML·Firebase 설정/Rules·POC·PNG. deploy 0.
+- **미검증:** 실제 Canvas 선명도·합성·CORS-clean·인쇄 정확도·실기기 = 순수 geometry로 증명 불가(후속). 커밋: 코드/test와 문서 분리(`spec 019:`). 핸드오프 `docs/2026-07-27-spec-019-canvas-geometry-contract-handoff.md`.
+
+### Codex 재검증 요청 — HEAD 갱신 후 판정 대기.
