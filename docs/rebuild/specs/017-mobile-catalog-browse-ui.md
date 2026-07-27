@@ -304,3 +304,14 @@
 - **NOT TESTED(정직 기록):** 실제 iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱, 실제 200% 확대, 실제 Firebase GET·`test:live:*`. **이 DONE은 자동검증 단계 완료이며 실기기 검증 전 출시 완료가 아님.**
 - **무변경:** 운영 HTML·Firebase 설정/Rules 2종·`poc/**`·디자인 PNG·`apps/admin/**` baseline hash UNCHANGED. Firebase SDK/Auth/write·Rules/CORS·Hosting·deploy 0. Router/Zustand/새 라이브러리 0.
 - **커밋:** 코드/test와 문서/핸드오프 분리(`spec 017:`). 핸드오프 `docs/2026-07-27-spec-017-mobile-catalog-browse-ui-handoff.md`.
+
+---
+
+### Codex 최종 판정 — 승인 가능 (2026-07-27)
+
+- **판정:** 스펙 017 = **승인 가능**. **승인 기준 HEAD = `711bb3e`**.
+- **게이트 최종:** **unit 202** / **e2e 34** / **check PASS**.
+- **키보드 전용:** 케이스·액자 **전체 흐름**을 마우스 없이 각 단계 focus-visible 확인 + **Enter·Space 교차 활성화**로 완료 요약까지 검증.
+- **E2E 잔류 프로세스:** 저장소 소속 preview/Vite/esbuild 잔류 **0**, 포트 4183/4184 LISTENING 0, Playwright exit 0.
+- **teardown:** `globalTeardown`·포트 기반 강제 종료 **없음**. webServer `gracefulShutdown{signal:"SIGTERM", timeout:5000}`만 유지.
+- **유지(NOT TESTED):** 실제 iPhone Safari·Android Chrome·Samsung Internet·카카오 인앱 4환경, 실제 200% 확대, 실제 Firebase GET·Canvas·이미지·저장·주문·배포는 미착수. 이 승인은 **자동검증 단계 종료**이며 실기기 검증 전 출시 완료가 아니다.
