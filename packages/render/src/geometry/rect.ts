@@ -36,10 +36,11 @@ export function percentRectToLogical(container: Rect, percent: PercentRect): Geo
     return err("NON_POSITIVE_SIZE");
   }
 
-  return ok({
-    x: container.x + (percent.x / 100) * container.width,
-    y: container.y + (percent.y / 100) * container.height,
-    width: (percent.width / 100) * container.width,
-    height: (percent.height / 100) * container.height,
-  });
+  const x = container.x + (percent.x / 100) * container.width;
+  const y = container.y + (percent.y / 100) * container.height;
+  const width = (percent.width / 100) * container.width;
+  const height = (percent.height / 100) * container.height;
+  // Finite inputs can overflow (e.g. huge percent × huge container). Never return a non-finite rect.
+  if (!allFinite([x, y, width, height])) return err("NON_FINITE_RESULT");
+  return ok({ x, y, width, height });
 }

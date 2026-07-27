@@ -97,4 +97,15 @@ describe("clientPointToLogical", () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.code).toBe(code);
   });
+
+  it("finite inputs that overflow (huge delta × huge logical / tiny rect) → NON_FINITE_RESULT", () => {
+    // x = (1000 - 0) * MAX_VALUE / 1 = Infinity
+    const r = clientPointToLogical({
+      client: { x: 1000, y: 10 },
+      clientRect: { x: 0, y: 0, width: 1, height: 400 },
+      logicalSize: { width: Number.MAX_VALUE, height: 400 },
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.code).toBe("NON_FINITE_RESULT");
+  });
 });

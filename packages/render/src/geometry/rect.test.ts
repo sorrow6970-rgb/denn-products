@@ -71,6 +71,16 @@ describe("percentRectToLogical", () => {
     if (!r.ok) expect(r.code).toBe(code);
   });
 
+  it("finite inputs that overflow (huge percent × huge container) → NON_FINITE_RESULT", () => {
+    // width = 1000/100 * MAX_VALUE = 10 * MAX_VALUE = Infinity
+    const r = percentRectToLogical(
+      { x: 0, y: 0, width: Number.MAX_VALUE, height: 300 },
+      { x: 0, y: 0, width: 1000, height: 40 },
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.code).toBe("NON_FINITE_RESULT");
+  });
+
   it("does not mutate its inputs", () => {
     const container = Object.freeze({ x: 0, y: 0, width: 400, height: 300 });
     const percent = Object.freeze({ x: 25, y: 10, width: 50, height: 40 });

@@ -50,4 +50,11 @@ describe("resolveOrientedAspect (aspect = height/width)", () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.code).toBe(code);
   });
+
+  it("finite tiny aspect whose landscape reciprocal overflows → NON_FINITE_RESULT (never ok)", () => {
+    // 1 / Number.MIN_VALUE = Infinity (finite positive input, non-finite result)
+    const r = resolveOrientedAspect({ portraitAspect: Number.MIN_VALUE, orientation: "landscape" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.code).toBe("NON_FINITE_RESULT");
+  });
 });

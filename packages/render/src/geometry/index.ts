@@ -1,5 +1,6 @@
-// Public surface of the pure geometry contract (spec 019). Six pure functions + their types.
-// No DOM/Canvas/React/Firebase/IO. Guards are internal and NOT re-exported.
+// Public surface of the pure geometry contract (spec 019): 5 public functions implementing the 6
+// geometry contracts (pan clamp is an internal contract of computeCoverDrawRect, not a separate
+// function). No DOM/Canvas/React/Firebase/IO. Guards are internal and NOT re-exported.
 export { computeCoverDrawRect } from "./cover";
 export type { CoverDrawInput } from "./cover";
 export { percentRectToLogical } from "./rect";

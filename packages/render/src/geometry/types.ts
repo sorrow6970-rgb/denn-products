@@ -36,6 +36,10 @@ export interface ImageTransform {
 
 export type GeometryErrorCode =
   | "NON_FINITE_INPUT"
+  // A computed value overflowed to NaN/±Infinity from otherwise-finite inputs (e.g. MAX_VALUE*2,
+  // 1/MIN_VALUE). Distinct from NON_FINITE_INPUT so an input error is never confused with an
+  // overflow of the math. A success Result NEVER contains a non-finite number.
+  | "NON_FINITE_RESULT"
   | "NON_POSITIVE_SIZE"
   | "NON_POSITIVE_SCALE"
   | "NON_POSITIVE_ASPECT"

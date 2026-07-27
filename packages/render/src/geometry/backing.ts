@@ -32,12 +32,13 @@ export function computeBackingStoreSize(
   if (!isPositive(deviceDpr) || !isPositive(dprCap)) return err("NON_POSITIVE_DPR");
 
   const effectiveDpr = Math.min(deviceDpr, dprCap);
+  const backingWidth = Math.max(1, Math.round(cssSize.width * effectiveDpr));
+  const backingHeight = Math.max(1, Math.round(cssSize.height * effectiveDpr));
+  // css * effectiveDpr (and its round) can overflow to Infinity from finite inputs; never return it.
+  if (!allFinite([effectiveDpr, backingWidth, backingHeight])) return err("NON_FINITE_RESULT");
   return ok({
     cssSize: { width: cssSize.width, height: cssSize.height },
     effectiveDpr,
-    backingSize: {
-      width: Math.max(1, Math.round(cssSize.width * effectiveDpr)),
-      height: Math.max(1, Math.round(cssSize.height * effectiveDpr)),
-    },
+    backingSize: { width: backingWidth, height: backingHeight },
   });
 }

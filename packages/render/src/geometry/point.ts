@@ -45,8 +45,9 @@ export function clientPointToLogical(input: ClientPointInput): GeometryResult<Po
     return err("NON_POSITIVE_SIZE");
   }
 
-  return ok({
-    x: ((client.x - clientRect.x) * logicalSize.width) / clientRect.width,
-    y: ((client.y - clientRect.y) * logicalSize.height) / clientRect.height,
-  });
+  const x = ((client.x - clientRect.x) * logicalSize.width) / clientRect.width;
+  const y = ((client.y - clientRect.y) * logicalSize.height) / clientRect.height;
+  // Finite inputs can overflow (e.g. huge client delta × huge logical size). Never return non-finite.
+  if (!allFinite([x, y])) return err("NON_FINITE_RESULT");
+  return ok({ x, y });
 }

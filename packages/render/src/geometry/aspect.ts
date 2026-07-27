@@ -6,7 +6,7 @@
 // portrait  -> portraitAspect
 // landscape -> 1 / portraitAspect
 
-import { err, isPositive, ok } from "./guards";
+import { allFinite, err, isPositive, ok } from "./guards";
 import type { GeometryResult } from "./types";
 
 export type Orientation = "portrait" | "landscape";
@@ -21,5 +21,8 @@ export function resolveOrientedAspect(input: OrientedAspectInput): GeometryResul
   const { portraitAspect, orientation } = input;
   if (!Number.isFinite(portraitAspect)) return err("NON_FINITE_INPUT");
   if (!isPositive(portraitAspect)) return err("NON_POSITIVE_ASPECT");
-  return ok(orientation === "landscape" ? 1 / portraitAspect : portraitAspect);
+  const value = orientation === "landscape" ? 1 / portraitAspect : portraitAspect;
+  // 1 / a can overflow to Infinity for a tiny finite a (e.g. 1/Number.MIN_VALUE).
+  if (!allFinite([value])) return err("NON_FINITE_RESULT");
+  return ok(value);
 }

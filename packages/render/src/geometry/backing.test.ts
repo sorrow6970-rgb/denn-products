@@ -82,4 +82,14 @@ describe("computeBackingStoreSize (backing = max(1, round(css * min(dpr, cap))))
     expect(() => computeBackingStoreSize(input)).not.toThrow();
     expect(input.cssSize.width).toBe(320);
   });
+
+  it("finite inputs that overflow (MAX_VALUE * dpr) → NON_FINITE_RESULT (never ok)", () => {
+    const r = computeBackingStoreSize({
+      cssSize: { width: Number.MAX_VALUE, height: 240 },
+      deviceDpr: 2,
+      dprCap: 2,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.code).toBe("NON_FINITE_RESULT");
+  });
 });

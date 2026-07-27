@@ -201,4 +201,15 @@ describe("computeCoverDrawRect — cover math", () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.code).toBe(code);
   });
+
+  it("finite inputs that overflow the computation → NON_FINITE_RESULT (never ok)", () => {
+    // baseScale=2, drawScale = 2 * MAX_VALUE = Infinity (finite scale input, non-finite result)
+    const r = computeCoverDrawRect({
+      zone: { x: 0, y: 0, width: 200, height: 200 },
+      image: { width: 100, height: 100 },
+      transform: { scale: Number.MAX_VALUE, x: 0, y: 0 },
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.code).toBe("NON_FINITE_RESULT");
+  });
 });

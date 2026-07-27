@@ -64,6 +64,25 @@ export function computeCoverDrawRect(input: CoverDrawInput): GeometryResult<Cove
   const drawX = zone.x + (zone.width - drawWidth) / 2 + panX;
   const drawY = zone.y + (zone.height - drawHeight) / 2 + panY;
 
+  // Finite inputs can still overflow (e.g. MAX_VALUE * scale). A success Result never carries a
+  // non-finite number.
+  if (
+    !allFinite([
+      baseScale,
+      drawScale,
+      drawWidth,
+      drawHeight,
+      maxPanX,
+      maxPanY,
+      panX,
+      panY,
+      drawX,
+      drawY,
+    ])
+  ) {
+    return err("NON_FINITE_RESULT");
+  }
+
   return ok({
     drawRect: { x: drawX, y: drawY, width: drawWidth, height: drawHeight },
     baseScale,
