@@ -408,3 +408,20 @@ Math.random
   - 액자 회전
   - template art·camera·magsafe·text·clock
   - print DPI와 주문 실패 정책
+
+---
+
+### DONE (Claude) — 2026-07-27
+
+- **구현:** `@denn/render`에 `buildPreviewRenderPlan(input)` — 순수·결정적·JSON-safe preview render **plan**(Canvas executor 아님). `packages/render/src/plan/{types,build,index}.ts` + `src/index.ts`에 `export * from "./plan"`(geometry export·placeholder API 유지, `RENDER_NOT_IMPLEMENTED` 문구만 "Canvas executor+print export 후속"으로 정정).
+- **입력 분리:** `CasePlanInput | FramePlanInput`(kind 태그, optional flag 병합 없음). command vocabulary=`fill-rect`/`draw-image-cover`(clipRect가 save→clip→drawImage→restore 대표)/`stroke-rect`만.
+- **순서/id:** 케이스 `case:body`→정렬 zone별 `case:user-image:<id>`→(guide 명시) `case:guide:<id>`; 액자 `frame:body`→`frame:mat`→`frame:user-image`→(innerBorder 명시) `frame:inner-border`. 정렬=order 오름차순(미지정=원래 index)·동률 index. 가짜 template/camera/magsafe/text/clock/watermark command 0.
+- **geometry 재사용:** 배치=스펙 019 `computeCoverDrawRect(clampPan:true)`, percent zone=`percentRectToLogical`. transform 병합·변경 없음(zone→default fallback). case zone별 독립 transform, frame 비회전 단일 transform.
+- **안전 경계:** 색상 `#RRGGBB`만(그 외 `INVALID_COLOR`); imageRef는 scheme-less 합성 id만(`data:/blob:/http:/https:/javascript:`·빈/공백 거부→`INVALID_ID`); plan/오류에 URL/base64/token/storagePath·raw catalog 0(직렬화 검사); JSON-safe·성공 plan 전 number finite(`NON_FINITE_RESULT` 안전망); 결정적(Date/random/global 0).
+- **오류 계약:** `INVALID_KIND/ID/COLOR/ZONE/TRANSFORM`·`GEOMETRY_ERROR(causeCode)`·`NON_FINITE_RESULT`. throw 없음, 중복/빈 id 치명적, geometry 실패를 성공/빈 plan으로 숨기지 않음.
+- **게이트:** frozen diff 0·신규 의존성 0 / format·lint·typecheck / **unit 332**(plan 35 신규) / build / **e2e 49 PASS·exit 0**(기존 회귀만, 새 Canvas E2E 없음) / check PASS / `git diff --check` clean.
+- **금지어(§G) 0:** plan source에 document/window/Canvas/getContext/drawImage/setTransform/devicePixelRatio/ResizeObserver/Image/fetch/firebase/Date/Math.random 런타임 참조 0(매치는 전부 주석/타입doc). plan 외부 import=`../geometry`뿐.
+- **무변경:** `apps/**`·shared·firebase·ui·spaces·운영 HTML·Firebase 설정/Rules·POC·PNG. deploy 0.
+- **미검증:** 실제 Canvas 픽셀·CORS-clean·선명도·실기기 = plan으로 증명 불가(후속). `imageRef`=결합 키(URL 아님). 회전·print·template-art·camera·magsafe·text·clock·DPR cap = 미착수. 커밋: 코드/test와 문서 분리(`spec 020:`). 핸드오프 `docs/2026-07-27-spec-020-deterministic-render-plan-handoff.md`.
+
+### Codex 재검증 요청 — HEAD 갱신 후 판정 대기.
