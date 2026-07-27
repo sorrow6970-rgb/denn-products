@@ -416,4 +416,13 @@ viewport:
 - **DOM 한계 보고:** 살아있는 thumbnail 인스턴스의 in-app A→B src 스왑은 UI로 도달 불가 → 경합은 keyed child+boolean으로 구조적 차단 + 결정적 Playwright로 검증. **새 DOM 테스트 라이브러리 미설치**(지시 준수).
 - **재검증:** frozen lockfile diff 0 / format·lint·typecheck / **unit 237** / build / **e2e 49 PASS·exit 0·고정 sleep 0**(스펙 012/015/016/017 무회귀) / check PASS / `git diff --check` clean. URL/token이 React state에 저장되지 않는 구조 확인. 운영본·admin·POC·Firebase·디자인 PNG·스펙 017 스크린샷 무변경, 실제 Firebase GET·이미지 다운로드·`test:live:*`·deploy 0. 실기기·운영 이미지·Canvas CORS-clean = NOT TESTED 유지.
 
-### Codex 재검증 요청 — HEAD 갱신 후 판정 대기.
+### Codex 최종 판정 — 승인 가능 (2026-07-27)
+
+- **판정:** 스펙 018 = **승인 가능**. **승인 기준 HEAD = `80e20c7`**.
+- **게이트 최종:** **unit 237** / **e2e 49 PASS·exit 0** / **check PASS** / mockup JS gzip **68.40KB** · admin **61.09KB**.
+- **image projection과 browse selector 분리:** `projectCatalogTemplateImage`는 별도 순수 경계로, 스펙 016 browse selector output에 image/base64/path를 넣지 않는다.
+- **Firebase Storage 신뢰 경계:** `resolvePublicImageSource`가 https를 host `firebasestorage.googleapis.com` + bucket path `/v0/b/denn-products.firebasestorage.app/o/` + userinfo 없음으로만 통과(그 외 untrusted/invalid), 표시 전 차단. fetch/preload/SDK 없음.
+- **thumbnail 경합:** keyed child `<ThumbnailImage key={src}>` + **boolean-only failure state**. 고정 sleep 0, controlled route gate로 결정적 검증.
+- **누출 계약:** URL/token 허용 위치 = props/closure·실제 `img[src]`만. React state·오류·로그·data/ARIA/storage/location 저장 0.
+- **미구현/없음:** `storagePath` fallback·Canvas·crossOrigin 없음.
+- **유지(NOT TESTED/미실행):** 실제 운영 이미지·실기기 4환경·200% 확대·Canvas CORS-clean = NOT TESTED, 실제 Firebase GET·이미지 다운로드·live test·배포 미실행. 이 승인은 **합성 이미지 자동검증 단계 종료**이며 출시 완료가 아니다.
