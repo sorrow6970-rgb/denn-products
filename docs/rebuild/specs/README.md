@@ -88,4 +88,5 @@ Claude Code  →  스펙 읽고 코드 구현 → 검증 실행 → 스펙 하�
 | 014 | 실제 공개 카탈로그 읽기 검증 | DONE | Node adapter+Browser CORS 실제 GET 2회 성공, Codex 승인 |
 | 015 | 고객 앱 공개 카탈로그 연결 | DONE | loading·ready·error·수동 retry, StrictMode 초기 fetch 1회, Codex 승인 |
 | 016 | 고객 카탈로그 탐색 selector 계약 | DONE | 모델·카테고리·사이즈·템플릿 관계와 안전 진단, Codex 승인 |
-| 017 | 모바일 우선 고객 카탈로그 탐색 UI | READY | 케이스/액자 단계형 텍스트 탐색, 이미지·Canvas·주문 제외 |
+| 017 | 모바일 우선 고객 카탈로그 탐색 UI | DONE | Codex 승인, 텍스트 탐색 자동검증 완료 |
+| 018 | 카탈로그 이미지 참조·안전한 썸네일 계약 | READY | 별도 image projection·신뢰 URL 경계·합성 thumbnail/fallback |

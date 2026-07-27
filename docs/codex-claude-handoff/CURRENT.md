@@ -170,3 +170,4 @@
 남은 위험: <위험>
 롤백: <방법>
 ```
+> **다음 작업 READY (2026-07-27):** 스펙 018 `docs/rebuild/specs/018-catalog-image-reference-and-thumbnail.md`. 스펙 017 template card에 합성 이미지 기반 thumbnail을 추가하되, 스펙 016 browse selector의 raw image/base64/path 비노출 계약은 유지한다. `@denn/shared` 별도 ID 기반 image projection에서 레거시 `dataUrl→sourceDataUrl→builderArtDataUrl→artDataUrl→originalDataUrl` 우선순위와 `generatedDetailPreview` 게이트를 고정하고, HTTPS-in-`dataUrl`의 스펙 012 오진을 보완한다. `@denn/firebase`는 Firebase Storage HTTPS/bucket 신뢰 경계를, `apps/mockup`은 lazy `<img>`·중립 placeholder·onerror를 소유한다. URL/base64는 표시를 위해 필요한 `img[src]`와 resolver 메모리에만 허용하고 text/ARIA/data/error/console/storage에는 금지한다. 실제 GET·이미지 다운로드·storagePath fallback·Canvas/CORS-clean·업로드·저장·주문·Firebase/배포는 제외한다. 실제 운영 이미지·실기기 4환경은 NOT TESTED로 유지한다.
