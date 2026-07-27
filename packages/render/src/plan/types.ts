@@ -1,6 +1,9 @@
 // Deterministic preview render-plan contract (spec 020). Pure, JSON-safe — this is a render PLAN,
-// NOT a Canvas executor. No ctx.*, no <canvas>, no image objects, no URL/base64/token/storagePath,
-// no raw catalog item. Image sources are opaque `imageRef` binding keys resolved by a later executor.
+// NOT a Canvas executor. No ctx.*, no <canvas>, no image objects. The builder stores no raw catalog
+// item, decoded image, or source URL/base64/storagePath it derived. Image sources are opaque
+// `imageRef` binding keys — a restricted synthetic identifier (see build.ts), NOT a URL. The
+// identifier grammar is not a secret detector, so callers must not pass a URL/token/base64/secret as
+// an imageRef; a later executor resolves it only as an in-memory trusted binding-map key.
 
 import type { GeometryErrorCode, ImageTransform, Rect, Size } from "../geometry";
 

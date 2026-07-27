@@ -92,7 +92,11 @@ describe("buildPreviewRenderPlan — determinism & safety", () => {
     }
   });
 
-  it("commands contain no URL/base64/token/storagePath (only the synthetic imageRef)", () => {
+  it("the builder does not synthesize or copy a source URL/token marker (this fixture)", () => {
+    // Scope: proves the BUILDER injects no source URL/token/storagePath and copies no raw catalog
+    // value — the plan carries only the caller's own synthetic imageRef. It is NOT a general
+    // guarantee that a plan can never contain a token (a caller could pass a token-shaped imageRef;
+    // the identifier grammar is not a secret detector — see the safe-identifier tests).
     const p = plan(buildPreviewRenderPlan(CASE_BASE));
     const json = JSON.stringify(p);
     for (const bad of ["http", "data:", "blob:", "token", "storagePath", "/o/", "base64"]) {
@@ -402,7 +406,7 @@ describe("buildPreviewRenderPlan — errors & leak", () => {
     expect(buildPreviewRenderPlan(input as FramePlanInput)).toEqual({ ok: false, code });
   });
 
-  it("does not leak an input id/URL/token marker into the serialized error", () => {
+  it("does not echo the input zone id into the serialized error (error carries only a code)", () => {
     const r = buildPreviewRenderPlan({
       ...CASE_BASE,
       bodyColor: "not-a-hex", // fatal
