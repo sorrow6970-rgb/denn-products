@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 019 Canvas 순수 geometry 계약(@denn/render) = Codex 최종 승인(승인 가능, 기준 HEAD `d52e5fb`) — 종료. 다음 = Codex 다음 스펙 지시 대기.**
+상태: **🟡 스펙 020 결정적 Canvas render-plan 계약 = Codex 작성 완료, Claude Code 구현 대기. 기준 HEAD `a351c4a`.**
+
+> 스펙 020 지시(2026-07-27): `@denn/render`에 실제 Canvas를 호출하지 않는 순수 `buildPreviewRenderPlan` 계약을 추가한다. 케이스·액자 입력 union을 분리하고, 스펙 019 geometry를 재사용해 최소 `fill-rect`·`draw-image-cover`·`stroke-rect` 명령을 stable 순서로 생성한다. plan은 JSON-safe·결정적이며 실제 URL/base64/token/storagePath/catalog raw object를 포함하지 않는다. 케이스 zone별 transform과 비회전 액자 단일 transform을 구분한다. **제외:** Canvas executor/DOM/React 앱 연결·이미지 load/CORS·pointer·text/clock·print·DPR 정책·Firebase·배포. 구현 정본: `docs/rebuild/specs/020-deterministic-render-plan.md`.
 
 > Codex 최종 승인(2026-07-27): 스펙 019 = **승인 가능**(기준 HEAD `d52e5fb`). 5개 공개 함수로 6개 geometry 계약, 유한입력 overflow→`NON_FINITE_RESULT` 차단, **성공 Result에 NaN/Infinity 미포함 계약 고정**, 함수별 극단값 테스트 5건. 최종 게이트 **unit 297 / e2e 49 PASS·exit 0 / check PASS**, 금지 의존성(§H) 0. 케이스+비회전 액자 cover 코어만 공유, `dprCap` 필수·제품 정책 미확정. **미검증 유지: 실제 Canvas·CORS-clean·인쇄·실기기 = NOT TESTED, DPR cap·주문차단·zoom 앵커·print DPI = NOT DECIDED.** 운영본·Firebase·앱·POC·PNG·배포 무변경. 후속 순서=deterministic renderer→image/CORS→pointer→text/clock→print. **다음 스펙은 Codex 지시 대기.**
 
