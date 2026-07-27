@@ -41,7 +41,7 @@ buildPreviewRenderPlan(input: PreviewRenderPlanInput): RenderPlanResult
 ## 5. 안전 경계 (누출 방지)
 
 - **색상:** `#RRGGBB`(대소문자 hex)만 허용. 알파/CSS 함수/`url()`/CSS 변수/named color·3자리 hex 거부 → `INVALID_COLOR`. render 기본 색상값(웜 토프 등) 복제 없음.
-- **안전 식별자(zone.id + imageRef 공통, 2차 하드닝):** 문법 `^[A-Za-z0-9][A-Za-z0-9._-]*$`, 길이 **1..128**. ASCII 영숫자로 시작 후 영숫자·`.`·`_`·`-`만. 구조적으로 URI scheme(`:`)·공백(선행/후행 포함, **trim 안 하고 거부**)·control char·`/`·base64 `+`/`=`를 담을 수 없음 → URL/base64/token 불가, URL 형태 zone.id가 layerId로 들어가지 못함. 위반 → `INVALID_ID`. **URL/base64/token/storagePath·원본 catalog 객체는 plan/오류에 없음**(직렬화 검사).
+- **안전 식별자(zone.id + imageRef 공통, 2차 하드닝):** 문법 `^[A-Za-z0-9][A-Za-z0-9._-]*$`, 길이 **1..128**. ASCII 영숫자로 시작 후 영숫자·`.`·`_`·`-`만. URL 형태(`:`·`/`)·공백(선행/후행 포함, **trim 안 하고 거부**)·control char·일반 **padded** base64(`+`/`=`)를 차단 → URL 형태 zone.id가 layerId로 유입 불가. 위반 → `INVALID_ID`. **이것은 secret detector가 아니다**: padding 없는 영숫자 token은 문법상 통과하므로, **caller가 imageRef에 URL/token/base64/secret을 전달하지 않아야 하고** 후속 executor는 imageRef를 URL이 아닌 메모리 신뢰 binding key로만 사용해야 한다. **builder 자체는 source URL/token/storagePath·raw catalog를 새로 생성·복사하지 않는다**(직렬화 검사; plan은 caller의 합성 imageRef만 담음).
 - **런타임 malformed 방어(2차 하드닝):** 모든 nested 입력을 사용 전 shape 검사(`isObj/isSize/isRect/isTransform` + `unknown` 대상 `isFiniteNum/isFinitePositive`). null/undefined/primitive/부분 객체(입력·zones 항목·logicalCanvas·image·default/zone transform·zone.rect·frameRect/imageZone/transform·guide·innerBorder)는 **throw 없이** 해당 `INVALID_*` 반환. `zone.order`는 존재 시 `Number.isFinite` 필수(NaN/±Infinity→`INVALID_ZONE`; 유한 음수·소수 허용).
 - **JSON-safe:** plan은 plain object/array/string/number/boolean만. function/callback/Canvas/Image/DOM 없음.
 - **성공 plan 모든 number finite**(최종 `commandsAllFinite` 안전망 → 아니면 `NON_FINITE_RESULT`).
@@ -67,7 +67,7 @@ type RenderPlanErrorCode =
 
 ## 8. unit 항목·개수 (총 75)
 
-- **B 결정성·안전(7):** deep-frozen 2회 deep-equal / 입력·zone·transform 비변형 / JSON 왕복+finite / URL·base64·token·storagePath marker 0(imageRef만) / 빈·공백·중복 id 거부 / geometry overflow가 빈 성공 아님 / 비-hex 색상 거부.
+- **B 결정성·안전(7):** deep-frozen 2회 deep-equal / 입력·zone·transform 비변형 / JSON 왕복+finite / builder가 source URL/token/storagePath marker 미생성·미복사(fixture) / 빈·공백·중복 id 거부 / geometry overflow가 빈 성공 아님 / 비-hex 색상 거부.
 - **C 케이스(9):** body→image 순서+full cover / percent non-zero canvas / wide cover=스펙019 / pan clamp 반영 / zone transform>default / transform 없는 zone=default / multi-zone 독립 / order 오름차순·동률 source index / guide 명시 후 stroke·미명시 없음 / 가짜 camera·magsafe·template·clock command 0.
 - **D 액자(5):** body→mat→image(+inner-border 명시 시) 순서 / image-zone cover·clip / body=frameRect·mat=imageZone / rotation·shadow·grain·gloss command 0 / 입력 transform 비변형.
 - **E 오류·누출:** invalid kind(+null) / 케이스 zero·nan canvas·image·scale·pan → 코드 / 액자 zone·color·transform → 코드 / 오류 직렬화에 입력 id marker 0 / imageRef `data:/blob:/http:/https:/javascript:` 거부.
