@@ -89,10 +89,10 @@ type CatalogBrowseSelection = {
 
 ## 8. 검증 결과
 
-- 게이트(`node scripts/check.mjs`): format / lint(`--error-on-warnings`) / typecheck(7 프로젝트) / **unit 220** / build 전부 PASS.
-  - unit: 스펙 016까지 202 → reducer 18 신규 = **220**.
+- 게이트(`node scripts/check.mjs`): format / lint(`--error-on-warnings`) / typecheck(7 프로젝트) / **unit 202** / build 전부 PASS.
+  - unit: 스펙 016 기준 184 + reducer 18 신규 = **202**.
   - mockup JS gzip **67.66KB**(스펙 015 기준 64.40KB 대비 **+3.26KB** = 탐색 UI+selector 배선. 예산 내, 비정상 급증 아님). admin JS gzip 61.09KB 무변경.
-- e2e(`pnpm test:e2e`): **34/34 PASS**(admin scaffold 2 + 스펙 015 mockup-catalog + 스펙 017 신규). 스펙 015 무회귀.
+- e2e(`pnpm test:e2e`): **34/34 PASS, 프로세스 exit 0**(admin scaffold 2 + 스펙 015 mockup-catalog + 스펙 017 신규). 스펙 015 무회귀. 종료 후 preview 포트 4183/4184 LISTENING 없음(서버 정상 teardown), 재생성된 스크린샷은 시각 변경 없어 커밋하지 않음.
 - 프론즌 설치: `pnpm-lock.yaml`·모든 `package.json` 무변경 → lockfile diff 0. 신규 의존성 0(Router/Zustand/Radix/shadcn/data-fetching lib 0).
 
 ### E2E 필수 흐름 (스펙 §14, 전부 PASS)
@@ -110,7 +110,7 @@ type CatalogBrowseSelection = {
 ### 반응형·접근성 matrix (스펙 §15, 10개 전부 PASS)
 320×568 / 360×800 / 390×844 / 844×390 / 430×932 / 932×390 / 768×1024 / 1024×768 / 1280×800 / 1440×900
 각 화면: document 수평 overflow 0 · 모든 control 44×44 이상 & viewport 폭 내 · axe serious/critical 0 · console error 0.
-키보드 Enter/Space 유형 선택 + focus-visible 확인.
+키보드 전용 흐름: Tab으로 첫 컨트롤 도달 후, 케이스(유형→모델→카테고리→템플릿)·액자(유형→사이즈→카테고리→템플릿)를 **마우스 없이** 각 단계 `.focus()`→focus-visible(`:focus-visible` 매칭) 확인→**Enter/Space 교차 활성화**로 진행해 두 흐름 모두 완료 요약까지 도달함을 검증.
 
 ### 시각 근거
 - `docs/rebuild/results/spec-017/browse-mobile-390x844.png`, `browse-desktop-1280x800.png` — 합성 fixture만, 실제 운영 이름·ID·이미지·URL 없음. 기존 `docs/rebuild/design/*-B.png` 5종 무수정(hash 확인).
