@@ -10,10 +10,9 @@ export default defineConfig({
   reporter: "list",
   use: { trace: "off" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  // Deterministic teardown: Playwright stops each webServer (SIGTERM → 5s → force). A final
-  // globalTeardown force-frees the ports as a cross-platform safety net so no preview/esbuild child
-  // outlives the run even if OS tree-kill is partial. See tests/e2e/global-teardown.ts.
-  globalTeardown: "./tests/e2e/global-teardown.ts",
+  // Each preview server is stopped by Playwright with SIGTERM then a 5s force-kill on run end
+  // (gracefulShutdown below). Investigation confirmed no repo-owned vite/esbuild process survives
+  // the run and the ports are released, so no extra port-killing teardown is used.
   webServer: [
     {
       command: `vite preview apps/mockup --port ${MOCKUP_PORT} --strictPort`,
