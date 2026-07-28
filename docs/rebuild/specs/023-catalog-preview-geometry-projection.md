@@ -435,3 +435,14 @@ diagnostic 배열 순서는 탐색·source 순서로 결정적이어야 하며 �
 - **미착수(유지):** 케이스/액자 색 선택·사용자 이미지·intrinsic size·transform·CSS logical size·`PreviewRenderPlan` 조립·표현 불가 shape(원형·라운드·multi-zone·alpha·inner border 4-band)의 render 어휘 확장·pointer·회전·text/clock/watermark·print/export·저장·주문·Firebase·배포. **projection 완료는 상품 미리보기 완료가 아니다.**
 - **후속 필수 항목(유지):** `firebase.json`의 `hosting.public: "."`로 인한 저장소 전체 노출 위험 → **Hosting 격리 전 배포 금지**.
 - **다음:** Codex 다음 스펙 지시 대기.
+
+### 스펙 025 정정 (2026-07-28) — `FramePreviewGeometry.contentInsetPx` 추가
+
+과거 승인 기록과 게이트 수치(스펙 023 승인 기준 HEAD `d1e2327`, unit 568)는 **그대로 보존**한다. 아래는 스펙 025가 추가한 **현재 계약**이다.
+
+- `FramePreviewGeometry`에 **`contentInsetPx: 0 | 8`**(logical px, 비율 아님)이 추가됐다. 출력 필드는 이제 `{aspect, borderPercentOfWidth, matColor, contentInsetPx}`다.
+- 판정: `type === "uploaded"`이고 **design source가 존재하면 `0`**, 그 밖의 지원 variant(builtin `full`, design source 없는 uploaded)는 **`8`**. 지원 불가 variant는 기존 projection 오류(`UNSUPPORTED_FRAME_TEMPLATE`/`UNSUPPORTED_ZONE_SHAPE`)를 그대로 유지한다.
+- design source 존재 판정은 **스펙 018과 같은 게이트·같은 필드 순서**를 재사용한다(`generatedDetailPreview === true`면 없음 → `dataUrl` → `sourceDataUrl` → `builderArtDataUrl` → `artDataUrl` → `originalDataUrl`, 각 후보는 **non-empty string일 때만** 존재). 구현은 `@denn/shared` 내부 predicate `hasCatalogTemplateDesignSource`(공개 surface 미포함)로 단일화했다.
+- **출력에는 최종 숫자만 담긴다** — source 문자열·필드명·URL 종류·token·`hasDesignSource` 같은 중간 boolean을 노출하지 않는다.
+- 레거시 `P = uploadedTransparentTpl ? 0 : 8`(`denn-mockup-tool.html:3130`) 식은 **복제하지 않았다**: uploaded+source 경로는 `:3133`에서 `return`하므로 그 식의 `0` 분기는 도달 불가이며, inset 0은 해당 경로가 mat rect를 직접 쓰기 때문에 생긴다.
+- 상세: `docs/rebuild/specs/025-product-render-plan-adapter.md`.

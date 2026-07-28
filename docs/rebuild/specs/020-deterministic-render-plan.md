@@ -451,3 +451,14 @@ Math.random
 - `matRect ?? imageZone` 같은 호환 fallback은 없다. 기존 fixture/test caller는 모두 명시적으로 수정됐다.
 - 프레임 rect/size/transform은 **한 번만 읽어 plain snapshot** 으로 복사되며, command 생성은 caller 객체를 다시 읽지 않는다. hostile getter·Proxy trap·revoked Proxy는 이제 **throw 없이** `INVALID_ZONE`이다(기존 error code 집합 무확장).
 - **케이스 plan 계약·정렬·geometry는 무변경.** 근거: `denn-mockup-tool.html:3120-3130`(mat은 band 안쪽 전체, 사진은 `P=8` inset). 상세는 `docs/rebuild/specs/024-frame-plan-mat-image-zone-separation.md`.
+
+### 스펙 025 정정 (2026-07-28) — 케이스 zone별 `image`·`transform` 필수화
+
+과거 승인 기록과 게이트 수치(스펙 020 승인 기준 HEAD `07657fb`, unit 372 / e2e 49)는 **그대로 보존**한다. 아래는 스펙 025가 정정한 **현재 계약**이다.
+
+- **`CaseImageZone`이 자기 `image`(intrinsic size)와 `transform`을 필수로 소유한다.** `CasePlanInput.image`와 `CasePlanInput.defaultTransform`은 **제거**됐다.
+- 각 zone의 cover 계산은 **그 zone의 `image`·`transform`만** 사용한다. `zone.image ?? input.image` 같은 **호환 fallback·deprecated overload는 없다**.
+- 근거: 레거시 케이스 편집기는 zone별로 독립 이미지·transform을 갖는다(`denn-mockup-tool.html:1662` `caseImgs[i]‖caseImg`, `:1665` `caseImgTs[i]‖…`). 공통 intrinsic size로 계산하면 비율이 다른 zone의 draw rect가 틀어진다.
+- zone 정렬(`order` 오름차순·동률 index)·layer id·command 순서·guide 동작·오류 code 집합은 **무변경**. 누락 시 `image`→`INVALID_ZONE`, `transform`→`INVALID_TRANSFORM`.
+- **frame 계약과 executor command vocabulary는 무변경**(스펙 024 `matRect` 포함). 기존 caller(plan unit fixture, executor unit fixture)는 모두 명시적으로 수정됐다.
+- 상세: `docs/rebuild/specs/025-product-render-plan-adapter.md`.
