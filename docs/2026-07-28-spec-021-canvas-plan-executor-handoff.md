@@ -55,3 +55,78 @@
 ## 다음
 
 Codex 재검증 요청(HEAD=origin, ahead/behind 0/0, clean). 이후 순서 = 실제 Canvas element/context + React lifecycle → image binding load/CORS-clean → pointer → text/clock → print.
+
+---
+
+## 재검증 보완 (2026-07-28, Codex "수정 후 재검증" 2건) — 코드 커밋 `71c0bd8`
+
+### [1] hostile getter/Proxy에서도 public executor throw 0
+
+**구현 방식(예외 경계 + normalized snapshot):**
+
+1. preflight의 property 읽기를 **전부 try/catch 안**으로 옮기고 2단계로 분리 —
+   - `readExecutorSurface(args)`: `args.context/imageBindings/plan` 읽기 + context surface + bindings 검사 → 예외 시 **`INVALID_EXECUTOR_INPUT`**
+   - `normalizePlan(...)`: plan·command·rect 필드 읽기 → 예외 시 **`INVALID_PLAN`**
+   - binding lookup 호출 예외는 기존대로 `INVALID_EXECUTOR_INPUT` + `commandIndex`
+2. `bindings.get`을 **1회만 읽어 pre-bound 함수로 캡처** → caller 객체에서 재읽기 없음(`ReadonlyMap` 호환 유지)
+3. **plain normalized snapshot**: 검증한 값을 각각 **정확히 1회 읽어** 새 plain object로 복사
+   - `logicalCanvas` → `{width, height}`
+   - command별 draw에 필요한 필드만: `fill-rect`=rect+color / `stroke-rect`=rect+color+width / `draw-image-cover`=clipRect+drawRect+**drawable identity**
+   - **`layerId`·`imageRef`는 복사하지 않음**(draw에 불필요·Result 누출 원천 차단)
+   - 실행은 snapshot만 읽음 → clearRect 크기·rect·color·command 개수 모두 첫 읽기 값으로 고정, **getter drift 불가**
+4. Canvas method/property 실행은 기존 `attempt()` 경계 유지, setter writability는 mutation으로 시험하지 않음
+5. 정상 실행 순서·restore 우선순위·Result API·code 집합 **무변경**
+
+**추가 hostile 테스트 12건 (canvas unit 36 → 48):**
+
+| # | 입력 | 기대 |
+| --- | --- | --- |
+| 1 | context method getter throw (save/restore/clearRect/drawImage/strokeRect) | `INVALID_EXECUTOR_INPUT`, ops 0 |
+| 2 | `lineWidth` getter throw | `INVALID_EXECUTOR_INPUT`, ops 0 |
+| 3 | Proxy `get` trap 전면 throw | `INVALID_EXECUTOR_INPUT`, ops 0 |
+| 4 | Proxy `has` trap throw (fillStyle/strokeStyle) | `INVALID_EXECUTOR_INPUT`, ops 0 |
+| 5 | throwing `fillStyle`/`strokeStyle` **getter** | `ok:true` — executor가 style 값을 **읽지 않음**을 증명 |
+| 6 | args container getter throw (context/plan/imageBindings) | `INVALID_EXECUTOR_INPUT` |
+| 7 | `bindings.get` **property** getter throw | `INVALID_EXECUTOR_INPUT`, ops 0 |
+| 8 | plan `kind`/`logicalCanvas`/`commands` getter throw | `INVALID_PLAN`, ops 0 |
+| 9 | commands **배열 element** getter throw (Proxy array) | `INVALID_PLAN`, ops 0 |
+| 10 | command `type`/`layerId`/`rect`/`color`/`imageRef`/`clipRect`/`drawRect` getter throw | `INVALID_PLAN`, ops 0 |
+| 11 | rect 필드(`height`) getter throw | `INVALID_PLAN`, ops 0 |
+| 12 | **revoked Proxy** context·bindings / plan | `INVALID_EXECUTOR_INPUT` / `INVALID_PLAN`, ops 0 |
+| 13 | **getter drift** ①command rect/color ②plan commands/logicalCanvas | 각 1회만 읽고 첫 값으로 draw, `executedCommands` 고정 |
+
+전부 `expect(...).not.toThrow()`, preflight 실패 경로는 Canvas operation·style assignment **0**.
+
+### [2] Tailwind v4 CSS bundle drift
+
+**실제 원인(측정으로 확정):** `apps/mockup/src/canvas`를 트리에서 잠시 제외해 대조 빌드 →
+
+| 상태 | mockup CSS raw | gzip |
+| --- | --- | --- |
+| 스펙 021 drift(HEAD `60e1560`) | **11.99 KB** | **3.35 KB** |
+| canvas 디렉터리 제외 대조군 | 11.32 KB | 3.16 KB |
+| **수정 후(현재)** | **11.32 KB** | **3.16 KB** |
+
+생성 CSS diff로 확인한 실제 추가분 = **`.block`, `.transform`** + transform 스캐폴딩(`@layer properties` + `--tw-rotate-x/y/z`·`--tw-skew-x/y` `@property` 5개). Tailwind v4 자동 source 탐지가 앱 하위 **비-UI 로직/테스트 파일의 식별자·주석까지 class 후보로 스캔**한 것이 원인(executor에는 JSX·className이 없다).
+
+**정정:** Codex가 든 5종 중 **`.visible`·`.fixed`·`.hidden`은 스펙 020 baseline CSS에 이미 존재**했다(기존 browse UI source 유래, drift 아님). 실제 drift는 2종 + scaffolding.
+
+**수정(최소 config 변경 1건 — 예외 보고):** Tailwind root는 양 앱이 import하는 `packages/ui/src/theme.css`(유일한 `@import "tailwindcss"`). 여기에 한 줄 추가:
+
+```css
+@source not "../../../apps/mockup/src/canvas/**/*";
+```
+
+- 경로는 **이 CSS 파일 기준 상대경로**(`packages/ui/src` → 저장소 루트 `../../../`)
+- 영향 범위 = **그 비-UI 디렉터리 하나뿐**. 앱 JSX/tsx·browse 컴포넌트·`@denn/ui` source는 계속 스캔된다
+- safelist/blocklist·`source(none)`·executor 문자열 개명/난독화 **없음**
+
+**검증:** 수정 후 mockup CSS는 스펙 020 baseline과 **byte-identical**(md5 `a9b44036cb2e5910b23c147aa578696c`, `diff` 무차이). admin CSS **8.54 KB / gzip 2.64 KB 무변경**(동일 hash). JS gzip mockup 68.40 / admin 61.09 KB 무변경. e2e viewport matrix(320·1280 포함) overflow 0·44px·axe 0·console 0 회귀 없음.
+
+### 재검증 게이트
+
+frozen exit 0(lockfile 추가 diff 0) / format·lint·typecheck / **unit 420**(408→420) / build 독립(위 표) / **e2e 49 PASS·exit 0**(새 Canvas E2E 0) / check PASS / `git diff --check` clean / 포트 4183·4184 LISTENING 0 · 저장소 소속 Vite/esbuild 잔류 0.
+
+**변경 파일:** `apps/mockup/src/canvas/executePreviewPlan.ts`, `executePreviewPlan.test.ts`, `packages/ui/src/theme.css`(Tailwind source 범위 1줄). 그 외 무변경 — `types.ts`·기존 mockup React UI·catalog·browse·`apps/admin/**`·`packages/{render,shared,firebase,spaces}`·운영 HTML·Firebase 설정/Rules·`poc/**`·결과 PNG(e2e 재생성 2개는 커밋 없이 복원). 네트워크·live·deploy 0, 신규 의존성 0.
+
+**미검증 유지:** recording fake·Proxy 검증은 실제 브라우저 Canvas 픽셀 검증이 아니다. 실제 clip/drawImage·CORS-clean·이미지 load·DPR·실기기 = NOT TESTED. `<canvas>`/React 연결·staging commit·pointer·회전·text/clock·print·주문 미착수(다음 기능 착수 없음).
