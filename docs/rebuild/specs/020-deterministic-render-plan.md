@@ -440,3 +440,14 @@ Math.random
 - **최종 게이트:** frozen diff 0·신규 의존성 0 / format·lint·typecheck / **unit 372** / build / **e2e 49 PASS·exit 0**(기존 회귀만, 새 Canvas E2E 없음) / check PASS / `git diff --check` clean. 금지어(§G) 런타임 참조 0.
 - **미검증 범위(후속):** 실제 Canvas 픽셀·CORS-clean·이미지 load·선명도·pointer·회전·text/clock·print·DPR cap·실기기·배포 = **미착수**(plan으로 증명 불가). template-art/camera/magsafe/text/clock 레이어, 주문 실패 정책 = 후속 스펙.
 - **다음:** 후속 순서(스펙 019 사전 조사 §표10) = Canvas executor(deterministic renderer) → image/CORS → pointer → text/clock → print. Codex 다음 스펙 지시 대기.
+
+### 스펙 024 정정 (2026-07-28) — `FramePlanInput`에 `matRect` 추가
+
+과거 승인 기록과 게이트 수치(스펙 020 승인 기준 HEAD `07657fb`, unit 372 / e2e 49)는 **그대로 보존**한다. 아래는 스펙 024가 정정한 **현재 계약**이다.
+
+- `FramePlanInput`에 **필수 `matRect`** 가 추가됐다. 순서는 `frameRect`(프레임 body 전체) → `matRect`(프레임 band 안쪽 mat 채움) → `imageZone`(mat 안쪽 사진 clip/cover)이다.
+- `frame:mat` command의 rect가 **`imageZone` → `matRect`** 로 바뀌었다. `frame:body`=`frameRect`, `frame:user-image`=clip·cover `imageZone`, 선택적 `frame:inner-border`=`imageZone`은 그대로다. command 어휘·순서·layer id는 무변경.
+- 성공 plan은 **`logicalCanvas ⊇ frameRect ⊇ matRect ⊇ imageZone`** 을 정확히 만족해야 한다(경계 공유 허용, tolerance·clamp 없음). 유한 입력의 far-edge overflow는 `NON_FINITE_RESULT`, 유한하지만 바깥이면 `INVALID_ZONE`.
+- `matRect ?? imageZone` 같은 호환 fallback은 없다. 기존 fixture/test caller는 모두 명시적으로 수정됐다.
+- 프레임 rect/size/transform은 **한 번만 읽어 plain snapshot** 으로 복사되며, command 생성은 caller 객체를 다시 읽지 않는다. hostile getter·Proxy trap·revoked Proxy는 이제 **throw 없이** `INVALID_ZONE`이다(기존 error code 집합 무확장).
+- **케이스 plan 계약·정렬·geometry는 무변경.** 근거: `denn-mockup-tool.html:3120-3130`(mat은 band 안쪽 전체, 사진은 `P=8` inset). 상세는 `docs/rebuild/specs/024-frame-plan-mat-image-zone-separation.md`.
