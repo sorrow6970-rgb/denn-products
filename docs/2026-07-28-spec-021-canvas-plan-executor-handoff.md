@@ -130,3 +130,92 @@ frozen exit 0(lockfile 추가 diff 0) / format·lint·typecheck / **unit 420**(4
 **변경 파일:** `apps/mockup/src/canvas/executePreviewPlan.ts`, `executePreviewPlan.test.ts`, `packages/ui/src/theme.css`(Tailwind source 범위 1줄). 그 외 무변경 — `types.ts`·기존 mockup React UI·catalog·browse·`apps/admin/**`·`packages/{render,shared,firebase,spaces}`·운영 HTML·Firebase 설정/Rules·`poc/**`·결과 PNG(e2e 재생성 2개는 커밋 없이 복원). 네트워크·live·deploy 0, 신규 의존성 0.
 
 **미검증 유지:** recording fake·Proxy 검증은 실제 브라우저 Canvas 픽셀 검증이 아니다. 실제 clip/drawImage·CORS-clean·이미지 load·DPR·실기기 = NOT TESTED. `<canvas>`/React 연결·staging commit·pointer·회전·text/clock·print·주문 미착수(다음 기능 착수 없음).
+
+---
+
+## 재검증 보완 2 (2026-07-28) — E2E 종료 결정성 — 코드 커밋 `014211c`
+
+### 1) 코드 무수정 반복 조사 (실행별 기록)
+
+| 실행 | 시작 | 마지막 테스트(ok 49) | 종료 | 실제 exit code | 자기 종료 | 실행 전 포트 | 실행 후 포트 | 저장소 소속 잔류 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| pre-fix #1 | 11:50:15 | 11:50:33 | 11:50:34 (19s) | 0 | YES | 4183/4184 free | free | 0 |
+| pre-fix #2 | 11:53:06 | 11:53:23 | 11:53:26 (19s) | 0 | YES | free | free | 0 |
+| pre-fix #3 | 11:53:49 | 11:54:06 | 11:54:07 (18s) | 0 | YES | free | free | 0 |
+
+→ 내 환경에서는 **자연 재현되지 않았다.** Codex 재현을 오탐으로 단정하지 않는다(아래에서 같은 상태를 인위적으로 만들어 동일 증상을 재현했다).
+
+### 2) 실행 중 소유 관계 (PID/PPID 실측)
+
+```
+pid=19376 node.exe  :: node "…\node_modules\.bin\..\vite\bin\vite.js" preview apps/mockup --port 4183 --strictPort   <- 포트 소유자
+  ppid=44016 cmd.exe :: cmd /d /s /c "vite preview apps/mockup --port 4183 --strictPort"                             <- Playwright가 소유한 PID
+    ppid=56524 node.exe :: node "…\@playwright\test\cli.js" test
+      ppid=25872 cmd.exe :: cmd /d /s /c playwright test
+        ppid=31996 node.exe :: corepack pnpm run test:e2e
+```
+
+**Playwright는 shell wrapper만 소유하고, 포트를 쥔 실제 Vite 서버는 그 자식이다.**
+
+### 3) 근본 원인 (playwright-core 1.61.1 소스 확인)
+
+1. `launchProcess`는 webServer command를 항상 `shell: true`로 spawn → 소유 PID = `cmd.exe`.
+2. `detached: process.platform !== "win32"` → **win32에는 프로세스 그룹이 없다.**
+3. webServer의 `attemptToGracefullyClose`는 win32에서 **즉시 throw**(`"Graceful shutdown is not supported on Windows"`) → 우리 `gracefulShutdown`은 **win32 no-op**, 항상 `killProcess()` 폴백.
+4. `killProcess()` = `taskkill /pid <wrapper> /T /F`이며 **`processClosed`면 skip**.
+5. teardown은 `await waitForCleanup` = wrapper의 `close` 이벤트 대기. `close`는 **상속된 stdout/stderr 파이프가 닫혀야** 발생 → **살아남은 자손이 파이프를 쥐면 teardown 무한 대기 + 포트 계속 LISTENING.**
+
+기존 `playwright.config.ts` 주석의 "SIGTERM → 5s force-kill" 기록은 **Windows 실제 동작과 불일치**였다(정정).
+
+### 4) 결정적 재현 (원인 증명)
+
+실행 중 **wrapper cmd.exe만** `/F`로 종료(자손 유지):
+
+| 관측 | 값 |
+| --- | --- |
+| 테스트 결과 | 49개 전부 PASS |
+| 명령 종료 | **124초간 미종료(SELF_EXIT=NO)** |
+| 포트 | 4183 LISTENING pid=51880 / 4184 LISTENING pid=58488 (고아 vite node) |
+| 기록한 PID 2개만 종료 후 | 즉시 `49 passed (2.1m)` + **exit 0**, 포트 해제 |
+
+Codex 보고와 동일한 형태다.
+
+### 5) 변경한 종료 메커니즘
+
+`scripts/e2e-preview.mjs` — **Vite 기존 Node API `preview()`**(루트 devDependency `vite`, 신규 의존성 0)로 preview 서버를 **in-process** 기동. webServer command:
+
+```
+node scripts/e2e-preview.mjs <mockup|admin> <port>
+```
+
+- wrapper가 spawn한 **node 자신이 포트 소유자** → 고아가 될 자손이 없다
+- 자기 수명 가드(자기가 띄운 서버만 close 후 exit 0): **SIGTERM/SIGINT/SIGHUP/SIGBREAK** · **stdin EOF** · **부모 PID 소멸(고아 감지; `process.kill(pid,0)` 존재 확인만)**
+- 앱 화이트리스트(mockup/admin) + 포트 범위 검증
+- **포트 기반 kill 0 · globalTeardown 0 · broad taskkill/SIGKILL/Stop-Process 0 · 타 프로세스 종료 0 · `reuseExistingServer:false` 유지**
+- `gracefulShutdown`은 POSIX 경로(런처가 SIGTERM 처리)를 위해 유지하고 win32 no-op임을 주석에 명시
+
+### 6) 수정 후 검증
+
+**(a) 고아 가드 직접 증명** — Playwright와 동일한 형태(`cmd /d /s /c node scripts/e2e-preview.mjs mockup 4183`)로 기동 → 포트 소유자가 wrapper의 **직속 자식**임을 확인 → wrapper만 `/F` 종료 → **856ms 후 자기 종료, 포트 해제**(수정 전 동일 조건: 무한 생존).
+
+**(b) standalone 3회 연속**
+
+| 실행 | 시작 | ok 49 | 종료 | exit code | 자기 종료 | 실행 후 포트 | 잔류 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| post-fix #1 | 12:03:16 | 12:03:33 | 12:03:36 (20s) | **0** | YES | 4183/4184 free | 0 |
+| post-fix #2 | 12:03:40 | 12:03:57 | 12:03:58 (18s) | **0** | YES | free | 0 |
+| post-fix #3 | 12:04:02 | 12:04:19 | 12:04:20 (19s) | **0** | YES | free | 0 |
+
+세 실행 모두 **49 passed**. 고정 sleep으로 성공을 꾸미지 않았고, 수동 종료가 필요한 실행은 없었다.
+
+### 7) 테스트로 고정 (+11, unit 420 → 431)
+
+`scripts/e2e-preview.test.mjs`: 인자 화이트리스트/포트 검증 · shutdown **멱등**(close 1회·exit 1회) · close 실패에도 exit 0·reject 0 · 4개 시그널 배선 · stdin `end`/`close` · **부모 소멸 시에만** 종료(살아 있으면 no-op) · dispose가 타이머 해제 · **모듈 import만으로 서버 기동 0**. `vitest.config.ts` include에 `scripts/**/*.test.mjs` 추가(최소 config 변경).
+
+### 8) 회귀·게이트
+
+executor production API·normalized snapshot·Result **무변경**, Tailwind `@source` 예외 **유지**(mockup CSS 11.32 KB / gzip 3.16 KB, admin 8.54 / 2.64), UI/CSS 변경 0. frozen exit 0·lockfile diff 0 / format·lint·typecheck / **unit 431** / build / **e2e 49 PASS** / check PASS / `git diff --check` clean / 포트 free · 잔류 0. 변경 파일 = `scripts/e2e-preview.mjs`(신규) · `scripts/e2e-preview.test.mjs`(신규) · `playwright.config.ts` · `vitest.config.ts`. 운영본·Firebase·Rules·POC·admin·디자인 PNG 무변경, e2e 재생성 스펙018 PNG는 커밋 없이 복원, 네트워크·live·deploy 0.
+
+### 9) 남은 불확실성
+
+Codex 실행에서 **wrapper 링크가 왜 끊겼는지**(스케줄링·부하·외부 트리 kill 등)는 로그가 없어 확정할 수 없다. 확인된 사실은 (1) 그 상태가 발생하면 무한 대기 + 포트 잔존이 **필연**이고, (2) 수정 후에는 그 상태를 인위적으로 만들어도 **856ms 안에 자기 종료·포트 해제**된다는 것이다. POSIX(리눅스/CI)는 detached 프로세스 그룹 + 실제 SIGTERM 경로라 이 실패 형태가 아니며, 런처는 그 경로에서도 정상 동작한다.
