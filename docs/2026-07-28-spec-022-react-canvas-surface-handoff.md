@@ -107,7 +107,7 @@ draw는 항상 최신 snapshot을 읽으므로 오래된 예약 draw가 새 plan
 | preview 서버 | `scripts/e2e-preview.mjs`의 `PREVIEW_APPS`가 앱별 `{root, outDir}`을 갖고 `preview()`에 `build.outDir` 전달 → **staging 서빙** |
 | 스펙 021 계약 | exact-handle 소유·teardown callback·`127.0.0.1`/`::1` 사전 거부·close 경로 **무변경**(서빙 디렉터리만 변경) |
 | 정리 방식 | 고객 dist에 **쓰지 않으므로 사후 삭제 불필요** — broad delete·포트/PID kill·globalTeardown sweep **0**, 새 서버·포트 **0** |
-| staging | `.e2e-staging/` **gitignored**, 배포 소스 아님(`firebase.json`은 앱 dist 발행) |
+| staging | `.e2e-staging/` gitignored 〔⚠️ **정정: `hosting.public:"."`이라 저장소 내부는 배포 후보였다 — 아래 보완 2에서 OS temp로 이전**〕 |
 
 ### 재검증 (요구 순서대로)
 
@@ -129,3 +129,55 @@ draw는 항상 최신 snapshot을 읽으므로 오래된 예약 draw가 새 plan
 ### 유지되는 NOT TESTED
 
 실제 운영 이미지·CORS-clean·실기기 4환경·선명도/성능/회전. pointer·회전·text/clock·print·저장·주문 미착수. surface 완료 ≠ 상품 미리보기 완료. **스펙 022 종료 문서 처리는 하지 않았다.**
+
+---
+
+## 재검증 보완 2 (2026-07-28) — staging을 Hosting public 밖으로 — 코드 커밋 `d24e836`
+
+### 확인된 결함 (재정정)
+
+`.e2e-staging/`은 `apps/mockup/dist` 밖이었지만 **Firebase Hosting public 밖이 아니었다.**
+
+| 근거 | 값 |
+| --- | --- |
+| `firebase.json` `hosting.public` | **`"."`**(저장소 전체) |
+| `hosting.ignore` | staging 항목 **없음**(`firebase.json`·`.firebaserc`·`**/.git/**`·`docs/**`·`스크린샷/**`·`*.md`·`*.ps1`·`*.bat`·`*.py`·`backup.json`·`*.rules`) |
+| `.firebaseignore` | **없음** |
+| firebase-tools | `**/*`를 `dot:true`로 glob |
+
+→ **gitignore는 배포 제외 근거가 아니다.** 이전 문서의 "staging은 배포 소스 아님"은 **거짓**이었고 세 문서에서 모두 정정했다.
+
+### 수정 구조
+
+| 항목 | 변경 후 |
+| --- | --- |
+| staging 생성 | `scripts/e2e-run.mjs`가 **`mkdtemp(os.tmpdir(), "denn-e2e-")`**로 실행별 디렉터리 생성, 경로를 로그로 출력 |
+| 빌드 | mockup·admin·fixture를 그 절대경로로 빌드(`--outDir`, `DENN_E2E_FIXTURE_OUT_DIR`) |
+| Playwright | `DENN_E2E_STAGING`로 경로 전달, `tests/global-setup.ts`가 `join(staging, app)`만 preview |
+| fixture config | `DENN_E2E_FIXTURE_OUT_DIR` **필수** + **OS temp 밖 경로 거부**(fail-closed, `dist` 폴백 불가) |
+| preview 모듈 | 서빙 디렉터리를 **보관하지 않음** — spec의 절대 `outDir`을 받고 없으면 기동 전 거부 |
+| 스펙 021 계약 | in-process exact-handle 소유·teardown callback·포트 사전 거부·close 경로 **무변경** |
+| cleanup | **이번 실행이 만든 디렉터리 하나만** 제거, 가드 `isDisposableStagingPath`(OS temp 바로 아래 + `denn-e2e-` 접두사만; temp root·상위·중첩·모든 repo 경로 거부) |
+| 금지사항 | broad delete·포트/PID kill·taskkill·globalTeardown sweep **0**, 새 서버·포트 **0**, **Firebase 설정·Rules 무변경** |
+
+### 재검증
+
+| 단계 | 결과 |
+| --- | --- |
+| clean 고객 build 목록+SHA-256 | mockup 3파일 / admin 3파일 기록 |
+| `test:e2e` | **57 PASS · summary · exit 0**(19초), staging = `C:\Users\<user>\AppData\Local\Temp\denn-e2e-XXXXXX` (**repo root 밖 · OS temp 아래**), 포트 free, 잔류 0 |
+| 후 고객 dist | **IDENTICAL**(SHA-256) |
+| 저장소 내 fixture/staging **빌드 산출물** | **0건** |
+| 실패 경로 1회 | exit 1(19초) → dist **IDENTICAL**, 저장소 산출물 **0건**, temp 잔여 staging **0건** |
+| 재빌드 | 기록 해시 **정확히 재현** |
+| 게이트 | frozen exit 0·**lockfile diff 0** / format·lint·typecheck / **unit 472**(468→472) / build 동일 / check PASS / `git diff --check` clean / PNG 복원·미커밋 |
+
+### 실제 경계 (정확히)
+
+저장소에 남는 fixture 관련 파일은 **소스 2개뿐**: `apps/mockup/e2e-canvas-fixture.html`, `apps/mockup/src/e2e/canvas-fixture.tsx`. 이는 `index.html`·`src/main.tsx`와 같은 범주의 **소스**이며 빌드 산출물이 아니다(브라우저가 실행할 수 없는 `.tsx` 모듈을 참조하므로 단독으로는 동작하지 않는다).
+
+⚠️ **남은 사실(스펙 022 이전부터, 이번 스펙 금지 범위):** `hosting.public:"."` + 현 ignore 목록이면 `apps/**`·`packages/**`·`tests/**`·`scripts/**`·`node_modules/**` 등 **저장소 소스 전체가 이미 배포 후보**다. 좁히려면 `firebase.json` 수정이 필요한데 이번 스펙이 금지하므로 **손대지 않고 Codex 결정 항목으로 남긴다**.
+
+### 무변경
+
+**production Canvas surface API·UI 무변경**(`apps/mockup/src/canvas/**` diff 0). 변경 파일 = `scripts/e2e-run.mjs`(신규)·`scripts/e2e-run.test.mjs`(신규)·`scripts/e2e-preview.mjs`·`scripts/e2e-preview.test.mjs`·`tests/global-setup.ts`·`apps/mockup/vite.e2e-fixture.config.ts`·`package.json`·`.gitignore`. **`firebase.json`·Rules·`packages/**`·admin·운영 HTML·POC·PNG 무변경.** 네트워크·live·deploy 0. **스펙 022 종료 문서는 처리하지 않았다.**
