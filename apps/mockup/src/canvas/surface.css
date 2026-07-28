@@ -1,0 +1,27 @@
+/* Preview Canvas surface (spec 022). Existing warm-taupe tokens only — no new token, no @denn/ui
+   change. The canvas keeps its explicit CSS size (== plan.logicalCanvas), so it is deliberately NOT
+   shrunk by `max-width: 100%`: producing a viewport-fitting plan is the later projection layer's
+   job. The wrapper scrolls instead, so a page never overflows horizontally. */
+
+.denn-canvas-surface {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.denn-canvas-surface__canvas {
+  display: block;
+  /* no padding/border: the observed content box equals the bounding rect the engine measures. */
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius, 12px);
+  background: var(--surface, #ffffff);
+}
+
+.denn-canvas-surface__message {
+  margin: 0;
+  color: var(--muted, #71717a);
+  font-size: 14px;
+}
