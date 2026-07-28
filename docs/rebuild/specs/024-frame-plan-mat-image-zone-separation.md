@@ -277,3 +277,17 @@ matRect contains imageZone
 - **무변경 확인:** `packages/shared|firebase|ui|spaces`·`apps/admin`·고객 `App.tsx`/`BrowseFlow`/catalog controller·**production Canvas surface(`surface.ts`·`surface.css`·`PreviewCanvasSurface.tsx`·`usePreviewCanvasSurface.ts`·`executePreviewPlan.ts`·`types.ts`)**·운영 HTML·Firebase 설정/Rules·`poc/**`·디자인 PNG = `git diff` 0. 허용된 앱 변경은 **테스트 전용 harness와 E2E test뿐**. 네트워크·live test·deploy 0.
 - **NOT TESTED / 유지:** 실제 상품 adapter(스펙 023 geometry → plan 조립)·운영 이미지·CORS-clean·실기기·선명도·성능 = **NOT TESTED**. 이번 완료는 **표현 능력 정정**이며 실제 상품 Canvas 연결 완료가 아니다. 앱이 `P=8`(builtin) 또는 uploaded `P=0`을 선택하는 정책은 **후속 adapter 스펙의 필수 결정**으로 남는다. `hosting.public:"."` 위험 그대로 → Hosting 격리 전 배포 금지.
 - 커밋: 코드/test `a9eb68f`, 문서 분리. 핸드오프 `docs/2026-07-28-spec-024-frame-mat-image-zone-handoff.md`. 스펙 020 문서 하단에 현재 계약 정정을 append했다(과거 승인 기록·수치 보존).
+
+### Codex 최종 판정 — 승인 가능 (2026-07-28)
+
+- **판정:** 스펙 024 = **승인 가능**. **승인 기준 HEAD = `a21b5c2`**.
+- **최종 게이트:** frozen install exit 0·**lockfile diff 0**·신규 외부 의존성 0 / format·lint·typecheck / **unit 604**(568 → 604, 신규 36) / build(**mockup JS 217.69 kB·gzip 68.40 / CSS 11.32 kB·gzip 3.16 = `index-D9dnc5BM.css` byte-identical**, **admin JS 193.53 kB·gzip 61.09 / CSS 8.54 kB·gzip 2.64** 무변경) / **e2e 58 PASS**(57 → 58)·reporter 요약·명령 exit 0 자체 종료 / 포트 4183·4184 free·저장소 실행 소속 잔류 0·**OS temp `denn-e2e-*` 잔여 0** / 고객 mockup·admin dist **파일 목록+SHA-256 E2E 전후 동일·fixture 파일 0** / check PASS / `git diff --check` clean / 재생성 스펙018 PNG 복원·미커밋.
+- **확정된 계약:** `FramePlanInput`이 `frameRect`·**`matRect`(필수)**·`imageZone`을 서로 다른 영역으로 표현한다. command rect = `frame:body`=`frameRect` / **`frame:mat`=`matRect`** / `frame:user-image`=clip·cover `imageZone` / 선택적 `frame:inner-border`=`imageZone`. `logicalCanvas ⊇ frameRect ⊇ matRect ⊇ imageZone` **fail-closed 검증**(경계 공유 허용, tolerance·clamp·자동 보정 0, far-edge overflow → `NON_FINITE_RESULT` 우선), rect/size/transform **1회 읽기 snapshot**으로 getter drift 차단, hostile getter·Proxy trap·revoked Proxy는 **throw 없이 `INVALID_ZONE`**(기존 error code 무확장), 실패 payload는 `{ok, code}`뿐. executor 어휘·실행 순서·**케이스 plan 계약 무변경**. 스펙 020 문서 하단에 현재 계약 정정을 append했다(과거 승인 기록·게이트 수치 보존).
+- **실제 Chromium 픽셀:** frame band(`#663300`)·mat 영역(`#FFFF00`)·사진(`#00FF00`)이 세 구역으로 구분되고 clip 밖 번짐 0, console error 0, axe serious/critical 0, 고정 sleep 0. `getImageData`는 테스트 측 `page.evaluate`에서만 사용하며 production source에 없다.
+- **무변경:** `packages/shared|firebase|ui|spaces`·`apps/admin`·고객 UI(`App.tsx`/`BrowseFlow`/catalog controller)·**production Canvas surface 전체**·운영 HTML·Firebase 설정/Rules·`poc/**`·디자인 PNG. 허용된 앱 변경은 테스트 전용 harness와 E2E test뿐. 실제 network·live test·deploy 0.
+- **유지되는 사실:**
+  - **실제 상품 adapter는 아직 미구현** — 이번 완료는 표현 능력 정정이며 상품 Canvas 연결 완료가 아니다.
+  - **builtin `full`의 `P=8` inset과 uploaded transparent의 `P=0` 판정은 다음 adapter 스펙의 필수 결정 항목**이다(어댑터가 `matRect`와 `imageZone`을 같은 rect로 넘기면 타입은 통과하지만 레거시와 시각적으로 다르다).
+  - **운영 이미지·CORS-clean·실기기 = NOT TESTED.**
+  - `firebase.json`의 `hosting.public: "."` 위험 그대로 → **Hosting 격리 전 배포 금지.**
+- **다음:** Codex 다음 스펙 지시 대기.
