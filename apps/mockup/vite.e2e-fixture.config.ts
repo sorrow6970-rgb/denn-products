@@ -5,22 +5,35 @@
 // entry's asset graph and hashes. Building it on its own keeps `pnpm run build` (and therefore the
 // shipped customer bundle) byte-identical.
 //
-// It emits into `.e2e-staging/mockup`, NEVER into `apps/mockup/dist`: `pnpm run test:e2e` builds the
-// customer app into that same staging directory first and then appends the harness there
-// (`emptyOutDir: false`), and the spec 021 preview server serves the staging directory. So the
-// deployable artifact in `apps/mockup/dist` is never written by an E2E run and can never contain the
-// harness — on success, on test failure and on startup failure alike. `.e2e-staging/` is gitignored
-// and is not a deploy source (firebase.json publishes the app dist, not staging).
+// The output directory is REQUIRED from the environment and is provided by `scripts/e2e-run.mjs`,
+// which points it at a per-run `mkdtemp` directory under the OS temp root. It must never fall back
+// to `dist` or to any path inside the repository: `firebase.json` publishes `hosting.public: "."`
+// with no staging entry in `ignore` and there is no `.firebaseignore`, so anything written inside
+// the repo is a Firebase Hosting deploy candidate regardless of gitignore. Failing closed here is
+// what keeps the harness out of the deployable tree.
 
+import { tmpdir } from "node:os";
+import { resolve, sep } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+
+const outDir = process.env.DENN_E2E_FIXTURE_OUT_DIR;
+if (!outDir) {
+  throw new Error(
+    "DENN_E2E_FIXTURE_OUT_DIR is required — run the E2E harness build via `pnpm run test:e2e`",
+  );
+}
+const temp = resolve(tmpdir());
+if (!resolve(outDir).startsWith(temp.endsWith(sep) ? temp : temp + sep)) {
+  throw new Error("DENN_E2E_FIXTURE_OUT_DIR must be inside the OS temp directory");
+}
 
 export default defineConfig({
   root: import.meta.dirname,
   plugins: [react(), tailwindcss()],
   build: {
-    outDir: "../../.e2e-staging/mockup",
+    outDir,
     emptyOutDir: false,
     rollupOptions: { input: "e2e-canvas-fixture.html" },
   },

@@ -55,18 +55,19 @@ export async function assertPortAvailable(port, options) {
 }
 
 /**
- * Only these two apps may be previewed, and each is served from its E2E STAGING build — never from
- * `apps/<app>/dist`. `pnpm run test:e2e` builds both apps (plus the canvas harness) into
- * `.e2e-staging/`, so the customer artifact in `apps/mockup/dist` is neither read nor written by the
- * E2E run and can never gain the harness files.
+ * Only these two apps may be previewed. The directory each one is SERVED from is not stored here:
+ * `scripts/e2e-run.mjs` builds them into a per-run `mkdtemp` directory under the OS temp root and
+ * `tests/global-setup.ts` passes that absolute path in as `spec.outDir`. Nothing is ever served from
+ * `apps/<app>/dist`, and no repo path is used — `firebase.json` publishes `hosting.public: "."`, so
+ * any build output inside the repository would be a deploy candidate.
  */
-export const PREVIEW_APPS = new Map([
-  ["mockup", { root: "apps/mockup", outDir: "../../.e2e-staging/mockup" }],
-  ["admin", { root: "apps/admin", outDir: "../../.e2e-staging/admin" }],
+export const PREVIEW_APP_ROOTS = new Map([
+  ["mockup", "apps/mockup"],
+  ["admin", "apps/admin"],
 ]);
 
-export function resolveApp(app) {
-  return PREVIEW_APPS.get(app) ?? null;
+export function resolveAppRoot(app) {
+  return PREVIEW_APP_ROOTS.get(app) ?? null;
 }
 
 function snapshotHostListeners(hostProcess) {
@@ -99,18 +100,21 @@ export async function startPreviewServers(
 ) {
   const handles = [];
   try {
-    for (const { app, port } of specs) {
-      const target = resolveApp(app);
-      if (target === null) throw new Error(`unknown preview app: ${String(app)}`);
+    for (const { app, port, outDir } of specs) {
+      const root = resolveAppRoot(app);
+      if (root === null) throw new Error(`unknown preview app: ${String(app)}`);
+      if (typeof outDir !== "string" || outDir.length === 0) {
+        throw new Error(`missing E2E staging outDir for ${app}`);
+      }
       if (!Number.isInteger(port) || port < 1024 || port > 65535) {
         throw new Error(`invalid preview port for ${app}`);
       }
       await assertAvailable(port);
       const before = snapshotHostListeners(hostProcess);
       const server = await previewFn({
-        root: target.root,
-        // serve the staging build; `outDir` is resolved relative to `root` by Vite
-        build: { outDir: target.outDir },
+        root,
+        // absolute per-run staging directory supplied by the caller (never a repo path)
+        build: { outDir },
         preview: { port, strictPort: true },
       });
       handles.push({ app, port, server, detached: detachAddedHostListeners(hostProcess, before) });

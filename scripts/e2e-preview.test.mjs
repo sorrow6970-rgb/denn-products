@@ -13,8 +13,8 @@ import {
   assertPortAvailable,
   closePreviewServers,
   isPortTaken,
-  PREVIEW_APPS,
-  resolveApp,
+  PREVIEW_APP_ROOTS,
+  resolveAppRoot,
   startPreviewServers,
 } from "./e2e-preview.mjs";
 
@@ -62,29 +62,34 @@ function fakeHost() {
   return host;
 }
 
+const STAGING = "/tmp/denn-e2e-abc123";
 const SPECS = [
-  { app: "mockup", port: 4183 },
-  { app: "admin", port: 4184 },
+  { app: "mockup", port: 4183, outDir: `${STAGING}/mockup` },
+  { app: "admin", port: 4184, outDir: `${STAGING}/admin` },
 ];
 
-describe("app targets", () => {
-  it("exposes only the two repo apps, each served from the E2E staging build", () => {
-    expect([...PREVIEW_APPS.entries()]).toEqual([
-      ["mockup", { root: "apps/mockup", outDir: "../../.e2e-staging/mockup" }],
-      ["admin", { root: "apps/admin", outDir: "../../.e2e-staging/admin" }],
+describe("app roots", () => {
+  it("exposes only the two repo apps", () => {
+    expect([...PREVIEW_APP_ROOTS.entries()]).toEqual([
+      ["mockup", "apps/mockup"],
+      ["admin", "apps/admin"],
     ]);
-    expect(resolveApp("mockup")).toEqual({
-      root: "apps/mockup",
-      outDir: "../../.e2e-staging/mockup",
-    });
-    expect(resolveApp("legacy")).toBeNull();
+    expect(resolveAppRoot("mockup")).toBe("apps/mockup");
+    expect(resolveAppRoot("legacy")).toBeNull();
   });
 
-  it("never serves a customer dist directory", () => {
-    for (const target of PREVIEW_APPS.values()) {
-      expect(target.outDir).toContain(".e2e-staging");
-      expect(target.outDir).not.toBe("dist");
+  it("stores no served directory of its own — the caller must pass the staging outDir", async () => {
+    const previewFn = vi.fn(async () => fakeServer());
+    for (const outDir of [undefined, "", 4183]) {
+      await expect(
+        startPreviewServers([{ app: "mockup", port: 4183, outDir }], {
+          previewFn,
+          hostProcess: fakeHost(),
+          assertAvailable: async () => {},
+        }),
+      ).rejects.toThrow(/missing E2E staging outDir/);
     }
+    expect(previewFn).not.toHaveBeenCalled();
   });
 });
 
@@ -142,12 +147,12 @@ describe("startPreviewServers", () => {
     expect(seen).toEqual([
       {
         root: "apps/mockup",
-        build: { outDir: "../../.e2e-staging/mockup" },
+        build: { outDir: `${STAGING}/mockup` },
         preview: { port: 4183, strictPort: true },
       },
       {
         root: "apps/admin",
-        build: { outDir: "../../.e2e-staging/admin" },
+        build: { outDir: `${STAGING}/admin` },
         preview: { port: 4184, strictPort: true },
       },
     ]);
@@ -160,7 +165,7 @@ describe("startPreviewServers", () => {
   it("rejects an unknown app or an invalid port without starting anything", async () => {
     const previewFn = vi.fn(async () => fakeServer());
     await expect(
-      startPreviewServers([{ app: "legacy", port: 4183 }], {
+      startPreviewServers([{ app: "legacy", port: 4183, outDir: `${STAGING}/x` }], {
         previewFn,
         hostProcess: fakeHost(),
         assertAvailable: freePorts,
@@ -168,7 +173,7 @@ describe("startPreviewServers", () => {
     ).rejects.toThrow(/unknown preview app/);
     for (const port of [80, 70000, Number.NaN, 4183.5, undefined]) {
       await expect(
-        startPreviewServers([{ app: "mockup", port }], {
+        startPreviewServers([{ app: "mockup", port, outDir: `${STAGING}/mockup` }], {
           previewFn,
           hostProcess: fakeHost(),
           assertAvailable: freePorts,

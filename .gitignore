@@ -24,9 +24,6 @@ playwright-report/
 **/playwright-report/
 test-results/
 **/test-results/
-# E2E staging build (customer app + canvas harness) — served by the E2E preview servers only.
-# Never a deploy source; the customer artifact stays in apps/<app>/dist.
-.e2e-staging/
 *.tsbuildinfo
 
 # 임시 파일

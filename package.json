@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit -p packages/shared/tsconfig.json && tsc --noEmit -p packages/firebase/tsconfig.json && tsc --noEmit -p packages/spaces/tsconfig.json && tsc --noEmit -p packages/render/tsconfig.json && tsc --noEmit -p packages/ui/tsconfig.json && tsc --noEmit -p apps/mockup/tsconfig.json && tsc --noEmit -p apps/admin/tsconfig.json",
     "test:unit": "vitest run",
     "build": "vite build apps/mockup && vite build apps/admin",
-    "test:e2e": "vite build apps/mockup --outDir ../../.e2e-staging/mockup --emptyOutDir && vite build apps/admin --outDir ../../.e2e-staging/admin --emptyOutDir && vite build --config apps/mockup/vite.e2e-fixture.config.ts && playwright test",
+    "test:e2e": "node scripts/e2e-run.mjs",
     "check": "node scripts/check.mjs",
     "test:live:node": "vitest run -c vitest.live.config.ts",
     "test:live:browser": "playwright test -c playwright.live.config.ts"
