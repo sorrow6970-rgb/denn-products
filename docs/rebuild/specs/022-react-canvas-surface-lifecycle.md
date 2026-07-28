@@ -392,3 +392,23 @@ DOM 라이브러리를 새로 설치하지 않는다. 순수 scheduler/lifecycle
 - **재검증:** clean 고객 build 파일목록+**SHA-256** 기록 → `test:e2e` **57 PASS·summary·exit 0**(staging 절대경로 `C:\Users\<user>\AppData\Local\Temp\denn-e2e-XXXXXX` = **repo root 밖·OS temp 아래**, 로그로 출력)·포트 free·잔류 0 → 고객 dist **IDENTICAL** → **저장소 내 fixture/staging 빌드 산출물 0건** → **실패 경로 1회(exit 1)** 후에도 IDENTICAL·0건·**temp 잔여 staging 0건** → 재빌드 시 해시 정확 재현. frozen exit 0·**lockfile diff 0** / format·lint·typecheck / **unit 472**(468→472) / build 동일(mockup 217.69·68.40 / 11.32·3.16, admin 193.53·61.09 / 8.54·2.64) / check PASS / `git diff --check` clean / 스펙018 PNG 복원·미커밋.
 - **정확한 경계 기록(§9):** 저장소 안에 남는 fixture 관련 파일은 **소스 2개뿐**(`apps/mockup/e2e-canvas-fixture.html`, `apps/mockup/src/e2e/canvas-fixture.tsx`) — `index.html`·`src/main.tsx`와 같은 범주의 소스이며 **빌드 산출물이 아니다**. 다만 `hosting.public:"."`+현 ignore 목록 때문에 **`apps/**`·`packages/**`·`tests/**`·`scripts/**`·`node_modules/**` 등 저장소 소스 전체가 이미 배포 후보**라는 사실이 남는다(스펙 022 이전부터의 상태). 이 경계를 좁히려면 `firebase.json` 변경이 필요하나 **이번 스펙이 금지**하므로 손대지 않고 **Codex 결정 항목으로 남긴다**.
 - **production Canvas surface API·UI 무변경**(`apps/mockup/src/canvas/**` diff 0). 변경 파일 = `scripts/e2e-run.mjs`(신규)·`scripts/e2e-run.test.mjs`(신규)·`scripts/e2e-preview.mjs`·`scripts/e2e-preview.test.mjs`·`tests/global-setup.ts`·`apps/mockup/vite.e2e-fixture.config.ts`·`package.json`·`.gitignore`. 코드 커밋 `d24e836`, 문서 커밋 분리.
+
+### Codex 최종 판정 — 승인 가능 (2026-07-28)
+
+- **판정:** 스펙 022 = **승인 가능**. **승인 기준 HEAD = `b8020c0`**.
+- **Codex 독립 재검증:** `check` PASS / **unit 472/472** / build PASS(**mockup JS gzip 68.40KB**, **admin JS gzip 61.09KB**) / **E2E 57/57 PASS** + reporter summary + 명령 exit 0 / staging = **OS temp 아래 실행별 `denn-e2e-*` 절대경로** / 고객 mockup·admin dist **E2E 전후 SHA-256 목록 동일** / 신규 temp staging 잔여 **0** / 포트 4183·4184 free / PNG 복원 후 working tree clean / HEAD=origin·ahead-behind **0/0**.
+- **승인된 핵심 계약:**
+  1. `PreviewCanvasSurface` + framework-free surface engine(`createPreviewSurface`)
+  2. **preview 전용 DPR cap = 2**(고객 preview surface 한정, room 4·print DPI·관리자에 전파 없음)
+  3. **CSS size ↔ `plan.logicalCanvas` 축당 0.5px 불변식**(위반 시 executor 미실행·안전 실패)
+  4. **조건부 backing 대입 → `setTransform(dpr)` → executor** 순서 고정
+  5. **React 19 callback-ref cleanup**으로 ResizeObserver/rAF **단독 소유**
+  6. StrictMode·stale callback·0-size·resize burst 안전
+  7. 실제 Chromium **fill/stroke/clip-image 픽셀 검증**
+  8. 상품 plan projection과 운영 이미지는 **미착수**
+  9. E2E fixture는 **저장소·Firebase public 밖 OS temp에서만** 빌드·서빙
+  10. 스펙 021 **exact-handle preview teardown 유지**
+- **NOT TESTED(유지):** 실제 운영 이미지·**CORS-clean**·**실기기 4환경**(Safari·Android·Samsung·카카오)·선명도·성능·회전. Chromium 자동검증은 이들을 대신하지 않는다.
+- **미착수(유지):** pointer/touch/wheel/pinch·회전 transform·text/clock/watermark·print/PNG/export·저장·주문. **surface 완료는 상품 미리보기 완료가 아니다** — 선택 상태→`CasePlanInput`/`FramePlanInput` projection과 케이스/액자 색 결정은 후속 스펙이다.
+- **후속 필수 항목(별도 스펙):** `firebase.json`의 **`hosting.public: "."`으로 인한 저장소 전체 노출 위험**(현 `ignore` 목록으로는 `apps/**`·`packages/**`·`tests/**`·`scripts/**`·`node_modules/**`가 모두 배포 후보) — **Hosting 격리를 필수 후속 항목으로 유지**한다. 스펙 022는 Firebase 설정·Rules를 변경하지 않았다.
+- **다음:** Codex 다음 스펙 지시 대기.
