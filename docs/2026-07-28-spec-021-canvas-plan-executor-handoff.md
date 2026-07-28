@@ -219,3 +219,76 @@ executor production API·normalized snapshot·Result **무변경**, Tailwind `@s
 ### 9) 남은 불확실성
 
 Codex 실행에서 **wrapper 링크가 왜 끊겼는지**(스케줄링·부하·외부 트리 kill 등)는 로그가 없어 확정할 수 없다. 확인된 사실은 (1) 그 상태가 발생하면 무한 대기 + 포트 잔존이 **필연**이고, (2) 수정 후에는 그 상태를 인위적으로 만들어도 **856ms 안에 자기 종료·포트 해제**된다는 것이다. POSIX(리눅스/CI)는 detached 프로세스 그룹 + 실제 SIGTERM 경로라 이 실패 형태가 아니며, 런처는 그 경로에서도 정상 동작한다.
+
+---
+
+## 재검증 보완 3 (2026-07-28) — E2E 종료 결정성 2차 — 코드 커밋 `fe86954`
+
+### 1) 수정 전 `c204b60` 재현 시도 (Codex와 동일한 비TTY 실행)
+
+| 항목 | 값 |
+| --- | --- |
+| 실행 방식 | `cmd /c set DEBUG=pw:webserver&& corepack pnpm run test:e2e > log` (비TTY) |
+| 결과 | **exit 0, 19초, 49 PASS** |
+| webServer 로그 | `Terminating the WebServer` → `Terminated the WebServer` (0.58초) |
+| 잔류 | 포트 free, 저장소 소속 Node 0 |
+
+→ **자연 재현 실패**(Codex 관측을 오탐으로 보지 않음).
+
+### 2) Codex 증상("포트 free + Node 4개 잔존 + 미종료")의 구조적 설명
+
+vite 8.1.5 소스 확인:
+
+- `preview()`는 **host 리스너를 스스로 등록**한다 — `process.once("SIGTERM", cb)` + (`CI !== "true"`이면) **`process.stdin.on("end", cb)`**. `cb`는 `await server.close()` 후 `process.exit()`.
+- close 경로(`createServerCloseFn`)는 **자기가 추적한 소켓만** destroy한 뒤 `httpServer.close()` 완료를 기다린다.
+
+따라서 자식 런처 설계에서 **stdin EOF로 close가 시작되면 포트는 즉시 해제**되지만, `close()`가 추적 밖 keep-alive/신규 소켓 때문에 미해결이면 **`process.exit()`에 도달하지 못하고 프로세스가 살아 상속 파이프를 계속 쥔다** → **포트 LISTENING 0 + Node 프로세스 잔존 + 최종 summary/exit 없음.** Codex 보고와 정확히 같은 형태다. **직접 재현은 못 했으므로 "증거와 일관된 최유력 설명"으로 기록한다.**
+
+### 3) "부모 대기 순환" 가설 (실측 정정)
+
+런처의 부모는 `cmd.exe` wrapper이고 `cmd /c`는 자식 종료를 기다린다(트리로 확인). 두 조건은 독립이라 **교착은 아니다.** 다만 wrapper가 살아 있는 정상 경로에서 **부모-소멸 가드는 아무 역할도 하지 못하므로**, 런처 내부 close가 멈춘 상황을 해결할 수 없다. 가설을 단정하지 않고 이렇게 정정한다.
+
+### 4) 변경한 구조 (Codex 권장안 채택)
+
+- `webServer` **완전 제거** → `tests/global-setup.ts`(globalSetup)가 Vite `preview()`로 **서버 2개를 Playwright 러너 프로세스 안에 직접 생성**하고, **반환하는 teardown 콜백에서 그 두 handle만 close**.
+- **자식 프로세스·shell wrapper·상속 파이프가 아예 없다.** 실행 중 실측: **4183·4184 둘 다 러너 PID 소유**(vite 자식 0).
+
+```
+cmd /c corepack pnpm run test:e2e
+  └ node corepack → cmd /d /s /c playwright test
+      └ node @playwright/test/cli.js test      <- 4183 AND 4184 모두 이 PID가 소유
+          └ node worker → chrome-headless-shell
+```
+
+- 종료 결정성: close 전에 **`closeAllConnections()` + `closeIdleConnections()`**로 keep-alive를 끊고, `close()`는 **타임아웃으로 한정**하며 **실패/타임아웃은 던져서 보고**(exit 0으로 은폐 금지, handle별 전부 시도 후 집계).
+- `preview()`가 host에 추가한 **SIGTERM/stdin 리스너만 차집합으로 제거**(러너가 stdin EOF·SIGTERM에 중간 사망하는 것 방지, 기존 리스너 보존).
+
+### 5) "기존 서버 거부" 계약 — 정정
+
+`strictPort: true`만으로는 부족함을 **실측**했다: 와일드카드(0.0.0.0)에 바인드된 낡은 서버는 Vite의 `localhost`(::1) 바인드와 충돌하지 않아 **그대로 통과**했다(그 실행 exit 0). 그래서 시작 전에 **`127.0.0.1`·`::1` 두 루프백에 connect-only 프로브**를 돌려 응답이 있으면 **거부**한다.
+
+검증: 와일드카드 낡은 서버 존재 시 → **1초 만에 exit 1**, `port 4183 is already in use on 127.0.0.1 — refusing to reuse an existing server`, 서버 기동 0.
+
+### 6) 수정 후 검증 (같은 비TTY 실행 방식)
+
+| 실행 | 시작 | ok 49 | 종료 | exit | 자기 종료 | reporter 요약 | 실행 후 포트 | 잔류 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| final #1 | 12:39:14 | 12:39:33 | 12:39:35 (21s) | **0** | YES | `49 passed (18.3s)` | free | 0 |
+| final #2 | 12:39:39 | 12:39:58 | 12:40:01 (21s) | **0** | YES | `49 passed (18.2s)` | free | 0 |
+| final #3 | 12:40:05 | 12:40:24 | 12:40:27 (22s) | **0** | YES | `49 passed (18.2s)` | free | 0 |
+
+- **실패 경로 1회**: 의도적으로 실패하는 임시 spec(두 서버에 실제 200 확인 후 실패) → **exit 1, 2초 내 종료**, 포트 free, 잔류 0. 임시 spec 삭제(커밋 없음).
+- **SIGINT 경로**: Windows 콘솔 제어 이벤트 제약으로 **미검증**. 다만 서버가 러너 **프로세스 내부**에 있어 러너가 죽으면 서버도 사라지므로 orphan은 구조적으로 불가능하다.
+- 임의 sleep으로 통과시키지 않았다(전부 lifecycle/handle/이벤트 기반).
+
+### 7) 테스트 (unit 431 → 434, 런처 11 → 14)
+
+app 화이트리스트 · spec별 `strictPort` 전달 · 잘못된 app/port 거부(서버 기동 0) · **부분 기동 실패 시 시작된 handle만 close + 원본 오류 재throw** · `preview()`가 추가한 host 리스너만 제거(기존 보존) · close 전 `closeAllConnections`/`closeIdleConnections` · **멈춘 close는 타임아웃으로 보고**(다른 handle은 계속 close) · 거부/집계 메시지 · 빈 목록 no-op · **포트 점유 프로브 3상태(open/refused/timeout)** · 두 루프백 거부.
+
+### 8) 게이트·회귀
+
+frozen exit 0 · **lockfile diff 0** · 신규 의존성 0 / format·lint·typecheck / **unit 434** / build(mockup CSS 11.32 KB·gzip 3.16 / JS 68.40, admin 8.54/2.64 · 61.09 — 전부 동일) / **e2e 49 PASS** / check PASS / `git diff --check` clean. executor production API·normalized snapshot·Result·Tailwind `@source`·UI/CSS **무변경**. 변경 파일 = `scripts/e2e-preview.mjs`(재작성) · `scripts/e2e-preview.test.mjs`(재작성) · `playwright.config.ts`(webServer 제거 → globalSetup) · `tests/global-setup.ts`(신규). 운영본·Firebase·Rules·POC·admin·디자인 PNG 무변경, 재생성 스펙018 PNG 복원(커밋 없음), 네트워크·live·deploy 0.
+
+### 9) 남은 불확실성
+
+Codex 실행의 정확한 트리거는 로그가 없어 확정할 수 없다. 확인된 것은 (i) 자식 프로세스 기반 `webServer`는 상속 파이프 때문에 **어떤 잔존 자손이든 명령 종료를 막을 수 있다**는 구조적 사실, (ii) Vite preview의 stdin/SIGTERM 자동 종료 경로가 `close()` 미해결 시 **정확히 Codex가 본 상태**를 만든다는 점, (iii) 새 구조에는 자식 프로세스가 없고 close가 타임아웃으로 한정되며 실패가 보고된다는 점이다. 스펙 021 종료 문서 처리는 하지 않았다.
