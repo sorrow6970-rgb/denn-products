@@ -49,12 +49,6 @@ const isSafeId = (v: unknown): v is string =>
   typeof v === "string" && v.length >= 1 && v.length <= MAX_ID_LEN && SAFE_ID.test(v);
 const isSize = (s: unknown): boolean =>
   isObj(s) && isFinitePositive(s.width) && isFinitePositive(s.height);
-const isRect = (r: unknown): boolean =>
-  isObj(r) &&
-  isFiniteNum(r.x) &&
-  isFiniteNum(r.y) &&
-  isFinitePositive(r.width) &&
-  isFinitePositive(r.height);
 const isTransform = (t: unknown): t is ImageTransform =>
   isObj(t) && isFiniteNum(t.x) && isFiniteNum(t.y) && isFinitePositive(t.scale);
 
@@ -238,12 +232,24 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
 }
 
 function buildFrame(input: FramePlanInput): RenderPlanResult {
-  if (!isSize(input.logicalCanvas)) return fail("INVALID_ZONE");
-  if (!isRect(input.frameRect) || !isRect(input.imageZone)) return fail("INVALID_ZONE");
-  if (!isHex(input.frameColor) || !isHex(input.matColor)) return fail("INVALID_COLOR");
-  if (!isSize(input.image)) return fail("INVALID_ZONE");
-  if (!isTransform(input.transform)) return fail("INVALID_TRANSFORM");
-  if (!isSafeId(input.imageRef)) return fail("INVALID_ID");
+  // Every frame value is read ONCE into a plain snapshot below, so a getter that returns a valid
+  // rect during validation and a different one later cannot influence the emitted commands
+  // (spec 024 §4). Nothing here re-reads the caller's objects.
+  const canvas = readSizeOnce(input.logicalCanvas);
+  if (canvas === null) return fail("INVALID_ZONE");
+  const frameRect = readRectOnce(input.frameRect);
+  const matRect = readRectOnce(input.matRect);
+  const imageZone = readRectOnce(input.imageZone);
+  if (frameRect === null || matRect === null || imageZone === null) return fail("INVALID_ZONE");
+  const frameColor = input.frameColor;
+  const matColor = input.matColor;
+  if (!isHex(frameColor) || !isHex(matColor)) return fail("INVALID_COLOR");
+  const image = readSizeOnce(input.image);
+  if (image === null) return fail("INVALID_ZONE");
+  const transform = readTransformOnce(input.transform);
+  if (transform === null) return fail("INVALID_TRANSFORM");
+  const imageRef = input.imageRef;
+  if (!isSafeId(imageRef)) return fail("INVALID_ID");
 
   let innerBorder: StrokeSpec | undefined;
   if (input.innerBorder !== undefined) {
@@ -252,35 +258,30 @@ function buildFrame(input: FramePlanInput): RenderPlanResult {
     innerBorder = b;
   }
 
-  const image = coverCommand(
-    "frame:user-image",
-    input.imageRef,
-    rectCopy(input.imageZone),
-    input.image,
-    input.transform,
-  );
-  if ("code" in image) return fail(image.code, image.causeCode);
+  // finite inputs can still overflow to ±Infinity when the far edge is computed
+  const canvasBounds = canvasRect(canvas);
+  if (!edgesFinite(canvasBounds) || !edgesFinite(frameRect)) return fail("NON_FINITE_RESULT");
+  if (!edgesFinite(matRect) || !edgesFinite(imageZone)) return fail("NON_FINITE_RESULT");
+  // exact containment (shared edges allowed): canvas ⊇ frame ⊇ mat ⊇ image. No tolerance, no clamp,
+  // no shrink — a rect that falls outside fails instead of being moved (spec 024 §3).
+  if (!contains(canvasBounds, frameRect)) return fail("INVALID_ZONE");
+  if (!contains(frameRect, matRect)) return fail("INVALID_ZONE");
+  if (!contains(matRect, imageZone)) return fail("INVALID_ZONE");
+
+  const drawn = coverCommand("frame:user-image", imageRef, imageZone, image, transform);
+  if ("code" in drawn) return fail(drawn.code, drawn.causeCode);
 
   const commands: PreviewDrawCommand[] = [
-    {
-      type: "fill-rect",
-      layerId: "frame:body",
-      rect: rectCopy(input.frameRect),
-      color: input.frameColor,
-    },
-    {
-      type: "fill-rect",
-      layerId: "frame:mat",
-      rect: rectCopy(input.imageZone),
-      color: input.matColor,
-    },
-    image.command,
+    { type: "fill-rect", layerId: "frame:body", rect: frameRect, color: frameColor },
+    // the mat fills its OWN rect; the photo zone is a separate, smaller rect (spec 024 §1, §2)
+    { type: "fill-rect", layerId: "frame:mat", rect: matRect, color: matColor },
+    drawn.command,
   ];
   if (innerBorder) {
     commands.push({
       type: "stroke-rect",
       layerId: "frame:inner-border",
-      rect: rectCopy(input.imageZone),
+      rect: rectCopy(imageZone),
       color: innerBorder.color,
       width: innerBorder.width,
     });
@@ -288,7 +289,11 @@ function buildFrame(input: FramePlanInput): RenderPlanResult {
   if (!commandsAllFinite(commands)) return fail("NON_FINITE_RESULT");
   return {
     ok: true,
-    plan: { kind: "frame", logicalCanvas: sizeCopy(input.logicalCanvas), commands },
+    plan: {
+      kind: "frame",
+      logicalCanvas: { width: canvas.width, height: canvas.height },
+      commands,
+    },
   };
 }
 
@@ -298,6 +303,62 @@ const canvasRect = (s: { width: number; height: number }): Rect => ({
   width: s.width,
   height: s.height,
 });
+
+// --- frame snapshot readers + containment (spec 024) ------------------------
+// Each reader takes every field ONCE; the returned object is a fresh plain value, so later command
+// building never touches the caller's (possibly hostile or drifting) objects again.
+
+function readRectOnce(value: unknown): Rect | null {
+  try {
+    if (!isObj(value)) return null;
+    const x = value.x;
+    const y = value.y;
+    const width = value.width;
+    const height = value.height;
+    if (!isFiniteNum(x) || !isFiniteNum(y)) return null;
+    if (!isFinitePositive(width) || !isFinitePositive(height)) return null;
+    return { x, y, width, height };
+  } catch {
+    // a hostile getter, a throwing Proxy get/has trap or a revoked Proxy is simply not a rect
+    return null;
+  }
+}
+
+function readSizeOnce(value: unknown): { width: number; height: number } | null {
+  try {
+    if (!isObj(value)) return null;
+    const width = value.width;
+    const height = value.height;
+    if (!isFinitePositive(width) || !isFinitePositive(height)) return null;
+    return { width, height };
+  } catch {
+    return null;
+  }
+}
+
+function readTransformOnce(value: unknown): ImageTransform | null {
+  try {
+    if (!isObj(value)) return null;
+    const scale = value.scale;
+    const x = value.x;
+    const y = value.y;
+    if (!isFinitePositive(scale) || !isFiniteNum(x) || !isFiniteNum(y)) return null;
+    return { scale, x, y };
+  } catch {
+    return null;
+  }
+}
+
+/** finite inputs can overflow when the far edge is computed (e.g. MAX_VALUE + MAX_VALUE). */
+const edgesFinite = (r: Rect): boolean =>
+  Number.isFinite(r.x + r.width) && Number.isFinite(r.y + r.height);
+
+/** exact containment; sharing an edge counts as contained. */
+const contains = (outer: Rect, inner: Rect): boolean =>
+  inner.x >= outer.x &&
+  inner.y >= outer.y &&
+  inner.x + inner.width <= outer.x + outer.width &&
+  inner.y + inner.height <= outer.y + outer.height;
 const sizeCopy = (s: { width: number; height: number }): { width: number; height: number } => ({
   width: s.width,
   height: s.height,
@@ -311,9 +372,16 @@ const rectCopy = (r: Rect): Rect => ({ x: r.x, y: r.y, width: r.width, height: r
  * placeholder commands for template-art/camera/magsafe/text/clock (no data for them in this spec).
  */
 export function buildPreviewRenderPlan(input: PreviewRenderPlanInput): RenderPlanResult {
-  if (!isObj(input) || (input.kind !== "case" && input.kind !== "frame"))
-    return fail("INVALID_KIND");
-  return input.kind === "case"
-    ? buildCase(input as CasePlanInput)
-    : buildFrame(input as FramePlanInput);
+  try {
+    if (!isObj(input) || (input.kind !== "case" && input.kind !== "frame"))
+      return fail("INVALID_KIND");
+    return input.kind === "case"
+      ? buildCase(input as CasePlanInput)
+      : buildFrame(input as FramePlanInput);
+  } catch {
+    // Last-resort boundary (spec 024 §4): a property read anywhere in the input can throw (hostile
+    // getter, Proxy trap, revoked Proxy). Such input is not a usable zone, and the existing error
+    // code set is NOT extended. The thrown object is never stored or surfaced.
+    return fail("INVALID_ZONE");
+  }
 }

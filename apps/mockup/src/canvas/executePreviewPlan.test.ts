@@ -286,7 +286,9 @@ function realFramePlan(): PreviewRenderPlan {
   const built = buildPreviewRenderPlan({
     kind: "frame",
     logicalCanvas: { width: 500, height: 500 },
+    // canvas ⊇ frameRect ⊇ matRect ⊇ imageZone (spec 024)
     frameRect: { x: 0, y: 0, width: 500, height: 500 },
+    matRect: { x: 40, y: 40, width: 420, height: 320 },
     imageZone: { x: 50, y: 50, width: 400, height: 300 },
     frameColor: "#9F887A",
     matColor: "#FFFFFF",

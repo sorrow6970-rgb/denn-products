@@ -70,7 +70,16 @@ export interface CasePlanInput {
 export interface FramePlanInput {
   readonly kind: "frame";
   readonly logicalCanvas: Size;
+  /** the whole frame body rectangle. */
   readonly frameRect: Rect;
+  /**
+   * the mat fill inside the frame band — a SEPARATE required rect since spec 024. The legacy frame
+   * paints the mat over the whole area inside the band and only then insets the photo, so sharing
+   * one rect with `imageZone` could only produce a plan with no mat ring (evidence:
+   * denn-mockup-tool.html:3120-3130). There is no `matRect ?? imageZone` fallback.
+   */
+  readonly matRect: Rect;
+  /** where the user photo is clipped and cover-fitted, inside the mat. */
   readonly imageZone: Rect;
   readonly frameColor: HexColor;
   readonly matColor: HexColor;
@@ -78,7 +87,11 @@ export interface FramePlanInput {
   /** single, NON-rotated transform (no rotation field in this spec). */
   readonly transform: ImageTransform;
   readonly imageRef: string;
-  /** optional inner border stroke; only emitted when supplied. */
+  /**
+   * optional inner border stroke; only emitted when supplied. Drawn on `imageZone`. This is NOT
+   * equivalent to the legacy 4-band fill, so a product adapter must not supply it until that
+   * geometry is decided (spec 024 §2).
+   */
   readonly innerBorder?: StrokeSpec;
 }
 

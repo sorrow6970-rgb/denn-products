@@ -19,6 +19,8 @@ const BODY = [17, 34, 51] as const; // #112233
 const STROKE = [255, 0, 0] as const; // #FF0000
 const DRAWABLE = [0, 255, 0] as const; // #00FF00
 const ALT_BODY = [0, 0, 255] as const; // #0000FF
+const FRAME = [102, 51, 0] as const; // #663300
+const MAT = [255, 255, 0] as const; // #FFFF00
 
 const canvas = (page: Page) => page.getByTestId("preview-canvas");
 const statusText = (page: Page) => page.getByTestId("canvas-status");
@@ -177,6 +179,32 @@ test.describe("preview canvas surface @ deviceScaleFactor 1", () => {
       expect(serious).toEqual([]);
     }
   });
+});
+
+test("frame plan draws distinct frame band, mat ring and photo areas", async ({ page }) => {
+  const errors = collectConsoleErrors(page);
+  await page.goto(FIXTURE_URL);
+  await waitForReady(page);
+  await page.getByTestId("fx-plan-frame").click();
+  // the frame plan keeps the same logical size, so poll a pixel that only it produces
+  await expect.poll(async () => rgb(await pixelAt(page, 5, 5))).toEqual([...FRAME]);
+
+  // frameRect 0,0,300,200 ⊃ matRect 20,20,260,160 ⊃ imageZone 60,50,180,100
+  expect(rgb(await pixelAt(page, 5, 100))).toEqual([...FRAME]); // frame band, left
+  expect(rgb(await pixelAt(page, 295, 195))).toEqual([...FRAME]); // frame band, bottom-right
+  expect(rgb(await pixelAt(page, 30, 30))).toEqual([...MAT]); // mat ring, above/left of the photo
+  expect(rgb(await pixelAt(page, 270, 170))).toEqual([...MAT]); // mat ring, below/right
+  expect(rgb(await pixelAt(page, 55, 100))).toEqual([...MAT]); // 5px left of the photo zone
+  expect(rgb(await pixelAt(page, 150, 45))).toEqual([...MAT]); // 5px above the photo zone
+  expect(rgb(await pixelAt(page, 150, 100))).toEqual([...DRAWABLE]); // inside the photo zone
+  expect(rgb(await pixelAt(page, 62, 52))).toEqual([...DRAWABLE]); // just inside the top-left
+  expect(rgb(await pixelAt(page, 238, 148))).toEqual([...DRAWABLE]); // just inside the bottom-right
+  expect(errors).toEqual([]);
+
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(
+    results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
+  ).toEqual([]);
 });
 
 test("the customer screen shows no canvas and no route to the fixture", async ({ page }) => {

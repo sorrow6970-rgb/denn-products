@@ -19,6 +19,9 @@ const BODY_COLOR = "#112233";
 const STROKE_COLOR = "#FF0000";
 const DRAWABLE_COLOR = "#00FF00";
 const ALT_BODY_COLOR = "#0000FF";
+// spec 024: frame band / mat area / photo must be three visually distinct areas
+const FRAME_COLOR = "#663300";
+const MAT_COLOR = "#FFFF00";
 
 /** Synthetic same-origin drawable: a small offscreen canvas filled with one flat colour. */
 function createDrawable(): CanvasImageSource {
@@ -74,12 +77,54 @@ const PLAN_B = (): PreviewRenderPlan => ({
   ],
 });
 
+/**
+ * Frame plan with three DISTINCT rects: frameRect > matRect > imageZone (spec 024 §7).
+ *
+ * Written as a literal plan, exactly like the case plans above, so this harness stays free of the
+ * spec 020 INPUT field names. Tailwind's source scan reads every word in this file as a utility
+ * candidate, and words that happen to match Tailwind utilities end up in the CUSTOMER stylesheet;
+ * the builder import pulled two such words in. The mapping from a plan input to these very commands
+ * is pinned by the plan unit tests instead (`packages/render/src/plan/build.test.ts`).
+ *
+ * cover math for the numbers below: a 10x10 drawable into a 180x100 zone scales by max(18,10)=18,
+ * so the drawn box is 180x180 centred on the zone -> y = 50 + (100 - 180) / 2 = 10.
+ */
+const PLAN_FRAME = (): PreviewRenderPlan => ({
+  kind: "frame",
+  logicalCanvas: { width: 300, height: 200 },
+  commands: [
+    {
+      type: "fill-rect",
+      layerId: "frame:body",
+      rect: { x: 0, y: 0, width: 300, height: 200 },
+      color: FRAME_COLOR,
+    },
+    {
+      type: "fill-rect",
+      layerId: "frame:mat",
+      rect: { x: 20, y: 20, width: 260, height: 160 },
+      color: MAT_COLOR,
+    },
+    {
+      type: "draw-image-cover",
+      layerId: "frame:user-image",
+      imageRef: "fixtureDrawable",
+      clipRect: { x: 60, y: 50, width: 180, height: 100 },
+      drawRect: { x: 60, y: 10, width: 180, height: 180 },
+    },
+  ],
+});
+
 function Fixture(): React.JSX.Element {
-  const [planKey, setPlanKey] = useState<"a" | "b">("a");
+  const [planKey, setPlanKey] = useState<"a" | "b" | "frame">("a");
   const [hidden, setHidden] = useState(false);
   const [mounted, setMounted] = useState(true);
 
-  const plan = useMemo(() => (planKey === "a" ? PLAN_A() : PLAN_B()), [planKey]);
+  const plan = useMemo(() => {
+    if (planKey === "b") return PLAN_B();
+    if (planKey === "frame") return PLAN_FRAME();
+    return PLAN_A();
+  }, [planKey]);
   const imageBindings = useMemo<PreviewImageBindings>(
     () => new Map<string, CanvasImageSource>([["fixtureDrawable", createDrawable()]]),
     [],
@@ -96,6 +141,9 @@ function Fixture(): React.JSX.Element {
         </button>
         <button type="button" data-testid="fx-plan-b" onClick={() => setPlanKey("b")}>
           plan B
+        </button>
+        <button type="button" data-testid="fx-plan-frame" onClick={() => setPlanKey("frame")}>
+          plan frame
         </button>
         <button type="button" data-testid="fx-hide" onClick={() => setHidden(true)}>
           hide
@@ -120,7 +168,7 @@ function Fixture(): React.JSX.Element {
         ) : null}
       </div>
       <p data-testid="fx-colors" style={{ fontSize: 12 }}>
-        {`${BODY_COLOR}|${STROKE_COLOR}|${DRAWABLE_COLOR}|${ALT_BODY_COLOR}`}
+        {`${BODY_COLOR}|${STROKE_COLOR}|${DRAWABLE_COLOR}|${ALT_BODY_COLOR}|${FRAME_COLOR}|${MAT_COLOR}`}
       </p>
     </main>
   );

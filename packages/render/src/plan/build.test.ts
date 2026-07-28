@@ -44,8 +44,10 @@ const CASE_BASE: CasePlanInput = {
 const FRAME_BASE: FramePlanInput = {
   kind: "frame",
   logicalCanvas: { width: 300, height: 400 },
+  // canvas ⊇ frameRect ⊇ matRect ⊇ imageZone, all distinct (spec 024)
   frameRect: { x: 0, y: 0, width: 300, height: 400 },
-  imageZone: { x: 10, y: 10, width: 280, height: 380 },
+  matRect: { x: 10, y: 10, width: 280, height: 380 },
+  imageZone: { x: 18, y: 18, width: 264, height: 364 },
   frameColor: "#9F887A",
   matColor: "#FFFFFF",
   image: { width: 200, height: 100 },
@@ -324,13 +326,13 @@ describe("buildPreviewRenderPlan — frame", () => {
     const p = plan(buildPreviewRenderPlan(FRAME_BASE));
     const img = cmd(p, "frame:user-image");
     if (img.type !== "draw-image-cover") throw new Error("type");
-    expect(img.clipRect).toEqual({ x: 10, y: 10, width: 280, height: 380 });
-    // image 200x100 into 280x380 → baseScale=max(280/200,380/100)=3.8 → draw 760x380
-    expect(img.drawRect.width).toBeCloseTo(760, 6);
-    expect(img.drawRect.height).toBeCloseTo(380, 6);
+    expect(img.clipRect).toEqual({ x: 18, y: 18, width: 264, height: 364 });
+    // image 200x100 into 264x364 → baseScale=max(264/200,364/100)=3.64 → draw 728x364
+    expect(img.drawRect.width).toBeCloseTo(728, 6);
+    expect(img.drawRect.height).toBeCloseTo(364, 6);
   });
 
-  it("body fills frameRect, mat fills imageZone", () => {
+  it("body fills frameRect, mat fills matRect, image clips imageZone (three distinct rects)", () => {
     const p = plan(buildPreviewRenderPlan(FRAME_BASE));
     expect(cmd(p, "frame:body")).toEqual({
       type: "fill-rect",
@@ -338,12 +340,17 @@ describe("buildPreviewRenderPlan — frame", () => {
       rect: { x: 0, y: 0, width: 300, height: 400 },
       color: "#9F887A",
     });
-    expect((cmd(p, "frame:mat") as { rect: unknown }).rect).toEqual({
-      x: 10,
-      y: 10,
-      width: 280,
-      height: 380,
+    expect(cmd(p, "frame:mat")).toEqual({
+      type: "fill-rect",
+      layerId: "frame:mat",
+      rect: { x: 10, y: 10, width: 280, height: 380 },
+      color: "#FFFFFF",
     });
+    const img = cmd(p, "frame:user-image");
+    if (img.type !== "draw-image-cover") throw new Error("type");
+    expect(img.clipRect).toEqual({ x: 18, y: 18, width: 264, height: 364 });
+    // the mat ring really exists: mat rect is strictly larger than the photo rect
+    expect(img.clipRect).not.toEqual((cmd(p, "frame:mat") as { rect: unknown }).rect);
   });
 
   it("has no rotation / shadow / grain / gloss commands", () => {
@@ -400,6 +407,7 @@ describe("buildPreviewRenderPlan — errors & leak", () => {
       { ...FRAME_BASE, imageZone: { x: 0, y: 0, width: 0, height: 10 } },
       "INVALID_ZONE",
     ],
+    ["bad mat color", { ...FRAME_BASE, matColor: "#12345" }, "INVALID_COLOR"],
     ["bad frame color", { ...FRAME_BASE, frameColor: "red" }, "INVALID_COLOR"],
     ["bad transform", { ...FRAME_BASE, transform: { scale: -1, x: 0, y: 0 } }, "INVALID_TRANSFORM"],
   ])("frame %s → %s", (_label, input, code) => {
@@ -491,6 +499,14 @@ describe("buildPreviewRenderPlan — runtime-malformed input returns errors (no 
     ["frame frameRect null", { ...FRAME_BASE, frameRect: null }, "INVALID_ZONE"],
     ["frame frameRect missing", omit(FRAME_BASE, "frameRect"), "INVALID_ZONE"],
     ["frame imageZone primitive", { ...FRAME_BASE, imageZone: 5 }, "INVALID_ZONE"],
+    ["frame matRect null", { ...FRAME_BASE, matRect: null }, "INVALID_ZONE"],
+    ["frame matRect missing", omit(FRAME_BASE, "matRect"), "INVALID_ZONE"],
+    ["frame matRect primitive", { ...FRAME_BASE, matRect: "10" }, "INVALID_ZONE"],
+    [
+      "frame matRect partial",
+      { ...FRAME_BASE, matRect: { x: 10, y: 10, width: 280 } },
+      "INVALID_ZONE",
+    ],
     ["frame transform null", { ...FRAME_BASE, transform: null }, "INVALID_TRANSFORM"],
     ["frame transform missing", omit(FRAME_BASE, "transform"), "INVALID_TRANSFORM"],
     ["frame innerBorder null", { ...FRAME_BASE, innerBorder: null }, "INVALID_ZONE"],
@@ -600,5 +616,280 @@ describe("buildPreviewRenderPlan — zone.order validation", () => {
       }),
     );
     expect(layerIds(p)).toEqual(["case:body", "case:user-image:first", "case:user-image:second"]);
+  });
+});
+
+// ---- D2. frame mat / image zone separation (spec 024) --------------------------
+describe("buildPreviewRenderPlan ??frame containment (spec 024)", () => {
+  const frame = (over: Partial<FramePlanInput>): unknown => ({ ...FRAME_BASE, ...over });
+  const code = (input: unknown): string => {
+    const r = buildPreviewRenderPlan(input as FramePlanInput);
+    return r.ok ? "ok" : r.code;
+  };
+
+  it("allows shared edges at every level", () => {
+    expect(
+      code(
+        frame({
+          frameRect: { x: 0, y: 0, width: 300, height: 400 },
+          matRect: { x: 0, y: 0, width: 300, height: 400 },
+          imageZone: { x: 0, y: 0, width: 300, height: 400 },
+        }),
+      ),
+    ).toBe("ok");
+  });
+
+  it("allows a frameRect smaller than the logical canvas", () => {
+    expect(
+      code(
+        frame({
+          frameRect: { x: 20, y: 30, width: 200, height: 300 },
+          matRect: { x: 30, y: 40, width: 180, height: 280 },
+          imageZone: { x: 40, y: 50, width: 160, height: 260 },
+        }),
+      ),
+    ).toBe("ok");
+  });
+
+  it.each([
+    ["frameRect off the left", { frameRect: { x: -1, y: 0, width: 300, height: 400 } }],
+    ["frameRect off the top", { frameRect: { x: 0, y: -1, width: 300, height: 400 } }],
+    ["frameRect off the right", { frameRect: { x: 1, y: 0, width: 300, height: 400 } }],
+    ["frameRect off the bottom", { frameRect: { x: 0, y: 1, width: 300, height: 400 } }],
+  ])("rejects a frameRect outside the logical canvas (%s)", (_label, over) => {
+    expect(code(frame(over))).toBe("INVALID_ZONE");
+  });
+
+  it.each([
+    ["matRect off the left", { matRect: { x: -1, y: 10, width: 100, height: 100 } }],
+    ["matRect off the top", { matRect: { x: 10, y: -1, width: 100, height: 100 } }],
+    ["matRect off the right", { matRect: { x: 10, y: 10, width: 295, height: 100 } }],
+    ["matRect off the bottom", { matRect: { x: 10, y: 10, width: 100, height: 395 } }],
+  ])("rejects a matRect outside the frameRect (%s)", (_label, over) => {
+    expect(code(frame(over))).toBe("INVALID_ZONE");
+  });
+
+  it.each([
+    ["imageZone off the left", { imageZone: { x: 9, y: 20, width: 100, height: 100 } }],
+    ["imageZone off the top", { imageZone: { x: 20, y: 9, width: 100, height: 100 } }],
+    ["imageZone off the right", { imageZone: { x: 20, y: 20, width: 275, height: 100 } }],
+    ["imageZone off the bottom", { imageZone: { x: 20, y: 20, width: 100, height: 375 } }],
+  ])("rejects an imageZone outside the matRect (%s)", (_label, over) => {
+    expect(code(frame(over))).toBe("INVALID_ZONE");
+  });
+
+  it("uses no tolerance: a hair outside still fails", () => {
+    const outside = { x: 10 - Number.EPSILON * 10, y: 20, width: 10, height: 10 };
+    expect(code(frame({ imageZone: outside }))).toBe("INVALID_ZONE");
+  });
+
+  it.each([
+    [
+      "frameRect edge overflow",
+      {
+        logicalCanvas: { width: Number.MAX_VALUE, height: Number.MAX_VALUE },
+        frameRect: { x: Number.MAX_VALUE, y: 0, width: Number.MAX_VALUE, height: 10 },
+      },
+    ],
+    [
+      "matRect edge overflow",
+      {
+        logicalCanvas: { width: Number.MAX_VALUE, height: Number.MAX_VALUE },
+        frameRect: { x: 0, y: 0, width: Number.MAX_VALUE, height: Number.MAX_VALUE },
+        matRect: { x: Number.MAX_VALUE, y: 0, width: Number.MAX_VALUE, height: 10 },
+      },
+    ],
+    [
+      "imageZone edge overflow",
+      {
+        logicalCanvas: { width: Number.MAX_VALUE, height: Number.MAX_VALUE },
+        frameRect: { x: 0, y: 0, width: 10, height: 10 },
+        matRect: { x: 0, y: 0, width: 10, height: 10 },
+        imageZone: { x: Number.MAX_VALUE, y: 0, width: Number.MAX_VALUE, height: 10 },
+      },
+    ],
+  ])("maps a finite-input edge overflow to NON_FINITE_RESULT (%s)", (_label, over) => {
+    expect(code(frame(over))).toBe("NON_FINITE_RESULT");
+  });
+
+  it("does not produce a partial plan when containment fails", () => {
+    const result = buildPreviewRenderPlan(
+      // one px wider than the frame band it must sit inside
+      frame({ matRect: { x: 0, y: 0, width: 301, height: 400 } }) as FramePlanInput,
+    );
+    expect(result.ok).toBe(false);
+    expect(Object.keys(result).sort()).toEqual(["code", "ok"]);
+  });
+
+  it("keeps the inner border on the imageZone", () => {
+    const p = plan(
+      buildPreviewRenderPlan({ ...FRAME_BASE, innerBorder: { color: "#191A1D", width: 2 } }),
+    );
+    expect((cmd(p, "frame:inner-border") as { rect: unknown }).rect).toEqual({
+      x: 18,
+      y: 18,
+      width: 264,
+      height: 364,
+    });
+  });
+});
+
+describe("buildPreviewRenderPlan ??frame hostile runtime input (spec 024)", () => {
+  const throwingRect = (key: string): Record<string, unknown> => {
+    const rect: Record<string, unknown> = { x: 20, y: 20, width: 100, height: 100 };
+    Object.defineProperty(rect, key, {
+      get() {
+        throw new Error("hostile rect getter");
+      },
+      enumerable: true,
+    });
+    return rect;
+  };
+
+  it.each(["frameRect", "matRect", "imageZone"])(
+    "never throws for a throwing getter on %s",
+    (field) => {
+      for (const key of ["x", "y", "width", "height"]) {
+        const input = { ...FRAME_BASE, [field]: throwingRect(key) } as unknown as FramePlanInput;
+        expect(() => buildPreviewRenderPlan(input)).not.toThrow();
+        expect(buildPreviewRenderPlan(input).ok).toBe(false);
+      }
+    },
+  );
+
+  it.each(["frameRect", "matRect", "imageZone"])(
+    "never throws for a Proxy trap or a revoked Proxy on %s",
+    (field) => {
+      const trap = new Proxy(
+        { x: 20, y: 20, width: 100, height: 100 },
+        {
+          get() {
+            throw new Error("hostile trap");
+          },
+          has() {
+            throw new Error("hostile has trap");
+          },
+        },
+      );
+      const revocable = Proxy.revocable({ x: 20, y: 20, width: 100, height: 100 }, {});
+      revocable.revoke();
+      for (const hostile of [trap, revocable.proxy]) {
+        const input = { ...FRAME_BASE, [field]: hostile } as unknown as FramePlanInput;
+        expect(() => buildPreviewRenderPlan(input)).not.toThrow();
+        expect(buildPreviewRenderPlan(input).ok).toBe(false);
+      }
+    },
+  );
+
+  it("uses a single snapshot: a drifting rect cannot change the emitted command", () => {
+    let reads = 0;
+    const first = { x: 18, y: 18, width: 264, height: 364 };
+    // any read after the validated one would break containment and change the clip rect
+    const later = { x: 0, y: 0, width: 300, height: 400 };
+    const drifting: Record<string, unknown> = {};
+    for (const key of ["x", "y", "width", "height"] as const) {
+      Object.defineProperty(drifting, key, {
+        get() {
+          const source = reads < 4 ? first : later;
+          reads += 1;
+          return source[key];
+        },
+        enumerable: true,
+      });
+    }
+    const p = plan(
+      buildPreviewRenderPlan({ ...FRAME_BASE, imageZone: drifting } as unknown as FramePlanInput),
+    );
+    const img = cmd(p, "frame:user-image");
+    if (img.type !== "draw-image-cover") throw new Error("type");
+    expect(img.clipRect).toEqual({ x: 18, y: 18, width: 264, height: 364 });
+    expect((cmd(p, "frame:mat") as { rect: unknown }).rect).toEqual({
+      x: 10,
+      y: 10,
+      width: 280,
+      height: 380,
+    });
+  });
+
+  it("keeps rect values, imageRef and identifiers out of a failure payload", () => {
+    const result = buildPreviewRenderPlan({
+      ...FRAME_BASE,
+      imageRef: "frame-img",
+      matRect: { x: 0, y: 0, width: 999, height: 999 }, // outside the frameRect
+    } as FramePlanInput);
+    expect(result.ok).toBe(false);
+    const serialized = JSON.stringify(result);
+    for (const forbidden of ["999", "frame-img", "http", "data:", "token"]) {
+      expect(serialized).not.toContain(forbidden);
+    }
+  });
+
+  it("does not mutate a deep-frozen frame input and stays deterministic", () => {
+    const input = deepFreeze({ ...FRAME_BASE });
+    const before = JSON.stringify(input);
+    const a = buildPreviewRenderPlan(input);
+    const b = buildPreviewRenderPlan(input);
+    expect(a).toEqual(b);
+    expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it("emits only finite numbers for the frame plan", () => {
+    const p = plan(buildPreviewRenderPlan(FRAME_BASE));
+    for (const command of p.commands) {
+      const rects =
+        command.type === "draw-image-cover" ? [command.clipRect, command.drawRect] : [command.rect];
+      for (const rect of rects) {
+        for (const value of [rect.x, rect.y, rect.width, rect.height]) {
+          expect(Number.isFinite(value)).toBe(true);
+        }
+      }
+    }
+  });
+});
+
+// The E2E harness writes its frame plan as a literal (it must not contain spec 020 INPUT field
+// names ??see apps/mockup/src/e2e/canvas-fixture.tsx). This pins that literal to the builder, so the
+// Chromium pixel test really exercises the command shape the builder produces.
+describe("buildPreviewRenderPlan ??frame E2E fixture equivalence (spec 024)", () => {
+  it("produces exactly the harness frame commands", () => {
+    const p = plan(
+      buildPreviewRenderPlan({
+        kind: "frame",
+        logicalCanvas: { width: 300, height: 200 },
+        frameRect: { x: 0, y: 0, width: 300, height: 200 },
+        matRect: { x: 20, y: 20, width: 260, height: 160 },
+        imageZone: { x: 60, y: 50, width: 180, height: 100 },
+        frameColor: "#663300",
+        matColor: "#FFFF00",
+        image: { width: 10, height: 10 },
+        transform: { scale: 1, x: 0, y: 0 },
+        imageRef: "fixtureDrawable",
+      }),
+    );
+    expect(p).toEqual({
+      kind: "frame",
+      logicalCanvas: { width: 300, height: 200 },
+      commands: [
+        {
+          type: "fill-rect",
+          layerId: "frame:body",
+          rect: { x: 0, y: 0, width: 300, height: 200 },
+          color: "#663300",
+        },
+        {
+          type: "fill-rect",
+          layerId: "frame:mat",
+          rect: { x: 20, y: 20, width: 260, height: 160 },
+          color: "#FFFF00",
+        },
+        {
+          type: "draw-image-cover",
+          layerId: "frame:user-image",
+          imageRef: "fixtureDrawable",
+          clipRect: { x: 60, y: 50, width: 180, height: 100 },
+          drawRect: { x: 60, y: 10, width: 180, height: 180 },
+        },
+      ],
+    });
   });
 });
