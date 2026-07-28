@@ -395,3 +395,27 @@ diagnostic 배열 순서는 탐색·source 순서로 결정적이어야 하며 �
 없음. 사전 조사 Q1~Q14는 이번 스펙을 render 비의존 geometry projection으로
 제한하고 위 규칙으로 결정했다. 색상 선택·사용자 이미지·CSS logical size·plan 조립,
 지원 불가 shape의 render 계약 확장은 각각 후속 스펙으로 분리한다.
+
+---
+
+### DONE (Claude) — 2026-07-28
+
+- **구현 위치:** `packages/shared/src/catalog/preview/{types,project,index}.ts` + `project.test.ts`, `catalog/index.ts`에 `export * from "./preview"` 추가. **그 외 파일 무변경**(앱·`@denn/render`·firebase·ui·spaces·운영 HTML·Firebase 설정/Rules·POC·PNG diff 0). 신규 외부 의존성 0.
+- **공개 API:** `projectCasePreviewGeometry(document, {modelId, templateId})` → `{modelLogicalSize:{width,height}, zones:[{id, sourceIndex, percentRect{x,y,width,height}}]}` / `projectFramePreviewGeometry(document, {frameSizeId, templateId})` → `{aspect, borderPercentOfWidth, matColor}`. 둘 다 `PreviewProjectionResult<T>` = `{ok:true,value,diagnostics}` | `{ok:false,code,diagnostics}`.
+- **오류 코드(8):** `INVALID_INPUT` · `INVALID_COLLECTION` · `ITEM_NOT_FOUND` · `AMBIGUOUS_ITEM` · `INVALID_ITEM` · `INVALID_GEOMETRY` · `UNSUPPORTED_ZONE_SHAPE` · `UNSUPPORTED_FRAME_TEMPLATE`. **diagnostic 코드(5):** `LEGACY_ZONES_ALIAS` · `PHOTO_SLOT_FALLBACK` · `INVALID_MAT_COLOR` · `INNER_BORDER_OMITTED` · `ALPHA_OUTLINE_OMITTED`(각각 `code`+`collection`+선택적 `sourceIndex`만).
+- **Q1~Q14 반영:** Q1 케이스 body color·Q2 액자 색 = **API에 없음**(첫 색 자동 선택 없음) / Q3 케이스는 `modelLogicalSize`(모델 w/h)만, 액자는 `aspect`만 반환 / Q4 zone id = **원본 index 기반 `case-zone-<index>`**(정렬·필터 후 재번호 없음) / Q5 원형·라운드 → **전체 실패**(사각 근사·조용한 제외 0) / Q6 inner border **output 제외 + diagnostic** / Q7 alpha 색 **생략 + diagnostic** / Q8 multi-zone **실패** / Q9 thickness = size별 → top-level까지만, **`5.5` 하드코딩 없음**(둘 다 없으면 실패) / Q10 template 미선택·blank ID = 명시적 실패 / Q11 opaque caseTemplate의 지원 subset을 이 경계에서 런타임 검증(read 계약 무확장) / Q12 size별 `frameThickness`는 opaque 값이 유한 양수일 때만 우선 사용(타입 승격 없음) / Q13 합성 fixture만·`NOT VERIFIED` 유지 / Q14 `prevMaxW` 미사용.
+- **케이스 규칙:** `modelLogicalSize`는 `models[].w/h` **그대로**(문자열 coercion·abs·clamp·fallback 0; 누락/0/음수/NaN/Infinity/숫자문자열 → `INVALID_GEOMETRY`). zone 공급원 = `photoZones` → `zones`(alias diagnostic) → 단일 `photoSlot`(diagnostic); **명시적으로 존재하는 빈 배열은 fallthrough 없이 실패**. zone별 = plain object · `x/y` 유한 · `w/h` 양수 · **정확한 0..100 경계 내**(clamp·정수화 없음) · `type` 없음/`""`/`"rect"`만 사각으로 인정 · `cornerR>0` 또는 미지의 `type` → `UNSUPPORTED_ZONE_SHAPE`. 원본 순서 유지, `label`·`order` 기반 정렬 없음.
+- **액자 규칙:** `aspect`는 유한 양수 필수(레거시 `‖1` 미복제). thickness는 **size별 → top-level** 순서이며 상위 값이 존재하지만 invalid면 **하위로 숨기지 않고 실패**. template은 **"단일 full-mat 사각형"만 지원** — uploaded(zone 데이터 없음 / 단일 `0,0,100,100` zone 또는 photoSlot)와 **builtin `full`**만 통과, `duo`·`trio`·`text_only`·`top_text`·미지 builtin id·미지 `type` → `UNSUPPORTED_FRAME_TEMPLATE`, builtin `circle`·원형/라운드 zone → `UNSUPPORTED_ZONE_SHAPE`(근거 `denn-mockup-tool.html:3134-3140`, `:3044-3047`, `:3069-3074`). mat 색 = 플래그 3별칭(`true/1/'1'/'true'/'on'`) + 색 4별칭 + **정확한 `#RRGGBB`만**, canonical **대문자**, 그 외 `#FFFFFF`(원문 미보존 + `INVALID_MAT_COLOR`), 비활성도 `#FFFFFF`.
+- **반환 payload 정확한 필드:** case = `modelLogicalSize.width/height`, `zones[].id/sourceIndex/percentRect.x,y,width,height` / frame = `aspect`, `borderPercentOfWidth`, `matColor`. 그 외 어떤 필드도 없음(테스트로 키 집합 고정). raw item·상품명·선택 ID·categoryId·이미지·URL·base64·token·storagePath **0**(성공·실패 모두 직렬화 검사).
+- **hostile 입력·누출 방지 테스트:** null/undefined/primitive/array document · `data` 비객체 · malformed selection(null/primitive/필드 누락/비문자열) · **throwing getter**(document `data`, zone `x`) · **Proxy get trap** · **revoked Proxy** · hostile selection Proxy → 전부 `expect(...).not.toThrow()` + 실패 Result. 추가로 blank/공백 ID 거부, trim된 ID가 다른 item을 찾지 않음, 원문 미echo, deep-freeze 입력 비변형, 동일 입력 deep-equal 결정성, JSON round-trip 동일, 실패 payload 키 = `ok/code/diagnostics`.
+- **게이트:** frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / **unit 568**(472 → 568, preview 96 신규) / build(**mockup JS 217.69 kB·gzip 68.40 / CSS 11.32 kB·gzip 3.16, admin 193.53·61.09 / 8.54·2.64 — 전부 동일**) / **e2e 57 PASS**(신규 E2E 0)·reporter 요약·**exit 0 자체 종료** / check PASS / `git diff --check` clean / 포트 4183·4184 free·잔류 0 / **OS temp `denn-e2e-*` 잔여 0** / 고객 mockup·admin dist **파일 목록+SHA-256 E2E 전후 동일·fixture 파일 0** / 재생성 스펙018 PNG 복원·미커밋.
+- **NOT TESTED / 유지:** 실제 published catalog의 opaque caseTemplate 변형 분포(합성 fixture만) · 실제 운영 데이터 · Canvas 연결·실제 미리보기 픽셀 · CORS-clean · 실기기. **이 DONE은 상품 미리보기 완료가 아니다** — 색 선택·사용자 이미지·CSS logical size·`PreviewRenderPlan` 조립은 후속 앱 계층 스펙이다. `hosting.public:"."` 위험도 그대로이며 Hosting 격리 전 배포 금지.
+- 커밋: 코드/test `5a7cbd7`, 문서 분리. 핸드오프 `docs/2026-07-28-spec-023-catalog-preview-projection-handoff.md`.
+
+### QUESTIONS (구현하지 않고 보고)
+
+1. **퍼센트 경계의 부동소수 edge:** §4의 "0..100 벗어나면 실패"를 **정확 비교**로 구현했다. IEEE754에서 `0.1 + 99.9 = 100.00000000000001`이므로 그런 저작값은 거부된다. 허용 오차를 임의로 만들지 않았다 — 필요하면 Codex가 tolerance를 명시해야 한다.
+2. **builtin `full`의 콘텐츠 inset:** 레거시 `full`은 mat 영역이 아니라 `P=8`만큼 안쪽(`cx,cy,cw,ch`)에 사진을 그린다(`:3130`,`:3134`). 이번 output은 사각형 개수만 판정하고 rect를 반환하지 않으므로, 후속 앱 어댑터가 imageZone을 mat 전체로 쓸 경우 레거시와 8px 차이가 난다. 이번 스펙 범위 밖으로 두었다.
+3. **`type` 빈 문자열 취급:** §4가 "알 수 없는 **non-empty** type"만 거부하도록 규정했으므로 `""`·`null`·부재를 사각으로 인정했다. 더 엄격하게 `"rect"`만 허용할지는 결정 필요.
+4. **`frameThickness` "존재" 판정:** `undefined`만 부재로 보고 `null`은 존재-but-invalid로 처리해 실패시켰다. `null`을 부재로 볼지 결정 필요.
+5. **실패 Result의 위치 정보:** §2의 error 형태가 `code`+`diagnostics`뿐이므로 실패한 zone의 `sourceIndex`를 노출하지 않는다(진단 코드 집합도 §6의 5종으로 제한). 실패 지점 index가 필요하면 계약 확장이 필요하다.
