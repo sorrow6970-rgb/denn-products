@@ -93,6 +93,7 @@ Claude Code  →  스펙 읽고 코드 구현 → 검증 실행 → 스펙 하�
 | 019 | Canvas 순수 geometry 계약 | DONE | Codex 승인, 5개 공개 함수로 6개 geometry 계약·극단값 안전성 고정 |
 | 020 | 결정적 Canvas render-plan 계약 | DONE | Codex 승인, 케이스·액자 최소 명령 plan·신뢰 경계 고정 |
 | 021 | Canvas render-plan executor 계약 | DONE | Codex 승인, 앱 계층 context 실행·E2E 종료 결정성 확정 |
-| 022 | React Canvas surface·DPR·생명주기 | READY | 실제 canvas/context·DPR 2·RO/rAF·StrictMode·Chromium 픽셀 검증 |
-| 023 | 카탈로그 미리보기 기하 projection | READY | `@denn/shared` 순수 case/frame geometry, 색·이미지·plan 조립 제외 |
-| 024 | 액자 render-plan mat·image zone 분리 | READY | `FramePlanInput.matRect` 분리·containment·실제 Chromium 픽셀 |
+| 022 | React Canvas surface·DPR·생명주기 | DONE | Codex 승인, 실제 canvas/context·DPR 2·RO/rAF·StrictMode·Chromium 픽셀 검증 |
+| 023 | 카탈로그 미리보기 기하 projection | DONE | Codex 승인, `@denn/shared` 순수 case/frame geometry |
+| 024 | 액자 render-plan mat·image zone 분리 | DONE | Codex 승인, `FramePlanInput.matRect` 분리·containment·실제 Chromium 픽셀 |
+| 025 | 상품 geometry → preview render-plan 순수 어댑터 | READY | zone별 case image 계약 정정·frame inset projection·명시적 색/이미지 plan 조립 |
