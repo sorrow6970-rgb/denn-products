@@ -13,8 +13,8 @@ import {
   assertPortAvailable,
   closePreviewServers,
   isPortTaken,
-  PREVIEW_APP_ROOTS,
-  resolveAppRoot,
+  PREVIEW_APPS,
+  resolveApp,
   startPreviewServers,
 } from "./e2e-preview.mjs";
 
@@ -67,14 +67,24 @@ const SPECS = [
   { app: "admin", port: 4184 },
 ];
 
-describe("app roots", () => {
-  it("exposes only the two repo apps", () => {
-    expect([...PREVIEW_APP_ROOTS.entries()]).toEqual([
-      ["mockup", "apps/mockup"],
-      ["admin", "apps/admin"],
+describe("app targets", () => {
+  it("exposes only the two repo apps, each served from the E2E staging build", () => {
+    expect([...PREVIEW_APPS.entries()]).toEqual([
+      ["mockup", { root: "apps/mockup", outDir: "../../.e2e-staging/mockup" }],
+      ["admin", { root: "apps/admin", outDir: "../../.e2e-staging/admin" }],
     ]);
-    expect(resolveAppRoot("mockup")).toBe("apps/mockup");
-    expect(resolveAppRoot("legacy")).toBeNull();
+    expect(resolveApp("mockup")).toEqual({
+      root: "apps/mockup",
+      outDir: "../../.e2e-staging/mockup",
+    });
+    expect(resolveApp("legacy")).toBeNull();
+  });
+
+  it("never serves a customer dist directory", () => {
+    for (const target of PREVIEW_APPS.values()) {
+      expect(target.outDir).toContain(".e2e-staging");
+      expect(target.outDir).not.toBe("dist");
+    }
   });
 });
 
@@ -118,7 +128,7 @@ describe("existing-server refusal (reuseExistingServer:false equivalent)", () =>
 describe("startPreviewServers", () => {
   const freePorts = async () => {};
 
-  it("starts one server per spec with the app root and a strict port", async () => {
+  it("starts one server per spec from staging with the app root and a strict port", async () => {
     const seen = [];
     const previewFn = vi.fn(async (config) => {
       seen.push(config);
@@ -130,8 +140,16 @@ describe("startPreviewServers", () => {
       assertAvailable: freePorts,
     });
     expect(seen).toEqual([
-      { root: "apps/mockup", preview: { port: 4183, strictPort: true } },
-      { root: "apps/admin", preview: { port: 4184, strictPort: true } },
+      {
+        root: "apps/mockup",
+        build: { outDir: "../../.e2e-staging/mockup" },
+        preview: { port: 4183, strictPort: true },
+      },
+      {
+        root: "apps/admin",
+        build: { outDir: "../../.e2e-staging/admin" },
+        preview: { port: 4184, strictPort: true },
+      },
     ]);
     expect(handles.map((h) => [h.app, h.port])).toEqual([
       ["mockup", 4183],

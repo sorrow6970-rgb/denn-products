@@ -54,14 +54,19 @@ export async function assertPortAvailable(port, options) {
   }
 }
 
-/** Only these two apps may be previewed. */
-export const PREVIEW_APP_ROOTS = new Map([
-  ["mockup", "apps/mockup"],
-  ["admin", "apps/admin"],
+/**
+ * Only these two apps may be previewed, and each is served from its E2E STAGING build — never from
+ * `apps/<app>/dist`. `pnpm run test:e2e` builds both apps (plus the canvas harness) into
+ * `.e2e-staging/`, so the customer artifact in `apps/mockup/dist` is neither read nor written by the
+ * E2E run and can never gain the harness files.
+ */
+export const PREVIEW_APPS = new Map([
+  ["mockup", { root: "apps/mockup", outDir: "../../.e2e-staging/mockup" }],
+  ["admin", { root: "apps/admin", outDir: "../../.e2e-staging/admin" }],
 ]);
 
-export function resolveAppRoot(app) {
-  return PREVIEW_APP_ROOTS.get(app) ?? null;
+export function resolveApp(app) {
+  return PREVIEW_APPS.get(app) ?? null;
 }
 
 function snapshotHostListeners(hostProcess) {
@@ -95,14 +100,19 @@ export async function startPreviewServers(
   const handles = [];
   try {
     for (const { app, port } of specs) {
-      const root = resolveAppRoot(app);
-      if (root === null) throw new Error(`unknown preview app: ${String(app)}`);
+      const target = resolveApp(app);
+      if (target === null) throw new Error(`unknown preview app: ${String(app)}`);
       if (!Number.isInteger(port) || port < 1024 || port > 65535) {
         throw new Error(`invalid preview port for ${app}`);
       }
       await assertAvailable(port);
       const before = snapshotHostListeners(hostProcess);
-      const server = await previewFn({ root, preview: { port, strictPort: true } });
+      const server = await previewFn({
+        root: target.root,
+        // serve the staging build; `outDir` is resolved relative to `root` by Vite
+        build: { outDir: target.outDir },
+        preview: { port, strictPort: true },
+      });
       handles.push({ app, port, server, detached: detachAddedHostListeners(hostProcess, before) });
     }
     return handles;
