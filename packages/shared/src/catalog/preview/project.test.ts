@@ -304,6 +304,8 @@ describe("projectFramePreviewGeometry — supported geometry", () => {
       aspect: 1.4,
       borderPercentOfWidth: 4,
       matColor: "#FFFFFF",
+      // uploaded template with no design source -> the legacy id-dispatch inset (spec 025)
+      contentInsetPx: 8,
     });
     expect(result.diagnostics).toEqual([
       { code: "ALPHA_OUTLINE_OMITTED", collection: "frameTemplates", sourceIndex: 0 },
@@ -424,6 +426,7 @@ describe("projectFramePreviewGeometry — supported geometry", () => {
     expect(Object.keys(result.value).sort()).toEqual([
       "aspect",
       "borderPercentOfWidth",
+      "contentInsetPx",
       "matColor",
     ]);
   });
@@ -704,5 +707,79 @@ describe("preview projection — purity and leak safety", () => {
       frameSel({ templateId: "duo" }),
     );
     expect(Object.keys(result).sort()).toEqual(["code", "diagnostics", "ok"]);
+  });
+});
+
+// --- contentInsetPx (spec 025) ---------------------------------------------
+
+describe("projectFramePreviewGeometry — contentInsetPx", () => {
+  const inset = (template: Record<string, unknown>): number | string => {
+    const result = projectFramePreviewGeometry(
+      frameDoc(SIZE, template, { frameThickness: 5 }),
+      frameSel({ templateId: String(template.id) }),
+    );
+    return result.ok ? result.value.contentInsetPx : result.code;
+  };
+
+  it.each([
+    ["dataUrl", "dataUrl"],
+    ["sourceDataUrl", "sourceDataUrl"],
+    ["builderArtDataUrl", "builderArtDataUrl"],
+    ["artDataUrl", "artDataUrl"],
+    ["originalDataUrl", "originalDataUrl"],
+  ])("uploaded with a design source in %s → 0", (_label, field) => {
+    expect(inset({ ...UPLOADED_FULL, [field]: "data:image/png;base64,QQ" })).toBe(0);
+  });
+
+  it("uploaded without any design source → 8", () => {
+    expect(inset(UPLOADED_FULL)).toBe(8);
+    expect(inset({ ...UPLOADED_FULL, dataUrl: "" })).toBe(8);
+    expect(inset({ ...UPLOADED_FULL, dataUrl: 42 })).toBe(8);
+  });
+
+  it("generatedDetailPreview gates the whole chain back to 8", () => {
+    expect(
+      inset({
+        ...UPLOADED_FULL,
+        generatedDetailPreview: true,
+        dataUrl: "data:image/png;base64,QQ",
+      }),
+    ).toBe(8);
+    expect(
+      inset({
+        ...UPLOADED_FULL,
+        generatedDetailPreview: false,
+        originalDataUrl: "data:image/png;base64,QQ",
+      }),
+    ).toBe(0);
+  });
+
+  it("builtin full → 8 even though it is a supported single-rect template", () => {
+    expect(inset({ id: "full", name: "Full", type: "builtin" })).toBe(8);
+  });
+
+  it("returns only the number — no source string, field name or URL kind leaks", () => {
+    const marker = "data:image/png;base64,SECRETMARKER";
+    const result = projectFramePreviewGeometry(
+      frameDoc(SIZE, { ...UPLOADED_FULL, sourceDataUrl: marker }, { frameThickness: 5 }),
+      frameSel(),
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.contentInsetPx).toBe(0);
+    const serialized = JSON.stringify(result);
+    for (const forbidden of ["SECRETMARKER", "data:", "base64", "sourceDataUrl", "dataUrl"]) {
+      expect(serialized).not.toContain(forbidden);
+    }
+  });
+
+  it("is always exactly 0 or 8", () => {
+    for (const template of [
+      UPLOADED_FULL,
+      { ...UPLOADED_FULL, dataUrl: "data:image/png;base64,QQ" },
+      { id: "full", name: "Full", type: "builtin" },
+    ]) {
+      expect([0, 8]).toContain(inset(template));
+    }
   });
 });

@@ -47,10 +47,6 @@ const isFinitePositive = (v: unknown): v is number => isFiniteNum(v) && v > 0;
 const isHex = (c: unknown): c is HexColor => typeof c === "string" && HEX.test(c);
 const isSafeId = (v: unknown): v is string =>
   typeof v === "string" && v.length >= 1 && v.length <= MAX_ID_LEN && SAFE_ID.test(v);
-const isSize = (s: unknown): boolean =>
-  isObj(s) && isFinitePositive(s.width) && isFinitePositive(s.height);
-const isTransform = (t: unknown): t is ImageTransform =>
-  isObj(t) && isFiniteNum(t.x) && isFiniteNum(t.y) && isFinitePositive(t.scale);
 
 const fail = (code: RenderPlanErrorCode, causeCode?: GeometryErrorCode): RenderPlanResult =>
   causeCode ? { ok: false, code, causeCode } : { ok: false, code };
@@ -141,6 +137,8 @@ interface NormalizedZone {
   readonly id: string;
   readonly imageRef: string;
   readonly rect: ZoneRect;
+  /** this zone's own intrinsic image size (spec 025). */
+  readonly image: { readonly width: number; readonly height: number };
   readonly transform: ImageTransform;
   readonly guide?: StrokeSpec;
   readonly index: number;
@@ -148,10 +146,9 @@ interface NormalizedZone {
 }
 
 function buildCase(input: CasePlanInput): RenderPlanResult {
-  if (!isSize(input.logicalCanvas)) return fail("INVALID_ZONE");
+  const canvas = readSizeOnce(input.logicalCanvas);
+  if (canvas === null) return fail("INVALID_ZONE");
   if (!isHex(input.bodyColor)) return fail("INVALID_COLOR");
-  if (!isSize(input.image)) return fail("INVALID_ZONE");
-  if (!isTransform(input.defaultTransform)) return fail("INVALID_TRANSFORM");
   if (!Array.isArray(input.zones)) return fail("INVALID_ZONE");
 
   const seen = new Set<string>();
@@ -171,10 +168,11 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
     if (zone.order !== undefined && !isFiniteNum(zone.order)) return fail("INVALID_ZONE");
     const key = isFiniteNum(zone.order) ? zone.order : index;
 
-    let transform: ImageTransform;
-    if (zone.transform === undefined) transform = input.defaultTransform;
-    else if (isTransform(zone.transform)) transform = zone.transform;
-    else return fail("INVALID_TRANSFORM");
+    // spec 025: each zone owns its intrinsic image size and transform — no plan-level fallback.
+    const image = readSizeOnce(zone.image);
+    if (image === null) return fail("INVALID_ZONE");
+    const transform = readTransformOnce(zone.transform);
+    if (transform === null) return fail("INVALID_TRANSFORM");
 
     let guide: StrokeSpec | undefined;
     if (zone.guide !== undefined) {
@@ -183,7 +181,16 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
       guide = g;
     }
 
-    normalized.push({ id: zone.id, imageRef: zone.imageRef, rect, transform, guide, index, key });
+    normalized.push({
+      id: zone.id,
+      imageRef: zone.imageRef,
+      rect,
+      image,
+      transform,
+      guide,
+      index,
+      key,
+    });
   }
 
   // deterministic order: `key` ascending (missing order = original index), ties by original index.
@@ -192,17 +199,17 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
   const imageCommands: PreviewDrawCommand[] = [];
   const guideCommands: PreviewDrawCommand[] = [];
   for (const zone of normalized) {
-    const resolved = resolveZoneRect(input.logicalCanvas, zone.rect);
+    const resolved = resolveZoneRect(canvas, zone.rect);
     if ("code" in resolved) return fail(resolved.code, resolved.causeCode);
-    const image = coverCommand(
+    const drawn = coverCommand(
       `case:user-image:${zone.id}`,
       zone.imageRef,
       resolved.rect,
-      input.image,
+      zone.image,
       zone.transform,
     );
-    if ("code" in image) return fail(image.code, image.causeCode);
-    imageCommands.push(image.command);
+    if ("code" in drawn) return fail(drawn.code, drawn.causeCode);
+    imageCommands.push(drawn.command);
     if (zone.guide) {
       guideCommands.push({
         type: "stroke-rect",
@@ -218,7 +225,7 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
     {
       type: "fill-rect",
       layerId: "case:body",
-      rect: canvasRect(input.logicalCanvas),
+      rect: canvasRect(canvas),
       color: input.bodyColor,
     },
     ...imageCommands,
@@ -227,7 +234,7 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
   if (!commandsAllFinite(commands)) return fail("NON_FINITE_RESULT");
   return {
     ok: true,
-    plan: { kind: "case", logicalCanvas: sizeCopy(input.logicalCanvas), commands },
+    plan: { kind: "case", logicalCanvas: { width: canvas.width, height: canvas.height }, commands },
   };
 }
 
@@ -359,10 +366,6 @@ const contains = (outer: Rect, inner: Rect): boolean =>
   inner.y >= outer.y &&
   inner.x + inner.width <= outer.x + outer.width &&
   inner.y + inner.height <= outer.y + outer.height;
-const sizeCopy = (s: { width: number; height: number }): { width: number; height: number } => ({
-  width: s.width,
-  height: s.height,
-});
 const rectCopy = (r: Rect): Rect => ({ x: r.x, y: r.y, width: r.width, height: r.height });
 
 /**

@@ -19,8 +19,9 @@
 //    `duo`/`trio` = 2/3 rects, `circle` = ellipse, `text_only` = none, `top_text` = sub-rect
 //    (mockup:3134-3140)
 
+import { hasCatalogTemplateDesignSource } from "../images/project";
 import { isPlainObject } from "../json";
-import type { CatalogDocumentV1 } from "../types";
+import type { CatalogDocumentV1, CatalogItemV1 } from "../types";
 import type {
   CasePreviewGeometry,
   CasePreviewSelection,
@@ -277,6 +278,23 @@ function resolveMatColor(
 }
 
 /**
+ * How far the photo sits inside the mat, in logical px (spec 025 §3).
+ *
+ * `0` when the template is `uploaded` AND carries a design source: that legacy branch draws into the
+ * mat rect itself and returns before the id-dispatch code that applies an inset
+ * (denn-mockup-tool.html:3133 → :3068-3074). `8` otherwise (builtin `full`, uploaded without a
+ * design source), which the id-dispatch path insets on each side (:3130 `cx = IX + P`, :3134/:3140).
+ *
+ * The legacy `P = uploadedTransparentTpl ? 0 : 8` expression is deliberately NOT reproduced: its
+ * `0` branch is unreachable, so copying it would be wrong. Only the final number is returned — no
+ * source string, field name, URL kind or flag ever leaves this function.
+ */
+function resolveContentInsetPx(template: Record<string, unknown>): 0 | 8 {
+  if (template.type !== "uploaded") return 8;
+  return hasCatalogTemplateDesignSource(template as unknown as CatalogItemV1) ? 0 : 8;
+}
+
+/**
  * Only a template whose photo layout is a SINGLE rectangle covering the whole mat area is supported.
  * Multi-zone, text-only, sub-rect and circular layouts fail; an unknown type/id is never presumed
  * to be supported (spec 023 §5).
@@ -348,6 +366,7 @@ function projectFrame(
   const found = lookupById(data, "frameTemplates", templateId as string);
   const template = found.item;
   assertSingleRectFrameTemplate(template);
+  const contentInsetPx = resolveContentInsetPx(template);
   const matColor = resolveMatColor(template, diagnostics, found.index);
 
   // Deliberately omitted from the output (spec 023 §5, §6): the legacy inner border is 4 filled
@@ -357,7 +376,7 @@ function projectFrame(
   }
   diagnostics.add("ALPHA_OUTLINE_OMITTED", "frameTemplates", found.index);
 
-  return { aspect: aspect as number, borderPercentOfWidth, matColor };
+  return { aspect: aspect as number, borderPercentOfWidth, matColor, contentInsetPx };
 }
 
 function run<T>(project: (diagnostics: Diagnostics) => T): PreviewProjectionResult<T> {

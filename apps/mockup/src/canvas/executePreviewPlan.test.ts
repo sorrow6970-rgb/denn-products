@@ -261,18 +261,20 @@ function realCasePlan(): PreviewRenderPlan {
     kind: "case",
     logicalCanvas: { width: 390, height: 780 },
     bodyColor: "#191A1D",
-    image: { width: 1200, height: 1600 },
-    defaultTransform: { scale: 1, x: 0, y: 0 },
+    // spec 025: every zone carries its own intrinsic image size and transform
     zones: [
       {
         id: "z1",
         imageRef: "imgA",
+        image: { width: 1200, height: 1600 },
         rect: { units: "logical", x: 10, y: 10, width: 120, height: 160 },
+        transform: { scale: 1, x: 0, y: 0 },
         guide: { color: "#9F887A", width: 2 },
       },
       {
         id: "z2",
         imageRef: "imgB",
+        image: { width: 800, height: 800 },
         rect: { units: "percent", x: 10, y: 20, width: 50, height: 30 },
         transform: { scale: 1.4, x: 5, y: -5 },
       },

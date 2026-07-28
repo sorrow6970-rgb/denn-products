@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildPreviewRenderPlan } from "./build";
 import type {
+  CaseImageZone,
   CasePlanInput,
   FramePlanInput,
   PreviewDrawCommand,
@@ -27,19 +28,22 @@ const cmd = (p: PreviewRenderPlan, layerId: string): PreviewDrawCommand => {
   return c;
 };
 
+/** Zone helper: spec 025 makes `image` and `transform` per-zone required fields. */
+const caseZone = (over: Partial<CaseImageZone> = {}): CaseImageZone => ({
+  id: "z0",
+  imageRef: "img-0",
+  image: { width: 100, height: 100 },
+  rect: { units: "logical", x: 0, y: 0, width: 200, height: 200 },
+  transform: { scale: 1, x: 0, y: 0 },
+  ...over,
+});
+/** Deliberately malformed zone for the runtime-safety tables (types bypassed on purpose). */
+const badZone = (over: Record<string, unknown>): unknown => ({ ...caseZone(), ...over });
 const CASE_BASE: CasePlanInput = {
   kind: "case",
   logicalCanvas: { width: 200, height: 200 },
   bodyColor: "#101112",
-  image: { width: 100, height: 100 },
-  defaultTransform: { scale: 1, x: 0, y: 0 },
-  zones: [
-    {
-      id: "z0",
-      imageRef: "img-0",
-      rect: { units: "logical", x: 0, y: 0, width: 200, height: 200 },
-    },
-  ],
+  zones: [caseZone()],
 };
 const FRAME_BASE: FramePlanInput = {
   kind: "frame",
@@ -67,19 +71,11 @@ describe("buildPreviewRenderPlan — determinism & safety", () => {
   it("does not mutate input / zones / transform", () => {
     const input = deepFreeze({
       ...CASE_BASE,
-      defaultTransform: { scale: 1.5, x: 3, y: 4 },
-      zones: [
-        {
-          id: "z0",
-          imageRef: "img-0",
-          rect: { units: "logical", x: 0, y: 0, width: 200, height: 200 } as const,
-          transform: { scale: 2, x: 5, y: 6 },
-        },
-      ],
+      zones: [caseZone({ transform: { scale: 2, x: 5, y: 6 } })],
     });
     expect(() => buildPreviewRenderPlan(input)).not.toThrow();
-    expect(input.defaultTransform.x).toBe(3);
-    expect(input.zones[0].transform?.scale).toBe(2);
+    expect(input.zones[0].transform.scale).toBe(2);
+    expect(input.zones[0].transform.x).toBe(5);
   });
 
   it("success plan is JSON round-trippable and all numbers finite", () => {
@@ -110,17 +106,12 @@ describe("buildPreviewRenderPlan — determinism & safety", () => {
   it("rejects empty/whitespace id and duplicate zone id", () => {
     const empty = buildPreviewRenderPlan({
       ...CASE_BASE,
-      zones: [
-        { id: "  ", imageRef: "i", rect: { units: "logical", x: 0, y: 0, width: 10, height: 10 } },
-      ],
+      zones: [caseZone({ id: "  ", imageRef: "i" })],
     });
     expect(empty).toEqual({ ok: false, code: "INVALID_ID" });
     const dup = buildPreviewRenderPlan({
       ...CASE_BASE,
-      zones: [
-        { id: "z", imageRef: "i0", rect: { units: "logical", x: 0, y: 0, width: 10, height: 10 } },
-        { id: "z", imageRef: "i1", rect: { units: "logical", x: 0, y: 0, width: 10, height: 10 } },
-      ],
+      zones: [caseZone({ id: "z", imageRef: "i0" }), caseZone({ id: "z", imageRef: "i1" })],
     });
     expect(dup).toEqual({ ok: false, code: "INVALID_ID" });
   });
@@ -128,7 +119,7 @@ describe("buildPreviewRenderPlan — determinism & safety", () => {
   it("does not turn a geometry overflow into a success/empty plan", () => {
     const r = buildPreviewRenderPlan({
       ...CASE_BASE,
-      defaultTransform: { scale: Number.MAX_VALUE, x: 0, y: 0 },
+      zones: [caseZone({ transform: { scale: Number.MAX_VALUE, x: 0, y: 0 } })],
     });
     expect(r.ok).toBe(false);
     if (!r.ok) {
@@ -166,11 +157,10 @@ describe("buildPreviewRenderPlan — case", () => {
         ...CASE_BASE,
         logicalCanvas: { width: 400, height: 300 },
         zones: [
-          {
-            id: "z0",
+          caseZone({
             imageRef: "i",
             rect: { units: "percent", x: 25, y: 10, width: 50, height: 40 },
-          },
+          }),
         ],
       }),
     );
@@ -185,13 +175,12 @@ describe("buildPreviewRenderPlan — case", () => {
       buildPreviewRenderPlan({
         ...CASE_BASE,
         logicalCanvas: { width: 100, height: 100 },
-        image: { width: 200, height: 100 },
         zones: [
-          {
-            id: "z0",
+          caseZone({
             imageRef: "i",
+            image: { width: 200, height: 100 },
             rect: { units: "logical", x: 0, y: 0, width: 100, height: 100 },
-          },
+          }),
         ],
       }),
     );
@@ -206,7 +195,8 @@ describe("buildPreviewRenderPlan — case", () => {
     const p = plan(
       buildPreviewRenderPlan({
         ...CASE_BASE,
-        defaultTransform: { scale: 1.5, x: 100, y: 0 }, // maxPan 50 → clamp; drawX=-50+50=0
+        // maxPan 50 → clamp; drawX = -50 + 50 = 0
+        zones: [caseZone({ transform: { scale: 1.5, x: 100, y: 0 } })],
       }),
     );
     const img = cmd(p, "case:user-image:z0");
@@ -214,31 +204,51 @@ describe("buildPreviewRenderPlan — case", () => {
     expect(img.drawRect.x).toBeCloseTo(0, 9);
   });
 
-  it("zone transform overrides default; a zone without transform uses default", () => {
+  it("each zone uses ITS OWN intrinsic image size and transform (spec 025)", () => {
     const p = plan(
       buildPreviewRenderPlan({
         ...CASE_BASE,
-        defaultTransform: { scale: 1.5, x: 0, y: 0 },
         zones: [
-          {
+          caseZone({
             id: "a",
             imageRef: "ia",
-            rect: { units: "logical", x: 0, y: 0, width: 200, height: 200 },
+            image: { width: 100, height: 100 },
             transform: { scale: 2, x: 0, y: 0 },
-          },
-          {
+          }),
+          caseZone({
             id: "b",
             imageRef: "ib",
-            rect: { units: "logical", x: 0, y: 0, width: 200, height: 200 },
-          },
+            image: { width: 200, height: 100 },
+            transform: { scale: 1.5, x: 0, y: 0 },
+          }),
         ],
       }),
     );
     const a = cmd(p, "case:user-image:a");
     const b = cmd(p, "case:user-image:b");
     if (a.type !== "draw-image-cover" || b.type !== "draw-image-cover") throw new Error("type");
-    expect(a.drawRect.width).toBeCloseTo(400, 9); // baseScale2 * 2
-    expect(b.drawRect.width).toBeCloseTo(300, 9); // baseScale2 * 1.5 default
+    // a: 100x100 -> baseScale max(200/100,200/100)=2, x2 -> 400x400
+    expect(a.drawRect.width).toBeCloseTo(400, 9);
+    expect(a.drawRect.height).toBeCloseTo(400, 9);
+    // b: 200x100 -> baseScale max(200/200,200/100)=2, x1.5 -> 600x300
+    expect(b.drawRect.width).toBeCloseTo(600, 9);
+    expect(b.drawRect.height).toBeCloseTo(300, 9);
+    // same clip rect, but the draw rects must differ because the intrinsic sizes differ
+    expect(a.clipRect).toEqual(b.clipRect);
+    expect(a.drawRect).not.toEqual(b.drawRect);
+  });
+
+  it("a zone with no transform or no image is rejected (no plan-level fallback)", () => {
+    const noTransform = { ...caseZone() } as Record<string, unknown>;
+    delete noTransform.transform;
+    expect(
+      buildPreviewRenderPlan({ ...CASE_BASE, zones: [noTransform] } as unknown as CasePlanInput),
+    ).toEqual({ ok: false, code: "INVALID_TRANSFORM" });
+    const noImage = { ...caseZone() } as Record<string, unknown>;
+    delete noImage.image;
+    expect(
+      buildPreviewRenderPlan({ ...CASE_BASE, zones: [noImage] } as unknown as CasePlanInput),
+    ).toEqual({ ok: false, code: "INVALID_ZONE" });
   });
 
   it("orders by explicit order ascending, ties by original source index", () => {
@@ -246,24 +256,9 @@ describe("buildPreviewRenderPlan — case", () => {
       buildPreviewRenderPlan({
         ...CASE_BASE,
         zones: [
-          {
-            id: "late",
-            imageRef: "i0",
-            rect: { units: "logical", x: 0, y: 0, width: 10, height: 10 },
-            order: 2,
-          },
-          {
-            id: "tieA",
-            imageRef: "i1",
-            rect: { units: "logical", x: 0, y: 0, width: 10, height: 10 },
-            order: 1,
-          },
-          {
-            id: "tieB",
-            imageRef: "i2",
-            rect: { units: "logical", x: 0, y: 0, width: 10, height: 10 },
-            order: 1,
-          },
+          caseZone({ id: "late", imageRef: "i0", order: 2 }),
+          caseZone({ id: "tieA", imageRef: "i1", order: 1 }),
+          caseZone({ id: "tieB", imageRef: "i2", order: 1 }),
         ],
       }),
     );
@@ -279,14 +274,7 @@ describe("buildPreviewRenderPlan — case", () => {
     const withGuide = plan(
       buildPreviewRenderPlan({
         ...CASE_BASE,
-        zones: [
-          {
-            id: "z0",
-            imageRef: "i",
-            rect: { units: "logical", x: 0, y: 0, width: 200, height: 200 },
-            guide: { color: "#000000", width: 2 },
-          },
-        ],
+        zones: [caseZone({ imageRef: "i", guide: { color: "#000000", width: 2 } })],
       }),
     );
     expect(layerIds(withGuide)).toEqual(["case:body", "case:user-image:z0", "case:guide:z0"]);
@@ -381,20 +369,24 @@ describe("buildPreviewRenderPlan — errors & leak", () => {
 
   it.each([
     ["zero canvas", { ...CASE_BASE, logicalCanvas: { width: 0, height: 200 } }, "INVALID_ZONE"],
-    ["zero image", { ...CASE_BASE, image: { width: 0, height: 100 } }, "INVALID_ZONE"],
+    [
+      "zero zone image",
+      { ...CASE_BASE, zones: [caseZone({ image: { width: 0, height: 100 } })] },
+      "INVALID_ZONE",
+    ],
     [
       "nan canvas",
       { ...CASE_BASE, logicalCanvas: { width: Number.NaN, height: 200 } },
       "INVALID_ZONE",
     ],
     [
-      "zero scale",
-      { ...CASE_BASE, defaultTransform: { scale: 0, x: 0, y: 0 } },
+      "zero zone scale",
+      { ...CASE_BASE, zones: [caseZone({ transform: { scale: 0, x: 0, y: 0 } })] },
       "INVALID_TRANSFORM",
     ],
     [
-      "nan pan",
-      { ...CASE_BASE, defaultTransform: { scale: 1, x: Number.NaN, y: 0 } },
+      "nan zone pan",
+      { ...CASE_BASE, zones: [caseZone({ transform: { scale: 1, x: Number.NaN, y: 0 } })] },
       "INVALID_TRANSFORM",
     ],
   ])("case %s → %s", (_label, input, code) => {
@@ -418,13 +410,7 @@ describe("buildPreviewRenderPlan — errors & leak", () => {
     const r = buildPreviewRenderPlan({
       ...CASE_BASE,
       bodyColor: "not-a-hex", // fatal
-      zones: [
-        {
-          id: "SECRET_ID_MARKER",
-          imageRef: "img",
-          rect: { units: "logical", x: 0, y: 0, width: 10, height: 10 },
-        },
-      ],
+      zones: [caseZone({ id: "SECRET_ID_MARKER", imageRef: "img" })],
     });
     expect(r.ok).toBe(false);
     expect(JSON.stringify(r)).not.toContain("SECRET_ID_MARKER");
@@ -439,7 +425,7 @@ describe("buildPreviewRenderPlan — errors & leak", () => {
   ])("rejects a %s: imageRef as INVALID_ID", (_label, imageRef) => {
     const c = buildPreviewRenderPlan({
       ...CASE_BASE,
-      zones: [{ id: "z", imageRef, rect: { units: "logical", x: 0, y: 0, width: 10, height: 10 } }],
+      zones: [caseZone({ id: "z", imageRef })],
     });
     expect(c).toEqual({ ok: false, code: "INVALID_ID" });
     const f = buildPreviewRenderPlan({ ...FRAME_BASE, imageRef });
@@ -454,7 +440,6 @@ const omit = (o: any, k: string): unknown => {
   delete c[k];
   return c;
 };
-const LZONE = { units: "logical", x: 0, y: 0, width: 10, height: 10 } as const;
 
 describe("buildPreviewRenderPlan — runtime-malformed input returns errors (no throw)", () => {
   it.each<[string, unknown, string]>([
@@ -465,9 +450,17 @@ describe("buildPreviewRenderPlan — runtime-malformed input returns errors (no 
     ["case zones not array", { ...CASE_BASE, zones: {} }, "INVALID_ZONE"],
     ["case logicalCanvas null", { ...CASE_BASE, logicalCanvas: null }, "INVALID_ZONE"],
     ["case logicalCanvas missing", omit(CASE_BASE, "logicalCanvas"), "INVALID_ZONE"],
-    ["case image null", { ...CASE_BASE, image: null }, "INVALID_ZONE"],
-    ["case defaultTransform null", { ...CASE_BASE, defaultTransform: null }, "INVALID_TRANSFORM"],
-    ["case defaultTransform missing", omit(CASE_BASE, "defaultTransform"), "INVALID_TRANSFORM"],
+    ["case zone image null", { ...CASE_BASE, zones: [badZone({ image: null })] }, "INVALID_ZONE"],
+    [
+      "case zone image missing",
+      { ...CASE_BASE, zones: [omit(caseZone(), "image")] },
+      "INVALID_ZONE",
+    ],
+    [
+      "case zone transform missing",
+      { ...CASE_BASE, zones: [omit(caseZone(), "transform")] },
+      "INVALID_TRANSFORM",
+    ],
     [
       "case zone.rect null",
       { ...CASE_BASE, zones: [{ id: "z", imageRef: "i", rect: null }] },
@@ -483,17 +476,17 @@ describe("buildPreviewRenderPlan — runtime-malformed input returns errors (no 
     ],
     [
       "case zone.transform null",
-      { ...CASE_BASE, zones: [{ id: "z", imageRef: "i", rect: LZONE, transform: null }] },
+      { ...CASE_BASE, zones: [badZone({ id: "z", imageRef: "i", transform: null })] },
       "INVALID_TRANSFORM",
     ],
     [
       "case zone.transform partial",
-      { ...CASE_BASE, zones: [{ id: "z", imageRef: "i", rect: LZONE, transform: { scale: 1 } }] },
+      { ...CASE_BASE, zones: [badZone({ id: "z", imageRef: "i", transform: { scale: 1 } })] },
       "INVALID_TRANSFORM",
     ],
     [
       "case zone.guide null",
-      { ...CASE_BASE, zones: [{ id: "z", imageRef: "i", rect: LZONE, guide: null }] },
+      { ...CASE_BASE, zones: [badZone({ id: "z", imageRef: "i", guide: null })] },
       "INVALID_ZONE",
     ],
     ["frame frameRect null", { ...FRAME_BASE, frameRect: null }, "INVALID_ZONE"],
@@ -543,7 +536,7 @@ describe("buildPreviewRenderPlan — restricted identifier grammar (delimiter/sc
     ["base64 plus/equals", "AA+/=="],
   ])("rejects a URL-shaped / delimiter imageRef (%s) as INVALID_ID", (_label, imageRef) => {
     expect(
-      buildPreviewRenderPlan({ ...CASE_BASE, zones: [{ id: "z", imageRef, rect: LZONE }] }),
+      buildPreviewRenderPlan({ ...CASE_BASE, zones: [caseZone({ id: "z", imageRef })] }),
     ).toEqual({ ok: false, code: "INVALID_ID" });
     expect(buildPreviewRenderPlan({ ...FRAME_BASE, imageRef })).toEqual({
       ok: false,
@@ -554,7 +547,7 @@ describe("buildPreviewRenderPlan — restricted identifier grammar (delimiter/sc
   it("a URL-form zone.id is rejected and never reaches a layerId", () => {
     const r = buildPreviewRenderPlan({
       ...CASE_BASE,
-      zones: [{ id: "https://evil.example/x", imageRef: "i", rect: LZONE }],
+      zones: [caseZone({ id: "https://evil.example/x", imageRef: "i" })],
     });
     expect(r).toEqual({ ok: false, code: "INVALID_ID" });
     expect(JSON.stringify(r)).not.toContain("evil.example");
@@ -564,7 +557,10 @@ describe("buildPreviewRenderPlan — restricted identifier grammar (delimiter/sc
     const id = `${"a".repeat(120)}.b_c-3`;
     expect(id.length).toBeGreaterThan(120);
     const p = plan(
-      buildPreviewRenderPlan({ ...CASE_BASE, zones: [{ id, imageRef: "img.0_a-1", rect: LZONE }] }),
+      buildPreviewRenderPlan({
+        ...CASE_BASE,
+        zones: [caseZone({ id, imageRef: "img.0_a-1" })],
+      }),
     );
     expect(layerIds(p)).toEqual(["case:body", `case:user-image:${id}`]);
   });
@@ -572,7 +568,7 @@ describe("buildPreviewRenderPlan — restricted identifier grammar (delimiter/sc
   it("rejects an over-length id (>128)", () => {
     const id = "a".repeat(129);
     expect(
-      buildPreviewRenderPlan({ ...CASE_BASE, zones: [{ id, imageRef: "i", rect: LZONE }] }),
+      buildPreviewRenderPlan({ ...CASE_BASE, zones: [caseZone({ id, imageRef: "i" })] }),
     ).toEqual({ ok: false, code: "INVALID_ID" });
   });
 });
@@ -587,7 +583,7 @@ describe("buildPreviewRenderPlan — zone.order validation", () => {
     expect(
       buildPreviewRenderPlan({
         ...CASE_BASE,
-        zones: [{ id: "z", imageRef: "i", rect: LZONE, order }],
+        zones: [caseZone({ id: "z", imageRef: "i", order })],
       }),
     ).toEqual({ ok: false, code: "INVALID_ZONE" });
   });
@@ -597,8 +593,8 @@ describe("buildPreviewRenderPlan — zone.order validation", () => {
       buildPreviewRenderPlan({
         ...CASE_BASE,
         zones: [
-          { id: "b", imageRef: "i0", rect: LZONE, order: 0.5 },
-          { id: "a", imageRef: "i1", rect: LZONE, order: -1.5 },
+          caseZone({ id: "b", imageRef: "i0", order: 0.5 }),
+          caseZone({ id: "a", imageRef: "i1", order: -1.5 }),
         ],
       }),
     );
@@ -610,8 +606,8 @@ describe("buildPreviewRenderPlan — zone.order validation", () => {
       buildPreviewRenderPlan({
         ...CASE_BASE,
         zones: [
-          { id: "first", imageRef: "i0", rect: LZONE },
-          { id: "second", imageRef: "i1", rect: LZONE },
+          caseZone({ id: "first", imageRef: "i0" }),
+          caseZone({ id: "second", imageRef: "i1" }),
         ],
       }),
     );

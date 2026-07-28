@@ -63,6 +63,24 @@ function findTemplate(
 }
 
 /**
+ * Does this template item carry a design source at all? INTERNAL to `@denn/shared` (not part of the
+ * public catalog surface) and used by the spec 023/025 preview projection to pick a frame content
+ * inset without ever handling the source string.
+ *
+ * Same gate and same field order as `projectCatalogTemplateImage` above, but a weaker question: it
+ * only asks whether a non-empty string exists, never what kind of reference it is. Nothing about the
+ * value (URL kind, field name, length) leaves this function.
+ */
+export function hasCatalogTemplateDesignSource(item: CatalogItemV1): boolean {
+  if (item.generatedDetailPreview === true) return false;
+  for (const field of FRAME_FIELDS) {
+    const raw = item[field];
+    if (typeof raw === "string" && raw.length > 0) return true;
+  }
+  return false;
+}
+
+/**
  * Project a template id (+ kind) to a minimal displayable image reference. Never throws on a
  * missing id, never mutates the input, never returns the raw template object, and never
  * decodes/fetches/clones/re-encodes the image string — `value` is the ONE original string

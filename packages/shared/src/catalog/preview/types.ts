@@ -95,6 +95,13 @@ export interface FramePreviewGeometry {
   readonly borderPercentOfWidth: number;
   /** canonical uppercase `#RRGGBB`; `#FFFFFF` when the mat is off or has no valid colour. */
   readonly matColor: string;
+  /**
+   * How far the photo sits inside the mat, in LOGICAL PX (spec 025) — never a ratio, never a source
+   * string. `0` for an uploaded template that has a design source (that legacy path draws into the
+   * mat rect itself), `8` for the other supported variants (builtin `full`, uploaded without a
+   * design source), which the legacy id-dispatch path insets by 8 px on each side.
+   */
+  readonly contentInsetPx: 0 | 8;
 }
 
 export interface CasePreviewSelection {

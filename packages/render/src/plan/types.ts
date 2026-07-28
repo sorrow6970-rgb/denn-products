@@ -48,9 +48,18 @@ export interface CaseImageZone {
   readonly id: string;
   /** opaque binding key — NOT a URL. A later executor pairs it with a real source. */
   readonly imageRef: string;
+  /**
+   * intrinsic size of THIS zone's image — required since spec 025. The legacy case editor holds an
+   * independent image per zone (`caseImgs[i]`, denn-mockup-tool.html:1662), so one shared intrinsic
+   * size would compute a wrong cover rect for any zone whose image has a different aspect.
+   */
+  readonly image: ImageIntrinsicSize;
   readonly rect: ZoneRect;
-  /** zone-specific transform; falls back to CasePlanInput.defaultTransform when absent. */
-  readonly transform?: ImageTransform;
+  /**
+   * transform of THIS zone's image — required since spec 025 (legacy `caseImgTs[i]`,
+   * denn-mockup-tool.html:1665). There is no plan-level default to fall back to.
+   */
+  readonly transform: ImageTransform;
   /** explicit draw order (ascending); ties broken by original array index. */
   readonly order?: number;
   /** optional safe-area stroke drawn after all zone images. */
@@ -61,9 +70,10 @@ export interface CasePlanInput {
   readonly kind: "case";
   readonly logicalCanvas: Size;
   readonly bodyColor: HexColor;
-  /** shared intrinsic image size used by every zone's cover math. */
-  readonly image: ImageIntrinsicSize;
-  readonly defaultTransform: ImageTransform;
+  /**
+   * Every zone owns its own `image` and `transform` (spec 025). The former plan-level `image` and
+   * `defaultTransform` are REMOVED — there is no compatibility fallback and no deprecated overload.
+   */
   readonly zones: readonly CaseImageZone[];
 }
 
