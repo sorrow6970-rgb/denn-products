@@ -780,6 +780,322 @@ describe("executePreviewRenderPlan — restore and exception paths", () => {
   });
 });
 
+// --- hostile getters / Proxy traps / revoked proxies (Codex re-verify [1]) ---
+
+/** A context Proxy whose get/has trap (or one specific key) throws. */
+function hostileContext(
+  recording: RecordingContext,
+  options: {
+    readonly getThrows?: string;
+    readonly hasThrows?: string;
+    readonly allGetsThrow?: boolean;
+  },
+): PreviewCanvasContext {
+  return new Proxy(recording, {
+    get(target, key) {
+      if (options.allGetsThrow || key === options.getThrows) throw new Error("hostile getter");
+      const value = Reflect.get(target, key);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+    has(target, key) {
+      if (key === options.hasThrows) throw new Error("hostile has trap");
+      return Reflect.has(target, key);
+    },
+  });
+}
+
+/** Copy `source`, then replace one key with a getter that throws. */
+function withThrowingKey<T extends object>(source: Record<string, unknown>, key: string): T {
+  const clone: Record<string, unknown> = { ...source };
+  delete clone[key];
+  Object.defineProperty(clone, key, {
+    get() {
+      throw new Error("hostile getter");
+    },
+    enumerable: true,
+    configurable: true,
+  });
+  return clone as T;
+}
+
+const rawPlanObject = (commands: readonly unknown[]): Record<string, unknown> => ({
+  kind: "case",
+  logicalCanvas: { width: CANVAS.width, height: CANVAS.height },
+  commands,
+});
+
+const rawFill = (): Record<string, unknown> => ({
+  type: "fill-rect",
+  layerId: "case:body",
+  rect: { x: 0, y: 0, width: 100, height: 200 },
+  color: "#191A1D",
+});
+
+const rawImage = (): Record<string, unknown> => ({
+  type: "draw-image-cover",
+  layerId: "case:user-image:z1",
+  imageRef: "imgA",
+  clipRect: { x: 5, y: 6, width: 40, height: 50 },
+  drawRect: { x: -3, y: 6, width: 60, height: 50 },
+});
+
+describe("executePreviewRenderPlan — hostile getters, Proxy traps, revoked proxies", () => {
+  const call = (args: unknown) =>
+    executePreviewRenderPlan(args as Parameters<typeof executePreviewRenderPlan>[0]);
+
+  it("classifies a throwing context method getter as invalid executor input", () => {
+    for (const method of ["save", "restore", "clearRect", "drawImage", "strokeRect"]) {
+      const recording = new RecordingContext();
+      const context = hostileContext(recording, { getThrows: method });
+      let result: ReturnType<typeof call> | undefined;
+      expect(() => {
+        result = call({ context, plan: plan([FILL]), imageBindings: BINDINGS });
+      }).not.toThrow();
+      expect(result).toEqual({ ok: false, code: "INVALID_EXECUTOR_INPUT" });
+      expect(recording.ops).toEqual([]);
+    }
+  });
+
+  it("classifies a throwing lineWidth getter and a throwing get/has trap as invalid input", () => {
+    const hostiles = [
+      { getThrows: "lineWidth" },
+      { allGetsThrow: true },
+      { hasThrows: "fillStyle" },
+      { hasThrows: "strokeStyle" },
+    ];
+    for (const options of hostiles) {
+      const recording = new RecordingContext();
+      const context = hostileContext(recording, options);
+      let result: ReturnType<typeof call> | undefined;
+      expect(() => {
+        result = call({ context, plan: plan([FILL]), imageBindings: BINDINGS });
+      }).not.toThrow();
+      expect(result).toEqual({ ok: false, code: "INVALID_EXECUTOR_INPUT" });
+      expect(recording.ops).toEqual([]);
+    }
+  });
+
+  it("never reads a style VALUE, so a throwing fillStyle/strokeStyle getter is inert", () => {
+    // preflight only checks presence via `in`; the executor assigns styles and never reads them.
+    for (const key of ["fillStyle", "strokeStyle"]) {
+      const recording = new RecordingContext();
+      const context = hostileContext(recording, { getThrows: key });
+      let result: ReturnType<typeof call> | undefined;
+      expect(() => {
+        result = call({ context, plan: plan([FILL, STROKE]), imageBindings: BINDINGS });
+      }).not.toThrow();
+      expect(result).toEqual({ ok: true, executedCommands: 2 });
+    }
+  });
+
+  it("classifies a throwing args-container getter as invalid executor input", () => {
+    for (const key of ["context", "plan", "imageBindings"]) {
+      const args = withThrowingKey<object>(
+        {
+          context: new RecordingContext(),
+          plan: plan([FILL]),
+          imageBindings: BINDINGS,
+        },
+        key,
+      );
+      let result: ReturnType<typeof call> | undefined;
+      expect(() => {
+        result = call(args);
+      }).not.toThrow();
+      expect(result).toEqual({ ok: false, code: "INVALID_EXECUTOR_INPUT" });
+    }
+  });
+
+  it("classifies a throwing bindings `get` property getter as invalid executor input", () => {
+    const recording = new RecordingContext();
+    const imageBindings = withThrowingKey<PreviewImageBindings>({}, "get");
+    let result: ReturnType<typeof call> | undefined;
+    expect(() => {
+      result = call({ context: recording, plan: plan([IMAGE]), imageBindings });
+    }).not.toThrow();
+    expect(result).toEqual({ ok: false, code: "INVALID_EXECUTOR_INPUT" });
+    expect(recording.ops).toEqual([]);
+  });
+
+  it("classifies a throwing plan getter as an invalid plan", () => {
+    for (const key of ["kind", "logicalCanvas", "commands"]) {
+      const recording = new RecordingContext();
+      const hostilePlan = withThrowingKey<object>(rawPlanObject([rawFill()]), key);
+      let result: ReturnType<typeof call> | undefined;
+      expect(() => {
+        result = call({ context: recording, plan: hostilePlan, imageBindings: BINDINGS });
+      }).not.toThrow();
+      expect(result).toEqual({ ok: false, code: "INVALID_PLAN" });
+      expect(recording.ops).toEqual([]);
+    }
+  });
+
+  it("classifies a throwing commands element getter as an invalid plan", () => {
+    const recording = new RecordingContext();
+    const commands = new Proxy([rawFill(), rawImage()], {
+      get(target, key) {
+        if (key === "1") throw new Error("hostile element getter");
+        return Reflect.get(target, key);
+      },
+    });
+    let result: ReturnType<typeof call> | undefined;
+    expect(() => {
+      result = call({
+        context: recording,
+        plan: rawPlanObject(commands),
+        imageBindings: BINDINGS,
+      });
+    }).not.toThrow();
+    expect(result).toEqual({ ok: false, code: "INVALID_PLAN" });
+    expect(recording.ops).toEqual([]);
+  });
+
+  it("classifies a throwing command property getter as an invalid plan", () => {
+    const hostiles: readonly [Record<string, unknown>, string][] = [
+      [rawFill(), "type"],
+      [rawFill(), "layerId"],
+      [rawFill(), "rect"],
+      [rawFill(), "color"],
+      [rawImage(), "imageRef"],
+      [rawImage(), "clipRect"],
+      [rawImage(), "drawRect"],
+    ];
+    for (const [source, key] of hostiles) {
+      const recording = new RecordingContext();
+      const command = withThrowingKey<object>(source, key);
+      let result: ReturnType<typeof call> | undefined;
+      expect(() => {
+        result = call({
+          context: recording,
+          plan: rawPlanObject([rawFill(), command]),
+          imageBindings: BINDINGS,
+        });
+      }).not.toThrow();
+      expect(result).toEqual({ ok: false, code: "INVALID_PLAN" });
+      expect(recording.ops).toEqual([]);
+    }
+  });
+
+  it("classifies a throwing rect-field getter as an invalid plan", () => {
+    const recording = new RecordingContext();
+    const command = {
+      ...rawFill(),
+      rect: withThrowingKey<object>({ x: 0, y: 0, width: 1 }, "height"),
+    };
+    let result: ReturnType<typeof call> | undefined;
+    expect(() => {
+      result = call({
+        context: recording,
+        plan: rawPlanObject([command]),
+        imageBindings: BINDINGS,
+      });
+    }).not.toThrow();
+    expect(result).toEqual({ ok: false, code: "INVALID_PLAN" });
+    expect(recording.ops).toEqual([]);
+  });
+
+  it("classifies revoked proxies safely (context/bindings → input, plan → plan)", () => {
+    const contextRevocable = Proxy.revocable(new RecordingContext(), {});
+    contextRevocable.revoke();
+    expect(() =>
+      call({ context: contextRevocable.proxy, plan: plan([FILL]), imageBindings: BINDINGS }),
+    ).not.toThrow();
+    expect(
+      call({ context: contextRevocable.proxy, plan: plan([FILL]), imageBindings: BINDINGS }),
+    ).toEqual({ ok: false, code: "INVALID_EXECUTOR_INPUT" });
+
+    const bindingsRevocable = Proxy.revocable({ get: () => IMAGE_A }, {});
+    bindingsRevocable.revoke();
+    const recordingForBindings = new RecordingContext();
+    expect(
+      call({
+        context: recordingForBindings,
+        plan: plan([IMAGE]),
+        imageBindings: bindingsRevocable.proxy,
+      }),
+    ).toEqual({ ok: false, code: "INVALID_EXECUTOR_INPUT" });
+    expect(recordingForBindings.ops).toEqual([]);
+
+    const planRevocable = Proxy.revocable(rawPlanObject([rawFill()]), {});
+    planRevocable.revoke();
+    const recordingForPlan = new RecordingContext();
+    let result: ReturnType<typeof call> | undefined;
+    expect(() => {
+      result = call({
+        context: recordingForPlan,
+        plan: planRevocable.proxy,
+        imageBindings: BINDINGS,
+      });
+    }).not.toThrow();
+    expect(result).toEqual({ ok: false, code: "INVALID_PLAN" });
+    expect(recordingForPlan.ops).toEqual([]);
+  });
+
+  it("draws the validated snapshot, not a re-read of a drifting getter", () => {
+    let rectReads = 0;
+    const drifting: Record<string, unknown> = { type: "fill-rect", layerId: "case:body" };
+    Object.defineProperty(drifting, "rect", {
+      get() {
+        rectReads += 1;
+        return rectReads === 1
+          ? { x: 1, y: 2, width: 3, height: 4 }
+          : { x: 999, y: 999, width: 999, height: 999 };
+      },
+      enumerable: true,
+    });
+    let colorReads = 0;
+    Object.defineProperty(drifting, "color", {
+      get() {
+        colorReads += 1;
+        return colorReads === 1 ? "#191A1D" : "not-a-color";
+      },
+      enumerable: true,
+    });
+    const recording = new RecordingContext();
+    expect(
+      call({ context: recording, plan: rawPlanObject([drifting]), imageBindings: BINDINGS }),
+    ).toEqual({ ok: true, executedCommands: 1 });
+    expect(rectReads).toBe(1);
+    expect(colorReads).toBe(1);
+    expect(recording.trace()).toEqual([
+      "call:save",
+      "call:clearRect(0,0,100,200)",
+      "set:fillStyle=#191A1D",
+      "call:fillRect(1,2,3,4)",
+      "call:restore",
+    ]);
+  });
+
+  it("uses the first read of plan.commands and logicalCanvas only", () => {
+    let commandReads = 0;
+    let canvasReads = 0;
+    const hostilePlan: Record<string, unknown> = { kind: "case" };
+    Object.defineProperty(hostilePlan, "commands", {
+      get() {
+        commandReads += 1;
+        return commandReads === 1 ? [rawFill()] : [rawFill(), rawFill(), rawFill()];
+      },
+      enumerable: true,
+    });
+    Object.defineProperty(hostilePlan, "logicalCanvas", {
+      get() {
+        canvasReads += 1;
+        return canvasReads === 1 ? { width: 100, height: 200 } : { width: 7, height: 9 };
+      },
+      enumerable: true,
+    });
+    const recording = new RecordingContext();
+    expect(call({ context: recording, plan: hostilePlan, imageBindings: BINDINGS })).toEqual({
+      ok: true,
+      executedCommands: 1,
+    });
+    expect(commandReads).toBe(1);
+    expect(canvasReads).toBe(1);
+    expect(recording.countOf("fillRect")).toBe(1);
+    expect(recording.trace()).toContain("call:clearRect(0,0,100,200)");
+  });
+});
+
 // --- §F forbidden behaviour -------------------------------------------------
 
 describe("executePreviewRenderPlan — forbidden behaviour", () => {

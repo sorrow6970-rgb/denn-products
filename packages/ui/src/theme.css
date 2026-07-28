@@ -6,6 +6,16 @@
    Values here must mirror packages/ui/src/index.ts (WARM_TAUPE) — a unit test fails on drift. */
 @import "tailwindcss";
 
+/* Tailwind v4 automatic source detection scans every non-ignored file under the app being built,
+   including non-UI logic. `apps/mockup/src/canvas/**` is the Canvas plan executor (spec 021): it
+   renders through ctx.* only, has no JSX and no className, and is not part of any UI. Its
+   identifiers/comments were being read as class candidates, which generated utilities no UI asks
+   for (`.block`, `.transform` + the transform @property scaffolding: +0.67 KB raw / +0.19 KB gzip).
+   Paths are relative to THIS file (packages/ui/src). Scope: exactly that one non-UI directory —
+   every app JSX/tsx, browse component and @denn/ui source is still scanned, and no safelist,
+   blocklist or `source(none)` is introduced. */
+@source not "../../../apps/mockup/src/canvas/**/*";
+
 @theme {
   --color-bg: #f4f4f5;
   --color-surface: #ffffff;

@@ -9,19 +9,29 @@
 //  - no console output, no telemetry callback, no stored exception object.
 //  - no setTransform/scale/rotate/translate: DPR/backing transform stays the caller's job and this
 //    executor draws in logical coordinates only.
-//  - never throws: malformed input and Canvas failures come back as an identity-free Result.
+//  - never throws: malformed input, hostile getters/Proxy traps, and Canvas failures all come back
+//    as an identity-free Result.
+//
+// Two exception boundaries make "never throws" total:
+//  1. preflight READS (property access on args/context/bindings/plan/commands) run inside try/catch,
+//     because any of them can be an accessor or a Proxy trap that throws — or a revoked Proxy.
+//     Failures classify as INVALID_EXECUTOR_INPUT (args/context/bindings) or INVALID_PLAN (plan).
+//  2. every Canvas operation and style assignment runs inside `attempt()`.
+//
+// Preflight also builds a plain NORMALIZED SNAPSHOT: each validated value is read exactly once and
+// copied into a fresh plain object. Execution reads only the snapshot, so a getter cannot return a
+// valid value during validation and a different (or throwing) one during the draw. The snapshot
+// carries only what a draw needs — no layerId, no imageRef; the drawable is kept as an identity.
 //
 // Honesty note (spec 021 §5): Canvas pixels are NOT rolled back by save/restore. Preflight prevents
 // a partial draw from a structural/binding error, but if the context throws mid-execution, already
 // drawn pixels remain. Not committing a failed frame (staging/double-buffer) is a later app spec.
 
-import type { PreviewDrawCommand, PreviewRenderPlan } from "@denn/render";
 import type {
   CanvasExecutionErrorCode,
   CanvasExecutionResult,
   ExecutePreviewRenderPlanArgs,
   PreviewCanvasContext,
-  PreviewImageBindings,
 } from "./types";
 
 // Same `#RRGGBB` grammar as the spec 020 builder (no alpha/functions/vars/named colors).
@@ -39,21 +49,107 @@ const CONTEXT_METHODS = [
   "strokeRect",
 ] as const;
 
-// --- defensive primitives (accept unknown; never throw) ---------------------
+// --- defensive primitives (accept unknown; never throw on their own) --------
 const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 const isFiniteNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 const isFinitePositive = (v: unknown): v is number => isFiniteNum(v) && v > 0;
 const isNonEmptyString = (v: unknown): v is string => typeof v === "string" && v.length > 0;
 const isHex = (v: unknown): v is string => typeof v === "string" && HEX.test(v);
-const isSize = (v: unknown): boolean =>
-  isObj(v) && isFinitePositive(v.width) && isFinitePositive(v.height);
-const isRect = (v: unknown): boolean =>
-  isObj(v) &&
-  isFiniteNum(v.x) &&
-  isFiniteNum(v.y) &&
-  isFinitePositive(v.width) &&
-  isFinitePositive(v.height);
+
+const FAIL_INPUT = { ok: false, code: "INVALID_EXECUTOR_INPUT" } as const;
+const FAIL_PLAN = { ok: false, code: "INVALID_PLAN" } as const;
+
+// --- normalized snapshot (plain objects only) -------------------------------
+
+interface SnapshotRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** Exactly what a draw needs. No layerId / imageRef; the drawable is an identity only. */
+type SnapshotCommand =
+  | { readonly type: "fill-rect"; readonly rect: SnapshotRect; readonly color: string }
+  | {
+      readonly type: "stroke-rect";
+      readonly rect: SnapshotRect;
+      readonly color: string;
+      readonly width: number;
+    }
+  | {
+      readonly type: "draw-image-cover";
+      readonly clipRect: SnapshotRect;
+      readonly drawRect: SnapshotRect;
+      readonly drawable: CanvasImageSource;
+    };
+
+interface SnapshotPlan {
+  readonly width: number;
+  readonly height: number;
+  readonly commands: readonly SnapshotCommand[];
+}
+
+/** Read x/y/width/height ONCE each, validate the copies, return a fresh plain rect. */
+function readRect(value: unknown): SnapshotRect | null {
+  if (!isObj(value)) return null;
+  const x = value.x;
+  const y = value.y;
+  const width = value.width;
+  const height = value.height;
+  if (!isFiniteNum(x) || !isFiniteNum(y)) return null;
+  if (!isFinitePositive(width) || !isFinitePositive(height)) return null;
+  return { x, y, width, height };
+}
+
+function readSize(value: unknown): { readonly width: number; readonly height: number } | null {
+  if (!isObj(value)) return null;
+  const width = value.width;
+  const height = value.height;
+  if (!isFinitePositive(width) || !isFinitePositive(height)) return null;
+  return { width, height };
+}
+
+/** An image command still needs its binding resolved, so it is reported separately. */
+type ReadCommand =
+  | { readonly kind: "direct"; readonly command: SnapshotCommand }
+  | {
+      readonly kind: "image";
+      readonly imageRef: string;
+      readonly clipRect: SnapshotRect;
+      readonly drawRect: SnapshotRect;
+    };
+
+function readCommand(value: unknown): ReadCommand | null {
+  if (!isObj(value)) return null;
+  // layerId is validated but deliberately NOT copied into the snapshot: a draw never needs it and
+  // it must never reach a Result.
+  if (!isNonEmptyString(value.layerId)) return null;
+  const type = value.type;
+  if (type === "fill-rect") {
+    const rect = readRect(value.rect);
+    const color = value.color;
+    if (rect === null || !isHex(color)) return null;
+    return { kind: "direct", command: { type: "fill-rect", rect, color } };
+  }
+  if (type === "stroke-rect") {
+    const rect = readRect(value.rect);
+    const color = value.color;
+    const width = value.width;
+    if (rect === null || !isHex(color) || !isFinitePositive(width)) return null;
+    return { kind: "direct", command: { type: "stroke-rect", rect, color, width } };
+  }
+  if (type === "draw-image-cover") {
+    // imageRef is read as a non-empty lookup key only — never parsed/validated as a URL.
+    const imageRef = value.imageRef;
+    const clipRect = readRect(value.clipRect);
+    const drawRect = readRect(value.drawRect);
+    if (!isNonEmptyString(imageRef) || clipRect === null || drawRect === null) return null;
+    return { kind: "image", imageRef, clipRect, drawRect };
+  }
+  return null;
+}
 
 /**
  * The context must expose every method we call plus the style/lineWidth surface. Only reads happen
@@ -70,37 +166,6 @@ function isUsableContext(context: unknown): context is PreviewCanvasContext {
   return typeof context.lineWidth === "number";
 }
 
-/** A `{get}` port or a `ReadonlyMap` both satisfy this; the collection itself is never copied. */
-function isUsableBindings(bindings: unknown): bindings is PreviewImageBindings {
-  return isObj(bindings) && typeof bindings.get === "function";
-}
-
-function isValidCommand(command: unknown): command is PreviewDrawCommand {
-  if (!isObj(command)) return false;
-  if (!isNonEmptyString(command.layerId)) return false;
-  switch (command.type) {
-    case "fill-rect":
-      return isRect(command.rect) && isHex(command.color);
-    case "stroke-rect":
-      return isRect(command.rect) && isHex(command.color) && isFinitePositive(command.width);
-    case "draw-image-cover":
-      // imageRef is checked as a non-empty lookup key only — never parsed/validated as a URL.
-      return (
-        isNonEmptyString(command.imageRef) && isRect(command.clipRect) && isRect(command.drawRect)
-      );
-    default:
-      return false;
-  }
-}
-
-function isValidPlan(plan: unknown): plan is PreviewRenderPlan {
-  if (!isObj(plan)) return false;
-  if (plan.kind !== "case" && plan.kind !== "frame") return false;
-  if (!isSize(plan.logicalCanvas)) return false;
-  if (!Array.isArray(plan.commands)) return false;
-  return true;
-}
-
 type PreflightFailure = {
   readonly ok: false;
   readonly code: CanvasExecutionErrorCode;
@@ -108,64 +173,111 @@ type PreflightFailure = {
 };
 
 type Preflight =
+  | { readonly ok: true; readonly context: PreviewCanvasContext; readonly plan: SnapshotPlan }
+  | PreflightFailure;
+
+type ExecutorSurface =
   | {
       readonly ok: true;
       readonly context: PreviewCanvasContext;
-      readonly plan: PreviewRenderPlan;
-      /** aligned with `plan.commands`; non-image commands hold `null`. */
-      readonly drawables: readonly (CanvasImageSource | null)[];
+      readonly plan: unknown;
+      /** the bindings' `get`, captured once and pre-bound; never re-read from the caller object. */
+      readonly lookup: (imageRef: string) => unknown;
     }
   | PreflightFailure;
 
 /**
- * Validate everything before a single Canvas operation runs (spec 021 §4): context surface, plan
- * shape, every command, and every image binding. No partial plan is ever executed.
+ * Read the executor surface (args → context, bindings, raw plan). Every property access sits inside
+ * the try, so a hostile accessor, a throwing Proxy trap, or a revoked Proxy becomes
+ * INVALID_EXECUTOR_INPUT instead of an exception.
  */
-function preflight(args: unknown): Preflight {
-  if (!isObj(args)) return { ok: false, code: "INVALID_EXECUTOR_INPUT" };
-  const { context, plan, imageBindings } = args;
-  if (!isUsableContext(context)) return { ok: false, code: "INVALID_EXECUTOR_INPUT" };
-  if (!isUsableBindings(imageBindings)) return { ok: false, code: "INVALID_EXECUTOR_INPUT" };
-  if (!isValidPlan(plan)) return { ok: false, code: "INVALID_PLAN" };
-
-  const commands = plan.commands as readonly unknown[];
-  for (let index = 0; index < commands.length; index++) {
-    if (!isValidCommand(commands[index]))
-      return { ok: false, code: "INVALID_PLAN", commandIndex: index };
+function readExecutorSurface(args: unknown): ExecutorSurface {
+  try {
+    if (!isObj(args)) return FAIL_INPUT;
+    const context = args.context;
+    const bindings = args.imageBindings;
+    const plan = args.plan;
+    if (!isUsableContext(context)) return FAIL_INPUT;
+    if (!isObj(bindings)) return FAIL_INPUT;
+    const get = bindings.get;
+    if (typeof get !== "function") return FAIL_INPUT;
+    const bound = get as (this: unknown, imageRef: string) => unknown;
+    return {
+      ok: true,
+      context,
+      plan,
+      lookup: (imageRef: string) => bound.call(bindings, imageRef),
+    };
+  } catch {
+    return FAIL_INPUT;
   }
+}
 
-  const drawables: (CanvasImageSource | null)[] = [];
+/**
+ * Validate the plan and every command, resolve every image binding, and copy the result into a
+ * plain snapshot — all before a single Canvas operation runs (spec 021 §4). No partial plan is ever
+ * executed, and the snapshot is what execution reads.
+ */
+function normalizePlan(
+  context: PreviewCanvasContext,
+  plan: unknown,
+  lookup: (imageRef: string) => unknown,
+): Preflight {
+  if (!isObj(plan)) return FAIL_PLAN;
+  const kind = plan.kind;
+  if (kind !== "case" && kind !== "frame") return FAIL_PLAN;
+  const canvas = readSize(plan.logicalCanvas);
+  if (canvas === null) return FAIL_PLAN;
+  const rawCommands = plan.commands;
+  if (!Array.isArray(rawCommands)) return FAIL_PLAN;
+
+  const commands: SnapshotCommand[] = [];
   // Only the refs actually drawn are looked up, once each: the same ref reuses the same drawable
   // identity, and the binding collection is never cloned, serialized, or logged.
   const resolved = new Map<string, CanvasImageSource>();
-  for (let index = 0; index < plan.commands.length; index++) {
-    const command = plan.commands[index];
-    if (command.type !== "draw-image-cover") {
-      drawables.push(null);
+  for (let index = 0; index < rawCommands.length; index++) {
+    const read = readCommand(rawCommands[index]);
+    if (read === null) return { ok: false, code: "INVALID_PLAN", commandIndex: index };
+    if (read.kind === "direct") {
+      commands.push(read.command);
       continue;
     }
-    const cached = resolved.get(command.imageRef);
-    if (cached !== undefined) {
-      drawables.push(cached);
-      continue;
+    let drawable = resolved.get(read.imageRef);
+    if (drawable === undefined) {
+      let bound: unknown;
+      try {
+        bound = lookup(read.imageRef);
+      } catch {
+        // a throwing lookup is an unusable caller input; the exception object is not captured.
+        return { ok: false, code: "INVALID_EXECUTOR_INPUT", commandIndex: index };
+      }
+      if (bound === undefined || bound === null) {
+        // the missing key itself is deliberately NOT reported (spec 021 §3).
+        return { ok: false, code: "MISSING_IMAGE_BINDING", commandIndex: index };
+      }
+      drawable = bound as CanvasImageSource;
+      resolved.set(read.imageRef, drawable);
     }
-    let bound: unknown;
-    try {
-      bound = imageBindings.get(command.imageRef);
-    } catch {
-      // a throwing lookup is an unusable caller input; the exception object is not captured.
-      return { ok: false, code: "INVALID_EXECUTOR_INPUT", commandIndex: index };
-    }
-    if (bound === undefined || bound === null) {
-      // the missing key itself is deliberately NOT reported (spec 021 §3).
-      return { ok: false, code: "MISSING_IMAGE_BINDING", commandIndex: index };
-    }
-    const drawable = bound as CanvasImageSource;
-    resolved.set(command.imageRef, drawable);
-    drawables.push(drawable);
+    commands.push({
+      type: "draw-image-cover",
+      clipRect: read.clipRect,
+      drawRect: read.drawRect,
+      drawable,
+    });
   }
 
-  return { ok: true, context, plan, drawables };
+  return { ok: true, context, plan: { width: canvas.width, height: canvas.height, commands } };
+}
+
+function preflight(args: unknown): Preflight {
+  const surface = readExecutorSurface(args);
+  if (!surface.ok) return surface;
+  try {
+    return normalizePlan(surface.context, surface.plan, surface.lookup);
+  } catch {
+    // a hostile accessor / Proxy trap / revoked Proxy inside the plan or one of its commands.
+    return FAIL_PLAN;
+  }
 }
 
 /** Run one Canvas step; a thrown value is swallowed (never stored, logged, or re-thrown). */
@@ -182,14 +294,13 @@ const failed = (code: CanvasExecutionErrorCode, commandIndex?: number): CanvasEx
   commandIndex === undefined ? { ok: false, code } : { ok: false, code, commandIndex };
 
 /**
- * Execute a single command. `draw-image-cover` keeps the exact save→beginPath→rect→clip→drawImage→
- * restore order; once the inner save succeeds, the inner restore is attempted exactly once even
- * when a step in between fails. Restore failure outranks operation failure (spec 021 §7).
+ * Execute a single snapshot command. `draw-image-cover` keeps the exact save→beginPath→rect→clip→
+ * drawImage→restore order; once the inner save succeeds, the inner restore is attempted exactly
+ * once even when a step in between fails. Restore failure outranks operation failure (spec 021 §7).
  */
 function executeCommand(
   context: PreviewCanvasContext,
-  command: PreviewDrawCommand,
-  drawable: CanvasImageSource | null,
+  command: SnapshotCommand,
 ): CanvasExecutionErrorCode | null {
   switch (command.type) {
     case "fill-rect": {
@@ -210,10 +321,8 @@ function executeCommand(
       return ok ? null : "CANVAS_OPERATION_FAILED";
     }
     case "draw-image-cover": {
-      // preflight guarantees a bound drawable; this is a defensive net, not an expected path.
-      if (drawable === null) return "MISSING_IMAGE_BINDING";
+      const { clipRect, drawRect, drawable } = command;
       if (!attempt(() => context.save())) return "CANVAS_OPERATION_FAILED"; // no inner restore
-      const { clipRect, drawRect } = command;
       const drawn = attempt(() => {
         context.beginPath();
         context.rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
@@ -233,28 +342,29 @@ function executeCommand(
  * their original order (never reordered or merged) → outer restore, attempted exactly once whenever
  * the outer save succeeded. Execution stops at the first failing command.
  *
- * Never throws. Failures return an identity-free `{ok:false, code, commandIndex?}` — no layerId,
- * imageRef, URL, token, or original exception message/stack. A `restore()` failure is never
- * reported as success, and success is never claimed as an "atomic" render (pixels do not roll back).
+ * Never throws — not for malformed input, not for hostile getters/Proxy traps, not for a context
+ * that throws mid-draw. Failures return an identity-free `{ok:false, code, commandIndex?}` — no
+ * layerId, imageRef, URL, token, or original exception message/stack. A `restore()` failure is
+ * never reported as success, and success is never claimed as an "atomic" render (pixels do not roll
+ * back).
  */
 export function executePreviewRenderPlan(
   args: ExecutePreviewRenderPlanArgs,
 ): CanvasExecutionResult {
   const pre = preflight(args);
   if (!pre.ok) return failed(pre.code, pre.commandIndex);
-  const { context, plan, drawables } = pre;
+  const { context, plan } = pre;
 
   if (!attempt(() => context.save())) return failed("CANVAS_OPERATION_FAILED"); // no restore
 
   let failure: { code: CanvasExecutionErrorCode; commandIndex?: number } | null = null;
-  const { width, height } = plan.logicalCanvas;
-  // exactly one clear of the whole logical surface; not counted as a command.
-  if (!attempt(() => context.clearRect(0, 0, width, height))) {
+  // exactly one clear of the whole logical surface, from the snapshot; not counted as a command.
+  if (!attempt(() => context.clearRect(0, 0, plan.width, plan.height))) {
     failure = { code: "CANVAS_OPERATION_FAILED" };
   }
   if (failure === null) {
     for (let index = 0; index < plan.commands.length; index++) {
-      const code = executeCommand(context, plan.commands[index], drawables[index]);
+      const code = executeCommand(context, plan.commands[index]);
       if (code !== null) {
         failure = { code, commandIndex: index };
         break;
