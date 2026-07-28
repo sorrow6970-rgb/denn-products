@@ -10,33 +10,18 @@ export default defineConfig({
   reporter: "list",
   use: { trace: "off" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  // Shutdown ownership (measured, spec 021 re-verification):
-  //   Playwright spawns each webServer command with `shell: true` and, on win32, without `detached`,
-  //   so the PID it owns is a `cmd.exe` wrapper. `gracefulShutdown` is REFUSED on win32 by
-  //   playwright-core ("Graceful shutdown is not supported on Windows"), so shutdown there is always
-  //   `taskkill /pid <wrapper> /T /F` — and it is skipped once the wrapper has closed. With the old
-  //   `vite preview …` command the real server was a descendant of that wrapper: orphan it and it
-  //   keeps the inherited stdio pipes, the wrapper's `close` never fires, and webServer teardown
-  //   waits forever with the port still LISTENING (reproduced by killing only the wrapper mid-run).
-  //   `scripts/e2e-preview.mjs` runs the preview server IN-PROCESS via Vite's Node API, so the node
-  //   process spawned here IS the port owner, and it self-terminates on signal / stdin EOF / dead
-  //   parent. It closes only the server it started; nothing is killed by port number, and no
-  //   globalTeardown or broad process sweep is used. `gracefulShutdown` is kept because it is the
-  //   POSIX path (the launcher handles SIGTERM); on win32 it stays a documented no-op.
-  webServer: [
-    {
-      command: `node scripts/e2e-preview.mjs mockup ${MOCKUP_PORT}`,
-      port: MOCKUP_PORT,
-      reuseExistingServer: false,
-      timeout: 60_000,
-      gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
-    },
-    {
-      command: `node scripts/e2e-preview.mjs admin ${ADMIN_PORT}`,
-      port: ADMIN_PORT,
-      reuseExistingServer: false,
-      timeout: 60_000,
-      gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
-    },
-  ],
+  // Server ownership (measured, spec 021 re-verification):
+  //   `webServer` is deliberately NOT used. Playwright spawns every webServer command with
+  //   `shell: true` and, on win32, without `detached`, so the PID it owns is a `cmd.exe` wrapper;
+  //   `gracefulShutdown` is refused outright on win32 ("Graceful shutdown is not supported on
+  //   Windows") and the fallback `taskkill /pid <wrapper> /T /F` is skipped once that wrapper has
+  //   closed. Teardown then awaits the wrapper's `close`, which needs every inherited stdio pipe
+  //   shut, so any surviving descendant blocks the command forever — reproduced twice, once with a
+  //   held port and once with the ports already free.
+  //   `tests/global-setup.ts` instead starts both preview servers IN-PROCESS via Vite's Node API and
+  //   closes those exact handles in the teardown callback it returns: no child process, no wrapper,
+  //   no inherited pipe, nothing located by port or PID, no taskkill/SIGKILL/globalTeardown sweep.
+  //   `strictPort: true` there is the refuse-an-existing-server contract that `reuseExistingServer:
+  //   false` provided.
+  globalSetup: "./tests/global-setup.ts",
 });

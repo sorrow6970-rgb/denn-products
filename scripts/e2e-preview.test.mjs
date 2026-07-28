@@ -1,155 +1,273 @@
-// Exit-path contract for the E2E preview launcher (spec 021 re-verification).
+// Lifecycle contract for the E2E preview servers (spec 021 re-verification, round 3).
 //
-// These tests pin the SHUTDOWN WIRING, not a real server: importing the launcher must start
-// nothing, and each guard (signal / stdin EOF / dead parent) must close exactly the server this
-// process started and then exit 0 — once. The real end-to-end proof that `pnpm run test:e2e`
-// self-exits and frees ports 4183/4184 is the repeated standalone run recorded in the handoff.
+// These tests pin OWNERSHIP and SHUTDOWN with fake servers — no real port is opened here. They
+// assert that exactly the created handles are closed, that keep-alive connections are dropped before
+// close, that a hanging or failing close is REPORTED rather than swallowed, that a partial startup
+// closes only what it started, and that the host listeners Vite's `preview()` installs are removed
+// again. The end-to-end proof (49/49, reporter summary, exit 0, ports free, no leftovers) is the
+// repeated standalone run recorded in the handoff.
 
+import { EventEmitter } from "node:events";
 import { describe, expect, it, vi } from "vitest";
 import {
-  createShutdown,
-  installShutdownGuards,
-  isPidAlive,
-  parsePreviewArgs,
-  SHUTDOWN_SIGNALS,
+  assertPortAvailable,
+  closePreviewServers,
+  isPortTaken,
+  PREVIEW_APP_ROOTS,
+  resolveAppRoot,
+  startPreviewServers,
 } from "./e2e-preview.mjs";
 
-describe("parsePreviewArgs", () => {
-  it("accepts only the two repo apps", () => {
-    expect(parsePreviewArgs(["mockup", "4183"])).toEqual({
-      ok: true,
-      app: "mockup",
-      root: "apps/mockup",
-      port: 4183,
-    });
-    expect(parsePreviewArgs(["admin", "4184"])).toEqual({
-      ok: true,
-      app: "admin",
-      root: "apps/admin",
-      port: 4184,
-    });
-  });
-
-  it("rejects an unknown app or a bad port", () => {
-    expect(parsePreviewArgs(["legacy", "4183"])).toEqual({ ok: false, reason: "unknown-app" });
-    expect(parsePreviewArgs([])).toEqual({ ok: false, reason: "unknown-app" });
-    for (const port of ["", "abc", "80", "70000", "4183.5", undefined]) {
-      expect(parsePreviewArgs(["mockup", port])).toEqual({ ok: false, reason: "invalid-port" });
-    }
-  });
-});
-
-describe("createShutdown", () => {
-  it("closes the server then exits 0", async () => {
-    const order = [];
-    const shutdown = createShutdown({
-      closeServer: async () => void order.push("close"),
-      exit: (code) => order.push(`exit:${code}`),
-    });
-    await shutdown();
-    expect(order).toEqual(["close", "exit:0"]);
-  });
-
-  it("is idempotent — repeated guards close and exit once", async () => {
-    const closeServer = vi.fn().mockResolvedValue(undefined);
-    const exit = vi.fn();
-    const shutdown = createShutdown({ closeServer, exit });
-    await Promise.all([shutdown(), shutdown(), shutdown()]);
-    await shutdown();
-    expect(closeServer).toHaveBeenCalledTimes(1);
-    expect(exit).toHaveBeenCalledTimes(1);
-    expect(exit).toHaveBeenCalledWith(0);
-  });
-
-  it("still exits 0 when closing throws, and never rejects", async () => {
-    const exit = vi.fn();
-    const shutdown = createShutdown({
-      closeServer: async () => {
-        throw new Error("close failed");
-      },
-      exit,
-    });
-    await expect(shutdown()).resolves.toBeUndefined();
-    expect(exit).toHaveBeenCalledWith(0);
-  });
-});
-
-describe("installShutdownGuards", () => {
-  const harness = () => {
-    const signalHandlers = new Map();
-    const stdinHandlers = new Map();
-    const timers = [];
-    const shutdown = vi.fn();
-    const clearIntervalFn = vi.fn();
-    const dispose = installShutdownGuards({
-      shutdown,
-      signalTarget: { on: (name, handler) => signalHandlers.set(name, handler) },
-      stdin: { on: (name, handler) => stdinHandlers.set(name, handler), resume: () => {} },
-      parentPid: 4242,
-      isProcessAlive: (pid) => pid === 4242 && aliveRef.alive,
-      setIntervalFn: (fn, ms) => {
-        const timer = { fn, ms, unref: vi.fn() };
-        timers.push(timer);
-        return timer;
-      },
-      clearIntervalFn,
-      intervalMs: 250,
-    });
-    return { signalHandlers, stdinHandlers, timers, shutdown, clearIntervalFn, dispose };
+/** Fake socket whose connect either succeeds, errors, or never settles. */
+function fakeConnect({ mode }) {
+  return (_options, onConnect) => {
+    const socket = new EventEmitter();
+    socket.destroy = () => {};
+    socket.setTimeout = (_ms, onTimeout) => {
+      if (mode === "timeout") queueMicrotask(onTimeout);
+    };
+    if (mode === "open") queueMicrotask(() => onConnect());
+    if (mode === "refused") queueMicrotask(() => socket.emit("error", new Error("ECONNREFUSED")));
+    return socket;
   };
-  const aliveRef = { alive: true };
+}
 
-  it("registers every termination signal", () => {
-    aliveRef.alive = true;
-    const h = harness();
-    expect([...h.signalHandlers.keys()]).toEqual([...SHUTDOWN_SIGNALS]);
-    for (const signal of SHUTDOWN_SIGNALS) {
-      h.shutdown.mockClear();
-      h.signalHandlers.get(signal)();
-      expect(h.shutdown).toHaveBeenCalledTimes(1);
-    }
-  });
+/** Minimal stand-in for a Vite PreviewServer + its http.Server. */
+function fakeServer({ close = () => Promise.resolve(), http = true } = {}) {
+  const calls = { closeAllConnections: 0, closeIdleConnections: 0, close: 0 };
+  const server = {
+    calls,
+    httpServer: http
+      ? {
+          closeAllConnections: () => {
+            calls.closeAllConnections += 1;
+          },
+          closeIdleConnections: () => {
+            calls.closeIdleConnections += 1;
+          },
+        }
+      : undefined,
+    close: () => {
+      calls.close += 1;
+      return close();
+    },
+  };
+  return server;
+}
 
-  it("shuts down on stdin end/close (the owner's pipe died)", () => {
-    aliveRef.alive = true;
-    const h = harness();
-    expect([...h.stdinHandlers.keys()]).toEqual(["end", "close"]);
-    h.stdinHandlers.get("end")();
-    h.stdinHandlers.get("close")();
-    expect(h.shutdown).toHaveBeenCalledTimes(2);
-  });
+/** A host process whose stdin/SIGTERM listener sets can be inspected. */
+function fakeHost() {
+  const host = new EventEmitter();
+  host.stdin = new EventEmitter();
+  return host;
+}
 
-  it("shuts down when the owning parent process is gone, and not while it lives", () => {
-    aliveRef.alive = true;
-    const h = harness();
-    expect(h.timers).toHaveLength(1);
-    expect(h.timers[0].ms).toBe(250);
-    expect(h.timers[0].unref).toHaveBeenCalled();
-    h.timers[0].fn();
-    expect(h.shutdown).not.toHaveBeenCalled();
-    aliveRef.alive = false;
-    h.timers[0].fn();
-    expect(h.shutdown).toHaveBeenCalledTimes(1);
-  });
+const SPECS = [
+  { app: "mockup", port: 4183 },
+  { app: "admin", port: 4184 },
+];
 
-  it("dispose clears the orphan timer", () => {
-    aliveRef.alive = true;
-    const h = harness();
-    h.dispose();
-    expect(h.clearIntervalFn).toHaveBeenCalledWith(h.timers[0]);
+describe("app roots", () => {
+  it("exposes only the two repo apps", () => {
+    expect([...PREVIEW_APP_ROOTS.entries()]).toEqual([
+      ["mockup", "apps/mockup"],
+      ["admin", "apps/admin"],
+    ]);
+    expect(resolveAppRoot("mockup")).toBe("apps/mockup");
+    expect(resolveAppRoot("legacy")).toBeNull();
   });
 });
 
-describe("isPidAlive", () => {
-  it("reports this process alive and rejects invalid pids", () => {
-    expect(isPidAlive(process.pid)).toBe(true);
-    for (const pid of [0, -1, 1.5, Number.NaN, undefined]) {
-      expect(isPidAlive(pid)).toBe(false);
+describe("existing-server refusal (reuseExistingServer:false equivalent)", () => {
+  it("reports a port as taken only when something answers", async () => {
+    expect(await isPortTaken("127.0.0.1", 4183, { connectFn: fakeConnect({ mode: "open" }) })).toBe(
+      true,
+    );
+    expect(
+      await isPortTaken("127.0.0.1", 4183, { connectFn: fakeConnect({ mode: "refused" }) }),
+    ).toBe(false);
+    expect(
+      await isPortTaken("127.0.0.1", 4183, { connectFn: fakeConnect({ mode: "timeout" }) }),
+    ).toBe(false);
+  });
+
+  it("refuses when either loopback address is answering", async () => {
+    await expect(
+      assertPortAvailable(4183, { connectFn: fakeConnect({ mode: "open" }) }),
+    ).rejects.toThrow(/already in use on 127\.0\.0\.1 — refusing to reuse an existing server/);
+    await expect(
+      assertPortAvailable(4183, { connectFn: fakeConnect({ mode: "refused" }) }),
+    ).resolves.toBeUndefined();
+  });
+
+  it("never starts a server when the port is refused", async () => {
+    const previewFn = vi.fn(async () => fakeServer());
+    await expect(
+      startPreviewServers(SPECS, {
+        previewFn,
+        hostProcess: fakeHost(),
+        assertAvailable: async () => {
+          throw new Error("port 4183 is already in use on ::1");
+        },
+      }),
+    ).rejects.toThrow(/already in use/);
+    expect(previewFn).not.toHaveBeenCalled();
+  });
+});
+
+describe("startPreviewServers", () => {
+  const freePorts = async () => {};
+
+  it("starts one server per spec with the app root and a strict port", async () => {
+    const seen = [];
+    const previewFn = vi.fn(async (config) => {
+      seen.push(config);
+      return fakeServer();
+    });
+    const handles = await startPreviewServers(SPECS, {
+      previewFn,
+      hostProcess: fakeHost(),
+      assertAvailable: freePorts,
+    });
+    expect(seen).toEqual([
+      { root: "apps/mockup", preview: { port: 4183, strictPort: true } },
+      { root: "apps/admin", preview: { port: 4184, strictPort: true } },
+    ]);
+    expect(handles.map((h) => [h.app, h.port])).toEqual([
+      ["mockup", 4183],
+      ["admin", 4184],
+    ]);
+  });
+
+  it("rejects an unknown app or an invalid port without starting anything", async () => {
+    const previewFn = vi.fn(async () => fakeServer());
+    await expect(
+      startPreviewServers([{ app: "legacy", port: 4183 }], {
+        previewFn,
+        hostProcess: fakeHost(),
+        assertAvailable: freePorts,
+      }),
+    ).rejects.toThrow(/unknown preview app/);
+    for (const port of [80, 70000, Number.NaN, 4183.5, undefined]) {
+      await expect(
+        startPreviewServers([{ app: "mockup", port }], {
+          previewFn,
+          hostProcess: fakeHost(),
+          assertAvailable: freePorts,
+        }),
+      ).rejects.toThrow(/invalid preview port/);
+    }
+    expect(previewFn).not.toHaveBeenCalled();
+  });
+
+  it("closes exactly the already-started handles when a later server fails, and rethrows", async () => {
+    const first = fakeServer();
+    const previewFn = vi
+      .fn()
+      .mockResolvedValueOnce(first)
+      .mockRejectedValueOnce(new Error("Port 4184 is already in use"));
+    await expect(
+      startPreviewServers(SPECS, {
+        previewFn,
+        hostProcess: fakeHost(),
+        assertAvailable: freePorts,
+      }),
+    ).rejects.toThrow(/already in use/);
+    expect(first.calls.close).toBe(1);
+    expect(first.calls.closeAllConnections).toBe(1);
+  });
+
+  it("removes exactly the host listeners preview() installed, leaving pre-existing ones", async () => {
+    const host = fakeHost();
+    const preExistingStdin = () => {};
+    const preExistingSigterm = () => {};
+    host.stdin.on("end", preExistingStdin);
+    host.on("SIGTERM", preExistingSigterm);
+
+    const viteStdin = () => {};
+    const viteSigterm = () => {};
+    const previewFn = vi.fn(async () => {
+      // what vite's preview() does: process.stdin.on("end", cb) + process.once("SIGTERM", cb)
+      host.stdin.on("end", viteStdin);
+      host.once("SIGTERM", viteSigterm);
+      return fakeServer();
+    });
+
+    const handles = await startPreviewServers([SPECS[0]], {
+      previewFn,
+      hostProcess: host,
+      assertAvailable: freePorts,
+    });
+    expect(host.stdin.listeners("end")).toEqual([preExistingStdin]);
+    expect(host.listeners("SIGTERM")).toEqual([preExistingSigterm]);
+    expect(handles[0].detached.stdinEnd).toEqual([viteStdin]);
+    expect(handles[0].detached.sigterm).toEqual([viteSigterm]);
+  });
+});
+
+describe("closePreviewServers", () => {
+  it("drops keep-alive connections before closing each handle", async () => {
+    const servers = [fakeServer(), fakeServer()];
+    const handles = servers.map((server, i) => ({ app: SPECS[i].app, server }));
+    await closePreviewServers(handles);
+    for (const server of servers) {
+      expect(server.calls.closeAllConnections).toBe(1);
+      expect(server.calls.closeIdleConnections).toBe(1);
+      expect(server.calls.close).toBe(1);
     }
   });
 
-  it("reports a never-existing pid as gone", () => {
-    // 0x7FFFFFFE is above Windows' and Linux' practical pid range.
-    expect(isPidAlive(0x7ffffffe)).toBe(false);
+  it("tolerates a server without the newer http close helpers", async () => {
+    const server = fakeServer({ http: false });
+    await expect(closePreviewServers([{ app: "mockup", server }])).resolves.toBeUndefined();
+    expect(server.calls.close).toBe(1);
+  });
+
+  it("reports a hanging close instead of hiding it, and still closes the other handle", async () => {
+    const hanging = fakeServer({ close: () => new Promise(() => {}) });
+    const healthy = fakeServer();
+    const timers = [];
+    const promise = closePreviewServers(
+      [
+        { app: "mockup", server: hanging },
+        { app: "admin", server: healthy },
+      ],
+      {
+        timeoutMs: 15_000,
+        setTimeoutFn: (fn, ms) => {
+          const timer = { fn, ms, unref: () => {} };
+          timers.push(timer);
+          // fire immediately so no wall-clock sleep is involved
+          fn();
+          return timer;
+        },
+        clearTimeoutFn: () => {},
+      },
+    );
+    await expect(promise).rejects.toThrow(/did not close within 15000ms/);
+    expect(timers[0].ms).toBe(15_000);
+    expect(healthy.calls.close).toBe(1);
+  });
+
+  it("reports a rejecting close", async () => {
+    const failing = fakeServer({ close: () => Promise.reject(new Error("EBUSY")) });
+    await expect(closePreviewServers([{ app: "admin", server: failing }])).rejects.toThrow(
+      /shutdown failed — admin: EBUSY/,
+    );
+  });
+
+  it("aggregates every failure and closes nothing else", async () => {
+    const a = fakeServer({ close: () => Promise.reject(new Error("first")) });
+    const b = fakeServer({ close: () => Promise.reject(new Error("second")) });
+    await expect(
+      closePreviewServers([
+        { app: "mockup", server: a },
+        { app: "admin", server: b },
+      ]),
+    ).rejects.toThrow(/mockup: first; admin: second/);
+  });
+
+  it("is a no-op for an empty handle list", async () => {
+    await expect(closePreviewServers([])).resolves.toBeUndefined();
   });
 });

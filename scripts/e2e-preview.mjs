@@ -1,128 +1,157 @@
-// Repo-only Vite preview launcher for Playwright's `webServer` (spec 021 re-verification).
+// E2E preview server lifecycle, owned by exact handles (spec 021 re-verification, round 3).
 //
-// WHY THIS EXISTS — measured Windows exit non-determinism:
-//   Playwright always spawns a webServer `command` with `shell: true` and, on win32, without
-//   `detached` (playwright-core `launchProcess`). So the PID Playwright owns is a `cmd.exe` wrapper,
-//   while the process that actually owns the HTTP port is a DESCENDANT. On win32 Playwright's
-//   `gracefulShutdown` option is also refused outright ("Graceful shutdown is not supported on
-//   Windows"), so shutdown always falls back to `taskkill /pid <wrapper> /T /F`, and that call is
-//   skipped entirely once the wrapper has already closed. A surviving descendant then keeps the
-//   inherited stdout/stderr pipes open, the wrapper's `close` event never fires, and Playwright's
-//   webServer teardown awaits it forever: every test passes and the command never exits, with the
-//   ports still LISTENING. Reproduced by force-killing only the wrapper mid-run.
+// WHY NOT A `webServer` CHILD PROCESS ANY MORE — measured on Windows:
+//   playwright-core `launchProcess` spawns every `webServer.command` with `shell: true` and, on
+//   win32, without `detached`. The PID Playwright owns is a `cmd.exe` wrapper, `gracefulShutdown`
+//   is refused outright on win32 ("Graceful shutdown is not supported on Windows"), and the
+//   fallback `taskkill /pid <wrapper> /T /F` is skipped once the wrapper has closed. Teardown then
+//   awaits the wrapper's `close` event, which requires every inherited stdio pipe to be closed —
+//   so ANY surviving descendant blocks the whole command forever. Owning a child process at all is
+//   the hazard, so these servers now run IN-PROCESS inside the Playwright runner and are closed by
+//   their exact handles. No PID lookup, no port scan, no taskkill/SIGKILL, nothing else is touched.
 //
-// WHAT THIS CHANGES: this launcher starts the preview server IN-PROCESS via Vite's Node API (the
-// existing `vite` devDependency — no new dependency), so the node process Playwright's wrapper
-// spawns is itself the port owner: no extra descendant to orphan. It then guards its own lifetime:
-//   - SIGTERM/SIGINT/SIGHUP/SIGBREAK  -> close this server, exit 0
-//   - stdin EOF (the pipe Playwright gives us dies with the runner) -> close this server, exit 0
-//   - parent process gone (orphan)     -> close this server, exit 0
-// Every guard terminates ONLY this process and closes ONLY the server it started. Nothing is killed
-// by port number, and no other process — in this repo or outside it — is ever signalled.
+// A second measured hazard this module neutralizes: Vite's `preview()` registers ITS OWN host
+// listeners (`process.once("SIGTERM")` and, unless `CI === "true"`, `process.stdin.on("end")`) whose
+// callback calls `process.exit()`. In a child process that was harmless; inside the Playwright
+// runner it would let a stdin EOF (every non-TTY run) or a SIGTERM kill the run mid-flight. So each
+// listener that `preview()` added is captured by difference and removed again — only those.
 
-import { pathToFileURL } from "node:url";
+import { createConnection } from "node:net";
 import { preview } from "vite";
 
-/** Only these two apps may be previewed; the port must be an explicit high port. */
-const APP_ROOTS = new Map([
+/** Loopback addresses a test navigating to `http://localhost:<port>` can end up on. */
+const LOOPBACK_HOSTS = ["127.0.0.1", "::1"];
+
+/** True when something already answers on host:port. Connect-only — nothing is sent or killed. */
+export function isPortTaken(host, port, { connectFn = createConnection, timeoutMs = 1000 } = {}) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (taken) => {
+      if (settled) return;
+      settled = true;
+      socket?.destroy?.();
+      resolve(taken);
+    };
+    const socket = connectFn({ host, port }, () => finish(true));
+    socket.setTimeout?.(timeoutMs, () => finish(false));
+    socket.on("error", () => finish(false));
+  });
+}
+
+/**
+ * Refuse to run against a server we did not start (the contract `reuseExistingServer: false` used to
+ * provide). `strictPort` alone is NOT enough: a stale server bound to the IPv4 wildcard does not
+ * collide with Vite's `localhost` (::1) bind, so both can hold the same port — measured. Both
+ * loopback addresses are probed instead.
+ */
+export async function assertPortAvailable(port, options) {
+  for (const host of LOOPBACK_HOSTS) {
+    if (await isPortTaken(host, port, options)) {
+      throw new Error(
+        `port ${port} is already in use on ${host} — refusing to reuse an existing server`,
+      );
+    }
+  }
+}
+
+/** Only these two apps may be previewed. */
+export const PREVIEW_APP_ROOTS = new Map([
   ["mockup", "apps/mockup"],
   ["admin", "apps/admin"],
 ]);
 
-export function parsePreviewArgs(argv) {
-  const [app, rawPort] = argv;
-  const root = APP_ROOTS.get(app);
-  if (root === undefined) return { ok: false, reason: "unknown-app" };
-  const port = Number(rawPort);
-  if (!Number.isInteger(port) || port < 1024 || port > 65535) {
-    return { ok: false, reason: "invalid-port" };
-  }
-  return { ok: true, app, root, port };
+export function resolveAppRoot(app) {
+  return PREVIEW_APP_ROOTS.get(app) ?? null;
 }
 
-/** Idempotent shutdown: close the server we started, then exit 0 even if closing failed. */
-export function createShutdown({ closeServer, exit }) {
-  let closing = false;
-  return async () => {
-    if (closing) return;
-    closing = true;
-    try {
-      await closeServer();
-    } catch {
-      // the process is going away anyway; a close error must not turn into an unhandled rejection.
-    }
-    exit(0);
+function snapshotHostListeners(hostProcess) {
+  return {
+    stdinEnd: [...hostProcess.stdin.listeners("end")],
+    sigterm: [...hostProcess.listeners("SIGTERM")],
   };
 }
 
-export const SHUTDOWN_SIGNALS = ["SIGTERM", "SIGINT", "SIGHUP", "SIGBREAK"];
+/** Remove exactly the listeners `preview()` added to the host process, and return them. */
+function detachAddedHostListeners(hostProcess, before) {
+  const stdinEnd = hostProcess.stdin.listeners("end").filter((l) => !before.stdinEnd.includes(l));
+  const sigterm = hostProcess.listeners("SIGTERM").filter((l) => !before.sigterm.includes(l));
+  for (const listener of stdinEnd) hostProcess.stdin.off("end", listener);
+  for (const listener of sigterm) hostProcess.off("SIGTERM", listener);
+  return { stdinEnd, sigterm };
+}
 
 /**
- * Wire every lifetime guard. Pure wiring over injected collaborators so the exit path is unit
- * tested without starting a server. Returns a dispose function that clears the orphan timer.
+ * Start one preview server per spec and return the exact handles.
+ *
+ * `strictPort: true` is the "refuse an existing server" contract: Vite fails instead of silently
+ * moving to another port, so a stale server on 4183/4184 fails the run rather than being reused.
+ * If a later server fails to start, only the handles already created here are closed, and the
+ * original startup error is rethrown.
  */
-export function installShutdownGuards({
-  shutdown,
-  signalTarget,
-  stdin,
-  parentPid,
-  isProcessAlive,
-  setIntervalFn = setInterval,
-  clearIntervalFn = clearInterval,
-  intervalMs = 1000,
-}) {
-  for (const signal of SHUTDOWN_SIGNALS) signalTarget.on(signal, shutdown);
-  // The runner holds the write end of our stdin pipe; EOF means our owner is gone.
-  stdin.on("end", shutdown);
-  stdin.on("close", shutdown);
-  stdin.resume?.();
-  // Orphan guard: if the process Playwright owns dies without taking us with it, exit ourselves.
-  const timer = setIntervalFn(() => {
-    if (!isProcessAlive(parentPid)) shutdown();
-  }, intervalMs);
-  timer?.unref?.();
-  return () => clearIntervalFn(timer);
-}
-
-/** Existence probe (signal 0 never terminates anything). */
-export function isPidAlive(pid) {
-  if (!Number.isInteger(pid) || pid <= 0) return false;
+export async function startPreviewServers(
+  specs,
+  { previewFn = preview, hostProcess = process, assertAvailable = assertPortAvailable } = {},
+) {
+  const handles = [];
   try {
-    process.kill(pid, 0);
-    return true;
+    for (const { app, port } of specs) {
+      const root = resolveAppRoot(app);
+      if (root === null) throw new Error(`unknown preview app: ${String(app)}`);
+      if (!Number.isInteger(port) || port < 1024 || port > 65535) {
+        throw new Error(`invalid preview port for ${app}`);
+      }
+      await assertAvailable(port);
+      const before = snapshotHostListeners(hostProcess);
+      const server = await previewFn({ root, preview: { port, strictPort: true } });
+      handles.push({ app, port, server, detached: detachAddedHostListeners(hostProcess, before) });
+    }
+    return handles;
   } catch (error) {
-    // EPERM = alive but not ours to signal; only ESRCH means gone.
-    return error?.code === "EPERM";
+    // exact-handle cleanup of the partially started set; the startup error is what the caller sees.
+    await closePreviewServers(handles).catch(() => {});
+    throw error;
   }
 }
 
-async function main() {
-  const parsed = parsePreviewArgs(process.argv.slice(2));
-  if (!parsed.ok) {
-    process.stderr.write(
-      `e2e-preview: ${parsed.reason} (usage: node scripts/e2e-preview.mjs <mockup|admin> <port>)\n`,
-    );
-    process.exit(1);
-  }
-  const server = await preview({
-    root: parsed.root,
-    preview: { port: parsed.port, strictPort: true },
+function withTimeout(promise, { timeoutMs, message, setTimeoutFn, clearTimeoutFn }) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeoutFn(() => reject(new Error(message)), timeoutMs);
+    timer?.unref?.();
+    const settle = (fn) => (value) => {
+      clearTimeoutFn(timer);
+      fn(value);
+    };
+    promise.then(settle(resolve), settle(reject));
   });
-  const shutdown = createShutdown({
-    closeServer: () => server.close(),
-    exit: (code) => process.exit(code),
-  });
-  installShutdownGuards({
-    shutdown,
-    signalTarget: process,
-    stdin: process.stdin,
-    parentPid: process.ppid,
-    isProcessAlive: isPidAlive,
-  });
-  process.stdout.write(`e2e-preview: ${parsed.app} on port ${parsed.port} (pid ${process.pid})\n`);
 }
 
-// Only run when executed directly; importing this file (unit tests) must start no server.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await main();
+/**
+ * Close exactly these handles. Keep-alive sockets are dropped first (`closeAllConnections`), because
+ * `httpServer.close()` alone waits for idle keep-alive connections and can hang forever — the
+ * "ports free but the process never exits" shape. A close that fails or exceeds `timeoutMs` is
+ * REPORTED (thrown), never swallowed into a green run; every handle is attempted regardless.
+ */
+export async function closePreviewServers(
+  handles,
+  { timeoutMs = 15_000, setTimeoutFn = setTimeout, clearTimeoutFn = clearTimeout } = {},
+) {
+  const failures = [];
+  for (const handle of handles) {
+    try {
+      const http = handle.server?.httpServer;
+      http?.closeAllConnections?.();
+      http?.closeIdleConnections?.();
+      await withTimeout(handle.server.close(), {
+        timeoutMs,
+        message: `preview server for ${handle.app} did not close within ${timeoutMs}ms`,
+        setTimeoutFn,
+        clearTimeoutFn,
+      });
+    } catch (error) {
+      failures.push(`${handle.app}: ${error?.message ?? String(error)}`);
+    }
+  }
+  if (failures.length > 0) {
+    throw new Error(`preview server shutdown failed — ${failures.join("; ")}`);
+  }
 }
