@@ -65,7 +65,7 @@ draw는 항상 최신 snapshot을 읽으므로 오래된 예약 draw가 새 plan
 
 - 별도 HTML entry(`/e2e-canvas-fixture.html`)이며 `index.html`·`main.tsx`·`App.tsx`·`BrowseFlow.tsx`는 fixture나 surface를 **import·링크·분기하지 않음**(grep + E2E 확인)
 - E2E 1건이 고객 `/`에서 **canvas 0개, fixture 링크 0개, 문서 내 문자열 0**을 확인
-- `pnpm build`·`pnpm check`는 fixture를 **빌드하지 않음** → 운영 산출물에 미포함. `test:e2e`만 별도 config로 dist에 append(`emptyOutDir:false`)
+- `pnpm build`·`pnpm check`는 fixture를 **빌드하지 않음**. ⚠️ **정정: 최초 구현은 `test:e2e`가 fixture를 `apps/mockup/dist`에 append했다(운영 산출물 오염). 현재는 `test:e2e`가 고객 앱·관리자 앱·fixture를 모두 `.e2e-staging/`에 빌드하고 preview 서버가 staging을 서빙하므로 `apps/mockup/dist`는 E2E가 읽지도 쓰지도 않는다 — 아래 '재검증 보완' 참조**
 - 별도 빌드를 택한 이유: 고객 빌드의 두 번째 input으로 넣으면 Rollup이 공유 청크를 분리해 **고객 자산 그래프·해시가 바뀐다**(실측). 별도 빌드에서는 고객 번들이 **byte-identical**
 
 ## 게이트 결과
@@ -89,3 +89,43 @@ draw는 항상 최신 snapshot을 읽으므로 오래된 예약 draw가 새 plan
 ## NOT TESTED / 미착수
 
 실제 운영 이미지·Firebase Storage·**CORS-clean**, **실기기 4환경**(Safari·Android·Samsung·카카오), 실기기 선명도·성능·회전 = **NOT TESTED**. pointer/touch/wheel/pinch·회전·text/clock/watermark·print/PNG·저장·주문 = 미착수. **surface 완료 ≠ 상품 미리보기 완료** — 선택 상태→`CasePlanInput`/`FramePlanInput` projection과 케이스/액자 색 결정은 후속 스펙이다.
+
+---
+
+## 재검증 보완 (2026-07-28) — E2E fixture의 고객 dist 오염 제거 — 코드 커밋 `1f0791d`
+
+### 확인된 결함 (내 이전 주장 정정)
+
+`test:e2e`가 실행하던 `vite.e2e-fixture.config.ts`는 `outDir:"dist"`·`emptyOutDir:false`였으므로 **`apps/mockup/dist`에 `e2e-canvas-fixture.html`과 전용 JS/CSS가 append**됐다. 이전 DONE·handoff의 **"운영 산출물에 fixture 미포함" 서술은 거짓**이었고, `build → test:e2e → deploy` 순서면 fixture가 배포될 수 있었다. 고객 `/`에 링크가 없다는 검사도 **직접 URL 접근·배포 혼입을 막지 못한다**.
+
+### 수정 구조
+
+| 항목 | 변경 후 |
+| --- | --- |
+| fixture 출력 | `apps/mockup/vite.e2e-fixture.config.ts` → **`../../.e2e-staging/mockup`** |
+| `test:e2e` | `vite build apps/mockup --outDir ../../.e2e-staging/mockup --emptyOutDir` → `vite build apps/admin --outDir ../../.e2e-staging/admin --emptyOutDir` → fixture 빌드(staging append) → `playwright test` |
+| preview 서버 | `scripts/e2e-preview.mjs`의 `PREVIEW_APPS`가 앱별 `{root, outDir}`을 갖고 `preview()`에 `build.outDir` 전달 → **staging 서빙** |
+| 스펙 021 계약 | exact-handle 소유·teardown callback·`127.0.0.1`/`::1` 사전 거부·close 경로 **무변경**(서빙 디렉터리만 변경) |
+| 정리 방식 | 고객 dist에 **쓰지 않으므로 사후 삭제 불필요** — broad delete·포트/PID kill·globalTeardown sweep **0**, 새 서버·포트 **0** |
+| staging | `.e2e-staging/` **gitignored**, 배포 소스 아님(`firebase.json`은 앱 dist 발행) |
+
+### 재검증 (요구 순서대로)
+
+| 단계 | 결과 |
+| --- | --- |
+| clean 고객 build → 파일 목록+SHA256 기록 | mockup `index.html`/`index-D9dnc5BM.css`/`index-R95W5Hp2.js`, admin `index.html`/`index-hSnRi2Ws.css`/`index-Dt6l7Y_-.js` |
+| `test:e2e` | **57 PASS · reporter summary · exit 0**(18초 자체 종료), 포트 4183/4184 free, 잔류 0 |
+| 후 고객 dist 목록+해시 | **IDENTICAL** |
+| 고객 dist 내 `e2e`/`fixture` 파일 | **0건** |
+| 실패 경로 1회(임시 실패 spec) | exit 1(18초) → dist **IDENTICAL**, fixture **0건** |
+| self-contained | 두 dist를 **삭제한 채** `test:e2e`만 실행 → **57/57 PASS·exit 0**, 실행 후에도 **dist 디렉터리 없음**(E2E가 고객 경로에 아무것도 쓰지 않음을 증명) |
+| 재빌드 | 기록된 해시 **정확히 재현** |
+| 게이트 | frozen exit 0·**lockfile diff 0** / format·lint·typecheck / **unit 468**(467→468) / build 수치 동일 / check PASS / `git diff --check` clean / 스펙018 PNG 복원·미커밋 |
+
+### 무변경
+
+**production Canvas surface API·UI 로직 무변경**(`apps/mockup/src/canvas/**` diff 0). 변경 파일 = `.gitignore` · `package.json` · `scripts/e2e-preview.mjs` · `scripts/e2e-preview.test.mjs` · `apps/mockup/vite.e2e-fixture.config.ts`. `packages/**`·admin 앱·운영 HTML·Firebase 설정/Rules·POC·디자인 PNG 무변경, 네트워크·live·deploy 0.
+
+### 유지되는 NOT TESTED
+
+실제 운영 이미지·CORS-clean·실기기 4환경·선명도/성능/회전. pointer·회전·text/clock·print·저장·주문 미착수. surface 완료 ≠ 상품 미리보기 완료. **스펙 022 종료 문서 처리는 하지 않았다.**
