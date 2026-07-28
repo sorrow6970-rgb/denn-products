@@ -92,4 +92,5 @@ Claude Code  →  스펙 읽고 코드 구현 → 검증 실행 → 스펙 하�
 | 018 | 카탈로그 이미지 참조·안전한 썸네일 계약 | DONE | Codex 승인, 합성 thumbnail·신뢰 경계·fallback 자동검증 완료 |
 | 019 | Canvas 순수 geometry 계약 | DONE | Codex 승인, 5개 공개 함수로 6개 geometry 계약·극단값 안전성 고정 |
 | 020 | 결정적 Canvas render-plan 계약 | DONE | Codex 승인, 케이스·액자 최소 명령 plan·신뢰 경계 고정 |
-| 021 | Canvas render-plan executor 계약 | READY | 앱 계층 context 실행·restore 상태머신, 화면 연결·이미지/CORS 제외 |
+| 021 | Canvas render-plan executor 계약 | DONE | Codex 승인, 앱 계층 context 실행·E2E 종료 결정성 확정 |
+| 022 | React Canvas surface·DPR·생명주기 | READY | 실제 canvas/context·DPR 2·RO/rAF·StrictMode·Chromium 픽셀 검증 |
