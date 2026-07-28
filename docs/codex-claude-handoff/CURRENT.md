@@ -1,6 +1,8 @@
 # 현재 상태
 
-상태: **✅ 스펙 020 결정적 Canvas render-plan 계약(@denn/render) = Codex 최종 승인(승인 가능, 기준 HEAD `07657fb`) — 종료. 다음 = Codex 다음 스펙 지시 대기.**
+상태: **🟡 스펙 021 Canvas render-plan executor 계약 = Codex 작성 완료, Claude Code 구현 대기. 기준 HEAD `2a4acd0`.**
+
+> 스펙 021 지시(2026-07-28): 스펙 020 plan의 `fill-rect`·`draw-image-cover`·`stroke-rect`를 실행하는 React 비의존 executor를 `apps/mockup` 계층에 추가한다. 실제 context와 이미 준비된 drawable binding은 호출자가 주입하며, executor는 preflight 후 outer save→clear→명령 실행→restore, image 명령은 inner save→clip→drawImage→restore를 지킨다. malformed 입력·binding 누락·Canvas operation/restore 실패는 식별정보 없는 Result로 반환하고 밖으로 throw하지 않는다. recording fake unit으로 순서·preflight·예외·restore 균형을 고정한다. **제외:** 실제 Canvas 생성/React 화면 연결·URL/image load·CORS·DPR·pointer·회전·text/clock·print·Firebase·배포. 구현 정본: `docs/rebuild/specs/021-canvas-plan-executor.md`.
 
 > Codex 최종 승인(2026-07-27): 스펙 020 = **승인 가능**(기준 HEAD `07657fb`). 결정적·JSON-safe preview render-plan(`buildPreviewRenderPlan`), 케이스·액자 입력·layer 순서 분리, 스펙 019 geometry 재사용, malformed runtime 입력 throw 방지, `zone.order` NaN/±Infinity 차단, restricted synthetic identifier 문법(`^[A-Za-z0-9][A-Za-z0-9._-]*$`·1..128) 확정. **식별자 문법은 semantic secret detector 아님**(허용 문자만의 token/secret/unpadded base64 판별 불가) — caller는 imageRef에 URL/base64/token/secret 전달 금지, executor는 imageRef를 URL이 아닌 메모리 신뢰 binding-map lookup key로만 사용, builder는 source URL/token/storagePath/raw catalog 미생성·미복사. 최종 게이트 **unit 372 / e2e 49 PASS·exit 0 / check PASS**, 금지어(§G) 0. **미검증(후속): 실제 Canvas·CORS-clean·이미지 load·pointer·회전·text/clock·print·DPR cap·실기기·배포 미착수(plan으로 증명 불가).** 후속 순서=Canvas executor→image/CORS→pointer→text/clock→print. **다음 스펙은 Codex 지시 대기.**
 
