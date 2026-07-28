@@ -419,3 +419,19 @@ diagnostic 배열 순서는 탐색·source 순서로 결정적이어야 하며 �
 3. **`type` 빈 문자열 취급:** §4가 "알 수 없는 **non-empty** type"만 거부하도록 규정했으므로 `""`·`null`·부재를 사각으로 인정했다. 더 엄격하게 `"rect"`만 허용할지는 결정 필요.
 4. **`frameThickness` "존재" 판정:** `undefined`만 부재로 보고 `null`은 존재-but-invalid로 처리해 실패시켰다. `null`을 부재로 볼지 결정 필요.
 5. **실패 Result의 위치 정보:** §2의 error 형태가 `code`+`diagnostics`뿐이므로 실패한 zone의 `sourceIndex`를 노출하지 않는다(진단 코드 집합도 §6의 5종으로 제한). 실패 지점 index가 필요하면 계약 확장이 필요하다.
+
+### Codex 최종 판정 — 승인 가능 (2026-07-28)
+
+- **판정:** 스펙 023 = **승인 가능**. **승인 기준 HEAD = `d1e2327`**.
+- **최종 게이트:** frozen install exit 0·**lockfile diff 0**·신규 외부 의존성 0 / format·lint·typecheck / **unit 568/568**(472 → 568, preview 96 신규) / build(**mockup JS 217.69 kB·gzip 68.40 / CSS 11.32 kB·gzip 3.16**, **admin JS 193.53 kB·gzip 61.09 / CSS 8.54 kB·gzip 2.64** — 스펙 022와 전부 동일) / **e2e 57/57 PASS**(신규 E2E 0)·reporter 요약·명령 exit 0 자체 종료 / 포트 4183·4184 free·저장소 실행 소속 잔류 0·**OS temp `denn-e2e-*` 잔여 0** / 고객 mockup·admin dist **파일 목록+SHA-256 E2E 전후 동일·fixture 파일 0** / check PASS / `git diff --check` clean / 재생성 스펙018 PNG 복원·미커밋.
+- **확정된 계약:** `@denn/shared`의 순수 render 비의존 geometry projection — `projectCasePreviewGeometry` → `{modelLogicalSize, zones[{id, sourceIndex, percentRect}]}`, `projectFramePreviewGeometry` → `{aspect, borderPercentOfWidth, matColor}`, 공통 `PreviewProjectionResult<T>`(오류 8종·diagnostic 5종, `code`+`collection`+`sourceIndex`만). 케이스 zone 공급원 우선순위(`photoZones` → `zones` alias → 단일 `photoSlot`)와 **명시적 빈 배열의 fallthrough 없는 실패**, 원본 index 기반 `case-zone-<i>`, 액자 **단일 full-mat 사각형만 지원**, mat 색 별칭·`#RRGGBB` canonical 대문자·`#FFFFFF` fallback, hostile 입력 throw 0·원문 미echo·결정성·입력 비변형.
+- **QUESTIONS 결정(Codex):**
+  1. **퍼센트 경계는 정확 비교 유지** — 허용 오차를 도입하지 않는다(부동소수로 `0.1+99.9`가 경계를 넘는 저작값은 거부된다).
+  2. **zone `type`의 빈 문자열은 사각으로 취급 유지.**
+  3. **`frameThickness`의 `null`은 invalid로 실패 유지**(부재로 보지 않는다).
+  4. **실패 Result에 `sourceIndex`를 추가하지 않는다** — 오류 형태는 `code`+`diagnostics`로 유지.
+  5. **builtin `full`의 `P=8` 콘텐츠 inset은 후속 plan 조립 스펙의 필수 결정 항목으로 유지**(이번 projection은 사각형 개수만 판정하고 rect를 반환하지 않는다).
+- **NOT TESTED(유지):** 실제 published catalog의 opaque caseTemplate 변형 분포·실제 운영 데이터·Canvas 연결·실제 미리보기 픽셀·CORS-clean·실기기. 합성 fixture만 검증했다.
+- **미착수(유지):** 케이스/액자 색 선택·사용자 이미지·intrinsic size·transform·CSS logical size·`PreviewRenderPlan` 조립·표현 불가 shape(원형·라운드·multi-zone·alpha·inner border 4-band)의 render 어휘 확장·pointer·회전·text/clock/watermark·print/export·저장·주문·Firebase·배포. **projection 완료는 상품 미리보기 완료가 아니다.**
+- **후속 필수 항목(유지):** `firebase.json`의 `hosting.public: "."`로 인한 저장소 전체 노출 위험 → **Hosting 격리 전 배포 금지**.
+- **다음:** Codex 다음 스펙 지시 대기.
