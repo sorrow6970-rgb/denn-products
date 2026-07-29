@@ -154,3 +154,31 @@
   커밋된 PNG 0
 - 이 라운드는 종료 문서 전용 커밋이며 기능 코드·설정·테스트 변경 0
 - 다음: 새 스펙 지시 대기. 기능 착수 없음.
+
+## 2026-07-29 — 스펙 027 구현 (고객 미리보기 composer 연결)
+
+- 기준: `835eaaa`
+- 코드/test: `175a363`
+- 상태: 구현·자체 검증 완료 → `READY_FOR_CODEX`
+- 변경 파일(허용 목록 안): `apps/mockup/src/preview/**`(5) ·
+  `apps/mockup/src/canvas/compositeImageBindings.{ts,test.ts}` ·
+  `apps/mockup/src/browse/BrowseFlow.tsx` · `apps/mockup/src/browse/browse.css` ·
+  `tests/e2e/mockup-preview.spec.ts`
+- 핵심:
+  - 명시적 `미리보기 만들기` 단계, 색 자동 선택 0, case 8색(transparent 제외),
+    frame은 valid solid만(grain 제외)
+  - 필수 이미지 전부 ready일 때만 plan, zone별 독립 owner, 공유 fallback 0
+  - frame logical width = max(1, round(min(content, 500))), resize 시 재계산
+  - 선택 변경 시 composer 닫힘 + owner dispose(section key)
+  - ⚠️ owner 간 `imageRef` 충돌(둘 다 user-image-1)을 E2E가 검출 →
+    slot namespace(`<slotId>.<ownerRef>`) + `withImageRefPrefix`로 수정
+- 게이트: frozen PASS / lockfile diff 0 / format·lint·typecheck /
+  unit 797(755→797) / e2e 78 PASS(69→78) exit 0 / check PASS / diff --check clean /
+  temp `denn-e2e-*` 0 / 고객 dist SHA-256 동일·fixture 0 / 포트 재확인 free
+- 번들: mockup JS 217.69→248.23 kB(gzip 68.40→77.53), CSS 11.32→13.80(gzip 3.16→3.53) —
+  미리보기가 처음 고객 번들에 포함됨. admin 무변경
+- E2E 소요: 20초대 → 2.1~3.5분(두 번 모두 78/78 exit 0). 개별 시간 변동이 커서
+  호스트 부하로 보이나 원인 확정 NOT VERIFIED
+- PNG 2개(Codex E2E 재생성): 미복원·미커밋 → working tree dirty 유지
+- NOT TESTED: 실기기, 실제 200% 확대, 운영 카탈로그 분포·이미지, 대용량 사진 성능, EXIF
+- 다음: Codex 독립 검증. 템플릿 아트·pointer·print·주문은 여전히 후속.

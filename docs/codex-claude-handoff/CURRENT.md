@@ -7,7 +7,35 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟢 스펙 026 승인·종료(Codex 최종 판정 = 승인 가능, 승인 기준 HEAD `69db696`). 다음 스펙은 Codex/Founder 지시 대기 — 기능 착수 없음. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **🟠 스펙 027(고객 미리보기 composer 연결) 구현 완료·push — Codex 독립 검증 대기(`READY_FOR_CODEX`). 스펙 026 승인·종료. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+
+> 스펙 027 구현·자동검증 완료(로컬, 2026-07-29, 기준 HEAD `835eaaa`, 코드 커밋 `175a363`): 정본
+> `docs/rebuild/specs/027-customer-preview-composer-connection.md`, 인계
+> `docs/handoff/2026-07-29-spec-027-customer-preview-handoff.md`. **고객 화면에서 스펙 023 projection →
+> 025 adapter → 026 local image binding → 022 Canvas surface를 처음 연결했다**(로컬 사진 + 결정적 solid 색까지).
+> **UX 계약**: 선택 완료만으로 Canvas를 만들지 않고 `미리보기 만들기` 버튼만 렌더(열기 전 색·파일 UI·Canvas 0),
+> 색 자동 선택 **0**(초기 `null`), case는 레거시 solid **8색**·`transparent` 제외, frame은 정확한 `#RRGGBB` +
+> 이름 있는 solid만·**`grain` 제외**·지원 색 0이면 안내만, 필수 이미지가 **모두 ready**일 때만 plan(loading/failed/
+> clear/unmount 시 plan·Canvas 즉시 제거), frame width = **`max(1, round(min(content, 500)))`**(측정 전·0·NaN·
+> Infinity면 대기, resize 시 재계산), case는 `modelLogicalSize` + scroll wrapper 유지(CSS transform 축소 0),
+> 선택 변경 시 composer 닫힘 + owner dispose. raw `CatalogDocumentV1`은 **projection 입력으로만** 사용하고 Canvas
+> props로 넘기지 않으며 실패는 code·index·ID 없이 고정 문구로 닫는다. `packages/**`·executor·surface·adapter **무변경**.
+> **⚠️ 구현 중 결함 발견·수정**: 스펙 026 owner가 각자 `user-image-1`부터 번호를 매겨 **zone 2개에서 ref 충돌**
+> (첫 zone 사진이 두 zone에 그려짐, E2E가 검출) → plan/lookup을 slot namespace `<slotId>.<ownerRef>` +
+> `withImageRefPrefix`로 수정(스펙 020 문법 유지, unit이 충돌 시나리오 고정). **실제 Chromium E2E 9건(고객 `/`)**:
+> case 전체 흐름(픽셀 (75,50)=사진A / (225,50)=사진B / (150,150)=body, CSS 300×200)·교체/같은 파일 재선택/clear에서
+> 부분 미리보기 0·선택 변경 시 닫힘·frame(미지원 색 미표시·사전선택 0·`width ≤ 500`·`height=round(width×1.4)`·
+> 프레임/mat/사진 3구역)·좁은 뷰포트 width 축소와 overflow 0·파일명/`blob:`/`base64`/색 ID/실패 code 누출 **0**·
+> 키보드 전용·320×568/1280×800 axe 0·console 0·실제 network 0. **게이트**: frozen exit 0·**lockfile diff 0**·
+> 신규 의존성 0 / format·lint·typecheck / **unit 797**(755→797, 신규 42) / **e2e 78 PASS**(69→78, 신규 9)·exit 0 /
+> check PASS / `git diff --check` clean / OS temp `denn-e2e-*` 0 / 고객 dist **SHA-256 E2E 전후 동일·fixture 0** /
+> 포트 4183·4184 실행 직후 TIME_WAIT 2건 → 재확인 **free**·잔류 프로세스 0. **번들(원인 기록)**: 미리보기가 처음
+> 고객 번들에 포함돼 mockup JS **217.69 → 248.23 kB**(gzip **68.40 → 77.53**), CSS **11.32 → 13.80**(gzip
+> **3.16 → 3.53**); admin **무변경**. **E2E 소요**: 20초대 → **2.1~3.5분**(두 번 모두 78/78·exit 0), 개별 시간
+> 변동이 커 호스트 부하로 보이나 **원인 확정 NOT VERIFIED**. **NOT TESTED**: 실기기 4환경·실제 200% 확대·운영
+> 카탈로그 분포·운영 이미지·대용량 사진 메모리/성능·EXIF 회전·선명도. **PNG**: Codex E2E 재생성분 2개는
+> **미복원·미커밋**(working tree dirty·커밋된 PNG 0). ⚠️ 이 완료는 **로컬 사진 기반 첫 고객 preview 연결**이며
+> 템플릿 아트·운영 이미지 CORS-clean·pointer/pan/zoom·print/export·저장·주문·Firebase·배포 완료가 아니다.
 
 > Codex 최종 승인(2026-07-29): 스펙 026 = **승인 가능**(승인 기준 HEAD `69db696`, 보완 코드 `25c421b`,
 > 기준선 `449b027`, fix_round 1). 독립 검증 = diff/허용 파일·format·lint·typecheck PASS / **unit 755/755** /

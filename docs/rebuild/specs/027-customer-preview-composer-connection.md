@@ -186,3 +186,48 @@ Chromium E2E:
 이 스펙 완료는 **로컬 사용자 사진 기반 첫 고객 Canvas preview 연결**이다. 템플릿 아트,
 운영 이미지 CORS-clean, pointer/pan/zoom, 회전, text/clock, print/export, 저장·주문,
 Firebase·배포 완료를 의미하지 않는다.
+
+---
+
+### DONE (Claude) — 2026-07-29
+
+기준 HEAD `835eaaa` → 코드/test 커밋 `175a363`. **Codex 독립 검증 전이므로 스펙 종료가 아니다.**
+
+- **UX 계약 이행**: 선택 완료만으로는 Canvas를 만들지 않고 `미리보기 만들기` 버튼만 렌더한다(열기 전 색·파일 UI·Canvas 0).
+  색은 초기 `null`이고 어떤 스와치도 `aria-pressed="true"`로 시작하지 않는다. case는 레거시 solid **8색**
+  (`denn-mockup-tool.html:322-330`)만 쓰고 `transparent`는 표시·근사하지 않는다. frame은 카탈로그의 **정확한 `#RRGGBB` +
+  이름 있는 solid만** 표시하고 `grain: true`는 제외하며, 지원 색이 0이면 안내만 하고 Canvas를 만들지 않는다.
+  필수 이미지가 모두 `ready`일 때만 plan을 만들고 loading/failed/clear/unmount에서는 plan·Canvas를 즉시 없앤다.
+  frame logical width는 자체 `ResizeObserver`가 관측한 content-box로 **`max(1, round(min(content, 500)))`**,
+  측정 전·0·NaN·Infinity면 기본값을 만들지 않고 대기하며, resize 시 geometry→plan을 재계산한다. case는 스펙 023
+  `modelLogicalSize` + 스펙 022 scroll wrapper 그대로이고 CSS transform 축소를 넣지 않았다.
+- **연결 경계**: ids-only 선택 → `projectCase/FramePreviewGeometry` → 명시 색 + 준비된 `UserImageState` →
+  `buildCase/FrameProductPlan` → owner별 binding 결합 → `PreviewCanvasSurface`. raw `CatalogDocumentV1`은
+  **projection 입력으로만** 쓰고 Canvas props로 넘기지 않는다. executor·surface·adapter·`packages/**` **무변경**.
+  실패는 code·sourceIndex·ID 없이 고정 문구로 닫는다.
+- **⚠️ 구현 중 발견·수정한 결함**: 스펙 026 owner는 각자 `user-image-1`부터 번호를 매기므로 **zone이 2개면 ref가 충돌**해
+  첫 zone의 사진이 두 zone 모두에 그려졌다(E2E가 실제로 검출). composer가 slot namespace를 붙여 plan은
+  `<slotId>.<ownerRef>`를 쓰고 lookup은 `withImageRefPrefix`로 자기 namespace만 응답하도록 수정했다. 결과 ref는
+  스펙 020 식별자 문법을 그대로 만족하며 unit이 충돌 시나리오를 고정한다.
+- **실제 Chromium E2E 9건(고객 `/`)**: case 전체 흐름(선택 완료 시 Canvas 0 → 색 → zone 0만으로는 Canvas 0 → 두 zone
+  모두 준비 후 Canvas, CSS `300×200`, 픽셀 (75,50)=사진 A / (225,50)=사진 B / (150,150)=body) · 교체·같은 파일
+  재선택(`input.value === ""`)·clear 시 부분 미리보기 0 · 선택 변경 시 composer 닫힘과 새 단계 · frame(미지원 색 미표시,
+  사전 선택 0, `width ≤ 500`, `height = round(width×1.4)`, 프레임/mat/사진 3구역 픽셀) · 좁은 뷰포트에서 더 좁은 width와
+  overflow 0 · 파일명·`blob:`·`base64`·색 ID·실패 code가 DOM/ARIA/data/storage/location/console에 **0** ·
+  키보드 전용 진입·색 선택·파일 input 도달 · 320×568/1280×800에서 overflow 0·44px·axe 0·console 0. 실제 network 0.
+- **게이트**: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / **unit 797**(755 → 797, 신규 42) /
+  **e2e 78 PASS**(69 → 78, 신규 9)·exit 0 / check PASS / `git diff --check` clean / OS temp `denn-e2e-*` 0 /
+  고객 dist **SHA-256 E2E 전후 동일·fixture 0** / 포트 4183·4184는 실행 직후 TIME_WAIT 2건 후 **free**(리스너·잔류 0).
+- **번들 변화와 원인(요구 기록)**: 미리보기가 처음으로 고객 번들에 포함돼 mockup JS **217.69 → 248.23 kB**
+  (gzip **68.40 → 77.53**), CSS **11.32 → 13.80 kB**(gzip **3.16 → 3.53**). 새로 실린 것 = Canvas surface(022) +
+  executor(021) + plan builder(020/024/025) + projection(023) + local image binding(026) + composer UI.
+  **admin은 바이트 무변경**.
+- **E2E 소요 시간(정직 기록)**: 전체 스위트가 이전 20초대에서 **2.1~3.5분**으로 늘었다(두 번 실행 모두 78/78·exit 0).
+  같은 테스트의 개별 시간이 실행마다 5.4초↔1.6초로 흔들려 호스트 부하 변동으로 보이나 **원인 확정은 NOT VERIFIED**.
+- **무변경**: `packages/**`·`apps/admin/**`·운영 HTML·Firebase 설정/Rules·`poc/**`·manifest·lockfile = diff 0.
+  기존 E2E fixture와 `canvas-surface.spec.ts`도 수정하지 않았다.
+- **NOT TESTED**: 실제 기기·실제 200% 확대·운영 카탈로그 분포·운영 이미지·대용량 사진 메모리/성능·EXIF 회전·선명도.
+- **PNG**: Codex E2E가 재생성한 스펙 018 스크린샷 2개는 restore·checkout·stage·commit **하지 않았다**(working tree dirty,
+  커밋된 PNG 0).
+- ⚠️ 이 완료는 **로컬 사용자 사진 기반 첫 고객 Canvas preview 연결**이며 템플릿 아트·운영 이미지 CORS-clean·pointer·
+  print/export·저장·주문·Firebase·배포 완료가 아니다. 인계: `docs/handoff/2026-07-29-spec-027-customer-preview-handoff.md`.
