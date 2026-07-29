@@ -45,13 +45,20 @@ force push, merge, rebase, `reset --hard`, checkout/restore를 이용한 사용�
 1. `git status --short --branch`, HEAD/origin, ahead/behind를 읽는다.
 2. `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`,
    `docs/codex-claude-handoff/CURRENT.md`를 읽는다.
-3. local ahead, dirty, staged 또는 Claude 진행 기록이 있으면 `CLAUDE_WORKING`으로 보고 Codex는
-   쓰지 않는다.
+3. local ahead, staged 또는 Claude 진행 기록이 있으면 `CLAUDE_WORKING`으로 보고 Codex는
+   쓰지 않는다. dirty 파일만으로 Claude 작업 중이라고 추정하지 않는다. 직전 Codex 검증이
+   만든 것으로 경로와 원인이 확인된 산출물은 상태에 별도로 기록하고
+   `CORRECTION_REQUIRED` 또는 `BLOCKED`로 전이한다.
 4. 새 push가 있고 HEAD=origin, 0/0, clean이면 `READY_FOR_CODEX`로 전이한다.
 5. Codex는 diff와 허용 파일을 대조하고 스펙별 게이트를 독립 실행한다.
 6. 결과를 PASS, NOT TESTED, CORRECTION_REQUIRED, FOUNDER_DECISION_REQUIRED 또는 BLOCKED로
    구분한다.
 7. 승인 후 확정 주체가 종료 문서를 commit/push하고 Codex가 `COMMITTED`를 확인한다.
+
+상태 문서가 실제 Git 상태 또는 최신 Codex 판정과 어긋나면 반복 대기하지 않는다. Codex가
+기능 코드를 건드리지 않는 범위에서 `DENN_AUTOMATION_STATE.md`와
+`NEXT_CLAUDE_PROMPT.md`를 최신 안전 상태로 교정하고, 그 자동화 문서만 별도 commit/push한다.
+Claude는 다음 폴링에서 해당 전이를 읽고 수행한다.
 
 ## 필수 안전 규칙
 
