@@ -17,6 +17,7 @@ import {
 } from "@denn/shared";
 import { Badge, Chip } from "@denn/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PreviewSection } from "../preview/PreviewSection";
 import "./browse.css";
 import {
   type BrowseAction,
@@ -104,6 +105,26 @@ export function BrowseFlow({
       ) : null}
 
       <CompletionSummary index={index} selection={selection} />
+      {/* spec 027: the preview composer is an explicit next step, never automatic. The key is the
+          whole selection, so changing any part closes the composer and disposes its image owners. */}
+      {isSelectionComplete(selection) &&
+      selection.productKind !== null &&
+      selection.templateId !== null ? (
+        <PreviewSection
+          key={[
+            selection.productKind,
+            selection.modelId,
+            selection.frameSizeId,
+            selection.categoryId,
+            selection.templateId,
+          ].join("|")}
+          productKind={selection.productKind}
+          document={document}
+          modelId={selection.modelId}
+          frameSizeId={selection.frameSizeId}
+          templateId={selection.templateId}
+        />
+      ) : null}
     </div>
   );
 }

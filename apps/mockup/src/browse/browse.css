@@ -185,3 +185,152 @@
     transition: none;
   }
 }
+
+/* Spec 027 — preview composer. Layout only; every colour comes from the existing @denn/ui tokens
+   except the customer-chosen product colour, which is an inline swatch value. Controls keep a
+   44x44 target and a visible focus ring, and the selection is never conveyed by colour alone. */
+
+.denn-composer__intro {
+  display: flex;
+}
+
+.denn-composer__open {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 12px);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.denn-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 12px);
+  background: var(--panel);
+}
+
+.denn-composer__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.denn-composer__group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.denn-composer__legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.denn-composer__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.denn-composer__swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.denn-composer__swatch[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  font-weight: 600;
+}
+
+.denn-composer__swatch-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+
+.denn-composer__swatch-name {
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.denn-composer__slots {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.denn-composer__slot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.denn-composer__slot-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.denn-composer__slot-input {
+  max-width: 100%;
+  min-height: 44px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.denn-composer__slot-state {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.denn-composer__clear {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 12px);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.denn-composer__open:focus-visible,
+.denn-composer__swatch:focus-visible,
+.denn-composer__clear:focus-visible,
+.denn-composer__slot-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
