@@ -235,3 +235,54 @@ E2E는 실제 Chromium browser API 검증이다. 실기기 4환경 검증은 아
 
 없음. 사전 조사 F-1~F-7·F-9는 이 스펙 범위 밖으로 유지한다. F-8은 사용자에게 보이는
 제품 동작을 확정하지 않고 이 모듈의 private 메모리·cleanup 방식으로 위와 같이 한정했다.
+
+---
+
+### DONE (Claude) — 2026-07-29
+
+기준 HEAD `377d350` → 코드/test 커밋 `ae798d5`. **Codex 독립 검증 전이므로 스펙 종료가 아니다.**
+
+- **공개 API(§3 그대로):** `createLocalImageBindingController(options?) → {getSnapshot, subscribe, load,
+  clear, dispose, bindings}`, 상태 `idle | loading | ready | failed`, 오류 code 4종
+  (`INVALID_INPUT | DECODE_FAILED | INVALID_DIMENSIONS | DISPOSED`). `bindings`는 스펙 021
+  `PreviewImageBindings`를 그대로 만족한다. 얇은 wrapper `useLocalImageBinding()`은
+  `useSyncExternalStore`로 snapshot만 구독하고 unmount 시 dispose하며, StrictMode 재마운트에는 새 controller를
+  넘긴다. **기존 surface·executor·adapter API 무변경.**
+- **decode·URL(§2):** `Blob` → private blob URL → `HTMLImageElement.onload/onerror`. data URL·
+  `createImageBitmap` **미사용**. URL은 closure 밖으로 나가지 않으며 **decode 완료 후** revoke하고 drawable
+  binding은 유지된다. 성공·실패·교체·clear·dispose **모든 종료 경로에서 정확히 1회** revoke(테스트가 생성 URL 집합과
+  revoke 집합의 완전 일치·중복 0을 단언).
+- **정보 경계(§4):** 공개 snapshot은 안전한 `imageState`(합성 `imageRef`, intrinsic size, 고정
+  `{scale:1,x:0,y:0}`)뿐이고 blob URL·`Blob`·파일명·MIME·예외·drawable은 들어가지 않는다. `imageRef`는
+  controller-local 증가 sequence `user-image-<n>`으로 파일명·시간·random·URL에 의존하지 않으며 스펙 020 문법과
+  128자 제한을 만족한다. 직렬화 검사로 `blob:`·파일명 marker·`image/png`·`base64`·`data:`·예외 문자열 부재를 고정했다.
+- **세대·cleanup(§5):** `load`마다 generation 증가 → 이전 pending은 handler detach + URL revoke, **늦은
+  성공/실패는 snapshot 참조와 binding을 바꾸지 못한다**. 새 load 시작 즉시 이전 binding 제거(어떤 ref로도 조회 불가).
+  `clear`는 pending 취소·binding 제거·`idle` 복귀, `dispose`는 pending handler·URL·binding·listener 회수 후
+  callback 무력화, 이후 `load`는 **throw 없이** `DISPOSED`. 구독 해제된 listener는 호출되지 않고, throwing listener도
+  owner를 깨뜨리지 못한다. 같은 파일 재선택은 controller가 막지 않으며 `<input>.value=""`는 UI 소유자 책임으로 fixture가
+  구현하고 E2E가 고정한다.
+- **runtime 안전:** import·생성 시 browser API 접근 **0**(node 환경 unit이 `Image` 미정의 상태에서 직접 증명),
+  hostile port(`createObjectUrl`/`createImage`/`src` setter/`naturalWidth` getter/`revokeObjectUrl`)와 malformed
+  입력에서 **throw 0**, 입력 Blob 저장·직렬화·변형 0.
+- **실제 Chromium E2E 7건(58 → 65):** 합성 단색 PNG를 테스트에서 `node:zlib`로 만들어 `setInputFiles`로 주입 —
+  실제 decode → binding → **클립 안 사진색 / 클립 밖 body색**, `input.value` 비움 후 같은 파일 재선택,
+  빠른 A→B 교체에서 최신만 draw, clear·unmount·remount에서 stale draw 0·console error 0,
+  `blob:`·파일명·`base64`가 text/ARIA/data-*/storage/location/console에 0, 320×568·desktop에서 overflow 0·
+  라벨 연결된 input·axe serious/critical 0, localhost 외 network request 0. 고객 `/`에는 canvas·fixture 링크에
+  더해 **`input[type=file]`도 0**. 고정 sleep 0.
+- **게이트:** frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / **unit 755**(716 → 755,
+  신규 39) / build(mockup 217.69·gzip **68.40** / CSS 11.32·**3.16**, md5 `a9b44036…` **byte-identical**;
+  admin 193.53·61.09 / 8.54·2.64 무변경) / **e2e 65 PASS**·reporter 요약·exit 0 자체 종료 23초 / check PASS /
+  `git diff --check` clean / 포트 4183·4184 free·저장소 소속 잔류 0 / OS temp `denn-e2e-*` 잔여 0 /
+  고객 dist **SHA-256 E2E 전후 동일·fixture 0** / 네트워크·live·deploy 0.
+- **⚠️ 재생성된 추적 PNG 2개는 자동 폐기하지 않았다:**
+  `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`(50,814 → 50,801 B),
+  `browse-mobile-390x844.png`(49,683 → 49,455 B). 고객 dist가 E2E 전후 동일하고 번들·CSS가 byte-identical이므로
+  렌더 입력은 불변이지만 **픽셀 동일성은 이 게이트로 증명하지 않았다(NOT VERIFIED)**. 복원 여부는 **Founder 결정**이며
+  승인 전까지 손대지 않는다(커밋도 하지 않음).
+- **무변경:** `packages/**` 전체·`apps/admin`·고객 `App.tsx`·`BrowseFlow`·`TemplateThumbnail`·catalog controller·
+  **production Canvas surface 전체**·운영 HTML·Firebase 설정/Rules·`poc/**`·`package.json`·`pnpm-lock.yaml` = diff 0.
+- **NOT TESTED:** 실기기 4환경의 blob URL·decode, 대용량 사진 메모리·성능, EXIF 회전, 선명도, 운영 이미지.
+- ⚠️ **이 완료는 로컬 이미지 owner 완료이며 상품 미리보기·고객 Canvas 연결 완료가 아니다.** 고객 production 화면에는
+  아무것도 mount하지 않았다. 인계: `docs/handoff/2026-07-29-spec-026-local-image-binding-handoff.md`.

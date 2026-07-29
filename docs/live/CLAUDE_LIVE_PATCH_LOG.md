@@ -69,3 +69,31 @@
 - 범위: 로컬 이미지 decode·binding·generation·cleanup과 전용 Chromium fixture
 - Founder 결정 유지: 색·frame logical width·축소 UX·template art·멀티 zone 공유
 - 고객 화면 mount·network·Firebase·deploy: 제외
+
+## 2026-07-29 — 스펙 026 구현 (로컬 사용자 이미지 binding)
+
+- 기준: `377d350`
+- 코드/test: `ae798d5`
+- 상태: 구현·자체 검증 완료 → `READY_FOR_CODEX`
+- 변경 파일(허용 목록 안):
+  - `apps/mockup/src/canvas/localImageBinding.ts` (신규)
+  - `apps/mockup/src/canvas/useLocalImageBinding.ts` (신규)
+  - `apps/mockup/src/canvas/localImageBinding.test.ts` (신규, 37)
+  - `apps/mockup/src/canvas/useLocalImageBinding.test.ts` (신규, 2)
+  - `apps/mockup/src/e2e/canvas-fixture.tsx`
+  - `tests/e2e/canvas-surface.spec.ts`
+- 핵심:
+  - private blob URL + `HTMLImageElement` decode, data URL/`createImageBitmap` 미사용
+  - import·생성 시 browser API 접근 0 (injectable ports)
+  - 합성 `user-image-<n>` imageRef, intrinsic size, 고정 transform
+  - generation으로 stale 완료 차단, 교체 시 이전 binding 즉시 제거
+  - 모든 종료 경로에서 URL 정확히 1회 revoke, dispose 후 throw 0
+  - 실제 Chromium: 합성 PNG `setInputFiles` → decode → Canvas 픽셀
+- 게이트: frozen PASS / lockfile diff 0 / format·lint·typecheck PASS /
+  unit 755 (716→755) / e2e 65 PASS exit 0 / check PASS / `git diff --check` clean /
+  포트 4183·4184 free / temp `denn-e2e-*` 0 / 고객 dist SHA-256 동일·fixture 0 /
+  mockup JS·CSS gzip 68.40·3.16 (byte-identical), admin 61.09·2.64 무변경
+- ⚠️ 재생성된 스펙 018 PNG 2개는 **자동 폐기하지 않고 그대로 두었다**(커밋 제외).
+  복원 여부는 Founder 결정 대기.
+- NOT TESTED: 실기기 blob URL/decode, 대용량 사진 메모리·성능, EXIF 회전, 선명도
+- 다음: Codex 독립 검증. 고객 화면 mount·색·logical width는 후속.

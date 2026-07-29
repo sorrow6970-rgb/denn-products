@@ -7,7 +7,37 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟡 스펙 026 로컬 사용자 이미지 binding 생명주기 작성 — Claude 구현 대기(`WAITING_FOR_CLAUDE`).**
+상태: **🟠 스펙 026(로컬 사용자 이미지 binding) 구현 완료·push — Codex 독립 검증 대기(`READY_FOR_CODEX`). ⚠️ 재생성된 스펙 018 PNG 2개는 Founder 결정 대기(미복원·미커밋).**
+
+> 스펙 026 구현·자동검증 완료(로컬, 2026-07-29, 기준 HEAD `377d350`, 코드 커밋 `ae798d5`): 정본
+> `docs/rebuild/specs/026-local-user-image-binding-lifecycle.md`, 인계
+> `docs/handoff/2026-07-29-spec-026-local-image-binding-handoff.md`.
+> **공개 API**: `createLocalImageBindingController(options?) → {getSnapshot, subscribe, load, clear, dispose, bindings}`,
+> 상태 `idle|loading|ready|failed`, code 4종(`INVALID_INPUT|DECODE_FAILED|INVALID_DIMENSIONS|DISPOSED`),
+> 얇은 wrapper `useLocalImageBinding()`(useSyncExternalStore + unmount dispose + StrictMode 재마운트 시 새 controller).
+> `bindings`는 스펙 021 `PreviewImageBindings`를 그대로 만족하고 **기존 surface·executor·adapter API는 무변경**.
+> **decode**: `Blob` → private blob URL → `HTMLImageElement.onload/onerror`(data URL·`createImageBitmap` 미사용),
+> URL은 closure 밖으로 나가지 않고 **decode 완료 후** revoke하며 drawable binding은 유지, 성공·실패·교체·clear·dispose
+> **모든 경로에서 정확히 1회** revoke. **정보 경계**: 공개 snapshot은 합성 `user-image-<n>`·intrinsic size·고정
+> `{scale:1,x:0,y:0}`뿐이고 blob URL·Blob·파일명·MIME·예외·drawable 0. **세대**: load마다 generation 증가 →
+> 늦은 성공/실패가 snapshot·binding을 못 바꾸고, 새 load 시작 즉시 이전 binding 제거. dispose 후 load는 throw 없이
+> `DISPOSED`. import·생성 시 browser API 접근 **0**(node unit이 `Image` 미정의 상태에서 증명), hostile port·
+> throwing listener에서 **throw 0**. **실제 Chromium E2E 7건 추가**(합성 PNG를 `node:zlib`로 생성해 `setInputFiles`
+> 주입 → 실제 decode → 클립 안 사진색/밖 body색, `input.value` 비움 후 동일 파일 재선택, 빠른 A→B 교체 최신만 draw,
+> clear·unmount·remount stale 0·console error 0, `blob:`·파일명·`base64`가 text/ARIA/data/storage/location/console에 0,
+> 320×568·desktop overflow 0·라벨 연결 input·axe 0, localhost 외 request 0). 고객 `/`에는 canvas·fixture 링크에 더해
+> **`input[type=file]`도 0**. 게이트: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck /
+> **unit 755**(716→755, 신규 39) / build(mockup 217.69·gzip **68.40** / CSS 11.32·**3.16** md5 `a9b44036…`
+> **byte-identical**, admin 193.53·61.09 / 8.54·2.64 무변경) / **e2e 65 PASS**(58→65)·exit 0 자체 종료 23초 /
+> check PASS / `git diff --check` clean / 포트 4183·4184 free·잔류 0 / OS temp `denn-e2e-*` 0 / 고객 dist
+> **SHA-256 E2E 전후 동일·fixture 0** / 네트워크·live·deploy 0. **무변경**: `packages/**` 전체·`apps/admin`·고객
+> `App.tsx`·`BrowseFlow`·`TemplateThumbnail`·catalog controller·**production Canvas surface 전체**·운영 HTML·
+> Firebase 설정/Rules·POC·`package.json`·`pnpm-lock.yaml` = diff 0. **NOT TESTED**: 실기기 4환경 blob URL·decode,
+> 대용량 사진 메모리·성능, EXIF 회전, 선명도, 운영 이미지. ⚠️ **재생성된 추적 PNG 2개**
+> (`spec-018/browse-desktop-1280x800.png` 50,814→50,801 B, `browse-mobile-390x844.png` 49,683→49,455 B)는
+> 런북 규칙에 따라 **복원·폐기하지 않고 그대로 두었고 커밋도 하지 않았다** — 복원 여부는 **Founder 결정**이며 픽셀
+> 동일성은 **NOT VERIFIED**. ⚠️ **이 완료는 로컬 이미지 owner 완료이며 상품 미리보기·고객 Canvas 연결 완료가 아니다**
+> (고객 화면 mount 0). 색·frame logical width·멀티 zone 공유·template art·pointer·print·Firebase·배포는 후속.
 
 > Codex 조사 검수 및 범위 결정(2026-07-29): 사전 조사 commit `4a76864`은 허용 문서
 > 3개만 변경했고 근거 라인을 확인했다. 색 팔레트·frame logical width·축소 UX·template art·
