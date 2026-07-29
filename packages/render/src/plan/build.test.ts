@@ -83,7 +83,12 @@ describe("buildPreviewRenderPlan — determinism & safety", () => {
     const round = JSON.parse(JSON.stringify(p));
     expect(round).toEqual(p);
     for (const c of p.commands) {
-      const rects = c.type === "draw-image-cover" ? [c.clipRect, c.drawRect] : [c.rect];
+      const rects =
+        c.type === "draw-image-cover"
+          ? [c.clipRect, c.drawRect]
+          : c.type === "draw-image-stretch"
+            ? [c.destRect]
+            : [c.rect];
       for (const r of rects) {
         for (const n of [r.x, r.y, r.width, r.height]) expect(Number.isFinite(n)).toBe(true);
       }
@@ -1055,7 +1060,11 @@ describe("buildPreviewRenderPlan ??frame hostile runtime input (spec 024)", () =
     const p = plan(buildPreviewRenderPlan(FRAME_BASE));
     for (const command of p.commands) {
       const rects =
-        command.type === "draw-image-cover" ? [command.clipRect, command.drawRect] : [command.rect];
+        command.type === "draw-image-cover"
+          ? [command.clipRect, command.drawRect]
+          : command.type === "draw-image-stretch"
+            ? [command.destRect]
+            : [command.rect];
       for (const rect of rects) {
         for (const value of [rect.x, rect.y, rect.width, rect.height]) {
           expect(Number.isFinite(value)).toBe(true);
@@ -1109,5 +1118,133 @@ describe("buildPreviewRenderPlan ??frame E2E fixture equivalence (spec 024)", ()
         },
       ],
     });
+  });
+});
+
+// ---- J. template art stretch command (spec 028) --------------------------------
+describe("buildPreviewRenderPlan — template art", () => {
+  const art = {
+    imageRef: "template-art.template-art-1",
+    destRect: { x: 0, y: 0, width: 200, height: 200 },
+  };
+  const caseWithArt = (over: Record<string, unknown> = {}): unknown => ({
+    ...CASE_BASE,
+    templateArt: { ...art, ...over },
+  });
+
+  it("draws the case art over the photos and under the guides", () => {
+    const p = plan(
+      buildPreviewRenderPlan({
+        ...CASE_BASE,
+        zones: [caseZone({ guide: { color: "#000000", width: 2 } })],
+        templateArt: art,
+      } as unknown as CasePlanInput),
+    );
+    expect(layerIds(p)).toEqual([
+      "case:body",
+      "case:user-image:z0",
+      "case:template-art",
+      "case:guide:z0",
+    ]);
+    expect(cmd(p, "case:template-art")).toEqual({
+      type: "draw-image-stretch",
+      layerId: "case:template-art",
+      imageRef: art.imageRef,
+      destRect: { x: 0, y: 0, width: 200, height: 200 },
+    });
+  });
+
+  it("draws the frame art over the photo and under the inner border", () => {
+    const p = plan(
+      buildPreviewRenderPlan({
+        ...FRAME_BASE,
+        innerBorder: { color: "#191A1D", width: 2 },
+        templateArt: { imageRef: "art1", destRect: { x: 10, y: 10, width: 280, height: 380 } },
+      } as unknown as FramePlanInput),
+    );
+    expect(layerIds(p)).toEqual([
+      "frame:body",
+      "frame:mat",
+      "frame:user-image",
+      "frame:template-art",
+      "frame:inner-border",
+    ]);
+  });
+
+  it("emits no art command when none is supplied (no fallback)", () => {
+    expect(layerIds(plan(buildPreviewRenderPlan(CASE_BASE)))).not.toContain("case:template-art");
+    expect(layerIds(plan(buildPreviewRenderPlan(FRAME_BASE)))).not.toContain("frame:template-art");
+  });
+
+  it("keeps the plan JSON-safe and deterministic with art", () => {
+    const input = deepFreeze(caseWithArt()) as CasePlanInput;
+    const a = plan(buildPreviewRenderPlan(input));
+    const b = plan(buildPreviewRenderPlan(input));
+    expect(a).toEqual(b);
+    expect(JSON.parse(JSON.stringify(a))).toEqual(a);
+  });
+
+  it.each<[string, Record<string, unknown>, string]>([
+    ["url-shaped ref", { imageRef: "https://x/y.png" }, "INVALID_ID"],
+    ["blank ref", { imageRef: "" }, "INVALID_ID"],
+    ["missing rect", { destRect: null }, "INVALID_ZONE"],
+    ["zero width", { destRect: { x: 0, y: 0, width: 0, height: 10 } }, "INVALID_ZONE"],
+    ["NaN origin", { destRect: { x: Number.NaN, y: 0, width: 10, height: 10 } }, "INVALID_ZONE"],
+    ["outside the canvas", { destRect: { x: 1, y: 0, width: 200, height: 200 } }, "INVALID_ZONE"],
+    ["off the left", { destRect: { x: -1, y: 0, width: 10, height: 10 } }, "INVALID_ZONE"],
+  ])("rejects unusable art (%s) as %s", (_label, over, code) => {
+    expect(buildPreviewRenderPlan(caseWithArt(over) as CasePlanInput)).toEqual({ ok: false, code });
+  });
+
+  it("rejects an art rect whose far edge overflows to Infinity", () => {
+    const result = buildPreviewRenderPlan({
+      ...CASE_BASE,
+      logicalCanvas: { width: Number.MAX_VALUE, height: Number.MAX_VALUE },
+      templateArt: {
+        imageRef: "art1",
+        destRect: { x: Number.MAX_VALUE, y: 0, width: Number.MAX_VALUE, height: 10 },
+      },
+    } as unknown as CasePlanInput);
+    expect(result).toEqual({ ok: false, code: "NON_FINITE_RESULT" });
+  });
+
+  it("never throws for a hostile art getter and never echoes the ref", () => {
+    const hostile: Record<string, unknown> = { destRect: { x: 0, y: 0, width: 10, height: 10 } };
+    Object.defineProperty(hostile, "imageRef", {
+      get() {
+        throw new Error("hostile art getter");
+      },
+      enumerable: true,
+    });
+    let result: RenderPlanResult | undefined;
+    expect(() => {
+      result = buildPreviewRenderPlan({ ...CASE_BASE, templateArt: hostile } as never);
+    }).not.toThrow();
+    expect(result?.ok).toBe(false);
+    expect(JSON.stringify(result)).not.toContain("hostile");
+  });
+
+  it("reads the art fields exactly once (a drifting rect cannot change the command)", () => {
+    let reads = 0;
+    const first = { x: 0, y: 0, width: 200, height: 200 };
+    const later = { x: 0, y: 0, width: 999, height: 999 };
+    const drifting: Record<string, unknown> = {};
+    for (const key of ["x", "y", "width", "height"] as const) {
+      Object.defineProperty(drifting, key, {
+        get() {
+          const source = reads < 4 ? first : later;
+          reads += 1;
+          return source[key];
+        },
+        enumerable: true,
+      });
+    }
+    const p = plan(
+      buildPreviewRenderPlan({
+        ...CASE_BASE,
+        templateArt: { imageRef: "art1", destRect: drifting },
+      } as unknown as CasePlanInput),
+    );
+    expect((cmd(p, "case:template-art") as { destRect: unknown }).destRect).toEqual(first);
   });
 });

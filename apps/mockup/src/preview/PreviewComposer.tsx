@@ -10,12 +10,15 @@
 //  - failure codes, source indexes, ids, file names, blob urls and exceptions never reach the DOM:
 //    the customer sees fixed copy only.
 
+import { resolvePublicImageSource } from "@denn/firebase";
 import type { PreviewRenderPlan } from "@denn/render";
 import {
   type CasePreviewGeometry,
   type CatalogDocumentV1,
   type FramePreviewGeometry,
   projectCasePreviewGeometry,
+  projectCatalogTemplateArtPlacement,
+  projectCatalogTemplateImage,
   projectFramePreviewGeometry,
 } from "@denn/shared";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -24,8 +27,10 @@ import type { LocalImageBindingState } from "../canvas/localImageBinding";
 import { PreviewCanvasSurface } from "../canvas/PreviewCanvasSurface";
 import { buildCaseProductPlan, buildFrameProductPlan } from "../canvas/productPlan";
 import type { UserImageState } from "../canvas/productPlan";
+import type { TemplateArtSource } from "../canvas/templateArtBinding";
 import type { PreviewImageBindings } from "../canvas/types";
 import { useLocalImageBinding } from "../canvas/useLocalImageBinding";
+import { useTemplateArtBinding } from "../canvas/useTemplateArtBinding";
 import {
   CASE_BODY_COLORS,
   PREVIEW_CANVAS_NAME,
@@ -37,6 +42,8 @@ import {
 } from "./previewContracts";
 
 const FRAME_SLOT_ID = "frame-image";
+/** Namespace for the template art owner's key, kept apart from every photo owner (spec 028). */
+const ART_PREFIX = "template-art.";
 
 /**
  * Namespace for one slot's image refs. Two owners each hand out `user-image-1`, so the plan and the
@@ -158,6 +165,47 @@ export function PreviewComposer({
     return [FRAME_SLOT_ID];
   }, [geometry]);
 
+  // --- template art (spec 028) ---------------------------------------------
+  // placement decides IF and WHERE the art belongs; projection + trust boundary decide whether the
+  // source may be handed to the browser at all. The source string never leaves this memo.
+  const artRequest = useMemo<
+    | { readonly required: false }
+    | { readonly required: true; readonly source: TemplateArtSource }
+    | { readonly required: true; readonly source: null }
+  >(() => {
+    const placement = projectCatalogTemplateArtPlacement(catalog, {
+      templateKind: productKind,
+      templateId,
+    });
+    if (placement.status === "none") return { required: false };
+    // unsupported (legacy builder crop / unusable template): required but unavailable → fail-closed
+    if (placement.status === "unsupported") return { required: true, source: null };
+    const projected = projectCatalogTemplateImage(catalog, {
+      templateKind: productKind,
+      templateId,
+    });
+    if (projected.status !== "available") return { required: true, source: null };
+    const resolved = resolvePublicImageSource({
+      kind: projected.sourceKind,
+      value: projected.value,
+    });
+    if (!resolved.ok) return { required: true, source: null };
+    return { required: true, source: { kind: resolved.kind, src: resolved.src } };
+  }, [catalog, productKind, templateId]);
+
+  const art = useTemplateArtBinding();
+  const artLoad = art.load;
+  const artSource = artRequest.required ? artRequest.source : null;
+  useEffect(() => {
+    if (artSource === null) return;
+    artLoad(artSource);
+  }, [artSource, artLoad]);
+
+  const artState = art.state;
+  const artReady = artRequest.required && artState.status === "ready" ? artState.imageRef : null;
+  const artBlocked =
+    artRequest.required && (artSource === null || artState.status !== "ready") ? true : false;
+
   const [entries, setEntries] = useState<Record<string, SlotEntry>>({});
   const report = useCallback((slotId: string, entry: SlotEntry | null): void => {
     setEntries((previous) => {
@@ -193,17 +241,22 @@ export function PreviewComposer({
     return () => observer.disconnect();
   }, []);
 
+  const artBindings = art.bindings;
   const imageBindings = useMemo<PreviewImageBindings>(() => {
     const sources: PreviewImageBindings[] = [];
     for (const slotId of slotIds) {
       const entry = entries[slotId];
       if (entry) sources.push(withImageRefPrefix(slotRefPrefix(slotId), entry.bindings));
     }
+    sources.push(withImageRefPrefix(ART_PREFIX, artBindings));
     return createCompositeImageBindings(sources);
-  }, [slotIds, entries]);
+  }, [slotIds, entries, artBindings]);
 
   const plan = useMemo<PreviewRenderPlan | null>(() => {
     if (geometry === null || color === null) return null;
+    // fail-closed (spec 028 §5): a template whose real art cannot be drawn shows NO canvas
+    if (artBlocked) return null;
+    const templateArt = artReady === null ? undefined : { imageRef: `${ART_PREFIX}${artReady}` };
     const ready = new Map<string, UserImageState>();
     for (const slotId of slotIds) {
       const entry = entries[slotId];
@@ -217,6 +270,7 @@ export function PreviewComposer({
         geometry: geometry.value,
         bodyColor: color,
         zoneImages: ready,
+        templateArt,
       });
       return built.ok ? built.plan : null;
     }
@@ -229,13 +283,21 @@ export function PreviewComposer({
       frameColor: color,
       logicalWidth,
       userImage,
+      templateArt,
     });
     return built.ok ? built.plan : null;
-  }, [geometry, color, slotIds, entries, contentWidth]);
+  }, [geometry, color, slotIds, entries, contentWidth, artBlocked, artReady]);
 
   const status = useMemo<string | null>(() => {
     if (colorOptions.length === 0) return PREVIEW_MESSAGES.noColors;
     if (geometry === null) return PREVIEW_MESSAGES.unavailable;
+    // the art message wins over "pick a colour": no colour choice can make this template drawable.
+    // A source that can never load (unsupported variant / trust refusal) or a finished failure is
+    // reported as a failure; anything still in flight (idle before the effect, loading) is not.
+    if (artBlocked) {
+      const permanent = artSource === null || artState.status === "failed";
+      return permanent ? PREVIEW_MESSAGES.templateArtFailed : PREVIEW_MESSAGES.templateArtLoading;
+    }
     if (color === null) return PREVIEW_MESSAGES.pickColor;
     if (slotIds.some((id) => entries[id]?.state.status === "failed")) {
       return PREVIEW_MESSAGES.imageFailed;
@@ -249,7 +311,18 @@ export function PreviewComposer({
     if (geometry.kind === "frame" && contentWidth === null) return PREVIEW_MESSAGES.measuring;
     if (plan === null) return PREVIEW_MESSAGES.unavailable;
     return null;
-  }, [colorOptions, geometry, color, slotIds, entries, contentWidth, plan]);
+  }, [
+    colorOptions,
+    geometry,
+    color,
+    slotIds,
+    entries,
+    contentWidth,
+    plan,
+    artBlocked,
+    artSource,
+    artState.status,
+  ]);
 
   return (
     <section className="denn-composer" aria-labelledby="denn-composer-title" ref={measureRef}>

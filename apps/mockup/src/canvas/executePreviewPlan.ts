@@ -83,6 +83,12 @@ type SnapshotCommand =
       readonly clipRect: SnapshotRect;
       readonly drawRect: SnapshotRect;
       readonly drawable: CanvasImageSource;
+    }
+  | {
+      /** spec 028 template art: one stretched draw, no clip, no crop, no state change. */
+      readonly type: "draw-image-stretch";
+      readonly destRect: SnapshotRect;
+      readonly drawable: CanvasImageSource;
     };
 
 interface SnapshotPlan {
@@ -119,6 +125,11 @@ type ReadCommand =
       readonly imageRef: string;
       readonly clipRect: SnapshotRect;
       readonly drawRect: SnapshotRect;
+    }
+  | {
+      readonly kind: "stretch";
+      readonly imageRef: string;
+      readonly destRect: SnapshotRect;
     };
 
 function readCommand(value: unknown): ReadCommand | null {
@@ -147,6 +158,13 @@ function readCommand(value: unknown): ReadCommand | null {
     const drawRect = readRect(value.drawRect);
     if (!isNonEmptyString(imageRef) || clipRect === null || drawRect === null) return null;
     return { kind: "image", imageRef, clipRect, drawRect };
+  }
+  if (type === "draw-image-stretch") {
+    // spec 028: destination only — there is no source rect, so no crop can be requested here.
+    const imageRef = value.imageRef;
+    const destRect = readRect(value.destRect);
+    if (!isNonEmptyString(imageRef) || destRect === null) return null;
+    return { kind: "stretch", imageRef, destRect };
   }
   return null;
 }
@@ -258,12 +276,16 @@ function normalizePlan(
       drawable = bound as CanvasImageSource;
       resolved.set(read.imageRef, drawable);
     }
-    commands.push({
-      type: "draw-image-cover",
-      clipRect: read.clipRect,
-      drawRect: read.drawRect,
-      drawable,
-    });
+    commands.push(
+      read.kind === "stretch"
+        ? { type: "draw-image-stretch", destRect: read.destRect, drawable }
+        : {
+            type: "draw-image-cover",
+            clipRect: read.clipRect,
+            drawRect: read.drawRect,
+            drawable,
+          },
+    );
   }
 
   return { ok: true, context, plan: { width: canvas.width, height: canvas.height, commands } };
@@ -331,6 +353,15 @@ function executeCommand(
       });
       if (!attempt(() => context.restore())) return "CANVAS_RESTORE_FAILED";
       return drawn ? null : "CANVAS_OPERATION_FAILED";
+    }
+    case "draw-image-stretch": {
+      // No clip and no style change, so no save/restore pair is needed: one 5-argument drawImage
+      // that fills destRect exactly (spec 028 §1). The source aspect is deliberately not preserved.
+      const { destRect, drawable } = command;
+      const ok = attempt(() => {
+        context.drawImage(drawable, destRect.x, destRect.y, destRect.width, destRect.height);
+      });
+      return ok ? null : "CANVAS_OPERATION_FAILED";
     }
   }
 }

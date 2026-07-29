@@ -737,7 +737,9 @@ describe("adapter runtime safety", () => {
         const rects =
           command.type === "draw-image-cover"
             ? [command.clipRect, command.drawRect]
-            : [command.rect];
+            : command.type === "draw-image-stretch"
+              ? [command.destRect]
+              : [command.rect];
         for (const rect of rects) {
           for (const value of [rect.x, rect.y, rect.width, rect.height]) {
             expect(Number.isFinite(value)).toBe(true);
@@ -774,5 +776,74 @@ describe("adapter runtime safety", () => {
     for (const forbidden of ["SECRETMARKER", "https", "secret.example", "hostile", "Error"]) {
       expect(serialized).not.toContain(forbidden);
     }
+  });
+});
+
+// --- template art pass-through (spec 028) -----------------------------------
+
+describe("product plan template art", () => {
+  const artCommand = (plan: PreviewRenderPlan, layerId: string) =>
+    cmd(plan, layerId) as unknown as { type: string; imageRef: string; destRect: unknown };
+
+  it("stretches the case art over the whole logical canvas", () => {
+    const plan = planOf(
+      buildCaseProductPlan(caseInput({ templateArt: { imageRef: "template-art.template-art-1" } })),
+    );
+    expect(plan.commands.map((c) => c.layerId)).toEqual([
+      "case:body",
+      "case:user-image:case-zone-0",
+      "case:template-art",
+    ]);
+    const art = artCommand(plan, "case:template-art");
+    expect(art.type).toBe("draw-image-stretch");
+    expect(art.imageRef).toBe("template-art.template-art-1");
+    expect(art.destRect).toEqual({ x: 0, y: 0, width: 320, height: 620 });
+  });
+
+  it("stretches the frame art over the mat rect", () => {
+    const plan = planOf(
+      buildFrameProductPlan(
+        frameInput({ templateArt: { imageRef: "template-art.template-art-2" } }),
+      ),
+    );
+    expect(plan.commands.map((c) => c.layerId)).toEqual([
+      "frame:body",
+      "frame:mat",
+      "frame:user-image",
+      "frame:template-art",
+    ]);
+    // W=400 → B=20, so the mat rect is 20,20,360,520 (identical to the frame:mat command)
+    expect(artCommand(plan, "frame:template-art").destRect).toEqual({
+      x: 20,
+      y: 20,
+      width: 360,
+      height: 520,
+    });
+  });
+
+  it("emits no art layer when none is supplied", () => {
+    const plan = planOf(buildCaseProductPlan(caseInput()));
+    expect(plan.commands.map((c) => c.layerId)).not.toContain("case:template-art");
+  });
+
+  it.each([
+    ["url-shaped ref", { imageRef: "https://example.test/a.png" }],
+    ["blank ref", { imageRef: "" }],
+    ["missing ref", {}],
+    ["not an object", 42],
+  ])("rejects an unusable art reference (%s) with a safe code", (_label, art) => {
+    expect(
+      buildCaseProductPlan(caseInput({ templateArt: art as unknown as { imageRef: string } })),
+    ).toEqual({ ok: false, code: "INVALID_ADAPTER_INPUT" });
+  });
+
+  it("keeps the art reference out of a failure payload", () => {
+    const result = buildCaseProductPlan(
+      caseInput({
+        templateArt: { imageRef: "https://secret.example/tok=SECRETMARKER" },
+      }),
+    );
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(result)).not.toContain("SECRETMARKER");
   });
 });

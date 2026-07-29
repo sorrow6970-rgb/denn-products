@@ -54,7 +54,10 @@ const fail = (code: RenderPlanErrorCode, causeCode?: GeometryErrorCode): RenderP
 /** Every rect coord and stroke width in the plan must be finite (final safety net). */
 function commandsAllFinite(commands: readonly PreviewDrawCommand[]): boolean {
   for (const c of commands) {
-    const rects: Rect[] = c.type === "draw-image-cover" ? [c.clipRect, c.drawRect] : [c.rect];
+    let rects: Rect[];
+    if (c.type === "draw-image-cover") rects = [c.clipRect, c.drawRect];
+    else if (c.type === "draw-image-stretch") rects = [c.destRect];
+    else rects = [c.rect];
     for (const r of rects) {
       if (
         !Number.isFinite(r.x) ||
@@ -196,6 +199,40 @@ function readCaseZoneOnce(
   return { id, imageRef, rect, image, transform, guide, index, key };
 }
 
+/** A template art layer whose every field was read exactly once and validated (spec 028). */
+interface NormalizedArt {
+  readonly imageRef: string;
+  readonly destRect: Rect;
+}
+
+/**
+ * Read the optional template art ONCE and validate it against the logical canvas. Absent art is not
+ * a failure (`undefined`); present-but-unusable art fails with the existing code set — the vocabulary
+ * of error codes is NOT extended by this spec.
+ */
+function readTemplateArtOnce(
+  value: unknown,
+  canvasBounds: Rect,
+): NormalizedArt | RenderPlanErrorCode | undefined {
+  if (value === undefined) return undefined;
+  if (!isObj(value)) return "INVALID_ZONE";
+  const imageRef = value.imageRef;
+  if (!isSafeId(imageRef)) return "INVALID_ID";
+  const destRect = readRectOnce(value.destRect);
+  if (destRect === null) return "INVALID_ZONE";
+  if (!edgesFinite(destRect)) return "NON_FINITE_RESULT";
+  // the art may cover the canvas exactly, but never spill outside it (no clamp, no shrink)
+  if (!contains(canvasBounds, destRect)) return "INVALID_ZONE";
+  return { imageRef, destRect };
+}
+
+const artCommand = (layerId: string, art: NormalizedArt): PreviewDrawCommand => ({
+  type: "draw-image-stretch",
+  layerId,
+  imageRef: art.imageRef,
+  destRect: rectCopy(art.destRect),
+});
+
 function buildCase(input: CasePlanInput): RenderPlanResult {
   // Every case value — canvas size, body colour, the zones array and each zone field — is read ONCE
   // into a plain snapshot (spec 025 §7). Validation, ordering and command building below read only
@@ -207,6 +244,9 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
   const rawZones: unknown = input.zones;
   if (!Array.isArray(rawZones)) return fail("INVALID_ZONE");
   const zoneCount = rawZones.length;
+  // spec 028: the case art covers the logical canvas; it is read once, here, and never re-read.
+  const art = readTemplateArtOnce(input.templateArt, canvasRect(canvas));
+  if (typeof art === "string") return fail(art);
 
   const seen = new Set<string>();
   const normalized: NormalizedZone[] = [];
@@ -252,6 +292,8 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
       color: bodyColor,
     },
     ...imageCommands,
+    // legacy order: the template artwork sits ON the photos and UNDER the guides (mockup:1679)
+    ...(art === undefined ? [] : [artCommand("case:template-art", art)]),
     ...guideCommands,
   ];
   if (!commandsAllFinite(commands)) return fail("NON_FINITE_RESULT");
@@ -299,6 +341,10 @@ function buildFrame(input: FramePlanInput): RenderPlanResult {
   if (!contains(frameRect, matRect)) return fail("INVALID_ZONE");
   if (!contains(matRect, imageZone)) return fail("INVALID_ZONE");
 
+  // spec 028: the frame art is stretched over its own rect (the caller supplies the mat rect)
+  const art = readTemplateArtOnce(input.templateArt, canvasBounds);
+  if (typeof art === "string") return fail(art);
+
   const drawn = coverCommand("frame:user-image", imageRef, imageZone, image, transform);
   if ("code" in drawn) return fail(drawn.code, drawn.causeCode);
 
@@ -307,6 +353,8 @@ function buildFrame(input: FramePlanInput): RenderPlanResult {
     // the mat fills its OWN rect; the photo zone is a separate, smaller rect (spec 024 §1, §2)
     { type: "fill-rect", layerId: "frame:mat", rect: matRect, color: matColor },
     drawn.command,
+    // legacy order: art over the photo, under the inner border (mockup:3093-3097, :3133)
+    ...(art === undefined ? [] : [artCommand("frame:template-art", art)]),
   ];
   if (innerBorder) {
     commands.push({

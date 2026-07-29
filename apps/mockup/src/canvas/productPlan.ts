@@ -98,6 +98,26 @@ function readImageState(value: unknown, zoneSourceIndex?: number): ImageSnapshot
 const requirePositive = (value: number): number =>
   Number.isFinite(value) && value > 0 ? value : fail("NON_POSITIVE_RECT");
 
+/**
+ * Optional template art (spec 028). The caller supplies only the owner's synthetic key — the source
+ * string never reaches this layer — and THIS layer decides the destination rectangle: the whole
+ * logical canvas for a case, the mat rect for a frame (legacy evidence in the plan types).
+ */
+function readTemplateArtRef(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (!isObj(value)) fail("INVALID_ADAPTER_INPUT");
+  const imageRef = (value as Record<string, unknown>).imageRef;
+  if (
+    typeof imageRef !== "string" ||
+    imageRef.length === 0 ||
+    imageRef.length > MAX_ID_LEN ||
+    !SAFE_ID.test(imageRef)
+  ) {
+    fail("INVALID_ADAPTER_INPUT");
+  }
+  return imageRef as string;
+}
+
 // --- case -------------------------------------------------------------------
 
 interface CaseZoneSnapshot {
@@ -160,6 +180,8 @@ export interface CaseProductPlanInput {
   readonly bodyColor: string;
   /** keyed by the geometry's synthetic `case-zone-<sourceIndex>`; extra entries are ignored. */
   readonly zoneImages: ReadonlyMap<string, UserImageState>;
+  /** optional template art binding key (spec 028); the destination is the whole logical canvas. */
+  readonly templateArt?: { readonly imageRef: string };
 }
 
 /**
@@ -172,6 +194,7 @@ export function buildCaseProductPlan(input: CaseProductPlanInput): ProductPlanRe
     if (!isObj(input)) fail("INVALID_ADAPTER_INPUT");
     const { size, zones } = readCaseGeometry((input as CaseProductPlanInput).geometry);
     const bodyColor = readColor((input as CaseProductPlanInput).bodyColor);
+    const artRef = readTemplateArtRef((input as CaseProductPlanInput).templateArt);
 
     const map = (input as CaseProductPlanInput).zoneImages as unknown;
     if (!isObj(map)) fail("INVALID_ADAPTER_INPUT");
@@ -200,7 +223,20 @@ export function buildCaseProductPlan(input: CaseProductPlanInput): ProductPlanRe
       };
     });
 
-    return finish({ kind: "case", logicalCanvas: size, bodyColor, zones: planZones });
+    return finish({
+      kind: "case",
+      logicalCanvas: size,
+      bodyColor,
+      zones: planZones,
+      ...(artRef === undefined
+        ? {}
+        : {
+            templateArt: {
+              imageRef: artRef,
+              destRect: { x: 0, y: 0, width: size.width, height: size.height },
+            },
+          }),
+    });
   });
 }
 
@@ -237,6 +273,8 @@ export interface FrameProductPlanInput {
   /** required positive integer — this layer has no default width (spec 025 §1 Q2). */
   readonly logicalWidth: number;
   readonly userImage: UserImageState;
+  /** optional template art binding key (spec 028); the destination is the mat rect. */
+  readonly templateArt?: { readonly imageRef: string };
 }
 
 /**
@@ -254,6 +292,7 @@ export function buildFrameProductPlan(input: FrameProductPlanInput): ProductPlan
     if (!isObj(input)) fail("INVALID_ADAPTER_INPUT");
     const geometry = readFrameGeometry((input as FrameProductPlanInput).geometry);
     const frameColor = readColor((input as FrameProductPlanInput).frameColor);
+    const artRef = readTemplateArtRef((input as FrameProductPlanInput).templateArt);
 
     const rawWidth = (input as FrameProductPlanInput).logicalWidth;
     if (!isFinitePositive(rawWidth) || !Number.isInteger(rawWidth)) fail("INVALID_LOGICAL_SIZE");
@@ -288,6 +327,15 @@ export function buildFrameProductPlan(input: FrameProductPlanInput): ProductPlan
       image: userImage.image,
       transform: userImage.transform,
       imageRef: userImage.imageRef,
+      ...(artRef === undefined
+        ? {}
+        : {
+            // legacy stretches the frame artwork over the mat rect (mockup:3094)
+            templateArt: {
+              imageRef: artRef,
+              destRect: { x: band, y: band, width: matWidth, height: matHeight },
+            },
+          }),
     };
     return finish(framePlan);
   });

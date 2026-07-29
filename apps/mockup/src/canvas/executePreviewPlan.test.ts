@@ -239,6 +239,10 @@ function expectedTrace(source: PreviewRenderPlan): string[] {
         `set:lineWidth=${command.width}`,
         `call:strokeRect(${x},${y},${width},${height})`,
       );
+    } else if (command.type === "draw-image-stretch") {
+      // spec 028: one plain drawImage over destRect — no save/clip/restore around it
+      const d = command.destRect;
+      out.push(`call:drawImage(${d.x},${d.y},${d.width},${d.height})`);
     } else {
       const c = command.clipRect;
       const d = command.drawRect;
@@ -1180,3 +1184,101 @@ describe("executePreviewRenderPlan — forbidden behaviour", () => {
 function stripComments(source: string): string {
   return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
 }
+
+// ---- template art stretch execution (spec 028) --------------------------------
+describe("executePreviewRenderPlan — template art stretch", () => {
+  const ART = (over: Record<string, unknown> = {}): PreviewDrawCommand =>
+    ({
+      type: "draw-image-stretch",
+      layerId: "case:template-art",
+      imageRef: "imgA",
+      destRect: { x: 0, y: 0, width: 100, height: 200 },
+      ...over,
+    }) as unknown as PreviewDrawCommand;
+
+  it("draws it with ONE plain drawImage — no save, clip or restore around it", () => {
+    const context = new RecordingContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([FILL, ART()]),
+      imageBindings: BINDINGS,
+    });
+    expect(result).toEqual({ ok: true, executedCommands: 2 });
+    expect(context.trace()).toEqual([
+      "call:save",
+      "call:clearRect(0,0,100,200)",
+      "set:fillStyle=#191A1D",
+      "call:fillRect(0,0,100,200)",
+      "call:drawImage(0,0,100,200)",
+      "call:restore",
+    ]);
+    expect(context.countOf("clip")).toBe(0);
+  });
+
+  it("passes the bound drawable identity, resolved once per ref", () => {
+    const context = new RecordingContext();
+    executePreviewRenderPlan({
+      context,
+      plan: plan([ART(), ART({ layerId: "case:template-art-2" })]),
+      imageBindings: BINDINGS,
+    });
+    const drawn = context.ops.filter((op) => op.kind === "call" && op.method === "drawImage");
+    expect(drawn).toHaveLength(2);
+    for (const op of drawn) {
+      expect(op.kind === "call" ? op.image : null).toBe(IMAGE_A);
+    }
+  });
+
+  it("refuses a missing art binding before any Canvas operation", () => {
+    const context = new RecordingContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([FILL, ART({ imageRef: "missing" })]),
+      imageBindings: BINDINGS,
+    });
+    expect(result).toEqual({ ok: false, code: "MISSING_IMAGE_BINDING", commandIndex: 1 });
+    expect(context.trace()).toEqual([]);
+  });
+
+  it.each<[string, Record<string, unknown>]>([
+    ["blank ref", { imageRef: "" }],
+    ["missing rect", { destRect: null }],
+    ["zero size", { destRect: { x: 0, y: 0, width: 0, height: 10 } }],
+    ["NaN origin", { destRect: { x: Number.NaN, y: 0, width: 10, height: 10 } }],
+    [
+      "source-crop attempt",
+      {
+        destRect: { x: 0, y: 0, width: 10, height: 10 },
+        sourceRect: { x: 0, y: 0, width: 5, height: 5 },
+      },
+    ],
+  ])("ignores or rejects an unusable stretch command (%s)", (label, over) => {
+    const context = new RecordingContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([FILL, ART(over)]),
+      imageBindings: BINDINGS,
+    });
+    if (label === "source-crop attempt") {
+      // an extra field is simply not read: the executor has no source-rect overload at all
+      expect(result).toEqual({ ok: true, executedCommands: 2 });
+      expect(context.countOf("drawImage")).toBe(1);
+      return;
+    }
+    expect(result).toEqual({ ok: false, code: "INVALID_PLAN", commandIndex: 1 });
+    expect(context.trace()).toEqual([]);
+  });
+
+  it("reports a failing drawImage without throwing", () => {
+    const context = new RecordingContext({ throwOn: { method: "drawImage" } });
+    let result: unknown;
+    expect(() => {
+      result = executePreviewRenderPlan({
+        context,
+        plan: plan([ART()]),
+        imageBindings: BINDINGS,
+      });
+    }).not.toThrow();
+    expect(result).toEqual({ ok: false, code: "CANVAS_OPERATION_FAILED", commandIndex: 0 });
+  });
+});

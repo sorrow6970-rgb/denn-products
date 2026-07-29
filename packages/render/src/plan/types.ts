@@ -66,6 +66,19 @@ export interface CaseImageZone {
   readonly guide?: StrokeSpec;
 }
 
+/**
+ * Template art layer (spec 028). The legacy tool draws the template's own artwork STRETCHED over a
+ * fixed rectangle — the whole case canvas (denn-mockup-tool.html:1679) or the frame's mat rect
+ * (:3094) — with no aspect preservation, no crop and no opacity. It is optional: a template without
+ * real art (builtin, no source, generated preview) simply has no art layer, which is NOT a failure.
+ */
+export interface TemplateArtSpec {
+  /** opaque binding key — NOT a URL. The source string never reaches a plan. */
+  readonly imageRef: string;
+  /** exact destination rectangle; must be finite, positive and inside the logical canvas. */
+  readonly destRect: Rect;
+}
+
 export interface CasePlanInput {
   readonly kind: "case";
   readonly logicalCanvas: Size;
@@ -75,6 +88,8 @@ export interface CasePlanInput {
    * `defaultTransform` are REMOVED — there is no compatibility fallback and no deprecated overload.
    */
   readonly zones: readonly CaseImageZone[];
+  /** optional template art, drawn after the zone photos and before the guides (spec 028). */
+  readonly templateArt?: TemplateArtSpec;
 }
 
 export interface FramePlanInput {
@@ -103,6 +118,8 @@ export interface FramePlanInput {
    * geometry is decided (spec 024 §2).
    */
   readonly innerBorder?: StrokeSpec;
+  /** optional template art, drawn after the user photo and before the inner border (spec 028). */
+  readonly templateArt?: TemplateArtSpec;
 }
 
 export type PreviewRenderPlanInput = CasePlanInput | FramePlanInput;
@@ -128,6 +145,16 @@ export type PreviewDrawCommand =
       readonly rect: Rect;
       readonly color: HexColor;
       readonly width: number;
+    }
+  | {
+      /**
+       * Draw the whole source image into `destRect`, NOT preserving its aspect (spec 028). There is
+       * no source rect / crop (no 9-argument drawImage), no opacity, no blend mode and no rotation.
+       */
+      readonly type: "draw-image-stretch";
+      readonly layerId: string;
+      readonly imageRef: string;
+      readonly destRect: Rect;
     };
 
 export interface PreviewRenderPlan {

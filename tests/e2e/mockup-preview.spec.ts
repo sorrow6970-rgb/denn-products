@@ -443,3 +443,316 @@ for (const viewport of [
     expect(route.unexpected()).toBe(0);
   });
 }
+
+// --- spec 028: template art on the customer canvas ------------------------------
+// The art is a synthetic RGBA PNG whose LEFT half is opaque and whose right half is fully
+// transparent, so one image proves both the stretch (it covers its whole destination) and the layer
+// order (what shows through on the right is the photo underneath).
+
+const ART_COLOUR = [255, 128, 0] as const; // orange
+const ART_TOKEN = "ARTTOKENMARKER";
+const FB_ORIGIN = "https://firebasestorage.googleapis.com/v0/b/denn-products.firebasestorage.app/o";
+const ART_OK_URL = `${FB_ORIGIN}/templates%2Fart-ok.png?alt=media&token=${ART_TOKEN}`;
+const ART_REFUSED_URL = `${FB_ORIGIN}/templates%2Fart-refused.png?alt=media&token=${ART_TOKEN}`;
+
+/** RGBA PNG: left half opaque `colour`, right half fully transparent. */
+function halfTransparentPng(size: number, [r, g, b]: readonly [number, number, number]): Buffer {
+  const raw = Buffer.alloc((size * 4 + 1) * size);
+  let offset = 0;
+  for (let y = 0; y < size; y++) {
+    raw[offset++] = 0;
+    for (let x = 0; x < size; x++) {
+      const opaque = x < size / 2;
+      raw[offset++] = r;
+      raw[offset++] = g;
+      raw[offset++] = b;
+      raw[offset++] = opaque ? 255 : 0;
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(size, 0);
+  ihdr.writeUInt32BE(size, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 6; // truecolour + alpha
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk("IHDR", ihdr),
+    pngChunk("IDAT", deflateSync(raw)),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+const ART_PNG = halfTransparentPng(20, ART_COLOUR);
+const ART_DATA_URL = `data:image/png;base64,${ART_PNG.toString("base64")}`;
+
+const artCatalog = (over: {
+  caseTemplate?: Record<string, unknown>;
+  frameTemplate?: Record<string, unknown>;
+}): string =>
+  JSON.stringify({
+    models: [{ id: "m1", name: "모델 하나", w: 300, h: 200 }],
+    caseCategories: [{ id: "cc1", name: "분류 A" }],
+    caseTemplates: [
+      {
+        id: "ct1",
+        name: "케이스 알파",
+        type: "uploaded",
+        categoryId: "cc1",
+        photoZones: [{ x: 5, y: 5, w: 90, h: 90 }],
+        ...over.caseTemplate,
+      },
+    ],
+    frameSizes: [{ id: "fs1", name: "사이즈 하나", aspect: 1.4, frameThickness: 5 }],
+    frameCategories: [{ id: "fc1", name: "액자 A" }],
+    frameTemplates: [
+      { id: "full", name: "기본 액자", type: "builtin" },
+      ...(over.frameTemplate
+        ? [{ id: "ftart", name: "아트 액자", type: "uploaded", ...over.frameTemplate }]
+        : []),
+    ],
+    frameColors: [{ id: "black", name: "블랙", fill: "#1A1A1A" }],
+  });
+
+interface ArtRoutes {
+  /** every request to an art URL, tagged `cors` (anonymous, i.e. the art owner) or `plain`
+   * (the spec 018 thumbnail `<img>`, which is a different consumer of the same URL). */
+  readonly artRequests: () => string[];
+  readonly corsRequests: () => number;
+  readonly unexpected: () => number;
+}
+
+/** Route the catalog plus the two synthetic art URLs; everything else on the host is aborted. */
+async function routeArt(page: Page, catalogBody: string): Promise<ArtRoutes> {
+  const artRequests: string[] = [];
+  let unexpected = 0;
+  await page.route("**/firebasestorage.googleapis.com/**", async (route: Route) => {
+    const url = route.request().url();
+    if (url === CATALOG_URL) {
+      await route.fulfill({ status: 200, contentType: "application/json", body: catalogBody });
+      return;
+    }
+    if (url === ART_OK_URL) {
+      artRequests.push(route.request().headers().origin ? "cors" : "plain");
+      await route.fulfill({
+        status: 200,
+        contentType: "image/png",
+        headers: { "access-control-allow-origin": "*" },
+        body: ART_PNG,
+      });
+      return;
+    }
+    if (url === ART_REFUSED_URL) {
+      // A genuinely missing `access-control-allow-origin` CANNOT be simulated here: Playwright
+      // normalises fulfilled responses and adds the header, so an anonymous fulfilment always
+      // succeeds (measured). What a CORS refusal looks like TO THE PAGE is an errored load, which
+      // is what this abort reproduces. "no ACAO ⇒ load failure" itself stays NOT TESTED.
+      artRequests.push(route.request().headers().origin ? "cors" : "plain");
+      await route.abort();
+      return;
+    }
+    unexpected++;
+    await route.abort();
+  });
+  return {
+    artRequests: () => artRequests,
+    corsRequests: () => artRequests.filter((tag) => tag === "cors").length,
+    unexpected: () => unexpected,
+  };
+}
+
+/** Read a pixel and report whether reading was allowed (a tainted canvas throws SecurityError). */
+async function pixelReadable(page: Page): Promise<boolean> {
+  return canvas(page).evaluate((element) => {
+    const node = element as HTMLCanvasElement;
+    const context = node.getContext("2d");
+    if (context === null) return false;
+    try {
+      context.getImageData(1, 1, 1, 1);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
+const ART_BLOCKED_MESSAGE = "템플릿 이미지를 불러오지 못해 미리보기를 표시할 수 없습니다.";
+
+async function chooseArtFrame(page: Page): Promise<void> {
+  await byName(page, "액자").click();
+  await byName(page, "사이즈 하나").click();
+  await templateCard(page, /아트 액자/).click();
+}
+
+test.describe("template art (spec 028)", () => {
+  test("case: a data-url art is stretched over the whole canvas, above the photo", async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    const routes = await routeArt(page, artCatalog({ caseTemplate: { dataUrl: ART_DATA_URL } }));
+    await gotoReady(page);
+    await chooseCase(page);
+    await openComposer(page);
+    await pickColour(page, "#1A1A1A");
+    await pickPhoto(page, "case-zone-0", PHOTO_A);
+    await waitForCanvas(page);
+
+    // the art covers the canvas: its opaque left half wins over the photo, the right half shows it
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 100))).toEqual([...ART_COLOUR]);
+    expect(rgb(await pixelAt(page, 240, 100))).toEqual([...PHOTO_A]);
+    // a data: url never reaches the network
+    expect(routes.corsRequests()).toBe(0);
+    expect(noise.errors).toEqual([]);
+  });
+
+  test("frame: a trusted URL art loads CORS-clean and is stretched over the mat rect", async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    const routes = await routeArt(page, artCatalog({ frameTemplate: { dataUrl: ART_OK_URL } }));
+    await gotoReady(page);
+    await chooseArtFrame(page);
+    await openComposer(page);
+    await pickColour(page, "#1A1A1A");
+    await pickPhoto(page, "frame-image", PHOTO_A);
+    await waitForCanvas(page);
+
+    const size = await cssSize(page);
+    const band = Math.max(1, Math.round((size.width * 5) / 100));
+    // the frame band is OUTSIDE the mat, so the art must not reach it
+    expect(rgb(await pixelAt(page, 2, 2))).toEqual([...FRAME_BODY]);
+    // inside the mat: the art's opaque half on the left, the photo showing through on the right
+    await expect
+      .poll(async () => rgb(await pixelAt(page, band + 5, size.height / 2)))
+      .toEqual([...ART_COLOUR]);
+    expect(rgb(await pixelAt(page, size.width - band - 5, size.height / 2))).not.toEqual([
+      ...ART_COLOUR,
+    ]);
+
+    // exactly one anonymous request, and the canvas is still readable → CORS-clean
+    expect(routes.corsRequests()).toBe(1);
+    expect(await pixelReadable(page)).toBe(true);
+    expect(noise.errors).toEqual([]);
+  });
+
+  test("frame: a failed art load blocks the canvas and is never retried", async ({ page }) => {
+    const routes = await routeArt(
+      page,
+      artCatalog({ frameTemplate: { dataUrl: ART_REFUSED_URL } }),
+    );
+    await gotoReady(page);
+    await chooseArtFrame(page);
+    await openComposer(page);
+    await pickColour(page, "#1A1A1A");
+    await pickPhoto(page, "frame-image", PHOTO_A);
+
+    await expect(previewStatus(page)).toHaveText(ART_BLOCKED_MESSAGE);
+    await expect(canvas(page)).toHaveCount(0);
+    // exactly ONE anonymous request: a failed load is never retried without crossOrigin
+    expect(routes.corsRequests()).toBe(1);
+    expect(routes.unexpected()).toBe(0);
+  });
+
+  test("frame: a legacy builder-crop variant is refused before any request", async ({ page }) => {
+    const routes = await routeArt(
+      page,
+      artCatalog({ frameTemplate: { dataUrl: ART_OK_URL, builtBy: "builder" } }),
+    );
+    await gotoReady(page);
+    await chooseArtFrame(page);
+    await openComposer(page);
+
+    await expect(previewStatus(page)).toHaveText(ART_BLOCKED_MESSAGE);
+    await expect(canvas(page)).toHaveCount(0);
+    expect(routes.corsRequests()).toBe(0); // the owner never even asks for it
+  });
+
+  test("frame: a builtin template keeps the existing art-free preview", async ({ page }) => {
+    const routes = await routeArt(page, artCatalog({ frameTemplate: { dataUrl: ART_OK_URL } }));
+    await gotoReady(page);
+    await chooseFrame(page); // the builtin `full` template
+    await openComposer(page);
+    await pickColour(page, "#1A1A1A");
+    await pickPhoto(page, "frame-image", PHOTO_A);
+    await waitForCanvas(page);
+
+    const size = await cssSize(page);
+    expect(rgb(await pixelAt(page, size.width / 2, size.height / 2))).toEqual([...PHOTO_A]);
+    expect(routes.corsRequests()).toBe(0);
+  });
+
+  test("a late art load cannot pollute a preview after the selection changed", async ({ page }) => {
+    const noise = collectConsole(page);
+    await routeArt(page, artCatalog({ caseTemplate: { dataUrl: ART_DATA_URL } }));
+    await gotoReady(page);
+    await chooseCase(page);
+    await openComposer(page);
+    await pickColour(page, "#1A1A1A");
+    await pickPhoto(page, "case-zone-0", PHOTO_A);
+    await waitForCanvas(page);
+
+    // switch to the frame flow: the case composer (and its art owner) is unmounted
+    await byName(page, "액자").click();
+    await expect(canvas(page)).toHaveCount(0);
+    await byName(page, "사이즈 하나").click();
+    await templateCard(page, /기본 액자/).click();
+    await openComposer(page);
+    await pickColour(page, "#1A1A1A");
+    await pickPhoto(page, "frame-image", PHOTO_B);
+    await waitForCanvas(page);
+
+    // the frame preview shows its own photo, never the case art
+    const size = await cssSize(page);
+    await expect
+      .poll(async () => rgb(await pixelAt(page, size.width / 2, size.height / 2)))
+      .toEqual([...PHOTO_B]);
+    expect(rgb(await pixelAt(page, 2, 2))).toEqual([...FRAME_BODY]);
+    expect(noise.errors).toEqual([]);
+  });
+
+  test("no art url, token or source kind reaches the page", async ({ page }) => {
+    const noise = collectConsole(page);
+    await routeArt(page, artCatalog({ frameTemplate: { dataUrl: ART_OK_URL } }));
+    await gotoReady(page);
+    await chooseArtFrame(page);
+    await openComposer(page);
+    await pickColour(page, "#1A1A1A");
+    await pickPhoto(page, "frame-image", PHOTO_A);
+    await waitForCanvas(page);
+
+    const leaked = await page.evaluate(() => {
+      const attributes: string[] = [];
+      for (const element of Array.from(document.querySelectorAll("*"))) {
+        for (const attribute of Array.from(element.attributes)) {
+          if (element.tagName === "INPUT" && attribute.name === "type") continue;
+          // spec 018 allows the template THUMBNAIL to carry the url in its own img[src]; the art
+          // owner must not add any further surface, which is what this scan checks.
+          if (element.tagName === "IMG" && attribute.name === "src") continue;
+          attributes.push(`${attribute.name}=${attribute.value}`);
+        }
+      }
+      return {
+        text: document.body.innerText,
+        attributes: attributes.join("|"),
+        storage: `${JSON.stringify(Object.entries(localStorage))}${JSON.stringify(
+          Object.entries(sessionStorage),
+        )}`,
+        location: `${location.href}${location.hash}${location.search}`,
+      };
+    });
+
+    for (const haystack of [leaked.text, leaked.attributes, leaked.storage, leaked.location]) {
+      for (const forbidden of [
+        ART_TOKEN,
+        "firebasestorage",
+        "alt=media",
+        "base64",
+        "firebase-download-image",
+        "LOAD_FAILED",
+      ]) {
+        expect(haystack).not.toContain(forbidden);
+      }
+    }
+    expect(noise.all.join("|")).not.toContain(ART_TOKEN);
+    expect(noise.errors).toEqual([]);
+  });
+});

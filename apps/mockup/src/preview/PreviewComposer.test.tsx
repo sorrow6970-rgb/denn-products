@@ -188,3 +188,114 @@ describe("PreviewComposer — before any choice", () => {
     }
   });
 });
+
+// --- template art fail-closed (spec 028) -------------------------------------
+
+const TRUSTED_ART =
+  "https://firebasestorage.googleapis.com/v0/b/denn-products.firebasestorage.app/o/t.png?alt=media&token=SECRETMARKER";
+
+const caseArtDoc = (template: Record<string, unknown>): CatalogDocumentV1 =>
+  ({
+    schemaVersion: 1,
+    migratedFrom: "legacy-v0",
+    data: {
+      models: [{ id: "m1", name: "모델 하나", w: 300, h: 200 }],
+      caseTemplates: [
+        {
+          id: "ct1",
+          name: "케이스 알파",
+          type: "uploaded",
+          photoZones: [{ x: 5, y: 5, w: 40, h: 40 }],
+          ...template,
+        },
+      ],
+    },
+  }) as unknown as CatalogDocumentV1;
+
+const frameArtDoc = (template: Record<string, unknown>): CatalogDocumentV1 =>
+  ({
+    schemaVersion: 1,
+    migratedFrom: "legacy-v0",
+    data: {
+      frameSizes: [{ id: "fs1", name: "사이즈 하나", aspect: 1.4, frameThickness: 5 }],
+      frameTemplates: [{ id: "ft1", name: "액자", type: "uploaded", ...template }],
+      frameColors: [{ id: "black", name: "블랙", fill: "#1A1A1A" }],
+    },
+  }) as unknown as CatalogDocumentV1;
+
+const caseArtMarkup = (template: Record<string, unknown>): string =>
+  renderToStaticMarkup(
+    <PreviewComposer
+      productKind="case"
+      document={caseArtDoc(template)}
+      modelId="m1"
+      frameSizeId={null}
+      templateId="ct1"
+    />,
+  );
+
+describe("PreviewComposer — template art", () => {
+  it("waits (does not claim failure) while a usable art source is still in flight", () => {
+    const markup = caseArtMarkup({ dataUrl: "data:image/png;base64,QQ" });
+    expect(markup).toContain("템플릿 이미지를 준비하는 중입니다.");
+    expect(markup).not.toContain("<canvas");
+  });
+
+  it("blocks the preview when the art source is not trusted", () => {
+    const markup = caseArtMarkup({ dataUrl: "https://untrusted.example.test/x.png" });
+    expect(markup).toContain("템플릿 이미지를 불러오지 못해 미리보기를 표시할 수 없습니다.");
+    expect(markup).not.toContain("<canvas");
+    expect(markup).not.toContain("untrusted.example.test");
+  });
+
+  it("blocks the preview for a legacy builder-crop frame template", () => {
+    const markup = renderToStaticMarkup(
+      <PreviewComposer
+        productKind="frame"
+        document={frameArtDoc({ dataUrl: TRUSTED_ART, builtBy: "builder" })}
+        modelId={null}
+        frameSizeId="fs1"
+        templateId="ft1"
+      />,
+    );
+    expect(markup).toContain("템플릿 이미지를 불러오지 못해 미리보기를 표시할 수 없습니다.");
+    expect(markup).not.toContain("<canvas");
+  });
+
+  it("keeps the normal flow for a template that simply has no art", () => {
+    const markup = caseArtMarkup({});
+    expect(markup).toContain("색상을 선택해 주세요.");
+    expect(markup).not.toContain("템플릿 이미지");
+  });
+
+  it("keeps the normal flow for a generated detail preview", () => {
+    const markup = caseArtMarkup({
+      dataUrl: "data:image/png;base64,QQ",
+      generatedDetailPreview: true,
+    });
+    expect(markup).toContain("색상을 선택해 주세요.");
+    expect(markup).not.toContain("템플릿 이미지");
+  });
+
+  it("never renders the art url, token or source kind", () => {
+    const markup = renderToStaticMarkup(
+      <PreviewComposer
+        productKind="frame"
+        document={frameArtDoc({ dataUrl: TRUSTED_ART })}
+        modelId={null}
+        frameSizeId="fs1"
+        templateId="ft1"
+      />,
+    );
+    for (const forbidden of [
+      "SECRETMARKER",
+      "firebasestorage",
+      "alt=media",
+      "firebase-download-image",
+      "data-image",
+      "https",
+    ]) {
+      expect(markup).not.toContain(forbidden);
+    }
+  });
+});

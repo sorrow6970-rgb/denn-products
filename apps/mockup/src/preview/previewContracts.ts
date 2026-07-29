@@ -95,6 +95,9 @@ export const PREVIEW_MESSAGES = {
   noColors: "선택할 수 있는 색상이 없습니다.",
   unavailable: "미리보기를 만들 수 없습니다.",
   measuring: "미리보기 크기를 확인하는 중입니다.",
+  /** spec 028 fail-closed: the template's own artwork could not be drawn. No code, id or url. */
+  templateArtFailed: "템플릿 이미지를 불러오지 못해 미리보기를 표시할 수 없습니다.",
+  templateArtLoading: "템플릿 이미지를 준비하는 중입니다.",
 } as const;
 
 /** Canvas accessible names are fixed strings — never a product name or a selection id. */
