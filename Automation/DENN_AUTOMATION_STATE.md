@@ -5,15 +5,15 @@ updated_at: 2026-07-29
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-027-customer-preview-composer-connection
-active_unit: none
-state: COMMITTED
-baseline_commit: 075ee01
-verified_commit: 06d9700
+active_unit: spec-028-pre-template-art-canvas-cors-investigation
+state: WAITING_FOR_CLAUDE
+baseline_commit: beb16ea
+verified_commit: beb16ea
 origin_relation: "HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: two Codex E2E-regenerated spec-018 PNG files; not restored, not committed"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: DONE
+next_transition: CLAUDE_WORKING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -47,6 +47,7 @@ restore, checkout, stage 또는 commit하지 않았다.
 
 ## 다음 전이
 
-Codex가 종료 커밋 hash·origin 일치를 확인하면 `DONE`으로 전이한다. 다음 스펙은 자동
-생성·자동 착수하지 않으며, Codex가 새 스펙과 `Automation/NEXT_CLAUDE_PROMPT.md`를 작성하거나
-Founder가 명시적으로 지시할 때까지 Claude Code는 기능 작업을 시작하지 않는다.
+Codex가 종료 commit `beb16ea`, HEAD=origin, ahead/behind 0/0을 확인했다. 다음 단계는
+템플릿 아트를 고객 Canvas에 넣기 전에 필요한 CORS-clean·decode·layer-plan 계약의 읽기
+전용 사전 조사다. Claude Code는 `Automation/NEXT_CLAUDE_PROMPT.md` 범위만 조사하고 구현은
+시작하지 않는다.
