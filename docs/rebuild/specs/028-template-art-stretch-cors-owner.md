@@ -201,3 +201,56 @@ Firebase config/Rules/CORS/Hosting, POC, PNG, manifests, lockfile는 변경 금�
 완료는 합성 fixture에서 CORS-clean 템플릿 아트를 고객 preview에 fail-closed로 합성한 단계다.
 운영 bucket CORS, 운영 이미지, 실기기, print/export CORS-clean, pointer, 주문·배포 완료가
 아니다.
+
+---
+
+### DONE (Claude) — 2026-07-29
+
+기준 HEAD `7a2b2cd` → 코드/test 커밋 `f7b3f61`. **Codex 독립 검증 전이므로 스펙 종료가 아니다.**
+
+- **§1 신규 command**: `draw-image-stretch {layerId, imageRef, destRect}`를 `@denn/render`에 추가했다. 5-인자
+  `drawImage`로 destRect를 채우며 source rect/crop·9-인자·opacity·blend·transform·rotation은 **없다**. destRect는
+  유한·양수이고 logical canvas에 **완전히 포함**돼야 하며(clamp·shrink 0), imageRef는 기존 제한 식별자 문법 그대로다.
+  executor는 preflight에서 검증한 뒤에만 그리고, **오류 code 집합은 확장하지 않았다**(`INVALID_ID`/`INVALID_ZONE`/
+  `NON_FINITE_RESULT` 재사용).
+- **§2 layer 순서**: case = body → zone 사진 → `case:template-art` → guides, frame = body → mat → 사진 →
+  `frame:template-art` → inner border. `templateArt`는 **명시됐을 때만** command가 생기고 호환 fallback은 없다.
+  destRect는 case가 logical canvas 전체, frame이 matRect(adapter 계산).
+- **§3 legacy crop 거부**: `projectCatalogTemplateArtPlacement`가 `none` / `stretch(case-canvas|frame-mat)` /
+  `unsupported(legacy-builder-crop|invalid-template)`만 반환한다. 판정은 레거시 `templateSourceForDesign`·
+  `builderTemplate`·`needsLegacyBuilderCrop`(`:3025-3028`)을 그대로 쓰고, **source 문자열·field name·ID·raw
+  template을 반환하지 않으며** hostile 입력에서 throw 0이다.
+- **§4 decode owner**: `templateArtBinding` + 얇은 `useTemplateArtBinding`. 입력은 trust boundary 통과분
+  `{kind, src}`이고 **remote는 `crossOrigin="anonymous"`를 `src`보다 먼저** 설정(테스트가 write 순서를 직접 단언),
+  `data-image`는 미설정. key는 `template-art-<generation>`, generation으로 stale 차단, clear/dispose에서 handler·
+  binding 회수, **cross-selection/global cache 0**(같은 소스도 다시 로드). onerror는 원인 구분 없는 **단일 code**이며
+  **crossOrigin 없는 재시도 0**. `src`는 owner closure와 실제 drawable 안에만 존재한다.
+- **§5 fail-closed**: trust 실패·legacy crop unsupported·loading·decode 실패·binding 누락이면 **Canvas를 렌더하지
+  않고** 고정 문구(`템플릿 이미지를 불러오지 못해 미리보기를 표시할 수 없습니다.`)만 보여준다. 아트가 **원래 없는**
+  builtin·no-source·generated-preview는 기존 body+사진 preview를 그대로 유지한다("실패"와 "원래 없음" 구분).
+- **§연결**: placement → `projectCatalogTemplateImage` → `resolvePublicImageSource` → owner 순서로만 호출하고,
+  art binding은 `template-art.` namespace로 기존 composite binding에 합류한다. selection/template 변경 시
+  composer가 remount돼 owner가 dispose되고 이전 art·plan이 즉시 사라진다.
+- **실제 Chromium E2E 7건**: `data:` 아트가 캔버스 전체에 stretch돼 사진 위에 보임(투명 절반으로 사진 비침, network 0) /
+  신뢰 URL 아트가 **anonymous 1회 요청**으로 로드되고 mat rect에만 stretch되며 **테스트 측 `getImageData` 성공(=CORS-clean)** /
+  로드 실패 시 **Canvas 0 + 고정 안내 + 재시도 0** / legacy crop variant는 **요청 전 차단** / builtin은 기존 preview 유지 /
+  선택 변경 후 늦은 아트가 새 preview를 오염시키지 않음 / URL·token·`base64`·source kind·code가 DOM·ARIA·data·storage·
+  location·console에 **0**(스펙 018이 허용한 썸네일 `img[src]` 한 곳만 제외).
+- **⚠️ 시뮬레이션 한계(정직 기록)**: **ACAO 헤더가 없는 응답은 재현할 수 없다** — Playwright의 `route.fulfill`이
+  응답에 `access-control-allow-origin`을 자동으로 붙인다(실측: 헤더 없이 fulfill해도 anonymous 로드 성공·canvas readable).
+  따라서 **"ACAO 없음 ⇒ 로드 실패"는 `NOT TESTED`** 이고, E2E가 증명하는 것은 **실패 시 fail-closed·재시도 0**이다.
+  부수 관측: 같은 URL을 스펙 018 썸네일(non-CORS)이 먼저 요청한 뒤 owner가 anonymous로 요청하며(태그 `plain`→`cors`),
+  이 환경에서는 CORS-clean이었다. 캐시 오염 가능성은 **NOT VERIFIED**.
+- **게이트**: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / **unit 876**(802 → 876,
+  신규 74) / build(mockup JS **248.29 → 253.92 kB**, gzip **77.55 → 78.82**; CSS **13.80/3.53 무변경**; admin 무변경) /
+  **e2e 85 PASS**(78 → 85, 신규 7)·exit 0 자체 종료 16.2초 / check PASS / `git diff --check` clean / 포트 4183·4184 free /
+  OS temp `denn-e2e-*` 0 / 고객 dist **SHA-256 E2E 전후 동일·fixture 0** / 네트워크·live·deploy 0.
+  번들 증가 원인 = 아트 owner + placement projection + stretch 실행 경로(JS gzip **+1.27 kB**), CSS 신규 규칙 없음.
+- **무변경**: `packages/firebase`(재사용만)·`apps/admin`·운영 HTML·Firebase 설정/Rules/CORS·`poc/**`·PNG·manifest·
+  lockfile = diff 0. 기존 E2E fixture와 `canvas-surface.spec.ts`도 수정하지 않았다.
+- **NOT TESTED**: 운영 bucket CORS 실제 설정, ACAO 부재 시 실제 실패, 운영 아트 이미지, 실기기, 실제 200% 확대,
+  print/export의 taint 검증, 대용량 아트 성능. **미착수**: legacy crop 지원·builtin multi-zone·text/clock·pointer·
+  print/export·저장·주문·Firebase·deploy.
+- **PNG**: Codex E2E 재생성분 2개는 restore·checkout·stage·commit **하지 않았다**(working tree dirty, 커밋된 PNG 0).
+- ⚠️ 이 완료는 **합성 fixture에서 CORS-clean 아트를 fail-closed로 합성한 단계**이며 운영 CORS·실기기·print/export·
+  주문·배포 완료가 아니다. 인계: `docs/handoff/2026-07-29-spec-028-template-art-handoff.md`.

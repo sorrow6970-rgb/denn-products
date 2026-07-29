@@ -7,7 +7,35 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟡 스펙 027 승인·종료. 스펙 028 사전 조사(템플릿 아트 Canvas 합성·CORS-clean) 완료·push — Codex 판정 대기. 구현 스펙 미작성·미착수. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **🟠 스펙 028(템플릿 아트 stretch·CORS-clean owner) 구현 완료·push — Codex 독립 검증 대기(`READY_FOR_CODEX`). 스펙 027 승인·종료. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+
+> 스펙 028 구현·자동검증 완료(로컬, 2026-07-29, 기준 HEAD `7a2b2cd`, 코드 커밋 `f7b3f61`): 정본
+> `docs/rebuild/specs/028-template-art-stretch-cors-owner.md`, 인계
+> `docs/handoff/2026-07-29-spec-028-template-art-handoff.md`. Founder 결정 = **아트 실패 시 미리보기 차단**.
+> **신규 command** `draw-image-stretch`(5-인자 `drawImage`로 destRect 채움, **source-crop·9-인자·opacity·rotation 0**,
+> destRect는 logical canvas에 완전 포함, 오류 code 무확장). **layer 순서**: case = body→사진→`case:template-art`→guides,
+> frame = body→mat→사진→`frame:template-art`→inner border, destRect는 case=canvas 전체·frame=matRect.
+> **placement projection**(`@denn/shared`)이 `none`/`stretch(case-canvas|frame-mat)`/`unsupported(legacy-builder-crop|
+> invalid-template)`만 반환하고 **source 문자열·field·ID를 노출하지 않으며** hostile 입력에 throw 0 —
+> **legacy builder crop variant는 근사하지 않고 거부**한다. **아트 owner**: trust boundary 통과분만 입력받아
+> **remote는 `crossOrigin="anonymous"`를 `src`보다 먼저** 설정(`data:`는 미설정), `template-art-<generation>` key,
+> generation stale 차단, **cache 0**, **crossOrigin 없는 재시도 0**, `src`는 closure·drawable 안에만.
+> **fail-closed**: trust 실패·unsupported·loading·decode 실패·binding 누락이면 **Canvas 0** + 고정 문구,
+> 아트가 **원래 없는** builtin/no-source/generated-preview는 기존 preview 유지. **실제 Chromium E2E 7건**:
+> `data:` 아트 캔버스 전체 stretch(사진 위, 투명부로 사진 비침, network 0) / 신뢰 URL 아트 **anonymous 1회**·mat rect
+> stretch·**`getImageData` 성공(CORS-clean)** / 실패 시 Canvas 0·안내·**재시도 0** / legacy crop **요청 전 차단** /
+> builtin 기존 preview 유지 / 선택 변경 후 늦은 아트 오염 0 / URL·token·base64·source kind·code 누출 0(스펙 018이
+> 허용한 썸네일 `img[src]`만 예외). **⚠️ 한계(정직 기록)**: Playwright `route.fulfill`이 응답에 ACAO를 자동으로 붙여
+> **"ACAO 없음" 시나리오를 재현할 수 없음**(실측) → **"ACAO 없음 ⇒ 로드 실패"는 NOT TESTED**, 검증된 것은
+> **실패 시 fail-closed·재시도 0**. 썸네일(non-CORS)→owner(anonymous) 요청 순서에서의 캐시 오염 가능성은 **NOT VERIFIED**.
+> 게이트: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / **unit 876**(802→876, 신규 74) /
+> **e2e 85 PASS**(78→85, 신규 7)·exit 0 16.2초 / check PASS / `git diff --check` clean / 포트 4183·4184 free /
+> OS temp 0 / 고객 dist **SHA-256 E2E 전후 동일·fixture 0** / 네트워크·live·deploy 0. **번들**: mockup JS
+> **248.29 → 253.92 kB**(gzip **77.55 → 78.82**, 원인 = 아트 owner+placement+stretch 실행 경로), **CSS 무변경**,
+> admin 무변경. **무변경**: `packages/firebase`(재사용만)·admin·운영 HTML·Firebase 설정/Rules/CORS·POC·PNG·
+> manifest·lockfile. **NOT TESTED**: 운영 bucket CORS·운영 아트·실기기·실제 200% 확대·print/export taint·대용량 성능.
+> ⚠️ 이 완료는 **합성 fixture에서 CORS-clean 아트를 fail-closed로 합성한 단계**이며 운영 CORS·print/export·주문·배포
+> 완료가 아니다.
 
 > 스펙 028 사전 조사 완료(읽기 전용, 2026-07-29, 기준 HEAD `beb16ea`): 보고서
 > `docs/codex-claude-handoff/reviews/2026-07-29-template-art-canvas-cors-investigation.md`(12항목).

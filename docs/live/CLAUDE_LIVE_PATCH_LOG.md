@@ -216,3 +216,29 @@
 - PNG 2개: 미복원·미커밋 → working tree dirty
 - 이 라운드는 종료 문서 전용 커밋(기능 코드·설정·테스트 변경 0)
 - 다음: 새 스펙 지시 대기. 기능 착수 없음.
+
+## 2026-07-29 — 스펙 028 구현 (템플릿 아트 stretch·CORS-clean owner)
+
+- 기준: `7a2b2cd`
+- 코드/test: `f7b3f61`
+- 상태: 구현·자체 검증 완료 → `READY_FOR_CODEX`
+- 변경 파일(허용 목록 안): `packages/render/src/plan/{types,build}.ts`(+test) ·
+  `packages/shared/src/catalog/images/{placement.ts,placement.test.ts,index.ts}` ·
+  `apps/mockup/src/canvas/{executePreviewPlan.ts,templateArtBinding.ts,useTemplateArtBinding.ts,productPlan.ts}`(+test) ·
+  `apps/mockup/src/preview/{PreviewComposer.tsx,previewContracts.ts}`(+test) ·
+  `tests/e2e/mockup-preview.spec.ts`
+- 핵심:
+  - 신규 `draw-image-stretch`(5-인자 drawImage, source-crop 0), case=canvas / frame=matRect
+  - layer 순서: case 사진→아트→guides, frame 사진→아트→inner border
+  - placement projection이 legacy crop variant를 unsupported로 거부(소스 문자열 미노출)
+  - owner: remote는 crossOrigin을 src보다 먼저, data는 미설정, 재시도 0, cache 0, generation 가드
+  - fail-closed: 아트 필요 템플릿이 준비되지 않으면 Canvas 0 + 고정 문구
+- 게이트: frozen PASS / lockfile diff 0 / format·lint·typecheck /
+  unit 876(802→876) / e2e 85 PASS(78→85) exit 0 16.2초 / check PASS / diff --check clean /
+  포트 free · temp 0 · 고객 dist SHA-256 동일 · fixture 0
+- 번들: mockup JS 248.29→253.92 kB(gzip 77.55→78.82), CSS 무변경, admin 무변경
+- ⚠️ 한계: Playwright가 fulfill 응답에 ACAO를 자동 부여해 "ACAO 없음" 시나리오를 재현할 수 없음 →
+  "ACAO 없음 ⇒ 실패"는 NOT TESTED. 검증한 것은 "실패 시 fail-closed·재시도 0".
+  썸네일(non-CORS)→owner(anonymous) 요청 순서에서 캐시 오염 가능성은 NOT VERIFIED.
+- PNG 2개: 미복원·미커밋
+- 다음: Codex 독립 검증. print/export·pointer·주문은 여전히 후속.
