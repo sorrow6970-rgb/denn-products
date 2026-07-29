@@ -6,9 +6,9 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-026-local-user-image-binding-lifecycle
 active_unit: spec-027-customer-preview-composer-connection
-state: WAITING_FOR_CLAUDE
-baseline_commit: 6b18931
-verified_commit: 6b18931
+state: CORRECTION_REQUIRED
+baseline_commit: 075ee01
+verified_commit: null
 origin_relation: "HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: two Codex E2E-regenerated spec-018 PNG files; not restored, not committed"
 fix_round: 1
@@ -50,6 +50,10 @@ restore, checkout, stage 또는 commit하지 않았다.
 
 ## 다음 전이
 
-Founder가 2026-07-29 고객 preview UX 권장안을 승인했다. Claude Code는
-`docs/rebuild/specs/027-customer-preview-composer-connection.md`와
-`Automation/NEXT_CLAUDE_PROMPT.md` 범위만 구현한다. push 후 `READY_FOR_CODEX`로 전이한다.
+스펙 027 commit `175a363`과 문서 commit `075ee01`은 check(unit 797), build, E2E 78/78을
+통과했다. 그러나 Codex 코드 리뷰에서 `frameColors`에 서로 다른 항목이 같은 canonical
+`fill`을 가질 때 swatch의 React key/test id가 중복되고 여러 버튼이 동시에
+`aria-pressed=true`가 되는 결함을 확인했다.
+
+Claude Code는 `Automation/NEXT_CLAUDE_PROMPT.md`의 dedup 보완만 수행한다. push 후
+`READY_FOR_CODEX`로 전이한다.
