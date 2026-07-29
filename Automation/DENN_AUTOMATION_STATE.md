@@ -6,14 +6,14 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-026-local-user-image-binding-lifecycle
 active_unit: spec-027-customer-preview-composer-connection
-state: CORRECTION_REQUIRED
+state: CODEX_PASSED
 baseline_commit: 075ee01
-verified_commit: null
+verified_commit: 06d9700
 origin_relation: "HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: two Codex E2E-regenerated spec-018 PNG files; not restored, not committed"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CLAUDE_WORKING
+next_transition: READY_FOR_COMMIT
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -50,10 +50,17 @@ restore, checkout, stage 또는 commit하지 않았다.
 
 ## 다음 전이
 
-스펙 027 commit `175a363`과 문서 commit `075ee01`은 check(unit 797), build, E2E 78/78을
-통과했다. 그러나 Codex 코드 리뷰에서 `frameColors`에 서로 다른 항목이 같은 canonical
-`fill`을 가질 때 swatch의 React key/test id가 중복되고 여러 버튼이 동시에
-`aria-pressed=true`가 되는 결함을 확인했다.
+스펙 027 보완 코드 commit `6fb8630`, 문서 commit `06d9700`을 Codex가 독립 재검증해 승인
+가능으로 판정했다.
 
-Claude Code는 `Automation/NEXT_CLAUDE_PROMPT.md`의 dedup 보완만 수행한다. push 후
-`READY_FOR_CODEX`로 전이한다.
+- canonical frame fill dedup: PASS
+- source order 첫 유효 이름 보존: PASS
+- format, lint, typecheck: PASS
+- unit: 802/802 PASS
+- build: mockup JS/CSS gzip 77.55/3.53 kB, admin 61.09/2.64 kB
+- E2E: 78/78 PASS, exit 0
+- 포트 4183/4184 free, OS temp 잔여 0
+- `git diff --check`: PASS
+- HEAD=origin `06d9700`, ahead/behind 0/0
+
+Claude Code는 `Automation/NEXT_CLAUDE_PROMPT.md`에 따라 종료 문서만 처리한다.

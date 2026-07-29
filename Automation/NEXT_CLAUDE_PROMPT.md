@@ -1,57 +1,38 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CORRECTION_REQUIRED`
+상태: `CODEX_PASSED / READY_FOR_COMMIT`
 
-# 스펙 027 보완 라운드 1 — 중복 frame fill 결정적 dedup
+# 스펙 027 종료 문서 처리
 
-기준 HEAD: `075ee01`
-
-## 재현
-
-`CatalogDocumentV1.data.frameColors`에 다음처럼 서로 다른 항목이 같은 canonical fill을
-가질 수 있다.
-
-```ts
-[
-  { id: "a", name: "블랙 A", fill: "#1a1a1a" },
-  { id: "b", name: "블랙 B", fill: "#1A1A1A" },
-]
-```
-
-현재 `readFrameColorOptions`는 두 옵션을 모두 반환한다. `PreviewComposer`는
-`key={option.value}`와 `data-testid`에 값을 사용하고 선택 여부도 값으로 비교하므로,
-중복 key/test id가 생기고 클릭 후 두 버튼이 동시에 선택된 것으로 표시될 수 있다.
-
-## 보완 계약
-
-- canonical uppercase `value` 기준으로 결정적으로 dedup한다.
-- source order의 첫 유효 항목과 그 이름을 보존한다.
-- 뒤의 중복 항목은 표시하지 않는다.
-- 자동 선택은 여전히 0이다.
-- raw id/object/diagnostic은 출력하지 않는다.
-- hostile getter throw 0과 1회 읽기 성질을 유지한다.
+Codex 승인 기준 HEAD는 `06d9700`이다. 기능 코드·설정·테스트를 수정하지 말고 종료 문서만
+처리한다.
 
 허용 파일:
 
-- `apps/mockup/src/preview/previewContracts.ts`
-- `apps/mockup/src/preview/previewContracts.test.ts`
-- 필요 시 `apps/mockup/src/preview/PreviewComposer.test.tsx`
 - `docs/rebuild/specs/027-customer-preview-composer-connection.md`
 - `docs/codex-claude-handoff/CURRENT.md`
 - `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
 - `docs/handoff/2026-07-29-spec-027-customer-preview-handoff.md`
+- `Automation/DENN_AUTOMATION_STATE.md`
+- `Automation/NEXT_CLAUDE_PROMPT.md`
 
-필수 테스트:
+종료 기록:
 
-- 대소문자만 다른 동일 fill 2개 → 첫 항목 1개
-- 동일 fill 3개 → 1개
-- 서로 다른 fill의 source order 유지
-- 컴포넌트 markup에 중복 key 경고 0, swatch 1개, 자동 선택 0
+- Codex 최종 판정: 승인 가능
+- 승인 기준 HEAD: `06d9700`
+- unit 802/802
+- E2E 78/78 PASS, exit 0
+- mockup JS/CSS gzip 77.55/3.53 kB
+- admin JS/CSS gzip 61.09/2.64 kB
+- frame canonical fill dedup과 source-order 첫 항목 보존
+- 고객 `/` 실제 case/frame Canvas 픽셀, keyboard, 320px/desktop, axe, 누출 0 검증
+- 실제 기기·200% 확대·운영 이미지·대용량 성능·EXIF 회전은 NOT TESTED
+- template art, Firebase image CORS-clean, pointer, print, 저장·주문, deploy는 미착수
 
-전체 check와 E2E를 다시 실행한다. 코드/test와 문서를 분리 commit하고 일반 fast-forward
-push한다. 아래 PNG 2개는 restore, checkout, stage, commit하지 않는다.
+아래 PNG 2개는 restore, checkout, stage, commit하지 않는다.
 
 - `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`
 - `docs/rebuild/results/spec-018/browse-mobile-390x844.png`
 
-다음 기능은 시작하지 않는다.
+문서 전용 커밋을 일반 fast-forward push하고 HEAD=origin, ahead/behind 0/0을 확인한다.
+working tree는 PNG 2개 때문에 dirty라고 기록한다. 다음 기능은 시작하지 않는다.
