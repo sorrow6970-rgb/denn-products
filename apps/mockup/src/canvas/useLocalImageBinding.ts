@@ -1,9 +1,13 @@
 // Thin React wrapper over the framework-free local image binding owner (spec 026 §3).
 //
 // It adds NO behaviour: the controller keeps every lifecycle rule (generation, revoke-once, binding
-// replacement) and this hook only subscribes to its snapshot and disposes it on unmount. Under
-// StrictMode the simulated unmount disposes the current controller and hands the remount a fresh
-// one, so a disposed controller is never left in use.
+// replacement) and this hook only subscribes to its snapshot and disposes it when the OWNER
+// component unmounts.
+//
+// Ownership record (spec 026 보완 라운드 1): the controller is held inside a small record whose
+// `disposed` flag is set by the effect cleanup. The replacement controller is published from the
+// effect BODY on the next mount — never from the cleanup — so a real unmount performs no state
+// update at all, while StrictMode's mount → cleanup → remount still ends up with a live controller.
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import {
@@ -20,19 +24,33 @@ export interface UseLocalImageBindingResult {
   readonly clear: () => void;
 }
 
+interface OwnedController {
+  readonly controller: LocalImageBindingController;
+  /** set by the cleanup of the effect that owns this record; read on the next mount only. */
+  disposed: boolean;
+}
+
+const createOwned = (): OwnedController => ({
+  controller: createLocalImageBindingController(),
+  disposed: false,
+});
+
 export function useLocalImageBinding(): UseLocalImageBindingResult {
-  const [controller, setController] = useState<LocalImageBindingController>(
-    createLocalImageBindingController,
-  );
+  const [owned, setOwned] = useState<OwnedController>(createOwned);
+  const { controller } = owned;
 
   useEffect(() => {
+    if (owned.disposed) {
+      // StrictMode re-ran this effect with the record its own cleanup already disposed. Publishing
+      // the replacement here (during mount) keeps the unmount path free of state updates.
+      setOwned(createOwned());
+      return;
+    }
     return () => {
-      controller.dispose();
-      // StrictMode remounts this component with the SAME instance, so publish a fresh controller
-      // for the next mount. After a real unmount this state update is a no-op.
-      setController(() => createLocalImageBindingController());
+      owned.controller.dispose();
+      owned.disposed = true;
     };
-  }, [controller]);
+  }, [owned]);
 
   const state = useSyncExternalStore(
     controller.subscribe,

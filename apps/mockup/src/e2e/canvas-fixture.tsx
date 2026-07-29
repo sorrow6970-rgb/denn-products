@@ -141,10 +141,20 @@ const PLAN_USER = (imageRef: string): PreviewRenderPlan => ({
   ],
 });
 
-function Fixture(): React.JSX.Element {
-  const [planKey, setPlanKey] = useState<"a" | "b" | "frame">("a");
-  const [hidden, setHidden] = useState(false);
-  const [mounted, setMounted] = useState(true);
+/**
+ * The component that OWNS `useLocalImageBinding` (spec 026 보완 라운드 1). It is mounted and
+ * unmounted as a whole by the fixture, so the E2E can exercise the real hook-owner lifecycle —
+ * unmounting only the canvas surface (`fx-unmount`) proves nothing about this owner.
+ */
+function PickerOwner({
+  planKey,
+  hidden,
+  surfaceMounted,
+}: {
+  planKey: "a" | "b" | "frame";
+  hidden: boolean;
+  surfaceMounted: boolean;
+}): React.JSX.Element {
   const picked = useLocalImageBinding();
 
   // a decoded local image takes over the surface; otherwise the synthetic plans are shown
@@ -164,6 +174,49 @@ function Fixture(): React.JSX.Element {
         imageRef === "fixtureDrawable" ? synthetic : pickedBindings.get(imageRef),
     };
   }, [pickedBindings]);
+
+  return (
+    <>
+      {/* Local image pick (spec 026). The owner keeps the object url private; this harness only
+          hands it a File and reads the safe snapshot back. */}
+      <div style={{ marginBottom: 12 }}>
+        <label htmlFor="fx-file">사용자 이미지 선택</label>{" "}
+        <input
+          id="fx-file"
+          data-testid="fx-file"
+          type="file"
+          accept="image/*"
+          onChange={(event) => {
+            const chosen = event.target.files?.[0];
+            // the UI owner (not the controller) empties the input so the SAME file can be
+            // picked again — spec 026 §5, legacy denn-mockup-tool.html:1408
+            event.target.value = "";
+            if (chosen) picked.load(chosen);
+          }}
+        />{" "}
+        <button type="button" data-testid="fx-file-clear" onClick={() => picked.clear()}>
+          clear picked image
+        </button>
+        <span data-testid="fx-file-state">{picked.state.status}</span>
+      </div>
+      <div data-testid="fx-host" style={hidden ? { display: "none" } : undefined}>
+        {surfaceMounted ? (
+          <PreviewCanvasSurface
+            plan={plan}
+            imageBindings={imageBindings}
+            accessibleName="합성 미리보기"
+          />
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+function Fixture(): React.JSX.Element {
+  const [planKey, setPlanKey] = useState<"a" | "b" | "frame">("a");
+  const [hidden, setHidden] = useState(false);
+  const [mounted, setMounted] = useState(true);
+  const [ownerLive, setOwnerLive] = useState(true);
 
   return (
     <main style={{ padding: 12 }}>
@@ -192,38 +245,17 @@ function Fixture(): React.JSX.Element {
         <button type="button" data-testid="fx-mount" onClick={() => setMounted(true)}>
           mount
         </button>
-      </div>
-      {/* Local image pick (spec 026). The owner keeps the object url private; this harness only
-          hands it a File and reads the safe snapshot back. */}
-      <div style={{ marginBottom: 12 }}>
-        <label htmlFor="fx-file">사용자 이미지 선택</label>{" "}
-        <input
-          id="fx-file"
-          data-testid="fx-file"
-          type="file"
-          accept="image/*"
-          onChange={(event) => {
-            const chosen = event.target.files?.[0];
-            // the UI owner (not the controller) empties the input so the SAME file can be
-            // picked again — spec 026 §5, legacy denn-mockup-tool.html:1408
-            event.target.value = "";
-            if (chosen) picked.load(chosen);
-          }}
-        />{" "}
-        <button type="button" data-testid="fx-file-clear" onClick={() => picked.clear()}>
-          clear picked image
+        <button type="button" data-testid="fx-owner-off" onClick={() => setOwnerLive(false)}>
+          owner off
         </button>
-        <span data-testid="fx-file-state">{picked.state.status}</span>
+        <button type="button" data-testid="fx-owner-on" onClick={() => setOwnerLive(true)}>
+          owner on
+        </button>
       </div>
-      <div data-testid="fx-host" style={hidden ? { display: "none" } : undefined}>
-        {mounted ? (
-          <PreviewCanvasSurface
-            plan={plan}
-            imageBindings={imageBindings}
-            accessibleName="합성 미리보기"
-          />
-        ) : null}
-      </div>
+      <p data-testid="fx-owner-state">{ownerLive ? "live" : "gone"}</p>
+      {ownerLive ? (
+        <PickerOwner planKey={planKey} hidden={hidden} surfaceMounted={mounted} />
+      ) : null}
       <p data-testid="fx-colors" style={{ fontSize: 12 }}>
         {`${BODY_COLOR}|${STROKE_COLOR}|${DRAWABLE_COLOR}|${ALT_BODY_COLOR}|${FRAME_COLOR}|${MAT_COLOR}`}
       </p>

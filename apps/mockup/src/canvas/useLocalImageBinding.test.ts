@@ -1,7 +1,11 @@
 // Contract for the thin React wrapper (spec 026 §3). Rendered through react-dom/server in the node
-// environment — no jsdom, no DOM, no browser image API — so this pins that the hook itself adds no
-// behaviour and reaches for nothing at render time. Real mount/unmount/StrictMode behaviour is
-// covered by the Chromium E2E fixture.
+// environment — no jsdom, no DOM, no browser image API.
+//
+// SCOPE (spec 026 보완 라운드 1): a static render proves ONLY the initial snapshot and that render
+// touches no browser API. It proves NOTHING about mount, unmount, StrictMode remount, effect
+// cleanup, disposal or object-URL bookkeeping — those are verified in a real browser by
+// `tests/e2e/canvas-surface.spec.ts` ("real hook owner lifecycle"), which mounts and unmounts the
+// component that owns this hook.
 
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";

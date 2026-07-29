@@ -442,6 +442,167 @@ test.describe("local user image binding (spec 026)", () => {
   });
 });
 
+// --- spec 026 보완 1: the REAL React owner lifecycle in a real browser --------------------------
+// The fixture mounts/unmounts the component that owns `useLocalImageBinding` (buttons `fx-owner-*`),
+// which is a different thing from unmounting only the canvas surface (`fx-unmount`). Object-URL
+// bookkeeping is instrumented on the TEST side (page.addInitScript wrapping window.URL) so the
+// production module keeps its private url and gains no observability hook.
+
+interface UrlOps {
+  readonly created: number;
+  readonly revoked: number;
+  readonly duplicates: number;
+  readonly outstanding: number;
+}
+
+async function instrumentObjectUrls(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const created: string[] = [];
+    const revoked = new Set<string>();
+    let duplicates = 0;
+    const realCreate = URL.createObjectURL.bind(URL);
+    const realRevoke = URL.revokeObjectURL.bind(URL);
+    URL.createObjectURL = (source: Blob | MediaSource): string => {
+      const url = realCreate(source as Blob);
+      created.push(url);
+      return url;
+    };
+    URL.revokeObjectURL = (url: string): void => {
+      if (revoked.has(url)) duplicates += 1;
+      revoked.add(url);
+      realRevoke(url);
+    };
+    (window as unknown as { __urlOps: () => UrlOps }).__urlOps = () => ({
+      created: created.length,
+      revoked: revoked.size,
+      duplicates,
+      outstanding: created.filter((url) => !revoked.has(url)).length,
+    });
+  });
+}
+
+const urlOps = (page: Page): Promise<UrlOps> =>
+  page.evaluate(() => (window as unknown as { __urlOps: () => UrlOps }).__urlOps());
+
+// Chromium prints this performance advisory because THESE TESTS read pixels back repeatedly with
+// getImageData; it is caused by the test side, not by the app, so it is not owner-lifecycle noise.
+const TEST_SIDE_ADVISORY = "willReadFrequently";
+
+/** Console errors AND warnings — a state update after unmount would surface here. */
+function collectConsoleNoise(page: Page): { errors: string[]; warnings: string[] } {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  page.on("console", (m: ConsoleMessage) => {
+    if (m.type() === "error") errors.push(m.text());
+    if (m.type() === "warning" && !m.text().includes(TEST_SIDE_ADVISORY)) warnings.push(m.text());
+  });
+  page.on("pageerror", (e) => errors.push(String(e)));
+  return { errors, warnings };
+}
+
+test.describe("local image binding — real hook owner lifecycle (spec 026)", () => {
+  test("survives the StrictMode mount → cleanup → remount with a live controller", async ({
+    page,
+  }) => {
+    const noise = collectConsoleNoise(page);
+    await instrumentObjectUrls(page);
+    await page.goto(FIXTURE_URL);
+    await waitForReady(page);
+
+    // the fixture root is <StrictMode>, so the owner already went through mount → cleanup → remount
+    await pick(page, `${FILE_NAME_MARKER}-a.png`, PHOTO_A);
+    await expect(pickState(page)).toHaveText("ready");
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...PHOTO_A]);
+
+    const ops = await urlOps(page);
+    expect(ops.created).toBeGreaterThan(0);
+    expect(ops.outstanding).toBe(0); // the url is revoked once the decode finished
+    expect(ops.duplicates).toBe(0);
+    expect(noise.errors).toEqual([]);
+    expect(noise.warnings).toEqual([]);
+  });
+
+  test("unmounting the owner disposes it: url revoked, binding gone, fresh state on remount", async ({
+    page,
+  }) => {
+    const noise = collectConsoleNoise(page);
+    await instrumentObjectUrls(page);
+    await page.goto(FIXTURE_URL);
+    await waitForReady(page);
+
+    await pick(page, `${FILE_NAME_MARKER}-a.png`, PHOTO_A);
+    await expect(pickState(page)).toHaveText("ready");
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...PHOTO_A]);
+
+    await page.getByTestId("fx-owner-off").click();
+    await expect(page.getByTestId("fx-owner-state")).toHaveText("gone");
+    await expect(fileInput(page)).toHaveCount(0);
+    await expect(canvas(page)).toHaveCount(0);
+    const afterUnmount = await urlOps(page);
+    expect(afterUnmount.outstanding).toBe(0);
+    expect(afterUnmount.duplicates).toBe(0);
+
+    await page.getByTestId("fx-owner-on").click();
+    // a brand-new controller: no leftover ready state and no stale user image on the canvas
+    await expect(pickState(page)).toHaveText("idle");
+    await waitForReady(page);
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...DRAWABLE]);
+
+    expect(noise.errors).toEqual([]);
+    expect(noise.warnings).toEqual([]);
+  });
+
+  test("unmounting during an in-flight load leaves no outstanding url and no late pollution", async ({
+    page,
+  }) => {
+    const noise = collectConsoleNoise(page);
+    await instrumentObjectUrls(page);
+    await page.goto(FIXTURE_URL);
+    await waitForReady(page);
+
+    // no wait for "ready": the owner goes away while the decode may still be in flight
+    await pick(page, `${FILE_NAME_MARKER}-a.png`, PHOTO_A);
+    await page.getByTestId("fx-owner-off").click();
+    await expect(page.getByTestId("fx-owner-state")).toHaveText("gone");
+
+    await expect.poll(async () => (await urlOps(page)).outstanding).toBe(0);
+    expect((await urlOps(page)).duplicates).toBe(0);
+
+    await page.getByTestId("fx-owner-on").click();
+    await expect(pickState(page)).toHaveText("idle"); // a late onload cannot revive the old owner
+    await waitForReady(page);
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...DRAWABLE]);
+    expect(noise.errors).toEqual([]);
+    expect(noise.warnings).toEqual([]);
+  });
+
+  test("repeated owner cycles leak no object url and stay usable", async ({ page }) => {
+    const noise = collectConsoleNoise(page);
+    await instrumentObjectUrls(page);
+    await page.goto(FIXTURE_URL);
+    await waitForReady(page);
+
+    for (const colour of [PHOTO_A, PHOTO_B, PHOTO_A]) {
+      await pick(page, `${FILE_NAME_MARKER}-cycle.png`, colour);
+      await expect(pickState(page)).toHaveText("ready");
+      await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...colour]);
+      await page.getByTestId("fx-owner-off").click();
+      await expect(page.getByTestId("fx-owner-state")).toHaveText("gone");
+      await page.getByTestId("fx-owner-on").click();
+      await expect(pickState(page)).toHaveText("idle");
+      await waitForReady(page);
+    }
+
+    const ops = await urlOps(page);
+    expect(ops.created).toBe(3);
+    expect(ops.revoked).toBe(3);
+    expect(ops.outstanding).toBe(0);
+    expect(ops.duplicates).toBe(0);
+    expect(noise.errors).toEqual([]);
+    expect(noise.warnings).toEqual([]);
+  });
+});
+
 test("the customer screen shows no canvas and no route to the fixture", async ({ page }) => {
   const errors = collectConsoleErrors(page);
   await page.route("**/firebasestorage.googleapis.com/**", (route) =>
