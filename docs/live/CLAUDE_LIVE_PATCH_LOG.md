@@ -264,3 +264,22 @@
 - 번들: mockup JS 254.06 kB(gzip 78.90), CSS 무변경, admin 무변경
 - PNG 2개: 미복원·미커밋
 - 다음: Codex 재검증. 다음 기능 착수 없음.
+
+## 2026-07-29 — 세션 종료 (자동 루프 종료, 수동 재개 대기)
+
+- Founder 지시로 세션 마감. **Claude Code의 5분 자동 루프를 종료**했다(cron job 취소).
+- 스펙 028은 **미완**이다. `DONE`/`CODEX_PASSED`가 아니며 Codex correction review 도중 종료됐다.
+- HEAD = origin = `b18b652`, ahead/behind 0/0, staged 0, 미추적 0
+- working tree 잔여: `spec-018/browse-desktop-1280x800.png`, `browse-mobile-390x844.png`
+  (Codex E2E 재생성분, restore/checkout/stage/commit 하지 않음)
+- 구현 후보: `f7b3f61` → 보완 라운드 1 `d4fb99b`(+문서 `b18b652`). Codex 마지막 review 기준선 `cebcaad`
+- 다음 세션 보완 2건: (a) templateArtBinding source 필드의 예외 경계 내 단일 snapshot,
+  (b) placement 판정 필드의 전체 단일 snapshot 및 getter drift fail-open 차단
+  → 둘 다 `d4fb99b`로 구현·push됨, **Codex 재검증은 NOT TESTED**
+- 이번 세션 PASS: frozen install·lockfile diff 0 / format·lint·typecheck / unit 893 /
+  build(mockup 254.06 kB·78.90 gzip, CSS 무변경, admin 무변경) / e2e 85 PASS exit 0 /
+  `git diff --check` clean / 포트 free / temp 0 / 고객 dist SHA-256 E2E 전후 동일·fixture 0
+- 이번 세션 NOT TESTED: Codex 재검증, 운영 bucket CORS, ACAO 부재 실제 실패, 운영 이미지,
+  실기기, 실제 200% 확대, print/export taint, 대용량 성능
+- 실제 network·live·Firebase·CORS·deploy: **0**. 다음 스펙 미착수.
+- 이 라운드는 **문서 전용 커밋**이며 기능 코드·설정·테스트 변경 0

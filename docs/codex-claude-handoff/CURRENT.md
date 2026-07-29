@@ -7,7 +7,25 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟠 스펙 028 보완 라운드 1 완료·push — Codex 재검증 대기(`READY_FOR_CODEX`, fix_round 1). 스펙 027 승인·종료. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **⏹ 세션 종료 · 자동 5분 루프 종료 · 수동 재개 대기. 스펙 028은 미완(승인·종료 아님) — Codex correction review 도중 종료. 스펙 027은 승인·종료. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+
+> 세션 종료(2026-07-29): Founder 지시로 마감하고 **Claude Code의 5분 자동 루프를 종료**했다(cron job 취소).
+> 인계 정본은 `docs/handoff/2026-07-29-session-end-handoff.md`.
+> **스펙 028은 `DONE`도 `CODEX_PASSED`도 아니다** — Codex가 `cebcaad`를 검토해 fail-closed/snapshot 결함 2건을
+> `CORRECTION_REQUIRED(1/3)`로 지적했고, Claude가 그 2건을 `d4fb99b`(코드) + `b18b652`(문서)로 보완·push했으나
+> **그에 대한 Codex 재검증은 실행되지 않은 채 세션이 끝났다**. 구현 후보 = `f7b3f61` → `d4fb99b`.
+> **다음 세션 보완 2건**: ⓐ `templateArtBinding`의 source 필드를 **예외 경계 안에서 각 1회** 읽어 snapshot으로만
+> 사용(getter throw·Proxy trap·revoked Proxy는 안전 실패, drift 무효, crossOrigin-before-src·data 예외·재시도 0·
+> generation guard·cache 0 무변경) ⓑ `placement`의 source 체인·legacy-builder marker를 **각 1회** 읽어 전체 snapshot으로
+> 판정하고 **첫 snapshot이 legacy crop이면 drift가 근거를 지워도 `stretch`로 fail-open하지 않음**(원문·필드명·ID 미노출,
+> 기존 결과·오류 우선순위 무변경). **PASS(이번 세션 실측)**: frozen exit 0·lockfile diff 0 / format·lint·typecheck /
+> **unit 893** / build(mockup **254.06 kB**·gzip **78.90**, CSS **13.80/3.53** 무변경, admin 무변경) / **e2e 85 PASS·exit 0** /
+> `git diff --check` clean / 포트 4183·4184 free / OS temp `denn-e2e-*` 0 / 고객 dist **SHA-256 E2E 전후 동일·fixture 0**.
+> **NOT TESTED**: **Codex 재검증**, 운영 bucket CORS, ACAO 부재 시 실제 실패(Playwright가 fulfill 응답에 ACAO를 자동
+> 부여함을 실측 → 시뮬레이션 불가), 운영 이미지·카탈로그, 실기기 4환경, 실제 200% 확대, print/export taint, 대용량 성능.
+> **NOT VERIFIED**: 썸네일(non-CORS)↔owner(anonymous) 동일 URL의 캐시 오염 가능성.
+> 실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**, **다음 스펙 미착수**.
+> 재개 시 HEAD=origin=`b18b652`·0/0 확인 후 위 2건 범위에서만 진행한다.
 
 > 스펙 028 보완 라운드 1 완료(로컬 검증, 2026-07-29, 기준 `cebcaad`, 코드 커밋 `d4fb99b`): Codex 지적 **2건 모두 유효**였다.
 > **① art source 1회 snapshot** — `templateArtBinding`이 `source.kind`/`src`를 **예외 경계 밖에서** 읽어 hostile

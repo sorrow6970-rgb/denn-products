@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-027-customer-preview-composer-connection
 active_unit: spec-028-template-art-stretch-cors-owner
-state: READY_FOR_CODEX
+state: SESSION_ENDED_AWAITING_MANUAL_RESUME
 baseline_commit: 7a2b2cd
 candidate_commit: cebcaad
-verified_commit: null  # 보완 라운드 1 push 후 Codex 재검증 대기
+verified_commit: null  # 스펙 028 미승인 — Codex 재검증 미실행 상태로 세션 종료
 origin_relation: "HEAD=origin=cebcaad, ahead/behind 0/0"
 working_tree: "dirty: two known Codex E2E-regenerated spec-018 PNGs plus local Automation transition documents; PNGs must not be restored, staged, or committed"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: MANUAL_RESUME  # 자동 5분 루프 종료됨
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -63,3 +63,20 @@ check PASS / `git diff --check` clean / 포트 4183·4184 free / OS temp `denn-e
 
 커밋: 코드/test `d4fb99b`, 문서(+ 이 상태 문서) 별도 커밋. 스펙 018 PNG 2개는 restore/checkout/
 stage/commit하지 않았다.
+
+## 세션 종료 (2026-07-29)
+
+Founder 지시로 이번 세션을 마감하고 **Claude Code의 5분 자동 루프를 종료**했다(cron job 취소).
+
+- 스펙 028은 **종료되지 않았다**. `DONE`도 `CODEX_PASSED`도 아니며, Codex correction review 도중
+  세션이 끝났다.
+- 구현 후보: `f7b3f61`(최초 구현) → `d4fb99b`(보완 라운드 1). Codex의 마지막 review 기준선은 `cebcaad`.
+- 보완 2건(templateArtBinding source 단일 snapshot / placement 전체 단일 snapshot과 drift fail-open
+  차단)은 `d4fb99b`로 구현·push됐고, **그에 대한 Codex 재검증은 실행되지 않았다**.
+- HEAD = origin = `b18b652`, ahead/behind 0/0. working tree에는 Codex E2E가 재생성한 스펙 018 PNG
+  2개만 남아 있으며 restore/checkout/stage/commit하지 않았다.
+- 실제 network, live test, Firebase/CORS/Rules/Hosting, deploy: **0**.
+- 다음 스펙은 착수하지 않았다.
+
+재개는 `Automation/NEXT_CLAUDE_PROMPT.md`와
+`docs/handoff/2026-07-29-session-end-handoff.md`를 읽고 **수동으로** 시작한다.

@@ -137,3 +137,16 @@ build(mockup JS **254.06 kB**·gzip **78.90**, CSS 13.80/3.53 무변경, admin �
 check PASS / `git diff --check` clean / 포트 free · temp 0 · 고객 dist SHA-256 E2E 전후 동일 · fixture 0.
 
 **PNG**: Codex E2E 재생성분 2개는 이번 라운드에서도 미복원·미커밋.
+
+## 10. 세션 종료 (2026-07-29) — 미완 상태로 마감
+
+Founder 지시로 세션을 마감하고 **Claude Code의 5분 자동 루프를 종료**했다(cron job 취소).
+
+- **스펙 028은 종료되지 않았다.** `DONE`도 `CODEX_PASSED`도 아니며, Codex correction review 도중 세션이 끝났다.
+- 보완 라운드 1(`d4fb99b` 코드 + `b18b652` 문서)은 push됐으나 **그에 대한 Codex 재검증은 실행되지 않았다(NOT TESTED)**.
+- HEAD = origin = `b18b652`, ahead/behind 0/0, staged 0, 미추적 0.
+  working tree 잔여는 §7의 PNG 2개뿐이며 이번 세션에서도 restore·checkout·stage·commit 하지 않았다.
+- 다음 세션 범위는 §9의 보완 2건(ⓐ art source 예외 경계 내 단일 snapshot, ⓑ placement 전체 단일 snapshot과
+  getter drift fail-open 차단)의 **재검증 또는 추가 보완**으로 한정한다. 새 기능·다음 스펙은 착수하지 않는다.
+- 세션 인계 정본: `docs/handoff/2026-07-29-session-end-handoff.md`.
+- 이번 마감 라운드는 **문서 전용 커밋**이며 기능 코드·설정·테스트 변경 0, 실제 network·live·Firebase·CORS·deploy 0.
