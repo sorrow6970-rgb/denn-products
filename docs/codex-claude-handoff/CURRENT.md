@@ -7,7 +7,31 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟡 스펙 025 승인·종료. 스펙 026 고객 상품 미리보기 연결 계약 사전 조사 대기(`WAITING_FOR_CLAUDE`).**
+상태: **🟡 스펙 025 승인·종료. 스펙 026 사전 조사 완료·push — Codex 근거 검수 대기(`READY_FOR_CODEX`). 구현 스펙 026 미작성·미착수.**
+
+> 스펙 026 사전 조사 완료(읽기 전용, 2026-07-29, 기준 HEAD `377d350`): 보고서
+> `docs/codex-claude-handoff/reviews/2026-07-29-customer-preview-connection-investigation.md`(표 12종).
+> **한 줄: 기하·어댑터·surface는 준비됐고, 색·사용자 사진·frame 논리 width·image binding 소유자·마운트 지점이 비어 있다.**
+> **실측**: 고객 production 코드가 `PreviewCanvasSurface`·`buildCase/FrameProductPlan`·`projectCase/FramePreviewGeometry`를
+> **한 번도 import 하지 않으며**(`App.tsx:1-8`, `BrowseFlow.tsx:6-31`) 선택 완료 화면은 텍스트 요약뿐이다(`BrowseFlow.tsx:312-351`).
+> **부족분 6종** = case 색 / frame 색 선택 단계(카탈로그에 `frameColors`는 있으나 selector·projection 없음,
+> `catalog/types.ts:57`·`catalog/read.ts:83`) / frame `logicalWidth`(레거시 `prevMaxW‖500`은 운영자 UI 설정이고 스펙 025가 기본값 금지) /
+> `UserImageState` 3필드 / `imageBindings` 소유자(`canvas/types.ts:43-45` 포트만 존재) / 마운트 지점.
+> **레거시 생명주기 확정**: 파일·드롭 → `FileReader.readAsDataURL` → `new Image()` → `onload`에서 `caseImgs[i]`/`caseImg`/`frameImg`에
+> **HTMLImageElement** 저장 + transform `{scale:1,x:0,y:0}` 초기화(`:1283`,`:1374-1391`), 리셋은 `input.value=''` 포함(`:1408`),
+> **revoke·abort·캐시 해제 없음**. `createObjectURL`은 다운로드 전용(`:11256`), `createImageBitmap`·`.decode()`·`OffscreenCanvas`는 **0회**.
+> cover 수식은 스펙 019와 동일하나 레거시는 클램프 값을 입력 객체에 되쓴다(`:1551`). **CORS**: 사용자 사진은 same-origin이라 요구 없음,
+> 템플릿 아트를 Canvas에 올리면 필수이며 레거시의 "crossOrigin 없이 재시도"(`:12138`)는 tainted canvas 위험이라 복제 금지.
+> **색**: case는 카탈로그에 없고 전역 초기값 `#1A1A1A`(`:977`)·HTML 첫 스와치 선택·`transparent` 패턴 분기(`:1686`),
+> frame은 `FC[0]` 자동 선택(`:1042`,`:1046`)+`grain` 난수 텍스처(`:1765`) → 스펙 025 제약과 충돌.
+> **크기**: case `modelLogicalSize`는 레거시 backing과 동일해 직결 가능하나, 액자는 논리 width가 없고 레거시는 CSS `transform: scale` 래퍼를 써
+> 스펙 022 불변식(`surface.ts:26-27`)과 충돌할 수 있다(첫 draw의 `getBoundingClientRect` 폴백이 스케일 값을 반환, `usePreviewCanvasSurface.ts:36-39`).
+> **`FOUNDER_DECISION_REQUIRED` 9건**(case 팔레트 정본·`transparent`·`grain`·색 미선택 UX·frame `logicalWidth` 정책·축소 vs 스크롤·
+> 템플릿 아트 포함 여부·이미지 표현 방식(data/blob/ImageBitmap)·멀티 zone 사진 공유 허용 여부)과 **근거만으로 확정 가능한 9건**을 분리했다.
+> 스펙 026 최소 범위·허용 파일 후보·unit/E2E 검증·제외 범위도 제안했다(transform은 고정값, pointer/회전/텍스트/인쇄/주문 제외).
+> **NOT VERIFIED**: 운영 `frameColors` 분포·`prevMaxW` 실제값·멀티 zone 비중·`?space=` 페이로드. **NOT TESTED**: 실제 이미지 load/decode·
+> 브라우저 파일 선택·CORS-clean·실기기·선명도. **코드·설정·테스트·PNG·lockfile 무변경, 실제 GET·live·deploy 0.**
+> 이 조사는 스펙 026을 작성하지 않으며 다음 구현은 착수하지 않는다.
 
 > 다음 전이(2026-07-29): Founder가 보호형 루프 계속 진행을 승인했다. Claude Code는
 > `Automation/NEXT_CLAUDE_PROMPT.md`의 읽기 전용 사전 조사만 수행한다. 앱·패키지·테스트·
