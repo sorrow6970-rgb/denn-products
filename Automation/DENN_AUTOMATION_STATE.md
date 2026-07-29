@@ -5,15 +5,16 @@ updated_at: 2026-07-29
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-025
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: bfcf8d7
-verified_commit: 2ae9f9a
+active_unit: spec-026-pre-investigation
+state: WAITING_FOR_CLAUDE
+baseline_commit: 3c3b794
+verified_commit: 3c3b794
 origin_relation: "HEAD=origin, ahead/behind 0/0"
 working_tree: clean
-fix_round: 1
+fix_round: 0
 max_fix_rounds: 3
-next_transition: WAITING_FOR_CLAUDE
-commit_owner: Codex
+next_transition: CLAUDE_WORKING
+commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
@@ -39,6 +40,7 @@ deploy: forbidden
 
 ## 다음 전이
 
-스펙 025는 승인·종료됐다. 전체 리빌드 파이프라인은 끝나지 않았으므로 5분 감시는 유지하되,
-다음 스펙의 범위가 확정될 때까지 `FOUNDER_DECISION_REQUIRED`에서 저장소 쓰기 없이 기다린다.
-Founder/Codex가 스펙 026을 확정하면 `WAITING_FOR_CLAUDE`로 전이한다.
+Founder가 다음 단계 진행을 승인했다. Claude Code는
+`Automation/NEXT_CLAUDE_PROMPT.md`에 적힌 스펙 026 사전 근거 조사만 수행한다.
+조사 결과가 push되면 `READY_FOR_CODEX`로 전이하고 Codex가 근거와 차단 결정을 검토한다.
+구현 스펙 026은 조사 결과를 검수한 뒤 Codex가 별도로 작성한다.

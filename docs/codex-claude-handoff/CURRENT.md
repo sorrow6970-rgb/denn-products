@@ -7,7 +7,12 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 025 Codex 최종 승인·종료. 승인 기준 HEAD `2ae9f9a`. 다음 = Founder/Codex의 스펙 026 결정 대기.**
+상태: **🟡 스펙 025 승인·종료. 스펙 026 고객 상품 미리보기 연결 계약 사전 조사 대기(`WAITING_FOR_CLAUDE`).**
+
+> 다음 전이(2026-07-29): Founder가 보호형 루프 계속 진행을 승인했다. Claude Code는
+> `Automation/NEXT_CLAUDE_PROMPT.md`의 읽기 전용 사전 조사만 수행한다. 앱·패키지·테스트·
+> 설정·PNG·실제 네트워크는 변경하지 않는다. 조사 push 후 Codex가 근거를 검수하고 구현
+> 스펙 026을 별도로 확정한다.
 
 > Codex 최종 승인(2026-07-29): 스펙 025 보완 라운드 1의 case builder 전체 1회
 > normalized snapshot, `zoneImages.get` property 단일 읽기, `sourceIndex` non-negative integer

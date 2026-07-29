@@ -28,3 +28,11 @@
 - 검증 중 재생성된 추적 PNG 1개는 Founder의 정확한 파일 승인 후 HEAD 승인본으로 복원했다.
 - NOT TESTED: 실제 사용자 이미지 load/binding, CORS-clean, 운영 이미지, 실기기, 선명도.
 - 다음: `FOUNDER_DECISION_REQUIRED` — 승인된 스펙 026 없음, 읽기 전용 대기.
+
+## 2026-07-29 — 스펙 026 사전 조사 전이
+
+- Founder가 보호형 루프 계속 진행을 승인했다.
+- 상태: `WAITING_FOR_CLAUDE`
+- 범위: 고객 상품 미리보기 연결 계약의 읽기 전용 근거 조사
+- 구현·UI·Canvas 연결·실제 network·Firebase·deploy: 금지
+- 결과: review 보고서 push 후 Codex 독립 검수
