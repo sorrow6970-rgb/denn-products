@@ -14,6 +14,7 @@ import { createRoot } from "react-dom/client";
 import "@denn/ui/theme.css";
 import { PreviewCanvasSurface } from "../canvas/PreviewCanvasSurface";
 import type { PreviewImageBindings } from "../canvas/types";
+import { useLocalImageBinding } from "../canvas/useLocalImageBinding";
 
 const BODY_COLOR = "#112233";
 const STROKE_COLOR = "#FF0000";
@@ -115,20 +116,54 @@ const PLAN_FRAME = (): PreviewRenderPlan => ({
   ],
 });
 
+/**
+ * Plan for a picked LOCAL image (spec 026). `imageRef` is the synthetic key the binding owner
+ * created — never a file name, never a url. The clip is smaller than the draw rect, so the pixels
+ * outside it must stay body-coloured even when a real decoded photo is bound.
+ */
+const PLAN_USER = (imageRef: string): PreviewRenderPlan => ({
+  kind: "case",
+  logicalCanvas: { width: 300, height: 200 },
+  commands: [
+    {
+      type: "fill-rect",
+      layerId: "fixture:body",
+      rect: { x: 0, y: 0, width: 300, height: 200 },
+      color: BODY_COLOR,
+    },
+    {
+      type: "draw-image-cover",
+      layerId: "fixture:user",
+      imageRef,
+      clipRect: { x: 20, y: 20, width: 100, height: 60 },
+      drawRect: { x: 0, y: 0, width: 200, height: 160 },
+    },
+  ],
+});
+
 function Fixture(): React.JSX.Element {
   const [planKey, setPlanKey] = useState<"a" | "b" | "frame">("a");
   const [hidden, setHidden] = useState(false);
   const [mounted, setMounted] = useState(true);
+  const picked = useLocalImageBinding();
 
+  // a decoded local image takes over the surface; otherwise the synthetic plans are shown
+  const pickedRef = picked.state.status === "ready" ? picked.state.imageState.imageRef : null;
   const plan = useMemo(() => {
+    if (pickedRef !== null) return PLAN_USER(pickedRef);
     if (planKey === "b") return PLAN_B();
     if (planKey === "frame") return PLAN_FRAME();
     return PLAN_A();
-  }, [planKey]);
-  const imageBindings = useMemo<PreviewImageBindings>(
-    () => new Map<string, CanvasImageSource>([["fixtureDrawable", createDrawable()]]),
-    [],
-  );
+  }, [planKey, pickedRef]);
+
+  const pickedBindings = picked.bindings;
+  const imageBindings = useMemo<PreviewImageBindings>(() => {
+    const synthetic = createDrawable();
+    return {
+      get: (imageRef: string) =>
+        imageRef === "fixtureDrawable" ? synthetic : pickedBindings.get(imageRef),
+    };
+  }, [pickedBindings]);
 
   return (
     <main style={{ padding: 12 }}>
@@ -157,6 +192,28 @@ function Fixture(): React.JSX.Element {
         <button type="button" data-testid="fx-mount" onClick={() => setMounted(true)}>
           mount
         </button>
+      </div>
+      {/* Local image pick (spec 026). The owner keeps the object url private; this harness only
+          hands it a File and reads the safe snapshot back. */}
+      <div style={{ marginBottom: 12 }}>
+        <label htmlFor="fx-file">사용자 이미지 선택</label>{" "}
+        <input
+          id="fx-file"
+          data-testid="fx-file"
+          type="file"
+          accept="image/*"
+          onChange={(event) => {
+            const chosen = event.target.files?.[0];
+            // the UI owner (not the controller) empties the input so the SAME file can be
+            // picked again — spec 026 §5, legacy denn-mockup-tool.html:1408
+            event.target.value = "";
+            if (chosen) picked.load(chosen);
+          }}
+        />{" "}
+        <button type="button" data-testid="fx-file-clear" onClick={() => picked.clear()}>
+          clear picked image
+        </button>
+        <span data-testid="fx-file-state">{picked.state.status}</span>
       </div>
       <div data-testid="fx-host" style={hidden ? { display: "none" } : undefined}>
         {mounted ? (

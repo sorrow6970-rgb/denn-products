@@ -9,6 +9,7 @@
 // `getImageData` is used ONLY inside these test-side `page.evaluate` calls; production source never
 // gains it (asserted in the executor's own source scan and by the surface unit tests).
 
+import { deflateSync } from "node:zlib";
 import AxeBuilder from "@axe-core/playwright";
 import { type ConsoleMessage, expect, type Page, test } from "@playwright/test";
 import { MOCKUP_PORT } from "../../playwright.config";
@@ -207,6 +208,240 @@ test("frame plan draws distinct frame band, mat ring and photo areas", async ({ 
   ).toEqual([]);
 });
 
+// --- spec 026: a real local file, decoded by the real browser, bound and drawn ------------------
+// The bytes are generated here (a solid-colour PNG built with node:zlib) — no fixture file is added
+// to the repo, nothing is downloaded, and no product image is used.
+
+const PHOTO_A = [255, 0, 255] as const; // magenta
+const PHOTO_B = [0, 255, 255] as const; // cyan
+const FILE_NAME_MARKER = "USERPHOTOMARKER";
+
+const CRC_TABLE: number[] = Array.from({ length: 256 }, (_, n) => {
+  let c = n;
+  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  return c >>> 0;
+});
+
+function crc32(buffer: Buffer): number {
+  let c = 0xffffffff;
+  for (const byte of buffer) c = CRC_TABLE[(c ^ byte) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type: string, data: Buffer): Buffer {
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length, 0);
+  const body = Buffer.concat([Buffer.from(type, "latin1"), data]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(body), 0);
+  return Buffer.concat([length, body, crc]);
+}
+
+/** Minimal valid truecolour PNG filled with one flat colour. */
+function solidPng(size: number, [r, g, b]: readonly [number, number, number]): Buffer {
+  const raw = Buffer.alloc((size * 3 + 1) * size);
+  let offset = 0;
+  for (let y = 0; y < size; y++) {
+    raw[offset++] = 0; // filter: none
+    for (let x = 0; x < size; x++) {
+      raw[offset++] = r;
+      raw[offset++] = g;
+      raw[offset++] = b;
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(size, 0);
+  ihdr.writeUInt32BE(size, 4);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 2; // colour type: truecolour
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk("IHDR", ihdr),
+    pngChunk("IDAT", deflateSync(raw)),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+const photoFile = (name: string, colour: readonly [number, number, number]) => ({
+  name,
+  mimeType: "image/png",
+  buffer: solidPng(20, colour),
+});
+
+const fileInput = (page: Page) => page.getByTestId("fx-file");
+const pickState = (page: Page) => page.getByTestId("fx-file-state");
+
+async function pick(
+  page: Page,
+  name: string,
+  colour: readonly [number, number, number],
+): Promise<void> {
+  await fileInput(page).setInputFiles(photoFile(name, colour));
+}
+
+test.describe("local user image binding (spec 026)", () => {
+  test("decodes a picked file, binds it and draws real pixels inside the clip", async ({
+    page,
+  }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto(FIXTURE_URL);
+    await waitForReady(page);
+
+    await pick(page, `${FILE_NAME_MARKER}-a.png`, PHOTO_A);
+    await expect(pickState(page)).toHaveText("ready");
+
+    // inside the clip → the decoded photo; outside the clip but inside the draw rect → body colour
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...PHOTO_A]);
+    expect(rgb(await pixelAt(page, 150, 100))).toEqual([...BODY]);
+    expect(rgb(await pixelAt(page, 8, 8))).toEqual([...BODY]);
+    expect(errors).toEqual([]);
+  });
+
+  test("empties the input value so the same file can be picked again", async ({ page }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto(FIXTURE_URL);
+    await waitForReady(page);
+
+    await pick(page, `${FILE_NAME_MARKER}-a.png`, PHOTO_A);
+    await expect(pickState(page)).toHaveText("ready");
+    expect(await fileInput(page).inputValue()).toBe("");
+
+    await page.getByTestId("fx-file-clear").click();
+    await expect(pickState(page)).toHaveText("idle");
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...DRAWABLE]);
+
+    // the very same file again — accepted because the value was emptied
+    await pick(page, `${FILE_NAME_MARKER}-a.png`, PHOTO_A);
+    await expect(pickState(page)).toHaveText("ready");
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...PHOTO_A]);
+    expect(errors).toEqual([]);
+  });
+
+  test("a fast replacement draws only the latest image", async ({ page }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto(FIXTURE_URL);
+    await waitForReady(page);
+
+    await pick(page, `${FILE_NAME_MARKER}-a.png`, PHOTO_A);
+    await pick(page, `${FILE_NAME_MARKER}-b.png`, PHOTO_B);
+    await expect(pickState(page)).toHaveText("ready");
+
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...PHOTO_B]);
+    // and it stays B — a late completion of A must not repaint
+    expect(rgb(await pixelAt(page, 60, 50))).toEqual([...PHOTO_B]);
+    expect(errors).toEqual([]);
+  });
+
+  test("clear, unmount and remount leave no stale draw and no console error", async ({ page }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto(FIXTURE_URL);
+    await waitForReady(page);
+
+    await pick(page, `${FILE_NAME_MARKER}-a.png`, PHOTO_A);
+    await expect(pickState(page)).toHaveText("ready");
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...PHOTO_A]);
+
+    await page.getByTestId("fx-unmount").click();
+    await expect(canvas(page)).toHaveCount(0);
+    await page.getByTestId("fx-mount").click();
+    await waitForReady(page);
+    // the surface came back with the still-bound photo, not a stale synthetic drawable
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...PHOTO_A]);
+
+    await page.getByTestId("fx-file-clear").click();
+    await expect(pickState(page)).toHaveText("idle");
+    await expect.poll(async () => rgb(await pixelAt(page, 60, 50))).toEqual([...DRAWABLE]);
+    expect(errors).toEqual([]);
+  });
+
+  test("no blob url or file name reaches text, ARIA, data-*, storage, location or console", async ({
+    page,
+  }) => {
+    const errors = collectConsoleErrors(page);
+    const logs: string[] = [];
+    page.on("console", (m: ConsoleMessage) => logs.push(m.text()));
+    await page.goto(FIXTURE_URL);
+    await waitForReady(page);
+
+    await pick(page, `${FILE_NAME_MARKER}-a.png`, PHOTO_A);
+    await expect(pickState(page)).toHaveText("ready");
+
+    const leaked = await page.evaluate(() => {
+      const attributes: string[] = [];
+      for (const element of Array.from(document.querySelectorAll("*"))) {
+        for (const attribute of Array.from(element.attributes)) {
+          // the file input's own value is browser-controlled and already asserted empty elsewhere
+          if (element.tagName === "INPUT" && attribute.name === "type") continue;
+          attributes.push(`${attribute.name}=${attribute.value}`);
+        }
+      }
+      return {
+        text: document.body.innerText,
+        attributes: attributes.join("|"),
+        storage: `${JSON.stringify(Object.entries(localStorage))}${JSON.stringify(
+          Object.entries(sessionStorage),
+        )}`,
+        location: `${location.href}${location.hash}${location.search}`,
+      };
+    });
+
+    for (const haystack of [leaked.text, leaked.attributes, leaked.storage, leaked.location]) {
+      expect(haystack).not.toContain("blob:");
+      expect(haystack).not.toContain(FILE_NAME_MARKER);
+      expect(haystack).not.toContain("base64");
+    }
+    expect(logs.join("|")).not.toContain("blob:");
+    expect(logs.join("|")).not.toContain(FILE_NAME_MARKER);
+    expect(errors).toEqual([]);
+  });
+
+  test("the picker is labelled and accessible at 320px and desktop with no overflow", async ({
+    page,
+  }) => {
+    for (const viewport of [
+      { width: 320, height: 568 },
+      { width: 1280, height: 800 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto(FIXTURE_URL);
+      await waitForReady(page);
+      await pick(page, `${FILE_NAME_MARKER}-a.png`, PHOTO_A);
+      await expect(pickState(page)).toHaveText("ready");
+
+      const accessibleName = await fileInput(page).evaluate((element) => {
+        const labels = (element as HTMLInputElement).labels;
+        return labels && labels.length > 0 ? (labels[0].textContent ?? "") : "";
+      });
+      expect(accessibleName.trim()).toBe("사용자 이미지 선택");
+
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(0);
+
+      const results = await new AxeBuilder({ page }).analyze();
+      expect(
+        results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
+      ).toEqual([]);
+    }
+  });
+
+  test("decoding a local file makes no network request", async ({ page }) => {
+    const external: string[] = [];
+    page.on("request", (request) => {
+      const url = request.url();
+      if (!url.startsWith(`http://localhost:${MOCKUP_PORT}/`) && !url.startsWith("blob:")) {
+        external.push(url);
+      }
+    });
+    await page.goto(FIXTURE_URL);
+    await waitForReady(page);
+    await pick(page, `${FILE_NAME_MARKER}-a.png`, PHOTO_A);
+    await expect(pickState(page)).toHaveText("ready");
+    expect(external).toEqual([]);
+  });
+});
+
 test("the customer screen shows no canvas and no route to the fixture", async ({ page }) => {
   const errors = collectConsoleErrors(page);
   await page.route("**/firebasestorage.googleapis.com/**", (route) =>
@@ -221,6 +456,8 @@ test("the customer screen shows no canvas and no route to the fixture", async ({
 
   expect(await page.locator("canvas").count()).toBe(0);
   expect(await page.getByTestId("preview-canvas").count()).toBe(0);
+  // spec 026: the local image picker is fixture-only — the customer screen gains no file input
+  expect(await page.locator('input[type="file"]').count()).toBe(0);
   expect(await page.locator('a[href*="fixture"]').count()).toBe(0);
   expect(await page.content()).not.toContain("e2e-canvas-fixture");
   expect(errors).toEqual([]);
