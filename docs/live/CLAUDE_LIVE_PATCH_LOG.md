@@ -97,3 +97,12 @@
   복원 여부는 Founder 결정 대기.
 - NOT TESTED: 실기기 blob URL/decode, 대용량 사진 메모리·성능, EXIF 회전, 선명도
 - 다음: Codex 독립 검증. 고객 화면 mount·색·logical width는 후속.
+
+## 2026-07-29 — 스펙 026 PNG 복원 (Founder 승인)
+
+- 승인 범위: `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`,
+  `docs/rebuild/results/spec-018/browse-mobile-390x844.png` **두 파일만**
+- 처리: `git checkout --`로 HEAD 승인본 복원 (50,814 B / 49,683 B = HEAD 일치)
+- 그 외 파일·미추적 파일 무변경, 커밋된 PNG 0, working tree clean
+- 픽셀 동일성은 여전히 NOT VERIFIED (고객 dist는 E2E 전후 SHA-256 동일)
+- 상태: `READY_FOR_CODEX` 유지 — Codex 독립 검증 대기

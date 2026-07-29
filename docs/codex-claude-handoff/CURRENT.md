@@ -7,7 +7,13 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟠 스펙 026(로컬 사용자 이미지 binding) 구현 완료·push — Codex 독립 검증 대기(`READY_FOR_CODEX`). ⚠️ 재생성된 스펙 018 PNG 2개는 Founder 결정 대기(미복원·미커밋).**
+상태: **🟠 스펙 026(로컬 사용자 이미지 binding) 구현 완료·push — Codex 독립 검증 대기(`READY_FOR_CODEX`). 재생성된 스펙 018 PNG 2개는 Founder 승인 후 HEAD 승인본으로 복원(커밋된 PNG 0, working tree clean).**
+
+> PNG 후속(2026-07-29): Founder가 **정확한 두 파일**(`spec-018/browse-desktop-1280x800.png`,
+> `browse-mobile-390x844.png`)의 복원을 승인해 `git checkout --`로 그 두 경로만 HEAD 승인본으로 되돌렸다
+> (복원 후 50,814 B / 49,683 B = HEAD 일치). 그 외 파일·미추적 파일은 건드리지 않았고 커밋된 PNG는 **0**,
+> working tree **clean**, HEAD=origin `0859e50`·0/0. 새 산출물은 채택하지 않았으며 픽셀 동일성은 여전히
+> **NOT VERIFIED**다. 상태는 `READY_FOR_CODEX` 유지.
 
 > 스펙 026 구현·자동검증 완료(로컬, 2026-07-29, 기준 HEAD `377d350`, 코드 커밋 `ae798d5`): 정본
 > `docs/rebuild/specs/026-local-user-image-binding-lifecycle.md`, 인계

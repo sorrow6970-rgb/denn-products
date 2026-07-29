@@ -286,3 +286,8 @@ E2E는 실제 Chromium browser API 검증이다. 실기기 4환경 검증은 아
 - **NOT TESTED:** 실기기 4환경의 blob URL·decode, 대용량 사진 메모리·성능, EXIF 회전, 선명도, 운영 이미지.
 - ⚠️ **이 완료는 로컬 이미지 owner 완료이며 상품 미리보기·고객 Canvas 연결 완료가 아니다.** 고객 production 화면에는
   아무것도 mount하지 않았다. 인계: `docs/handoff/2026-07-29-spec-026-local-image-binding-handoff.md`.
+
+**PNG 후속(2026-07-29):** 위 재생성된 추적 PNG 2개는 **Founder가 정확한 두 파일의 복원을 승인**해
+`docs/rebuild/results/spec-018/browse-desktop-1280x800.png`(50,814 B)과
+`browse-mobile-390x844.png`(49,683 B)을 HEAD 승인본으로 복원했다(각각 바이트 수가 HEAD와 일치, working tree clean).
+새 산출물은 채택하지 않았고 커밋된 PNG는 없다. 픽셀 동일성은 여전히 `NOT VERIFIED`다.

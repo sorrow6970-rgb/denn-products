@@ -122,3 +122,12 @@ type LocalImageBindingState =
 | 2 | (문서) | 스펙 026 DONE, 이 인계, `CLAUDE_LIVE_PATCH_LOG.md`, `CURRENT.md` |
 
 **롤백 순서: 문서 커밋 → 코드 커밋**(역순 revert). 기준 `377d350`으로 되돌리면 라운드 전 상태다.
+
+---
+
+## 10. PNG 후속 (2026-07-29, Founder 승인 후)
+
+Founder가 §6의 **정확한 두 파일**에 대해 복원을 승인했다. `git checkout --`로 그 두 경로만 HEAD 승인본으로
+되돌렸고(복원 후 바이트 수 50,814 / 49,683 = HEAD와 일치), 그 외 파일은 건드리지 않았다.
+결과: working tree **clean**, HEAD=origin `0859e50`, ahead/behind 0/0, 커밋된 PNG **0**.
+새 산출물은 채택하지 않았으며 픽셀 동일성은 여전히 `NOT VERIFIED`다.
