@@ -182,3 +182,23 @@
 - PNG 2개(Codex E2E 재생성): 미복원·미커밋 → working tree dirty 유지
 - NOT TESTED: 실기기, 실제 200% 확대, 운영 카탈로그 분포·이미지, 대용량 사진 성능, EXIF
 - 다음: Codex 독립 검증. 템플릿 아트·pointer·print·주문은 여전히 후속.
+
+## 2026-07-29 — 스펙 027 보완 라운드 1 (frame 색 dedup)
+
+- 기준: `075ee01` (+ Codex 지적 `f5c0039`)
+- 코드/test: `6fb8630`
+- 상태: `CORRECTION_REQUIRED` → 보완 완료 → `READY_FOR_CODEX`
+- 변경 파일(허용 목록 안): `apps/mockup/src/preview/previewContracts.ts`,
+  `previewContracts.test.ts`, `PreviewComposer.test.tsx`
+- 지적: 같은 canonical fill을 가진 frameColors 항목 2개 → swatch key/test id 중복,
+  여러 버튼이 동시에 aria-pressed=true
+- 수정: canonical value 기준 결정적 dedup(첫 유효 항목·이름 보존, 유효 항목만 선점),
+  자동 선택 0·raw id 미노출·1회 읽기·throw 0 유지
+- 신규 테스트 5건
+- 게이트: frozen PASS / lockfile diff 0 / format·lint·typecheck /
+  unit 802(797→802) / e2e 78 PASS exit 0 **16.9초** / check PASS / diff --check clean /
+  포트 free · temp 0 · 고객 dist SHA-256 동일 · fixture 0
+- 번들: mockup JS 248.29 kB(gzip 77.55), CSS 13.80(3.53) — dedup 코드분만 증가, admin 무변경
+- 이전 라운드의 "E2E 2.1~3.5분" 의문 해소: 동일 스위트가 16.9초로 완료 → 호스트 부하였음
+- PNG 2개: 여전히 미복원·미커밋
+- 다음: Codex 재검증. 다음 기능 착수 없음.

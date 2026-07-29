@@ -231,3 +231,25 @@ Firebase·배포 완료를 의미하지 않는다.
   커밋된 PNG 0).
 - ⚠️ 이 완료는 **로컬 사용자 사진 기반 첫 고객 Canvas preview 연결**이며 템플릿 아트·운영 이미지 CORS-clean·pointer·
   print/export·저장·주문·Firebase·배포 완료가 아니다. 인계: `docs/handoff/2026-07-29-spec-027-customer-preview-handoff.md`.
+
+---
+
+### DONE (Claude) — 보완 라운드 1 (2026-07-29)
+
+기준 HEAD `075ee01`(+ Codex 지적 커밋 `f5c0039`) → 코드/test 커밋 `6fb8630`. **Codex 재검증 전이므로 종료가 아니다.**
+
+- **지적(재현 확인)**: `frameColors`의 서로 다른 항목이 같은 canonical fill을 가질 수 있다(예 `#1a1a1a` / `#1A1A1A`).
+  기존 `readFrameColorOptions`는 둘 다 반환했고 composer는 `key`·`data-testid`·선택 비교에 **값**을 쓰므로
+  **중복 key/test id**가 생기고 한 번 클릭에 **두 버튼이 동시에 `aria-pressed=true`** 로 보일 수 있었다.
+- **수정**: canonical uppercase `value` 기준으로 **결정적 dedup**. source order의 **첫 유효 항목과 그 이름을 보존**하고
+  뒤의 중복은 표시하지 않는다. **유효 항목만 색을 선점**하므로 앞선 `grain`·형식 오류 항목이 뒤의 solid를 가리지 않는다.
+  자동 선택 **0**, raw id/object/diagnostic 미노출, 각 property **1회 읽기**, hostile getter **throw 0** 유지.
+- **테스트(신규 5)**: 대소문자만 다른 2개 → 첫 1개 / 같은 색 3개 → 1개 / 서로 다른 색은 source order 유지 /
+  무효 첫 항목이 색을 선점하지 않음 / 컴포넌트 markup에 swatch **1개**·`aria-pressed="true"` **0**.
+- **게이트(보완 라운드 1)**: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck /
+  **unit 802**(797 → 802) / build(mockup JS **248.29 kB**·gzip **77.55**, CSS **13.80**·**3.53** — dedup 코드만큼
+  +0.06 kB, admin 무변경) / **e2e 78 PASS**·**exit 0·16.9초** / check PASS / `git diff --check` clean /
+  포트 4183·4184 **free** / OS temp `denn-e2e-*` 0 / 고객 dist **SHA-256 E2E 전후 동일·fixture 0** / 네트워크·deploy 0.
+- **이전 라운드 E2E 소요 의문 해소**: 같은 78건 스위트가 이번에 **16.9초**로 끝났다(직전 라운드 2.1~3.5분).
+  즉 그때의 지연은 **호스트 부하**였고 앱 회귀가 아니었음이 실측으로 확인됐다.
+- **PNG**: Codex E2E 재생성분 2개는 이번에도 **restore·checkout·stage·commit 하지 않았다**(working tree dirty, 커밋된 PNG 0).

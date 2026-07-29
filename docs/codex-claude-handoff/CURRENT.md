@@ -7,7 +7,21 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟠 스펙 027(고객 미리보기 composer 연결) 구현 완료·push — Codex 독립 검증 대기(`READY_FOR_CODEX`). 스펙 026 승인·종료. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **🟠 스펙 027 보완 라운드 1 완료·push — Codex 재검증 대기(`READY_FOR_CODEX`, fix_round 1). 스펙 026 승인·종료. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+
+> 스펙 027 보완 라운드 1 완료(로컬 검증, 2026-07-29, 기준 `075ee01` + Codex 지적 `f5c0039`, 코드 커밋 `6fb8630`):
+> **지적(재현 확인)** = `frameColors`의 서로 다른 항목이 같은 canonical fill(`#1a1a1a`/`#1A1A1A`)을 가지면
+> swatch의 React key·`data-testid`가 중복되고 값 비교 때문에 **여러 버튼이 동시에 `aria-pressed=true`** 가 될 수 있었다.
+> **수정** = `readFrameColorOptions`가 canonical uppercase 값 기준으로 **결정적 dedup**(source order의 **첫 유효 항목과
+> 이름 보존**, 이후 중복 미표시, **유효 항목만 색 선점**이라 앞선 `grain`·형식 오류가 뒤 solid를 가리지 않음).
+> 자동 선택 0·raw id/object/diagnostic 미노출·property 1회 읽기·hostile getter throw 0 **유지**.
+> 신규 테스트 5건(대소문자 2개→1, 같은 색 3개→1, 서로 다른 색 순서 유지, 무효 항목 미선점, markup swatch 1개·pressed 0).
+> 게이트: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / **unit 802**(797→802) /
+> build(mockup JS **248.29 kB**·gzip **77.55**, CSS **13.80**·**3.53**, admin 무변경) / **e2e 78 PASS·exit 0·16.9초** /
+> check PASS / `git diff --check` clean / 포트 4183·4184 **free**·잔류 0 / OS temp `denn-e2e-*` 0 / 고객 dist
+> **SHA-256 E2E 전후 동일·fixture 0** / 네트워크·live·deploy 0. **이전 라운드의 "E2E 2.1~3.5분" 의문 해소**:
+> 동일한 78건 스위트가 이번에 **16.9초**로 끝나 그 지연이 **호스트 부하**였고 앱 회귀가 아니었음이 실측됐다.
+> **PNG**: Codex E2E 재생성분 2개는 이번에도 미복원·미커밋(working tree dirty·커밋된 PNG 0).
 
 > 스펙 027 구현·자동검증 완료(로컬, 2026-07-29, 기준 HEAD `835eaaa`, 코드 커밋 `175a363`): 정본
 > `docs/rebuild/specs/027-customer-preview-composer-connection.md`, 인계
