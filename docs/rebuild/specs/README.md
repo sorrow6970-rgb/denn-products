@@ -3,7 +3,11 @@
 > 이 폴더는 **Codex가 작성하고 Claude Code가 소비하는** 작업 스펙의 단일 위치다.
 > 규칙 전문은 루트 `CLAUDE.md` §1 참조.
 
-작업 전에는 `/CLAUDE.md` → `docs/rebuild/README.md` → `docs/codex-claude-handoff/CURRENT.md` → 적용 `decisions/` → 현재 스펙 순서로 읽는다. 스펙 번호가 같아도 `docs/codex-claude-handoff/instructions/` 문서는 준비 이력이며 이 폴더의 현재 스펙을 대체하지 않는다.
+작업 전에는 `/CLAUDE.md` → `docs/rebuild/README.md` →
+`docs/codex-claude-handoff/AUTO_REVIEW_LOOP.md` →
+`docs/codex-claude-handoff/CURRENT.md` → 적용 `decisions/` → 현재 스펙 순서로 읽는다.
+스펙 번호가 같아도 `docs/codex-claude-handoff/instructions/` 문서는 준비 이력이며 이
+폴더의 현재 스펙을 대체하지 않는다.
 
 ## 흐름
 
@@ -16,6 +20,9 @@ Claude Code  →  스펙 읽고 코드 구현 → 검증 실행 → 스펙 하�
 - Claude Code는 **스펙에 명시된 범위만** 구현한다. 범위 밖 리팩터·확장 금지.
 - 불명확/모순 → 임의 결정 금지. 스펙 하단 `### QUESTIONS`에 남기고 확인 요청.
 - 커밋은 스펙 단위, 메시지에 `spec NNN:` 접두어.
+- 보호형 자동 검수 루프가 켜져 있으면 현재 스펙의 in-scope 보완·재검증·fast-forward
+  push·최종 승인 문서 종료까지 자동 진행한다. 최대 라운드와 STOP 조건은
+  `AUTO_REVIEW_LOOP.md`를 따른다.
 
 ## 파일명
 

@@ -1,7 +1,7 @@
 # CLAUDE.md — DENN PRODUCTS 리빌드 규칙 (필독)
 
 > 이 파일은 Claude Code가 세션 시작 시 자동으로 읽는다. 여기 적힌 규칙은 **강제**다.
-> 최종 갱신: 2026-07-22 (웜 토프 최종 결정 및 스펙 006 종료).
+> 최종 갱신: 2026-07-29 (보호형 자동 검수 루프 도입).
 
 ---
 
@@ -35,6 +35,20 @@
 - 위치: `docs/rebuild/specs/`
 - 파일명: `NNN-<slug>.md` (예: `007-warm-taupe-palette-migration.md`, `012-room-mockup-engine.md`) — NNN은 기존 번호와 중복하지 않는 3자리 순번.
 - 포맷/템플릿: `docs/rebuild/specs/README.md` 참조.
+
+### 1.3 보호형 자동 검수 루프
+
+이미 범위가 확정된 **현재 스펙 안에서는** 구현→검증→커밋→fast-forward push→Codex
+재검수→in-scope 보완→재검증을 사용자 재확인 없이 반복한다. Codex 승인 후에는 종료
+문서 커밋·push까지 자동 처리하고 **다음 스펙 전에 멈춘다**.
+
+정확한 자동 허용 범위·최대 3회 보완·즉시 중지 조건·STOP REPORT 형식은
+`docs/codex-claude-handoff/AUTO_REVIEW_LOOP.md`가 정본이다.
+
+다음은 자동 진행하지 않는다: 새 제품 결정, 스펙 밖 API/스키마 확장, 신규 의존성,
+운영 데이터/secret, 실제 network/live, Firebase/Rules/CORS/Hosting/배포, 운영본 변경,
+merge/rebase/force push, 비재현/flaky 게이트. 하나라도 필요하면 즉시 멈추고 근거와
+필요한 결정을 보고한다.
 
 ---
 
