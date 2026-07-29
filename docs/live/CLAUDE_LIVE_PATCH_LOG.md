@@ -139,3 +139,18 @@
 - PNG: Codex E2E가 만든 dirty 산출물은 **미복원·미커밋**(working tree dirty 상태 그대로 보고)
 - NOT TESTED: 실기기 blob URL/decode, 대용량 사진 메모리·성능, EXIF 회전, 선명도
 - 다음: Codex 재검증. 고객 화면 mount·색·logical width는 여전히 후속.
+
+## 2026-07-29 — 스펙 026 종료 (CODEX_PASSED → COMMITTED)
+
+- Codex 최종 판정: **승인 가능**, 승인 기준 HEAD `69db696`
+- 실측: unit 755/755, E2E 69/69 PASS exit 0,
+  mockup JS/CSS gzip 68.40/3.16 kB, admin 61.09/2.64 kB,
+  포트 4183/4184 free, temp `denn-e2e-*` 0, `git diff --check` PASS
+- 실제 Chromium 검증: hook owner StrictMode mount-cleanup-remount, owner unmount,
+  in-flight 중 unmount, 반복 remount
+- NOT TESTED: 실제 기기, 운영 이미지, 대용량 사진 성능·메모리, EXIF 회전
+- 미착수: 고객 화면 mount, 색·logical width 정책, Firebase/network/deploy
+- PNG 2개(Codex E2E 재생성): restore/checkout/stage/commit 하지 않음 → working tree dirty,
+  커밋된 PNG 0
+- 이 라운드는 종료 문서 전용 커밋이며 기능 코드·설정·테스트 변경 0
+- 다음: 새 스펙 지시 대기. 기능 착수 없음.

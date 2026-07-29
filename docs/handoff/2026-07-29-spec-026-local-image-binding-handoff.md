@@ -194,3 +194,17 @@ StrictMode remount 후에도 live controller 유지(위 E2E가 고정).
 
 **NOT TESTED(유지)**: 실기기 4환경 blob URL·decode, 대용량 사진 메모리·성능, EXIF 회전, 선명도, 운영 이미지.
 여전히 **로컬 이미지 owner 완료이며 상품 미리보기·Canvas 연결 완료가 아니다**(고객 화면 mount 0).
+
+## 12. 종료 (2026-07-29)
+
+Codex 최종 판정 **승인 가능**, 승인 기준 HEAD **`69db696`**. 종료 시점 실측치는 §11.4와 일치한다:
+unit **755/755**, E2E **69/69 PASS·exit 0**, mockup JS/CSS gzip **68.40 / 3.16 kB**,
+admin **61.09 / 2.64 kB**, 포트 free, temp 잔여 0, `git diff --check` PASS, HEAD=origin·0/0.
+실제 Chromium에서 hook owner의 **StrictMode mount→cleanup→remount / owner unmount / in-flight 중
+unmount / 반복 remount**가 검증됐다.
+
+- **NOT TESTED**: 실제 기기, 운영 이미지, 대용량 사진 메모리·성능, EXIF 회전.
+- **미착수**: 고객 화면 mount, 색·logical width 정책, 멀티 zone 공유, template art·Firebase 이미지,
+  pointer/print/저장/주문, Firebase·network·deploy.
+- **PNG**: Codex E2E 재생성 산출물 2개는 미복원·미커밋 → working tree dirty(정직 기록), 커밋된 PNG 0.
+- 종료 커밋: 이 문서를 포함한 문서 전용 커밋. 코드·설정·테스트는 승인본 그대로다.

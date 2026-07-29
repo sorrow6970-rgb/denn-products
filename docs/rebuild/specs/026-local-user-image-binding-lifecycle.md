@@ -293,3 +293,34 @@ HEAD 바이트로 되돌린 적이 있다. **그러나 그 복원이 승인된 �
 "checkout/restore가 승인된 절차다"라는 취지의 서술은 **철회한다**. 현재 규칙은 다음과 같다: Claude는
 `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`과 `browse-mobile-390x844.png`을 **restore·checkout·
 stage·commit하지 않는다.** 커밋된 PNG는 0이고, 픽셀 동일성은 `NOT VERIFIED`다.
+
+---
+
+### 최종 승인 (Codex) — 2026-07-29
+
+**판정: 승인 가능. 승인 기준 HEAD `69db696`**(보완 코드 `25c421b` + 문서 `69db696`, 기준선 `449b027`, fix_round 1).
+
+Codex 독립 검증 결과:
+
+- diff/허용 파일 · format · lint · typecheck: **PASS**
+- unit: **755/755 PASS**
+- build: **PASS** — mockup JS/CSS gzip **68.40 / 3.16 kB**, admin JS/CSS gzip **61.09 / 2.64 kB**
+- E2E: **69/69 PASS**, reporter **exit 0**
+- 실제 Chromium에서 **hook owner의 StrictMode mount→cleanup→remount, owner unmount,
+  in-flight 중 unmount, 반복 remount**: **PASS**
+- 포트 4183/4184 free, OS temp `denn-e2e-*` 잔여 0, `git diff --check` PASS
+- HEAD=origin `69db696`, ahead/behind 0/0
+
+**NOT TESTED(유지):** 실제 기기(iOS Safari·Android Chrome·삼성 인터넷·카카오 인앱), 운영 이미지,
+대용량 사진 메모리·성능, EXIF 회전.
+
+**미착수(유지):** 고객 production 화면 mount, case/frame 색 선택·팔레트, frame logical width 정책,
+멀티 zone 사진 공유, template art·Firebase 이미지 합성, pointer/pan/zoom, text/clock/watermark,
+print/export·저장·주문, Firebase SDK/Auth/Rules/CORS/Hosting, 실제 network/live, deploy.
+
+**PNG:** Codex 독립 E2E가 재생성한 `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`과
+`browse-mobile-390x844.png`은 restore·checkout·stage·commit **하지 않았다**. 그 때문에 working tree는
+dirty하며 커밋된 PNG는 **0**이다.
+
+**스펙 026 종료.** 이 종료는 **로컬 사용자 이미지 owner 완료**이며 상품 미리보기·고객 Canvas 연결 완료가
+아니다. 다음 스펙은 Codex 지시 대기.

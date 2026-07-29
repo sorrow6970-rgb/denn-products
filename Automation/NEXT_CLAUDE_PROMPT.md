@@ -1,39 +1,27 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CODEX_PASSED / READY_FOR_COMMIT`
+상태: `COMMITTED` — 다음 작업 없음
 
-# 스펙 026 종료 문서 처리
+# 대기: 스펙 026 종료 확인 후 다음 스펙 지시 대기
 
-Codex 승인 기준 HEAD는 `69db696`이다. 기능 코드·설정·테스트를 수정하지 말고 종료 문서만
-처리한다.
+스펙 026(로컬 사용자 이미지 binding 생명주기)은 Codex 승인 기준 HEAD `69db696`으로 승인됐고
+종료 문서까지 commit·push됐다. Claude Code가 지금 수행할 작업 범위는 **없다.**
 
-허용 파일:
+이 상태에서 Claude Code는 다음만 한다.
 
-- `docs/rebuild/specs/026-local-user-image-binding-lifecycle.md`
-- `docs/codex-claude-handoff/CURRENT.md`
-- `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
-- `docs/handoff/2026-07-29-spec-026-local-image-binding-handoff.md`
-- `Automation/DENN_AUTOMATION_STATE.md`
-- `Automation/NEXT_CLAUDE_PROMPT.md`
+- `git fetch` 후 HEAD=origin, ahead/behind, working tree 상태 확인
+- `Automation/DENN_AUTOMATION_STATE.md`, 이 파일, `docs/codex-claude-handoff/CURRENT.md` 재확인
+- 상태 변화가 없으면 파일 수정·커밋·푸시 없이 보고만 한다
 
-종료 기록에 다음을 정확히 반영한다.
+다음은 하지 않는다.
 
-- Codex 최종 판정: 승인 가능
-- 승인 기준 HEAD: `69db696`
-- unit 755/755
-- E2E 69/69 PASS, exit 0
-- mockup JS/CSS gzip 68.40/3.16 kB
-- admin JS/CSS gzip 61.09/2.64 kB
-- 실제 Chromium에서 hook owner StrictMode mount-cleanup-remount, owner unmount, in-flight
-  unmount, 반복 remount 검증
-- 실제 기기, 운영 이미지, 대용량 사진 성능·메모리, EXIF 회전은 NOT TESTED
-- 고객 production 화면 mount, 색·logical width 정책, Firebase/network/deploy는 미착수
+- 새 스펙 작성 또는 다음 기능 착수
+- 고객 production 화면 mount, 색·frame logical width 정책, 멀티 zone 공유, template art·
+  Firebase 이미지 합성, pointer/print/저장/주문
+- Firebase SDK/Auth/Rules/CORS/Hosting, 실제 network/live test, deploy
+- 아래 두 파일의 restore·checkout·stage·commit
+  - `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`
+  - `docs/rebuild/results/spec-018/browse-mobile-390x844.png`
 
-현재 E2E가 재생성한 아래 PNG 2개는 restore, checkout, stage, commit하지 않는다.
-
-- `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`
-- `docs/rebuild/results/spec-018/browse-mobile-390x844.png`
-
-문서 전용 커밋을 만들고 일반 fast-forward push한다. HEAD=origin과 ahead/behind 0/0을
-확인한다. working tree는 위 PNG 2개 때문에 dirty라고 정직하게 기록한다. 다음 기능은
-착수하지 않는다.
+재개 조건: Codex가 `DONE` 전이와 함께 새 스펙 및 이 파일의 새 지시를 push하거나, Founder가
+명시적으로 다음 작업을 지시한다.

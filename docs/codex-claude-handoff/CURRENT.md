@@ -7,7 +7,24 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟠 스펙 026 보완 라운드 1 완료·push — Codex 재검증 대기(`READY_FOR_CODEX`, fix_round 1). ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **🟢 스펙 026 승인·종료(Codex 최종 판정 = 승인 가능, 승인 기준 HEAD `69db696`). 다음 스펙은 Codex/Founder 지시 대기 — 기능 착수 없음. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+
+> Codex 최종 승인(2026-07-29): 스펙 026 = **승인 가능**(승인 기준 HEAD `69db696`, 보완 코드 `25c421b`,
+> 기준선 `449b027`, fix_round 1). 독립 검증 = diff/허용 파일·format·lint·typecheck PASS / **unit 755/755** /
+> build PASS(**mockup JS/CSS gzip 68.40 / 3.16 kB**, **admin 61.09 / 2.64 kB**) / **E2E 69/69 PASS·reporter
+> exit 0** / **실제 Chromium에서 hook owner의 StrictMode mount→cleanup→remount·owner unmount·in-flight 중
+> unmount·반복 remount PASS** / 포트 4183·4184 free · OS temp `denn-e2e-*` 잔여 0 · `git diff --check` PASS /
+> HEAD=origin `69db696`·0/0. **승인된 계약**: framework-free `createLocalImageBindingController`가 private blob
+> URL·decode·`imageRef → drawable` binding·generation·cleanup을 단독 소유하고, 공개 snapshot은 합성
+> `user-image-<n>`·intrinsic size·고정 `{scale:1,x:0,y:0}`뿐이며 URL·Blob·파일명·MIME·예외·drawable을 노출하지
+> 않는다. URL은 decode 완료 후 **모든 종료 경로에서 정확히 1회** revoke되고, 늦은 완료는 최신 snapshot·binding을
+> 바꾸지 못하며, unmount 경로에는 state update가 없다. **NOT TESTED(유지)**: 실제 기기, 운영 이미지, 대용량 사진
+> 메모리·성능, EXIF 회전. **미착수(유지)**: 고객 production 화면 mount, case/frame 색 선택·팔레트, frame logical
+> width 정책, 멀티 zone 사진 공유, template art·Firebase 이미지 합성, pointer/pan/zoom, text/clock/watermark,
+> print/export·저장·주문, Firebase SDK/Auth/Rules/CORS/Hosting, 실제 network/live, deploy. ⚠️ **이 종료는 로컬
+> 사용자 이미지 owner 완료이며 상품 미리보기·고객 Canvas 연결 완료가 아니다.** `hosting.public:"."` → **Hosting
+> 격리 전 배포 금지** 유지. **PNG**: Codex 독립 E2E가 재생성한 `spec-018` 스크린샷 2개는 restore·checkout·stage·
+> commit **하지 않았다** → working tree dirty·커밋된 PNG 0·픽셀 동일성 **NOT VERIFIED**. **다음 스펙은 지시 대기.**
 
 > 스펙 026 보완 라운드 1 완료(로컬 검증, 2026-07-29, 기준 `449b027` + Codex 문서 커밋 `73e4e2b`, 코드 커밋 `25c421b`):
 > Codex 지적 3건을 허용 파일(`useLocalImageBinding.ts`·`.test.ts`·`canvas-fixture.tsx`·`canvas-surface.spec.ts`)
