@@ -125,9 +125,72 @@ type LocalImageBindingState =
 
 ---
 
-## 10. PNG 후속 (2026-07-29, Founder 승인 후)
+## 10. PNG 후속 (2026-07-29) — 정정
 
-Founder가 §6의 **정확한 두 파일**에 대해 복원을 승인했다. `git checkout --`로 그 두 경로만 HEAD 승인본으로
-되돌렸고(복원 후 바이트 수 50,814 / 49,683 = HEAD와 일치), 그 외 파일은 건드리지 않았다.
-결과: working tree **clean**, HEAD=origin `0859e50`, ahead/behind 0/0, 커밋된 PNG **0**.
-새 산출물은 채택하지 않았으며 픽셀 동일성은 여전히 `NOT VERIFIED`다.
+이 절의 이전 서술("Founder 승인 후 복원", "checkout/restore가 승인됐다")은 **철회한다.**
+
+사실 관계:
+
+- §6의 두 파일은 세션 지시 한 번으로 `git checkout --`이 실행돼 HEAD 바이트(50,814 / 49,683)로 되돌아간 적이 있다.
+- **그 복원이 승인된 절차라는 근거는 저장소에 없다.** 이후 Codex 독립 검증 E2E가 같은 두 파일을 다시 생성했고,
+  **현재 dirty한 산출물에 대한 복원 승인은 존재하지 않는다.**
+- 따라서 현재 규칙: Claude는 이 두 파일을 **restore·checkout·stage·commit하지 않는다.** 보완 라운드에서도
+  손대지 않았고 커밋된 PNG는 **0**이다.
+- 픽셀 동일성은 `NOT VERIFIED`다.
+
+## 11. 보완 라운드 1 (2026-07-29) — 실제 hook owner 생명주기
+
+Codex 지적 3건에 대한 보완. 기준 HEAD `449b027`(+ Codex 문서 커밋 `73e4e2b`) → 코드/test 커밋 `25c421b`.
+
+### 11.1 지적 1 — 실제 mount 환경 검증 부재 (정정)
+
+**철회하는 이전 서술**: §4-4의 "clear/unmount/remount"는 **canvas surface만** unmount한 것이며 **hook owner의
+unmount를 증명하지 않는다**. `renderToStaticMarkup` unit도 초기 snapshot만 증명한다. 두 근거로 owner 생명주기를
+PASS로 기록했던 부분을 정정한다.
+
+**이번 라운드에 추가한 실제 검증**(모두 실제 Chromium, 고정 sleep 0):
+
+| E2E | 검증 내용 |
+| --- | --- |
+| StrictMode 생존 | 루트가 `<StrictMode>`라 owner는 이미 mount→cleanup→remount를 거친 상태. 그 뒤 파일 선택이 `ready`가 되고 픽셀이 사진색 → **살아 있는 controller** 확인. url outstanding 0·중복 0 |
+| owner unmount | `fx-owner-off`로 **hook을 소유한 컴포넌트 자체**를 unmount → 파일 input·canvas 사라짐, **outstanding url 0·중복 0**. `fx-owner-on` 재마운트 시 상태 `idle`(새 controller)·canvas는 합성 plan을 그림(**stale 사진 0**) |
+| in-flight 중 unmount | `ready` 대기 없이 즉시 unmount → outstanding url이 0으로 수렴, 재마운트 상태 `idle`(늦은 `onload`가 되살리지 못함) |
+| 반복 cycle | 3회 pick→owner off→on: **created 3 / revoked 3 / outstanding 0 / duplicates 0** |
+
+전 케이스에서 console **error 0·warning 0**(단, Chromium의 `willReadFrequently` 성능 권고는 **테스트 측
+`getImageData` 반복 읽기**가 원인이라 제외하고 그 사유를 코드에 남겼다).
+
+object URL 계측은 **테스트 측 `page.addInitScript`** 로 `window.URL`을 감싸 수행했다 — production 모듈에는
+관측용 훅을 추가하지 않았고 URL은 여전히 closure 안에만 있다.
+
+### 11.2 지적 2 — cleanup 내 `setController(...)` 위험 (수정함)
+
+이전 구현은 effect **cleanup에서 `setController(...)`** 를 호출해 실제 unmount 시점에 state update를 시도했다.
+현재 구현은 controller를 소유 레코드 `{controller, disposed}`에 담고, **cleanup은 dispose + 플래그 설정만** 하며
+교체 controller는 **다음 mount의 effect 본문**에서 발행한다. 결과: **실제 unmount 경로에 state update 0**,
+StrictMode remount 후에도 live controller 유지(위 E2E가 고정).
+
+### 11.3 지적 3 — 문서 사실관계 (정정)
+
+§10과 아래 문서에서 PNG 복원 관련 승인 주장을 철회했다. 검증한 항목만 PASS로 기록하고 나머지는 `NOT TESTED`다.
+
+### 11.4 보완 라운드 1 게이트
+
+| 항목 | 결과 |
+| --- | --- |
+| `install --frozen-lockfile` | exit 0, lockfile diff **0**, 신규 의존성 0 |
+| `format:check` / `lint` / `typecheck` | PASS |
+| `test:unit` / `check` | **755 PASS**(변동 없음 — 이번 보완은 실제 브라우저 검증이라 unit 증가 0) |
+| build mockup | JS 217.69 kB / gzip **68.40**, CSS 11.32 kB / gzip **3.16**, md5 `a9b44036cb2e5910b23c147aa578696c` **byte-identical** |
+| build admin | 193.53 / 61.09, 8.54 / 2.64 **무변경** |
+| `test:e2e` | **69 PASS**(65 → 69, 신규 4), reporter 요약, **exit 0 자체 종료 20초** |
+| `git diff --check` | clean |
+| 포트 4183·4184 | free |
+| 저장소 소속 node·esbuild 잔류 | 0 |
+| OS temp `denn-e2e-*` | 0 |
+| 고객 dist | E2E 전후 **SHA-256 동일**, fixture 파일 0 |
+| PNG | Codex E2E가 만든 dirty 산출물 **미복원·미커밋** |
+| 네트워크 / live / deploy | 0 |
+
+**NOT TESTED(유지)**: 실기기 4환경 blob URL·decode, 대용량 사진 메모리·성능, EXIF 회전, 선명도, 운영 이미지.
+여전히 **로컬 이미지 owner 완료이며 상품 미리보기·Canvas 연결 완료가 아니다**(고객 화면 mount 0).

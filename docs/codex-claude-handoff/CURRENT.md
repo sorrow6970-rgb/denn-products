@@ -7,13 +7,30 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟠 스펙 026(로컬 사용자 이미지 binding) 구현 완료·push — Codex 독립 검증 대기(`READY_FOR_CODEX`). 재생성된 스펙 018 PNG 2개는 Founder 승인 후 HEAD 승인본으로 복원(커밋된 PNG 0, working tree clean).**
+상태: **🟠 스펙 026 보완 라운드 1 완료·push — Codex 재검증 대기(`READY_FOR_CODEX`, fix_round 1). ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
 
-> PNG 후속(2026-07-29): Founder가 **정확한 두 파일**(`spec-018/browse-desktop-1280x800.png`,
-> `browse-mobile-390x844.png`)의 복원을 승인해 `git checkout --`로 그 두 경로만 HEAD 승인본으로 되돌렸다
-> (복원 후 50,814 B / 49,683 B = HEAD 일치). 그 외 파일·미추적 파일은 건드리지 않았고 커밋된 PNG는 **0**,
-> working tree **clean**, HEAD=origin `0859e50`·0/0. 새 산출물은 채택하지 않았으며 픽셀 동일성은 여전히
-> **NOT VERIFIED**다. 상태는 `READY_FOR_CODEX` 유지.
+> 스펙 026 보완 라운드 1 완료(로컬 검증, 2026-07-29, 기준 `449b027` + Codex 문서 커밋 `73e4e2b`, 코드 커밋 `25c421b`):
+> Codex 지적 3건을 허용 파일(`useLocalImageBinding.ts`·`.test.ts`·`canvas-fixture.tsx`·`canvas-surface.spec.ts`)
+> 안에서만 보완했다. **지적 1(실제 mount 검증 부재)**: fixture에서 hook을 소유한 컴포넌트를 분리해
+> `fx-owner-off`/`fx-owner-on`으로 **owner 자체를 mount/unmount**하고, 실제 Chromium E2E **4건**을 추가했다 —
+> ① StrictMode mount→cleanup→remount 후에도 live controller(선택→`ready`→사진 픽셀) ② owner unmount 시
+> **outstanding object URL 0·중복 0**, 재마운트 시 상태 `idle`(새 controller)·**stale 사진 0** ③ in-flight 중
+> unmount에서 outstanding 0으로 수렴·늦은 `onload`가 되살리지 못함 ④ 3회 cycle에서 **created 3 / revoked 3 /
+> duplicates 0**. 전 케이스 console **error 0·warning 0**(테스트 측 `getImageData` 반복이 유발하는 Chromium
+> `willReadFrequently` 권고만 사유를 남기고 제외). URL 계측은 **테스트 측 `addInitScript`** 로만 수행해 production
+> 모듈에 관측 훅을 추가하지 않았다. **지적 2(cleanup 내 `setController`)**: controller를 소유 레코드
+> `{controller, disposed}`로 감싸 **cleanup은 dispose+플래그만** 하고 교체 controller는 **다음 mount의 effect 본문**에서
+> 발행하도록 수정 → **실제 unmount 경로에 state update 0**. **지적 3(문서)**: PNG 복원의 "Founder 승인"·
+> "checkout/restore 승인" 주장과, surface-only unmount를 hook owner 검증으로 쓴 서술을 **철회·정정**했다.
+> 게이트: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / **unit 755**(변동 없음 —
+> 이번 보완은 실제 브라우저 검증) / build(mockup 217.69·gzip **68.40** / CSS 11.32·**3.16**, md5 `a9b44036…`
+> **byte-identical**; admin 무변경) / **e2e 69 PASS**(65→69)·exit 0 자체 종료 20초 / check PASS /
+> `git diff --check` clean / 포트 4183·4184 free·잔류 0 / OS temp `denn-e2e-*` 0 / 고객 dist **SHA-256 E2E 전후
+> 동일·fixture 0** / 네트워크·live·deploy 0. **PNG**: Codex 독립 E2E가 재생성한 `spec-018` 스크린샷은
+> **restore·checkout·stage·commit 모두 하지 않았다** — 그 때문에 working tree는 dirty하며 커밋된 PNG는 **0**이다.
+> 픽셀 동일성은 **NOT VERIFIED**. **NOT TESTED 유지**: 실기기 4환경 blob URL·decode, 대용량 사진 메모리·성능,
+> EXIF 회전, 선명도, 운영 이미지. ⚠️ 여전히 **로컬 이미지 owner 완료이며 상품 미리보기·Canvas 연결 완료가 아니다**
+> (고객 화면 mount 0).
 
 > 스펙 026 구현·자동검증 완료(로컬, 2026-07-29, 기준 HEAD `377d350`, 코드 커밋 `ae798d5`): 정본
 > `docs/rebuild/specs/026-local-user-image-binding-lifecycle.md`, 인계

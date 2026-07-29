@@ -98,11 +98,44 @@
 - NOT TESTED: 실기기 blob URL/decode, 대용량 사진 메모리·성능, EXIF 회전, 선명도
 - 다음: Codex 독립 검증. 고객 화면 mount·색·logical width는 후속.
 
-## 2026-07-29 — 스펙 026 PNG 복원 (Founder 승인)
+## 2026-07-29 — 스펙 026 PNG 복원 (기록 정정됨)
 
-- 승인 범위: `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`,
+- ⚠️ 정정(같은 날 보완 라운드 1): 아래를 "Founder 승인"으로 기록했던 서술은 철회한다. 저장소에는
+  그 승인 근거가 없고, 이후 Codex 독립 E2E가 같은 두 파일을 다시 생성했으며 그 산출물에 대한
+  복원 승인은 없다. 이후 Claude는 이 두 파일을 restore/checkout/stage/commit하지 않는다.
+- 대상 파일: `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`,
   `docs/rebuild/results/spec-018/browse-mobile-390x844.png` **두 파일만**
 - 처리: `git checkout --`로 HEAD 승인본 복원 (50,814 B / 49,683 B = HEAD 일치)
 - 그 외 파일·미추적 파일 무변경, 커밋된 PNG 0, working tree clean
 - 픽셀 동일성은 여전히 NOT VERIFIED (고객 dist는 E2E 전후 SHA-256 동일)
 - 상태: `READY_FOR_CODEX` 유지 — Codex 독립 검증 대기
+
+## 2026-07-29 — 스펙 026 보완 라운드 1 (CORRECTION_REQUIRED)
+
+- 기준: `449b027` (+ Codex 문서 커밋 `73e4e2b`)
+- 코드/test: `25c421b`
+- 상태: `CORRECTION_REQUIRED` → 보완 완료 → `READY_FOR_CODEX`
+- 변경 파일(허용 목록 안):
+  - `apps/mockup/src/canvas/useLocalImageBinding.ts`
+  - `apps/mockup/src/canvas/useLocalImageBinding.test.ts`
+  - `apps/mockup/src/e2e/canvas-fixture.tsx`
+  - `tests/e2e/canvas-surface.spec.ts`
+- 지적 1(실제 mount 검증 부재): fixture에 hook 소유 컴포넌트(`PickerOwner`)를 분리하고
+  `fx-owner-off`/`fx-owner-on`으로 owner 자체를 mount/unmount. 실제 Chromium E2E 4건 추가 —
+  StrictMode remount 후 live controller, owner unmount 시 url revoke·binding 제거·remount 시 idle·
+  stale 사진 0, in-flight 중 unmount에서 outstanding url 0·늦은 onload 무해, 3회 cycle에서
+  created 3/revoked 3/duplicates 0. console error·warning 0(테스트 측 getImageData가 유발하는
+  Chromium `willReadFrequently` 권고만 제외, 사유 주석 기록). URL 계측은 테스트 측
+  `addInitScript`로만 수행(production 관측 훅 0).
+- 지적 2(cleanup 내 setController): 소유 레코드 `{controller, disposed}`로 바꿔 cleanup은
+  dispose+플래그만 하고 교체 controller는 다음 mount의 effect 본문에서 발행 →
+  실제 unmount 경로에 state update 0.
+- 지적 3(문서): PNG 복원 "Founder 승인"·"checkout/restore 승인" 주장 철회, surface-only unmount를
+  hook owner 검증으로 쓴 서술 정정.
+- 게이트: frozen PASS / lockfile diff 0 / format·lint·typecheck / unit 755(변동 없음) /
+  build byte-identical(mockup 68.40·3.16 gzip, md5 `a9b44036…`; admin 무변경) /
+  **e2e 69 PASS**(65→69) exit 0 20초 / check PASS / `git diff --check` clean /
+  포트 4183·4184 free / temp `denn-e2e-*` 0 / 고객 dist SHA-256 동일·fixture 0
+- PNG: Codex E2E가 만든 dirty 산출물은 **미복원·미커밋**(working tree dirty 상태 그대로 보고)
+- NOT TESTED: 실기기 blob URL/decode, 대용량 사진 메모리·성능, EXIF 회전, 선명도
+- 다음: Codex 재검증. 고객 화면 mount·색·logical width는 여전히 후속.
