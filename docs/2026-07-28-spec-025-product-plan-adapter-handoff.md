@@ -123,3 +123,107 @@ epsilon·clamp·abs·추가 반올림·자동 확대/축소/이동 0. `innerBord
 | 2 | (문서) | 스펙 020·023 정정 append, 스펙 025 DONE, 이 핸드오프, `CURRENT.md` |
 
 **롤백 순서: 문서 커밋 → 코드 커밋** (역순 revert).
+
+---
+
+## 9. 보완 라운드 1 — Codex 1차 재검증 (2026-07-29)
+
+기준 HEAD `bfcf8d7`. Codex 차단 2건은 모두 **현재 스펙 범위 안의 snapshot 계약 위반**이라
+`docs/codex-claude-handoff/AUTO_REVIEW_LOOP.md`에 따라 자동 구현·검증·분리 커밋·fast-forward push했다.
+**Codex 최종 승인 전이므로 스펙은 종료 처리하지 않는다.**
+
+### 9.1 보완 1 — case plan 입력의 정확한 1회 snapshot (`packages/render/src/plan/build.ts`)
+
+결함(확인됨): `buildCase`가 검증에 쓴 값을 **다시 읽어** command를 만들었다.
+`input.bodyColor` 2회(검증 `:151` → `case:body` 색 `:229`), `input.zones` 2회(`Array.isArray` → 배열 참조),
+`zone.id` 4회(문법·중복 검사·`seen.add`·layer id), `zone.imageRef` 2회, `zone.order` 4회, `zone.guide` 2회,
+`validateZoneRect`의 `units` 3회·`x/y/width/height` 각 2회, `validateStroke`의 `color` 2회·`width` 3회.
+따라서 첫 읽기에 정상값, 두 번째 읽기에 다른 값을 주는 getter는 **검증되지 않은 값을 성공 plan에 넣을 수 있었다.**
+
+수정: 사용되는 모든 필드를 **정확히 한 번** 읽어 plain normalized snapshot을 만들고, 이후 검증·정렬·command
+생성은 snapshot만 읽는다.
+
+| snapshot | 읽는 위치 | property read count |
+| --- | --- | --- |
+| `logicalCanvas` (+ `width`,`height`) | `readSizeOnce` | 1 / 1 / 1 |
+| `bodyColor` | `buildCase` 지역 const | 1 |
+| `zones` (+ `length`) | `buildCase` 지역 const | 1 / 1 |
+| zone element `[index]` | 루프 | zone당 1 |
+| `zone.id` | `readCaseZoneOnce` | 1 (문법·중복·layer id 전부 지역 const) |
+| `zone.imageRef` | `readCaseZoneOnce` | 1 |
+| `zone.rect` (+ `units`,`x`,`y`,`width`,`height`) | `validateZoneRect` | 1 / 각 1 |
+| `zone.order` | `readCaseZoneOnce` | 1 |
+| `zone.image` (+ `width`,`height`) | `readSizeOnce` | 1 / 각 1 |
+| `zone.transform` (+ `scale`,`x`,`y`) | `readTransformOnce` | 1 / 각 1 |
+| `zone.guide` (+ `color`,`width`) | `validateStroke` | 1 / 각 1 |
+| `input.kind` | `buildPreviewRenderPlan` | 1 (이전 3회) |
+| `input.innerBorder` (frame) | `buildFrame` | 1 (이전 2회) |
+
+- 검증 후 caller object/property **재조회 0**. normalized snapshot 구조는 기존 `NormalizedZone`
+  (`{id, imageRef, rect, image, transform, guide?, index, key}`) 그대로이고, 이제 그 필드가 전부 단일 읽기 결과다.
+- **읽기·검증 순서를 바꾸지 않았다** → 오류 code·우선순위·layer ID·정렬(`key` → 원본 index)·guide 순서·
+  frame 계약·executor 어휘 **무변경**. 호환 fallback·deprecated overload **0**.
+- hostile getter·Proxy get/has trap·revoked Proxy는 여전히 **throw 0**(zone 단위 신규 테스트 포함).
+
+### 9.2 보완 2 — `zoneImages.get` 단일 읽기 (`apps/mockup/src/canvas/productPlan.ts`)
+
+결함(확인됨): `typeof (map as {get?}).get !== "function"` 검사에서 1회, `.get.bind(map)`에서 **다시 1회** 읽었다.
+호출마다 다른 함수를 반환하는 getter라면 **검증한 함수와 실제 lookup 함수가 달라질 수 있었다.**
+
+수정: `const getter = (map as {get?: unknown}).get`로 **정확히 1회** 읽고, **그 값**의 함수 여부를 검증하고,
+**그 동일 함수만** bind·호출한다. `zoneImages` 자체도 1회 읽기(기존 유지), `get` property read count = **1**,
+lookup 함수 호출 = **필요한 zone당 정확히 1회**(추가 map entry는 조회조차 하지 않음).
+`get` property 접근 예외와 lookup 함수 예외 모두 `INVALID_ADAPTER_INPUT`(throw 0), 실제 `Map`/`ReadonlyMap` 호환 유지.
+
+### 9.3 추가 안전 보완 — geometry zone `sourceIndex`
+
+`sourceIndex`는 **0-based non-negative integer만** 허용한다. 음수·소수·`NaN`·`±Infinity`·비숫자·누락은
+`INVALID_ADAPTER_INPUT`이다. 정상 projection index는 그대로 통과하며(비연속 `7` 포함) 실패 payload는
+`{ok, code, zoneSourceIndex}`의 **안전한 숫자 index뿐**(원문·id·색·imageRef 추가 0).
+같은 라운드에서 geometry `percentRect`의 `x/y/width/height`도 각 **1회 읽기**로 정정했다.
+
+### 9.4 회귀 고정 근거
+
+신규 테스트 **44건**(render 26 / mockup adapter 18). 수정 **전** 소스로 이 테스트들을 실행하면
+**20건이 실패**(read count·drift·`get` 단일 읽기·`sourceIndex` 검증)하고 수정 후 전부 통과한다 —
+즉 테스트가 결함을 실제로 고정한다. 각 getter의 read count를 명시적으로 단언하고, 두 번째 읽기에서
+throw하도록 만든 입력에서도 첫 snapshot으로 **성공**함을 확인한다. malformed·Proxy·revoked 기존 테스트는 무회귀.
+
+### 9.5 게이트 (보완 라운드 1)
+
+| 항목 | 결과 |
+| --- | --- |
+| `install --frozen-lockfile` | exit 0, `pnpm-lock.yaml` diff **0**, 신규 의존성 **0** |
+| `format:check` / `lint` / `typecheck` | PASS |
+| `test:unit` | **716 PASS**(672 → 716, 신규 44), 28 파일 |
+| `build` | mockup JS 217.69 kB / gzip **68.40**, CSS 11.32 kB / gzip **3.16**(`index-D9dnc5BM.css` 동일) · admin 193.53 / 61.09, 8.54 / 2.64 = **무변경** |
+| `test:e2e` | **58 PASS**(신규 E2E 0), reporter 요약, **exit 0 자체 종료 19초** |
+| `check` | PASS |
+| `git diff --check` | clean |
+| 포트 / 프로세스 | 4183·4184 free, 저장소 소속 node·esbuild 잔류 **0** |
+| OS temp | `denn-e2e-*` 신규 잔여 **0** |
+| 고객 dist | mockup·admin 파일 목록 + **SHA-256 E2E 전후 동일**, fixture 파일 **0** |
+| 스펙 018 PNG | E2E가 재생성 → 시각 변경 없음(고객 dist byte-identical) → 복원·**미커밋** |
+| 네트워크 / live / deploy | **0** |
+
+### 9.6 무변경 (이번 라운드)
+
+`packages/shared`·`packages/firebase|ui|spaces`·`apps/admin`·고객 `App.tsx`·`BrowseFlow`·catalog controller·
+**production Canvas surface 전체**·frame builder 동작·executor·운영 HTML·`firebase.json`·Rules·`poc/**`·PNG·
+`package.json`·`pnpm-lock.yaml` = `git diff` **0**. 변경 파일은 **4개뿐**:
+`packages/render/src/plan/build.ts`(+ `.test.ts`), `apps/mockup/src/canvas/productPlan.ts`(+ `.test.ts`).
+
+### 9.7 유지되는 사실
+
+- **NOT TESTED**: 실제 사용자 이미지 load·binding·CORS-clean·운영 이미지·실기기·선명도.
+- 이 라운드도 **순수 adapter 보완**이며 상품 미리보기·고객 Canvas 연결 완료가 아니다.
+- `hosting.public:"."` → **Hosting 격리 전 배포 금지**.
+
+### 9.8 커밋 / 롤백 (보완 라운드 1)
+
+| 순서 | 커밋 | 내용 |
+| --- | --- | --- |
+| 3 | `6682e04` | 코드·테스트 (case 단일 읽기 snapshot, `zoneImages.get` 단일 읽기, `sourceIndex` 검증) |
+| 4 | (문서) | 이 절, 스펙 025 DONE append, `CURRENT.md` |
+
+**롤백 순서: 문서 커밋 → 코드 커밋**(역순 revert). 기준 HEAD `bfcf8d7`로 되돌리면 라운드 전 상태다.

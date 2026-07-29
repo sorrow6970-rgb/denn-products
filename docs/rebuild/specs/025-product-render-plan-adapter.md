@@ -400,3 +400,48 @@ executor/surface/세 rect 픽셀을 이미 검증했다. 다만 변경된 케이
 - **무변경 확인:** 고객 `App.tsx`·`BrowseFlow`·catalog controller·**production Canvas surface 전체**(`surface.ts`·`surface.css`·`PreviewCanvasSurface.tsx`·`usePreviewCanvasSurface.ts`·`executePreviewPlan.ts`·`canvas/types.ts`)·`packages/firebase|ui|spaces`·`apps/admin`·운영 HTML·Firebase 설정/Rules·`poc/**`·PNG·`package.json`·`pnpm-lock.yaml` = `git diff` 0. 실제 network·live test·deploy 0.
 - **NOT TESTED / 유지:** 실제 사용자 이미지 load·binding·CORS-clean·운영 이미지·실기기·선명도 = **NOT TESTED**. **이 완료는 순수 adapter 완료이며 상품 미리보기·Canvas 연결 완료가 아니다** — 고객 화면 연결, 색 선택 UI, 파일 선택/업로드, 케이스 `modelLogicalSize`와 CSS logical size 연결 정책은 후속 스펙이다. `hosting.public:"."` 위험 그대로 → **Hosting 격리 전 배포 금지**.
 - 커밋: 코드/test `4a23f22`, 문서 분리. 핸드오프 `docs/2026-07-28-spec-025-product-plan-adapter-handoff.md`. 스펙 020·023 문서 하단에 현재 계약 정정 append(과거 승인 기록·수치 보존).
+
+---
+
+### DONE (Claude) — Codex 1차 재검증 보완 (2026-07-29)
+
+> 위 2026-07-28 최초 구현 기록과 당시 게이트 수치는 그대로 둔다. 아래는 Codex 1차 재검증에서 지적된
+> 차단 2건에 대한 보완 라운드 1이며, **아직 Codex 최종 승인이 아니므로 스펙 종료가 아니다.**
+
+기준 HEAD `bfcf8d7` → 코드/test 커밋 `6682e04`.
+
+- **보완 1 (`packages/render/src/plan/build.ts`) — case 입력의 정확한 1회 snapshot.** `buildCase`가 검증에 쓴
+  값을 다시 읽던 경로를 전부 제거했다(이전 read count: `bodyColor` 2, `zones` 2, `zone.id` 4, `zone.imageRef` 2,
+  `zone.order` 4, `zone.guide` 2, rect `units` 3·`x/y/width/height` 각 2, stroke `color` 2·`width` 3,
+  `input.kind` 3, frame `innerBorder` 2). 이제 `readCaseZoneOnce`가 zone 하나의 사용 필드를 **정확히 1회**
+  읽어 plain normalized snapshot(`{id, imageRef, rect, image, transform, guide?, index, key}`)을 만들고,
+  검증·정렬·command 생성은 **snapshot만** 읽는다. `logicalCanvas`/`zone.image`/`zone.transform`은 기존
+  `readSizeOnce`/`readTransformOnce`(각 필드 1회), `validateZoneRect`·`validateStroke`도 단일 읽기 결과로
+  반환값을 만든다. **읽기·검증 순서를 바꾸지 않아** 오류 code·우선순위·layer ID·정렬·guide 순서·frame 계약·
+  executor 어휘는 **무변경**이고, 호환 fallback·deprecated overload는 **0**이다. hostile getter·Proxy
+  get/has trap·revoked Proxy에서 **throw 0** 유지(zone 단위 신규 테스트 포함). 결과적으로 **검증되지 않은
+  두 번째 getter 값이 성공 plan에 들어갈 수 없다.**
+- **보완 2 (`apps/mockup/src/canvas/productPlan.ts`) — `zoneImages.get` 단일 읽기.** `typeof` 검사와 `bind`가
+  `get`을 두 번 읽던 것을 지역 const 1회 읽기로 바꿨다. **검증한 그 함수만** bind·호출한다.
+  `get` property read count = **1**, lookup 호출 = **필요한 zone당 1회**(추가 map entry는 조회 없음),
+  `get` 접근/호출 예외 모두 `INVALID_ADAPTER_INPUT`(throw 0), 실제 `Map`/`ReadonlyMap` 호환 유지.
+- **추가 안전 보완.** geometry zone `sourceIndex`는 **0-based non-negative integer만** 허용(음수·소수·NaN·
+  ±Infinity·비숫자·누락 → `INVALID_ADAPTER_INPUT`), 정상 projection index는 비연속 값(`7`)까지 그대로 유지되며
+  실패 payload는 안전한 숫자 index 외 원문을 추가하지 않는다. geometry `percentRect`의 `x/y/width/height`도
+  각 1회 읽기로 정정했다.
+- **회귀 고정.** 신규 unit **44건**(render 26 / adapter 18): 각 getter의 read count 명시 단언, `bodyColor`·
+  `zones`·`zone.id/imageRef/order/guide` drift, nested rect/image/transform/guide·canvas 필드 단일 읽기,
+  두 번째 읽기가 throw해도 첫 snapshot으로 성공, `get` property drift·단일 읽기·zone당 1회 호출,
+  `sourceIndex` 검증. **수정 전 소스에서는 이 중 20건이 실패**하고 수정 후 전부 통과한다(결함 고정 확인).
+- **게이트(보완 라운드 1).** frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck /
+  **unit 716**(672 → 716) / build(mockup 217.69·gzip **68.40** / CSS 11.32·**3.16** = 무변경, admin 193.53·
+  61.09 / 8.54·2.64 무변경) / **e2e 58 PASS**(신규 E2E 0)·reporter 요약·exit 0 자체 종료 19초 / check PASS /
+  `git diff --check` clean / 포트 4183·4184 free·저장소 소속 잔류 0 / OS temp `denn-e2e-*` 잔여 0 /
+  고객 dist **SHA-256 E2E 전후 동일·fixture 0** / 재생성 스펙018 PNG 복원·미커밋 / 네트워크·live·deploy 0.
+- **무변경.** `packages/shared`·`packages/firebase|ui|spaces`·`apps/admin`·고객 `App.tsx`·`BrowseFlow`·
+  catalog controller·**production Canvas surface 전체**·frame builder 동작·executor·운영 HTML·Firebase
+  설정/Rules·`poc/**`·PNG·`package.json`·`pnpm-lock.yaml` = `git diff` 0. 변경 파일은 **4개뿐**이다.
+- **유지되는 사실.** 실제 사용자 이미지 load·binding·CORS-clean·운영 이미지·실기기 = **NOT TESTED**.
+  이 라운드도 **순수 adapter 보완**이며 상품 미리보기·Canvas 연결 완료가 아니다.
+  `hosting.public:"."` → **Hosting 격리 전 배포 금지**.
+- 핸드오프: `docs/2026-07-28-spec-025-product-plan-adapter-handoff.md` §9.
