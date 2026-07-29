@@ -253,3 +253,34 @@ Firebase·배포 완료를 의미하지 않는다.
 - **이전 라운드 E2E 소요 의문 해소**: 같은 78건 스위트가 이번에 **16.9초**로 끝났다(직전 라운드 2.1~3.5분).
   즉 그때의 지연은 **호스트 부하**였고 앱 회귀가 아니었음이 실측으로 확인됐다.
 - **PNG**: Codex E2E 재생성분 2개는 이번에도 **restore·checkout·stage·commit 하지 않았다**(working tree dirty, 커밋된 PNG 0).
+
+---
+
+### 최종 승인 (Codex) — 2026-07-29
+
+**판정: 승인 가능. 승인 기준 HEAD `06d9700`**(보완 코드 `6fb8630`, 기준선 `075ee01`, fix_round 1).
+
+Codex 독립 재검증 결과:
+
+- canonical frame fill dedup · source order 첫 유효 이름 보존: **PASS**
+- format · lint · typecheck: **PASS**
+- unit: **802/802 PASS**
+- build: mockup JS/CSS gzip **77.55 / 3.53 kB**, admin JS/CSS gzip **61.09 / 2.64 kB**
+- E2E: **78/78 PASS**, **exit 0**
+- 고객 `/` 실제 Chromium에서 case·frame Canvas 픽셀, 키보드 전용 조작, 320px/desktop, axe,
+  누출 0 검증: **PASS**
+- 포트 4183/4184 free, OS temp `denn-e2e-*` 잔여 0, `git diff --check` PASS
+- HEAD=origin `06d9700`, ahead/behind 0/0
+
+**NOT TESTED(유지):** 실제 기기(iPhone Safari·Android Chrome·삼성 인터넷·카카오 인앱), 실제 200% 확대,
+운영 이미지, 대용량 사진 메모리·성능, EXIF 회전.
+
+**미착수(유지):** template art, Firebase image CORS-clean 합성, pointer/pan/zoom·회전,
+text/clock/watermark, print/export, 저장·주문·카카오, Firebase SDK/Auth/Rules/CORS/Hosting, deploy.
+
+**PNG:** Codex 독립 E2E가 재생성한 `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`과
+`browse-mobile-390x844.png`은 restore·checkout·stage·commit **하지 않았다** → working tree dirty,
+커밋된 PNG **0**.
+
+**스펙 027 종료.** 이 종료는 **로컬 사용자 사진 기반 첫 고객 Canvas preview 연결**이며 상품 미리보기 기능
+전체의 완성이 아니다. 다음 스펙은 Codex/Founder 지시 대기.

@@ -7,7 +7,23 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟠 스펙 027 보완 라운드 1 완료·push — Codex 재검증 대기(`READY_FOR_CODEX`, fix_round 1). 스펙 026 승인·종료. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **🟢 스펙 027 승인·종료(Codex 최종 판정 = 승인 가능, 승인 기준 HEAD `06d9700`). 다음 스펙은 Codex/Founder 지시 대기 — 기능 착수 없음. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+
+> Codex 최종 승인(2026-07-29): 스펙 027 = **승인 가능**(승인 기준 HEAD `06d9700`, 보완 코드 `6fb8630`,
+> 기준선 `075ee01`, fix_round 1). 독립 재검증 = canonical frame fill dedup·source order 첫 유효 이름 보존 PASS /
+> format·lint·typecheck PASS / **unit 802/802** / build(**mockup JS/CSS gzip 77.55 / 3.53 kB**,
+> **admin 61.09 / 2.64 kB**) / **E2E 78/78 PASS·exit 0** / 고객 `/`의 **실제 case·frame Canvas 픽셀·키보드 전용·
+> 320px/desktop·axe·누출 0** PASS / 포트 4183·4184 free · OS temp `denn-e2e-*` 0 · `git diff --check` PASS /
+> HEAD=origin·0/0. **승인된 것**: 선택 완료 후 **명시적 `미리보기 만들기` 단계**, 색 자동 선택 0(case 레거시 solid 8색·
+> transparent 제외, frame은 정확한 `#RRGGBB` solid만·grain 제외·canonical 값 dedup), 모든 필수 이미지가 ready일 때만
+> plan(zone별 독립 owner, 공유 fallback 0), frame width `max(1, round(min(content, 500)))`+resize 재계산,
+> 선택 변경 시 composer 닫힘·owner dispose, raw 카탈로그는 projection 입력으로만 사용, 실패는 code·ID 없이 고정 문구.
+> **NOT TESTED(유지)**: 실제 기기·실제 200% 확대·운영 이미지·대용량 사진 메모리/성능·EXIF 회전.
+> **미착수(유지)**: template art·Firebase image CORS-clean 합성·pointer/pan/zoom·회전·text/clock/watermark·
+> print/export·저장·주문·카카오·Firebase SDK/Auth/Rules/CORS/Hosting·deploy. `hosting.public:"."` →
+> **Hosting 격리 전 배포 금지** 유지. ⚠️ 이 종료는 **로컬 사진 기반 첫 고객 preview 연결**이며 상품 미리보기 기능
+> 전체의 완성이 아니다. **PNG**: Codex E2E 재생성분 2개는 미복원·미커밋(working tree dirty·커밋된 PNG 0).
+> **다음 스펙은 지시 대기.**
 
 > 스펙 027 보완 라운드 1 완료(로컬 검증, 2026-07-29, 기준 `075ee01` + Codex 지적 `f5c0039`, 코드 커밋 `6fb8630`):
 > **지적(재현 확인)** = `frameColors`의 서로 다른 항목이 같은 canonical fill(`#1a1a1a`/`#1A1A1A`)을 가지면

@@ -202,3 +202,17 @@
 - 이전 라운드의 "E2E 2.1~3.5분" 의문 해소: 동일 스위트가 16.9초로 완료 → 호스트 부하였음
 - PNG 2개: 여전히 미복원·미커밋
 - 다음: Codex 재검증. 다음 기능 착수 없음.
+
+## 2026-07-29 — 스펙 027 종료 (CODEX_PASSED → COMMITTED)
+
+- Codex 최종 판정: **승인 가능**, 승인 기준 HEAD `06d9700`
+- 실측: unit 802/802, E2E 78/78 PASS exit 0,
+  mockup JS/CSS gzip 77.55/3.53 kB, admin 61.09/2.64 kB,
+  포트 4183/4184 free, OS temp `denn-e2e-*` 0, `git diff --check` PASS
+- 검증된 것: canonical frame fill dedup·source order 첫 유효 이름 보존,
+  고객 `/`의 실제 case/frame Canvas 픽셀, 키보드 전용, 320px/desktop, axe, 누출 0
+- NOT TESTED: 실제 기기, 실제 200% 확대, 운영 이미지, 대용량 사진 성능·메모리, EXIF 회전
+- 미착수: template art, Firebase image CORS-clean, pointer, print, 저장·주문, deploy
+- PNG 2개: 미복원·미커밋 → working tree dirty
+- 이 라운드는 종료 문서 전용 커밋(기능 코드·설정·테스트 변경 0)
+- 다음: 새 스펙 지시 대기. 기능 착수 없음.

@@ -1,38 +1,26 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CODEX_PASSED / READY_FOR_COMMIT`
+상태: `COMMITTED` — 다음 작업 없음
 
-# 스펙 027 종료 문서 처리
+# 대기: 스펙 027 종료 확인 후 다음 스펙 지시 대기
 
-Codex 승인 기준 HEAD는 `06d9700`이다. 기능 코드·설정·테스트를 수정하지 말고 종료 문서만
-처리한다.
+스펙 027(고객 상품 미리보기 composer 연결)은 Codex 승인 기준 HEAD `06d9700`으로 승인됐고
+종료 문서까지 commit·push됐다. Claude Code가 지금 수행할 작업 범위는 **없다.**
 
-허용 파일:
+이 상태에서 Claude Code는 다음만 한다.
 
-- `docs/rebuild/specs/027-customer-preview-composer-connection.md`
-- `docs/codex-claude-handoff/CURRENT.md`
-- `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
-- `docs/handoff/2026-07-29-spec-027-customer-preview-handoff.md`
-- `Automation/DENN_AUTOMATION_STATE.md`
-- `Automation/NEXT_CLAUDE_PROMPT.md`
+- `git fetch` 후 HEAD=origin, ahead/behind, working tree 상태 확인
+- `Automation/DENN_AUTOMATION_STATE.md`, 이 파일, `docs/codex-claude-handoff/CURRENT.md` 재확인
+- 상태 변화가 없으면 파일 수정·커밋·푸시 없이 보고만 한다
 
-종료 기록:
+다음은 하지 않는다.
 
-- Codex 최종 판정: 승인 가능
-- 승인 기준 HEAD: `06d9700`
-- unit 802/802
-- E2E 78/78 PASS, exit 0
-- mockup JS/CSS gzip 77.55/3.53 kB
-- admin JS/CSS gzip 61.09/2.64 kB
-- frame canonical fill dedup과 source-order 첫 항목 보존
-- 고객 `/` 실제 case/frame Canvas 픽셀, keyboard, 320px/desktop, axe, 누출 0 검증
-- 실제 기기·200% 확대·운영 이미지·대용량 성능·EXIF 회전은 NOT TESTED
-- template art, Firebase image CORS-clean, pointer, print, 저장·주문, deploy는 미착수
+- 새 스펙 작성 또는 다음 기능 착수(template art, Firebase image CORS-clean 합성,
+  pointer/pan/zoom, 회전, text/clock/watermark, print/export, 저장·주문·카카오 포함)
+- Firebase SDK/Auth/Rules/CORS/Hosting, 실제 network/live test, deploy
+- 아래 두 파일의 restore·checkout·stage·commit
+  - `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`
+  - `docs/rebuild/results/spec-018/browse-mobile-390x844.png`
 
-아래 PNG 2개는 restore, checkout, stage, commit하지 않는다.
-
-- `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`
-- `docs/rebuild/results/spec-018/browse-mobile-390x844.png`
-
-문서 전용 커밋을 일반 fast-forward push하고 HEAD=origin, ahead/behind 0/0을 확인한다.
-working tree는 PNG 2개 때문에 dirty라고 기록한다. 다음 기능은 시작하지 않는다.
+재개 조건: Codex가 `DONE` 전이와 함께 새 스펙 및 이 파일의 새 지시를 push하거나, Founder가
+명시적으로 다음 작업을 지시한다.

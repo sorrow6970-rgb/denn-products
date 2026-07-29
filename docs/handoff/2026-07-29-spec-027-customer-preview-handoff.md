@@ -158,3 +158,17 @@ check PASS / `git diff --check` clean / 포트 free · temp 0 · 고객 dist SHA
 앱 회귀가 아니었음이 확인됐다(그 항목의 `NOT VERIFIED`는 이로써 해소).
 
 **PNG**: Codex E2E 재생성분 2개는 이번 라운드에서도 미복원·미커밋 → working tree dirty, 커밋된 PNG 0.
+
+## 12. 종료 (2026-07-29)
+
+Codex 최종 판정 **승인 가능**, 승인 기준 HEAD **`06d9700`**. 종료 시점 실측치:
+unit **802/802**, E2E **78/78 PASS·exit 0**, mockup JS/CSS gzip **77.55 / 3.53 kB**,
+admin **61.09 / 2.64 kB**, 포트 free, OS temp 잔여 0, `git diff --check` PASS, HEAD=origin·0/0.
+canonical frame fill dedup과 source-order 첫 유효 이름 보존, 고객 `/`의 실제 case/frame Canvas 픽셀·
+키보드·320px/desktop·axe·누출 0이 독립 검증됐다.
+
+- **NOT TESTED**: 실제 기기, 실제 200% 확대, 운영 이미지, 대용량 사진 메모리·성능, EXIF 회전.
+- **미착수**: template art, Firebase image CORS-clean 합성, pointer/pan/zoom, print/export,
+  저장·주문, Firebase·deploy.
+- **PNG**: Codex E2E 재생성분 2개는 미복원·미커밋 → working tree dirty(정직 기록), 커밋된 PNG 0.
+- 종료 커밋: 이 문서를 포함한 문서 전용 커밋. 기능 코드·설정·테스트는 승인본 그대로다.
