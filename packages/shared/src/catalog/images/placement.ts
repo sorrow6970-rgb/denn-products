@@ -31,16 +31,6 @@ const NONE: CatalogTemplateArtPlacement = { status: "none" };
 const isNonEmpty = (value: unknown): value is string =>
   typeof value === "string" && value.length > 0;
 
-/** Legacy `templateSourceForDesign` (:3025) as a boolean; the string itself never leaves. */
-function hasDesignSource(item: CatalogItemV1, fields: readonly string[]): boolean {
-  if (item.generatedDetailPreview === true) return false;
-  for (const field of fields) {
-    if (isNonEmpty(item[field])) return true;
-  }
-  return false;
-}
-
-const CASE_FIELDS = ["dataUrl"] as const;
 const FRAME_FIELDS = [
   "dataUrl",
   "sourceDataUrl",
@@ -49,21 +39,47 @@ const FRAME_FIELDS = [
   "originalDataUrl",
 ] as const;
 
-/** Legacy `builderTemplate` (:3027) — uploaded + real source + a builder marker. */
-function isBuilderTemplate(item: CatalogItemV1): boolean {
-  if (item.type !== "uploaded") return false;
-  if (!hasDesignSource(item, FRAME_FIELDS)) return false;
-  return (
-    item.builtBy === "builder" ||
-    item.exportVersion === "clean-inner-v1" ||
-    item.overlayScope === "inner"
-  );
+/**
+ * Every field this decision uses, read EXACTLY once (spec 028 보완 라운드 1).
+ *
+ * Reading the source chain and the builder markers more than once would let a drifting getter show
+ * a legacy-crop variant to one check and hide it from the next, which would fail OPEN into a plain
+ * `stretch`. Only booleans/comparisons are kept — no source string ever leaves this snapshot.
+ */
+interface TemplateSnapshot {
+  readonly isUploaded: boolean;
+  readonly hasCaseSource: boolean;
+  readonly hasFrameSource: boolean;
+  readonly isBuilderMarked: boolean;
+  readonly isInnerOverlay: boolean;
+  readonly isFrameBakedFalse: boolean;
 }
 
-/** Legacy `needsLegacyBuilderCrop` (:3028) — the pixel-scan crop path. */
-function needsLegacyBuilderCrop(item: CatalogItemV1): boolean {
-  if (!isBuilderTemplate(item)) return false;
-  return !(item.overlayScope === "inner" && item.frameBaked === false);
+function readTemplateOnce(item: CatalogItemV1): TemplateSnapshot {
+  const generated = item.generatedDetailPreview === true;
+  // the five legacy source fields, each read once; `dataUrl` also answers the case chain
+  const sources = FRAME_FIELDS.map((field) => isNonEmpty(item[field]));
+  const builtBy = item.builtBy;
+  const exportVersion = item.exportVersion;
+  const overlayScope = item.overlayScope;
+  const frameBaked = item.frameBaked;
+  return {
+    isUploaded: item.type === "uploaded",
+    // legacy `templateSourceForDesign` (:3025): the generated-preview gate wins over every field
+    hasCaseSource: !generated && sources[0],
+    hasFrameSource: !generated && sources.some((present) => present),
+    isBuilderMarked:
+      builtBy === "builder" || exportVersion === "clean-inner-v1" || overlayScope === "inner",
+    isInnerOverlay: overlayScope === "inner",
+    isFrameBakedFalse: frameBaked === false,
+  };
+}
+
+/** Legacy `needsLegacyBuilderCrop` (:3028), evaluated on the snapshot only. */
+function needsLegacyBuilderCrop(snapshot: TemplateSnapshot): boolean {
+  // legacy `builderTemplate` (:3027) = uploaded + real source + a builder marker
+  if (!snapshot.isUploaded || !snapshot.hasFrameSource || !snapshot.isBuilderMarked) return false;
+  return !(snapshot.isInnerOverlay && snapshot.isFrameBakedFalse);
 }
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
@@ -93,18 +109,17 @@ export function projectCatalogTemplateArtPlacement(
       (candidate) => isPlainObject(candidate) && candidate.id === templateId,
     );
     if (!isPlainObject(item)) return { status: "unsupported", reason: "invalid-template" };
-    const template = item as CatalogItemV1;
+    // one read of every used field; nothing below touches the caller's template again
+    const snapshot = readTemplateOnce(item as CatalogItemV1);
 
     if (kind === "case") {
-      return hasDesignSource(template, CASE_FIELDS)
-        ? { status: "stretch", target: "case-canvas" }
-        : NONE;
+      return snapshot.hasCaseSource ? { status: "stretch", target: "case-canvas" } : NONE;
     }
 
     // frame: only uploaded templates carry artwork; builtin ones are drawn from slots + text
-    if (template.type !== "uploaded") return NONE;
-    if (!hasDesignSource(template, FRAME_FIELDS)) return NONE;
-    if (needsLegacyBuilderCrop(template)) {
+    if (!snapshot.isUploaded) return NONE;
+    if (!snapshot.hasFrameSource) return NONE;
+    if (needsLegacyBuilderCrop(snapshot)) {
       return { status: "unsupported", reason: "legacy-builder-crop" };
     }
     return { status: "stretch", target: "frame-mat" };

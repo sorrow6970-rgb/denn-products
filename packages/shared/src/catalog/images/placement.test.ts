@@ -164,3 +164,97 @@ describe("projectCatalogTemplateArtPlacement — safety", () => {
     }
   });
 });
+
+describe("projectCatalogTemplateArtPlacement — single-read snapshot (보완 라운드 1)", () => {
+  const SOURCE = "https://example.test/a.png";
+
+  /** A frame template whose `key` getter counts reads and drifts after the first one. */
+  const driftingTemplate = (
+    key: string,
+    first: unknown,
+    later: unknown,
+    base: Record<string, unknown> = { type: "uploaded", dataUrl: SOURCE },
+  ): { document: CatalogDocumentV1; reads: () => number } => {
+    const template: Record<string, unknown> = { id: "ft1", name: "액자", ...base };
+    delete template[key];
+    let reads = 0;
+    Object.defineProperty(template, key, {
+      get() {
+        reads += 1;
+        return reads === 1 ? first : later;
+      },
+      enumerable: true,
+    });
+    return { document: doc({ frameTemplates: [template] }), reads: () => reads };
+  };
+
+  const place = (document: CatalogDocumentV1) =>
+    projectCatalogTemplateArtPlacement(document, { templateKind: "frame", templateId: "ft1" });
+
+  it.each(["dataUrl", "type", "builtBy", "overlayScope", "frameBaked", "generatedDetailPreview"])(
+    "reads %s exactly once",
+    (key) => {
+      const drift = driftingTemplate(key, undefined, undefined);
+      place(drift.document);
+      expect(drift.reads()).toBe(1);
+    },
+  );
+
+  it("stays unsupported when the builder marker disappears on a later read", () => {
+    // first read says "builder" (legacy crop), a second read would say "not a builder"
+    const drift = driftingTemplate("builtBy", "builder", undefined);
+    expect(place(drift.document)).toEqual({
+      status: "unsupported",
+      reason: "legacy-builder-crop",
+    });
+    expect(drift.reads()).toBe(1);
+  });
+
+  it("stays unsupported when the source disappears on a later read", () => {
+    const drift = driftingTemplate("dataUrl", SOURCE, "", {
+      type: "uploaded",
+      builtBy: "builder",
+    });
+    expect(place(drift.document)).toEqual({
+      status: "unsupported",
+      reason: "legacy-builder-crop",
+    });
+  });
+
+  it("does not turn a drifting frameBaked into a supported stretch", () => {
+    // first read: frameBaked !== false (so the legacy crop applies); a later read says false
+    const drift = driftingTemplate("frameBaked", true, false, {
+      type: "uploaded",
+      dataUrl: SOURCE,
+      overlayScope: "inner",
+    });
+    expect(place(drift.document)).toEqual({
+      status: "unsupported",
+      reason: "legacy-builder-crop",
+    });
+  });
+
+  it("closes safely for a throwing Proxy trap and a revoked Proxy in the collection", () => {
+    const trap = new Proxy(
+      { id: "ft1", type: "uploaded", dataUrl: SOURCE },
+      {
+        get() {
+          throw new Error("hostile trap");
+        },
+        has() {
+          throw new Error("hostile has trap");
+        },
+      },
+    );
+    const revocable = Proxy.revocable({ id: "ft1", type: "uploaded", dataUrl: SOURCE }, {});
+    revocable.revoke();
+
+    for (const hostile of [trap, revocable.proxy]) {
+      let placement: unknown;
+      expect(() => {
+        placement = place(doc({ frameTemplates: [hostile] }));
+      }).not.toThrow();
+      expect(placement).toEqual({ status: "unsupported", reason: "invalid-template" });
+    }
+  });
+});

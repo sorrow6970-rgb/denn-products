@@ -84,6 +84,27 @@ interface PendingArt {
 }
 
 /**
+ * Read the caller's source EXACTLY once into a plain snapshot, inside an exception boundary
+ * (spec 028 보완 라운드 1). `kind` and `src` may be hostile accessors, Proxy traps or a revoked
+ * Proxy: none of them may escape `load()`, and a getter that returns a valid value now and a
+ * different one later must not be able to change what is validated, assigned or bound.
+ */
+function readSourceOnce(value: unknown): { kind: TemplateArtSourceKind; src: string } | null {
+  try {
+    if (value === null || typeof value !== "object") return null;
+    const record = value as Record<string, unknown>;
+    const kind = record.kind;
+    const src = record.src;
+    if (kind !== "data-image" && kind !== "firebase-download-image") return null;
+    if (typeof src !== "string" || src.length === 0) return null;
+    return { kind, src };
+  } catch {
+    // hostile getter / Proxy trap / revoked Proxy — not a usable source, and nothing is stored
+    return null;
+  }
+}
+
+/**
  * Create a template art owner. One load at a time, generation-guarded, with NO cache: a new
  * selection disposes this owner and the next one starts from `idle`, so a source string never
  * outlives the owner that needed it (spec 028 §4).
@@ -142,17 +163,9 @@ export function createTemplateArtBindingController(
     cancelPending();
     ready = null;
 
-    if (source === null || typeof source !== "object") {
-      setState({ status: "failed", code: "INVALID_INPUT" });
-      return;
-    }
-    const kind = source.kind;
-    const src = source.src;
-    if (kind !== "data-image" && kind !== "firebase-download-image") {
-      setState({ status: "failed", code: "INVALID_INPUT" });
-      return;
-    }
-    if (typeof src !== "string" || src.length === 0) {
+    // one read, inside the boundary; everything below uses this snapshot only
+    const snapshot = readSourceOnce(source);
+    if (snapshot === null) {
       setState({ status: "failed", code: "INVALID_INPUT" });
       return;
     }
@@ -203,8 +216,9 @@ export function createTemplateArtBindingController(
       };
       // crossOrigin MUST be set before src: setting it afterwards has no effect on the request.
       // A `data:` source is same-origin by construction and gets no crossOrigin attribute.
-      if (kind === "firebase-download-image") element.crossOrigin = "anonymous";
-      element.src = src;
+      // Both values come from the snapshot — the caller's object is never read again.
+      if (snapshot.kind === "firebase-download-image") element.crossOrigin = "anonymous";
+      element.src = snapshot.src;
     } catch {
       pending = null;
       detach(record);

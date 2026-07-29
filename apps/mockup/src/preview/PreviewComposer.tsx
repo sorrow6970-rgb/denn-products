@@ -203,8 +203,7 @@ export function PreviewComposer({
 
   const artState = art.state;
   const artReady = artRequest.required && artState.status === "ready" ? artState.imageRef : null;
-  const artBlocked =
-    artRequest.required && (artSource === null || artState.status !== "ready") ? true : false;
+  const artBlocked = artRequest.required && (artSource === null || artState.status !== "ready");
 
   const [entries, setEntries] = useState<Record<string, SlotEntry>>({});
   const report = useCallback((slotId: string, entry: SlotEntry | null): void => {

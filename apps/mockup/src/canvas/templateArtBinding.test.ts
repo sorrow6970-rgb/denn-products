@@ -276,3 +276,100 @@ describe("createTemplateArtBindingController — leak safety", () => {
     expect(satisfied).toBe(true);
   });
 });
+
+describe("createTemplateArtBindingController — source snapshot (보완 라운드 1)", () => {
+  /** An object whose `key` getter counts reads and drifts after the first one. */
+  const drifting = (
+    key: "kind" | "src",
+    first: unknown,
+    later: unknown,
+  ): { source: unknown; reads: () => number } => {
+    const base: Record<string, unknown> = { kind: "data-image", src: "data:image/png;base64,QQ" };
+    const source: Record<string, unknown> = { ...base };
+    let reads = 0;
+    Object.defineProperty(source, key, {
+      get() {
+        reads += 1;
+        return reads === 1 ? first : later;
+      },
+      enumerable: true,
+    });
+    return { source, reads: () => reads };
+  };
+
+  it.each(["kind", "src"] as const)("reads source.%s exactly once", (key) => {
+    const h = harness();
+    const controller = createTemplateArtBindingController({ ports: h.ports });
+    const drift = drifting(key, key === "kind" ? "data-image" : "data:image/png;base64,QQ", "");
+    controller.load(drift.source as never);
+    fire(h.elements[0], "onload");
+    expect(drift.reads()).toBe(1);
+    expect(controller.getSnapshot().status).toBe("ready");
+  });
+
+  it("uses the FIRST snapshot when the kind drifts to a remote kind", () => {
+    const h = harness();
+    const controller = createTemplateArtBindingController({ ports: h.ports });
+    const drift = drifting("kind", "data-image", "firebase-download-image");
+    controller.load(drift.source as never);
+    // the drifted (remote) kind must not retroactively add a crossOrigin attribute
+    expect(h.elements[0].writes).toEqual(["src"]);
+    expect(drift.reads()).toBe(1);
+  });
+
+  it("uses the FIRST snapshot when the src drifts", () => {
+    const h = harness();
+    const controller = createTemplateArtBindingController({ ports: h.ports });
+    const drift = drifting("src", "data:image/png;base64,FIRST", "data:image/png;base64,LATER");
+    controller.load(drift.source as never);
+    expect(h.elements[0].src).toBe("data:image/png;base64,FIRST");
+    expect(drift.reads()).toBe(1);
+  });
+
+  it.each(["kind", "src"] as const)(
+    "closes safely when source.%s throws instead of letting it escape",
+    (key) => {
+      const h = harness();
+      const controller = createTemplateArtBindingController({ ports: h.ports });
+      const source: Record<string, unknown> = {
+        kind: "data-image",
+        src: "data:image/png;base64,QQ",
+      };
+      delete source[key];
+      Object.defineProperty(source, key, {
+        get() {
+          throw new Error("hostile source getter");
+        },
+        enumerable: true,
+      });
+      expect(() => controller.load(source as never)).not.toThrow();
+      expect(controller.getSnapshot()).toEqual({ status: "failed", code: "INVALID_INPUT" });
+      expect(h.elements).toHaveLength(0);
+      expect(JSON.stringify(controller.getSnapshot())).not.toContain("hostile");
+    },
+  );
+
+  it("closes safely for a throwing Proxy trap and a revoked Proxy", () => {
+    const h = harness();
+    const controller = createTemplateArtBindingController({ ports: h.ports });
+    const trap = new Proxy(
+      { kind: "data-image", src: "data:image/png;base64,QQ" },
+      {
+        get() {
+          throw new Error("hostile trap");
+        },
+        has() {
+          throw new Error("hostile has trap");
+        },
+      },
+    );
+    const revocable = Proxy.revocable({ kind: "data-image", src: "data:x" }, {});
+    revocable.revoke();
+
+    for (const hostile of [trap, revocable.proxy]) {
+      expect(() => controller.load(hostile as never)).not.toThrow();
+      expect(controller.getSnapshot()).toEqual({ status: "failed", code: "INVALID_INPUT" });
+    }
+    expect(h.elements).toHaveLength(0);
+  });
+});
