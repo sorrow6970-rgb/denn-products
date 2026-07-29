@@ -445,3 +445,29 @@ executor/surface/세 rect 픽셀을 이미 검증했다. 다만 변경된 케이
   이 라운드도 **순수 adapter 보완**이며 상품 미리보기·Canvas 연결 완료가 아니다.
   `hosting.public:"."` → **Hosting 격리 전 배포 금지**.
 - 핸드오프: `docs/2026-07-28-spec-025-product-plan-adapter-handoff.md` §9.
+
+---
+
+### Codex 최종 판정 — 승인 가능 (2026-07-29)
+
+- 승인 기준 HEAD: `2ae9f9a`
+- 보완 계약 확인:
+  - case builder의 사용 값은 1회 읽은 plain normalized snapshot만 사용
+  - `zoneImages.get` property는 1회만 읽고 필요한 zone당 1회 호출
+  - `sourceIndex`는 0-based non-negative integer만 허용
+  - getter drift·hostile getter·Proxy·throw-on-second-read 회귀 테스트 고정
+- Codex 독립 게이트:
+  - frozen install PASS, lockfile diff 0
+  - format·lint·typecheck PASS
+  - unit **716/716**
+  - build PASS — mockup JS/CSS gzip **68.40/3.16 kB**, admin **61.09/2.64 kB**
+  - E2E **58/58 PASS**, exit 0
+  - 포트 4183/4184 free, OS temp `denn-e2e-*` 잔여 0
+  - `git diff --check` PASS
+  - E2E가 재생성한 추적 PNG 1개는 Founder의 정확한 파일 승인 후 HEAD 승인본으로 복원,
+    working tree clean
+- 실제 사용자 이미지 load·binding·CORS-clean·운영 이미지·실기기·선명도는
+  **NOT TESTED**다.
+- 이 승인은 순수 product-plan adapter 계약의 완료이며 상품 미리보기·고객 Canvas 연결
+  완료가 아니다.
+- `hosting.public: "."` 위험이 해소되기 전 Firebase Hosting 배포 금지를 유지한다.

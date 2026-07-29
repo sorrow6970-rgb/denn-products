@@ -7,7 +7,17 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟠 스펙 025 보완 라운드 1 완료·push — Codex 재검수 대기(승인 전이므로 스펙 미종료). 스펙 024는 승인·종료(기준 HEAD `a21b5c2`).**
+상태: **✅ 스펙 025 Codex 최종 승인·종료. 승인 기준 HEAD `2ae9f9a`. 다음 = Founder/Codex의 스펙 026 결정 대기.**
+
+> Codex 최종 승인(2026-07-29): 스펙 025 보완 라운드 1의 case builder 전체 1회
+> normalized snapshot, `zoneImages.get` property 단일 읽기, `sourceIndex` non-negative integer
+> 계약과 drift 테스트를 독립 검증했다. frozen PASS / format·lint·typecheck PASS /
+> **unit 716** / build mockup JS·CSS gzip **68.40·3.16 kB**, admin **61.09·2.64 kB** /
+> **E2E 58/58 PASS·exit 0** / check PASS / 포트·temp clean. 검증 중 재생성된 추적 PNG
+> 1개는 Founder의 정확한 파일 승인 후 HEAD 승인본으로 복원했다. 실제 사용자 이미지
+> load·binding·CORS-clean·운영 이미지·실기기·선명도는 **NOT TESTED**다. 이 승인은 순수
+> adapter 계약의 완료이며 상품 미리보기·고객 Canvas 연결 완료가 아니다. 다음 기능은
+> 시작하지 않고 `FOUNDER_DECISION_REQUIRED`에서 스펙 026 결정을 기다린다.
 
 > 스펙 025 보완 라운드 1 완료(로컬 검증, 2026-07-29, 기준 HEAD `bfcf8d7`): Codex 1차 재검증 차단 2건을 `AUTO_REVIEW_LOOP.md`에 따라 자동 구현·검증·분리 커밋·fast-forward push했다. **보완 ①(`packages/render/src/plan/build.ts`)**: `buildCase`가 검증한 값을 다시 읽던 경로를 제거 — 이전 read count `bodyColor` 2·`zones` 2·`zone.id` 4·`zone.imageRef` 2·`zone.order` 4·`zone.guide` 2·rect `units` 3/`x,y,width,height` 각 2·stroke `color` 2/`width` 3·`input.kind` 3·frame `innerBorder` 2 → **전부 1회**. 신규 `readCaseZoneOnce`가 zone 하나의 사용 필드를 정확히 1회 읽어 plain normalized snapshot(`{id,imageRef,rect,image,transform,guide?,index,key}`)을 만들고 **검증·정렬·command 생성은 snapshot만** 읽는다(caller 재조회 0). **읽기·검증 순서 무변경** → 오류 code·우선순위·layer ID·정렬·guide 순서·frame 계약·executor 어휘 그대로, 호환 fallback·deprecated overload 0, hostile getter·Proxy trap·revoked Proxy **throw 0** 유지 → **검증되지 않은 두 번째 getter 값이 성공 plan에 들어갈 수 없다**. **보완 ②(`apps/mockup/src/canvas/productPlan.ts`)**: `zoneImages.get`을 `typeof` 검사와 `bind`에서 두 번 읽던 것을 **1회 읽기**로 바꿔 **검증한 그 함수만** bind·호출 — `get` read count **1**, lookup 호출 **zone당 1회**(추가 map entry 조회 0), `get` 접근/호출 예외 모두 `INVALID_ADAPTER_INPUT`(throw 0), 실제 `Map`/`ReadonlyMap` 호환 유지. **추가 안전**: geometry zone `sourceIndex`는 **0-based non-negative integer만**(음수·소수·NaN·±Infinity·비숫자·누락 → `INVALID_ADAPTER_INPUT`, 정상 index는 비연속 `7`까지 유지, 실패 payload는 안전한 숫자 index뿐), geometry `percentRect` 4필드도 각 1회 읽기. **회귀 고정**: 신규 unit **44건**(render 26·adapter 18)이 read count·drift·throw-on-second-read·`get` 단일 읽기·`sourceIndex`를 명시 단언하며, **수정 전 소스에서는 그중 20건이 실패**하고 수정 후 전부 통과한다. 게이트: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / **unit 716**(672→716) / build(mockup 217.69·gzip **68.40** / CSS 11.32·**3.16** `index-D9dnc5BM.css` 동일, admin 193.53·61.09 / 8.54·2.64 무변경) / **e2e 58 PASS**(신규 E2E 0)·reporter 요약·exit 0 자체 종료 19초 / check PASS / `git diff --check` clean / 포트 4183·4184 free·저장소 소속 잔류 0 / **OS temp `denn-e2e-*` 잔여 0** / 고객 dist **SHA-256 E2E 전후 동일·fixture 0** / 스펙018 PNG 복원·미커밋 / 네트워크·live·deploy 0. **무변경**: `packages/shared|firebase|ui|spaces`·`apps/admin`·고객 `App.tsx`·`BrowseFlow`·catalog controller·**production Canvas surface 전체**·frame builder 동작·executor·운영 HTML·Firebase 설정/Rules·POC·PNG·`package.json`·`pnpm-lock.yaml` = diff 0 — **변경 파일 4개뿐**. **NOT TESTED 유지**: 실제 사용자 이미지 load·binding·CORS-clean·운영 이미지·실기기. ⚠️ 이 라운드도 **순수 adapter 보완**이며 상품 미리보기·고객 Canvas 연결 완료가 아니다. `hosting.public:"."` → **Hosting 격리 전 배포 금지**. 코드 커밋 `6682e04`/문서 분리, 핸드오프 `docs/2026-07-28-spec-025-product-plan-adapter-handoff.md` §9, 스펙 025 하단에 보완 DONE append(최초 구현 기록·과거 수치 무수정). **다음 기능 착수 금지 — Codex 재검증 대기.**
 
