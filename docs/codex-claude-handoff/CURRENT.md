@@ -7,7 +7,27 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟢 스펙 027 승인·종료(Codex 최종 판정 = 승인 가능, 승인 기준 HEAD `06d9700`). 다음 스펙은 Codex/Founder 지시 대기 — 기능 착수 없음. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **🟡 스펙 027 승인·종료. 스펙 028 사전 조사(템플릿 아트 Canvas 합성·CORS-clean) 완료·push — Codex 판정 대기. 구현 스펙 미작성·미착수. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+
+> 스펙 028 사전 조사 완료(읽기 전용, 2026-07-29, 기준 HEAD `beb16ea`): 보고서
+> `docs/codex-claude-handoff/reviews/2026-07-29-template-art-canvas-cors-investigation.md`(12항목).
+> **한 줄: 템플릿 아트는 "이미지를 하나 더 그리는 일"이 아니다** — 레거시는 아트를 **stretch**로 그리고(케이스=캔버스 전체
+> `:1679`, 액자=mat rect `:3094`), 일부 uploaded 액자는 **아트 픽셀을 읽어 crop rect를 추정**하며(`detectLegacyInnerRect`
+> `:3076-3091`), 그 픽셀 읽기는 **CORS-clean이 아니면 SecurityError**다. **현재 render-plan 어휘에는 stretch도
+> source-crop도 없어**(`draw-image-cover`는 cover 의미, 실행기는 9-인자 오버로드를 의도적으로 배제) `draw-image-cover`
+> 재사용은 **의미적으로 안전하지 않다**. **재사용 가능 확정**: 스펙 018 projection(`sourceKind`/`generatedDetailPreview`
+> 게이트)과 `@denn/firebase` trust boundary는 순수·네트워크 0이라 **그대로 재사용**하면 된다. **CORS**: `crossOrigin`은
+> `src` 대입 **전에** 설정해야 하고(레거시는 prototype setter 패치 `:11638-11662`), ACAO가 없으면 **로드 자체가 실패**하며,
+> taint는 **픽셀을 읽는 순간(인쇄/export)** 에만 드러난다 — 현재 executor는 픽셀을 읽지 않으므로 preview만으로는 조용히
+> 통과한다. 레거시의 **"crossOrigin 없이 재시도"(`:12138`)는 tainted canvas → 인쇄 0×0 위험이라 복제 금지**.
+> **실패 정책이 레거시에서 불일치**: 액자는 아트만 생략하고 계속(`:3133`), 케이스는 `onerror` 핸들러 부재로 카메라·가이드까지
+> 렌더가 멈춘다(`:1679`). **합성 fixture만으로 검증 가능한 경계**(ACAO 유무 라우트로 성공/실패·taint 대조군)와
+> **NOT VERIFIED**(운영 버킷 CORS 실제 설정·token 수명·아트 분포·legacy crop 템플릿 실재 여부)를 분리했다.
+> **결정 필요 5건**: D-1 stretch command 도입(계약) · D-2 legacy crop 템플릿 지원/거부(계약) · D-3 아트 로드 실패
+> 정책(생략/차단/placeholder, **Founder**) · D-4 아트 캐시 키·수명(소스 문자열 보존 경계) · D-5 버킷 CORS 미설정 시 처리
+> (**Founder**, 설정 변경은 승인 사항). 최소 구현 순서·허용 파일 후보·STOP 조건도 제안했다(1단계 = `packages/render`
+> 어휘 결정, 그 전에는 앱 작업 불가). **코드·설정·테스트·PNG·lockfile 변경 0, 실제 Firebase GET·이미지 다운로드·live·
+> CORS 변경·Rules/Hosting·deploy 0.** 구현 스펙은 작성하지 않았고 다음 기능도 착수하지 않는다.
 
 > Codex 최종 승인(2026-07-29): 스펙 027 = **승인 가능**(승인 기준 HEAD `06d9700`, 보완 코드 `6fb8630`,
 > 기준선 `075ee01`, fix_round 1). 독립 재검증 = canonical frame fill dedup·source order 첫 유효 이름 보존 PASS /
