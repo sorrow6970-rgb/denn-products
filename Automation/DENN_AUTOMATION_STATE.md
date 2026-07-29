@@ -5,15 +5,15 @@ updated_at: 2026-07-29
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-027-customer-preview-composer-connection
-active_unit: spec-028-pre-template-art-canvas-cors-investigation
-state: READY_FOR_CODEX
-baseline_commit: beb16ea
-verified_commit: beb16ea
+active_unit: spec-028-template-art-stretch-cors-owner
+state: WAITING_FOR_CLAUDE
+baseline_commit: 72bcd8d
+verified_commit: 72bcd8d
 origin_relation: "HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: two Codex E2E-regenerated spec-018 PNG files; not restored, not committed"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: CLAUDE_WORKING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -54,6 +54,7 @@ restore, checkout, stage 또는 commit하지 않았다.
 
 ## 다음 전이
 
-Codex가 조사 근거와 결정 항목을 검토한다. 구현 스펙 028은 Codex가 별도로 작성하며, Claude
-Code는 그 스펙과 `Automation/NEXT_CLAUDE_PROMPT.md`가 갱신되기 전까지 기능 작업을 시작하지
-않는다.
+Founder가 아트 실패 시 case/frame preview fail-closed 정책을 승인했다. Codex는
+stretch command 도입, legacy crop 거부, cross-selection cache 없음으로 구현 계약을
+확정했다. Claude Code는 `docs/rebuild/specs/028-template-art-stretch-cors-owner.md`와
+`Automation/NEXT_CLAUDE_PROMPT.md` 범위만 구현한다.
