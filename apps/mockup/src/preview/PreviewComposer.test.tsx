@@ -145,6 +145,26 @@ describe("PreviewComposer — before any choice", () => {
     expect(markup).not.toContain("missing-model");
   });
 
+  it("renders ONE swatch when two catalog entries carry the same colour", () => {
+    const markup = renderToStaticMarkup(
+      <PreviewComposer
+        productKind="frame"
+        document={frameDoc([
+          { id: "a", name: "블랙 A", fill: "#1a1a1a" },
+          { id: "b", name: "블랙 B", fill: "#1A1A1A" },
+        ])}
+        modelId={null}
+        frameSizeId="fs1"
+        templateId="full"
+      />,
+    );
+    const swatches = markup.match(/data-testid="preview-color-/g) ?? [];
+    expect(swatches).toHaveLength(1); // one value → one key, one test id, one pressed state
+    expect(markup).toContain("블랙 A"); // the first entry's name is kept
+    expect(markup).not.toContain("블랙 B");
+    expect(markup).not.toContain('aria-pressed="true"'); // still nothing auto-selected
+  });
+
   it("keeps catalog ids, codes and raw values out of the markup", () => {
     const markup = renderToStaticMarkup(
       <PreviewComposer

@@ -116,6 +116,53 @@ describe("readFrameColorOptions", () => {
     expect(serialized).not.toContain("grain");
   });
 
+  it("deduplicates by canonical value, keeping the first entry and its name", () => {
+    const options = readFrameColorOptions(
+      doc([
+        { id: "a", name: "블랙 A", fill: "#1a1a1a" },
+        { id: "b", name: "블랙 B", fill: "#1A1A1A" },
+      ]),
+    );
+    expect(options).toEqual([{ name: "블랙 A", value: "#1A1A1A" }]);
+  });
+
+  it("collapses three entries of the same colour into one", () => {
+    const options = readFrameColorOptions(
+      doc([
+        { id: "a", name: "첫째", fill: "#AABBCC" },
+        { id: "b", name: "둘째", fill: "#aabbcc" },
+        { id: "c", name: "셋째", fill: "#AaBbCc" },
+      ]),
+    );
+    expect(options).toEqual([{ name: "첫째", value: "#AABBCC" }]);
+  });
+
+  it("keeps distinct colours in source order", () => {
+    const options = readFrameColorOptions(
+      doc([
+        { id: "w", name: "화이트", fill: "#FFFFFF" },
+        { id: "k", name: "블랙", fill: "#1A1A1A" },
+        { id: "k2", name: "블랙 중복", fill: "#1a1a1a" },
+        { id: "g", name: "그레이", fill: "#808080" },
+      ]),
+    );
+    expect(options).toEqual([
+      { name: "화이트", value: "#FFFFFF" },
+      { name: "블랙", value: "#1A1A1A" },
+      { name: "그레이", value: "#808080" },
+    ]);
+  });
+
+  it("dedups only valid entries — an invalid first entry does not reserve the colour", () => {
+    const options = readFrameColorOptions(
+      doc([
+        { id: "grain", name: "원목", fill: "#1A1A1A", grain: true },
+        { id: "solid", name: "블랙", fill: "#1A1A1A" },
+      ]),
+    );
+    expect(options).toEqual([{ name: "블랙", value: "#1A1A1A" }]);
+  });
+
   it("does not auto-select anything (it returns options only)", () => {
     const options = readFrameColorOptions(doc([{ id: "b", name: "블랙", fill: "#1A1A1A" }]));
     expect(Object.keys(options[0])).toEqual(["name", "value"]);

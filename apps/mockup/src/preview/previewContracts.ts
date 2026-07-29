@@ -40,6 +40,10 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
  * name. `grain: true` items are EXCLUDED (the legacy wood texture is a random overlay, which a
  * deterministic plan cannot reproduce and a flat fill would misrepresent). No id, no raw catalog
  * object and no diagnostic code leaves this function — only a name and a canonical colour.
+ *
+ * Two catalog entries may carry the SAME colour (e.g. `#1a1a1a` and `#1A1A1A`). The customer picks a
+ * colour, not a catalog row, and the UI keys a swatch by that value — so the result is deduplicated
+ * by canonical value, deterministically keeping the FIRST valid entry in source order and its name.
  */
 export function readFrameColorOptions(document: CatalogDocumentV1): readonly PreviewColorOption[] {
   const options: PreviewColorOption[] = [];
@@ -48,6 +52,7 @@ export function readFrameColorOptions(document: CatalogDocumentV1): readonly Pre
     if (!isPlainObject(data)) return options;
     const raw: unknown = data.frameColors;
     if (!Array.isArray(raw)) return options;
+    const seen = new Set<string>();
     for (const item of raw as readonly unknown[]) {
       if (!isPlainObject(item)) continue;
       if (item.grain === true) continue;
@@ -55,7 +60,10 @@ export function readFrameColorOptions(document: CatalogDocumentV1): readonly Pre
       const fill = item.fill;
       if (typeof name !== "string" || name.trim().length === 0) continue;
       if (typeof fill !== "string" || !HEX6.test(fill)) continue;
-      options.push({ name: name.trim(), value: fill.toUpperCase() });
+      const value = fill.toUpperCase();
+      if (seen.has(value)) continue; // a later duplicate never becomes a second swatch
+      seen.add(value);
+      options.push({ name: name.trim(), value });
     }
   } catch {
     // a hostile getter or revoked Proxy simply yields no options
