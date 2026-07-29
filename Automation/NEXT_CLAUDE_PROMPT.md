@@ -1,33 +1,28 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_CLAUDE`
+상태: `READY_FOR_CODEX`
+기준 후보: 보완 라운드 1 push 결과 (코드 `d4fb99b` + 문서 커밋)
+보완 라운드: `1 / 3`
 
-# 스펙 028 구현 — 템플릿 아트 stretch·CORS-clean owner
+# 대기: 스펙 028 보완 라운드 1 재검증
 
-정본:
-`docs/rebuild/specs/028-template-art-stretch-cors-owner.md`
+Codex 지적 2건(art source 1회 snapshot, placement 전체 1회 snapshot)은 지정된 허용 파일
+안에서만 보완해 push했다. Claude Code가 지금 수행할 작업 범위는 **없다.**
 
-Founder 결정은 `아트 실패 시 미리보기 차단`이다. 스펙 전체를 읽고 허용 파일 안에서만
-구현·검증한다.
+이 상태에서 Claude Code는 다음만 한다.
 
-핵심:
+- `git fetch` 후 HEAD=origin, ahead/behind, working tree 상태 확인
+- `Automation/DENN_AUTOMATION_STATE.md`, 이 파일, `docs/codex-claude-handoff/CURRENT.md` 재확인
+- 상태 변화가 없으면 파일 수정·커밋·푸시 없이 보고만 한다
 
-- 신규 `draw-image-stretch`, source-crop 0
-- case images → art → guides, frame image → art → inner-border
-- legacy builder crop variant request 전 거부
-- 스펙 018 projection + 기존 Firebase trust boundary 재사용
-- remote는 crossOrigin anonymous를 src보다 먼저, 실패 시 재시도 0
-- global/cross-selection cache 0
-- URL/token/base64는 owner closure·drawable 밖 0
-- required art loading/failure/unsupported는 Canvas 0
-- no-art/builtin/generated-preview는 기존 preview 유지
-- 합성 route로 ACAO 성공·실패와 실제 픽셀/CORS-clean 검증
+다음은 하지 않는다.
 
-코드/test와 문서를 분리 commit하고 일반 fast-forward push한다. HEAD=origin,
-ahead/behind 0/0을 확인한다. 아래 PNG 2개는 restore, checkout, stage, commit하지 않는다.
+- 새 기능·정책 변경·의존성 추가
+- legacy builder crop 지원, builtin multi-zone, text/clock, pointer, print/export, 저장·주문
+- Firebase SDK/Auth/Rules/CORS/Hosting, 실제 network/live test, 운영 이미지 다운로드, deploy
+- 아래 두 파일의 restore·checkout·stage·commit
+  - `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`
+  - `docs/rebuild/results/spec-018/browse-mobile-390x844.png`
 
-- `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`
-- `docs/rebuild/results/spec-018/browse-mobile-390x844.png`
-
-실제 Firebase GET, 운영 이미지 다운로드, CORS/Rules/Hosting 변경, live/deploy는 금지한다.
-필요하면 즉시 BLOCKED로 보고한다. 다음 기능은 시작하지 않는다.
+재개 조건: Codex가 재검증 결과(`CODEX_PASSED` 또는 새 `CORRECTION_REQUIRED`)와 이 파일의 새
+지시를 push하거나, Founder가 명시적으로 다음 작업을 지시한다.

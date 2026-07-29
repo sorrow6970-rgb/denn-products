@@ -242,3 +242,25 @@
   썸네일(non-CORS)→owner(anonymous) 요청 순서에서 캐시 오염 가능성은 NOT VERIFIED.
 - PNG 2개: 미복원·미커밋
 - 다음: Codex 독립 검증. print/export·pointer·주문은 여전히 후속.
+
+## 2026-07-29 — 스펙 028 보완 라운드 1 (1회 snapshot fail-closed)
+
+- 기준: `cebcaad`
+- 코드/test: `d4fb99b`
+- 상태: `CORRECTION_REQUIRED` → 보완 완료 → `READY_FOR_CODEX`
+- 변경 파일(허용 목록 안): `apps/mockup/src/canvas/templateArtBinding.{ts,test.ts}` ·
+  `packages/shared/src/catalog/images/placement.{ts,test.ts}` ·
+  `apps/mockup/src/preview/PreviewComposer.tsx`(lint 1줄)
+- 지적 1: art source(kind/src)를 예외 경계 밖에서 읽음 → `readSourceOnce()`로 경계 안 1회 읽기,
+  이후 전부 snapshot 사용. hostile getter/Proxy/revoked Proxy는 element 생성 없이 INVALID_INPUT
+- 지적 2: placement가 source 체인·builder marker를 재읽어 drift 시 stretch로 fail-open 가능 →
+  `readTemplateOnce()`로 사용 필드 전부 1회 읽기, 첫 snapshot이 legacy crop이면 결과 유지
+- 유지: crossOrigin-before-src, data URL 예외, 재시도 0, generation guard, cache 0,
+  기존 결과·오류 우선순위, Result에 source/필드명/ID 미추가
+- 신규 회귀 테스트 17건(read count, drift, throwing getter/trap/revoked)
+- 게이트: frozen PASS / lockfile diff 0 / format·lint·typecheck / unit 893(876→893) /
+  e2e 85 PASS exit 0 16.4초 / check PASS / diff --check clean / 포트 free · temp 0 ·
+  고객 dist SHA-256 동일 · fixture 0
+- 번들: mockup JS 254.06 kB(gzip 78.90), CSS 무변경, admin 무변경
+- PNG 2개: 미복원·미커밋
+- 다음: Codex 재검증. 다음 기능 착수 없음.

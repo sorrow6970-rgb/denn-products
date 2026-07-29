@@ -7,7 +7,24 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟠 스펙 028(템플릿 아트 stretch·CORS-clean owner) 구현 완료·push — Codex 독립 검증 대기(`READY_FOR_CODEX`). 스펙 027 승인·종료. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **🟠 스펙 028 보완 라운드 1 완료·push — Codex 재검증 대기(`READY_FOR_CODEX`, fix_round 1). 스펙 027 승인·종료. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+
+> 스펙 028 보완 라운드 1 완료(로컬 검증, 2026-07-29, 기준 `cebcaad`, 코드 커밋 `d4fb99b`): Codex 지적 **2건 모두 유효**였다.
+> **① art source 1회 snapshot** — `templateArtBinding`이 `source.kind`/`src`를 **예외 경계 밖에서** 읽어 hostile
+> getter·Proxy trap·revoked Proxy가 `load()` 밖으로 throw할 수 있었고, drift가 검증값과 실제 `crossOrigin`/`src`
+> 대입값을 가를 수 있었다 → `readSourceOnce()`가 **경계 안에서 각 1회** 읽어 plain snapshot을 만들고 이후 전부
+> snapshot만 사용한다(hostile 입력은 element 생성 없이 `INVALID_INPUT`). **② placement 전체 1회 snapshot** —
+> source 체인·legacy-builder marker를 helper마다 재읽어 **첫 읽기가 legacy crop이어도 drift가 근거를 지우면
+> `stretch`로 fail-open**할 수 있었다 → `readTemplateOnce()`가 `generatedDetailPreview`·legacy source 5필드·`type`·
+> `builtBy`·`exportVersion`·`overlayScope`·`frameBaked`를 **각 1회** 읽어 boolean snapshot으로 판정하므로
+> **첫 snapshot이 legacy crop이면 결과가 유지**된다. **유지된 계약**: crossOrigin-before-src·data URL 예외·재시도 0·
+> generation guard·cache 0·기존 none/stretch/unsupported 결과와 오류 우선순위·Result에 source/필드명/ID 미추가.
+> 선택적 lint 정리 1줄(`noUselessTernary`, 의미 변경 0)도 반영했다. **신규 회귀 테스트 17건**(필드별 read count,
+> drifting kind/src, drifting source/marker의 legacy crop 유지, throwing getter·Proxy trap·revoked Proxy).
+> 게이트: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / **unit 893**(876→893) /
+> build(mockup JS **254.06 kB**·gzip **78.90**, CSS **13.80/3.53 무변경**, admin 무변경) / **e2e 85 PASS·exit 0·16.4초** /
+> check PASS / `git diff --check` clean / 포트 4183·4184 free·잔류 0 / OS temp 0 / 고객 dist **SHA-256 E2E 전후
+> 동일·fixture 0** / 네트워크·live·deploy 0. **PNG 2개는 이번에도 미복원·미커밋**(working tree dirty).
 
 > 스펙 028 구현·자동검증 완료(로컬, 2026-07-29, 기준 HEAD `7a2b2cd`, 코드 커밋 `f7b3f61`): 정본
 > `docs/rebuild/specs/028-template-art-stretch-cors-owner.md`, 인계

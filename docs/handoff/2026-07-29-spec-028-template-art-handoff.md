@@ -115,3 +115,25 @@ PNG · `package.json` · `pnpm-lock.yaml` = `git diff` **0**. E2E fixture(`canva
 | 2 | (문서) | 스펙 028 DONE, 이 인계, `CLAUDE_LIVE_PATCH_LOG.md`, `CURRENT.md` |
 
 **롤백 순서: 문서 커밋 → 코드 커밋**(역순 revert). `7a2b2cd`로 되돌리면 라운드 전 상태다.
+
+## 9. 보완 라운드 1 (2026-07-29) — 1회 snapshot fail-closed
+
+기준 `cebcaad` → 코드/test 커밋 `d4fb99b`.
+
+| 지적 | 결함 | 수정 |
+| --- | --- | --- |
+| 1 | `templateArtBinding`이 `source.kind`/`src`를 **예외 경계 밖에서** 읽어 hostile getter·Proxy가 `load()` 밖으로 throw할 수 있었고 drift가 검증값과 대입값을 가를 수 있었다 | `readSourceOnce()`가 경계 안에서 **각 1회** 읽어 snapshot 생성 → 검증·crossOrigin/src 대입·결과 처리 모두 snapshot만 사용. hostile 입력은 element 생성 없이 `INVALID_INPUT`으로 닫힘 |
+| 2 | `placement`가 source 체인·builder marker를 helper마다 재읽어, 첫 읽기가 legacy crop이어도 drift가 근거를 지우면 **`stretch`로 fail-open** 가능 | `readTemplateOnce()`가 사용 필드 전부를 **각 1회** 읽어 boolean snapshot 생성 → 모든 판정이 snapshot 기반, 첫 snapshot이 legacy crop이면 **결과 유지** |
+| 선택 | composer `artBlocked`의 `noUselessTernary` lint info | 표현식 1줄 정리(의미 변경 0) |
+
+**유지된 계약**: crossOrigin-before-src · data URL 예외 · 재시도 0 · generation stale guard · cache 0 ·
+기존 none/stretch/unsupported 결과와 오류 우선순위 · Result에 source/필드명/ID 미추가.
+
+**신규 회귀 테스트 17건**: 필드별 read count, drifting kind/src, drifting source/marker(legacy crop 유지),
+throwing getter, throwing Proxy trap, revoked Proxy.
+
+**게이트**: frozen exit 0 · lockfile diff 0 · format·lint·typecheck / **unit 893**(876→893) /
+build(mockup JS **254.06 kB**·gzip **78.90**, CSS 13.80/3.53 무변경, admin 무변경) / **e2e 85 PASS·exit 0·16.4초** /
+check PASS / `git diff --check` clean / 포트 free · temp 0 · 고객 dist SHA-256 E2E 전후 동일 · fixture 0.
+
+**PNG**: Codex E2E 재생성분 2개는 이번 라운드에서도 미복원·미커밋.

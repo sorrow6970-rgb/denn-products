@@ -254,3 +254,32 @@ Firebase config/Rules/CORS/Hosting, POC, PNG, manifests, lockfile는 변경 금�
 - **PNG**: Codex E2E 재생성분 2개는 restore·checkout·stage·commit **하지 않았다**(working tree dirty, 커밋된 PNG 0).
 - ⚠️ 이 완료는 **합성 fixture에서 CORS-clean 아트를 fail-closed로 합성한 단계**이며 운영 CORS·실기기·print/export·
   주문·배포 완료가 아니다. 인계: `docs/handoff/2026-07-29-spec-028-template-art-handoff.md`.
+
+---
+
+### DONE (Claude) — 보완 라운드 1 (2026-07-29)
+
+기준 `cebcaad`(+ Codex 지적) → 코드/test 커밋 `d4fb99b`. **Codex 재검증 전이므로 종료가 아니다.**
+
+- **지적 1 — art source 1회 snapshot(`templateArtBinding.ts`)**: `source.kind`/`source.src`를 **예외 경계 밖에서**
+  읽어 hostile getter·Proxy trap·revoked Proxy가 `load()` 밖으로 throw할 수 있었고, drift가 검증값과 실제 대입값을
+  가르게 할 수 있었다. 이제 `readSourceOnce()`가 **경계 안에서 각 필드를 정확히 1회** 읽어 plain snapshot을 만들고,
+  검증·`crossOrigin`/`src` 대입·load 결과 처리는 **snapshot만** 사용한다. hostile 입력은 element를 만들지도 않고
+  기존 `INVALID_INPUT`으로 닫히며 원본 예외·URL은 저장되지 않는다. **crossOrigin-before-src·data URL 예외·재시도 0·
+  generation guard·cache 0 계약은 그대로**다.
+- **지적 2 — placement 전체 1회 snapshot(`placement.ts`)**: source 체인과 legacy-builder marker를 helper마다 다시
+  읽어, 첫 읽기가 legacy crop variant를 가리켜도 이후 drift가 근거를 지우면 **`stretch`로 fail-open**할 수 있었다.
+  이제 `readTemplateOnce()`가 `generatedDetailPreview`·legacy source 5필드·`type`·`builtBy`·`exportVersion`·
+  `overlayScope`·`frameBaked`를 **각각 1회** 읽어 boolean만 남긴 snapshot을 만들고(케이스 체인도 같은 `dataUrl` 읽기를
+  재사용), 모든 판정이 snapshot에서만 이뤄진다. 따라서 **첫 snapshot이 legacy crop이면 이후 drift와 무관하게
+  `unsupported: legacy-builder-crop`을 유지**한다. 기존 안정 입력의 none/stretch/unsupported 결과·오류 우선순위
+  **무변경**, Result에 source 문자열·필드명·template ID **미추가**.
+- **선택적 정리**: composer의 `artBlocked` 표현식에서 `noUselessTernary` 1줄만 정리(의미 변경 0).
+- **신규 회귀 테스트 17건**: 필드별 read count 1, drifting `kind`/`src`(첫 snapshot 사용 — 드리프트된 remote kind가
+  crossOrigin을 추가하지 못함), drifting source/marker(legacy crop 유지), 각 필드 throwing getter, throwing Proxy trap,
+  revoked Proxy(양쪽 모두 throw 0).
+- **게이트(보완 라운드 1)**: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck /
+  **unit 893**(876 → 893) / build(mockup JS **254.06 kB**·gzip **78.90**, CSS **13.80/3.53 무변경**, admin 무변경) /
+  **e2e 85 PASS**·exit 0·16.4초 / check PASS / `git diff --check` clean / 포트 4183·4184 free·잔류 0 /
+  OS temp `denn-e2e-*` 0 / 고객 dist **SHA-256 E2E 전후 동일·fixture 0** / 네트워크·live·deploy 0.
+- **PNG**: Codex E2E 재생성분 2개는 이번에도 restore·checkout·stage·commit **하지 않았다**.
