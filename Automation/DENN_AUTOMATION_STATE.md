@@ -5,10 +5,10 @@ updated_at: 2026-07-29
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-025
-active_unit: spec-026-pre-investigation
+active_unit: spec-026-local-user-image-binding-lifecycle
 state: WAITING_FOR_CLAUDE
-baseline_commit: 3c3b794
-verified_commit: 3c3b794
+baseline_commit: 4a76864
+verified_commit: 4a76864
 origin_relation: "HEAD=origin, ahead/behind 0/0"
 working_tree: clean
 fix_round: 0
@@ -38,9 +38,11 @@ deploy: forbidden
 실제 사용자 이미지 load·binding·CORS-clean·운영 이미지·실기기·선명도는 `NOT TESTED`다.
 상품 미리보기·고객 Canvas 연결 완료로 해석하지 않는다.
 
+스펙 026 사전 조사 commit `4a76864`은 허용된 문서 3개만 변경했고 근거 검수를 통과했다.
+색·logical width·화면 mount의 Founder 결정은 후속으로 유지한다. 제품 결정과 독립적인 로컬
+사용자 이미지 binding 생명주기를 스펙 026으로 확정했다.
+
 ## 다음 전이
 
-Founder가 다음 단계 진행을 승인했다. Claude Code는
-`Automation/NEXT_CLAUDE_PROMPT.md`에 적힌 스펙 026 사전 근거 조사만 수행한다.
-조사 결과가 push되면 `READY_FOR_CODEX`로 전이하고 Codex가 근거와 차단 결정을 검토한다.
-구현 스펙 026은 조사 결과를 검수한 뒤 Codex가 별도로 작성한다.
+Claude Code는 `docs/rebuild/specs/026-local-user-image-binding-lifecycle.md`와
+`Automation/NEXT_CLAUDE_PROMPT.md` 범위만 구현한다. push 후 `READY_FOR_CODEX`로 전이한다.

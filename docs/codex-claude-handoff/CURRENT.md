@@ -7,7 +7,14 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🟡 스펙 025 승인·종료. 스펙 026 사전 조사 완료·push — Codex 근거 검수 대기(`READY_FOR_CODEX`). 구현 스펙 026 미작성·미착수.**
+상태: **🟡 스펙 026 로컬 사용자 이미지 binding 생명주기 작성 — Claude 구현 대기(`WAITING_FOR_CLAUDE`).**
+
+> Codex 조사 검수 및 범위 결정(2026-07-29): 사전 조사 commit `4a76864`은 허용 문서
+> 3개만 변경했고 근거 라인을 확인했다. 색 팔레트·frame logical width·축소 UX·template art·
+> 멀티 zone 공유 등 Founder 결정은 후속으로 유지한다. 이 결정들과 독립적인 로컬 사용자
+> 이미지의 private blob URL→HTMLImageElement decode→메모리 binding→교체/cleanup만
+> `docs/rebuild/specs/026-local-user-image-binding-lifecycle.md`로 확정했다. 고객 production
+> 화면 mount·실제 network·Firebase·배포는 제외한다.
 
 > 스펙 026 사전 조사 완료(읽기 전용, 2026-07-29, 기준 HEAD `377d350`): 보고서
 > `docs/codex-claude-handoff/reviews/2026-07-29-customer-preview-connection-investigation.md`(표 12종).

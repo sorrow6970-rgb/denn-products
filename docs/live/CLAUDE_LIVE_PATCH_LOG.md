@@ -60,3 +60,12 @@
   live test, 브라우저 파일 선택, deploy
 - NOT TESTED: 실제 이미지 load/decode·binding·CORS-clean·실기기·선명도
 - 다음: Codex 독립 검수 → 구현 스펙 026 작성(Claude는 착수하지 않음)
+
+## 2026-07-29 — 스펙 026 조사 검수·구현 전이
+
+- 조사 commit `4a76864`: 허용 문서 3개만 변경, 근거 검수 통과
+- 상태: `READY_FOR_CODEX` → `WAITING_FOR_CLAUDE`
+- 구현 정본: `docs/rebuild/specs/026-local-user-image-binding-lifecycle.md`
+- 범위: 로컬 이미지 decode·binding·generation·cleanup과 전용 Chromium fixture
+- Founder 결정 유지: 색·frame logical width·축소 UX·template art·멀티 zone 공유
+- 고객 화면 mount·network·Firebase·deploy: 제외
