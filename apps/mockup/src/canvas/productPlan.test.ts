@@ -412,6 +412,201 @@ describe("buildFrameProductPlan", () => {
   });
 });
 
+// --- zone image map access (spec 025 §7 single read) ------------------------
+
+describe("zone image map access", () => {
+  const twoZoneGeometry = (): CasePreviewGeometry =>
+    caseGeometry([
+      { id: "case-zone-0", sourceIndex: 0, percentRect: { x: 0, y: 0, width: 50, height: 50 } },
+      { id: "case-zone-1", sourceIndex: 1, percentRect: { x: 50, y: 0, width: 50, height: 50 } },
+    ]);
+
+  it("reads the map's `get` property exactly once and calls it once per zone", () => {
+    const real = new Map([
+      ["case-zone-0", image({ imageRef: "img-a" })],
+      ["case-zone-1", image({ imageRef: "img-b" })],
+    ]);
+    let getReads = 0;
+    const calls: string[] = [];
+    const map = {
+      get get() {
+        getReads += 1;
+        return (key: string): UserImageState | undefined => {
+          calls.push(key);
+          return real.get(key);
+        };
+      },
+    };
+    const plan = planOf(
+      buildCaseProductPlan(caseInput({ geometry: twoZoneGeometry(), zoneImages: map as never })),
+    );
+    expect(getReads).toBe(1);
+    expect(calls).toEqual(["case-zone-0", "case-zone-1"]);
+    expect((cmd(plan, "case:user-image:case-zone-0") as { imageRef: string }).imageRef).toBe(
+      "img-a",
+    );
+  });
+
+  it("uses the first `get` snapshot when the property drifts to another function", () => {
+    let getReads = 0;
+    const map = {
+      get get() {
+        getReads += 1;
+        const ref = getReads === 1 ? "first-fn" : "second-fn";
+        return (): UserImageState => image({ imageRef: ref });
+      },
+    };
+    const plan = planOf(buildCaseProductPlan(caseInput({ zoneImages: map as never })));
+    expect(getReads).toBe(1);
+    expect((cmd(plan, "case:user-image:case-zone-0") as { imageRef: string }).imageRef).toBe(
+      "first-fn",
+    );
+  });
+
+  it("succeeds when a second read of `get` would throw", () => {
+    const real = new Map([["case-zone-0", image()]]);
+    let getReads = 0;
+    const map = {
+      get get() {
+        getReads += 1;
+        if (getReads > 1) throw new Error("second read of get");
+        return (key: string): UserImageState | undefined => real.get(key);
+      },
+    };
+    expect(buildCaseProductPlan(caseInput({ zoneImages: map as never })).ok).toBe(true);
+    expect(getReads).toBe(1);
+  });
+
+  it("reports a throwing lookup function as INVALID_ADAPTER_INPUT without throwing", () => {
+    const map = {
+      get(): never {
+        throw new Error("hostile map get");
+      },
+    };
+    let result: ProductPlanResult | undefined;
+    expect(() => {
+      result = buildCaseProductPlan(caseInput({ zoneImages: map as never }));
+    }).not.toThrow();
+    expect(result).toEqual({ ok: false, code: "INVALID_ADAPTER_INPUT" });
+    expect(JSON.stringify(result)).not.toContain("hostile");
+  });
+
+  it.each([
+    ["missing", {}],
+    ["not a function", { get: 42 }],
+    ["null map", null],
+  ])("rejects a zone image map whose `get` is unusable (%s)", (_label, map) => {
+    expect(buildCaseProductPlan(caseInput({ zoneImages: map as never }))).toEqual({
+      ok: false,
+      code: "INVALID_ADAPTER_INPUT",
+    });
+  });
+
+  it("works with a real Map and a real ReadonlyMap view", () => {
+    const real = new Map([["case-zone-0", image()]]);
+    const readonlyView: ReadonlyMap<string, UserImageState> = real;
+    expect(buildCaseProductPlan(caseInput({ zoneImages: real })).ok).toBe(true);
+    expect(buildCaseProductPlan(caseInput({ zoneImages: readonlyView })).ok).toBe(true);
+  });
+
+  it("still ignores extra map entries when the lookup is a plain function", () => {
+    const store = new Map([
+      ["case-zone-0", image()],
+      ["case-zone-9", image({ imageRef: "unused" })],
+    ]);
+    const calls: string[] = [];
+    const map = {
+      get: (key: string): UserImageState | undefined => {
+        calls.push(key);
+        return store.get(key);
+      },
+    };
+    const result = buildCaseProductPlan(caseInput({ zoneImages: map as never }));
+    expect(result.ok).toBe(true);
+    expect(calls).toEqual(["case-zone-0"]);
+    expect(JSON.stringify(result)).not.toContain("unused");
+  });
+});
+
+// --- geometry zone source index --------------------------------------------
+
+describe("geometry zone source index", () => {
+  const withIndex = (sourceIndex: number): CasePreviewGeometry =>
+    caseGeometry([
+      { id: "case-zone-0", sourceIndex, percentRect: { x: 0, y: 0, width: 10, height: 10 } },
+    ]);
+
+  it.each([
+    ["negative", -1],
+    ["fractional", 0.5],
+    ["NaN", Number.NaN],
+    ["Infinity", Number.POSITIVE_INFINITY],
+    ["-Infinity", Number.NEGATIVE_INFINITY],
+  ])("rejects a source index that is not a 0-based integer (%s)", (_label, sourceIndex) => {
+    expect(buildCaseProductPlan(caseInput({ geometry: withIndex(sourceIndex) }))).toEqual({
+      ok: false,
+      code: "INVALID_ADAPTER_INPUT",
+    });
+  });
+
+  it.each([
+    ["non-numeric", "0"],
+    ["missing", undefined],
+  ])("rejects a non-numeric source index (%s)", (_label, sourceIndex) => {
+    expect(
+      buildCaseProductPlan(caseInput({ geometry: withIndex(sourceIndex as unknown as number) })),
+    ).toEqual({ ok: false, code: "INVALID_ADAPTER_INPUT" });
+  });
+
+  it("keeps a valid projection source index (including a non-contiguous one)", () => {
+    const result = buildCaseProductPlan(
+      caseInput({
+        geometry: caseGeometry([
+          { id: "case-zone-7", sourceIndex: 7, percentRect: { x: 0, y: 0, width: 10, height: 10 } },
+        ]),
+        zoneImages: new Map(),
+      }),
+    );
+    expect(result).toEqual({ ok: false, code: "MISSING_ZONE_IMAGE", zoneSourceIndex: 7 });
+    // the failure payload carries the safe number and nothing else
+    expect(Object.keys(result).sort()).toEqual(["code", "ok", "zoneSourceIndex"]);
+    expect(JSON.stringify(result)).not.toContain("case-zone-7");
+  });
+
+  it("reads each geometry percentRect field once (a drift cannot change the clip rect)", () => {
+    const counts: Record<string, number> = { x: 0, y: 0, width: 0, height: 0 };
+    const first: Record<string, number> = { x: 0, y: 0, width: 50, height: 50 };
+    const percentRect: Record<string, unknown> = {};
+    for (const key of ["x", "y", "width", "height"] as const) {
+      Object.defineProperty(percentRect, key, {
+        get() {
+          counts[key] = (counts[key] ?? 0) + 1;
+          // any later read would produce a full-canvas clip rect instead of the 50% one
+          return counts[key] === 1 ? first[key] : 100;
+        },
+        enumerable: true,
+      });
+    }
+    const plan = planOf(
+      buildCaseProductPlan(
+        caseInput({
+          geometry: caseGeometry([
+            {
+              id: "case-zone-0",
+              sourceIndex: 0,
+              percentRect: percentRect as Record<string, number>,
+            },
+          ]),
+        }),
+      ),
+    );
+    expect(counts).toEqual({ x: 1, y: 1, width: 1, height: 1 });
+    const img = cmd(plan, "case:user-image:case-zone-0");
+    if (img.type !== "draw-image-cover") throw new Error("type");
+    expect(img.clipRect).toEqual({ x: 0, y: 0, width: 160, height: 310 });
+  });
+});
+
 // --- runtime safety, purity, leak safety ------------------------------------
 
 describe("adapter runtime safety", () => {

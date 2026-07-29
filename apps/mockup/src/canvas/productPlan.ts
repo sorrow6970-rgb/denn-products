@@ -127,19 +127,28 @@ function readCaseGeometry(value: unknown): {
     const sourceIndex = zone.sourceIndex;
     const rect = zone.percentRect;
     if (typeof id !== "string" || id.length === 0) fail("INVALID_ADAPTER_INPUT");
-    if (!isFiniteNum(sourceIndex)) fail("INVALID_ADAPTER_INPUT");
+    // a projection source index is a 0-based non-negative integer; a negative, fractional, NaN or
+    // Infinite value is not a usable index and is never carried into a failure payload
+    if (!isFiniteNum(sourceIndex) || !Number.isInteger(sourceIndex) || sourceIndex < 0) {
+      fail("INVALID_ADAPTER_INPUT");
+    }
     if (!isObj(rect)) fail("INVALID_ADAPTER_INPUT");
     const r = rect as Record<string, unknown>;
-    if (!isFiniteNum(r.x) || !isFiniteNum(r.y)) fail("INVALID_ADAPTER_INPUT");
-    if (!isFinitePositive(r.width) || !isFinitePositive(r.height)) fail("INVALID_ADAPTER_INPUT");
+    // every rect field is read once, then validated, then used from the snapshot
+    const x = r.x;
+    const y = r.y;
+    const width = r.width;
+    const height = r.height;
+    if (!isFiniteNum(x) || !isFiniteNum(y)) fail("INVALID_ADAPTER_INPUT");
+    if (!isFinitePositive(width) || !isFinitePositive(height)) fail("INVALID_ADAPTER_INPUT");
     zones.push({
       id: id as string,
       sourceIndex: sourceIndex as number,
       percentRect: {
-        x: r.x as number,
-        y: r.y as number,
-        width: r.width as number,
-        height: r.height as number,
+        x: x as number,
+        y: y as number,
+        width: width as number,
+        height: height as number,
       },
     });
   }
@@ -165,10 +174,13 @@ export function buildCaseProductPlan(input: CaseProductPlanInput): ProductPlanRe
     const bodyColor = readColor((input as CaseProductPlanInput).bodyColor);
 
     const map = (input as CaseProductPlanInput).zoneImages as unknown;
-    if (!isObj(map) || typeof (map as { get?: unknown }).get !== "function") {
-      fail("INVALID_ADAPTER_INPUT");
-    }
-    const lookup = (map as { get: (key: string) => unknown }).get.bind(map);
+    if (!isObj(map)) fail("INVALID_ADAPTER_INPUT");
+    // The `get` property is read EXACTLY once: a getter that hands a valid function to the typeof
+    // check and a different one to `bind` must not be able to swap the lookup we validated. The
+    // validated value is the only thing ever bound and called (spec 025 §7).
+    const getter = (map as { get?: unknown }).get;
+    if (typeof getter !== "function") fail("INVALID_ADAPTER_INPUT");
+    const lookup = (getter as (key: string) => unknown).bind(map);
 
     const planZones: CaseImageZone[] = zones.map((zone) => {
       let found: unknown;

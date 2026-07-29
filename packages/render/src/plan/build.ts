@@ -70,28 +70,36 @@ function commandsAllFinite(commands: readonly PreviewDrawCommand[]): boolean {
   return true;
 }
 
-/** Validate an optional stroke spec (object + hex color + finite positive width). */
+/**
+ * Validate an optional stroke spec (object + hex color + finite positive width). Each field is read
+ * ONCE and the returned spec is built from those reads only (spec 025 §7).
+ */
 function validateStroke(stroke: unknown): StrokeSpec | RenderPlanErrorCode {
   if (!isObj(stroke)) return "INVALID_ZONE";
-  if (!isHex(stroke.color)) return "INVALID_COLOR";
-  if (!isFiniteNum(stroke.width)) return "NON_FINITE_RESULT";
-  if (stroke.width <= 0) return "INVALID_ZONE";
-  return { color: stroke.color, width: stroke.width };
+  const color = stroke.color;
+  if (!isHex(color)) return "INVALID_COLOR";
+  const width = stroke.width;
+  if (!isFiniteNum(width)) return "NON_FINITE_RESULT";
+  if (width <= 0) return "INVALID_ZONE";
+  return { color, width };
 }
 
-/** Validate a zone rect (object + units tag + finite origin + positive finite size). */
+/**
+ * Validate a zone rect (object + units tag + finite origin + positive finite size). Each field is
+ * read ONCE, in the same short-circuit order as before, and the returned rect is a plain snapshot.
+ */
 function validateZoneRect(raw: unknown): ZoneRect | null {
   if (!isObj(raw)) return null;
-  if (raw.units !== "logical" && raw.units !== "percent") return null;
-  if (
-    !isFiniteNum(raw.x) ||
-    !isFiniteNum(raw.y) ||
-    !isFinitePositive(raw.width) ||
-    !isFinitePositive(raw.height)
-  ) {
+  const units = raw.units;
+  if (units !== "logical" && units !== "percent") return null;
+  const x = raw.x;
+  const y = raw.y;
+  const width = raw.width;
+  const height = raw.height;
+  if (!isFiniteNum(x) || !isFiniteNum(y) || !isFinitePositive(width) || !isFinitePositive(height)) {
     return null;
   }
-  return { units: raw.units, x: raw.x, y: raw.y, width: raw.width, height: raw.height };
+  return { units, x, y, width, height };
 }
 
 /** Resolve a validated zone rect to a logical rect (percent → geometry), or an error code. */
@@ -145,52 +153,67 @@ interface NormalizedZone {
   readonly key: number;
 }
 
+/**
+ * Read ONE case zone into a plain normalized snapshot, taking every used field exactly once
+ * (spec 025 §7). Nothing after this function touches the caller's zone object again, so a getter
+ * that returns a valid value to the check and a different value afterwards cannot put an unvalidated
+ * value into the plan. Read/validate order — and therefore the error priority — is unchanged.
+ */
+function readCaseZoneOnce(
+  value: unknown,
+  index: number,
+  seen: Set<string>,
+): NormalizedZone | RenderPlanErrorCode {
+  if (!isObj(value)) return "INVALID_ZONE"; // null/undefined/primitive item
+  const id = value.id;
+  if (!isSafeId(id)) return "INVALID_ID";
+  const imageRef = value.imageRef;
+  if (!isSafeId(imageRef)) return "INVALID_ID";
+  if (seen.has(id)) return "INVALID_ID"; // duplicate zone id is fatal, not a warning
+  seen.add(id);
+
+  const rect = validateZoneRect(value.rect);
+  if (!rect) return "INVALID_ZONE";
+
+  const order = value.order;
+  if (order !== undefined && !isFiniteNum(order)) return "INVALID_ZONE";
+  const key = isFiniteNum(order) ? order : index;
+
+  // spec 025: each zone owns its intrinsic image size and transform — no plan-level fallback.
+  const image = readSizeOnce(value.image);
+  if (image === null) return "INVALID_ZONE";
+  const transform = readTransformOnce(value.transform);
+  if (transform === null) return "INVALID_TRANSFORM";
+
+  const rawGuide = value.guide;
+  let guide: StrokeSpec | undefined;
+  if (rawGuide !== undefined) {
+    const g = validateStroke(rawGuide);
+    if (typeof g === "string") return g;
+    guide = g;
+  }
+
+  return { id, imageRef, rect, image, transform, guide, index, key };
+}
+
 function buildCase(input: CasePlanInput): RenderPlanResult {
+  // Every case value — canvas size, body colour, the zones array and each zone field — is read ONCE
+  // into a plain snapshot (spec 025 §7). Validation, ordering and command building below read only
+  // those snapshots; the caller's objects are never re-read.
   const canvas = readSizeOnce(input.logicalCanvas);
   if (canvas === null) return fail("INVALID_ZONE");
-  if (!isHex(input.bodyColor)) return fail("INVALID_COLOR");
-  if (!Array.isArray(input.zones)) return fail("INVALID_ZONE");
+  const bodyColor = input.bodyColor;
+  if (!isHex(bodyColor)) return fail("INVALID_COLOR");
+  const rawZones: unknown = input.zones;
+  if (!Array.isArray(rawZones)) return fail("INVALID_ZONE");
+  const zoneCount = rawZones.length;
 
   const seen = new Set<string>();
   const normalized: NormalizedZone[] = [];
-  const rawZones = input.zones as readonly unknown[];
-  for (let index = 0; index < rawZones.length; index++) {
-    const zone = rawZones[index];
-    if (!isObj(zone)) return fail("INVALID_ZONE"); // null/undefined/primitive item
-    if (!isSafeId(zone.id)) return fail("INVALID_ID");
-    if (!isSafeId(zone.imageRef)) return fail("INVALID_ID");
-    if (seen.has(zone.id)) return fail("INVALID_ID"); // duplicate zone id is fatal, not a warning
-    seen.add(zone.id);
-
-    const rect = validateZoneRect(zone.rect);
-    if (!rect) return fail("INVALID_ZONE");
-
-    if (zone.order !== undefined && !isFiniteNum(zone.order)) return fail("INVALID_ZONE");
-    const key = isFiniteNum(zone.order) ? zone.order : index;
-
-    // spec 025: each zone owns its intrinsic image size and transform — no plan-level fallback.
-    const image = readSizeOnce(zone.image);
-    if (image === null) return fail("INVALID_ZONE");
-    const transform = readTransformOnce(zone.transform);
-    if (transform === null) return fail("INVALID_TRANSFORM");
-
-    let guide: StrokeSpec | undefined;
-    if (zone.guide !== undefined) {
-      const g = validateStroke(zone.guide);
-      if (typeof g === "string") return fail(g);
-      guide = g;
-    }
-
-    normalized.push({
-      id: zone.id,
-      imageRef: zone.imageRef,
-      rect,
-      image,
-      transform,
-      guide,
-      index,
-      key,
-    });
+  for (let index = 0; index < zoneCount; index++) {
+    const zone = readCaseZoneOnce((rawZones as readonly unknown[])[index], index, seen);
+    if (typeof zone === "string") return fail(zone);
+    normalized.push(zone);
   }
 
   // deterministic order: `key` ascending (missing order = original index), ties by original index.
@@ -226,7 +249,7 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
       type: "fill-rect",
       layerId: "case:body",
       rect: canvasRect(canvas),
-      color: input.bodyColor,
+      color: bodyColor,
     },
     ...imageCommands,
     ...guideCommands,
@@ -258,9 +281,10 @@ function buildFrame(input: FramePlanInput): RenderPlanResult {
   const imageRef = input.imageRef;
   if (!isSafeId(imageRef)) return fail("INVALID_ID");
 
+  const rawInnerBorder = input.innerBorder;
   let innerBorder: StrokeSpec | undefined;
-  if (input.innerBorder !== undefined) {
-    const b = validateStroke(input.innerBorder);
+  if (rawInnerBorder !== undefined) {
+    const b = validateStroke(rawInnerBorder);
     if (typeof b === "string") return fail(b);
     innerBorder = b;
   }
@@ -376,9 +400,10 @@ const rectCopy = (r: Rect): Rect => ({ x: r.x, y: r.y, width: r.width, height: r
  */
 export function buildPreviewRenderPlan(input: PreviewRenderPlanInput): RenderPlanResult {
   try {
-    if (!isObj(input) || (input.kind !== "case" && input.kind !== "frame"))
-      return fail("INVALID_KIND");
-    return input.kind === "case"
+    if (!isObj(input)) return fail("INVALID_KIND");
+    const kind = input.kind; // read once: a drifting `kind` cannot re-route after the check
+    if (kind !== "case" && kind !== "frame") return fail("INVALID_KIND");
+    return kind === "case"
       ? buildCase(input as CasePlanInput)
       : buildFrame(input as FramePlanInput);
   } catch {

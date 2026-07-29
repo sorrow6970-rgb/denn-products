@@ -615,6 +615,228 @@ describe("buildPreviewRenderPlan — zone.order validation", () => {
   });
 });
 
+// ---- I. case input single-read snapshot (spec 025 §7) -------------------------
+// Every used case field must be read EXACTLY once into a plain normalized snapshot. A getter that
+// returns a valid value to the validation and a different (or throwing) one afterwards must not be
+// able to influence the emitted plan.
+describe("buildPreviewRenderPlan — case single-read snapshot", () => {
+  const THROW = Symbol("throw-on-second-read");
+
+  /** Replace `key` with a counting getter: first read = the original value, later = `later`. */
+  const drift = (
+    base: Record<string, unknown>,
+    key: string,
+    later: unknown,
+  ): { object: Record<string, unknown>; reads: () => number } => {
+    const object: Record<string, unknown> = { ...base };
+    const first = object[key];
+    let reads = 0;
+    Object.defineProperty(object, key, {
+      get() {
+        reads += 1;
+        if (reads === 1) return first;
+        if (later === THROW) throw new Error("second read");
+        return later;
+      },
+      enumerable: true,
+      configurable: true,
+    });
+    return { object, reads: () => reads };
+  };
+
+  /** Object whose every field is a counting getter (used for nested rect/image/transform). */
+  const counting = (
+    values: Record<string, unknown>,
+  ): { object: Record<string, unknown>; counts: Record<string, number> } => {
+    const counts: Record<string, number> = {};
+    const object: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(values)) {
+      counts[key] = 0;
+      Object.defineProperty(object, key, {
+        get() {
+          counts[key] = (counts[key] ?? 0) + 1;
+          return value;
+        },
+        enumerable: true,
+      });
+    }
+    return { object, counts };
+  };
+
+  const guidedZone = (over: Record<string, unknown> = {}): Record<string, unknown> => ({
+    ...caseZone(),
+    order: 0,
+    guide: { color: "#000000", width: 2 },
+    ...over,
+  });
+  const caseWith = (zone: Record<string, unknown>): unknown => ({ ...CASE_BASE, zones: [zone] });
+
+  it("reads bodyColor once and ignores a later invalid colour", () => {
+    const { object, reads } = drift({ ...CASE_BASE }, "bodyColor", "not-a-hex");
+    const p = plan(buildPreviewRenderPlan(object as unknown as CasePlanInput));
+    expect(reads()).toBe(1);
+    expect((cmd(p, "case:body") as { color: string }).color).toBe("#101112");
+  });
+
+  it("reads the zones array once (a later array cannot add zones)", () => {
+    const { object, reads } = drift({ ...CASE_BASE }, "zones", [
+      caseZone({ id: "injected", imageRef: "injected" }),
+    ]);
+    const p = plan(buildPreviewRenderPlan(object as unknown as CasePlanInput));
+    expect(reads()).toBe(1);
+    expect(layerIds(p)).toEqual(["case:body", "case:user-image:z0"]);
+  });
+
+  it("reads zone.id once (a later id cannot reach a layerId)", () => {
+    const { object, reads } = drift(guidedZone(), "id", "INJECTED_ID_MARKER");
+    const p = plan(buildPreviewRenderPlan(caseWith(object) as CasePlanInput));
+    expect(reads()).toBe(1);
+    expect(layerIds(p)).toEqual(["case:body", "case:user-image:z0", "case:guide:z0"]);
+    expect(JSON.stringify(p)).not.toContain("INJECTED_ID_MARKER");
+  });
+
+  it("reads zone.imageRef once (a later imageRef cannot reach the command)", () => {
+    const { object, reads } = drift(guidedZone(), "imageRef", "https://evil.example/x");
+    const p = plan(buildPreviewRenderPlan(caseWith(object) as CasePlanInput));
+    expect(reads()).toBe(1);
+    expect((cmd(p, "case:user-image:z0") as { imageRef: string }).imageRef).toBe("img-0");
+    expect(JSON.stringify(p)).not.toContain("evil.example");
+  });
+
+  it("reads zone.order once (a later order cannot re-sort the layers)", () => {
+    const drifting = drift(guidedZone({ id: "a", imageRef: "ia", order: 2 }), "order", -5);
+    const p = plan(
+      buildPreviewRenderPlan({
+        ...CASE_BASE,
+        zones: [drifting.object, guidedZone({ id: "b", imageRef: "ib", order: 1 })],
+      } as unknown as CasePlanInput),
+    );
+    expect(drifting.reads()).toBe(1);
+    expect(layerIds(p)).toEqual([
+      "case:body",
+      "case:user-image:b", // order 1
+      "case:user-image:a", // order 2 (the later -5 is never read)
+      "case:guide:b",
+      "case:guide:a",
+    ]);
+  });
+
+  it("reads zone.guide once (a later guide cannot change the stroke)", () => {
+    const { object, reads } = drift(guidedZone(), "guide", { color: "#FFFFFF", width: 9 });
+    const p = plan(buildPreviewRenderPlan(caseWith(object) as CasePlanInput));
+    expect(reads()).toBe(1);
+    expect(cmd(p, "case:guide:z0")).toEqual({
+      type: "stroke-rect",
+      layerId: "case:guide:z0",
+      rect: { x: 0, y: 0, width: 200, height: 200 },
+      color: "#000000",
+      width: 2,
+    });
+  });
+
+  it("reads each nested rect / image / transform field exactly once", () => {
+    const rect = counting({ units: "logical", x: 0, y: 0, width: 200, height: 200 });
+    const image = counting({ width: 100, height: 100 });
+    const transform = counting({ scale: 1, x: 0, y: 0 });
+    const guide = counting({ color: "#000000", width: 2 });
+    plan(
+      buildPreviewRenderPlan(
+        caseWith(
+          guidedZone({
+            rect: rect.object,
+            image: image.object,
+            transform: transform.object,
+            guide: guide.object,
+          }),
+        ) as CasePlanInput,
+      ),
+    );
+    for (const counts of [rect.counts, image.counts, transform.counts, guide.counts]) {
+      for (const [key, value] of Object.entries(counts)) {
+        expect([key, value]).toEqual([key, 1]);
+      }
+    }
+  });
+
+  it("reads the plan-level canvas fields exactly once", () => {
+    const canvas = counting({ width: 200, height: 200 });
+    plan(
+      buildPreviewRenderPlan({
+        ...CASE_BASE,
+        logicalCanvas: canvas.object,
+      } as unknown as CasePlanInput),
+    );
+    expect(canvas.counts).toEqual({ width: 1, height: 1 });
+  });
+
+  it.each(["bodyColor", "zones"])("still succeeds when %s throws on a second read", (key) => {
+    const { object, reads } = drift({ ...CASE_BASE }, key, THROW);
+    const p = plan(buildPreviewRenderPlan(object as unknown as CasePlanInput));
+    expect(reads()).toBe(1);
+    expect(layerIds(p)).toEqual(["case:body", "case:user-image:z0"]);
+  });
+
+  it.each(["id", "imageRef", "rect", "order", "image", "transform", "guide"])(
+    "still succeeds when zone.%s throws on a second read",
+    (key) => {
+      const { object, reads } = drift(guidedZone(), key, THROW);
+      const p = plan(buildPreviewRenderPlan(caseWith(object) as CasePlanInput));
+      expect(reads()).toBe(1);
+      expect(layerIds(p)).toEqual(["case:body", "case:user-image:z0", "case:guide:z0"]);
+    },
+  );
+
+  it.each(["id", "imageRef", "rect", "order", "image", "transform", "guide"])(
+    "never throws for a hostile getter on zone.%s",
+    (key) => {
+      const hostile: Record<string, unknown> = { ...guidedZone() };
+      delete hostile[key];
+      Object.defineProperty(hostile, key, {
+        get() {
+          throw new Error("hostile zone getter");
+        },
+        enumerable: true,
+      });
+      let result: RenderPlanResult | undefined;
+      expect(() => {
+        result = buildPreviewRenderPlan(caseWith(hostile) as CasePlanInput);
+      }).not.toThrow();
+      expect(result?.ok).toBe(false);
+      expect(JSON.stringify(result)).not.toContain("hostile");
+    },
+  );
+
+  it("never throws for a Proxy trap or a revoked Proxy in the zones array", () => {
+    const trap = new Proxy(
+      { ...caseZone() },
+      {
+        get() {
+          throw new Error("hostile trap");
+        },
+        has() {
+          throw new Error("hostile has trap");
+        },
+      },
+    );
+    const revocable = Proxy.revocable({ ...caseZone() }, {});
+    revocable.revoke();
+    for (const hostile of [trap, revocable.proxy]) {
+      let result: RenderPlanResult | undefined;
+      expect(() => {
+        result = buildPreviewRenderPlan(caseWith(hostile as Record<string, unknown>) as never);
+      }).not.toThrow();
+      expect(result?.ok).toBe(false);
+    }
+  });
+
+  it("reads input.kind once (a later kind cannot re-route the builder)", () => {
+    const { object, reads } = drift({ ...CASE_BASE }, "kind", "frame");
+    const p = plan(buildPreviewRenderPlan(object as unknown as CasePlanInput));
+    expect(reads()).toBe(1);
+    expect(p.kind).toBe("case");
+  });
+});
+
 // ---- D2. frame mat / image zone separation (spec 024) --------------------------
 describe("buildPreviewRenderPlan ??frame containment (spec 024)", () => {
   const frame = (over: Partial<FramePlanInput>): unknown => ({ ...FRAME_BASE, ...over });
