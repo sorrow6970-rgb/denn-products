@@ -332,3 +332,19 @@
 - 변경: **문서 전용**(보고서 1 + CURRENT + 이 로그 + Automation 2). 제품 코드·테스트·설정·CSS·PNG·lockfile 0,
   신규 의존성 0, 실제 network·live·Firebase·CORS·deploy 0
 - 다음: Codex 검토. **구현 착수 없음.**
+
+## 2026-07-30 — 스펙 029 Founder 결정 접수·기록 (문서 전용)
+
+- 상태: `FOUNDER_DECISION_REQUIRED` → 승인 접수 → `READY_FOR_CODEX`(구현 계약 대기)
+- 승인 문장 원문: `스펙 029 Founder 권장안 D-2·D-3·D-5·D-6·D-7 일괄 승인.`
+- Codex는 저장소만 읽으므로 결정을 정본 문서로 기록:
+  `docs/codex-claude-handoff/decisions/2026-07-30-spec-029-pan-zoom-decisions.md`
+- Founder 승인: D-2 슬롯 카드 선택+활성 표시 / D-3 scale 1.0~5.0·무차원·표시만 %·승산 /
+  D-5 단일 `원래대로` / D-6 1차 핀치 미지원 / D-7 빈 공간 금지(최소 scale 1.0 + cover clamp)
+- Codex 계약(같은 문서 §2 보존): D-1 normalized pan `[-1,1]`·plan에서만 환산 / D-4 0.02·Shift 0.10 /
+  D-8 composer 소유·owner 무변경 / D-9 형상 변경만 초기화
+- 변경: 결정 문서 1 신규 + `CURRENT.md` + 이 로그 + Automation 2 (**문서 전용 커밋**)
+- 제품 코드·테스트·설정·CSS·PNG·lockfile diff **0**, 신규 의존성 0, pointer/pan/zoom 구현 0,
+  구현 스펙 작성 0(Codex 소유), network·live·Firebase·CORS·deploy 0
+- `Automation/DENN_AUTOMATION_RUNBOOK.md`의 미커밋 변경은 Codex 소유로 판단해 손대지 않음
+- 다음: Codex의 스펙 029 구현 계약 대기

@@ -7,7 +7,22 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🔎 스펙 029 사전 조사(pointer/pan/zoom) 완료 → `READY_FOR_CODEX`. 스펙 027·028은 승인·종료. 구현은 미착수(계약 결정 대기). ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **✅ 스펙 029 편집 계약 9건 전부 확정(Founder D-2·D-3·D-5·D-6·D-7 승인 + Codex D-1·D-4·D-8·D-9) → `READY_FOR_CODEX`(구현 계약 대기). 스펙 027·028은 승인·종료. pointer/pan/zoom 구현 미착수. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+
+> 스펙 029 결정 확정(2026-07-30): 정본 `docs/codex-claude-handoff/decisions/2026-07-30-spec-029-pan-zoom-decisions.md`.
+> **Founder 승인**: D-2 case multi-zone은 **슬롯 카드 선택 + 활성 슬롯 표시**(캔버스 히트테스트 없음) /
+> D-3 scale **1.0~5.0 단일 범위**·내부 무차원·**표시만 %**·휠·버튼 **승산** / D-5 **단일 `원래대로` 버튼** /
+> D-6 **1차 핀치 미지원**(슬라이더·버튼·휠·키보드·마우스 drag) / D-7 **클립 안 빈 공간 금지**(최소 scale 1.0 +
+> cover clamp 유지). **Codex 계약**: D-1 편집 상태 = `scale` + 축별 **normalized pan `x/y ∈ [-1,1]`**
+> (현재 scale의 축별 `maxPan` 대비, `maxPan=0`이면 0)이고 **plan 생성 시에만** logical px로 환산 /
+> D-4 키보드 normalized **0.02**·Shift **0.10** / D-8 **composer가 slot별 transform 소유**, 스펙 026 owner
+> **무변경** / D-9 이미지 교체·삭제·model·template·frame-size 변경 시 **초기화**, 색상 변경·활성 slot 전환은 **유지**.
+> **불변식**: 편집 상태에 logical px pan 미저장 · scale<1.0 부재(cover 항상 유지) · 핀치 제스처 미가로채기
+> (브라우저 200% 확대 보존) · `packages/render`·스펙 026 owner 무변경 · 형상 변경만 초기화.
+> **여전히 미결정·미검증**: 실기기 4환경 스크롤·제스처 충돌(육안 필요), 실제 200% 확대, `touch-action` 범위와
+> 스크롤 양보 게이트 세부, 인쇄/export pan 재현(레거시 frame 하드코딩 `dim.w/500`), 핀치 향후 도입,
+> 대용량 사진 드래그 성능. 이 라운드도 **문서 전용**(제품 코드·테스트·CSS·설정·lockfile diff 0, 신규 의존성 0,
+> network·live·Firebase·CORS·deploy 0)이며 **구현 스펙은 Codex가 작성**한다.
 
 > 스펙 029 사전 조사 완료(읽기 전용, 2026-07-30, 기준 HEAD `d21531c`): 보고서
 > `docs/codex-claude-handoff/reviews/2026-07-30-pointer-pan-zoom-investigation.md`(10항목).

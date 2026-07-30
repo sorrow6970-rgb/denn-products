@@ -6,7 +6,7 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-028-template-art-stretch-cors-owner
 active_unit: spec-029-pointer-pan-zoom-investigation
-state: READY_FOR_CODEX
+state: READY_FOR_CODEX  # Founder D-2·D-3·D-5·D-6·D-7 승인 접수·기록 완료 → Codex가 구현 계약 작성
 baseline_commit: d21531c
 candidate_commit: null  # 조사 문서 커밋(아래 절) — 제품 코드 후보 없음
 verified_commit: d4fb99b  # 스펙 028 승인분
@@ -14,7 +14,7 @@ origin_relation: "investigation doc commit pushed fast-forward on top of d21531c
 working_tree: "dirty: only the two known Codex E2E-regenerated spec-018 PNGs; they must not be restored, staged, or committed"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: WAITING_FOR_CLAUDE
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -158,3 +158,50 @@ NOT TESTED/NOT VERIFIED 유지:
 
 다음 전이: Codex가 조사 보고서를 검토해 구현 스펙(또는 추가 조사 지시)을 작성한다. 그 전까지 Claude는
 어떤 제품 코드도 만들지 않는다.
+
+## Codex 조사 검토 — Founder 결정 대기 (2026-07-30)
+
+문서 전용 커밋 `2ded576`은 허용 범위와 정확히 일치하고 `git diff --check`를 통과했다.
+제품 코드·테스트·설정·CSS·manifest·lockfile 변경은 0이며 HEAD=origin, ahead/behind 0/0이다.
+
+Codex 계약 결정:
+
+- D-1: 편집 상태는 `scale`(무차원)과 축별 normalized pan `x/y ∈ [-1,1]`을 저장한다.
+  `x/y`는 현재 scale에서 계산한 축별 `maxPan` 대비 비율이며 `maxPan=0`인 축은 0이다.
+  plan 생성 시에만 현재 zone의 logical px로 환산한다.
+- D-4: 키보드 이동은 축별 normalized pan 0.02/step, Shift는 0.10/step으로 한다.
+- D-8: composer가 slot별 transform을 소유한다. 스펙 026 image owner는 drawable/ref/intrinsic만
+  소유하고 기존 리터럴 transform 계약을 바꾸지 않는다.
+- D-9: 이미지 교체·삭제, model/template/frame-size 변경 시 해당 transform을 초기화한다.
+  색상 변경과 활성 slot 전환에서는 유지한다.
+
+Founder 결정이 필요한 권장 묶음:
+
+- D-2: case multi-zone은 슬롯 카드 선택 + 활성 슬롯 표시
+- D-3: scale 단일 범위 1.0~5.0, 내부 무차원·표시만 %, 휠/버튼은 승산 방식
+- D-5: 중복 없는 단일 `원래대로` 버튼
+- D-6: 1차 핀치 미지원; 슬라이더·버튼·휠·키보드·마우스 drag 제공
+- D-7: 빈 공간 금지; 최소 scale 1.0과 cover clamp 유지
+
+위 다섯 항목은 제품 UX 결정이므로 승인 전 구현 스펙·제품 코드를 작성하지 않는다.
+
+## Founder 결정 접수·기록 완료 (Claude Code, 2026-07-30)
+
+Founder가 다음 문장을 그대로 승인했다: `스펙 029 Founder 권장안 D-2·D-3·D-5·D-6·D-7 일괄 승인.`
+Codex는 저장소만 읽으므로 결정을 정본 문서로 남겼다:
+`docs/codex-claude-handoff/decisions/2026-07-30-spec-029-pan-zoom-decisions.md`.
+
+승인된 값(요약): D-2 슬롯 카드 선택 + 활성 슬롯 표시 / D-3 scale **1.0~5.0** 단일 범위·내부 무차원·
+표시만 %·휠·버튼 **승산** / D-5 단일 `원래대로` 버튼 / D-6 **1차 핀치 미지원**(슬라이더·버튼·휠·키보드·
+마우스 drag) / D-7 **빈 공간 금지**(최소 scale 1.0 + cover clamp 유지). Codex 계약 D-1·D-4·D-8·D-9는
+결정 문서 §2에 그대로 옮겨 함께 보존했다.
+
+- 이 라운드 변경: **문서 전용**(결정 문서 1 신규 + `CURRENT.md` + live log + 이 문서 +
+  `NEXT_CLAUDE_PROMPT.md`)
+- 제품 코드·테스트·설정·CSS·PNG·`package.json`·`pnpm-lock.yaml` diff **0**, 신규 의존성 0
+- pointer/pan/zoom 구현 **0**, 구현 스펙 작성 **0**(Codex 소유)
+- 실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다
+- `Automation/DENN_AUTOMATION_RUNBOOK.md`의 미커밋 변경은 **Codex 소유로 판단해 손대지 않았다**
+
+다음 전이: Codex가 이 결정을 입력으로 **스펙 029 구현 계약**을 작성하면 `WAITING_FOR_CLAUDE`.
