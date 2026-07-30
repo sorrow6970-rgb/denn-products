@@ -7,7 +7,26 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🛠 스펙 029 구현·자체 검증 완료 → `READY_FOR_CODEX`(독립 검증 대기, 종료 아님). 스펙 027·028은 승인·종료. 다음 기능 미착수. ⚠️ working tree는 스펙 018 PNG 2개 + Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md` 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+상태: **🛠 스펙 029 보완 라운드 1 완료 → `READY_FOR_CODEX`(재검증 대기, 종료 아님). 스펙 027·028은 승인·종료. 다음 기능 미착수. ⚠️ working tree는 스펙 018 PNG 2개 + Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md` 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+
+> 스펙 029 보완 라운드 1 완료(로컬 검증, 2026-07-30, 기준 `197527c`, 코드 커밋 `110511e`): Codex 지적
+> **2건 모두 유효**였다. **① 릴리즈 flush** — `end(…, "pointerup")`이 **대기 중인 최신 transform을 버려**
+> 릴리즈 직전 `move`가 rAF를 기다리는 중이면 사진이 **손을 놓은 위치보다 한 프레임 뒤**에 남았다 →
+> 이제 `pointerup`만 **정확히 1회 flush** 후 종료하고 `pointercancel`·`lostpointercapture`·selection abort·
+> unmount/dispose는 **pending을 폐기**한다. flush는 state 정리·frame 취소 **후에** 실행되므로 늦은 rAF는
+> commit 0, 이중 commit 0, **다음 세션 pending 소비 0**이며 `cancelFrame`은 frame 유무와 무관하게 항상
+> pending을 비운다. **② capture 실패** — `setPointerCapture`가 throw하면 **capture 없는 drag가 계속**돼
+> 포인터가 요소를 벗어나면 세션이 반쯤 열린 채 남았다 → throw 시 방금 시작한 세션을 **즉시 abort**하고
+> `dragSlotRef`를 비운다. **유지된 계약**: normalized 저장·plan 직전 환산·`maxPan=0` 고정·1.1 승산·
+> 0.02/0.10 스텝·단일 `원래대로`·generation 가드·rAF 1회 병합·터치 drag·핀치 미지원·`touch-action` 선언 0·
+> 초기화 행렬·스펙 026 owner와 `packages/**` 무변경. **신규 회귀**: flush 1회 / 이미 실행된 frame 중복 0 /
+> move 없는 up commit 0 / 다음 세션 누출 0 / stale end flush 0 / throwing subscriber 후 재사용 /
+> abort·dispose 폐기 / **실제 Chromium** capture 거부 시 픽셀 불변 + 원복 후 정상 drag.
+> 게이트: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / **unit 944**(938→944) /
+> **e2e 91 PASS**(90→91)·exit 0 / `git diff --check` clean / 포트 4183·4184 free·OS temp 0·저장소 소속
+> 프로세스 0 / dist **SHA-256 E2E 전후 동일·fixture 0** / 네트워크·live·deploy 0.
+> **번들**: mockup JS **263.19 → 263.31 kB**(gzip **81.56 → 81.60**), **CSS 무변경**, admin 무변경.
+> NOT TESTED 목록은 그대로 유지된다(핀치·터치 drag·실기기·200% 확대·print/export pan·대용량 성능).
 
 > 스펙 029 구현·자체검증 완료(로컬, 2026-07-30, 기준 조사 `2ded576`·결정 `7701c7a`, 코드 커밋 `95fcf92`):
 > 정본 `docs/rebuild/specs/029-pointer-pan-zoom-editing.md`, 인계

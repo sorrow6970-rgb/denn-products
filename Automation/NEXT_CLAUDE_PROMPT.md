@@ -1,14 +1,13 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX` (스펙 029 구현 제출 · 독립 검증 대기)
+상태: `READY_FOR_CODEX` (스펙 029 보완 라운드 1 제출 · 재검증 대기)
 
-# 스펙 029 구현 완료 · Codex 독립 검증 대기 (다음 기능 착수 금지)
+# 스펙 029 보완 라운드 1 완료 · Codex 재검증 대기 (다음 기능 착수 금지)
 
-스펙 §4 허용 파일 안에서만 구현하고 코드/test와 문서를 **분리 커밋**해 일반 fast-forward push했다.
+Codex 지적 **2건 모두 유효**였고 지정된 파일 안에서만 보완해 코드/문서를 **분리 커밋**해 push했다.
 
-- 코드/test: **`95fcf92`** (기준 `7701c7a`)
-- 문서: 이 커밋 — 스펙 029 정본 §DONE, `docs/handoff/2026-07-30-spec-029-pan-zoom-handoff.md`,
-  live log, `CURRENT.md`, Automation 2개
+- 코드/test: **`110511e`** (기준 `197527c`, 최초 구현 `95fcf92`)
+- 문서: 이 커밋 — 스펙 029 §보완 라운드 1, handoff §8, live log, `CURRENT.md`, Automation 2개
 
 ## 루프·정지 보고 규칙 (유지)
 
@@ -20,32 +19,37 @@
 - 폴링 주기 tier: 5분 = `WAITING_FOR_CLAUDE`·`CORRECTION_REQUIRED`·`READY_FOR_COMMIT`,
   15분 = `READY_FOR_CODEX`·`COMMITTED`·`WAITING_FOR_NEXT_SPEC`.
 
-## 제출 내용 (검증 대상)
+## 보완 내용 (재검증 대상)
 
-- **상태 모델**: composer가 슬롯별 `{scale, x, y}` 소유. `scale` 무차원 **1.0~5.0**, `x/y`는 축별 `maxPan`
-  대비 **[-1,1]**, `maxPan=0` 축은 0 고정, logical px 환산은 **plan 직전에만**, resize는 normalized 유지 후 재환산.
-- **어댑터 공식 비복제**: pan 0 **probe plan**의 `draw-image-cover`(`clipRect`/`drawRect`)에서 축별 `maxPan`을
-  읽고 그 값으로 실제 plan을 만든다. 둘 중 하나라도 실패하면 **plan 미생성**(부분 plan·이전 transform 재사용 0).
-- **안전 실패**: `readNormalizedTransform`이 범위 밖·비유한·hostile getter/Proxy trap/revoked Proxy를 **거부**
-  (clamp 복구·기본값 생성 없음). 스펙 026 owner와 `packages/**`는 **무변경**.
-- **입력**: mouse/pen Pointer Events + capture, 시작 snapshot 기준 절대 delta, rAF **1회 병합**,
-  `pointerup`·`pointercancel`·`lostpointercapture`·선택 변경·unmount 종료 + **generation 가드**.
-- **UI**: 슬라이더 100~500%, 버튼·휠 **`*1.1`/`/1.1`**(휠은 scale이 실제로 바뀔 때만 preventDefault),
-  화살표 **0.02**/Shift **0.10**, 단일 **`원래대로`**, 슬롯 카드 선택 + `편집 중`, 사진 미준비 시 전부 disabled.
-- **스크롤 보존**: 터치 drag·핀치 미구현, **`touch-action` 선언 0**, 무조건 `preventDefault` 0.
-- **초기화 행렬**: 이미지 교체·삭제·실패 → 그 슬롯만 / model·template·frame-size·kind → 전체 /
-  색상 변경·활성 슬롯 전환 → 유지.
-- **구현 중 수정한 결함**: stale animation frame이 다음 세션의 pending 값을 소비해 재-grab 첫 move가 누락됨.
+1. **릴리즈 flush** — `end(pointerId, "pointerup")`이 대기 중인 최신 transform을 버려, 릴리즈 직전 `move`가
+   animation frame을 기다리는 중이면 사진이 **손을 놓은 위치보다 한 프레임 뒤**에 남았다.
+   이제 `pointerup`만 **정확히 1회 flush**한 뒤 종료하고, `pointercancel`·`lostpointercapture`·
+   selection abort·unmount/dispose는 **pending을 폐기**한다. flush는 state 정리와 frame 취소 **후에**
+   실행되므로 늦은 rAF는 commit 0이고, **이중 commit도 다음 세션 pending 소비도 없다**.
+   `cancelFrame`은 frame 유무와 무관하게 **항상 pending을 비운다**.
+2. **capture 실패** — `setPointerCapture`가 throw하면 **capture 없는 drag가 계속**됐다(포인터가 요소를
+   벗어나면 move/up이 도달하지 않아 세션이 반쯤 열린 채 남는다). 이제 방금 시작한 세션을 **즉시 abort**하고
+   `dragSlotRef.current`를 비운다.
 
-## 게이트 실측 (Claude)
+**유지된 계약**: normalized 저장 · plan 직전 환산 · `maxPan=0` 고정 · 1.1 승산 · 0.02/0.10 키보드 스텝 ·
+단일 `원래대로` · generation 가드 · rAF 1회 병합 · 터치 drag·핀치 미지원 · `touch-action` 선언 0 ·
+초기화 행렬 · 스펙 026 owner와 `packages/**` 무변경.
+
+**신규 회귀 테스트**: `pointerup` flush 1회 / 이미 실행된 frame 중복 commit 0 / move 없는 `pointerup`
+commit 0 / flush가 다음 세션에 누출·소비되지 않음 / 다른 pointerId의 stale end flush 0 /
+throwing subscriber 후에도 세션 종료·재사용 / abort·dispose 폐기 /
+**실제 Chromium**: capture 거부 시 픽셀 불변 + 원복 후 정상 drag.
+
+## 게이트 실측 (Claude, 보완 라운드 1)
 
 - frozen install exit 0, **lockfile diff 0**, 신규 의존성 0
 - format · lint · typecheck PASS
-- **unit 938**(893 → 938, 신규 45) / **e2e 90 PASS**(85 → 90, 신규 5) · exit 0
-- 독립 build PASS — mockup JS **254.06 → 263.19 kB**(gzip **78.90 → 81.56**),
-  CSS **13.80 → 15.47**(gzip **3.53 → 3.88**), admin **무변경**
+- **unit 944**(938 → 944) / **e2e 91 PASS**(90 → 91) · exit 0
+- build PASS — mockup JS **263.19 → 263.31 kB**(gzip **81.56 → 81.60**), **CSS 무변경**, admin 무변경
 - `git diff --check` clean / 포트 4183·4184 free / OS temp `denn-e2e-*` 0 / 저장소 소속 node·esbuild 0
 - dist **SHA-256 E2E 전후 동일**, fixture 0 / 실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**
+- 변경 파일: `imageTransform.ts`(+ test) · `PreviewComposer.tsx` · `tests/e2e/mockup-preview.spec.ts`
+  (허용 목록 안). CSS·설정·manifest·lockfile·`packages/**` 무변경
 
 ## NOT TESTED (유지)
 
@@ -56,8 +60,8 @@
 
 1. `git fetch --all --prune` → HEAD=origin, ahead/behind 0/0 확인.
 2. working tree에 스펙 018 PNG 2개와 **Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md`** 외 변경이 없는지 확인.
-3. Codex가 `CODEX_PASSED` / `CORRECTION_REQUIRED` / 다음 지시를 기록했는지 본다.
-   - `CORRECTION_REQUIRED` → 지정된 허용 파일 범위만 보완하고 코드/문서 분리 커밋.
+3. Codex가 `CODEX_PASSED` / 새 `CORRECTION_REQUIRED`(fix_round 2) / 다음 지시를 기록했는지 본다.
+   - 새 `CORRECTION_REQUIRED` → 지정 파일 범위만 보완, 코드/문서 분리 커밋(최대 3회).
    - `CODEX_PASSED` → 종료 문서만 처리.
 4. 변화가 없으면 **어떤 파일도 수정·commit·push하지 않고** 조용히 대기한다.
 
@@ -66,7 +70,7 @@
 - 다음 기능·다음 스펙(030 등) 착수, 확정된 D-1~D-9 값 변경·확장
 - 터치 drag·핀치 구현, 전역 `touch-action:none`, 무조건 `preventDefault`
 - 스펙 026 owner의 리터럴 transform 변경, `packages/**` 변경
-- 핀치·실기기·200% 확대를 "검증됨"으로 기록하는 것(합성 이벤트는 PASS 근거 아님)
+- 핀치·실기기·200% 확대를 "검증됨"으로 기록하는 것
 - 신규 의존성, Firebase/network/live/deploy, 운영 데이터·이미지 접근
 - force push, merge, rebase, `reset --hard`, stale lock 삭제, broad cleanup,
   사용자·Codex 소유 변경 restore/checkout

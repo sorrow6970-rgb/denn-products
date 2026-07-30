@@ -1,4 +1,4 @@
-# DENN automation state
+﻿# DENN automation state
 
 ```yaml
 updated_at: 2026-07-30
@@ -6,13 +6,13 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-028-template-art-stretch-cors-owner
 active_unit: spec-029-pointer-pan-zoom-editing
-state: READY_FOR_CODEX  # 스펙 029 구현·자체 검증 완료 → Codex 독립 검증 대기
-baseline_commit: 7701c7a
-candidate_commit: 95fcf92  # 스펙 029 코드/test (문서는 별도 커밋)
+state: READY_FOR_CODEX  # 보완 라운드 1 완료(지적 2건 수정·push) → Codex 재검증 대기
+baseline_commit: 197527c
+candidate_commit: 110511e  # 스펙 029 보완 라운드 1 코드/test (최초 구현 95fcf92)
 verified_commit: d4fb99b  # 스펙 028 승인분
 origin_relation: "spec 029 code + doc commits pushed fast-forward on top of 7701c7a; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs plus the Codex-owned uncommitted DENN_AUTOMATION_RUNBOOK.md; Claude touches neither"
-fix_round: 0
+fix_round: 1
 max_fix_rounds: 3
 next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
@@ -212,6 +212,32 @@ Founder 승인과 결정 정본 `7701c7a`를 입력으로
 `docs/rebuild/specs/029-pointer-pan-zoom-editing.md`를 작성했다.
 상태를 `WAITING_FOR_CLAUDE`로 전환하며 Claude는 해당 스펙의 허용 파일과 게이트 안에서만 구현한다.
 
+## Codex 독립 검증 — CORRECTION_REQUIRED (2026-07-30)
+
+대상 `95fcf92` / 문서 `197527c`를 독립 확인했다.
+
+- frozen install PASS, lockfile diff 0
+- format·lint·typecheck PASS
+- unit 938/938 PASS
+- mockup/admin build PASS
+- E2E 90/90 PASS, 정상 exit
+- `git diff --check 7701c7a..197527c` PASS
+- HEAD=origin=`197527c`, ahead/behind 0/0
+
+다만 pointer 종료 계약에 실제 결함 2건이 있어 승인할 수 없다.
+
+1. `createDragController.end()`가 pointerup 직전 rAF에 대기 중인 최신 transform을 취소한다.
+   move와 pointerup이 같은 frame 안에 오면 사용자가 놓은 최종 위치가 사라지고 직전 렌더 위치로 되돌아간다.
+   현재 unit test는 이 손실을 정상 동작으로 고정하고 있다. pointerup은 최신 pending 값을 정확히 한 번
+   동기 commit한 뒤 종료해야 하며 pointercancel/lost/selection/unmount만 폐기해야 한다.
+2. `setPointerCapture()` 예외를 무시한 채 drag session을 유지한다. capture 실패 후 포인터가 영역 밖에서
+   놓이면 pointerup을 받지 못해 세션이 열린 채 남을 수 있다. capture 실패 시 즉시 해당 세션을 abort하고
+   `dragSlotRef`를 비워 안전 실패해야 한다.
+
+수정 허용 범위는 `apps/mockup/src/preview/imageTransform.ts`,
+`apps/mockup/src/preview/imageTransform.test.ts`, `apps/mockup/src/preview/PreviewComposer.tsx`,
+`apps/mockup/src/preview/PreviewComposer.test.tsx`와 관련 E2E/문서/Automation뿐이다.
+
 ## 스펙 029 구현 완료 — READY_FOR_CODEX (Claude Code, 2026-07-30)
 
 스펙 §4 허용 파일 안에서만 구현하고 코드/test와 문서를 분리 커밋했다.
@@ -241,3 +267,32 @@ Founder 승인과 결정 정본 `7701c7a`를 입력으로
 - 스펙 018 PNG 2개와 Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md`는 건드리지 않았다
 
 다음 전이: Codex가 `95fcf92`와 문서 커밋을 독립 검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.
+
+## 스펙 029 보완 라운드 1 결과 — READY_FOR_CODEX (Claude Code, 2026-07-30)
+
+Codex 지적 2건은 모두 유효했고 지정된 파일 안에서만 보완해 push했다. 코드/test `110511e`, 문서 별도 커밋.
+
+- 지적 1 (릴리즈 flush): `end(pointerId, "pointerup")`이 대기 중인 최신 transform을 버려, 릴리즈 직전
+  move가 animation frame을 기다리는 중이면 사진이 손을 놓은 위치보다 한 프레임 뒤에 남았다.
+  이제 `pointerup`만 정확히 1회 flush한 뒤 종료하고, `pointercancel`·`lostpointercapture`·selection
+  abort·unmount/dispose는 pending을 폐기한다. flush는 state 정리와 frame 취소 후에 실행되므로 늦은 rAF는
+  commit 0이고 이중 commit도 다음 세션 pending 소비도 없다. `cancelFrame`은 frame 유무와 무관하게 항상
+  pending을 비운다.
+- 지적 2 (capture 실패): `setPointerCapture`가 throw하면 capture 없는 drag가 계속됐다. 이제 방금 시작한
+  세션을 즉시 abort하고 `dragSlotRef.current`를 비운다.
+- 유지된 계약: normalized 저장, plan 직전 환산, `maxPan=0` 고정, 1.1 승산, 0.02/0.10 키보드 스텝,
+  단일 `원래대로`, generation 가드, rAF 1회 병합, 터치 drag·핀치 미지원, `touch-action` 선언 0,
+  초기화 행렬, 스펙 026 owner와 `packages/**` 무변경.
+- 신규 회귀 테스트: flush 1회 / 이미 실행된 frame 중복 commit 0 / move 없는 pointerup commit 0 /
+  다음 세션 누출·소비 0 / 다른 pointerId의 stale end flush 0 / throwing subscriber 후 세션 종료·재사용 /
+  abort·dispose 폐기 / 실제 Chromium에서 capture 거부 시 픽셀 불변 + 원복 후 정상 drag.
+- 게이트: frozen exit 0 / lockfile diff 0 / 신규 의존성 0 / format·lint·typecheck /
+  unit 944 (938 → 944) / e2e 91 PASS (90 → 91) exit 0 / `git diff --check` clean /
+  포트 4183·4184 free / OS temp `denn-e2e-*` 0 / 저장소 소속 node·esbuild 0 /
+  dist SHA-256 E2E 전후 동일 · fixture 0 / 네트워크·live·Firebase·CORS·deploy 0.
+- 번들: mockup JS 263.19 → 263.31 kB (gzip 81.56 → 81.60), CSS 무변경, admin 무변경.
+- 변경 파일: `apps/mockup/src/preview/imageTransform.ts`(+ test), `PreviewComposer.tsx`,
+  `tests/e2e/mockup-preview.spec.ts` — 허용 목록 안. CSS·설정·manifest·lockfile·`packages/**` 무변경.
+- 스펙 018 PNG 2개와 Codex 소유 미커밋 `Automation/DENN_AUTOMATION_RUNBOOK.md`는 손대지 않았다.
+
+다음 전이: Codex가 `110511e`와 문서 커밋을 재검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.

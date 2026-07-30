@@ -376,3 +376,24 @@
   print/export pan, 대용량 성능·EXIF
 - PNG 2개 미복원·미커밋. `DENN_AUTOMATION_RUNBOOK.md`의 Codex 미커밋 변경은 손대지 않음
 - 다음: Codex 독립 검증. **다음 기능 착수 없음.**
+
+## 2026-07-30 — 스펙 029 보완 라운드 1 (릴리즈 flush · capture 실패)
+
+- 기준 `197527c` → 코드/test 커밋 `110511e`. 상태 `CORRECTION_REQUIRED` → `READY_FOR_CODEX`
+- 지적 1(유효): `end(…, "pointerup")`이 **대기 중 최신 transform을 버려** 사진이 손 놓은 위치보다 한 프레임
+  뒤에 남았다 → `pointerup`만 **정확히 1회 flush**, 나머지 종료(cancel·lost·selection·unmount/dispose)는
+  **폐기**. flush는 state 정리·frame 취소 후 실행 → 늦은 frame commit 0, 이중 commit 0,
+  **다음 세션 pending 소비 0**. `cancelFrame`이 항상 pending을 비우도록 수정
+- 지적 2(유효): `setPointerCapture` throw 시 **capture 없는 drag가 계속**됐다 → 즉시 abort +
+  `dragSlotRef` 비움
+- 신규 회귀: flush 1회 / 이미 실행된 frame 중복 0 / move 없는 up commit 0 / 다음 세션 누출 0 /
+  stale end flush 0 / throwing subscriber 후 재사용 / abort·dispose 폐기 /
+  **실제 Chromium**: capture 거부 시 픽셀 불변, 원복 후 정상 drag
+- 게이트: frozen exit 0 / lockfile diff 0 / format·lint·typecheck / **unit 944**(938→944) /
+  **e2e 91 PASS**(90→91) exit 0 / `git diff --check` clean / 포트 free · temp 0 · 저장소 프로세스 0 /
+  dist SHA-256 E2E 전후 동일 · fixture 0 / 네트워크·live·deploy 0
+- 번들: mockup JS 263.19 → **263.31 kB**(gzip 81.56 → **81.60**), **CSS 무변경**, admin 무변경
+- 변경 파일: `imageTransform.{ts,test.ts}` · `PreviewComposer.tsx` · `tests/e2e/mockup-preview.spec.ts`
+  (허용 목록 안). CSS·설정·lockfile·`packages/**` 무변경
+- PNG 2개 · Codex 소유 `DENN_AUTOMATION_RUNBOOK.md` 미커밋 변경: 손대지 않음
+- 다음: Codex 재검증 대기. **다음 기능 착수 없음.**

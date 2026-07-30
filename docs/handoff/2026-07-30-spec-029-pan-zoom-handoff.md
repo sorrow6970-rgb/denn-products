@@ -137,3 +137,31 @@ legacy builder crop 지원 · builtin multi-zone · text/clock/watermark · prin
 | 2 | (문서) | 이 인계 + 스펙 029 정본 + live log + CURRENT + Automation |
 
 **롤백 순서: 문서 커밋 → 코드 커밋**(역순 revert). `7701c7a`로 되돌리면 라운드 전 상태다.
+
+## 8. 보완 라운드 1 (2026-07-30) — 릴리즈 flush와 capture 실패
+
+기준 `197527c` → 코드/test 커밋 `110511e`. Codex 지적 **2건 모두 유효**였다.
+
+| 지적 | 결함 | 수정 |
+| --- | --- | --- |
+| 1 | `end(pointerId, "pointerup")`이 **대기 중인 최신 transform을 버렸다** — 릴리즈 직전 `move`가 아직 rAF를 기다리는 중이면 사진이 **손을 놓은 위치보다 한 프레임 뒤**에 남는다 | `pointerup`만 **정확히 1회 flush** 후 종료. `pointercancel`·`lostpointercapture`·selection abort·unmount/dispose는 **pending 폐기**(기존 동작). flush는 state 정리·frame 취소 **후에** 실행하므로 늦은 frame은 commit 0이고 같은 값이 두 번 commit되거나 **다음 세션의 pending을 소비하는 일이 없다**. `cancelFrame`이 frame 유무와 무관하게 **항상 pending을 비운다** |
+| 2 | `setPointerCapture`가 throw하면 **capture 없는 drag가 계속**됐다 — 포인터가 요소를 벗어나면 move/up이 오지 않아 세션이 반쯤 열린 채 남는다 | throw 시 방금 시작한 세션을 **즉시 abort**하고 `dragSlotRef.current = null`로 비운다 |
+
+**유지된 계약**: normalized 저장·plan 직전 환산·`maxPan=0` 고정·1.1 승산·0.02/0.10 키보드 스텝·단일
+`원래대로`·generation 가드·rAF 1회 병합·터치 drag·핀치 미지원·`touch-action` 선언 0·초기화 행렬·
+스펙 026 owner와 `packages/**` 무변경.
+
+**신규 회귀 테스트**: `pointerup` flush 정확히 1회 / frame이 이미 실행됐으면 **중복 commit 0** /
+move 없는 `pointerup`은 commit 0 / flush가 **다음 세션에 누출·소비되지 않음** / 다른 pointerId의 stale
+end는 flush 0 / throwing subscriber에도 세션 종료·재사용 가능 / abort·dispose는 폐기 /
+**실제 Chromium**: capture 거부 시 픽셀 **불변**, 원복 후 정상 drag 동작.
+
+**게이트(보완 라운드 1)**: frozen exit 0 · **lockfile diff 0** · 신규 의존성 0 / format·lint·typecheck /
+**unit 944**(938 → 944) / **e2e 91 PASS**(90 → 91) · exit 0 / `git diff --check` clean /
+포트 4183·4184 free · OS temp `denn-e2e-*` 0 · 저장소 소속 node·esbuild 0 /
+dist **SHA-256 E2E 전후 동일 · fixture 0** / 네트워크·live·deploy 0.
+**번들**: mockup JS **263.19 → 263.31 kB**(gzip **81.56 → 81.60**), **CSS 무변경**, admin 무변경.
+
+**변경 파일**: `imageTransform.ts`(+ test) · `PreviewComposer.tsx` · `tests/e2e/mockup-preview.spec.ts` —
+허용 목록 안. CSS·설정·manifest·lockfile·`packages/**` **무변경**.
+**PNG 2개와 Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md`는 이번에도 손대지 않았다.**

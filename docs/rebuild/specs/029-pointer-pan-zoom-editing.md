@@ -179,3 +179,37 @@ ahead/behind 0/0을 확인하고 `READY_FOR_CODEX`에서 다음 기능을 시작
   실제 200% 확대, print/export pan 재현, 대용량 사진 성능·EXIF, 운영 카탈로그·이미지.
 - **PNG**: 스펙 018 재생성분 2개는 restore·checkout·stage·commit **하지 않았다**.
   `Automation/DENN_AUTOMATION_RUNBOOK.md`의 미커밋 변경은 **Codex 소유로 판단해 손대지 않았다**.
+
+---
+
+### DONE (Claude) — 보완 라운드 1 (2026-07-30)
+
+기준 `197527c`(+ Codex 지적) → 코드/test 커밋 `110511e`. **Codex 재검증 전이므로 종료가 아니다.**
+
+- **지적 1 — 릴리즈 flush(`imageTransform.ts`)**: `end(pointerId, "pointerup")`이 **대기 중인 최신
+  transform을 버렸다**. 릴리즈 직전 `move`가 아직 animation frame을 기다리는 중이면 사진이 **손을 놓은
+  위치보다 한 프레임 뒤**에 남는다. 이제 `pointerup`만 **정확히 1회 flush**한 뒤 종료하고,
+  `pointercancel`·`lostpointercapture`·selection abort·unmount/dispose는 **pending을 폐기**한다.
+  flush는 state 정리와 frame 취소 **후에** 실행되므로 종료 후 늦은 rAF는 여전히 commit 0이고, 같은 값이
+  두 번 commit되거나 **다음 세션의 pending을 소비하는 경로가 없다**. `cancelFrame`은 frame 유무와 무관하게
+  **항상 pending을 비운다**.
+- **지적 2 — capture 실패(`PreviewComposer.tsx`)**: `setPointerCapture`가 throw하면 **capture 없는 drag가
+  계속**됐다(포인터가 요소를 벗어나면 move/up이 도달하지 않아 세션이 반쯤 열린 채 남는다). 이제 throw 시
+  방금 시작한 세션을 **즉시 abort**하고 `dragSlotRef.current`를 비운다.
+- **유지된 계약**: normalized 저장 · plan 직전 환산 · `maxPan=0` 고정 · 1.1 승산 · 0.02/0.10 키보드 스텝 ·
+  단일 `원래대로` · generation 가드 · rAF 1회 병합 · 터치 drag·핀치 미지원 · `touch-action` 선언 0 ·
+  초기화 행렬 · 스펙 026 owner와 `packages/**` 무변경.
+- **신규 회귀 테스트**: `pointerup` flush 1회 / frame이 이미 실행된 경우 중복 commit 0 / move 없는
+  `pointerup`은 commit 0 / flush가 다음 세션에 누출·소비되지 않음 / 다른 pointerId의 stale end는 flush 0 /
+  throwing subscriber에도 세션 종료·재사용 가능 / abort·dispose 폐기 / **실제 Chromium**: capture 거부 시
+  픽셀 불변 + 원복 후 정상 drag.
+- **게이트**: frozen exit 0 · **lockfile diff 0** · 신규 의존성 0 / format·lint·typecheck /
+  **unit 944**(938 → 944) / **e2e 91 PASS**(90 → 91) · exit 0 / `git diff --check` clean /
+  포트 4183·4184 free · OS temp 0 · 저장소 소속 프로세스 0 / dist **SHA-256 E2E 전후 동일 · fixture 0** /
+  네트워크·live·deploy 0. **번들**: mockup JS **263.19 → 263.31 kB**(gzip **81.56 → 81.60**),
+  **CSS 무변경**, admin 무변경.
+- **변경 파일**: `imageTransform.ts`(+ test) · `PreviewComposer.tsx` · `tests/e2e/mockup-preview.spec.ts`.
+  CSS·설정·manifest·lockfile·`packages/**` 무변경. 스펙 018 PNG 2개와 Codex 소유 미커밋
+  `Automation/DENN_AUTOMATION_RUNBOOK.md`는 **손대지 않았다**.
+- **NOT TESTED 유지**: 2손가락 핀치 · 터치 drag · 실기기 4환경 · 실제 200% 확대 · print/export pan ·
+  대용량 성능·EXIF · 운영 카탈로그·이미지.
