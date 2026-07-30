@@ -7,7 +7,35 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 028 승인·종료(Codex 재검증 PASS, 승인 대상 `d4fb99b`). 스펙 027도 승인·종료. 다음 스펙은 지시 대기 — 착수 금지. 5분 보호형 루프는 Codex 최종 hash 확인까지 유지. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **🔎 스펙 029 사전 조사(pointer/pan/zoom) 완료 → `READY_FOR_CODEX`. 스펙 027·028은 승인·종료. 구현은 미착수(계약 결정 대기). ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+
+> 스펙 029 사전 조사 완료(읽기 전용, 2026-07-30, 기준 HEAD `d21531c`): 보고서
+> `docs/codex-claude-handoff/reviews/2026-07-30-pointer-pan-zoom-investigation.md`(10항목).
+> **한 줄: 기하는 이미 준비돼 있고, 막힌 것은 두 계약이다.** `computeCoverDrawRect`가 cover·drawScale·
+> **pan clamp**를 계산해 `appliedTransform`/`maxPan`을 돌려주고(입력을 변형하지 않음), `clientPointToLogical`이
+> logical px 기준으로 포인터를 변환하며, plan/adapter는 이미 zone별 `transform`을 받는다 → **`packages/render`
+> 무변경으로 시작 가능**. 결정이 필요한 것은 ⓐ **pan 단위·기준 공간** — 액자 logical canvas는
+> `resolveFrameLogicalWidth`(`max(1,round(min(content,500)))`)와 `ResizeObserver`로 **resize마다 바뀌므로**
+> logical px 저장은 "창 크기 바꾸면 사진이 움직임"을 구조적으로 만든다(case는 `modelLogicalSize` 고정이라
+> 무해 → 같은 단위를 쓰면 한쪽이 반드시 틀림) ⓑ **transform 소유자** — 스펙 026 owner의 `transform`이
+> **리터럴 타입 `{scale:1,x:0,y:0}`** 이라 owner를 편집 주체로 둘 수 없음(권장: composer가 slot별 소유).
+> **레거시 실측**: pan은 `drawImgT`(`:1543-1556`)가 **렌더 중 T를 직접 clamp**(maxPan=|drawSize-zone|/2, abs라
+> **줌아웃 시 클립 안 빈 공간 허용**), 인쇄 경로(`:11371`)는 **clamp 없이 pan×해상도배율** — case는
+> `dim.w/model.w`로 일치하지만 **frame은 하드코딩 `dim.w/500`** 이라 `ADM.uiCustom.prevMaxW` 변경 시
+> 미리보기와 인쇄가 어긋난다. zoom은 휠 ±0.08·핀치 승산(0.3~5)과 슬라이더/±25%p(30~500%)가 **불일치**하고,
+> multi-zone에서 **슬라이더 표시값·터치 시작 오프셋이 `caseImgT`를 봐서 틀린다**(`:1455`,`:1470`,`:1482`) →
+> 재현 대상이 아니라 회피 대상. 이벤트는 **pointer capture 없음**(캔버스 밖 나가면 끊김), case는 팬 중
+> `preventDefault`로 스크롤을 죽이고, **frame은 미리보기가 스크롤 컨테이너보다 크면 팬/핀치를 포기하고
+> 네이티브 스크롤에 양보**(`frameScaleOverflowV`, preventDefault 前 게이트).
+> **모바일 제약(리빌드)**: `surface.css`에 `touch-action` 선언이 **0**이고 wrapper는 `overflow-x:auto`+
+> `tabIndex=0`, 캔버스는 축소하지 않으므로 무조건 preventDefault는 가로·세로 스크롤을 둘 다 죽인다.
+> **핀치는 Playwright로 구동 불가(단일 탭만 제공) → 구조적 NOT TESTED**, 합성 TouchEvent는 PASS 근거 아님.
+> **차단 결정 9건**: D-1 pan 단위(계약) · D-2 활성 zone UX(**Founder**) · D-3 scale 범위·단위 통일(**Founder**) ·
+> D-4 키보드 이동 단위 · D-5 초기화 버튼 구성(**Founder**, 레거시 "맞춤"="초기화" 중복) · D-6 핀치 지원 여부
+> (**Founder**, 200% 확대 제스처 충돌) · D-7 클립 빈 공간 허용(**Founder**) · D-8 transform 소유자 ·
+> D-9 선택/템플릿 변경 시 초기화 여부. 최소 구현 순서·허용 파일 후보·STOP 조건도 기록했다.
+> **코드·테스트·설정·CSS·PNG·lockfile 변경 0**, 신규 의존성 0, 실제 network·live·Firebase·CORS·deploy 0.
+> 구현 스펙은 작성하지 않았고 다음 기능도 착수하지 않는다.
 
 > 스펙 028 종료(2026-07-30): Codex가 보완 코드 **`d4fb99b`** 를 독립 재검증해 **승인 가능**으로 판정했고,
 > Claude Code가 종료 문서만 처리했다(상태 `CODEX_PASSED` → `COMMITTED`, 문서 전용 커밋·기능 코드 변경 0).

@@ -310,3 +310,25 @@
   실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**
 - PNG 2개: 이번에도 restore·checkout·stage·commit 하지 않음
 - 다음: Codex의 최종 commit hash 확인 대기. **다음 스펙(029 등) 미착수.**
+
+## 2026-07-30 — 스펙 029 사전 조사 (pointer/pan/zoom, 읽기 전용)
+
+- 상태: `WAITING_FOR_CLAUDE` → 조사 완료 → `READY_FOR_CODEX`
+- 기준 HEAD: `d21531c` / 산출물: `docs/codex-claude-handoff/reviews/2026-07-30-pointer-pan-zoom-investigation.md`
+- 재사용 확정: `computeCoverDrawRect`(cover+pan clamp, 입력 무변형, `appliedTransform`·`maxPan` 반환),
+  `clientPointToLogical`(logical px·DPR 무관), plan/adapter의 zone별 `transform`
+  → **`packages/render` 무변경으로 시작 가능**
+- 차단 계약 2건: **pan 단위·기준 공간**(액자 logical canvas가 `ResizeObserver`+`resolveFrameLogicalWidth`로
+  가변 → logical px 저장은 resize 시 구도 이동), **transform 소유자**(스펙 026 owner의 `transform`이
+  리터럴 `{scale:1,x:0,y:0}`)
+- 레거시 실측: `drawImgT`(`:1543-1556`)가 렌더 중 T를 직접 clamp(abs → 줌아웃 시 빈 공간 허용),
+  인쇄 `drawImageT`(`:11371`)는 clamp 없이 pan×배율(case `dim.w/model.w` 일치, **frame 하드코딩 `dim.w/500`**),
+  zoom 두 축 불일치(휠·핀치 0.3~5 vs 슬라이더·버튼 30~500%), multi-zone 표시값·터치 시작 오프셋 결함
+  (`:1455`,`:1470`,`:1482`), pointer capture 없음, frame은 오버플로 시 네이티브 스크롤 양보
+- 리빌드 모바일 제약: `surface.css`에 `touch-action` 0, wrapper `overflow-x:auto`+`tabIndex=0`, 캔버스 미축소
+- 검증 한계: **2손가락 핀치는 Playwright로 구동 불가**(단일 탭만) → 구조적 NOT TESTED,
+  현재 `playwright.config.ts`는 chromium desktop 1개 프로젝트(hasTouch 없음)
+- 결정 필요 9건(D-1~D-9, 그중 Founder 5건) + 최소 구현 순서 + 허용 파일 후보 + STOP 9조건 기록
+- 변경: **문서 전용**(보고서 1 + CURRENT + 이 로그 + Automation 2). 제품 코드·테스트·설정·CSS·PNG·lockfile 0,
+  신규 의존성 0, 실제 network·live·Firebase·CORS·deploy 0
+- 다음: Codex 검토. **구현 착수 없음.**

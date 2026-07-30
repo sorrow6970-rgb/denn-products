@@ -5,16 +5,16 @@ updated_at: 2026-07-30
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-028-template-art-stretch-cors-owner
-active_unit: null  # 스펙 028 종료 · 다음 스펙은 Codex 지시 대기 (착수 금지)
-state: COMMITTED
-baseline_commit: 7a2b2cd
-candidate_commit: cebcaad
-verified_commit: d4fb99b
-origin_relation: "closing doc commit pushed fast-forward on top of baa0d78; HEAD=origin, ahead/behind 0/0"
+active_unit: spec-029-pointer-pan-zoom-investigation
+state: READY_FOR_CODEX
+baseline_commit: d21531c
+candidate_commit: null  # 조사 문서 커밋(아래 절) — 제품 코드 후보 없음
+verified_commit: d4fb99b  # 스펙 028 승인분
+origin_relation: "investigation doc commit pushed fast-forward on top of d21531c; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known Codex E2E-regenerated spec-018 PNGs; they must not be restored, staged, or committed"
-fix_round: 1
+fix_round: 0
 max_fix_rounds: 3
-next_transition: DONE  # Codex의 최종 commit hash 확인 후 DONE 확정
+next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -134,3 +134,27 @@ NOT TESTED/NOT VERIFIED 유지:
 - 다음 스펙(029 등)·사전조사·기능 **미착수**
 
 다음 전이: Codex가 이 문서 커밋의 최종 hash와 `HEAD=origin`, ahead/behind 0/0을 확인하면 `DONE`이다.
+
+## 스펙 029 사전 조사 완료 — READY_FOR_CODEX (Claude Code, 2026-07-30)
+
+`NEXT_CLAUDE_PROMPT.md`의 읽기 전용 조사 범위만 수행했다. 보고서
+`docs/codex-claude-handoff/reviews/2026-07-30-pointer-pan-zoom-investigation.md`.
+
+- 재사용 확정: `computeCoverDrawRect`(cover + pan clamp, 입력 무변형, `appliedTransform`·`maxPan`),
+  `clientPointToLogical`(logical px, DPR 무관), plan/adapter의 zone별 `transform`
+  → `packages/render` 무변경으로 시작 가능
+- 차단 계약 2건: pan 단위·기준 공간(액자 logical canvas 가변), transform 소유자(스펙 026 owner의
+  `transform`이 리터럴 `{scale:1,x:0,y:0}`)
+- 레거시 결함(재현 금지): 인쇄 pan 배율의 frame 하드코딩 `dim.w/500`, zoom 두 축 범위 불일치,
+  multi-zone 슬라이더 표시값·터치 시작 오프셋 오류, pointer capture 부재
+- 검증 한계: 2손가락 핀치는 Playwright로 구동 불가 → 구조적 NOT TESTED
+- 결정 필요 9건(D-1~D-9, Founder 5건) · 최소 구현 순서 · 허용 파일 후보 · STOP 9조건 기록
+- 변경 파일: 보고서 1개 + `docs/codex-claude-handoff/CURRENT.md` + `docs/live/CLAUDE_LIVE_PATCH_LOG.md` +
+  이 문서 + `Automation/NEXT_CLAUDE_PROMPT.md` (**문서 전용 커밋**)
+- 제품 코드·테스트·설정·CSS·PNG·`package.json`·`pnpm-lock.yaml` diff **0**, 신규 의존성 0
+- 실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**, 운영 데이터·이미지 접근 0
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다
+- 구현 스펙 작성·pointer/pan/zoom 구현·다음 기능 착수 **없음**
+
+다음 전이: Codex가 조사 보고서를 검토해 구현 스펙(또는 추가 조사 지시)을 작성한다. 그 전까지 Claude는
+어떤 제품 코드도 만들지 않는다.
