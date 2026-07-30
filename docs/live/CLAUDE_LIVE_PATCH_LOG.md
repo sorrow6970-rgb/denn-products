@@ -397,3 +397,20 @@
   (허용 목록 안). CSS·설정·lockfile·`packages/**` 무변경
 - PNG 2개 · Codex 소유 `DENN_AUTOMATION_RUNBOOK.md` 미커밋 변경: 손대지 않음
 - 다음: Codex 재검증 대기. **다음 기능 착수 없음.**
+
+## 2026-07-30 — 스펙 029 종료 (Codex 재검증 승인 → DONE)
+
+- 상태: `READY_FOR_CODEX` → **`CODEX_PASSED`** → 종료 문서 처리 → `COMMITTED`
+- 승인 대상: 코드 **`110511e`**(보완 라운드 1) + 문서 **`0512c8d`**, 최종 문서 기준 HEAD `0512c8d`
+- Codex 독립 재검증 결론: `pointerup`이 pending transform을 **정확히 1회 flush**하고
+  `pointercancel`·`lostpointercapture`·abort·dispose는 **폐기**하며, **stale callback·다음 세션 오염 0**,
+  `setPointerCapture` 실패 시 **즉시 abort**를 확인
+- Codex 독립 게이트: frozen install PASS·lockfile diff 0·신규 의존성 0 / format·lint·typecheck /
+  **unit 944/944** / build(mockup JS **263.31 kB**·gzip **81.60**, CSS **15.47/3.88**, admin 무변경) /
+  **E2E 91/91 PASS**·정상 exit / `git diff --check` / 포트 listener 0 / OS temp 0 / HEAD=origin·0/0
+- Claude 실측과 일치(추가로 dist SHA-256 E2E 전후 동일·fixture 0·저장소 소속 프로세스 0)
+- NOT TESTED 유지: 핀치(미구현·Playwright 구동 불가), 터치 drag, 실기기 4환경, 실제 200% 확대,
+  print/export pan, 대용량 실기기 성능·EXIF, 운영 카탈로그·이미지
+- 이 라운드는 **문서 전용 커밋**(기능 코드·테스트·CSS·설정·lockfile 변경 0, network·live·deploy 0)
+- PNG 2개 · Codex 소유 `DENN_AUTOMATION_RUNBOOK.md` 미커밋 변경: 손대지 않음
+- 다음: **다음 스펙(030 등) 미착수 — Codex 지시 대기**

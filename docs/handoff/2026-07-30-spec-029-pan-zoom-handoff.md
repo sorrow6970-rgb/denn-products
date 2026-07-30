@@ -5,7 +5,7 @@
 - 스펙 정본: `docs/rebuild/specs/029-pointer-pan-zoom-editing.md`
 - 결정 정본: `docs/codex-claude-handoff/decisions/2026-07-30-spec-029-pan-zoom-decisions.md`
 - 조사 근거: `docs/codex-claude-handoff/reviews/2026-07-30-pointer-pan-zoom-investigation.md`
-- 상태: 구현·자체 검증 완료 → **Codex 독립 검증 대기. 스펙 종료 아님.**
+- 상태: **✅ 종료(DONE) — Codex가 보완 라운드 1 코드 `110511e`·문서 `0512c8d`를 재검증해 승인. 상세는 §9.**
 
 > ⚠️ 이 완료는 **합성 fixture에서 마우스·휠·슬라이더·버튼·키보드로 구도를 조절한 단계**다.
 > 터치 drag·핀치·실기기·실제 200% 확대·인쇄/export pan 재현은 포함하지 않는다.
@@ -165,3 +165,47 @@ dist **SHA-256 E2E 전후 동일 · fixture 0** / 네트워크·live·deploy 0.
 **변경 파일**: `imageTransform.ts`(+ test) · `PreviewComposer.tsx` · `tests/e2e/mockup-preview.spec.ts` —
 허용 목록 안. CSS·설정·manifest·lockfile·`packages/**` **무변경**.
 **PNG 2개와 Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md`는 이번에도 손대지 않았다.**
+
+## 9. 종료 — Codex 재검증 승인 (2026-07-30)
+
+Codex가 보완 라운드 1 코드 **`110511e`** 와 문서 **`0512c8d`** 를 독립 재검증해 **승인 가능**으로 판정했고,
+스펙 029를 **DONE**으로 종료했다. 상태 `CODEX_PASSED` → 종료 문서 처리 → `COMMITTED`.
+
+| 항목 | Codex 독립 검증 | Claude 실측(같은 트리) |
+| --- | --- | --- |
+| frozen install / lockfile / 신규 의존성 | PASS / diff 0 / 0 | exit 0 / diff 0 / 0 |
+| format · lint · typecheck | PASS | PASS |
+| unit | **944 / 944** | **944 / 944** |
+| build mockup | JS **263.31 kB** · gzip **81.60**, CSS 15.47 / 3.88 | 동일 |
+| build admin | **무변경** | 무변경 |
+| E2E | **91 / 91 PASS**, 정상 exit | **91 / 91 PASS**, exit 0 |
+| `git diff --check` | PASS | clean |
+| 포트 4183·4184 / OS temp | listener 0 / 0 | free / 0 |
+| 저장소 소속 node·esbuild / dist SHA-256 · fixture | — | 0 / E2E 전후 동일 · 0 |
+| HEAD = origin, ahead/behind | `0512c8d`, 0 / 0 | 동일 |
+
+**Codex가 확인한 것**: `pointerup`이 pending transform을 **정확히 1회 flush**하고
+`pointercancel`·`lostpointercapture`·abort·dispose는 **폐기**한다. **stale callback·다음 세션 오염 0**이며
+`setPointerCapture` 실패 시 **즉시 abort**한다.
+
+**유지된 계약**: normalized 저장 · plan 직전 환산 · `maxPan=0` 고정 · probe plan으로 어댑터 공식 비복제 ·
+1.1 승산 · 0.02/0.10 키보드 스텝 · 단일 `원래대로` · generation 가드 · rAF 1회 병합 ·
+터치 drag·핀치 미지원 · `touch-action` 선언 0 · 초기화 행렬 · 스펙 026 owner와 `packages/**` 무변경.
+
+**NOT TESTED(종료 후에도 유지)**: 2손가락 핀치(미구현 + Playwright 구동 불가) · 터치 drag ·
+실기기 4환경 · 실제 200% 브라우저 확대 · print/export pan 재현 · 대용량 이미지의 실기기 성능 · EXIF ·
+운영 카탈로그·이미지.
+
+⚠️ 종료의 의미는 §목적과 같다 — **합성 fixture에서 마우스·휠·슬라이더·버튼·키보드로 구도를 조절한
+단계**이며 터치·실기기·인쇄/export·주문·배포 완료가 아니다. `hosting.public:"."` →
+**Hosting 격리 전 배포 금지** 유지. 이 종료 라운드는 **문서 전용 커밋**(기능 코드·테스트·CSS·설정·
+lockfile 변경 0, network·live·Firebase·CORS·deploy 0)이고, 스펙 018 PNG 2개와 Codex 소유 미커밋
+`Automation/DENN_AUTOMATION_RUNBOOK.md`는 이번에도 손대지 않았다. **다음 스펙은 착수하지 않는다.**
+
+| 순서 | 커밋 | 내용 |
+| --- | --- | --- |
+| 1 | `95fcf92` | 최초 구현 코드·테스트 |
+| 2 | `197527c` | 최초 구현 문서 |
+| 3 | `110511e` | 보완 라운드 1 코드·테스트 |
+| 4 | `0512c8d` | 보완 라운드 1 문서 |
+| 5 | (이 커밋) | 종료 문서 |

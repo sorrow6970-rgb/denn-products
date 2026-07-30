@@ -213,3 +213,62 @@ ahead/behind 0/0을 확인하고 `READY_FOR_CODEX`에서 다음 기능을 시작
   `Automation/DENN_AUTOMATION_RUNBOOK.md`는 **손대지 않았다**.
 - **NOT TESTED 유지**: 2손가락 핀치 · 터치 drag · 실기기 4환경 · 실제 200% 확대 · print/export pan ·
   대용량 성능·EXIF · 운영 카탈로그·이미지.
+
+---
+
+### CODEX_PASSED — 스펙 029 종료 (2026-07-30)
+
+Codex가 코드 **`110511e`**(보완 라운드 1)와 문서 **`0512c8d`** 를 독립 재검증해 **승인 가능**으로 판정했다.
+이 섹션으로 스펙 029를 **DONE**으로 종료한다(기능 코드·테스트·CSS·설정 변경 0, 문서 전용).
+
+**Codex 독립 검증 결론**
+
+- `pointerup`이 pending transform을 **정확히 1회 flush**하고 `pointercancel`·`lostpointercapture`·
+  abort·dispose는 **폐기**함을 확인.
+- **stale callback과 다음 세션 오염 0**, `setPointerCapture` 실패 시 **즉시 abort**를 확인.
+
+**Codex 독립 게이트**
+
+| 항목 | 결과 |
+| --- | --- |
+| frozen install | PASS, lockfile diff **0**, 신규 의존성 0 |
+| format · lint · typecheck | PASS |
+| unit | **944 / 944 PASS** |
+| build | PASS — mockup JS **263.31 kB** / gzip **81.60**, CSS **15.47 / 3.88**; admin **무변경** |
+| E2E | **91 / 91 PASS**, 정상 exit |
+| `git diff --check` | PASS |
+| 포트 4183 · 4184 / OS temp `denn-e2e-*` | listener **0** / **0** |
+| HEAD = origin, ahead/behind | `0512c8d`, **0 / 0** |
+| working tree | Codex 소유 RUNBOOK + 알려진 스펙 018 PNG 2개만 |
+
+Claude Code의 자체 실측치(unit 944, E2E 91 exit 0, 동일 build 수치, dist SHA-256 E2E 전후 동일·fixture 0,
+저장소 소속 프로세스 0)와 **일치**했다.
+
+**확정 계약 (스펙 029 최종)**
+
+1. 편집 상태 = 슬롯별 `scale`(무차원 1.0~5.0) + 축별 normalized pan `[-1,1]`, **plan 직전에만** logical px
+   환산, `maxPan=0` 축은 0, resize는 normalized 유지 후 재환산.
+2. `maxPan`은 pan 0 probe plan의 cover 명령에서 읽어 **어댑터 rect 공식을 복제하지 않는다**. 두 단계 중
+   하나라도 실패하면 plan 미생성(부분 plan·이전 transform 재사용 0).
+3. 잘못된 입력은 **거부**하며 clamp 복구·기본값 생성을 하지 않고, hostile getter/Proxy는 throw 0으로 닫힌다.
+4. mouse/pen Pointer Events + capture, **`pointerup`은 1회 flush**·나머지 종료는 폐기, generation 가드,
+   rAF 1회 병합, capture 실패 시 즉시 abort.
+5. 슬라이더 100~500% / 버튼·휠 `*1.1`·`/1.1`(휠은 scale이 실제로 바뀔 때만 preventDefault) /
+   화살표 0.02·Shift 0.10 / 단일 `원래대로` / 슬롯 카드 선택 + `편집 중` / 사진 미준비 시 전부 disabled.
+6. **터치 drag·핀치 미지원, `touch-action` 선언 0** → 기존 페이지·가로 스크롤과 브라우저 확대 제스처 보존.
+7. 초기화: 이미지 교체·삭제·실패 → 그 슬롯만 / model·template·frame-size·kind → 전체 /
+   색상 변경·활성 슬롯 전환 → 유지.
+8. 스펙 026 image owner와 `packages/**`는 **무변경**(재사용만).
+
+**NOT TESTED (종료 후에도 유지)**
+
+- 2손가락 핀치(미구현 + Playwright 구동 불가)
+- 터치 drag(1차 미지원)
+- 실기기 4환경(iOS Safari · Android Chrome · 삼성 인터넷 · 카카오 인앱)
+- 실제 200% 브라우저 확대
+- print/export 경로의 pan 재현(레거시 frame 하드코딩 `dim.w/500`은 별도 스펙)
+- 대용량 이미지의 실기기 성능 · EXIF 회전 · 운영 카탈로그·이미지
+
+⚠️ 이 종료는 **합성 fixture에서 마우스·휠·슬라이더·버튼·키보드로 구도를 조절한 단계**이며 터치·실기기·
+인쇄/export·주문·배포 완료가 아니다. `hosting.public:"."` → **Hosting 격리 전 배포 금지** 유지.
+**다음 스펙은 지시 대기.**

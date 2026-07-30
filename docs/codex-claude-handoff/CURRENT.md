@@ -7,7 +7,33 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🛠 스펙 029 보완 라운드 1 완료 → `READY_FOR_CODEX`(재검증 대기, 종료 아님). 스펙 027·028은 승인·종료. 다음 기능 미착수. ⚠️ working tree는 스펙 018 PNG 2개 + Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md` 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+상태: **✅ 스펙 029 승인·종료(Codex 재검증 PASS, 승인 대상 코드 `110511e`·문서 `0512c8d`). 스펙 027·028도 승인·종료. 다음 스펙은 지시 대기 — 착수 금지. ⚠️ working tree는 스펙 018 PNG 2개 + Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md` 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+
+> 스펙 029 종료(2026-07-30): Codex가 보완 라운드 1 코드 **`110511e`** 와 문서 **`0512c8d`** 를 독립 재검증해
+> **승인 가능**으로 판정했고, Claude Code가 종료 문서만 처리했다(상태 `CODEX_PASSED` → `COMMITTED`,
+> 문서 전용 커밋·기능 코드 변경 0). 정본 `docs/rebuild/specs/029-pointer-pan-zoom-editing.md`(§CODEX_PASSED),
+> 인계 `docs/handoff/2026-07-30-spec-029-pan-zoom-handoff.md`(§9).
+> **Codex가 확인한 것**: `pointerup`이 pending transform을 **정확히 1회 flush**하고 `pointercancel`·
+> `lostpointercapture`·abort·dispose는 **폐기**하며, **stale callback·다음 세션 오염 0**이고
+> `setPointerCapture` 실패 시 **즉시 abort**한다.
+> **Codex 독립 게이트 PASS**: frozen install·lockfile diff 0·신규 의존성 0 / format·lint·typecheck /
+> **unit 944/944** / build(mockup JS **263.31 kB**·gzip **81.60**, CSS **15.47/3.88**, admin 무변경) /
+> **E2E 91/91 PASS**·정상 exit / `git diff --check` / 포트 4183·4184 listener 0 / OS temp `denn-e2e-*` 0 /
+> HEAD=origin=`0512c8d`·0/0. Claude 실측치와 **일치**(dist SHA-256 E2E 전후 동일·fixture 0·저장소 프로세스 0 추가 확인).
+> **확정 계약(최종)**: 슬롯별 `scale` 1.0~5.0 + 축별 normalized pan `[-1,1]`·**plan 직전 환산**·`maxPan=0` 고정 /
+> `maxPan`은 **probe plan**에서 읽어 어댑터 rect 공식 비복제(둘 중 하나 실패 시 plan 미생성) / 잘못된 입력은
+> **거부**(clamp 복구·기본값 생성 0, hostile getter/Proxy throw 0) / Pointer Events + capture, **`pointerup`
+> 1회 flush**·나머지 종료 폐기·generation 가드·rAF 1회 병합·**capture 실패 시 즉시 abort** /
+> 슬라이더 100~500%·버튼·휠 `*1.1`·`/1.1`(휠은 scale 변화 시에만 preventDefault)·화살표 0.02·Shift 0.10·
+> 단일 `원래대로`·슬롯 카드 선택 + `편집 중`·사진 미준비 시 전부 disabled / **터치 drag·핀치 미지원 +
+> `touch-action` 선언 0**(기존 스크롤·브라우저 확대 보존) / 초기화 행렬(이미지 교체·삭제는 그 슬롯만,
+> model·template·frame-size·kind는 전체, **색상·활성 슬롯 전환은 유지**) / 스펙 026 owner와 `packages/**` 무변경.
+> **NOT TESTED 유지**: 2손가락 핀치(미구현 + Playwright 구동 불가) · 터치 drag · 실기기 4환경 ·
+> 실제 200% 브라우저 확대 · print/export pan 재현(레거시 frame 하드코딩 `dim.w/500`은 별도 스펙) ·
+> 대용량 이미지 실기기 성능 · EXIF · 운영 카탈로그·이미지. 실제 network·live·Firebase·CORS·deploy **0**.
+> ⚠️ 이 종료는 **합성 fixture에서 마우스·휠·슬라이더·버튼·키보드로 구도를 조절한 단계**이며 터치·실기기·
+> 인쇄/export·주문·배포 완료가 아니다. `hosting.public:"."` → **Hosting 격리 전 배포 금지** 유지.
+> **다음 스펙(030 등)·사전조사·신규 기능은 착수하지 않는다.**
 
 > 스펙 029 보완 라운드 1 완료(로컬 검증, 2026-07-30, 기준 `197527c`, 코드 커밋 `110511e`): Codex 지적
 > **2건 모두 유효**였다. **① 릴리즈 flush** — `end(…, "pointerup")`이 **대기 중인 최신 transform을 버려**

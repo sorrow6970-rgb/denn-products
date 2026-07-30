@@ -4,17 +4,17 @@
 updated_at: 2026-07-30
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-028-template-art-stretch-cors-owner
-active_unit: spec-029-pointer-pan-zoom-editing
-state: READY_FOR_CODEX  # 보완 라운드 1 완료(지적 2건 수정·push) → Codex 재검증 대기
+completed_unit: spec-029-pointer-pan-zoom-editing
+active_unit: null  # 스펙 029 종료 · 다음 스펙은 Codex 지시 대기 (착수 금지)
+state: COMMITTED  # 스펙 029 DONE · 종료 문서 처리 완료
 baseline_commit: 197527c
 candidate_commit: 110511e  # 스펙 029 보완 라운드 1 코드/test (최초 구현 95fcf92)
-verified_commit: d4fb99b  # 스펙 028 승인분
-origin_relation: "spec 029 code + doc commits pushed fast-forward on top of 7701c7a; HEAD=origin, ahead/behind 0/0"
+verified_commit: 110511e  # 스펙 029 승인분 (스펙 028은 d4fb99b)
+origin_relation: "spec 029 closing doc commit pushed fast-forward on top of 0512c8d; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs plus the Codex-owned uncommitted DENN_AUTOMATION_RUNBOOK.md; Claude touches neither"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: DONE  # Codex의 종료 문서 hash 확인 후 DONE 확정
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -238,6 +238,24 @@ Founder 승인과 결정 정본 `7701c7a`를 입력으로
 `apps/mockup/src/preview/imageTransform.test.ts`, `apps/mockup/src/preview/PreviewComposer.tsx`,
 `apps/mockup/src/preview/PreviewComposer.test.tsx`와 관련 E2E/문서/Automation뿐이다.
 
+## Codex 보완 라운드 1 재검증 — 승인 가능 (2026-07-30)
+
+대상 코드 `110511e`, 문서 `0512c8d`를 독립 재검증했다.
+
+- pointerup pending transform 정확히 1회 flush, cancel/lost/abort/dispose 폐기 확인
+- stale callback·다음 세션 오염 0, capture 실패 즉시 abort 확인
+- frozen install PASS, lockfile diff 0, 신규 의존성 0
+- format·lint·typecheck PASS
+- unit 944/944 PASS
+- build PASS: mockup JS 263.31 kB/gzip 81.60, CSS 15.47/3.88; admin 무변경
+- E2E 91/91 PASS, 정상 exit
+- `git diff --check` PASS
+- 포트 4183/4184 listener 0, OS temp `denn-e2e-*` 0
+- HEAD=origin=`0512c8d`, ahead/behind 0/0
+- working tree는 Codex 소유 RUNBOOK과 알려진 스펙 018 PNG 두 개만 남음
+
+스펙 029는 코드 기준 승인 가능하다. Claude는 종료 문서만 처리하고 다음 스펙을 시작하지 않는다.
+
 ## 스펙 029 구현 완료 — READY_FOR_CODEX (Claude Code, 2026-07-30)
 
 스펙 §4 허용 파일 안에서만 구현하고 코드/test와 문서를 분리 커밋했다.
@@ -296,3 +314,23 @@ Codex 지적 2건은 모두 유효했고 지정된 파일 안에서만 보완해
 - 스펙 018 PNG 2개와 Codex 소유 미커밋 `Automation/DENN_AUTOMATION_RUNBOOK.md`는 손대지 않았다.
 
 다음 전이: Codex가 `110511e`와 문서 커밋을 재검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.
+
+## 스펙 029 종료 문서 처리 완료 — COMMITTED (Claude Code, 2026-07-30)
+
+Codex 승인(코드 `110511e`, 문서 `0512c8d`)에 따라 종료 문서만 하나의 문서 커밋으로 처리하고
+일반 fast-forward push했다.
+
+- 커밋 파일(허용 목록과 정확히 일치): `docs/rebuild/specs/029-pointer-pan-zoom-editing.md`(§CODEX_PASSED),
+  `docs/handoff/2026-07-30-spec-029-pan-zoom-handoff.md`(§9 + 상태 줄),
+  `docs/live/CLAUDE_LIVE_PATCH_LOG.md`, `docs/codex-claude-handoff/CURRENT.md`,
+  `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`
+- 기록한 최종 판정: unit **944/944**, E2E **91/91**, build mockup JS 263.31 kB / gzip 81.60,
+  CSS 15.47 / 3.88, admin 무변경, 보완 2건(릴리즈 flush · capture 실패 즉시 abort),
+  network/live/deploy **0**
+- 기능 코드·테스트·CSS·설정·`package.json`·`pnpm-lock.yaml` 변경 **0**, 신규 의존성 0
+- 스펙 018 PNG 2개와 Codex 소유 미커밋 `Automation/DENN_AUTOMATION_RUNBOOK.md`는 손대지 않았다
+- NOT TESTED 유지: 2손가락 핀치(미구현·Playwright 구동 불가), 터치 drag, 실기기 4환경,
+  실제 200% 브라우저 확대, print/export pan 재현, 대용량 이미지 실기기 성능·EXIF, 운영 카탈로그·이미지
+- 다음 스펙(030 등)·사전조사·기능 **미착수**
+
+다음 전이: Codex가 이 종료 문서 커밋의 hash와 `HEAD=origin`, ahead/behind 0/0을 확인하면 `DONE`이다.
