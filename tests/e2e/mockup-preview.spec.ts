@@ -756,3 +756,305 @@ test.describe("template art (spec 028)", () => {
     expect(noise.errors).toEqual([]);
   });
 });
+
+// --- pan / zoom editing (spec 029) -------------------------------------------
+// The photos above are one solid colour, which cannot show movement, so this block uses a two-tone
+// photo: the drawn boundary between the halves is what a pan actually moves.
+//
+// Geometry used by the assertions (case model 300x200, zone 0 = 5/5/40/40 -> 15,10,120,80):
+//   photo 20x20 -> cover baseScale = max(120/20, 80/20) = 6 -> drawn 120x120
+//   maxPan.x = |120-120|/2 = 0  (horizontal is PINNED for this square photo)
+//   maxPan.y = |120-80|/2  = 20 (vertical has 20 logical px of travel each way)
+//   at pan 0 the draw origin is y = 10 + (80-120)/2 = -10, so the half boundary sits at y = 50
+//
+// Real devices, 200% browser zoom, two-finger pinch and touch drag stay NOT TESTED (spec 029 §5).
+
+const TOP = [255, 220, 0] as const;
+const BOTTOM = [0, 90, 255] as const;
+
+function splitPng(
+  size: number,
+  [tr, tg, tb]: readonly [number, number, number],
+  [br, bg, bb]: readonly [number, number, number],
+): Buffer {
+  const raw = Buffer.alloc((size * 3 + 1) * size);
+  let offset = 0;
+  for (let y = 0; y < size; y++) {
+    raw[offset++] = 0;
+    const top = y < size / 2;
+    for (let x = 0; x < size; x++) {
+      raw[offset++] = top ? tr : br;
+      raw[offset++] = top ? tg : bg;
+      raw[offset++] = top ? tb : bb;
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(size, 0);
+  ihdr.writeUInt32BE(size, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk("IHDR", ihdr),
+    pngChunk("IDAT", deflateSync(raw)),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+const pickSplitPhoto = (page: Page, slot: string) =>
+  page.getByTestId(`preview-file-${slot}`).setInputFiles({
+    name: `${FILE_MARKER}-split.png`,
+    mimeType: "image/png",
+    buffer: splitPng(20, TOP, BOTTOM),
+  });
+
+const scaleValue = (page: Page) => page.getByTestId("preview-scale-value");
+const editArea = (page: Page) => page.getByTestId("preview-edit-area");
+
+async function caseWithSplitPhotos(page: Page): Promise<void> {
+  await gotoReady(page);
+  await chooseCase(page);
+  await openComposer(page);
+  await pickColour(page, "#1A1A1A");
+  await pickSplitPhoto(page, "case-zone-0");
+  await pickSplitPhoto(page, "case-zone-1");
+  await waitForCanvas(page);
+}
+
+/** Viewport box of the editing area — scrolled into view first, since `page.mouse` uses viewport px. */
+async function areaBox(
+  page: Page,
+): Promise<{ x: number; y: number; width: number; height: number }> {
+  await editArea(page).scrollIntoViewIfNeeded();
+  const box = await editArea(page).boundingBox();
+  if (box === null) throw new Error("no edit area");
+  return box;
+}
+
+/** Drag with the real mouse from the canvas centre by a CSS-px delta (canvas CSS px == logical px). */
+async function dragBy(page: Page, dx: number, dy: number, release = true): Promise<void> {
+  const box = await areaBox(page);
+  const startX = box.x + box.width / 2;
+  const startY = box.y + box.height / 2;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX + dx / 2, startY + dy / 2);
+  await page.mouse.move(startX + dx, startY + dy);
+  if (release) await page.mouse.up();
+}
+
+test.describe("pan/zoom editing (spec 029)", () => {
+  test("mouse drag moves the active photo, keeps the clip full and ends outside the canvas", async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    const route = await routeCatalog(page);
+    await caseWithSplitPhotos(page);
+
+    // pan 0: the boundary is at y=50, so y=30 is the top half and y=70 the bottom half
+    expect(rgb(await pixelAt(page, 75, 30))).toEqual([...TOP]);
+    expect(rgb(await pixelAt(page, 75, 70))).toEqual([...BOTTOM]);
+    expect(rgb(await pixelAt(page, 75, 60))).toEqual([...BOTTOM]);
+
+    // drag DOWN by the full 20 logical px of travel -> the boundary moves to y=70
+    await dragBy(page, 0, 20);
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 60))).toEqual([...TOP]);
+
+    // the clip is still completely covered: no body colour leaks in anywhere inside the zone
+    for (const y of [12, 30, 50, 70, 88]) {
+      expect(rgb(await pixelAt(page, 75, y))).not.toEqual([...CASE_BODY]);
+    }
+
+    // the other zone never moved (per-slot transforms are independent)
+    expect(rgb(await pixelAt(page, 225, 60))).toEqual([...BOTTOM]);
+
+    // horizontal travel is 0 for this photo/zone, so a sideways drag cannot move anything
+    const before = rgb(await pixelAt(page, 75, 60));
+    await dragBy(page, 120, 0);
+    expect(rgb(await pixelAt(page, 75, 60))).toEqual([...before]);
+
+    // releasing OUTSIDE the canvas ends the session: later mouse moves change nothing
+    await dragBy(page, 0, -20, false);
+    await page.mouse.move(2, 2);
+    await page.mouse.up();
+    const settled = rgb(await pixelAt(page, 75, 60));
+    await page.mouse.move(400, 400);
+    await page.mouse.move(400, 300);
+    expect(rgb(await pixelAt(page, 75, 60))).toEqual([...settled]);
+
+    expect(noise.errors).toEqual([]);
+    expect(route.unexpected()).toBe(0);
+  });
+
+  test("wheel, slider, buttons, keyboard and the single reset drive the same state", async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    await routeCatalog(page);
+    await caseWithSplitPhotos(page);
+    await expect(scaleValue(page)).toHaveText("100%");
+
+    // buttons are multiplicative (1.1) in both directions
+    await page.getByTestId("preview-zoom-in").click();
+    await expect(scaleValue(page)).toHaveText("110%");
+    await page.getByTestId("preview-zoom-in").click();
+    await expect(scaleValue(page)).toHaveText("121%");
+    await page.getByTestId("preview-zoom-out").click();
+    await expect(scaleValue(page)).toHaveText("110%");
+
+    // the wheel uses the same rule over the editing area
+    const box = await areaBox(page);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, -120);
+    await expect(scaleValue(page)).toHaveText("121%");
+    await page.mouse.wheel(0, 120);
+    await expect(scaleValue(page)).toHaveText("110%");
+
+    // the slider is the same state in percent, and it never goes below 100%
+    await page.getByTestId("preview-scale").fill("250");
+    await expect(scaleValue(page)).toHaveText("250%");
+    await page.getByTestId("preview-scale").fill("100");
+    await expect(scaleValue(page)).toHaveText("100%");
+    await page.getByTestId("preview-zoom-out").click();
+    await expect(scaleValue(page)).toHaveText("100%");
+
+    // keyboard: fine steps move the photo, then the single reset restores scale AND framing
+    const baseline = rgb(await pixelAt(page, 75, 48));
+    await page.getByTestId("preview-pan-down").focus();
+    for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowDown");
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 48))).not.toEqual([...baseline]);
+    await page.keyboard.press("Shift+ArrowDown");
+    await page.getByTestId("preview-zoom-in").click();
+    await page.getByTestId("preview-reset").click();
+    await expect(scaleValue(page)).toHaveText("100%");
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 48))).toEqual([...baseline]);
+    expect(noise.errors).toEqual([]);
+  });
+
+  test("slot selection marks one active slot and leaves the other slot's framing alone", async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    await routeCatalog(page);
+    await caseWithSplitPhotos(page);
+
+    const slot0 = page.getByTestId("preview-edit-slot-case-zone-0");
+    const slot1 = page.getByTestId("preview-edit-slot-case-zone-1");
+    await expect(slot0).toHaveAttribute("aria-pressed", "true");
+    await expect(slot1).toHaveAttribute("aria-pressed", "false");
+
+    // edit zone 0 only
+    await dragBy(page, 0, 20);
+    await page.getByTestId("preview-zoom-in").click();
+    await expect(scaleValue(page)).toHaveText("110%");
+    const zone0 = rgb(await pixelAt(page, 75, 60));
+    const zone1 = rgb(await pixelAt(page, 225, 60));
+
+    // switching the active slot keeps BOTH transforms (a slot switch is not a reset)
+    await slot1.click();
+    await expect(slot1).toHaveAttribute("aria-pressed", "true");
+    await expect(slot0).toHaveAttribute("aria-pressed", "false");
+    await expect(scaleValue(page)).toHaveText("100%"); // zone 1 has its own untouched state
+    expect(rgb(await pixelAt(page, 75, 60))).toEqual([...zone0]);
+    expect(rgb(await pixelAt(page, 225, 60))).toEqual([...zone1]);
+
+    // now the controls act on zone 1 only
+    await page.getByTestId("preview-zoom-in").click();
+    await expect(scaleValue(page)).toHaveText("110%");
+    await slot0.click();
+    await expect(scaleValue(page)).toHaveText("110%"); // zone 0 kept its own 110%
+    expect(rgb(await pixelAt(page, 75, 60))).toEqual([...zone0]);
+
+    // replacing ONE photo resets only that slot (D-9)
+    await pickSplitPhoto(page, "case-zone-0");
+    await waitForCanvas(page);
+    await expect(scaleValue(page)).toHaveText("100%");
+    expect(noise.errors).toEqual([]);
+  });
+
+  test("the frame keeps its normalized framing across a resize", async ({ page }) => {
+    const noise = collectConsole(page);
+    await routeCatalog(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await gotoReady(page);
+    await chooseFrame(page);
+    await openComposer(page);
+    await pickColour(page, "#1A1A1A");
+    await pickSplitPhoto(page, "frame-image");
+    await waitForCanvas(page);
+
+    // a single slot has no picker, and the controls act on it directly
+    expect(await page.getByTestId("preview-edit-slot-frame-image").count()).toBe(0);
+    await page.getByTestId("preview-scale").fill("200");
+    await expect(scaleValue(page)).toHaveText("200%");
+    await page.getByTestId("preview-pan-up").focus();
+    await page.keyboard.press("Shift+ArrowUp");
+    await page.keyboard.press("Shift+ArrowUp");
+
+    // sample well away from the moved half-boundary so a rounding difference cannot flip the pixel
+    const wide = await cssSize(page);
+    const upper = rgb(await pixelAt(page, wide.width * 0.5, wide.height * 0.2));
+    const lower = rgb(await pixelAt(page, wide.width * 0.5, wide.height * 0.8));
+    expect(upper).not.toEqual([...lower]); // the pan really is showing both halves
+
+    // the frame's logical canvas follows the measured content box, so this really does re-layout
+    await page.setViewportSize({ width: 360, height: 800 });
+    await expect.poll(async () => (await cssSize(page)).width).not.toBe(wide.width);
+    await expect(scaleValue(page)).toHaveText("200%");
+    const narrow = await cssSize(page);
+    // the SAME proportional point keeps its colour: the normalized framing survived the resize
+    await expect
+      .poll(async () => rgb(await pixelAt(page, narrow.width * 0.5, narrow.height * 0.2)))
+      .toEqual([...upper]);
+    expect(rgb(await pixelAt(page, narrow.width * 0.5, narrow.height * 0.8))).toEqual([...lower]);
+    expect(noise.errors).toEqual([]);
+  });
+
+  test("editing at 320px keeps the page scrollable, axe clean and the console quiet", async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    await routeCatalog(page);
+    await page.setViewportSize({ width: 320, height: 568 });
+    await caseWithSplitPhotos(page);
+
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth + 1);
+
+    // no global gesture capture was introduced: touch scrolling is untouched (spec 029)
+    const touchActions = await page.evaluate(() => {
+      const style = (node: Element | null) =>
+        node === null ? "none-element" : getComputedStyle(node).touchAction;
+      return {
+        body: style(document.body),
+        area: style(document.querySelector('[data-testid="preview-edit-area"]')),
+        canvas: style(document.querySelector("canvas")),
+      };
+    });
+    expect(touchActions.body).toBe("auto");
+    expect(touchActions.area).toBe("auto");
+    expect(touchActions.canvas).toBe("auto");
+
+    // every editing control still meets the 44px target
+    const controls = page.locator(
+      '[data-testid^="preview-pan-"], [data-testid="preview-zoom-in"], [data-testid="preview-zoom-out"], [data-testid="preview-reset"], .denn-preview-edit__slot',
+    );
+    const count = await controls.count();
+    expect(count).toBeGreaterThan(0);
+    for (let i = 0; i < count; i++) {
+      const box = await controls.nth(i).boundingBox();
+      if (box) {
+        expect(Math.round(box.width)).toBeGreaterThanOrEqual(44);
+        expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
+      }
+    }
+
+    const axe = await new AxeBuilder({ page }).analyze();
+    const serious = axe.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    expect(serious.map((v) => v.id)).toEqual([]);
+    expect(noise.errors).toEqual([]);
+  });
+});

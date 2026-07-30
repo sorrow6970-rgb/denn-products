@@ -25,3 +25,79 @@
   color: var(--muted, #71717a);
   font-size: 14px;
 }
+
+/* Pan/zoom editing controls (spec 029). Existing tokens only. NOTE: no `touch-action` and no
+   global gesture capture is declared — the first round has no touch drag and no pinch, so page and
+   horizontal scrolling plus the browser zoom gesture stay exactly as they were. */
+
+.denn-preview-edit__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* a nested fieldset is the accessible group for the slot picker and the pan pad (no role="group") */
+.denn-preview-edit__subgroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.denn-preview-edit__range {
+  flex: 1 1 140px;
+  min-width: 120px;
+  /* a slider is a touch target too: the contract is 44px on the pointer axis */
+  min-height: 44px;
+}
+
+.denn-preview-edit__range:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* own class (not the colour swatch) so a slot never matches a colour-swatch selector */
+.denn-preview-edit__slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--line, #e4e4e7);
+  border-radius: var(--radius, 12px);
+  background: var(--surface, #ffffff);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.denn-preview-edit__slot[aria-pressed="true"] {
+  border-color: var(--accent, #9f887a);
+  background: var(--accent-soft, #eee8e1);
+}
+
+.denn-preview-edit__slot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* `ink` on white/accent-soft, never `accent` as text: the palette decision records that white or
+   accent-soft under `accent` fails AA (2026-07-22 warm taupe decision §접근성 근거). */
+.denn-preview-edit__active {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink, #191a1d);
+}
+
+.denn-preview-edit__area {
+  /* the drag surface is exactly the canvas box; it adds no scrolling of its own */
+  display: block;
+  max-width: 100%;
+}

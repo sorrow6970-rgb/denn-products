@@ -77,7 +77,9 @@ describe("PreviewComposer — before any choice", () => {
     expect(markup).toContain("#1A1A1A");
     expect(markup).toContain("블랙");
     expect(markup).toContain("라벤더");
-    expect(markup).not.toContain('aria-pressed="true"');
+    // scoped to the COLOUR swatches: since spec 029 the active photo slot is legitimately pressed,
+    // so a document-wide assertion would no longer be about colour auto-selection.
+    expect(markup).not.toMatch(/aria-pressed="true" data-testid="preview-color-/);
   });
 
   it("creates no Canvas until a colour and every image are ready", () => {
@@ -297,5 +299,92 @@ describe("PreviewComposer — template art", () => {
     ]) {
       expect(markup).not.toContain(forbidden);
     }
+  });
+});
+
+// --- pan/zoom editing controls (spec 029) -----------------------------------
+// A static render proves the CONTROL contract before any interaction: real buttons and a real range,
+// the slot picker with an active slot, and everything disabled while no photo is ready. Dragging,
+// wheel, keyboard and pixels are verified in a real browser by the E2E suite.
+
+describe("PreviewComposer — pan/zoom controls", () => {
+  it("offers a range for the scale and real buttons for zoom, reset and pan", () => {
+    const markup = caseComposer();
+    expect(markup).toContain('data-testid="preview-edit"');
+    expect(markup).toContain('type="range" min="100" max="500" step="1"');
+    expect(markup).toContain('data-testid="preview-scale-value">100%');
+    for (const testId of [
+      "preview-zoom-in",
+      "preview-zoom-out",
+      "preview-reset",
+      "preview-pan-left",
+      "preview-pan-right",
+      "preview-pan-up",
+      "preview-pan-down",
+    ]) {
+      expect(markup).toContain(
+        `<button type="button" class="denn-composer__clear" data-testid="${testId}"`,
+      );
+    }
+    expect(markup).toContain("원래대로");
+    // exactly one reset control: the legacy "맞춤" + "↺" duplication is not reproduced (D-5)
+    expect(markup.match(/원래대로/g)).toHaveLength(1);
+  });
+
+  it("disables every editing control until the active slot's photo is ready", () => {
+    const markup = caseComposer();
+    expect(markup).toContain("사진을 선택하면 위치와 크기를 조절할 수 있습니다.");
+    const disabled = markup.match(/disabled=""/g) ?? [];
+    // range + 2 zoom + reset + 4 pan
+    expect(disabled).toHaveLength(8);
+  });
+
+  it("keeps the slot picker on its own class so it never matches a colour swatch", () => {
+    const markup = caseComposer();
+    expect(markup).toContain('class="denn-preview-edit__slot"');
+    expect(markup).not.toMatch(/denn-composer__swatch" aria-pressed="true"/);
+  });
+
+  it("marks one active slot for a multi-zone case and none for the second", () => {
+    const markup = caseComposer();
+    expect(markup).toContain('aria-pressed="true" data-testid="preview-edit-slot-case-zone-0"');
+    expect(markup).toContain('aria-pressed="false" data-testid="preview-edit-slot-case-zone-1"');
+    expect(markup).toContain("편집 중");
+    expect(markup.match(/편집 중/g)).toHaveLength(1);
+  });
+
+  it("shows no slot picker for the single frame slot", () => {
+    const markup = renderToStaticMarkup(
+      <PreviewComposer
+        productKind="frame"
+        document={frameDoc([{ id: "black", name: "블랙", fill: "#1A1A1A" }])}
+        modelId={null}
+        frameSizeId="fs1"
+        templateId="full"
+      />,
+    );
+    expect(markup).toContain('data-testid="preview-edit"');
+    expect(markup).not.toContain("preview-edit-slot-");
+    expect(markup).not.toContain("편집할 사진");
+  });
+
+  it("adds no touch-action, gesture capture or pointer surface before a canvas exists", () => {
+    const markup = caseComposer();
+    expect(markup).not.toContain("touch-action");
+    expect(markup).not.toContain('data-testid="preview-edit-area"');
+    expect(markup).not.toContain("<canvas");
+  });
+
+  it("keeps the editing controls out of a product with no slots", () => {
+    const markup = renderToStaticMarkup(
+      <PreviewComposer
+        productKind="case"
+        document={CASE_DOC}
+        modelId={null}
+        frameSizeId={null}
+        templateId="ct1"
+      />,
+    );
+    expect(markup).not.toContain('data-testid="preview-edit"');
   });
 });

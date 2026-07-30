@@ -100,6 +100,28 @@ export const PREVIEW_MESSAGES = {
   templateArtLoading: "템플릿 이미지를 준비하는 중입니다.",
 } as const;
 
+/**
+ * Fixed copy for the pan/zoom editing controls (spec 029). Every control is a real `button` or
+ * `input[type=range]`, so these strings are the whole accessible naming: no code, id, file name or
+ * measurement ever appears here.
+ */
+export const PREVIEW_EDIT_LABELS = {
+  group: "사진 위치·크기",
+  slotGroup: "편집할 사진",
+  /** marks the slot the controls act on; distinct from the slot's own "선택됨" image status. */
+  activeSlot: "편집 중",
+  scale: "확대 비율",
+  zoomIn: "크게",
+  zoomOut: "작게",
+  reset: "원래대로",
+  panGroup: "사진 위치 이동 (화살표 키로도 이동, Shift와 함께 누르면 크게 이동)",
+  panUp: "위로 이동",
+  panDown: "아래로 이동",
+  panLeft: "왼쪽으로 이동",
+  panRight: "오른쪽으로 이동",
+  needsImage: "사진을 선택하면 위치와 크기를 조절할 수 있습니다.",
+} as const;
+
 /** Canvas accessible names are fixed strings — never a product name or a selection id. */
 export const PREVIEW_CANVAS_NAME = {
   case: "케이스 미리보기",

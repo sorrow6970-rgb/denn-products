@@ -11,7 +11,7 @@
 //    the customer sees fixed copy only.
 
 import { resolvePublicImageSource } from "@denn/firebase";
-import type { PreviewRenderPlan } from "@denn/render";
+import { clientPointToLogical, type Point, type PreviewRenderPlan } from "@denn/render";
 import {
   type CasePreviewGeometry,
   type CatalogDocumentV1,
@@ -21,7 +21,7 @@ import {
   projectCatalogTemplateImage,
   projectFramePreviewGeometry,
 } from "@denn/shared";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createCompositeImageBindings, withImageRefPrefix } from "../canvas/compositeImageBindings";
 import type { LocalImageBindingState } from "../canvas/localImageBinding";
 import { PreviewCanvasSurface } from "../canvas/PreviewCanvasSurface";
@@ -32,8 +32,27 @@ import type { PreviewImageBindings } from "../canvas/types";
 import { useLocalImageBinding } from "../canvas/useLocalImageBinding";
 import { useTemplateArtBinding } from "../canvas/useTemplateArtBinding";
 import {
+  createDragController,
+  type DragController,
+  IDENTITY_TRANSFORM,
+  maxPanFromRects,
+  type NormalizedTransform,
+  panTransform,
+  PAN_KEY_STEP,
+  PAN_KEY_STEP_COARSE,
+  resetTransform,
+  SCALE_PERCENT_MAX,
+  SCALE_PERCENT_MIN,
+  scaleFromPercent,
+  scaleToPercent,
+  toLogicalTransform,
+  withScale,
+  zoomTransform,
+} from "./imageTransform";
+import {
   CASE_BODY_COLORS,
   PREVIEW_CANVAS_NAME,
+  PREVIEW_EDIT_LABELS,
   PREVIEW_MESSAGES,
   type PreviewColorOption,
   readFrameColorOptions,
@@ -51,6 +70,9 @@ const ART_PREFIX = "template-art.";
  * spec 020 identifier grammar (alphanumeric start, then alphanumerics and `. _ -`).
  */
 const slotRefPrefix = (slotId: string): string => `${slotId}.`;
+
+/** The logical-px transform shape the spec 025 adapter validates. */
+type LogicalTransformInput = UserImageState["transform"];
 
 interface SlotEntry {
   readonly state: LocalImageBindingState;
@@ -222,6 +244,57 @@ export function PreviewComposer({
     });
   }, []);
 
+  // --- pan/zoom editing state (spec 029) -----------------------------------
+  // The composer owns one NORMALIZED transform per slot; the spec 026 owner keeps publishing its
+  // fixed literal transform and is not touched. A slot with no entry is at the identity.
+  const [transforms, setTransforms] = useState<Record<string, NormalizedTransform>>({});
+  const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
+
+  const activeSlot = useMemo<string | null>(() => {
+    if (slotIds.length === 0) return null;
+    if (activeSlotId !== null && slotIds.includes(activeSlotId)) return activeSlotId;
+    return slotIds[0] ?? null;
+  }, [activeSlotId, slotIds]);
+
+  const transformOf = useCallback(
+    (slotId: string): NormalizedTransform => transforms[slotId] ?? IDENTITY_TRANSFORM,
+    [transforms],
+  );
+
+  // D-9: a shape change resets every slot. A colour change is NOT in this dependency list, and
+  // switching the active slot keeps both slots' framing.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: these props ARE the reset signal — the body deliberately reads none of them
+  useEffect(() => {
+    setTransforms((previous) => (Object.keys(previous).length === 0 ? previous : {}));
+    setActiveSlotId(null);
+  }, [productKind, modelId, frameSizeId, templateId]);
+
+  // D-9: replacing, clearing or failing ONE photo resets only that slot. The owner hands out a new
+  // synthetic ref for a new decode, so a changed (or vanished) ref is the replacement signal.
+  const readyRefs = useRef<Record<string, string>>({});
+  useEffect(() => {
+    const nextRefs: Record<string, string> = {};
+    const stale: string[] = [];
+    for (const slotId of slotIds) {
+      const entry = entries[slotId];
+      const ref = entry?.state.status === "ready" ? entry.state.imageState.imageRef : null;
+      if (ref !== null) nextRefs[slotId] = ref;
+      const previous = readyRefs.current[slotId];
+      if (previous !== undefined && previous !== ref) stale.push(slotId);
+    }
+    readyRefs.current = nextRefs;
+    if (stale.length === 0) return;
+    setTransforms((previous) => {
+      let next: Record<string, NormalizedTransform> | null = null;
+      for (const slotId of stale) {
+        if (!(slotId in previous)) continue;
+        next = next ?? { ...previous };
+        delete next[slotId];
+      }
+      return next ?? previous;
+    });
+  }, [slotIds, entries]);
+
   // frame only: the logical width follows the measured content box (spec 027 §UX 5, 6)
   const [contentWidth, setContentWidth] = useState<number | null>(null);
   const measureRef = useCallback((element: HTMLDivElement | null) => {
@@ -251,41 +324,230 @@ export function PreviewComposer({
     return createCompositeImageBindings(sources);
   }, [slotIds, entries, artBindings]);
 
-  const plan = useMemo<PreviewRenderPlan | null>(() => {
+  /**
+   * Build the plan twice on purpose (spec 029 §2 환산):
+   *
+   *  1. a PROBE plan at the current scale with pan 0 — its `draw-image-cover` commands give the
+   *     drawn size vs the clip size, i.e. the axis `maxPan`, WITHOUT duplicating the zone/mat rect
+   *     formulas that live in the adapter (a second copy would silently drift from it),
+   *  2. the real plan with `logical pan = normalized * maxPan`.
+   *
+   * `maxPan` depends only on the scale, so the probe is exact for the pan being applied. A failure in
+   * either pass yields NO plan: no partial plan and no previous slot transform is reused.
+   */
+  const built = useMemo<{
+    readonly plan: PreviewRenderPlan;
+    readonly maxPan: ReadonlyMap<string, Point>;
+  } | null>(() => {
     if (geometry === null || color === null) return null;
     // fail-closed (spec 028 §5): a template whose real art cannot be drawn shows NO canvas
     if (artBlocked) return null;
     const templateArt = artReady === null ? undefined : { imageRef: `${ART_PREFIX}${artReady}` };
-    const ready = new Map<string, UserImageState>();
+    const slots: {
+      readonly slotId: string;
+      readonly imageRef: string;
+      readonly state: UserImageState;
+      readonly normalized: NormalizedTransform;
+    }[] = [];
     for (const slotId of slotIds) {
       const entry = entries[slotId];
       if (entry?.state.status !== "ready") return null;
       const owned = entry.state.imageState;
       // each owner numbers its images independently, so the plan addresses them per slot
-      ready.set(slotId, { ...owned, imageRef: `${slotRefPrefix(slotId)}${owned.imageRef}` });
+      const imageRef = `${slotRefPrefix(slotId)}${owned.imageRef}`;
+      slots.push({
+        slotId,
+        imageRef,
+        state: { ...owned, imageRef },
+        normalized: transforms[slotId] ?? IDENTITY_TRANSFORM,
+      });
     }
-    if (geometry.kind === "case") {
-      const built = buildCaseProductPlan({
+
+    const logicalWidth =
+      geometry.kind === "frame" && contentWidth !== null
+        ? resolveFrameLogicalWidth(contentWidth)
+        : null;
+    if (geometry.kind === "frame" && logicalWidth === null) return null;
+
+    const buildWith = (
+      pan: (slotId: string, normalized: NormalizedTransform) => LogicalTransformInput | null,
+    ): PreviewRenderPlan | null => {
+      const ready = new Map<string, UserImageState>();
+      for (const slot of slots) {
+        const transform = pan(slot.slotId, slot.normalized);
+        if (transform === null) return null;
+        ready.set(slot.slotId, { ...slot.state, transform });
+      }
+      if (geometry.kind === "case") {
+        const result = buildCaseProductPlan({
+          geometry: geometry.value,
+          bodyColor: color,
+          zoneImages: ready,
+          templateArt,
+        });
+        return result.ok ? result.plan : null;
+      }
+      const userImage = ready.get(FRAME_SLOT_ID);
+      if (userImage === undefined || logicalWidth === null) return null;
+      const result = buildFrameProductPlan({
         geometry: geometry.value,
-        bodyColor: color,
-        zoneImages: ready,
+        frameColor: color,
+        logicalWidth,
+        userImage,
         templateArt,
       });
-      return built.ok ? built.plan : null;
+      return result.ok ? result.plan : null;
+    };
+
+    const probe = buildWith((_slotId, normalized) => ({ scale: normalized.scale, x: 0, y: 0 }));
+    if (probe === null) return null;
+
+    const maxPanByRef = new Map<string, Point>();
+    for (const command of probe.commands) {
+      if (command.type !== "draw-image-cover") continue;
+      const limit = maxPanFromRects(command.clipRect, command.drawRect);
+      if (limit === null) return null;
+      maxPanByRef.set(command.imageRef, limit);
     }
-    const userImage = ready.get(FRAME_SLOT_ID);
-    if (userImage === undefined || contentWidth === null) return null;
-    const logicalWidth = resolveFrameLogicalWidth(contentWidth);
-    if (logicalWidth === null) return null;
-    const built = buildFrameProductPlan({
-      geometry: geometry.value,
-      frameColor: color,
-      logicalWidth,
-      userImage,
-      templateArt,
+    const maxPan = new Map<string, Point>();
+    for (const slot of slots) {
+      const limit = maxPanByRef.get(slot.imageRef);
+      if (limit === undefined) return null;
+      maxPan.set(slot.slotId, limit);
+    }
+
+    const plan = buildWith((slotId, normalized) => {
+      const limit = maxPan.get(slotId);
+      if (limit === undefined) return null;
+      return toLogicalTransform(normalized, limit);
     });
-    return built.ok ? built.plan : null;
-  }, [geometry, color, slotIds, entries, contentWidth, artBlocked, artReady]);
+    if (plan === null) return null;
+    return { plan, maxPan };
+  }, [geometry, color, slotIds, entries, contentWidth, artBlocked, artReady, transforms]);
+
+  const plan = built?.plan ?? null;
+
+  // --- editing controls + pointer drag (spec 029) ---------------------------
+  // A slot is editable only while its own photo is ready; the controls never act on another slot.
+  const activeEditable =
+    activeSlot !== null && entries[activeSlot]?.state.status === "ready" ? activeSlot : null;
+  const activeTransform = activeSlot === null ? IDENTITY_TRANSFORM : transformOf(activeSlot);
+
+  const applyToActive = useCallback(
+    (next: (current: NormalizedTransform) => NormalizedTransform): void => {
+      const slotId = activeEditable;
+      if (slotId === null) return;
+      setTransforms((previous) => {
+        const current = previous[slotId] ?? IDENTITY_TRANSFORM;
+        const updated = next(current);
+        if (updated === current) return previous;
+        return { ...previous, [slotId]: updated };
+      });
+    },
+    [activeEditable],
+  );
+
+  // The wheel handler and the drag session read the live values through a ref, so the non-passive
+  // listener is attached once per surface instead of on every transform change.
+  const editRef = useRef<{ slotId: string | null; transform: NormalizedTransform }>({
+    slotId: null,
+    transform: IDENTITY_TRANSFORM,
+  });
+  useEffect(() => {
+    editRef.current = { slotId: activeEditable, transform: activeTransform };
+  }, [activeEditable, activeTransform]);
+
+  const dragSlotRef = useRef<string | null>(null);
+  const controllerRef = useRef<DragController | null>(null);
+  const getController = useCallback((): DragController => {
+    const existing = controllerRef.current;
+    if (existing !== null) return existing;
+    const created = createDragController({
+      requestFrame: (callback) => window.requestAnimationFrame(callback),
+      cancelFrame: (handle) => window.cancelAnimationFrame(handle),
+      commit: (next) => {
+        const slotId = dragSlotRef.current;
+        if (slotId === null) return;
+        setTransforms((previous) =>
+          (previous[slotId] ?? IDENTITY_TRANSFORM) === next
+            ? previous
+            : { ...previous, [slotId]: next },
+        );
+      },
+    });
+    controllerRef.current = created;
+    return created;
+  }, []);
+
+  // StrictMode attach → detach → attach: the controller is disposed AND dropped, so the next mount
+  // lazily builds a fresh one. Nothing stays permanently disabled and no listener survives.
+  useEffect(
+    () => () => {
+      controllerRef.current?.dispose();
+      controllerRef.current = null;
+      dragSlotRef.current = null;
+    },
+    [],
+  );
+
+  // a selection change (or a slot switch) ends an in-flight drag instead of letting it land later
+  // biome-ignore lint/correctness/useExhaustiveDependencies: these values ARE the end-the-drag signal, not values the body reads
+  useEffect(() => {
+    controllerRef.current?.abort("selection");
+    dragSlotRef.current = null;
+  }, [productKind, modelId, frameSizeId, templateId, activeSlot]);
+
+  const areaRef = useRef<HTMLDivElement | null>(null);
+  const logicalPoint = useCallback(
+    (clientX: number, clientY: number): Point | null => {
+      const area = areaRef.current;
+      const canvas = area?.querySelector("canvas") ?? null;
+      const size = plan?.logicalCanvas ?? null;
+      if (canvas === null || size === null) return null;
+      const rect = canvas.getBoundingClientRect();
+      const mapped = clientPointToLogical({
+        client: { x: clientX, y: clientY },
+        clientRect: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+        logicalSize: size,
+      });
+      return mapped.ok ? mapped.value : null;
+    },
+    [plan],
+  );
+
+  // Wheel zoom is attached manually because React's `onWheel` is passive at the root: the default is
+  // blocked ONLY when the scale actually changes, so a wheel at a bound still scrolls the page.
+  const hasSurface = plan !== null;
+  useEffect(() => {
+    const area = areaRef.current;
+    if (!hasSurface || area === null) return;
+    const onWheel = (event: WheelEvent): void => {
+      const { slotId, transform } = editRef.current;
+      if (slotId === null || event.deltaY === 0) return;
+      const next = zoomTransform(transform, event.deltaY < 0 ? "in" : "out");
+      if (next === transform) return;
+      event.preventDefault();
+      setTransforms((previous) => ({ ...previous, [slotId]: next }));
+    };
+    area.addEventListener("wheel", onWheel, { passive: false });
+    return () => area.removeEventListener("wheel", onWheel);
+  }, [hasSurface]);
+
+  const onPanKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLFieldSetElement>): void => {
+      const step = event.shiftKey ? PAN_KEY_STEP_COARSE : PAN_KEY_STEP;
+      let dx = 0;
+      let dy = 0;
+      if (event.key === "ArrowLeft") dx = -step;
+      else if (event.key === "ArrowRight") dx = step;
+      else if (event.key === "ArrowUp") dy = -step;
+      else if (event.key === "ArrowDown") dy = step;
+      else return;
+      event.preventDefault();
+      applyToActive((current) => panTransform(current, dx, dy));
+    },
+    [applyToActive],
+  );
 
   const status = useMemo<string | null>(() => {
     if (colorOptions.length === 0) return PREVIEW_MESSAGES.noColors;
@@ -372,16 +634,175 @@ export function PreviewComposer({
         </fieldset>
       ) : null}
 
+      {slotIds.length > 0 ? (
+        <fieldset className="denn-composer__group" data-testid="preview-edit">
+          <legend className="denn-composer__legend">{PREVIEW_EDIT_LABELS.group}</legend>
+
+          {slotIds.length > 1 ? (
+            <fieldset className="denn-preview-edit__subgroup">
+              <legend className="denn-composer__slot-label">{PREVIEW_EDIT_LABELS.slotGroup}</legend>
+              {slotIds.map((slotId, index) => (
+                <button
+                  key={slotId}
+                  type="button"
+                  className="denn-preview-edit__slot"
+                  aria-pressed={slotId === activeSlot}
+                  data-testid={`preview-edit-slot-${slotId}`}
+                  onClick={() => setActiveSlotId(slotId)}
+                >
+                  <span>{zoneSlotLabel(index)}</span>
+                  {slotId === activeSlot ? (
+                    <span className="denn-preview-edit__active">
+                      {PREVIEW_EDIT_LABELS.activeSlot}
+                    </span>
+                  ) : null}
+                </button>
+              ))}
+            </fieldset>
+          ) : null}
+
+          {activeEditable === null ? (
+            <p className="denn-browse__notice">{PREVIEW_EDIT_LABELS.needsImage}</p>
+          ) : null}
+
+          <div className="denn-preview-edit__row">
+            <label className="denn-composer__slot-label" htmlFor="denn-preview-scale">
+              {PREVIEW_EDIT_LABELS.scale}
+            </label>
+            <input
+              id="denn-preview-scale"
+              className="denn-preview-edit__range"
+              data-testid="preview-scale"
+              type="range"
+              min={SCALE_PERCENT_MIN}
+              max={SCALE_PERCENT_MAX}
+              step={1}
+              value={scaleToPercent(activeTransform.scale)}
+              disabled={activeEditable === null}
+              onChange={(event) => {
+                const next = scaleFromPercent(Number(event.target.value));
+                if (next === null) return;
+                applyToActive((current) => withScale(current, next));
+              }}
+            />
+            <span className="denn-composer__slot-state" data-testid="preview-scale-value">
+              {scaleToPercent(activeTransform.scale)}%
+            </span>
+          </div>
+
+          <div className="denn-preview-edit__row">
+            <button
+              type="button"
+              className="denn-composer__clear"
+              data-testid="preview-zoom-out"
+              disabled={activeEditable === null}
+              onClick={() => applyToActive((current) => zoomTransform(current, "out"))}
+            >
+              {PREVIEW_EDIT_LABELS.zoomOut}
+            </button>
+            <button
+              type="button"
+              className="denn-composer__clear"
+              data-testid="preview-zoom-in"
+              disabled={activeEditable === null}
+              onClick={() => applyToActive((current) => zoomTransform(current, "in"))}
+            >
+              {PREVIEW_EDIT_LABELS.zoomIn}
+            </button>
+            <button
+              type="button"
+              className="denn-composer__clear"
+              data-testid="preview-reset"
+              disabled={activeEditable === null}
+              onClick={() => applyToActive(() => resetTransform())}
+            >
+              {PREVIEW_EDIT_LABELS.reset}
+            </button>
+          </div>
+
+          {/* Real buttons host the keyboard pan: arrows (Shift = coarse) work whenever focus is
+              inside this group, and each button alone is enough for keyboard-only use. */}
+          <fieldset className="denn-preview-edit__subgroup" onKeyDown={onPanKeyDown}>
+            <legend className="denn-composer__slot-label">{PREVIEW_EDIT_LABELS.panGroup}</legend>
+            {(
+              [
+                ["preview-pan-left", PREVIEW_EDIT_LABELS.panLeft, -1, 0],
+                ["preview-pan-right", PREVIEW_EDIT_LABELS.panRight, 1, 0],
+                ["preview-pan-up", PREVIEW_EDIT_LABELS.panUp, 0, -1],
+                ["preview-pan-down", PREVIEW_EDIT_LABELS.panDown, 0, 1],
+              ] as const
+            ).map(([testId, label, dirX, dirY]) => (
+              <button
+                key={testId}
+                type="button"
+                className="denn-composer__clear"
+                data-testid={testId}
+                disabled={activeEditable === null}
+                onClick={(event) => {
+                  const step = event.shiftKey ? PAN_KEY_STEP_COARSE : PAN_KEY_STEP;
+                  applyToActive((current) => panTransform(current, dirX * step, dirY * step));
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </fieldset>
+        </fieldset>
+      ) : null}
+
       <p className="denn-browse__notice" role="status" data-testid="preview-status">
         {status ?? ""}
       </p>
 
       {plan !== null ? (
-        <PreviewCanvasSurface
-          plan={plan}
-          imageBindings={imageBindings}
-          accessibleName={PREVIEW_CANVAS_NAME[productKind]}
-        />
+        // Mouse/pen drag only (spec 029 §접근성): a touch pointer is ignored and no global
+        // `touch-action: none` / unconditional preventDefault is added, so page and horizontal
+        // scrolling keep working and the browser zoom gesture is never intercepted.
+        <div
+          className="denn-preview-edit__area"
+          ref={areaRef}
+          data-testid="preview-edit-area"
+          onPointerDown={(event) => {
+            if (event.pointerType === "touch" || event.button !== 0) return;
+            const slotId = activeEditable;
+            if (slotId === null) return;
+            const limit = built?.maxPan.get(slotId);
+            if (limit === undefined) return;
+            const point = logicalPoint(event.clientX, event.clientY);
+            if (point === null) return;
+            const started = getController().begin({
+              pointerId: event.pointerId,
+              point,
+              transform: transformOf(slotId),
+              maxPan: limit,
+            });
+            if (!started) return;
+            dragSlotRef.current = slotId;
+            try {
+              event.currentTarget.setPointerCapture(event.pointerId);
+            } catch {
+              // capture is an optimisation: without it the pointerup below still ends the session
+            }
+          }}
+          onPointerMove={(event) => {
+            const controller = controllerRef.current;
+            if (controller === null || !controller.isDragging()) return;
+            const point = logicalPoint(event.clientX, event.clientY);
+            if (point === null) return;
+            controller.move(event.pointerId, point);
+          }}
+          onPointerUp={(event) => controllerRef.current?.end(event.pointerId, "pointerup")}
+          onPointerCancel={(event) => controllerRef.current?.end(event.pointerId, "pointercancel")}
+          onLostPointerCapture={(event) =>
+            controllerRef.current?.end(event.pointerId, "lostpointercapture")
+          }
+        >
+          <PreviewCanvasSurface
+            plan={plan}
+            imageBindings={imageBindings}
+            accessibleName={PREVIEW_CANVAS_NAME[productKind]}
+          />
+        </div>
       ) : null}
     </section>
   );
