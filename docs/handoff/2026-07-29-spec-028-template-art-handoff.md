@@ -150,3 +150,39 @@ Founder 지시로 세션을 마감하고 **Claude Code의 5분 자동 루프를 
   getter drift fail-open 차단)의 **재검증 또는 추가 보완**으로 한정한다. 새 기능·다음 스펙은 착수하지 않는다.
 - 세션 인계 정본: `docs/handoff/2026-07-29-session-end-handoff.md`.
 - 이번 마감 라운드는 **문서 전용 커밋**이며 기능 코드·설정·테스트 변경 0, 실제 network·live·Firebase·CORS·deploy 0.
+
+## 11. 종료 — Codex 재검증 승인 (2026-07-30)
+
+Codex가 보완 코드 **`d4fb99b`** 를 독립 재검증해 **승인 가능**으로 판정했고, 스펙 028을 **DONE**으로 종료했다.
+최종 문서 기준 HEAD `baa0d78`, 상태 `CODEX_PASSED` → 종료 문서 처리 → `COMMITTED`.
+
+| 항목 | Codex 독립 검증 | Claude 재실측(같은 트리) |
+| --- | --- | --- |
+| frozen install / lockfile | PASS / diff 0 | exit 0 / diff 0 |
+| format · lint · typecheck | PASS | PASS |
+| unit | **893 / 893** | **893 / 893** |
+| build mockup | JS **254.06 kB** · gzip **78.90**, CSS 13.80 / 3.53 | 동일 |
+| build admin | JS 193.53 / 61.09, CSS 8.54 / 2.64 | 동일(무변경) |
+| E2E | **85 / 85 PASS**, exit 0 | **85 / 85 PASS**, exit 0, 19.5초 |
+| `git diff --check` | PASS | clean |
+| 포트 4183·4184 / OS temp / 저장소 node·esbuild | listener 0 / 0 / 0 | free / 0 / — |
+| 고객 dist fixture | 0 | 0 |
+| HEAD = origin, ahead/behind | `baa0d78`, 0 / 0 | 동일 |
+
+**Codex가 확인한 것**: ⓐ `templateArtBinding`의 source `kind`/`src`가 예외 경계 안에서 각 1회 읽힌 snapshot만
+쓰이고 hostile getter·Proxy trap·revoked Proxy가 안전 실패한다. ⓑ placement의 source 체인·legacy-builder marker가
+각 1회 snapshot되고, **첫 snapshot이 legacy crop이면 getter drift가 `stretch`로 fail-open시키는 경로가 없다**.
+변경 범위는 허용된 source/test 4개 + lint 의미 보존 1줄로 한정됐다.
+
+**유지된 계약**: crossOrigin-before-src · data URL 예외 · 재시도 0 · generation guard · cache 0 ·
+기존 none/stretch/unsupported 결과와 오류 우선순위 · Result에 원문·필드명·template ID 미노출.
+
+**NOT TESTED / NOT VERIFIED (종료 후에도 유지)**: 운영 bucket CORS와 ACAO 부재 시 실제 브라우저 실패 /
+운영 이미지·카탈로그 / 실기기 4환경·실제 200% 확대 / print/export taint / 대용량 아트 성능 /
+썸네일(non-CORS)과 owner(anonymous)의 동일 URL 캐시 오염 가능성.
+
+⚠️ 종료의 의미는 §「완료 의미」와 같다 — **합성 fixture에서 CORS-clean 아트를 fail-closed로 합성한 단계**이며
+운영 CORS·운영 이미지·실기기·print/export·pointer·주문·배포 완료가 아니다. `hosting.public:"."` →
+**Hosting 격리 전 배포 금지** 유지. 이 종료 라운드는 **문서 전용 커밋**(기능 코드·설정·테스트·lockfile 변경 0,
+실제 network·live·Firebase·CORS·Rules/Hosting·deploy 0)이고 §7의 PNG 2개는 이번에도 미복원·미커밋이다.
+**다음 스펙(029 등)은 착수하지 않고 Codex의 최종 commit hash 확인을 기다린다.**

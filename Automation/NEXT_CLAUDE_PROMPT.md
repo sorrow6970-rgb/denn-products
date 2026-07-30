@@ -1,53 +1,56 @@
 # NEXT CLAUDE PROMPT
 
-상태: `SESSION_ENDED_AWAITING_MANUAL_RESUME`
-자동 5분 루프: **종료됨**
-스펙 028: **미완 — 승인·종료 아님**
+상태: `COMMITTED` → Codex 최종 hash 확인 대기
 
-# 다음 세션 작업: 스펙 028 보완 2건의 재검증/보완만
+# 스펙 028 종료 완료 · 다음 지시 대기 (착수 금지)
 
-이번 세션은 Founder 지시로 마감됐다. 스펙 028은 Codex correction review 도중 종료됐으며
-`DONE`/`CODEX_PASSED`가 아니다. 다음 세션에서 다룰 범위는 **아래 2건뿐**이다.
+Codex가 2026-07-30 보완 코드 `d4fb99b`를 독립 재검증해 승인 가능으로 판정했고,
+Claude Code가 **종료 문서만** 하나의 문서 commit으로 처리해 일반 fast-forward push했다.
+스펙 028은 `DONE`, 상태는 `COMMITTED`다.
 
-두 보완은 커밋 `d4fb99b`로 이미 구현·push된 상태이고, 남은 것은 **Codex 재검증**과 그 결과에 따른
-추가 보완이다. 재검증이 불충분하다고 판정하면 정확히 이 2건을 다시 다룬다.
+## 처리한 것
 
-## a. `apps/mockup/src/canvas/templateArtBinding.ts` (+ `templateArtBinding.test.ts`)
+- 종료 문서 커밋 파일(허용 목록과 정확히 일치)
+  - `docs/rebuild/specs/028-template-art-stretch-cors-owner.md` (§CODEX_PASSED 종료 섹션)
+  - `docs/handoff/2026-07-29-spec-028-template-art-handoff.md` (§11 종료)
+  - `docs/handoff/2026-07-29-session-end-handoff.md` (최종 상태 append)
+  - `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
+  - `docs/codex-claude-handoff/CURRENT.md`
+  - `Automation/DENN_AUTOMATION_STATE.md`
+  - `Automation/NEXT_CLAUDE_PROMPT.md`
+- 기록한 Codex 독립 게이트: frozen install PASS·lockfile diff 0 / format·lint·typecheck PASS /
+  unit 893/893 / build(mockup JS 254.06 kB·gzip 78.90, CSS 13.80/3.53; admin 193.53/61.09, 8.54/2.64) /
+  E2E 85/85 PASS·exit 0 / `git diff --check` PASS / 포트 4183·4184 listener 0 /
+  OS temp `denn-e2e-*` 0 / 저장소 소속 node·esbuild 0 / 고객 dist fixture 0 / HEAD=origin·0/0
+- 기능 코드·테스트·설정·`package.json`·`pnpm-lock.yaml` 변경 **0**, 신규 의존성 0
+- 실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않음(working tree에 그 2개만 잔존)
 
-source 필드의 **예외 경계 내 단일 normalized snapshot**.
+## 다음 폴링에서 할 일
 
-- `source.kind` / `source.src`를 예외 경계 안에서 각각 정확히 1회 읽어 plain snapshot으로 복사
-- 검증, `crossOrigin`/`src` 설정, load 결과 처리는 그 snapshot만 사용
-- getter throw · Proxy get trap · revoked Proxy가 public call 밖으로 throw하지 않고 기존 안전 실패로 닫힘
-- getter drift가 두 번째 읽기로 결과를 바꾸지 못함
-- URL·token·base64·원본 예외 객체를 state/error/log/DOM에 저장하거나 노출하지 않음
-- crossOrigin-before-src, data URL 예외, 재시도 0, generation stale guard, cache 0 계약 무변경
+1. `git fetch --all --prune` → HEAD=origin, ahead/behind 0/0 확인.
+2. working tree에 아래 PNG 2개 외 변경이 없는지 확인.
+3. Codex가 종료 문서 커밋의 최종 hash를 확인해 `DONE`을 기록했는지 본다.
+4. Codex가 **새 스펙(029 등)을 push하기 전까지는 어떤 파일도 수정·commit·push하지 않고 대기**한다.
+   상태 변화가 없으면 반복 보고하지 말고 조용히 다음 폴링을 기다린다.
 
-## b. `packages/shared/src/catalog/images/placement.ts` (+ `placement.test.ts`)
+## 금지 (계속 유지)
 
-판정 필드의 **전체 단일 snapshot 및 getter drift fail-open 차단**.
-
-- source 체인과 legacy-builder marker 필드를 각각 정확히 1회 읽어 snapshot으로 복사
-- `hasDesignSource`·builder 판정·legacy crop 판정·최종 결과가 caller/template을 재읽지 않음
-- 첫 snapshot이 legacy crop variant면 이후 drift가 근거를 지워도 `stretch`로 fail-open하지 않고
-  `unsupported: legacy-builder-crop` 유지
-- 관련 getter throw · Proxy trap · revoked Proxy는 throw 0의 안전 결과로 닫힘
-- Result/diagnostic에 source 문자열·필드명·template ID 미추가
-- 기존 안정 입력의 none/stretch/unsupported 결과와 오류 우선순위 무변경
-
-## 재개 전 확인
-
-1. `git fetch --all --prune` → HEAD = origin = `b18b652`, ahead/behind 0/0
-2. working tree에 아래 PNG 2개 외 변경이 없는지 확인
-3. `docs/handoff/2026-07-29-session-end-handoff.md`와 `docs/codex-claude-handoff/CURRENT.md` 정독
-4. Codex 재검증 결과가 push돼 있으면 그 지시를 따른다. 없으면 파일을 수정하지 말고 상태만 보고한다.
-
-## 금지 (다음 세션에서도 유지)
-
-- 스펙 028을 `DONE`/`CODEX_PASSED`로 기록하는 것
-- 위 2건 밖의 새 기능·정책 변경·의존성 추가·다음 스펙(029 등) 착수
+- 다음 스펙(029 등) 착수, 사전조사, 새 기능·정책 변경·의존성 추가
+- 스펙 028 코드 재수정(승인 완료 — 재검증 없는 수정 금지)
 - legacy builder crop 지원, builtin multi-zone, text/clock, pointer, print/export, 저장·주문
 - Firebase SDK/Auth/Rules/CORS/Hosting, 실제 network/live test, 운영 이미지 다운로드, deploy
+  (`hosting.public:"."` → Hosting 격리 전 배포 금지)
+- force push, merge, rebase, `reset --hard`, stale lock 삭제, broad cleanup, 사용자 변경 restore/checkout
 - 아래 두 파일의 restore·checkout·stage·commit
   - `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`
   - `docs/rebuild/results/spec-018/browse-mobile-390x844.png`
+
+## NOT TESTED / NOT VERIFIED (스펙 028 종료 후에도 유지)
+
+- 운영 bucket CORS와 ACAO 부재 시 실제 브라우저 실패
+- 운영 이미지·카탈로그
+- 실기기 4환경과 실제 200% 확대
+- print/export taint
+- 대용량 아트 성능
+- 썸네일(non-CORS)과 owner(anonymous)의 동일 URL 캐시 오염 가능성

@@ -283,3 +283,61 @@ Firebase config/Rules/CORS/Hosting, POC, PNG, manifests, lockfile는 변경 금�
   **e2e 85 PASS**·exit 0·16.4초 / check PASS / `git diff --check` clean / 포트 4183·4184 free·잔류 0 /
   OS temp `denn-e2e-*` 0 / 고객 dist **SHA-256 E2E 전후 동일·fixture 0** / 네트워크·live·deploy 0.
 - **PNG**: Codex E2E 재생성분 2개는 이번에도 restore·checkout·stage·commit **하지 않았다**.
+
+---
+
+### CODEX_PASSED — 스펙 028 종료 (2026-07-30)
+
+Codex가 보완 코드 **`d4fb99b`** 를 독립 재검증해 **승인 가능**으로 판정했다. 최종 문서 기준 HEAD `baa0d78`.
+이 섹션으로 스펙 028을 **DONE**으로 종료한다(기능 코드·설정·테스트 변경 0, 문서 전용).
+
+**Codex 독립 검증 결론**
+
+- `templateArtBinding`: source `kind`/`src`를 예외 경계 안에서 **각각 1회** 읽은 snapshot만 검증·대입·binding에
+  사용하며 hostile getter · Proxy trap · revoked Proxy는 **throw 없이 안전 실패**한다.
+- catalog placement: source 체인과 legacy-builder marker를 **각각 1회** 읽은 snapshot으로만 판정하며,
+  **첫 snapshot이 legacy crop이면 getter drift가 `stretch`로 fail-open시키는 경로가 없다**.
+- 변경 범위는 허용된 source/test 4개와 lint 의미 보존 1줄로 한정되고 `git diff --check`를 통과했다.
+
+**Codex 독립 게이트**
+
+| 항목 | 결과 |
+| --- | --- |
+| frozen install | PASS, lockfile diff **0** |
+| format · lint · typecheck | PASS |
+| unit | **893 / 893 PASS** |
+| build | PASS — mockup JS **254.06 kB** / gzip **78.90 kB**, CSS 13.80 / 3.53 kB; admin JS 193.53 / 61.09 kB, CSS 8.54 / 2.64 kB |
+| E2E | **85 / 85 PASS**, exit 0 |
+| `git diff --check` | PASS |
+| 포트 4183 · 4184 | listener **0** |
+| OS temp `denn-e2e-*` / 저장소 소속 node·esbuild | **0 / 0** |
+| 고객 dist fixture | **0** |
+| HEAD = origin, ahead/behind | `baa0d78`, **0 / 0** |
+
+Claude Code도 같은 트리에서 재실측했고 위 수치와 **일치**했다(unit 893, e2e 85 PASS exit 0 19.5초,
+build 동일, `git diff --check` clean, 포트 free, temp 0).
+
+**확정 계약 (무변경 유지)**
+
+1. template-art source `kind`/`src`는 예외 경계 안에서 각각 1회 읽은 plain snapshot만 검증·대입·binding에 쓴다.
+2. hostile getter · Proxy trap · revoked Proxy는 throw 없이 안전 실패한다.
+3. placement source 체인과 legacy-builder marker는 각각 1회 snapshot된다.
+4. 첫 snapshot이 legacy crop이면 getter drift로 `stretch`가 되는 fail-open 경로가 없다.
+5. crossOrigin-before-src · data URL 예외 · 재시도 0 · generation guard · cache 0 ·
+   기존 none/stretch/unsupported 결과와 오류 우선순위 · 원문 비노출 계약은 유지된다.
+
+**NOT TESTED / NOT VERIFIED (종료 후에도 유지)**
+
+- 운영 bucket CORS와 ACAO 부재 시 실제 브라우저 실패
+- 운영 이미지 · 카탈로그
+- 실기기 4환경과 실제 200% 확대
+- print/export taint
+- 대용량 아트 성능
+- 썸네일(non-CORS)과 owner(anonymous)의 동일 URL 캐시 오염 가능성
+
+⚠️ 이 종료는 **합성 fixture에서 CORS-clean 템플릿 아트를 고객 preview에 fail-closed로 합성한 단계**이며
+운영 bucket CORS · 운영 이미지 · 실기기 · print/export CORS-clean · pointer · 주문 · 배포 완료가 아니다.
+`hosting.public:"."` → **Hosting 격리 전 배포 금지** 유지. **다음 스펙은 지시 대기.**
+
+**PNG**: `spec-018/browse-desktop-1280x800.png`·`browse-mobile-390x844.png`은 이번 종료 라운드에서도
+restore·checkout·stage·commit **하지 않았다**(working tree dirty, 커밋된 PNG 0).

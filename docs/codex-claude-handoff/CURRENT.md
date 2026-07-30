@@ -7,7 +7,29 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **⏹ 세션 종료 · 자동 5분 루프 종료 · 수동 재개 대기. 스펙 028은 미완(승인·종료 아님) — Codex correction review 도중 종료. 스펙 027은 승인·종료. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **✅ 스펙 028 승인·종료(Codex 재검증 PASS, 승인 대상 `d4fb99b`). 스펙 027도 승인·종료. 다음 스펙은 지시 대기 — 착수 금지. 5분 보호형 루프는 Codex 최종 hash 확인까지 유지. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+
+> 스펙 028 종료(2026-07-30): Codex가 보완 코드 **`d4fb99b`** 를 독립 재검증해 **승인 가능**으로 판정했고,
+> Claude Code가 종료 문서만 처리했다(상태 `CODEX_PASSED` → `COMMITTED`, 문서 전용 커밋·기능 코드 변경 0).
+> 정본 `docs/rebuild/specs/028-template-art-stretch-cors-owner.md`(§CODEX_PASSED), 인계
+> `docs/handoff/2026-07-29-spec-028-template-art-handoff.md`(§11).
+> **Codex가 확인한 것**: ⓐ `templateArtBinding`의 source `kind`/`src`가 **예외 경계 안에서 각 1회** 읽힌
+> snapshot만 검증·`crossOrigin`/`src` 대입·binding에 쓰이고 hostile getter·Proxy trap·revoked Proxy가
+> **throw 없이** 안전 실패 / ⓑ placement의 source 체인·legacy-builder marker가 **각 1회** snapshot되어
+> **첫 snapshot이 legacy crop이면 getter drift가 `stretch`로 fail-open시키는 경로가 없음** / 변경 범위는
+> 허용된 source·test 4개 + lint 의미 보존 1줄로 한정. **유지 계약**: crossOrigin-before-src · data URL 예외 ·
+> 재시도 0 · generation guard · cache 0 · 기존 none/stretch/unsupported 결과와 오류 우선순위 · 원문·필드명·ID 미노출.
+> **Codex 독립 게이트 PASS**: frozen install·lockfile diff 0 / format·lint·typecheck / **unit 893/893** /
+> build(mockup JS **254.06 kB**·gzip **78.90**, CSS 13.80/3.53; admin 193.53/61.09, 8.54/2.64) /
+> **E2E 85/85 PASS·exit 0** / `git diff --check` / 포트 4183·4184 listener 0 / OS temp `denn-e2e-*` 0 ·
+> 저장소 소속 node·esbuild 0 / 고객 dist fixture 0 / HEAD=origin=`baa0d78`·0/0.
+> Claude 재실측도 동일 수치(unit 893, e2e 85 PASS exit 0 19.5초, build 동일, diff clean, 포트 free, temp 0).
+> **NOT TESTED/NOT VERIFIED 유지**: 운영 bucket CORS·ACAO 부재 시 실제 브라우저 실패, 운영 이미지·카탈로그,
+> 실기기 4환경·실제 200% 확대, print/export taint, 대용량 아트 성능, 썸네일(non-CORS)↔owner(anonymous)
+> 동일 URL 캐시 오염. 실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**.
+> ⚠️ 이 종료는 **합성 fixture에서 CORS-clean 아트를 fail-closed로 합성한 단계**이며 운영 CORS·print/export·
+> 주문·배포 완료가 아니다. `hosting.public:"."` → **Hosting 격리 전 배포 금지** 유지.
+> **다음 스펙(029 등)·사전조사·신규 기능은 착수하지 않고 Codex의 최종 commit hash 확인을 기다린다.**
 
 > 세션 종료(2026-07-29): Founder 지시로 마감하고 **Claude Code의 5분 자동 루프를 종료**했다(cron job 취소).
 > 인계 정본은 `docs/handoff/2026-07-29-session-end-handoff.md`.

@@ -96,6 +96,26 @@
    - 아무 변화도 없으면 **파일을 수정하지 말고** 상태만 보고한다.
 5. 어떤 경우에도 다음 스펙(029 등)·새 기능·의존성 추가·Firebase/CORS/Hosting/deploy는 착수하지 않는다.
 
+## 4.1 후속 결과 — 스펙 028 승인·종료 (2026-07-30 append)
+
+위 §4 재개 절차대로 재개했고, **Codex 재검증이 실행되어 승인 가능으로 판정**됐다. 따라서 이 문서의
+"스펙 028 미완" 서술은 **2026-07-30 시점에 해소**됐다(이 절이 최종 상태다).
+
+- 승인 대상 보완 코드 **`d4fb99b`**, 문서 기준 HEAD `baa0d78`, 상태 `CODEX_PASSED` → `COMMITTED`
+- §2.1 a/b 두 보완 모두 Codex가 닫힌 것으로 확인: source `kind`/`src`의 예외 경계 내 1회 snapshot,
+  placement 판정 필드 전체 1회 snapshot과 **legacy crop → `stretch` fail-open 경로 부재**
+- Codex 독립 게이트 PASS: frozen install·lockfile diff 0 / format·lint·typecheck / **unit 893/893** /
+  build(mockup JS 254.06 kB·gzip 78.90, CSS 13.80/3.53; admin 193.53/61.09, 8.54/2.64) /
+  **E2E 85/85·exit 0** / `git diff --check` / 포트 4183·4184 listener 0 / OS temp 0 ·
+  저장소 소속 node·esbuild 0 / 고객 dist fixture 0 / HEAD=origin·0/0
+- §3.2의 나머지 **NOT TESTED / NOT VERIFIED 항목은 그대로 유지**된다(운영 bucket CORS, ACAO 부재 시 실제
+  실패, 운영 이미지·카탈로그, 실기기 4환경, 실제 200% 확대, print/export taint, 대용량 성능,
+  썸네일↔owner 캐시 오염)
+- 종료 라운드는 **문서 전용 커밋**이며 기능 코드·설정·테스트·lockfile 변경 0, 실제 network·live·
+  Firebase·CORS·Rules/Hosting·deploy 0. §1의 PNG 2개는 이번에도 미복원·미커밋
+- 다음 스펙(029 등)은 **미착수** — Codex 지시 대기. 정본 갱신: `docs/codex-claude-handoff/CURRENT.md`,
+  `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`
+
 ## 5. 이번 세션에서 하지 않은 것
 
 - 실제 network 호출 · live test · 운영 이미지 다운로드 · Firebase SDK/Auth/Rules/CORS/Hosting 변경 · deploy: **0**

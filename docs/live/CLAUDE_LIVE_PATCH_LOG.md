@@ -283,3 +283,30 @@
   실기기, 실제 200% 확대, print/export taint, 대용량 성능
 - 실제 network·live·Firebase·CORS·deploy: **0**. 다음 스펙 미착수.
 - 이 라운드는 **문서 전용 커밋**이며 기능 코드·설정·테스트 변경 0
+
+## 2026-07-30 — 스펙 028 종료 (Codex 재검증 승인 → DONE)
+
+- 상태: `READY_FOR_CODEX` → **`CODEX_PASSED`** → 종료 문서 처리 → `COMMITTED`
+- 승인 대상 보완 코드: **`d4fb99b`**, 최종 문서 기준 HEAD: `baa0d78`
+- Codex 독립 재검증(2026-07-30) 결론: 보완 라운드 1의 지적 2건이 모두 닫혔다.
+  - `templateArtBinding`: source `kind`/`src`를 예외 경계 안에서 각 1회 읽어 snapshot만 사용하고
+    hostile getter·Proxy trap·revoked Proxy가 안전 실패한다.
+  - catalog placement: source 체인·legacy-builder marker를 각 1회 읽은 snapshot으로만 판정하며
+    getter drift가 `legacy-builder-crop`을 `stretch`로 fail-open시키지 않는다.
+  - 변경 범위는 허용된 source/test 4개 + lint 의미 보존 1줄로 한정, `git diff --check` PASS.
+- Codex 독립 게이트: frozen install PASS·lockfile diff 0 / format·lint·typecheck PASS /
+  **unit 893/893** / build PASS(mockup JS **254.06 kB**·gzip **78.90**, CSS 13.80/3.53;
+  admin 193.53/61.09, 8.54/2.64) / **E2E 85/85 PASS·exit 0** / 포트 4183·4184 listener 0 /
+  OS temp `denn-e2e-*` 0 / 저장소 소속 node·esbuild 0 / 고객 dist fixture 0 / HEAD=origin·0/0
+- Claude 재실측(같은 트리, 2026-07-30): frozen exit 0·lockfile diff 0 / format·lint·typecheck /
+  unit **893** / build 동일 수치 / e2e **85 PASS**·exit 0·19.5초 / `git diff --check` clean /
+  포트 4183·4184 free / OS temp 0 → Codex 수치와 일치
+- 확정 계약(무변경 유지): crossOrigin-before-src · data URL 예외 · 재시도 0 · generation guard ·
+  cache 0 · 기존 none/stretch/unsupported 결과와 오류 우선순위 · Result에 원문·필드명·ID 미노출
+- NOT TESTED / NOT VERIFIED 유지: 운영 bucket CORS와 ACAO 부재 시 실제 브라우저 실패 / 운영 이미지·
+  카탈로그 / 실기기 4환경·실제 200% 확대 / print/export taint / 대용량 아트 성능 /
+  썸네일(non-CORS)과 owner(anonymous)의 동일 URL 캐시 오염 가능성
+- 이 라운드는 **문서 전용 커밋**이며 기능 코드·설정·테스트·lockfile 변경 **0**,
+  실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**
+- PNG 2개: 이번에도 restore·checkout·stage·commit 하지 않음
+- 다음: Codex의 최종 commit hash 확인 대기. **다음 스펙(029 등) 미착수.**

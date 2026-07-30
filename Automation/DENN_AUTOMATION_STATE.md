@@ -1,20 +1,20 @@
 # DENN automation state
 
 ```yaml
-updated_at: 2026-07-29
+updated_at: 2026-07-30
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-027-customer-preview-composer-connection
-active_unit: spec-028-template-art-stretch-cors-owner
-state: SESSION_ENDED_AWAITING_MANUAL_RESUME
+completed_unit: spec-028-template-art-stretch-cors-owner
+active_unit: null  # 스펙 028 종료 · 다음 스펙은 Codex 지시 대기 (착수 금지)
+state: COMMITTED
 baseline_commit: 7a2b2cd
 candidate_commit: cebcaad
-verified_commit: null  # 스펙 028 미승인 — Codex 재검증 미실행 상태로 세션 종료
-origin_relation: "HEAD=origin=cebcaad, ahead/behind 0/0"
-working_tree: "dirty: two known Codex E2E-regenerated spec-018 PNGs plus local Automation transition documents; PNGs must not be restored, staged, or committed"
+verified_commit: d4fb99b
+origin_relation: "closing doc commit pushed fast-forward on top of baa0d78; HEAD=origin, ahead/behind 0/0"
+working_tree: "dirty: only the two known Codex E2E-regenerated spec-018 PNGs; they must not be restored, staged, or committed"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: MANUAL_RESUME  # 자동 5분 루프 종료됨
+next_transition: DONE  # Codex의 최종 commit hash 확인 후 DONE 확정
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -80,3 +80,57 @@ Founder 지시로 이번 세션을 마감하고 **Claude Code의 5분 자동 루
 
 재개는 `Automation/NEXT_CLAUDE_PROMPT.md`와
 `docs/handoff/2026-07-29-session-end-handoff.md`를 읽고 **수동으로** 시작한다.
+
+## Codex 독립 재검증 — 승인 가능 (2026-07-30)
+
+Founder의 수동 재개 승인 후 보완 코드 `d4fb99b`를 독립 재검증했다.
+
+- `templateArtBinding`: source `kind`/`src`를 예외 경계 안에서 각각 1회 읽어
+  snapshot만 사용하며 hostile getter, Proxy trap, revoked Proxy는 안전 실패한다.
+- catalog placement: source 체인과 legacy-builder marker를 각각 1회 읽은 snapshot으로만
+  판정하며 getter drift가 `legacy-builder-crop`을 `stretch`로 fail-open시키지 않는다.
+- 변경 범위는 허용된 source/test 4개와 lint 의미 보존 1줄로 한정되고 `git diff --check`
+  를 통과했다.
+
+독립 게이트:
+
+- frozen install PASS, lockfile diff 0
+- format, lint, typecheck PASS
+- unit 893/893 PASS
+- build PASS: mockup JS 254.06 kB / gzip 78.90 kB, CSS 13.80 / 3.53 kB;
+  admin JS 193.53 / 61.09 kB, CSS 8.54 / 2.64 kB
+- E2E 85/85 PASS, exit 0
+- 포트 4183·4184 listener 0, OS temp `denn-e2e-*` 0, 저장소 소속 node/esbuild 0
+- 고객 dist fixture 0
+- HEAD=origin=`baa0d78`, ahead/behind 0/0
+- working tree에는 알려진 스펙 018 PNG 2개와 이 로컬 Automation 전이 문서만 존재
+
+NOT TESTED/NOT VERIFIED 유지:
+
+- 운영 bucket CORS와 ACAO 부재 시 실제 브라우저 실패
+- 운영 이미지·카탈로그, 실기기 4환경, 실제 200% 확대
+- print/export taint, 대용량 아트 성능
+- 썸네일(non-CORS)과 owner(anonymous)의 동일 URL 캐시 오염 가능성
+
+스펙 028은 코드 기준 승인 가능하다. Claude Code는
+`Automation/NEXT_CLAUDE_PROMPT.md`의 종료 문서 범위만 처리하고 다음 스펙을 시작하지 않는다.
+
+## 종료 문서 처리 완료 — COMMITTED (Claude Code, 2026-07-30)
+
+승인 판정에 따라 **종료 문서만** 하나의 문서 commit으로 처리하고 일반 fast-forward push했다.
+
+- 승인 대상 보완 코드 `d4fb99b`, 문서 기준 HEAD `baa0d78`
+- 커밋 파일(허용 목록과 정확히 일치): `docs/rebuild/specs/028-template-art-stretch-cors-owner.md`,
+  `docs/handoff/2026-07-29-spec-028-template-art-handoff.md`,
+  `docs/handoff/2026-07-29-session-end-handoff.md`, `docs/live/CLAUDE_LIVE_PATCH_LOG.md`,
+  `docs/codex-claude-handoff/CURRENT.md`, `Automation/DENN_AUTOMATION_STATE.md`,
+  `Automation/NEXT_CLAUDE_PROMPT.md`
+- 기능 코드·테스트·설정·`package.json`·`pnpm-lock.yaml` 변경 **0**, 신규 의존성 0
+- Claude 재실측(같은 트리): frozen exit 0 · lockfile diff 0 / format·lint·typecheck /
+  unit **893** / build 동일 수치 / e2e **85 PASS** exit 0 19.5초 / `git diff --check` clean /
+  포트 4183·4184 free / OS temp `denn-e2e-*` 0 → Codex 독립 게이트와 일치
+- 실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit **하지 않았다**(working tree에 그 2개만 잔존)
+- 다음 스펙(029 등)·사전조사·기능 **미착수**
+
+다음 전이: Codex가 이 문서 커밋의 최종 hash와 `HEAD=origin`, ahead/behind 0/0을 확인하면 `DONE`이다.
