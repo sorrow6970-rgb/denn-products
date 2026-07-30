@@ -5,16 +5,16 @@ updated_at: 2026-07-30
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-028-template-art-stretch-cors-owner
-active_unit: spec-029-pointer-pan-zoom-investigation
-state: READY_FOR_CODEX  # Founder D-2·D-3·D-5·D-6·D-7 승인 접수·기록 완료 → Codex가 구현 계약 작성
-baseline_commit: d21531c
-candidate_commit: null  # 조사 문서 커밋(아래 절) — 제품 코드 후보 없음
+active_unit: spec-029-pointer-pan-zoom-editing
+state: READY_FOR_CODEX  # 스펙 029 구현·자체 검증 완료 → Codex 독립 검증 대기
+baseline_commit: 7701c7a
+candidate_commit: 95fcf92  # 스펙 029 코드/test (문서는 별도 커밋)
 verified_commit: d4fb99b  # 스펙 028 승인분
-origin_relation: "investigation doc commit pushed fast-forward on top of d21531c; HEAD=origin, ahead/behind 0/0"
-working_tree: "dirty: only the two known Codex E2E-regenerated spec-018 PNGs; they must not be restored, staged, or committed"
+origin_relation: "spec 029 code + doc commits pushed fast-forward on top of 7701c7a; HEAD=origin, ahead/behind 0/0"
+working_tree: "dirty: the two known spec-018 PNGs plus the Codex-owned uncommitted DENN_AUTOMATION_RUNBOOK.md; Claude touches neither"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: WAITING_FOR_CLAUDE
+next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -205,3 +205,39 @@ Codex는 저장소만 읽으므로 결정을 정본 문서로 남겼다:
 - `Automation/DENN_AUTOMATION_RUNBOOK.md`의 미커밋 변경은 **Codex 소유로 판단해 손대지 않았다**
 
 다음 전이: Codex가 이 결정을 입력으로 **스펙 029 구현 계약**을 작성하면 `WAITING_FOR_CLAUDE`.
+
+## Codex 구현 계약 작성 완료 (2026-07-30)
+
+Founder 승인과 결정 정본 `7701c7a`를 입력으로
+`docs/rebuild/specs/029-pointer-pan-zoom-editing.md`를 작성했다.
+상태를 `WAITING_FOR_CLAUDE`로 전환하며 Claude는 해당 스펙의 허용 파일과 게이트 안에서만 구현한다.
+
+## 스펙 029 구현 완료 — READY_FOR_CODEX (Claude Code, 2026-07-30)
+
+스펙 §4 허용 파일 안에서만 구현하고 코드/test와 문서를 분리 커밋했다.
+
+- 코드/test 커밋 `95fcf92`, 기준 `7701c7a`(Founder 결정), 스펙 `029-pointer-pan-zoom-editing.md`
+- 상태 모델: 슬롯별 `scale`(무차원 1.0~5.0) + 축별 normalized pan `[-1,1]`, plan 직전에만 logical 환산,
+  `maxPan=0` 축 고정, resize는 normalized 유지 후 재환산
+- `maxPan`은 pan 0 probe plan의 cover 명령에서 읽어 어댑터 rect 공식을 복제하지 않음(둘 중 하나라도
+  실패하면 plan 미생성)
+- Pointer Events + capture, 3종 종료 + selection/unmount, generation 가드, rAF 1회 병합,
+  휠은 scale이 실제로 바뀔 때만 preventDefault, touch-action 선언 0(스크롤·브라우저 확대 보존)
+- 슬롯 카드 선택 + `편집 중` 표시, 단일 `원래대로`, 화살표 0.02 / Shift 0.10,
+  사진 미준비 슬롯은 컨트롤 전부 disabled
+- 초기화: 이미지 교체·삭제·실패 → 그 슬롯만 / model·template·frame-size·kind → 전체 /
+  색상 변경·활성 슬롯 전환 → 유지
+- 발견·수정: stale animation frame이 다음 세션의 pending 값을 소비해 재-grab 첫 move가 누락되던 결함
+- 게이트: frozen exit 0 / lockfile diff 0 / 신규 의존성 0 / format·lint·typecheck /
+  unit 938 (893 → 938) / e2e 90 PASS (85 → 90) exit 0 / `git diff --check` clean /
+  포트 4183·4184 free / OS temp `denn-e2e-*` 0 / 저장소 소속 node·esbuild 0 /
+  dist SHA-256 E2E 전후 동일 · fixture 0 / 네트워크·live·Firebase·CORS·deploy 0
+- 번들: mockup JS 254.06 → 263.19 kB (gzip 78.90 → 81.56), CSS 13.80 → 15.47 (gzip 3.53 → 3.88),
+  admin 무변경
+- NOT TESTED: 2손가락 핀치(미구현·Playwright 구동 불가), 터치 drag(1차 미지원), 실기기 4환경,
+  실제 200% 확대, print/export pan, 대용량 성능·EXIF
+- `packages/**`·`apps/admin/**`·운영 HTML·Firebase 설정/Rules/CORS/Hosting·POC·manifest·lockfile 무변경,
+  스펙 026 owner(`localImageBinding.ts`)와 `productPlan.ts`도 무수정
+- 스펙 018 PNG 2개와 Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md`는 건드리지 않았다
+
+다음 전이: Codex가 `95fcf92`와 문서 커밋을 독립 검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.

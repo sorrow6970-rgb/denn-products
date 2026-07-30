@@ -7,7 +7,41 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 029 편집 계약 9건 전부 확정(Founder D-2·D-3·D-5·D-6·D-7 승인 + Codex D-1·D-4·D-8·D-9) → `READY_FOR_CODEX`(구현 계약 대기). 스펙 027·028은 승인·종료. pointer/pan/zoom 구현 미착수. ⚠️ working tree는 Codex E2E가 재생성한 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일을 복원·커밋하지 않는다.**
+상태: **🛠 스펙 029 구현·자체 검증 완료 → `READY_FOR_CODEX`(독립 검증 대기, 종료 아님). 스펙 027·028은 승인·종료. 다음 기능 미착수. ⚠️ working tree는 스펙 018 PNG 2개 + Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md` 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+
+> 스펙 029 구현·자체검증 완료(로컬, 2026-07-30, 기준 조사 `2ded576`·결정 `7701c7a`, 코드 커밋 `95fcf92`):
+> 정본 `docs/rebuild/specs/029-pointer-pan-zoom-editing.md`, 인계
+> `docs/handoff/2026-07-30-spec-029-pan-zoom-handoff.md`. **고객이 처음으로 사진 구도를 조절한다.**
+> **상태 모델**: composer가 슬롯별 `{scale, x, y}`를 소유하고 `scale`은 무차원 **1.0~5.0**, `x/y`는 축별
+> `maxPan` 대비 **[-1,1]** normalized이며 **plan 직전에만** logical px로 환산한다(`maxPan=0` 축은 0 고정,
+> resize는 normalized 유지 후 재환산). 신규 `apps/mockup/src/preview/imageTransform.ts`는 framework-free이고
+> **범위 밖·비유한·hostile getter/Proxy trap/revoked Proxy를 거부**하며 **clamp 복구·기본값 생성을 하지 않는다**.
+> 스펙 026 owner의 리터럴 transform과 `packages/**`는 **무변경**(재사용만).
+> **어댑터 공식 비복제**: `maxPan`을 얻으려 zone/mat rect 공식을 복사하지 않고 **pan 0 probe plan**의
+> `draw-image-cover`(`clipRect`/`drawRect`)에서 축별 값을 읽은 뒤 실제 plan을 만든다 — 두 단계 중 하나라도
+> 실패하면 **plan을 만들지 않는다**(부분 plan·이전 transform 재사용 0).
+> **입력**: mouse/pen Pointer Events + `setPointerCapture`, 시작 snapshot 기준 **절대 delta**, rAF **1회 병합**,
+> `pointerup`·`pointercancel`·`lostpointercapture`·선택 변경·unmount 종료 + **generation 가드**,
+> 슬라이더 100~500%·버튼·휠 **`*1.1`/`/1.1`**, 화살표 **0.02**/Shift **0.10**, 단일 **`원래대로`**.
+> **핀치·터치 drag는 1차 미구현**이고 **전역 `touch-action:none`·무조건 `preventDefault`를 추가하지 않았다**
+> (E2E가 body·area·canvas 모두 `auto`임을 실측) → 기존 스크롤·브라우저 확대 제스처 보존. 휠은 **scale이
+> 실제로 바뀔 때만** 기본 동작을 막는다. **초기화 행렬**: 이미지 교체·삭제·실패는 그 슬롯만, model·template·
+> frame-size·kind 변경은 전체, **색상 변경·활성 슬롯 전환은 유지**. case는 **슬롯 카드 선택 + `편집 중` 표시**
+> (캔버스 히트테스트 0), frame은 단일 슬롯, 사진이 ready가 아니면 컨트롤 전부 `disabled`.
+> **⚠️ 구현 중 결함 발견·수정**: **stale animation frame이 다음 세션의 pending 값을 소비**해 재-grab 직후 첫
+> move가 사라졌다 → stale frame은 `pending`을 건드리지 않고 return(신규 unit이 고정).
+> **검증**: unit **938**(893→938, 신규 45) / **실제 Chromium E2E 90**(85→90, 신규 5) — drag로 반쪽 경계
+> **y=50→70**·빈 공간 0·다른 존 불변·`maxPan.x=0` 축 불변·캔버스 밖 `pointerup` 후 불변 / 버튼·휠·슬라이더·
+> 키보드·`원래대로` / 슬롯 전환에도 두 구도 유지·교체 시 그 슬롯만 초기화 / 액자 **1280→360 resize 후 같은
+> 비율 지점 색 동일** / 320px 오버플로 0·`touch-action` 전부 `auto`·44px·axe 0·console 0.
+> 게이트: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / exit 0 /
+> `git diff --check` clean / 포트 4183·4184 free · OS temp·저장소 소속 프로세스 0 / dist **SHA-256 E2E 전후
+> 동일·fixture 0** / 네트워크·live·Firebase·CORS·deploy **0**. **번들**: mockup JS **254.06 → 263.19 kB**
+> (gzip **78.90 → 81.56**), CSS **13.80 → 15.47**(gzip **3.53 → 3.88**), admin 무변경.
+> **NOT TESTED**: 2손가락 핀치(미구현 + Playwright 구동 불가), 터치 drag, 실기기 4환경, 실제 200% 확대,
+> print/export pan 재현, 대용량 사진 성능·EXIF, 운영 카탈로그·이미지.
+> ⚠️ 이 완료는 **합성 fixture에서 마우스·휠·슬라이더·버튼·키보드로 구도를 조절한 단계**이며 터치·실기기·
+> 인쇄·주문·배포 완료가 아니다. `hosting.public:"."` → **Hosting 격리 전 배포 금지** 유지.
 
 > 스펙 029 결정 확정(2026-07-30): 정본 `docs/codex-claude-handoff/decisions/2026-07-30-spec-029-pan-zoom-decisions.md`.
 > **Founder 승인**: D-2 case multi-zone은 **슬롯 카드 선택 + 활성 슬롯 표시**(캔버스 히트테스트 없음) /
