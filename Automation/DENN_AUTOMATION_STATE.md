@@ -6,7 +6,7 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-029-pointer-pan-zoom-editing
 active_unit: spec-030-image-rotation-investigation
-state: READY_FOR_CODEX  # 스펙 030 사전 조사 완료 → Codex 검토 대기
+state: FOUNDER_DECISION_REQUIRED  # 스펙 030 조사 승인 · 제품 회전 범위 결정 대기
 baseline_commit: 8d20b6d
 candidate_commit: 110511e  # 스펙 029 보완 라운드 1 코드/test (최초 구현 95fcf92)
 verified_commit: 110511e  # 스펙 029 승인분 (스펙 028은 d4fb99b)
@@ -14,7 +14,7 @@ origin_relation: "spec 029 closing doc commit pushed fast-forward on top of 0512
 working_tree: "dirty: the two known spec-018 PNGs plus the Codex-owned uncommitted DENN_AUTOMATION_RUNBOOK.md; Claude touches neither"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: WAITING_FOR_CLAUDE
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -25,6 +25,27 @@ deploy: forbidden
 종료 문서 커밋 `8d20b6d`가 origin과 일치하고 ahead/behind 0/0이며 허용된 문서 파일만 포함함을 확인했다.
 스펙 029는 DONE이다. 전체 리빌드 루프는 유지하고, 스펙 030 이미지 회전 계약을 구현 없이
 읽기 전용으로 조사하도록 `WAITING_FOR_CLAUDE`로 전환한다.
+
+## Codex 스펙 030 조사 검토 — Founder 결정 대기 (2026-07-30)
+
+문서 커밋 `8734307`은 허용된 문서 5개만 변경했고 `git diff --check`를 통과했으며
+HEAD=origin, ahead/behind 0/0이다. 제품 코드·테스트·CSS·manifest·lockfile 변경은 0이다.
+
+Codex 계약은 다음으로 확정한다.
+
+- C-1: composer의 슬롯별 normalized transform에 `rotationQuarterTurns`를 추가한다.
+- C-2: 저장 값은 `0|1|2|3`; 다른 값은 복구 없이 거부한다.
+- C-3: pan은 화면축이며 회전 footprint로 maxPan을 다시 계산한다.
+- C-4: 회전 중심은 zone 중심 + 현재 pan이다.
+- C-5: `draw-image-cover`의 선택적 `rotationQuarterTurns`로 plan 어휘를 확장한다.
+- C-6: executor는 한 command 안에서 save→translate→rotate→draw→restore를 수행한다.
+- C-7: probe plan에도 회전을 포함하고 normalized 값을 유지해 재환산한다.
+- C-8: 회전을 plan에 기록해 향후 print/export가 같은 plan을 소비하게 한다.
+- C-9: 기존 오류 우선순위에서 transform 유한성·범위 검증 단계에 회전 검증을 편입한다.
+
+Founder 권장 결정은 R-1 90° 배수만, R-3 액자 aspect 전환 미도입·별도 기능,
+R-4 case multi-zone에도 슬롯별 제공, R-5 template art와 독립적으로 사진 회전 허용,
+R-6 EXIF 직접 파싱 금지·브라우저 decode 실측이다. R-2는 R-1 승인 시 불필요하다.
 
 ## Codex independent review result
 
