@@ -5,20 +5,26 @@ updated_at: 2026-07-30
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-029-pointer-pan-zoom-editing
-active_unit: null  # 스펙 029 종료 · 다음 스펙은 Codex 지시 대기 (착수 금지)
-state: COMMITTED  # 스펙 029 DONE · 종료 문서 처리 완료
-baseline_commit: 197527c
+active_unit: spec-030-image-rotation-investigation
+state: READY_FOR_CODEX  # 스펙 030 사전 조사 완료 → Codex 검토 대기
+baseline_commit: 8d20b6d
 candidate_commit: 110511e  # 스펙 029 보완 라운드 1 코드/test (최초 구현 95fcf92)
 verified_commit: 110511e  # 스펙 029 승인분 (스펙 028은 d4fb99b)
 origin_relation: "spec 029 closing doc commit pushed fast-forward on top of 0512c8d; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs plus the Codex-owned uncommitted DENN_AUTOMATION_RUNBOOK.md; Claude touches neither"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: DONE  # Codex의 종료 문서 hash 확인 후 DONE 확정
+next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 029 종료 확인 및 다음 조사 전이 (2026-07-30)
+
+종료 문서 커밋 `8d20b6d`가 origin과 일치하고 ahead/behind 0/0이며 허용된 문서 파일만 포함함을 확인했다.
+스펙 029는 DONE이다. 전체 리빌드 루프는 유지하고, 스펙 030 이미지 회전 계약을 구현 없이
+읽기 전용으로 조사하도록 `WAITING_FOR_CLAUDE`로 전환한다.
 
 ## Codex independent review result
 
@@ -334,3 +340,30 @@ Codex 승인(코드 `110511e`, 문서 `0512c8d`)에 따라 종료 문서만 하�
 - 다음 스펙(030 등)·사전조사·기능 **미착수**
 
 다음 전이: Codex가 이 종료 문서 커밋의 hash와 `HEAD=origin`, ahead/behind 0/0을 확인하면 `DONE`이다.
+
+## 스펙 030 사전 조사 완료 — READY_FOR_CODEX (Claude Code, 2026-07-30)
+
+`NEXT_CLAUDE_PROMPT.md`의 읽기 전용 조사 범위만 수행했다. 보고서
+`docs/codex-claude-handoff/reviews/2026-07-30-image-rotation-investigation.md`(15항목).
+
+- 회전 소유자 4개를 근거 라인과 함께 분리했다: 액자 가로/세로 ±90(사진 픽셀), 룸 tilt(액자 목업),
+  워터마크 기울기, 텍스트 존 회전(인쇄 반영). 기기 방향 전환·회전 전체화면은 룸 표시 셸이며 사진과 무관.
+- 액자 가로/세로는 레거시에서 미완이다: aspect transpose가 `normFrameRatio`로 되돌려지고 캔버스 CSS
+  회전은 no-op이며, 회전 경로는 pan clamp를 잃고 전역 `state.rot` 폴백이 케이스 사진까지 회전시킨다.
+- 인쇄 경로는 회전을 무시한다 → 미리보기와 인쇄가 어긋난다.
+- EXIF는 레거시·리빌드 모두 직접 처리 0. 리빌드는 `<img>`+`naturalWidth`라 엔진 기본 동작에 의존하며
+  이 저장소에서 실측된 적이 없다(NOT VERIFIED). 직접 파싱은 이중 회전·신규 의존성 때문에 비권장.
+- 핵심 계약 충돌: 임의 각도는 스펙 029 Founder 확정값 D-3(scale 하한 1.0)·D-7(빈 공간 금지)와 수학적으로
+  충돌한다(45°에서 cover 최소 배율 √2). 90° 배수면 019 cover와 029 normalized pan을 그대로 재사용한다.
+- 회전은 `packages/render` 계약 변경이 전제다(plan에 rotation 필드 없음, executor는 transform 금지 명시).
+- 결정 필요: Founder 6건(R-1 각도 집합, R-2 D-3/D-7 재해석, R-3 액자 가로/세로 분리 도입, R-4 case 회전,
+  R-5 아트 템플릿 회전, R-6 EXIF 직접 정규화) + Codex 9건(C-1~C-9).
+- 최소 구현 순서, 허용 파일 후보, unit/Chromium/실기기 검증 설계, 지원 불가·근거 부족, STOP 10조건 기록.
+- 변경 파일: 보고서 1개 + `docs/codex-claude-handoff/CURRENT.md` + `docs/live/CLAUDE_LIVE_PATCH_LOG.md` +
+  이 문서 + `Automation/NEXT_CLAUDE_PROMPT.md` (문서 전용 커밋).
+- 제품 코드·테스트·CSS·설정·manifest·lockfile·PNG diff 0, 신규 의존성 0,
+  실제 network·live·Firebase·CORS·Rules/Hosting·deploy 0, 운영 데이터·이미지 접근 0.
+- 스펙 018 PNG 2개와 Codex 소유 미커밋 `Automation/DENN_AUTOMATION_RUNBOOK.md`는 손대지 않았다.
+
+다음 전이: Codex가 조사 보고서를 검토해 R-1~R-6 Founder 결정 요청과 구현 스펙(또는 추가 조사)을 작성한다.
+그 전까지 Claude는 회전 관련 제품 코드를 만들지 않는다.

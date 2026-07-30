@@ -7,7 +7,38 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 029 승인·종료(Codex 재검증 PASS, 승인 대상 코드 `110511e`·문서 `0512c8d`). 스펙 027·028도 승인·종료. 다음 스펙은 지시 대기 — 착수 금지. ⚠️ working tree는 스펙 018 PNG 2개 + Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md` 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+상태: **🔎 스펙 030 사전 조사(이미지 회전) 완료 → `READY_FOR_CODEX`. 스펙 027·028·029는 승인·종료. 회전 구현 미착수(각도 집합 결정 대기). ⚠️ working tree는 스펙 018 PNG 2개 + Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md` 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+
+> 스펙 030 사전 조사 완료(읽기 전용, 2026-07-30, 기준 HEAD `8d20b6d`): 보고서
+> `docs/codex-claude-handoff/reviews/2026-07-30-image-rotation-investigation.md`(15항목).
+> **한 줄: 레거시에 "사진 회전" 기능은 없다.** 회전이라는 이름이 붙은 것은 **네 개의 다른 소유자**다 —
+> ① 액자 가로/세로 ±90(`DENN_FRAME_ORIENTATION_V64` `:7180-7352`, **유일하게 고객 사진 픽셀을 돌림**)
+> ② 룸 목업 기울기(`:2130`, 벽면 각도 보정, 액자 목업 전체) ③ 워터마크 기울기(admin `wm-rotation`)
+> ④ 텍스트 존 회전(`z.rotation`, **인쇄에도 반영되는 유일한 회전**). 기기 방향 전환·회전 전체화면
+> (`:2311` 등)은 **룸 표시 셸 로직**으로 사진 transform과 무관하다.
+> **①은 미완 상태다(레거시가 스스로 기록, `:15015-15029`)**: `sz.aspect=1/base` transpose를
+> `normFrameRatio`(`:2659`, `max(w,h)/min(w,h)`)가 즉시 되돌려 **캔버스 비율은 항상 portrait**이고, 보이는
+> 결과는 "이미지만 압축되며 회전"이며 캔버스 통째 CSS 회전은 **비활성(no-op)**(스케일러가 transform을
+> 3회 재설정 + `cPos`가 회전을 몰라 드래그 좌표 어긋남). 게다가 회전 경로(`:7345-7348`)는 **pan clamp를
+> 잃고**, `T.rot ?? state.rot` **전역 폴백** 때문에 **액자를 가로로 두면 케이스 사진까지 회전**한다.
+> **인쇄는 회전을 무시**한다(`drawImageT` `:9732`·`:11371`에 rotate·swap 없음) → 미리보기≠인쇄.
+> **EXIF는 레거시·리빌드 모두 직접 처리 0**(grep 0건). 리빌드는 `<img>`+`naturalWidth` 경로라 최신 엔진의
+> 기본 EXIF 적용에 의존하며 **이 저장소에서 실측된 적 없다(NOT VERIFIED)**.
+> **★ 계약 충돌(핵심)**: **임의 각도를 허용하면 스펙 029 Founder 확정값이 깨진다** — 45°에서 cover 최소
+> 배율이 √2라 `scale` 하한 **1.0(D-3)** 과 **빈 공간 금지(D-7)** 를 동시에 만족할 수 없다.
+> **90° 배수만** 허용하면 019 cover(입력 w/h swap 재사용)와 029 normalized pan이 **그대로** 살아 있다.
+> **또한 회전은 `packages/render` 계약 변경이 전제**다: `draw-image-cover`에 rotation 필드가 없고
+> `draw-image-stretch`는 "no rotation", executor 헤더는 **"no setTransform/scale/rotate/translate"**
+> 를 못 박았다 → 지금까지 지켜 온 "packages 무변경" 경계를 처음 깨는 일이다.
+> **결정 필요**: Founder 6건(R-1 각도 집합 · R-2 D-3/D-7 재해석 · R-3 액자 가로/세로 도입 여부(분리 권장) ·
+> R-4 case 회전 · R-5 아트 템플릿에서의 회전 · R-6 EXIF 직접 정규화 여부(**하지 않기 권장**)) +
+> Codex 9건(C-1 `rot`을 normalized transform의 4번째 필드로 · C-2 `{0,90,180,270}` 거부형 정규화 ·
+> C-3 pan은 화면축·`maxPan`은 회전 footprint · C-4 zone 중심+pan 회전 · C-5 `draw-image-cover`에 선택적
+> quarter-turn · C-6 커맨드 내부 save/rotate/restore · C-7 probe plan에 `rot` 포함 ·
+> C-8 **회전은 plan에 담아** print와 자동 일치 · C-9 실패 시 plan 미생성).
+> 최소 구현 순서·허용 파일 후보·검증 설계(EXIF 합성 JPEG 바이트 스플라이싱 포함)·지원 불가·근거 부족·
+> STOP 10조건도 기록했다. **코드·테스트·CSS·설정·PNG·lockfile 변경 0**, 신규 의존성 0,
+> 실제 network·live·Firebase·CORS·deploy 0. 구현 스펙은 작성하지 않았고 다음 기능도 착수하지 않는다.
 
 > 스펙 029 종료(2026-07-30): Codex가 보완 라운드 1 코드 **`110511e`** 와 문서 **`0512c8d`** 를 독립 재검증해
 > **승인 가능**으로 판정했고, Claude Code가 종료 문서만 처리했다(상태 `CODEX_PASSED` → `COMMITTED`,
