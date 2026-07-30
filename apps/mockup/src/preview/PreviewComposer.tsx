@@ -781,7 +781,10 @@ export function PreviewComposer({
             try {
               event.currentTarget.setPointerCapture(event.pointerId);
             } catch {
-              // capture is an optimisation: without it the pointerup below still ends the session
+              // Capture is not optional (보완 라운드 1): without it a pointer that leaves the element
+              // stops delivering move/up here, so the session would hang half-open. End it now.
+              getController().abort("lostpointercapture");
+              dragSlotRef.current = null;
             }
           }}
           onPointerMove={(event) => {

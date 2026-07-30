@@ -886,6 +886,43 @@ test.describe("pan/zoom editing (spec 029)", () => {
     expect(route.unexpected()).toBe(0);
   });
 
+  test("a refused pointer capture ends the drag instead of continuing without it", async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    await routeCatalog(page);
+    await caseWithSplitPhotos(page);
+    const baseline = rgb(await pixelAt(page, 75, 60));
+
+    // make the real browser refuse the capture (보완 라운드 1)
+    await page.evaluate(() => {
+      const target = Element.prototype as unknown as {
+        setPointerCapture: (id: number) => void;
+        __origCapture?: (id: number) => void;
+      };
+      target.__origCapture = target.setPointerCapture;
+      target.setPointerCapture = () => {
+        throw new Error("capture refused");
+      };
+    });
+
+    // the drag must not move anything: a capture-less session is ended, not continued
+    await dragBy(page, 0, 20);
+    expect(rgb(await pixelAt(page, 75, 60))).toEqual([...baseline]);
+
+    // and the next normal drag still works — nothing stayed permanently disabled
+    await page.evaluate(() => {
+      const target = Element.prototype as unknown as {
+        setPointerCapture: (id: number) => void;
+        __origCapture?: (id: number) => void;
+      };
+      if (target.__origCapture) target.setPointerCapture = target.__origCapture;
+    });
+    await dragBy(page, 0, 20);
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 60))).toEqual([...TOP]);
+    expect(noise.errors).toEqual([]);
+  });
+
   test("wheel, slider, buttons, keyboard and the single reset drive the same state", async ({
     page,
   }) => {

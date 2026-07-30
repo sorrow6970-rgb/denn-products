@@ -316,8 +316,8 @@ describe("createDragController", () => {
     expect(h.commits).toEqual([]);
   });
 
-  for (const reason of ["pointerup", "pointercancel", "lostpointercapture"] as const) {
-    it(`ends the session on ${reason} and never commits a frame scheduled before it`, () => {
+  for (const reason of ["pointercancel", "lostpointercapture"] as const) {
+    it(`ends the session on ${reason}, DISCARDS the pending transform and stays quiet`, () => {
       const h = harness();
       h.controller.begin(BEGIN);
       h.controller.move(7, { x: 50, y: 0 });
@@ -332,6 +332,100 @@ describe("createDragController", () => {
       expect(h.commits).toEqual([]);
     });
   }
+
+  // --- 보완 라운드 1: a normal release must not lose the last move -------------
+
+  it("FLUSHES the pending transform exactly once on pointerup", () => {
+    const h = harness();
+    h.controller.begin(BEGIN);
+    h.controller.move(7, { x: 30, y: 0 });
+    h.controller.move(7, { x: 50, y: 0 }); // newest value, still waiting for its frame
+    expect(h.commits).toEqual([]);
+    h.controller.end(7, "pointerup");
+    expect(h.commits).toHaveLength(1);
+    expect(h.commits[0]?.x).toBeCloseTo(0.5, 12);
+    expect(h.controller.isDragging()).toBe(false);
+    // the cancelled frame must not commit the same value a second time
+    h.runFrames();
+    expect(h.commits).toHaveLength(1);
+  });
+
+  it("does not double-commit when the frame already ran before the pointerup", () => {
+    const h = harness();
+    h.controller.begin(BEGIN);
+    h.controller.move(7, { x: 50, y: 0 });
+    h.runFrames();
+    expect(h.commits).toHaveLength(1);
+    h.controller.end(7, "pointerup");
+    expect(h.commits).toHaveLength(1); // nothing pending → nothing flushed
+  });
+
+  it("commits nothing on a pointerup with no move at all", () => {
+    const h = harness();
+    h.controller.begin(BEGIN);
+    h.controller.end(7, "pointerup");
+    expect(h.commits).toEqual([]);
+  });
+
+  it("the pointerup flush cannot be consumed by, or leak into, the NEXT session", () => {
+    const h = harness();
+    h.controller.begin(BEGIN);
+    h.controller.move(7, { x: 50, y: 0 });
+    h.controller.end(7, "pointerup");
+    expect(h.commits).toHaveLength(1);
+
+    h.controller.begin({ ...BEGIN, pointerId: 21, transform: t(1, 0.5, 0) });
+    h.runFrames(); // the previous session's frame fires now
+    expect(h.commits).toHaveLength(1); // still only the flush
+    h.controller.move(21, { x: 10, y: 0 });
+    h.runFrames();
+    expect(h.commits).toHaveLength(2);
+    expect(h.commits[1]?.x).toBeCloseTo(0.6, 12); // 0.5 start + 10/100
+  });
+
+  it("a stale end from an old pointer cannot flush anything", () => {
+    const h = harness();
+    h.controller.begin(BEGIN);
+    h.controller.move(7, { x: 50, y: 0 });
+    h.controller.end(99, "pointerup"); // wrong pointer
+    expect(h.commits).toEqual([]);
+    expect(h.controller.isDragging()).toBe(true);
+    h.controller.end(7, "pointerup");
+    expect(h.commits).toHaveLength(1);
+  });
+
+  it("a throwing subscriber during the flush still closes the session", () => {
+    const frames: Array<() => void> = [];
+    const controller = createDragController({
+      requestFrame: (callback) => {
+        frames.push(callback);
+        return frames.length;
+      },
+      cancelFrame: () => undefined,
+      commit: () => {
+        throw new Error("subscriber");
+      },
+    });
+    controller.begin(BEGIN);
+    controller.move(7, { x: 50, y: 0 });
+    expect(() => controller.end(7, "pointerup")).not.toThrow();
+    expect(controller.isDragging()).toBe(false);
+    expect(controller.begin(BEGIN)).toBe(true); // usable again
+  });
+
+  it("dispose and abort discard the pending transform (no flush)", () => {
+    const aborted = harness();
+    aborted.controller.begin(BEGIN);
+    aborted.controller.move(7, { x: 50, y: 0 });
+    aborted.controller.abort("selection");
+    expect(aborted.commits).toEqual([]);
+
+    const disposed = harness();
+    disposed.controller.begin(BEGIN);
+    disposed.controller.move(7, { x: 50, y: 0 });
+    disposed.controller.dispose();
+    expect(disposed.commits).toEqual([]);
+  });
 
   it("ignores an end from a different pointer (a stale event cannot close the session)", () => {
     const h = harness();
@@ -354,7 +448,8 @@ describe("createDragController", () => {
     const h = harness();
     h.controller.begin(BEGIN);
     h.controller.move(7, { x: 50, y: 0 }); // frame 1 scheduled
-    h.controller.end(7, "pointerup");
+    // a discarding end, so the only possible commit below is the SECOND session's
+    h.controller.end(7, "pointercancel");
     h.controller.begin({ ...BEGIN, pointerId: 11 });
     h.controller.move(11, { x: 10, y: 0 }); // frame 2 scheduled
     h.runFrames();

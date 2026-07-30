@@ -219,11 +219,12 @@ export function createDragController(ports: DragSessionPorts): DragController {
   let frame: number | null = null;
   let pending: NormalizedTransform | null = null;
 
+  /** Drop the pending transform (always) and cancel its frame (when one is scheduled). */
   const cancelFrame = (): void => {
-    if (frame === null) return;
     const handle = frame;
     frame = null;
     pending = null;
+    if (handle === null) return;
     try {
       ports.cancelFrame(handle);
     } catch {
@@ -281,11 +282,26 @@ export function createDragController(ports: DragSessionPorts): DragController {
       pending = dragTransform(current.startTransform, current.startPoint, point, current.maxPan);
       schedule(current);
     },
-    end: (pointerId: number, _reason: DragEndReason): void => {
+    /**
+     * A normal release FLUSHES the pending transform once (보완 라운드 1): the last `move` before the
+     * `pointerup` may still be waiting for its animation frame, and dropping it would leave the photo
+     * one frame behind where the customer let go. Every other ending — `pointercancel`,
+     * `lostpointercapture`, a selection change and unmount/dispose — DISCARDS the pending value.
+     * The flush happens after the state is cleared, so the late frame still commits nothing and the
+     * value can never be committed twice or consumed by the next session.
+     */
+    end: (pointerId: number, reason: DragEndReason): void => {
       if (disposed || state === null || state.pointerId !== pointerId) return;
+      const flush = reason === "pointerup" ? pending : null;
       generation += 1;
       state = null;
-      cancelFrame();
+      cancelFrame(); // also clears `pending`, so nothing else can commit this value
+      if (flush === null) return;
+      try {
+        ports.commit(flush);
+      } catch {
+        // a throwing subscriber must not leave the session half-ended
+      }
     },
     abort: (_reason: DragEndReason): void => {
       if (disposed || state === null) return;
