@@ -6,6 +6,7 @@ import {
   CASE_BODY_COLORS,
   FRAME_MAX_LOGICAL_WIDTH,
   PREVIEW_MESSAGES,
+  PRINT_MESSAGES,
   readFrameColorOptions,
   resolveFrameLogicalWidth,
   zoneSlotLabel,
@@ -208,5 +209,42 @@ describe("copy", () => {
   it("numbers zone slots by position", () => {
     expect(zoneSlotLabel(0)).toBe("사진 1");
     expect(zoneSlotLabel(2)).toBe("사진 3");
+  });
+});
+
+// --- spec 033: print copy ----------------------------------------------------
+
+describe("PRINT_MESSAGES", () => {
+  it("never calls the download an order (P-4a blocks order sending)", () => {
+    for (const message of Object.values(PRINT_MESSAGES)) {
+      expect(message.includes("주문"), message).toBe(false);
+      expect(message.includes("카카오"), message).toBe(false);
+    }
+  });
+
+  it("never invites a retry, because there is no automatic retry", () => {
+    expect(PRINT_MESSAGES.exportFailed).not.toContain("다시");
+    expect(PRINT_MESSAGES.exportFailed).not.toContain("재시도");
+  });
+
+  it("states that the settings are provisional without naming the numbers (E-6)", () => {
+    expect(PRINT_MESSAGES.provisional).toContain("임시값");
+    for (const message of Object.values(PRINT_MESSAGES)) {
+      expect(/\d/.test(message), message).toBe(false);
+    }
+  });
+
+  it("carries no code, id, URL, file name or English identifier", () => {
+    for (const message of Object.values(PRINT_MESSAGES)) {
+      expect(/[A-Za-z_]/.test(message), message).toBe(false);
+      expect(message.includes("://"), message).toBe(false);
+    }
+  });
+
+  it("keeps every message a non-empty fixed string", () => {
+    for (const [key, message] of Object.entries(PRINT_MESSAGES)) {
+      expect(typeof message, key).toBe("string");
+      expect(message.trim().length, key).toBeGreaterThan(0);
+    }
   });
 });

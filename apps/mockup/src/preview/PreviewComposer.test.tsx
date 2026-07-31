@@ -569,3 +569,93 @@ describe("PreviewComposer — requested font availability (보완 1 §3)", () =>
     expect(markup).not.toContain("<canvas");
   });
 });
+
+// --- spec 033: local print download -----------------------------------------
+
+/** A frame size that declares the operator-authored centimetres (spec 032). */
+const printDoc = (size: Record<string, unknown>): CatalogDocumentV1 =>
+  ({
+    schemaVersion: 1,
+    migratedFrom: "legacy-v0",
+    data: {
+      frameSizes: [{ id: "fs1", name: "사이즈 하나", aspect: 1.4, frameThickness: 5, ...size }],
+      frameTemplates: [{ id: "ft1", name: "액자", type: "uploaded" }],
+      frameColors: [{ id: "black", name: "블랙", fill: "#1A1A1A" }],
+    },
+  }) as unknown as CatalogDocumentV1;
+
+const printMarkup = (size: Record<string, unknown>): string =>
+  renderToStaticMarkup(
+    <PreviewComposer
+      productKind="frame"
+      document={printDoc(size)}
+      modelId={null}
+      frameSizeId="fs1"
+      templateId="ft1"
+    />,
+  );
+
+describe("PreviewComposer — local print download (spec 033)", () => {
+  it("shows the download button in its own area", () => {
+    const markup = printMarkup({ printWidthCm: 21, printHeightCm: 29.7 });
+    expect(markup).toContain('data-testid="print-export"');
+    expect(markup).toContain("인쇄용 파일 내려받기");
+  });
+
+  it("always states that the print settings are provisional, without the numbers (E-6)", () => {
+    const markup = printMarkup({ printWidthCm: 21, printHeightCm: 29.7 });
+    expect(markup).toContain("인쇄 설정은 인쇄소 확인 전 임시값입니다.");
+    // the provisional constants are never shown to the customer
+    for (const value of ["300", "3000", "36000000", "36,000,000", "dpi", "DPI"]) {
+      expect(markup.includes(value), value).toBe(false);
+    }
+  });
+
+  it("never calls the download an order (P-4a)", () => {
+    const markup = printMarkup({ printWidthCm: 21, printHeightCm: 29.7 });
+    const printBlock = markup.slice(markup.indexOf('data-testid="print-export"'));
+    expect(printBlock).not.toContain("주문");
+    expect(printBlock).not.toContain("카카오");
+  });
+
+  it("disables the button and explains why when the size declares no centimetres", () => {
+    const markup = printMarkup({});
+    expect(markup).toContain("이 사이즈는 아직 인쇄용 파일을 만들 수 없습니다.");
+    expect(markup).toContain('aria-describedby="denn-print-reason"');
+    expect(markup).toContain("disabled");
+  });
+
+  it("reuses the existing preview reason when the plan is not ready", () => {
+    // centimetres are declared, but no colour or photo is chosen in a static render
+    const markup = printMarkup({ printWidthCm: 21, printHeightCm: 29.7 });
+    expect(markup).toContain("미리보기를 만들 수 없습니다.");
+    expect(markup).toContain('aria-describedby="denn-print-reason"');
+    // the cm reason is NOT shown at the same time — one reason at a time
+    expect(markup).not.toContain("이 사이즈는 아직 인쇄용 파일을 만들 수 없습니다.");
+  });
+
+  it("ties the disabled reason to the button for assistive tech (E-5)", () => {
+    const markup = printMarkup({});
+    expect(markup).toContain('id="denn-print-reason"');
+    expect(markup).toContain('aria-describedby="denn-print-reason"');
+  });
+
+  it("shows no failure message before anything was attempted", () => {
+    const markup = printMarkup({ printWidthCm: 21, printHeightCm: 29.7 });
+    expect(markup).not.toContain("인쇄용 파일을 만들지 못했습니다.");
+    expect(markup).not.toContain("다시 시도");
+  });
+
+  it("offers no download for the case product (P-1)", () => {
+    expect(caseComposer()).not.toContain('data-testid="print-export"');
+    expect(caseComposer()).not.toContain("인쇄용 파일 내려받기");
+  });
+
+  it("leaks no code, URL, pixel size or customer word into the DOM", () => {
+    const markup = printMarkup({ printWidthCm: 21, printHeightCm: 29.7 });
+    const printBlock = markup.slice(markup.indexOf('data-testid="print-export"'));
+    for (const leak of ["blob:", "INVALID_", "ENCODE_FAILED", "denn-frame-", ".png", "2480"]) {
+      expect(printBlock.includes(leak), leak).toBe(false);
+    }
+  });
+});

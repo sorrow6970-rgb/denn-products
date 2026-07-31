@@ -20,12 +20,14 @@ import {
   projectCatalogTemplateArtPlacement,
   projectCatalogTemplateImage,
   projectFramePreviewGeometry,
+  projectFramePrintPhysicalSize,
 } from "@denn/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createCompositeImageBindings, withImageRefPrefix } from "../canvas/compositeImageBindings";
 import type { LocalImageBindingState } from "../canvas/localImageBinding";
 import { PreviewCanvasSurface } from "../canvas/PreviewCanvasSurface";
 import { buildCaseProductPlan, buildFrameProductPlan } from "../canvas/productPlan";
+import { createFramePngExporter, type FramePngExporter } from "../print/exportFramePng";
 import type { UserImageState } from "../canvas/productPlan";
 import type { TemplateArtSource } from "../canvas/templateArtBinding";
 import type { PreviewImageBindings } from "../canvas/types";
@@ -56,6 +58,7 @@ import {
   PREVIEW_CANVAS_NAME,
   PREVIEW_EDIT_LABELS,
   PREVIEW_MESSAGES,
+  PRINT_MESSAGES,
   PREVIEW_TEXT_COPY,
   PREVIEW_TEXT_LABELS,
   type PreviewColorOption,
@@ -676,6 +679,83 @@ export function PreviewComposer({
 
   const plan = built?.plan ?? null;
 
+  // --- local print export (spec 033) ---------------------------------------
+  /**
+   * The operator-authored physical size (spec 032). `null` means this size declares no centimetres,
+   * which is NOT an error — it means the size cannot be printed yet (P-2). A failed projection is
+   * treated the same way: either way there is no dimension we are allowed to use.
+   */
+  const physicalSize = useMemo<{ widthCm: number; heightCm: number } | null>(() => {
+    if (productKind !== "frame" || frameSizeId === null) return null;
+    const projected = projectFramePrintPhysicalSize(catalog, frameSizeId);
+    return projected.ok ? projected.value : null;
+  }, [productKind, catalog, frameSizeId]);
+
+  const [exporting, setExporting] = useState(false);
+  const [exportFailed, setExportFailed] = useState(false);
+  const exporterRef = useRef<FramePngExporter | null>(null);
+  useEffect(() => {
+    const exporter = createFramePngExporter({
+      createCanvas: () => window.document.createElement("canvas"),
+      createObjectUrl: (blob) => URL.createObjectURL(blob),
+      revokeObjectUrl: (url) => URL.revokeObjectURL(url),
+      triggerDownload: (url, fileName) => {
+        const anchor = window.document.createElement("a");
+        anchor.href = url;
+        anchor.download = fileName;
+        // not appended to the document: a detached anchor still dispatches a download click, and
+        // nothing is left behind to clean up if this unmounts mid-flight
+        anchor.click();
+      },
+      now: () => new Date(),
+    });
+    exporterRef.current = exporter;
+    // unmount releases the live object URL and neutralises any in-flight export
+    return () => {
+      exporterRef.current = null;
+      exporter.dispose();
+    };
+  }, []);
+
+  /**
+   * `plan !== null` already proves the art, the photo and the fonts are ready — it is the same
+   * gate the canvas draws behind. Re-deriving readiness here would create a second source of truth
+   * that could disagree with what the customer is looking at.
+   */
+  const canExport = plan !== null && physicalSize !== null && !exporting;
+
+  /**
+   * The "one export at a time" rule is held in a ref, not in `exporting`. A state updater must stay
+   * side-effect free (React may invoke it twice), and two clicks in the same tick would both read
+   * the same pre-render state value — the ref is updated synchronously, so the second click loses.
+   */
+  const exportBusyRef = useRef(false);
+  const onExport = useCallback((): void => {
+    const exporter = exporterRef.current;
+    if (exporter === null || plan === null || physicalSize === null) return;
+    if (exportBusyRef.current) return;
+    exportBusyRef.current = true;
+    setExporting(true);
+    setExportFailed(false);
+    void exporter.export({ plan, imageBindings, physicalSize }).then((result) => {
+      exportBusyRef.current = false;
+      setExportFailed(!result.ok);
+      setExporting(false);
+    });
+  }, [plan, imageBindings, physicalSize]);
+
+  /** The single reason the button is unavailable, or null when it is usable. */
+  const exportReason =
+    productKind !== "frame"
+      ? null
+      : physicalSize === null
+        ? PRINT_MESSAGES.noPhysicalSize
+        : plan === null
+          ? PREVIEW_MESSAGES.unavailable
+          : exporting
+            ? PRINT_MESSAGES.exporting
+            : null;
+
   // --- editing controls + pointer drag (spec 029) ---------------------------
   // A slot is editable only while its own photo is ready; the controls never act on another slot.
   const activeEditable =
@@ -1245,6 +1325,34 @@ export function PreviewComposer({
                 </span>
               )}
             </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {productKind === "frame" ? (
+        <div className="denn-print" data-testid="print-export">
+          <p className="denn-print__provisional" data-testid="print-provisional">
+            {PRINT_MESSAGES.provisional}
+          </p>
+          <button
+            type="button"
+            className="denn-print__button"
+            data-testid="print-download"
+            onClick={onExport}
+            disabled={!canExport}
+            aria-describedby={exportReason === null ? undefined : "denn-print-reason"}
+          >
+            {PRINT_MESSAGES.download}
+          </button>
+          {exportReason === null ? null : (
+            <p className="denn-print__reason" id="denn-print-reason" data-testid="print-reason">
+              {exportReason}
+            </p>
+          )}
+          {exportFailed ? (
+            <p className="denn-print__reason" role="alert" data-testid="print-failed">
+              {PRINT_MESSAGES.exportFailed}
+            </p>
           ) : null}
         </div>
       ) : null}

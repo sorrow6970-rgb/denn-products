@@ -157,3 +157,48 @@
   color: rgb(35 31 26 / 92%);
   white-space: nowrap;
 }
+
+/*
+ * spec 033: the local print download. Its own block, deliberately separated from any order CTA —
+ * orders are blocked until the print shop confirms the output (P-4a), and a download button sitting
+ * next to "카카오로 주문" reads as "this places an order". The legacy build bundled download, order
+ * storage and opening Kakao into one flow; this is the opposite of that.
+ */
+.denn-print {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--denn-border, rgb(35 31 26 / 12%));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.denn-print__provisional {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--denn-muted, rgb(35 31 26 / 62%));
+}
+
+.denn-print__button {
+  padding: 0.625rem 1.125rem;
+  border: 1px solid var(--denn-accent, #9f887a);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--denn-accent, #9f887a);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.denn-print__button:disabled {
+  /* still readable: the reason below is what explains it, so this must not fade to unreadable */
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.denn-print__reason {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--denn-muted, rgb(35 31 26 / 62%));
+}

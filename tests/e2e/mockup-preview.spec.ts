@@ -1707,3 +1707,349 @@ test.describe("physical clock overlay (spec 031, Founder F-4)", () => {
     expect(insideCanvas).toBe(false);
   });
 });
+
+// --- spec 033: local frame PNG export ----------------------------------------
+//
+// E-2 settles the non-integer scale, the glyph letter-spacing and the clip half-pixel risks with
+// REAL pixels rather than reasoning. Each comparison re-runs the export in the page, normalizes the
+// print canvas down to the preview's logical size, and fails on a layout difference.
+
+const printCatalog = (
+  size: Record<string, unknown>,
+  template: Record<string, unknown> = {},
+): string =>
+  JSON.stringify({
+    models: [{ id: "m1", name: "모델 하나", w: 300, h: 200 }],
+    caseTemplates: [],
+    frameSizes: [{ id: "fs1", name: "사이즈 하나", aspect: 1.4, frameThickness: 5, ...size }],
+    frameCategories: [{ id: "fc1", name: "액자 A" }],
+    frameTemplates: [{ id: "full", name: "기본 액자", type: "uploaded", ...template }],
+    frameColors: [{ id: "black", name: "블랙", fill: "#1A1A1A" }],
+  });
+
+async function routePrintCatalog(
+  page: Page,
+  size: Record<string, unknown>,
+  template: Record<string, unknown> = {},
+): Promise<void> {
+  const body = printCatalog(size, template);
+  await page.route("**/firebasestorage.googleapis.com/**", async (route: Route) => {
+    if (route.request().url() !== CATALOG_URL) {
+      await route.abort();
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: "application/json", body });
+  });
+}
+
+/**
+ * Centimetres whose ratio MATCHES the fixture's `aspect` (1.4).
+ *
+ * Spec 032 deliberately does not reconcile a size whose `aspect` disagrees with its centimetres —
+ * it leaves the mismatch as a diagnostic candidate. The export therefore refuses such a size rather
+ * than stretching the customer's layout to fit; that case has its own test below.
+ */
+const MATCHED_CM = { printWidthCm: 21, printHeightCm: 29.4 };
+/** Landscape, with `aspect` again agreeing with the centimetres. */
+const LANDSCAPE_CM = { printWidthCm: 29.4, printHeightCm: 21, aspect: 1 / 1.4 };
+
+const printButton = (page: Page) => page.getByTestId("print-download");
+const printReason = (page: Page) => page.getByTestId("print-reason");
+
+/** Reach a drawn frame preview, for whatever catalog the caller routed. */
+async function readyPrintFrame(page: Page): Promise<void> {
+  await gotoReady(page);
+  await chooseFrame(page);
+  await openComposer(page);
+  await pickColour(page, "#1A1A1A");
+  await pickPhoto(page, "frame-image", PHOTO_A);
+  await waitForCanvas(page);
+}
+
+/**
+ * Install a page-side probe that drives the SAME export the button drives, but keeps the canvas and
+ * swallows the anchor click so the E2E run writes no file to disk.
+ */
+async function installPrintProbe(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __dennPrintProbe?: () => Promise<HTMLCanvasElement | null>;
+      __dennPrintCanvases?: HTMLCanvasElement[];
+      __dennPrintDownloads?: number;
+      __dennPrintObjectUrls?: number;
+      __dennPrintRevoked?: number;
+    };
+    w.__dennPrintCanvases = [];
+    w.__dennPrintDownloads = 0;
+    w.__dennPrintObjectUrls = 0;
+    w.__dennPrintRevoked = 0;
+
+    const createElement = document.createElement.bind(document);
+    document.createElement = ((tag: string, options?: ElementCreationOptions) => {
+      const element = createElement(tag, options);
+      if (tag === "canvas") w.__dennPrintCanvases?.push(element as HTMLCanvasElement);
+      if (tag === "a") {
+        (element as HTMLAnchorElement).click = () => {
+          w.__dennPrintDownloads = (w.__dennPrintDownloads ?? 0) + 1;
+        };
+      }
+      return element;
+    }) as typeof document.createElement;
+
+    const createObjectURL = URL.createObjectURL.bind(URL);
+    URL.createObjectURL = (blob: Blob | MediaSource): string => {
+      w.__dennPrintObjectUrls = (w.__dennPrintObjectUrls ?? 0) + 1;
+      return createObjectURL(blob);
+    };
+    const revokeObjectURL = URL.revokeObjectURL.bind(URL);
+    URL.revokeObjectURL = (url: string): void => {
+      w.__dennPrintRevoked = (w.__dennPrintRevoked ?? 0) + 1;
+      revokeObjectURL(url);
+    };
+
+    w.__dennPrintProbe = async () => {
+      const before = w.__dennPrintCanvases?.length ?? 0;
+      const settled = w.__dennPrintDownloads ?? 0;
+      const button = document.querySelector("[data-testid=print-download]") as HTMLButtonElement;
+      button.click();
+      for (let i = 0; i < 240; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        // the download fires INSIDE the export, before the promise settles and before the busy
+        // flag clears — so also wait for the button to become usable again, or a second probe
+        // call would be swallowed by the one-export-at-a-time guard
+        if ((w.__dennPrintDownloads ?? 0) > settled && !button.disabled) break;
+      }
+      const created = (w.__dennPrintCanvases ?? []).slice(before);
+      return created.find((element) => element.width > 1000) ?? null;
+    };
+  });
+}
+
+/**
+ * Run the export and report the largest per-channel difference between the on-screen canvas and the
+ * print canvas downsampled to the same logical size.
+ *
+ * Downsampling with `drawImage` is the browser's own resampling, so what survives is LAYOUT: a
+ * shifted line break, a photo that failed to rotate, or a clip that moved would all be far larger
+ * than resampling noise.
+ */
+async function comparePreviewToPrint(
+  page: Page,
+): Promise<{ maxDiff: number; diffFraction: number; scale: number }> {
+  return page.evaluate(async () => {
+    /** A pixel differing by more than this is counted; at or below it is resampling noise. */
+    const NOISE_FLOOR = 24;
+    const probe = (
+      window as unknown as { __dennPrintProbe: () => Promise<HTMLCanvasElement | null> }
+    ).__dennPrintProbe;
+    const printed = await probe();
+    if (printed === null) throw new Error("export produced no canvas");
+    const preview = document.querySelector("[data-testid=preview-canvas]") as HTMLCanvasElement;
+    const scale = printed.width / preview.width;
+
+    const shrunk = document.createElement("canvas");
+    shrunk.width = preview.width;
+    shrunk.height = preview.height;
+    const target = shrunk.getContext("2d");
+    const source = preview.getContext("2d");
+    if (target === null || source === null) throw new Error("no context");
+    target.drawImage(printed, 0, 0, shrunk.width, shrunk.height);
+
+    const a = source.getImageData(0, 0, preview.width, preview.height).data;
+    const b = target.getImageData(0, 0, shrunk.width, shrunk.height).data;
+    let maxDiff = 0;
+    let differing = 0;
+    let total = 0;
+    for (let i = 0; i < a.length; i += 4) {
+      let pixelDiff = 0;
+      for (let channel = 0; channel < 3; channel++) {
+        const diff = Math.abs((a[i + channel] as number) - (b[i + channel] as number));
+        if (diff > pixelDiff) pixelDiff = diff;
+      }
+      if (pixelDiff > maxDiff) maxDiff = pixelDiff;
+      if (pixelDiff > NOISE_FLOOR) differing += 1;
+      total += 1;
+    }
+    return { maxDiff, diffFraction: total === 0 ? 1 : differing / total, scale };
+  });
+}
+
+/**
+ * How the pixel comparison judges "same layout".
+ *
+ * A max single-pixel difference is the wrong metric on its own: downsampling ~3500px to ~500px
+ * averages a hard edge (black frame against white mat) differently from a direct 500px render, so a
+ * handful of boundary pixels legitimately differ a lot. What a REAL defect looks like — a moved
+ * line break, a photo that failed to rotate, a shifted clip — is a large FRACTION of the image
+ * changing, not a few edge pixels. So the fraction is the assertion and the max is only a sanity
+ * bound.
+ */
+const MAX_DIFFERING_FRACTION = 0.02;
+
+test.describe("local frame PNG export (spec 033)", () => {
+  test("offers the download in its own area, away from any order CTA", async ({ page }) => {
+    await routePrintCatalog(page, MATCHED_CM);
+    await readyPrintFrame(page);
+    await expect(printButton(page)).toBeVisible();
+    await expect(printButton(page)).toBeEnabled();
+    await expect(page.getByTestId("print-provisional")).toHaveText(
+      "인쇄 설정은 인쇄소 확인 전 임시값입니다.",
+    );
+    await expect(page.getByTestId("print-export")).not.toContainText("주문");
+    await expect(page.getByTestId("print-export")).not.toContainText("카카오");
+  });
+
+  test("shows no resolution numbers to the customer (E-6)", async ({ page }) => {
+    await routePrintCatalog(page, MATCHED_CM);
+    await readyPrintFrame(page);
+    const text = (await page.getByTestId("print-export").textContent()) ?? "";
+    expect(/\d/.test(text)).toBe(false);
+  });
+
+  test("cannot print a size that declares no centimetres, and says why (P-2)", async ({ page }) => {
+    await routePrintCatalog(page, {});
+    await readyPrintFrame(page);
+    await expect(printButton(page)).toBeDisabled();
+    await expect(printReason(page)).toHaveText("이 사이즈는 아직 인쇄용 파일을 만들 수 없습니다.");
+    await expect(printButton(page)).toHaveAttribute("aria-describedby", "denn-print-reason");
+  });
+
+  test("matches the preview at a NON-INTEGER scale (E-2)", async ({ page }) => {
+    await routePrintCatalog(page, MATCHED_CM);
+    await readyPrintFrame(page);
+    await installPrintProbe(page);
+    const { diffFraction, scale } = await comparePreviewToPrint(page);
+    expect(Number.isInteger(scale)).toBe(false); // the risky case, not a convenient one
+    expect(diffFraction).toBeLessThanOrEqual(MAX_DIFFERING_FRACTION);
+  });
+
+  test("matches the preview for a landscape size", async ({ page }) => {
+    await routePrintCatalog(page, LANDSCAPE_CM);
+    await readyPrintFrame(page);
+    await installPrintProbe(page);
+    const { diffFraction } = await comparePreviewToPrint(page);
+    expect(diffFraction).toBeLessThanOrEqual(MAX_DIFFERING_FRACTION);
+  });
+
+  test("keeps letter-spaced text and its line breaks identical (P-6, E-2)", async ({ page }) => {
+    await routePrintCatalog(page, MATCHED_CM, { textZones: [zoneFixture({ letterSpacing: 12 })] });
+    await readyPrintFrame(page);
+    await page.getByTestId("preview-text-main").fill("가나다라마바사아자차카타파하");
+    await waitForCanvas(page);
+    await installPrintProbe(page);
+    const { diffFraction } = await comparePreviewToPrint(page);
+    expect(diffFraction).toBeLessThanOrEqual(MAX_DIFFERING_FRACTION);
+  });
+
+  test("keeps a rotated and zoomed photo identical, clip edges included", async ({ page }) => {
+    await routePrintCatalog(page, MATCHED_CM);
+    await readyPrintFrame(page);
+    await page.getByTestId("preview-rotate-right").click();
+    await page.getByTestId("preview-zoom-in").click();
+    await waitForCanvas(page);
+    await installPrintProbe(page);
+    const { diffFraction } = await comparePreviewToPrint(page);
+    expect(diffFraction).toBeLessThanOrEqual(MAX_DIFFERING_FRACTION);
+  });
+
+  test("produces byte-identical PNGs for the same inputs twice (determinism)", async ({ page }) => {
+    await routePrintCatalog(page, MATCHED_CM);
+    await readyPrintFrame(page);
+    await installPrintProbe(page);
+    const digests = await page.evaluate(async () => {
+      const probe = (
+        window as unknown as { __dennPrintProbe: () => Promise<HTMLCanvasElement | null> }
+      ).__dennPrintProbe;
+      const digest = async (): Promise<string> => {
+        const printed = await probe();
+        if (printed === null) throw new Error("export produced no canvas");
+        const blob = await new Promise<Blob | null>((resolve) =>
+          printed.toBlob((value) => resolve(value), "image/png"),
+        );
+        if (blob === null) throw new Error("no blob");
+        const hash = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
+        return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, "0")).join("");
+      };
+      return [await digest(), await digest()];
+    });
+    expect(digests[0]).toBe(digests[1]);
+  });
+
+  test("keeps at most one live object URL across repeated exports", async ({ page }) => {
+    await routePrintCatalog(page, MATCHED_CM);
+    await readyPrintFrame(page);
+    await installPrintProbe(page);
+    const counts = await page.evaluate(async () => {
+      const w = window as unknown as {
+        __dennPrintProbe: () => Promise<HTMLCanvasElement | null>;
+        __dennPrintObjectUrls?: number;
+        __dennPrintRevoked?: number;
+      };
+      await w.__dennPrintProbe();
+      await w.__dennPrintProbe();
+      await w.__dennPrintProbe();
+      return { created: w.__dennPrintObjectUrls ?? 0, revoked: w.__dennPrintRevoked ?? 0 };
+    });
+    expect(counts.created).toBe(3);
+    // every URL but the live one has been released
+    expect(counts.revoked).toBe(counts.created - 1);
+  });
+
+  test("produces no file when the preview is not ready (P-3)", async ({ page }) => {
+    await routePrintCatalog(page, MATCHED_CM);
+    await gotoReady(page);
+    await chooseFrame(page);
+    await openComposer(page);
+    await pickColour(page, "#1A1A1A");
+    // no photo, so no plan exists and there is nothing to print
+    await expect(printButton(page)).toBeDisabled();
+    await expect(printReason(page)).toHaveText("미리보기를 만들 수 없습니다.");
+  });
+
+  test("never uploads, posts an order or opens Kakao", async ({ page }) => {
+    const requests: { url: string; method: string }[] = [];
+    page.on("request", (request) =>
+      requests.push({ url: request.url(), method: request.method() }),
+    );
+    const popups: unknown[] = [];
+    page.on("popup", (popup) => popups.push(popup));
+    await routePrintCatalog(page, MATCHED_CM);
+    await readyPrintFrame(page);
+    await installPrintProbe(page);
+    await comparePreviewToPrint(page);
+    for (const request of requests) {
+      expect(request.url.includes("kakao"), request.url).toBe(false);
+      expect(["POST", "PUT", "PATCH"].includes(request.method), request.url).toBe(false);
+    }
+    expect(popups).toHaveLength(0);
+  });
+
+  test("REFUSES a size whose aspect disagrees with its centimetres", async ({ page }) => {
+    // aspect 1.4 vs 21x29.7cm (1.414): scaling both axes by different amounts would distort what
+    // the customer approved, so the export fails closed instead (P-3). Spec 032 leaves the
+    // underlying mismatch as a diagnostic, not something to silently reconcile.
+    await routePrintCatalog(page, { printWidthCm: 21, printHeightCm: 29.7 });
+    await readyPrintFrame(page);
+    await installPrintProbe(page);
+    const downloads = await page.evaluate(async () => {
+      const w = window as unknown as {
+        __dennPrintProbe: () => Promise<HTMLCanvasElement | null>;
+        __dennPrintDownloads?: number;
+        __dennPrintObjectUrls?: number;
+      };
+      await w.__dennPrintProbe().catch(() => null);
+      return { downloads: w.__dennPrintDownloads ?? 0, urls: w.__dennPrintObjectUrls ?? 0 };
+    });
+    expect(downloads.downloads).toBe(0);
+    expect(downloads.urls).toBe(0);
+    await expect(page.getByTestId("print-failed")).toHaveText("인쇄용 파일을 만들지 못했습니다.");
+  });
+
+  test("offers no download for the case product (P-1)", async ({ page }) => {
+    await routeCatalog(page);
+    await gotoReady(page);
+    await chooseCase(page);
+    await openComposer(page);
+    await expect(page.getByTestId("print-export")).toHaveCount(0);
+  });
+});

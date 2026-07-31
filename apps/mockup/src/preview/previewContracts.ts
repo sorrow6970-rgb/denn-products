@@ -101,6 +101,30 @@ export const PREVIEW_MESSAGES = {
 } as const;
 
 /**
+ * Copy for the local print download (spec 033 E-5 / E-6). Fixed strings, same discipline as
+ * `PREVIEW_MESSAGES`: no code, id, file name, URL, exception — and no resolution numbers.
+ */
+export const PRINT_MESSAGES = {
+  /** the button never says "주문": pressing it downloads a file and sends no order (P-4a). */
+  download: "인쇄용 파일 내려받기",
+  /**
+   * Always visible. E-6: the customer is told the settings are provisional but NOT what they are —
+   * 300dpi / 3000 / 36M are legacy observations that will change once the print shop confirms them,
+   * so showing the numbers would only be something to un-learn later.
+   */
+  provisional: "인쇄 설정은 인쇄소 확인 전 임시값입니다.",
+  /** spec 032 P-2: a size with no declared centimetres is not printed, and nothing is guessed. */
+  noPhysicalSize: "이 사이즈는 아직 인쇄용 파일을 만들 수 없습니다.",
+  /**
+   * No "다시 시도해 주세요": there is no automatic retry, and the same inputs produce the same
+   * result, so inviting a retry would promise something that cannot happen.
+   */
+  exportFailed: "인쇄용 파일을 만들지 못했습니다.",
+  /** shown while one export is in flight, so a second click has a visible reason to be ignored. */
+  exporting: "인쇄용 파일을 만드는 중입니다.",
+} as const;
+
+/**
  * Fixed copy for the pan/zoom editing controls (spec 029). Every control is a real `button` or
  * `input[type=range]`, so these strings are the whole accessible naming: no code, id, file name or
  * measurement ever appears here.
