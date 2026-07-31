@@ -6,11 +6,11 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-031-frame-text-zones-physical-clock-preview
 active_unit: spec-032-print-export-investigation
-state: READY_FOR_CODEX  # 스펙 032 조사 보완 라운드 1 완료 → Codex 재검토 대기
+state: READY_FOR_CODEX  # 스펙 032 Founder 결정 정본 기록 완료 → Codex 구현 계약 작성 대기
 baseline_commit: b763174
 candidate_commit: null  # 조사 라운드 (제품 코드 없음)
 verified_commit: 88b64e6  # 스펙 031 승인분 (보완 라운드 1)
-origin_relation: "spec 032 investigation fix round 1 doc commit pushed fast-forward on top of 5a42b29; HEAD=origin, ahead/behind 0/0"
+origin_relation: "spec 032 decision doc commit pushed fast-forward on top of d55a9b8; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
 fix_round: 1
 max_fix_rounds: 3
@@ -856,3 +856,34 @@ Codex 지적 3건은 모두 유효했고 조사 문서와 상태 문서만 보�
 - 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 손대지 않았다
 
 다음 전이: Codex가 보완된 보고서를 재검토한다. **Founder P-1~P-6은 Codex 승인 전 확정하지 않는다.**
+
+## 스펙 032 Founder 결정 정본 기록 완료 — READY_FOR_CODEX (Claude Code, 2026-07-31)
+
+Founder가 `스펙 032 Founder 권장안 P-1·P-2·P-3·P-4a·P-5·P-6을 일괄 승인하고 자동화를 계속 진행해.`로
+승인했다. 정본 `docs/codex-claude-handoff/decisions/2026-07-31-spec-032-print-export-decisions.md`(신규).
+
+⚠️ 절차 기록: Codex의 마지막 지시는 "보완된 Founder 질문을 Codex가 승인하기 전 확정하지 않는다"였으나
+Founder가 순서를 명시적으로 앞당겨 결정했다. **조사 보고서에 대한 Codex 재검토는 여전히 미완**이며,
+재검토에서 질문의 전제가 틀렸다고 밝혀지면 해당 항목은 다시 열어야 한다.
+
+- P-1: 액자 인쇄만 구현하고 케이스 인쇄는 별도 스펙으로 미룬다.
+- P-2: 인쇄 물리 치수는 카탈로그 명시 필드에서만 얻고 이름 텍스트 파싱을 쓰지 않는다. 카탈로그 스키마
+  확장과 admin 입력 UI는 별도 스펙이며, 치수가 없으면 인쇄를 만들지 않는다.
+- P-3: 경고가 있으면 인쇄 파일을 만들지 않는다(fail-closed). 부분 파일·아트 누락 파일 0.
+- P-4a: 레거시 수치를 명시적 임시값으로 구현·검증하되 **인쇄소 확인 전까지 실제 업로드·주문 전송·
+  배포를 차단**한다. 로컬 다운로드와 E2E는 허용한다.
+- P-5: 색·사진 transform과 시계 유무는 담고(P-5a·P-5b), **고객 문구 원문은 텍스트로 저장·전송하지
+  않는다(P-5c)**. 문구는 이미 인쇄 PNG에 픽셀로 포함되며, 텍스트 저장·전송은 별도 개인정보 승인이
+  필요해 이 스펙 범위가 아니다.
+- P-6: 미리보기와 인쇄의 줄바꿈은 반드시 동일해야 한다. 이는 조사 §8.1 후보 선택에 제약만 걸고
+  A/B/C 중 무엇을 택할지는 정하지 않는다(Codex C-1).
+
+- 이 라운드 변경: **문서 전용** — 결정 문서 1 신규 + `docs/codex-claude-handoff/CURRENT.md` +
+  `docs/live/CLAUDE_LIVE_PATCH_LOG.md` + 이 문서 + `Automation/NEXT_CLAUDE_PROMPT.md`
+- 제품 코드·테스트·CSS·설정·manifest·lockfile diff **0**, 신규 의존성 0, 인쇄 제품 코드 **0**
+- 실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**, 운영 데이터·secret 접근 0
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 손대지 않았다
+
+다음 전이: Codex가 이 결정과 보완된 조사 보고서를 입력으로 **스펙 032 구현 계약**을 작성하면
+`WAITING_FOR_CLAUDE`. 계약은 최소한 **C-1(후보 A/B/C 택일)** 과 허용 파일·게이트·NOT TESTED 경계를
+확정해야 한다.
