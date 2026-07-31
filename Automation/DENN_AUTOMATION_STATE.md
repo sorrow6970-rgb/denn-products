@@ -5,8 +5,8 @@ updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-032-frame-print-physical-size-catalog
-active_unit: spec-033-local-frame-png-export
-state: WAITING_FOR_CLAUDE  # Founder E-4~E-6 확인, Codex E-1~E-3 확정 및 구현 계약 준비
+active_unit: spec-033-local-frame-png-export  # 구현 완료
+state: READY_FOR_CODEX  # 스펙 033 구현 완료, Codex 독립 검증 대기
 baseline_commit: 2a0cfd3
 candidate_commit: c10e7a6  # 스펙 032 catalog cm 계약
 verified_commit: 315356a  # 스펙 032 Codex 승인분
@@ -14,11 +14,63 @@ origin_relation: "export UI decision doc pushed fast-forward on top of 5480e54; 
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_WORKING
+next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 스펙 033 구현 완료 — READY_FOR_CODEX (2026-07-31)
+
+계약 `4ee162e`를 정본으로 허용 파일 안에서만 구현했다. 구현 커밋 **`4246503`**, 종료 문서는 별도 커밋.
+
+### 구현한 계약
+
+- **E-1/C-1** plan 인스턴스를 **그대로 전달**한다. 재빌드·재측정·prewrapped 입력·plan 좌표 scaling **0**.
+  `draw-text`의 `lines`가 확정값이라 **재wrap될 여지가 구조적으로 없다** → **P-6이 성립**한다.
+  unit이 **plan identity(`toBe`)** 와 **JSON 직렬화 전후 불변**을 고정한다.
+- **transform** identity에서 `setTransform(s,0,0,s,0,0)` **정확히 한 번**(`a===d`, 나머지 0).
+  `outputHeight/logicalHeight`와 어긋나면 **`NON_UNIFORM_SCALE` fail-closed**.
+- **순서** 크기 지정 → setTransform → executor → (**ok일 때만**) `toBlob` → URL → 다운로드. 호출 로그로 고정.
+- **P-3** executor 실패·`blob === null`·`toBlob` throw(taint) 전부 **파일 0, retry 0**.
+- **URL 수명** 생성자가 revoke, 살아 있는 URL **최대 1개**, 교체·unmount·dispose 정리
+  (E2E: 3회 export → created 3 / revoked 2).
+- **E-4/E-5/E-6** 파일명 `denn-frame-<W>x<H>cm-<YYYYMMDD-HHmmss>.png`, 주문 CTA와 분리,
+  `aria-describedby`, **수치 비노출**(E2E가 print 영역 텍스트에 숫자 0개임을 확인).
+
+### ★ Codex에 보고할 관측 2가지
+
+1. **E-3 재검사는 현재 상수로 도달 불가능하다.** upscale은 총 픽셀 최대 `3000×3000 = 9MP`라 36MP 천장을
+   넘을 수 없고, downscale은 총 36MP라 긴 변이 최소 `sqrt(36M) = 6000`이라 3000 바닥을 깰 수 없다.
+   **가드는 유지**했다(상수 변경 시 의미가 생기고, 레거시가 재검사하지 않아 생긴 문제를 막는 지점).
+   불가능성과 그 이유를 unit으로 고정했다.
+2. **★ 카탈로그 `aspect`와 cm 비율이 다르면 인쇄가 나오지 않는다.** 스펙 032가 이 불일치를 **자동 수정
+   하지 않고 진단 후보로만** 남겼으므로, export는 축별로 다른 배율로 **고객이 승인한 배치를 왜곡하는 대신
+   `NON_UNIFORM_SCALE`로 실패**한다. E2E 전용 테스트 있음.
+   → **운영자 cm 입력 UI 스펙에서 이 불일치 처리 결정이 필요하다.**
+
+### 게이트
+
+frozen install(lockfile diff **0**) · format · lint(`--error-on-warnings`) · typecheck **PASS**,
+unit **1174/1174**(032 시점 1109 → **+65**), 독립 build **PASS**,
+전체 Chromium E2E **129/129**(032 시점 116 → **+13**),
+고객 dist SHA-256 E2E 전후 **동일**(`9273f59b…a1580b`), `git diff --check` 클린,
+ports 4183/4184 LISTENING **0**, OS temp `denn-e2e-*` **0**.
+
+### 범위 준수
+
+`packages/render/**`·`packages/shared/**`·`apps/admin/**`·`canvas/surface.ts`·image binding owner·
+placement·geometry·운영 HTML·manifest·lockfile·신규 의존성 변경 **0**.
+upload·order payload·IndexedDB order·Kakao·Firebase·network·live·deploy **0**
+(E2E가 POST/PUT/PATCH·kakao·popup **0건**을 확인).
+알려진 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: **손대지 않음**.
+
+### NOT TESTED
+
+실제 인쇄물·인쇄소 수용성(해상도·색공간/ICC·재단 여백·파일 형식·최대 크기) ·
+실기기 `toBlob` 한계 · 대용량 이미지 메모리·성능 · 잔류 프로세스 command-line.
+
+**P-4a에 따라 업로드·주문 전송·배포는 계속 금지**다. 산출물은 **시험용 로컬 PNG**다.
 
 ## Founder E-4·E-5·E-6 일괄 승인 기록 — 문서 전용 (2026-07-31)
 

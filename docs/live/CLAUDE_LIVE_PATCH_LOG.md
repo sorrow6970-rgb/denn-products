@@ -1138,3 +1138,65 @@
 - 구현 계약: `docs/rebuild/specs/033-local-frame-png-export.md`.
 - 상태: `WAITING_FOR_CLAUDE`. 계약/상태 문서 fast-forward push 후 허용 범위 구현.
 - 이번 변경은 문서 전용이다. 제품 코드·테스트·CSS·설정·lockfile 변경 0.
+
+## 2026-07-31 — 스펙 033 로컬 액자 PNG export 구현 (`4246503`, 종료 문서 분리)
+
+계약 `4ee162e`. **C-1 = 후보 A**(plan 고정 + detached canvas uniform transform)로 Codex가 확정.
+
+- **★★ plan을 재빌드하지 않는 것이 핵심이다** — frame plan의 논리 폭은 **측정 CSS 폭**에서 나오고
+  `fontSizePercent`·`boxWidthPercent`가 **그 폭의 %**라, 인쇄 폭으로 재빌드하면 `measureText`가 다시
+  호출돼 줄바꿈이 달라질 수 있다. 승인된 **plan 인스턴스를 그대로** 넘기면 `draw-text`의
+  `lines[{text,width}]`가 **이미 확정값**이라 **재wrap될 여지 자체가 없다** → **P-6이 구조적으로 성립**.
+  unit이 **plan identity(`toBe`)** 와 **JSON 직렬화 전후 불변**을 고정한다
+- **transform**: detached canvas의 backing에 계산된 정수 픽셀을 넣고 identity에서
+  `setTransform(s,0,0,s,0,0)`을 **정확히 한 번**. `a===d`·`b===c===e===f===0`을 unit으로 고정.
+  `outputHeight/logicalHeight`와 상대오차 0.005를 넘게 어긋나면 **`NON_UNIFORM_SCALE` fail-closed**
+  (축별 다른 배율은 **고객이 승인한 배치를 왜곡**하므로 절대 적용하지 않는다).
+  `canvas/surface.ts`는 관측 크기가 `plan.logicalCanvas`와 0.5px 이내여야 해 **재사용 불가**이고,
+  인쇄 때문에 그 불변식을 완화하면 미리보기 보호가 약해지므로 **손대지 않았다**
+- **순서**: 크기 지정 → `setTransform` → executor → (**ok일 때만**) `toBlob` → object URL → 다운로드.
+  fake port 호출 로그로 순서를 고정
+- **P-3**: executor `ok:false`면 **`toBlob`을 호출조차 하지 않는다**. `blob === null`·`toBlob` 동기 throw
+  (taint `SecurityError`)도 전부 **파일 0 · retry 0**. 레거시는 반대로 아트 로드 실패를 `warnings`에
+  넣고 **아트 빠진 PNG를 주문까지** 보냈다
+- **object URL 수명**: **생성자가 revoke**, 살아 있는 URL **최대 1개**, 교체·unmount·dispose에서 정리.
+  encode 중 unmount되면 **아무것도 넘기지 않는다**. 레거시의 **800ms 타이머**(탭 종료 시 누수)는 재현 안 함.
+  E2E가 3회 export 후 **created 3 / revoked 2**를 확인
+- **크기 계산**(`printSize.ts`, 순수 — DOM·시계·난수 0): `round(cm/2.54*300)` → 긴 변 3000 미만이면
+  uniform upscale → 총 픽셀 36M 초과면 uniform downscale → **최종 정수에 대해 두 제약 재검사**.
+  **`fallbackLongSide=3508`(aspect 추정)과 하한 900은 재현하지 않는다** — cm 없으면 **인쇄 미생성**(P-2)
+- **E-4/E-5/E-6**: 파일명 `denn-frame-<W>x<H>cm-<YYYYMMDD-HHmmss>.png`(고객 문구·id·token·사이즈 이름 0,
+  읽을 수 있는 로컬 시각) · 미리보기 아래 **독립 블록**(주문 CTA와 분리, `.denn-print`) ·
+  버튼 `인쇄용 파일 내려받기`(**"주문" 없음**) · 실패 `인쇄용 파일을 만들지 못했습니다.`(**"다시 시도" 없음**) ·
+  비활성 사유 **`aria-describedby`** 연결 · `인쇄 설정은 인쇄소 확인 전 임시값입니다.` **항상 표시**,
+  **수치 비노출**(E2E가 print 영역 텍스트에 **숫자 0개**임을 확인)
+- **중복 클릭**: `exportBusyRef`(ref)로 막는다 — state updater는 부작용이 없어야 하고, 같은 tick의 두 클릭은
+  같은 pre-render state를 읽기 때문이다
+- **E-2는 실제 픽셀로 판정했다**(추론 아님): print canvas를 preview 논리 크기로 정규화한 뒤
+  **차이 픽셀 비율 ≤ 2%**(noise floor 24)를 확인. **max 단일 픽셀 차이는 지표로 부적합** —
+  3500px→500px 다운샘플이 하드 엣지(검은 프레임↔흰 매트)를 직접 렌더와 다르게 평균해 경계 픽셀 몇 개는
+  정당하게 크게 벌어진다. **실제 결함(줄바꿈 이동·회전 실패·clip 이동)은 화면의 큰 비율이 바뀐다**.
+  커버: **비정수 배율(4.96×)** · 가로 · letter-spacing 12% 한글 · **회전+확대** · **PNG 2회 바이트 동일**
+- **★ 보고할 관측 ①**: **E-3 재검사는 현재 상수로 도달 불가능하다.** upscale은 긴 변이 3000이 되어 총
+  픽셀 최대 `3000×3000 = 9MP`라 36MP 천장을 넘을 수 없고, downscale은 총 36MP라 긴 변이 최소
+  `sqrt(36M) = 6000`이라 3000 바닥을 깰 수 없다. **가드는 유지**했다 — 상수가 바뀌면(바닥 상향·천장 하향)
+  의미가 생기고, **레거시가 재검사하지 않아 두 제약 모두 어기는 파일을 내보내던 문제**를 막는 지점이다.
+  불가능성과 그 이유를 unit으로 고정했다
+- **★ 보고할 관측 ②**: **카탈로그 `aspect`와 cm 비율이 다르면 인쇄가 나오지 않는다.** 스펙 032가 이
+  불일치를 **자동 수정하지 않고 진단 후보로만** 남겼으므로, export는 축별로 다른 배율을 적용해 배치를
+  왜곡하는 대신 **`NON_UNIFORM_SCALE`로 실패**한다(E2E 전용 테스트 있음).
+  → **운영자 cm 입력 UI 스펙에서 이 불일치 처리 결정이 필요하다**
+- **게이트**: frozen install(lockfile diff **0**) · format · lint(`--error-on-warnings`) · typecheck **PASS**,
+  unit **1174/1174**(032 시점 1109 → **+65**), 독립 build **PASS**,
+  전체 Chromium E2E **129/129**(032 시점 116 → **+13**),
+  고객 dist SHA-256 E2E 전후 **동일**(`9273f59b…a1580b`), `git diff --check` 클린,
+  ports 4183/4184 LISTENING **0**, OS temp `denn-e2e-*` **0**
+- **범위 준수**: `packages/render/**`·`packages/shared/**`·`apps/admin/**`·`canvas/surface.ts`·
+  image binding owner·placement·geometry·운영 HTML·manifest·lockfile·신규 의존성 변경 **0**.
+  upload·order payload·**IndexedDB order**·**Kakao**·Firebase·network·live·deploy **0**
+  (E2E가 **POST/PUT/PATCH 0건 · kakao 0건 · popup 0건**을 확인)
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: **손대지 않음**
+- **NOT TESTED**: **실제 인쇄물과 인쇄소 수용성**(해상도·색공간/ICC·재단 여백·파일 형식·최대 크기) ·
+  실기기 `toBlob` 한계 · 대용량 이미지 메모리·성능 · 잔류 프로세스 command-line
+- **P-4a에 따라 업로드·주문 전송·배포는 계속 금지**다. 산출물은 **시험용 로컬 PNG**다
+- 다음: **Codex 독립 검증**. 구현 추가 수정 **없음.**

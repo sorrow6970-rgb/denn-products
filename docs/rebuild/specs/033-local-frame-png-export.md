@@ -1,6 +1,6 @@
 # 스펙 033 — 로컬 액자 PNG export
 
-상태: **WAITING_FOR_CLAUDE**
+상태: `READY_FOR_CODEX` (구현 `4246503`, Codex 독립 검증 대기)
 
 ## 목적
 
@@ -106,3 +106,75 @@
 모든 게이트 통과 후에도 결과는 **시험용 로컬 PNG**다. 인쇄소의 해상도·색공간/ICC·bleed·파일
 형식·최대 크기 확인 전 upload/order/deploy는 계속 금지한다. 스펙 종료 문서는 별도 fast-forward
 커밋으로 처리하고, 개별 DONE 뒤에는 다음 권장 읽기 전용 조사로 자동 전환한다.
+
+---
+
+### DONE (Claude) — 2026-07-31, 커밋 `4246503`
+
+구현/테스트 커밋 `4246503`, 종료 문서는 별도 커밋. 기준 HEAD `4ee162e`.
+
+#### 바꾼 파일 (허용 목록 안)
+
+| 파일 | 내용 |
+| --- | --- |
+| `apps/mockup/src/print/printSize.ts` (신규) | provisional 상수 + cm→px + 파일명 (전부 순수) |
+| `apps/mockup/src/print/printSize.test.ts` (신규) | 23 tests |
+| `apps/mockup/src/print/exportFramePng.ts` (신규) | detached canvas + uniform transform + executor + `toBlob` + URL 수명 |
+| `apps/mockup/src/print/exportFramePng.test.ts` (신규) | 28 tests (전부 fake port) |
+| `apps/mockup/src/preview/PreviewComposer.tsx` | seam·버튼·비활성 사유·중복 클릭 방지·unmount 정리 |
+| `apps/mockup/src/preview/PreviewComposer.test.tsx` | UI 9 tests |
+| `apps/mockup/src/preview/previewContracts.ts` | `PRINT_MESSAGES` |
+| `apps/mockup/src/preview/previewContracts.test.ts` | 문구 규율 5 tests |
+| `apps/mockup/src/canvas/surface.css` | `.denn-print` 블록 |
+| `tests/e2e/mockup-preview.spec.ts` | Chromium 13 tests |
+
+#### 계약 구현 요지
+
+- **E-1/C-1**: plan 인스턴스를 **그대로 전달**한다. 재빌드·재측정·prewrapped 입력·plan 좌표 scaling **0**.
+  `draw-text`의 `lines`가 이미 확정값이라 **재wrap될 여지가 구조적으로 없다** → P-6이 성립한다.
+  unit이 **plan identity(`toBe`)** 와 **JSON 직렬화 전후 불변**을 고정한다.
+- **transform**: identity에서 `setTransform(s,0,0,s,0,0)`을 **정확히 한 번**. `a===d`, `b===c===e===f===0`을
+  unit으로 고정. `outputHeight/logicalHeight`와 어긋나면 **`NON_UNIFORM_SCALE`로 fail-closed**.
+- **순서**: 크기 지정 → setTransform → executor → (**ok일 때만**) `toBlob` → URL → 다운로드.
+  호출 로그 순서를 unit으로 고정했다.
+- **E-3**: 최종 정수에 대해 두 제약을 **재검사**한다.
+- **P-3**: executor 실패·`blob === null`·`toBlob` throw(taint) 전부 **파일 0, retry 0**.
+- **URL 수명**: 생성자가 revoke, 살아 있는 URL **최대 1개**, 교체·unmount·dispose에서 정리.
+  E2E가 3회 export 후 **created 3 / revoked 2**를 확인한다.
+- **E-4/E-5/E-6**: 파일명 `denn-frame-21x29.4cm-20260731-153042.png` 형태, 주문 CTA와 분리,
+  `aria-describedby`, 수치 비노출(E2E가 print 영역 텍스트에 **숫자 0개**임을 확인).
+
+#### ★ 보고할 관측 2가지
+
+1. **E-3 재검사는 현재 상수로는 도달 불가능하다.** upscale 경로는 총 픽셀이 최대 `3000×3000 = 9MP`라
+   36MP 천장을 넘을 수 없고, downscale 경로는 총 36MP라 긴 변이 최소 `sqrt(36M) = 6000`이라 3000 바닥을
+   깰 수 없다. **가드는 유지**했다 — 상수가 바뀌면(바닥 상향·천장 하향) 그때 의미가 생기고, 그것이
+   레거시가 재검사하지 않아 생긴 문제를 막는 지점이기 때문이다. 이 사실과 이유를 unit으로 고정했다.
+2. **카탈로그 `aspect`와 cm 비율이 다르면 인쇄가 나오지 않는다.** 스펙 032는 이 불일치를 **자동
+   수정하지 않고 진단 후보로만** 남겼으므로, export는 축별로 다른 배율을 적용해 **고객이 승인한 배치를
+   왜곡하는 대신 `NON_UNIFORM_SCALE`로 실패**한다. E2E에 전용 테스트를 넣었다.
+   → **운영자 cm 입력 UI 스펙에서 이 불일치를 어떻게 다룰지 결정이 필요하다.**
+
+#### 검증 결과
+
+| 게이트 | 결과 |
+| --- | --- |
+| frozen install | PASS (`Already up to date`) |
+| lockfile diff | **0** |
+| format / lint(`--error-on-warnings`) / typecheck | PASS |
+| unit | **1174/1174 PASS** (032 시점 1109 → **+65**) |
+| 독립 build | PASS |
+| 전체 Chromium E2E | **129/129 PASS** (032 시점 116 → **+13**) |
+| 고객 dist SHA-256 (E2E 전후) | **동일** `9273f59b…a1580b` |
+| `git diff --check` | 클린 (CRLF 경고만) |
+| forbidden diff | **0** |
+| ports 4183/4184 LISTENING | **0** |
+| OS temp `denn-e2e-*` | **0** |
+
+#### NOT TESTED
+
+- **실제 인쇄물과 인쇄소 수용성** (해상도·색공간/ICC·재단 여백·파일 형식·최대 크기)
+- **실기기** `toBlob` 한계, **대용량 이미지 메모리·성능**
+- 잔류 프로세스 command-line
+
+**P-4a에 따라 업로드·주문 전송·배포는 계속 금지**다. 이 단위의 산출물은 **시험용 로컬 PNG**다.

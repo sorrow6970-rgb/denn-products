@@ -7,13 +7,30 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **스펙 033 로컬 액자 PNG export `WAITING_FOR_CLAUDE`. Founder가 E-4·E-5·E-6
+상태: **✅ **스펙 033 로컬 액자 PNG export 구현 완료**(`4246503`) → `READY_FOR_CODEX`. ★C-1은 **후보 A(plan 고정 + detached canvas uniform transform)** 로 Codex가 확정했고 그대로 구현했다 — **plan을 재빌드하지 않으므로 P-6(줄바꿈 동일)이 구조적으로 성립**한다. Chromium 픽셀 E2E가 비정수 배율·가로·자간·회전+확대에서 preview↔export 동일성을 확인했다. **결과는 시험용 로컬 PNG이며 P-4a에 따라 업로드·주문 전송·배포는 계속 금지**다. Founder **F-A~F-E(admin)는 여전히 미결**.**
 승인 원문을 이 Codex 대화에서 재확인했다. Codex는 E-1/C-1을 동일 preview plan +
 detached HTMLCanvasElement uniform transform으로 확정했고, E-2는 Chromium pixel E2E 판정,
 E-3은 minLongSide/maxPixels 동시 충족 불가 시 fail-closed로 확정했다. 구현 계약:
 `docs/rebuild/specs/033-local-frame-png-export.md`. 실제 upload/order/Firebase/network/deploy는
 계속 금지다. Founder F-A~F-E(admin)는 독립·미결이다.**
 
+
+> **★★ 스펙 033 구현(2026-07-31, `4246503`, 계약 `4ee162e`)**: 로컬 액자 PNG export.
+> **C-1 = 후보 A 확정**(Codex) — 승인된 **plan 인스턴스를 그대로** detached canvas에 넘기고
+> `setTransform(printScale,0,0,printScale,0,0)`을 **정확히 한 번** 적용한 뒤 **기존 executor**를 돌린다.
+> plan 재빌드·인쇄 폭 재측정·prewrapped 입력·plan 좌표 scaling **0** → `draw-text`의 `lines`가 확정값이라
+> **재wrap될 여지가 구조적으로 없고 P-6이 성립**한다. unit이 plan identity(`toBe`)와 JSON 불변을 고정.
+> **순서**: 크기 → transform → executor → (**ok일 때만**) `toBlob` → URL → 다운로드.
+> **P-3**: executor 실패·`blob===null`·taint throw 전부 **파일 0 · retry 0**.
+> **URL**: 생성자가 revoke, 살아 있는 URL **최대 1개**(E2E: 3회 export → created 3 / revoked 2).
+> **E-2는 실제 픽셀로 판정** — 비정수 배율·가로·letter-spacing·회전+확대에서 print를 preview 크기로
+> 정규화해 **차이 픽셀 비율 ≤ 2%**(noise floor 24)를 확인. 결정성(PNG 2회 바이트 동일)도 확인.
+> 게이트: unit **1174/1174**, Chromium E2E **129/129**, dist SHA-256 E2E 전후 동일, lockfile 0, ports/temp 0.
+> **★ 보고된 관측 2가지**: ① **E-3 재검사는 현재 상수로 도달 불가능**(upscale ≤ 9MP, downscale 긴 변 ≥ 6000)
+> — 가드는 유지하고 불가능성을 unit으로 고정했다. ② **★ 카탈로그 `aspect`와 cm 비율이 다르면 인쇄가
+> 나오지 않는다** — 스펙 032가 불일치를 자동 수정하지 않기로 했으므로 **왜곡 대신 `NON_UNIFORM_SCALE`로
+> 실패**한다 → **운영자 cm 입력 UI 스펙에서 처리 결정 필요**.
+> **NOT TESTED**: 실제 인쇄물·인쇄소 수용성·실기기 `toBlob`·대용량 메모리/성능.
 
 > **Founder E-4·E-5·E-6 확정(2026-07-31, 문서 전용)**: 정본
 > `docs/codex-claude-handoff/decisions/2026-07-31-local-png-export-ui-decisions.md`.
