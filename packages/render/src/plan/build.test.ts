@@ -88,7 +88,9 @@ describe("buildPreviewRenderPlan — determinism & safety", () => {
           ? [c.clipRect, c.drawRect]
           : c.type === "draw-image-stretch"
             ? [c.destRect]
-            : [c.rect];
+            : c.type === "draw-text"
+              ? [] // spec 031: text carries an origin and measured widths, not a rect
+              : [c.rect];
       for (const r of rects) {
         for (const n of [r.x, r.y, r.width, r.height]) expect(Number.isFinite(n)).toBe(true);
       }
@@ -1064,7 +1066,9 @@ describe("buildPreviewRenderPlan ??frame hostile runtime input (spec 024)", () =
           ? [command.clipRect, command.drawRect]
           : command.type === "draw-image-stretch"
             ? [command.destRect]
-            : [command.rect];
+            : command.type === "draw-text"
+              ? [] // spec 031: text carries an origin and measured widths, not a rect
+              : [command.rect];
       for (const rect of rects) {
         for (const value of [rect.x, rect.y, rect.width, rect.height]) {
           expect(Number.isFinite(value)).toBe(true);
@@ -1408,5 +1412,342 @@ describe("buildPreviewRenderPlan — quarter-turn rotation (spec 030)", () => {
     const art = cmd(p, "frame:template-art");
     expect(art.type).toBe("draw-image-stretch");
     expect(Object.hasOwn(art, "rotationQuarterTurns")).toBe(false);
+  });
+});
+
+// ---- spec 031: deterministic text ---------------------------------------------
+//
+// The measurement port is a FAKE, so wrapping is exercised without a browser and without depending
+// on any real font metric. Real glyph widths are only ever seen in the Chromium E2E.
+
+/** 10 logical px per code point, so an expected width is just `codePoints * 10`. */
+const fixedWidth = (perGlyph = 10) => {
+  const calls: string[] = [];
+  const port = ({ text }: { text: string }): number => {
+    calls.push(text);
+    return Array.from(text).length * perGlyph;
+  };
+  return { port, calls };
+};
+
+const textZoneInput = (over: Record<string, unknown> = {}) => ({
+  value: "AB",
+  xPercent: 50,
+  yPercent: 20,
+  boxWidthPercent: 100,
+  fontSizePercent: 10,
+  align: "center" as const,
+  fontFamily: "DM Sans",
+  bold: false,
+  italic: false,
+  color: "#111111",
+  lineHeight: 1.25,
+  letterSpacingPercent: 0,
+  rotationDegrees: 0,
+  maxChars: 80,
+  maxLines: 2,
+  ...over,
+});
+
+const frameWithText = (zones: unknown[]): FramePlanInput =>
+  ({ ...FRAME_BASE, textZones: zones }) as FramePlanInput;
+
+const textOf = (p: PreviewRenderPlan) => {
+  const found = p.commands.find((c) => c.type === "draw-text");
+  if (found?.type !== "draw-text") throw new Error("no text command");
+  return found;
+};
+
+describe("buildPreviewRenderPlan — deterministic text (spec 031)", () => {
+  it('emits nothing for an absent or empty value, but DOES emit for "0"', () => {
+    const { port } = fixedWidth();
+    for (const value of [undefined, ""]) {
+      const p = plan(
+        buildPreviewRenderPlan(frameWithText([textZoneInput({ value })]), {
+          measureText: port,
+        }),
+      );
+      expect(p.commands.some((c) => c.type === "draw-text")).toBe(false);
+    }
+    const zero = plan(
+      buildPreviewRenderPlan(frameWithText([textZoneInput({ value: "0" })]), { measureText: port }),
+    );
+    expect(textOf(zero).lines).toEqual([{ text: "0", width: 10 }]);
+  });
+
+  it("places text AFTER the art and before the inner border", () => {
+    const { port } = fixedWidth();
+    const p = plan(
+      buildPreviewRenderPlan(
+        {
+          ...frameWithText([textZoneInput()]),
+          templateArt: { imageRef: "art-1", destRect: { x: 10, y: 10, width: 280, height: 380 } },
+          innerBorder: { color: "#000000", width: 2 },
+        } as FramePlanInput,
+        { measureText: port },
+      ),
+    );
+    expect(layerIds(p)).toEqual([
+      "frame:body",
+      "frame:mat",
+      "frame:user-image",
+      "frame:template-art",
+      "frame:text:0",
+      "frame:inner-border",
+    ]);
+  });
+
+  it("resolves the font, origin, line height and spacing from percentages", () => {
+    const { port } = fixedWidth();
+    // canvas is 300x400; fontSize 10% of width = 30px, lineHeight 1.25 -> 37.5px
+    const p = plan(
+      buildPreviewRenderPlan(frameWithText([textZoneInput({ letterSpacingPercent: 10 })]), {
+        measureText: port,
+      }),
+    );
+    const command = textOf(p);
+    expect(command.font).toEqual({
+      family: "DM Sans",
+      sizePx: 30,
+      weight: "normal",
+      italic: false,
+      fallback: "sans-serif",
+    });
+    expect(command.origin).toEqual({ x: 150, y: 80 });
+    expect(command.lineHeightPx).toBeCloseTo(37.5, 9);
+    expect(command.letterSpacingPx).toBeCloseTo(3, 9);
+    expect(command.align).toBe("center");
+    expect(command.color).toBe("#111111");
+    expect(command.rotationDegrees).toBe(0);
+  });
+
+  it("includes letter spacing in the measured width, between ADJACENT glyphs only", () => {
+    const { port } = fixedWidth();
+    const p = plan(
+      buildPreviewRenderPlan(
+        frameWithText([textZoneInput({ value: "ABC", letterSpacingPercent: 10 })]),
+        { measureText: port },
+      ),
+    );
+    // 3 glyphs * 10px + 2 gaps * 3px
+    expect(textOf(p).lines).toEqual([{ text: "ABC", width: 36 }]);
+  });
+
+  it("splits on explicit newlines first", () => {
+    const { port } = fixedWidth();
+    const p = plan(
+      buildPreviewRenderPlan(
+        frameWithText([textZoneInput({ value: `A${String.fromCharCode(10)}B` })]),
+        {
+          measureText: port,
+        },
+      ),
+    );
+    expect(textOf(p).lines).toEqual([
+      { text: "A", width: 10 },
+      { text: "B", width: 10 },
+    ]);
+  });
+
+  it("wraps on word boundaries when a line does not fit", () => {
+    const { port } = fixedWidth();
+    // box = 100% of 300px = 300px; "AAAAAAAAAAAAAAAAAAAA BB" is 20 glyphs (200px) + space + 2
+    const p = plan(
+      buildPreviewRenderPlan(
+        frameWithText([textZoneInput({ value: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA BB" })]),
+        { measureText: port },
+      ),
+    );
+    const lines = textOf(p).lines;
+    expect(lines).toHaveLength(2);
+    expect(lines[0]?.text).toBe("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    expect(lines[1]?.text).toBe("BB");
+  });
+
+  it("breaks a single oversized word by code point rather than overflowing", () => {
+    const { port } = fixedWidth();
+    const p = plan(
+      buildPreviewRenderPlan(
+        frameWithText([textZoneInput({ value: "A".repeat(45), maxLines: 3, boxWidthPercent: 50 })]),
+        { measureText: port },
+      ),
+    );
+    const lines = textOf(p).lines;
+    // box = 150px = 15 glyphs per line
+    expect(lines.map((line) => line.text.length)).toEqual([15, 15, 15]);
+  });
+
+  it("REJECTS the whole plan when wrapping needs more lines than the zone allows", () => {
+    const { port } = fixedWidth();
+    const result = buildPreviewRenderPlan(
+      frameWithText([textZoneInput({ value: "A".repeat(100), maxLines: 2, boxWidthPercent: 50 })]),
+      { measureText: port },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    // never truncated, never ellipsised, never a partial plan
+    expect(result.code).toBe("INVALID_TEXT");
+  });
+
+  it("REJECTS a value longer than maxChars", () => {
+    const { port } = fixedWidth();
+    const result = buildPreviewRenderPlan(
+      frameWithText([textZoneInput({ value: "AB", maxChars: 1 })]),
+      { measureText: port },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.code).toBe("INVALID_TEXT");
+  });
+
+  it("REJECTS control characters but allows a newline", () => {
+    const { port } = fixedWidth();
+    const control = (code: number) => `A${String.fromCharCode(code)}B`;
+    for (const value of [control(0), control(7), control(0x1f), control(0x7f)]) {
+      const result = buildPreviewRenderPlan(frameWithText([textZoneInput({ value })]), {
+        measureText: port,
+      });
+      expect(result.ok, JSON.stringify(value)).toBe(false);
+    }
+    expect(
+      buildPreviewRenderPlan(frameWithText([textZoneInput({ value: "A\\nB" })]), {
+        measureText: port,
+      }).ok,
+    ).toBe(true);
+  });
+
+  it("fails CLOSED when the measurement port throws or returns an unusable width", () => {
+    const ports = [
+      () => {
+        throw new Error("hostile");
+      },
+      () => Number.NaN,
+      () => Number.POSITIVE_INFINITY,
+      () => -1,
+    ];
+    for (const measureText of ports) {
+      const result = buildPreviewRenderPlan(frameWithText([textZoneInput()]), { measureText });
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error("expected failure");
+      expect(result.code).toBe("TEXT_MEASUREMENT_FAILED");
+    }
+  });
+
+  it("fails CLOSED when no measurement port is supplied at all", () => {
+    const result = buildPreviewRenderPlan(frameWithText([textZoneInput()]));
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.code).toBe("TEXT_MEASUREMENT_FAILED");
+  });
+
+  it("needs no port when every zone is empty", () => {
+    const result = buildPreviewRenderPlan(frameWithText([textZoneInput({ value: "" })]));
+    expect(result.ok).toBe(true);
+  });
+
+  it("REJECTS an out-of-range zone style", () => {
+    const { port } = fixedWidth();
+    const bad: Record<string, unknown>[] = [
+      { xPercent: -1 },
+      { yPercent: 101 },
+      { boxWidthPercent: 0 },
+      { fontSizePercent: 0 },
+      { align: "justify" },
+      { fontFamily: "" },
+      { fontFamily: 'a"b' },
+      { bold: "no" },
+      { color: "#fff" },
+      { lineHeight: 0 },
+      { letterSpacingPercent: 101 },
+      { rotationDegrees: 361 },
+      { maxChars: 0 },
+      { maxLines: 6 },
+      { value: 5 },
+    ];
+    for (const over of bad) {
+      const result = buildPreviewRenderPlan(frameWithText([textZoneInput(over)]), {
+        measureText: port,
+      });
+      expect(result.ok, JSON.stringify(over)).toBe(false);
+    }
+  });
+
+  it("keeps arbitrary rotation for text (unrelated to the photo quarter turns)", () => {
+    const { port } = fixedWidth();
+    const p = plan(
+      buildPreviewRenderPlan(frameWithText([textZoneInput({ rotationDegrees: -12.5 })]), {
+        measureText: port,
+      }),
+    );
+    expect(textOf(p).rotationDegrees).toBe(-12.5);
+    // and the photo command keeps ITS own contract untouched
+    const image = cmd(p, "frame:user-image");
+    expect(Object.hasOwn(image, "rotationQuarterTurns")).toBe(false);
+  });
+
+  it("emits one command per non-empty zone, positionally identified", () => {
+    const { port } = fixedWidth();
+    const p = plan(
+      buildPreviewRenderPlan(
+        frameWithText([
+          textZoneInput({ value: "A" }),
+          textZoneInput({ value: "" }),
+          textZoneInput({ value: "B" }),
+        ]),
+        { measureText: port },
+      ),
+    );
+    const ids = p.commands.filter((c) => c.type === "draw-text").map((c) => c.layerId);
+    // the empty zone emits nothing, and the id is positional — the zone KEY never reaches a command
+    expect(ids).toEqual(["frame:text:0", "frame:text:2"]);
+    for (const id of ids) {
+      expect(id).not.toContain("main");
+    }
+  });
+
+  it("carries no raw customer string beyond the wrapped lines", () => {
+    const { port } = fixedWidth();
+    const p = plan(
+      buildPreviewRenderPlan(frameWithText([textZoneInput({ value: "SECRETMARKER" })]), {
+        measureText: port,
+      }),
+    );
+    const command = textOf(p);
+    // the lines ARE the text, but nothing else in the command echoes the input
+    expect(JSON.stringify({ ...command, lines: [] })).not.toContain("SECRETMARKER");
+    expect(Object.hasOwn(command, "maxChars")).toBe(false);
+    expect(Object.hasOwn(command, "value")).toBe(false);
+  });
+
+  it("a text-free frame plan is unchanged", () => {
+    const withoutField = plan(buildPreviewRenderPlan(FRAME_BASE));
+    const withEmptyList = plan(buildPreviewRenderPlan({ ...FRAME_BASE, textZones: [] }));
+    expect(withEmptyList).toEqual(withoutField);
+    expect(withoutField.commands.some((c) => c.type === "draw-text")).toBe(false);
+  });
+
+  it("reads each zone field exactly once", () => {
+    const { port } = fixedWidth();
+    let reads = 0;
+    const drifting = {
+      ...textZoneInput(),
+      get color() {
+        reads += 1;
+        return reads === 1 ? "#123456" : "#ABCDEF";
+      },
+    };
+    const p = plan(buildPreviewRenderPlan(frameWithText([drifting]), { measureText: port }));
+    expect(reads).toBe(1);
+    expect(textOf(p).color).toBe("#123456");
+  });
+
+  it("a case plan never carries text (case text is out of scope, Founder F-1)", () => {
+    const { port } = fixedWidth();
+    const p = plan(
+      buildPreviewRenderPlan({ ...CASE_BASE, textZones: [textZoneInput()] } as never, {
+        measureText: port,
+      }),
+    );
+    expect(p.commands.some((c) => c.type === "draw-text")).toBe(false);
   });
 });

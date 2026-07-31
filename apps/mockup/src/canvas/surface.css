@@ -100,4 +100,60 @@
   /* the drag surface is exactly the canvas box; it adds no scrolling of its own */
   display: block;
   max-width: 100%;
+  /* spec 031: the physical-clock overlay is positioned against this same box */
+  position: relative;
+}
+
+/* spec 031: customer text inputs — same row rhythm as the existing editing controls */
+.denn-preview-text__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.denn-preview-text__input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--denn-border, #d8d3ce);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.denn-preview-text__input[aria-invalid="true"] {
+  border-color: #b3261e;
+}
+
+/*
+ * spec 031 §2.7: the PHYSICAL clock preview. A DOM overlay on top of the canvas — never a canvas
+ * layer — so it cannot reach the render plan, print or export. It ignores the pointer entirely so
+ * the photo drag underneath keeps working.
+ */
+.denn-preview-clock {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  /* so the label below can size itself against THIS box (cqw) */
+  container-type: inline-size;
+}
+
+.denn-preview-clock__image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.denn-preview-clock__label {
+  font-weight: 700;
+  /* scales with the overlay box, matching the legacy 38%-of-box text clock */
+  font-size: 38cqw;
+  color: rgb(35 31 26 / 92%);
+  white-space: nowrap;
 }

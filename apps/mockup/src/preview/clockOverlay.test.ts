@@ -1,0 +1,305 @@
+// Physical-clock overlay contract (spec 031 §2.7, §5 unit). Framework-free: the clock and the
+// scheduler are injected, so nothing here depends on the real time, the real timezone or a browser.
+//
+// SCOPE HONESTY: this proves WHAT is shown and WHEN a timer is scheduled. Real DOM placement, real
+// pixels and real devices are verified in `tests/e2e/mockup-preview.spec.ts` and stay NOT TESTED
+// against actual clock hardware.
+
+import { describe, expect, it, vi } from "vitest";
+import {
+  type ClockPorts,
+  createClockTicker,
+  formatClockLabel,
+  MINUTE_MS,
+  msUntilNextMinute,
+  resolveClockOverlay,
+} from "./clockOverlay";
+
+const PLACEMENT = { xPercent: 88, yPercent: 88, sizePercent: 12 };
+
+/** A fake scheduler: nothing fires until the test says so. */
+function fakePorts(startMs = 0): ClockPorts & {
+  run: () => void;
+  pending: () => number;
+  delays: number[];
+  advance: (ms: number) => void;
+} {
+  let now = startMs;
+  const timers = new Map<number, () => void>();
+  const delays: number[] = [];
+  let nextHandle = 1;
+  return {
+    now: () => now,
+    setTimer: (callback, delayMs) => {
+      const handle = nextHandle++;
+      timers.set(handle, callback);
+      delays.push(delayMs);
+      return handle;
+    },
+    clearTimer: (handle) => {
+      timers.delete(handle);
+    },
+    run: () => {
+      const entries = [...timers.entries()];
+      timers.clear();
+      for (const [, callback] of entries) callback();
+    },
+    pending: () => timers.size,
+    delays,
+    advance: (ms: number) => {
+      now += ms;
+    },
+  };
+}
+
+describe("formatClockLabel — local 24-hour HH:MM, no seconds", () => {
+  it("pads both fields", () => {
+    const nineOhFive = new Date(2026, 6, 31, 9, 5, 0, 0).getTime();
+    expect(formatClockLabel(nineOhFive)).toBe("09:05");
+  });
+
+  it("uses midnight as 00:00 and keeps the 24-hour form", () => {
+    expect(formatClockLabel(new Date(2026, 6, 31, 0, 0).getTime())).toBe("00:00");
+    expect(formatClockLabel(new Date(2026, 6, 31, 23, 59).getTime())).toBe("23:59");
+    expect(formatClockLabel(new Date(2026, 6, 31, 13, 7).getTime())).toBe("13:07");
+  });
+
+  it("rejects a non-finite timestamp instead of painting NaN", () => {
+    expect(formatClockLabel(Number.NaN)).toBeNull();
+    expect(formatClockLabel(Number.POSITIVE_INFINITY)).toBeNull();
+  });
+});
+
+describe("msUntilNextMinute — the tick lands on the boundary, never on 0", () => {
+  it("returns the remaining time inside a minute", () => {
+    expect(msUntilNextMinute(0)).toBe(MINUTE_MS);
+    expect(msUntilNextMinute(1_000)).toBe(59_000);
+    expect(msUntilNextMinute(59_999)).toBe(1);
+  });
+
+  it("never returns 0 — a zero delay would busy-loop the scheduler", () => {
+    for (const at of [0, MINUTE_MS, MINUTE_MS * 42]) {
+      expect(msUntilNextMinute(at)).toBeGreaterThan(0);
+      expect(msUntilNextMinute(at)).toBeLessThanOrEqual(MINUTE_MS);
+    }
+  });
+
+  it("falls back to a full minute for an unusable timestamp", () => {
+    expect(msUntilNextMinute(Number.NaN)).toBe(MINUTE_MS);
+  });
+});
+
+describe("resolveClockOverlay — what to show", () => {
+  it("hides when the template has no clock", () => {
+    const state = resolveClockOverlay({
+      enabled: false,
+      placement: PLACEMENT,
+      imageSrc: null,
+      nowMs: 0,
+    });
+    expect(state).toEqual({ view: { kind: "hidden" }, placement: null });
+  });
+
+  it("shows the operator's clock PHOTO when there is one", () => {
+    const state = resolveClockOverlay({
+      enabled: true,
+      placement: PLACEMENT,
+      imageSrc: "blob:fake",
+      nowMs: 0,
+    });
+    expect(state.view).toEqual({ kind: "image", src: "blob:fake" });
+    expect(state.placement).toEqual(PLACEMENT);
+  });
+
+  it("falls back to the HH:MM placeholder without an image", () => {
+    const at = new Date(2026, 6, 31, 10, 10).getTime();
+    const state = resolveClockOverlay({
+      enabled: true,
+      placement: PLACEMENT,
+      imageSrc: null,
+      nowMs: at,
+    });
+    expect(state.view).toEqual({ kind: "text", label: "10:10" });
+  });
+
+  it("copies the placement instead of keeping the caller's object", () => {
+    const mutable = { xPercent: 10, yPercent: 20, sizePercent: 30 };
+    const state = resolveClockOverlay({
+      enabled: true,
+      placement: mutable,
+      imageSrc: null,
+      nowMs: 0,
+    });
+    mutable.xPercent = 99;
+    expect(state.placement?.xPercent).toBe(10);
+  });
+
+  it("HIDES instead of failing when the placement is unusable — the clock is not print data", () => {
+    const bad = [
+      { xPercent: -1, yPercent: 0, sizePercent: 12 },
+      { xPercent: 101, yPercent: 0, sizePercent: 12 },
+      { xPercent: 0, yPercent: Number.NaN, sizePercent: 12 },
+      { xPercent: 0, yPercent: 0, sizePercent: 0 },
+      { xPercent: 0, yPercent: 0, sizePercent: 101 },
+    ];
+    for (const placement of bad) {
+      const state = resolveClockOverlay({ enabled: true, placement, imageSrc: null, nowMs: 0 });
+      expect(state.view.kind).toBe("hidden");
+    }
+    expect(
+      resolveClockOverlay({ enabled: true, placement: null, imageSrc: null, nowMs: 0 }).view.kind,
+    ).toBe("hidden");
+  });
+
+  it("treats an empty image source as no image", () => {
+    const state = resolveClockOverlay({
+      enabled: true,
+      placement: PLACEMENT,
+      imageSrc: "",
+      nowMs: new Date(2026, 6, 31, 1, 2).getTime(),
+    });
+    expect(state.view).toEqual({ kind: "text", label: "01:02" });
+  });
+});
+
+describe("createClockTicker — at most ONE timer, minute boundaries only", () => {
+  it("schedules nothing when ticking is not needed (a clock PHOTO does not tick)", () => {
+    const ports = fakePorts(0);
+    const ticker = createClockTicker(ports, () => {});
+    expect(ticker.start(false)).toBe(false);
+    expect(ports.pending()).toBe(0);
+    expect(ticker.activeTimers()).toBe(0);
+  });
+
+  it("first tick lands on the minute boundary, then every 60s", () => {
+    const ports = fakePorts(1_000); // 1s past a boundary
+    const onTick = vi.fn();
+    const ticker = createClockTicker(ports, onTick);
+    ticker.start(true);
+    expect(ports.delays).toEqual([59_000]);
+    ports.run();
+    expect(onTick).toHaveBeenCalledTimes(1);
+    expect(ports.delays).toEqual([59_000, MINUTE_MS]);
+    ports.run();
+    expect(onTick).toHaveBeenCalledTimes(2);
+    expect(ports.delays).toEqual([59_000, MINUTE_MS, MINUTE_MS]);
+    // never a 1-second poll
+    expect(ports.delays.some((delay) => delay <= 1_000 && delay !== 1)).toBe(false);
+  });
+
+  it("keeps at most one timer alive across repeated starts", () => {
+    const ports = fakePorts(0);
+    const ticker = createClockTicker(ports, () => {});
+    for (let i = 0; i < 5; i++) ticker.start(true);
+    expect(ports.pending()).toBe(1);
+    expect(ticker.activeTimers()).toBe(1);
+  });
+
+  it("stop cancels the pending timer", () => {
+    const ports = fakePorts(0);
+    const onTick = vi.fn();
+    const ticker = createClockTicker(ports, onTick);
+    ticker.start(true);
+    ticker.stop();
+    expect(ports.pending()).toBe(0);
+    expect(ticker.activeTimers()).toBe(0);
+    ports.run();
+    expect(onTick).not.toHaveBeenCalled();
+  });
+
+  it("switching to a clock PHOTO stops the timer", () => {
+    const ports = fakePorts(0);
+    const ticker = createClockTicker(ports, () => {});
+    ticker.start(true);
+    expect(ports.pending()).toBe(1);
+    ticker.start(false); // now showing a custom image
+    expect(ports.pending()).toBe(0);
+    expect(ticker.activeTimers()).toBe(0);
+  });
+
+  it("a callback from an ended session never fires (generation guard)", () => {
+    // a scheduler that keeps the callback even after `clearTimer`, so a LATE fire is observable —
+    // exactly the case a real `setTimeout` cannot be forced into.
+    const captured: (() => void)[] = [];
+    const leaky: ClockPorts = {
+      now: () => 0,
+      setTimer: (callback) => {
+        captured.push(callback);
+        return captured.length;
+      },
+      clearTimer: () => {}, // deliberately does NOT cancel
+    };
+    const onTick = vi.fn();
+    const ticker = createClockTicker(leaky, onTick);
+
+    ticker.start(true);
+    ticker.stop(); // session ends, but the callback is still out there
+    for (const callback of captured) callback();
+    expect(onTick).not.toHaveBeenCalled();
+
+    // and a callback from the PREVIOUS session cannot repaint the NEW one either
+    captured.length = 0;
+    ticker.start(true);
+    const fromNewSession = [...captured];
+    ticker.start(true); // restart -> the previous generation is stale
+    for (const callback of fromNewSession) callback();
+    expect(onTick).not.toHaveBeenCalled();
+    ticker.dispose();
+  });
+
+  it("dispose is permanent and a later start does nothing", () => {
+    const ports = fakePorts(0);
+    const onTick = vi.fn();
+    const ticker = createClockTicker(ports, onTick);
+    ticker.start(true);
+    ticker.dispose();
+    expect(ports.pending()).toBe(0);
+    expect(ticker.start(true)).toBe(false);
+    expect(ports.pending()).toBe(0);
+    ticker.dispose(); // idempotent
+    expect(ticker.activeTimers()).toBe(0);
+  });
+
+  it("a throwing subscriber does not stop the next tick", () => {
+    const ports = fakePorts(0);
+    let calls = 0;
+    const ticker = createClockTicker(ports, () => {
+      calls += 1;
+      throw new Error("hostile");
+    });
+    ticker.start(true);
+    ports.run();
+    expect(calls).toBe(1);
+    // a follow-up tick was still scheduled
+    expect(ports.pending()).toBe(1);
+    ticker.dispose();
+  });
+
+  it("a hostile scheduler cannot break start or teardown", () => {
+    const hostile: ClockPorts = {
+      now: () => 0,
+      setTimer: () => {
+        throw new Error("no timers");
+      },
+      clearTimer: () => {
+        throw new Error("no clear");
+      },
+    };
+    const ticker = createClockTicker(hostile, () => {});
+    expect(ticker.start(true)).toBe(false);
+    expect(() => ticker.stop()).not.toThrow();
+    expect(() => ticker.dispose()).not.toThrow();
+  });
+
+  it("a throwing clock source schedules nothing", () => {
+    const ports: ClockPorts = {
+      now: () => {
+        throw new Error("no clock");
+      },
+      setTimer: () => 1,
+      clearTimer: () => {},
+    };
+    const ticker = createClockTicker(ports, () => {});
+    expect(ticker.start(true)).toBe(false);
+  });
+});

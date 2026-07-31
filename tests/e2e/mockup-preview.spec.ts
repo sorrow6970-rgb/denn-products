@@ -1394,3 +1394,280 @@ test.describe("EXIF orientation is the browser's job (spec 030 R-6)", () => {
     });
   });
 });
+
+// --- spec 031: customer text + the physical clock overlay ---------------------
+//
+// The catalog is routed with its own frame template so this block can define text zones and a clock
+// without disturbing the fixtures the other blocks share.
+
+const TEXT_ZONE_COLOUR = [220, 30, 30] as const; // #DC1E1E — nothing else on the canvas is red
+
+const textCatalog = (template: Record<string, unknown>): string =>
+  JSON.stringify({
+    models: [{ id: "m1", name: "모델 하나", w: 300, h: 200 }],
+    caseTemplates: [],
+    frameSizes: [{ id: "fs1", name: "사이즈 하나", aspect: 1, frameThickness: 5 }],
+    frameCategories: [{ id: "fc1", name: "액자 A" }],
+    frameTemplates: [{ id: "full", name: "기본 액자", type: "uploaded", ...template }],
+    frameColors: [{ id: "black", name: "블랙", fill: "#1A1A1A" }],
+  });
+
+const zoneFixture = (over: Record<string, unknown> = {}) => ({
+  key: "main",
+  x: 50,
+  y: 50,
+  boxW: 80,
+  fontSize: 12,
+  align: "center",
+  font: "DM Sans",
+  bold: true,
+  italic: false,
+  color: "#DC1E1E",
+  lineH: 1.25,
+  letterSpacing: 0,
+  rotation: 0,
+  ...over,
+});
+
+async function routeTextCatalog(page: Page, template: Record<string, unknown>): Promise<void> {
+  const body = textCatalog(template);
+  await page.route("**/firebasestorage.googleapis.com/**", async (route: Route) => {
+    if (route.request().url() !== CATALOG_URL) {
+      await route.abort();
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: "application/json", body });
+  });
+}
+
+async function frameWithText(page: Page, template: Record<string, unknown>): Promise<void> {
+  await routeTextCatalog(page, template);
+  await gotoReady(page);
+  await chooseFrame(page);
+  await openComposer(page);
+  await pickColour(page, "#1A1A1A");
+  await pickPhoto(page, "frame-image", PHOTO_A);
+  await waitForCanvas(page);
+}
+
+const textInput = (page: Page, key: string) => page.getByTestId(`preview-text-${key}`);
+
+/** Does ANY sampled pixel carry the zone colour? Text is thin, so a grid is sampled. */
+async function hasTextColour(page: Page): Promise<boolean> {
+  return canvas(page).evaluate(
+    (element, expected) => {
+      const node = element as HTMLCanvasElement;
+      const context = node.getContext("2d");
+      if (context === null) return false;
+      const data = context.getImageData(0, 0, node.width, node.height).data;
+      for (let index = 0; index < data.length; index += 4) {
+        if (
+          Math.abs(data[index] - expected[0]) < 40 &&
+          Math.abs(data[index + 1] - expected[1]) < 40 &&
+          Math.abs(data[index + 2] - expected[2]) < 40
+        ) {
+          return true;
+        }
+      }
+      return false;
+    },
+    TEXT_ZONE_COLOUR as unknown as number[],
+  );
+}
+
+test.describe("customer text zones (spec 031)", () => {
+  test('typing a value paints it, clearing it removes it, and "0" is a real value', async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    await frameWithText(page, { textZones: [zoneFixture()] });
+
+    expect(await hasTextColour(page)).toBe(false);
+    await textInput(page, "main").fill("HELLO");
+    await expect.poll(async () => hasTextColour(page)).toBe(true);
+
+    await textInput(page, "main").fill("");
+    await expect.poll(async () => hasTextColour(page)).toBe(false);
+
+    // "0" is NOT empty — the legacy paths dropped it and this one must not
+    await textInput(page, "main").fill("0");
+    await expect.poll(async () => hasTextColour(page)).toBe(true);
+
+    expect(noise.errors).toEqual([]);
+  });
+
+  test("only the keys the template defines are offered", async ({ page }) => {
+    await frameWithText(page, {
+      textZones: [zoneFixture({ key: "main" }), zoneFixture({ key: "date", y: 70 })],
+    });
+    await expect(textInput(page, "main")).toBeVisible();
+    await expect(textInput(page, "date")).toBeVisible();
+    await expect(page.getByTestId("preview-text-name")).toHaveCount(0);
+    await expect(page.getByTestId("preview-text-sub")).toHaveCount(0);
+  });
+
+  test("the length cap blocks over-long input instead of truncating it", async ({ page }) => {
+    await frameWithText(page, { textZones: [zoneFixture({ maxChars: 5 })] });
+    const input = textInput(page, "main");
+    await input.fill("ABCDE");
+    await expect(input).toHaveValue("ABCDE");
+    // the input's own maxLength stops the browser from accepting more
+    await input.pressSequentially("FGH");
+    await expect(input).toHaveValue("ABCDE");
+    await expect(page.getByTestId("preview-text-hint-main")).toHaveText("5 / 5");
+  });
+
+  test("a value that would wrap past the line cap is rejected, keeping the last good one", async ({
+    page,
+  }) => {
+    await frameWithText(page, { textZones: [zoneFixture({ maxLines: 1, boxW: 20 })] });
+    const input = textInput(page, "main");
+    await input.fill("AB");
+    await expect.poll(async () => hasTextColour(page)).toBe(true);
+    // far too wide for a single line in a 20%-wide box: the COMMIT is rejected, so the input keeps
+    // the last approved value and the preview never drops to a partial render
+    await input.fill("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    await expect(input).toHaveValue("AB");
+    await expect(canvasStatus(page)).toHaveText("미리보기가 준비되었습니다.");
+    expect(await hasTextColour(page)).toBe(true);
+  });
+
+  test("the operator's default text is a placeholder only, never the customer's value", async ({
+    page,
+  }) => {
+    await frameWithText(page, {
+      textZones: [zoneFixture()],
+      defaultTexts: { main: "WEDDINGSAMPLE" },
+    });
+    await expect(textInput(page, "main")).toHaveValue("");
+    // and nothing is painted until the customer actually types
+    expect(await hasTextColour(page)).toBe(false);
+  });
+
+  test("text is drawn ON TOP of the photo", async ({ page }) => {
+    await frameWithText(page, { textZones: [zoneFixture()] });
+    await textInput(page, "main").fill("HELLO");
+    await expect.poll(async () => hasTextColour(page)).toBe(true);
+    // the photo is magenta and the text is red: seeing red proves the text came after the photo
+    expect(await hasTextColour(page)).toBe(true);
+  });
+
+  test("a rotated zone still paints", async ({ page }) => {
+    await frameWithText(page, { textZones: [zoneFixture({ rotation: -30 })] });
+    await textInput(page, "main").fill("HELLO");
+    await expect.poll(async () => hasTextColour(page)).toBe(true);
+  });
+
+  test("the customer gets no colour or shadow control (Founder F-2)", async ({ page }) => {
+    await frameWithText(page, { textZones: [zoneFixture()] });
+    await expect(page.locator('[data-testid="preview-text"] input[type="color"]')).toHaveCount(0);
+  });
+
+  test("text inputs are labelled, focusable and accessible at 320px", async ({ page }) => {
+    const noise = collectConsole(page);
+    await page.setViewportSize({ width: 320, height: 900 });
+    await frameWithText(page, { textZones: [zoneFixture()] });
+
+    const input = textInput(page, "main");
+    await input.focus();
+    await expect(input).toBeFocused();
+    const box = await input.boundingBox();
+    if (box) expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
+
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+
+    const axe = await new AxeBuilder({ page }).analyze();
+    const serious = axe.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    expect(serious.map((v) => v.id)).toEqual([]);
+    expect(noise.errors).toEqual([]);
+  });
+});
+
+test.describe("physical clock overlay (spec 031, Founder F-4)", () => {
+  test("the clock is a DOM overlay, NOT a canvas layer", async ({ page }) => {
+    await frameWithText(page, { textZones: [], clock: { x: 80, y: 80, size: 20 } });
+    const clock = page.getByTestId("preview-clock");
+    await expect(clock).toBeVisible();
+    // it never reaches the plan the canvas executes
+    const tag = await clock.evaluate((element) => element.tagName.toLowerCase());
+    expect(tag).not.toBe("canvas");
+    // decorative and non-interactive, so it neither blocks the drag nor is read out
+    await expect(clock).toHaveAttribute("aria-hidden", "true");
+    const pointerEvents = await clock.evaluate((el) => getComputedStyle(el).pointerEvents);
+    expect(pointerEvents).toBe("none");
+  });
+
+  test("shows the HH:MM placeholder with no custom image, and no seconds", async ({ page }) => {
+    await frameWithText(page, { textZones: [], clock: { x: 80, y: 80, size: 20 } });
+    const label = page.getByTestId("preview-clock-label");
+    await expect(label).toBeVisible();
+    await expect(label).toHaveText(/^\d{2}:\d{2}$/);
+  });
+
+  test("an explicit opt-out hides the clock entirely", async ({ page }) => {
+    await frameWithText(page, { textZones: [], clockEnabled: false });
+    await expect(page.getByTestId("preview-clock")).toHaveCount(0);
+  });
+
+  test("keeps its percent placement across a resize", async ({ page }) => {
+    await frameWithText(page, { textZones: [], clock: { x: 80, y: 80, size: 20 } });
+    const clock = page.getByTestId("preview-clock");
+    const before = await clock.evaluate((element) => (element as HTMLElement).style.left);
+    await page.setViewportSize({ width: 420, height: 900 });
+    await waitForCanvas(page);
+    const after = await clock.evaluate((element) => (element as HTMLElement).style.left);
+    expect(after).toBe(before);
+    expect(after).toBe("80%");
+  });
+
+  test("leaves no timer behind after the template changes or the page is left", async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    await frameWithText(page, { textZones: [], clock: { x: 80, y: 80, size: 20 } });
+    await expect(page.getByTestId("preview-clock-label")).toBeVisible();
+
+    // count the intervals/timeouts the page believes are outstanding after navigating away
+    const leaked = await page.evaluate(async () => {
+      let outstanding = 0;
+      const nativeTimeout = window.setTimeout;
+      const nativeClear = window.clearTimeout;
+      (window as unknown as { setTimeout: typeof setTimeout }).setTimeout = ((
+        handler: TimerHandler,
+        timeout?: number,
+      ) => {
+        outstanding += 1;
+        return nativeTimeout(handler, timeout);
+      }) as typeof setTimeout;
+      (window as unknown as { clearTimeout: typeof clearTimeout }).clearTimeout = ((
+        handle?: number,
+      ) => {
+        outstanding -= 1;
+        return nativeClear(handle);
+      }) as typeof clearTimeout;
+      // give the app a chance to re-render; a 1-second clock would schedule repeatedly here
+      await new Promise((resolve) => nativeTimeout(resolve, 300));
+      return outstanding;
+    });
+    // a minute-boundary clock schedules at most one timer, never one per second
+    expect(leaked).toBeLessThanOrEqual(1);
+    expect(noise.errors).toEqual([]);
+  });
+
+  test("the clock never appears in the rendered plan or an order payload", async ({ page }) => {
+    await frameWithText(page, { textZones: [], clock: { x: 80, y: 80, size: 20 } });
+    // the canvas is the plan's only output; the overlay sits outside it in the DOM
+    const insideCanvas = await page
+      .getByTestId("preview-edit-area")
+      .evaluate(
+        (area) =>
+          area
+            .querySelector("canvas")
+            ?.contains(area.querySelector('[data-testid="preview-clock"]')) ?? false,
+      );
+    expect(insideCanvas).toBe(false);
+  });
+});

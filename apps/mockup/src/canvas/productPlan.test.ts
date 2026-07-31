@@ -739,7 +739,9 @@ describe("adapter runtime safety", () => {
             ? [command.clipRect, command.drawRect]
             : command.type === "draw-image-stretch"
               ? [command.destRect]
-              : [command.rect];
+              : command.type === "draw-text"
+                ? [] // spec 031: text carries an origin and measured widths, not a rect
+                : [command.rect];
         for (const rect of rects) {
           for (const value of [rect.x, rect.y, rect.width, rect.height]) {
             expect(Number.isFinite(value)).toBe(true);
@@ -1008,5 +1010,156 @@ describe("product plan quarter-turn rotation (spec 030)", () => {
     } as unknown as UserImageState;
     const result = buildFrameProductPlan(frameInput({ userImage: hostile }));
     expect(result.ok).toBe(false);
+  });
+});
+
+// --- spec 031: text zones through the adapter ---------------------------------
+
+const measureTen = ({ text }: { text: string }): number => Array.from(text).length * 10;
+
+const zone31 = (over: Record<string, unknown> = {}) => ({
+  key: "main",
+  xPercent: 50,
+  yPercent: 20,
+  boxWidthPercent: 100,
+  fontSizePercent: 10,
+  align: "center",
+  fontFamily: "DM Sans",
+  bold: false,
+  italic: false,
+  color: "#111111",
+  lineHeight: 1.25,
+  letterSpacingPercent: 0,
+  rotationDegrees: 0,
+  maxChars: 80,
+  maxLines: 2,
+  ...over,
+});
+
+const frameGeometry31 = (zones: unknown[] = [zone31()]): FramePreviewGeometry =>
+  ({ ...frameGeometry(), textZones: zones, clockPreview: null }) as unknown as FramePreviewGeometry;
+
+const textCommandsOf = (plan: PreviewRenderPlan) =>
+  plan.commands.filter((command) => command.type === "draw-text");
+
+describe("frame product plan — customer text (spec 031)", () => {
+  it("pairs the operator's zone with the customer's value", () => {
+    const plan = planOf(
+      buildFrameProductPlan(
+        frameInput({
+          geometry: frameGeometry31(),
+          textValues: new Map([["main", "HELLO"]]),
+          measureText: measureTen,
+        }),
+      ),
+    );
+    const commands = textCommandsOf(plan);
+    expect(commands).toHaveLength(1);
+    const command = commands[0];
+    if (command?.type !== "draw-text") throw new Error("type");
+    expect(command.lines).toEqual([{ text: "HELLO", width: 50 }]);
+    expect(command.color).toBe("#111111");
+  });
+
+  it("emits nothing for a key the customer left empty", () => {
+    for (const textValues of [undefined, new Map(), new Map([["main", ""]])]) {
+      const plan = planOf(
+        buildFrameProductPlan(
+          frameInput({
+            geometry: frameGeometry31(),
+            textValues: textValues as ReadonlyMap<string, string>,
+            measureText: measureTen,
+          }),
+        ),
+      );
+      expect(textCommandsOf(plan)).toHaveLength(0);
+    }
+  });
+
+  it("ignores a value whose key no zone defines", () => {
+    const plan = planOf(
+      buildFrameProductPlan(
+        frameInput({
+          geometry: frameGeometry31([zone31({ key: "main" })]),
+          textValues: new Map([
+            ["main", "A"],
+            ["sub", "SHOULD NOT APPEAR"],
+          ]),
+          measureText: measureTen,
+        }),
+      ),
+    );
+    expect(textCommandsOf(plan)).toHaveLength(1);
+    expect(JSON.stringify(plan)).not.toContain("SHOULD NOT APPEAR");
+  });
+
+  it("fails the plan when a value exceeds the zone's caps", () => {
+    for (const value of ["A".repeat(81), "A\nB\nC"]) {
+      const result = buildFrameProductPlan(
+        frameInput({
+          geometry: frameGeometry31(),
+          textValues: new Map([["main", value]]),
+          measureText: measureTen,
+        }),
+      );
+      expect(result.ok, JSON.stringify(value)).toBe(false);
+      if (result.ok) throw new Error("expected failure");
+      expect(result.code).toBe("PLAN_BUILD_FAILED");
+    }
+  });
+
+  it("fails the plan when no measurement port is supplied but text exists", () => {
+    const result = buildFrameProductPlan(
+      frameInput({
+        geometry: frameGeometry31(),
+        textValues: new Map([["main", "A"]]),
+      }),
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  it("a geometry with no text zones produces the same plan as before", () => {
+    const withEmpty = planOf(buildFrameProductPlan(frameInput({ geometry: frameGeometry31([]) })));
+    expect(textCommandsOf(withEmpty)).toHaveLength(0);
+  });
+
+  it("a hostile value map fails safe instead of escaping", () => {
+    const hostile = {
+      get: () => {
+        throw new Error("hostile");
+      },
+    } as unknown as ReadonlyMap<string, string>;
+    const result = buildFrameProductPlan(
+      frameInput({
+        geometry: frameGeometry31(),
+        textValues: hostile,
+        measureText: measureTen,
+      }),
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  it("never carries the operator's placeholder into the plan (Founder F-3)", () => {
+    const plan = planOf(
+      buildFrameProductPlan(
+        frameInput({
+          geometry: frameGeometry31([zone31({ placeholder: "WEDDING" })]),
+          textValues: new Map([["main", "OURS"]]),
+          measureText: measureTen,
+        }),
+      ),
+    );
+    expect(JSON.stringify(plan)).not.toContain("WEDDING");
+  });
+
+  it("the clock never reaches the plan (Founder F-4)", () => {
+    const geometry = {
+      ...frameGeometry(),
+      textZones: [],
+      clockPreview: { xPercent: 88, yPercent: 88, sizePercent: 12, customImage: null },
+    } as unknown as FramePreviewGeometry;
+    const plan = planOf(buildFrameProductPlan(frameInput({ geometry })));
+    expect(JSON.stringify(plan)).not.toContain("clock");
+    expect(plan.commands.every((command) => command.type !== "draw-text")).toBe(true);
   });
 });

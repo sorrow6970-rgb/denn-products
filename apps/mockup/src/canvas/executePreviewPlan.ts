@@ -36,6 +36,7 @@ import type {
   ExecutePreviewRenderPlanArgs,
   PreviewCanvasContext,
   RotationCapableCanvasContext,
+  TextCapableCanvasContext,
 } from "./types";
 
 // Same `#RRGGBB` grammar as the spec 020 builder (no alpha/functions/vars/named colors).
@@ -85,6 +86,35 @@ function supportsRotation(context: PreviewCanvasContext): context is RotationCap
   return true;
 }
 
+/**
+ * The spec 031 text capability, required ONLY when the plan carries a `draw-text` command. Same
+ * shape as the rotation probe: the members live on the public port and the derived type is built
+ * from it, so this executor cannot drift from what consumers are told to implement.
+ */
+const TEXT_METHODS = [
+  "fillText",
+  "measureText",
+  "translate",
+  "rotate",
+] as const satisfies readonly (keyof PreviewCanvasContext)[];
+const TEXT_PROPERTIES = [
+  "font",
+  "textAlign",
+  "textBaseline",
+] as const satisfies readonly (keyof PreviewCanvasContext)[];
+
+function supportsText(context: PreviewCanvasContext): context is TextCapableCanvasContext {
+  for (const method of TEXT_METHODS) {
+    if (typeof context[method] !== "function") return false;
+  }
+  for (const property of TEXT_PROPERTIES) {
+    if (!(property in context)) return false;
+  }
+  return true;
+}
+
+const DEGREES_TO_RADIANS = Math.PI / 180;
+
 const FAIL_INPUT = { ok: false, code: "INVALID_EXECUTOR_INPUT" } as const;
 const FAIL_PLAN = { ok: false, code: "INVALID_PLAN" } as const;
 
@@ -119,6 +149,18 @@ type SnapshotCommand =
       readonly type: "draw-image-stretch";
       readonly destRect: SnapshotRect;
       readonly drawable: CanvasImageSource;
+    }
+  | {
+      /** spec 031: already-wrapped customer text. The executor paints; it never re-wraps. */
+      readonly type: "draw-text";
+      readonly lines: readonly { readonly text: string; readonly width: number }[];
+      readonly origin: { readonly x: number; readonly y: number };
+      readonly align: "left" | "center" | "right";
+      readonly fontSpec: string;
+      readonly color: string;
+      readonly lineHeightPx: number;
+      readonly letterSpacingPx: number;
+      readonly rotationDegrees: number;
     };
 
 interface SnapshotPlan {
@@ -137,6 +179,41 @@ function readRect(value: unknown): SnapshotRect | null {
   if (!isFiniteNum(x) || !isFiniteNum(y)) return null;
   if (!isFinitePositive(width) || !isFinitePositive(height)) return null;
   return { x, y, width, height };
+}
+
+/**
+ * Assemble the CSS font shorthand from the plan's structured spec (spec 031 §2.4). The family is
+ * re-validated here — the executor must never build a font string from an unchecked value — and the
+ * generic fallback is appended by THIS layer, never by the plan.
+ */
+const FORBIDDEN_FAMILY_CHARS = new Set(['"', "'", ";", "\\"]);
+
+/** 1..64 code units, no control characters and no quote/semicolon/backslash. */
+function isUsableFontFamily(value: string): boolean {
+  if (value.length < 1 || value.length > 64) return false;
+  for (const char of value) {
+    const code = char.codePointAt(0) ?? 0;
+    if (code <= 0x1f || (code >= 0x7f && code <= 0x9f)) return false;
+    if (FORBIDDEN_FAMILY_CHARS.has(char)) return false;
+  }
+  return true;
+}
+
+function readFontSpec(value: unknown): string | null {
+  if (!isObj(value)) return null;
+  const family = value.family;
+  const sizePx = value.sizePx;
+  const weight = value.weight;
+  const italic = value.italic;
+  const fallback = value.fallback;
+  if (typeof family !== "string" || !isUsableFontFamily(family)) return null;
+  if (!isFinitePositive(sizePx)) return null;
+  if (weight !== "normal" && weight !== "bold") return null;
+  if (typeof italic !== "boolean") return null;
+  if (fallback !== "sans-serif" && fallback !== "serif") return null;
+  const style = italic ? "italic " : "";
+  const bold = weight === "bold" ? "bold " : "";
+  return `${style}${bold}${sizePx}px "${family}", ${fallback}`;
 }
 
 /** `undefined` → 0 (absent rotation). Any other non-`0|1|2|3` value → null (invalid plan). */
@@ -200,6 +277,50 @@ function readCommand(value: unknown): ReadCommand | null {
     const rotation = readQuarterTurns(value.rotationQuarterTurns);
     if (rotation === null) return null;
     return { kind: "image", imageRef, clipRect, drawRect, rotation };
+  }
+  if (type === "draw-text") {
+    // spec 031: read every field ONCE. The raw customer string, the zone key and the catalog id are
+    // not in the command at all, so nothing identifying can reach a Result from here.
+    const rawLines = value.lines;
+    if (!Array.isArray(rawLines) || rawLines.length === 0) return null;
+    const lines: { text: string; width: number }[] = [];
+    for (const item of rawLines as readonly unknown[]) {
+      if (!isObj(item)) return null;
+      const text = item.text;
+      const width = item.width;
+      if (typeof text !== "string" || !isFiniteNum(width) || width < 0) return null;
+      lines.push({ text, width });
+    }
+    const origin = value.origin;
+    if (!isObj(origin)) return null;
+    const originX = origin.x;
+    const originY = origin.y;
+    if (!isFiniteNum(originX) || !isFiniteNum(originY)) return null;
+    const align = value.align;
+    if (align !== "left" && align !== "center" && align !== "right") return null;
+    const fontSpec = readFontSpec(value.font);
+    if (fontSpec === null) return null;
+    const color = value.color;
+    if (!isHex(color)) return null;
+    const lineHeightPx = value.lineHeightPx;
+    const letterSpacingPx = value.letterSpacingPx;
+    const rotationDegrees = value.rotationDegrees;
+    if (!isFiniteNum(lineHeightPx) || !isFiniteNum(letterSpacingPx)) return null;
+    if (!isFiniteNum(rotationDegrees)) return null;
+    return {
+      kind: "direct",
+      command: {
+        type: "draw-text",
+        lines,
+        origin: { x: originX, y: originY },
+        align,
+        fontSpec,
+        color,
+        lineHeightPx,
+        letterSpacingPx,
+        rotationDegrees,
+      },
+    };
   }
   if (type === "draw-image-stretch") {
     // spec 028: destination only — there is no source rect, so no crop can be requested here.
@@ -299,6 +420,12 @@ function normalizePlan(
     const read = readCommand(rawCommands[index]);
     if (read === null) return { ok: false, code: "INVALID_PLAN", commandIndex: index };
     if (read.kind === "direct") {
+      // spec 031 fail-closed: a text command against a context without the text capability is
+      // rejected in PREFLIGHT, so nothing is drawn — a frame missing the customer's words is a
+      // wrong product, not a graceful degradation.
+      if (read.command.type === "draw-text" && !supportsText(context)) {
+        return { ok: false, code: "INVALID_EXECUTOR_INPUT", commandIndex: index };
+      }
       commands.push(read.command);
       continue;
     }
@@ -416,6 +543,47 @@ function executeCommand(
       });
       // The restore below is the ONLY undo for translate/rotate; it is attempted exactly once even
       // when a step above threw, so no transform can leak into the next command.
+      if (!attempt(() => context.restore())) return "CANVAS_RESTORE_FAILED";
+      return drawn ? null : "CANVAS_OPERATION_FAILED";
+    }
+    case "draw-text": {
+      const { lines, origin, align, fontSpec, color, lineHeightPx, letterSpacingPx } = command;
+      // preflight guaranteed the capability; this cast is the derived public type, not a widening
+      const text = context as TextCapableCanvasContext;
+      if (!attempt(() => context.save())) return "CANVAS_OPERATION_FAILED"; // no inner restore
+      const drawn = attempt(() => {
+        text.translate(origin.x, origin.y);
+        if (command.rotationDegrees !== 0) {
+          text.rotate(command.rotationDegrees * DEGREES_TO_RADIANS);
+        }
+        text.font = fontSpec;
+        text.textAlign = align;
+        // the plan's origin is the first line's BASELINE, so the baseline is alphabetic
+        text.textBaseline = "alphabetic";
+        context.fillStyle = color;
+        for (let index = 0; index < lines.length; index++) {
+          const line = lines[index];
+          const y = index * lineHeightPx;
+          if (letterSpacingPx === 0) {
+            text.fillText(line.text, 0, y);
+            continue;
+          }
+          // letter spacing is drawn glyph by glyph so the widths match what the builder measured;
+          // `ctx.letterSpacing` is deliberately not used (support varies and it would re-measure).
+          const glyphs = Array.from(line.text);
+          // with a left-aligned pen we place each glyph ourselves, so the line origin is shifted
+          // to reproduce the requested alignment against the measured line width.
+          let pen = align === "center" ? -line.width / 2 : align === "right" ? -line.width : 0;
+          text.textAlign = "left";
+          for (let g = 0; g < glyphs.length; g++) {
+            const glyph = glyphs[g];
+            text.fillText(glyph, pen, y);
+            pen += text.measureText(glyph).width + letterSpacingPx;
+          }
+          text.textAlign = align;
+        }
+      });
+      // the single restore undoes the translate/rotate AND the font/align/baseline/fillStyle state
       if (!attempt(() => context.restore())) return "CANVAS_RESTORE_FAILED";
       return drawn ? null : "CANVAS_OPERATION_FAILED";
     }

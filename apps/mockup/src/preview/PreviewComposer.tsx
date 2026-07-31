@@ -50,14 +50,19 @@ import {
   withScale,
   zoomTransform,
 } from "./imageTransform";
+import { createClockTicker, resolveClockOverlay } from "./clockOverlay";
 import {
   CASE_BODY_COLORS,
   PREVIEW_CANVAS_NAME,
   PREVIEW_EDIT_LABELS,
   PREVIEW_MESSAGES,
+  PREVIEW_TEXT_COPY,
+  PREVIEW_TEXT_LABELS,
   type PreviewColorOption,
   readFrameColorOptions,
   resolveFrameLogicalWidth,
+  textLengthHint,
+  textTooLongMessage,
   zoneSlotLabel,
 } from "./previewContracts";
 
@@ -71,6 +76,59 @@ const ART_PREFIX = "template-art.";
  * spec 020 identifier grammar (alphanumeric start, then alphanumerics and `. _ -`).
  */
 const slotRefPrefix = (slotId: string): string => `${slotId}.`;
+
+/**
+ * The five customer-editable text keys (spec 031). Declared here rather than imported so this spec
+ * does not have to widen the shared package's public barrel; the projection validates the same set.
+ */
+const FRAME_TEXT_KEYS = ["main", "name", "name2", "date", "sub"] as const;
+type FrameTextKey = (typeof FRAME_TEXT_KEYS)[number];
+
+/** The plan's structured font spec, taken structurally from the builder's own port type. */
+type PlanFontSpec = Parameters<
+  NonNullable<Parameters<typeof buildFrameProductPlan>[0]["measureText"]>
+>[0]["font"];
+
+/** A literal newline, kept as a constant so no escape survives a refactor. */
+const NEWLINE = String.fromCharCode(10);
+
+/** Empty value for every one of the five customer text keys (spec 031). */
+const EMPTY_TEXTS: Readonly<Record<FrameTextKey, string>> = {
+  main: "",
+  name: "",
+  name2: "",
+  date: "",
+  sub: "",
+};
+
+/**
+ * Synchronous text measurement for the plan builder (spec 031 §2.3).
+ *
+ * The composer owns an offscreen 2D context ONLY for measuring — nothing is ever drawn on it and it
+ * never reaches the executor. The port is injected into the builder and is never stored in a plan,
+ * so the plan stays pure and JSON-safe while the wrap is still decided exactly once.
+ */
+function createMeasurePort(): ((request: { text: string; font: PlanFontSpec }) => number) | null {
+  let context: CanvasRenderingContext2D | null = null;
+  try {
+    context = window.document.createElement("canvas").getContext("2d");
+  } catch {
+    return null;
+  }
+  if (context === null) return null;
+  const measuring = context;
+  return ({ text, font }) => {
+    measuring.font = fontShorthand(font);
+    return measuring.measureText(text).width;
+  };
+}
+
+/** The exact same shorthand the executor assembles, so measuring and drawing cannot disagree. */
+function fontShorthand(font: PlanFontSpec): string {
+  const style = font.italic ? "italic " : "";
+  const weight = font.weight === "bold" ? "bold " : "";
+  return `${style}${weight}${font.sizePx}px "${font.family}", ${font.fallback}`;
+}
 
 /** The logical-px transform shape the spec 025 adapter validates. */
 type LogicalTransformInput = UserImageState["transform"];
@@ -245,6 +303,119 @@ export function PreviewComposer({
     });
   }, []);
 
+  // --- customer text values (spec 031) -------------------------------------
+  // The composer owns five PLAIN STRINGS. The operator owns the zone style and the placeholder;
+  // the two never mix, and the operator's default text is never copied into a value (Founder F-3).
+  const [texts, setTexts] = useState<Readonly<Record<FrameTextKey, string>>>(EMPTY_TEXTS);
+  const [textError, setTextError] = useState<FrameTextKey | null>(null);
+
+  const textZones = useMemo(
+    () => (geometry?.kind === "frame" ? geometry.value.textZones : []),
+    [geometry],
+  );
+
+  // a shape change clears every value; photo, colour and pan/zoom/rotation changes do not
+  // biome-ignore lint/correctness/useExhaustiveDependencies: these props ARE the reset signal
+  useEffect(() => {
+    setTexts(EMPTY_TEXTS);
+    setTextError(null);
+  }, [productKind, modelId, frameSizeId, templateId]);
+
+  // Fonts must be settled BEFORE measuring: measuring with a fallback and then painting with the
+  // real family would wrap differently, which is exactly the legacy preview/print divergence.
+  const [fontsReady, setFontsReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const fonts = (window.document as Document & { fonts?: FontFaceSet }).fonts;
+    if (fonts === undefined) {
+      setFontsReady(true);
+      return;
+    }
+    fonts.ready
+      .then(() => {
+        if (!cancelled) setFontsReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) setFontsReady(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const measurePortRef = useRef<((request: { text: string; font: PlanFontSpec }) => number) | null>(
+    null,
+  );
+  const measureText = useCallback((request: { text: string; font: PlanFontSpec }): number => {
+    if (measurePortRef.current === null) measurePortRef.current = createMeasurePort();
+    const port = measurePortRef.current;
+    // a missing port is a measurement failure, which fails the plan closed rather than guessing
+    if (port === null) return Number.NaN;
+    return port(request);
+  }, []);
+
+  const textValues = useMemo<ReadonlyMap<string, string>>(() => {
+    const map = new Map<string, string>();
+    for (const key of FRAME_TEXT_KEYS) {
+      const value = texts[key];
+      if (value !== "") map.set(key, value);
+    }
+    return map;
+  }, [texts]);
+
+  /** The last frame arguments a plan was built from, so an edit can be trial-built against them. */
+  const frameTrialRef = useRef<{
+    geometry: FramePreviewGeometry;
+    frameColor: string;
+    logicalWidth: number;
+    userImage: UserImageState;
+    templateArt: { readonly imageRef: string } | undefined;
+  } | null>(null);
+
+  /**
+   * Accept an edit only if it fits (Founder F-6/F-7). Over-long, over-tall or unwrappable input is
+   * REJECTED and the previously approved value stays — nothing is truncated, ellipsised or silently
+   * repaired, and the preview never drops to a partial render because of a keystroke.
+   */
+  const commitText = useCallback(
+    (key: FrameTextKey, next: string): void => {
+      const zone = textZones.find((candidate) => candidate.key === key);
+      if (zone === undefined) return;
+      if (next.length > zone.maxChars) {
+        setTextError(key);
+        return;
+      }
+      // explicit newlines alone can already exceed the line budget
+      if (next.split(NEWLINE).length > zone.maxLines) {
+        setTextError(key);
+        return;
+      }
+      // The wrap decides the rest, and only the BUILDER knows it. Trial-build with the same
+      // arguments instead of re-implementing the wrap here, so the two can never disagree.
+      const trial = frameTrialRef.current;
+      if (trial !== null && next !== "") {
+        const candidate = new Map(textValues);
+        candidate.set(key, next);
+        const result = buildFrameProductPlan({
+          geometry: trial.geometry,
+          frameColor: trial.frameColor,
+          logicalWidth: trial.logicalWidth,
+          userImage: trial.userImage,
+          templateArt: trial.templateArt,
+          textValues: candidate,
+          measureText,
+        });
+        if (!result.ok) {
+          setTextError(key);
+          return;
+        }
+      }
+      setTextError((current) => (current === key ? null : current));
+      setTexts((previous) => (previous[key] === next ? previous : { ...previous, [key]: next }));
+    },
+    [textZones, textValues, measureText],
+  );
+
   // --- pan/zoom editing state (spec 029) -----------------------------------
   // The composer owns one NORMALIZED transform per slot; the spec 026 owner keeps publishing its
   // fixed literal transform and is not touched. A slot with no entry is at the identity.
@@ -390,12 +561,24 @@ export function PreviewComposer({
       }
       const userImage = ready.get(FRAME_SLOT_ID);
       if (userImage === undefined || logicalWidth === null) return null;
+      // spec 031 §2.2: keep the EXACT arguments so a candidate edit can be trial-built against the
+      // real builder — the composer must not re-implement the wrap and risk disagreeing with it.
+      frameTrialRef.current = {
+        geometry: geometry.value,
+        frameColor: color,
+        logicalWidth,
+        userImage,
+        templateArt,
+      };
       const result = buildFrameProductPlan({
         geometry: geometry.value,
         frameColor: color,
         logicalWidth,
         userImage,
         templateArt,
+        // spec 031: only the customer's words travel here; the zone style comes from the geometry
+        textValues,
+        measureText,
       });
       return result.ok ? result.plan : null;
     };
@@ -403,6 +586,10 @@ export function PreviewComposer({
     // C-7: the probe MUST carry the rotation — a quarter turn swaps the cover footprint, so a probe
     // without it would hand back the unrotated `maxPan` and the pan would be clamped to the wrong
     // limit. Only the pan is zeroed here.
+    // spec 031 §2.3: with text to draw, a plan may not be built before the fonts are settled —
+    // a silent system fallback would wrap differently from what the customer finally sees.
+    if (!fontsReady && textValues.size > 0) return null;
+
     const probe = buildWith((_slotId, normalized) => ({
       scale: normalized.scale,
       x: 0,
@@ -432,7 +619,19 @@ export function PreviewComposer({
     });
     if (plan === null) return null;
     return { plan, maxPan };
-  }, [geometry, color, slotIds, entries, contentWidth, artBlocked, artReady, transforms]);
+  }, [
+    geometry,
+    color,
+    slotIds,
+    entries,
+    contentWidth,
+    artBlocked,
+    artReady,
+    transforms,
+    textValues,
+    measureText,
+    fontsReady,
+  ]);
 
   const plan = built?.plan ?? null;
 
@@ -556,6 +755,57 @@ export function PreviewComposer({
       applyToActive((current) => panTransform(current, dx, dy));
     },
     [applyToActive],
+  );
+
+  // --- physical clock overlay (spec 031 §2.7) -------------------------------
+  // The clock is HARDWARE on the finished product (Founder F-4): it is shown next to the canvas,
+  // never inside the plan, so it can never reach print, export or an order.
+  const clockPlacement = geometry?.kind === "frame" ? geometry.value.clockPreview : null;
+  const clockImageSrc = useMemo<string | null>(() => {
+    const custom = clockPlacement?.customImage ?? null;
+    if (custom === null) return null;
+    const resolved = resolvePublicImageSource({ kind: custom.sourceKind, value: custom.value });
+    // an unusable source simply falls back to the HH:MM placeholder — the clock never fails the
+    // preview, because it is not print data (spec 031 §3)
+    return resolved.ok ? resolved.src : null;
+  }, [clockPlacement]);
+
+  const [clockNowMs, setClockNowMs] = useState<number>(() => Date.now());
+  const clockOverlay = resolveClockOverlay({
+    enabled: clockPlacement !== null,
+    placement: clockPlacement,
+    imageSrc: clockImageSrc,
+    nowMs: clockNowMs,
+  });
+
+  // A custom clock image runs ZERO timers; only the text placeholder ticks, and only on the minute
+  // boundary. Exactly one timer may be alive, and it is cancelled on every ending.
+  const needsClockTick = clockOverlay.view.kind === "text";
+  const tickerRef = useRef<ReturnType<typeof createClockTicker> | null>(null);
+  useEffect(() => {
+    if (tickerRef.current === null) {
+      tickerRef.current = createClockTicker(
+        {
+          now: () => Date.now(),
+          setTimer: (callback, delayMs) => window.setTimeout(callback, delayMs),
+          clearTimer: (handle) => window.clearTimeout(handle),
+        },
+        () => setClockNowMs(Date.now()),
+      );
+    }
+    tickerRef.current.start(needsClockTick);
+    return () => {
+      tickerRef.current?.stop();
+    };
+  }, [needsClockTick]);
+  // StrictMode attach → detach → attach: dispose AND drop, so the next mount builds a fresh ticker
+  // and no timer from the previous mount can survive.
+  useEffect(
+    () => () => {
+      tickerRef.current?.dispose();
+      tickerRef.current = null;
+    },
+    [],
   );
 
   const status = useMemo<string | null>(() => {
@@ -782,6 +1032,63 @@ export function PreviewComposer({
         </fieldset>
       ) : null}
 
+      {geometry?.kind === "frame" ? (
+        <fieldset className="denn-composer__group" data-testid="preview-text">
+          <legend className="denn-composer__legend">{PREVIEW_TEXT_COPY.group}</legend>
+          {textZones.length === 0 ? (
+            <p className="denn-browse__notice">{PREVIEW_TEXT_COPY.none}</p>
+          ) : (
+            // only the keys THIS template defines are offered; the rest are not rendered at all
+            textZones.map((zone) => {
+              const inputId = `denn-preview-text-${zone.key}`;
+              const hintId = `${inputId}-hint`;
+              const value = texts[zone.key];
+              const invalid = textError === zone.key;
+              return (
+                <div className="denn-preview-text__row" key={zone.key}>
+                  <label className="denn-composer__slot-label" htmlFor={inputId}>
+                    {PREVIEW_TEXT_LABELS[zone.key] ?? zone.key}
+                  </label>
+                  <input
+                    id={inputId}
+                    data-testid={`preview-text-${zone.key}`}
+                    className="denn-preview-text__input"
+                    type="text"
+                    value={value}
+                    maxLength={zone.maxChars}
+                    aria-describedby={hintId}
+                    aria-invalid={invalid || undefined}
+                    onChange={(event) => {
+                      // IME: a composing value is provisional, so it is not committed yet
+                      if (
+                        event.nativeEvent instanceof InputEvent &&
+                        event.nativeEvent.isComposing
+                      ) {
+                        return;
+                      }
+                      commitText(zone.key, event.target.value);
+                    }}
+                    onCompositionEnd={(event) => {
+                      // validated exactly once, when the composition finishes
+                      commitText(zone.key, event.currentTarget.value);
+                    }}
+                  />
+                  <span
+                    className="denn-composer__slot-state"
+                    id={hintId}
+                    data-testid={`preview-text-hint-${zone.key}`}
+                  >
+                    {invalid
+                      ? textTooLongMessage(zone.maxChars)
+                      : textLengthHint(value.length, zone.maxChars)}
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </fieldset>
+      ) : null}
+
       <p className="denn-browse__notice" role="status" data-testid="preview-status">
         {status ?? ""}
       </p>
@@ -837,6 +1144,34 @@ export function PreviewComposer({
             imageBindings={imageBindings}
             accessibleName={PREVIEW_CANVAS_NAME[productKind]}
           />
+          {clockOverlay.view.kind !== "hidden" && clockOverlay.placement !== null ? (
+            // spec 031 §2.7: a DOM overlay, NOT a canvas layer — the physical clock must never be
+            // painted into the plan. It is decorative for assistive tech and ignores the pointer,
+            // so it can neither be read out nor block the photo drag.
+            <div
+              className="denn-preview-clock"
+              data-testid="preview-clock"
+              aria-hidden="true"
+              style={{
+                left: `${clockOverlay.placement.xPercent}%`,
+                top: `${clockOverlay.placement.yPercent}%`,
+                width: `${clockOverlay.placement.sizePercent}%`,
+              }}
+            >
+              {clockOverlay.view.kind === "image" ? (
+                <img
+                  className="denn-preview-clock__image"
+                  src={clockOverlay.view.src}
+                  alt=""
+                  data-testid="preview-clock-image"
+                />
+              ) : (
+                <span className="denn-preview-clock__label" data-testid="preview-clock-label">
+                  {clockOverlay.view.label}
+                </span>
+              )}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </section>

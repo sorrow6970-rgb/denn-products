@@ -19,6 +19,17 @@ import {
   type PreviewRenderPlan,
 } from "@denn/render";
 
+/**
+ * The spec 031 measurement port and text-zone input, typed STRUCTURALLY on purpose: the render
+ * package's barrel is outside this spec's allowed files, and a structural type is checked just as
+ * strictly by `tsc` as a named import would be.
+ */
+export type TextMeasurePort = NonNullable<
+  NonNullable<Parameters<typeof buildPreviewRenderPlan>[1]>["measureText"]
+>;
+type FrameTextZoneInput = NonNullable<FramePlanInput["textZones"]>[number];
+type PlanOptions = NonNullable<Parameters<typeof buildPreviewRenderPlan>[1]>;
+
 /** Exact `#RRGGBB` (no alpha, no `transparent`, no named colour, no CSS variable, no trimming). */
 const HEX6 = /^#[0-9A-Fa-f]{6}$/;
 /**
@@ -295,6 +306,14 @@ export interface FrameProductPlanInput {
   readonly userImage: UserImageState;
   /** optional template art binding key (spec 028); the destination is the mat rect. */
   readonly templateArt?: { readonly imageRef: string };
+  /**
+   * spec 031: the customer's value for each text key. A key with no entry (or `""`) renders
+   * nothing. The operator's zone style comes from `geometry.textZones`; this map carries ONLY the
+   * customer's words, so the two owners never mix.
+   */
+  readonly textValues?: ReadonlyMap<string, string>;
+  /** spec 031: required as soon as any text zone has a value; the plan is not built without it. */
+  readonly measureText?: TextMeasurePort;
 }
 
 /**
@@ -321,6 +340,11 @@ export function buildFrameProductPlan(input: FrameProductPlanInput): ProductPlan
     const rawImage = (input as FrameProductPlanInput).userImage;
     if (rawImage === undefined || rawImage === null) fail("MISSING_USER_IMAGE");
     const userImage = readImageState(rawImage);
+
+    const textZones = readFrameTextZones(
+      (input as FrameProductPlanInput).geometry,
+      (input as FrameProductPlanInput).textValues,
+    );
 
     const height = requirePositive(Math.round(width * geometry.aspect));
     const band = Math.max(1, Math.round((width * geometry.borderPercentOfWidth) / 100));
@@ -351,6 +375,8 @@ export function buildFrameProductPlan(input: FrameProductPlanInput): ProductPlan
         ? {}
         : { rotationQuarterTurns: userImage.rotationQuarterTurns }),
       imageRef: userImage.imageRef,
+      // spec 031: operator zone style + the customer's value, paired here and nowhere else
+      ...(textZones === undefined ? {} : { textZones }),
       ...(artRef === undefined
         ? {}
         : {
@@ -361,17 +387,59 @@ export function buildFrameProductPlan(input: FrameProductPlanInput): ProductPlan
             },
           }),
     };
-    return finish(framePlan);
+    return finish(framePlan, { measureText: (input as FrameProductPlanInput).measureText });
   });
 }
 
 // --- shared plumbing --------------------------------------------------------
 
 /** Hand the assembled input to the spec 020/024 builder; its code is never echoed. */
-function finish(planInput: Parameters<typeof buildPreviewRenderPlan>[0]): PreviewRenderPlan {
-  const built = buildPreviewRenderPlan(planInput);
+function finish(
+  planInput: Parameters<typeof buildPreviewRenderPlan>[0],
+  options?: PlanOptions,
+): PreviewRenderPlan {
+  const built = buildPreviewRenderPlan(planInput, options);
   if (!built.ok) fail("PLAN_BUILD_FAILED");
   return (built as { ok: true; plan: PreviewRenderPlan }).plan;
+}
+
+/**
+ * Pair each operator zone with the customer's value (spec 031). The zone style is copied field by
+ * field from the already-validated projection; the value is looked up by key and is the ONLY thing
+ * the customer controls. The operator's placeholder never enters this input (Founder F-3).
+ */
+function readFrameTextZones(
+  geometry: FramePreviewGeometry,
+  values: ReadonlyMap<string, string> | undefined,
+): readonly FrameTextZoneInput[] | undefined {
+  const zones = geometry.textZones;
+  if (!Array.isArray(zones) || zones.length === 0) return undefined;
+  const lookup = (key: string): string | undefined => {
+    if (values === undefined) return undefined;
+    try {
+      const found = values.get(key);
+      return typeof found === "string" ? found : undefined;
+    } catch {
+      fail("INVALID_ADAPTER_INPUT");
+    }
+  };
+  return zones.map((zone) => ({
+    value: lookup(zone.key),
+    xPercent: zone.xPercent,
+    yPercent: zone.yPercent,
+    boxWidthPercent: zone.boxWidthPercent,
+    fontSizePercent: zone.fontSizePercent,
+    align: zone.align,
+    fontFamily: zone.fontFamily,
+    bold: zone.bold,
+    italic: zone.italic,
+    color: zone.color,
+    lineHeight: zone.lineHeight,
+    letterSpacingPercent: zone.letterSpacingPercent,
+    rotationDegrees: zone.rotationDegrees,
+    maxChars: zone.maxChars,
+    maxLines: zone.maxLines,
+  }));
 }
 
 function run(build: () => PreviewRenderPlan): ProductPlanResult {

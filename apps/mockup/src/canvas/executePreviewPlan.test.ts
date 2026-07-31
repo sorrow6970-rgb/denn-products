@@ -19,6 +19,7 @@ import type {
   PreviewCanvasContext,
   PreviewImageBindings,
   RotationCapableCanvasContext,
+  TextCapableCanvasContext,
 } from "./types";
 
 // --- recording fake (spec 021 §B) -------------------------------------------
@@ -247,6 +248,8 @@ function expectedTrace(source: PreviewRenderPlan): string[] {
       // spec 028: one plain drawImage over destRect — no save/clip/restore around it
       const d = command.destRect;
       out.push(`call:drawImage(${d.x},${d.y},${d.width},${d.height})`);
+    } else if (command.type === "draw-text") {
+      // spec 031: text is executed by its own trace helper, not this image-oriented one
     } else {
       const c = command.clipRect;
       const d = command.drawRect;
@@ -1689,5 +1692,297 @@ describe("PreviewCanvasContext rotation capability (spec 030 보완 라운드 1)
     expect(typeof backToPort.save).toBe("function");
     expect(typeof derived.translate).toBe("function");
     expect(typeof derived.rotate).toBe("function");
+  });
+});
+
+// --- spec 031: text capability ------------------------------------------------
+//
+// SCOPE HONESTY (unchanged): a recording fake, so this proves the ORDER, the ARGUMENTS and the
+// save/restore pairing — never real glyphs. Real text pixels are asserted in the Chromium E2E.
+
+/** The spec 021 port PLUS the spec 030 rotation and spec 031 text capabilities. */
+class TextContext implements PreviewCanvasContext {
+  readonly log: { method: string; args: readonly (number | string)[] }[] = [];
+  fillStyle: string | CanvasGradient | CanvasPattern = "#000000";
+  strokeStyle: string | CanvasGradient | CanvasPattern = "#000000";
+  lineWidth = 1;
+  font = "";
+  textAlign: CanvasTextAlign = "start";
+  textBaseline: CanvasTextBaseline = "alphabetic";
+
+  constructor(private readonly throwOnMethod?: string) {}
+
+  private note(method: string, args: readonly (number | string)[] = []): void {
+    this.log.push({ method, args });
+    if (this.throwOnMethod === method) throw new Error("fake failure");
+  }
+
+  save(): void {
+    this.note("save");
+  }
+  restore(): void {
+    this.note("restore");
+  }
+  clearRect(): void {
+    this.note("clearRect");
+  }
+  fillRect(): void {
+    this.note("fillRect");
+  }
+  beginPath(): void {
+    this.note("beginPath");
+  }
+  rect(): void {
+    this.note("rect");
+  }
+  clip(): void {
+    this.note("clip");
+  }
+  drawImage(): void {
+    this.note("drawImage");
+  }
+  strokeRect(): void {
+    this.note("strokeRect");
+  }
+  translate(x: number, y: number): void {
+    this.note("translate", [x, y]);
+  }
+  rotate(angle: number): void {
+    this.note("rotate", [angle]);
+  }
+  fillText(text: string, x: number, y: number): void {
+    this.note("fillText", [text, x, y]);
+  }
+  measureText(text: string): TextMetrics {
+    this.note("measureText", [text]);
+    return { width: Array.from(text).length * 10 } as TextMetrics;
+  }
+
+  methods(): string[] {
+    return this.log.map((op) => op.method);
+  }
+  callsOf(method: string): readonly { method: string; args: readonly (number | string)[] }[] {
+    return this.log.filter((op) => op.method === method);
+  }
+}
+
+const textCmd = (over: Record<string, unknown> = {}): PreviewDrawCommand =>
+  ({
+    type: "draw-text",
+    layerId: "frame:text:0",
+    lines: [{ text: "AB", width: 20 }],
+    origin: { x: 100, y: 50 },
+    align: "center",
+    font: {
+      family: "DM Sans",
+      sizePx: 30,
+      weight: "normal",
+      italic: false,
+      fallback: "sans-serif",
+    },
+    color: "#111111",
+    lineHeightPx: 37.5,
+    letterSpacingPx: 0,
+    rotationDegrees: 0,
+    ...over,
+  }) as PreviewDrawCommand;
+
+describe("executePreviewRenderPlan — text (spec 031)", () => {
+  it("runs save → translate → font/align/baseline → fillText → restore inside ONE command", () => {
+    const context = new TextContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([textCmd()]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(true);
+    expect(context.methods()).toEqual([
+      "save", // outer
+      "clearRect",
+      "save", // command
+      "translate",
+      "fillText",
+      "restore", // command — the only undo for the transform AND the font/align state
+      "restore", // outer
+    ]);
+    expect(context.callsOf("translate")[0]?.args).toEqual([100, 50]);
+    expect(context.font).toBe('30px "DM Sans", sans-serif');
+    expect(context.fillStyle).toBe("#111111");
+  });
+
+  it("draws each line at its own line-height offset", () => {
+    const context = new TextContext();
+    executePreviewRenderPlan({
+      context,
+      plan: plan([
+        textCmd({
+          lines: [
+            { text: "A", width: 10 },
+            { text: "B", width: 10 },
+          ],
+        }),
+      ]),
+      imageBindings: BINDINGS,
+    });
+    expect(context.callsOf("fillText").map((call) => call.args)).toEqual([
+      ["A", 0, 0],
+      ["B", 0, 37.5],
+    ]);
+  });
+
+  it("applies an arbitrary rotation, and none when it is 0", () => {
+    const rotated = new TextContext();
+    executePreviewRenderPlan({
+      context: rotated,
+      plan: plan([textCmd({ rotationDegrees: 90 })]),
+      imageBindings: BINDINGS,
+    });
+    expect(rotated.callsOf("rotate")[0]?.args).toEqual([Math.PI / 2]);
+
+    const upright = new TextContext();
+    executePreviewRenderPlan({
+      context: upright,
+      plan: plan([textCmd()]),
+      imageBindings: BINDINGS,
+    });
+    expect(upright.methods()).not.toContain("rotate");
+  });
+
+  it("draws glyph by glyph for letter spacing, never using ctx.letterSpacing", () => {
+    const context = new TextContext();
+    executePreviewRenderPlan({
+      context,
+      plan: plan([
+        textCmd({ lines: [{ text: "AB", width: 25 }], letterSpacingPx: 5, align: "left" }),
+      ]),
+      imageBindings: BINDINGS,
+    });
+    const calls = context.callsOf("fillText").map((call) => call.args);
+    // left aligned: pen starts at 0, advances by the glyph width plus the spacing
+    expect(calls).toEqual([
+      ["A", 0, 0],
+      ["B", 15, 0],
+    ]);
+    expect("letterSpacing" in context).toBe(false);
+  });
+
+  it("shifts the pen so a centred/right-aligned spaced line still lands correctly", () => {
+    for (const [align, firstX] of [
+      ["center", -12.5],
+      ["right", -25],
+    ] as const) {
+      const context = new TextContext();
+      executePreviewRenderPlan({
+        context,
+        plan: plan([textCmd({ lines: [{ text: "AB", width: 25 }], letterSpacingPx: 5, align })]),
+        imageBindings: BINDINGS,
+      });
+      expect(context.callsOf("fillText")[0]?.args[1]).toBe(firstX);
+    }
+  });
+
+  it("restores even when the draw throws, and stops at that command", () => {
+    const context = new TextContext("fillText");
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([textCmd(), FILL]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.code).toBe("CANVAS_OPERATION_FAILED");
+    expect(context.methods().filter((m) => m === "restore")).toHaveLength(2);
+    // execution stopped: the following fill never ran
+    expect(context.methods()).not.toContain("fillRect");
+  });
+
+  it("FAILS CLOSED on a context without the text capability — nothing is drawn", () => {
+    const context = new RecordingContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([textCmd()]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.code).toBe("INVALID_EXECUTOR_INPUT");
+    expect(context.ops).toHaveLength(0);
+  });
+
+  it("a text-free plan still runs on a context without the capability", () => {
+    const context = new RecordingContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([FILL, IMAGE, STROKE]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("REJECTS a malformed text command as an invalid plan", () => {
+    const bad: Record<string, unknown>[] = [
+      { lines: [] },
+      { lines: "AB" },
+      { lines: [{ text: 1, width: 10 }] },
+      { lines: [{ text: "A", width: -1 }] },
+      { origin: { x: Number.NaN, y: 0 } },
+      { align: "justify" },
+      { color: "red" },
+      { lineHeightPx: Number.NaN },
+      { letterSpacingPx: Number.POSITIVE_INFINITY },
+      { rotationDegrees: Number.NaN },
+      { font: { family: "", sizePx: 10, weight: "normal", italic: false, fallback: "sans-serif" } },
+      {
+        font: {
+          family: 'a"b',
+          sizePx: 10,
+          weight: "normal",
+          italic: false,
+          fallback: "sans-serif",
+        },
+      },
+      { font: { family: "A", sizePx: 0, weight: "normal", italic: false, fallback: "sans-serif" } },
+      { font: { family: "A", sizePx: 10, weight: "heavy", italic: false, fallback: "sans-serif" } },
+      { font: { family: "A", sizePx: 10, weight: "normal", italic: false, fallback: "comic" } },
+    ];
+    for (const over of bad) {
+      const context = new TextContext();
+      const result = executePreviewRenderPlan({
+        context,
+        plan: plan([textCmd(over)]),
+        imageBindings: BINDINGS,
+      });
+      expect(result.ok, JSON.stringify(over)).toBe(false);
+      if (result.ok) throw new Error("expected failure");
+      expect(result.code).toBe("INVALID_PLAN");
+      expect(context.log).toHaveLength(0);
+    }
+  });
+
+  it("assembles the font shorthand from the structured spec", () => {
+    const context = new TextContext();
+    executePreviewRenderPlan({
+      context,
+      plan: plan([
+        textCmd({
+          font: {
+            family: "Noto Serif KR",
+            sizePx: 18,
+            weight: "bold",
+            italic: true,
+            fallback: "serif",
+          },
+        }),
+      ]),
+      imageBindings: BINDINGS,
+    });
+    expect(context.font).toBe('italic bold 18px "Noto Serif KR", serif');
+  });
+
+  it("a real CanvasRenderingContext2D satisfies the text capability at compile time", () => {
+    const asPort = (value: CanvasRenderingContext2D): PreviewCanvasContext => value;
+    const asTextCapable = (value: CanvasRenderingContext2D): TextCapableCanvasContext => value;
+    expect(typeof asPort).toBe("function");
+    expect(typeof asTextCapable).toBe("function");
   });
 });

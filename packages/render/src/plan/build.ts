@@ -16,11 +16,15 @@ import type {
   FramePlanInput,
   HexColor,
   ImageIntrinsicSize,
+  PlanFontSpec,
+  PlanTextLine,
   PreviewDrawCommand,
   PreviewRenderPlanInput,
+  PreviewRenderPlanOptions,
   RenderPlanErrorCode,
   RenderPlanResult,
   StrokeSpec,
+  TextMeasurePort,
   ZoneRect,
 } from "./types";
 
@@ -57,7 +61,14 @@ function commandsAllFinite(commands: readonly PreviewDrawCommand[]): boolean {
     let rects: Rect[];
     if (c.type === "draw-image-cover") rects = [c.clipRect, c.drawRect];
     else if (c.type === "draw-image-stretch") rects = [c.destRect];
-    else rects = [c.rect];
+    else if (c.type === "draw-text") {
+      // spec 031: text has an origin and measured widths instead of a rect
+      if (!Number.isFinite(c.origin.x) || !Number.isFinite(c.origin.y)) return false;
+      if (!Number.isFinite(c.lineHeightPx) || !Number.isFinite(c.letterSpacingPx)) return false;
+      if (!Number.isFinite(c.rotationDegrees) || !Number.isFinite(c.font.sizePx)) return false;
+      if (c.lines.some((line) => !Number.isFinite(line.width))) return false;
+      continue;
+    } else rects = [c.rect];
     for (const r of rects) {
       if (
         !Number.isFinite(r.x) ||
@@ -342,7 +353,7 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
   };
 }
 
-function buildFrame(input: FramePlanInput): RenderPlanResult {
+function buildFrame(input: FramePlanInput, options?: PreviewRenderPlanOptions): RenderPlanResult {
   // Every frame value is read ONCE into a plain snapshot below, so a getter that returns a valid
   // rect during validation and a different one later cannot influence the emitted commands
   // (spec 024 §4). Nothing here re-reads the caller's objects.
@@ -390,6 +401,11 @@ function buildFrame(input: FramePlanInput): RenderPlanResult {
   const drawn = coverCommand("frame:user-image", imageRef, imageZone, image, transform, rotation);
   if ("code" in drawn) return fail(drawn.code, drawn.causeCode);
 
+  // spec 031: text sits over the art and under the inner border. Any text failure rejects the
+  // whole plan — there is no partial plan and no previous-value fallback.
+  const textCommands = frameTextCommands(input, canvas, options?.measureText);
+  if (typeof textCommands === "string") return fail(textCommands);
+
   const commands: PreviewDrawCommand[] = [
     { type: "fill-rect", layerId: "frame:body", rect: frameRect, color: frameColor },
     // the mat fills its OWN rect; the photo zone is a separate, smaller rect (spec 024 §1, §2)
@@ -397,6 +413,7 @@ function buildFrame(input: FramePlanInput): RenderPlanResult {
     drawn.command,
     // legacy order: art over the photo, under the inner border (mockup:3093-3097, :3133)
     ...(art === undefined ? [] : [artCommand("frame:template-art", art)]),
+    ...textCommands,
   ];
   if (innerBorder) {
     commands.push({
@@ -488,18 +505,317 @@ const rectCopy = (r: Rect): Rect => ({ x: r.x, y: r.y, width: r.width, height: r
  * Never throws — ordinary (or runtime-malformed) bad input returns a typed error Result. Never emits
  * placeholder commands for template-art/camera/magsafe/text/clock (no data for them in this spec).
  */
-export function buildPreviewRenderPlan(input: PreviewRenderPlanInput): RenderPlanResult {
+export function buildPreviewRenderPlan(
+  input: PreviewRenderPlanInput,
+  options?: PreviewRenderPlanOptions,
+): RenderPlanResult {
   try {
     if (!isObj(input)) return fail("INVALID_KIND");
     const kind = input.kind; // read once: a drifting `kind` cannot re-route after the check
     if (kind !== "case" && kind !== "frame") return fail("INVALID_KIND");
     return kind === "case"
       ? buildCase(input as CasePlanInput)
-      : buildFrame(input as FramePlanInput);
+      : buildFrame(input as FramePlanInput, options);
   } catch {
     // Last-resort boundary (spec 024 §4): a property read anywhere in the input can throw (hostile
     // getter, Proxy trap, revoked Proxy). Such input is not a usable zone, and the existing error
     // code set is NOT extended. The thrown object is never stored or surfaced.
     return fail("INVALID_ZONE");
   }
+}
+
+// --- spec 031: deterministic text -------------------------------------------
+//
+// Wrapping happens HERE, once, through the injected measurement port, so the plan is deterministic
+// and the executor never re-wraps. Nothing repairs a bad value: an over-long string, a control
+// character or a wrap that needs more lines than the zone allows rejects the WHOLE plan — there is
+// no truncation, no ellipsis, no partial command and no fallback to a previous value (Founder F-6).
+
+/** `\n` is the only allowed control character; every other C0/C1 code point is rejected. */
+const NEWLINE = String.fromCharCode(10);
+
+/** A newline is the only allowed control character; every other C0/C1 code point is rejected. */
+function hasForbiddenControlChar(value: string): boolean {
+  for (const char of value) {
+    if (char === NEWLINE) continue;
+    const code = char.codePointAt(0) ?? 0;
+    if (code <= 0x1f || (code >= 0x7f && code <= 0x9f)) return true;
+  }
+  return false;
+}
+
+const FORBIDDEN_FAMILY_CHARS = new Set(['"', "'", ";", "\\"]);
+
+/** 1..64 code units, no control characters and no quote/semicolon/backslash. */
+function isUsableFontFamily(value: string): boolean {
+  if (value.length < 1 || value.length > 64) return false;
+  for (const char of value) {
+    const code = char.codePointAt(0) ?? 0;
+    if (code <= 0x1f || (code >= 0x7f && code <= 0x9f)) return false;
+    if (FORBIDDEN_FAMILY_CHARS.has(char)) return false;
+  }
+  return true;
+}
+
+const isBool = (v: unknown): v is boolean => typeof v === "boolean";
+const inClosed = (v: unknown, min: number, max: number): v is number =>
+  isFiniteNum(v) && v >= min && v <= max;
+const inHalfOpen = (v: unknown, max: number): v is number => isFiniteNum(v) && v > 0 && v <= max;
+const isIntIn = (v: unknown, min: number, max: number): v is number =>
+  isFiniteNum(v) && Number.isInteger(v) && v >= min && v <= max;
+
+/** A text zone whose every field was read exactly once and validated. */
+interface NormalizedTextZone {
+  readonly value: string | undefined;
+  readonly xPercent: number;
+  readonly yPercent: number;
+  readonly boxWidthPercent: number;
+  readonly fontSizePercent: number;
+  readonly align: "left" | "center" | "right";
+  readonly fontFamily: string;
+  readonly bold: boolean;
+  readonly italic: boolean;
+  readonly color: HexColor;
+  readonly lineHeight: number;
+  readonly letterSpacingPercent: number;
+  readonly rotationDegrees: number;
+  readonly maxChars: number;
+  readonly maxLines: number;
+}
+
+/**
+ * Read ONE text zone into a plain snapshot. Every field is taken exactly once, so a getter that
+ * returns a valid value to the check and a different one afterwards cannot reach the plan.
+ */
+function readTextZoneOnce(value: unknown): NormalizedTextZone | RenderPlanErrorCode {
+  if (!isObj(value)) return "INVALID_TEXT";
+  const raw = value.value;
+  if (raw !== undefined && typeof raw !== "string") return "INVALID_TEXT";
+  const x = value.xPercent;
+  const y = value.yPercent;
+  if (!inClosed(x, 0, 100) || !inClosed(y, 0, 100)) return "INVALID_TEXT";
+  const boxWidthPercent = value.boxWidthPercent;
+  const fontSizePercent = value.fontSizePercent;
+  if (!inHalfOpen(boxWidthPercent, 100) || !inHalfOpen(fontSizePercent, 100)) return "INVALID_TEXT";
+  const align = value.align;
+  if (align !== "left" && align !== "center" && align !== "right") return "INVALID_TEXT";
+  const fontFamily = value.fontFamily;
+  if (typeof fontFamily !== "string" || !isUsableFontFamily(fontFamily)) return "INVALID_TEXT";
+  const bold = value.bold;
+  const italic = value.italic;
+  if (!isBool(bold) || !isBool(italic)) return "INVALID_TEXT";
+  const color = value.color;
+  if (!isHex(color)) return "INVALID_COLOR";
+  const lineHeight = value.lineHeight;
+  if (!inHalfOpen(lineHeight, 3)) return "INVALID_TEXT";
+  const letterSpacingPercent = value.letterSpacingPercent;
+  if (!inClosed(letterSpacingPercent, -100, 100)) return "INVALID_TEXT";
+  const rotationDegrees = value.rotationDegrees;
+  if (!inClosed(rotationDegrees, -360, 360)) return "INVALID_TEXT";
+  const maxChars = value.maxChars;
+  if (!isIntIn(maxChars, 1, 200)) return "INVALID_TEXT";
+  const maxLines = value.maxLines;
+  if (!isIntIn(maxLines, 1, 5)) return "INVALID_TEXT";
+  return {
+    value: raw,
+    xPercent: x,
+    yPercent: y,
+    boxWidthPercent,
+    fontSizePercent,
+    align,
+    fontFamily,
+    bold,
+    italic,
+    color,
+    lineHeight,
+    letterSpacingPercent,
+    rotationDegrees,
+    maxChars,
+    maxLines,
+  };
+}
+
+/** Measure through the port; any throw / non-finite / negative result fails the plan closed. */
+function measure(port: TextMeasurePort, text: string, font: PlanFontSpec): number | null {
+  let width: unknown;
+  try {
+    width = port({ text, font });
+  } catch {
+    return null; // the thrown value is never stored or surfaced
+  }
+  if (!isFiniteNum(width) || width < 0) return null;
+  return width;
+}
+
+/**
+ * Width of `text` including letter spacing: spacing is added between ADJACENT glyphs only, so a
+ * single code point costs no spacing. Code points (not UTF-16 units) are the glyph unit, matching
+ * the executor's per-glyph draw.
+ */
+function measureWithSpacing(
+  port: TextMeasurePort,
+  text: string,
+  font: PlanFontSpec,
+  spacingPx: number,
+): number | null {
+  const base = measure(port, text, font);
+  if (base === null) return null;
+  if (spacingPx === 0) return base;
+  const glyphs = Array.from(text).length;
+  const total = base + Math.max(0, glyphs - 1) * spacingPx;
+  return Number.isFinite(total) ? total : null;
+}
+
+/**
+ * Wrap one paragraph: word boundaries first, then a hard code-point split for a single word that
+ * still does not fit. A word longer than the box is broken rather than allowed to overflow.
+ */
+function wrapParagraph(
+  port: TextMeasurePort,
+  paragraph: string,
+  font: PlanFontSpec,
+  spacingPx: number,
+  maxWidth: number,
+): PlanTextLine[] | null {
+  if (paragraph === "") return [{ text: "", width: 0 }];
+  const out: PlanTextLine[] = [];
+  let current = "";
+  let currentWidth = 0;
+
+  const flush = (): void => {
+    out.push({ text: current, width: currentWidth });
+    current = "";
+    currentWidth = 0;
+  };
+
+  /** Break a single oversized token into code-point chunks that each fit. */
+  const breakToken = (token: string): boolean => {
+    for (const glyph of Array.from(token)) {
+      const candidate = current + glyph;
+      const width = measureWithSpacing(port, candidate, font, spacingPx);
+      if (width === null) return false;
+      if (width > maxWidth && current !== "") {
+        flush();
+        const alone = measureWithSpacing(port, glyph, font, spacingPx);
+        if (alone === null) return false;
+        current = glyph;
+        currentWidth = alone;
+        continue;
+      }
+      current = candidate;
+      currentWidth = width;
+    }
+    return true;
+  };
+
+  for (const word of paragraph.split(" ")) {
+    const candidate = current === "" ? word : `${current} ${word}`;
+    const width = measureWithSpacing(port, candidate, font, spacingPx);
+    if (width === null) return null;
+    if (width <= maxWidth) {
+      current = candidate;
+      currentWidth = width;
+      continue;
+    }
+    if (current !== "") flush();
+    const alone = measureWithSpacing(port, word, font, spacingPx);
+    if (alone === null) return null;
+    if (alone <= maxWidth) {
+      current = word;
+      currentWidth = alone;
+      continue;
+    }
+    // the word alone overflows: split it by code point
+    if (!breakToken(word)) return null;
+  }
+  flush();
+  return out;
+}
+
+/**
+ * Build one `draw-text` command, or `undefined` when the zone is empty.
+ *
+ * Order of checks mirrors spec 031 §3: the customer's characters and length first, then the
+ * measurement, then the wrap against `maxLines`.
+ */
+function textCommand(
+  layerId: string,
+  zone: NormalizedTextZone,
+  canvas: { width: number; height: number },
+  port: TextMeasurePort | undefined,
+): { command: PreviewDrawCommand } | { code: RenderPlanErrorCode } | undefined {
+  const value = zone.value;
+  // `undefined` and `""` are the ONLY empties. `"0"` is a real value and must render.
+  if (value === undefined || value === "") return undefined;
+  if (hasForbiddenControlChar(value)) return { code: "INVALID_TEXT" };
+  // UTF-16 code units, to match the HTML `maxLength` the input enforces
+  if (value.length > zone.maxChars) return { code: "INVALID_TEXT" };
+  if (port === undefined) return { code: "TEXT_MEASUREMENT_FAILED" };
+
+  const sizePx = (zone.fontSizePercent / 100) * canvas.width;
+  const boxWidth = (zone.boxWidthPercent / 100) * canvas.width;
+  const lineHeightPx = sizePx * zone.lineHeight;
+  const letterSpacingPx = (zone.letterSpacingPercent / 100) * sizePx;
+  if (!isFiniteNum(sizePx) || sizePx <= 0) return { code: "INVALID_TEXT" };
+  if (!isFiniteNum(boxWidth) || boxWidth <= 0) return { code: "INVALID_TEXT" };
+  if (!isFiniteNum(lineHeightPx) || !isFiniteNum(letterSpacingPx)) return { code: "INVALID_TEXT" };
+
+  const font: PlanFontSpec = {
+    family: zone.fontFamily,
+    sizePx,
+    weight: zone.bold ? "bold" : "normal",
+    italic: zone.italic,
+    fallback: "sans-serif",
+  };
+
+  const lines: PlanTextLine[] = [];
+  // explicit newlines first, then word wrapping inside each paragraph
+  for (const paragraph of value.split("\n")) {
+    const wrapped = wrapParagraph(port, paragraph, font, letterSpacingPx, boxWidth);
+    if (wrapped === null) return { code: "TEXT_MEASUREMENT_FAILED" };
+    lines.push(...wrapped);
+    if (lines.length > zone.maxLines) return { code: "INVALID_TEXT" };
+  }
+  if (lines.length === 0 || lines.length > zone.maxLines) return { code: "INVALID_TEXT" };
+
+  const originX = (zone.xPercent / 100) * canvas.width;
+  const originY = (zone.yPercent / 100) * canvas.height;
+  if (!isFiniteNum(originX) || !isFiniteNum(originY)) return { code: "NON_FINITE_RESULT" };
+
+  return {
+    command: {
+      type: "draw-text",
+      layerId,
+      lines,
+      origin: { x: originX, y: originY },
+      align: zone.align,
+      font,
+      color: zone.color,
+      lineHeightPx,
+      letterSpacingPx,
+      rotationDegrees: zone.rotationDegrees,
+    },
+  };
+}
+
+/** All text commands for a frame, in source order. Any failure rejects the whole plan. */
+function frameTextCommands(
+  input: FramePlanInput,
+  canvas: { width: number; height: number },
+  port: TextMeasurePort | undefined,
+): PreviewDrawCommand[] | RenderPlanErrorCode {
+  const raw: unknown = input.textZones;
+  if (raw === undefined || raw === null) return [];
+  if (!Array.isArray(raw)) return "INVALID_TEXT";
+  const commands: PreviewDrawCommand[] = [];
+  for (let index = 0; index < (raw as readonly unknown[]).length; index++) {
+    const zone = readTextZoneOnce((raw as readonly unknown[])[index]);
+    if (typeof zone === "string") return zone;
+    // the layerId is positional on purpose: the zone key never reaches a command
+    const built = textCommand(`frame:text:${index}`, zone, canvas, port);
+    if (built === undefined) continue;
+    if ("code" in built) return built.code;
+    commands.push(built.command);
+  }
+  return commands;
 }

@@ -22,12 +22,21 @@
 import { hasCatalogTemplateDesignSource } from "../images/project";
 import { isPlainObject } from "../json";
 import type { CatalogDocumentV1, CatalogItemV1 } from "../types";
+import {
+  FRAME_TEXT_DEFAULT_MAX_CHARS,
+  FRAME_TEXT_DEFAULT_MAX_LINES,
+  FRAME_TEXT_KEYS,
+} from "./types";
 import type {
   CasePreviewGeometry,
   CasePreviewSelection,
   CasePreviewZone,
+  FrameClockPreview,
   FramePreviewGeometry,
   FramePreviewSelection,
+  FrameTextAlign,
+  FrameTextKey,
+  FrameTextZone,
   PreviewPercentRect,
   PreviewProjectionCollection,
   PreviewProjectionDiagnostic,
@@ -376,7 +385,18 @@ function projectFrame(
   }
   diagnostics.add("ALPHA_OUTLINE_OMITTED", "frameTemplates", found.index);
 
-  return { aspect: aspect as number, borderPercentOfWidth, matColor, contentInsetPx };
+  // spec 031: operator-owned text zones and the PHYSICAL clock placement (preview-only).
+  const textZones = readTextZones(template);
+  const clockPreview = readClockPreview(data, size, template);
+
+  return {
+    aspect: aspect as number,
+    borderPercentOfWidth,
+    matColor,
+    contentInsetPx,
+    textZones,
+    clockPreview,
+  };
 }
 
 function run<T>(project: (diagnostics: Diagnostics) => T): PreviewProjectionResult<T> {
@@ -419,4 +439,219 @@ export function projectFramePreviewGeometry(
   selection: FramePreviewSelection,
 ): PreviewProjectionResult<FramePreviewGeometry> {
   return run((diagnostics) => projectFrame(document, selection, diagnostics));
+}
+
+// --- spec 031: frame text zones + physical clock preview ----------------------
+//
+// Every value is read EXACTLY ONCE inside the projection's exception boundary and copied into a
+// plain snapshot, so a hostile getter, a Proxy trap, a revoked Proxy or a drifting accessor cannot
+// put an unvalidated value into the output. Nothing here repairs, clamps or defaults a malformed
+// value — an out-of-range zone fails the WHOLE projection (spec 031 §2.1).
+
+const FORBIDDEN_FAMILY_CHARS: ReadonlySet<string> = new Set(['"', "'", ";", "\\"]);
+
+/** 1..64 code units, no control characters and no quote/semicolon/backslash. */
+function isUsableFontFamily(value: string): boolean {
+  if (value.length < 1 || value.length > 64) return false;
+  for (const char of value) {
+    const code = char.codePointAt(0) ?? 0;
+    if (code <= 0x1f || (code >= 0x7f && code <= 0x9f)) return false;
+    if (FORBIDDEN_FAMILY_CHARS.has(char)) return false;
+  }
+  return true;
+}
+
+const isIntegerInRange = (value: unknown, min: number, max: number): boolean =>
+  isFiniteNumber(value) && Number.isInteger(value) && value >= min && value <= max;
+
+const isInClosedRange = (value: unknown, min: number, max: number): boolean =>
+  isFiniteNumber(value) && value >= min && value <= max;
+
+/** `(0..max]` — zero is not a usable width, size or line height. */
+const isInHalfOpenRange = (value: unknown, max: number): boolean =>
+  isFiniteNumber(value) && value > 0 && value <= max;
+
+const FRAME_TEXT_KEY_SET: ReadonlySet<string> = new Set(FRAME_TEXT_KEYS);
+
+/** Same classification the spec 018 image projection uses; kept local to avoid a wider change. */
+function classifyClockImage(value: unknown): "data-image" | "https-image" | null {
+  if (typeof value !== "string" || value.length === 0) return null;
+  if (/^data:image\//i.test(value)) return "data-image";
+  try {
+    return new URL(value).protocol === "https:" ? "https-image" : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Operator sample text for one key, read once. It is a PLACEHOLDER ONLY (Founder F-3) and is never
+ * copied into an input value or a plan. `name2` never has one — the legacy editor cannot author it.
+ */
+function readPlaceholder(defaults: unknown, key: FrameTextKey): string | undefined {
+  if (key === "name2") return undefined;
+  if (!isPlainObject(defaults)) return undefined;
+  const raw = (defaults as Record<string, unknown>)[key];
+  if (typeof raw !== "string" || raw.length === 0) return undefined;
+  return raw;
+}
+
+/** Read ONE text zone into a validated plain snapshot. Any violation fails the projection. */
+function readTextZone(value: unknown, defaults: unknown, seen: Set<string>): FrameTextZone {
+  if (!isPlainObject(value)) fail("INVALID_ITEM");
+  const zone = value as Record<string, unknown>;
+
+  const key = zone.key;
+  if (typeof key !== "string" || !FRAME_TEXT_KEY_SET.has(key)) fail("INVALID_GEOMETRY");
+  if (seen.has(key as string)) fail("INVALID_GEOMETRY"); // duplicate key is fatal, not a warning
+  seen.add(key as string);
+
+  // percent position: 0..100 inclusive (the legacy authoring sliders are bounded the same way)
+  const x = zone.x;
+  const y = zone.y;
+  if (!isInClosedRange(x, 0, 100) || !isInClosedRange(y, 0, 100)) fail("INVALID_GEOMETRY");
+
+  const boxW = zone.boxW;
+  const fontSize = zone.fontSize;
+  if (!isInHalfOpenRange(boxW, 100) || !isInHalfOpenRange(fontSize, 100)) fail("INVALID_GEOMETRY");
+
+  const align = zone.align;
+  if (align !== "left" && align !== "center" && align !== "right") fail("INVALID_GEOMETRY");
+
+  const font = zone.font;
+  if (typeof font !== "string" || !isUsableFontFamily(font)) fail("INVALID_GEOMETRY");
+
+  const bold = zone.bold;
+  const italic = zone.italic;
+  if (typeof bold !== "boolean" || typeof italic !== "boolean") fail("INVALID_GEOMETRY");
+
+  const color = zone.color;
+  if (typeof color !== "string" || !HEX6.test(color)) fail("INVALID_GEOMETRY");
+
+  const lineH = zone.lineH;
+  if (!isInHalfOpenRange(lineH, 3)) fail("INVALID_GEOMETRY");
+
+  const letterSpacing = zone.letterSpacing;
+  if (!isInClosedRange(letterSpacing, -100, 100)) fail("INVALID_GEOMETRY");
+
+  const rotation = zone.rotation;
+  if (!isInClosedRange(rotation, -360, 360)) fail("INVALID_GEOMETRY");
+
+  // caps: absent means the approved default; present means it must be a valid integer
+  const rawMaxChars = zone.maxChars;
+  const maxChars =
+    rawMaxChars === undefined ? FRAME_TEXT_DEFAULT_MAX_CHARS : (rawMaxChars as number);
+  if (rawMaxChars !== undefined && !isIntegerInRange(rawMaxChars, 1, 200)) fail("INVALID_GEOMETRY");
+
+  const rawMaxLines = zone.maxLines;
+  const maxLines =
+    rawMaxLines === undefined ? FRAME_TEXT_DEFAULT_MAX_LINES : (rawMaxLines as number);
+  if (rawMaxLines !== undefined && !isIntegerInRange(rawMaxLines, 1, 5)) fail("INVALID_GEOMETRY");
+
+  const placeholder = readPlaceholder(defaults, key as FrameTextKey);
+  return {
+    key: key as FrameTextKey,
+    xPercent: x as number,
+    yPercent: y as number,
+    boxWidthPercent: boxW as number,
+    fontSizePercent: fontSize as number,
+    align: align as FrameTextAlign,
+    fontFamily: font as string,
+    bold: bold as boolean,
+    italic: italic as boolean,
+    color: (color as string).toUpperCase(),
+    lineHeight: lineH as number,
+    letterSpacingPercent: letterSpacing as number,
+    rotationDegrees: rotation as number,
+    maxChars,
+    maxLines,
+    ...(placeholder === undefined ? {} : { placeholder }),
+  };
+}
+
+/** Zones in source order. An absent/empty list is valid — the template simply has no text. */
+function readTextZones(template: Record<string, unknown>): readonly FrameTextZone[] {
+  const raw = template.textZones;
+  if (raw === undefined || raw === null) return [];
+  if (!Array.isArray(raw)) fail("INVALID_GEOMETRY");
+  const defaults = template.defaultTexts;
+  const seen = new Set<string>();
+  const zones: FrameTextZone[] = [];
+  for (const item of raw as readonly unknown[]) zones.push(readTextZone(item, defaults, seen));
+  return zones;
+}
+
+/**
+ * Whether this template carries a physical clock (legacy `isClockTemplate`,
+ * denn-mockup-tool.html:971-975): ONLY an explicit opt-out means "no clock". A template with no
+ * `clock` field at all is a clock frame, which is why the legacy default reads as "has clock".
+ */
+function templateHasClock(template: Record<string, unknown>): boolean {
+  if (template.clockEnabled === false) return false;
+  const clock = template.clock;
+  if (clock === false) return false;
+  // a builder-made template that explicitly stored a null clock opted out
+  if (template.builtBy === "builder" && Object.hasOwn(template, "clock") && clock == null) {
+    return false;
+  }
+  return true;
+}
+
+/** One clock override level, read once. `undefined` fields simply do not override. */
+function readClockLevel(
+  value: unknown,
+): Partial<Record<"x" | "y" | "size" | "customImg", unknown>> {
+  if (!isPlainObject(value)) return {};
+  const level = value as Record<string, unknown>;
+  return { x: level.x, y: level.y, size: level.size, customImg: level.customImg };
+}
+
+/**
+ * The physical clock's placement, merged over three levels exactly as the legacy preview does
+ * (denn-mockup-tool.html:1775-1777): global `clockSettings`, then the frame size, then the template.
+ * A level only overrides a field it actually defines.
+ *
+ * The clock is NOT artwork (Founder F-4): this never reaches the plan, print or export.
+ */
+function readClockPreview(
+  data: Record<string, unknown>,
+  size: Record<string, unknown>,
+  template: Record<string, unknown>,
+): FrameClockPreview | null {
+  if (!templateHasClock(template)) return null;
+
+  const levels = [
+    readClockLevel(data.clockSettings),
+    readClockLevel(size.clock),
+    readClockLevel(template.clock),
+  ];
+  // legacy defaults (mockup:1775): bottom-right at 88/88, 12% of the shorter side
+  let xPercent = 88;
+  let yPercent = 88;
+  let sizePercent = 12;
+  let customImage: FrameClockPreview["customImage"] = null;
+
+  for (const level of levels) {
+    if (level.x !== undefined && level.x !== null) {
+      if (!isInClosedRange(level.x, 0, 100)) fail("INVALID_GEOMETRY");
+      xPercent = level.x as number;
+    }
+    if (level.y !== undefined && level.y !== null) {
+      if (!isInClosedRange(level.y, 0, 100)) fail("INVALID_GEOMETRY");
+      yPercent = level.y as number;
+    }
+    if (level.size !== undefined && level.size !== null) {
+      if (!isInHalfOpenRange(level.size, 100)) fail("INVALID_GEOMETRY");
+      sizePercent = level.size as number;
+    }
+    if (level.customImg !== undefined && level.customImg !== null) {
+      const sourceKind = classifyClockImage(level.customImg);
+      // an unusable source is not a projection failure: the overlay simply falls back to the
+      // `HH:MM` placeholder. The clock must never poison the photo/text plan (spec 031 §3).
+      customImage =
+        sourceKind === null ? customImage : { sourceKind, value: level.customImg as string };
+    }
+  }
+
+  return { xPercent, yPercent, sizePercent, customImage };
 }

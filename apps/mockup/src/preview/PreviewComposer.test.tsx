@@ -434,3 +434,119 @@ describe("PreviewComposer — rotation controls (spec 030)", () => {
     expect(markup.slice(right, right + 200)).toContain("disabled");
   });
 });
+
+// --- spec 031: text inputs and the physical clock overlay ---------------------
+//
+// SCOPE: a static render proves the controls EXIST with the approved copy and caps. Typing, IME,
+// caps enforcement, real pixels and the clock's ticking are asserted in the Chromium E2E.
+
+const frameTextDoc = (template: Record<string, unknown>): CatalogDocumentV1 =>
+  ({
+    schemaVersion: 1,
+    migratedFrom: "legacy-v0",
+    data: {
+      frameSizes: [{ id: "fs1", name: "사이즈 하나", aspect: 1.4, frameThickness: 5 }],
+      frameTemplates: [{ id: "ft1", name: "액자", type: "uploaded", ...template }],
+      frameColors: [{ id: "black", name: "블랙", fill: "#1A1A1A" }],
+    },
+  }) as unknown as CatalogDocumentV1;
+
+const textZoneFixture = (over: Record<string, unknown> = {}) => ({
+  key: "main",
+  x: 50,
+  y: 20,
+  boxW: 80,
+  fontSize: 6,
+  align: "center",
+  font: "DM Sans",
+  bold: false,
+  italic: false,
+  color: "#111111",
+  lineH: 1.25,
+  letterSpacing: 0,
+  rotation: 0,
+  ...over,
+});
+
+const frameTextMarkup = (template: Record<string, unknown>): string =>
+  renderToStaticMarkup(
+    <PreviewComposer
+      productKind="frame"
+      document={frameTextDoc(template)}
+      modelId={null}
+      frameSizeId="fs1"
+      templateId="ft1"
+    />,
+  );
+
+describe("PreviewComposer — customer text (spec 031)", () => {
+  it("offers an input only for the keys THIS template defines", () => {
+    const markup = frameTextMarkup({
+      textZones: [textZoneFixture({ key: "main" }), textZoneFixture({ key: "date" })],
+    });
+    expect(markup).toContain('data-testid="preview-text-main"');
+    expect(markup).toContain('data-testid="preview-text-date"');
+    // keys the template does not define are not rendered at all
+    expect(markup).not.toContain('data-testid="preview-text-name"');
+    expect(markup).not.toContain('data-testid="preview-text-sub"');
+  });
+
+  it("says so plainly when the template takes no text", () => {
+    const markup = frameTextMarkup({ textZones: [] });
+    expect(markup).toContain("이 템플릿은 문구를 받지 않습니다.");
+    expect(markup).not.toContain('data-testid="preview-text-main"');
+  });
+
+  it("applies the approved default caps to the input itself", () => {
+    const markup = frameTextMarkup({ textZones: [textZoneFixture()] });
+    const index = markup.indexOf('data-testid="preview-text-main"');
+    const tag = markup.slice(markup.lastIndexOf("<", index), markup.indexOf(">", index));
+    expect(tag).toContain('maxLength="80"');
+    expect(markup).toContain("0 / 80");
+  });
+
+  it("honours a zone's own cap", () => {
+    const markup = frameTextMarkup({ textZones: [textZoneFixture({ maxChars: 12 })] });
+    const index = markup.indexOf('data-testid="preview-text-main"');
+    const tag = markup.slice(markup.lastIndexOf("<", index), markup.indexOf(">", index));
+    expect(tag).toContain('maxLength="12"');
+    expect(markup).toContain("0 / 12");
+  });
+
+  it("starts EMPTY even when the operator authored a default text (Founder F-3)", () => {
+    const markup = frameTextMarkup({
+      textZones: [textZoneFixture()],
+      defaultTexts: { main: "WEDDING" },
+    });
+    // the operator's sample must never become the customer's value
+    expect(markup).not.toContain('value="WEDDING"');
+    expect(markup).toContain("0 / 80");
+  });
+
+  it("labels every input and links its hint for assistive tech", () => {
+    const markup = frameTextMarkup({ textZones: [textZoneFixture()] });
+    expect(markup).toContain('for="denn-preview-text-main"');
+    expect(markup).toContain('id="denn-preview-text-main"');
+    expect(markup).toContain('aria-describedby="denn-preview-text-main-hint"');
+    expect(markup).toContain("메인 문구");
+  });
+
+  it("offers no colour or shadow control for the customer (Founder F-2)", () => {
+    const markup = frameTextMarkup({ textZones: [textZoneFixture()] });
+    expect(markup).not.toContain('data-testid="preview-text-color"');
+    expect(markup).not.toContain('data-testid="preview-text-shadow"');
+    expect(markup).not.toContain('type="color"');
+  });
+
+  it("keeps the case product free of text inputs (Founder F-1)", () => {
+    const markup = caseComposer();
+    expect(markup).not.toContain('data-testid="preview-text-main"');
+    expect(markup).not.toContain("문구 입력");
+  });
+
+  it("shows no clock overlay before a canvas exists", () => {
+    const markup = frameTextMarkup({ textZones: [textZoneFixture()] });
+    // no colour or photo is chosen in a static render, so there is no surface to overlay
+    expect(markup).not.toContain('data-testid="preview-clock"');
+  });
+});

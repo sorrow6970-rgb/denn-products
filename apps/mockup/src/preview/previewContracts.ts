@@ -132,5 +132,31 @@ export const PREVIEW_CANVAS_NAME = {
   frame: "액자 미리보기",
 } as const;
 
+/**
+ * Fixed copy for the customer's five text fields (spec 031). The labels are product words, never a
+ * catalog value, and the key itself is never shown.
+ */
+export const PREVIEW_TEXT_LABELS: Record<string, string> = {
+  main: "메인 문구",
+  name: "이름",
+  name2: "이름 2",
+  date: "날짜",
+  sub: "추가 문구",
+};
+
+export const PREVIEW_TEXT_COPY = {
+  group: "문구 입력",
+  /** shown when the chosen template defines no text zone at all. */
+  none: "이 템플릿은 문구를 받지 않습니다.",
+} as const;
+
+/** `12 / 80` style counter. Units are UTF-16 code units, matching the input's own `maxLength`. */
+export const textLengthHint = (used: number, max: number): string => `${used} / ${max}`;
+
+/** Fixed, customer-safe copy for a rejected edit. Never echoes the value the customer typed. */
+export const textTooLongMessage = (max: number): string => `${max}자까지 입력할 수 있습니다.`;
+
+export const textTooManyLinesMessage = (max: number): string => `${max}줄까지 입력할 수 있습니다.`;
+
 /** Zone slots are numbered by position; no catalog label reaches the customer here. */
 export const zoneSlotLabel = (index: number): string => `사진 ${index + 1}`;

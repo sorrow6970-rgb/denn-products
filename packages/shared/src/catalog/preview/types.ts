@@ -102,6 +102,16 @@ export interface FramePreviewGeometry {
    * design source), which the legacy id-dispatch path insets by 8 px on each side.
    */
   readonly contentInsetPx: 0 | 8;
+  /**
+   * spec 031: operator-authored text zones, normalized and in source order. Empty when the template
+   * defines none. A template that defines a duplicate or unknown key fails the whole projection.
+   */
+  readonly textZones: readonly FrameTextZone[];
+  /**
+   * spec 031: where the PHYSICAL clock sits on the finished product, or `null` when this template
+   * has no clock. Preview-only — never part of the render plan, print or export (Founder F-4).
+   */
+  readonly clockPreview: FrameClockPreview | null;
 }
 
 export interface CasePreviewSelection {
@@ -112,4 +122,74 @@ export interface CasePreviewSelection {
 export interface FramePreviewSelection {
   readonly frameSizeId: string;
   readonly templateId: string;
+}
+
+// --- spec 031: frame text zones + physical clock preview ----------------------
+
+/** The five customer-editable text keys. The set is closed; anything else is rejected. */
+export const FRAME_TEXT_KEYS = ["main", "name", "name2", "date", "sub"] as const;
+export type FrameTextKey = (typeof FRAME_TEXT_KEYS)[number];
+
+export type FrameTextAlign = "left" | "center" | "right";
+
+/** Defaults for the two caps the Founder approved (spec 031 §2.2). */
+export const FRAME_TEXT_DEFAULT_MAX_CHARS = 80;
+export const FRAME_TEXT_DEFAULT_MAX_LINES = 2;
+
+/**
+ * One operator-authored text zone, normalized (spec 031 §2.1).
+ *
+ * Every field is a validated plain value: no raw catalog object, no template id, no source string.
+ * Percent fields are relative to the frame's logical canvas, exactly as the legacy authoring UI
+ * stored them. `placeholder` comes from the operator's `defaultTexts` and is PLACEHOLDER-ONLY —
+ * it must never be copied into an input value or into a plan (F-3).
+ */
+export interface FrameTextZone {
+  readonly key: FrameTextKey;
+  /** percent of the logical canvas, 0..100. */
+  readonly xPercent: number;
+  readonly yPercent: number;
+  /** wrap width as a percent of the logical WIDTH, (0..100]. NOT a clip. */
+  readonly boxWidthPercent: number;
+  /** font size as a percent of the logical WIDTH, (0..100]. */
+  readonly fontSizePercent: number;
+  readonly align: FrameTextAlign;
+  /** 1..64 code units, no control/quote/semicolon/backslash. The executor adds the fallback. */
+  readonly fontFamily: string;
+  readonly bold: boolean;
+  readonly italic: boolean;
+  /** canonical uppercase `#RRGGBB`. The operator owns it; the customer cannot change it (F-2). */
+  readonly color: string;
+  /** line height multiplier, (0..3]. */
+  readonly lineHeight: number;
+  /** letter spacing as a percent of the font size, [-100..100]. */
+  readonly letterSpacingPercent: number;
+  /** arbitrary degrees, [-360..360]. Text rotation is unrelated to the photo quarter turns. */
+  readonly rotationDegrees: number;
+  /** integer 1..200; defaults to 80 UTF-16 code units. */
+  readonly maxChars: number;
+  /** integer 1..5; defaults to 2. */
+  readonly maxLines: number;
+  /** operator sample text, shown as a placeholder only. Absent for `name2` and when unset. */
+  readonly placeholder?: string;
+}
+
+/**
+ * The physical clock's position on the product (spec 031 §2.7, Founder F-4).
+ *
+ * This is NOT artwork: it describes where the real clock hardware sits so the preview can show it.
+ * It never reaches the render plan, print or export. `customImage` mirrors the existing catalog
+ * media projection shape (`sourceKind` + `value`); resolving it to a usable src stays the app's job.
+ */
+export interface FrameClockPreview {
+  /** percent of the logical canvas. */
+  readonly xPercent: number;
+  readonly yPercent: number;
+  /** size as a percent of `min(width, height)`. */
+  readonly sizePercent: number;
+  /** operator-uploaded clock photo, when present. `null` means the `HH:MM` text placeholder. */
+  readonly customImage: {
+    readonly sourceKind: "data-image" | "https-image";
+    readonly value: string;
+  } | null;
 }

@@ -50,6 +50,22 @@ export interface PreviewCanvasContext {
   translate?(x: number, y: number): void;
   /** spec 030 rotation capability — required ONLY for a plan that carries a rotation. */
   rotate?(angle: number): void;
+
+  /**
+   * TEXT CAPABILITY (spec 031). Optional for the same reason rotation is: a context without these
+   * executes every text-free plan exactly as before, and a plan that carries a `draw-text` command
+   * fails CLOSED in preflight with `INVALID_EXECUTOR_INPUT` and zero Canvas operations rather than
+   * drawing a frame with the customer's words missing.
+   *
+   * `measureText` is present because letter spacing is drawn glyph by glyph; `ctx.letterSpacing` is
+   * deliberately NOT used, since its support varies and it would change the widths the builder
+   * already measured.
+   */
+  font?: string;
+  textAlign?: CanvasTextAlign;
+  textBaseline?: CanvasTextBaseline;
+  fillText?(text: string, x: number, y: number): void;
+  measureText?(text: string): TextMetrics;
 }
 
 /**
@@ -59,6 +75,19 @@ export interface PreviewCanvasContext {
  */
 export type RotationCapableCanvasContext = PreviewCanvasContext &
   Required<Pick<PreviewCanvasContext, "translate" | "rotate">>;
+
+/**
+ * A context that provides the spec 031 text capability. DERIVED from the public type, so the
+ * members are declared exactly once and the executor cannot drift from the published contract.
+ * `translate`/`rotate` are included because a text command always translates to its origin.
+ */
+export type TextCapableCanvasContext = PreviewCanvasContext &
+  Required<
+    Pick<
+      PreviewCanvasContext,
+      "font" | "textAlign" | "textBaseline" | "fillText" | "measureText" | "translate" | "rotate"
+    >
+  >;
 
 /**
  * Read-only lookup from a spec 020 synthetic `imageRef` to an already-decoded, ready-to-draw

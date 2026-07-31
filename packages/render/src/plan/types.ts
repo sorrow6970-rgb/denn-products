@@ -130,6 +130,58 @@ export interface FramePlanInput {
   readonly innerBorder?: StrokeSpec;
   /** optional template art, drawn after the user photo and before the inner border (spec 028). */
   readonly templateArt?: TemplateArtSpec;
+  /**
+   * spec 031: operator-authored text zones already paired with the customer's value. Absent or
+   * empty means no text. A zone whose value is `undefined`/`""` emits no command; `"0"` does.
+   */
+  readonly textZones?: readonly FrameTextZoneInput[];
+}
+
+/**
+ * One text zone plus the customer's current value (spec 031). The zone style is the OPERATOR's and
+ * the value is the CUSTOMER's — the builder never mixes the two, and the operator's placeholder /
+ * default text is not part of this input at all (Founder F-3).
+ */
+export interface FrameTextZoneInput {
+  /** the customer's text. `undefined`/`""` = empty; `"0"` is a real value. Never trimmed. */
+  readonly value: string | undefined;
+  /** percent of the logical canvas. */
+  readonly xPercent: number;
+  readonly yPercent: number;
+  /** wrap width as a percent of the logical WIDTH. NOT a clip. */
+  readonly boxWidthPercent: number;
+  /** font size as a percent of the logical WIDTH. */
+  readonly fontSizePercent: number;
+  readonly align: "left" | "center" | "right";
+  readonly fontFamily: string;
+  readonly bold: boolean;
+  readonly italic: boolean;
+  readonly color: HexColor;
+  readonly lineHeight: number;
+  readonly letterSpacingPercent: number;
+  readonly rotationDegrees: number;
+  /** integer 1..200 (UTF-16 code units, matching HTML `maxLength`). */
+  readonly maxChars: number;
+  /** integer 1..5. Wrapping past this rejects the whole plan — it never truncates. */
+  readonly maxLines: number;
+}
+
+/** What the builder asks the injected port to measure. */
+export interface TextMeasureRequest {
+  readonly text: string;
+  readonly font: PlanFontSpec;
+}
+
+/**
+ * Synchronous measurement port (spec 031 §2.3). It is INJECTED, never stored in the plan, so the
+ * resulting plan stays pure and JSON-safe while the wrap is still decided exactly once.
+ * A throwing, non-finite or negative measurement fails the plan closed.
+ */
+export type TextMeasurePort = (request: TextMeasureRequest) => number;
+
+export interface PreviewRenderPlanOptions {
+  /** required as soon as any text zone carries a non-empty value. */
+  readonly measureText?: TextMeasurePort;
 }
 
 export type PreviewRenderPlanInput = CasePlanInput | FramePlanInput;
@@ -179,6 +231,29 @@ export type PreviewDrawCommand =
       readonly layerId: string;
       readonly imageRef: string;
       readonly destRect: Rect;
+    }
+  | {
+      /**
+       * Draw already-wrapped customer text (spec 031). The lines are FINAL: the builder measured
+       * and wrapped them through an injected port, so the executor only paints.
+       *
+       * Deliberately absent: the raw customer string, the zone key, the catalog/template id, the
+       * operator's default text, the measurement port, and any clip. `boxWidth` is a wrap width,
+       * not a clip, so it does not appear here at all — the lines already honour it.
+       */
+      readonly type: "draw-text";
+      readonly layerId: string;
+      readonly lines: readonly PlanTextLine[];
+      /** first line's baseline anchor, in logical px, BEFORE the optional rotation. */
+      readonly origin: { readonly x: number; readonly y: number };
+      readonly align: "left" | "center" | "right";
+      readonly font: PlanFontSpec;
+      readonly color: HexColor;
+      readonly lineHeightPx: number;
+      /** extra px between adjacent glyphs; already included in each line's `width`. */
+      readonly letterSpacingPx: number;
+      /** arbitrary degrees, clockwise around `origin`. Unrelated to the photo quarter turns. */
+      readonly rotationDegrees: number;
     };
 
 export interface PreviewRenderPlan {
@@ -194,7 +269,12 @@ export type RenderPlanErrorCode =
   | "INVALID_ZONE"
   | "INVALID_TRANSFORM"
   | "GEOMETRY_ERROR"
-  | "NON_FINITE_RESULT";
+  | "NON_FINITE_RESULT"
+  // spec 031: the zone style or the customer's value is unusable (chars, length, lines, range).
+  // The code never carries the offending text, the key or the zone.
+  | "INVALID_TEXT"
+  // spec 031: the injected measurement port threw, or returned a non-finite/negative width.
+  | "TEXT_MEASUREMENT_FAILED";
 
 export type RenderPlanResult =
   | { readonly ok: true; readonly plan: PreviewRenderPlan }
@@ -204,3 +284,26 @@ export type RenderPlanResult =
       readonly code: RenderPlanErrorCode;
       readonly causeCode?: GeometryErrorCode;
     };
+
+// --- spec 031: deterministic text ---------------------------------------------
+
+/**
+ * One already-wrapped line. Wrapping happens ONCE, at plan build time, through an injected
+ * measurement port — so the plan stays deterministic and JSON-safe and the executor never re-wraps.
+ * `width` is the measured logical width INCLUDING letter spacing.
+ */
+export interface PlanTextLine {
+  readonly text: string;
+  readonly width: number;
+}
+
+/** Font, as a structure. The executor assembles the CSS string and appends the fallback. */
+export interface PlanFontSpec {
+  /** validated family, 1..64 code units, no control/quote/semicolon/backslash. */
+  readonly family: string;
+  readonly sizePx: number;
+  readonly weight: "normal" | "bold";
+  readonly italic: boolean;
+  /** generic fallback appended by the executor; never a remote or custom font. */
+  readonly fallback: "sans-serif" | "serif";
+}

@@ -306,6 +306,9 @@ describe("projectFramePreviewGeometry — supported geometry", () => {
       matColor: "#FFFFFF",
       // uploaded template with no design source -> the legacy id-dispatch inset (spec 025)
       contentInsetPx: 8,
+      // spec 031: no textZones authored, and no explicit clock opt-out -> a clock frame
+      textZones: [],
+      clockPreview: { xPercent: 88, yPercent: 88, sizePercent: 12, customImage: null },
     });
     expect(result.diagnostics).toEqual([
       { code: "ALPHA_OUTLINE_OMITTED", collection: "frameTemplates", sourceIndex: 0 },
@@ -426,8 +429,10 @@ describe("projectFramePreviewGeometry — supported geometry", () => {
     expect(Object.keys(result.value).sort()).toEqual([
       "aspect",
       "borderPercentOfWidth",
+      "clockPreview",
       "contentInsetPx",
       "matColor",
+      "textZones",
     ]);
   });
 });
@@ -780,6 +785,267 @@ describe("projectFramePreviewGeometry — contentInsetPx", () => {
       { id: "full", name: "Full", type: "builtin" },
     ]) {
       expect([0, 8]).toContain(inset(template));
+    }
+  });
+});
+
+// --- spec 031: frame text zones + physical clock ------------------------------
+
+const textZone = (over: Record<string, unknown> = {}) => ({
+  key: "main",
+  x: 50,
+  y: 20,
+  boxW: 80,
+  fontSize: 6,
+  align: "center",
+  font: "DM Sans",
+  bold: false,
+  italic: false,
+  color: "#111111",
+  lineH: 1.25,
+  letterSpacing: 0,
+  rotation: 0,
+  ...over,
+});
+
+/** `frameThickness` is required by the existing border projection, so every fixture supplies it. */
+const SIZE_31 = { ...SIZE, frameThickness: 4 };
+
+const frameWithZones = (zones: unknown, extra: Record<string, unknown> = {}) =>
+  frameDoc(SIZE_31, { ...UPLOADED_FULL, textZones: zones, ...extra });
+
+describe("projectFramePreviewGeometry — text zones (spec 031)", () => {
+  it("normalizes a zone and applies the approved caps by default", () => {
+    const result = projectFramePreviewGeometry(frameWithZones([textZone()]), frameSel());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.textZones).toEqual([
+      {
+        key: "main",
+        xPercent: 50,
+        yPercent: 20,
+        boxWidthPercent: 80,
+        fontSizePercent: 6,
+        align: "center",
+        fontFamily: "DM Sans",
+        bold: false,
+        italic: false,
+        color: "#111111",
+        lineHeight: 1.25,
+        letterSpacingPercent: 0,
+        rotationDegrees: 0,
+        // Founder F-6 / F-7 defaults
+        maxChars: 80,
+        maxLines: 2,
+      },
+    ]);
+  });
+
+  it("keeps source order and accepts all five keys", () => {
+    const zones = ["main", "name", "name2", "date", "sub"].map((key) => textZone({ key }));
+    const result = projectFramePreviewGeometry(frameWithZones(zones), frameSel());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.textZones.map((zone) => zone.key)).toEqual([
+      "main",
+      "name",
+      "name2",
+      "date",
+      "sub",
+    ]);
+  });
+
+  it("an absent or empty zone list is valid — the template simply has no text", () => {
+    for (const zones of [undefined, null, []]) {
+      const result = projectFramePreviewGeometry(frameWithZones(zones), frameSel());
+      expect(result.ok).toBe(true);
+      if (result.ok) expect(result.value.textZones).toEqual([]);
+    }
+  });
+
+  it("REJECTS an unknown or duplicate key", () => {
+    for (const zones of [
+      [textZone({ key: "title" })],
+      [textZone({ key: "" })],
+      [textZone({ key: 1 })],
+      [textZone(), textZone()],
+    ]) {
+      const result = projectFramePreviewGeometry(frameWithZones(zones), frameSel());
+      expect(result.ok).toBe(false);
+    }
+  });
+
+  it("REJECTS an out-of-range style instead of clamping it", () => {
+    const bad: Record<string, unknown>[] = [
+      { x: -1 },
+      { x: 101 },
+      { y: Number.NaN },
+      { boxW: 0 },
+      { boxW: 101 },
+      { fontSize: 0 },
+      { lineH: 0 },
+      { lineH: 3.1 },
+      { letterSpacing: -101 },
+      { letterSpacing: 101 },
+      { rotation: 361 },
+      { rotation: -361 },
+      { align: "justify" },
+      { bold: "yes" },
+      { italic: 1 },
+      { color: "red" },
+      { color: "#fff" },
+      { font: "" },
+      { font: "a".repeat(65) },
+      { font: 'DM "Sans"' },
+      { font: "DM;Sans" },
+      { maxChars: 0 },
+      { maxChars: 201 },
+      { maxChars: 1.5 },
+      { maxLines: 0 },
+      { maxLines: 6 },
+    ];
+    for (const over of bad) {
+      const result = projectFramePreviewGeometry(frameWithZones([textZone(over)]), frameSel());
+      expect(result.ok, JSON.stringify(over)).toBe(false);
+    }
+  });
+
+  it("accepts the cap boundaries", () => {
+    for (const over of [{ maxChars: 1 }, { maxChars: 200 }, { maxLines: 1 }, { maxLines: 5 }]) {
+      const result = projectFramePreviewGeometry(frameWithZones([textZone(over)]), frameSel());
+      expect(result.ok, JSON.stringify(over)).toBe(true);
+    }
+  });
+
+  it("carries defaultTexts as a PLACEHOLDER only, and never for name2 (Founder F-3)", () => {
+    const doc = frameWithZones([textZone({ key: "main" }), textZone({ key: "name2" })], {
+      defaultTexts: { main: "WEDDING", name2: "IGNORED" },
+    });
+    const result = projectFramePreviewGeometry(doc, frameSel());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.textZones[0]?.placeholder).toBe("WEDDING");
+    // the legacy editor cannot author a name2 default, so one never exists
+    expect(result.value.textZones[1]?.placeholder).toBeUndefined();
+  });
+
+  it("reads each zone field exactly once, so a drifting getter cannot change the output", () => {
+    let reads = 0;
+    const drifting = {
+      ...textZone(),
+      get color() {
+        reads += 1;
+        return reads === 1 ? "#123456" : "#ABCDEF";
+      },
+    };
+    const result = projectFramePreviewGeometry(frameWithZones([drifting]), frameSel());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(reads).toBe(1);
+    expect(result.value.textZones[0]?.color).toBe("#123456");
+  });
+
+  it("a throwing zone getter fails safe instead of escaping", () => {
+    const hostile = {
+      ...textZone(),
+      get x(): number {
+        throw new Error("hostile");
+      },
+    };
+    const result = projectFramePreviewGeometry(frameWithZones([hostile]), frameSel());
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe("projectFramePreviewGeometry — physical clock (spec 031, Founder F-4)", () => {
+  it("defaults to the legacy bottom-right placement when nothing overrides it", () => {
+    const result = projectFramePreviewGeometry(frameDoc(SIZE_31, UPLOADED_FULL), frameSel());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.clockPreview).toEqual({
+      xPercent: 88,
+      yPercent: 88,
+      sizePercent: 12,
+      customImage: null,
+    });
+  });
+
+  it("merges global -> size -> template, with the template winning", () => {
+    const doc = frameDoc(
+      { ...SIZE_31, clock: { x: 50, size: 20 } },
+      { ...UPLOADED_FULL, clock: { x: 10 } },
+      { clockSettings: { x: 5, y: 6, size: 7 } },
+    );
+    const result = projectFramePreviewGeometry(doc, frameSel());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    // x: template 10 wins; y: only the global level set it; size: the frame size set it
+    expect(result.value.clockPreview).toEqual({
+      xPercent: 10,
+      yPercent: 6,
+      sizePercent: 20,
+      customImage: null,
+    });
+  });
+
+  it("reports an operator clock PHOTO with its source kind", () => {
+    const doc = frameDoc(SIZE_31, {
+      ...UPLOADED_FULL,
+      clock: { customImg: "https://cdn.example.com/clock.png" },
+    });
+    const result = projectFramePreviewGeometry(doc, frameSel());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.clockPreview?.customImage).toEqual({
+      sourceKind: "https-image",
+      value: "https://cdn.example.com/clock.png",
+    });
+  });
+
+  it("an unusable clock image falls back to the text placeholder, never a failure", () => {
+    const doc = frameDoc(SIZE_31, {
+      ...UPLOADED_FULL,
+      clock: { customImg: "javascript:alert(1)" },
+    });
+    const result = projectFramePreviewGeometry(doc, frameSel());
+    // the clock is not print data, so it must never fail the whole projection (spec 031 §3)
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.clockPreview?.customImage).toBeNull();
+  });
+
+  it("only an EXPLICIT opt-out means no clock (legacy isClockTemplate)", () => {
+    const withClock = [{}, { clock: {} }, { clock: { x: 10 } }];
+    for (const over of withClock) {
+      const result = projectFramePreviewGeometry(
+        frameDoc(SIZE_31, { ...UPLOADED_FULL, ...over }),
+        frameSel(),
+      );
+      expect(result.ok, JSON.stringify(over)).toBe(true);
+      if (result.ok) expect(result.value.clockPreview).not.toBeNull();
+    }
+    const withoutClock = [
+      { clockEnabled: false },
+      { clock: false },
+      { builtBy: "builder", clock: null },
+    ];
+    for (const over of withoutClock) {
+      const result = projectFramePreviewGeometry(
+        frameDoc(SIZE_31, { ...UPLOADED_FULL, ...over }),
+        frameSel(),
+      );
+      expect(result.ok, JSON.stringify(over)).toBe(true);
+      if (result.ok) expect(result.value.clockPreview).toBeNull();
+    }
+  });
+
+  it("REJECTS an out-of-range clock placement", () => {
+    for (const clock of [{ x: -1 }, { y: 101 }, { size: 0 }, { size: 101 }]) {
+      const result = projectFramePreviewGeometry(
+        frameDoc(SIZE_31, { ...UPLOADED_FULL, clock }),
+        frameSel(),
+      );
+      expect(result.ok, JSON.stringify(clock)).toBe(false);
     }
   });
 });
