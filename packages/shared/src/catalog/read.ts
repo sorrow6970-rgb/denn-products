@@ -79,7 +79,18 @@ const ITEM_KNOWN: Record<string, Set<string>> = {
   ]),
   caseCategories: new Set(["id", "name"]),
   frameCategories: new Set(["id", "name"]),
-  frameSizes: new Set(["id", "name", "sub", "aspect", "custom", "clock"]),
+  frameSizes: new Set([
+    "id",
+    "name",
+    "sub",
+    "aspect",
+    "custom",
+    "clock",
+    // spec 032: the operator-authored PHYSICAL size, in centimetres. Print resolution is derived
+    // from these and never from a name, label or the logical w/h.
+    "printWidthCm",
+    "printHeightCm",
+  ]),
   frameColors: new Set(["id", "name", "fill", "grain", "custom"]),
   frameTemplates: new Set([
     "id",
@@ -261,7 +272,10 @@ export function readLegacyCatalog(input: unknown): CatalogReadResult {
         validatePositive(item.w, `${p}.w`, fatals);
         validatePositive(item.h, `${p}.h`, fatals);
       }
-      if (key === "frameSizes") validatePositive(item.aspect, `${p}.aspect`, fatals);
+      if (key === "frameSizes") {
+        validatePositive(item.aspect, `${p}.aspect`, fatals);
+        validatePrintSizeCm(item, p, fatals);
+      }
       if (key === "frameTemplates") validateFrameTemplateType(item.type, p, warnings);
       if (itemKnown) {
         for (const sub of Object.keys(item)) {
@@ -307,6 +321,45 @@ function validateName(name: JsonValue, path: string, fatals: CatalogIssue[]): vo
 function validatePositive(value: JsonValue, path: string, fatals: CatalogIssue[]): void {
   if (value === undefined) return;
   if (!isFinitePositive(value)) fatals.push({ code: "INVALID_NUMBER", path });
+}
+
+/** spec 032: the largest physical dimension a print size may declare, in centimetres. */
+const MAX_PRINT_CM = 500;
+
+/**
+ * Validate the operator-authored physical print size (spec 032).
+ *
+ * The pair is ALL-OR-NOTHING: a size may declare both `printWidthCm` and `printHeightCm`, or
+ * neither. Declaring one alone is a fatal `INVALID_NUMBER`, because a half-specified size would
+ * otherwise have to be completed by guessing — and guessing the physical size from a name is
+ * exactly the legacy behaviour this field exists to remove.
+ *
+ * Each value must be finite, greater than 0 and at most 500 cm. Anything else fails CLOSED; nothing
+ * is clamped, rounded or inferred, and `aspect` is never consulted to fill a missing side.
+ */
+function validatePrintSizeCm(
+  item: Record<string, JsonValue>,
+  path: string,
+  fatals: CatalogIssue[],
+): void {
+  const width = item.printWidthCm;
+  const height = item.printHeightCm;
+  if (width === undefined && height === undefined) return; // an existing catalog simply has neither
+
+  // one side alone is unusable: report the MISSING side, never invent it
+  if (width === undefined) {
+    fatals.push({ code: "INVALID_NUMBER", path: `${path}.printWidthCm` });
+    return;
+  }
+  if (height === undefined) {
+    fatals.push({ code: "INVALID_NUMBER", path: `${path}.printHeightCm` });
+    return;
+  }
+
+  const inRange = (value: JsonValue): boolean =>
+    isFinitePositive(value) && (value as number) <= MAX_PRINT_CM;
+  if (!inRange(width)) fatals.push({ code: "INVALID_NUMBER", path: `${path}.printWidthCm` });
+  if (!inRange(height)) fatals.push({ code: "INVALID_NUMBER", path: `${path}.printHeightCm` });
 }
 
 function validateFrameTemplateType(type: JsonValue, path: string, warnings: CatalogIssue[]): void {

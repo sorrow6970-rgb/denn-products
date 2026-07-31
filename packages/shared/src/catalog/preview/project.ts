@@ -33,6 +33,7 @@ import type {
   CasePreviewZone,
   FrameClockPreview,
   FramePreviewGeometry,
+  FramePrintPhysicalSize,
   FramePreviewSelection,
   FrameTextAlign,
   FrameTextKey,
@@ -654,4 +655,50 @@ function readClockPreview(
   }
 
   return { xPercent, yPercent, sizePercent, customImage };
+}
+
+// --- spec 032: frame print physical size --------------------------------------
+
+/** The largest physical dimension a print size may declare, mirroring the catalog read guard. */
+const MAX_PRINT_CM = 500;
+
+const isPrintCm = (value: unknown): value is number =>
+  isFiniteNumber(value) && value > 0 && value <= MAX_PRINT_CM;
+
+/**
+ * Project the operator-authored physical print size for one frame size (spec 032).
+ *
+ * Returns `{widthCm, heightCm}` when BOTH fields are present and usable, and `null` when the size
+ * declares neither — an existing catalog with no centimetres is valid, it simply cannot be printed
+ * yet. A half-declared or out-of-range pair fails, because completing it would mean guessing.
+ *
+ * Never throws, never returns a raw item, an id, a name or any other catalog value, and never
+ * consults `name`, `sub`, `label`, `key`, `aspect` or the logical `w`/`h`.
+ */
+function projectPrintPhysicalSize(
+  document: unknown,
+  frameSizeId: unknown,
+): FramePrintPhysicalSize | null {
+  const data = readData(document);
+  if (!isNonBlankString(frameSizeId)) fail("INVALID_INPUT");
+
+  const size = lookupById(data, "frameSizes", frameSizeId as string).item;
+  // each field is read EXACTLY once, so a drifting getter cannot change what was validated
+  const width = size.printWidthCm;
+  const height = size.printHeightCm;
+  if (width === undefined && height === undefined) return null;
+  if (!isPrintCm(width) || !isPrintCm(height)) fail("INVALID_GEOMETRY");
+  return { widthCm: width as number, heightCm: height as number };
+}
+
+/**
+ * Project a frame size's physical print dimensions, or `null` when it declares none.
+ *
+ * Never throws. The result carries only two numbers — no id, name, raw item or diagnostic value.
+ */
+export function projectFramePrintPhysicalSize(
+  document: CatalogDocumentV1,
+  frameSizeId: string,
+): PreviewProjectionResult<FramePrintPhysicalSize | null> {
+  return run(() => projectPrintPhysicalSize(document, frameSizeId));
 }

@@ -9,6 +9,7 @@ import {
   type FramePreviewSelection,
   projectCasePreviewGeometry,
   projectFramePreviewGeometry,
+  projectFramePrintPhysicalSize,
 } from "./index";
 
 const doc = (data: Record<string, unknown>): CatalogDocumentV1 =>
@@ -1047,5 +1048,152 @@ describe("projectFramePreviewGeometry — physical clock (spec 031, Founder F-4)
       );
       expect(result.ok, JSON.stringify(clock)).toBe(false);
     }
+  });
+});
+
+// --- spec 032: frame print physical size ------------------------------------
+
+const sizeDoc = (size: Record<string, unknown>) => doc({ frameSizes: [size] });
+/** A size whose NAME advertises centimetres it does not actually declare as fields. */
+const NAMED_CM = { id: "s1", name: "A4 21x29.7cm", sub: "21x29.7cm", aspect: 1.41 };
+
+describe("projectFramePrintPhysicalSize — declared pair", () => {
+  it("projects the declared centimetres and nothing else", () => {
+    const result = projectFramePrintPhysicalSize(
+      sizeDoc({ ...SIZE, printWidthCm: 21, printHeightCm: 29.7 }),
+      "s1",
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value).toEqual({ widthCm: 21, heightCm: 29.7 });
+    // no id, name, sub, aspect or raw item leaks into the projection
+    expect(Object.keys(result.value as object).sort()).toEqual(["heightCm", "widthCm"]);
+  });
+
+  it("accepts the range boundaries", () => {
+    for (const pair of [
+      { printWidthCm: 0.01, printHeightCm: 0.01 },
+      { printWidthCm: 500, printHeightCm: 500 },
+    ]) {
+      const result = projectFramePrintPhysicalSize(sizeDoc({ ...SIZE, ...pair }), "s1");
+      expect(result.ok, JSON.stringify(pair)).toBe(true);
+    }
+  });
+
+  it("is deterministic and does not mutate the input", () => {
+    const document = deepFreeze(sizeDoc({ ...SIZE, printWidthCm: 30, printHeightCm: 40 }));
+    const first = projectFramePrintPhysicalSize(document, "s1");
+    const second = projectFramePrintPhysicalSize(document, "s1");
+    expect(first).toEqual(second);
+    expect(JSON.parse(JSON.stringify(first))).toEqual(first);
+  });
+});
+
+describe("projectFramePrintPhysicalSize — nothing declared", () => {
+  it("returns null for a size that declares neither field", () => {
+    const result = projectFramePrintPhysicalSize(sizeDoc(SIZE), "s1");
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toBeNull();
+  });
+
+  it("returns null even when the NAME or sub spells out centimetres", () => {
+    const result = projectFramePrintPhysicalSize(sizeDoc(NAMED_CM), "s1");
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toBeNull();
+  });
+
+  it("never reads the logical w/h as centimetres", () => {
+    const result = projectFramePrintPhysicalSize(sizeDoc({ ...SIZE, w: 420, h: 594 }), "s1");
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toBeNull();
+  });
+
+  it("never derives the missing side from aspect", () => {
+    const result = projectFramePrintPhysicalSize(
+      sizeDoc({ ...SIZE, aspect: 1.41, printWidthCm: 21 }),
+      "s1",
+    );
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe("projectFramePrintPhysicalSize — fail-closed", () => {
+  it("REJECTS a half-declared pair", () => {
+    for (const pair of [{ printWidthCm: 21 }, { printHeightCm: 29.7 }]) {
+      const result = projectFramePrintPhysicalSize(sizeDoc({ ...SIZE, ...pair }), "s1");
+      expect(result.ok, JSON.stringify(pair)).toBe(false);
+      if (!result.ok) expect(result.code).toBe("INVALID_GEOMETRY");
+    }
+  });
+
+  it("REJECTS an unusable value instead of clamping it", () => {
+    const bad = [
+      0,
+      -1,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+      500.0001,
+      1000,
+      "21",
+      null,
+      { valueOf: () => 21 },
+    ];
+    for (const value of bad) {
+      for (const pair of [
+        { printWidthCm: value, printHeightCm: 29.7 },
+        { printWidthCm: 21, printHeightCm: value },
+      ]) {
+        const result = projectFramePrintPhysicalSize(sizeDoc({ ...SIZE, ...pair }), "s1");
+        expect(result.ok, JSON.stringify(String(value))).toBe(false);
+      }
+    }
+  });
+
+  it("carries no raw value, id or name in the failure", () => {
+    const result = projectFramePrintPhysicalSize(
+      sizeDoc({ ...NAMED_CM, printWidthCm: 9999, printHeightCm: 29.7 }),
+      "s1",
+    );
+    expect(result.ok).toBe(false);
+    const serialized = JSON.stringify(result);
+    for (const secret of ["9999", "29.7", "s1", "A4", "21x29.7cm"]) {
+      expect(serialized.includes(secret), secret).toBe(false);
+    }
+  });
+
+  it("REJECTS a malformed, missing or ambiguous id", () => {
+    expect(projectFramePrintPhysicalSize(sizeDoc(SIZE), "").ok).toBe(false);
+    expect(projectFramePrintPhysicalSize(sizeDoc(SIZE), "  ").ok).toBe(false);
+    expect(projectFramePrintPhysicalSize(sizeDoc(SIZE), "other").ok).toBe(false);
+    const dupes = doc({ frameSizes: [SIZE, { ...SIZE, printWidthCm: 21, printHeightCm: 29.7 }] });
+    expect(projectFramePrintPhysicalSize(dupes, "s1").ok).toBe(false);
+  });
+
+  it("survives a hostile getter and a revoked Proxy without throwing", () => {
+    let reads = 0;
+    const hostile = {
+      ...SIZE,
+      printHeightCm: 29.7,
+      get printWidthCm() {
+        reads += 1;
+        return reads === 1 ? 21 : -1; // drift: a second read would see a different value
+      },
+    };
+    const drifted = projectFramePrintPhysicalSize(sizeDoc(hostile), "s1");
+    expect(drifted.ok).toBe(true);
+    if (drifted.ok) expect(drifted.value).toEqual({ widthCm: 21, heightCm: 29.7 });
+
+    const throwing = {
+      ...SIZE,
+      get printWidthCm(): number {
+        throw new Error("boom");
+      },
+    };
+    expect(projectFramePrintPhysicalSize(sizeDoc(throwing), "s1").ok).toBe(false);
+
+    const revocable = Proxy.revocable({ ...SIZE, printWidthCm: 21, printHeightCm: 29.7 }, {});
+    revocable.revoke();
+    expect(projectFramePrintPhysicalSize(sizeDoc(revocable.proxy), "s1").ok).toBe(false);
   });
 });

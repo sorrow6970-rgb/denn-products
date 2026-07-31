@@ -140,6 +140,19 @@ export const errEmptyId: unknown = { frameColors: [{ id: "", name: "empty id" }]
 export const errMissingName: unknown = { models: [{ id: "m1" }] };
 export const errBadNumber: unknown = { frameThickness: -2 };
 export const errBadAspect: unknown = { frameSizes: [{ id: "s", name: "s", aspect: 0 }] };
+/** spec 032: only one half of the physical print size — the other side must never be guessed. */
+export const errHalfPrintSize: unknown = {
+  frameSizes: [{ id: "s", name: "s", aspect: 1.4, printWidthCm: 21 }],
+};
+/** spec 032: a physical print size beyond the 500 cm ceiling. */
+export const errPrintSizeTooLarge: unknown = {
+  frameSizes: [{ id: "s", name: "s", aspect: 1.4, printWidthCm: 21, printHeightCm: 500.5 }],
+};
+/** spec 032: a fully declared, in-range physical print size. */
+export const okPrintSize: unknown = {
+  frameSizes: [{ id: "s", name: "s", aspect: 1.41, printWidthCm: 21, printHeightCm: 29.7 }],
+};
+
 export const errUnsafeStoragePath: unknown = {
   frameTemplates: [{ id: "x", name: "x", type: "uploaded", storagePath: "javascript:alert(1)" }],
 };

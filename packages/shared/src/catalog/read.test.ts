@@ -199,6 +199,13 @@ describe("readLegacyCatalog — failures (no default-catalog success)", () => {
     ["missing name", fx.errMissingName, "MISSING_NAME", "models[0].name"],
     ["bad thickness", fx.errBadNumber, "INVALID_NUMBER", "frameThickness"],
     ["bad aspect", fx.errBadAspect, "INVALID_NUMBER", "frameSizes[0].aspect"],
+    ["half print size", fx.errHalfPrintSize, "INVALID_NUMBER", "frameSizes[0].printHeightCm"],
+    [
+      "print size above the cm ceiling",
+      fx.errPrintSizeTooLarge,
+      "INVALID_NUMBER",
+      "frameSizes[0].printHeightCm",
+    ],
     [
       "unsafe storage path (javascript:)",
       fx.errUnsafeStoragePath,
@@ -264,6 +271,75 @@ describe("readLegacyCatalog — failures (no default-catalog success)", () => {
     for (const e of res.errors) {
       expect(Object.keys(e).sort()).toEqual(["code", "path"]);
       expect(e.path).not.toContain("alert(1)");
+    }
+  });
+});
+
+// --- spec 032: physical print size (cm) -------------------------------------
+
+describe("frameSizes physical print size (spec 032)", () => {
+  const size = (over: Record<string, unknown>) => ({
+    frameSizes: [{ id: "s", name: "s", aspect: 1.41, ...over }],
+  });
+
+  it("accepts a fully declared in-range pair with no warning", () => {
+    const res = readLegacyCatalog(fx.okPrintSize);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    // the two cm fields are KNOWN keys, so they must not be reported as unknown
+    expect(res.report.warnings.filter((w) => w.path?.includes("printWidthCm"))).toEqual([]);
+    expect(res.report.warnings.filter((w) => w.path?.includes("printHeightCm"))).toEqual([]);
+  });
+
+  it("still accepts an existing catalog that declares neither field", () => {
+    expect(readLegacyCatalog(size({})).ok).toBe(true);
+  });
+
+  it("accepts the range boundaries", () => {
+    expect(readLegacyCatalog(size({ printWidthCm: 500, printHeightCm: 500 })).ok).toBe(true);
+    expect(readLegacyCatalog(size({ printWidthCm: 0.01, printHeightCm: 0.01 })).ok).toBe(true);
+  });
+
+  it("REJECTS an unusable value instead of clamping it", () => {
+    for (const value of [0, -1, 500.5, 1000, "21", null, true, {}]) {
+      const res = readLegacyCatalog(size({ printWidthCm: value, printHeightCm: 29.7 }));
+      expect(res.ok, JSON.stringify(String(value))).toBe(false);
+      if (!res.ok) {
+        expect(res.errors.some((e) => e.path === "frameSizes[0].printWidthCm")).toBe(true);
+      }
+    }
+  });
+
+  it("REJECTS whichever side is missing, and reports THAT side", () => {
+    const noHeight = readLegacyCatalog(size({ printWidthCm: 21 }));
+    expect(noHeight.ok).toBe(false);
+    if (!noHeight.ok) {
+      expect(noHeight.errors.some((e) => e.path === "frameSizes[0].printHeightCm")).toBe(true);
+    }
+    const noWidth = readLegacyCatalog(size({ printHeightCm: 29.7 }));
+    expect(noWidth.ok).toBe(false);
+    if (!noWidth.ok) {
+      expect(noWidth.errors.some((e) => e.path === "frameSizes[0].printWidthCm")).toBe(true);
+    }
+  });
+
+  it("never lets a name, sub or aspect stand in for the declared centimetres", () => {
+    // a size that only ADVERTISES centimetres in its text stays valid and simply has no cm fields
+    const res = readLegacyCatalog({
+      frameSizes: [
+        { id: "s", name: "A4 21x29.7cm", sub: "21x29.7cm", aspect: 1.41, w: 21, h: 29.7 },
+      ],
+    });
+    expect(res.ok).toBe(true);
+  });
+
+  it("failure issues carry only code + path (no raw centimetres)", () => {
+    const res = readLegacyCatalog(size({ printWidthCm: 9999, printHeightCm: 29.7 }));
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    for (const e of res.errors) {
+      expect(Object.keys(e).sort()).toEqual(["code", "path"]);
+      expect(e.path).not.toContain("9999");
     }
   });
 });

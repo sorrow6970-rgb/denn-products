@@ -193,3 +193,15 @@ export interface FrameClockPreview {
     readonly value: string;
   } | null;
 }
+
+/**
+ * The operator-authored PHYSICAL size of a frame, in centimetres (spec 032).
+ *
+ * This is the ONLY source a print resolution may come from. It is never inferred from a size's
+ * name, `sub`, `label`, `id` or `aspect`, and never from the logical `w`/`h` — deriving it from a
+ * name is what let renaming a size change what got printed in the legacy tool.
+ */
+export interface FramePrintPhysicalSize {
+  readonly widthCm: number;
+  readonly heightCm: number;
+}
