@@ -7,7 +7,30 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🔎 스펙 030 사전 조사(이미지 회전) 완료 → `READY_FOR_CODEX`. 스펙 027·028·029는 승인·종료. 회전 구현 미착수(각도 집합 결정 대기). ⚠️ working tree는 스펙 018 PNG 2개 + Codex 소유 미커밋 `DENN_AUTOMATION_RUNBOOK.md` 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+상태: **✅ 스펙 030 Founder 결정(R-1~R-6) 정본 기록 완료 → `READY_FOR_CODEX`(Codex 구현 스펙 작성 대기). 스펙 027·028·029는 승인·종료. 회전 구현 미착수. ⚠️ working tree는 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+
+> 스펙 030 결정 확정(2026-07-31): 정본 `docs/codex-claude-handoff/decisions/2026-07-31-spec-030-image-rotation-decisions.md`.
+> 승인 문장(원문): `스펙 030 Founder 권장안 R-1·R-2·R-3·R-4·R-5·R-6 일괄 승인하고 자동화 재개.`
+> **Founder 승인**: R-1 고객 사진 회전은 **90° 배수만**(`왼쪽 90°`/`오른쪽 90°` 버튼) / R-2 **임의 각도 미도입**
+> → 029의 `scale` **1.0~5.0**·**클립 안 빈 공간 금지** 계약 **그대로 유지** / R-3 액자 **가로/세로 aspect 전환은
+> 별도 기능**으로 분리, **이번 스펙 제외** / R-4 **case multi-zone도 활성 슬롯별 독립 회전** / R-5 **template art는
+> 고정**, 사용자 사진만 회전 / R-6 **EXIF 직접 파싱 금지**(브라우저 `<img>` decode 의존 + **합성 EXIF fixture 실측**).
+> **Codex 계약(C-1~C-9)**: C-1 `rot`은 029 normalized transform의 **네 번째 필드**(`{scale,x,y,rot}`)·**전역 상태
+> 금지**(composer 슬롯별 소유 → D-9 초기화 행렬 자동 상속) / C-2 저장 값은 **`0|1|2|3`**, 그 밖은 **복구 없이 거부** /
+> C-3 pan은 **화면축 유지**, `maxPan`은 **회전 footprint**로 재계산(normalized 유지 + 재환산) / C-4 회전 중심은
+> **zone 중심 + 현재 pan**(구도 점프 0) / C-5 `draw-image-cover`에 **선택적 `rotationQuarterTurns`**(신규 커맨드 없음) /
+> C-6 executor는 한 커맨드 안에서 **`save→translate→rotate→drawImage→restore`**, "no transform" 문구는
+> "커맨드 내부에서만·restore 짝" 으로 정정 / C-7 **probe plan에도 회전 포함**(회전이 `maxPan`을 바꾸므로) /
+> C-8 **회전은 plan에 기록** → 향후 print/export가 같은 plan을 소비해 자동 일치("UI만 회전" 금지) /
+> C-9 회전 검증은 **transform 유한성·범위 단계**에 편입, 실패 시 **plan 미생성**(부분 plan 금지).
+> **불변식**: quarter turn 밖 값은 존재하지 않음(거부) · 회전은 **슬롯별**(전역 폴백 금지 = 레거시 케이스 오염 재현 금지) ·
+> **D-3 하한 1.0·D-7 빈 공간 금지 불변** · 회전은 plan에 담겨 미리보기=인쇄 · **아트는 회전하지 않음** ·
+> 액자 aspect 전환은 범위 밖 · EXIF 직접 파싱 0.
+> **여전히 미결정·미검증**: 액자 가로/세로 전환 기능 자체(별도 스펙) · `packages/render` 계약 변경의 정확한 범위·문구
+> (**"packages 무변경" 경계를 처음 깨는 일**) · 브라우저 `<img>` EXIF 실제 적용(**NOT VERIFIED**, 합성 fixture 실측 전) ·
+> 실기기 4환경 회전 UI 조작성 · print/export 실제 회전 재현(현 인쇄 경로는 회전 무시) · 임의 각도 향후 도입 ·
+> 대용량 사진 회전 성능. 이 라운드도 **문서 전용**(제품 코드·테스트·CSS·설정·manifest·lockfile diff 0, 신규 의존성 0,
+> network·live·Firebase·CORS·Rules/Hosting·deploy 0)이며 **구현 스펙은 Codex가 작성**한다.
 
 > 스펙 030 사전 조사 완료(읽기 전용, 2026-07-30, 기준 HEAD `8d20b6d`): 보고서
 > `docs/codex-claude-handoff/reviews/2026-07-30-image-rotation-investigation.md`(15항목).

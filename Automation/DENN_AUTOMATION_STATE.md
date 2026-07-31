@@ -1,20 +1,20 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-07-30
+updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-029-pointer-pan-zoom-editing
 active_unit: spec-030-image-rotation-investigation
-state: FOUNDER_DECISION_REQUIRED  # 스펙 030 조사 승인 · 제품 회전 범위 결정 대기
-baseline_commit: 8d20b6d
+state: READY_FOR_CODEX  # 스펙 030 Founder 결정 정본 기록 완료 → Codex 구현 스펙 작성 대기
+baseline_commit: 9a20080
 candidate_commit: 110511e  # 스펙 029 보완 라운드 1 코드/test (최초 구현 95fcf92)
 verified_commit: 110511e  # 스펙 029 승인분 (스펙 028은 d4fb99b)
-origin_relation: "spec 029 closing doc commit pushed fast-forward on top of 0512c8d; HEAD=origin, ahead/behind 0/0"
-working_tree: "dirty: the two known spec-018 PNGs plus the Codex-owned uncommitted DENN_AUTOMATION_RUNBOOK.md; Claude touches neither"
+origin_relation: "spec 030 decision doc commit pushed fast-forward on top of 9a20080; HEAD=origin, ahead/behind 0/0"
+working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: WAITING_FOR_CLAUDE
+next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -46,6 +46,19 @@ Codex 계약은 다음으로 확정한다.
 Founder 권장 결정은 R-1 90° 배수만, R-3 액자 aspect 전환 미도입·별도 기능,
 R-4 case multi-zone에도 슬롯별 제공, R-5 template art와 독립적으로 사진 회전 허용,
 R-6 EXIF 직접 파싱 금지·브라우저 decode 실측이다. R-2는 R-1 승인 시 불필요하다.
+
+## Founder 스펙 030 권장안 승인 (2026-07-31)
+
+Founder가 R-1·R-2·R-3·R-4·R-5·R-6을 일괄 승인하고 자동화 재개를 지시했다.
+
+- 사진 회전은 90° 배수만 지원한다.
+- 임의 각도는 도입하지 않고 스펙 029의 scale 1.0~5.0·빈 공간 금지를 유지한다.
+- 액자 가로/세로 aspect 전환은 사진 회전과 분리하며 이번 스펙에서 제외한다.
+- case multi-zone에도 활성 슬롯별 독립 회전을 제공한다.
+- template art는 고정하고 사용자 사진만 회전한다.
+- EXIF를 직접 파싱하지 않고 브라우저 `<img>` decode를 합성 fixture로 실측한다.
+
+Claude가 결정 정본을 문서 전용으로 기록한 뒤 `READY_FOR_CODEX`로 전환한다. 구현은 아직 시작하지 않는다.
 
 ## Codex independent review result
 
@@ -387,4 +400,34 @@ Codex 승인(코드 `110511e`, 문서 `0512c8d`)에 따라 종료 문서만 하�
 - 스펙 018 PNG 2개와 Codex 소유 미커밋 `Automation/DENN_AUTOMATION_RUNBOOK.md`는 손대지 않았다.
 
 다음 전이: Codex가 조사 보고서를 검토해 R-1~R-6 Founder 결정 요청과 구현 스펙(또는 추가 조사)을 작성한다.
+그 전까지 Claude는 회전 관련 제품 코드를 만들지 않는다.
+
+## 스펙 030 Founder 결정 정본 기록 완료 — READY_FOR_CODEX (Claude Code, 2026-07-31)
+
+`NEXT_CLAUDE_PROMPT.md`의 문서 전용 범위만 수행했다. 정본
+`docs/codex-claude-handoff/decisions/2026-07-31-spec-030-image-rotation-decisions.md`(신규).
+
+승인 문장(원문): `스펙 030 Founder 권장안 R-1·R-2·R-3·R-4·R-5·R-6 일괄 승인하고 자동화 재개.`
+
+기록한 Founder 결정:
+
+- R-1: 고객 사진 회전은 90° 배수만 지원하고 `왼쪽 90°`/`오른쪽 90°` 버튼을 사용한다.
+- R-2: 임의 각도를 도입하지 않아 스펙 029의 scale 1.0~5.0과 클립 안 빈 공간 금지를 유지한다.
+- R-3: 액자 가로/세로 aspect 전환은 별도 기능이며 이번 스펙에서 제외한다.
+- R-4: case multi-zone에도 활성 슬롯별 독립 회전을 제공한다.
+- R-5: template art는 고정하고 사용자 사진만 회전한다.
+- R-6: EXIF를 직접 파싱하지 않고 브라우저 `<img>` decode를 합성 EXIF fixture로 실측한다.
+
+Codex 구조 계약 C-1~C-9는 조사 보고서와 이 문서의 기록 그대로 결정 문서 §2에 옮겨 보존했다.
+
+- 이 라운드 변경: **문서 전용** — 결정 문서 1 신규 + `docs/codex-claude-handoff/CURRENT.md` +
+  `docs/live/CLAUDE_LIVE_PATCH_LOG.md` + 이 문서 + `Automation/NEXT_CLAUDE_PROMPT.md`
+  (`NEXT_CLAUDE_PROMPT.md`의 전이 지시 변경분 포함). 허용 파일 목록과 정확히 일치한다.
+- 제품 코드·테스트·CSS·설정·manifest·`package.json`·`pnpm-lock.yaml` diff **0**, 신규 의존성 0
+- 회전 관련 제품 코드 **0**, 구현 스펙 작성 **0**(Codex 소유), `packages/**` 무변경
+- 실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**, 운영 데이터·secret 접근 0
+- `git diff --check` clean, 일반 fast-forward push, HEAD=origin, ahead/behind 0/0
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다(working tree에 그 2개만 잔존)
+
+다음 전이: Codex가 이 결정을 입력으로 **스펙 030 구현 계약**을 작성하면 `WAITING_FOR_CLAUDE`.
 그 전까지 Claude는 회전 관련 제품 코드를 만들지 않는다.

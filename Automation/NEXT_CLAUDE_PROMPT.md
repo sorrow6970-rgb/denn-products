@@ -1,29 +1,36 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
+상태: `READY_FOR_CODEX`
 
-# 스펙 030 이미지 회전 — Founder 결정 대기
+# 스펙 030 Founder 결정 정본 기록 완료 — Codex 구현 계약 대기
 
-조사 커밋 `8734307`은 Codex가 문서 범위와 근거를 검토해 승인했다.
-아래 제품 결정을 Founder가 승인하기 전에는 어떤 파일도 수정·stage·commit·push하지 않는다.
+Claude Code가 2026-07-31에 `WAITING_FOR_CLAUDE` 지시를 소비해 문서 전용으로 결정 정본을 기록했다.
 
-## 권장안
+- 정본: `docs/codex-claude-handoff/decisions/2026-07-31-spec-030-image-rotation-decisions.md`
+- 승인 문장(원문): `스펙 030 Founder 권장안 R-1·R-2·R-3·R-4·R-5·R-6 일괄 승인하고 자동화 재개.`
+- 기록 범위: R-1~R-6(Founder) + C-1~C-9(Codex 구조 계약, 원문 보존) + 불변식 7개 +
+  미결정·미검증 7개
+- 커밋 파일(허용 목록과 정확히 일치): 위 결정 문서(신규), `docs/codex-claude-handoff/CURRENT.md`,
+  `docs/live/CLAUDE_LIVE_PATCH_LOG.md`, `Automation/DENN_AUTOMATION_STATE.md`,
+  이 문서
+- 제품 코드·테스트·CSS·설정·manifest·`package.json`·`pnpm-lock.yaml` diff 0, 신규 의존성 0
+- 실제 network·live·Firebase·CORS·Rules/Hosting·deploy 0, 운영 데이터·secret 접근 0
+- `git diff --check` clean, 일반 fast-forward push, HEAD=origin, ahead/behind 0/0
+- 알려진 스펙 018 PNG 2개는 restore·stage·commit하지 않았다(working tree에 그 2개만 잔존)
 
-- R-1: 고객 사진 회전은 90° 배수만 지원한다. UI는 `왼쪽으로 90°`, `오른쪽으로 90°` 버튼이다.
-- R-2: 임의 각도를 도입하지 않으므로 스펙 029의 scale 1.0~5.0과 빈 공간 금지 계약을 변경하지 않는다.
-- R-3: 액자 가로/세로 aspect 전환은 사진 회전과 분리하고 이번 스펙에는 도입하지 않는다.
-- R-4: case multi-zone에도 활성 슬롯별 독립 회전을 제공한다.
-- R-5: template art는 고정하고 사용자 사진만 회전할 수 있게 한다.
-- R-6: EXIF를 직접 파싱하지 않고 브라우저 `<img>` decode 동작을 합성 EXIF fixture로 실측한다.
+## Codex 다음 작업
 
-Codex 구조 계약 C-1~C-9는 `Automation/DENN_AUTOMATION_STATE.md`와 조사 보고서 §9.2대로 확정한다.
+이 결정을 입력으로 **스펙 030 구현 계약**(`docs/rebuild/specs/030-*.md`)을 작성한다.
+구현 계약에는 최소한 다음을 명시한다.
 
-Founder 승인 문장:
+- 허용 파일 목록(특히 `packages/render` 계약 변경 범위 — "packages 무변경" 경계를 처음 깨는 지점)
+- `rotationQuarterTurns` 저장·검증·거부 규칙과 오류 우선순위에서의 위치
+- probe plan → `maxPan` → 실제 plan 파이프라인에서의 회전 취급
+- case multi-zone 슬롯별 회전 UI와 초기화 행렬(029 D-9 상속) 명세
+- 합성 EXIF fixture 실측 검증 설계와 NOT TESTED 경계
 
-```text
-스펙 030 Founder 권장안 R-1·R-2·R-3·R-4·R-5·R-6 일괄 승인.
-```
+## Claude 다음 작업
 
-결정 전에는 구현 스펙, 제품 코드·테스트·CSS·설정, 신규 의존성,
-Firebase/network/live/deploy, 운영 데이터 접근을 금지한다. Codex 소유 RUNBOOK과 스펙 018 PNG도
-restore·stage·commit하지 않는다. 동일 결정 대기 상태에서는 반복 보고하지 않는다.
+**없다.** 구현 계약이 저장소에 기록되고 상태가 `WAITING_FOR_CLAUDE`로 바뀌기 전까지
+회전 관련 제품 코드·테스트·CSS·설정을 작성하지 않는다. 이 기간에는 저장소를 수정하지 않고
+폴링만 유지한다. 알려진 스펙 018 PNG 2개는 계속 손대지 않는다.
