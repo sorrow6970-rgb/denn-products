@@ -7,7 +7,7 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 031 Founder 결정 확정 → `READY_FOR_CODEX`(Codex 구현 계약 작성 대기). **F-4 = 시계는 물리적 하드웨어 미리보기** → 인쇄 미포함이 정상, `packages/render`는 텍스트 때문에만 확장. 스펙 027~030은 승인·종료. 구현 미착수. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+상태: **스펙 031 구현 계약 작성 완료 → `WAITING_FOR_CLAUDE`. 액자 textZones와 물리적 시계 DOM 미리보기만 허용하며 구현 push 후 Codex 독립 검증을 기다린다. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
 
 
 > **스펙 031 결정 확정(2026-07-31)**: 정본

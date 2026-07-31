@@ -665,3 +665,12 @@
   manifest·lockfile diff 0, 신규 의존성 0, network·live·Firebase·CORS·deploy 0
 - 스펙 018 PNG 2개: 손대지 않음
 - 다음: Codex가 이 결정을 입력으로 **스펙 031 구현 계약**을 작성한다. **구현 착수 없음.**
+
+## 2026-07-31 — Codex 스펙 031 구현 계약 작성
+
+- Founder 결정 정본 `e3dc2b1`, HEAD=origin 0/0 확인
+- 신규 정본 `docs/rebuild/specs/031-frame-text-zones-physical-clock-preview.md`
+- 결정적 wrap 측정 포트, draw-text, executor capability, 액자 다섯 key 계약 확정
+- maxChars 기본 80/상한 200 UTF-16 code unit, maxLines 기본 2/상한 5
+- 시계는 plan 밖 DOM physical-hardware overlay; custom image timer 0, text fallback 분 단위
+- 상태 `WAITING_FOR_CLAUDE`; 구현은 Claude만 허용 범위에서 수행

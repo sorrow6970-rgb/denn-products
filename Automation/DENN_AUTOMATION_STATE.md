@@ -6,19 +6,29 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-030-customer-photo-quarter-turn-rotation
 active_unit: spec-031-text-clock-investigation
-state: READY_FOR_CODEX  # 스펙 031 Founder 결정 정본 기록 완료 → Codex 구현 계약 작성 대기
-baseline_commit: 57d43b6
-candidate_commit: 7636367  # 스펙 031 조사 보완 라운드 1 (최초 조사 33323dd)
-verified_commit: 7636367
-origin_relation: "spec 031 decision doc commit pushed fast-forward on top of 7636367; HEAD=origin, ahead/behind 0/0"
+state: WAITING_FOR_CLAUDE  # 스펙 031 구현 계약 작성 완료
+baseline_commit: e3dc2b1
+candidate_commit: null
+verified_commit: null
+origin_relation: "spec 031 decision e3dc2b1 is HEAD=origin 0/0; Codex implementation contract is local for Claude to include"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
-fix_round: 1
+fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: CLAUDE_WORKING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Codex 스펙 031 구현 계약 작성 완료 (2026-07-31)
+
+Founder 결정 정본 `e3dc2b1`을 입력으로
+`docs/rebuild/specs/031-frame-text-zones-physical-clock-preview.md`를 작성했다.
+
+- C-1~C-7·C-9~C-11 승인, C-8은 시계를 plan 밖 DOM preview overlay로 확정
+- `maxChars` 1..200/기본 80 UTF-16 code unit, `maxLines` 1..5/기본 2
+- custom clock image timer 0, text fallback은 분 경계 + 60초 갱신
+- 상태 `WAITING_FOR_CLAUDE`; Claude만 허용 범위에서 구현
 
 ## Codex 스펙 031 조사 보완 재검토 — 승인 및 Founder 결정 대기 (2026-07-31)
 
