@@ -335,8 +335,8 @@ describe("PreviewComposer — pan/zoom controls", () => {
     const markup = caseComposer();
     expect(markup).toContain("사진을 선택하면 위치와 크기를 조절할 수 있습니다.");
     const disabled = markup.match(/disabled=""/g) ?? [];
-    // range + 2 zoom + reset + 4 pan
-    expect(disabled).toHaveLength(8);
+    // range + 2 zoom + reset + 2 rotate (spec 030) + 4 pan
+    expect(disabled).toHaveLength(10);
   });
 
   it("keeps the slot picker on its own class so it never matches a colour swatch", () => {
@@ -386,5 +386,51 @@ describe("PreviewComposer — pan/zoom controls", () => {
       />,
     );
     expect(markup).not.toContain('data-testid="preview-edit"');
+  });
+});
+
+// --- spec 030: rotation controls --------------------------------------------
+//
+// SCOPE: a static render proves the controls EXIST, are real buttons, are named exactly as the
+// approved copy and share the pan/zoom disabled gate. Actual rotated pixels, the modulo-4 stepping
+// through real clicks and the per-slot independence are asserted in the real browser by
+// `tests/e2e/mockup-preview.spec.ts`.
+
+describe("PreviewComposer — rotation controls (spec 030)", () => {
+  it("offers exactly one left and one right quarter-turn button", () => {
+    const markup = caseComposer();
+    expect(markup).toContain('data-testid="preview-rotate-left"');
+    expect(markup).toContain('data-testid="preview-rotate-right"');
+    // quarter turns only: no free-angle input of any kind reaches the customer (R-1/R-2)
+    expect(markup).not.toContain('data-testid="preview-rotation-angle"');
+    expect(markup).not.toContain("45°");
+  });
+
+  it("names them with the approved copy and nothing else", () => {
+    const markup = caseComposer();
+    expect(markup).toContain("왼쪽으로 90°");
+    expect(markup).toContain("오른쪽으로 90°");
+    expect(markup).toContain("사진 회전");
+  });
+
+  it("uses real buttons, not a canvas gesture or a div", () => {
+    const markup = caseComposer();
+    for (const testId of ["preview-rotate-left", "preview-rotate-right"]) {
+      const index = markup.indexOf(`data-testid="${testId}"`);
+      expect(index).toBeGreaterThan(-1);
+      // the tag that owns the testid is a <button type="button">
+      const open = markup.lastIndexOf("<", index);
+      expect(markup.slice(open, index)).toContain("button");
+      expect(markup.slice(open, index)).toContain('type="button"');
+    }
+  });
+
+  it("shares the same disabled gate as every other editing control", () => {
+    const markup = caseComposer();
+    const left = markup.indexOf('data-testid="preview-rotate-left"');
+    const right = markup.indexOf('data-testid="preview-rotate-right"');
+    // no photo is ready in a static render, so both are disabled like the pan/zoom controls
+    expect(markup.slice(left, left + 200)).toContain("disabled");
+    expect(markup.slice(right, right + 200)).toContain("disabled");
   });
 });

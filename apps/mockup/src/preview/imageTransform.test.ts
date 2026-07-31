@@ -8,6 +8,7 @@ import {
   createDragController,
   dragTransform,
   IDENTITY_TRANSFORM,
+  isQuarterTurns,
   MAX_SCALE,
   maxPanFromRects,
   MIN_SCALE,
@@ -16,6 +17,7 @@ import {
   panTransform,
   readNormalizedTransform,
   resetTransform,
+  rotateTransform,
   SCALE_PERCENT_MAX,
   SCALE_PERCENT_MIN,
   scaleFromPercent,
@@ -26,11 +28,17 @@ import {
   ZOOM_STEP_FACTOR,
 } from "./imageTransform";
 
-const t = (scale: number, x: number, y: number) => ({ scale, x, y });
+/** spec 030: a transform now always carries its quarter turn; 0 is the unrotated default. */
+const t = (scale: number, x: number, y: number, rotationQuarterTurns: 0 | 1 | 2 | 3 = 0) => ({
+  scale,
+  x,
+  y,
+  rotationQuarterTurns,
+});
 
 describe("scale contract (D-3, D-7)", () => {
   it("starts at 1 and never drops below it, so the clip can never show empty space", () => {
-    expect(IDENTITY_TRANSFORM).toEqual({ scale: 1, x: 0, y: 0 });
+    expect(IDENTITY_TRANSFORM).toEqual({ scale: 1, x: 0, y: 0, rotationQuarterTurns: 0 });
     expect(MIN_SCALE).toBe(1);
     expect(withScale(IDENTITY_TRANSFORM, 0.3).scale).toBe(1);
     expect(withScale(IDENTITY_TRANSFORM, -2).scale).toBe(1);
@@ -72,7 +80,7 @@ describe("scale contract (D-3, D-7)", () => {
   });
 
   it("reset returns the identity", () => {
-    expect(resetTransform()).toEqual({ scale: 1, x: 0, y: 0 });
+    expect(resetTransform()).toEqual({ scale: 1, x: 0, y: 0, rotationQuarterTurns: 0 });
   });
 });
 
@@ -107,21 +115,32 @@ describe("normalized ↔ logical conversion (D-1)", () => {
       scale: 2,
       x: 20,
       y: -10,
+      rotationQuarterTurns: 0,
     });
   });
 
   it("pins an axis whose maxPan is 0", () => {
-    expect(toLogicalTransform(t(2, 1, -1), { x: 0, y: 8 })).toEqual({ scale: 2, x: 0, y: -8 });
-    expect(toLogicalTransform(t(2, 1, 1), { x: 0, y: 0 })).toEqual({ scale: 2, x: 0, y: 0 });
+    expect(toLogicalTransform(t(2, 1, -1), { x: 0, y: 8 })).toEqual({
+      scale: 2,
+      x: 0,
+      y: -8,
+      rotationQuarterTurns: 0,
+    });
+    expect(toLogicalTransform(t(2, 1, 1), { x: 0, y: 0 })).toEqual({
+      scale: 2,
+      x: 0,
+      y: 0,
+      rotationQuarterTurns: 0,
+    });
   });
 
   it("keeps the composition across a resize: the same normalized value follows the new geometry", () => {
     const editing = t(1.5, 0.5, 0.5);
     const before = toLogicalTransform(editing, { x: 40, y: 20 });
     const after = toLogicalTransform(editing, { x: 80, y: 40 });
-    expect(before).toEqual({ scale: 1.5, x: 20, y: 10 });
+    expect(before).toEqual({ scale: 1.5, x: 20, y: 10, rotationQuarterTurns: 0 });
     // twice the geometry → twice the logical pan, i.e. the SAME visible framing
-    expect(after).toEqual({ scale: 1.5, x: 40, y: 20 });
+    expect(after).toEqual({ scale: 1.5, x: 40, y: 20, rotationQuarterTurns: 0 });
   });
 
   it("rejects an unusable maxPan instead of inventing one", () => {
@@ -477,7 +496,7 @@ describe("createDragController", () => {
     expect(second.controller.begin(BEGIN)).toBe(true);
     second.controller.move(7, { x: 100, y: 0 });
     second.runFrames();
-    expect(second.commits).toEqual([{ scale: 1, x: 1, y: 0 }]);
+    expect(second.commits).toEqual([{ scale: 1, x: 1, y: 0, rotationQuarterTurns: 0 }]);
   });
 
   it("rejects an unusable begin input without throwing", () => {
@@ -518,5 +537,112 @@ describe("createDragController", () => {
     expect(zoneB).toEqual(t(1, 0, 0));
     expect(panTransform(zoneB, -0.5, 0)).toEqual(t(1, -0.5, 0));
     expect(zoneA).toEqual(t(2, 0.5, 0));
+  });
+});
+
+// --- spec 030: quarter-turn rotation ----------------------------------------
+
+describe("quarter-turn rotation (spec 030 R-1)", () => {
+  it("starts unrotated and resets back to unrotated", () => {
+    expect(IDENTITY_TRANSFORM.rotationQuarterTurns).toBe(0);
+    expect(resetTransform().rotationQuarterTurns).toBe(0);
+    // 원래대로 clears the rotation too, not only the pan/scale
+    expect(resetTransform()).toEqual(t(1, 0, 0, 0));
+  });
+
+  it("steps exactly ONE quarter turn per press, modulo 4", () => {
+    let value = IDENTITY_TRANSFORM;
+    for (const expected of [1, 2, 3, 0] as const) {
+      value = rotateTransform(value, "right");
+      expect(value.rotationQuarterTurns).toBe(expected);
+    }
+    for (const expected of [3, 2, 1, 0] as const) {
+      value = rotateTransform(value, "left");
+      expect(value.rotationQuarterTurns).toBe(expected);
+    }
+  });
+
+  it("left and right are exact inverses", () => {
+    const start = t(2.5, 0.4, -0.6, 2);
+    expect(rotateTransform(rotateTransform(start, "left"), "right")).toEqual(start);
+    expect(rotateTransform(rotateTransform(start, "right"), "left")).toEqual(start);
+  });
+
+  it("never touches the scale or the normalized pan (the framing survives a rotation)", () => {
+    const start = t(3, 0.75, -0.25);
+    const turned = rotateTransform(start, "right");
+    expect(turned.scale).toBe(3);
+    expect(turned.x).toBe(0.75);
+    expect(turned.y).toBe(-0.25);
+  });
+
+  it("scale, pan and zoom all CARRY the rotation instead of dropping it", () => {
+    const start = t(2, 0.5, 0.5, 3);
+    expect(withScale(start, 4).rotationQuarterTurns).toBe(3);
+    expect(zoomTransform(start, "in").rotationQuarterTurns).toBe(3);
+    expect(zoomTransform(start, "out").rotationQuarterTurns).toBe(3);
+    expect(panTransform(start, 0.1, -0.1).rotationQuarterTurns).toBe(3);
+    expect(toLogicalTransform(start, { x: 10, y: 10 })?.rotationQuarterTurns).toBe(3);
+  });
+
+  it("isQuarterTurns accepts only 0|1|2|3", () => {
+    for (const good of [0, 1, 2, 3]) expect(isQuarterTurns(good)).toBe(true);
+    for (const bad of [4, -1, 1.5, 90, "1", null, undefined, Number.NaN, true, {}]) {
+      expect(isQuarterTurns(bad)).toBe(false);
+    }
+  });
+
+  it("readNormalizedTransform treats an ABSENT rotation as unrotated (pre-030 values stay valid)", () => {
+    const read = readNormalizedTransform({ scale: 2, x: 0.5, y: -0.5 });
+    expect(read).toEqual(t(2, 0.5, -0.5, 0));
+  });
+
+  it("readNormalizedTransform REJECTS a non-quarter-turn instead of wrapping it", () => {
+    for (const bad of [4, -1, 1.5, 90, "1", null, Number.NaN]) {
+      expect(
+        readNormalizedTransform({ scale: 2, x: 0, y: 0, rotationQuarterTurns: bad }),
+      ).toBeNull();
+    }
+  });
+
+  it("reads the rotation exactly once, and a drift after validation cannot change it", () => {
+    let reads = 0;
+    const drifting = {
+      scale: 2,
+      x: 0,
+      y: 0,
+      get rotationQuarterTurns() {
+        reads += 1;
+        return reads === 1 ? 1 : 3;
+      },
+    };
+    const read = readNormalizedTransform(drifting);
+    expect(reads).toBe(1);
+    expect(read?.rotationQuarterTurns).toBe(1);
+    // the snapshot is a plain object, so a later drift is invisible to it
+    expect(read?.rotationQuarterTurns).toBe(1);
+  });
+
+  it("a throwing rotation getter yields null instead of escaping", () => {
+    const hostile = {
+      scale: 2,
+      x: 0,
+      y: 0,
+      get rotationQuarterTurns(): number {
+        throw new Error("hostile");
+      },
+    };
+    expect(readNormalizedTransform(hostile)).toBeNull();
+  });
+
+  it("returns the SAME object when a rotation would not change anything", () => {
+    // modulo 4 of a full turn is a no-op only after four presses; a single press always changes
+    const start = t(1, 0, 0, 0);
+    expect(rotateTransform(start, "right")).not.toBe(start);
+    const four = rotateTransform(
+      rotateTransform(rotateTransform(rotateTransform(start, "right"), "right"), "right"),
+      "right",
+    );
+    expect(four.rotationQuarterTurns).toBe(0);
   });
 });

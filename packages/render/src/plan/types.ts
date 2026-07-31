@@ -60,6 +60,14 @@ export interface CaseImageZone {
    * denn-mockup-tool.html:1665). There is no plan-level default to fall back to.
    */
   readonly transform: ImageTransform;
+  /**
+   * Optional quarter-turn rotation of THIS zone's photo (spec 030). Clockwise, in units of 90°.
+   * It sits BESIDE `transform` rather than inside it because `ImageTransform` is the spec 019
+   * geometry contract and rotation is not a geometry concern. Absent === 0 === no rotation, and an
+   * absent/zero value produces byte-identical commands to a pre-030 plan. Any other value is
+   * rejected (INVALID_TRANSFORM) — never clamped, wrapped or defaulted.
+   */
+  readonly rotationQuarterTurns?: 0 | 1 | 2 | 3;
   /** explicit draw order (ascending); ties broken by original array index. */
   readonly order?: number;
   /** optional safe-area stroke drawn after all zone images. */
@@ -109,8 +117,10 @@ export interface FramePlanInput {
   readonly frameColor: HexColor;
   readonly matColor: HexColor;
   readonly image: ImageIntrinsicSize;
-  /** single, NON-rotated transform (no rotation field in this spec). */
+  /** pan/scale only; the quarter-turn rotation is the separate field below (spec 030). */
   readonly transform: ImageTransform;
+  /** Optional clockwise quarter-turn rotation of the user photo (spec 030). Absent === 0. */
+  readonly rotationQuarterTurns?: 0 | 1 | 2 | 3;
   readonly imageRef: string;
   /**
    * optional inner border stroke; only emitted when supplied. Drawn on `imageZone`. This is NOT
@@ -124,7 +134,10 @@ export interface FramePlanInput {
 
 export type PreviewRenderPlanInput = CasePlanInput | FramePlanInput;
 
-/** Minimal draw-command vocabulary. `draw-image-cover` bundles save→clip→drawImage→restore. */
+/**
+ * Minimal draw-command vocabulary. `draw-image-cover` bundles save→clip→drawImage→restore, and —
+ * only when a rotation is present — save→clip→translate→rotate→drawImage→restore (spec 030).
+ */
 export type PreviewDrawCommand =
   | {
       readonly type: "fill-rect";
@@ -137,7 +150,18 @@ export type PreviewDrawCommand =
       readonly layerId: string;
       readonly imageRef: string;
       readonly clipRect: Rect;
+      /**
+       * The photo's footprint ON SCREEN, after any rotation. For a quarter turn (1 or 3) the cover
+       * fit is computed from the SWAPPED intrinsic size, so this rect is already the rotated
+       * silhouette and `maxPan` derived from it is the rotated one (spec 030 §2).
+       */
       readonly drawRect: Rect;
+      /**
+       * Clockwise quarter turns to apply around the centre of `drawRect` (spec 030). The field is
+       * EMITTED ONLY when it is non-zero, so an unrotated plan is byte-identical to a pre-030 plan
+       * and an existing executor keeps working unchanged.
+       */
+      readonly rotationQuarterTurns?: 1 | 2 | 3;
     }
   | {
       readonly type: "stroke-rect";

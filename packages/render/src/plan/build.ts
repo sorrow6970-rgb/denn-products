@@ -123,14 +123,45 @@ function resolveZoneRect(
   return { rect: r.value };
 }
 
+/**
+ * Quarter turns, read ONCE (spec 030 §2). `undefined` means "no rotation" and is the ONLY accepted
+ * absence; every other non-`0|1|2|3` value — a float, a negative, 4, `"1"`, NaN — is rejected, never
+ * wrapped with a modulo and never defaulted to 0. `null` is a value, not an absence, so it fails.
+ */
+function readQuarterTurnsOnce(value: unknown): 0 | 1 | 2 | 3 | null {
+  if (value === undefined) return 0;
+  if (value === 0 || value === 1 || value === 2 || value === 3) return value;
+  return null;
+}
+
+/**
+ * Cover fit + the optional quarter turn (spec 030).
+ *
+ * A 90°/270° rotation swaps what the viewer sees, so the cover is computed from the SWAPPED
+ * intrinsic size: `drawRect` is then the on-screen silhouette of the rotated photo and the spec 029
+ * `maxPan = |drawSize - clipSize| / 2` stays correct without touching spec 019 geometry (which is
+ * out of scope for this spec and unchanged). Pan stays on the SCREEN axes (C-3).
+ *
+ * `rotationQuarterTurns` is attached ONLY when non-zero, so an unrotated command is byte-identical
+ * to the pre-030 shape.
+ */
 function coverCommand(
   layerId: string,
   imageRef: string,
   zoneRect: Rect,
   image: ImageIntrinsicSize,
   transform: ImageTransform,
+  rotation: 0 | 1 | 2 | 3,
 ): { command: PreviewDrawCommand } | { code: RenderPlanErrorCode; causeCode?: GeometryErrorCode } {
-  const cover = computeCoverDrawRect({ zone: zoneRect, image, transform, clampPan: true });
+  // odd turns exchange the axes; 0 and 180 keep the footprint the viewer already had
+  const oriented =
+    rotation === 1 || rotation === 3 ? { width: image.height, height: image.width } : image;
+  const cover = computeCoverDrawRect({
+    zone: zoneRect,
+    image: oriented,
+    transform,
+    clampPan: true,
+  });
   if (!cover.ok) return { code: "GEOMETRY_ERROR", causeCode: cover.code };
   return {
     command: {
@@ -139,6 +170,7 @@ function coverCommand(
       imageRef,
       clipRect: zoneRect,
       drawRect: cover.value.drawRect,
+      ...(rotation === 0 ? {} : { rotationQuarterTurns: rotation }),
     },
   };
 }
@@ -151,6 +183,8 @@ interface NormalizedZone {
   /** this zone's own intrinsic image size (spec 025). */
   readonly image: { readonly width: number; readonly height: number };
   readonly transform: ImageTransform;
+  /** spec 030: 0 when absent; never a wrapped or defaulted value. */
+  readonly rotation: 0 | 1 | 2 | 3;
   readonly guide?: StrokeSpec;
   readonly index: number;
   readonly key: number;
@@ -187,6 +221,10 @@ function readCaseZoneOnce(
   if (image === null) return "INVALID_ZONE";
   const transform = readTransformOnce(value.transform);
   if (transform === null) return "INVALID_TRANSFORM";
+  // spec 030 §3: rotation validation belongs to the SAME step as transform finiteness/range, so a
+  // bad rotation fails with the same code and at the same point in the priority order.
+  const rotation = readQuarterTurnsOnce(value.rotationQuarterTurns);
+  if (rotation === null) return "INVALID_TRANSFORM";
 
   const rawGuide = value.guide;
   let guide: StrokeSpec | undefined;
@@ -196,7 +234,7 @@ function readCaseZoneOnce(
     guide = g;
   }
 
-  return { id, imageRef, rect, image, transform, guide, index, key };
+  return { id, imageRef, rect, image, transform, rotation, guide, index, key };
 }
 
 /** A template art layer whose every field was read exactly once and validated (spec 028). */
@@ -270,6 +308,7 @@ function buildCase(input: CasePlanInput): RenderPlanResult {
       resolved.rect,
       zone.image,
       zone.transform,
+      zone.rotation,
     );
     if ("code" in drawn) return fail(drawn.code, drawn.causeCode);
     imageCommands.push(drawn.command);
@@ -320,6 +359,9 @@ function buildFrame(input: FramePlanInput): RenderPlanResult {
   if (image === null) return fail("INVALID_ZONE");
   const transform = readTransformOnce(input.transform);
   if (transform === null) return fail("INVALID_TRANSFORM");
+  // spec 030 §3: same validation step as the transform's finiteness/range (see readCaseZoneOnce)
+  const rotation = readQuarterTurnsOnce(input.rotationQuarterTurns);
+  if (rotation === null) return fail("INVALID_TRANSFORM");
   const imageRef = input.imageRef;
   if (!isSafeId(imageRef)) return fail("INVALID_ID");
 
@@ -345,7 +387,7 @@ function buildFrame(input: FramePlanInput): RenderPlanResult {
   const art = readTemplateArtOnce(input.templateArt, canvasBounds);
   if (typeof art === "string") return fail(art);
 
-  const drawn = coverCommand("frame:user-image", imageRef, imageZone, image, transform);
+  const drawn = coverCommand("frame:user-image", imageRef, imageZone, image, transform, rotation);
   if ("code" in drawn) return fail(drawn.code, drawn.causeCode);
 
   const commands: PreviewDrawCommand[] = [

@@ -41,6 +41,7 @@ import {
   PAN_KEY_STEP,
   PAN_KEY_STEP_COARSE,
   resetTransform,
+  rotateTransform,
   SCALE_PERCENT_MAX,
   SCALE_PERCENT_MIN,
   scaleFromPercent,
@@ -399,7 +400,15 @@ export function PreviewComposer({
       return result.ok ? result.plan : null;
     };
 
-    const probe = buildWith((_slotId, normalized) => ({ scale: normalized.scale, x: 0, y: 0 }));
+    // C-7: the probe MUST carry the rotation — a quarter turn swaps the cover footprint, so a probe
+    // without it would hand back the unrotated `maxPan` and the pan would be clamped to the wrong
+    // limit. Only the pan is zeroed here.
+    const probe = buildWith((_slotId, normalized) => ({
+      scale: normalized.scale,
+      x: 0,
+      y: 0,
+      rotationQuarterTurns: normalized.rotationQuarterTurns,
+    }));
     if (probe === null) return null;
 
     const maxPanByRef = new Map<string, Point>();
@@ -719,6 +728,29 @@ export function PreviewComposer({
               {PREVIEW_EDIT_LABELS.reset}
             </button>
           </div>
+
+          {/* spec 030: quarter turns only. Each press is exactly one step (modulo 4); scale and
+              normalized pan are untouched, so the framing survives the rotation. */}
+          <fieldset className="denn-preview-edit__subgroup">
+            <legend className="denn-composer__slot-label">{PREVIEW_EDIT_LABELS.rotateGroup}</legend>
+            {(
+              [
+                ["preview-rotate-left", PREVIEW_EDIT_LABELS.rotateLeft, "left"],
+                ["preview-rotate-right", PREVIEW_EDIT_LABELS.rotateRight, "right"],
+              ] as const
+            ).map(([testId, label, direction]) => (
+              <button
+                key={testId}
+                type="button"
+                className="denn-composer__clear"
+                data-testid={testId}
+                disabled={activeEditable === null}
+                onClick={() => applyToActive((current) => rotateTransform(current, direction))}
+              >
+                {label}
+              </button>
+            ))}
+          </fieldset>
 
           {/* Real buttons host the keyboard pan: arrows (Shift = coarse) work whenever focus is
               inside this group, and each button alone is enough for keyboard-only use. */}

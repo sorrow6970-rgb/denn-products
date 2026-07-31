@@ -1248,3 +1248,165 @@ describe("buildPreviewRenderPlan — template art", () => {
     expect((cmd(p, "case:template-art") as { destRect: unknown }).destRect).toEqual(first);
   });
 });
+
+// ---- spec 030: optional quarter-turn rotation ---------------------------------
+describe("buildPreviewRenderPlan — quarter-turn rotation (spec 030)", () => {
+  it("an absent rotation emits a command byte-identical to the pre-030 shape", () => {
+    const p = plan(buildPreviewRenderPlan(FRAME_BASE));
+    const img = cmd(p, "frame:user-image");
+    // the KEY must be absent, not present-and-zero: a pre-030 consumer sees no new field at all
+    expect(Object.hasOwn(img, "rotationQuarterTurns")).toBe(false);
+    expect(JSON.parse(JSON.stringify(img))).toEqual({
+      type: "draw-image-cover",
+      layerId: "frame:user-image",
+      imageRef: "frame-img",
+      clipRect: { x: 18, y: 18, width: 264, height: 364 },
+      drawRect: img.type === "draw-image-cover" ? img.drawRect : null,
+    });
+  });
+
+  it("an explicit 0 is also omitted, so it cannot change the plan bytes", () => {
+    const rotated = plan(buildPreviewRenderPlan({ ...FRAME_BASE, rotationQuarterTurns: 0 }));
+    expect(rotated).toEqual(plan(buildPreviewRenderPlan(FRAME_BASE)));
+  });
+
+  it("180° keeps the footprint; 90°/270° SWAP the cover footprint", () => {
+    // imageZone 264x364, image 200x100
+    const unrotated = cmd(plan(buildPreviewRenderPlan(FRAME_BASE)), "frame:user-image");
+    const half = cmd(
+      plan(buildPreviewRenderPlan({ ...FRAME_BASE, rotationQuarterTurns: 2 })),
+      "frame:user-image",
+    );
+    const quarter = cmd(
+      plan(buildPreviewRenderPlan({ ...FRAME_BASE, rotationQuarterTurns: 1 })),
+      "frame:user-image",
+    );
+    if (unrotated.type !== "draw-image-cover") throw new Error("type");
+    if (half.type !== "draw-image-cover") throw new Error("type");
+    if (quarter.type !== "draw-image-cover") throw new Error("type");
+
+    // 180° is a pure flip: identical silhouette, only the rotation field is added
+    expect(half.drawRect).toEqual(unrotated.drawRect);
+    expect(half.rotationQuarterTurns).toBe(2);
+
+    // 90°: cover now fits a 100x200 source → baseScale = max(264/100, 364/200) = 2.64
+    expect(quarter.rotationQuarterTurns).toBe(1);
+    expect(quarter.drawRect.width).toBeCloseTo(264, 6);
+    expect(quarter.drawRect.height).toBeCloseTo(528, 6);
+    // the clip is untouched by rotation
+    expect(quarter.clipRect).toEqual(unrotated.clipRect);
+  });
+
+  it("270° and 90° produce the same on-screen footprint (only the direction differs)", () => {
+    const one = cmd(
+      plan(buildPreviewRenderPlan({ ...FRAME_BASE, rotationQuarterTurns: 1 })),
+      "frame:user-image",
+    );
+    const three = cmd(
+      plan(buildPreviewRenderPlan({ ...FRAME_BASE, rotationQuarterTurns: 3 })),
+      "frame:user-image",
+    );
+    if (one.type !== "draw-image-cover" || three.type !== "draw-image-cover") throw new Error("t");
+    expect(three.drawRect).toEqual(one.drawRect);
+    expect(three.rotationQuarterTurns).toBe(3);
+  });
+
+  it("a rotated cover still fills the clip completely (no empty space, D-7 survives)", () => {
+    for (const rotationQuarterTurns of [0, 1, 2, 3] as const) {
+      const c = cmd(
+        plan(buildPreviewRenderPlan({ ...FRAME_BASE, rotationQuarterTurns })),
+        "frame:user-image",
+      );
+      if (c.type !== "draw-image-cover") throw new Error("type");
+      expect(c.drawRect.width).toBeGreaterThanOrEqual(c.clipRect.width - 1e-9);
+      expect(c.drawRect.height).toBeGreaterThanOrEqual(c.clipRect.height - 1e-9);
+    }
+  });
+
+  it("REJECTS every non-quarter-turn value instead of wrapping or defaulting it", () => {
+    for (const bad of [4, -1, 1.5, 90, "1", null, Number.NaN, true, {}]) {
+      const r = buildPreviewRenderPlan({
+        ...FRAME_BASE,
+        rotationQuarterTurns: bad,
+      } as unknown as FramePlanInput);
+      expect(r.ok).toBe(false);
+      if (r.ok) throw new Error("expected failure");
+      expect(r.code).toBe("INVALID_TRANSFORM");
+    }
+  });
+
+  it("rotation is validated in the SAME step as the transform (error priority unchanged)", () => {
+    // a bad transform AND a bad rotation still report the transform's own code
+    const r = buildPreviewRenderPlan({
+      ...FRAME_BASE,
+      transform: { scale: 0, x: 0, y: 0 },
+      rotationQuarterTurns: 9,
+    } as unknown as FramePlanInput);
+    expect(r.ok).toBe(false);
+    if (r.ok) throw new Error("expected failure");
+    expect(r.code).toBe("INVALID_TRANSFORM");
+  });
+
+  it("case zones rotate INDEPENDENTLY — one zone's turn never reaches another", () => {
+    const p = plan(
+      buildPreviewRenderPlan({
+        ...CASE_BASE,
+        zones: [
+          caseZone({ id: "z0", imageRef: "img-0", rotationQuarterTurns: 1 }),
+          caseZone({
+            id: "z1",
+            imageRef: "img-1",
+            rect: { units: "logical", x: 0, y: 0, width: 200, height: 200 },
+          }),
+        ],
+      }),
+    );
+    const first = cmd(p, "case:user-image:z0");
+    const second = cmd(p, "case:user-image:z1");
+    if (first.type !== "draw-image-cover" || second.type !== "draw-image-cover") {
+      throw new Error("type");
+    }
+    expect(first.rotationQuarterTurns).toBe(1);
+    expect(Object.hasOwn(second, "rotationQuarterTurns")).toBe(false);
+  });
+
+  it("reads the rotation exactly once (a drifting getter cannot change the emitted plan)", () => {
+    let reads = 0;
+    const zone = {
+      ...caseZone(),
+      get rotationQuarterTurns() {
+        reads += 1;
+        return reads === 1 ? 1 : 3; // drift AFTER validation
+      },
+    };
+    const p = plan(buildPreviewRenderPlan({ ...CASE_BASE, zones: [zone as CaseImageZone] }));
+    const c = cmd(p, "case:user-image:z0");
+    if (c.type !== "draw-image-cover") throw new Error("type");
+    expect(reads).toBe(1);
+    expect(c.rotationQuarterTurns).toBe(1);
+  });
+
+  it("a throwing rotation getter fails safe instead of escaping", () => {
+    const zone = {
+      ...caseZone(),
+      get rotationQuarterTurns(): number {
+        throw new Error("hostile");
+      },
+    };
+    const r = buildPreviewRenderPlan({ ...CASE_BASE, zones: [zone as CaseImageZone] });
+    expect(r.ok).toBe(false);
+  });
+
+  it("template art never gains a rotation field (R-5: the art stays fixed)", () => {
+    const p = plan(
+      buildPreviewRenderPlan({
+        ...FRAME_BASE,
+        rotationQuarterTurns: 1,
+        templateArt: { imageRef: "art-1", destRect: { x: 10, y: 10, width: 280, height: 380 } },
+      }),
+    );
+    const art = cmd(p, "frame:template-art");
+    expect(art.type).toBe("draw-image-stretch");
+    expect(Object.hasOwn(art, "rotationQuarterTurns")).toBe(false);
+  });
+});

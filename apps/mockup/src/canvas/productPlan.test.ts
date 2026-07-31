@@ -847,3 +847,166 @@ describe("product plan template art", () => {
     expect(JSON.stringify(result)).not.toContain("SECRETMARKER");
   });
 });
+
+// --- spec 030: quarter-turn rotation ----------------------------------------
+
+describe("product plan quarter-turn rotation (spec 030)", () => {
+  it("forwards the rotation into the frame command", () => {
+    const plan = planOf(
+      buildFrameProductPlan(
+        frameInput({
+          userImage: image({
+            transform: { scale: 1, x: 0, y: 0, rotationQuarterTurns: 1 },
+          }),
+        }),
+      ),
+    );
+    const drawn = cmd(plan, "frame:user-image");
+    if (drawn.type !== "draw-image-cover") throw new Error("type");
+    expect(drawn.rotationQuarterTurns).toBe(1);
+  });
+
+  it("omits the field entirely for an unrotated photo (pre-030 plans are unchanged)", () => {
+    const plan = planOf(buildFrameProductPlan(frameInput()));
+    const drawn = cmd(plan, "frame:user-image");
+    expect(Object.hasOwn(drawn, "rotationQuarterTurns")).toBe(false);
+    // an explicit 0 must produce exactly the same plan as an absent rotation
+    const explicit = planOf(
+      buildFrameProductPlan(
+        frameInput({
+          userImage: image({ transform: { scale: 1, x: 0, y: 0, rotationQuarterTurns: 0 } }),
+        }),
+      ),
+    );
+    expect(explicit).toEqual(plan);
+  });
+
+  it("keeps case zone rotations INDEPENDENT (R-4)", () => {
+    const plan = planOf(
+      buildCaseProductPlan(
+        caseInput({
+          geometry: caseGeometry([
+            {
+              id: "case-zone-0",
+              sourceIndex: 0,
+              percentRect: { x: 0, y: 0, width: 50, height: 100 },
+            },
+            {
+              id: "case-zone-1",
+              sourceIndex: 1,
+              percentRect: { x: 50, y: 0, width: 50, height: 100 },
+            },
+          ]),
+          zoneImages: new Map([
+            [
+              "case-zone-0",
+              image({
+                imageRef: "user-image-0",
+                transform: { scale: 1, x: 0, y: 0, rotationQuarterTurns: 3 },
+              }),
+            ],
+            ["case-zone-1", image({ imageRef: "user-image-1" })],
+          ]),
+        }),
+      ),
+    );
+    const first = cmd(plan, "case:user-image:case-zone-0");
+    const second = cmd(plan, "case:user-image:case-zone-1");
+    if (first.type !== "draw-image-cover" || second.type !== "draw-image-cover") {
+      throw new Error("type");
+    }
+    expect(first.rotationQuarterTurns).toBe(3);
+    expect(Object.hasOwn(second, "rotationQuarterTurns")).toBe(false);
+  });
+
+  it("a 90 turn swaps the cover footprint, so maxPan is the ROTATED one", () => {
+    const upright = planOf(
+      buildFrameProductPlan(
+        frameInput({ userImage: image({ intrinsicSize: { width: 2000, height: 1000 } }) }),
+      ),
+    );
+    const turned = planOf(
+      buildFrameProductPlan(
+        frameInput({
+          userImage: image({
+            intrinsicSize: { width: 2000, height: 1000 },
+            transform: { scale: 1, x: 0, y: 0, rotationQuarterTurns: 1 },
+          }),
+        }),
+      ),
+    );
+    const a = cmd(upright, "frame:user-image");
+    const b = cmd(turned, "frame:user-image");
+    if (a.type !== "draw-image-cover" || b.type !== "draw-image-cover") throw new Error("type");
+    // a landscape photo covers a portrait-ish zone very differently once turned upright
+    expect(b.drawRect).not.toEqual(a.drawRect);
+    // …but it still covers the clip on BOTH axes: no empty space (D-7 survives the rotation)
+    expect(b.drawRect.width).toBeGreaterThanOrEqual(b.clipRect.width - 1e-9);
+    expect(b.drawRect.height).toBeGreaterThanOrEqual(b.clipRect.height - 1e-9);
+  });
+
+  it("REJECTS a non-quarter-turn rotation as an invalid image state", () => {
+    for (const bad of [4, -1, 1.5, 90, "1", null, Number.NaN]) {
+      const result = buildFrameProductPlan(
+        frameInput({
+          userImage: image({
+            transform: { scale: 1, x: 0, y: 0, rotationQuarterTurns: bad },
+          } as unknown as Partial<UserImageState>),
+        }),
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error("expected failure");
+      expect(result.code).toBe("INVALID_IMAGE_STATE");
+    }
+  });
+
+  it("carries the offending zone index when a case rotation is invalid", () => {
+    const result = buildCaseProductPlan(
+      caseInput({
+        geometry: caseGeometry([
+          {
+            id: "case-zone-0",
+            sourceIndex: 0,
+            percentRect: { x: 0, y: 0, width: 100, height: 100 },
+          },
+          {
+            id: "case-zone-1",
+            sourceIndex: 7,
+            percentRect: { x: 0, y: 0, width: 100, height: 100 },
+          },
+        ]),
+        zoneImages: new Map([
+          ["case-zone-0", image({ imageRef: "user-image-0" })],
+          [
+            "case-zone-1",
+            image({
+              imageRef: "user-image-1",
+              transform: { scale: 1, x: 0, y: 0, rotationQuarterTurns: 4 },
+            } as unknown as Partial<UserImageState>),
+          ],
+        ]),
+      }),
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.code).toBe("INVALID_IMAGE_STATE");
+    expect(result.zoneSourceIndex).toBe(7);
+  });
+
+  it("a throwing rotation getter fails safe instead of escaping", () => {
+    const hostile = {
+      imageRef: "user-image-0",
+      intrinsicSize: { width: 1000, height: 1000 },
+      transform: {
+        scale: 1,
+        x: 0,
+        y: 0,
+        get rotationQuarterTurns(): number {
+          throw new Error("hostile");
+        },
+      },
+    } as unknown as UserImageState;
+    const result = buildFrameProductPlan(frameInput({ userImage: hostile }));
+    expect(result.ok).toBe(false);
+  });
+});

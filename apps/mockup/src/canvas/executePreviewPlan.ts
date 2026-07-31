@@ -7,8 +7,11 @@
 //  - `imageRef` is ONLY an in-memory lookup key — it is never parsed as, or used as, a URL. Using it
 //    as a URL would break the spec 020 trust boundary.
 //  - no console output, no telemetry callback, no stored exception object.
-//  - no setTransform/scale/rotate/translate: DPR/backing transform stays the caller's job and this
-//    executor draws in logical coordinates only.
+//  - no setTransform and no scale(): DPR/backing transform stays the caller's job and this executor
+//    draws in logical coordinates only. Since spec 030 a `draw-image-cover` command MAY carry a
+//    quarter-turn rotation; then — and ONLY then — translate()/rotate() run INSIDE that one command,
+//    always paired with the save/restore that already wrapped it, so no transform ever leaks into
+//    the next command or back to the caller.
 //  - never throws: malformed input, hostile getters/Proxy traps, and Canvas failures all come back
 //    as an identity-free Result.
 //
@@ -49,6 +52,22 @@ const CONTEXT_METHODS = [
   "strokeRect",
 ] as const;
 
+/**
+ * Rotation needs two methods the spec 021 port does not declare. They are required ONLY when the
+ * plan actually contains a rotated command, so a context that satisfies the published port keeps
+ * executing every pre-030 plan unchanged; a rotated plan against such a context fails CLOSED in
+ * preflight (INVALID_EXECUTOR_INPUT) instead of drawing the photo unrotated.
+ */
+const ROTATION_METHODS = ["translate", "rotate"] as const;
+
+interface RotationCapableContext {
+  translate(x: number, y: number): void;
+  rotate(angle: number): void;
+}
+
+/** Clockwise radians for a quarter turn. Exact multiples only — no interpolation exists here. */
+const QUARTER_TURN_RADIANS = Math.PI / 2;
+
 // --- defensive primitives (accept unknown; never throw on their own) --------
 const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
@@ -56,6 +75,16 @@ const isFiniteNum = (v: unknown): v is number => typeof v === "number" && Number
 const isFinitePositive = (v: unknown): v is number => isFiniteNum(v) && v > 0;
 const isNonEmptyString = (v: unknown): v is string => typeof v === "string" && v.length > 0;
 const isHex = (v: unknown): v is string => typeof v === "string" && HEX.test(v);
+
+function supportsRotation(
+  context: PreviewCanvasContext,
+): context is PreviewCanvasContext & RotationCapableContext {
+  const record = context as unknown as Record<string, unknown>;
+  for (const method of ROTATION_METHODS) {
+    if (typeof record[method] !== "function") return false;
+  }
+  return true;
+}
 
 const FAIL_INPUT = { ok: false, code: "INVALID_EXECUTOR_INPUT" } as const;
 const FAIL_PLAN = { ok: false, code: "INVALID_PLAN" } as const;
@@ -82,6 +111,8 @@ type SnapshotCommand =
       readonly type: "draw-image-cover";
       readonly clipRect: SnapshotRect;
       readonly drawRect: SnapshotRect;
+      /** spec 030: clockwise quarter turns; 0 means the exact pre-030 draw. */
+      readonly rotation: 0 | 1 | 2 | 3;
       readonly drawable: CanvasImageSource;
     }
   | {
@@ -109,6 +140,13 @@ function readRect(value: unknown): SnapshotRect | null {
   return { x, y, width, height };
 }
 
+/** `undefined` → 0 (absent rotation). Any other non-`0|1|2|3` value → null (invalid plan). */
+function readQuarterTurns(value: unknown): 0 | 1 | 2 | 3 | null {
+  if (value === undefined) return 0;
+  if (value === 0 || value === 1 || value === 2 || value === 3) return value;
+  return null;
+}
+
 function readSize(value: unknown): { readonly width: number; readonly height: number } | null {
   if (!isObj(value)) return null;
   const width = value.width;
@@ -125,6 +163,7 @@ type ReadCommand =
       readonly imageRef: string;
       readonly clipRect: SnapshotRect;
       readonly drawRect: SnapshotRect;
+      readonly rotation: 0 | 1 | 2 | 3;
     }
   | {
       readonly kind: "stretch";
@@ -157,7 +196,11 @@ function readCommand(value: unknown): ReadCommand | null {
     const clipRect = readRect(value.clipRect);
     const drawRect = readRect(value.drawRect);
     if (!isNonEmptyString(imageRef) || clipRect === null || drawRect === null) return null;
-    return { kind: "image", imageRef, clipRect, drawRect };
+    // spec 030: read ONCE. Absent is the only accepted absence; every other non-`0|1|2|3` value is
+    // an invalid plan — it is never wrapped with a modulo and never defaulted to "no rotation".
+    const rotation = readQuarterTurns(value.rotationQuarterTurns);
+    if (rotation === null) return null;
+    return { kind: "image", imageRef, clipRect, drawRect, rotation };
   }
   if (type === "draw-image-stretch") {
     // spec 028: destination only — there is no source rect, so no crop can be requested here.
@@ -276,16 +319,23 @@ function normalizePlan(
       drawable = bound as CanvasImageSource;
       resolved.set(read.imageRef, drawable);
     }
-    commands.push(
-      read.kind === "stretch"
-        ? { type: "draw-image-stretch", destRect: read.destRect, drawable }
-        : {
-            type: "draw-image-cover",
-            clipRect: read.clipRect,
-            drawRect: read.drawRect,
-            drawable,
-          },
-    );
+    if (read.kind === "stretch") {
+      commands.push({ type: "draw-image-stretch", destRect: read.destRect, drawable });
+      continue;
+    }
+    // spec 030 fail-closed: a rotated command against a context without translate/rotate is
+    // rejected in PREFLIGHT, so nothing is drawn — an unrotated photo is a wrong product, not a
+    // graceful degradation.
+    if (read.rotation !== 0 && !supportsRotation(context)) {
+      return { ok: false, code: "INVALID_EXECUTOR_INPUT", commandIndex: index };
+    }
+    commands.push({
+      type: "draw-image-cover",
+      clipRect: read.clipRect,
+      drawRect: read.drawRect,
+      rotation: read.rotation,
+      drawable,
+    });
   }
 
   return { ok: true, context, plan: { width: canvas.width, height: canvas.height, commands } };
@@ -343,14 +393,30 @@ function executeCommand(
       return ok ? null : "CANVAS_OPERATION_FAILED";
     }
     case "draw-image-cover": {
-      const { clipRect, drawRect, drawable } = command;
+      const { clipRect, drawRect, rotation, drawable } = command;
       if (!attempt(() => context.save())) return "CANVAS_OPERATION_FAILED"; // no inner restore
       const drawn = attempt(() => {
         context.beginPath();
         context.rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
         context.clip();
-        context.drawImage(drawable, drawRect.x, drawRect.y, drawRect.width, drawRect.height);
+        if (rotation === 0) {
+          // byte-identical to the pre-030 path: no translate, no rotate, same 5-arg drawImage
+          context.drawImage(drawable, drawRect.x, drawRect.y, drawRect.width, drawRect.height);
+          return;
+        }
+        // C-4: the centre of rotation is the drawRect centre, which already carries the pan, so
+        // rotating never makes the composition jump.
+        const rotatable = context as PreviewCanvasContext & RotationCapableContext;
+        rotatable.translate(drawRect.x + drawRect.width / 2, drawRect.y + drawRect.height / 2);
+        rotatable.rotate(rotation * QUARTER_TURN_RADIANS);
+        // drawRect is the ON-SCREEN silhouette; inside the rotated frame a quarter turn exchanges
+        // the axes back, so the photo is drawn with its own (pre-rotation) width and height.
+        const width = rotation === 2 ? drawRect.width : drawRect.height;
+        const height = rotation === 2 ? drawRect.height : drawRect.width;
+        context.drawImage(drawable, -width / 2, -height / 2, width, height);
       });
+      // The restore below is the ONLY undo for translate/rotate; it is attempted exactly once even
+      // when a step above threw, so no transform can leak into the next command.
       if (!attempt(() => context.restore())) return "CANVAS_RESTORE_FAILED";
       return drawn ? null : "CANVAS_OPERATION_FAILED";
     }

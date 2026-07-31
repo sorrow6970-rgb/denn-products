@@ -114,6 +114,10 @@ export const PREVIEW_EDIT_LABELS = {
   zoomIn: "크게",
   zoomOut: "작게",
   reset: "원래대로",
+  /** spec 030 §2: the two rotate buttons are the WHOLE rotation UI — quarter turns only. */
+  rotateGroup: "사진 회전",
+  rotateLeft: "왼쪽으로 90°",
+  rotateRight: "오른쪽으로 90°",
   panGroup: "사진 위치 이동 (화살표 키로도 이동, Shift와 함께 누르면 크게 이동)",
   panUp: "위로 이동",
   panDown: "아래로 이동",

@@ -13,11 +13,20 @@
 
 import type { Point } from "@denn/render";
 
+/** Clockwise quarter turns (spec 030). The ONLY rotation this product supports. */
+export type QuarterTurns = 0 | 1 | 2 | 3;
+
 /** Normalized editing transform. `x`/`y` are fractions of `maxPan`, NOT logical px. */
 export interface NormalizedTransform {
   readonly scale: number;
   readonly x: number;
   readonly y: number;
+  /**
+   * spec 030: 0|1|2|3 clockwise quarter turns of THIS slot's photo. Pan stays on the SCREEN axes,
+   * so a rotation changes only which `maxPan` the same normalized `x`/`y` are measured against —
+   * the framing the customer chose is preserved across a rotation.
+   */
+  readonly rotationQuarterTurns: QuarterTurns;
 }
 
 /** Logical-px transform, the shape the spec 025 adapter expects. */
@@ -25,6 +34,7 @@ export interface LogicalTransform {
   readonly scale: number;
   readonly x: number;
   readonly y: number;
+  readonly rotationQuarterTurns: QuarterTurns;
 }
 
 /** Cover is always preserved: no scale below 1 exists, so no empty space can appear in the clip. */
@@ -39,7 +49,15 @@ export const PAN_KEY_STEP_COARSE = 0.1;
 export const SCALE_PERCENT_MIN = 100;
 export const SCALE_PERCENT_MAX = 500;
 
-export const IDENTITY_TRANSFORM: NormalizedTransform = { scale: MIN_SCALE, x: 0, y: 0 };
+/** A full turn: the modulo base for both rotate buttons. */
+export const QUARTER_TURNS_IN_TURN = 4;
+
+export const IDENTITY_TRANSFORM: NormalizedTransform = {
+  scale: MIN_SCALE,
+  x: 0,
+  y: 0,
+  rotationQuarterTurns: 0,
+};
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -62,13 +80,37 @@ export function readNormalizedTransform(value: unknown): NormalizedTransform | n
     const scale = record.scale;
     const x = record.x;
     const y = record.y;
+    // spec 030: read ONCE, like every other field. `undefined` is the only accepted absence (a
+    // pre-030 value is unrotated); 4, -1, 1.5, "1" and NaN are REJECTED, never wrapped or defaulted.
+    const rotation = record.rotationQuarterTurns;
     if (!isFiniteNumber(scale) || !isFiniteNumber(x) || !isFiniteNumber(y)) return null;
     if (!inRange(scale, MIN_SCALE, MAX_SCALE)) return null;
     if (!inRange(x, -1, 1) || !inRange(y, -1, 1)) return null;
-    return { scale, x, y };
+    if (rotation !== undefined && !isQuarterTurns(rotation)) return null;
+    return { scale, x, y, rotationQuarterTurns: rotation === undefined ? 0 : rotation };
   } catch {
     return null;
   }
+}
+
+/** Exactly 0, 1, 2 or 3 — no float, no negative, no 4, no numeric string. */
+export const isQuarterTurns = (value: unknown): value is QuarterTurns =>
+  value === 0 || value === 1 || value === 2 || value === 3;
+
+/**
+ * One rotate-button press (spec 030 §2): exactly ONE quarter turn, modulo 4. `왼쪽으로 90°` is -1
+ * and `오른쪽으로 90°` is +1. Scale and normalized pan are untouched, so the framing survives.
+ */
+export function rotateTransform(
+  transform: NormalizedTransform,
+  direction: "left" | "right",
+): NormalizedTransform {
+  const step = direction === "left" ? -1 : 1;
+  const raw = transform.rotationQuarterTurns + step;
+  const next = (((raw % QUARTER_TURNS_IN_TURN) + QUARTER_TURNS_IN_TURN) %
+    QUARTER_TURNS_IN_TURN) as QuarterTurns;
+  if (next === transform.rotationQuarterTurns) return transform;
+  return { scale: transform.scale, x: transform.x, y: transform.y, rotationQuarterTurns: next };
 }
 
 /** Scale as the UI percentage (integer). */
@@ -91,13 +133,23 @@ export function zoomTransform(
     direction === "in" ? transform.scale * ZOOM_STEP_FACTOR : transform.scale / ZOOM_STEP_FACTOR;
   const scale = clamp(raw, MIN_SCALE, MAX_SCALE);
   if (scale === transform.scale) return transform;
-  return { scale, x: transform.x, y: transform.y };
+  return {
+    scale,
+    x: transform.x,
+    y: transform.y,
+    rotationQuarterTurns: transform.rotationQuarterTurns,
+  };
 }
 
 export function withScale(transform: NormalizedTransform, scale: number): NormalizedTransform {
   const next = clamp(scale, MIN_SCALE, MAX_SCALE);
   if (next === transform.scale) return transform;
-  return { scale: next, x: transform.x, y: transform.y };
+  return {
+    scale: next,
+    x: transform.x,
+    y: transform.y,
+    rotationQuarterTurns: transform.rotationQuarterTurns,
+  };
 }
 
 /** Keyboard/step pan. `dx`/`dy` are normalized deltas; both axes are limited to [-1, 1]. */
@@ -110,10 +162,10 @@ export function panTransform(
   const x = clamp(transform.x + dx, -1, 1);
   const y = clamp(transform.y + dy, -1, 1);
   if (x === transform.x && y === transform.y) return transform;
-  return { scale: transform.scale, x, y };
+  return { scale: transform.scale, x, y, rotationQuarterTurns: transform.rotationQuarterTurns };
 }
 
-/** The single `원래대로` action. */
+/** The single `원래대로` action. Since spec 030 it also returns the rotation to 0. */
 export const resetTransform = (): NormalizedTransform => IDENTITY_TRANSFORM;
 
 /**
@@ -129,7 +181,13 @@ export function toLogicalTransform(
   const x = maxPan.x === 0 ? 0 : transform.x * maxPan.x;
   const y = maxPan.y === 0 ? 0 : transform.y * maxPan.y;
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-  return { scale: transform.scale, x, y };
+  // The rotation is NOT converted: it is already an exact quarter turn in both spaces.
+  return {
+    scale: transform.scale,
+    x,
+    y,
+    rotationQuarterTurns: transform.rotationQuarterTurns,
+  };
 }
 
 /**

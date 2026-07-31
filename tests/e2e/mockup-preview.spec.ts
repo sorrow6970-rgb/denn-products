@@ -1095,3 +1095,302 @@ test.describe("pan/zoom editing (spec 029)", () => {
     expect(noise.errors).toEqual([]);
   });
 });
+
+// --- spec 030: quarter-turn rotation ------------------------------------------
+//
+// Real Chromium, real Canvas pixels. The split photo makes the rotation VISIBLE: its boundary runs
+// horizontally at rest, and a quarter turn must move that boundary to the vertical axis.
+
+const rotateLeft = (page: Page) => page.getByTestId("preview-rotate-left");
+const rotateRight = (page: Page) => page.getByTestId("preview-rotate-right");
+
+/** A non-square split photo: the left `width/2` columns are TOP, the rest BOTTOM. */
+function splitWidePng(
+  width: number,
+  height: number,
+  [lr, lg, lb]: readonly [number, number, number],
+  [rr, rg, rb]: readonly [number, number, number],
+): Buffer {
+  const raw = Buffer.alloc((width * 3 + 1) * height);
+  let offset = 0;
+  for (let y = 0; y < height; y++) {
+    raw[offset++] = 0;
+    for (let x = 0; x < width; x++) {
+      const left = x < width / 2;
+      raw[offset++] = left ? lr : rr;
+      raw[offset++] = left ? lg : rg;
+      raw[offset++] = left ? lb : rb;
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk("IHDR", ihdr),
+    pngChunk("IDAT", deflateSync(raw)),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+test.describe("quarter-turn rotation (spec 030)", () => {
+  test("a right turn moves the photo boundary from the horizontal to the vertical axis", async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    const route = await routeCatalog(page);
+    await caseWithSplitPhotos(page);
+
+    // at rest the 20x20 split photo covers the 120x80 zone: TOP above y=50, BOTTOM below
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 30))).toEqual([...TOP]);
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 70))).toEqual([...BOTTOM]);
+
+    // one clockwise quarter turn: the photo's top edge now points RIGHT
+    await rotateRight(page).click();
+    await expect.poll(async () => rgb(await pixelAt(page, 105, 50))).toEqual([...TOP]);
+    await expect.poll(async () => rgb(await pixelAt(page, 45, 50))).toEqual([...BOTTOM]);
+    // and the horizontal boundary is gone — both samples on the vertical axis are the same colour
+    expect(rgb(await pixelAt(page, 105, 30))).toEqual(rgb(await pixelAt(page, 105, 70)));
+
+    // a second turn is 180°: the halves are simply swapped top-for-bottom
+    await rotateRight(page).click();
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 30))).toEqual([...BOTTOM]);
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 70))).toEqual([...TOP]);
+
+    expect(noise.errors).toEqual([]);
+    expect(route.unexpected()).toBe(0);
+  });
+
+  test("left and right are inverses and four presses return to the start", async ({ page }) => {
+    await routeCatalog(page);
+    await caseWithSplitPhotos(page);
+
+    await rotateRight(page).click();
+    await rotateLeft(page).click();
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 30))).toEqual([...TOP]);
+
+    for (let i = 0; i < 4; i++) await rotateRight(page).click();
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 30))).toEqual([...TOP]);
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 70))).toEqual([...BOTTOM]);
+  });
+
+  test("each case slot rotates INDEPENDENTLY (R-4)", async ({ page }) => {
+    await routeCatalog(page);
+    await caseWithSplitPhotos(page);
+
+    // slot 0 is active by default; turn it once
+    await rotateRight(page).click();
+    // zone 0 (centre x=75) is now split vertically…
+    await expect.poll(async () => rgb(await pixelAt(page, 105, 50))).toEqual([...TOP]);
+    // …and zone 1 (5%+55% → x 165..285, centre 225) is untouched
+    await expect.poll(async () => rgb(await pixelAt(page, 225, 30))).toEqual([...TOP]);
+    await expect.poll(async () => rgb(await pixelAt(page, 225, 70))).toEqual([...BOTTOM]);
+
+    // switch slots and turn the OTHER photo; the first keeps its own rotation
+    await page.getByTestId("preview-edit-slot-case-zone-1").click();
+    await rotateRight(page).click();
+    await expect.poll(async () => rgb(await pixelAt(page, 255, 50))).toEqual([...TOP]);
+    await expect.poll(async () => rgb(await pixelAt(page, 105, 50))).toEqual([...TOP]);
+    await expect.poll(async () => rgb(await pixelAt(page, 45, 50))).toEqual([...BOTTOM]);
+  });
+
+  test("`원래대로` clears the rotation together with the pan and the scale", async ({ page }) => {
+    await routeCatalog(page);
+    await caseWithSplitPhotos(page);
+
+    await rotateRight(page).click();
+    await page.getByTestId("preview-zoom-in").click();
+    await dragBy(page, 0, 10);
+    await page.getByTestId("preview-reset").click();
+
+    await expect(scaleValue(page)).toHaveText("100%");
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 30))).toEqual([...TOP]);
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 70))).toEqual([...BOTTOM]);
+  });
+
+  test("a rotated photo still fills the clip after drag, zoom and resize (D-7 survives)", async ({
+    page,
+  }) => {
+    await routeCatalog(page);
+    await gotoReady(page);
+    await chooseFrame(page);
+    await openComposer(page);
+    await pickColour(page, "#1A1A1A");
+    // a WIDE photo: a quarter turn genuinely swaps the cover footprint
+    await page.getByTestId("preview-file-frame-image").setInputFiles({
+      name: `${FILE_MARKER}-wide.png`,
+      mimeType: "image/png",
+      buffer: splitWidePng(40, 20, TOP, BOTTOM),
+    });
+    await waitForCanvas(page);
+
+    const box = await canvas(page).boundingBox();
+    if (box === null) throw new Error("no canvas");
+
+    /** Every sample inside the photo zone must be a PHOTO colour — never the mat or the body. */
+    const clipIsFull = async (): Promise<void> => {
+      const size = await canvas(page).evaluate((element) => {
+        const node = element as HTMLCanvasElement;
+        const rect = node.getBoundingClientRect();
+        return { width: rect.width, height: rect.height };
+      });
+      // the photo zone sits inside the band+inset; sample well within it, including near-corners
+      const inset = 0.16; // comfortably inside band(5%)+inset, still near the clip edges
+      for (const fx of [inset, 0.5, 1 - inset]) {
+        for (const fy of [inset, 0.5, 1 - inset]) {
+          // polled, so the sample waits for the repaint instead of racing it (no fixed sleep)
+          await expect
+            .poll(async () => {
+              const pixel = rgb(await pixelAt(page, size.width * fx, size.height * fy));
+              // the boundary column blends the two halves, so "is a photo" means "is not the
+              // mat and not the frame body" — an empty clip would show one of those two.
+              const isMat = pixel.join() === [...MAT].join();
+              const isBody = pixel.join() === [...FRAME_BODY].join();
+              return isMat || isBody ? `empty:${pixel.join()}` : "photo";
+            })
+            .toBe("photo");
+        }
+      }
+    };
+
+    await clipIsFull();
+    await rotateRight(page).click();
+    await clipIsFull();
+    await dragBy(page, 0, 30);
+    await clipIsFull();
+    await page.getByTestId("preview-zoom-in").click();
+    await clipIsFull();
+
+    // a resize re-derives maxPan from the ROTATED footprint; the clip must still be full
+    await page.setViewportSize({ width: 420, height: 900 });
+    await waitForCanvas(page);
+    await clipIsFull();
+  });
+
+  test("the rotate buttons are keyboard operable and meet the 44px target", async ({ page }) => {
+    const noise = collectConsole(page);
+    await routeCatalog(page);
+    await caseWithSplitPhotos(page);
+
+    await rotateRight(page).focus();
+    await page.keyboard.press("Enter");
+    await expect.poll(async () => rgb(await pixelAt(page, 105, 50))).toEqual([...TOP]);
+    await rotateLeft(page).focus();
+    await page.keyboard.press("Space");
+    await expect.poll(async () => rgb(await pixelAt(page, 75, 30))).toEqual([...TOP]);
+
+    for (const control of [rotateLeft(page), rotateRight(page)]) {
+      const box = await control.boundingBox();
+      if (box) {
+        expect(Math.round(box.width)).toBeGreaterThanOrEqual(44);
+        expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
+      }
+    }
+
+    const axe = await new AxeBuilder({ page }).analyze();
+    const serious = axe.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    expect(serious.map((v) => v.id)).toEqual([]);
+    expect(noise.errors).toEqual([]);
+  });
+
+  test("the rotation controls do not overflow a 320px viewport", async ({ page }) => {
+    await routeCatalog(page);
+    await page.setViewportSize({ width: 320, height: 720 });
+    await caseWithSplitPhotos(page);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    await expect(rotateLeft(page)).toBeVisible();
+    await expect(rotateRight(page)).toBeVisible();
+  });
+});
+
+// --- spec 030 R-6: measure the browser's own EXIF behaviour --------------------
+//
+// The app never parses EXIF. This test does not ASSERT a particular browser policy — it MEASURES
+// and records what this Chromium actually does with an `Orientation=6` JPEG, so the "we rely on the
+// engine default" decision has evidence in this repository for the first time. Other engines and
+// real devices stay NOT TESTED.
+
+/** Splice a minimal little-endian APP1/Exif segment carrying `Orientation` into a JPEG. */
+function withExifOrientation(jpeg: Buffer, orientation: number): Buffer {
+  const tiff: number[] = [];
+  const push16 = (v: number) => tiff.push(v & 0xff, (v >> 8) & 0xff);
+  const push32 = (v: number) =>
+    tiff.push(v & 0xff, (v >> 8) & 0xff, (v >> 16) & 0xff, (v >> 24) & 0xff);
+  tiff.push(0x49, 0x49); // "II" little-endian
+  push16(42); // TIFF magic
+  push32(8); // offset of IFD0
+  push16(1); // one entry
+  push16(0x0112); // Orientation
+  push16(3); // SHORT
+  push32(1); // count
+  push16(orientation);
+  push16(0); // padding of the 4-byte value field
+  push32(0); // no next IFD
+  const payload = Buffer.concat([Buffer.from("Exif\0\0", "latin1"), Buffer.from(tiff)]);
+  const header = Buffer.alloc(4);
+  header[0] = 0xff;
+  header[1] = 0xe1; // APP1
+  header.writeUInt16BE(payload.length + 2, 2);
+  // SOI is the first two bytes; the segment goes immediately after it
+  return Buffer.concat([jpeg.subarray(0, 2), header, payload, jpeg.subarray(2)]);
+}
+
+test.describe("EXIF orientation is the browser's job (spec 030 R-6)", () => {
+  test("records how Chromium decodes an Orientation=6 JPEG", async ({ page }) => {
+    await routeCatalog(page);
+    await gotoReady(page);
+
+    // build a REAL baseline JPEG in the browser (no encoder and no binary fixture in the repo),
+    // then splice the EXIF segment in Node — byte splicing only, no EXIF library.
+    const base64 = await page.evaluate(() => {
+      const surface = document.createElement("canvas");
+      surface.width = 40;
+      surface.height = 20;
+      const context = surface.getContext("2d");
+      if (context === null) return "";
+      context.fillStyle = "#FF00FF";
+      context.fillRect(0, 0, 40, 20);
+      context.fillStyle = "#00FFFF";
+      context.fillRect(0, 0, 20, 20);
+      return surface.toDataURL("image/jpeg", 0.92).split(",")[1] ?? "";
+    });
+    expect(base64.length).toBeGreaterThan(0);
+    const plain = Buffer.from(base64, "base64");
+    const tagged = withExifOrientation(plain, 6);
+    expect(tagged.length).toBeGreaterThan(plain.length);
+
+    const measure = async (buffer: Buffer): Promise<{ width: number; height: number }> =>
+      page.evaluate(async (data: string) => {
+        const element = new Image();
+        element.src = `data:image/jpeg;base64,${data}`;
+        await element.decode();
+        return { width: element.naturalWidth, height: element.naturalHeight };
+      }, buffer.toString("base64"));
+
+    const plainSize = await measure(plain);
+    const taggedSize = await measure(tagged);
+
+    // the untagged baseline is the ground truth: 40x20
+    expect(plainSize).toEqual({ width: 40, height: 20 });
+
+    // MEASUREMENT, not a policy assertion: an engine that applies EXIF reports the SWAPPED size,
+    // one that ignores it reports the stored size. Both are recorded; neither is "wrong" here.
+    const applied = taggedSize.width === 20 && taggedSize.height === 40;
+    const ignored = taggedSize.width === 40 && taggedSize.height === 20;
+    expect(
+      applied || ignored,
+      `unexpected decode size ${taggedSize.width}x${taggedSize.height}`,
+    ).toBe(true);
+    test.info().annotations.push({
+      type: "exif-orientation-6",
+      description: applied
+        ? "Chromium APPLIES EXIF orientation: naturalWidth/Height are swapped (20x40)"
+        : "Chromium IGNORES EXIF orientation: naturalWidth/Height stay stored (40x20)",
+    });
+  });
+});

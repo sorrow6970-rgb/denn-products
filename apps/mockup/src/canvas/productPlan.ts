@@ -57,7 +57,16 @@ interface ImageSnapshot {
   readonly imageRef: string;
   readonly image: { width: number; height: number };
   readonly transform: { scale: number; x: number; y: number };
+  /** spec 030: 0 when the caller supplied none. Never wrapped, never invented. */
+  readonly rotationQuarterTurns: 0 | 1 | 2 | 3;
 }
+
+/** `undefined` → 0 (a pre-030 caller). Any other non-`0|1|2|3` value is an invalid image state. */
+const readQuarterTurns = (value: unknown): 0 | 1 | 2 | 3 | null => {
+  if (value === undefined) return 0;
+  if (value === 0 || value === 1 || value === 2 || value === 3) return value;
+  return null;
+};
 
 /** Read a user image state ONCE into a plain snapshot. `zoneSourceIndex` is carried into failures. */
 function readImageState(value: unknown, zoneSourceIndex?: number): ImageSnapshot {
@@ -87,10 +96,17 @@ function readImageState(value: unknown, zoneSourceIndex?: number): ImageSnapshot
   if (!isFinitePositive(scale) || !isFiniteNum(x) || !isFiniteNum(y)) {
     fail("INVALID_IMAGE_STATE", zoneSourceIndex);
   }
+  // spec 030 §3: the rotation is validated in the SAME step as the transform's finiteness/range and
+  // it is read exactly once, so a drifting getter cannot change what was validated.
+  const rotationQuarterTurns = readQuarterTurns(
+    (rawTransform as Record<string, unknown>).rotationQuarterTurns,
+  );
+  if (rotationQuarterTurns === null) fail("INVALID_IMAGE_STATE", zoneSourceIndex);
   return {
     imageRef: imageRef as string,
     image: { width: width as number, height: height as number },
     transform: { scale: scale as number, x: x as number, y: y as number },
+    rotationQuarterTurns: rotationQuarterTurns as 0 | 1 | 2 | 3,
   };
 }
 
@@ -220,6 +236,10 @@ export function buildCaseProductPlan(input: CaseProductPlanInput): ProductPlanRe
         image: state.image,
         rect: { units: "percent", ...zone.percentRect },
         transform: state.transform,
+        // spec 030: only emitted when non-zero, so an unrotated case plan is unchanged
+        ...(state.rotationQuarterTurns === 0
+          ? {}
+          : { rotationQuarterTurns: state.rotationQuarterTurns }),
       };
     });
 
@@ -326,6 +346,10 @@ export function buildFrameProductPlan(input: FrameProductPlanInput): ProductPlan
       matColor: geometry.matColor,
       image: userImage.image,
       transform: userImage.transform,
+      // spec 030: only emitted when non-zero, so an unrotated frame plan is unchanged
+      ...(userImage.rotationQuarterTurns === 0
+        ? {}
+        : { rotationQuarterTurns: userImage.rotationQuarterTurns }),
       imageRef: userImage.imageRef,
       ...(artRef === undefined
         ? {}
@@ -377,7 +401,16 @@ function run(build: () => PreviewRenderPlan): ProductPlanResult {
 export interface UserImageState {
   readonly imageRef: string;
   readonly intrinsicSize: { readonly width: number; readonly height: number };
-  readonly transform: { readonly scale: number; readonly x: number; readonly y: number };
+  readonly transform: {
+    readonly scale: number;
+    readonly x: number;
+    readonly y: number;
+    /**
+     * spec 030: optional clockwise quarter turns of THIS photo. Absent === unrotated, which keeps
+     * every pre-030 caller valid. Any other value fails with `INVALID_IMAGE_STATE`.
+     */
+    readonly rotationQuarterTurns?: 0 | 1 | 2 | 3;
+  };
 }
 
 /** Identity-free failure codes. A failure never carries a name, id, colour, imageRef or exception. */

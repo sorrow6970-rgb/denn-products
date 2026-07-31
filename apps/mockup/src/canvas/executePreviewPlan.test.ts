@@ -1282,3 +1282,278 @@ describe("executePreviewRenderPlan — template art stretch", () => {
     expect(result).toEqual({ ok: false, code: "CANVAS_OPERATION_FAILED", commandIndex: 0 });
   });
 });
+
+// --- spec 030: quarter-turn rotation ----------------------------------------
+//
+// SCOPE HONESTY (unchanged): this is still the recording fake, so it proves the ORDER and the
+// ARGUMENTS of translate/rotate/drawImage and the restore pairing — never real rotated pixels.
+// Real rotated pixels are asserted in `tests/e2e/mockup-preview.spec.ts`.
+
+type RotOp = { readonly method: string; readonly args: readonly number[] };
+
+/** The spec 021 port PLUS translate/rotate, recording a flat trace of everything it is asked. */
+class RotatingContext implements PreviewCanvasContext {
+  readonly log: RotOp[] = [];
+  fillStyle: string | CanvasGradient | CanvasPattern = "#000000";
+  strokeStyle: string | CanvasGradient | CanvasPattern = "#000000";
+  lineWidth = 1;
+
+  constructor(private readonly throwOnMethod?: string) {}
+
+  private note(method: string, args: readonly number[] = []): void {
+    this.log.push({ method, args });
+    if (this.throwOnMethod === method) throw new Error("fake failure");
+  }
+
+  save(): void {
+    this.note("save");
+  }
+  restore(): void {
+    this.note("restore");
+  }
+  clearRect(x: number, y: number, w: number, h: number): void {
+    this.note("clearRect", [x, y, w, h]);
+  }
+  fillRect(x: number, y: number, w: number, h: number): void {
+    this.note("fillRect", [x, y, w, h]);
+  }
+  beginPath(): void {
+    this.note("beginPath");
+  }
+  rect(x: number, y: number, w: number, h: number): void {
+    this.note("rect", [x, y, w, h]);
+  }
+  clip(): void {
+    this.note("clip");
+  }
+  drawImage(_image: CanvasImageSource, dx: number, dy: number, dw: number, dh: number): void {
+    this.note("drawImage", [dx, dy, dw, dh]);
+  }
+  strokeRect(x: number, y: number, w: number, h: number): void {
+    this.note("strokeRect", [x, y, w, h]);
+  }
+  translate(x: number, y: number): void {
+    this.note("translate", [x, y]);
+  }
+  rotate(angle: number): void {
+    this.note("rotate", [angle]);
+  }
+
+  methods(): string[] {
+    return this.log.map((op) => op.method);
+  }
+  argsOf(method: string): readonly number[] {
+    const found = this.log.find((op) => op.method === method);
+    if (!found) throw new Error("method was never called");
+    return found.args;
+  }
+}
+
+const rotatedImage = (rotationQuarterTurns: 1 | 2 | 3): PreviewDrawCommand => ({
+  type: "draw-image-cover",
+  layerId: "case:user-image:z1",
+  imageRef: "imgA",
+  clipRect: { x: 10, y: 20, width: 40, height: 60 },
+  // an on-screen silhouette centred at (30, 50)
+  drawRect: { x: 10, y: 10, width: 40, height: 80 },
+  rotationQuarterTurns,
+});
+
+describe("executePreviewRenderPlan — quarter-turn rotation (spec 030)", () => {
+  it("an unrotated command draws EXACTLY as before (no translate, no rotate)", () => {
+    const context = new RotatingContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([IMAGE]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(true);
+    expect(context.methods()).toEqual([
+      "save",
+      "clearRect",
+      "save",
+      "beginPath",
+      "rect",
+      "clip",
+      "drawImage",
+      "restore",
+      "restore",
+    ]);
+    expect(context.argsOf("drawImage")).toEqual([-3, 6, 60, 50]);
+  });
+
+  it("a rotated command runs save-clip-translate-rotate-draw-restore inside ONE command", () => {
+    const context = new RotatingContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([rotatedImage(1)]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(true);
+    expect(context.methods()).toEqual([
+      "save", // outer
+      "clearRect",
+      "save", // command
+      "beginPath",
+      "rect",
+      "clip",
+      "translate",
+      "rotate",
+      "drawImage",
+      "restore", // command — the ONLY undo for translate/rotate
+      "restore", // outer
+    ]);
+  });
+
+  it("rotates about the drawRect centre, which already carries the pan (C-4)", () => {
+    const context = new RotatingContext();
+    executePreviewRenderPlan({
+      context,
+      plan: plan([rotatedImage(1)]),
+      imageBindings: BINDINGS,
+    });
+    // drawRect {10,10,40,80} → centre (30, 50)
+    expect(context.argsOf("translate")).toEqual([30, 50]);
+    expect(context.argsOf("rotate")).toEqual([Math.PI / 2]);
+  });
+
+  it("uses the exact clockwise angle for each quarter turn", () => {
+    for (const [turns, angle] of [
+      [1, Math.PI / 2],
+      [2, Math.PI],
+      [3, (3 * Math.PI) / 2],
+    ] as const) {
+      const context = new RotatingContext();
+      executePreviewRenderPlan({
+        context,
+        plan: plan([rotatedImage(turns)]),
+        imageBindings: BINDINGS,
+      });
+      expect(context.argsOf("rotate")).toEqual([angle]);
+    }
+  });
+
+  it("draws the photo with its axes exchanged back for 90/270, unchanged for 180", () => {
+    const quarter = new RotatingContext();
+    executePreviewRenderPlan({
+      context: quarter,
+      plan: plan([rotatedImage(1)]),
+      imageBindings: BINDINGS,
+    });
+    // screen silhouette 40x80 → inside the rotated frame the photo is 80x40, centred on the origin
+    expect(quarter.argsOf("drawImage")).toEqual([-40, -20, 80, 40]);
+
+    const half = new RotatingContext();
+    executePreviewRenderPlan({
+      context: half,
+      plan: plan([rotatedImage(2)]),
+      imageBindings: BINDINGS,
+    });
+    // 180 keeps the axes: 40x80, centred on the origin
+    expect(half.argsOf("drawImage")).toEqual([-20, -40, 40, 80]);
+  });
+
+  it("restores even when the rotated draw throws, so no transform leaks to the next command", () => {
+    const context = new RotatingContext("drawImage");
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([rotatedImage(1)]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.code).toBe("CANVAS_OPERATION_FAILED");
+    // the inner restore was still attempted exactly once, after the failed draw
+    expect(context.methods().filter((m) => m === "restore")).toHaveLength(2);
+    expect(context.methods().indexOf("restore")).toBeGreaterThan(
+      context.methods().indexOf("rotate"),
+    );
+  });
+
+  it("the next command is isolated: its own save/clip pair follows the rotated one", () => {
+    const context = new RotatingContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([rotatedImage(1), IMAGE]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(true);
+    const methods = context.methods();
+    // exactly two inner save/restore pairs plus the outer pair
+    expect(methods.filter((m) => m === "save")).toHaveLength(3);
+    expect(methods.filter((m) => m === "restore")).toHaveLength(3);
+    // the second draw is NOT preceded by another translate/rotate
+    expect(methods.filter((m) => m === "translate")).toHaveLength(1);
+    expect(methods.filter((m) => m === "rotate")).toHaveLength(1);
+  });
+
+  it("FAILS CLOSED on a context without translate/rotate — nothing is drawn unrotated", () => {
+    const context = new RecordingContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([rotatedImage(1)]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.code).toBe("INVALID_EXECUTOR_INPUT");
+    // preflight rejected it: not a single Canvas operation ran
+    expect(context.ops).toHaveLength(0);
+  });
+
+  it("a context without translate/rotate still executes every unrotated plan", () => {
+    const context = new RecordingContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([FILL, IMAGE, STROKE]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("REJECTS a non-quarter-turn rotation as an invalid plan (no wrap, no default)", () => {
+    for (const bad of [4, -1, 1.5, 90, "1", null, Number.NaN]) {
+      const context = new RotatingContext();
+      const result = executePreviewRenderPlan({
+        context,
+        plan: plan([{ ...IMAGE, rotationQuarterTurns: bad } as unknown as PreviewDrawCommand]),
+        imageBindings: BINDINGS,
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error("expected failure");
+      expect(result.code).toBe("INVALID_PLAN");
+      expect(context.log).toHaveLength(0);
+    }
+  });
+
+  it("an explicit 0 is accepted and behaves exactly like an absent rotation", () => {
+    const context = new RotatingContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([{ ...IMAGE, rotationQuarterTurns: 0 } as unknown as PreviewDrawCommand]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(true);
+    expect(context.methods()).not.toContain("rotate");
+    expect(context.argsOf("drawImage")).toEqual([-3, 6, 60, 50]);
+  });
+
+  it("template art is never rotated (R-5)", () => {
+    const context = new RotatingContext();
+    const art: PreviewDrawCommand = {
+      type: "draw-image-stretch",
+      layerId: "case:template-art",
+      imageRef: "imgB",
+      destRect: { x: 0, y: 0, width: 100, height: 200 },
+    };
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([rotatedImage(1), art]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(true);
+    // exactly one rotate — the photo's; the art draw carries none
+    expect(context.methods().filter((m) => m === "rotate")).toHaveLength(1);
+    expect(context.log[context.log.length - 2]?.method).toBe("drawImage");
+  });
+});
