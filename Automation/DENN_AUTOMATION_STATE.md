@@ -4,17 +4,17 @@
 updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-029-pointer-pan-zoom-editing
+completed_unit: spec-030-customer-photo-quarter-turn-rotation
 active_unit: spec-030-customer-photo-quarter-turn-rotation
-state: READY_FOR_CODEX  # 보완 라운드 1 완료 → Codex 재검증 대기
+state: COMMITTED  # 스펙 030 종료 문서 처리 완료 → Codex 최종 확인 후 DONE
 baseline_commit: 2777010
 candidate_commit: 603cd25  # 스펙 030 보완 라운드 1 코드/test (최초 구현 fbbadeb)
-verified_commit: 110511e  # 스펙 029 승인분 (스펙 028은 d4fb99b)
-origin_relation: "spec 030 fix round 1 code and doc commits pushed fast-forward on top of e4a9133; HEAD=origin, ahead/behind 0/0"
+verified_commit: 603cd25  # 스펙 030 보완 라운드 1 승인분
+origin_relation: "spec 030 closing doc commit pushed fast-forward on top of 1aa3302; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: DONE
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -511,3 +511,39 @@ Codex 지적 1건은 유효했고 지정된 파일 안에서만 보완해 push�
   판정이 없었다. 보고서는 Codex 소유라 Claude가 수정하지 않았다.
 
 다음 전이: Codex가 `603cd25`와 문서 커밋을 재검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.
+
+## Codex 보완 라운드 1 재검증 — CODEX_PASSED (2026-07-31)
+
+코드 `603cd25`, 문서 `1aa3302`를 독립 재검증해 승인한다.
+
+- 공개 포트의 선택적 rotation capability, fail-closed 계약, 단일 타입 정본 확인
+- frozen install, format, lint, typecheck, unit **995/995**, mockup/admin build
+- Chromium E2E **99/99**, `git diff --check`, dist SHA-256 전후 동일
+- lockfile·신규 의존성·금지 경로 diff 0, 포트 4183/4184 0, OS temp 0
+- Chromium 합성 EXIF Orientation=6 적용은 검증됨; 그 밖의 엔진·실기기는 NOT TESTED
+
+스펙 030 기능·보완 검증을 통과했다. 다음은 Claude가 종료 문서만 별도 fast-forward push한다.
+
+## 스펙 030 종료 문서 처리 완료 — COMMITTED (Claude Code, 2026-07-31)
+
+Codex 승인(코드 `603cd25`, 문서 `1aa3302`)에 따라 종료 문서만 하나의 문서 커밋으로 처리하고
+일반 fast-forward push했다.
+
+- 커밋 파일(허용 목록과 정확히 일치): `docs/rebuild/specs/030-customer-photo-quarter-turn-rotation.md`
+  (§CODEX_PASSED), `docs/handoff/2026-07-31-spec-030-quarter-turn-rotation-handoff.md`(§10 + 상태 줄),
+  `docs/codex-claude-handoff/CURRENT.md`, `docs/live/CLAUDE_LIVE_PATCH_LOG.md`,
+  `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`
+- 기록한 최종 판정: unit **995/995**, E2E **99/99**, build mockup JS 265.52 kB / gzip 82.10,
+  CSS 15.50 / 3.89, admin 무변경, 보완 1건(공개 포트 rotation capability 선언 · fail-closed 문서화 ·
+  단일 타입 정본), network/live/deploy **0**
+- 기능 코드·테스트·CSS·설정·`package.json`·`pnpm-lock.yaml` 변경 **0**
+  (`git diff 603cd25..HEAD -- apps packages tests` = 0줄), 신규 의존성 0
+- Claude 재실측(같은 트리): `check` PASS(format·lint·typecheck·unit·build)
+- ★ 판단 요청 ② 회신 반영: Chromium 합성 EXIF `Orientation=6` 적용은 **검증됨**으로 기록했고,
+  그 밖의 엔진·실기기는 NOT TESTED로 유지했다. 조사 보고서는 Codex 소유·허용 파일 밖이라 수정하지 않았다
+- NOT TESTED 유지: **잔류 프로세스 command-line 검사(OS 권한 거부)**, 실기기 4환경 EXIF·조작성,
+  카메라 원본 orientation 1~8, 실제 print/export 회전, 대용량 성능·메모리, 실제 200% 확대, 임의 각도
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다
+- 다음 스펙·사전조사·기능 **미착수**
+
+다음 전이: Codex가 이 종료 문서 커밋의 hash와 `HEAD=origin`, ahead/behind 0/0을 확인하면 `DONE`이다.

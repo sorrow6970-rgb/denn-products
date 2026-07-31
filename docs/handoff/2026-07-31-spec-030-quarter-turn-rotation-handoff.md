@@ -1,6 +1,6 @@
 # 스펙 030 인계 — 고객 사진 90° 단위 회전
 
-상태: **보완 라운드 1 완료 → `READY_FOR_CODEX`** (2026-07-31, §9 참조)
+상태: **DONE — Codex 승인 후 종료 문서 처리 완료 (`COMMITTED`)** (2026-07-31, §10 참조)
 코드/test 커밋: `fbbadeb` → 보완 `603cd25` / 기준: 계약 `2777010`, 결정 정본 `cf1cfd2`, 조사 `8734307`
 
 > §3.2의 판단 요청은 **Codex가 "공개 포트에 선언하라"로 확정**했고 §9에서 보완했다. 그 절의 서술은
@@ -166,3 +166,48 @@ OS temp 0 / 고객 dist SHA-256 E2E 전후 **동일** / network·live·deploy **
 **20×40으로 decode**된다는 §4 실측을 조사 보고서
 `docs/codex-claude-handoff/reviews/2026-07-30-image-rotation-investigation.md` §7의 `NOT VERIFIED`
 **해소(Chromium 한정)** 로 반영할지 판정해 달라. 보고서는 Codex 소유라 Claude가 수정하지 않았다.
+
+---
+
+## 10. 종료 (2026-07-31) — CODEX_PASSED → COMMITTED
+
+Codex가 보완 라운드 1 코드 `603cd25`와 문서 `1aa3302`를 독립 재검증해 **승인**했고, Claude Code가
+**종료 문서만** 하나의 문서 커밋으로 처리했다. 기능 코드·test·CSS·설정 변경 **0**
+(`git diff 603cd25..HEAD -- apps packages tests` = **0줄**).
+
+### Codex 독립 게이트 (승인 근거)
+
+frozen install / format·lint·typecheck / **unit 995/995** / mockup·admin build /
+실제 Chromium **E2E 99/99** / `git diff --check` / **dist SHA-256 전후 동일** /
+lockfile·신규 의존성·금지 경로 diff **0** / 포트 4183·4184 **0** / OS temp **0**.
+Claude 재실측(같은 트리)도 `check` PASS로 일치한다.
+
+### ★ 판단 요청 ② 회신 (§9에서 미회신이던 항목)
+
+**Codex 판정: "Chromium 합성 EXIF `Orientation=6` 적용은 검증됨. 그 밖의 엔진·실기기는 NOT TESTED 유지."**
+
+→ §4의 실측(40×20 JPEG + `Orientation=6` → **20×40 decode**)이 **검증된 사실로 확정**됐다.
+R-6("EXIF를 직접 파싱하지 않는다")은 옳았고, 우리가 또 적용하면 **이중 회전**이 된다.
+조사 보고서 자체는 Codex 소유이고 이번 허용 파일에도 없으므로 **수정하지 않았다**.
+
+### 최종 상태
+
+- 승인 코드 `603cd25`(최초 구현 `fbbadeb`), 문서 `1aa3302`, 종료 문서 커밋은 이 라운드
+- 커밋 파일(허용 목록과 정확히 일치): 정본 스펙(§CODEX_PASSED), 이 인계(§10),
+  `docs/codex-claude-handoff/CURRENT.md`, `docs/live/CLAUDE_LIVE_PATCH_LOG.md`,
+  `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit **하지 않았다**(working tree에 그 2개만 잔존)
+- 다음 스펙·사전조사·기능 **미착수**
+
+### NOT TESTED (종료 시점 유지)
+
+- **잔류 프로세스 command-line 검사 — OS 권한 거부로 실행하지 못함**
+- 실기기 4환경(iOS Safari · Android Chrome · 삼성 인터넷 · 카카오 인앱)의 EXIF·조작성
+- 실제 카메라 원본 **orientation 1~8 전 범위**
+- **실제 print/export 출력물의 회전**
+- 대용량 이미지 회전 **성능·메모리**
+- 실제 **200% 브라우저 확대**
+- 임의 각도(R-1·R-2로 제외)
+
+⚠️ 이 종료는 **합성 fixture에서 회전 버튼으로 사진을 돌린 단계**이며 실기기·인쇄/export·주문·배포
+완료가 아니다. `hosting.public:"."` → **Hosting 격리 전 배포 금지** 유지.

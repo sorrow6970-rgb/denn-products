@@ -158,3 +158,34 @@ NOT TESTED 유지: 실기기 4환경 EXIF·조작성, 카메라 원본 orientati
 대용량 성능·메모리, 임의 각도, 실제 200% 확대.
 
 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다.
+
+### CODEX_PASSED (2026-07-31)
+
+Codex가 보완 라운드 1 코드 `603cd25`와 문서 `1aa3302`를 독립 재검증해 **승인**했다.
+
+확인된 것:
+
+- 공개 포트의 **선택적 rotation capability**, **fail-closed 계약**, **단일 타입 정본**
+- frozen install, format·lint·typecheck, **unit 995/995**, mockup/admin build
+- 실제 Chromium **E2E 99/99**, `git diff --check`, dist SHA-256 전후 동일
+- lockfile·신규 의존성·금지 경로 diff **0**, 포트 4183/4184 **0**, OS temp **0**
+- **Chromium 합성 EXIF `Orientation=6` 적용은 검증됨**(40×20 → 20×40 decode).
+  그 밖의 엔진·실기기는 NOT TESTED로 유지한다.
+
+구현 판정: 슬롯별 `rotationQuarterTurns 0|1|2|3`, 좌/우 90° 버튼, probe·실제 plan 모두 회전 전달,
+회전 footprint 기반 `maxPan` 재환산, `draw-image-cover` 선택 필드(0이면 미emit → pre-030 plan과 바이트
+동일), executor 커맨드 내부 `save→clip→translate→rotate→drawImage→restore`(중심 = drawRect 중심).
+scale 1.0~5.0·빈 공간 금지·normalized pan·D-9 초기화 행렬(회전 포함)·template art 고정 유지.
+invalid/hostile/drift transform은 복구 없이 거부. `packages/render/src/geometry` 무변경.
+
+**NOT TESTED (종료 시점 유지)**:
+
+- **잔류 프로세스 command-line 검사** — OS 권한 거부로 실행하지 못함
+- 실기기 4환경(iOS Safari · Android Chrome · 삼성 인터넷 · 카카오 인앱)의 EXIF·조작성
+- 실제 카메라 원본 **orientation 1~8 전 범위**
+- **실제 print/export 출력물의 회전**(인쇄 경로는 아직 이 plan을 소비하지 않는다)
+- 대용량 이미지 회전 **성능·메모리**
+- 실제 **200% 브라우저 확대**
+- 임의 각도(R-1·R-2로 제외)
+
+스펙 030은 **DONE**이다. 다음 스펙은 Codex 지시 전까지 착수하지 않는다.

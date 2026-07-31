@@ -523,3 +523,33 @@
 - 스펙 018 PNG 2개: 손대지 않음
 - ⚠️ 판단 요청 ②(R-6 실측의 조사 보고서 NOT VERIFIED 해소 여부)는 **아직 미회신** — Codex 판정 대기
 - 다음: Codex 재검증 대기. **종료 문서·다음 스펙 착수 없음.**
+
+## 2026-07-31 — Codex 스펙 030 보완 라운드 1 재검증: CODEX_PASSED
+
+- 승인 코드 `603cd25`, 문서 `1aa3302`
+- 공개 포트 capability·단일 정본·기존 context 호환·회전 fail-closed 계약 확인
+- frozen/format/lint/typecheck/unit **995/995**/build/E2E **99/99**/diff check/dist hash PASS
+- 포트 4183·4184 및 OS temp 0, lockfile·신규 의존성·금지 경로 diff 0
+- 잔류 프로세스 command-line 검사는 OS 권한 거부로 NOT TESTED
+- Chromium 합성 EXIF Orientation=6 적용은 VERIFIED; 다른 엔진·실기기는 NOT TESTED
+- 다음: Claude 종료 문서 전용 fast-forward commit/push. 다음 스펙 착수 금지
+
+## 2026-07-31 — 스펙 030 종료 (Codex 재검증 승인 → DONE)
+
+- 상태: `READY_FOR_CODEX` → **`CODEX_PASSED`** → 종료 문서 처리 → `COMMITTED`
+- 승인 대상: 코드 **`603cd25`**(보완 라운드 1, 최초 구현 `fbbadeb`) + 문서 **`1aa3302`**
+- Codex 독립 재검증 결론: 공개 포트의 **선택적 rotation capability**·**fail-closed 계약**·
+  **단일 타입 정본**을 확인
+- Codex 독립 게이트: frozen install / format·lint·typecheck / **unit 995/995** / mockup·admin build /
+  실제 Chromium **E2E 99/99** / `git diff --check` / **dist SHA-256 전후 동일** /
+  lockfile·신규 의존성·금지 경로 diff 0 / 포트 4183·4184 0 / OS temp 0
+- Claude 재실측(같은 트리): `check` PASS(format·lint·typecheck·unit·build), 기능 코드 diff **0**
+  (`git diff 603cd25..HEAD -- apps packages tests` = 0줄)
+- ★ **판단 요청 ② 회신**: "Chromium 합성 EXIF `Orientation=6` 적용은 **검증됨**, 그 밖의 엔진·실기기는
+  NOT TESTED 유지" → 40×20 + `Orientation=6` → **20×40 decode** 실측이 **검증된 사실로 확정**.
+  R-6("직접 파싱 금지")이 옳았다. 조사 보고서는 Codex 소유·허용 파일 밖이라 **수정하지 않음**
+- NOT TESTED 유지: **잔류 프로세스 command-line 검사(OS 권한 거부)**, 실기기 4환경 EXIF·조작성,
+  카메라 원본 orientation 1~8, 실제 print/export 회전, 대용량 성능·메모리, 실제 200% 확대, 임의 각도
+- 이 라운드는 **문서 전용 커밋**(기능 코드·테스트·CSS·설정·lockfile 변경 0, network·live·deploy 0)
+- 스펙 018 PNG 2개: 손대지 않음
+- 다음: **다음 스펙 미착수 — Codex 지시 대기**

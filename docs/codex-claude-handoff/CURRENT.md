@@ -7,7 +7,37 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🛠️ 스펙 030 보완 라운드 1 완료 → `READY_FOR_CODEX`(Codex 재검증 대기). executor 공개 포트에 회전 capability를 선언해 compile-time 계약과 runtime 요구를 일치시켰다. 스펙 027·028·029는 승인·종료. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+상태: **✅ 스펙 030(고객 사진 90° 단위 회전) 승인·종료. 스펙 027·028·029도 승인·종료. 다음 스펙 미착수 — Codex 지시 대기. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+
+> 스펙 030 종료(2026-07-31): Codex가 보완 라운드 1 코드 **`603cd25`** 와 문서 **`1aa3302`** 를 독립 재검증해
+> **승인**했고, Claude Code가 종료 문서만 처리했다(상태 `CODEX_PASSED` → `COMMITTED`, **문서 전용 커밋** ·
+> 기능 코드 변경 **0** — `git diff 603cd25..HEAD -- apps packages tests` = **0줄**).
+> 정본 `docs/rebuild/specs/030-customer-photo-quarter-turn-rotation.md`(§CODEX_PASSED),
+> 인계 `docs/handoff/2026-07-31-spec-030-quarter-turn-rotation-handoff.md`(§10).
+> **Codex가 확인한 것**: 공개 포트의 **선택적 rotation capability**·**fail-closed 계약**·**단일 타입 정본**.
+> **Codex 독립 게이트 PASS**: frozen install / format·lint·typecheck / **unit 995/995** /
+> mockup·admin build / 실제 Chromium **E2E 99/99** / `git diff --check` / **dist SHA-256 전후 동일** /
+> lockfile·신규 의존성·금지 경로 diff 0 / 포트 4183·4184 0 / OS temp 0. Claude 재실측도 `check` PASS로 일치.
+> **★ 판단 요청 ② 회신**: **"Chromium 합성 EXIF `Orientation=6` 적용은 검증됨, 그 밖의 엔진·실기기는
+> NOT TESTED 유지"** → 40×20 JPEG + `Orientation=6` → **20×40 decode** 실측이 **검증된 사실로 확정**됐다.
+> **R-6("EXIF 직접 파싱 금지")이 옳았다** — 우리가 또 적용하면 이중 회전이다. 조사 보고서는 Codex 소유이자
+> 허용 파일 밖이라 **수정하지 않았다**.
+> **확정 계약(최종)**: 슬롯별 `rotationQuarterTurns` **`0|1|2|3`**(전역 회전 상태·전역 폴백 **0**) /
+> 좌·우 90° 버튼 1회 = **정확히 한 단계**(modulo 4) / **scale·normalized pan 불변** → 구도 유지,
+> `원래대로`는 **회전까지** 초기화 / 90°·270°는 **cover에 넘기는 intrinsic w/h 스왑**으로 회전 footprint를 얻어
+> **`packages/render/src/geometry` 무변경**·029 `maxPan` 공식 그대로 / **probe plan에도 회전 포함** /
+> `draw-image-cover`의 **선택적 필드**, 0이면 **미emit → pre-030 plan과 바이트 동일**, 신규 command 0,
+> **아트 무회전** / executor는 회전 시에만 커맨드 내부 `save→clip→translate→rotate→drawImage→restore`,
+> 중심 = **drawRect 중심**(구도 점프 0), 실패해도 restore 1회 보장 / 공개 포트가 `translate?`/`rotate?`를
+> **선택적 capability로 선언**하고 **없으면 preflight fail-closed**(Canvas 연산 0) /
+> invalid·hostile·drift transform은 **복구 없이 거부**.
+> **NOT TESTED 유지**: **잔류 프로세스 command-line 검사(OS 권한 거부)** · 실기기 4환경 EXIF·조작성 ·
+> 실제 카메라 원본 **orientation 1~8** · **실제 print/export 회전**(인쇄 경로는 아직 이 plan을 소비하지 않는다) ·
+> 대용량 이미지 성능·메모리 · 실제 **200% 확대** · 임의 각도(R-1·R-2로 제외).
+> ⚠️ 이 종료는 **합성 fixture에서 회전 버튼으로 사진을 돌린 단계**이며 실기기·인쇄/export·주문·배포 완료가
+> 아니다. `hosting.public:"."` → **Hosting 격리 전 배포 금지** 유지.
+> **다음 스펙·사전조사·신규 기능은 착수하지 않는다.**
+
 
 > 스펙 030 보완 라운드 1 완료(로컬, 2026-07-31, 기준 `e4a9133`, 코드 커밋 `603cd25`): Codex 독립 검증에서
 > **기능 게이트는 전부 PASS**(unit 989/989 · E2E 99/99 · dist SHA 동일 · lockfile·금지 경로 diff 0)였고,
