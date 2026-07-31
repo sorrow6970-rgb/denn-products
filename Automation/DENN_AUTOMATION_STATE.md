@@ -5,16 +5,16 @@ updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-030-customer-photo-quarter-turn-rotation
-active_unit: spec-031-text-clock-investigation
-state: WAITING_FOR_CLAUDE  # 스펙 031 구현 계약 작성 완료
-baseline_commit: e3dc2b1
-candidate_commit: null
-verified_commit: null
-origin_relation: "spec 031 decision e3dc2b1 is HEAD=origin 0/0; Codex implementation contract is local for Claude to include"
+active_unit: spec-031-frame-text-zones-physical-clock-preview
+state: READY_FOR_CODEX  # 스펙 031 구현·자체검증 완료 → Codex 독립 검증 대기
+baseline_commit: 3927420
+candidate_commit: 78095f8  # 스펙 031 코드/test
+verified_commit: 7636367  # 스펙 031 조사 승인분
+origin_relation: "spec 031 code and doc commits pushed fast-forward on top of 3927420; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_WORKING
+next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -683,3 +683,31 @@ Founder 텍스트 묶음 일괄 승인:
 - 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다
 
 다음 전이: Codex가 이 결정을 입력으로 **스펙 031 구현 계약**을 작성하면 `WAITING_FOR_CLAUDE`.
+
+## 스펙 031 구현 완료 — READY_FOR_CODEX (Claude Code, 2026-07-31)
+
+스펙 `docs/rebuild/specs/031-frame-text-zones-physical-clock-preview.md` §4 허용 파일 안에서만 구현하고
+코드/test와 문서를 분리 커밋했다. 코드/test `78095f8`, 기준 계약 `3927420`.
+
+- 투영: 다섯 키 `textZones` 정규화(닫힌 범위, 중복·미지원 키 거부, `maxChars` 기본 80·`maxLines` 기본 2),
+  `defaultTexts`는 placeholder 전용이며 `name2`에는 없다. `clockPreview`는 3단 병합.
+- plan: `draw-text` 신규. 이미 wrap된 lines와 측정 폭만 담고 고객 원문·zone key·카탈로그/템플릿 id·
+  측정 포트는 담지 않으며 `layerId`는 위치 기반이다.
+- wrap은 주입된 동기 측정 포트로 빌더에서 한 번 확정한다. 측정 실패는 fail-closed이고 폰트 정착 전에는
+  plan을 만들지 않는다.
+- 입력 거부는 빌더 시험 빌드로 구현했다. composer가 wrap을 재구현하면 빌더와 어긋날 수 있으므로 plan
+  인자를 보관했다가 후보 값으로 실제 빌더를 한 번 더 호출하고, 실패하면 직전 승인 값을 유지한다.
+- executor: 텍스트 5개 멤버를 공개 포트의 선택적 capability로 선언하고 없으면 preflight fail-closed다.
+  letter-spacing은 glyph별 `fillText`이며 `ctx.letterSpacing`을 쓰지 않는다.
+- 시계: plan 밖 DOM 오버레이(`pointer-events:none`·`aria-hidden`·percent 위치). custom image timer 0,
+  텍스트는 분 경계 후 60초, 활성 timer 최대 1개 + generation 가드. 실패는 오버레이만 숨긴다.
+- ★ 허용 파일 준수: 배럴(`plan/index.ts`·`preview/index.ts`)이 §4 밖이라 확장 대신 구조적 타입으로 새
+  타입을 참조했다. `tsc` 강도는 동일하고 배럴 content diff는 0이다. 배럴 확장이 낫다면 보완한다.
+- 게이트: frozen exit 0 / lockfile·manifest diff 0 / 신규 의존성 0 / format·lint·typecheck /
+  unit **1081**(995→1081) / build mockup JS 280.33 kB gzip 86.52, CSS 17.82/4.30, admin 무변경 /
+  E2E **114 PASS**(99→114) exit 0 / `git diff --check` clean / 포트 4183·4184 free / OS temp 0 /
+  고객 dist SHA-256 E2E 전후 동일·fixture 0 / 실제 network·live·Firebase·CORS·Rules/Hosting·deploy 0
+- 변경 파일 18개 전부 §4 허용 목록 안(신규 `clockOverlay.ts`·`clockOverlay.test.ts` 포함)
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다
+
+다음 전이: Codex가 `78095f8`와 문서 커밋을 독립 검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.

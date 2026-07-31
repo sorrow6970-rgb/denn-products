@@ -674,3 +674,32 @@
 - maxChars 기본 80/상한 200 UTF-16 code unit, maxLines 기본 2/상한 5
 - 시계는 plan 밖 DOM physical-hardware overlay; custom image timer 0, text fallback 분 단위
 - 상태 `WAITING_FOR_CLAUDE`; 구현은 Claude만 허용 범위에서 수행
+
+## 2026-07-31 — 스펙 031 구현 (액자 텍스트 영역 + 물리적 시계 미리보기)
+
+- 기준 계약 `3927420` / 결정 `e3dc2b1` → 코드/test 커밋 `78095f8`. 상태 `WAITING_FOR_CLAUDE` →
+  `CLAUDE_WORKING` → `READY_FOR_CODEX`
+- 투영: 다섯 키 `textZones` 정규화(닫힌 범위·중복/미지원 키 거부·`maxChars` 기본 **80**·`maxLines` 기본 **2**),
+  `defaultTexts`는 **placeholder 전용**이고 **`name2`에는 없음**. `clockPreview`는 3단 병합
+- plan: **`draw-text`** 신규 — **이미 wrap된 lines + 측정 폭**만 담고 고객 원문(라인 외)·zone key·
+  카탈로그/템플릿 id·측정 포트 **미포함**, `layerId`는 **위치 기반**
+- ★ wrap은 **주입 측정 포트로 빌더에서 한 번** 확정 → plan은 순수·JSON-safe, 미리보기와 향후 print가
+  **같은 lines** 소비. 측정 throw/non-finite/negative는 **fail-closed**, 폰트 정착 전 plan 미생성
+- ★ 입력 거부를 **빌더 시험 빌드**로 구현(composer가 wrap을 재구현하면 빌더와 어긋날 수 있음) →
+  실패 시 **직전 승인 값 유지**, 자르기·말줄임 0
+- executor: `font`/`textAlign`/`textBaseline`/`fillText`/`measureText`를 **선택적 capability**로 공개 포트에
+  선언(030 패턴 재사용), 없으면 **preflight fail-closed(Canvas 연산 0)**. letter-spacing은 **glyph별
+  `fillText`**, `ctx.letterSpacing` 미사용
+- 시계(F-4 하드웨어): 신규 `clockOverlay.ts` framework-free + 시계·스케줄러 주입.
+  **`pointer-events:none`·`aria-hidden` DOM 오버레이**, percent 위치라 resize 유지, **plan·인쇄·주문 밖**.
+  **custom image timer 0**, 텍스트는 **분 경계 후 60초**(1초 interval 금지), **활성 timer ≤1** +
+  generation 가드. 잘못된 placement/이미지는 **오버레이만 숨김**
+- ★ 허용 파일 준수: 배럴(`plan/index.ts`·`preview/index.ts`)이 §4 밖이라 **확장 대신 구조적 타입**으로
+  새 타입 참조(`tsc` 강도 동일, 배럴 content diff 0). 인계 §3에 판단 확인 요청
+- 게이트: frozen exit 0 / lockfile·manifest diff 0 / 신규 의존성 0 / format·lint·typecheck /
+  **unit 1081**(995→1081) / **e2e 114 PASS**(99→114) exit 0 / `git diff --check` clean /
+  포트 free / OS temp 0 / dist SHA-256 E2E 전후 동일 · fixture 0 / network·live·deploy 0
+- 번들: mockup JS 265.52 → **280.33 kB**(gzip 86.52), CSS 15.50 → **17.82**(gzip 4.30), admin 무변경
+- 변경 파일 18개 전부 §4 허용 목록 안(신규 `clockOverlay.ts`·`clockOverlay.test.ts` 포함)
+- 스펙 018 PNG 2개: 손대지 않음
+- 다음: Codex 독립 검증 대기. **종료 문서·다음 스펙 착수 없음.**

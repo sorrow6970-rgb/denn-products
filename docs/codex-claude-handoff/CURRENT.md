@@ -7,7 +7,54 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **스펙 031 구현 계약 작성 완료 → `WAITING_FOR_CLAUDE`. 액자 textZones와 물리적 시계 DOM 미리보기만 허용하며 구현 push 후 Codex 독립 검증을 기다린다. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+상태: **🛠️ 스펙 031 구현·자체검증 완료 → `READY_FOR_CODEX`(Codex 독립 검증 대기). 고객이 액자 문구를 입력하고, 실물 시계는 캔버스 밖 DOM 오버레이다. 스펙 027~030은 승인·종료. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+
+
+> 스펙 031 구현·자체검증 완료(로컬, 2026-07-31, 기준 계약 `3927420`·결정 `e3dc2b1`, 코드 커밋 `78095f8`):
+> 정본 `docs/rebuild/specs/031-frame-text-zones-physical-clock-preview.md`(§DONE), 인계
+> `docs/handoff/2026-07-31-spec-031-text-clock-handoff.md`. **고객이 처음으로 문구를 넣는다.**
+> **텍스트**: 투영이 **다섯 키만** 허용하고 모든 스타일을 닫힌 범위로 검증한다(중복·미지원 키·범위 밖은
+> **전체 투영 실패**, clamp 0). 캡은 `maxChars` 기본 **80 UTF-16 code unit**(HTML `maxLength`와 단위 일치),
+> `maxLines` 기본 **2**. `defaultTexts`는 **placeholder 전용**이고 **`name2`에는 없어서** 운영자 샘플
+> (`'WEDDING'`)이 고객 값·인쇄물에 들어갈 경로가 **구조적으로 없다**(F-3).
+> **★ wrap은 주입된 동기 측정 포트로 빌더에서 한 번 확정**한다 → plan은 순수·JSON-safe이고 미리보기와
+> 향후 print/export가 **같은 lines**를 소비한다. 순서는 **명시 개행 → 단어 경계 → code-point 강제 분해**,
+> letter-spacing은 **인접 glyph 사이에만**. 측정 throw/non-finite/negative는 **fail-closed**이고
+> **`document.fonts` 정착 전에는 plan을 만들지 않는다**(fallback으로 재고 real family로 그리면 레거시의
+> 미리보기≠인쇄가 그대로 재현된다).
+> **`draw-text`** 커맨드는 **이미 wrap된 lines + 측정 폭**만 담고 고객 원문(라인 외)·zone key·카탈로그/
+> 템플릿 id·측정 포트를 **담지 않으며** `layerId`는 **위치 기반**(`frame:text:0`)이다. 순서는
+> **사진 → 아트 → 텍스트 → inner border**.
+> **★ 입력 거부는 "빌더 시험 빌드"** 로 구현했다 — wrap을 아는 것은 빌더뿐이라 composer가 재구현하면
+> **둘이 어긋난다**. plan 인자를 ref에 보관했다가 후보 값으로 **실제 빌더를 한 번 더 호출**하고 실패하면
+> **직전 승인 값을 유지**한다(자르기·말줄임·부분 plan·이전 값 fallback **0**, `"0"`은 유효한 값).
+> **executor**: `font`·`textAlign`·`textBaseline`·`fillText`·`measureText`를 **공개 포트의 선택적
+> capability**로 선언하고 내부 타입을 `Required<Pick<…>>`로 **파생**했다(030 패턴 그대로). 텍스트 없는
+> plan은 기존 컨텍스트에서 그대로 실행되고, 텍스트 plan은 capability가 없으면 **preflight fail-closed
+> (Canvas 연산 0)**. letter-spacing은 **glyph별 `fillText`** 이고 `ctx.letterSpacing`은 쓰지 않는다.
+> **★★ 시계 = 하드웨어(F-4)**: 신규 `apps/mockup/src/preview/clockOverlay.ts`가 framework-free로
+> **시계·스케줄러를 주입**받는다. **`pointer-events:none`·`aria-hidden` DOM 오버레이**이고 percent 위치라
+> **resize에도 유지**되며 **plan·인쇄·주문에 들어갈 경로가 없다**. **custom image는 timer 0개**,
+> 텍스트 `HH:MM`은 초가 없으므로 **1초 interval 금지 → 분 경계 후 60초**, **활성 timer 최대 1개** +
+> **generation 가드**(toggle·템플릿 전환·unmount·StrictMode 재마운트에서 취소). 잘못된 placement나 못 쓰는
+> 이미지는 **오버레이만 숨긴다** — 시계는 인쇄 데이터가 아니라 사진·텍스트 plan을 오염시키면 안 된다.
+> **★ 허용 파일 준수 판단**: 배럴(`plan/index.ts`·`preview/index.ts`)이 §4 밖이라 **확장 대신 구조적 타입**
+> (`Parameters<typeof buildPreviewRenderPlan>` 등)으로 새 타입을 참조했다. **`tsc` 강도는 named import와
+> 동일**하고 배럴 content diff는 **0**이다. 배럴 확장이 더 낫다면 최소 확장으로 보완한다(인계 §3).
+> **검증**: unit **1081**(995→1081, 신규 86) / 실제 Chromium **E2E 114**(99→114, 신규 15) —
+> 입력→픽셀·삭제→사라짐·**`"0"` 렌더** / 정의된 키만 노출 / **길이 캡이 자르지 않고 차단** /
+> **wrap 초과 시 직전 값 유지 + 캔버스 정상** / `defaultTexts`는 값이 되지 않음 / 텍스트가 사진 **위** /
+> 회전 zone / **고객 색·그림자 UI 0** / 320px 라벨·포커스·44px·axe 0·console 0 /
+> 시계가 **캔버스 밖 DOM 오버레이**·`HH:MM` 초 없음·opt-out 숨김·**resize percent 유지**·**잔류 timer 0**.
+> 게이트: frozen exit 0·**lockfile·manifest diff 0**·신규 의존성 0 / format·lint·typecheck /
+> `git diff --check` clean / 포트 4183·4184 free · OS temp 0 / dist **SHA-256 E2E 전후 동일·fixture 0** /
+> 네트워크·live·Firebase·CORS·deploy **0**. **번들**: mockup JS **265.52 → 280.33 kB**(gzip 82.10 → 86.52),
+> CSS **15.50 → 17.82**(gzip 3.89 → 4.30), admin 무변경.
+> **NOT TESTED**: 실기기 4환경 IME·폰트·오버레이 · system font 대체 · 실제 인쇄물 가독성 ·
+> case 텍스트(F-1 범위 밖) · admin `name2`(F-8 별도 스펙) · 고객 style(F-2) · **실제 print/export의 텍스트
+> 출력**(인쇄 경로는 아직 이 plan을 소비하지 않는다) · **실제 물리 시계와 오버레이 위치의 일치 여부**.
+> ⚠️ 이 완료는 **합성 fixture에서 문구를 입력하고 시계 자리를 표시한 단계**이며 실기기·인쇄/export·주문·
+> 배포 완료가 아니다. `hosting.public:"."` → **Hosting 격리 전 배포 금지** 유지.
 
 
 > **스펙 031 결정 확정(2026-07-31)**: 정본

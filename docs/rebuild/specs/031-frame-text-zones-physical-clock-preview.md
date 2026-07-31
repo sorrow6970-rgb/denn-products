@@ -168,3 +168,33 @@ admin `name2`, 고객 style, 실제 print/export 텍스트, 실제 물리 시계
 
 코드/test와 문서를 분리해 일반 fast-forward push한다. HEAD=origin 0/0에서 Codex가 독립 검증하며
 승인 전 종료 문서·다음 스펙을 시작하지 않는다.
+
+### DONE (Claude Code, 2026-07-31) — READY_FOR_CODEX
+
+코드/test 커밋 `78095f8`, 기준 계약 `3927420`. 인계
+`docs/handoff/2026-07-31-spec-031-text-clock-handoff.md`.
+
+구현 요약: 투영이 다섯 키 `textZones`(닫힌 범위·중복/미지원 거부·캡 기본 80/2)와 `clockPreview`
+(3단 병합)를 정규화 → 어댑터가 운영자 zone과 고객 값을 짝지음 → 빌더가 **주입 측정 포트로 wrap을 한 번
+확정**해 `draw-text` 커맨드(lines+width만) 생성 → executor가 선택적 text capability로 실행
+(save→translate→rotate?→glyph fillText→restore, `ctx.letterSpacing` 미사용). 시계는 **plan 밖 DOM
+오버레이**(pointer-events:none·aria-hidden·percent 위치, custom image timer 0, 텍스트는 분 경계 60초,
+활성 timer ≤1, generation 가드).
+
+입력 거부는 **빌더 시험 빌드**로 구현했다 — wrap을 아는 것은 빌더뿐이라 composer가 재구현하면 어긋날 수
+있어, plan 인자를 보관했다가 후보 값으로 실제 빌더를 한 번 더 호출하고 실패 시 직전 승인 값을 유지한다.
+자르기·말줄임·부분 plan·이전 값 fallback 0.
+
+게이트: frozen exit 0 / lockfile·manifest diff 0 / 신규 의존성 0 / format·lint·typecheck /
+**unit 1081**(995→1081) / build mockup JS 280.33 kB gzip 86.52, CSS 17.82/4.30, admin 무변경 /
+**E2E 114 PASS**(99→114) exit 0 / `git diff --check` clean / 포트 4183·4184 free / OS temp 0 /
+고객 dist SHA-256 E2E 전후 동일·fixture 0 / network·live·deploy 0.
+
+★ 판단 확인 요청: `plan/index.ts`·`preview/index.ts`(배럴)가 §4 밖이라 **배럴을 넓히지 않고 구조적
+타입**(`Parameters<typeof buildPreviewRenderPlan>` 등)으로 새 타입을 참조했다. `tsc` 검증 강도는 동일하고
+배럴 content diff는 0이다. 배럴 확장이 더 낫다고 판단되면 최소 확장으로 보완한다. 상세는 인계 §3.
+
+NOT TESTED 유지: 실기기 4환경 IME·font·overlay, system font 대체, 실제 인쇄물 가독성, case text,
+admin `name2`, 고객 style, 실제 print/export 텍스트, **실제 물리 시계와 overlay 위치 일치**.
+
+스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다.
