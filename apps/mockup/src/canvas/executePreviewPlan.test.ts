@@ -15,7 +15,11 @@ import {
 } from "@denn/render";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { executePreviewRenderPlan } from "./executePreviewPlan";
-import type { PreviewCanvasContext, PreviewImageBindings } from "./types";
+import type {
+  PreviewCanvasContext,
+  PreviewImageBindings,
+  RotationCapableCanvasContext,
+} from "./types";
 
 // --- recording fake (spec 021 §B) -------------------------------------------
 
@@ -1555,5 +1559,135 @@ describe("executePreviewRenderPlan — quarter-turn rotation (spec 030)", () => 
     // exactly one rotate — the photo's; the art draw carries none
     expect(context.methods().filter((m) => m === "rotate")).toHaveLength(1);
     expect(context.log[context.log.length - 2]?.method).toBe("drawImage");
+  });
+});
+
+// --- spec 030 보완 라운드 1: the PUBLIC port's rotation capability ------------
+//
+// Codex correction: the executor required translate/rotate while the published
+// `PreviewCanvasContext` did not declare them, so a consumer could implement the type exactly,
+// compile, and then fail only on a rotated plan. The two methods are now OPTIONAL members of the
+// public port and `RotationCapableCanvasContext` is DERIVED from it. These tests fix that contract
+// from the outside: a context typed ONLY as the public interface, with no capability at all.
+
+/** A context that satisfies the public port and provides NO rotation capability. */
+function capabilityFreeContext(): PreviewCanvasContext & { readonly calls: string[] } {
+  const calls: string[] = [];
+  const note =
+    (method: string) =>
+    (..._args: unknown[]): void => {
+      calls.push(method);
+    };
+  return {
+    calls,
+    fillStyle: "#000000",
+    strokeStyle: "#000000",
+    lineWidth: 1,
+    save: note("save"),
+    restore: note("restore"),
+    clearRect: note("clearRect"),
+    fillRect: note("fillRect"),
+    beginPath: note("beginPath"),
+    rect: note("rect"),
+    clip: note("clip"),
+    drawImage: note("drawImage"),
+    strokeRect: note("strokeRect"),
+  };
+}
+
+describe("PreviewCanvasContext rotation capability (spec 030 보완 라운드 1)", () => {
+  it("a capability-free PUBLIC context executes every unrotated plan", () => {
+    const context = capabilityFreeContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([FILL, IMAGE, STROKE]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.code);
+    expect(result.executedCommands).toBe(3);
+    // the unrotated draw path is untouched: no transform call was even attempted
+    expect(context.calls).not.toContain("translate");
+    expect(context.calls).not.toContain("rotate");
+  });
+
+  it("an explicit rotation of 0 is still not a rotated plan for a capability-free context", () => {
+    const context = capabilityFreeContext();
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([{ ...IMAGE, rotationQuarterTurns: 0 } as unknown as PreviewDrawCommand]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("a rotated plan against a capability-free PUBLIC context fails CLOSED before any draw", () => {
+    for (const turns of [1, 2, 3] as const) {
+      const context = capabilityFreeContext();
+      const result = executePreviewRenderPlan({
+        context,
+        plan: plan([rotatedImage(turns)]),
+        imageBindings: BINDINGS,
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error("expected failure");
+      expect(result.code).toBe("INVALID_EXECUTOR_INPUT");
+      // preflight rejected it: ZERO Canvas operations, so nothing was drawn unrotated
+      expect(context.calls).toEqual([]);
+    }
+  });
+
+  it("HALF the capability is not the capability (either one missing fails closed)", () => {
+    for (const present of ["translate", "rotate"] as const) {
+      const context = capabilityFreeContext();
+      (context as unknown as Record<string, unknown>)[present] = () => {
+        context.calls.push(present);
+      };
+      const result = executePreviewRenderPlan({
+        context,
+        plan: plan([rotatedImage(1)]),
+        imageBindings: BINDINGS,
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error("expected failure");
+      expect(result.code).toBe("INVALID_EXECUTOR_INPUT");
+      expect(context.calls).toEqual([]);
+    }
+  });
+
+  it("a non-function value on either capability is not the capability", () => {
+    const context = capabilityFreeContext() as unknown as PreviewCanvasContext &
+      Record<string, unknown>;
+    context.translate = 1 as unknown as PreviewCanvasContext["translate"];
+    context.rotate = "rotate" as unknown as PreviewCanvasContext["rotate"];
+    const result = executePreviewRenderPlan({
+      context,
+      plan: plan([rotatedImage(1)]),
+      imageBindings: BINDINGS,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.code).toBe("INVALID_EXECUTOR_INPUT");
+  });
+
+  it("a real CanvasRenderingContext2D satisfies the port, capability included", () => {
+    // compile-time only: `tsc` fails here if the published port ever asks for something a real
+    // browser context does not provide, or if the capability signatures drift from the DOM lib.
+    const asPort = (value: CanvasRenderingContext2D): PreviewCanvasContext => value;
+    const asRotationCapable = (value: CanvasRenderingContext2D): RotationCapableCanvasContext =>
+      value;
+    expect(typeof asPort).toBe("function");
+    expect(typeof asRotationCapable).toBe("function");
+
+    // and the derived type is exactly the port plus the two now-required methods
+    const derived: RotationCapableCanvasContext = {
+      ...capabilityFreeContext(),
+      translate: () => {},
+      rotate: () => {},
+    };
+    const backToPort: PreviewCanvasContext = derived;
+    expect(typeof backToPort.save).toBe("function");
+    expect(typeof derived.translate).toBe("function");
+    expect(typeof derived.rotate).toBe("function");
   });
 });

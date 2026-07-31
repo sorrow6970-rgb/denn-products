@@ -35,6 +35,7 @@ import type {
   CanvasExecutionResult,
   ExecutePreviewRenderPlanArgs,
   PreviewCanvasContext,
+  RotationCapableCanvasContext,
 } from "./types";
 
 // Same `#RRGGBB` grammar as the spec 020 builder (no alpha/functions/vars/named colors).
@@ -53,17 +54,18 @@ const CONTEXT_METHODS = [
 ] as const;
 
 /**
- * Rotation needs two methods the spec 021 port does not declare. They are required ONLY when the
- * plan actually contains a rotated command, so a context that satisfies the published port keeps
- * executing every pre-030 plan unchanged; a rotated plan against such a context fails CLOSED in
- * preflight (INVALID_EXECUTOR_INPUT) instead of drawing the photo unrotated.
+ * The spec 030 rotation capability. `PreviewCanvasContext` declares `translate`/`rotate` as OPTIONAL
+ * members and `RotationCapableCanvasContext` is derived from it, so the methods are declared exactly
+ * once — in the public port — and this executor cannot drift from the published contract.
+ *
+ * They are required ONLY when the plan actually contains a rotated command: a context that provides
+ * neither keeps executing every pre-030 plan unchanged, and a rotated plan against it fails CLOSED
+ * in preflight (INVALID_EXECUTOR_INPUT) instead of drawing the photo unrotated.
  */
-const ROTATION_METHODS = ["translate", "rotate"] as const;
-
-interface RotationCapableContext {
-  translate(x: number, y: number): void;
-  rotate(angle: number): void;
-}
+const ROTATION_METHODS = [
+  "translate",
+  "rotate",
+] as const satisfies readonly (keyof PreviewCanvasContext)[];
 
 /** Clockwise radians for a quarter turn. Exact multiples only — no interpolation exists here. */
 const QUARTER_TURN_RADIANS = Math.PI / 2;
@@ -76,12 +78,9 @@ const isFinitePositive = (v: unknown): v is number => isFiniteNum(v) && v > 0;
 const isNonEmptyString = (v: unknown): v is string => typeof v === "string" && v.length > 0;
 const isHex = (v: unknown): v is string => typeof v === "string" && HEX.test(v);
 
-function supportsRotation(
-  context: PreviewCanvasContext,
-): context is PreviewCanvasContext & RotationCapableContext {
-  const record = context as unknown as Record<string, unknown>;
+function supportsRotation(context: PreviewCanvasContext): context is RotationCapableCanvasContext {
   for (const method of ROTATION_METHODS) {
-    if (typeof record[method] !== "function") return false;
+    if (typeof context[method] !== "function") return false;
   }
   return true;
 }
@@ -406,7 +405,7 @@ function executeCommand(
         }
         // C-4: the centre of rotation is the drawRect centre, which already carries the pan, so
         // rotating never makes the composition jump.
-        const rotatable = context as PreviewCanvasContext & RotationCapableContext;
+        const rotatable = context as RotationCapableCanvasContext;
         rotatable.translate(drawRect.x + drawRect.width / 2, drawRect.y + drawRect.height / 2);
         rotatable.rotate(rotation * QUARTER_TURN_RADIANS);
         // drawRect is the ON-SCREEN silhouette; inside the rotated frame a quarter turn exchanges

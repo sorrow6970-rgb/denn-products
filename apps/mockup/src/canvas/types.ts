@@ -12,9 +12,24 @@ import type { PreviewRenderPlan } from "@denn/render";
  * can drive a recording fake with no DOM library, while a real `CanvasRenderingContext2D` still
  * satisfies it (asserted at compile time in the unit test).
  *
- * Deliberately absent: `getContext`, `setTransform`/`scale`/`rotate`/`translate` (DPR transform is
- * the caller's job — this executor draws in logical coordinates only), the 9-argument `drawImage`
- * source-crop overload, smoothing flags, `globalCompositeOperation`, and any URL-string drawable.
+ * Deliberately absent: `getContext`, `setTransform`/`scale` (the DPR transform is the caller's job —
+ * this executor draws in logical coordinates only), the 9-argument `drawImage` source-crop overload,
+ * smoothing flags, `globalCompositeOperation`, and any URL-string drawable.
+ *
+ * ROTATION CAPABILITY (spec 030). `translate`/`rotate` are OPTIONAL members, and that optionality is
+ * the contract — not an oversight:
+ *
+ *  - a context WITHOUT them executes every unrotated plan exactly as before. Nothing that satisfied
+ *    this interface before spec 030 has to change,
+ *  - a plan containing a `draw-image-cover` with a non-zero `rotationQuarterTurns` requires BOTH.
+ *    When either is missing, the executor fails CLOSED in preflight with `INVALID_EXECUTOR_INPUT`
+ *    and performs ZERO Canvas operations — an unrotated photo would be a wrong product, so it is
+ *    never drawn as a fallback,
+ *  - they are the only transform calls the executor may make, they run INSIDE a single
+ *    `draw-image-cover` command, and they are always paired with that command's own save/restore.
+ *    No transform ever survives a command or reaches the caller.
+ *
+ * A real `CanvasRenderingContext2D` supplies both (asserted at compile time in the unit test).
  */
 export interface PreviewCanvasContext {
   fillStyle: string | CanvasGradient | CanvasPattern;
@@ -30,7 +45,20 @@ export interface PreviewCanvasContext {
   clip(): void;
   drawImage(image: CanvasImageSource, dx: number, dy: number, dw: number, dh: number): void;
   strokeRect(x: number, y: number, width: number, height: number): void;
+
+  /** spec 030 rotation capability — required ONLY for a plan that carries a rotation. */
+  translate?(x: number, y: number): void;
+  /** spec 030 rotation capability — required ONLY for a plan that carries a rotation. */
+  rotate?(angle: number): void;
 }
+
+/**
+ * A context that actually provides the spec 030 rotation capability. DERIVED from the public type,
+ * so there is exactly one declaration of the two methods and the executor cannot drift from the
+ * published contract.
+ */
+export type RotationCapableCanvasContext = PreviewCanvasContext &
+  Required<Pick<PreviewCanvasContext, "translate" | "rotate">>;
 
 /**
  * Read-only lookup from a spec 020 synthetic `imageRef` to an already-decoded, ready-to-draw
