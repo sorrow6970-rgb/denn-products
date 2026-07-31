@@ -464,3 +464,29 @@
 - 구현 정본: `docs/rebuild/specs/030-customer-photo-quarter-turn-rotation.md`
 - 상태: `READY_FOR_CODEX` → `WAITING_FOR_CLAUDE`
 - 제품 코드·테스트 변경 0. 다음은 Claude 구현이며 Codex 승인 전 종료·다음 스펙 착수 금지
+
+## 2026-07-31 — 스펙 030 구현 (고객 사진 90° 단위 회전)
+
+- 기준 계약 `2777010` / 결정 `cf1cfd2` → 코드/test 커밋 `fbbadeb`. 상태 `WAITING_FOR_CLAUDE` →
+  `CLAUDE_WORKING` → `READY_FOR_CODEX`
+- 상태 모델: `NormalizedTransform`에 `rotationQuarterTurns 0|1|2|3` 추가(전역 상태 0, 슬롯별 소유) →
+  D-9 초기화 행렬 자동 상속. `4`·`-1`·`1.5`·`90`·`"1"`·`NaN`·drift/throwing getter는 **복구 없이 거부**
+- 기하: 90°/270°일 때 **cover에 넘기는 intrinsic w/h를 스왑** → `drawRect`가 회전된 화면 실루엣이 되어
+  029 `maxPan` 공식이 그대로 성립. **`packages/render/src/geometry` diff 0**
+- plan: `draw-image-cover`의 **선택적 `rotationQuarterTurns`**, 0이면 **필드 미emit** → pre-030 plan과
+  바이트 동일. 신규 command 0, `draw-image-stretch` 무변경(**아트 무회전**)
+- executor: 회전 시에만 커맨드 내부 `save→clip→translate→rotate→drawImage→restore`, 중심 = drawRect 중심
+  (= zone 중심 + 현재 pan). 실패해도 restore 1회 보장 → 다음 command 격리
+- **probe plan에도 회전 포함**(없으면 회전 전 `maxPan`으로 clamp되어 구도가 틀어짐)
+- 포트 판단: `types.ts`가 §4 밖이라 `translate`/`rotate`를 **executor 런타임 검사**로 요구하고, 회전
+  command가 있을 때만 필요하며 없으면 **preflight fail-closed**. 트레이드오프는 인계 §3.2에 보고
+- ★ **R-6 실측(저장소 최초)**: `Orientation=6` 합성 JPEG(40×20) → Chromium에서 **20×40 decode** =
+  브라우저가 EXIF를 **적용**한다. 직접 파싱은 이중 회전이 되므로 R-6이 옳았다. EXIF 라이브러리 0,
+  바이너리 fixture 0(바이트 스플라이싱)
+- 게이트: frozen exit 0 / lockfile diff 0 / 신규 의존성 0 / format·lint·typecheck /
+  **unit 989**(944→989) / **e2e 99 PASS**(91→99) exit 0 / `git diff --check` clean /
+  포트 4183·4184 free / OS temp 0 / dist SHA-256 E2E 전후 동일 · fixture 0 / network·live·deploy 0
+- 번들: mockup JS 263.31 → **265.53 kB**(gzip 81.60 → **82.11**), CSS 15.47 → **15.50**, admin 무변경
+- 변경 파일 13개 모두 스펙 §4 허용 목록 안. `surface.css`는 기존 편집 컨트롤 스타일 재사용으로 **무변경**
+- 스펙 018 PNG 2개: 손대지 않음
+- 다음: Codex 독립 검증 대기. **종료 문서·다음 스펙 착수 없음.**

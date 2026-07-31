@@ -7,7 +7,47 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🛠️ 스펙 030 구현 계약 확정 → `WAITING_FOR_CLAUDE`. 정본은 `docs/rebuild/specs/030-customer-photo-quarter-turn-rotation.md`. 스펙 027·028·029는 승인·종료. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+상태: **🛠️ 스펙 030 구현·자체검증 완료 → `READY_FOR_CODEX`(Codex 독립 검증 대기). 스펙 027·028·029는 승인·종료. ⚠️ working tree는 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+
+> 스펙 030 구현·자체검증 완료(로컬, 2026-07-31, 기준 계약 `2777010`·결정 `cf1cfd2`, 코드 커밋 `fbbadeb`):
+> 정본 `docs/rebuild/specs/030-customer-photo-quarter-turn-rotation.md`(§DONE), 인계
+> `docs/handoff/2026-07-31-spec-030-quarter-turn-rotation-handoff.md`. **고객이 처음으로 사진을 회전한다.**
+> **상태 모델**: `NormalizedTransform`에 `rotationQuarterTurns` **`0|1|2|3`** 추가 — composer가 **슬롯별**로
+> 소유하고 **전역 회전 상태·전역 폴백 0**(레거시 `T.rot ?? state.rot`가 케이스 사진까지 돌리던 결함 미재현).
+> `4`·`-1`·`1.5`·`90`·`"1"`·`NaN`·drift/throwing getter는 **복구 없이 거부**(modulo wrap·clamp·기본값 생성 0).
+> 버튼 1회 = **정확히 한 단계**(왼쪽 `-1`/오른쪽 `+1`), 이름은 `왼쪽으로 90°`·`오른쪽으로 90°`.
+> **scale·normalized pan 불변** → 회전해도 고객이 만든 **구도가 유지**되고, `원래대로`는 **회전까지** 0으로 되돌린다.
+> **★ geometry 무변경으로 회전 footprint 확보**: 90°/270°일 때 **cover에 넘기는 intrinsic w/h를 스왑**해
+> `drawRect`가 이미 **회전된 화면 실루엣**이 되게 했다 → 029 `maxPan = |drawSize-clipSize|/2`가 **수정 없이**
+> 성립하고 `packages/render/src/geometry` **diff 0**.
+> **plan 어휘**: `draw-image-cover`에 **선택적 `rotationQuarterTurns`** 만 추가하고 **0이면 필드 자체를 emit하지
+> 않아** pre-030 plan과 **바이트 동일**하다(신규 draw command 0). `draw-image-stretch` 무변경 = **아트는 회전 안 함**(R-5).
+> **executor**: 회전 시에만 **한 command 안에서** `save→clip→translate→rotate→drawImage→restore`, 중심은
+> **drawRect 중심(= zone 중심 + 현재 pan)** 이라 구도 점프 0. 실패해도 restore **1회 보장** → 다음 command 격리.
+> **probe plan에도 회전 포함**(C-7) — 없으면 회전 전 `maxPan`으로 clamp돼 구도가 틀어진다.
+> **★ 판단 요청 1건**: executor 포트 `apps/mockup/src/canvas/types.ts`에 `translate`/`rotate`가 없고 스펙 §4
+> **허용 목록 밖**이라, 허용 파일을 임의 확장하지 않고 **executor 내부 런타임 검사 + 회전 command가 있을 때만
+> 요구 + 없으면 preflight `INVALID_EXECUTOR_INPUT` fail-closed**로 구현했다(회전을 무시한 채 그리지 않는다).
+> 트레이드오프 = 공개 포트 타입이 실제 요구를 전부 기술하지 못함 → `types.ts`를 허용 목록에 넣어 선택적 멤버로
+> 선언하는 편이 낫다면 그 방향으로 보완한다. 상세 인계 §3.2.
+> **★★ R-6 실측(이 저장소 최초)**: `Orientation=6`을 스플라이싱한 합성 JPEG(**40×20**)이 Chromium에서
+> **20×40으로 decode**된다(untagged baseline은 40×20) → **브라우저가 EXIF를 적용**한다. 우리가 또 적용하면
+> **이중 회전**이므로 **R-6이 옳았다**. 조사 보고서의 `NOT VERIFIED`는 **Chromium 한정 해소**, 타 엔진·실기기는
+> NOT TESTED 유지. EXIF 라이브러리 **0**, 바이너리 fixture **0**(바이트 스플라이싱).
+> **검증**: unit **989**(944→989, 신규 45) / **실제 Chromium E2E 99**(91→99, 신규 8) — 우회전 시 분할 경계가
+> **가로→세로**(오른쪽이 TOP)·좌우 역연산·4회 원위치·**슬롯별 독립 회전**·`원래대로` 동시 초기화·회전 후
+> drag·zoom·**resize**에도 빈 공간 **0**·회전 버튼 **키보드(Enter·Space)**+44px+axe serious/critical **0**+
+> console **0**·320px 오버플로 **0**·EXIF 실측.
+> 게이트: frozen exit 0·**lockfile diff 0**·신규 의존성 0 / format·lint·typecheck / `git diff --check` clean /
+> 포트 4183·4184 free · OS temp 0 / dist **SHA-256 E2E 전후 동일·fixture 0** / 네트워크·live·Firebase·CORS·
+> deploy **0**. **번들**: mockup JS **263.31 → 265.53 kB**(gzip **81.60 → 82.11**), CSS **15.47 → 15.50**
+> (gzip 3.88 → 3.89), admin 무변경. `surface.css`는 기존 편집 컨트롤 스타일 재사용으로 **무변경**.
+> **NOT TESTED**: 실기기 4환경 EXIF·조작성, 카메라 원본 orientation **1~8 전 범위**, **실제 print/export 회전**
+> (인쇄 경로는 아직 이 plan을 소비하지 않는다), 대용량 이미지 성능·메모리, **임의 각도**(R-1·R-2로 제외),
+> 실제 200% 확대.
+> ⚠️ 이 완료는 **합성 fixture에서 회전 버튼으로 사진을 돌린 단계**이며 실기기·인쇄/export·주문·배포 완료가
+> 아니다. `hosting.public:"."` → **Hosting 격리 전 배포 금지** 유지. **다음 스펙은 착수하지 않는다.**
+
 
 > 스펙 030 결정 확정(2026-07-31): 정본 `docs/codex-claude-handoff/decisions/2026-07-31-spec-030-image-rotation-decisions.md`.
 > 승인 문장(원문): `스펙 030 Founder 권장안 R-1·R-2·R-3·R-4·R-5·R-6 일괄 승인하고 자동화 재개.`

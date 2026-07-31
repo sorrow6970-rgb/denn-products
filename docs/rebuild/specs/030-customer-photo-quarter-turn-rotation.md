@@ -127,3 +127,34 @@ NOT TESTED로 남길 항목:
 제품 코드·테스트 커밋과 문서 커밋을 분리해 일반 fast-forward push한다. Claude push 뒤
 HEAD=origin, ahead/behind 0/0에서 Codex가 독립 검증한다. Codex 승인 전에는 종료 문서를
 작성하거나 다음 스펙을 시작하지 않는다.
+
+### DONE (Claude Code, 2026-07-31) — READY_FOR_CODEX
+
+코드/test 커밋 `fbbadeb`, 기준 계약 `2777010`. 인계
+`docs/handoff/2026-07-31-spec-030-quarter-turn-rotation-handoff.md`.
+
+구현 요약: 슬롯별 `rotationQuarterTurns 0|1|2|3` + 좌/우 90° 버튼 + probe/실제 plan 모두 회전 전달 +
+회전 footprint 기반 `maxPan` 재환산 + `draw-image-cover` 선택 필드(0이면 미emit → pre-030 plan과 바이트
+동일) + executor 커맨드 내부 `save→clip→translate→rotate→drawImage→restore`(중심 = drawRect 중심).
+scale 1.0~5.0·빈 공간 금지·normalized pan·D-9 초기화 행렬(회전 포함)·template art 고정 유지.
+invalid/hostile/drift transform은 복구 없이 거부.
+
+게이트: frozen exit 0 / lockfile diff 0 / 신규 의존성 0 / format·lint·typecheck /
+**unit 989**(944→989) / build mockup JS 265.53 kB gzip 82.11, CSS 15.50/3.89, admin 무변경 /
+**E2E 99 PASS**(91→99) exit 0 / `git diff --check` clean / 포트 4183·4184 free / OS temp 0 /
+고객 dist SHA-256 E2E 전후 동일·fixture 0 / network·live·deploy 0.
+
+★ R-6 실측(저장소 최초): `Orientation=6` 합성 JPEG(40×20)이 Chromium에서 **20×40으로 decode**된다 →
+브라우저가 EXIF를 **적용**하므로 직접 파싱은 이중 회전이 된다. 조사 보고서의 NOT VERIFIED는
+**Chromium 한정 해소**, 타 엔진·실기기는 NOT TESTED 유지.
+
+★ 판단 요청 1건: `apps/mockup/src/canvas/types.ts`(executor 포트)에 `translate`/`rotate`가 없고 §4 허용
+목록 밖이라, 허용 파일을 확장하는 대신 **executor 내부 런타임 검사 + 회전 command가 있을 때만 요구 +
+없으면 preflight fail-closed**로 구현했다. 공개 포트 타입이 실제 요구를 전부 기술하지 못하는 트레이드오프가
+있으므로, `types.ts`를 허용 목록에 넣어 선택적 멤버로 선언하는 편이 낫다면 그 방향으로 보완한다.
+상세는 인계 문서 §3.2.
+
+NOT TESTED 유지: 실기기 4환경 EXIF·조작성, 카메라 원본 orientation 1~8, 실제 print/export 회전,
+대용량 성능·메모리, 임의 각도, 실제 200% 확대.
+
+스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다.

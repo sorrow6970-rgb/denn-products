@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-029-pointer-pan-zoom-editing
 active_unit: spec-030-customer-photo-quarter-turn-rotation
-state: WAITING_FOR_CLAUDE  # Codex 구현 계약 확정 → Claude 구현 대기
-baseline_commit: 9a20080
-candidate_commit: 110511e  # 스펙 029 보완 라운드 1 코드/test (최초 구현 95fcf92)
+state: READY_FOR_CODEX  # 스펙 030 구현·자체검증 완료 → Codex 독립 검증 대기
+baseline_commit: 2777010
+candidate_commit: fbbadeb  # 스펙 030 코드/test
 verified_commit: 110511e  # 스펙 029 승인분 (스펙 028은 d4fb99b)
-origin_relation: "spec 030 decision doc commit pushed fast-forward on top of 9a20080; HEAD=origin, ahead/behind 0/0"
+origin_relation: "spec 030 code and doc commits pushed fast-forward on top of 2777010; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
-fix_round: 1
+fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_WORKING
+next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -441,3 +441,29 @@ R-1~R-6과 C-1~C-9는 Founder 승인 및 조사 근거와 일치한다.
 `WAITING_FOR_CLAUDE`로 전환한다. Claude는 해당 스펙의 허용 파일·오류 우선순위·검증 계약
 안에서만 구현하고, 제품 코드/test 커밋을 일반 fast-forward push한 뒤 `READY_FOR_CODEX`로
 전환한다.
+
+## 스펙 030 구현 완료 — READY_FOR_CODEX (Claude Code, 2026-07-31)
+
+스펙 `docs/rebuild/specs/030-customer-photo-quarter-turn-rotation.md` §4 허용 파일 안에서만 구현하고
+코드/test와 문서를 분리 커밋했다. 코드/test `fbbadeb`, 기준 계약 `2777010`.
+
+- 상태 모델: 슬롯별 `rotationQuarterTurns 0|1|2|3`, 전역 회전 상태 0, D-9 초기화 행렬에 회전 편입
+- 잘못된 값(`4`·`-1`·`1.5`·`90`·`"1"`·`NaN`·drift/throwing getter)은 복구 없이 거부
+- 90°/270°는 cover에 넘기는 intrinsic w/h를 스왑해 회전 footprint를 얻는다 → `packages/render/src/geometry`
+  무변경, 029 `maxPan` 공식 그대로 성립
+- `draw-image-cover`의 선택적 `rotationQuarterTurns`만 추가하고 0이면 미emit → pre-030 plan과 바이트 동일
+- executor는 회전 시에만 커맨드 내부 save→clip→translate→rotate→drawImage→restore, 중심은 drawRect 중심
+- probe plan에도 회전 포함, template art는 무회전
+- 게이트: frozen exit 0 / lockfile diff 0 / 신규 의존성 0 / format·lint·typecheck /
+  unit **989**(944→989) / build mockup JS 265.53 kB gzip 82.11, CSS 15.50/3.89, admin 무변경 /
+  E2E **99 PASS**(91→99) exit 0 / `git diff --check` clean / 포트 4183·4184 free / OS temp 0 /
+  고객 dist SHA-256 E2E 전후 동일·fixture 0 / 실제 network·live·Firebase·CORS·Rules/Hosting·deploy 0
+- ★ R-6 실측(저장소 최초): `Orientation=6` 합성 JPEG(40×20)이 Chromium에서 20×40으로 decode된다 →
+  브라우저가 EXIF를 적용하므로 직접 파싱은 이중 회전. 조사의 NOT VERIFIED는 Chromium 한정 해소
+- ★ 판단 요청 1건: executor 포트 `apps/mockup/src/canvas/types.ts`가 §4 허용 목록 밖이라
+  `translate`/`rotate`를 executor 런타임 검사로 요구하고 없으면 preflight fail-closed로 처리했다.
+  허용 파일 확장이 더 낫다고 판단되면 그 방향으로 보완한다(인계 §3.2)
+- 변경 파일 13개 전부 §4 허용 목록 안. `surface.css`·`previewContracts.test.ts`는 변경 불필요로 무변경
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다
+
+다음 전이: Codex가 `fbbadeb`와 문서 커밋을 독립 검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.
