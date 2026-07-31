@@ -6,19 +6,34 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-030-customer-photo-quarter-turn-rotation
 active_unit: spec-031-text-clock-investigation
-state: READY_FOR_CODEX  # 스펙 031 사전 조사 완료 → Codex 검토 대기
+state: READY_FOR_CODEX  # 스펙 031 조사 보완 라운드 1 완료 → Codex 재검토 대기
 baseline_commit: 57d43b6
-candidate_commit: null
+candidate_commit: 33323dd
 verified_commit: null
-origin_relation: "spec 031 investigation doc commit pushed fast-forward on top of 57d43b6; HEAD=origin, ahead/behind 0/0"
+origin_relation: "spec 031 fix round 1 doc commit pushed fast-forward on top of 33323dd; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
-fix_round: 0
+fix_round: 1
 max_fix_rounds: 3
 next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Codex 스펙 031 조사 검토 — CORRECTION_REQUIRED 라운드 1 (2026-07-31)
+
+문서 전용 커밋 `33323dd`는 허용 파일과 일치하고 `git diff --check`를 통과했으며
+HEAD=origin, ahead/behind 0/0이다. 제품 코드·테스트·설정·lockfile 변경은 0이다.
+
+다만 보고서가 “인쇄/export에 시계가 없는 것”을 결함으로 확정하고 인쇄 포함을 권고한 근거는
+불충분하다. 레거시 관리자 UI는 `denn-admin.html:335-342`에서 이를 **“템플릿용 시계 가이드”**라고
+설명하고, `denn-admin.html:473-482`에서 **“시계 이미지 (커스텀)”**과
+“미설정 시 텍스트형 시계”로 관리한다. 이는 인쇄 그래픽이 아니라 완제품의 물리적 시계
+하드웨어/표시를 미리 보여주는 오버레이일 가능성이 있다.
+
+현재 근거로 어느 의미가 맞는지 확인할 수 없으므로 결함 판정과 “인쇄 포함” 권장을 유지할 수 없다.
+Claude는 제품 코드를 수정하지 않고 조사 보고서와 관련 상태 문서만 보완한다. 확정할 제품/운영 근거가
+없으면 `UNCONFIRMED`로 낮추고 Founder에게 시계의 제품 의미부터 묻는다.
 
 ## 스펙 030 종료 확인 및 스펙 031 읽기 전용 조사 전이 (2026-07-31)
 
@@ -590,3 +605,28 @@ Codex 승인(코드 `603cd25`, 문서 `1aa3302`)에 따라 종료 문서만 하�
 
 다음 전이: Codex가 조사 보고서를 검토해 F-1~F-8 Founder 결정 요청과 구현 스펙(또는 추가 조사)을 작성한다.
 그 전까지 Claude는 텍스트·시계 관련 제품 코드를 만들지 않는다.
+
+## 스펙 031 조사 보완 라운드 1 결과 — READY_FOR_CODEX (Claude Code, 2026-07-31)
+
+Codex 지적 1건은 **유효**했고 허용된 문서 안에서만 보완했다. 기준 `33323dd`, 문서 전용 커밋.
+
+- 지적: 조사가 "인쇄에 시계가 없다"는 코드 사실에서 곧바로 "구조적 불일치·결함" 판정과 "인쇄 포함"
+  권장을 도출했다. `admin:335`("템플릿용 시계 가이드")·`admin:342`("템플릿 제작 시 시계를 미리 보면서
+  위치를 잡고")는 시계가 완제품의 물리적 하드웨어일 가능성을 지지한다.
+- 추가 조사 결과를 보고서 §3.5.1에 양쪽 근거로 정리했다. 새로 찾은 근거: 주문 payload에 시계 상태가
+  없다(하드웨어 쪽), `clockOn`이 `space-scene-v1`의 `design`에 저장된다(그래픽 쪽), 하드웨어 어휘
+  (무브먼트·바늘·초침·타공·벽시계·건전지)가 두 운영본 HTML과 `docs/` 전체에서 0건이다(양쪽 다 불확정).
+- **판정 `UNCONFIRMED`**: §0·§3.5·§10에서 "구조적 불일치"·"결함"·"인쇄 포함 권장" 단정을 제거했고,
+  §3.5는 관측된 코드 사실만 주장한다.
+- Founder 결정 순서를 재구성했다: F-4(제품 의미) → F-4a(하드웨어면 print 미포함 유지, preview 전용) /
+  F-4b(그래픽이면 포함 여부) → F-5(F-4b일 때만 시각 의미).
+- 구현 범위를 §8.4에서 분기했다. 하드웨어로 확정되면 print/export와 공유할 결정적 plan을 전제하지 않고
+  preview overlay 계약과 timer 정리만 다룬다. C-8을 F-4 종속으로 바꾸고 STOP 조건 11·12를 추가했다.
+- 바꾸지 않은 것: §1·§2 textZones 조사 전체, §4~§7, C-1~C-7·C-9~C-11, §9 검증 설계.
+- 변경 파일: 보고서 + `docs/codex-claude-handoff/CURRENT.md` + `docs/live/CLAUDE_LIVE_PATCH_LOG.md` +
+  이 문서 + `Automation/NEXT_CLAUDE_PROMPT.md` — 허용 목록과 정확히 일치
+- 제품 코드·테스트·CSS·설정·manifest·`package.json`·`pnpm-lock.yaml` diff 0, 신규 의존성 0,
+  실제 network·live·Firebase·CORS·Rules/Hosting·deploy 0
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다
+
+다음 전이: Codex가 보완된 보고서를 재검토한다. **F-4는 Founder 결정이 필요하며 Claude가 확정하지 않는다.**
