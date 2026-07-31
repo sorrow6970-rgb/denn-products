@@ -847,3 +847,40 @@
 - 변경: **문서 전용**. 제품 코드·테스트·CSS·설정·lockfile diff 0, 신규 의존성 0, network·live·deploy 0
 - 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: 손대지 않음
 - 다음: Codex 구현 계약 대기(**C-1 후보 A/B/C 택일** 포함). **구현 착수 없음.**
+
+## 2026-07-31 — 스펙 032 구현 + Codex 승인 → DONE (`c10e7a6`, 종료 문서 분리)
+
+- **인쇄 해상도가 나올 수 있는 곳을 "운영자가 명시한 cm 두 개"로 좁혔다.** 레거시 `frameCm`은 후보 필드
+  8종 → **사이즈 이름 파싱** → 하드코딩 표 순으로 떨어져 **이름을 바꾸면 해상도가 바뀌었다**(조사 §2.3).
+  P-2의 금지를 코드로 고정한 단위다
+- `frameSizes[].printWidthCm`·`printHeightCm`을 allowlist에 추가(UNKNOWN_FIELD 경고 안 남)하고
+  `validatePrintSizeCm` 신설 — **all-or-nothing**, 각각 finite·`> 0`·`<= 500`, 위반은
+  **`INVALID_NUMBER` fatal**(clamp·반올림·기본값 0). 한쪽만 있으면 **없는 쪽 path**로 진단한다
+  (있는 쪽을 탓하면 운영자가 "남긴 값"을 고치러 간다). **둘 다 없는 기존 카탈로그는 이전과 동일하게 읽힌다**
+- `projectFramePrintPhysicalSize(document, frameSizeId)` → **`{widthCm,heightCm}` 또는 `null`만**.
+  `null`은 "아직 인쇄 불가"이지 "기본값을 쓰라"가 아니다(P-2·P-3 fail-closed). 기존 preview projection의
+  `lookupById`/`run`/`fail` 규율 재사용, 각 필드 **정확히 한 번 read**(drifting getter 방어),
+  hostile getter throw·revoked Proxy는 예외 경계에서 실패로 흡수
+- **추론 경로 0**을 unit으로 고정: 이름 `"A4 21x29.7cm"` · `sub`/label/id · `aspect`로 없는 변 계산 ·
+  논리 `w`/`h`를 cm로 사용 — **전부 읽지 않거나 실패**
+- 바꾼 파일 7개 전부 `packages/shared/src/catalog/**`(계약 허용 목록 안).
+  `catalog/types.ts`·`catalog/index.ts`·`src/index.ts`는 상위 배럴이 `export *`라 **변경 불필요**
+- 게이트: frozen(lockfile diff 0)·format·lint·typecheck **PASS**, unit **1109/1109**(031 시점 1088 → **+21**),
+  독립 build **PASS**, Chromium E2E **116/116**, 고객 dist SHA-256 E2E 전후 **동일**(`74427f72…c9644c`),
+  `git diff --check` 클린, ports 4183/4184 **0**, OS temp `denn-e2e-*` **0**. 신규 E2E **없음**
+  (브라우저 동작이 아닌 순수 read/projection 계약이라 unit이 정본)
+- **Codex가 `315356a`를 독립 검증해 PASS** — frozen/format/lint/typecheck/build, unit 1109/1109,
+  E2E 116/116, diff check·forbidden diff·ports·OS temp 전부 통과
+- 변경 0: `apps/**` · `packages/render/**` · 실제 print/export · PNG 생성 · 주문 payload · 이름 파싱 ·
+  fallback 치수 · lockfile/의존성 · Firebase/Rules/CORS/Hosting/deploy · 실제 network/live
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: **손대지 않음**
+- **NOT TESTED**: 실제 발행 카탈로그의 cm 필드(아직 존재하지 않음 — 값을 넣을 운영자 UI가 후속 스펙이라
+  이번 검증은 전부 합성 fixture) · `aspect`↔cm 비율 불일치 진단(계약상 자동 수정 안 함, 후보로만) ·
+  잔류 프로세스 command-line
+- **여전히 미결**: **C-1 인쇄 좌표 방법(후보 A/B/C)** — 계약 §후속 순서 3이 A 계열을 가리키지만
+  **확정 스펙 없음**, Claude 임의 선택 금지 · **인쇄소 요구 전체**(해상도·색공간/ICC·재단 여백·파일 형식·
+  최대 크기, 저장소 근거 0 → 외부 확인 필요, P-4a 출력 차단 유지) · 케이스 인쇄(P-1 분리) · C-2~C-8 ·
+  **조사 보고서 자체에 대한 Codex 재검토 미완**(전제가 뒤집히면 해당 결정 재개)
+- 인계: `docs/handoff/2026-07-31-spec-032-print-physical-size-handoff.md`
+- 다음: **운영자용 cm 입력 UI(`apps/admin/**`) 읽기 전용 조사**로 자동 전환(계약 §후속 순서 2)
+

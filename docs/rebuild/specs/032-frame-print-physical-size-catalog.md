@@ -1,6 +1,6 @@
 # 스펙 032 — 액자 인쇄 물리 치수 카탈로그 계약
 
-상태: `READY_FOR_CODEX` (구현 `c10e7a6`, Codex 독립 검증 대기)
+상태: **DONE** (`COMMITTED`) — 구현 `c10e7a6`, Codex 독립 검증 통과 (2026-07-31)
 
 ## 목적
 
@@ -135,3 +135,23 @@ function projectFramePrintPhysicalSize(
 - `aspect`와 cm 비율 불일치 진단 (계약상 이번 단위에서 자동 수정하지 않고 후보로만 남긴다)
 - 잔류 프로세스 command-line
 - **C-1(인쇄 좌표 방법)** 은 이 스펙이 정하지 않는다. §후속 순서 3이 A 계열을 가리키지만 확정 스펙은 아직 없다.
+
+---
+
+### CODEX_PASSED — 2026-07-31
+
+Codex가 `315356a`를 독립 재검증해 **통과**시켰다.
+
+| 게이트 | 결과 |
+| --- | --- |
+| frozen install / format / lint / typecheck / build | PASS |
+| unit | **1109/1109 PASS** |
+| Chromium E2E | **116/116 PASS** |
+| `git diff --check`, forbidden diff, ports 4183/4184, OS temp staging | PASS |
+
+알려진 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 **손대지 않았다.**
+
+기능 코드·테스트는 승인 후 **추가 수정 없음**. 종료 문서만 별도 fast-forward 커밋으로 처리했다.
+
+**스펙 032 = DONE.** 다음은 계약 §후속 순서 2 — **운영자용 cm 입력·검증·저장 UI**의 읽기 전용 조사다.
+§후속 순서 3의 **C-1(인쇄 좌표 방법 A/B/C)** 은 이 스펙이 정하지 않았고 여전히 Codex 결정이다.

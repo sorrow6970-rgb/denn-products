@@ -4,21 +4,58 @@
 updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-031-frame-text-zones-physical-clock-preview
-active_unit: spec-032-frame-print-physical-size-catalog
-state: READY_FOR_CODEX  # 스펙 032 구현 완료, Codex 독립 검증 대기
+completed_unit: spec-032-frame-print-physical-size-catalog
+active_unit: spec-033-operator-cm-input-ui-investigation  # 읽기 전용 조사 (계약 §후속 순서 2)
+state: CODEX_PASSED  # 스펙 032 독립 검증 통과
 baseline_commit: 2a0cfd3
 candidate_commit: c10e7a6  # 스펙 032 catalog cm 계약
-verified_commit: 88b64e6  # 스펙 031 승인분 (보완 라운드 1)
-origin_relation: "spec 032 impl + closing docs pushed fast-forward on top of 2a0cfd3; HEAD=origin, ahead/behind 0/0"
+verified_commit: 315356a  # 스펙 032 Codex 승인분
+origin_relation: "spec 032 closing docs pushed fast-forward on top of 315356a; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: READY_FOR_COMMIT
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 스펙 032 종료 — DONE / COMMITTED (2026-07-31)
+
+Codex가 `315356a`를 독립 검증해 **CODEX_PASSED**했다. 기능 코드·테스트는 **추가 수정 0**이고
+종료 문서만 별도 fast-forward 커밋으로 처리했다.
+
+### Codex 최종 검증 결과
+
+| 게이트 | 결과 |
+| --- | --- |
+| frozen install / format / lint / typecheck / build | PASS |
+| unit | **1109/1109 PASS** |
+| Chromium E2E | **116/116 PASS** |
+| `git diff --check`, forbidden diff, ports 4183/4184, OS temp staging | PASS |
+
+알려진 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 손대지 않았다.
+
+### 종료된 계약
+
+- `frameSizes[].printWidthCm`·`printHeightCm` — all-or-nothing, finite·`> 0`·`<= 500`,
+  위반은 **없는/틀린 쪽 path의 `INVALID_NUMBER` fail-closed**. 둘 다 없는 기존 카탈로그는 무회귀
+- `projectFramePrintPhysicalSize` → `{widthCm,heightCm}` 또는 `null`만. `null`은 "아직 인쇄 불가"이지
+  "기본값을 쓰라"가 아니다
+- 이름·`sub`·label·id·`aspect`·논리 `w`/`h` → cm 추론 경로 **0** (unit으로 고정)
+
+### NOT TESTED
+
+실제 발행 카탈로그의 cm 필드(아직 없음 — 전부 합성 fixture) · `aspect`↔cm 비율 불일치 진단 ·
+잔류 프로세스 command-line
+
+### 다음 — 읽기 전용 조사
+
+계약 §후속 순서 2의 **운영자용 cm 입력·검증·저장 UI**(`apps/admin/**`) 조사로 자동 전환한다.
+**제품 코드 변경 0**이며, 스펙과 Founder 결정이 나오기 전에는 구현하지 않는다.
+
+**여전히 미결**: C-1 인쇄 좌표 방법(후보 A/B/C, Codex 결정) · 인쇄소 요구 전체(외부 확인) ·
+케이스 인쇄(P-1 분리) · C-2~C-8 · **조사 보고서 자체에 대한 Codex 재검토 미완**.
 
 ## Claude 스펙 032 구현 완료 — READY_FOR_CODEX (2026-07-31)
 

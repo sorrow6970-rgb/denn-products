@@ -7,8 +7,15 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 032 구현 완료(`c10e7a6`) → `READY_FOR_CODEX`(Codex 독립 검증 대기). 카탈로그에 **명시 cm 필드**(`printWidthCm`·`printHeightCm`)와 `projectFramePrintPhysicalSize`만 추가했다. **인쇄 좌표 방법(C-1 후보 A/B/C)은 여전히 미정**이고 **조사 보고서 Codex 재검토도 미완**이다. 스펙 027~031은 승인·종료. 실제 인쇄 구현 미착수.**
+상태: **✅ 스펙 032 DONE(`COMMITTED`) — Codex가 `315356a`를 독립 검증해 승인했다. 카탈로그에 **명시 cm 필드**(`printWidthCm`·`printHeightCm`)와 `projectFramePrintPhysicalSize`가 들어갔고 **이름·`sub`·label·id·`aspect`·논리 `w`/`h`에서 치수를 추론하는 경로는 0**이다. → 다음은 **운영자 cm 입력 UI 읽기 전용 조사**(계약 §후속 순서 2). **인쇄 좌표 방법(C-1 후보 A/B/C)은 여전히 미정**이고 **조사 보고서 Codex 재검토도 미완**이다. 스펙 027~032 승인·종료. 실제 인쇄 구현 미착수.**
 
+
+> **스펙 032 DONE(2026-07-31, Codex 승인 `315356a`)**: 최종 게이트 frozen·format·lint·typecheck·build PASS,
+> unit **1109/1109**, Chromium E2E **116/116**, diff check·forbidden diff·ports 4183/4184·OS temp PASS.
+> 기능 코드·테스트 추가 수정 **0**, 종료 문서만 별도 커밋.
+> 인계: `docs/handoff/2026-07-31-spec-032-print-physical-size-handoff.md`.
+> **다음 = 운영자 cm 입력 UI 읽기 전용 조사**(`apps/admin/**`은 조사 대상이지 수정 대상이 아니다).
+> **NOT TESTED**: 실제 발행 카탈로그의 cm 필드(아직 없음 — 전부 합성 fixture) · `aspect`↔cm 비율 불일치 진단.
 
 > **스펙 032 구현(2026-07-31, `c10e7a6`)**: 정본 계약
 > `docs/rebuild/specs/032-frame-print-physical-size-catalog.md`(`2a0cfd3`).
