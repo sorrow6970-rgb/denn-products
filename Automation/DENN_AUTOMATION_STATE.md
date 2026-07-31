@@ -5,16 +5,16 @@ updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-031-frame-text-zones-physical-clock-preview
-active_unit: spec-031-frame-text-zones-physical-clock-preview
-state: COMMITTED  # 스펙 031 종료 문서 처리 완료 → Codex 최종 확인 후 DONE
-baseline_commit: 3927420
-candidate_commit: b7d46d3  # 스펙 031 보완 라운드 1 코드 88b64e6 + 문서
+active_unit: spec-032-print-export-investigation
+state: READY_FOR_CODEX  # 스펙 032 인쇄/내보내기 사전 조사 완료 → Codex 검토 대기
+baseline_commit: b763174
+candidate_commit: null  # 조사 라운드 (제품 코드 없음)
 verified_commit: 88b64e6  # 스펙 031 승인분 (보완 라운드 1)
-origin_relation: "spec 031 closing doc commit pushed fast-forward on top of b7d46d3; HEAD=origin, ahead/behind 0/0"
+origin_relation: "spec 032 investigation doc commit pushed fast-forward on top of b763174; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
-fix_round: 1
+fix_round: 0
 max_fix_rounds: 3
-next_transition: DONE
+next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -800,3 +800,37 @@ Codex 승인(코드 `88b64e6`, 문서 `b7d46d3`)에 따라 종료 문서만 하�
 - 다음 스펙·사전조사·기능 **미착수**
 
 다음 전이: Codex가 이 종료 문서 커밋의 hash와 `HEAD=origin`, ahead/behind 0/0을 확인하면 `DONE`이다.
+
+## 스펙 032 사전 조사 완료 — READY_FOR_CODEX (Claude Code, 2026-07-31)
+
+**Founder 지시로 자동 전환**했다: 개별 스펙 DONE에서 멈추지 말고 다음 권장 스펙의 읽기 전용 조사를
+수행하며, 자동화는 전체 리빌드 DONE 또는 Founder의 명시적 중단에서만 멈춘다. 구현은 조사 승인과
+필요한 Founder 결정 뒤에만 시작한다.
+
+다음 스펙은 임의 선택이 아니라 **스펙 019 §506이 명시한 후속 순서**
+(deterministic renderer → image/CORS → pointer → text/clock → **print**)의 마지막 항목이다.
+보고서 `docs/codex-claude-handoff/reviews/2026-07-31-print-export-investigation.md`(12항목).
+
+- 인쇄 경로는 **두 세대 공존**: 케이스는 V36 구경로, 액자만 V365(`patchedRender`가 케이스를 되돌린다).
+- 해상도 계약이 제품군마다 다르다: 액자는 실물 cm → 300dpi(min 3000 / max 36M / fallback 3508),
+  케이스는 cm·dpi 없이 화면 논리 크기의 3~5배.
+- ★ 액자의 물리 치수를 **필드 8종 → 이름 텍스트 파싱 → 하드코딩 표**로 추측한다. 사이즈 이름을 바꾸면
+  인쇄 해상도가 바뀔 수 있고, 카탈로그 V1 `frameSizes` allowlist에 cm 필드가 없다.
+- ★ **경고가 주문을 막지 않는다**: 템플릿 아트 실패 시 아트가 빠진 PNG를 그대로 반환해 저장·다운로드·
+  카카오까지 진행된다. 미리보기는 스펙 028에서 fail-closed로 바꿨다.
+- 스펙 029~031 중 인쇄 반영은 텍스트뿐이다. 회전(030)은 무시되고, 시계(031 F-4) 제외는 정상이다.
+- 리빌드에는 인쇄 코드가 0줄이지만 재료(결정적 plan·executor·normalized pan·quarter turn·확정 lines)는
+  모두 있다. 핵심은 새 렌더러가 아니라 **같은 plan을 인쇄 해상도로 다시 만드는 것**이다.
+- 권고: **인쇄 폭으로 plan 재생성 + 미리보기 `lines` 재사용** → 좌표 정확성과 줄바꿈 동일성을 동시에.
+- 결정 필요: Founder 6건(P-1~P-6, 특히 **P-2 물리 치수 출처**와 **P-3 경고 시 인쇄 생성 여부**) +
+  Codex 8건(C-1~C-8). 최소 구현 순서와 STOP 11조건도 기록했다.
+- 변경 파일: 보고서 1개 + `docs/codex-claude-handoff/CURRENT.md` + `docs/live/CLAUDE_LIVE_PATCH_LOG.md` +
+  이 문서 + `Automation/NEXT_CLAUDE_PROMPT.md` (문서 전용 커밋).
+- 제품 코드·테스트·CSS·설정·manifest·lockfile·PNG diff 0, 신규 의존성 0,
+  실제 network·live·Firebase·CORS·Rules/Hosting·deploy 0, 운영 데이터·이미지 접근 0.
+- NOT VERIFIED: 레거시 인쇄 미실행(코드 근거만), `CONFIG` 값들의 출처와 인쇄소 요구, `knownCm` 표와
+  운영 카탈로그 실제 필드, 운영 CORS 실패, 대용량 성능.
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 손대지 않았다.
+
+다음 전이: Codex가 조사 보고서를 검토해 P-1~P-6 Founder 결정 요청과 구현 스펙(또는 추가 조사)을 작성한다.
+그 전까지 Claude는 인쇄 관련 제품 코드를 만들지 않는다.

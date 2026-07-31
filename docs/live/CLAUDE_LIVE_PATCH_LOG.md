@@ -754,3 +754,33 @@
 - 이 라운드는 **문서 전용 커밋**(기능 코드·테스트·CSS·설정·lockfile 변경 0, network·live·deploy 0)
 - 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: 손대지 않음
 - 다음: **다음 스펙 미착수 — Codex 지시 대기**
+
+## 2026-07-31 — 스펙 032 사전 조사 (인쇄/내보내기, 읽기 전용)
+
+- 기준 HEAD `b763174` / 산출물 `docs/codex-claude-handoff/reviews/2026-07-31-print-export-investigation.md`
+- 착수 근거: **Founder 지시**(개별 스펙 DONE에서 멈추지 말고 다음 권장 스펙 조사로 자동 전환) +
+  스펙 019 §506의 후속 순서 마지막 항목 `print`. 상태 `COMMITTED` → 조사 → `READY_FOR_CODEX`
+- **한 줄: 인쇄 경로는 두 세대가 공존하고, 리빌드에는 인쇄 코드가 0줄이다.**
+- ★ **케이스는 V36 구경로, 액자만 V365** — `patchedRender`가 `type==='case'`면 옛 구현으로 되돌린다
+  (`:11453-11455`). 해상도 산식도 텍스트 처리도 다르다
+- 해상도: 액자는 실물 cm → **300dpi**(`minLongSide 3000`·`maxPixels 36M`·`fallbackLongSide 3508`),
+  케이스는 **cm·dpi 없이** `scale=min(5,max(3,3000/max(W,H)))`. payload의 `dpi:300`은 계산 미사용 상수
+- ★ **액자 물리 치수를 추측한다**(`frameCm :11298-11317`): 필드 8종 → **이름 텍스트 파싱** → 하드코딩 표.
+  **사이즈 이름을 바꾸면 인쇄 해상도가 바뀔 수 있다.** 카탈로그 V1 `frameSizes` allowlist에 **cm 필드 없음**
+- ★ **경고가 주문을 막지 않는다**: 템플릿 아트 로드 실패는 `warnings` 문자열만 남기고 **아트 빠진 PNG를
+  반환**해 IndexedDB 저장·다운로드·카카오까지 진행된다(§5). 미리보기는 028에서 fail-closed로 바꿨음
+- 스펙 029~031 중 인쇄 반영은 **텍스트뿐** — **회전(030) 무시**, **시계(031 F-4) 제외는 정상**
+- pan 배율 **frame 하드코딩 `dim.w/500`**(prevMaxW 변경 시 미리보기≠인쇄) — 리빌드는 normalized라 무관
+- CORS: 전역 IIFE가 Firebase URL에 `crossOrigin` 자동 주입. 리빌드는 **026/028 계약 재사용으로 충분**
+- 주문 payload는 **이름 3개뿐** — 색·문구·pan/zoom·회전·시계 상태 없음(운영자는 PNG로만 파악)
+- ★ 핵심 논점: 인쇄는 새 렌더러가 아니라 **같은 plan을 인쇄 해상도로 다시 만드는 것**.
+  **인쇄 폭으로 재생성 + 미리보기 `lines` 재사용**을 권고(좌표 정확성 + 줄바꿈 동일성 동시 확보,
+  031이 이미 `lines`를 plan에 담아 추가 계약 불필요)
+- 결정 필요: Founder 6건(P-1 케이스 포함 여부 · **P-2 물리 치수 출처** · **P-3 경고 시 인쇄 생성 여부** ·
+  P-4 DPI/최대 픽셀 · P-5 주문 payload 확장과 개인정보 · P-6 줄바꿈 일치) + Codex 8건(C-1~C-8)
+- 최소 구현 순서·STOP 11조건 기록
+- 변경: **문서 전용**(보고서 1 + CURRENT + 이 로그 + Automation 2). 제품 코드·테스트·CSS·설정·PNG·
+  lockfile 0, 신규 의존성 0, network·live·Firebase·CORS·deploy 0
+- NOT VERIFIED: 레거시 인쇄 **미실행**(코드 근거만) · `CONFIG` 값들의 **출처와 인쇄소 요구** ·
+  `knownCm` 표 내용과 운영 카탈로그 실제 필드 · 운영 CORS 실패 · 대용량 성능
+- 다음: Codex 검토. **구현 착수 없음.**
