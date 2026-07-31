@@ -1,6 +1,18 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `WAITING_FOR_CLAUDE`
+
+## 다음 작업 — 스펙 032 physical-size catalog 계약 구현
+
+`docs/rebuild/specs/032-frame-print-physical-size-catalog.md`를 정본으로 읽고 허용 파일 안에서만
+구현한다. `frameSizes[].printWidthCm`·`printHeightCm`의 안전한 read와
+`projectFramePrintPhysicalSize`만 추가한다.
+
+`apps/admin/**`, `apps/mockup/**`, `packages/render/**`, 실제 print/export, 주문 payload,
+이름 파싱·fallback 치수, lockfile·의존성은 변경하지 않는다.
+
+정본 spec 파일과 구현 코드/test를 의도한 커밋으로 분리해 일반 fast-forward push하고,
+HEAD=origin, ahead/behind 0/0에서 `READY_FOR_CODEX`로 전환한다.
 
 ## 스펙 032 Founder 결정 정본 기록 완료 — Codex 구현 계약 대기
 

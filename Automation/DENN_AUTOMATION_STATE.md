@@ -6,7 +6,7 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-031-frame-text-zones-physical-clock-preview
 active_unit: spec-032-print-export-investigation
-state: READY_FOR_CODEX  # 스펙 032 Founder 결정 정본 기록 완료 → Codex 구현 계약 작성 대기
+state: WAITING_FOR_CLAUDE  # 스펙 032 physical-size catalog 계약 구현 대기
 baseline_commit: b763174
 candidate_commit: null  # 조사 라운드 (제품 코드 없음)
 verified_commit: 88b64e6  # 스펙 031 승인분 (보완 라운드 1)
@@ -14,7 +14,7 @@ origin_relation: "spec 032 decision doc commit pushed fast-forward on top of d55
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: CLAUDE_WORKING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
