@@ -1127,3 +1127,14 @@
   인쇄소 요구 전체(외부 확인, **P-4a 차단 유지**) · 케이스 인쇄 · C-2~C-8 ·
   **스펙 032 조사 보고서 Codex 재검토 미완**
 - 다음: **Codex가 E-1~E-3을 확정하고 구현 계약 작성**. 구현 착수 **없음.**
+
+## 2026-07-31 — Codex 스펙 033 구현 계약 준비
+
+- Founder가 이 Codex 대화에서 E-4·E-5·E-6 승인 원문을 명시해 `b0f633c`의 정본성 차단을 해소했다.
+- **E-1/C-1**: 동일 preview plan + detached HTMLCanvasElement의 uniform transform.
+  plan 재빌드·재측정·plan scaling 금지.
+- **E-2**: 비정수 배율·자간·clip 위험은 실제 Chromium pixel E2E로 판정하며 불일치는 correction.
+- **E-3**: minLongSide와 maxPixels를 동시에 만족하지 못하면 파일 생성 전 fail-closed.
+- 구현 계약: `docs/rebuild/specs/033-local-frame-png-export.md`.
+- 상태: `WAITING_FOR_CLAUDE`. 계약/상태 문서 fast-forward push 후 허용 범위 구현.
+- 이번 변경은 문서 전용이다. 제품 코드·테스트·CSS·설정·lockfile 변경 0.

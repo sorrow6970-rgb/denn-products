@@ -7,7 +7,12 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 032 DONE → cm UI 조사 → admin 쓰기 경계 조사 → export 연결부 조사 → **Founder E-4·E-5·E-6 승인 기록 완료**, `READY_FOR_CODEX`(Codex **E-1=C-1**·E-2·E-3 + 구현 계약 대기). ★★조사 핵심 — **plan을 인쇄 폭으로 재빌드하면 재wrap이라 P-6(줄바꿈 동일)이 깨진다**. **C-1은 여전히 미정**이고 확정 전 구현 불가. Founder **F-A~F-E(admin)는 독립·미결**. 스펙 032 조사 보고서 Codex 재검토도 미완. 실제 인쇄·운영자 UI 구현 미착수.**
+상태: **스펙 033 로컬 액자 PNG export `WAITING_FOR_CLAUDE`. Founder가 E-4·E-5·E-6
+승인 원문을 이 Codex 대화에서 재확인했다. Codex는 E-1/C-1을 동일 preview plan +
+detached HTMLCanvasElement uniform transform으로 확정했고, E-2는 Chromium pixel E2E 판정,
+E-3은 minLongSide/maxPixels 동시 충족 불가 시 fail-closed로 확정했다. 구현 계약:
+`docs/rebuild/specs/033-local-frame-png-export.md`. 실제 upload/order/Firebase/network/deploy는
+계속 금지다. Founder F-A~F-E(admin)는 독립·미결이다.**
 
 
 > **Founder E-4·E-5·E-6 확정(2026-07-31, 문서 전용)**: 정본
