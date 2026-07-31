@@ -1,6 +1,6 @@
 # 스펙 033 — 로컬 액자 PNG export
 
-상태: `READY_FOR_CODEX` (구현 `4246503`, Codex 독립 검증 대기)
+상태: **DONE** (`COMMITTED`) — 구현 `4246503`, Codex 독립 검증 통과 (2026-07-31)
 
 ## 목적
 
@@ -178,3 +178,28 @@
 - 잔류 프로세스 command-line
 
 **P-4a에 따라 업로드·주문 전송·배포는 계속 금지**다. 이 단위의 산출물은 **시험용 로컬 PNG**다.
+
+---
+
+## CODEX_PASSED — 2026-07-31
+
+Codex가 구현 `4246503`과 구현 기록 `9e2d408`을 독립 검증해 통과시켰다.
+
+| 게이트 | 결과 |
+| --- | --- |
+| frozen install | PASS (`Already up to date`) |
+| lockfile diff | 0 |
+| format / lint / typecheck | PASS |
+| unit | **1174/1174 PASS** |
+| 독립 build | PASS |
+| 전체 Chromium E2E | **129/129 PASS** |
+| `git diff --check` / forbidden diff | PASS / 0 |
+| 고객 dist SHA-256 동일 rebuild | PASS |
+| ports 4183/4184 / OS temp `denn-e2e-*` | 0 / 0 |
+
+구현 diff는 계약의 허용 파일 10개에만 존재한다. 알려진 spec018 PNG 두 개와 content diff 0인
+`packages/render/src/plan/index.ts`는 커밋 범위에 포함하지 않았다.
+
+NOT TESTED는 실제 인쇄물·인쇄소 수용성, 다른 브라우저 엔진과 실제 기기 `toBlob`, 대용량 이미지
+메모리·성능, 색공간/ICC·bleed·파일 형식·최대 크기, 잔류 프로세스 command-line이다.
+P-4a에 따라 인쇄소 확인 전 실제 upload/order/deploy는 계속 차단한다.

@@ -4,17 +4,17 @@
 updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-032-frame-print-physical-size-catalog
-active_unit: spec-033-local-frame-png-export  # 구현 완료
-state: READY_FOR_CODEX  # 스펙 033 구현 완료, Codex 독립 검증 대기
+completed_unit: spec-033-local-frame-png-export
+active_unit: null
+state: COMMITTED  # spec033 DONE, 오늘 작업 종료
 baseline_commit: 2a0cfd3
-candidate_commit: c10e7a6  # 스펙 032 catalog cm 계약
-verified_commit: 315356a  # 스펙 032 Codex 승인분
-origin_relation: "export UI decision doc pushed fast-forward on top of 5480e54; HEAD=origin, ahead/behind 0/0"
+candidate_commit: 4246503
+verified_commit: 4246503
+origin_relation: "spec033 implementation and READY_FOR_CODEX docs pushed; closure docs pending fast-forward"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: PAUSED
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden

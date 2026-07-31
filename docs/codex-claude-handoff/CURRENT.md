@@ -7,7 +7,11 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ **스펙 033 로컬 액자 PNG export 구현 완료**(`4246503`) → `READY_FOR_CODEX`. ★C-1은 **후보 A(plan 고정 + detached canvas uniform transform)** 로 Codex가 확정했고 그대로 구현했다 — **plan을 재빌드하지 않으므로 P-6(줄바꿈 동일)이 구조적으로 성립**한다. Chromium 픽셀 E2E가 비정수 배율·가로·자간·회전+확대에서 preview↔export 동일성을 확인했다. **결과는 시험용 로컬 PNG이며 P-4a에 따라 업로드·주문 전송·배포는 계속 금지**다. Founder **F-A~F-E(admin)는 여전히 미결**.**
+상태: **스펙 033 로컬 액자 PNG export DONE. 구현 `4246503`, 구현 기록 `9e2d408`.
+Codex 독립 게이트 frozen·format·lint·typecheck·unit 1174/1174·build·Chromium 129/129·
+diff·dist hash·ports·temp PASS. Founder 지시에 따라 다음 스펙은 시작하지 않고 자동화를 PAUSED로
+전환한다. 실제 upload/order/Firebase/network/deploy는 계속 금지다. Founder F-A~F-E(admin)는
+독립·미결이다.**
 승인 원문을 이 Codex 대화에서 재확인했다. Codex는 E-1/C-1을 동일 preview plan +
 detached HTMLCanvasElement uniform transform으로 확정했고, E-2는 Chromium pixel E2E 판정,
 E-3은 minLongSide/maxPixels 동시 충족 불가 시 fail-closed로 확정했다. 구현 계약:
