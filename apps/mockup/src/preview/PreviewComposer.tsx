@@ -328,6 +328,7 @@ export function PreviewComposer({
     let cancelled = false;
     const fonts = (window.document as Document & { fonts?: FontFaceSet }).fonts;
     if (fonts === undefined) {
+      // nothing to wait for; availability itself is checked separately and fails closed
       setFontsReady(true);
       return;
     }
@@ -341,6 +342,29 @@ export function PreviewComposer({
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  /**
+   * spec 031 보완 1 §3: the REQUESTED family must actually be available before anything is measured.
+   * `document.fonts.ready` only says loading finished — it does not say this family loaded. Measuring
+   * with a substituted font and painting with another wraps differently, which is precisely the
+   * legacy preview/print divergence, so a missing family fails the text plan CLOSED.
+   */
+  const fontsAvailable = useCallback((shorthands: readonly string[]): boolean => {
+    if (shorthands.length === 0) return true;
+    const fonts = (window.document as Document & { fonts?: FontFaceSet }).fonts;
+    // no FontFaceSet at all: availability cannot be established, so text is not drawn
+    if (fonts === undefined || typeof fonts.check !== "function") return false;
+    for (const shorthand of shorthands) {
+      let available: boolean;
+      try {
+        available = fonts.check(shorthand);
+      } catch {
+        return false; // a throwing check is not an available font
+      }
+      if (!available) return false;
+    }
+    return true;
   }, []);
 
   const measurePortRef = useRef<((request: { text: string; font: PlanFontSpec }) => number) | null>(
@@ -586,9 +610,25 @@ export function PreviewComposer({
     // C-7: the probe MUST carry the rotation — a quarter turn swaps the cover footprint, so a probe
     // without it would hand back the unrotated `maxPan` and the pan would be clamped to the wrong
     // limit. Only the pan is zeroed here.
-    // spec 031 §2.3: with text to draw, a plan may not be built before the fonts are settled —
-    // a silent system fallback would wrap differently from what the customer finally sees.
-    if (!fontsReady && textValues.size > 0) return null;
+    // spec 031 §2.3: with text to draw, a plan may not be built before the fonts are settled AND
+    // the requested families are actually available — a silent system fallback would wrap
+    // differently from what the customer finally sees.
+    if (textValues.size > 0) {
+      if (!fontsReady) return null;
+      if (geometry.kind !== "frame" || logicalWidth === null) return null;
+      const requested = geometry.value.textZones
+        .filter((zone) => (textValues.get(zone.key) ?? "") !== "")
+        .map((zone) =>
+          fontShorthand({
+            family: zone.fontFamily,
+            sizePx: (zone.fontSizePercent / 100) * logicalWidth,
+            weight: zone.bold ? "bold" : "normal",
+            italic: zone.italic,
+            fallback: "sans-serif",
+          }),
+        );
+      if (!fontsAvailable(requested)) return null;
+    }
 
     const probe = buildWith((_slotId, normalized) => ({
       scale: normalized.scale,
@@ -631,6 +671,7 @@ export function PreviewComposer({
     textValues,
     measureText,
     fontsReady,
+    fontsAvailable,
   ]);
 
   const plan = built?.plan ?? null;
@@ -761,20 +802,47 @@ export function PreviewComposer({
   // The clock is HARDWARE on the finished product (Founder F-4): it is shown next to the canvas,
   // never inside the plan, so it can never reach print, export or an order.
   const clockPlacement = geometry?.kind === "frame" ? geometry.value.clockPreview : null;
+
+  /**
+   * The MAT rect is the clock's reference, not the whole preview box (보완 1 §1). The band is
+   * derived with the SAME arithmetic the plan adapter uses, so the overlay and the drawn mat can
+   * never drift apart.
+   */
+  const clockCanvas = useMemo(() => {
+    if (geometry?.kind !== "frame" || plan === null) return null;
+    const { width, height } = plan.logicalCanvas;
+    if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
+    const bandPx = Math.max(1, Math.round((width * geometry.value.borderPercentOfWidth) / 100));
+    return { logicalWidth: width, logicalHeight: height, bandPx };
+  }, [geometry, plan]);
+
+  // `declared` and the resolved source are tracked separately: a declared-but-unresolvable photo
+  // must HIDE the overlay rather than fall back to a generic HH:MM (보완 1 §2).
+  const clockImageDeclared = clockPlacement?.customImage != null;
   const clockImageSrc = useMemo<string | null>(() => {
     const custom = clockPlacement?.customImage ?? null;
     if (custom === null) return null;
     const resolved = resolvePublicImageSource({ kind: custom.sourceKind, value: custom.value });
-    // an unusable source simply falls back to the HH:MM placeholder — the clock never fails the
-    // preview, because it is not print data (spec 031 §3)
+    // the source string itself never leaves this memo, and a refusal is not surfaced anywhere
     return resolved.ok ? resolved.src : null;
   }, [clockPlacement]);
+
+  // a failed <img> load is remembered per source, so a retry loop cannot form
+  const [failedClockSrc, setFailedClockSrc] = useState<string | null>(null);
+  useEffect(() => {
+    setFailedClockSrc(null);
+  }, []);
 
   const [clockNowMs, setClockNowMs] = useState<number>(() => Date.now());
   const clockOverlay = resolveClockOverlay({
     enabled: clockPlacement !== null,
     placement: clockPlacement,
-    imageSrc: clockImageSrc,
+    canvas: clockCanvas,
+    image: {
+      declared: clockImageDeclared,
+      src: clockImageSrc,
+      failed: clockImageSrc !== null && failedClockSrc === clockImageSrc,
+    },
     nowMs: clockNowMs,
   });
 
@@ -1144,18 +1212,19 @@ export function PreviewComposer({
             imageBindings={imageBindings}
             accessibleName={PREVIEW_CANVAS_NAME[productKind]}
           />
-          {clockOverlay.view.kind !== "hidden" && clockOverlay.placement !== null ? (
+          {clockOverlay.view.kind !== "hidden" && clockOverlay.css !== null ? (
             // spec 031 §2.7: a DOM overlay, NOT a canvas layer — the physical clock must never be
             // painted into the plan. It is decorative for assistive tech and ignores the pointer,
-            // so it can neither be read out nor block the photo drag.
+            // so it can neither be read out nor block the photo drag. The percentages are relative
+            // to the whole canvas box but were derived from the MAT rect (보완 1 §1).
             <div
               className="denn-preview-clock"
               data-testid="preview-clock"
               aria-hidden="true"
               style={{
-                left: `${clockOverlay.placement.xPercent}%`,
-                top: `${clockOverlay.placement.yPercent}%`,
-                width: `${clockOverlay.placement.sizePercent}%`,
+                left: `${clockOverlay.css.leftPercent}%`,
+                top: `${clockOverlay.css.topPercent}%`,
+                width: `${clockOverlay.css.widthPercent}%`,
               }}
             >
               {clockOverlay.view.kind === "image" ? (
@@ -1164,6 +1233,11 @@ export function PreviewComposer({
                   src={clockOverlay.view.src}
                   alt=""
                   data-testid="preview-clock-image"
+                  onError={() =>
+                    setFailedClockSrc(
+                      clockOverlay.view.kind === "image" ? clockOverlay.view.src : null,
+                    )
+                  }
                 />
               ) : (
                 <span className="denn-preview-clock__label" data-testid="preview-clock-label">

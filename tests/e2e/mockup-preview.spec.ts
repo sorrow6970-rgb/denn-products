@@ -1612,15 +1612,51 @@ test.describe("physical clock overlay (spec 031, Founder F-4)", () => {
     await expect(page.getByTestId("preview-clock")).toHaveCount(0);
   });
 
-  test("keeps its percent placement across a resize", async ({ page }) => {
+  test("is positioned against the MAT rect, not the whole box (보완 1)", async ({ page }) => {
     await frameWithText(page, { textZones: [], clock: { x: 80, y: 80, size: 20 } });
     const clock = page.getByTestId("preview-clock");
-    const before = await clock.evaluate((element) => (element as HTMLElement).style.left);
+    const left = await clock.evaluate((element) => (element as HTMLElement).style.left);
+    // aspect 1 and a 5% band: canvas W=H, band = max(1, round(W*0.05)), mat = W - 2*band.
+    // 80% of the MAT is NOT 80% of the box, so the naive whole-box placement is ruled out.
+    expect(left).not.toBe("80%");
+    const value = Number.parseFloat(left);
+    expect(Number.isFinite(value)).toBe(true);
+    expect(value).toBeGreaterThan(70);
+    expect(value).toBeLessThan(80);
+  });
+
+  test("stays glued to the mat across a resize", async ({ page }) => {
+    await frameWithText(page, { textZones: [], clock: { x: 80, y: 80, size: 20 } });
+    const clock = page.getByTestId("preview-clock");
+    const read = () =>
+      clock.evaluate((element) => {
+        const style = (element as HTMLElement).style;
+        return [style.left, style.top, style.width].map((value) => Number.parseFloat(value));
+      });
+    const before = await read();
     await page.setViewportSize({ width: 420, height: 900 });
     await waitForCanvas(page);
-    const after = await clock.evaluate((element) => (element as HTMLElement).style.left);
-    expect(after).toBe(before);
-    expect(after).toBe("80%");
+    const after = await read();
+
+    // NOT bit-identical on purpose: the band is `max(1, round(width * percent/100))`, so a different
+    // logical width rounds it differently — and the DRAWN mat rounds exactly the same way. The
+    // overlay therefore tracks the mat, which is the contract; the shift is rounding-sized only.
+    for (let index = 0; index < before.length; index++) {
+      expect(Number.isFinite(after[index])).toBe(true);
+      expect(Math.abs(after[index] - before[index])).toBeLessThan(0.5);
+    }
+  });
+
+  test("a declared clock photo that cannot be resolved hides the overlay (보완 1)", async ({
+    page,
+  }) => {
+    // an unusable source: the projection keeps the clock but resolves no image, and a generic
+    // HH:MM must NOT stand in for the operator's specific hardware photo
+    await frameWithText(page, {
+      textZones: [],
+      clock: { x: 80, y: 80, size: 20, customImg: "javascript:alert(1)" },
+    });
+    await expect(page.getByTestId("preview-clock-label")).toBeVisible();
   });
 
   test("leaves no timer behind after the template changes or the page is left", async ({

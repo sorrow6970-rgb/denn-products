@@ -29,17 +29,50 @@ export type ClockOverlayView =
   | { readonly kind: "image"; readonly src: string }
   | { readonly kind: "text"; readonly label: string };
 
+/**
+ * The operator's clock placement, in percent of the MAT rect — the same rect the legacy overlay
+ * measured against (`IX + x/100*IW`, `IY + y/100*IH`, `min(IW,IH) * size/100`, where IX/IY/IW/IH are
+ * the mat). It is NOT a percent of the whole preview box.
+ */
 export interface ClockOverlayPlacement {
-  /** percent of the preview surface. */
   readonly xPercent: number;
   readonly yPercent: number;
-  /** percent of `min(width, height)`. */
   readonly sizePercent: number;
+}
+
+/**
+ * The frame's logical canvas plus the band thickness, so the mat rect can be derived with the SAME
+ * arithmetic the plan adapter uses (`band = max(1, round(width * borderPercent / 100))`).
+ */
+export interface ClockCanvasGeometry {
+  readonly logicalWidth: number;
+  readonly logicalHeight: number;
+  readonly bandPx: number;
+}
+
+/** Where to put the overlay, as CSS percentages of the whole canvas box. */
+export interface ClockOverlayCss {
+  readonly leftPercent: number;
+  readonly topPercent: number;
+  readonly widthPercent: number;
+}
+
+/**
+ * The operator's custom clock photo. `declared` and `src` are SEPARATE on purpose: a template that
+ * declares a clock image but whose source cannot be resolved (or whose `<img>` fails to load) must
+ * HIDE the overlay, not silently fall back to the `HH:MM` text — showing a generic digital clock
+ * where a specific hardware photo belongs would misrepresent the product.
+ */
+export interface ClockImageInput {
+  readonly declared: boolean;
+  readonly src: string | null;
+  /** set once the browser reports the `<img>` failed. */
+  readonly failed?: boolean;
 }
 
 export interface ClockOverlayState {
   readonly view: ClockOverlayView;
-  readonly placement: ClockOverlayPlacement | null;
+  readonly css: ClockOverlayCss | null;
 }
 
 export const MINUTE_MS = 60_000;
@@ -77,16 +110,51 @@ export function msUntilNextMinute(epochMs: number): number {
 }
 
 /**
- * Resolve what to display. A missing or malformed placement hides the overlay — the clock must
- * never fail the preview, because it is not print data.
+ * Convert a mat-relative placement to CSS percentages of the whole canvas box.
+ *
+ * The mat rect is `{band, band, width - 2*band, height - 2*band}`, mirroring the plan adapter. The
+ * overlay is a square whose side is `min(matWidth, matHeight) * sizePercent/100`, matching the
+ * legacy `box = min(IW, IH) * size/100`, and it is centred on the resolved point.
+ */
+export function resolveClockCss(
+  placement: ClockOverlayPlacement,
+  canvas: ClockCanvasGeometry,
+): ClockOverlayCss | null {
+  const { logicalWidth, logicalHeight, bandPx } = canvas;
+  if (!isFiniteNumber(logicalWidth) || logicalWidth <= 0) return null;
+  if (!isFiniteNumber(logicalHeight) || logicalHeight <= 0) return null;
+  if (!isFiniteNumber(bandPx) || bandPx < 0) return null;
+
+  const matWidth = logicalWidth - 2 * bandPx;
+  const matHeight = logicalHeight - 2 * bandPx;
+  if (matWidth <= 0 || matHeight <= 0) return null;
+
+  const centreX = bandPx + (placement.xPercent / 100) * matWidth;
+  const centreY = bandPx + (placement.yPercent / 100) * matHeight;
+  const sidePx = (Math.min(matWidth, matHeight) * placement.sizePercent) / 100;
+  if (!isFiniteNumber(centreX) || !isFiniteNumber(centreY)) return null;
+  if (!isFiniteNumber(sidePx) || sidePx <= 0) return null;
+
+  return {
+    leftPercent: (centreX / logicalWidth) * 100,
+    topPercent: (centreY / logicalHeight) * 100,
+    widthPercent: (sidePx / logicalWidth) * 100,
+  };
+}
+
+/**
+ * Resolve what to display. A missing or malformed placement, an unusable canvas, or a DECLARED but
+ * unusable custom image all hide the overlay — the clock is not print data, so it must never fail
+ * the preview, and it must never substitute a generic clock for a specific one.
  */
 export function resolveClockOverlay(input: {
   readonly enabled: boolean;
   readonly placement: ClockOverlayPlacement | null | undefined;
-  readonly imageSrc: string | null | undefined;
+  readonly canvas: ClockCanvasGeometry | null | undefined;
+  readonly image: ClockImageInput;
   readonly nowMs: number;
 }): ClockOverlayState {
-  const hidden: ClockOverlayState = { view: { kind: "hidden" }, placement: null };
+  const hidden: ClockOverlayState = { view: { kind: "hidden" }, css: null };
   if (!input.enabled) return hidden;
 
   const placement = input.placement;
@@ -96,21 +164,29 @@ export function resolveClockOverlay(input: {
   if (!isFiniteNumber(placement.sizePercent)) return hidden;
   if (placement.sizePercent <= 0 || placement.sizePercent > 100) return hidden;
 
-  const snapshot: ClockOverlayPlacement = {
-    xPercent: placement.xPercent,
-    yPercent: placement.yPercent,
-    sizePercent: placement.sizePercent,
-  };
+  const canvas = input.canvas;
+  if (canvas === null || canvas === undefined) return hidden;
+  const css = resolveClockCss(
+    {
+      xPercent: placement.xPercent,
+      yPercent: placement.yPercent,
+      sizePercent: placement.sizePercent,
+    },
+    canvas,
+  );
+  if (css === null) return hidden;
 
-  const src = input.imageSrc;
-  if (typeof src === "string" && src.length > 0) {
-    // a photo of the real clock: it does not tick, so no timer is ever scheduled for it
-    return { view: { kind: "image", src }, placement: snapshot };
+  const image = input.image;
+  if (image.declared) {
+    // a hardware photo was authored: show it, or show NOTHING. The text clock is not a stand-in.
+    if (image.failed === true) return hidden;
+    if (typeof image.src !== "string" || image.src.length === 0) return hidden;
+    return { view: { kind: "image", src: image.src }, css };
   }
 
   const label = formatClockLabel(input.nowMs);
   if (label === null) return hidden;
-  return { view: { kind: "text", label }, placement: snapshot };
+  return { view: { kind: "text", label }, css };
 }
 
 export interface ClockTicker {

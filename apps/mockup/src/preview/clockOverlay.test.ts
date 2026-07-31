@@ -12,6 +12,7 @@ import {
   formatClockLabel,
   MINUTE_MS,
   msUntilNextMinute,
+  resolveClockCss,
   resolveClockOverlay,
 } from "./clockOverlay";
 
@@ -89,52 +90,141 @@ describe("msUntilNextMinute — the tick lands on the boundary, never on 0", () 
   });
 });
 
+/** A 300x420 frame with a 5% band -> band 15, mat 270x390. */
+const CANVAS = { logicalWidth: 300, logicalHeight: 420, bandPx: 15 };
+const IMAGE_NONE = { declared: false, src: null } as const;
+
+describe("resolveClockCss — the MAT rect is the reference (보완 1 §1)", () => {
+  it("places the centre inside the mat, not the whole box", () => {
+    // x=50%,y=50% of the mat -> band + 0.5*mat = 15+135 = 150 and 15+195 = 210
+    const css = resolveClockCss({ xPercent: 50, yPercent: 50, sizePercent: 10 }, CANVAS);
+    expect(css?.leftPercent).toBeCloseTo(50, 9);
+    expect(css?.topPercent).toBeCloseTo(50, 9);
+    // side = min(270, 390) * 10% = 27 -> 27/300 = 9% of the box
+    expect(css?.widthPercent).toBeCloseTo(9, 9);
+  });
+
+  it("a nonzero band shifts the result away from the naive whole-box percentage", () => {
+    const css = resolveClockCss({ xPercent: 88, yPercent: 88, sizePercent: 12 }, CANVAS);
+    // mat-relative: 15 + 0.88*270 = 252.6 -> 84.2% of 300, NOT 88%
+    expect(css?.leftPercent).toBeCloseTo(84.2, 9);
+    expect(css?.leftPercent).not.toBeCloseTo(88, 3);
+    // 15 + 0.88*390 = 358.2 -> 85.285…% of 420, NOT 88%
+    expect(css?.topPercent).toBeCloseTo((358.2 / 420) * 100, 9);
+  });
+
+  it("uses the SHORTER mat side for the size, in portrait and in landscape", () => {
+    const portrait = resolveClockCss(
+      { xPercent: 50, yPercent: 50, sizePercent: 20 },
+      { logicalWidth: 300, logicalHeight: 420, bandPx: 15 },
+    );
+    // min(270, 390) = 270 -> 54px -> 18% of 300
+    expect(portrait?.widthPercent).toBeCloseTo(18, 9);
+
+    const landscape = resolveClockCss(
+      { xPercent: 50, yPercent: 50, sizePercent: 20 },
+      { logicalWidth: 420, logicalHeight: 300, bandPx: 21 },
+    );
+    // mat 378x258 -> min = 258 -> 51.6px -> 51.6/420 = 12.285…%
+    expect(landscape?.widthPercent).toBeCloseTo((51.6 / 420) * 100, 9);
+  });
+
+  it("keeps the SAME percentages when the canvas scales (resize is a no-op)", () => {
+    const small = resolveClockCss(
+      { xPercent: 88, yPercent: 88, sizePercent: 12 },
+      { logicalWidth: 300, logicalHeight: 420, bandPx: 15 },
+    );
+    const large = resolveClockCss(
+      { xPercent: 88, yPercent: 88, sizePercent: 12 },
+      { logicalWidth: 600, logicalHeight: 840, bandPx: 30 },
+    );
+    expect(large?.leftPercent).toBeCloseTo(small?.leftPercent ?? -1, 9);
+    expect(large?.topPercent).toBeCloseTo(small?.topPercent ?? -1, 9);
+    expect(large?.widthPercent).toBeCloseTo(small?.widthPercent ?? -1, 9);
+  });
+
+  it("returns null for an unusable canvas instead of guessing", () => {
+    const placement = { xPercent: 50, yPercent: 50, sizePercent: 10 };
+    for (const canvas of [
+      { logicalWidth: 0, logicalHeight: 420, bandPx: 15 },
+      { logicalWidth: 300, logicalHeight: Number.NaN, bandPx: 15 },
+      { logicalWidth: 300, logicalHeight: 420, bandPx: -1 },
+      // a band that swallows the mat entirely
+      { logicalWidth: 300, logicalHeight: 420, bandPx: 200 },
+    ]) {
+      expect(resolveClockCss(placement, canvas)).toBeNull();
+    }
+  });
+});
+
 describe("resolveClockOverlay — what to show", () => {
   it("hides when the template has no clock", () => {
     const state = resolveClockOverlay({
       enabled: false,
       placement: PLACEMENT,
-      imageSrc: null,
+      canvas: CANVAS,
+      image: IMAGE_NONE,
       nowMs: 0,
     });
-    expect(state).toEqual({ view: { kind: "hidden" }, placement: null });
+    expect(state).toEqual({ view: { kind: "hidden" }, css: null });
   });
 
-  it("shows the operator's clock PHOTO when there is one", () => {
+  it("shows the operator's clock PHOTO when one is declared and resolved", () => {
     const state = resolveClockOverlay({
       enabled: true,
       placement: PLACEMENT,
-      imageSrc: "blob:fake",
+      canvas: CANVAS,
+      image: { declared: true, src: "blob:fake" },
       nowMs: 0,
     });
     expect(state.view).toEqual({ kind: "image", src: "blob:fake" });
-    expect(state.placement).toEqual(PLACEMENT);
+    expect(state.css).not.toBeNull();
   });
 
-  it("falls back to the HH:MM placeholder without an image", () => {
+  it("★ a DECLARED but unresolvable photo HIDES the overlay — no generic clock stands in", () => {
+    const unresolved = resolveClockOverlay({
+      enabled: true,
+      placement: PLACEMENT,
+      canvas: CANVAS,
+      image: { declared: true, src: null },
+      nowMs: new Date(2026, 6, 31, 10, 10).getTime(),
+    });
+    expect(unresolved.view.kind).toBe("hidden");
+
+    const empty = resolveClockOverlay({
+      enabled: true,
+      placement: PLACEMENT,
+      canvas: CANVAS,
+      image: { declared: true, src: "" },
+      nowMs: 0,
+    });
+    expect(empty.view.kind).toBe("hidden");
+  });
+
+  it("★ a declared photo whose <img> FAILED to load also hides the overlay", () => {
+    const state = resolveClockOverlay({
+      enabled: true,
+      placement: PLACEMENT,
+      canvas: CANVAS,
+      image: { declared: true, src: "blob:fake", failed: true },
+      nowMs: new Date(2026, 6, 31, 10, 10).getTime(),
+    });
+    expect(state.view.kind).toBe("hidden");
+  });
+
+  it("uses the HH:MM placeholder ONLY when no photo was declared", () => {
     const at = new Date(2026, 6, 31, 10, 10).getTime();
     const state = resolveClockOverlay({
       enabled: true,
       placement: PLACEMENT,
-      imageSrc: null,
+      canvas: CANVAS,
+      image: IMAGE_NONE,
       nowMs: at,
     });
     expect(state.view).toEqual({ kind: "text", label: "10:10" });
   });
 
-  it("copies the placement instead of keeping the caller's object", () => {
-    const mutable = { xPercent: 10, yPercent: 20, sizePercent: 30 };
-    const state = resolveClockOverlay({
-      enabled: true,
-      placement: mutable,
-      imageSrc: null,
-      nowMs: 0,
-    });
-    mutable.xPercent = 99;
-    expect(state.placement?.xPercent).toBe(10);
-  });
-
-  it("HIDES instead of failing when the placement is unusable — the clock is not print data", () => {
+  it("HIDES instead of failing when the placement or canvas is unusable", () => {
     const bad = [
       { xPercent: -1, yPercent: 0, sizePercent: 12 },
       { xPercent: 101, yPercent: 0, sizePercent: 12 },
@@ -143,22 +233,35 @@ describe("resolveClockOverlay — what to show", () => {
       { xPercent: 0, yPercent: 0, sizePercent: 101 },
     ];
     for (const placement of bad) {
-      const state = resolveClockOverlay({ enabled: true, placement, imageSrc: null, nowMs: 0 });
+      const state = resolveClockOverlay({
+        enabled: true,
+        placement,
+        canvas: CANVAS,
+        image: IMAGE_NONE,
+        nowMs: 0,
+      });
       expect(state.view.kind).toBe("hidden");
     }
+    for (const canvas of [null, undefined]) {
+      expect(
+        resolveClockOverlay({
+          enabled: true,
+          placement: PLACEMENT,
+          canvas,
+          image: IMAGE_NONE,
+          nowMs: 0,
+        }).view.kind,
+      ).toBe("hidden");
+    }
     expect(
-      resolveClockOverlay({ enabled: true, placement: null, imageSrc: null, nowMs: 0 }).view.kind,
+      resolveClockOverlay({
+        enabled: true,
+        placement: null,
+        canvas: CANVAS,
+        image: IMAGE_NONE,
+        nowMs: 0,
+      }).view.kind,
     ).toBe("hidden");
-  });
-
-  it("treats an empty image source as no image", () => {
-    const state = resolveClockOverlay({
-      enabled: true,
-      placement: PLACEMENT,
-      imageSrc: "",
-      nowMs: new Date(2026, 6, 31, 1, 2).getTime(),
-    });
-    expect(state.view).toEqual({ kind: "text", label: "01:02" });
   });
 });
 

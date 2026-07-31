@@ -550,3 +550,22 @@ describe("PreviewComposer — customer text (spec 031)", () => {
     expect(markup).not.toContain('data-testid="preview-clock"');
   });
 });
+
+// --- spec 031 보완 라운드 1 -----------------------------------------------
+
+describe("PreviewComposer — requested font availability (보완 1 §3)", () => {
+  it("still renders the text inputs when no font can be checked yet", () => {
+    // `document.fonts` does not exist in this node render; the INPUTS are unaffected because the
+    // availability gate only decides whether a PLAN may be measured, never whether the customer
+    // may type.
+    const markup = frameTextMarkup({ textZones: [textZoneFixture()] });
+    expect(markup).toContain('data-testid="preview-text-main"');
+    expect(markup).not.toContain("<canvas");
+  });
+
+  it("keeps a text-free frame working with no font check at all", () => {
+    const markup = frameTextMarkup({ textZones: [] });
+    expect(markup).toContain("이 템플릿은 문구를 받지 않습니다.");
+    expect(markup).not.toContain("<canvas");
+  });
+});
