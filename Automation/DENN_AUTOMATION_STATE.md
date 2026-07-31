@@ -6,13 +6,13 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-031-frame-text-zones-physical-clock-preview
 active_unit: spec-032-print-export-investigation
-state: READY_FOR_CODEX  # 스펙 032 인쇄/내보내기 사전 조사 완료 → Codex 검토 대기
+state: READY_FOR_CODEX  # 스펙 032 조사 보완 라운드 1 완료 → Codex 재검토 대기
 baseline_commit: b763174
 candidate_commit: null  # 조사 라운드 (제품 코드 없음)
 verified_commit: 88b64e6  # 스펙 031 승인분 (보완 라운드 1)
-origin_relation: "spec 032 investigation doc commit pushed fast-forward on top of b763174; HEAD=origin, ahead/behind 0/0"
+origin_relation: "spec 032 investigation fix round 1 doc commit pushed fast-forward on top of 5a42b29; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
-fix_round: 0
+fix_round: 1
 max_fix_rounds: 3
 next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
@@ -834,3 +834,25 @@ Codex 승인(코드 `88b64e6`, 문서 `b7d46d3`)에 따라 종료 문서만 하�
 
 다음 전이: Codex가 조사 보고서를 검토해 P-1~P-6 Founder 결정 요청과 구현 스펙(또는 추가 조사)을 작성한다.
 그 전까지 Claude는 인쇄 관련 제품 코드를 만들지 않는다.
+
+## 스펙 032 조사 보완 라운드 1 결과 — READY_FOR_CODEX (Claude Code, 2026-07-31)
+
+Codex 지적 3건은 모두 유효했고 조사 문서와 상태 문서만 보완했다. 기준 `5a42b29`, 제품 코드 변경 0.
+
+- 지적 1(가장 중요): C-1의 `lines` 재사용 경로가 **현재 API에 없다**. `FrameTextZoneInput`에 `lines`
+  입력이 없고 빌더는 값이 있으면 항상 `measureText`로 재wrap하며, `lines`는 `draw-text` command의
+  출력으로만 존재한다. "추가 계약 없이 가능"이라는 단정을 제거하고 §8.1을 후보 A/B/C 비교로 다시 썼다.
+  각 후보가 줄바꿈·회전·pan·레이어 순서 네 불변식을 어떻게 보장하는지 표로 명시했다.
+  새 근거: executor 헤더가 transform을 caller 몫으로 못 박았고 `surface.ts`가 이미 `setTransform(dpr)`
+  후 같은 plan을 실행한다 → 후보 A가 가장 강하지만 인쇄 배율의 자간 품질은 NOT VERIFIED이며 선택은
+  Codex C-1로 남겼다.
+- 지적 2: P-5를 색·사진 transform / 시계 유무 / 고객 문구 원문으로 분리하고 각각 PNG 포함·로컬 저장·
+  주문 전송·보존 기간을 구분했다. 최소안 P-5c는 고객 문구를 텍스트로 저장·전송하지 않는 것이며,
+  별도 개인정보 정책 승인 없이는 스펙 032 범위에서 제외한다.
+- 지적 3: P-4 수치가 레거시 관측값일 뿐 인쇄소 근거가 없음을 명시하고 P-4a(임시값 구현 + 실제 업로드·
+  주문·배포 차단)와 P-4b(확인 전 구현 보류)로 갈랐다. STOP 조건 12·13을 추가했다.
+- 바꾸지 않은 것: §1~§7 레거시 조사 결과, §10 최소 구현 순서, C-2~C-8
+- 제품 코드·테스트·CSS·설정·manifest·lockfile diff 0, 신규 의존성 0, network·live·deploy 0
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 손대지 않았다
+
+다음 전이: Codex가 보완된 보고서를 재검토한다. **Founder P-1~P-6은 Codex 승인 전 확정하지 않는다.**
