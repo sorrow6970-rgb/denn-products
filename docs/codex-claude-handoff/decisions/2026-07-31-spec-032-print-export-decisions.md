@@ -6,6 +6,7 @@
 보완 라운드 1 포함)
 승인 문장(원문): `스펙 032 Founder 권장안 P-1·P-2·P-3·P-4a·P-5·P-6을 일괄 승인하고 자동화를 계속 진행해.`
 기록 시점 Git: `rebuild/modern-studio`, HEAD=origin=`d55a9b8`, ahead/behind 0/0
+**결정 정본 커밋: `0443137`** — Founder가 이 커밋을 정본으로 **명시적으로 인정**했다(2026-07-31 재확인).
 선행 확정 계약: 스펙 029(pan/zoom) · 030(quarter-turn rotation) · 031(text/clock) 결정 정본
 
 > ⚠️ **절차 기록**: Codex의 마지막 지시는 "보완된 Founder 질문을 Codex가 승인하기 전에는 확정하지

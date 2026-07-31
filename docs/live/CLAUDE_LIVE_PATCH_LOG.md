@@ -837,3 +837,13 @@
   manifest·lockfile diff 0, 신규 의존성 0, network·live·Firebase·CORS·deploy 0
 - 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: 손대지 않음
 - 다음: Codex가 이 결정을 입력으로 **스펙 032 구현 계약**을 작성한다. **구현 착수 없음.**
+
+## 2026-07-31 — 스펙 032 결정 정본 커밋 인정 기록 (문서 전용, 해시만 추가)
+
+- Founder가 `커밋 0443137을 결정 정본으로 인정`한다고 재확인했다. **결정 내용 자체는 변경 없음** —
+  P-1·P-2·P-3·P-4a·P-5·P-6은 `0443137`에서 이미 확정됐다
+- 문서에 **커밋 해시가 기록돼 있지 않아** 추적성을 위해 정본 문서·CURRENT·STATE·NEXT 네 곳에
+  **`0443137`을 결정 정본 커밋으로 명시**했다. 그 외 문장 변경 0
+- 변경: **문서 전용**. 제품 코드·테스트·CSS·설정·lockfile diff 0, 신규 의존성 0, network·live·deploy 0
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: 손대지 않음
+- 다음: Codex 구현 계약 대기(**C-1 후보 A/B/C 택일** 포함). **구현 착수 없음.**

@@ -7,6 +7,7 @@
 Claude Code가 2026-07-31에 Founder 결정을 문서 전용으로 기록하고 일반 fast-forward push했다.
 
 - 정본: `docs/codex-claude-handoff/decisions/2026-07-31-spec-032-print-export-decisions.md`
+- **결정 정본 커밋: `0443137`** (Founder가 이 커밋을 정본으로 명시 인정, 2026-07-31 재확인)
 - 기준 HEAD `d55a9b8`
 - 제품 코드·테스트·CSS·설정·manifest·lockfile diff **0**, 신규 의존성 0, 인쇄 제품 코드 **0**
 - 실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**

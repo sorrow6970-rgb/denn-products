@@ -11,7 +11,8 @@
 
 
 > **스펙 032 결정 확정(2026-07-31)**: 정본
-> `docs/codex-claude-handoff/decisions/2026-07-31-spec-032-print-export-decisions.md`.
+> `docs/codex-claude-handoff/decisions/2026-07-31-spec-032-print-export-decisions.md`,
+> **결정 정본 커밋 `0443137`**(Founder가 이 커밋을 정본으로 명시 인정, 2026-07-31 재확인).
 > 승인 문장(원문): `스펙 032 Founder 권장안 P-1·P-2·P-3·P-4a·P-5·P-6을 일괄 승인하고 자동화를 계속 진행해.`
 > ⚠️ **절차 기록**: Codex의 마지막 지시는 "보완된 질문을 **Codex가 승인하기 전 확정하지 않는다**"였으나
 > Founder가 순서를 **명시적으로 앞당겨** 결정했다(CLAUDE.md §7상 최신 Founder 결정이 최상위).
