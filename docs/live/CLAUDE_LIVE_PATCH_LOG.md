@@ -631,3 +631,37 @@
   lockfile diff 0, 신규 의존성 0, network·live·Firebase·CORS·deploy 0
 - 스펙 018 PNG 2개: 손대지 않음
 - 다음: Codex 재검토. **구현 착수 없음.**
+
+## 2026-07-31 — Codex 스펙 031 보완 재검토 승인
+
+- 보완 커밋 `7636367`: 시계 의미 `UNCONFIRMED`, 결함·인쇄 포함 단정 제거, 구현 분기 확인
+- 허용 문서 5개, `git diff --check` PASS, HEAD=origin 0/0, 제품 코드 변경 0
+- 상태: `FOUNDER_DECISION_REQUIRED`
+- Codex C-1~C-7·C-9~C-11 승인, C-8은 Founder F-4에 종속
+- Founder 결정 전 텍스트·시계 구현 금지
+
+## 2026-07-31 — 스펙 031 Founder 결정 정본 기록 (F-1~F-4·F-6~F-8, 문서 전용)
+
+- 기준 HEAD `7636367`(Codex 조사 승인) / 정본
+  `docs/codex-claude-handoff/decisions/2026-07-31-spec-031-text-clock-decisions.md`
+- 상태: `FOUNDER_DECISION_REQUIRED` → 결정 기록 → `READY_FOR_CODEX`
+- ★★ **F-4 = 시계는 "완제품의 물리적 시계 하드웨어 미리보기"**. 조사 §3.5.1의 `UNCONFIRMED`가 Founder
+  권한으로 확정됐다. 즉시 확정되는 것:
+  ① **인쇄/export에 시계 미포함이 정상** — 레거시가 빼 온 것은 결함이 아니라 **의도**였다
+  ② "미리보기≠인쇄"는 **문제가 아니다**(보완 라운드 1의 철회가 최종 확정)
+  ③ **F-5(인쇄 시각) 불필요**
+  ④ **`packages/render`는 시계 때문에 바뀌지 않는다**(텍스트 때문에만 확장)
+  ⑤ 시계는 **plan에 담기지 않고** 결정적 plan 공유를 전제하지 않는다
+- 시계 구현 범위(조사 §8.4 ⓐ): **preview overlay 계약 + timer lifecycle뿐** — DOM 분리 여부 ·
+  1초 갱신 필요성 · **타이머 정확히 1개 보장**(레거시 누수 미재현) · 실물 부착 안내 문구
+- Founder 텍스트 묶음 **일괄 승인**: F-1 1차는 액자 `textZones`만(케이스 자유배치는 별도 스펙) /
+  F-2 고객 색·그림자 미지원(운영자 zone 스타일 단일 정본) / F-3 `defaultTexts`는 placeholder로만 /
+  F-6 zone별 길이 상한 + **초과 입력 차단**(자르기·말줄임·자동복구 없음) / F-7 zone별 줄 수, **기본 2줄** /
+  F-8 5개 키 균일 처리, **`name2` 기본값 만들지 않음**(admin 확장은 별도 스펙)
+- 불변식 8개 기록: 시계는 인쇄물·plan에 없다 / **텍스트는 plan에 담겨 미리보기=인쇄** / 케이스 텍스트
+  범위 밖 / 텍스트 스타일 소유자는 운영자 하나 / 운영자 샘플이 고객 값이 되지 않는다 / 초과는 입력
+  차단 / 019·026·028·030 계약 무변경
+- 변경: **문서 전용**(결정 문서 1 신규 + CURRENT + 이 로그 + Automation 2). 제품 코드·테스트·CSS·설정·
+  manifest·lockfile diff 0, 신규 의존성 0, network·live·Firebase·CORS·deploy 0
+- 스펙 018 PNG 2개: 손대지 않음
+- 다음: Codex가 이 결정을 입력으로 **스펙 031 구현 계약**을 작성한다. **구현 착수 없음.**
