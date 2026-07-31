@@ -1,6 +1,25 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `WAITING_FOR_CLAUDE`
+
+## 다음 작업 — 로컬 액자 PNG export 연결부 읽기 전용 조사
+
+admin 쓰기 경계 조사 `918ee9e`는 Codex가 승인했다. Firebase auth/write/publish 구현은 Founder
+결정 전 보류하지만, P-4a가 허용한 로컬 생성·다운로드·E2E 범위는 계속 조사한다.
+
+제품 코드·테스트·CSS·설정은 수정하지 않고 다음을 파일·라인 근거로 확정한다.
+
+- PreviewComposer에서 승인된 최신 frame plan과 imageBindings, font readiness를 export에 전달할 seam
+- detached HTMLCanvasElement backing, uniform logical→print transform, executor 호출 순서
+- `toBlob("image/png")` null/throw/taint fail-closed와 object URL lifecycle·다운로드 소유권
+- physical-size projection null/error일 때 버튼·상태·접근성
+- provisional 300dpi/minLong 3000/maxPixels 36M/fallback 3508 계산의 순수 함수 경계
+- 동일 plan으로 lines/rotation/pan/layer 동일성을 unit/Chromium pixel/PNG byte로 검증하는 법
+- art·user image·font 준비 실패 시 파일 0개, retry 0
+- upload/order/Firebase/network/deploy가 경로에 들어가지 않는 hard boundary
+- 구현 허용 파일 후보와 STOP 조건
+
+보고서를 문서 전용 일반 fast-forward push하고 HEAD=origin 0/0에서 READY_FOR_CODEX로 전환한다.
 
 ## 다음 작업 — Codex 검토 (admin 쓰기 경계 조사)
 

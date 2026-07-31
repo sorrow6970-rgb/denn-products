@@ -6,7 +6,7 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-032-frame-print-physical-size-catalog
 active_unit: spec-033-admin-write-boundary-investigation  # 읽기 전용 추가 조사
-state: READY_FOR_CODEX  # admin 쓰기 경계 조사 완료, Codex 검토 대기
+state: WAITING_FOR_CLAUDE  # local frame PNG export integration seam 조사
 baseline_commit: 2a0cfd3
 candidate_commit: c10e7a6  # 스펙 032 catalog cm 계약
 verified_commit: 315356a  # 스펙 032 Codex 승인분
@@ -14,7 +14,7 @@ origin_relation: "admin write boundary investigation pushed fast-forward on top 
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING  # 조사 보고서 검토
+next_transition: CLAUDE_WORKING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
