@@ -456,3 +456,11 @@
   실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**, 운영 데이터·secret 접근 0
 - 스펙 018 PNG 2개는 restore·checkout·stage·commit **하지 않았다**
 - 다음: Codex가 이 결정을 입력으로 **스펙 030 구현 계약**을 작성한다. **회전 구현 착수 없음.**
+
+## 2026-07-31 — Codex 스펙 030 결정 검토·구현 계약 확정
+
+- 결정 정본 커밋 `cf1cfd2`: 허용 문서 5개만 변경, R-1~R-6/C-1~C-9 일치,
+  `git diff --check` clean, HEAD=origin, ahead/behind 0/0
+- 구현 정본: `docs/rebuild/specs/030-customer-photo-quarter-turn-rotation.md`
+- 상태: `READY_FOR_CODEX` → `WAITING_FOR_CLAUDE`
+- 제품 코드·테스트 변경 0. 다음은 Claude 구현이며 Codex 승인 전 종료·다음 스펙 착수 금지

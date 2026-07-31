@@ -5,8 +5,8 @@ updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-029-pointer-pan-zoom-editing
-active_unit: spec-030-image-rotation-investigation
-state: READY_FOR_CODEX  # 스펙 030 Founder 결정 정본 기록 완료 → Codex 구현 스펙 작성 대기
+active_unit: spec-030-customer-photo-quarter-turn-rotation
+state: WAITING_FOR_CLAUDE  # Codex 구현 계약 확정 → Claude 구현 대기
 baseline_commit: 9a20080
 candidate_commit: 110511e  # 스펙 029 보완 라운드 1 코드/test (최초 구현 95fcf92)
 verified_commit: 110511e  # 스펙 029 승인분 (스펙 028은 d4fb99b)
@@ -14,7 +14,7 @@ origin_relation: "spec 030 decision doc commit pushed fast-forward on top of 9a2
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: CLAUDE_WORKING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -431,3 +431,13 @@ Codex 구조 계약 C-1~C-9는 조사 보고서와 이 문서의 기록 그대�
 
 다음 전이: Codex가 이 결정을 입력으로 **스펙 030 구현 계약**을 작성하면 `WAITING_FOR_CLAUDE`.
 그 전까지 Claude는 회전 관련 제품 코드를 만들지 않는다.
+
+## Codex 결정 정본 검토 및 구현 계약 확정 (2026-07-31)
+
+결정 정본 커밋 `cf1cfd2`는 허용된 문서 5개만 변경했고 `git diff --check`를 통과했다.
+R-1~R-6과 C-1~C-9는 Founder 승인 및 조사 근거와 일치한다.
+
+구현 정본은 `docs/rebuild/specs/030-customer-photo-quarter-turn-rotation.md`다. 실효 상태를
+`WAITING_FOR_CLAUDE`로 전환한다. Claude는 해당 스펙의 허용 파일·오류 우선순위·검증 계약
+안에서만 구현하고, 제품 코드/test 커밋을 일반 fast-forward push한 뒤 `READY_FOR_CODEX`로
+전환한다.

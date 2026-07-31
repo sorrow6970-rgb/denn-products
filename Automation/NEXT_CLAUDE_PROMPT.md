@@ -1,8 +1,8 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `WAITING_FOR_CLAUDE`
 
-# 스펙 030 Founder 결정 정본 기록 완료 — Codex 구현 계약 대기
+# 스펙 030 고객 사진 90° 단위 회전 구현
 
 Claude Code가 2026-07-31에 `WAITING_FOR_CLAUDE` 지시를 소비해 문서 전용으로 결정 정본을 기록했다.
 
@@ -18,19 +18,26 @@ Claude Code가 2026-07-31에 `WAITING_FOR_CLAUDE` 지시를 소비해 문서 전
 - `git diff --check` clean, 일반 fast-forward push, HEAD=origin, ahead/behind 0/0
 - 알려진 스펙 018 PNG 2개는 restore·stage·commit하지 않았다(working tree에 그 2개만 잔존)
 
-## Codex 다음 작업
+Codex가 결정 정본 `cf1cfd2`를 검토해 승인했고 구현 계약을 확정했다.
 
-이 결정을 입력으로 **스펙 030 구현 계약**(`docs/rebuild/specs/030-*.md`)을 작성한다.
-구현 계약에는 최소한 다음을 명시한다.
+정본:
 
-- 허용 파일 목록(특히 `packages/render` 계약 변경 범위 — "packages 무변경" 경계를 처음 깨는 지점)
-- `rotationQuarterTurns` 저장·검증·거부 규칙과 오류 우선순위에서의 위치
-- probe plan → `maxPan` → 실제 plan 파이프라인에서의 회전 취급
-- case multi-zone 슬롯별 회전 UI와 초기화 행렬(029 D-9 상속) 명세
-- 합성 EXIF fixture 실측 검증 설계와 NOT TESTED 경계
+- `docs/rebuild/specs/030-customer-photo-quarter-turn-rotation.md`
+- `docs/codex-claude-handoff/decisions/2026-07-31-spec-030-image-rotation-decisions.md`
 
-## Claude 다음 작업
+정본을 처음부터 끝까지 읽고 허용 파일 안에서만 구현하라. 핵심은 slot별
+`rotationQuarterTurns: 0|1|2|3`, 좌/우 90° 버튼, 회전을 포함한 probe/실제 plan,
+회전 footprint 기반 `maxPan`, `draw-image-cover`의 선택 필드와 executor 내부
+save/clip/translate/rotate/draw/restore다. scale 1.0~5.0, 빈 공간 금지, normalized pan,
+D-9 초기화 행렬, template art 고정을 유지한다.
 
-**없다.** 구현 계약이 저장소에 기록되고 상태가 `WAITING_FOR_CLAUDE`로 바뀌기 전까지
-회전 관련 제품 코드·테스트·CSS·설정을 작성하지 않는다. 이 기간에는 저장소를 수정하지 않고
-폴링만 유지한다. 알려진 스펙 018 PNG 2개는 계속 손대지 않는다.
+invalid/hostile transform을 복구하거나 기본 회전으로 fallback하지 않는다. geometry, image
+owner, template art binding, placement, lockfile, 신규 의존성, 운영 경로는 수정하지 않는다.
+EXIF를 직접 파싱하지 않고 합성 fixture로 브라우저 decode를 실측한다.
+
+스펙의 unit/Chromium/전체 게이트를 수행하고 검증하지 못한 항목은 NOT TESTED로 기록한다.
+허용 파일 확장이 필요하거나 STOP 조건이 발생하면 즉시 멈춰 근거와 최소 확장안을 보고한다.
+
+제품 코드·test 커밋과 문서 커밋을 분리해 일반 fast-forward push한다. 알려진 스펙 018 PNG
+2개는 restore·checkout·stage·commit하지 않는다. 완료 후 HEAD=origin, ahead/behind 0/0을
+확인하고 `READY_FOR_CODEX`로 전환한다. Codex 승인 전 종료 문서나 다음 스펙을 시작하지 않는다.

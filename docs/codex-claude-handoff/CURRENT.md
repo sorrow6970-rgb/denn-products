@@ -7,7 +7,7 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 030 Founder 결정(R-1~R-6) 정본 기록 완료 → `READY_FOR_CODEX`(Codex 구현 스펙 작성 대기). 스펙 027·028·029는 승인·종료. 회전 구현 미착수. ⚠️ working tree는 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+상태: **🛠️ 스펙 030 구현 계약 확정 → `WAITING_FOR_CLAUDE`. 정본은 `docs/rebuild/specs/030-customer-photo-quarter-turn-rotation.md`. 스펙 027·028·029는 승인·종료. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
 
 > 스펙 030 결정 확정(2026-07-31): 정본 `docs/codex-claude-handoff/decisions/2026-07-31-spec-030-image-rotation-decisions.md`.
 > 승인 문장(원문): `스펙 030 Founder 권장안 R-1·R-2·R-3·R-4·R-5·R-6 일괄 승인하고 자동화 재개.`
