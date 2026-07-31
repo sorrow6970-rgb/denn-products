@@ -198,3 +198,29 @@ NOT TESTED 유지: 실기기 4환경 IME·font·overlay, system font 대체, 실
 admin `name2`, 고객 style, 실제 print/export 텍스트, **실제 물리 시계와 overlay 위치 일치**.
 
 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다.
+
+### 보완 라운드 1 (Claude Code, 2026-07-31) — READY_FOR_CODEX
+
+Codex 지적 3건 모두 유효했고 허용 파일 5개 안에서만 보완했다. 코드/test `88b64e6`.
+
+1. **시계 기준 rect**: percent를 전체 박스가 아니라 **mat rect** 기준으로 환산한다. band는 plan
+   어댑터와 동일한 `max(1, round(width*borderPercent/100))`이고, 중심은 mat 기준, 한 변은
+   `min(matW,matH)*size/100`이다. 순수 함수 `resolveClockCss`로 분리해 unit으로 고정했다
+   (mat 안 중심 · band≠0에서 naive percent가 틀림 · portrait/landscape 짧은 변 · 스케일 불변 ·
+   못 쓰는 캔버스는 null). E2E는 렌더 값이 naive `80%`가 아님과 resize 이동 <0.5%p를 확인한다.
+   resize에서 bit-identical이 아닌 것은 의도다 — band 반올림을 그려지는 mat도 똑같이 겪는다.
+2. **custom image 실패**: `declared`와 resolved `src`를 분리했다. 선언됐는데 resolve 실패이거나
+   `<img>` load 실패면 **오버레이를 숨긴다**(텍스트 대체 금지). 텍스트는 사진이 애초에 선언되지
+   않았을 때만 쓴다. 실패 source를 기억해 재시도 루프가 없고, source·오류 원문 노출 0이며 사진·텍스트
+   plan은 유지된다.
+3. **폰트 가용성**: 측정 전에 값이 있는 각 zone의 **정확한 `fontShorthand`** 로
+   `document.fonts.check(...)`를 확인한다. FontFaceSet 부재·check 부재·throw·false면 텍스트 plan을
+   **fail-closed**한다(대체 측정 없음). 텍스트 없는 액자는 그대로 동작하고 입력창은 게이트와 무관하다.
+
+게이트: frozen exit 0 / lockfile·manifest diff 0 / 신규 의존성 0 / format·lint·typecheck /
+**unit 1088**(1081→1088) / build mockup JS 281.69 kB gzip 86.99, CSS 17.85, admin 무변경 /
+**E2E 116 PASS**(114→116) exit 0 / `git diff --check` clean / 포트 free / OS temp 0 /
+dist SHA-256 E2E 전후 동일 / network·live·deploy 0.
+
+무변경: 회전·텍스트 wrap·오류 우선순위·F-1~F-8. `surface.css`·`packages/**`·`canvas/**` 무변경.
+스펙 018 PNG 2개와 `packages/render/src/plan/index.ts`는 손대지 않았다.

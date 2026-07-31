@@ -7,7 +7,35 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🛠️ 스펙 031 구현·자체검증 완료 → `READY_FOR_CODEX`(Codex 독립 검증 대기). 고객이 액자 문구를 입력하고, 실물 시계는 캔버스 밖 DOM 오버레이다. 스펙 027~030은 승인·종료. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+상태: **🛠️ 스펙 031 보완 라운드 1 완료 → `READY_FOR_CODEX`(Codex 재검증 대기). 시계는 **mat rect 기준**, 선언된 시계 사진 실패는 **숨김**, 요청 폰트 미가용 시 텍스트 plan **fail-closed**. 스펙 027~030은 승인·종료. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+
+
+> **스펙 031 보완 라운드 1(2026-07-31, 기준 `78acdf6`, 코드 커밋 `88b64e6`)**: Codex 지적 **3건 모두 유효**.
+> **① 시계 percent의 기준이 mat rect였다** — 전체 박스에 적용해 **band가 클수록 위치가 틀렸다**.
+> 정본 §2.7·레거시 `IX+x/100*IW`·`min(IW,IH)*size/100`의 `IX/IY/IW/IH`는 **mat**이다. → band를
+> **plan 어댑터와 동일한 `max(1, round(width*borderPercent/100))`** 로 구해 **mat 기준 중심**과
+> **`min(matW,matH)` 기준 한 변**을 캔버스 대비 CSS percent로 환산하는 **순수 함수 `resolveClockCss`** 로
+> 분리했다. 오버레이와 **그려지는 mat이 같은 반올림**을 쓰므로 어긋날 수 없다. unit이 mat 안 중심·
+> **band≠0에서 naive percent가 틀림**·portrait/landscape **짧은 변**·스케일 불변·못 쓰는 캔버스 `null`을
+> 고정하고, E2E가 렌더 값이 **naive `80%`가 아님**과 resize 이동 **<0.5%p**를 확인한다.
+> ⚠️ resize에서 **bit-identical이 아닌 것은 의도** — band가 width마다 반올림되고 **그려지는 mat도 똑같이**
+> 반올림된다(차이 ≈0.09%p).
+> **② 선언된 시계 사진의 실패가 텍스트로 대체됐다** — 특정 하드웨어 자리에 **일반 디지털 시계**를 보여주면
+> 제품을 잘못 표현한다. → `declared`와 resolved `src`를 **분리**하고, resolve 실패나 **`<img>` load 실패**면
+> **오버레이를 숨긴다**. 텍스트 `HH:MM`은 **사진이 애초에 선언되지 않았을 때만**. 실패 source를 기억해
+> **재시도 루프 0**, source·오류 원문 노출 0, 사진·텍스트 plan **유지**.
+> **③ 요청 폰트의 가용성을 확인하지 않았다** — `fonts.ready`는 "로딩 끝"이지 **"그 family 로드됨"이 아니다**.
+> 대체 폰트로 재고 real family로 그리면 wrap이 달라진다(레거시 미리보기≠인쇄 그 자체). → **측정 전에**
+> 값이 있는 각 zone의 **정확한 shorthand**로 `document.fonts.check(...)`를 확인하고, **FontFaceSet 부재·
+> check 부재·throw·false**면 텍스트 plan을 **fail-closed**한다(대체 측정 없음). 텍스트 없는 액자는 그대로
+> 동작하고 **입력창은 게이트와 무관**해 고객은 언제든 타이핑할 수 있다.
+> 게이트 재실측: frozen exit 0 · lockfile·manifest diff **0** · 신규 의존성 0 / format·lint·typecheck /
+> **unit 1088**(1081→1088) / **E2E 116 PASS**(114→116) exit 0 / `git diff --check` clean / 포트 free /
+> OS temp 0 / dist **SHA-256 E2E 전후 동일** / network·live·deploy **0**.
+> **번들**: mockup JS 280.33 → **281.69 kB**(gzip 86.99), CSS 17.82 → **17.85**, admin 무변경.
+> 변경 파일은 허용 5개이고 `surface.css`는 **변경 불필요**였다. 회전·텍스트 wrap·오류 우선순위·F-1~F-8은
+> **전부 무변경**이다. 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는
+> **손대지 않았다**.
 
 
 > 스펙 031 구현·자체검증 완료(로컬, 2026-07-31, 기준 계약 `3927420`·결정 `e3dc2b1`, 코드 커밋 `78095f8`):

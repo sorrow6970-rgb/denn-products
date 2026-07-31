@@ -6,19 +6,35 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-030-customer-photo-quarter-turn-rotation
 active_unit: spec-031-frame-text-zones-physical-clock-preview
-state: READY_FOR_CODEX  # 스펙 031 구현·자체검증 완료 → Codex 독립 검증 대기
+state: READY_FOR_CODEX  # 스펙 031 보완 라운드 1 완료 → Codex 재검증 대기
 baseline_commit: 3927420
-candidate_commit: 78095f8  # 스펙 031 코드/test
+candidate_commit: 88b64e6  # 스펙 031 보완 라운드 1 코드/test (최초 구현 78095f8)
 verified_commit: 7636367  # 스펙 031 조사 승인분
-origin_relation: "spec 031 code and doc commits pushed fast-forward on top of 3927420; HEAD=origin, ahead/behind 0/0"
+origin_relation: "spec 031 fix round 1 code and doc commits pushed fast-forward on top of 78acdf6; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
-fix_round: 0
+fix_round: 1
 max_fix_rounds: 3
 next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Codex 스펙 031 독립 검증 — CORRECTION_REQUIRED 라운드 1 (2026-07-31)
+
+대상 코드 `78095f8`, 문서 `78acdf6`. frozen, format/lint/typecheck, unit 1081/1081,
+build, Chromium E2E 114/114, diff check, lockfile·금지 경로 0, ports/temp를 통과했다.
+
+승인 차단 결함:
+
+1. clock `x/y/size` percent를 전체 canvas wrapper에 적용한다. 정본과 레거시는 frame band 안의
+   **mat rect** 대비 percent라서 frame band가 있으면 실제 부착 위치가 어긋난다.
+2. custom clock image source 해석 실패를 `HH:MM`으로 fallback한다. 명시된 물리 하드웨어 종류를
+   바꾸는 잘못된 복구이며 resolve/load 실패 시 overlay만 숨겨야 한다.
+3. `document.fonts.ready`만 기다리고 요청 family를 `FontFaceSet.check`로 확인하지 않으며,
+   FontFaceSet 부재도 ready로 처리한다. system fallback 측정으로 wrap이 달라질 수 있다.
+
+보완은 위 세 계약의 composer/clock/CSS/unit/E2E 및 관련 문서만 허용한다.
 
 ## Codex 스펙 031 구현 계약 작성 완료 (2026-07-31)
 
@@ -711,3 +727,32 @@ Founder 텍스트 묶음 일괄 승인:
 - 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다
 
 다음 전이: Codex가 `78095f8`와 문서 커밋을 독립 검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.
+
+## 스펙 031 보완 라운드 1 결과 — READY_FOR_CODEX (Claude Code, 2026-07-31)
+
+Codex 지적 3건은 모두 유효했고 허용 파일 5개 안에서만 보완해 push했다. 코드/test `88b64e6`,
+기준 `78acdf6`. `surface.css`는 변경이 필요 없었다.
+
+- 지적 1(시계 기준 rect): percent를 전체 박스에 적용해 band가 클수록 위치가 틀렸다. 정본 §2.7과
+  레거시의 `IX/IY/IW/IH`는 mat rect다. → band를 plan 어댑터와 동일한
+  `max(1, round(width*borderPercent/100))`으로 구해 mat 기준 중심과 `min(matW,matH)` 기준 한 변을
+  캔버스 대비 CSS percent로 환산하는 순수 함수 `resolveClockCss`로 분리했다. 오버레이와 그려지는 mat이
+  같은 반올림을 쓰므로 어긋날 수 없다. resize에서 bit-identical이 아닌 것은 의도이며 차이는 반올림
+  크기(약 0.09%p)뿐이다.
+- 지적 2(custom image 실패): `declared`와 resolved `src`를 분리했다. 선언됐는데 resolve 실패이거나
+  `<img>` load 실패면 오버레이를 숨긴다. 텍스트 `HH:MM`은 사진이 애초에 선언되지 않았을 때만 쓴다.
+  실패 source를 기억해 재시도 루프가 없고 source·오류 원문 노출 0이며 사진·텍스트 plan은 유지된다.
+- 지적 3(폰트 가용성): 측정 전에 값이 있는 각 zone의 정확한 shorthand로 `document.fonts.check(...)`를
+  확인하고, FontFaceSet 부재·check 부재·throw·false면 텍스트 plan을 fail-closed한다. 대체 측정은
+  하지 않는다. 텍스트 없는 액자는 그대로 동작하고 입력창은 게이트와 무관하다.
+- 게이트: frozen exit 0 / lockfile·manifest diff 0 / 신규 의존성 0 / format·lint·typecheck /
+  unit **1088**(1081→1088) / build mockup JS 281.69 kB gzip 86.99, CSS 17.85, admin 무변경 /
+  E2E **116 PASS**(114→116) exit 0 / `git diff --check` clean / 포트 4183·4184 free / OS temp 0 /
+  고객 dist SHA-256 E2E 전후 동일 / 실제 network·live·Firebase·CORS·Rules/Hosting·deploy 0
+- 무변경: 회전·텍스트 wrap·오류 우선순위·F-1~F-8, `packages/**`, `apps/mockup/src/canvas/**`
+- 변경 파일: `PreviewComposer.tsx`(+test), `clockOverlay.ts`(+test), `tests/e2e/mockup-preview.spec.ts`
+  — 허용 목록과 일치
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 restore·stage·commit
+  하지 않았다
+
+다음 전이: Codex가 `88b64e6`와 문서 커밋을 재검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.

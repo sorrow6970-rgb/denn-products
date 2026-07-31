@@ -1,7 +1,7 @@
 # 스펙 031 인계 — 액자 텍스트 영역과 물리적 시계 미리보기
 
-상태: **구현·자체검증 완료 → `READY_FOR_CODEX`** (2026-07-31)
-코드/test 커밋: `78095f8` / 기준: 계약 `3927420`, 결정 정본 `e3dc2b1`, 조사 `7636367`
+상태: **보완 라운드 1 완료 → `READY_FOR_CODEX`** (2026-07-31, §8 참조)
+코드/test 커밋: `78095f8` → 보완 `88b64e6` / 기준: 계약 `3927420`, 결정 정본 `e3dc2b1`, 조사 `7636367`
 
 ## 1. 한 줄
 
@@ -47,8 +47,8 @@
 
 - 신규 `clockOverlay.ts`는 **framework-free**로 "무엇을 보여줄지"와 "언제 갱신할지"만 소유하고,
   **시계·스케줄러를 주입**받아 실제 시간·timezone에 의존하지 않는다.
-- **`pointer-events:none` + `aria-hidden`** 인 **DOM 오버레이**로, percent 위치라 **resize에도 유지**되고
-  **plan·인쇄·주문에 들어갈 경로가 없다**.
+- **`pointer-events:none` + `aria-hidden`** 인 **DOM 오버레이**로, **mat rect 기준** percent 위치라
+  (§8-1로 정정) resize에도 mat을 따라가고 **plan·인쇄·주문에 들어갈 경로가 없다**.
 - **custom image는 timer 0개.** 텍스트 `HH:MM`은 초가 없으므로 **1초 interval 금지** — **분 경계 후 60초**
   주기다. **활성 timer는 최대 1개**이고 toggle·템플릿 전환·unmount·StrictMode 재마운트에서 취소되며
   **generation 가드**가 늦은 콜백을 막는다.
@@ -122,3 +122,62 @@ POC · `package.json` · `pnpm-lock.yaml` · 신규 의존성 · print/export/wa
 
 Codex가 `78095f8`와 이 문서 커밋을 독립 검증한다. **§3의 구조적 타입 판단**을 함께 확인해 달라.
 승인 전까지 Claude는 종료 문서를 쓰거나 다음 스펙을 시작하지 않는다.
+
+---
+
+## 8. 보완 라운드 1 (2026-07-31) — 시계 기준 rect · 이미지 실패 · 폰트 가용성
+
+Codex 지적 **3건 모두 유효**했다. 코드/test 커밋 `88b64e6`. 변경 파일은 허용 목록의 5개
+(`PreviewComposer.tsx`(+test), `clockOverlay.ts`(+test), `tests/e2e/mockup-preview.spec.ts`)이며
+`surface.css`는 변경이 필요 없었다.
+
+### 1. 시계 percent의 기준은 mat rect였다
+
+**지적**: percent를 `.denn-preview-edit__area` 전체에 적용했으나, 정본 §2.7과 레거시의
+`IX+x/100*IW`·`IY+y/100*IH`·`min(IW,IH)*size/100`에서 `IX/IY/IW/IH`는 **mat rect**다.
+band가 클수록 오차가 커진다.
+
+**보완**: band를 **plan 어댑터와 동일한 산식**(`max(1, round(width*borderPercent/100))`)으로 구해
+mat rect를 만들고, **mat 기준 중심**과 **`min(matW,matH)` 기준 한 변**을 캔버스 대비 CSS percent로
+환산하는 **순수 함수** `resolveClockCss`를 두었다. 오버레이와 실제로 그려지는 mat이 **같은 반올림**을
+쓰므로 서로 어긋날 수 없다.
+
+**검증**: mat 안 중심 / **band가 0이 아닐 때 naive 전체 박스 percent가 틀린다는 것을 수치로 고정** /
+portrait·landscape 모두 **짧은 변** 기준 / 스케일 불변 / 못 쓰는 캔버스는 `null`.
+E2E는 렌더된 값이 **naive `80%`가 아님**을 증명하고, resize 시 이동이 **0.5%p 미만**임을 확인한다.
+
+> ⚠️ resize에서 **bit-identical이 아닌 것은 의도**다. band가 width마다 반올림되고 **그려지는 mat도 똑같이
+> 반올림**되므로, 오버레이가 mat을 따라가는 것이 계약이고 차이는 반올림 크기(≈0.09%p)뿐이다.
+
+### 2. 선언된 시계 사진의 실패가 텍스트로 대체됐다
+
+**지적**: custom image가 **선언됐는데 resolve 실패**하면 조용히 `HH:MM` 텍스트로 떨어졌다 —
+특정 하드웨어 사진 자리에 **일반 디지털 시계**를 보여주는 것은 제품을 잘못 표현한다.
+
+**보완**: `declared`와 `src`를 **분리**했다. 선언됐는데 resolve 실패이거나 `<img>`가 **load 실패**하면
+**오버레이를 숨긴다**. 텍스트 `HH:MM`은 **애초에 사진이 선언되지 않았을 때만** 쓴다. 실패한 source를
+기억해 **재시도 루프가 생기지 않고**, source·오류 원문은 어디에도 노출되지 않으며 사진·텍스트 plan은
+**그대로 유지**된다.
+
+### 3. 요청한 폰트의 가용성을 확인하지 않았다
+
+**지적**: `document.fonts.ready`는 **로딩이 끝났다**는 뜻이지 **그 family가 로드됐다**는 뜻이 아니다.
+대체 폰트로 재고 real family로 그리면 wrap이 달라진다 — 레거시의 미리보기≠인쇄 그 자체다.
+
+**보완**: **측정 전에**, 값이 실제로 있는 각 zone에 대해 **측정·executor가 쓸 바로 그 `fontShorthand`** 로
+`document.fonts.check(...)`를 확인한다. **FontFaceSet 부재·check 부재·check throw·false**면 텍스트 plan을
+**fail-closed**한다(대체 측정 없음). 텍스트 없는 액자는 그대로 동작하고, **입력창 자체는 게이트와 무관**해
+고객은 언제든 타이핑할 수 있다.
+
+### 게이트 (재실측)
+
+frozen exit 0 / lockfile·manifest diff **0** / 신규 의존성 0 / format·lint·typecheck /
+**unit 1088**(1081→1088) / build mockup JS **281.69 kB**(gzip **86.99**), CSS **17.85**(gzip 4.30),
+admin 무변경 / **E2E 116 PASS**(114→116) exit 0 / `git diff --check` clean / 포트 4183·4184 free /
+OS temp 0 / 고객 dist SHA-256 E2E 전후 **동일** / network·live·deploy **0**.
+
+### 무변경 확인
+
+회전·텍스트 wrap·오류 우선순위·F-1~F-8 결정 **전부 무변경**. `surface.css`·`packages/**`·
+`apps/mockup/src/canvas/**` **무변경**. 스펙 018 PNG 2개와 content diff 0인
+`packages/render/src/plan/index.ts`는 **restore·stage·commit하지 않았다**.

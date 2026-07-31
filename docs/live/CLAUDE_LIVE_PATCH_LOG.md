@@ -499,6 +499,16 @@
 - 스펙 018 PNG 2개: 손대지 않음
 - 다음: Codex 독립 검증 대기. **종료 문서·다음 스펙 착수 없음.**
 
+## 2026-07-31 — Codex 스펙 031 독립 검증 CORRECTION_REQUIRED 라운드 1
+
+- 대상 코드 `78095f8`, 문서 `78acdf6`
+- PASS: frozen, format/lint/typecheck, unit 1081/1081, build, Chromium E2E 114/114,
+  diff check, lockfile/금지 경로 0, ports/temp
+- 결함 1: clock percent가 mat가 아니라 전체 canvas 기준
+- 결함 2: custom hardware image 실패가 HH:MM으로 잘못 fallback
+- 결함 3: requested font availability 미검증
+- 위 세 계약의 composer/clock/CSS/unit/E2E와 관련 문서만 보완
+
 ## 2026-07-31 — Codex 스펙 030 독립 검증: CORRECTION_REQUIRED 라운드 1
 
 - frozen/format/lint/typecheck/unit **989/989**/build/E2E **99/99**/diff check/dist hash PASS
@@ -703,3 +713,26 @@
 - 변경 파일 18개 전부 §4 허용 목록 안(신규 `clockOverlay.ts`·`clockOverlay.test.ts` 포함)
 - 스펙 018 PNG 2개: 손대지 않음
 - 다음: Codex 독립 검증 대기. **종료 문서·다음 스펙 착수 없음.**
+
+## 2026-07-31 — 스펙 031 보완 라운드 1 (시계 기준 rect · 이미지 실패 · 폰트 가용성)
+
+- 기준 `78acdf6` → 코드/test 커밋 `88b64e6`. 상태 `CORRECTION_REQUIRED` → `READY_FOR_CODEX`
+- 지적 **3건 모두 유효**
+- ① **시계 percent 기준이 mat rect였다**: 전체 박스에 적용해 band가 클수록 위치가 틀렸다 →
+  band를 **plan 어댑터와 동일 산식**으로 구해 mat 기준 중심과 `min(matW,matH)` 기준 한 변을 캔버스
+  대비 CSS percent로 환산하는 **순수 함수 `resolveClockCss`** 로 분리. 오버레이와 그려지는 mat이
+  **같은 반올림**을 쓰므로 어긋날 수 없다. E2E가 **naive `80%`가 아님**을 증명하고 resize 이동 <0.5%p
+  (bit-identical이 아닌 것은 의도 — band 반올림을 mat도 겪는다)
+- ② **선언된 시계 사진의 실패가 텍스트로 대체됐다**: 특정 하드웨어 자리에 일반 디지털 시계를 보여주는
+  잘못 → `declared`/`src` **분리**, resolve 실패·`<img>` load 실패는 **오버레이 숨김**, 텍스트는
+  **사진 미선언 시에만**. 실패 source 기억으로 재시도 루프 0, source·오류 원문 노출 0
+- ③ **폰트 가용성 미확인**: `fonts.ready`는 "로딩 끝"이지 "그 family 로드됨"이 아니다 →
+  **측정 전** 값 있는 zone마다 **정확한 shorthand**로 `fonts.check(...)` 확인, FontFaceSet 부재·check
+  부재·throw·false면 텍스트 plan **fail-closed**(대체 측정 없음). 입력창은 게이트와 무관
+- 게이트: frozen exit 0 / lockfile·manifest diff 0 / 신규 의존성 0 / format·lint·typecheck /
+  **unit 1088**(1081→1088) / **e2e 116 PASS**(114→116) exit 0 / `git diff --check` clean /
+  포트 free / OS temp 0 / dist SHA-256 E2E 전후 동일 / network·live·deploy 0
+- 번들: mockup JS 280.33 → **281.69 kB**(gzip 86.99), CSS 17.82 → **17.85**, admin 무변경
+- 변경 파일 5개(허용 목록과 일치), `surface.css` 변경 불필요. 회전·wrap·오류 우선순위·F-1~F-8 무변경
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: 손대지 않음
+- 다음: Codex 재검증 대기. **종료 문서·다음 스펙 착수 없음.**
