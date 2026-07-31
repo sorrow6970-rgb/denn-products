@@ -1,76 +1,58 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_CLAUDE`
+상태: `READY_FOR_CODEX`
 
-## 다음 작업 — 로컬 액자 PNG export 연결부 읽기 전용 조사
+## 다음 작업 — Codex 검토 (로컬 액자 PNG export 연결부 조사)
 
-admin 쓰기 경계 조사 `918ee9e`는 Codex가 승인했다. Firebase auth/write/publish 구현은 Founder
-결정 전 보류하지만, P-4a가 허용한 로컬 생성·다운로드·E2E 범위는 계속 조사한다.
+Claude Code가 지시 `aaf9268`의 **읽기 전용 조사**를 마치고 문서 전용 커밋으로 push했다.
 
-제품 코드·테스트·CSS·설정은 수정하지 않고 다음을 파일·라인 근거로 확정한다.
-
-- PreviewComposer에서 승인된 최신 frame plan과 imageBindings, font readiness를 export에 전달할 seam
-- detached HTMLCanvasElement backing, uniform logical→print transform, executor 호출 순서
-- `toBlob("image/png")` null/throw/taint fail-closed와 object URL lifecycle·다운로드 소유권
-- physical-size projection null/error일 때 버튼·상태·접근성
-- provisional 300dpi/minLong 3000/maxPixels 36M/fallback 3508 계산의 순수 함수 경계
-- 동일 plan으로 lines/rotation/pan/layer 동일성을 unit/Chromium pixel/PNG byte로 검증하는 법
-- art·user image·font 준비 실패 시 파일 0개, retry 0
-- upload/order/Firebase/network/deploy가 경로에 들어가지 않는 hard boundary
-- 구현 허용 파일 후보와 STOP 조건
-
-보고서를 문서 전용 일반 fast-forward push하고 HEAD=origin 0/0에서 READY_FOR_CODEX로 전환한다.
-
-## 다음 작업 — Codex 검토 (admin 쓰기 경계 조사)
-
-Claude Code가 지시 `802a486`의 **읽기 전용 추가 조사**를 마치고 문서 전용 커밋으로 push했다.
-
-- 보고서: `docs/codex-claude-handoff/reviews/2026-07-31-admin-write-boundary-investigation.md`
+- 보고서: `docs/codex-claude-handoff/reviews/2026-07-31-local-frame-png-export-seam-investigation.md`
 - 제품 코드·테스트·CSS·설정 diff **0**, 신규 의존성 0
-- **실제 Firebase·network·live·emulator 실행 0**, Rules·config·배포 변경 **0**
+- **실제 network·live·Firebase·업로드·주문 전송·배포 0**
 
 ### 검토해 달라
 
-1. **인증 경계**: `storage.rules`의 `op()`(non-anonymous)와 20 MiB cap을 리빌드가 **만족만 하면 된다**는
-   정리가 맞는지. 레거시의 **미인증 조용한 return**을 재현 금지로 못박을지.
-2. **★ 검증 가능성**: `public-catalog/reader.ts`의 **주입 transport + 합성 fake + `*.live.test.ts` 분리**
-   패턴을 write port에 그대로 적용하면 **실제 network 없이 계약 검증이 끝난다**는 판단이 맞는지.
-3. **★★ 손실 경로 L-1~L-4**(벽시계 rev · upload 전 재확인 없음 · rev 동일 시 분기 고착 ·
-   `frameSizes` tombstone 부재로 삭제 부활)가 실제 결함인지, 그리고 **L-4가 cm UI와 충돌**한다는
-   지적이 타당한지.
-4. **publish가 admin 저장과 별개**이고 **발행본 ≠ `admin/state.json`** 이라는 관측이 맞는지.
-   "발행 안 된 변경"을 UI가 알려야 하는지.
-5. **`wcm`/`hcm` 정규화안의 W-1·W-2·W-3** — 정규화 시점 재검증과 `aspect` 불일치 진단을
-   계약에 넣을지.
+1. **★★ P-6 논증**: frame plan의 논리 폭이 **측정 CSS 폭**에서 나오고 폰트·wrap 폭이 **그 폭의 %**라
+   **재빌드 = 재wrap**이며, 따라서 **줄바꿈 동일성의 구조적 보장은 plan 고정 + transform뿐**이라는
+   결론이 맞는지.
+2. **★ 근거 대칭**: `surface.ts:151`의 `setTransform(dpr,…)` → 같은 plan/executor 구조가 인쇄에서
+   `printScale`로 그대로 성립한다는 판단과, 레거시 `drawImageT(..., dim.w/500)`의 **500이 리빌드의
+   `FRAME_MAX_LOGICAL_WIDTH`와 같다**는 관측이 유효한지.
+3. **★ `surface.ts` 재사용 불가**(logicalCanvas 0.5px 불변식)이며 **인쇄 때문에 그 불변식을 완화하면
+   안 된다**는 판단이 맞는지.
+4. **`plan !== null`이 준비 완료의 증명**이므로 export가 별도 준비 판정을 만들면 **두 번째 진실
+   원천**이 된다는 지적이 타당한지.
+5. **§5.2 함정**: `minLongSide` 업스케일과 `maxPixels` 다운스케일이 **서로 싸울 수 있고 레거시는
+   재검사하지 않는다**는 관측, 그리고 그 경우 **fail-closed** 처리 여부.
+6. **§2.5 픽셀 위험**(비정수 배율·자간 품질·clip 반픽셀)을 **구현 전에 측정**할지.
 
-### Codex 결정 (X-1~X-6)
+### Codex 결정
 
-**X-1** revision 모델 · **X-2** 충돌 시 자동 병합 vs fail-closed · **X-3** `frameSizes` tombstone ·
-**X-4** write port 형태와 경로 allowlist · **X-5** 정규화 검증 재적용 범위 ·
-**X-6** 조사 `1aae91d`의 **STOP 4(A/B/C) 명시 답이 아직 없다**
+- **★ E-1 C-1 확정** — 이 조사는 근거만 모았고 **고르지 않았다**
+- **E-2** §2.5 사전 측정 여부 · **E-3** minLongSide↔maxPixels 충돌 시 실패 처리
 
-### Founder 결정 (Firebase 표면 = 자동 진행 금지)
+### Founder 결정
 
-**F-A** Auth 도입 여부·시점·계정 · **F-B** 쓰기 범위(admin 저장만 vs 발행까지) ·
-**★ F-C** 레거시와 `admin/state.json`을 **공유할지 격리할지** · **F-D** 정규화 snapshot 되쓰기 ·
-**F-E** 손실 시나리오 허용 여부(막으려면 조건부 쓰기/잠금 = 범위 확대)
+- **E-4** 파일명 규칙(P-5c와 닿음) · **E-5** 다운로드 UI 위치·문구·비활성 사유 한국어 ·
+  **E-6** provisional 상수(300dpi/3000/36M)를 UI에 노출할지
 
 ## Claude 다음 작업
 
-**없다.** Codex 검토와 Founder F-A~F-E 결정이 기록되기 전까지 admin 인증·쓰기·발행 관련
+**없다.** Codex 검토와 E-1~E-6이 기록되기 전까지 인쇄/export 관련
 **제품 코드·테스트·CSS·설정을 작성하지 않는다**.
 
 - `CORRECTION_REQUIRED`면 지적된 범위만 **문서로** 보완한다
-- 승인 + Founder 결정이 나오면 구현 계약(`docs/rebuild/specs/033-*.md`)을 기다린다
+- 승인 + 결정이 나오면 구현 계약(`docs/rebuild/specs/033-*.md` 또는 후속 번호)을 기다린다
 - 알려진 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 계속 손대지 않는다
-- **C-1(인쇄 좌표 방법 A/B/C) 임의 선택 금지** — Codex 결정이다
+- **C-1 임의 선택 금지**
 
 ## 미해결로 남아 있는 것
 
 - **C-1 인쇄 좌표 방법(후보 A/B/C)** — 확정 스펙 없음
+- **Founder F-A~F-E**(admin 인증·쓰기·발행) — 이번 조사와 **독립**이며 여전히 미결.
+  이번 범위는 P-4a가 허용한 **로컬 생성·다운로드·E2E뿐**이다
 - 인쇄소 요구 전체(해상도·색공간/ICC·재단 여백·파일 형식·최대 크기) → **외부 확인 필요**,
   P-4a의 업로드·주문 전송·배포 차단은 그때까지 유지
 - 케이스 인쇄(P-1로 분리), C-2~C-8
 - **스펙 032 조사 보고서 자체에 대한 Codex 재검토** → 여전히 미완
-- 실제 `published/state.json`·`admin/state.json` 내용 → **NOT VERIFIED**(실제 network 금지)
-- L-1~L-4 손실 시나리오 재현 → **NOT VERIFIED**
+- §2.5 픽셀 위험, 레거시 주문 버튼의 실제 경로, 실기기 `toBlob` 한계 → **NOT VERIFIED**

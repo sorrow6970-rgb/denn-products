@@ -7,8 +7,38 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 032 DONE(Codex 승인 `315356a`) → 운영자 cm UI 조사(`1aae91d`, Codex 승인) → **admin 쓰기 경계 읽기 전용 조사 완료**, `READY_FOR_CODEX`. ★리빌드 최초의 쓰기 경계를 조사했다 — **인증 경계는 storage.rules에 이미 확정**돼 있고, **주입 transport + 합성 fake로 실제 network 없이 검증 가능**하며, **레거시 admin 동기화에 편집 손실 경로 4개(L-1~L-4)** 가 있고 **publish는 별개의 두 번째 쓰기**다. **Founder F-A~F-E 승인 필요**(Firebase 표면 = 자동 진행 금지). **C-1은 여전히 미정**, 스펙 032 조사 보고서 Codex 재검토도 미완. 구현 미착수.**
+상태: **✅ 스펙 032 DONE → cm UI 조사(`1aae91d`) → admin 쓰기 경계 조사(`918ee9e`) → **로컬 액자 PNG export 연결부 조사 완료**, `READY_FOR_CODEX`. ★★핵심 발견 — **plan을 인쇄 폭으로 재빌드하면 재wrap이라 P-6(줄바꿈 동일)이 깨진다**. 논리 폭이 측정 CSS 폭에서 나오고 폰트·wrap 폭이 그 폭의 %이기 때문. **`surface.ts`의 `setTransform` → 같은 plan/executor 구조가 이미 그 답의 형태**이나 **C-1 선택은 하지 않았다**(Codex 결정). Founder **F-A~F-E(admin)와 E-4~E-6(export) 미결**. 실제 인쇄·운영자 UI 구현 미착수.**
 
+
+> **★★ 로컬 액자 PNG export 연결부 조사(2026-07-31, 읽기 전용, 지시 `aaf9268`)**: 보고서
+> `docs/codex-claude-handoff/reviews/2026-07-31-local-frame-png-export-seam-investigation.md`.
+> **문서 전용, 제품 코드 diff 0, 실제 network·업로드·주문 전송·배포 0.**
+> **① ★★ export가 `logicalWidth`를 바꾸면 P-6이 깨진다** — frame plan의 논리 폭은 **측정 CSS 폭**에서
+> 나오고(`resolveFrameLogicalWidth`, 상한 `FRAME_MAX_LOGICAL_WIDTH=500`) 폰트 크기·wrap 폭이 **전부 그
+> 폭의 %**다. 재빌드 = **재측정 → 재wrap** → 줄바꿈이 달라질 수 있다.
+> **줄바꿈 동일성의 구조적 보장 = plan 고정 + transform만 걸기**.
+> **② ★ 그 패턴은 이미 있다** — `surface.ts:151`이 매 draw마다 `setTransform(dpr,0,0,dpr,0,0)` 후
+> **같은 plan을 같은 executor로** 실행한다. 인쇄는 `dpr` 자리에 `printScale`. 레거시도
+> `drawImageT(..., dim.w/500)`로 같은 일을 했고 **그 500이 `FRAME_MAX_LOGICAL_WIDTH`와 같은 수**다.
+> **③ ★ `surface.ts` 재사용은 불가** — 관측 CSS 크기가 `plan.logicalCanvas`와 **0.5px 이내**여야 하고
+> 아니면 `failed`(`:110-117`). **인쇄 때문에 이 불변식을 완화하면 미리보기 보호가 약해진다.**
+> **④ ★ 붙일 seam이 아직 없다** — `plan`·`imageBindings`가 `PreviewComposer` 내부 지역값이고
+> 리빌드 전체에 `toBlob`·다운로드 **0건**. 단 **`plan !== null` 자체가 art·사진·폰트 준비 완료의 증명**이라
+> export가 별도 판정을 만들면 **두 번째 진실 원천**이 된다.
+> **taint**: 사진=object URL, 아트 `data:`=안전, `firebase-download-image`만 `crossOrigin` **src 이전 설정**
+> + **anonymous 실패 재시도 안 함**(재시도했다면 tainted → 인쇄 0×0). 그래도 `toBlob`은 감싸야 한다.
+> **`toBlob` 순서**: executor `ok` 확인 → ok일 때만 `toBlob`, 실패는 **파일 0개**
+> (레거시는 아트 빠진 PNG를 주문까지 보냈다 = P-3 위반). **object URL은 생성한 쪽이 해제, 살아 있는 URL ≤1**
+> (레거시 800ms 타이머는 탭 종료 시 누수).
+> **provisional**: `dpi 300 / minLongSide 3000 / maxPixels 36M / fallbackLongSide 3508`
+> (`denn-mockup-tool.html:11242-11248`). **★`fallbackLongSide` 분기는 재현 금지**(cm 없으면 미생성 = P-2).
+> 함정 = **min 업스케일과 maxPixels 다운스케일이 서로 싸울 수 있고 레거시는 재검사하지 않는다**.
+> **hard boundary**: 업로드·주문 payload·IndexedDB 주문 저장·카카오 열기·고객 문구 텍스트 저장/전송 전부
+> 경로 밖(레거시 V36 `:9732`는 이 넷을 한 함수에 묶었다). ⚠️ 레거시엔 `framePrintSize`가 **두 개**이고
+> **주문 버튼에 연결된 V36은 cm을 전혀 안 본다**(하드코딩 3000) — **NOT VERIFIED**.
+> **STOP Codex**: **★E-1 C-1 확정**(조사는 근거만 모으고 **고르지 않았다**) · E-2 픽셀 위험 사전 측정 ·
+> E-3 minLongSide↔maxPixels 충돌 처리. **STOP Founder**: E-4 파일명 규칙 · E-5 UI 문구 · E-6 임시 상수 노출.
+> **NOT VERIFIED**: 비정수 배율·자간 품질·clip 반픽셀(측정 안 함), 실기기 `toBlob`, 대용량 성능.
 
 > **★★ admin 쓰기 경계 조사(2026-07-31, 읽기 전용, 지시 `802a486`)**: 보고서
 > `docs/codex-claude-handoff/reviews/2026-07-31-admin-write-boundary-investigation.md`.

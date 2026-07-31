@@ -995,3 +995,89 @@
   스펙 032 조사 보고서 **Codex 재검토 미완**. `firebase.json`의 `hosting.public`은 여전히 `"."` 이라
   **deploy 금지 상태 그대로**
 - 다음: **Codex 검토 + Founder F-A~F-E 결정**. 구현 착수 **없음.**
+
+## 2026-07-31 — 로컬 액자 PNG export 연결부 읽기 전용 조사 (문서 전용, 제품 코드 diff 0)
+
+지시 `aaf9268`. 보고서
+`docs/codex-claude-handoff/reviews/2026-07-31-local-frame-png-export-seam-investigation.md`.
+**실제 network·live·Firebase·업로드·주문 전송·배포 0.**
+
+- **① ★★ export가 `logicalWidth`를 바꾸면 P-6이 깨진다** — frame plan의 논리 폭은 **측정된 CSS 폭**에서
+  나온다(`PreviewComposer.tsx:562-566` → `previewContracts.ts:83-87`,
+  `FRAME_MAX_LOGICAL_WIDTH=500` 상한). 그리고 `fontSizePercent`·`boxWidthPercent`가 **전부 그 폭의 %**라
+  (`:631-639`) 인쇄 폭으로 재빌드하면 **폰트 픽셀 크기가 달라지고 `measureText`가 다시 호출**된다 →
+  힌팅·서브픽셀 때문에 **같은 줄바꿈 보장이 없다**. P-6이 금지한 "재측정으로 대체로 같음에 기대기"다.
+  **줄바꿈 동일성을 구조적으로 보장하는 유일한 길 = plan을 그대로 두고 transform만 걸기**
+  (plan을 안 바꾸면 `draw-text`의 `lines[{text,width}]`가 확정값 그대로라 **재계산 여지 자체가 없다**)
+- **② ★ 그 transform 패턴은 이미 검증돼 있다** — `surface.ts:151`이 매 draw마다
+  `setTransform(dpr,0,0,dpr,0,0)` 후 **같은 plan을 같은 executor로** 실행하고,
+  `executePreviewPlan.ts` 헤더가 **DPR/backing transform은 caller 책임, executor는 논리 좌표만**이라고
+  명시한다. 인쇄는 `dpr` 자리에 `printWidth / plan.logicalCanvas.width`가 들어가는 **같은 구조**다.
+  레거시도 `renderFramePrint`가 `drawImageT(..., dim.w/500)`로 사실상 같은 일을 했고,
+  **그 하드코딩 500이 리빌드의 `FRAME_MAX_LOGICAL_WIDTH`와 같은 수**다
+- **③ ★ 그러나 `surface.ts`는 재사용할 수 없다** — 관측 CSS 크기가 `plan.logicalCanvas`와
+  **0.5px 이내**여야 하고 아니면 `failed`를 낸다(`:110-117`). 인쇄는 정의상 크기가 다르므로
+  **detached canvas + 얇은 별도 실행 경로**가 필요하다. **인쇄 때문에 이 불변식을 완화하면
+  미리보기 보호가 약해지므로 `surface.ts` 수정은 비권장**
+- **④ ★ 지금 붙일 seam이 없다** — `plan`(`:534-677`)·`imageBindings`(`:513-522`)가
+  `PreviewComposer` 내부 `useMemo` 지역값이고 밖으로 안 나간다. 리빌드 전체에 `toBlob`·`toDataURL`·
+  다운로드 **0건**. 다만 `plan`은 이미 fail-closed 게이트를 통과한 값이라
+  (`artBlocked`→null, 슬롯 미준비→null, 텍스트 있는데 `fontsReady`/family 없으면→null, `:613-630`)
+  **`plan !== null` 자체가 "art·user image·font 준비 완료"의 증명**이다 →
+  **export가 별도 준비 판정을 만들면 두 번째 진실 원천이 된다**
+- **taint**: 고객 사진=`URL.createObjectURL`(same-origin, `localImageBinding.ts:89`) ·
+  아트 `data:`=안전 · `firebase-download-image`만 `crossOrigin="anonymous"`를 **src 이전에** 설정하고
+  (`templateArtBinding.ts:217-220`) **anonymous 실패를 crossOrigin 없이 재시도하지 않는다**(`:214`) —
+  재시도했다면 **tainted canvas → 인쇄 0×0**(CLAUDE.md §4 제약 7). 그래도 `toBlob`은 `SecurityError`를
+  던질 수 있어 **반드시 감싸야** 한다
+- **`toBlob` 순서와 P-3**: executor 결과를 **먼저** 확인하고 **`ok`일 때만** `toBlob`.
+  `blob===null`·동기 throw·executor 실패는 전부 **파일 0개**(부분·빈 파일 금지).
+  레거시는 반대로 아트 로드 실패를 `warnings`에 넣고도 **아트 빠진 PNG를 반환**해 다운로드·주문까지
+  보냈다 — **P-3이 금지한 바로 그 동작**
+- **object URL 수명**: 레거시 `downloadBlob`은 **800ms `setTimeout`** 해제라 탭이 그 사이 닫히면
+  **revoke 미실행(누수)**이고 800ms는 **근거 없는 상수**다. → **생성한 쪽이 반드시 해제 + 살아 있는
+  URL ≤1**(스펙 031 시계 타이머의 generation guard 규율과 동형)
+- **physical size `null`/error UI**: `ok`+값=활성 / `ok`+`null`(cm 미입력)=**비활성** /
+  `ok:false`=**비활성**, 전부 **고정 문구**(코드·수치·id·URL 노출 금지 — `PREVIEW_MESSAGES` 규율).
+  ⚠️ `disabled`만 두면 스크린리더가 이유를 못 읽으므로 **`aria-describedby` 연결이 사실상 필수**
+- **provisional 계산**: `CONFIG = {dpi:300, minLongSide:3000, maxPixels:36000000,
+  fallbackLongSide:3508}`(`denn-mockup-tool.html:11242-11248`), `framePrintSize`(`:11318-11340`)는
+  cm→px → min 업스케일 → maxPixels 다운스케일(하한 900) 순.
+  **★ `fallbackLongSide` 분기(cm 없을 때 `aspect` 추정)는 재현 금지** — cm 없으면 **인쇄 미생성**(P-2).
+  나머지는 `Date.now`·`random`·DOM이 없어 **순수 함수로 완전히 단위 고정 가능**하고 상수는 명시적
+  provisional 표식과 함께 한 곳에 두면 인쇄소 확인 후 **상수만 교체**하면 된다(P-4a).
+  **함정 = min 업스케일과 maxPixels 다운스케일이 서로 싸울 수 있는데 레거시는 재검사하지 않는다** →
+  두 제약을 동시에 만족 못 하는 결과가 나올 수 있다. 하한 `900`도 근거 없는 상수
+- **동일성 검증 설계**: plan을 재빌드하지 않으면 lines/rotation/pan/layer 비교는 **동어반복**이므로
+  초점은 **"정말 같은 plan이 쓰였는가"**. unit = 주입 fake executor가 받은 plan **깊은 비교** ·
+  JSON 직렬화 **불변** · transform이 **uniform**(a==d, b==c==0) · 호출 순서(크기 지정 → setTransform →
+  execute → ok면 toBlob) · 준비 실패 시 `toBlob` 호출 **0회, retry 0**.
+  E2E = 정규화 후 픽셀 비교 + **같은 입력 두 번 export 시 바이트 동일**(결정성).
+  기존 관례대로 `tests/e2e/mockup-preview.spec.ts`에 `test.describe`로 추가
+- **hard boundary**: Storage 업로드 · 주문 payload 생성/저장/전송 · **IndexedDB 주문 저장** ·
+  **카카오 열기** · 실제 network · **고객 문구 텍스트 저장·전송**(P-5c: 문구는 **PNG 픽셀로만** 존재) ·
+  파일명에 고객 문구/id/token — 전부 **경로에 들어가지 않는다**. 로컬 다운로드·E2E는 **P-4a가 명시 허용**.
+  레거시 V36(`:9732`)은 다운로드+IndexedDB 주문 저장+카카오 열기를 **한 함수에 묶어** 두었다
+- ⚠️ **레거시에 `framePrintSize`가 두 개다** — V36(`:9732`, **cm 무시, 하드코딩 `longSide=3000`**)와
+  V36.5(`:11318`, `frameCm` 기반). **주문 버튼에 연결된 쪽은 V36**이라 레거시 주문 PNG는
+  **cm을 전혀 안 볼 수도 있다** — **NOT VERIFIED**(실행 확인 안 함)
+- **구현 허용 파일 후보**(관측): `apps/mockup/src/print/printSize.ts`(신규, DOM/Canvas 없음) ·
+  `apps/mockup/src/print/exportFramePng.ts`(신규, 주입 포트) · `PreviewComposer.tsx`(seam·버튼) ·
+  `previewContracts.ts`(고정 문구) · 해당 CSS · `tests/e2e/mockup-preview.spec.ts` · 문서.
+  **건드리지 말 것**: `packages/render/**`(plan 계약 무변경이 이 접근의 핵심) · `packages/shared/**` ·
+  `apps/admin/**` · `geometry/**` · `localImageBinding.ts`/`templateArtBinding.ts`/`placement.ts` ·
+  **`canvas/surface.ts`** · 운영 HTML · lockfile·의존성
+- **STOP Codex**: **★E-1 C-1 확정**(이 조사는 근거만 모았고 **고르지 않았다**) ·
+  **E-2** §2.5 픽셀 위험(비정수 배율·자간·clip 반픽셀)을 구현 전 측정할지 ·
+  **E-3** minLongSide↔maxPixels 충돌 시 fail-closed 여부
+- **STOP Founder**: **E-4** 파일명 규칙(P-5c와 닿음) · **E-5** 다운로드 UI 위치·문구·비활성 사유 한국어 ·
+  **E-6** provisional 상수를 UI에 노출할지
+- 변경: **문서 전용**(조사 보고서 1 신규 + CURRENT + 이 로그 + Automation 2). 제품 코드·테스트·CSS·
+  설정·manifest·lockfile diff **0**, 신규 의존성 0
+- **NOT VERIFIED**: 비정수 배율·자간 품질·clip 반픽셀(**측정 안 함**) · 레거시 주문 버튼의 실제 경로 ·
+  실기기 `toBlob` 한계 · 대용량 이미지 메모리·성능 · 인쇄소 요구 전체
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: **손대지 않음**
+- 유지: 스펙 032 P-1~P-6, 선행 029/030/031 확정분 **무변경**. **C-1은 고르지 않았다.**
+  스펙 032 조사 보고서 **Codex 재검토 미완**. Founder **F-A~F-E(admin)는 이 조사와 독립**이며 미결 —
+  이번 범위는 P-4a가 허용한 **로컬 생성·다운로드·E2E뿐**
+- 다음: **Codex 검토 + E-1~E-6 결정**. 구현 착수 **없음.**

@@ -5,20 +5,89 @@ updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-032-frame-print-physical-size-catalog
-active_unit: spec-033-admin-write-boundary-investigation  # 읽기 전용 추가 조사
-state: WAITING_FOR_CLAUDE  # local frame PNG export integration seam 조사
+active_unit: spec-033-local-frame-png-export-seam-investigation  # 읽기 전용 조사
+state: READY_FOR_CODEX  # export 연결부 조사 완료, Codex 검토 대기
 baseline_commit: 2a0cfd3
 candidate_commit: c10e7a6  # 스펙 032 catalog cm 계약
 verified_commit: 315356a  # 스펙 032 Codex 승인분
-origin_relation: "admin write boundary investigation pushed fast-forward on top of 802a486; HEAD=origin, ahead/behind 0/0"
+origin_relation: "local PNG export seam investigation pushed fast-forward on top of aaf9268; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_WORKING
+next_transition: CODEX_VERIFYING  # 조사 보고서 검토
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 로컬 액자 PNG export 연결부 읽기 전용 조사 완료 — READY_FOR_CODEX (2026-07-31)
+
+보고서: `docs/codex-claude-handoff/reviews/2026-07-31-local-frame-png-export-seam-investigation.md`
+지시: `aaf9268` · 선행 조사 `918ee9e`(Codex 승인)
+**문서 전용. 제품 코드·테스트·CSS·설정 diff 0**, 신규 의존성 0,
+**실제 network·live·Firebase·업로드·주문 전송·배포 0**.
+
+### 핵심 관측 4개
+
+1. **★★ export가 `logicalWidth`를 바꾸면 P-6이 깨진다.** frame plan의 논리 폭은 **측정된 CSS 폭**에서
+   나오고(`resolveFrameLogicalWidth`, 상한 `FRAME_MAX_LOGICAL_WIDTH=500`), 폰트 크기·wrap 폭이 **전부
+   그 폭의 %**다(`PreviewComposer.tsx:631-639`). 인쇄 폭으로 재빌드하면 **재측정 → 재wrap**이라
+   줄바꿈이 달라질 수 있다. **줄바꿈 동일성의 구조적 보장 = plan을 그대로 두고 transform만 걸기**.
+2. **★ 그 transform 패턴은 이미 검증돼 있다.** `surface.ts:151`이 매 draw마다
+   `setTransform(dpr,0,0,dpr,0,0)` 후 **같은 plan을 같은 executor로** 실행한다. 인쇄는 `dpr` 자리에
+   `printScale`이 들어가는 **같은 구조**이며, 레거시도 `drawImageT(..., dim.w/500)`으로 사실상 같은 일을
+   했다(그 **500이 리빌드의 `FRAME_MAX_LOGICAL_WIDTH`와 같은 수**).
+3. **★ 그러나 `surface.ts`는 재사용 불가.** 관측 CSS 크기가 `plan.logicalCanvas`와 **0.5px 이내**여야
+   하고 아니면 `failed`다(`:110-117`). 인쇄는 정의상 크기가 다르므로 **별도의 얇은 실행 경로** 필요.
+   (이 불변식을 인쇄 때문에 완화하면 미리보기 보호가 약해진다 → `surface.ts` 수정은 비권장)
+4. **★ 지금 붙일 seam이 없다.** `plan`·`imageBindings`는 `PreviewComposer` 내부 `useMemo` 지역값이고
+   밖으로 안 나간다. 리빌드 전체에 `toBlob`·`toDataURL`·다운로드 **0건**.
+   다만 **`plan !== null` 자체가 "art·user image·font 준비 완료"의 증명**이므로
+   (`:613-630` 게이트) export가 **별도 준비 판정을 만들면 두 번째 진실 원천**이 된다.
+
+### 나머지 관측
+
+- **taint**: 고객 사진=object URL(same-origin), 아트 `data:`=안전, `firebase-download-image`만
+  `crossOrigin="anonymous"` **src 이전 설정**(`templateArtBinding.ts:217-220`)이고 **anonymous 실패를
+  재시도하지 않는다**(`:214`) — 재시도했다면 tainted → 인쇄 0×0. 그래도 `toBlob`은 `SecurityError`를
+  던질 수 있어 **반드시 감싸야** 한다.
+- **`toBlob` 순서**: executor `ok` 확인 → **ok일 때만** `toBlob`. `blob===null`·throw는 **파일 0개**.
+  레거시는 반대로 아트 로드 실패를 `warnings`에 넣고 **아트 빠진 PNG를 주문까지 보냈다**(P-3 위반).
+- **object URL**: 레거시는 **800ms 타이머** 해제라 탭이 닫히면 누수, 느린 기기에선 조기 해제 위험.
+  → **생성한 쪽이 해제 + 살아 있는 URL ≤1**(스펙 031 시계 타이머 규율과 동형).
+- **physical size `null`/error**: 버튼 **비활성 + 고정 문구**(코드·수치 노출 금지). `disabled`만으로는
+  이유를 못 읽으므로 **`aria-describedby` 연결이 사실상 필수**.
+- **provisional 계산**: `CONFIG` = `dpi 300 / minLongSide 3000 / maxPixels 36,000,000 /
+  fallbackLongSide 3508`(`denn-mockup-tool.html:11242-11248`).
+  **★ `fallbackLongSide` 분기는 재현 금지**(cm 없으면 인쇄 미생성 = P-2). 나머지는 **순수 함수**로
+  분리 가능(`Date.now`·`random`·DOM 없음). 함정: **min 업스케일과 maxPixels 다운스케일이 서로 싸울 수
+  있고 레거시는 재검사하지 않는다** → fail-closed면 그 경우 실패해야 한다. 하한 `900`도 근거 없는 상수.
+- **동일성 검증**: plan을 재빌드하지 않으면 lines/rotation/pan/layer 비교는 **동어반복**이므로 초점은
+  **"정말 같은 plan이 쓰였는가"**. unit=주입 fake로 plan 깊은 비교·JSON 직렬화 불변·transform uniform
+  (a==d, b==c==0)·호출 순서·실패 시 `toBlob` 호출 **0회**, E2E=정규화 픽셀 비교 + **두 번 export 바이트 동일**.
+- **hard boundary**: 업로드·주문 payload·**IndexedDB 주문 저장**·**카카오 열기**·실제 network·
+  **고객 문구 텍스트 저장/전송** 전부 경로 밖. 레거시 V36(`:9732`)은 이 넷을 **한 함수에 묶어** 두었다.
+  ⚠️ 레거시에 `framePrintSize`가 **두 개**이고 **주문 버튼에 연결된 V36은 cm을 전혀 안 본다**
+  (하드코딩 `longSide=3000`) — **NOT VERIFIED**(실행 확인 안 함).
+
+### STOP
+
+**Codex**: **★E-1 C-1 확정**(§2가 uniform transform에 유리한 근거를 모았으나 **선택은 하지 않았다**) ·
+E-2 비정수 배율·자간·clip 반픽셀을 구현 전 측정할지 · E-3 minLongSide↔maxPixels 충돌 시 실패 처리.
+**Founder**: E-4 파일명 규칙(P-5c와 닿음) · E-5 다운로드 UI 위치·문구·비활성 사유 한국어 ·
+E-6 provisional 상수를 UI에 노출할지.
+
+### NOT VERIFIED
+
+§2.5의 세 가지 픽셀 위험(비정수 배율·자간 품질·clip 반픽셀, **측정 안 함**) ·
+레거시 주문 버튼이 실제 V36 경로를 쓰는지 · 실기기 `toBlob` 한계 · 대용량 이미지 메모리·성능 ·
+인쇄소 요구 전체.
+
+### 유지
+
+스펙 032 P-1~P-6, 선행 029/030/031 확정분 **무변경**. **C-1은 고르지 않았다.**
+스펙 032 조사 보고서 **Codex 재검토 여전히 미완**. Founder **F-A~F-E(admin 인증·쓰기·발행)는 이
+조사와 독립**이며 미결 — 이번 범위는 P-4a가 허용한 **로컬 생성·다운로드·E2E뿐**이다.
 
 ## Claude admin 쓰기 경계 읽기 전용 조사 완료 — READY_FOR_CODEX (2026-07-31)
 
