@@ -6,19 +6,38 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-032-frame-print-physical-size-catalog
 active_unit: spec-033-operator-cm-input-ui-investigation  # 읽기 전용 조사 (계약 §후속 순서 2)
-state: CODEX_PASSED  # 스펙 032 독립 검증 통과
+state: READY_FOR_CODEX  # 운영자 cm 입력 UI 조사 완료, Codex 검토 대기
 baseline_commit: 2a0cfd3
 candidate_commit: c10e7a6  # 스펙 032 catalog cm 계약
 verified_commit: 315356a  # 스펙 032 Codex 승인분
-origin_relation: "operator cm input UI investigation pushed fast-forward on top of 8a4ed09; HEAD=origin, ahead/behind 0/0"
-working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
+origin_relation: "yaml header correction pushed fast-forward on top of 1aae91d; HEAD=origin, ahead/behind 0/0"
+working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: READY_FOR_COMMIT
+next_transition: CODEX_VERIFYING  # 조사 보고서 검토
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## ⚠️ STATE yaml 헤더 정정 (2026-07-31, 문서 전용)
+
+`1aae91d` 시점의 yaml 헤더가 **`state: CODEX_PASSED` · `next_transition: READY_FOR_COMMIT`** 로
+남아 있었다. 이는 **이미 종료된 스펙 032**를 가리키는 값이고, 아래 서술 섹션·`NEXT_CLAUDE_PROMPT.md`
+(`READY_FOR_CODEX`)와 **모순**됐다.
+
+**원인**: Codex가 작업 트리의 STATE yaml을 `CODEX_PASSED`로 바꿔 둔 뒤에, Claude가 종료 문서를
+쓰면서 **자기가 이전에 쓴 문자열**(`state: READY_FOR_CODEX …` → `COMMITTED` → …)을 기준으로 치환해
+**두 줄만 조용히 no-op** 됐다. 같은 커밋의 다른 필드(`completed_unit`·`active_unit`·`verified_commit`·
+`origin_relation`)는 전부 정상 반영됐고, **커밋된 서술 내용과 조사 보고서에는 오류가 없다.**
+
+**정정**: yaml 헤더를 서술·NEXT와 일치하도록 `READY_FOR_CODEX` / `CODEX_VERIFYING`으로 맞췄다.
+`working_tree`에 content diff 0인 `packages/render/src/plan/index.ts`도 함께 명시했다.
+
+**교훈**: Codex와 공유하는 문서는 **치환 대상 문자열의 존재를 단언(assert)** 하고 바꾼다.
+치환 실패를 조용히 넘기면 상태 기계가 **가짜 상태로 진행**할 수 있다.
+
+**제품 코드·테스트 변경 0.** 스펙 032는 `8a4ed09`에서 이미 정상 종료(DONE)됐고 이 정정으로 바뀌지 않는다.
 
 ## Claude 운영자 cm 입력 UI 읽기 전용 조사 완료 — READY_FOR_CODEX (2026-07-31)
 
