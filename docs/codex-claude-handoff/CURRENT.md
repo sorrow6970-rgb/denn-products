@@ -7,8 +7,32 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 032 DONE(Codex 승인 `315356a`) → 운영자 cm 입력 UI **읽기 전용 조사 완료**, `READY_FOR_CODEX`(Codex 검토 대기). ★조사에서 두 가지가 새로 드러났다 — **리빌드 admin은 아직 프리미티브 데모 셸(3파일 79줄)이고 쓰기 경로가 0건**이며, **레거시에 이미 명시적 cm 필드 `wcm`/`hcm`이 있는데 스펙 032가 고려하지 않았다**. **인쇄 좌표 방법(C-1)은 여전히 미정**이고 **스펙 032 조사 보고서 Codex 재검토도 미완**이다. 실제 인쇄·운영자 UI 구현 미착수.**
+상태: **✅ 스펙 032 DONE(Codex 승인 `315356a`) → 운영자 cm UI 조사(`1aae91d`, Codex 승인) → **admin 쓰기 경계 읽기 전용 조사 완료**, `READY_FOR_CODEX`. ★리빌드 최초의 쓰기 경계를 조사했다 — **인증 경계는 storage.rules에 이미 확정**돼 있고, **주입 transport + 합성 fake로 실제 network 없이 검증 가능**하며, **레거시 admin 동기화에 편집 손실 경로 4개(L-1~L-4)** 가 있고 **publish는 별개의 두 번째 쓰기**다. **Founder F-A~F-E 승인 필요**(Firebase 표면 = 자동 진행 금지). **C-1은 여전히 미정**, 스펙 032 조사 보고서 Codex 재검토도 미완. 구현 미착수.**
 
+
+> **★★ admin 쓰기 경계 조사(2026-07-31, 읽기 전용, 지시 `802a486`)**: 보고서
+> `docs/codex-claude-handoff/reviews/2026-07-31-admin-write-boundary-investigation.md`.
+> **문서 전용, 제품 코드 diff 0, 실제 Firebase·network·live·emulator 실행 0.**
+> **① 인증 경계는 이미 확정** — `storage.rules`의 `op()`가 `admin/`을 **non-anonymous만 read+write**로
+> 잠갔다(20 MiB cap). 리빌드는 재현이 아니라 **만족**시키면 된다. ⚠️ 레거시 `dennCloudSaveAdminV`의
+> **미인증 조용한 return**은 계승 금지.
+> **② ★ 실제 network 없이 검증할 선례가 있다** — `public-catalog/reader.ts`의 **주입 transport(`FetchLike`)
+> + 100% 합성 fake + `*.live.test.ts` 기본 게이트 제외**(`vitest.config.ts:17`). write port도 같은 형태면 된다.
+> **③ ★★ 레거시 admin 동기화 = 사실상 last-writer-wins** — `__cloudRev = Date.now()`는 **벽시계**이고
+> upload 전 **원격 rev 재확인이 없다**. 손실 경로 **L-1** 시계 역전 / **L-2** 디바운스(3초) 내 겹침 /
+> **L-3** rev 동일 시 분기 고착 / **L-4 `frameSizes`에 tombstone이 없어 삭제가 부활**한다.
+> **L-4는 cm UI와 직접 충돌** — 지운 사이즈가 되살아나면 **cm 없는 인쇄 불가 사이즈가 돌아온다**.
+> **④ ★ publish는 별개의 두 번째 쓰기** — `dennPublishState`가 localStorage의 `roomBackgroundSettings`로
+> 덮어쓰고 base64를 내용해시 경로로 외부화해 발행한다 → **발행본 ≠ `admin/state.json`**, 순서도 무관하고
+> **"발행 안 된 변경"을 알리는 장치가 없다**.
+> **`wcm`/`hcm` 정규화안**(canonical 없을 때만 승격, 둘 다 있고 다르면 fail-closed)은 legacy pair가
+> **운영자 명시 입력 필드**라 **P-2와 충돌하지 않는다**. 남는 문제: **W-1** `parseFloat||1`로 무효 입력이
+> **1 cm** 저장 · **W-2** `aspect` 불일치를 그대로 승격 · **W-3** snapshot 되쓰기 여부 →
+> **정규화 시점 재검증 필수 + `aspect` 불일치는 진단**. `sub`는 **독립 유지가 안전**(인쇄 무영향).
+> **STOP Founder**: F-A Auth 도입 · F-B 쓰기 범위 · **★F-C 레거시와 `admin/state.json` 공유/격리** ·
+> F-D 정규화 되쓰기 · F-E 손실 시나리오 허용 여부. **STOP Codex**: X-1 revision 모델 · X-2 병합 vs
+> fail-closed · X-3 tombstone · X-4 write port·경로 allowlist · X-5 검증 재적용 · **X-6 STOP 4(A/B/C) 미답**.
+> **NOT VERIFIED**: L-1~L-4 재현, 실제 state.json 내용, 실제 rules 거부 동작, 레거시 UI 실행.
 
 > **★ 운영자 cm 입력 UI 조사(2026-07-31, 읽기 전용)**: 보고서
 > `docs/codex-claude-handoff/reviews/2026-07-31-operator-cm-input-ui-investigation.md`. **문서 전용, 제품 코드 diff 0.**

@@ -5,20 +5,81 @@ updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-032-frame-print-physical-size-catalog
-active_unit: spec-033-operator-cm-input-ui-investigation  # 읽기 전용 조사 (계약 §후속 순서 2)
-state: WAITING_FOR_CLAUDE  # admin persistence/auth 계약 읽기 전용 추가 조사
+active_unit: spec-033-admin-write-boundary-investigation  # 읽기 전용 추가 조사
+state: READY_FOR_CODEX  # admin 쓰기 경계 조사 완료, Codex 검토 대기
 baseline_commit: 2a0cfd3
 candidate_commit: c10e7a6  # 스펙 032 catalog cm 계약
 verified_commit: 315356a  # 스펙 032 Codex 승인분
-origin_relation: "yaml header correction pushed fast-forward on top of 1aae91d; HEAD=origin, ahead/behind 0/0"
+origin_relation: "admin write boundary investigation pushed fast-forward on top of 802a486; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_WORKING
+next_transition: CODEX_VERIFYING  # 조사 보고서 검토
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude admin 쓰기 경계 읽기 전용 조사 완료 — READY_FOR_CODEX (2026-07-31)
+
+보고서: `docs/codex-claude-handoff/reviews/2026-07-31-admin-write-boundary-investigation.md`
+지시: `802a486` · 선행 조사 `1aae91d`(Codex 승인)
+**문서 전용. 제품 코드·테스트·CSS·설정 diff 0**, 신규 의존성 0,
+**실제 Firebase·network·live·emulator 실행 0**, Rules·config·배포 변경 0.
+
+### 핵심 관측 4개
+
+1. **인증 경계는 이미 확정돼 바꿀 게 없다.** `storage.rules`가 `admin/`을 **non-anonymous만
+   read+write**로 잠갔다(`op()`, 20 MiB cap). 리빌드는 재현이 아니라 **만족**시키면 된다.
+   ⚠️ 레거시 `dennCloudSaveAdminV`는 미인증 시 **조용히 return**한다 — 이 침묵은 계승 금지.
+2. **★ write port를 실제 network 없이 검증할 선례가 이미 있다.**
+   `public-catalog/reader.ts` = **주입 transport(`FetchLike`) + 안전 오류 계약 + 100% 합성 테스트**,
+   live는 `*.live.test.ts`로 `vitest.config.ts:17`에서 **기본 게이트 제외**. write도 같은 형태면 된다.
+3. **★★ 레거시 admin 동기화는 사실상 last-writer-wins다.** `__cloudRev = Date.now()`는 **벽시계**이고
+   upload 전 **원격 rev 재확인이 없다**. 손실 경로 4개(L-1 시계 역전 / L-2 디바운스 내 겹침 /
+   L-3 rev 동일 시 분기 고착 / **L-4 개수 점수 union이라 `frameSizes`는 tombstone이 없어 삭제 부활**).
+   **L-4는 cm UI와 직접 충돌** — 지운 사이즈가 되살아나면 **cm 없는 인쇄 불가 사이즈가 돌아온다**.
+4. **★ publish는 별개의 두 번째 쓰기다.** `dennPublishState`가 `window.S`에 localStorage의
+   `roomBackgroundSettings`를 덮어쓰고 base64를 내용해시 경로로 외부화해 발행한다 →
+   **발행본과 `admin/state.json`은 같은 바이트가 아니고 순서도 무관**하다.
+   레거시에는 **"발행 안 된 변경"을 알리는 장치가 없다.**
+
+### 지시된 후보 검토
+
+- **`wcm`/`hcm` 정규화안**(canonical 없을 때만 승격, 둘 다 있고 다르면 fail-closed):
+  legacy pair는 **운영자 명시 입력 필드**라 **P-2와 충돌하지 않고**, 조용한 우선순위가 없어 타당하다.
+  남는 문제 3개 — **W-1** `parseFloat(...)||1`이라 무효 입력이 **1 cm**로 저장돼 있을 수 있다 ·
+  **W-2** `aspect`와 어긋난 값을 그대로 canonical로 승격시킨다 · **W-3** snapshot을 저장에 되쓸지.
+  → 정규화 시점에도 `> 0`·`<= 500` **재검증 필수**, `aspect` 불일치는 **진단으로 남겨야 한다**.
+- **`sub` 독립 유지안**: `sub`는 인쇄에 영향이 없으므로(P-2) 자동 덮어쓰기는 **이득 없이 운영자 입력만
+  지운다**. 독립 유지가 안전하다.
+- **재현 금지 5종 확정**: `sub` 정규식 prefill · `wcm=21` 날조 기본값 · `parseFloat||1` ·
+  `confirmEditSz`의 cm 미저장 · 미인증 조용한 return.
+
+### STOP — Founder 승인 (Firebase 표면 = 자동 진행 금지)
+
+**F-A** Auth 도입 여부·시점·계정 · **F-B** 쓰기 범위(`admin/state.json`만 vs 발행까지) ·
+**★ F-C** 리빌드 admin이 레거시와 **같은 `admin/state.json`을 공유할지 격리할지**(공유하면 레거시
+스키마 100% 왕복 보존 필요, 격리하면 데이터 분기) · **F-D** 정규화 snapshot 되쓰기 여부 ·
+**F-E** §2.4 손실 시나리오 허용 여부(막으려면 조건부 쓰기/잠금 = 범위 확대)
+
+### Codex 구조 결정
+
+**X-1** revision 모델(벽시계 계승 / 단조 정수 / 병행 — **벽시계가 L-1의 원인**) ·
+**X-2** 충돌 시 자동 병합 vs fail-closed · **X-3** `frameSizes` tombstone 도입 여부 ·
+**X-4** write port 형태와 **경로 allowlist** · **X-5** 정규화 검증 재적용 범위 ·
+**X-6** 조사 `1aae91d`의 **STOP 4(A/B/C)** 는 이번 지시가 흡수했으나 **명시 답이 아직 없다**
+
+### NOT VERIFIED
+
+L-1~L-4 손실 시나리오(소스 기반 구조적 결론, **재현 안 함**) · 실제 `admin/state.json`·
+`published/state.json` 내용과 크기 · 실제 Storage rules 거부 동작 · 레거시 admin UI 실행 확인.
+
+### 유지
+
+스펙 032 P-1~P-6, 선행 029/030/031 확정분 **무변경**. **C-1은 고르지 않았다.**
+스펙 032 조사 보고서 **Codex 재검토 여전히 미완**. `firebase.json`의 `hosting.public`은 여전히
+`"."` 이라 **deploy 금지 상태 그대로**다.
 
 ## ⚠️ STATE yaml 헤더 정정 (2026-07-31, 문서 전용)
 

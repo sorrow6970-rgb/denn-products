@@ -926,3 +926,72 @@
 - 유지: 스펙 032 P-1~P-6, 선행 029/030/031 확정분 **무변경**. **C-1은 고르지 않았다**(Codex 결정).
   **스펙 032 조사 보고서 Codex 재검토 미완** — 전제가 뒤집히면 STOP 2도 다시 열린다
 - 다음: **Codex 검토 + Founder STOP 1~3 결정**. 구현 착수 **없음.**
+
+## 2026-07-31 — admin 인증·쓰기·revision·publish 경계 읽기 전용 조사 (문서 전용, 제품 코드 diff 0)
+
+지시 `802a486`. 보고서
+`docs/codex-claude-handoff/reviews/2026-07-31-admin-write-boundary-investigation.md`.
+**실제 Firebase·network·live·emulator 실행 0**, Rules·config·배포 변경 0.
+
+- **① 인증 경계는 이미 확정돼 바꿀 게 없다** — `storage.rules`의
+  `op() = request.auth != null && ...sign_in_provider != 'anonymous'`가 `admin/`을 **비익명만
+  read+write**로 잠갔고 `okSize()`는 **20 MiB 미만**이다. 파일 주석이 **catch-all `read:if true` 금지**
+  이유(겹치는 match는 OR → `admin/` 노출)와 **read 조건에 `request.resource.size` 금지**(read 시
+  `resource=null`)까지 못박아 뒀다. 리빌드는 **재현이 아니라 만족**시키면 된다.
+  ⚠️ 레거시 `dennCloudSaveAdminV`(`denn-admin.html:783-785`)는 미인증·익명이면 **조용히 return** —
+  운영자는 저장됐다고 믿는데 로컬에만 남는다. **이 침묵은 계승 금지**
+  (`ensureAdminAuth`(`:14810-14817`)는 반대로 `admin/auth-required`로 **던진다** → 이쪽을 계승)
+- **② ★ write port를 실제 network 없이 검증할 선례가 이미 있다** — `public-catalog/reader.ts`가
+  **주입 transport(`FetchLike`) + 안전 오류 계약(category/code/retryable/correlationId) + 100% 합성
+  fake 테스트**이고, live 검증은 `*.live.test.ts`로 `vitest.config.ts:17`에서 **기본 게이트 제외**된다.
+  write도 같은 형태면 **미인증 write 시도 0회·경로 allowlist 위반 거부·20 MiB 사전 거부·revision
+  결정성·오류 원문 비노출**까지 fake로 전부 검증된다
+- **③ ★★ 레거시 admin 동기화는 사실상 last-writer-wins다** — `__cloudRev = Date.now()`는 **벽시계**이고
+  upload 전 **원격 rev 재확인이 없다**(`:736-740`). 디바운스 3초. 손실 경로 4개:
+  **L-1** 기기 시계 역전 → 나중 저장이 짐 · **L-2** 디바운스 내 겹침 → 나중 upload가 원격 통째 덮어씀 ·
+  **L-3** rev 동일 → 로드도 저장도 안 해 **분기 고착** · **L-4** 배열이 **개수 점수 union**이라
+  항목을 지운 기기가 점수에서 지면 **삭제가 되살아남**(tombstone은 `guideBackgrounds`만 있고
+  **`frameSizes`에는 없다**). **L-4가 cm UI와 직접 충돌** — 지운 사이즈가 되살아나면
+  **cm 없는 인쇄 불가 사이즈가 카탈로그에 돌아온다**.
+  `__opRev`(목업툴 `stampOpRevV`)는 **저장마다 +1 단조 정수**라 `__cloudRev`(벽시계)와 **의미가 다르다**
+- **④ ★ publish는 admin 저장과 완전히 별개인 두 번째 쓰기다** — `dennPublishState`(`:14930-14951`)가
+  `window.S`에 **localStorage의 `roomBackgroundSettings`를 덮어쓴 뒤** `__publishedAt`을 찍고
+  base64를 **내용해시 경로**(`published/assets/<h32>.<ext>`)로 외부화해 발행한다(2026-07-04, 492KB 대응).
+  외부화 실패는 **원본 유지 + 발행 성공**. → **발행본과 `admin/state.json`은 같은 바이트가 아니고
+  순서도 무관**하며, 레거시에는 **"발행 안 된 변경"을 알리는 장치가 없다**.
+  리빌드 소비자는 `published/state.json`만 읽으므로(`public-catalog/location.ts:11-14`) 여기는 일치
+- **최소 port와 소유권**: `AuthPort`(비익명 판정)·`ObjectWritePort`(read/write)·**경로 allowlist**·
+  20 MiB 사전 거부는 `@denn/firebase`, **revision 정책은 순수 함수로 `@denn/shared`**(fake 없이 단위 검증),
+  편집 상태·저장 시점·"발행 안 됨" 표시는 `apps/admin`. **`@denn/firebase`는 바이트만 옮기고
+  무엇이 최신인지 판단하지 않는다. `apps/admin`은 rev를 직접 만들지 않는다**
+- **`wcm`/`hcm` 정규화안 검토**(canonical 없을 때만 승격, 둘 다 있고 값 다르면 fail-closed):
+  legacy pair는 **운영자 명시 입력 필드**(`s-wcm`/`s-hcm`)라 **이름 파싱이 아니고 P-2와 충돌하지 않는다**.
+  canonical이 항상 이기므로 진실 원천도 갈라지지 않고, **조용한 우선순위 규칙이 없다**는 게 핵심.
+  남는 문제 — **W-1** `addSz`의 `parseFloat(...)||1`이라 무효 입력이 **1 cm**로 저장돼 있을 수 있다
+  (`> 0`·`<= 500`은 통과하지만 명백히 틀림) · **W-2** `aspect`와 어긋난 값을 **그대로 canonical로 승격** ·
+  **W-3** snapshot을 메모리 전용/저장 되쓰기/발행본만 중 어디에 쓸지.
+  → **정규화 시점에도 범위 재검증 필수**, `aspect` 심한 불일치는 **최소한 진단으로** 남겨야 한다
+- **`sub` 독립 유지안**: `sub`는 인쇄에 **아무 영향이 없으므로**(P-2) 자동 덮어쓰기는 **이득 없이 운영자
+  입력만 지운다**. 독립 유지가 안전하다(표시상 경고는 검토 가치 있음, 인쇄 차단은 아님)
+- **재현 금지 5종 확정**: `editSz`의 `sub` 정규식 prefill(`:1647-1648`) · **`wcm=21` 날조 기본값**(`:1649`) ·
+  `addSz`의 `parseFloat||1`(`:1688`) · `confirmEditSz`의 **cm 미저장**(`:1668-1681`) ·
+  **미인증 조용한 return**(`:783-785`)
+- **STOP Founder**(Firebase 표면 = 자동 진행 금지): **F-A** Auth 도입 여부·시점·계정 ·
+  **F-B** 쓰기 범위(admin 저장만 vs 발행까지 — 둘은 별개 동작) ·
+  **★F-C** 리빌드 admin이 레거시와 **같은 `admin/state.json`을 공유할지 격리할지**(공유하면 레거시
+  스키마 100% 왕복 보존 필요, 격리하면 데이터 분기) · **F-D** 정규화 snapshot 되쓰기 여부 ·
+  **F-E** L-1~L-4 허용 여부(막으려면 조건부 쓰기/단일 편집자 잠금 = **범위 확대**)
+- **STOP Codex**: **X-1** revision 모델(벽시계 계승 / 단조 정수 / 병행 — **벽시계가 L-1의 원인**) ·
+  **X-2** 충돌 시 자동 병합 vs **fail-closed**(리빌드의 다른 모든 계약은 fail-closed) ·
+  **X-3** `frameSizes` tombstone 도입(L-4 방지) · **X-4** write port 형태와 경로 allowlist ·
+  **X-5** 정규화 검증 재적용 범위 · **X-6** 조사 `1aae91d`의 **STOP 4(A/B/C) 명시 답 아직 없음**
+- 변경: **문서 전용**(조사 보고서 1 신규 + CURRENT + 이 로그 + Automation 2). 제품 코드·테스트·CSS·
+  설정·manifest·lockfile diff **0**, 신규 의존성 0
+- **NOT VERIFIED**: L-1~L-4는 **소스 기반 구조적 결론이고 재현하지 않았다** · 실제
+  `admin/state.json`·`published/state.json` 내용과 크기 · 실제 Storage rules가 거부하는지 ·
+  레거시 admin UI 실행 확인
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: **손대지 않음**
+- 유지: 스펙 032 P-1~P-6, 선행 029/030/031 확정분 **무변경**. **C-1은 고르지 않았다**(Codex 결정).
+  스펙 032 조사 보고서 **Codex 재검토 미완**. `firebase.json`의 `hosting.public`은 여전히 `"."` 이라
+  **deploy 금지 상태 그대로**
+- 다음: **Codex 검토 + Founder F-A~F-E 결정**. 구현 착수 **없음.**
