@@ -1,6 +1,26 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `WAITING_FOR_CLAUDE`
+
+## 다음 작업 — admin 인증·쓰기·revision·publish 계약 읽기 전용 조사
+
+운영자 cm UI 조사 `1aae91d`는 Codex가 승인했다. 실제 구현 전에 리빌드 최초의 admin 쓰기 경계를
+로컬 소스만으로 추가 조사한다. 제품 코드·테스트·CSS·설정은 수정하지 않는다.
+
+조사 범위:
+
+- 현재 Firebase Storage Rules·설정과 CLAUDE.md가 요구하는 비익명 운영자 인증 경계
+- 레거시 `admin/state.json` 읽기·쓰기·`__opRev`/`__cloudRev` 충돌 처리·published 발행 순서
+- 리빌드 `packages/firebase`에 필요한 최소 read/write port와 앱 계층 소유권
+- 실제 network 없이 합성 fake port로 검증 가능한 범위
+- `wcm/hcm` 호환안: canonical pair가 없을 때만 legacy pair를 canonical snapshot으로 정규화하고,
+  양쪽 pair가 함께 존재해 값이 다르면 fail-closed하는 후보
+- `sub`는 인쇄 치수와 독립 display text로 유지하고 cm에서 자동 생성·덮어쓰기하지 않는 후보
+- 레거시 `21` prefill과 cm 미저장 동작 재현 금지
+- Founder가 승인해야 할 Firebase/auth/write/publish 범위와 Codex 구조 결정 분리
+
+실제 Firebase/network/live/emulator 실행, Rules·config·제품 코드 수정, 신규 의존성, 배포는 금지한다.
+보고서를 문서 전용 일반 fast-forward push하고 HEAD=origin 0/0에서 READY_FOR_CODEX로 전환한다.
 
 ## 다음 작업 — Codex 검토 (운영자 cm 입력 UI 조사)
 
