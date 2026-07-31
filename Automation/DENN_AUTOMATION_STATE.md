@@ -5,20 +5,31 @@ updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-030-customer-photo-quarter-turn-rotation
-active_unit: spec-030-customer-photo-quarter-turn-rotation
-state: COMMITTED  # 스펙 030 종료 문서 처리 완료 → Codex 최종 확인 후 DONE
-baseline_commit: 2777010
-candidate_commit: 603cd25  # 스펙 030 보완 라운드 1 코드/test (최초 구현 fbbadeb)
-verified_commit: 603cd25  # 스펙 030 보완 라운드 1 승인분
-origin_relation: "spec 030 closing doc commit pushed fast-forward on top of 1aa3302; HEAD=origin, ahead/behind 0/0"
+active_unit: spec-031-text-clock-investigation
+state: READY_FOR_CODEX  # 스펙 031 사전 조사 완료 → Codex 검토 대기
+baseline_commit: 57d43b6
+candidate_commit: null
+verified_commit: null
+origin_relation: "spec 031 investigation doc commit pushed fast-forward on top of 57d43b6; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
-fix_round: 1
+fix_round: 0
 max_fix_rounds: 3
-next_transition: DONE
+next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 030 종료 확인 및 스펙 031 읽기 전용 조사 전이 (2026-07-31)
+
+종료 문서 커밋 `57d43b6`이 `origin/rebuild/modern-studio`와 일치하고 ahead/behind 0/0이며,
+working tree에는 원인이 확정된 스펙 018 PNG 두 개만 남아 있음을 확인했다. 스펙 030은 DONE이다.
+
+다음 작업은 `docs/rebuild/specs/019-canvas-geometry-contract.md`에 기록된 후속 순서
+`deterministic renderer → image/CORS → pointer → text/clock → print`에 따라
+**스펙 031 고객 텍스트 영역·시계 오버레이 계약의 읽기 전용 사전 조사**로 정한다.
+Claude는 제품 코드를 수정하지 않고 `Automation/NEXT_CLAUDE_PROMPT.md`의 문서 전용 범위만 조사해
+fast-forward push한 뒤 `READY_FOR_CODEX`로 전환한다.
 
 ## 스펙 029 종료 확인 및 다음 조사 전이 (2026-07-30)
 
@@ -547,3 +558,35 @@ Codex 승인(코드 `603cd25`, 문서 `1aa3302`)에 따라 종료 문서만 하�
 - 다음 스펙·사전조사·기능 **미착수**
 
 다음 전이: Codex가 이 종료 문서 커밋의 hash와 `HEAD=origin`, ahead/behind 0/0을 확인하면 `DONE`이다.
+
+## 스펙 031 사전 조사 완료 — READY_FOR_CODEX (Claude Code, 2026-07-31)
+
+`NEXT_CLAUDE_PROMPT.md`의 읽기 전용 조사 범위만 수행했다. 보고서
+`docs/codex-claude-handoff/reviews/2026-07-31-text-clock-investigation.md`(13항목, 지시 10항목 전부 포함).
+
+- 텍스트 소유자 2개를 근거 라인과 함께 분리했다: 액자 **키 기반 `textZones`**(운영자가 좌표·글꼴,
+  고객이 값만) vs 케이스 **자유 배치 `textObjs`**(고객이 드래그). 코드·데이터 공유 0.
+- zone 필드 전수와 기본값, 레이어 순서(사진 → 아트 → 텍스트 → 시계 → 테두리)를 기록했다.
+- 레거시 결함 3건(재현 금지): 빈 값 판정 불일치로 `"0"` 소실, 줄 수 상한 미리보기 2 / 인쇄 3,
+  기본 글자색이 경로에 따라 `#111`↔`#FFF`로 뒤집힘.
+- ★ 인쇄/export 경로에 **시계가 아예 없다** → 고객이 본 화면과 인쇄물이 구조적으로 다르다.
+- 시계 계약: 3단 병합(`clockSettings` → `frameSizes.clock` → `frameTemplates.clock`), `{x,y,size,customImg}`,
+  로컬 시간 24h `HH:MM` 고정, 1초 `setInterval`, 타이머 정리 부실, `drawClockLayer` 12중 재정의.
+- 카탈로그 V1은 `textZones`·`clock`·`clockEnabled`·`clockSettings`·`customFonts`를 보존만 하고
+  **투영은 0**이다. `packages/render` plan 커맨드는 4개뿐이고 **텍스트 어휘가 없다**.
+- ★ 핵심 계약 딜레마: wrap은 `measureText`(Canvas)가 필요한데 plan은 순수·JSON-safe여야 한다 →
+  **빌더에 측정 포트를 주입해 `lines[]`를 plan에 확정**할 것을 권고했다. 레거시 결함이 정확히 반대
+  선택(executor가 wrap)에서 나왔다.
+- 결정 필요: Founder 8건(F-1~F-8, 특히 **F-4 시계를 인쇄에 포함할지**)과 Codex 11건(C-1~C-11).
+- 검증 설계(fake 측정 포트, Playwright `page.clock` 고정 시각, 실제 시간·timezone 의존 금지),
+  최소 구현 순서, 허용 파일 후보, STOP 12조건을 기록했다.
+- 변경 파일: 보고서 1개 + `docs/codex-claude-handoff/CURRENT.md` + `docs/live/CLAUDE_LIVE_PATCH_LOG.md` +
+  이 문서 + `Automation/NEXT_CLAUDE_PROMPT.md` (문서 전용 커밋).
+- 제품 코드·테스트·CSS·설정·manifest·lockfile·PNG diff 0, 신규 의존성 0,
+  실제 network·live·Firebase·CORS·Rules/Hosting·deploy 0, 운영 데이터·이미지 접근 0.
+- NOT VERIFIED: 레거시 실제 실행 0(코드 근거만), `drawClockLayer` 12중 재정의의 런타임 최종 승자,
+  `customFonts` 실제 데이터 형태, 실기기 IME·폰트 대체·인쇄물 가독성.
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다.
+
+다음 전이: Codex가 조사 보고서를 검토해 F-1~F-8 Founder 결정 요청과 구현 스펙(또는 추가 조사)을 작성한다.
+그 전까지 Claude는 텍스트·시계 관련 제품 코드를 만들지 않는다.

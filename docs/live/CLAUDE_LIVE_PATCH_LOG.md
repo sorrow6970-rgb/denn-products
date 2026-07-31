@@ -553,3 +553,44 @@
 - 이 라운드는 **문서 전용 커밋**(기능 코드·테스트·CSS·설정·lockfile 변경 0, network·live·deploy 0)
 - 스펙 018 PNG 2개: 손대지 않음
 - 다음: **다음 스펙 미착수 — Codex 지시 대기**
+
+## 2026-07-31 — Codex 스펙 031 읽기 전용 조사 전이
+
+- 스펙 030 종료 커밋 `57d43b6`과 `HEAD=origin`, ahead/behind 0/0을 확인해 DONE으로 확정
+- `docs/rebuild/specs/019-canvas-geometry-contract.md`의 후속 순서에서 pointer 다음 항목인
+  **text/clock**을 스펙 031 조사 대상으로 선정
+- 상태: `WAITING_FOR_CLAUDE`
+- 이번 라운드는 문서 전용 조사이며 제품 코드·테스트·CSS·설정·manifest·lockfile·의존성 변경 금지
+- 조사 완료 전 구현·print/export·watermark·network/live/Firebase/deploy 착수 금지
+- 알려진 스펙 018 PNG 두 개는 계속 손대지 않음
+
+## 2026-07-31 — 스펙 031 사전 조사 (텍스트 영역·시계, 읽기 전용)
+
+- 기준 HEAD `57d43b6` / 산출물 `docs/codex-claude-handoff/reviews/2026-07-31-text-clock-investigation.md`
+- 상태: `WAITING_FOR_CLAUDE` → 조사 완료 → `READY_FOR_CODEX`
+- **한 줄: "텍스트"는 하나가 아니라 두 모델이고, 시계는 미리보기에만 있다.**
+- 텍스트 소유자 2개 분리: ① 액자 **키 기반 `textZones`**(운영자가 좌표, 고객이 값, `:1783`·`:11427`)
+  ② 케이스 **자유 배치 `textObjs`**(고객이 드래그, `:1736`·`:3038`) — 코드도 데이터도 공유 0
+- zone 필드 전수(`:11387-11402`): `key/x/y/fontSize/align/boxW/letterSpacing/lineH/rotation/font/
+  bold/italic/color`, 좌표·크기는 **캔버스 % 기준**, `rotation`은 **임의 각도**
+- ★ 결함 3건: **빈 값 판정 불일치**(`"0"`이 일부 경로에서 사라짐, `:11388` vs `:9732`) /
+  **줄 수 상한 불일치**(미리보기 2줄 vs V365 인쇄 3줄) / **기본 글자색 뒤집힘**
+  (`applyFrameTextStyle` 없으면 `#111`, 있으면 `#FFF`)
+- ★★ **인쇄/export에 시계가 아예 없다**(`renderFramePrintV365 :11404-11446`에 `drawClockLayer` 0회)
+  → 고객이 본 화면과 인쇄물이 구조적으로 다르다
+- 시계: `ADM.clockSettings` → `frameSizes[].clock` → `frameTemplates[].clock` 3단 병합, `{x,y,size,customImg}`,
+  기본 88/88/12%, **로컬 시간 24h `HH:MM` 고정**(초·timezone·locale 없음), `setInterval(renderFrame,1000)`,
+  **타이머 정리 부실**(덮어쓰기 전 clearInterval 없음), `drawClockLayer` **12중 재정의**
+- 카탈로그: `textZones`·`clock`·`clockEnabled`·`clockSettings`·`customFonts`는 **보존만** 되고
+  **투영은 0**(`project.ts`에 문자열 0회). `caseTemplates`·`customFonts`는 item 스키마 없이 불투명
+- `packages/render` plan 커맨드는 4개뿐 — **텍스트 어휘 0** → 계약 확장 전제
+- ★ 핵심 딜레마 기록: wrap은 `measureText`가 필요한데 plan은 순수해야 한다 →
+  **측정 포트를 빌더에 주입해 `lines[]`를 plan에 확정**할 것을 권고(레거시 결함이 정확히 반대 선택에서 나옴)
+- 결정 필요: Founder 8건(F-1 케이스 텍스트 방식 · F-2 고객 색/그림자 · F-3 defaultTexts 초기값 ·
+  **F-4 시계 인쇄 포함 여부** · F-5 인쇄 시각 의미 · F-6 길이 상한 · F-7 줄 수 · F-8 `name2` 기본값) +
+  Codex 11건(C-1~C-11)
+- 검증 설계: fake 측정 포트 unit · Chromium 픽셀 E2E · **Playwright `page.clock` 고정 시각**
+  (실제 시간·timezone 의존 금지) · 최소 구현 순서 · 허용 파일 후보 · STOP 12조건
+- 변경: **문서 전용**(보고서 1 + CURRENT + 이 로그 + Automation 2). 제품 코드·테스트·CSS·설정·PNG·
+  lockfile 0, 신규 의존성 0, network·live·Firebase·CORS·deploy 0
+- 다음: Codex 검토. **구현 착수 없음.**

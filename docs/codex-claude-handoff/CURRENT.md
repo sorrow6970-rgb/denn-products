@@ -7,7 +7,45 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 030(고객 사진 90° 단위 회전) 승인·종료. 스펙 027·028·029도 승인·종료. 다음 스펙 미착수 — Codex 지시 대기. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+상태: **🔎 스펙 031 사전 조사(텍스트 영역·시계) 완료 → `READY_FOR_CODEX`. 스펙 027~030은 승인·종료. 텍스트/시계 구현 미착수(Founder 결정 8건 대기). ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+
+> 스펙 031 사전 조사 완료(읽기 전용, 2026-07-31, 기준 HEAD `57d43b6`): 보고서
+> `docs/codex-claude-handoff/reviews/2026-07-31-text-clock-investigation.md`(13항목).
+> **한 줄: "텍스트"는 하나의 기능이 아니라 서로 다른 두 모델이고, 시계는 미리보기에만 존재한다.**
+> ① **액자 `textZones`** — 운영자가 좌표·글꼴·색을 찍고(`admin:1728` `openZoneEditor`, `:1964` `saveZones`)
+> 고객은 **값만** 입력한다(`f-main`/`name`/`name2`/`date`/`sub` 5개, `mockup:11390`). **인쇄 반영 O**.
+> ② **케이스 `textObjs`** — 고객이 캔버스에서 **자유롭게 드래그**하는 객체(`:1736`·`:3038`), zone도 key도 없다.
+> **두 모델은 코드도 데이터도 공유하지 않는다.**
+> **zone 필드 전수**(`:11387-11402`): `key/x/y/fontSize/align/boxW/letterSpacing/lineH/rotation/font/bold/
+> italic/color` — 좌표·크기는 **캔버스 %**, `rotation`은 **임의 각도**, `boxW`는 **wrap 폭이지 clip이 아니다**.
+> 레이어 순서는 **사진 → 아트 → 텍스트 → 시계 → 흰 테두리**.
+> **★ 레거시 결함 3건(재현 금지)**: 빈 값 판정이 경로마다 달라 **`"0"` 한 글자가 사라진다**(`:11388` vs `:9732`) /
+> 줄 수 상한이 **미리보기 2줄 · V365 인쇄 3줄**로 어긋난다 / `applyFrameTextStyle` 유무에 따라 기본 글자색이
+> **`#111`↔`#FFF`로 뒤집힌다**.
+> **★★ 인쇄/export에 시계가 아예 없다**(`renderFramePrintV365 :11404-11446`에 `drawClockLayer` **0회**)
+> → **고객이 본 화면과 인쇄물이 구조적으로 다르다.** 이번 스펙의 1순위 결정이다.
+> **시계 계약**: `ADM.clockSettings` → `frameSizes[].clock` → `frameTemplates[].clock` **3단 병합**,
+> `{x,y,size,customImg}`(기본 88/88/12%), **로컬 시간 24h `HH:MM` 고정**(초·timezone·locale 없음),
+> `setInterval(renderFrame,1000)`으로 **1초마다 액자 전체 재렌더**, **타이머 정리 부실**(덮어쓰기 전
+> `clearInterval` 없음), `drawClockLayer`는 **12중 재정의**(`:1816`~`:3210`)라 "읽어서 재현"이 불가능하다.
+> `clock` 필드가 **없으면 시계액자로 간주**된다(`isClockTemplate :971`).
+> **리빌드 현황**: 카탈로그 V1은 `textZones`·`clock`·`clockEnabled`·`clockSettings`·`customFonts`를
+> **보존만 하고 투영은 0**이며(`project.ts`에 해당 문자열 0회), `packages/render` plan 커맨드는
+> `fill-rect`·`draw-image-cover`·`stroke-rect`·`draw-image-stretch` **4개뿐 — 텍스트 어휘가 없다**.
+> **★ 핵심 딜레마**: wrap은 `measureText`(Canvas)가 필요한데 plan은 **순수·JSON-safe**여야 한다 →
+> **빌더에 측정 포트를 주입해 `lines[]`를 plan에 확정**할 것을 권고한다. 레거시의 미리보기≠인쇄가 정확히
+> 반대 선택(executor가 wrap)에서 나왔다. **시계는 별도 커맨드가 필요 없다** — `draw-text`로 표현하되
+> **시각을 plan 생성 시 확정**해야 plan이 결정적이다.
+> **결정 필요**: Founder 8건(F-1 케이스 텍스트 방식 · F-2 고객 색/그림자 · F-3 `defaultTexts` 초기값 여부
+> (**운영자 샘플 `'WEDDING'`이 인쇄물에 들어갈 위험**) · **F-4 시계 인쇄 포함 여부** · F-5 인쇄 시각의 의미 ·
+> F-6 길이 상한 · F-7 줄 수 상한 · F-8 `name2` 기본값 부재) + Codex 11건(C-1~C-11).
+> **검증 설계**: fake 측정 포트 unit · 실제 Chromium 픽셀 E2E · **Playwright `page.clock` 고정 시각**
+> (실제 시간·timezone 의존 단언 **금지**, 고정 sleep 0) · 최소 구현 순서 · 허용 파일 후보 · STOP 12조건.
+> **코드·테스트·CSS·설정·PNG·lockfile 변경 0**, 신규 의존성 0, 실제 network·live·Firebase·CORS·deploy 0.
+> **NOT VERIFIED**: 레거시 실제 실행 0(코드 근거만) · `drawClockLayer` 12중 재정의의 런타임 최종 승자 ·
+> `customFonts` 실제 데이터 형태 · 실기기 IME·소프트 키보드·폰트 대체·인쇄물 가독성.
+> 구현 스펙은 작성하지 않았고 다음 기능도 착수하지 않는다.
+
 
 > 스펙 030 종료(2026-07-31): Codex가 보완 라운드 1 코드 **`603cd25`** 와 문서 **`1aa3302`** 를 독립 재검증해
 > **승인**했고, Claude Code가 종료 문서만 처리했다(상태 `CODEX_PASSED` → `COMMITTED`, **문서 전용 커밋** ·
