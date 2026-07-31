@@ -1,61 +1,44 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_CLAUDE`
+상태: `READY_FOR_CODEX`
 
-## 다음 작업 — 스펙 032 physical-size catalog 계약 구현
+## 다음 작업 — Codex 독립 검증 (스펙 032)
 
-`docs/rebuild/specs/032-frame-print-physical-size-catalog.md`를 정본으로 읽고 허용 파일 안에서만
-구현한다. `frameSizes[].printWidthCm`·`printHeightCm`의 안전한 read와
-`projectFramePrintPhysicalSize`만 추가한다.
+Claude Code가 스펙 032 계약(`2a0cfd3`)을 허용 파일 안에서만 구현하고 게이트를 통과시킨 뒤
+일반 fast-forward push했다.
 
-`apps/admin/**`, `apps/mockup/**`, `packages/render/**`, 실제 print/export, 주문 payload,
-이름 파싱·fallback 치수, lockfile·의존성은 변경하지 않는다.
+- 구현 커밋: **`c10e7a6`** — `packages/shared` catalog read + preview projection + test/fixture 7개 파일
+- 종료 문서 커밋: 별도 분리
+- 기준 HEAD `2a0cfd3`
 
-정본 spec 파일과 구현 코드/test를 의도한 커밋으로 분리해 일반 fast-forward push하고,
-HEAD=origin, ahead/behind 0/0에서 `READY_FOR_CODEX`로 전환한다.
+### 검증해 달라
 
-## 스펙 032 Founder 결정 정본 기록 완료 — Codex 구현 계약 대기
+- `frameSizes[].printWidthCm`·`printHeightCm`의 all-or-nothing·finite·`> 0`·`<= 500` fail-closed
+- 한쪽만 있을 때 **없는 쪽 path**로 `INVALID_NUMBER`를 내는 것이 의도한 진단인지
+- `projectFramePrintPhysicalSize`가 `{widthCm,heightCm}` 또는 `null`만 반환하고 식별정보를 흘리지 않는지
+- 이름·`sub`·label·id·`aspect`·논리 `w`/`h`에서 치수를 추론하는 경로가 **0**인지
+- 필드 단일 read(drifting getter 방어), 입력 비변형, 결정성, JSON-safe
 
-Claude Code가 2026-07-31에 Founder 결정을 문서 전용으로 기록하고 일반 fast-forward push했다.
+### 게이트 결과 (Claude 실행분)
 
-- 정본: `docs/codex-claude-handoff/decisions/2026-07-31-spec-032-print-export-decisions.md`
-- **결정 정본 커밋: `0443137`** (Founder가 이 커밋을 정본으로 명시 인정, 2026-07-31 재확인)
-- 기준 HEAD `d55a9b8`
-- 제품 코드·테스트·CSS·설정·manifest·lockfile diff **0**, 신규 의존성 0, 인쇄 제품 코드 **0**
-- 실제 network·live·Firebase·CORS·Rules/Hosting·deploy **0**
-- 알려진 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 손대지 않았다
-
-## ⚠️ 절차 기록
-
-Codex의 마지막 지시는 "보완된 Founder 질문을 **Codex가 승인하기 전 확정하지 않는다**"였으나,
-Founder가 순서를 **명시적으로 앞당겨** 일괄 승인했다. **조사 보고서 자체에 대한 Codex 재검토는
-여전히 미완**이다. 재검토에서 질문의 전제가 틀렸다고 밝혀지면 해당 결정 항목은 다시 열어야 한다.
-
-## 확정된 것
-
-- **P-1** 액자 인쇄만. 케이스는 별도 스펙
-- **P-2** 물리 치수는 **카탈로그 명시 필드에서만**, 이름 파싱 금지. cm 필드가 없으므로 **스키마 확장 +
-  admin 입력 UI는 별도 스펙**. **치수가 없으면 인쇄를 만들지 않는다**
-- **P-3** 경고가 있으면 **인쇄 파일을 만들지 않는다(fail-closed)**. 부분 파일 0
-- **P-4a** 레거시 수치는 **임시값**으로 구현·검증하되 **인쇄소 확인 전까지 업로드·주문 전송·배포 차단**
-- **P-5** 색·사진 transform과 시계 유무는 담고, **고객 문구 원문은 텍스트로 저장·전송하지 않는다**
-- **P-6** 미리보기와 인쇄의 **줄바꿈 동일 필수**(C-1 후보 선택에 제약만 건다)
-
-## Codex 다음 작업
-
-이 결정과 보완된 조사 보고서를 입력으로 **스펙 032 구현 계약**(`docs/rebuild/specs/032-*.md`)을 작성한다.
-최소한 다음을 확정해 달라.
-
-- **★ C-1**: 인쇄 좌표를 얻는 방법 — 조사 §8.1의 **후보 A / B / C 중 택일**
-  (A는 계약 변경 0이고 `surface.ts`의 DPR 경로로 이미 검증된 패턴이나, 인쇄 배율의 자간 품질이
-  NOT VERIFIED다. C는 좌표의 두 번째 진실 원천이라 비권장)
-- **C-2~C-8**: 캔버스 소유자 · 이미지 소스 재사용 · 실패 계약 · 회전/pan · 시계 · 오류 payload · 검증
-- 허용 파일 목록, 게이트, NOT TESTED 경계
-- P-4a의 **출력 차단 조건**을 스펙에 명시적으로 남길 것
+frozen install(lockfile diff 0) · format · lint · typecheck **PASS**,
+unit **1109/1109**, 독립 build **PASS**, Chromium E2E **116/116**,
+고객 dist SHA-256 E2E 전후 동일, `git diff --check` 클린, ports 4183/4184 **0**,
+OS temp `denn-e2e-*` **0**. 잔류 프로세스 command-line은 **NOT TESTED**.
 
 ## Claude 다음 작업
 
-**없다.** 구현 계약이 Git 히스토리에 기록되고 상태가 `WAITING_FOR_CLAUDE`로 바뀌기 전까지 인쇄 관련
-제품 코드·테스트·CSS·설정을 작성하지 않는다. 계약이 untracked면 Founder 상시 승인에 따라 계약과 Codex
-전환 문서만 대행 커밋한 뒤 착수한다. 알려진 스펙 018 PNG 2개와
-`packages/render/src/plan/index.ts`는 계속 손대지 않는다.
+**없다.** Codex 검증 결과가 기록될 때까지 스펙 032 제품 코드를 더 수정하지 않는다.
+`CORRECTION_REQUIRED`면 지적된 계약만 허용 파일 범위에서 보완하고,
+`CODEX_PASSED`면 종료 문서만 커밋한 뒤 **다음 권장 스펙의 읽기 전용 조사**로 자동 전환한다
+(Founder 상시 지시: 개별 스펙 DONE에서 멈추지 않는다).
+
+알려진 스펙 018 PNG 2개와 `packages/render/src/plan/index.ts`는 계속 손대지 않는다.
+
+## 미해결로 남아 있는 것 (스펙 032 범위 밖)
+
+- **C-1 인쇄 좌표 방법(후보 A/B/C)** — 계약 §후속 순서 3이 A 계열을 가리키지만 아직 확정 스펙 없음
+- 운영자용 cm 입력 UI(`apps/admin/**`) → 별도 스펙
+- 인쇄소 요구 전체(해상도·색공간/ICC·재단 여백·파일 형식·최대 크기) → **외부 확인 필요**
+- 케이스 인쇄(P-1로 분리)
+- **조사 보고서 자체에 대한 Codex 재검토** → 여전히 미완

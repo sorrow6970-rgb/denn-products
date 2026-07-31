@@ -7,8 +7,19 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 032 Founder 결정 확정(P-1·P-2·P-3·P-4a·P-5·P-6) → `READY_FOR_CODEX`(Codex 구현 계약 대기). **인쇄 좌표 방법(C-1 후보 A/B/C)은 여전히 미정**이고 **조사 보고서 Codex 재검토도 미완**이다. 스펙 027~031은 승인·종료. 인쇄 구현 미착수.**
+상태: **✅ 스펙 032 구현 완료(`c10e7a6`) → `READY_FOR_CODEX`(Codex 독립 검증 대기). 카탈로그에 **명시 cm 필드**(`printWidthCm`·`printHeightCm`)와 `projectFramePrintPhysicalSize`만 추가했다. **인쇄 좌표 방법(C-1 후보 A/B/C)은 여전히 미정**이고 **조사 보고서 Codex 재검토도 미완**이다. 스펙 027~031은 승인·종료. 실제 인쇄 구현 미착수.**
 
+
+> **스펙 032 구현(2026-07-31, `c10e7a6`)**: 정본 계약
+> `docs/rebuild/specs/032-frame-print-physical-size-catalog.md`(`2a0cfd3`).
+> **이번 단위는 순수 카탈로그 계약이다** — 실제 print/export·PNG 생성·주문 payload·운영자 입력 UI는 전부 후속 스펙.
+> `frameSizes[].printWidthCm`·`printHeightCm`은 **함께 있거나 함께 없어야** 하고 각각 finite·`> 0`·`<= 500`이며,
+> 위반은 **없는/틀린 쪽 path의 `INVALID_NUMBER`로 fail-closed**한다. 둘 다 없는 기존 카탈로그는 **그대로 읽힌다**.
+> `projectFramePrintPhysicalSize(document, frameSizeId)`는 **`{widthCm,heightCm}` 또는 `null`만** 반환하고
+> 이름·`sub`·label·id·`aspect`·논리 `w`/`h` 중 **어느 것도 cm로 쓰지 않는다**(P-2의 코드 구현).
+> 게이트: frozen(lockfile 0)·format·lint·typecheck PASS, unit **1109/1109**, build PASS,
+> Chromium E2E **116/116**, 고객 dist SHA-256 E2E 전후 동일, ports/temp 0.
+> `apps/**`·`packages/render/**`·의존성 변경 **0**.
 
 > **스펙 032 결정 확정(2026-07-31)**: 정본
 > `docs/codex-claude-handoff/decisions/2026-07-31-spec-032-print-export-decisions.md`,

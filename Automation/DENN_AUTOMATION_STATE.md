@@ -5,20 +5,61 @@ updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-031-frame-text-zones-physical-clock-preview
-active_unit: spec-032-print-export-investigation
-state: WAITING_FOR_CLAUDE  # 스펙 032 physical-size catalog 계약 구현 대기
-baseline_commit: b763174
-candidate_commit: null  # 조사 라운드 (제품 코드 없음)
+active_unit: spec-032-frame-print-physical-size-catalog
+state: READY_FOR_CODEX  # 스펙 032 구현 완료, Codex 독립 검증 대기
+baseline_commit: 2a0cfd3
+candidate_commit: c10e7a6  # 스펙 032 catalog cm 계약
 verified_commit: 88b64e6  # 스펙 031 승인분 (보완 라운드 1)
-origin_relation: "spec 032 decision doc commit pushed fast-forward on top of d55a9b8; HEAD=origin, ahead/behind 0/0"
+origin_relation: "spec 032 impl + closing docs pushed fast-forward on top of 2a0cfd3; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
-fix_round: 1
+fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_WORKING
+next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 스펙 032 구현 완료 — READY_FOR_CODEX (2026-07-31)
+
+`docs/rebuild/specs/032-frame-print-physical-size-catalog.md`(계약 `2a0cfd3`)를 정본으로
+허용 파일 안에서만 구현했다. 구현 커밋 **`c10e7a6`**, 기준 HEAD `2a0cfd3`.
+
+### 구현한 계약
+
+1. **catalog read** — `frameSizes[].printWidthCm`·`printHeightCm`을 allowlist에 추가하고
+   `validatePrintSizeCm`으로 검증한다. 두 필드는 **함께 있거나 함께 없어야** 하며 각각 finite,
+   `> 0`, `<= 500`이다. 한쪽만 있으면 **없는 쪽 path**로 `INVALID_NUMBER`를 낸다(추측·보정 0).
+   둘 다 없는 기존 카탈로그는 **그대로 읽힌다**(UNKNOWN_FIELD 경고도 없다).
+2. **projection** — `projectFramePrintPhysicalSize(document, frameSizeId)`는 `{widthCm,heightCm}`
+   또는 `null`만 반환한다. 기존 preview projection의 `lookupById`·`run`·`fail` 규율을 재사용해
+   중복·누락·malformed id를 식별정보 없이 실패시킨다. 각 필드는 **정확히 한 번만 읽어** drifting
+   getter가 검증된 값을 바꿀 수 없다.
+3. **금지된 추론 0** — 이름·`sub`·label·id·`aspect`·논리 `w`/`h` 중 어느 것도 cm로 쓰지 않는다.
+   `aspect`만 있고 한쪽 cm만 있는 입력은 **보완하지 않고 실패**한다.
+
+### 게이트
+
+- frozen install `Already up to date`, lockfile diff **0**
+- format / lint(`--error-on-warnings`) / typecheck: **PASS**
+- unit **1109/1109 PASS** (스펙 031 시점 1088 → **+21**)
+- 독립 build: **PASS**
+- 전체 Chromium E2E **116/116 PASS** (신규 E2E 없음 — 이번 단위는 순수 계약)
+- 고객 dist SHA-256 E2E 전후 **동일**(`74427f72…c9644c`)
+- `git diff --check` 클린(CRLF 경고만), ports 4183/4184 LISTENING **0**, OS temp `denn-e2e-*` **0**
+
+### 범위 준수
+
+- `apps/**`, `packages/render/**`, 실제 print/export, PNG 생성, 주문 payload, 이름 파싱,
+  fallback 치수, lockfile·의존성: 변경 **0**
+- Firebase/Rules/CORS/Hosting/deploy, 실제 network/live, 운영 데이터·secret: **0**
+- 알려진 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: **손대지 않음**
+
+### NOT TESTED
+
+- 실제 발행 카탈로그에 cm 필드를 넣은 사례(아직 존재하지 않는다 — 운영자 입력 UI는 후속 스펙)
+- `aspect`와 cm 비율의 불일치 진단(계약상 이번 단위에서 자동 수정하지 않는다)
+- 잔류 프로세스 command-line
 
 ## Codex 스펙 031 보완 라운드 1 재검증 — CODEX_PASSED (2026-07-31)
 
