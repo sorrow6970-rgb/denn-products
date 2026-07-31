@@ -6,13 +6,13 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-029-pointer-pan-zoom-editing
 active_unit: spec-030-customer-photo-quarter-turn-rotation
-state: READY_FOR_CODEX  # 스펙 030 구현·자체검증 완료 → Codex 독립 검증 대기
+state: READY_FOR_CODEX  # 보완 라운드 1 완료 → Codex 재검증 대기
 baseline_commit: 2777010
-candidate_commit: fbbadeb  # 스펙 030 코드/test
+candidate_commit: 603cd25  # 스펙 030 보완 라운드 1 코드/test (최초 구현 fbbadeb)
 verified_commit: 110511e  # 스펙 029 승인분 (스펙 028은 d4fb99b)
-origin_relation: "spec 030 code and doc commits pushed fast-forward on top of 2777010; HEAD=origin, ahead/behind 0/0"
+origin_relation: "spec 030 fix round 1 code and doc commits pushed fast-forward on top of e4a9133; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
-fix_round: 0
+fix_round: 1
 max_fix_rounds: 3
 next_transition: CODEX_VERIFYING
 commit_owner: Claude Code
@@ -467,3 +467,47 @@ R-1~R-6과 C-1~C-9는 Founder 승인 및 조사 근거와 일치한다.
 - 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다
 
 다음 전이: Codex가 `fbbadeb`와 문서 커밋을 독립 검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.
+
+## Codex 독립 검증 — CORRECTION_REQUIRED (2026-07-31, 라운드 1)
+
+코드 `fbbadeb`, 문서 `e4a9133`의 독립 검증 결과:
+
+- frozen install, format, lint, typecheck, unit **989/989**, mockup/admin build,
+  Chromium E2E **99/99**, `git diff --check`, dist SHA-256 전후 동일: PASS
+- lockfile·신규 의존성·금지 경로 diff 0, 포트 4183/4184 listener 0, OS temp 0
+- 잔류 프로세스 command-line 열람은 OS 권한 거부로 **NOT TESTED**
+
+보완 1건: `executePreviewPlan.ts`는 회전 command에서 `translate`/`rotate`를 요구하지만 공개
+`PreviewCanvasContext`가 두 capability를 선언하지 않는다. 타입을 정확히 구현한 소비자가 컴파일을
+통과한 뒤 회전 plan에서만 실패할 수 있으므로 `apps/mockup/src/canvas/types.ts`를 최소 허용 확장한다.
+두 메서드를 선택적 capability로 선언하고, 미지원 context는 unrotated plan만 호환되며 rotated plan은
+preflight fail-closed임을 문서와 테스트로 고정한다.
+
+## 스펙 030 보완 라운드 1 결과 — READY_FOR_CODEX (Claude Code, 2026-07-31)
+
+Codex 지적 1건은 유효했고 지정된 파일 안에서만 보완해 push했다. 코드/test `603cd25`, 기준 `e4a9133`.
+
+- 지적: executor가 회전 command에서 `translate`/`rotate`를 요구하는데 공개 `PreviewCanvasContext`가
+  둘을 선언하지 않아, 타입을 정확히 구현한 소비자가 컴파일을 통과한 뒤 회전 plan에서만 실패할 수 있었다.
+- 보완 1: 두 메서드를 **선택적 capability로 공개 포트에 선언**했다. 선택성 자체가 계약이며, 없는
+  컨텍스트는 unrotated plan을 그대로 실행하고 회전 plan만 둘 다 요구한다.
+- 보완 2: fail-closed 계약을 공개 포트에 문서화했다 — 하나라도 없으면 preflight
+  `INVALID_EXECUTOR_INPUT`이고 Canvas 연산 0이다.
+- 보완 3: `RotationCapableCanvasContext`를 공개 타입에서 `Required<Pick<…>>`로 파생하고 executor의
+  중복 interface를 삭제했다. `ROTATION_METHODS`는 `keyof PreviewCanvasContext`로 검사하므로 메서드명이
+  바뀌면 컴파일이 깨진다.
+- 신규 테스트 6: 공개 타입만으로 선언된 capability-free 컨텍스트의 unrotated PASS(transform 시도 0),
+  명시적 회전 0도 동일, 회전 1·2·3 전부 fail-closed(Canvas 연산 0), 절반의 capability도 실패,
+  함수 아닌 값도 실패, 실제 `CanvasRenderingContext2D`의 컴파일 타임 assignability.
+- 무변경: 회전 순서·픽셀·오류 우선순위·R-1~R-6·C-1~C-9. E2E 99개 그대로 PASS.
+- 게이트: frozen exit 0 / lockfile·manifest diff 0 / 신규 의존성 0 / format·lint·typecheck /
+  unit **995**(989→995) / build mockup JS 265.52 kB gzip 82.10, CSS·admin 무변경 /
+  E2E **99 PASS** exit 0 / `git diff --check` clean / 포트 4183·4184 free / OS temp 0 /
+  고객 dist SHA-256 E2E 전후 동일 / 실제 network·live·Firebase·CORS·Rules/Hosting·deploy 0
+- 변경 파일: `apps/mockup/src/canvas/types.ts`, `executePreviewPlan.ts`, `executePreviewPlan.test.ts`
+  — 허용 목록과 정확히 일치
+- 스펙 018 PNG 2개는 restore·checkout·stage·commit 하지 않았다
+- ⚠️ 미회신: 판단 요청 ②(R-6 실측을 조사 보고서 §7 `NOT VERIFIED` 해소로 반영할지)는 이번 회신에
+  판정이 없었다. 보고서는 Codex 소유라 Claude가 수정하지 않았다.
+
+다음 전이: Codex가 `603cd25`와 문서 커밋을 재검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.

@@ -7,7 +7,35 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🛠️ 스펙 030 구현·자체검증 완료 → `READY_FOR_CODEX`(Codex 독립 검증 대기). 스펙 027·028·029는 승인·종료. ⚠️ working tree는 스펙 018 PNG 2개 때문에 dirty하며 Claude는 이 파일들을 복원·커밋하지 않는다.**
+상태: **🛠️ 스펙 030 보완 라운드 1 완료 → `READY_FOR_CODEX`(Codex 재검증 대기). executor 공개 포트에 회전 capability를 선언해 compile-time 계약과 runtime 요구를 일치시켰다. 스펙 027·028·029는 승인·종료. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+
+> 스펙 030 보완 라운드 1 완료(로컬, 2026-07-31, 기준 `e4a9133`, 코드 커밋 `603cd25`): Codex 독립 검증에서
+> **기능 게이트는 전부 PASS**(unit 989/989 · E2E 99/99 · dist SHA 동일 · lockfile·금지 경로 diff 0)였고,
+> 인계 §3.2의 **판단 요청이 "공개 포트에 선언하라"로 확정**되어 `apps/mockup/src/canvas/types.ts`가
+> 허용 목록에 **최소 확장**됐다. **지적은 유효했다**: executor가 회전 command에서 `translate`/`rotate`를
+> 요구하는데 공개 `PreviewCanvasContext`가 둘을 **선언하지 않아**, 타입을 정확히 구현한 소비자가
+> **컴파일을 통과한 뒤 회전 plan에서만 실패**할 수 있었다(compile-time 계약 ≠ runtime 요구).
+> **보완**: ① 두 메서드를 **선택적 capability로 공개 포트에 선언**했고 **선택성 자체가 계약**이다 —
+> 없는 컨텍스트는 unrotated plan을 **그대로** 실행하고 회전 plan만 둘 다 요구한다 ② **fail-closed 계약을
+> 공개 포트에 문서화**했다(하나라도 없으면 preflight `INVALID_EXECUTOR_INPUT` + **Canvas 연산 0** —
+> 회전 안 된 사진은 폴백이 아니라 잘못된 제품) ③ **단일 정본화**: `RotationCapableCanvasContext`를
+> 공개 타입에서 `Required<Pick<…>>`로 **파생**하고 executor의 중복 interface를 **삭제**했으며
+> `ROTATION_METHODS`를 `keyof PreviewCanvasContext`로 검사해 **메서드명이 바뀌면 컴파일이 깨지도록** 했다.
+> **신규 테스트 6**(전부 공개 타입만으로 선언된 컨텍스트로 외부에서 고정): capability 없는 컨텍스트의
+> unrotated 3커맨드 실행 + transform 시도 **0** / 명시적 회전 `0`도 동일 / 회전 1·2·3 전부 **fail-closed +
+> Canvas 연산 0** / **절반의 capability는 capability가 아니다**(`translate`만·`rotate`만·함수 아닌 값 전부 실패) /
+> 실제 `CanvasRenderingContext2D`가 포트와 파생 타입에 **모두 assignable**(컴파일 타임 고정).
+> **회전 순서·픽셀·오류 우선순위·R-1~R-6·C-1~C-9는 전부 무변경**이고 E2E 99개가 그대로 PASS다.
+> 게이트 재실측: frozen exit 0 · lockfile·manifest diff **0** · 신규 의존성 0 / format·lint·typecheck /
+> **unit 995**(989→995) / **E2E 99 PASS** exit 0 / `git diff --check` clean / 포트 4183·4184 free /
+> OS temp 0 / dist **SHA-256 E2E 전후 동일** / network·live·deploy **0**.
+> **번들**: mockup JS 265.53 → **265.52 kB**(gzip 82.11 → **82.10**), CSS·admin **무변경**.
+> ⚠️ **판단 요청 ②(R-6 실측)는 아직 미회신**: `Orientation=6` 합성 JPEG(40×20)이 Chromium에서
+> **20×40으로 decode**된다는 실측을 조사 보고서 §7의 `NOT VERIFIED` **해소(Chromium 한정)** 로 반영할지
+> Codex 판정이 필요하다. 보고서는 Codex 소유라 Claude가 수정하지 않았다.
+> NOT TESTED 목록은 그대로 유지된다(실기기 EXIF·조작성, orientation 1~8, 실제 print/export 회전,
+> 대용량 성능, 임의 각도). **다음 스펙은 착수하지 않는다.**
+
 
 > 스펙 030 구현·자체검증 완료(로컬, 2026-07-31, 기준 계약 `2777010`·결정 `cf1cfd2`, 코드 커밋 `fbbadeb`):
 > 정본 `docs/rebuild/specs/030-customer-photo-quarter-turn-rotation.md`(§DONE), 인계

@@ -490,3 +490,36 @@
 - 변경 파일 13개 모두 스펙 §4 허용 목록 안. `surface.css`는 기존 편집 컨트롤 스타일 재사용으로 **무변경**
 - 스펙 018 PNG 2개: 손대지 않음
 - 다음: Codex 독립 검증 대기. **종료 문서·다음 스펙 착수 없음.**
+
+## 2026-07-31 — Codex 스펙 030 독립 검증: CORRECTION_REQUIRED 라운드 1
+
+- frozen/format/lint/typecheck/unit **989/989**/build/E2E **99/99**/diff check/dist hash PASS
+- 포트 4183·4184 및 OS temp 잔존 0; 프로세스 command-line 열람은 권한 거부로 NOT TESTED
+- 결함: 회전 시 필요한 `translate`/`rotate`가 공개 `PreviewCanvasContext`에 선언되지 않아
+  compile-time 계약과 runtime 요구가 불일치
+- 최소 보완: `canvas/types.ts`에 선택적 capability와 fail-closed 계약을 선언하고 executor/test의
+  단일 정본·호환성을 고정
+
+## 2026-07-31 — 스펙 030 보완 라운드 1 (executor 공개 포트 capability)
+
+- 기준 `e4a9133` → 코드/test 커밋 `603cd25`. 상태 `CORRECTION_REQUIRED` → `READY_FOR_CODEX`
+- 지적(유효): executor가 회전 시 `translate`/`rotate`를 요구하는데 공개 `PreviewCanvasContext`가 둘을
+  선언하지 않아, 타입을 정확히 구현한 소비자가 **컴파일 통과 후 회전 plan에서만 실패**할 수 있었다
+- 보완 ①: 두 메서드를 **선택적 capability로 공개 포트에 선언**. 선택성 자체가 계약 —
+  없으면 unrotated plan은 **그대로 실행**, rotated plan은 둘 다 요구
+- 보완 ②: **fail-closed 계약을 공개 포트에 문서화**(하나라도 없으면 preflight
+  `INVALID_EXECUTOR_INPUT` + **Canvas 연산 0**)
+- 보완 ③: **단일 정본화** — `RotationCapableCanvasContext`를 공개 타입에서 `Required<Pick<...>>`로
+  **파생**하고 executor 중복 interface **삭제**. `ROTATION_METHODS`는 `keyof PreviewCanvasContext`로
+  검사 → 메서드명 변경 시 컴파일이 깨진다
+- 신규 테스트 6: 공개 타입만으로 선언된 capability-free 컨텍스트의 unrotated PASS(transform 시도 0)·
+  명시적 0도 동일·회전 1/2/3 전부 fail-closed(Canvas 연산 0)·**절반 capability도 실패**·
+  함수 아닌 값도 실패·실제 `CanvasRenderingContext2D` **컴파일 타임 assignability**
+- 회전 순서·픽셀·오류 우선순위·R-1~R-6·C-1~C-9 **무변경**
+- 게이트: frozen exit 0 / lockfile·manifest diff 0 / 신규 의존성 0 / format·lint·typecheck /
+  **unit 995**(989→995) / **e2e 99 PASS** exit 0 / `git diff --check` clean / 포트 free / OS temp 0 /
+  dist SHA-256 E2E 전후 동일 / network·live·deploy 0
+- 번들: mockup JS 265.53 → **265.52 kB**(gzip 82.11 → **82.10**), CSS·admin 무변경
+- 스펙 018 PNG 2개: 손대지 않음
+- ⚠️ 판단 요청 ②(R-6 실측의 조사 보고서 NOT VERIFIED 해소 여부)는 **아직 미회신** — Codex 판정 대기
+- 다음: Codex 재검증 대기. **종료 문서·다음 스펙 착수 없음.**
