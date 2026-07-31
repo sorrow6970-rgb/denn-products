@@ -7,8 +7,26 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 032 DONE(`COMMITTED`) — Codex가 `315356a`를 독립 검증해 승인했다. 카탈로그에 **명시 cm 필드**(`printWidthCm`·`printHeightCm`)와 `projectFramePrintPhysicalSize`가 들어갔고 **이름·`sub`·label·id·`aspect`·논리 `w`/`h`에서 치수를 추론하는 경로는 0**이다. → 다음은 **운영자 cm 입력 UI 읽기 전용 조사**(계약 §후속 순서 2). **인쇄 좌표 방법(C-1 후보 A/B/C)은 여전히 미정**이고 **조사 보고서 Codex 재검토도 미완**이다. 스펙 027~032 승인·종료. 실제 인쇄 구현 미착수.**
+상태: **✅ 스펙 032 DONE(Codex 승인 `315356a`) → 운영자 cm 입력 UI **읽기 전용 조사 완료**, `READY_FOR_CODEX`(Codex 검토 대기). ★조사에서 두 가지가 새로 드러났다 — **리빌드 admin은 아직 프리미티브 데모 셸(3파일 79줄)이고 쓰기 경로가 0건**이며, **레거시에 이미 명시적 cm 필드 `wcm`/`hcm`이 있는데 스펙 032가 고려하지 않았다**. **인쇄 좌표 방법(C-1)은 여전히 미정**이고 **스펙 032 조사 보고서 Codex 재검토도 미완**이다. 실제 인쇄·운영자 UI 구현 미착수.**
 
+
+> **★ 운영자 cm 입력 UI 조사(2026-07-31, 읽기 전용)**: 보고서
+> `docs/codex-claude-handoff/reviews/2026-07-31-operator-cm-input-ui-investigation.md`. **문서 전용, 제품 코드 diff 0.**
+> **① 리빌드 admin에 아무것도 없다** — `apps/admin/src`는 스펙 011 프리미티브 데모 셸 **3파일 79줄**,
+> 카탈로그·저장·인증 0. 리빌드 전체 **쓰기 경로 0건**(`FIREBASE_NOT_IMPLEMENTED`), 읽기는
+> `published/state.json` 하나뿐이고 `admin/state.json`은 **읽지도 쓰지도 않는다**.
+> → 이 스펙의 실제 크기는 "입력란 두 개"가 아니라 **최초의 운영자 기능 + 최초의 쓰기 경로**다.
+> **② ★★ 레거시에 이미 `wcm`/`hcm`이 있다** — `denn-admin.html:1698`이 저장하고
+> `denn-mockup-tool.html:11302`가 **1순위**로 읽는다. 스펙 032가 고른 `printWidthCm`/`printHeightCm`은
+> 레거시 후보 **6순위**라 하위호환은 안전하지만, **운영자가 실제 값을 넣어온 필드는 `wcm`/`hcm`**이라
+> 지금 리빌드는 `UNKNOWN_FIELD`로 흘리고 projection이 **`null`(=인쇄 불가)**을 낸다 → **마이그레이션 결정 필요**.
+> **③ 레거시 사이즈 "수정"이 cm을 저장하지 않는다** — `confirmEditSz`가 `aspect`만 갱신하고 `wcm`/`hcm`
+> 대입이 없어 **조용한 불일치**가 생기고, `editSz`는 `sub` 파싱과 **`wcm=21` 날조 기본값**으로 폼을 채운다.
+> 스펙 032의 NOT TESTED "aspect↔cm 불일치"의 **실제 발생 메커니즘**이며 **재현 금지 대상**이다.
+> **STOP**: 1 admin 인증·쓰기·발행 도입 여부(Founder, **Firebase 표면 = 자동 진행 금지**) ·
+> 2 `wcm`/`hcm` 처리(Founder+Codex) · 3 `sub` 파생 여부(Founder) · 4 저장 경로 A/B/C(Codex) ·
+> 5 레거시 편집 동작 재현 금지 명시(Codex).
+> **NOT VERIFIED**: 실제 발행 카탈로그의 `wcm`/`hcm` 건수(실제 network 금지), 레거시 admin UI 실행 확인.
 
 > **스펙 032 DONE(2026-07-31, Codex 승인 `315356a`)**: 최종 게이트 frozen·format·lint·typecheck·build PASS,
 > unit **1109/1109**, Chromium E2E **116/116**, diff check·forbidden diff·ports 4183/4184·OS temp PASS.

@@ -10,7 +10,7 @@ state: CODEX_PASSED  # 스펙 032 독립 검증 통과
 baseline_commit: 2a0cfd3
 candidate_commit: c10e7a6  # 스펙 032 catalog cm 계약
 verified_commit: 315356a  # 스펙 032 Codex 승인분
-origin_relation: "spec 032 closing docs pushed fast-forward on top of 315356a; HEAD=origin, ahead/behind 0/0"
+origin_relation: "operator cm input UI investigation pushed fast-forward on top of 8a4ed09; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
@@ -19,6 +19,48 @@ commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 운영자 cm 입력 UI 읽기 전용 조사 완료 — READY_FOR_CODEX (2026-07-31)
+
+보고서: `docs/codex-claude-handoff/reviews/2026-07-31-operator-cm-input-ui-investigation.md`
+**문서 전용. 제품 코드·테스트·CSS·설정 diff 0**, 신규 의존성 0, 실제 network/live/Firebase/deploy 0.
+
+### 핵심 발견 3개
+
+1. **★ 리빌드 admin에 아무것도 없다.** `apps/admin/src`는 **3파일 79줄**의 스펙 011 프리미티브
+   데모 셸이고, 카탈로그·저장·인증이 전부 없다. 리빌드 전체에 **쓰기 경로 0건**이며
+   `packages/firebase`는 `FIREBASE_NOT_IMPLEMENTED`로 경계를 명시한다. 읽기도
+   `published/state.json` 하나뿐이고 `admin/state.json`은 **읽지도 쓰지도 않는다**.
+   → "입력란 두 개"가 아니라 **최초의 운영자 기능 + 최초의 쓰기 경로**다.
+2. **★★ 레거시에 이미 명시적 cm 필드 `wcm`/`hcm`이 있다**(`denn-admin.html:1698`이 저장,
+   `denn-mockup-tool.html:11302`가 **1순위**로 읽음). 스펙 032가 고른
+   `printWidthCm`/`printHeightCm`은 레거시 후보 **6순위**라 하위호환은 안전하지만,
+   **운영자가 실제 값을 넣어온 필드는 `wcm`/`hcm`** 이다. 지금 리빌드는 이를 `UNKNOWN_FIELD`
+   경고로 흘리고 projection이 **`null`(=인쇄 불가)** 을 낸다 → **마이그레이션 결정 필요**.
+3. **★ 레거시 사이즈 "수정"이 cm을 저장하지 않는다.** `confirmEditSz`가 `aspect`만 갱신하고
+   `wcm`/`hcm` 대입이 없다 → **aspect와 cm이 조용히 어긋난다**. `editSz`는 `sub` 정규식 파싱과
+   **`wcm=21` 날조 기본값**으로 폼을 채운다. 스펙 032가 NOT TESTED로 남긴 "aspect↔cm 불일치"의
+   **실제 발생 메커니즘**이며, 새 UI가 **재현하면 안 되는** 동작이다.
+
+### STOP — 결정 필요 (저장소 쓰기 없이 보고만)
+
+| # | 항목 | 누가 |
+| --- | --- | --- |
+| STOP 1 | admin에 **인증·쓰기·발행**을 이번에 도입할지, 쓰기 없는 검증 단위로 쪼갤지 (Firebase 표면 = 자동 진행 금지) | **Founder** |
+| STOP 2 | 기존 `wcm`/`hcm` 처리: 마이그레이션 / read가 함께 인정 / 무시하고 재입력 | **Founder + Codex** |
+| STOP 3 | `sub` 텍스트를 cm에서 파생할지 독립 편집할지 | **Founder** |
+| STOP 4 | 저장 경로 후보 A(검증만) / B(로컬 초안) / C(실제 쓰기) 택일 | **Codex** |
+| STOP 5 | 레거시 `confirmEditSz` 동작 재현 금지를 스펙에 명시할지 | **Codex** |
+
+### NOT VERIFIED
+
+실제 `published/state.json`·`admin/state.json` 내용(실제 network 금지) — `wcm`/`hcm`이 실제 몇 건인지
+모른다. 레거시 admin UI를 **실행해 보지 않았다**(근거는 전부 소스).
+
+### 유지
+
+스펙 032 P-1~P-6과 선행 029/030/031 확정분 **무변경**. **C-1은 여전히 Codex 결정이며 고르지 않았다.**
+스펙 032 조사 보고서에 대한 **Codex 재검토는 여전히 미완** — 전제가 뒤집히면 STOP 2도 다시 열린다.
 
 ## Claude 스펙 032 종료 — DONE / COMMITTED (2026-07-31)
 

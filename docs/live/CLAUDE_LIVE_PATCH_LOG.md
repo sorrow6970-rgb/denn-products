@@ -884,3 +884,46 @@
 - 인계: `docs/handoff/2026-07-31-spec-032-print-physical-size-handoff.md`
 - 다음: **운영자용 cm 입력 UI(`apps/admin/**`) 읽기 전용 조사**로 자동 전환(계약 §후속 순서 2)
 
+## 2026-07-31 — 운영자 cm 입력 UI 읽기 전용 조사 (문서 전용, 제품 코드 diff 0)
+
+스펙 032 §후속 순서 2. 보고서
+`docs/codex-claude-handoff/reviews/2026-07-31-operator-cm-input-ui-investigation.md`.
+
+- **① 리빌드 admin에 아무것도 없다** — `apps/admin/src`는 스펙 011 프리미티브 데모 셸 **3파일 79줄**
+  (`App.tsx` 주석: `No product features, no click side effects`). 의존성에 `@denn/firebase`조차 없다.
+  리빌드 전체에서 `uploadString|uploadBytes|setDoc|updateDoc|putFile|writeFile` **0건**이고
+  `packages/firebase/src/index.ts`가 `FIREBASE_NOT_IMPLEMENTED`로 경계를 명시한다. 읽기도
+  `published/state.json` 하나뿐(`public-catalog/location.ts:11-14`)이며 `admin/state.json`은
+  **읽지도 쓰지도 않는다** → 이 스펙은 "입력란 두 개"가 아니라 **최초의 운영자 기능 + 최초의 쓰기 경로**다
+- **② ★★ 레거시에 이미 명시적 cm 필드 `wcm`/`hcm`이 있다** — `denn-admin.html:1698`의 `addSz`가
+  `wcm:w, hcm:h`로 저장하고(입력 id `s-wcm`/`s-hcm`, `sub`는 `w+'×'+h+' cm'` 자동 생성),
+  `denn-mockup-tool.html:11302`의 `frameCm` 후보 8쌍 중 **1순위**가 `[sz.wcm, sz.hcm]`이다.
+  룸 목업(`:4410`)은 아예 `pick.wcm`/`pick.hcm`만 본다. 스펙 032가 고른
+  `printWidthCm`/`printHeightCm`은 **6순위**로 이미 후보에 있어 하위호환은 안전하지만,
+  **운영자가 실제로 값을 넣어온 필드는 `wcm`/`hcm`**이다. 현재 리빌드 allowlist에 없어
+  `recordUnknown`(`read.ts:190-194`) → **`UNKNOWN_FIELD` 경고 + `extensions` 보존 + 정상 read**이고
+  `projectFramePrintPhysicalSize`는 **`null`(=P-2·P-3에 따라 인쇄 미생성)** 을 낸다 →
+  운영자가 이미 정확한 치수를 넣어뒀는데도 인쇄가 안 나온다. **마이그레이션 결정 필요**
+  (기본 사이즈 6개(`denn-admin.html:852`)는 `wcm`/`hcm`이 **없고** `sub` 텍스트만 있어 전부 `null` 확정)
+- **③ ★ 레거시 사이즈 "수정"이 cm을 저장하지 않는다** — `confirmEditSz`(`denn-admin.html:1668-1681`)가
+  `s-wcm`/`s-hcm`을 읽어 `sz.aspect=w/h`만 갱신하고 **`sz.wcm`/`sz.hcm` 대입이 없다**. `addSz`는 쓰는데
+  편집은 안 쓴다 → 커스텀 사이즈는 **aspect 새 값 + cm 옛 값**으로 조용히 어긋나고, 기본 사이즈는
+  영원히 cm이 없다. 게다가 `editSz`(`:1645-1653`)는 저장값이 없으면 **`sub` 정규식 파싱** →
+  실패하면 **`wcm=21, hcm=21*aspect` 날조 기본값**으로 폼을 채운다. 스펙 032가 NOT TESTED로 남긴
+  **"aspect↔cm 비율 불일치"의 실제 발생 메커니즘**이며 새 UI가 **재현하면 안 되는** 동작이다
+- **새 UI가 만족시켜야 할 것**: half-declared는 read가 **fatal**이라 **저장 자체를 차단**해야 한다
+  (통과시키면 카탈로그 전체가 안 읽혀 목업툴이 죽는다) · finite·`> 0`·`<= 500` 입력 단계 거부(clamp 금지) ·
+  "둘 다 미입력"은 오류가 아니라 **"아직 인쇄 불가"** · **자동 채움(prefill) 금지**(P-2)
+- **저장 경로 후보(선택 안 함)**: A 검증만(쓰기 0, 자동 진행 가능) / B 로컬 초안 / C 실제
+  `admin/state.json` 쓰기(**Firebase 표면 = CLAUDE.md §1.3 자동 진행 금지**). A는 B/C의 부분집합
+- **STOP**: 1 admin 인증·쓰기·발행 도입 여부(**Founder**) · 2 `wcm`/`hcm` 처리(**Founder+Codex**) ·
+  3 `sub` 파생 여부(**Founder**) · 4 저장 경로 A/B/C(**Codex**) · 5 레거시 편집 동작 재현 금지 명시(**Codex**)
+- 변경: **문서 전용**(조사 보고서 1 신규 + CURRENT + 이 로그 + Automation 2). 제품 코드·테스트·CSS·
+  설정·manifest·lockfile diff **0**, 신규 의존성 0, 실제 network·live·Firebase·CORS·deploy **0**
+- **NOT VERIFIED**: 실제 `published/state.json`·`admin/state.json` 내용(실제 network 금지) —
+  `wcm`/`hcm`이 몇 건인지 모른다 · 레거시 admin UI를 **실행해 보지 않았다**(근거는 전부 소스)
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: **손대지 않음**
+- 유지: 스펙 032 P-1~P-6, 선행 029/030/031 확정분 **무변경**. **C-1은 고르지 않았다**(Codex 결정).
+  **스펙 032 조사 보고서 Codex 재검토 미완** — 전제가 뒤집히면 STOP 2도 다시 열린다
+- 다음: **Codex 검토 + Founder STOP 1~3 결정**. 구현 착수 **없음.**
+
