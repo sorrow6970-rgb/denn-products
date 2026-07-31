@@ -4,21 +4,37 @@
 updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-030-customer-photo-quarter-turn-rotation
+completed_unit: spec-031-frame-text-zones-physical-clock-preview
 active_unit: spec-031-frame-text-zones-physical-clock-preview
-state: READY_FOR_CODEX  # 스펙 031 보완 라운드 1 완료 → Codex 재검증 대기
+state: COMMITTED  # 스펙 031 종료 문서 처리 완료 → Codex 최종 확인 후 DONE
 baseline_commit: 3927420
-candidate_commit: 88b64e6  # 스펙 031 보완 라운드 1 코드/test (최초 구현 78095f8)
-verified_commit: 7636367  # 스펙 031 조사 승인분
-origin_relation: "spec 031 fix round 1 code and doc commits pushed fast-forward on top of 78acdf6; HEAD=origin, ahead/behind 0/0"
+candidate_commit: b7d46d3  # 스펙 031 보완 라운드 1 코드 88b64e6 + 문서
+verified_commit: 88b64e6  # 스펙 031 승인분 (보완 라운드 1)
+origin_relation: "spec 031 closing doc commit pushed fast-forward on top of b7d46d3; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: only the two known spec-018 PNGs; Claude must not restore/stage/commit them"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_VERIFYING
+next_transition: DONE
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Codex 스펙 031 보완 라운드 1 재검증 — CODEX_PASSED (2026-07-31)
+
+대상 `b7d46d3`을 독립 재검증했다.
+
+- frozen install, format, lint, typecheck: PASS
+- unit: 1088/1088 PASS
+- 독립 build: PASS
+- Chromium E2E: 116/116 PASS
+- `git diff --check`, lockfile·금지 범위: PASS
+- ports 4183/4184, OS temp staging 잔류: 0
+- 잔류 프로세스 command-line: NOT TESTED
+
+시계 mat 좌표, 선언된 custom image 실패 시 overlay 숨김, requested font availability fail-closed
+세 계약이 보완됐다. Claude는 기능 코드를 더 수정하지 않고 스펙 031 종료 문서만 별도
+fast-forward commit/push한다. 다음 스펙은 자동 시작하지 않는다.
 
 ## Codex 스펙 031 독립 검증 — CORRECTION_REQUIRED 라운드 1 (2026-07-31)
 
@@ -756,3 +772,31 @@ Codex 지적 3건은 모두 유효했고 허용 파일 5개 안에서만 보완�
   하지 않았다
 
 다음 전이: Codex가 `88b64e6`와 문서 커밋을 재검증한다. 그 전까지 Claude는 저장소를 수정하지 않는다.
+
+## 스펙 031 종료 문서 처리 완료 — COMMITTED (Claude Code, 2026-07-31)
+
+Codex 승인(코드 `88b64e6`, 문서 `b7d46d3`)에 따라 종료 문서만 하나의 문서 커밋으로 처리하고
+일반 fast-forward push했다.
+
+- 커밋 파일(허용 목록과 정확히 일치):
+  `docs/rebuild/specs/031-frame-text-zones-physical-clock-preview.md`(§CODEX_PASSED),
+  `docs/handoff/2026-07-31-spec-031-text-clock-handoff.md`(§9 + 상태 줄),
+  `docs/codex-claude-handoff/CURRENT.md`, `docs/live/CLAUDE_LIVE_PATCH_LOG.md`,
+  `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`
+- 기록한 최종 판정: **unit 1088/1088**, 실제 Chromium **E2E 116/116**,
+  frozen·format·lint·typecheck·build·`git diff --check` PASS, 포트 4183·4184·OS temp 잔류 0,
+  lockfile·manifest diff 0, 신규 의존성 0, network·live·deploy 0
+- **잔류 프로세스 command-line 검사는 NOT TESTED**로 유지했다
+- 기능 코드·테스트·CSS·설정·`package.json`·`pnpm-lock.yaml` 변경 **0**
+  (`git diff 88b64e6..HEAD -- apps packages tests` = 0줄)
+- Claude 재실측(같은 트리): `check` PASS(format·lint·typecheck·unit·build), unit 1088
+- 판단 2건(배럴 확장 대신 구조적 타입 · 입력 거부의 빌더 시험 빌드)은 명시 지시 없이 승인으로 수용된
+  것으로 기록했다
+- NOT TESTED 유지: 잔류 프로세스 command-line, 실기기 4환경 IME·폰트·오버레이, system font 대체,
+  실제 인쇄물 가독성, 실제 print/export 텍스트 출력, 실제 물리 시계와 오버레이 위치 일치,
+  case 텍스트·admin `name2`·고객 style(범위 밖)
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 restore·checkout·stage·
+  commit 하지 않았다
+- 다음 스펙·사전조사·기능 **미착수**
+
+다음 전이: Codex가 이 종료 문서 커밋의 hash와 `HEAD=origin`, ahead/behind 0/0을 확인하면 `DONE`이다.

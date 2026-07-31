@@ -736,3 +736,21 @@
 - 변경 파일 5개(허용 목록과 일치), `surface.css` 변경 불필요. 회전·wrap·오류 우선순위·F-1~F-8 무변경
 - 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: 손대지 않음
 - 다음: Codex 재검증 대기. **종료 문서·다음 스펙 착수 없음.**
+
+## 2026-07-31 — 스펙 031 종료 (Codex 재검증 승인 → DONE)
+
+- 상태: `READY_FOR_CODEX` → **`CODEX_PASSED`** → 종료 문서 처리 → `COMMITTED`
+- 승인 대상: 코드 **`88b64e6`**(보완 라운드 1, 최초 구현 `78095f8`) + 문서 **`b7d46d3`**
+- Codex 독립 게이트: **unit 1088/1088** / 실제 Chromium **E2E 116/116** /
+  frozen·format·lint·typecheck·build·`git diff --check` **PASS** / 포트 4183·4184·OS temp 잔류 **0** /
+  lockfile·manifest diff 0 · 신규 의존성 0
+- Claude 재실측(같은 트리): `check` PASS · unit 1088, 기능 코드 diff **0**
+  (`git diff 88b64e6..HEAD -- apps packages tests` = 0줄)
+- **NOT TESTED 유지**: **잔류 프로세스 command-line 검사** / 실기기 4환경 IME·폰트·오버레이 /
+  system font 대체 / 실제 인쇄물 가독성 / **실제 print/export 텍스트 출력** /
+  **실제 물리 시계와 오버레이 위치 일치** / case 텍스트·admin `name2`·고객 style(범위 밖)
+- 판단 2건(배럴 확장 대신 구조적 타입 · 입력 거부의 빌더 시험 빌드)은 **명시 지시 없이 승인으로 수용**된
+  것으로 기록했다
+- 이 라운드는 **문서 전용 커밋**(기능 코드·테스트·CSS·설정·lockfile 변경 0, network·live·deploy 0)
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: 손대지 않음
+- 다음: **다음 스펙 미착수 — Codex 지시 대기**

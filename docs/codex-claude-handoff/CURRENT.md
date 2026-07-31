@@ -7,7 +7,36 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **🛠️ 스펙 031 보완 라운드 1 완료 → `READY_FOR_CODEX`(Codex 재검증 대기). 시계는 **mat rect 기준**, 선언된 시계 사진 실패는 **숨김**, 요청 폰트 미가용 시 텍스트 plan **fail-closed**. 스펙 027~030은 승인·종료. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+상태: **✅ 스펙 031(액자 텍스트 영역 + 물리적 시계 미리보기) 승인·종료. 스펙 027~030도 승인·종료. 다음 스펙 미착수 — Codex 지시 대기. ⚠️ working tree의 스펙 018 PNG 2개는 복원·커밋하지 않는다.**
+
+
+> 스펙 031 종료(2026-07-31): Codex가 보완 라운드 1 코드 **`88b64e6`** 와 문서 **`b7d46d3`** 를 독립
+> 재검증해 **승인**했고, Claude Code가 종료 문서만 처리했다(상태 `CODEX_PASSED` → `COMMITTED`,
+> **문서 전용 커밋** · 기능 코드 변경 **0** — `git diff 88b64e6..HEAD -- apps packages tests` = **0줄**).
+> 정본 `docs/rebuild/specs/031-frame-text-zones-physical-clock-preview.md`(§CODEX_PASSED),
+> 인계 `docs/handoff/2026-07-31-spec-031-text-clock-handoff.md`(§9).
+> **Codex 독립 게이트 PASS**: **unit 1088/1088** / 실제 Chromium **E2E 116/116** /
+> frozen install·format·lint·typecheck·build·`git diff --check` / 포트 4183·4184·OS temp 잔류 **0** /
+> lockfile·manifest diff 0 · 신규 의존성 0. Claude 재실측(같은 트리)도 `check` PASS·unit 1088로 일치.
+> **확정 계약(최종)**: 액자 `textZones` **다섯 키만**(닫힌 범위 검증, 중복·미지원 키 거부,
+> `maxChars` 기본 **80**·`maxLines` 기본 **2**, 초과는 **입력 차단**이지 자르기가 아님, `"0"`은 유효) /
+> `defaultTexts`는 **placeholder 전용**·`name2`엔 없음 / **wrap은 주입 측정 포트로 빌더에서 한 번 확정**해
+> `draw-text`가 **이미 wrap된 lines + 폭**만 담고 미리보기와 향후 print가 **같은 lines**를 소비 /
+> **요청 폰트 미가용 시 텍스트 plan fail-closed**(대체 측정 없음) / executor 텍스트 capability는
+> **선택적**이고 없으면 **preflight fail-closed**, letter-spacing은 **glyph별 `fillText`** /
+> **시계는 하드웨어**(F-4) — **mat rect 기준** percent의 DOM 오버레이(`pointer-events:none`·`aria-hidden`),
+> **plan·인쇄·주문에 없음**, custom image **timer 0**, 텍스트는 **분 경계 60초**, **활성 timer ≤1** +
+> generation 가드, **선언된 사진이 실패하면 텍스트로 대체하지 않고 숨김**.
+> `packages/render/src/geometry`·image owner·template art·placement **무변경**.
+> **NOT TESTED 유지**: **잔류 프로세스 command-line 검사** · 실기기 4환경 **IME·폰트·오버레이** ·
+> **system font 대체** · 실제 **인쇄물 가독성** · **실제 print/export의 텍스트 출력**(인쇄 경로는 아직 이
+> plan을 소비하지 않는다) · **실제 물리 시계와 오버레이 위치의 일치 여부** ·
+> case 텍스트 · admin `name2` · 고객 style(모두 Founder 결정으로 범위 밖).
+> 최초 라운드의 판단 2건(배럴 확장 대신 **구조적 타입** · 입력 거부의 **빌더 시험 빌드**)은 **명시 지시
+> 없이 승인으로 수용**된 것으로 기록했다.
+> ⚠️ 이 종료는 **합성 fixture에서 문구를 입력하고 시계 자리를 표시한 단계**이며 실기기·인쇄/export·주문·
+> 배포 완료가 아니다. `hosting.public:"."` → **Hosting 격리 전 배포 금지** 유지.
+> **다음 스펙·사전조사·신규 기능은 착수하지 않는다.**
 
 
 > **스펙 031 보완 라운드 1(2026-07-31, 기준 `78acdf6`, 코드 커밋 `88b64e6`)**: Codex 지적 **3건 모두 유효**.

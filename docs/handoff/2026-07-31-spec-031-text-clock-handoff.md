@@ -1,6 +1,6 @@
 # 스펙 031 인계 — 액자 텍스트 영역과 물리적 시계 미리보기
 
-상태: **보완 라운드 1 완료 → `READY_FOR_CODEX`** (2026-07-31, §8 참조)
+상태: **DONE — Codex 승인 후 종료 문서 처리 완료 (`COMMITTED`)** (2026-07-31, §9 참조)
 코드/test 커밋: `78095f8` → 보완 `88b64e6` / 기준: 계약 `3927420`, 결정 정본 `e3dc2b1`, 조사 `7636367`
 
 ## 1. 한 줄
@@ -181,3 +181,53 @@ OS temp 0 / 고객 dist SHA-256 E2E 전후 **동일** / network·live·deploy **
 회전·텍스트 wrap·오류 우선순위·F-1~F-8 결정 **전부 무변경**. `surface.css`·`packages/**`·
 `apps/mockup/src/canvas/**` **무변경**. 스펙 018 PNG 2개와 content diff 0인
 `packages/render/src/plan/index.ts`는 **restore·stage·commit하지 않았다**.
+
+---
+
+## 9. 종료 (2026-07-31) — CODEX_PASSED → COMMITTED
+
+Codex가 보완 라운드 1 커밋 `b7d46d3`(코드 `88b64e6`)을 독립 재검증해 **승인**했고, Claude Code가
+**종료 문서만** 하나의 문서 커밋으로 처리했다. 기능 코드·테스트·CSS·설정 변경 **0**
+(`git diff 88b64e6..HEAD -- apps packages tests` = **0줄**).
+
+### 최종 검증 결과
+
+| 게이트 | 결과 |
+| --- | --- |
+| unit | **1088 / 1088** |
+| 실제 Chromium E2E | **116 / 116** |
+| frozen install · format · lint · typecheck · build · `git diff --check` | **PASS** |
+| lockfile·manifest diff / 신규 의존성 | **0 / 0** |
+| 포트 4183·4184 / OS temp staging 잔류 | **0 / 0** |
+| 고객 dist SHA-256 (E2E 전/후) | **동일** |
+| 실제 network·live·Firebase·CORS·Rules/Hosting·deploy | **0** |
+| **잔류 프로세스 command-line 검사** | **NOT TESTED** |
+
+Claude 재실측(같은 트리)도 `check` PASS·unit 1088로 Codex 게이트와 일치한다.
+
+### 판단 2건의 처리
+
+최초 라운드에서 올린 ① **배럴 확장 대신 구조적 타입**(§3) ② **입력 거부의 빌더 시험 빌드**(§2.2)에
+대해 **명시적 별도 지시는 오지 않았다**. 이번 승인으로 **현재 구현 형태가 수용된 것으로 기록**한다.
+후속 스펙에서 배럴을 넓히거나 wrap 헬퍼를 노출하기로 정해지면 그때 정리한다.
+
+### 최종 상태
+
+- 승인 코드 `88b64e6`(최초 구현 `78095f8`), 승인 문서 `b7d46d3`, 종료 문서 커밋은 이 라운드
+- 커밋 파일(허용 목록과 정확히 일치): 정본 스펙(§CODEX_PASSED), 이 인계(§9),
+  `docs/codex-claude-handoff/CURRENT.md`, `docs/live/CLAUDE_LIVE_PATCH_LOG.md`,
+  `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`
+- 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 restore·checkout·stage·
+  commit **하지 않았다**
+- 다음 스펙·사전조사·기능 **미착수**
+
+### NOT TESTED (종료 시점 유지)
+
+- **잔류 프로세스 command-line 검사**
+- 실기기 4환경의 **IME · 폰트 · 오버레이**, **system font 대체**, 실제 **인쇄물 가독성**
+- **실제 print/export의 텍스트 출력**(인쇄 경로는 아직 이 plan을 소비하지 않는다)
+- **실제 물리 시계와 오버레이 위치의 일치 여부**
+- case 텍스트 · admin `name2` · 고객 style (모두 Founder 결정으로 범위 밖)
+
+⚠️ 이 종료는 **합성 fixture에서 문구를 입력하고 시계 자리를 표시한 단계**이며 실기기·인쇄/export·주문·
+배포 완료가 아니다. `hosting.public:"."` → **Hosting 격리 전 배포 금지** 유지.

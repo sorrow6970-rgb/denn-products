@@ -224,3 +224,35 @@ dist SHA-256 E2E 전후 동일 / network·live·deploy 0.
 
 무변경: 회전·텍스트 wrap·오류 우선순위·F-1~F-8. `surface.css`·`packages/**`·`canvas/**` 무변경.
 스펙 018 PNG 2개와 `packages/render/src/plan/index.ts`는 손대지 않았다.
+
+### CODEX_PASSED (2026-07-31)
+
+Codex가 보완 라운드 1 커밋 `b7d46d3`(코드 `88b64e6`)을 독립 재검증해 **승인**했다.
+
+확인된 것:
+
+- **unit 1088/1088**, 실제 Chromium **E2E 116/116**
+- frozen install · format · lint · typecheck · build · `git diff --check` **PASS**
+- 포트 4183·4184 및 OS temp staging 잔류 **0**
+- lockfile·manifest diff **0**, 신규 의존성 **0**
+
+**NOT TESTED (종료 시점 유지)**:
+
+- **잔류 프로세스 command-line 검사** — 이번 라운드에서도 실행하지 못했다
+- 실기기 4환경(iOS Safari · Android Chrome · 삼성 인터넷 · 카카오 인앱)의 **IME · 폰트 · 오버레이**
+- **system font 대체** 결과
+- 실제 **인쇄물 가독성**
+- **실제 print/export의 텍스트 출력** — 인쇄 경로는 아직 이 plan을 소비하지 않는다
+- **실제 물리 시계와 오버레이 위치의 일치 여부**
+- case 텍스트(F-1 범위 밖) · admin `name2`(F-8 별도 스펙) · 고객 style(F-2)
+
+구현 판정(최종): 액자 `textZones` 다섯 키 + `draw-text` 커맨드(주입 측정 포트로 wrap을 plan 생성 시
+확정) + executor 텍스트 capability(없으면 preflight fail-closed) + **mat rect 기준** 물리적 시계 DOM
+오버레이(custom image timer 0, 텍스트는 분 경계 60초, 활성 timer ≤1, 선언된 사진 실패 시 숨김) +
+요청 폰트 미가용 시 텍스트 plan fail-closed. `packages/render/src/geometry`·image owner·template art·
+placement 무변경, 시계는 plan·인쇄·주문에 **들어가지 않는다**(Founder F-4).
+
+> 최초 라운드에서 올린 판단 2건(배럴 확장 대신 구조적 타입 · 입력 거부의 빌더 시험 빌드)에 대한
+> **명시적 별도 지시는 없었고**, 이번 승인으로 **현재 구현 형태가 수용된 것**으로 기록한다.
+
+스펙 031은 **DONE**이다. 다음 스펙은 Codex 지시 전까지 착수하지 않는다.
