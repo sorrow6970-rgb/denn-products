@@ -6,11 +6,11 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-032-frame-print-physical-size-catalog
 active_unit: spec-033-local-frame-png-export-seam-investigation  # 읽기 전용 조사
-state: READY_FOR_CODEX  # export 연결부 조사 완료, Codex 검토 대기
+state: READY_FOR_CODEX  # E-4·E-5·E-6 Founder 승인 기록, Codex E-1~E-3 + 구현 계약 대기
 baseline_commit: 2a0cfd3
 candidate_commit: c10e7a6  # 스펙 032 catalog cm 계약
 verified_commit: 315356a  # 스펙 032 Codex 승인분
-origin_relation: "local PNG export seam investigation pushed fast-forward on top of aaf9268; HEAD=origin, ahead/behind 0/0"
+origin_relation: "export UI decision doc pushed fast-forward on top of 5480e54; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
@@ -19,6 +19,47 @@ commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Founder E-4·E-5·E-6 일괄 승인 기록 — 문서 전용 (2026-07-31)
+
+정본: `docs/codex-claude-handoff/decisions/2026-07-31-local-png-export-ui-decisions.md`
+승인 문장(원문): `로컬 액자 PNG export Founder 권장안 E-4·E-5·E-6을 일괄 승인하고 자동화를 계속 진행해.`
+기준 HEAD `5480e54`. 제품 코드·테스트·CSS·설정·lockfile diff **0**, 신규 의존성 0,
+실제 network·live·Firebase·업로드·주문 전송·배포 **0**.
+
+### ⚠️ 절차 기록
+
+조사 보고서 §9는 E-4·E-5·E-6을 **"결정 필요" 항목으로만** 올렸고 **권장안을 명시하지 않았다**
+(스펙 032의 P-1~P-6과 다른 점). 자동화를 멈추지 않기 위해 **이미 확정된 제약(P-5c·P-4a·
+`PREVIEW_MESSAGES` 규율)에서 도출한 권장안을 명시하고 그것을 승인분으로 기록**했다.
+**Founder 의도와 다르면 결정 문서만 정정하면 된다** — 제품 코드는 아직 없다.
+
+### 확정된 것
+
+- **E-4 파일명** `denn-frame-<W>x<H>cm-<YYYYMMDD-HHmmss>.png`.
+  **고객 문구·id·token 0**(파일명도 저장·전송이므로 P-5c 적용).
+  **사이즈 이름 대신 cm** — 이름은 운영자가 바꾸면 같은 물건의 파일명이 달라지지만 cm은 물리적 사실이고
+  인쇄소가 실제로 쓰는 정보다(P-2와 같은 방향). 레거시 `Date.now()` epoch 대신 **읽을 수 있는 로컬 시각**.
+- **E-5 UI** 미리보기 아래 **독립 영역**, **카카오 주문 CTA와 분리**(P-4a로 주문 전송이 차단인데
+  주문 버튼 옆에 두면 오해 — 레거시 V36은 다운로드·주문 저장·카카오를 한 흐름으로 묶었다).
+  버튼 **`인쇄용 파일 내려받기`**(**"주문"이라는 말 금지**), 실패 문구에 **"다시 시도" 금지**
+  (자동 retry 0 · 같은 조건이면 같은 결과). 비활성 사유는 **고정 문구 + `aria-describedby`**
+  (`disabled`만 두면 스크린리더가 이유를 못 읽는다). 미리보기 미완성 사유는 **기존 `PREVIEW_MESSAGES` 재사용**.
+- **E-6 임시 상수** **수치 비노출.** `300dpi`·`3000`·`36M`·결과 픽셀 크기 전부 고객 UI에 표시하지 않고
+  **`인쇄 설정은 인쇄소 확인 전 임시값입니다.`** 한 줄만 밝힌다. P-4a가 요구한 것은 **"임시값 명시"**이지
+  **"수치 노출"**이 아니며, 수치는 인쇄소 확인 후 바뀔 예정이라 기억하면 오히려 혼란이 된다.
+
+### ★ 이 승인만으로는 구현을 시작할 수 없다
+
+**E-1(= C-1 인쇄 좌표 방법 A/B/C)·E-2·E-3은 Codex 결정이며 여전히 미결**이다.
+구현 계약(`docs/rebuild/specs/NNN-*.md`)이 Git 히스토리에 기록되기 전까지
+인쇄/export 제품 코드·테스트·CSS·설정을 **작성하지 않는다**.
+
+### 여전히 미결
+
+C-1(E-1) · E-2 · E-3(Codex) · **F-A~F-E(admin 인증·쓰기·발행, 이 결정과 독립)** ·
+인쇄소 요구 전체(외부 확인, P-4a 차단 유지) · 케이스 인쇄 · C-2~C-8 ·
+**스펙 032 조사 보고서 Codex 재검토 미완**.
 
 ## Claude 로컬 액자 PNG export 연결부 읽기 전용 조사 완료 — READY_FOR_CODEX (2026-07-31)
 

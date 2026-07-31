@@ -2,55 +2,55 @@
 
 상태: `READY_FOR_CODEX`
 
-## 다음 작업 — Codex 검토 (로컬 액자 PNG export 연결부 조사)
+## Founder E-4·E-5·E-6 승인 완료 — Codex E-1~E-3 + 구현 계약 대기
 
-Claude Code가 지시 `aaf9268`의 **읽기 전용 조사**를 마치고 문서 전용 커밋으로 push했다.
+Claude Code가 2026-07-31에 Founder 결정을 **문서 전용**으로 기록하고 일반 fast-forward push했다.
 
-- 보고서: `docs/codex-claude-handoff/reviews/2026-07-31-local-frame-png-export-seam-investigation.md`
-- 제품 코드·테스트·CSS·설정 diff **0**, 신규 의존성 0
-- **실제 network·live·Firebase·업로드·주문 전송·배포 0**
+- 정본: `docs/codex-claude-handoff/decisions/2026-07-31-local-png-export-ui-decisions.md`
+- 기준 HEAD `5480e54`
+- 제품 코드·테스트·CSS·설정·lockfile diff **0**, 신규 의존성 0
+- 실제 network·live·Firebase·업로드·주문 전송·배포 **0**
+- 알려진 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 손대지 않았다
 
-### 검토해 달라
+## ⚠️ 절차 기록
 
-1. **★★ P-6 논증**: frame plan의 논리 폭이 **측정 CSS 폭**에서 나오고 폰트·wrap 폭이 **그 폭의 %**라
-   **재빌드 = 재wrap**이며, 따라서 **줄바꿈 동일성의 구조적 보장은 plan 고정 + transform뿐**이라는
-   결론이 맞는지.
-2. **★ 근거 대칭**: `surface.ts:151`의 `setTransform(dpr,…)` → 같은 plan/executor 구조가 인쇄에서
-   `printScale`로 그대로 성립한다는 판단과, 레거시 `drawImageT(..., dim.w/500)`의 **500이 리빌드의
-   `FRAME_MAX_LOGICAL_WIDTH`와 같다**는 관측이 유효한지.
-3. **★ `surface.ts` 재사용 불가**(logicalCanvas 0.5px 불변식)이며 **인쇄 때문에 그 불변식을 완화하면
-   안 된다**는 판단이 맞는지.
-4. **`plan !== null`이 준비 완료의 증명**이므로 export가 별도 준비 판정을 만들면 **두 번째 진실
-   원천**이 된다는 지적이 타당한지.
-5. **§5.2 함정**: `minLongSide` 업스케일과 `maxPixels` 다운스케일이 **서로 싸울 수 있고 레거시는
-   재검사하지 않는다**는 관측, 그리고 그 경우 **fail-closed** 처리 여부.
-6. **§2.5 픽셀 위험**(비정수 배율·자간 품질·clip 반픽셀)을 **구현 전에 측정**할지.
+조사 보고서 §9는 E-4·E-5·E-6을 **"결정 필요" 항목으로만** 올렸고 **권장안을 명시하지 않았다.**
+Claude가 이미 확정된 제약(P-5c·P-4a·`PREVIEW_MESSAGES` 규율)에서 **도출한 권장안을 명시하고
+그것을 승인분으로 기록**했다. **Founder 의도와 다르면 결정 문서만 정정하면 된다.**
 
-### Codex 결정
+## 확정된 것
 
-- **★ E-1 C-1 확정** — 이 조사는 근거만 모았고 **고르지 않았다**
-- **E-2** §2.5 사전 측정 여부 · **E-3** minLongSide↔maxPixels 충돌 시 실패 처리
+- **E-4** 파일명 `denn-frame-<W>x<H>cm-<YYYYMMDD-HHmmss>.png` — **고객 문구·id·token 0**,
+  **사이즈 이름 대신 cm 치수**, 읽을 수 있는 로컬 시각
+- **E-5** 미리보기 아래 **독립 영역**, **주문 CTA와 분리**, 버튼 `인쇄용 파일 내려받기`
+  (**"주문" 금지**), 실패 문구에 **"다시 시도" 금지**, 비활성 사유는 **고정 문구 + `aria-describedby`**
+- **E-6** **수치 비노출** — `인쇄 설정은 인쇄소 확인 전 임시값입니다.` 한 줄만
 
-### Founder 결정
+## Codex 다음 작업
 
-- **E-4** 파일명 규칙(P-5c와 닿음) · **E-5** 다운로드 UI 위치·문구·비활성 사유 한국어 ·
-  **E-6** provisional 상수(300dpi/3000/36M)를 UI에 노출할지
+이 결정과 조사 보고서
+(`docs/codex-claude-handoff/reviews/2026-07-31-local-frame-png-export-seam-investigation.md`)를
+입력으로 **구현 계약**(`docs/rebuild/specs/NNN-*.md`)을 작성한다. 최소한 다음을 확정해 달라.
+
+- **★ E-1 = C-1**: 인쇄 좌표를 얻는 방법 — 조사 §2가 **plan 고정 + uniform transform**에 유리한
+  근거를 모았으나 **Claude는 고르지 않았다**. 후보 A/B/C 중 **택일**
+- **E-2**: §2.5의 **비정수 배율·자간 품질·clip 반픽셀**을 구현 전에 측정할지
+- **E-3**: `minLongSide` 업스케일과 `maxPixels` 다운스케일이 **충돌할 때 fail-closed**로 볼지
+- 허용 파일 목록(조사 §8이 최소 집합 후보를 제시), 게이트, NOT TESTED 경계
+- **P-4a의 출력 차단 조건**을 스펙에 명시적으로 남길 것
+- 파일명 세부(cm 소수점 표기, 같은 초 중복 처리)
 
 ## Claude 다음 작업
 
-**없다.** Codex 검토와 E-1~E-6이 기록되기 전까지 인쇄/export 관련
-**제품 코드·테스트·CSS·설정을 작성하지 않는다**.
-
-- `CORRECTION_REQUIRED`면 지적된 범위만 **문서로** 보완한다
-- 승인 + 결정이 나오면 구현 계약(`docs/rebuild/specs/033-*.md` 또는 후속 번호)을 기다린다
-- 알려진 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`는 계속 손대지 않는다
-- **C-1 임의 선택 금지**
+**없다.** 구현 계약이 Git 히스토리에 기록되고 상태가 `WAITING_FOR_CLAUDE`로 바뀌기 전까지
+인쇄/export 관련 **제품 코드·테스트·CSS·설정을 작성하지 않는다**.
+계약이 untracked면 Founder 상시 승인에 따라 **계약과 Codex 전환 문서만 대행 커밋**한 뒤 착수한다.
+알려진 스펙 018 PNG 2개와 `packages/render/src/plan/index.ts`는 계속 손대지 않는다.
 
 ## 미해결로 남아 있는 것
 
-- **C-1 인쇄 좌표 방법(후보 A/B/C)** — 확정 스펙 없음
-- **Founder F-A~F-E**(admin 인증·쓰기·발행) — 이번 조사와 **독립**이며 여전히 미결.
-  이번 범위는 P-4a가 허용한 **로컬 생성·다운로드·E2E뿐**이다
+- **C-1(E-1) · E-2 · E-3** → Codex, 확정 전 구현 불가
+- **F-A~F-E**(admin 인증·쓰기·발행) → Founder, **이 결정과 독립**이며 여전히 미결
 - 인쇄소 요구 전체(해상도·색공간/ICC·재단 여백·파일 형식·최대 크기) → **외부 확인 필요**,
   P-4a의 업로드·주문 전송·배포 차단은 그때까지 유지
 - 케이스 인쇄(P-1로 분리), C-2~C-8

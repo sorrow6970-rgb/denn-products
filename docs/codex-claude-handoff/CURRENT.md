@@ -7,8 +7,25 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **✅ 스펙 032 DONE → cm UI 조사(`1aae91d`) → admin 쓰기 경계 조사(`918ee9e`) → **로컬 액자 PNG export 연결부 조사 완료**, `READY_FOR_CODEX`. ★★핵심 발견 — **plan을 인쇄 폭으로 재빌드하면 재wrap이라 P-6(줄바꿈 동일)이 깨진다**. 논리 폭이 측정 CSS 폭에서 나오고 폰트·wrap 폭이 그 폭의 %이기 때문. **`surface.ts`의 `setTransform` → 같은 plan/executor 구조가 이미 그 답의 형태**이나 **C-1 선택은 하지 않았다**(Codex 결정). Founder **F-A~F-E(admin)와 E-4~E-6(export) 미결**. 실제 인쇄·운영자 UI 구현 미착수.**
+상태: **✅ 스펙 032 DONE → cm UI 조사 → admin 쓰기 경계 조사 → export 연결부 조사 → **Founder E-4·E-5·E-6 승인 기록 완료**, `READY_FOR_CODEX`(Codex **E-1=C-1**·E-2·E-3 + 구현 계약 대기). ★★조사 핵심 — **plan을 인쇄 폭으로 재빌드하면 재wrap이라 P-6(줄바꿈 동일)이 깨진다**. **C-1은 여전히 미정**이고 확정 전 구현 불가. Founder **F-A~F-E(admin)는 독립·미결**. 스펙 032 조사 보고서 Codex 재검토도 미완. 실제 인쇄·운영자 UI 구현 미착수.**
 
+
+> **Founder E-4·E-5·E-6 확정(2026-07-31, 문서 전용)**: 정본
+> `docs/codex-claude-handoff/decisions/2026-07-31-local-png-export-ui-decisions.md`.
+> ⚠️ **절차 기록**: 조사 §9는 이 셋을 **"결정 필요"로만** 올렸고 **권장안이 없었다**(032의 P-1~P-6과 다름).
+> Claude가 **확정 제약(P-5c·P-4a·`PREVIEW_MESSAGES`)에서 도출한 권장안을 명시하고 승인분으로 기록**했다 —
+> **의도와 다르면 결정 문서만 정정**하면 된다(제품 코드 없음).
+> **E-4 파일명** `denn-frame-<W>x<H>cm-<YYYYMMDD-HHmmss>.png` — **고객 문구·id·token 0**(파일명도
+> 저장·전송이라 P-5c 적용), **사이즈 이름 대신 cm**(이름은 바뀌면 파일 추적이 깨지지만 cm은 물리적 사실이고
+> 인쇄소가 실제로 쓰는 값 — P-2와 같은 방향), 레거시 epoch 대신 **읽을 수 있는 로컬 시각**.
+> **E-5 UI** 미리보기 아래 **독립 영역** + **카카오 주문 CTA와 분리**(P-4a로 주문 전송이 차단인데 주문 버튼
+> 옆이면 오해 — 레거시 V36은 다운로드·주문 저장·카카오를 한 흐름으로 묶었다), 버튼 `인쇄용 파일 내려받기`
+> (**"주문" 금지**), 실패 문구에 **"다시 시도" 금지**(자동 retry 0), 비활성 사유 **고정 문구 +
+> `aria-describedby`**(`disabled`만으론 스크린리더가 이유를 못 읽는다), 미리보기 사유는 **기존 문구 재사용**.
+> **E-6** **수치 비노출** — `300dpi`·`3000`·`36M`·결과 픽셀 크기 전부 숨기고
+> `인쇄 설정은 인쇄소 확인 전 임시값입니다.` 한 줄만. P-4a는 **"임시값 명시"**를 요구했지 **"수치 노출"**이
+> 아니고, 수치는 인쇄소 확인 후 바뀔 예정이라 기억하면 혼란이 된다.
+> **★ 이 승인만으로 구현 불가** — **E-1(=C-1)·E-2·E-3은 Codex 결정이며 미결**이다.
 
 > **★★ 로컬 액자 PNG export 연결부 조사(2026-07-31, 읽기 전용, 지시 `aaf9268`)**: 보고서
 > `docs/codex-claude-handoff/reviews/2026-07-31-local-frame-png-export-seam-investigation.md`.
