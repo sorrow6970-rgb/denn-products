@@ -1554,3 +1554,49 @@
     합성 fake로만 두 순서를 재현한다
 - **권장 다음 상태**: `READY_FOR_CODEX` — **Codex의 최종 계약 검토**, 그 뒤 **Founder의 구현 착수
   승인**이 있어야 코드 작성과 SDK 추가를 시작한다.
+
+## 2026-08-10 — 스펙 036 구현 (운영자 Auth + 비공개 admin/state.json 읽기)
+
+- **승인**: Founder가 계약 `765dfb4`와 **구현 착수**를 승인. 기준 `765dfb4`, 구현 커밋 **`fd92fbc`**.
+- **구현 범위**: 운영자 Email/Password Auth · `onAuthStateChanged` 기반 **비익명** 세션 관찰 ·
+  고정 `admin/state.json` 읽기 · `readLegacyCatalog` 검증 · **메모리 전용**.
+  쓰기·발행·업로드·revision·충돌·tombstone·마이그레이션 **0**.
+- **변경 파일(20)**: `packages/firebase/package.json`, `packages/firebase/src/admin-read/**`(9),
+  `apps/admin/package.json`, `apps/admin/src/admin-read/**`(5), `apps/admin/src/App.tsx`,
+  `apps/admin/src/env.d.ts`, `tests/e2e/admin-auth-read.spec.ts`, `pnpm-lock.yaml`.
+  **`packages/firebase/src/index.ts` 무변경**, `apps/mockup/**`·`packages/render/**`·
+  `packages/shared/**`·`storage.rules`·`firestore.rules`·`firebase.json`·`pnpm-workspace.yaml` 무변경.
+- **핵심 설계**:
+  - **번들 격리** — admin 기능은 `@denn/firebase/admin-read` 서브패스로만 공개하고 SDK는
+    `sdk-facade.ts`의 **동적 import**로만 닿는다. 결과: **고객 `dist` SHA-256 구현 전후 동일**,
+    admin 번들에서 Firebase는 **lazy 청크 4개**로 분리(unconfigured면 로드 0).
+  - **observer 단일 권위** — sign-in/sign-out은 `{correlationId}`만 반환하고 상태를 쓰지 않는다.
+    Promise 먼저 / observer 먼저 두 순서를 각각 unit으로 고정.
+  - **인증 게이트** — `initializing`·`signed-out`·`anonymous`에서 `getBytes` 0회.
+  - **경로 주입 불가** — `load`의 인자는 `{correlationId}`뿐이고 실제 요청은 항상 `admin/state.json`.
+  - **timeout** — 29,999 ms 미완료 / 30,000 ms `NETWORK_TIMEOUT` / 늦은 성공 폐기(fake timer).
+    **SDK 취소는 주장하지 않는다.** 자동 retry 0.
+  - **비노출** — 심은 raw message·email·uid·token이 `SafeAdminReadError`와 `JSON.stringify(error)`에
+    0건, 실패 payload에 원문 bytes/JSON 0건, 화면에 경로·uid·카탈로그 0건.
+  - **기본 비활성** — 플래그 정확 비교 + 공개 config 5개 완전성(5키 × 3결측 전수 unit).
+- **게이트 결과**: `pnpm install --frozen-lockfile` **PASS(exit 0)** · format · lint
+  (`--error-on-warnings`) · typecheck PASS · unit **1258/1258**(035 시점 1213 → +45) ·
+  독립 build PASS · 전체 Chromium E2E **134/134**(131 → +3) · `pnpm check` PASS ·
+  `git diff --check` 클린 · 금지 diff **0** · 고객 dist SHA-256 **구현 전 = 구현 후 = E2E 후**
+  (`f86d446d…7bbc09`) · ports 4183/4184 **0** · OS temp `denn-e2e-*` **0** ·
+  **실제 Firebase endpoint 요청 0건**(E2E가 요청 URL 전수 검사).
+- **⚠️ 미해결 — `pnpm-workspace.yaml`(커밋 안 함)**: `pnpm install`이 pnpm 11 정책으로
+  `allowBuilds` 자리표시자 3줄을 자동 추가했고 그 상태의 frozen install은 **exit 1**이었다.
+  출처가 이번 세션의 내 작업임을 확인하고(HEAD에 없음, 마지막 커밋은 스펙 010) Founder 지시에 따라
+  **3줄을 제거**했으며, 제거 상태에서 frozen install은 **exit 0**이고 pnpm이 다시 추가하지도 않았다.
+  **NOT VERIFIED**: pnpm이 무시 결정을 `node_modules/.modules.yaml`(`pendingBuilds`)에 기록하므로
+  **`node_modules` 없는 새 클론에서 재발 가능**하다. 재발 시 최소 안전 해결책은
+  `@firebase/util`·`protobufjs`를 **`false`**로 명시하는 것이고, 그 수정과 `pnpm approve-builds`는
+  **별도 Founder 승인 대상**이다.
+- **예상 밖 dirty**: 없음. 보호 대상 3개(spec-018 PNG 2개 + content diff 0인
+  `packages/render/src/plan/index.ts`)는 restore·checkout·stage·commit 하지 않았다.
+- **NOT TESTED**: 운영자 계정의 실제 존재·로그인 가능 여부 · `storage.rules` 실제 배포 여부와
+  거부 동작 · 실제 `admin/state.json` 존재·크기·내용 · 실제 인증 만료·갱신 ·
+  실제 Storage CORS와 `getBytes` 동작 · 실기기 · 쓰기 원자성 ·
+  **실제 SDK 오류 코드 문자열**(매핑은 계약 표 기준이며 합성 fake로만 검증).
+- **권장 다음 상태**: `READY_FOR_CODEX` — Codex 독립 검증. 다음 스펙은 시작하지 않는다.

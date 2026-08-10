@@ -1,7 +1,6 @@
 # 스펙 036 — 운영자 Auth + 비공개 `admin/state.json` 읽기 전용
 
-상태: **READY (계약)** — **구현 미승인.** Founder가 이 계약을 검토해 별도로 승인하기 전에는
-제품 코드를 한 줄도 쓰지 않는다.
+상태: **DONE (Claude)** — Founder가 계약(`765dfb4`)과 구현 착수를 승인, 구현 `fd92fbc`.
 
 작성 2026-08-10 · 기준 HEAD = origin = `6daf365`
 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-10-admin-auth-write-boundary-decisions.md`
@@ -569,3 +568,93 @@ base64가 성공 값에 존재할 수 있다.** 따라서 검증을 다음처럼
 1. 계약 내용 승인 (특히 §2 SDK 버전 고정, §3 활성화 방식, §5 오류 코드 15개, §7 허용 파일)
 2. **구현 착수 승인** — 승인 전에는 `packages/firebase`·`apps/admin`에 코드를 쓰지 않고
    `firebase` SDK도 추가하지 않는다.
+
+
+---
+
+### DONE (Claude) — 2026-08-10, 구현 `fd92fbc`
+
+Founder가 계약 `765dfb4`를 승인하고 구현 착수를 승인했다. 기준 HEAD `765dfb4`.
+
+#### 바꾼 파일 (허용 목록 안, 20개)
+
+| 파일 | 내용 |
+| --- | --- |
+| `packages/firebase/package.json` | `firebase: "12.17.1"` 정확 고정 + `"./admin-read"` 서브패스 export |
+| `packages/firebase/src/admin-read/types.ts` | 공개 타입 전부(`OperatorAuthErrorCode`·`AdminReadErrorCode`·`SafeAdminReadError`·`OperatorAuthActionResult`·`AdminStateLoadResult`·두 포트) |
+| `…/constants.ts` | `ADMIN_STATE_OBJECT_PATH`·`ADMIN_STATE_MAX_BYTES = 20_971_519`·`ADMIN_STATE_READ_TIMEOUT_MS = 30_000`·correlationId 패턴 |
+| `…/facade.ts` | 주입 가능한 SDK 경계(`AdminFirebaseFacade`) — 사용자 정보는 `isAnonymous` 하나만 통과 |
+| `…/errors.ts` | 15개 코드의 category/retryable + auth/storage 매핑 |
+| `…/auth-port.ts` | observer 단일 권위, 첫 구독에 관찰 시작·마지막 해제에 종료 |
+| `…/read-port.ts` | 고정 경로 read, 인증 게이트, 단일 in-flight, 30s wrapper |
+| `…/sdk-facade.ts` | 실제 어댑터 — SDK는 **동적 import**로만 로드 |
+| `…/index.ts` | 서브패스 배럴 (write/upload/delete/publish 표면 0) |
+| `…/admin-read.test.ts` | 합성 fake 26건 |
+| `apps/admin/package.json` | `@denn/firebase: "workspace:*"` |
+| `apps/admin/src/admin-read/config.ts` | 플래그 정확 비교 + 공개 config 5개 완전성 판정 |
+| `…/controller.ts` | UI 무관 상태기계(8상태·늦은 결과 무시·dispose) |
+| `…/create.ts` | env → (선택적) 포트 → 컨트롤러, lazy facade, correlationId 생성 |
+| `…/AdminRemoteStateCard.tsx` | 카드 1개 |
+| `…/admin-read.test.tsx` | 25건 중 이 스펙 분 |
+| `apps/admin/src/App.tsx` | 카드 배치 + unmount 시 `dispose()` |
+| `apps/admin/src/env.d.ts` | `ImportMetaEnv` 6키(`string \| undefined`) |
+| `tests/e2e/admin-auth-read.spec.ts` | Chromium 2 viewport + 고객 번들 검사 |
+| `pnpm-lock.yaml` | `firebase@12.17.1` |
+
+**`packages/firebase/src/index.ts` 무변경**, `apps/mockup/**`·`packages/render/**`·`packages/shared/**`·
+`storage.rules`·`firestore.rules`·`firebase.json`·`pnpm-workspace.yaml` **무변경**.
+
+#### 계약 구현 요지
+
+- **번들 격리**: admin 코드는 `@denn/firebase/admin-read`로만 공개하고 SDK는 `sdk-facade.ts`의
+  **동적 import**로만 닿는다. 결과: 고객 `dist` SHA-256이 구현 전후 **동일**(`f86d446d…7bbc09`),
+  admin 번들에서는 Firebase가 **별도 lazy 청크 4개**(~194 kB)로 분리돼 unconfigured에서는 로드되지 않는다.
+- **observer 단일 권위**: sign-in/sign-out은 `{correlationId}`만 반환하고 상태를 쓰지 않는다.
+  두 순서(Promise 먼저 / observer 먼저)를 각각 unit으로 고정했다.
+- **인증 게이트**: `initializing`·`signed-out`·`anonymous`에서 `getBytes` **0회**(unit).
+- **경로 주입 불가**: `load`의 인자는 `{correlationId}`뿐. 런타임에 `objectPath`를 끼워 넣어도
+  실제 요청은 `admin/state.json` 하나였다(unit).
+- **timeout**: 29,999 ms 미완료 / 30,000 ms `NETWORK_TIMEOUT` / 이후 늦은 성공 폐기 —
+  fake timer로 고정. **SDK 취소는 주장하지 않는다.**
+- **비노출**: 심어 둔 raw message·email·uid·token이 `SafeAdminReadError`와
+  `JSON.stringify(error)`에 **0건**, 실패 payload에 원문 bytes/JSON **0건**,
+  화면에는 경로·uid·correlationId·카탈로그 **0건**(unit).
+- **기본 비활성**: 플래그가 정확히 `"true"`가 아니거나 config 5개 중 하나라도 비면 어댑터를
+  만들지 않는다(unit이 5키 × 3가지 결측을 전수 확인).
+
+#### 검증 결과
+
+| 게이트 | 결과 |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | **PASS** (exit 0) |
+| format / lint(`--error-on-warnings`) / typecheck | PASS |
+| unit | **1258/1258 PASS** (035 시점 1213 → **+45**) |
+| 독립 build | PASS (admin 216.95 kB + lazy Firebase 청크 4개, 고객 287.74 kB 무변경) |
+| 전체 Chromium E2E | **134/134 PASS** (035 시점 131 → **+3**) |
+| 고객 `dist` SHA-256 | 구현 **전 `f86d446d…7bbc09`** = 구현 후 = E2E 후 **동일** |
+| `pnpm check` | `✓ check passed` |
+| `git diff --check` | 클린 (CRLF 경고만) |
+| 허용/금지 diff | 금지 경로 **0건** |
+| ports 4183/4184 · OS temp `denn-e2e-*` | **0 / 0** |
+| 실제 Firebase endpoint 요청 | **0건** (E2E가 요청 URL 전수 확인) |
+
+#### ⚠️ 미해결 — `pnpm-workspace.yaml` (커밋하지 않음)
+
+`pnpm install`이 pnpm 11 정책에 따라 `allowBuilds` 자리표시자 3줄을 자동 추가했고, 그 상태에서
+`pnpm install --frozen-lockfile`이 **exit 1**이었다. Founder 지시로 **그 3줄을 제거**했고,
+제거 상태에서 frozen install은 **exit 0**이며 pnpm이 다시 추가하지도 않았다(현재 파일 = HEAD 동일).
+
+⚠️ **NOT VERIFIED**: pnpm이 무시 결정(`pendingBuilds`)을 `node_modules/.modules.yaml`에 기록하므로,
+**`node_modules`가 없는 새 클론에서 첫 `pnpm install --frozen-lockfile`이 같은 오류를 낼 수 있다.**
+이 저장소에서는 재현하지 않았다(node_modules를 지우는 검증은 범위 밖). 발생하면
+`@firebase/util`·`protobufjs`를 **`false`(스크립트 실행 안 함)** 로 명시하는 것이 최소 안전 해결책이며,
+`pnpm-workspace.yaml` 수정은 **별도 Founder 승인 대상**이다.
+
+#### NOT TESTED
+
+- 기존 운영자 계정의 **실제 존재·로그인 가능 여부**
+- **`storage.rules`의 실제 배포 여부**와 실제 거부 동작
+- 실제 `admin/state.json`의 존재·크기·내용
+- 실제 인증 만료·갱신, 실제 Storage CORS와 `getBytes` 동작
+- 실기기, 쓰기 원자성(F-E로 별도 조사 대상)
+- **실제 SDK 오류 코드 문자열** — 매핑은 계약 표 기준이며 합성 fake로만 검증했다

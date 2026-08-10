@@ -1,57 +1,49 @@
 # NEXT CLAUDE PROMPT
 
 상태: `READY_FOR_CODEX`
-active_unit: `spec-036-final-contract-review`
+active_unit: `spec-036-codex-independent-verification`
 
-**스펙 036 구현 계약이 작성(초판 `77b5b47`)되고 **1차 정확성 보완(`9fb1456`)** 과
-**2차 타입·비동기 경계 보완**까지 끝났다: `docs/rebuild/specs/036-admin-auth-private-state-read.md`
-(개정 이력 블록 ①~⑨ 참조).**
-**다음은 Codex의 최종 계약 검토**이며, 그 뒤 Founder의 구현 착수 승인이 있어야 코드를 시작한다.
-**구현은 아직 승인되지 않았다.** Founder가 계약을 검토해 **구현 착수를 별도로 승인**하기 전에는
-`packages/firebase`·`apps/admin`에 코드를 쓰지 않고 **`firebase` SDK도 추가하지 않는다**.
+**스펙 036 구현이 끝났다: `fd92fbc`**(계약 `765dfb4`, 결정 정본
+`decisions/2026-08-10-admin-auth-write-boundary-decisions.md`).
+다음은 **Codex 독립 검증**이다. 다음 스펙은 시작하지 않는다.
 
-## 확정된 입력
+## 구현된 것
 
-- Founder 결정 정본(2026-08-10): `decisions/2026-08-10-admin-auth-write-boundary-decisions.md`
-  — F-A Auth 도입(**1단계 = 인증 + `admin/state.json` 읽기, 쓰기 0**, 기존 비익명 계정 1개,
-  `firebase` SDK 의존성 승인, Rules 변경 미승인) · F-B 발행 제외 · F-C 읽기만 공유 ·
-  F-D 정규화 메모리 전용 · **F-E E3-strong(쓰기 구현 차단)**
-- 계약(2026-08-10, 기준 `6daf365`): 스펙 036
+운영자 Email/Password Auth · `onAuthStateChanged` 기반 **비익명** 세션 관찰 ·
+고정 `admin/state.json` 읽기 · `readLegacyCatalog` 검증 · **메모리 전용**.
+`firebase@12.17.1` 정확 고정, admin 기능은 **`@denn/firebase/admin-read` 서브패스 전용**,
+**루트 배럴 무변경**, SDK는 **동적 import**.
 
-## Founder가 승인해야 할 것
+## Codex가 재확인할 것
 
-1. 계약 내용 — 특히 **§2 `firebase@12.17.1` 정확 고정과 서브패스 `@denn/firebase/admin-read` 전용
-   공개**, **§3.1 플래그 정확 비교 + 공개 config 5개 전부 비어 있지 않은 문자열일 때만 초기화**,
-   **§4.1~4.2 공개 타입과 `correlationId` 주입 책임**, **§5.3 안전 오류 15개 매핑 표**,
-   **§5.1 20 MiB = 클라이언트 상한(서버 read 보장 아님)**, **§7 허용 파일 9경로**,
-   **§4.3 observer가 인증 상태의 유일한 권위**(action 결과로 상태를 덮어쓰지 않는다),
-   **§5.4 `ADMIN_STATE_READ_TIMEOUT_MS = 30_000`이 `getBytes`에만 적용**(Auth action·observer 제외),
-   **§8.1 비노출 검증 경계**(성공 값의 합법적 카탈로그 data URL 제거는 요구하지 않음)
-2. **구현 착수** 자체
+- frozen install / format / lint / typecheck / **unit 1258** / build / **Chromium E2E 134** / `pnpm check`
+- **고객 `dist` SHA-256 = `f86d446d…7bbc09`**(구현 전후 동일)과 고객 번들 문자열 0건
+- 금지 diff 0: `apps/mockup/**` · `packages/render/**` · `packages/shared/**` ·
+  `packages/firebase/src/index.ts` · `storage.rules` · `firestore.rules` · `firebase.json` ·
+  **`pnpm-workspace.yaml`**
+- 실제 Firebase/network/live/emulator 요청 **0건**
+- ports 4183/4184 · OS temp `denn-e2e-*` 잔여 0
 
-## 승인되면 첫 작업 순서 (참고)
+## ⚠️ 미해결 (별도 Founder 승인 대상)
 
-`firebase@12.17.1` 추가 + lockfile 갱신 → `packages/firebase/src/admin-read/**`(합성 fake 주입 가능한
-AuthPort·AdminStateReadPort) → `apps/admin/src/admin-read/**` + 카드 배치 →
-`tests/e2e/admin-auth-read.spec.ts` → §9 게이트 전량.
+`pnpm install`이 pnpm 11 정책으로 `pnpm-workspace.yaml`에 `allowBuilds` 자리표시자를 자동 추가하면
+frozen install이 exit 1이 된다. 이번엔 그 3줄을 **제거**했고 제거 상태에서 exit 0이지만,
+**`node_modules`가 없는 새 클론에서는 재발할 수 있다(NOT VERIFIED)**.
+재발 시 최소 해결책은 `@firebase/util`·`protobufjs`를 **`false`**(스크립트 실행 안 함)로 명시하는 것이며,
+`pnpm-workspace.yaml` 수정과 `pnpm approve-builds`는 **Founder 승인 없이 하지 않는다**.
 
-## 계속 금지 (승인 전후 모두)
+## 계속 금지
 
-- 실제 Firebase / network / live / emulator / 운영 데이터 접근
-- `storage.rules` · `firestore.rules` · `firebase.json` · Hosting · deploy 변경
-- 쓰기 · 발행 · 업로드 · revision · 충돌 병합 · tombstone · 마이그레이션 코드
-- `packages/firebase/src/index.ts` 루트 배럴 수정 (고객 번들 오염)
-- `apps/mockup/**` · `packages/render/**` · `packages/shared/**` · legacy HTML
-- 실제 config 하드코딩 · `.env` commit · live 테스트 파일 작성
-- 신규 계정 · 다중 계정 · 역할 권한 UI
+쓰기·발행·업로드·revision·충돌·tombstone·마이그레이션 (F-B·F-D·F-E) ·
+실제 Firebase/network/live/emulator/운영 데이터 · Rules/Hosting/배포 ·
+신규 계정·다중 계정·역할 · 실제 config 하드코딩·`.env` commit · live 테스트 파일 ·
+`packages/firebase/src/index.ts` 루트 배럴 수정.
 
-## UNCONFIRMED (추정 금지)
+## NOT TESTED
 
-**`firebase@12.17.1`의 실제 설치·빌드 호환성**(Node 24 / Vite 8 / TS 7 / pnpm workspace —
-버전 **존재 자체는 VERIFIED**, 호환성만 구현 단계 frozen install에서 확인) ·
-운영자 계정의 실재·로그인 가능 여부 ·
-`storage.rules`의 실제 배포 여부와 거부 동작 · 실제 `admin/state.json`의 존재·크기·내용 ·
-실제 Storage CORS와 `getBytes` 동작.
+운영자 계정의 실제 존재·로그인 가능 여부 · `storage.rules` 실제 배포·거부 동작 ·
+실제 `admin/state.json` 존재·크기·내용 · 실제 인증 만료·갱신 · 실제 Storage CORS·`getBytes` ·
+실기기 · 쓰기 원자성 · 실제 SDK 오류 코드 문자열(매핑은 합성 fake로만 검증).
 
-자동화 루프는 삭제된 상태이며 **새 자동화나 반복 작업을 만들지 않는다**. 인수인계는 수동으로만 한다.
+자동화 루프는 삭제된 상태이며 새 자동화·반복 작업을 만들지 않는다.
 알려진 spec018 PNG 두 개와 content diff 0인 `packages/render/src/plan/index.ts`는 건드리지 않는다.

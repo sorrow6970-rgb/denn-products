@@ -9,9 +9,24 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — 스펙 036 계약 작성(`77b5b47`) + 1차 보완(`9fb1456`) +
-2차 타입·비동기 경계 보완 완료(2026-08-10).
-구현은 아직 승인되지 않았다. 다음 = Codex의 최종 계약 검토.**
+상태: **`READY_FOR_CODEX` — 스펙 036 구현 완료(2026-08-10, `fd92fbc`). 다음 = Codex 독립 검증.**
+Founder가 계약 `765dfb4`와 **구현 착수를 승인**했다. 운영자 Email/Password Auth + 비익명 세션 관찰 +
+고정 `admin/state.json` 읽기 + `readLegacyCatalog` 검증 + **메모리 전용**이며,
+쓰기·발행·업로드·revision·충돌·tombstone·마이그레이션은 **0**이다(F-B·F-D·F-E).
+**`firebase@12.17.1`** 정확 고정, admin 기능은 **`@denn/firebase/admin-read` 서브패스 전용**,
+**루트 배럴 무변경**, SDK는 **동적 import** → **고객 `dist` SHA-256이 구현 전후 동일**
+(`f86d446d…7bbc09`)이고 admin 번들에서 Firebase는 lazy 청크로 분리된다.
+기본 **비활성**: 플래그가 정확히 `"true"`가 아니거나 공개 config 5개 중 하나라도 비면
+`initializeApp`·observer·Storage **0회**.
+게이트: frozen install PASS · format · lint · typecheck · **unit 1258/1258** · build ·
+**Chromium E2E 134/134** · check · diff·금지 diff 0 · ports/temp 0 · **실제 Firebase 요청 0건**.
+⚠️ **`pnpm-workspace.yaml`의 `allowBuilds` 3줄은 제거했고 커밋하지 않았다** — 제거 상태에서
+frozen install은 exit 0이지만 **`node_modules` 없는 새 클론에서 재발 가능(NOT VERIFIED)**이며,
+수정은 **별도 Founder 승인 대상**이다.
+**NOT TESTED**: 운영자 계정 실재·로그인 · Rules 실제 배포·거부 · 실제 `admin/state.json` ·
+인증 만료·갱신 · 실제 Storage CORS·`getBytes` · 실기기 · 쓰기 원자성 · 실제 SDK 오류 코드 문자열.
+
+> **이전 상태(참고)** — 스펙 036 계약 작성(`77b5b47`) + 1차 보완(`9fb1456`) + 2차 타입·비동기 보완.
 계약 `docs/rebuild/specs/036-admin-auth-private-state-read.md` — **운영자 Email/Password 인증 +
 비익명 세션 관찰/복원 + 고정 `admin/state.json` 읽기 + `readLegacyCatalog` 검증 + 메모리 전용**.
 저장·쓰기·발행·업로드·revision·충돌·tombstone·마이그레이션은 **전부 제외**(F-B·F-D·F-E).

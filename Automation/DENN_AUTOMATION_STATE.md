@@ -4,13 +4,13 @@
 updated_at: 2026-08-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-036-contract-final-correction
-active_unit: spec-036-final-contract-review
+completed_unit: spec-036-admin-auth-private-state-read-implementation
+active_unit: spec-036-codex-independent-verification
 state: READY_FOR_CODEX
-baseline_commit: 9fb1456
-candidate_commit: none-product-code-unchanged
+baseline_commit: 765dfb4
+candidate_commit: fd92fbc
 verified_commit: e9e2af6
-origin_relation: "docs-only final contract-correction commit on top of 9fb1456; HEAD=origin, ahead/behind 0/0"
+origin_relation: "implementation fd92fbc pushed on top of 765dfb4; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
@@ -1477,3 +1477,28 @@ NOT TESTED 경계). 쓰기 port·저장 UI·발행·revision/충돌·tombstone·
 
 **구현은 시작하지 않았다.** 다음 전이: **Codex의 최종 계약 검토**, 그 뒤 Founder의 **구현 착수 승인**.
 보호 대상 3개는 restore·checkout·stage·commit 하지 않았다. 자동화·반복 작업은 만들지 않았다.
+
+
+## 스펙 036 구현 완료 — READY_FOR_CODEX (Claude Code, 2026-08-10)
+
+Founder가 계약 `765dfb4`와 **구현 착수**를 승인했다. 구현 커밋 **`fd92fbc`**, 기준 `765dfb4`.
+운영자 Email/Password Auth + 비익명 세션 관찰 + 고정 `admin/state.json` 읽기 +
+`readLegacyCatalog` 검증 + **메모리 전용**. 쓰기·발행·업로드·revision·충돌·tombstone·마이그레이션 **0**.
+
+- **의존성**: `firebase@12.17.1` 정확 고정(`packages/firebase/package.json` + `pnpm-lock.yaml`),
+  `apps/admin`에 `@denn/firebase: workspace:*`. 승인 외 신규 의존성 **0**.
+- **경계**: admin 기능은 **`@denn/firebase/admin-read` 서브패스 전용**,
+  **`packages/firebase/src/index.ts` 무변경**, SDK는 **동적 import**로만 접근.
+  → **고객 `dist` SHA-256 구현 전후 동일**(`f86d446d…7bbc09`), admin 번들에서 Firebase는 lazy 청크로 분리.
+- **게이트**: frozen install PASS · format · lint · typecheck · **unit 1258/1258** ·
+  독립 build · **Chromium E2E 134/134** · `pnpm check` PASS · `git diff --check` 클린 ·
+  금지 diff 0 · ports 4183/4184 **0** · OS temp **0** · **실제 Firebase 요청 0건**.
+- **⚠️ `pnpm-workspace.yaml`**: pnpm 11이 자동 추가한 `allowBuilds` 3줄을 Founder 지시로 제거했고
+  제거 상태에서 frozen install은 exit 0이다(파일 = HEAD 동일, 커밋하지 않음).
+  **NOT VERIFIED**: `node_modules` 없는 새 클론에서 첫 frozen install이 같은 오류를 낼 수 있다 —
+  발생 시 `@firebase/util`·`protobufjs`를 `false`로 명시하는 것이 최소 해결책이며 **별도 승인 대상**이다.
+- **NOT TESTED**: 운영자 계정 실재·로그인, `storage.rules` 실제 배포·거부, 실제 `admin/state.json`,
+  인증 만료·갱신, 실제 Storage CORS·`getBytes`, 실기기, 쓰기 원자성, 실제 SDK 오류 코드 문자열.
+
+보호 대상 3개는 restore·checkout·stage·commit 하지 않았다. 자동화·반복 작업은 만들지 않았다.
+다음 전이: **Codex 독립 검증**. 다음 스펙은 시작하지 않는다.
