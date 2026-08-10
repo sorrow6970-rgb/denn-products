@@ -4,17 +4,17 @@
 updated_at: 2026-07-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-033-local-frame-png-export
-active_unit: null
-state: COMMITTED  # spec033 DONE, 오늘 작업 종료
+completed_unit: spec-035-operator-print-size-cm-input
+active_unit: admin-auth-write-publish-decision
+state: FOUNDER_DECISION_REQUIRED
 baseline_commit: 2a0cfd3
-candidate_commit: 4246503
-verified_commit: 4246503
-origin_relation: "spec033 implementation and READY_FOR_CODEX docs pushed; closure docs pending fast-forward"
+candidate_commit: e9e2af6
+verified_commit: e9e2af6
+origin_relation: "spec034/035 pushed through 7fc2f07; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: PAUSED
+next_transition: WAITING_FOR_CLAUDE
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden

@@ -1,6 +1,6 @@
 # 스펙 034 — 레거시 `wcm`/`hcm` 읽기 정규화와 충돌 fail-closed
 
-상태: **DONE (Claude)** — 구현 `ff7a49a`, 계약 `d3bed91`, 기준 HEAD `f88ab70`
+상태: **DONE (`CODEX_PASSED`)** — 구현 `ff7a49a`, 계약 `d3bed91`, Codex 독립 검증 통과
 
 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-10-operator-cm-input-decisions.md`
 (Founder O-1~O-8, 구조 N-1~N-10)
@@ -193,3 +193,9 @@ projection은 legacy 필드를 알 필요가 없다.
 - 충돌 fatal이 실제 운영 카탈로그에서 발생할 수 있는지 (현재 리빌드에 canonical을 쓰는 쓰기 경로가
   없어 공존 자체가 만들어지지 않는다).
 - 되쓰기·저장·발행은 **O-8로 연기**된 별도 스펙이다.
+
+### CODEX_PASSED — 2026-08-10
+
+Codex 독립 재검증: frozen·format·lint·typecheck·build·`pnpm check` PASS, unit **1213/1213**,
+Chromium **131/131**, diff check·forbidden 범위·ports 4183/4184·OS temp PASS. 정규화·충돌·
+입력 비변형·결정성 계약의 추가 결함은 발견되지 않았다.

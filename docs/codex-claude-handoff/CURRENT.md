@@ -13,7 +13,11 @@ Founder 승인 O-1~O-8 + 구조 결정 N-1~N-10 = `decisions/2026-08-10-operator
 **035**(`e9e2af6`) 운영자 cm 로컬 입력·검증 UI. 게이트: frozen·format·lint·typecheck·
 unit **1213/1213**·build·Chromium E2E **131/131**·dist hash E2E 전후 동일·ports/temp 0.
 **Auth·Firebase 쓰기·발행·실제 network·deploy는 계속 0**이며 O-8로 미뤄졌다.
-다음 = **Codex 독립 재검수 대기**. Founder F-A~F-E(admin 쓰기 경계)는 여전히 미결이다.
+Codex 독립 재검수도 frozen·format·lint·typecheck·unit **1213/1213**·build·Chromium **131/131**·
+check·diff·forbidden 범위·ports/temp PASS로 완료됐다. 고객 bundle byte hash는 shared 배럴 export의
+모듈 순서 영향으로 달라졌지만 authoring 코드·문구는 bundle에 0건이고 `apps/mockup/**` diff 0 및
+고객 회귀 E2E 전량 PASS라 비기능 변화로 승인했다. 다음 = **FOUNDER_DECISION_REQUIRED** —
+Founder F-A~F-E(admin Auth·쓰기·충돌·발행)가 여전히 미결이다.
 
 > **★★ 스펙 034 DONE(2026-08-10, `ff7a49a`, 기록 `5097179`)**: 레거시 `wcm`/`hcm`을 **읽는 순간
 > 메모리에서** canonical로 정규화한다(N-1: 정규화는 `readLegacyCatalog` 안, `projectFramePrintPhysicalSize`

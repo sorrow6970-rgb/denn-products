@@ -1,6 +1,6 @@
 # 스펙 035 — 운영자 인쇄 치수(cm) 로컬 입력·검증·canonical 변환
 
-상태: **DONE (Claude)** — 구현 `e9e2af6`, 계약 `d3bed91`, 선행 스펙 034 DONE(`ff7a49a`)
+상태: **DONE (`CODEX_PASSED`)** — 구현 `e9e2af6`, 계약 `d3bed91`, Codex 독립 검증 통과
 
 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-10-operator-cm-input-decisions.md`
 (Founder O-1~O-8, 구조 N-6~N-9)
@@ -250,3 +250,14 @@ E2E가 카드 안 `button`·`a`·`[role=button]` **0개**, `input` 2개, `주문
   O-1·O-2의 명시적 결과이며 저장 경로는 O-8의 별도 결정이다.
 - 사이즈 목록·선택·편집, `admin/state.json` 읽기/쓰기, 발행: **범위 밖**.
 - 실기기(모바일 브라우저) 확인 없음. 자동 게이트는 Chromium 2 viewport뿐이다.
+
+### CODEX_PASSED — 2026-08-10
+
+Codex 독립 재검증: frozen·format·lint·typecheck·build·`pnpm check` PASS, unit **1213/1213**,
+Chromium **131/131**, diff check·forbidden 범위·ports 4183/4184·OS temp PASS.
+
+계약 내부의 `trim` 선행 절차와 `" 21"` 거부 예시가 충돌하므로 구현이 선행 절차를 따른 것을 승인한다.
+고객 mockup 번들의 SHA-256 byte identity는 shared 배럴 export 추가로 바뀌었지만, `apps/mockup/**`
+diff는 0이고 결과 bundle에서 authoring 코드·오류 코드·한국어 UI 문자열은 모두 0건이며 고객 E2E를
+포함한 전체 131건이 통과했다. 따라서 비기능적 module graph/minifier 순서 변화로 기록하고 기능
+회귀로 판정하지 않는다. 향후 byte identity가 필수라면 별도 package entrypoint 계약이 필요하다.

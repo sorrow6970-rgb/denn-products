@@ -1211,3 +1211,12 @@
 - NOT TESTED: 실제 인쇄물·인쇄소 수용성, 다른 엔진/실기기 `toBlob`, 대용량 메모리·성능,
   색공간/ICC·bleed·파일 형식·최대 크기, 잔류 프로세스 command-line.
 - 스펙 033 DONE. Founder 지시에 따라 다음 스펙은 시작하지 않고 자동화를 PAUSED로 전환한다.
+
+## 2026-08-10 — 스펙 034·035 Codex 독립 검증
+
+- 구현 `ff7a49a`·`e9e2af6`, 기록 `5097179`·`0bc2aa8`·`7fc2f07` 검토.
+- frozen, format, lint, typecheck, build, check PASS. unit **1213/1213**, Chromium **131/131** PASS.
+- diff check, forbidden 범위, ports 4183/4184, OS temp PASS.
+- 고객 bundle byte hash 변화는 authoring 코드·문구 0건, `apps/mockup/**` diff 0, 고객 회귀 E2E PASS를
+  근거로 비기능적 module graph/minifier 순서 변화로 승인했다.
+- 스펙 034·035 DONE. 다음 실제 Auth·저장·충돌·발행은 `FOUNDER_DECISION_REQUIRED`.
