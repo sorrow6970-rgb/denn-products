@@ -21,24 +21,45 @@ export function createCorrelationId(): string {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** Defers the SDK import to the first actual call, keeping controller construction synchronous. */
-function createLazyFacade(config: AdminFirebaseConfig): AdminFirebaseFacade {
+/**
+ * Defers the SDK import to the first actual call, keeping controller construction synchronous.
+ *
+ * `makeFacade` exists so the failure path (the adapter cannot be built at all) is unit-testable
+ * without a network; production always uses the real factory.
+ */
+export function createLazyFacade(
+  config: AdminFirebaseConfig,
+  makeFacade: (c: AdminFirebaseConfig) => Promise<AdminFirebaseFacade> = createFirebaseAdminFacade,
+): AdminFirebaseFacade {
   let pending: Promise<AdminFirebaseFacade> | null = null;
   const facade = (): Promise<AdminFirebaseFacade> => {
-    pending ??= createFirebaseAdminFacade(config);
+    pending ??= makeFacade(config);
     return pending;
   };
   return {
     setPersistenceLocal: async () => {
       await (await facade()).setPersistenceLocal();
     },
-    onAuthStateChanged: (listener) => {
+    onAuthStateChanged: (listener, onError) => {
       let stop: (() => void) | null = null;
       let cancelled = false;
-      void facade().then((real) => {
-        if (cancelled) return;
-        stop = real.onAuthStateChanged(listener);
-      });
+      facade().then(
+        (real) => {
+          // unsubscribed before the SDK finished loading: attach nothing, report nothing
+          if (cancelled) return;
+          stop = real.onAuthStateChanged(listener, (error) => {
+            if (cancelled) return;
+            onError(error);
+          });
+        },
+        (error: unknown) => {
+          // the adapter could not be built (bad config, blocked SDK chunk, offline import).
+          // Reporting it here is what keeps this from being an unhandled rejection AND what
+          // stops the UI from sitting in `initializing` forever.
+          if (cancelled) return;
+          onError(error);
+        },
+      );
       return () => {
         cancelled = true;
         stop?.();

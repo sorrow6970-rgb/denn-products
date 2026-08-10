@@ -3,6 +3,7 @@
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import { createOperatorAuthPort } from "@denn/firebase/admin-read";
 import type {
   AdminStateLoadResult,
   AdminStateReadPort,
@@ -12,7 +13,11 @@ import type {
 import { AdminRemoteStateCard } from "./AdminRemoteStateCard";
 import { resolveAdminFirebaseConfig } from "./config";
 import { createAdminRemoteController } from "./controller";
-import { createAdminRemoteControllerFromEnv, createCorrelationId } from "./create";
+import {
+  createAdminRemoteControllerFromEnv,
+  createCorrelationId,
+  createLazyFacade,
+} from "./create";
 
 const FULL_ENV = {
   VITE_DENN_ADMIN_FIREBASE_ENABLED: "true",
@@ -33,6 +38,10 @@ function fakeAuth(initial: OperatorAuthState = { status: "initializing" }) {
     ok: true as const,
     value: { correlationId: req.correlationId },
   }));
+  const signOut = vi.fn(async (req: { correlationId: string }) => ({
+    ok: true as const,
+    value: { correlationId: req.correlationId },
+  }));
   const port: OperatorAuthPort = {
     subscribe: (listener) => {
       listeners.add(listener);
@@ -41,11 +50,12 @@ function fakeAuth(initial: OperatorAuthState = { status: "initializing" }) {
     },
     currentOperator: () => state,
     signInWithEmailPassword: signIn,
-    signOut: async (req) => ({ ok: true as const, value: { correlationId: req.correlationId } }),
+    signOut,
   };
   return {
     port,
     signIn,
+    signOut,
     subscriberCount: () => listeners.size,
     emit(next: OperatorAuthState) {
       state = next;
@@ -368,5 +378,182 @@ describe("AdminRemoteStateCard", () => {
     ]) {
       expect(out, forbidden).not.toContain(forbidden);
     }
+  });
+});
+
+// --- CORRECTION_REQUIRED round 1 --------------------------------------------
+
+describe("createAdminRemoteController — sign-out concurrency", () => {
+  it("blocks a duplicate sign-out and a load while one is running", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    const auth = fakeAuth({ status: "authenticated" });
+    auth.signOut.mockImplementation(async (req) => {
+      await gate;
+      return { ok: true as const, value: { correlationId: req.correlationId } };
+    });
+    const read = fakeRead(OK_LOAD);
+    const controller = createAdminRemoteController({
+      ports: { auth: auth.port, read: read.port },
+      createCorrelationId: cid,
+    });
+    controller.subscribe(() => {});
+
+    const first = controller.signOut();
+    // both doors are closed while the sign-out is in flight
+    expect(controller.getSnapshot().canLoad).toBe(false);
+    expect(controller.getSnapshot().canSignIn).toBe(false);
+
+    await controller.signOut(); // duplicate
+    await controller.load(); // and a read behind it
+    await controller.signIn("a@b.c", "pw");
+    expect(auth.signOut).toHaveBeenCalledTimes(1);
+    expect(read.load).not.toHaveBeenCalled();
+    expect(auth.signIn).not.toHaveBeenCalled();
+
+    release();
+    await first;
+    // the observer, not the promise, is what finally reports signed-out
+    expect(controller.getSnapshot().status).toBe("authenticated");
+    auth.emit({ status: "signed-out" });
+    expect(controller.getSnapshot().status).toBe("signed-out");
+  });
+
+  it("lets the observer win regardless of when the sign-out promise settles", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    const auth = fakeAuth({ status: "authenticated" });
+    auth.signOut.mockImplementation(async (req) => {
+      await gate;
+      return { ok: true as const, value: { correlationId: req.correlationId } };
+    });
+    const controller = createAdminRemoteController({
+      ports: { auth: auth.port, read: fakeRead(OK_LOAD).port },
+      createCorrelationId: cid,
+    });
+    controller.subscribe(() => {});
+
+    const pending = controller.signOut();
+    auth.emit({ status: "signed-out" }); // observer arrives first
+    expect(controller.getSnapshot().status).toBe("signed-out");
+    release();
+    await pending;
+    expect(controller.getSnapshot().status).toBe("signed-out"); // the promise did not overwrite it
+  });
+
+  it("surfaces a failed sign-out as a safe code and reopens the actions", async () => {
+    const auth = fakeAuth({ status: "authenticated" });
+    auth.signOut.mockResolvedValueOnce({
+      ok: false,
+      error: {
+        category: "NETWORK",
+        code: "NETWORK_UNAVAILABLE",
+        retryable: true,
+        correlationId: "0123abcd",
+      },
+    } as never);
+    const controller = createAdminRemoteController({
+      ports: { auth: auth.port, read: fakeRead(OK_LOAD).port },
+      createCorrelationId: cid,
+    });
+    controller.subscribe(() => {});
+    await controller.signOut();
+    expect(controller.getSnapshot()).toMatchObject({
+      status: "error",
+      errorCode: "NETWORK_UNAVAILABLE",
+      canLoad: true,
+    });
+  });
+});
+
+describe("createLazyFacade — adapter construction failure fails closed", () => {
+  const CONFIG = {
+    apiKey: "k",
+    authDomain: "d",
+    projectId: "p",
+    storageBucket: "b",
+    appId: "a",
+  };
+  const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  it("reports a factory rejection through onError instead of an unhandled rejection", async () => {
+    const unhandled: unknown[] = [];
+    const onUnhandled = (e: unknown) => unhandled.push(e);
+    process.on("unhandledRejection", onUnhandled);
+    try {
+      const facade = createLazyFacade(CONFIG, () =>
+        Promise.reject({ code: "auth/network-request-failed", message: "RAW-INIT-MESSAGE" }),
+      );
+      const errors: unknown[] = [];
+      const users: unknown[] = [];
+      facade.onAuthStateChanged(
+        (u) => users.push(u),
+        (e) => errors.push(e),
+      );
+      await tick();
+      expect(users).toHaveLength(0);
+      expect(errors).toHaveLength(1);
+      await tick();
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.off("unhandledRejection", onUnhandled);
+    }
+  });
+
+  it("maps that failure to a safe auth state and never shows the raw error", async () => {
+    const facade = createLazyFacade(CONFIG, () =>
+      Promise.reject({ code: "auth/network-request-failed", message: "RAW-INIT-MESSAGE" }),
+    );
+    const auth = createOperatorAuthPort(facade);
+    const seen: string[] = [];
+    auth.subscribe((s) => seen.push(JSON.stringify(s)));
+    await tick();
+    expect(auth.currentOperator()).toEqual({ status: "error", code: "NETWORK_UNAVAILABLE" });
+    expect(seen.join(" ")).not.toContain("RAW-INIT-MESSAGE");
+  });
+
+  it("stays silent when unsubscribed before the factory settles", async () => {
+    let reject!: (reason: unknown) => void;
+    const facade = createLazyFacade(
+      CONFIG,
+      () =>
+        new Promise((_resolve, r) => {
+          reject = r;
+        }),
+    );
+    const errors: unknown[] = [];
+    const stop = facade.onAuthStateChanged(
+      () => {},
+      (e) => errors.push(e),
+    );
+    stop();
+    reject(new Error("too late"));
+    await tick();
+    expect(errors).toHaveLength(0);
+  });
+
+  it("forwards an observer error raised after the adapter is ready", async () => {
+    let raise!: (error: unknown) => void;
+    const facade = createLazyFacade(CONFIG, () =>
+      Promise.resolve({
+        setPersistenceLocal: () => Promise.resolve(),
+        onAuthStateChanged: (_l, onError) => {
+          raise = onError;
+          return () => {};
+        },
+        signInWithEmailPassword: () => Promise.resolve(),
+        signOut: () => Promise.resolve(),
+        readObjectBytes: () => Promise.resolve(new Uint8Array()),
+      }),
+    );
+    const auth = createOperatorAuthPort(facade);
+    auth.subscribe(() => {});
+    await tick();
+    raise({ code: "auth/network-request-failed" });
+    expect(auth.currentOperator()).toEqual({ status: "error", code: "NETWORK_UNAVAILABLE" });
   });
 });

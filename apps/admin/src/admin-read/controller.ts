@@ -61,7 +61,7 @@ export function createAdminRemoteController(
   let disposed = false;
   let generation = 0;
   let auth: OperatorAuthState = { status: "initializing" };
-  let busy: "idle" | "signing-in" | "loading" = "idle";
+  let busy: "idle" | "signing-in" | "loading" | "signing-out" = "idle";
   let errorCode: AdminReadErrorCode | null = null;
   let hasDocument = false;
   let snapshot: AdminRemoteSnapshot = ports === undefined ? UNCONFIGURED : derive();
@@ -70,6 +70,8 @@ export function createAdminRemoteController(
   function derive(): AdminRemoteSnapshot {
     if (ports === undefined) return UNCONFIGURED;
     const authenticated = auth.status === "authenticated";
+    // `signing-out` adds no product state and no new copy: it only closes both doors while the
+    // SDK call is in flight, so a second sign-out (or a load) cannot start behind it.
     const canSignIn = !authenticated && busy === "idle";
     const canLoad = authenticated && busy === "idle";
     if (busy === "loading") return { status: "loading", errorCode: null, canSignIn, canLoad };
@@ -150,12 +152,16 @@ export function createAdminRemoteController(
   };
 
   const signOut = async (): Promise<void> => {
+    // the same guard as sign-in/load: while a sign-out is running, nothing else may start
     if (ports === undefined || busy !== "idle" || disposed) return;
     const token = ++generation;
+    busy = "signing-out";
     errorCode = null;
     publish();
     const result = await ports.auth.signOut({ correlationId: createCorrelationId() });
     if (isStale(token)) return;
+    busy = "idle";
+    // On success nothing is asserted about the auth state — `signed-out` is the observer's word.
     errorCode = result.ok ? null : result.error.code;
     publish();
   };

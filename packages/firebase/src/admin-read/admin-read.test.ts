@@ -10,6 +10,7 @@ import {
   createOperatorAuthPort,
 } from "./index";
 import type { AdminFacadeUser, AdminFirebaseFacade, AdminReadObjectRequest } from "./facade";
+import { createAdminStateReadPortWithTimeout } from "./read-port";
 import type { OperatorAuthState } from "./types";
 
 const CID = "0123abcd";
@@ -31,6 +32,7 @@ const OK_CATALOG = { frameSizes: [{ id: "s1", name: "s1", aspect: 1.41 }] };
 
 interface Fake extends AdminFirebaseFacade {
   emit(user: AdminFacadeUser | null): void;
+  emitError(error: unknown): void;
   readonly reads: AdminReadObjectRequest[];
   readonly observerCount: () => number;
 }
@@ -39,14 +41,19 @@ function makeFake(
   overrides: Partial<AdminFirebaseFacade> & { bytes?: Uint8Array; readError?: unknown } = {},
 ): Fake {
   const listeners = new Set<(user: AdminFacadeUser | null) => void>();
+  const errorCallbacks = new Set<(error: unknown) => void>();
   const reads: AdminReadObjectRequest[] = [];
   const fake: Fake = {
     setPersistenceLocal: overrides.setPersistenceLocal ?? (() => Promise.resolve()),
     onAuthStateChanged:
       overrides.onAuthStateChanged ??
-      ((listener) => {
+      ((listener, onError) => {
         listeners.add(listener);
-        return () => listeners.delete(listener);
+        errorCallbacks.add(onError);
+        return () => {
+          listeners.delete(listener);
+          errorCallbacks.delete(onError);
+        };
       }),
     signInWithEmailPassword: overrides.signInWithEmailPassword ?? (() => Promise.resolve()),
     signOut: overrides.signOut ?? (() => Promise.resolve()),
@@ -59,6 +66,9 @@ function makeFake(
       }),
     emit: (user) => {
       for (const listener of [...listeners]) listener(user);
+    },
+    emitError: (error) => {
+      for (const onError of [...errorCallbacks]) onError(error);
     },
     reads,
     observerCount: () => listeners.size,
@@ -98,8 +108,10 @@ describe("admin-read module boundary", () => {
       throw new Error("no network is allowed here");
     }) as typeof globalThis.fetch;
     try {
-      // a fresh module instance: importing must not reach out, initialize an app or observe auth
-      await import(`./index?probe=${Date.now()}`);
+      // a genuinely fresh module instance, via the module registry rather than a query-string
+      // path (an interpolated dynamic import is not statically analysable and Vite warns on it)
+      vi.resetModules();
+      await import("./index");
     } finally {
       globalThis.fetch = original;
     }
@@ -474,7 +486,12 @@ describe("createAdminStateReadPort — concurrency and timeout", () => {
     vi.useFakeTimers();
     const fake = makeFake({ readObjectBytes: () => new Promise<Uint8Array>(() => {}) });
     const { port: auth } = authenticatedPort(fake);
-    const port = createAdminStateReadPort({ facade: fake, auth });
+    // the PUBLIC factory always uses the contract constant; this drives the internal seam with
+    // exactly that value so the assertion is about the real number, not an injected one
+    const port = createAdminStateReadPortWithTimeout(
+      { facade: fake, auth },
+      ADMIN_STATE_READ_TIMEOUT_MS,
+    );
 
     let settled = false;
     const pending = port.load({ correlationId: CID }).then((r) => {
@@ -499,7 +516,10 @@ describe("createAdminStateReadPort — concurrency and timeout", () => {
     const gate = deferred<Uint8Array>();
     const fake = makeFake({ readObjectBytes: () => gate.promise });
     const { port: auth } = authenticatedPort(fake);
-    const port = createAdminStateReadPort({ facade: fake, auth });
+    const port = createAdminStateReadPortWithTimeout(
+      { facade: fake, auth },
+      ADMIN_STATE_READ_TIMEOUT_MS,
+    );
 
     const pending = port.load({ correlationId: CID });
     await vi.advanceTimersByTimeAsync(30_000);
@@ -512,5 +532,83 @@ describe("createAdminStateReadPort — concurrency and timeout", () => {
     const again = await pending;
     expect(again).toBe(result);
     if (!again.ok) expect(again.error.code).toBe("NETWORK_TIMEOUT");
+  });
+});
+
+// --- CORRECTION_REQUIRED round 1 --------------------------------------------
+
+describe("createOperatorAuthPort — observer/init failures fail closed", () => {
+  it("leaves `initializing` when the observer reports an error, with a safe code", () => {
+    const fake = makeFake();
+    const port = createOperatorAuthPort(fake);
+    const seen: OperatorAuthState[] = [];
+    port.subscribe((s) => seen.push(s));
+    expect(port.currentOperator()).toEqual({ status: "initializing" });
+
+    fake.emitError({ code: "auth/network-request-failed", message: "RAW-OBSERVER-MESSAGE" });
+    expect(port.currentOperator()).toEqual({ status: "error", code: "NETWORK_UNAVAILABLE" });
+    expect(JSON.stringify(seen)).not.toContain("RAW-OBSERVER-MESSAGE");
+  });
+
+  it("folds an unmapped observer error into the UNKNOWN code", () => {
+    const fake = makeFake();
+    const port = createOperatorAuthPort(fake);
+    port.subscribe(() => {});
+    fake.emitError(new Error("adapter could not be built"));
+    expect(port.currentOperator()).toEqual({
+      status: "error",
+      code: "UNEXPECTED_ADMIN_READ_ERROR",
+    });
+  });
+
+  it("refuses a read while the auth observer is in an error state", async () => {
+    const fake = makeFake();
+    const port = createOperatorAuthPort(fake);
+    port.subscribe(() => {});
+    fake.emitError({ code: "auth/network-request-failed" });
+    const read = createAdminStateReadPort({ facade: fake, auth: port });
+    const result = await read.load({ correlationId: CID });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("AUTH_REQUIRED");
+    expect(fake.reads).toHaveLength(0);
+  });
+
+  it("reports nothing once unsubscribed", () => {
+    const fake = makeFake();
+    const port = createOperatorAuthPort(fake);
+    const seen: OperatorAuthState[] = [];
+    const unsubscribe = port.subscribe((s) => seen.push(s));
+    const before = seen.length;
+    unsubscribe();
+    fake.emitError({ code: "auth/network-request-failed" });
+    fake.emit({ isAnonymous: false });
+    expect(seen).toHaveLength(before);
+    expect(fake.observerCount()).toBe(0);
+  });
+});
+
+describe("createAdminStateReadPort — the timeout is not negotiable", () => {
+  it("ignores any timeout the caller tries to inject", async () => {
+    vi.useFakeTimers();
+    const fake = makeFake({ readObjectBytes: () => new Promise<Uint8Array>(() => {}) });
+    const { port: auth } = authenticatedPort(fake);
+    // a runtime override attempt: the public factory reads no such field
+    const port = createAdminStateReadPort({ facade: fake, auth, timeoutMs: 5 } as never);
+    let settled = false;
+    const pending = port.load({ correlationId: CID }).then((r) => {
+      settled = true;
+      return r;
+    });
+    await vi.advanceTimersByTimeAsync(29_999);
+    expect(settled).toBe(false); // an injected 5 ms would have fired long ago
+    await vi.advanceTimersByTimeAsync(1);
+    const result = await pending;
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("NETWORK_TIMEOUT");
+  });
+
+  it("does not expose a timeout override on the public surface", async () => {
+    const surface = await import("./index");
+    expect(Object.keys(surface)).not.toContain("createAdminStateReadPortWithTimeout");
   });
 });

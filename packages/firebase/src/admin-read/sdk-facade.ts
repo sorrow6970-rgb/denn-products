@@ -39,10 +39,14 @@ export async function createFirebaseAdminFacade(
 
   return {
     setPersistenceLocal: () => auth.setPersistence(authInstance, auth.browserLocalPersistence),
-    onAuthStateChanged: (listener) =>
-      auth.onAuthStateChanged(authInstance, (user) =>
-        // only `isAnonymous` crosses the boundary — no uid, email, token or User instance
-        listener(user === null ? null : { isAnonymous: user.isAnonymous }),
+    onAuthStateChanged: (listener, onError) =>
+      auth.onAuthStateChanged(
+        authInstance,
+        (user) =>
+          // only `isAnonymous` crosses the boundary — no uid, email, token or User instance
+          listener(user === null ? null : { isAnonymous: user.isAnonymous }),
+        // the SDK reports observer failures here; without this the port would wait forever
+        (error) => onError(error),
       ),
     signInWithEmailPassword: async (email, password) => {
       await auth.signInWithEmailAndPassword(authInstance, email, password);

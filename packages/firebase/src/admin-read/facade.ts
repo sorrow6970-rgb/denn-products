@@ -17,8 +17,17 @@ export interface AdminReadObjectRequest {
 export interface AdminFirebaseFacade {
   /** Must reject (never silently no-op) when local persistence cannot be established. */
   setPersistenceLocal(): Promise<void>;
-  /** Registers the auth observer and returns its unsubscribe. */
-  onAuthStateChanged(listener: (user: AdminFacadeUser | null) => void): () => void;
+  /**
+   * Registers the auth observer and returns its unsubscribe.
+   *
+   * `onError` is not optional in spirit: without it an SDK/init failure would leave the port stuck
+   * in `initializing` forever (and a factory rejection would surface as an unhandled rejection).
+   * Implementations must report BOTH observer errors and adapter-construction failures through it.
+   */
+  onAuthStateChanged(
+    listener: (user: AdminFacadeUser | null) => void,
+    onError: (error: unknown) => void,
+  ): () => void;
   signInWithEmailPassword(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
   /** Reads a fixed object. The port always passes the module constants (never caller input). */

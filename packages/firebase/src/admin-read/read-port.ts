@@ -69,13 +69,17 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<TimedOu
 export interface AdminStateReadPortOptions {
   readonly facade: AdminFirebaseFacade;
   readonly auth: OperatorAuthPort;
-  /** Overridable for deterministic tests only; production uses the contract constant. */
-  readonly timeoutMs?: number;
 }
 
-export function createAdminStateReadPort(options: AdminStateReadPortOptions): AdminStateReadPort {
+/**
+ * INTERNAL test seam. Not exported from `./index`, so no caller of
+ * `@denn/firebase/admin-read` can shorten or extend the contract timeout.
+ */
+export function createAdminStateReadPortWithTimeout(
+  options: AdminStateReadPortOptions,
+  timeoutMs: number,
+): AdminStateReadPort {
   const { facade, auth } = options;
-  const timeoutMs = options.timeoutMs ?? ADMIN_STATE_READ_TIMEOUT_MS;
   // A second click while a read is running reuses the running promise instead of starting a
   // second request. Disabling the button is a UI nicety; this is the actual guarantee.
   let inFlight: Promise<AdminStateLoadResult> | null = null;
@@ -153,4 +157,9 @@ export function createAdminStateReadPort(options: AdminStateReadPortOptions): Ad
   };
 
   return { load };
+}
+
+/** Public factory. The timeout is the contract constant and is deliberately not a parameter. */
+export function createAdminStateReadPort(options: AdminStateReadPortOptions): AdminStateReadPort {
+  return createAdminStateReadPortWithTimeout(options, ADMIN_STATE_READ_TIMEOUT_MS);
 }

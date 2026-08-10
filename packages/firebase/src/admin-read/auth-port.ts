@@ -34,7 +34,12 @@ export function createOperatorAuthPort(facade: AdminFirebaseFacade): OperatorAut
     // The observer is attached with the first subscriber and detached with the last, so a
     // StrictMode double-subscribe stays balanced instead of leaking a second registration.
     if (detach === null) {
-      detach = facade.onAuthStateChanged((user) => publish(stateFromUser(user)));
+      detach = facade.onAuthStateChanged(
+        (user) => publish(stateFromUser(user)),
+        // An SDK/init failure must NOT leave the port in `initializing` forever, and the raw error
+        // must not travel any further than this line.
+        (error) => publish({ status: "error", code: mapAuthError(error) }),
+      );
     }
     listener(state);
     let active = true;
