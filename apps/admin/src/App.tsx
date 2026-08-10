@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { APP_IDS, BRAND } from "@denn/shared";
 import { Badge, Button, Card, Chip, TextField, VisuallyHidden } from "@denn/ui";
+import { AdminRemoteStateCard } from "./admin-read/AdminRemoteStateCard";
+import { createAdminRemoteControllerFromEnv } from "./admin-read/create";
+import type { AdminRemoteController } from "./admin-read/controller";
 import { PrintSizeCmDraft } from "./PrintSizeCmDraft";
 
 // Primitive showcase shell only (spec 011): renders @denn/ui primitives to verify the
@@ -10,6 +13,11 @@ const VIEWS = ["카드", "목록", "표"] as const;
 
 export function App(): React.JSX.Element {
   const [view, setView] = useState<string>("카드");
+  // one controller per mount; StrictMode's double effect must not leave an observer attached
+  const controllerRef = useRef<AdminRemoteController | null>(null);
+  controllerRef.current ??= createAdminRemoteControllerFromEnv(import.meta.env);
+  const controller = controllerRef.current;
+  useEffect(() => () => controller.dispose(), [controller]);
   return (
     <main className="denn-shell">
       <div className="denn-shell__inner">
@@ -21,6 +29,9 @@ export function App(): React.JSX.Element {
 
         {/* spec 035: the first operator feature — local validation only, no save path. */}
         <PrintSizeCmDraft />
+
+        {/* spec 036: read-only remote operator state. Disabled unless explicitly configured. */}
+        <AdminRemoteStateCard controller={controller} />
 
         <Card>
           <div className="denn-stack">
