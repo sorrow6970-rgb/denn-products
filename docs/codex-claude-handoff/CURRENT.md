@@ -9,8 +9,9 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — 스펙 036 제품 구현·보완은 Codex 독립 재검증을 **통과**했다.
-현재 단계는 **종료 문서 확인**이다(2026-08-10, 문서 HEAD `91acec0`).**
+상태: **`WAITING_FOR_NEXT_SPEC` — 스펙 036은 Codex 독립 재검증과 종료 문서 확인을 모두 통과해
+DONE이다(2026-08-10, 종료 문서 `a0543fb`). 오늘 작업은 Founder 지시에 따라 여기서 종료하며,
+다음 스펙은 명시적으로 재개할 때만 시작한다.**
 
 - **제품 검증 커밋 = `b7ee207`** (구현 `fd92fbc` + CORRECTION_REQUIRED 라운드 1 보완).
   Codex 독립 게이트: frozen install PASS · format/lint 각 **153 파일** PASS · typecheck PASS ·

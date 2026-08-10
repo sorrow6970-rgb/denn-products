@@ -1,10 +1,11 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-036-closure-doc-verification`
+상태: `WAITING_FOR_NEXT_SPEC`
+active_unit: `none`
 
-**다음 작업: 라운드 3 문서 범위 확인 후 스펙 036 종료 판단.**
-**제품 독립 재검증은 이미 통과했다 — 다시 요구하지 않는다.**
+**스펙 036은 Codex 종료 문서 확인까지 통과해 DONE이다.**
+오늘 작업은 Founder 지시에 따라 여기서 종료한다. 다음 스펙은 자동으로 시작하지 않는다.
+Founder가 명시적으로 재개할 때 새 작업 범위와 프롬프트를 작성한다.
 
 ## 확정된 사실
 

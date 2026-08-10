@@ -1730,3 +1730,17 @@
   중단**돼 성공·실패로 단정하지 않는다.
 - **권장 다음 상태**: `READY_FOR_CODEX` — **Codex의 종료 문서 확인 → 스펙 036 종료 판단.**
   다음 스펙은 시작하지 않는다.
+
+## 2026-08-10 — 스펙 036 Codex 종료 확인 · 오늘 작업 종료
+
+- **확인 대상**: 문서 위생·종료 문서 커밋 `a0543fb`.
+- **Codex 판정**: **PASS / 스펙 036 DONE**. 라운드 3 변경은 허용 문서 5개뿐이고
+  `git diff --check`가 통과했으며 제품 코드·테스트·설정·manifest·lockfile 변경은 0이다.
+- **Git 근거**: 확인 시점 HEAD=origin=`a0543fb`, ahead/behind 0/0. 워킹 트리는 보호 대상
+  spec-018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`만 남아 있다.
+- **최종 제품 근거**: 검증 커밋 `b7ee207`, unit **1271/1271**, Chromium E2E **134/134**.
+  제품 검증은 이미 완료됐으므로 이번 종료 단계에서 전체 게이트를 반복하지 않았다.
+- **남은 미검증**: `pnpm-workspace.yaml`의 새 클론 `allowBuilds` 재발 여부, 실제 운영자 계정·
+  Firebase/Storage/Rules/CORS·실기기·쓰기 원자성은 기존 기록대로 NOT VERIFIED/NOT TESTED다.
+- **다음 상태**: `WAITING_FOR_NEXT_SPEC`. Founder가 명시적으로 재개할 때만 다음 작업을 시작한다.
+  자동화나 반복 작업은 만들지 않았다.

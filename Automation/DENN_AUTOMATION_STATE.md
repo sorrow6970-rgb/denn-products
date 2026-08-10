@@ -4,17 +4,17 @@
 updated_at: 2026-08-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-036-correction-round-3-doc-hygiene
-active_unit: spec-036-closure-doc-verification
-state: READY_FOR_CODEX
-baseline_commit: 91acec0
-candidate_commit: none (rounds 2-3 are docs-only; last product change is b7ee207)
+completed_unit: spec-036-admin-auth-private-state-read
+active_unit: none
+state: WAITING_FOR_NEXT_SPEC
+baseline_commit: a0543fb
+candidate_commit: none (spec 036 is DONE; last product change is b7ee207)
 verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "docs-only round-3 commit on top of 91acec0; HEAD=origin, ahead/behind 0/0"
+origin_relation: "Codex confirmed docs-only closure commit a0543fb; HEAD=origin, ahead/behind 0/0 before final status commit"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 3
 max_fix_rounds: 3
-next_transition: WAITING_FOR_CODEX   # Codex reviews the CLOSURE DOCS; product verification is done
+next_transition: FOUNDER_EXPLICIT_RESUME   # manual workflow; no automatic next-spec start
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
