@@ -4,15 +4,15 @@
 updated_at: 2026-08-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-036-admin-auth-private-state-read-implementation
+completed_unit: spec-036-correction-round-1
 active_unit: spec-036-codex-independent-verification
 state: READY_FOR_CODEX
-baseline_commit: 765dfb4
-candidate_commit: fd92fbc
+baseline_commit: e873049
+candidate_commit: b7ee207
 verified_commit: e9e2af6
-origin_relation: "implementation fd92fbc pushed on top of 765dfb4; HEAD=origin, ahead/behind 0/0"
+origin_relation: "correction b7ee207 pushed on top of e873049; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
-fix_round: 0
+fix_round: 1
 max_fix_rounds: 3
 next_transition: WAITING_FOR_CODEX
 automation_loop: removed (no new automation or recurring task is created)
@@ -1502,3 +1502,35 @@ Founder가 계약 `765dfb4`와 **구현 착수**를 승인했다. 구현 커밋 
 
 보호 대상 3개는 restore·checkout·stage·commit 하지 않았다. 자동화·반복 작업은 만들지 않았다.
 다음 전이: **Codex 독립 검증**. 다음 스펙은 시작하지 않는다.
+
+
+## 스펙 036 CORRECTION_REQUIRED 라운드 1 완료 — READY_FOR_CODEX (Claude Code, 2026-08-10)
+
+기준 `e873049`, 보완 커밋 **`b7ee207`**(제품), 종료 문서는 별도 커밋. 지적된 **4개 결함만** 고쳤다.
+
+1. **초기화·observer 오류 fail-closed** — `onAuthStateChanged(listener, onError)`로 오류 경계를
+   계약에 추가, `sdk-facade`가 SDK error callback 전달, `createLazyFacade`가 factory rejection을
+   같은 경로로 라우팅. `mapAuthError`를 거쳐 **안전 코드만** publish(`auth/network-request-failed`
+   → `NETWORK_UNAVAILABLE`, 미등록 → `UNEXPECTED_ADMIN_READ_ERROR`).
+   **unhandled rejection 0 · raw error 비노출 · `initializing` 영구 고정 제거 ·
+   rejection 전 unsubscribe 시 callback 0회**를 unit으로 고정.
+2. **timeout 공개 계약 고정** — 공개 옵션에서 `timeoutMs` 제거, 제품 경로는 항상
+   `ADMIN_STATE_READ_TIMEOUT_MS`. seam은 `read-port.ts` 내부이며 `index.ts` 미노출.
+   런타임 override 시도도 30,000 ms를 따르는 것을 unit으로 고정.
+3. **로그아웃 동시성 차단** — 내부 `busy="signing-out"` 가드. 새 공개 상태·문구 **0**,
+   진행 중 `canSignIn`/`canLoad` **false**, 중복 signOut 1회·진행 중 load/signIn 0회,
+   observer 단일 권위 유지.
+4. **Vite 경고 제거** — `vi.resetModules()` + 정적 `import("./index")`.
+   **unit 실행에 invalid dynamic import warning 0건.**
+
+게이트: frozen install exit 0 · format · lint · typecheck · **unit 1271/1271**(1258 → +13) ·
+build · **Chromium E2E 134/134** · check · diff-check 클린 · **금지 경로 diff 0** ·
+고객 dist SHA-256 **`f86d446d…7bbc09` 동일** · 실제 Firebase/network 요청 **0** ·
+ports 4183/4184 **0** · OS temp **0**.
+
+**`pnpm-workspace.yaml`은 이번에도 수정하지 않았고 `pnpm approve-builds`도 실행하지 않았다.**
+새 클론 frozen install 재발 여부는 **NOT VERIFIED**이며, Codex의 새 클론 시도가 **registry EACCES로
+중단**됐으므로 성공·실패 어느 쪽으로도 단정하지 않는다.
+
+보호 대상 3개는 restore·checkout·stage·commit 하지 않았다. 자동화·반복 작업은 만들지 않았고
+다음 스펙도 시작하지 않았다. 다음 전이: **Codex 독립 재검증**.

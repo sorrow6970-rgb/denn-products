@@ -1,6 +1,6 @@
 # 스펙 036 — 운영자 Auth + 비공개 `admin/state.json` 읽기 전용
 
-상태: **DONE (Claude)** — Founder가 계약(`765dfb4`)과 구현 착수를 승인, 구현 `fd92fbc`.
+상태: **DONE (Claude)** — 구현 `fd92fbc`, **CORRECTION_REQUIRED 라운드 1 보완 `b7ee207`**.
 
 작성 2026-08-10 · 기준 HEAD = origin = `6daf365`
 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-10-admin-auth-write-boundary-decisions.md`
@@ -658,3 +658,89 @@ Founder가 계약 `765dfb4`를 승인하고 구현 착수를 승인했다. 기�
 - 실제 인증 만료·갱신, 실제 Storage CORS와 `getBytes` 동작
 - 실기기, 쓰기 원자성(F-E로 별도 조사 대상)
 - **실제 SDK 오류 코드 문자열** — 매핑은 계약 표 기준이며 합성 fake로만 검증했다
+
+
+---
+
+### CORRECTION_REQUIRED 라운드 1 (Claude) — 2026-08-10, 보완 `b7ee207`
+
+기준 `e873049`. 지적된 **4개 결함만** 고쳤고 제품 범위·공개 8상태·observer 단일 권위는 그대로다.
+
+#### ① Firebase 초기화·observer 오류 fail-closed
+
+**재현**: `createLazyFacade`가 `createFirebaseAdminFacade(config)`의 **rejection을 처리하지 않았다**
+(`void facade().then(...)`). 어댑터 생성이 실패하면 ⓐ **unhandled rejection**이 발생하고
+ⓑ observer가 영영 붙지 않아 상태가 **`initializing`에 고정**됐다. SDK observer의 error callback도
+전달하지 않아 같은 고착이 가능했다.
+
+**수정**: `AdminFirebaseFacade.onAuthStateChanged(listener, onError)`로 **오류 경계를 계약에 추가**하고,
+`sdk-facade.ts`가 Firebase의 error callback을 그대로 전달하며, `createLazyFacade`가 factory
+rejection을 **같은 `onError`로 라우팅**한다. `auth-port`는 이를 `mapAuthError`에 통과시켜
+**`OperatorAuthState`의 안전 코드로만** publish한다(`auth/network-request-failed` →
+`NETWORK_UNAVAILABLE`, 미등록 → `UNEXPECTED_ADMIN_READ_ERROR`). **rejection 전에 unsubscribe되면
+callback·상태 갱신 0회**다.
+
+**고정한 unit**: factory rejection이 unhandled가 아님(`process.on("unhandledRejection")`으로 확인) ·
+안전 코드 매핑 · **raw message 비노출** · unsubscribe 후 침묵 · 어댑터 준비 후 observer 오류 전달 ·
+error 상태에서 read는 `AUTH_REQUIRED`로 막히고 `getBytes` 0회.
+
+#### ② 30,000 ms timeout 공개 계약 고정
+
+**재현**: `AdminStateReadPortOptions.timeoutMs?`가 **공개 옵션**이라
+`@denn/firebase/admin-read` 호출자가 계약 상수를 우회할 수 있었다.
+
+**수정**: 공개 `AdminStateReadPortOptions`에서 **`timeoutMs` 제거**. 공개
+`createAdminStateReadPort`는 항상 `ADMIN_STATE_READ_TIMEOUT_MS`를 쓴다. 테스트 seam은
+`read-port.ts`의 `createAdminStateReadPortWithTimeout`이며 **`index.ts`에서 export하지 않는다**.
+
+**고정한 unit**: 런타임에 `{ timeoutMs: 5 }`를 끼워 넣어도 **29,999 ms에 미완료, 30,000 ms에
+`NETWORK_TIMEOUT`** · 공개 surface에 seam 이름이 **없음**.
+
+#### ③ 로그아웃 동시성 차단
+
+**재현**: `signOut`이 `busy`를 세우지 않아 **중복 signOut**과 진행 중 **load/signIn**이 함께 시작될 수
+있었다.
+
+**수정**: 내부 `busy = "signing-out"` 가드를 추가했다. **새 공개 상태·문구는 없다** — 진행 중에는
+`canSignIn`·`canLoad`가 **false**가 되고, 완료 후에도 `signed-out` 확정은 **observer**만 한다.
+
+**고정한 unit**: 중복 signOut → `auth.signOut` **1회** · 진행 중 `read.load` **0회**,
+`signIn` **0회** · observer가 먼저 도착해도 늦게 끝난 Promise가 상태를 **덮지 않음** ·
+실패 시 안전 코드 + 액션 재개방.
+
+#### ④ Vite 경고 제거
+
+**재현**: `import(\`./index?probe=${Date.now()}\`)`가
+`warning: invalid import … A file extension must be included in the static part` 을 매 unit 실행마다 냈다.
+
+**수정**: `vi.resetModules()` + **정적 경로 `import("./index")`** 로 바꿨다. import side-effect 검사
+(초기화·network 0)는 그대로다. **unit 실행에 해당 경고 0건.**
+
+#### 검증 결과 (계약 순서)
+
+| # | 게이트 | 결과 |
+| --- | --- | --- |
+| 1 | `pnpm install --frozen-lockfile` | **exit 0** |
+| 2 | `pnpm format:check` | exit 0 |
+| 3 | `pnpm lint` | exit 0 |
+| 4 | `pnpm typecheck` | exit 0 |
+| 5 | `pnpm test:unit` | **1271/1271 PASS**, **invalid dynamic import warning 0건** |
+| 6 | 독립 `pnpm build` | exit 0 |
+| 7 | 전체 Chromium E2E | **134/134 PASS** |
+| 8 | `pnpm check` | `✓ check passed` |
+| 9 | `git diff --check` | 클린 |
+| 10 | 금지 경로 diff | **0건** |
+| 11 | 고객 dist SHA-256 | 빌드 후 = E2E 후 = **`f86d446d…7bbc09`**(구현 전 기준값과 동일) |
+| 12 | 실제 Firebase/network 요청 | **0건** |
+| 13 | ports 4183/4184 · OS temp | **0 / 0** |
+
+unit은 라운드 1 전 1258 → **1271**(+13).
+
+#### NOT VERIFIED / NOT TESTED (변동 없음)
+
+- **`pnpm-workspace.yaml`의 `allowBuilds`** — 이번에도 **수정하지 않았고 `pnpm approve-builds`도
+  실행하지 않았다**. 새 클론 frozen install 재발 여부는 **NOT VERIFIED**이며,
+  Codex의 새 클론 시도는 **registry EACCES로 중단**돼 성공·실패 어느 쪽으로도 단정하지 않는다.
+- 운영자 계정 실재·로그인 · `storage.rules` 실제 배포·거부 · 실제 `admin/state.json` ·
+  인증 만료·갱신 · 실제 Storage CORS·`getBytes` · 실기기 · 쓰기 원자성 ·
+  **실제 SDK 오류 코드 문자열**(매핑은 합성 fake로만 검증).

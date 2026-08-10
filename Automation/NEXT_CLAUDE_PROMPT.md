@@ -3,9 +3,13 @@
 상태: `READY_FOR_CODEX`
 active_unit: `spec-036-codex-independent-verification`
 
-**스펙 036 구현이 끝났다: `fd92fbc`**(계약 `765dfb4`, 결정 정본
-`decisions/2026-08-10-admin-auth-write-boundary-decisions.md`).
-다음은 **Codex 독립 검증**이다. 다음 스펙은 시작하지 않는다.
+**스펙 036 구현 `fd92fbc` + CORRECTION_REQUIRED 라운드 1 보완 `b7ee207`이 끝났다**
+(계약 `765dfb4`, 결정 정본 `decisions/2026-08-10-admin-auth-write-boundary-decisions.md`).
+다음은 **Codex 독립 재검증**이다. 다음 스펙은 시작하지 않는다.
+
+**라운드 1에서 고친 4가지**: ① 초기화·observer 오류 fail-closed(`onAuthStateChanged(listener, onError)`,
+unhandled rejection 0, `initializing` 고정 제거, raw error 비노출) · ② 공개 옵션에서 `timeoutMs` 제거로
+30,000 ms 고정 · ③ 로그아웃 동시성 가드(새 상태·문구 0) · ④ Vite invalid dynamic import 경고 제거.
 
 ## 구현된 것
 
@@ -16,7 +20,8 @@ active_unit: `spec-036-codex-independent-verification`
 
 ## Codex가 재확인할 것
 
-- frozen install / format / lint / typecheck / **unit 1258** / build / **Chromium E2E 134** / `pnpm check`
+- frozen install / format / lint / typecheck / **unit 1271** / build / **Chromium E2E 134** / `pnpm check`
+- `pnpm test:unit`에 **invalid dynamic import warning 0건**
 - **고객 `dist` SHA-256 = `f86d446d…7bbc09`**(구현 전후 동일)과 고객 번들 문자열 0건
 - 금지 diff 0: `apps/mockup/**` · `packages/render/**` · `packages/shared/**` ·
   `packages/firebase/src/index.ts` · `storage.rules` · `firestore.rules` · `firebase.json` ·

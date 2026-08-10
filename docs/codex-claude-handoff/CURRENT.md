@@ -9,7 +9,17 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — 스펙 036 구현 완료(2026-08-10, `fd92fbc`). 다음 = Codex 독립 검증.**
+상태: **`READY_FOR_CODEX` — 스펙 036 구현(`fd92fbc`) + **CORRECTION_REQUIRED 라운드 1 보완
+(`b7ee207`)** 완료(2026-08-10). 다음 = Codex 독립 재검증.**
+**라운드 1에서 고친 4가지**: ① Firebase 초기화·observer 오류를 **fail-closed**로 —
+`onAuthStateChanged(listener, onError)` 경계 추가, SDK error callback 전달, lazy facade의 factory
+rejection 라우팅 → **unhandled rejection 0 · raw error 비노출 · `initializing` 영구 고정 제거 ·
+rejection 전 unsubscribe 시 callback 0회** · ② **30,000 ms timeout을 공개 계약으로 고정** —
+공개 옵션에서 `timeoutMs` 제거, seam은 내부 전용 · ③ **로그아웃 동시성 차단** — 내부 가드로
+중복 signOut·진행 중 load/signIn을 막되 **새 상태·문구 0**, observer 단일 권위 유지 ·
+④ **Vite invalid dynamic import 경고 제거**(`vi.resetModules()` + 정적 import).
+라운드 1 게이트: frozen install exit 0 · format · lint · typecheck · **unit 1271/1271**(+13) ·
+build · **E2E 134/134** · check · 금지 diff 0 · 고객 dist SHA-256 **동일** · 실제 요청 0 · ports/temp 0.
 Founder가 계약 `765dfb4`와 **구현 착수를 승인**했다. 운영자 Email/Password Auth + 비익명 세션 관찰 +
 고정 `admin/state.json` 읽기 + `readLegacyCatalog` 검증 + **메모리 전용**이며,
 쓰기·발행·업로드·revision·충돌·tombstone·마이그레이션은 **0**이다(F-B·F-D·F-E).
