@@ -1,6 +1,6 @@
 # 스펙 035 — 운영자 인쇄 치수(cm) 로컬 입력·검증·canonical 변환
 
-상태: **READY** — 계약 작성 2026-08-10, 선행 스펙 **034**가 DONE인 뒤에 착수한다.
+상태: **DONE (Claude)** — 구현 `e9e2af6`, 계약 `d3bed91`, 선행 스펙 034 DONE(`ff7a49a`)
 
 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-10-operator-cm-input-decisions.md`
 (Founder O-1~O-8, 구조 N-6~N-9)
@@ -172,3 +172,81 @@ E2E(`admin-print-size.spec.ts`, 모바일 320×568 · 데스크톱 1280×800):
 - `scaffold.spec.ts`가 admin 셸의 현재 모습을 강하게 고정하고 있어 카드 추가로 깨질 수 있다.
   깨지면 **기대치를 최소로만** 조정하고, 무엇을 왜 바꿨는지 DONE에 남긴다.
 - 롤백: 이 스펙 커밋만 되돌리면 admin은 스펙 011 데모 셸로 정확히 복귀한다.
+
+---
+
+### DONE (Claude) — 2026-08-10, 커밋 `e9e2af6`
+
+#### 바꾼 파일 (허용 목록 안)
+
+| 파일 | 내용 |
+| --- | --- |
+| `packages/shared/src/catalog/authoring/print-size.ts` | `evaluateOperatorPrintSizeInput` (신규, 순수) |
+| `packages/shared/src/catalog/authoring/index.ts` | 배럴 (신규) |
+| `packages/shared/src/catalog/authoring/print-size.test.ts` | 14건 (신규) |
+| `packages/shared/src/catalog/index.ts` | `export * from "./authoring"`, `MAX_PRINT_CM` 공개 |
+| `packages/shared/src/catalog/read.ts` | `MAX_PRINT_CM`을 `export`로 (값·동작 변경 0) |
+| `apps/admin/src/PrintSizeCmDraft.tsx` | 입력 카드 (신규) |
+| `apps/admin/src/PrintSizeCmDraft.test.tsx` | 정적 마크업 6건 (신규) |
+| `apps/admin/src/App.tsx` | 카드 1개 배치 |
+| `tests/e2e/admin-print-size.spec.ts` | Chromium 2 viewport (신규) |
+| `tests/e2e/scaffold.spec.ts` | **1줄** — 첫 Tab 대상이 `BUTTON`에서 `INPUT`으로 바뀌어 `["BUTTON","INPUT"]` 허용 |
+
+#### 계약 구현 요지
+
+- 판정은 **계약 실행**이다: 후보 `{id,name,printWidthCm,printHeightCm}` 하나짜리 카탈로그를
+  `readLegacyCatalog`에 넣고, 통과하면 `projectFramePrintPhysicalSize`로 **왕복**시킨다.
+  반환 cm은 **projection이 낸 값**이지 파싱한 숫자가 아니다. 범위 규칙은 이 파일에 **없다**.
+- 표기 검사는 `/^\d+(\.\d+)?$/` 하나다. `"21cm"`·`"abc"`·`"-5"`·`"1e2"`·`"1,5"`·`"２１"`·`".5"`·`"21."`
+  전부 `NOT_DECIMAL`이며 **`parseFloat`를 쓰지 않는다**.
+- 빈 폼은 `empty`이고 **오류가 아니다**. 한쪽만 채우면 **빈 쪽**이 `MISSING`이다.
+- prefill 0 · `sub` 없음 · `aspect` 없음 · 저장·전송·클립보드·다운로드 0.
+
+#### 검증 결과
+
+| 게이트 | 결과 |
+| --- | --- |
+| frozen install / lockfile diff | PASS / **0** |
+| format / lint(`--error-on-warnings`) / typecheck | PASS |
+| unit | **1213/1213 PASS** (034 시점 1193 → **+20**) |
+| 독립 build | PASS (admin 203.59 kB / gzip 64.81 kB) |
+| 전체 Chromium E2E | **131/131 PASS** (034 시점 129 → **+2**) |
+| 고객 `dist` SHA-256 (E2E 전후) | **동일** `f86d446d…7bbc09` |
+| `pnpm check` | `✓ check passed` |
+| `git diff --check` / forbidden diff(`packages/render/**`,`apps/mockup/**`) | 클린 / **0** |
+| ports 4183/4184 · OS temp `denn-e2e-*` | **0 / 0** |
+
+E2E가 실제 브라우저에서 확인한 것: 빈 폼 안내 · 정상쌍 canonical 표시 · 반쪽 거부 ·
+`abc` 거부(**`1`이 나타나지 않음**) · `501` 거부 · **카드 안에 클릭 가능한 요소 0개** ·
+**새로고침 후 값 소멸** · **자기 origin 밖 요청 0건** · axe serious/critical 0 · console error 0 ·
+가로 overflow 0.
+
+#### ⚠️ 보고: 고객 번들 **바이트 identity가 바뀌었다** (기능 무변경)
+
+`apps/mockup/dist`의 JS 해시가 `49cae2d3…`(034) → `f86d446d…`(035)로 바뀌었다. 확인한 것:
+
+- 길이 286,220 → **286,192 (−28 byte)**, 공통 prefix 2,126자 뒤부터 **minifier 식별자 배치가 밀렸다**.
+- authoring 코드는 고객 번들에 **들어가지 않았다** — `REJECTED_BY_CATALOG`·`NOT_DECIMAL`·
+  `MAX_PRINT_CM`·`인쇄 폭` 문자열 **각 0건**(tree-shaking 확인).
+- 원인은 `catalog/index.ts`에 배럴 하나가 추가되면서 **모듈 그래프 순서가 바뀐 것**이다.
+- 스펙 §검증의 `고객 dist SHA-256 무변경`은 **이 항목만 충족하지 못했다**. E2E **전후** 해시 동일이라는
+  본래 불변식(테스트가 dist를 오염시키지 않음)은 유지되고, 고객 E2E 131건은 전부 통과한다.
+
+#### 계약과 다르게 구현한 2가지 (의도적)
+
+1. **canonical 조각을 `<pre>`가 아니라 `<p>` 한 줄로** 냈다. `<pre>`는 줄바꿈하지 않아 320 px에서
+   가로 overflow를 만들고, 그 금지 항목이 같은 스펙의 E2E 조건에 있다. 내용·`data-testid`는 동일하다.
+2. **`" 21"`(앞뒤 공백)은 유효**하다. 계약 §1 절차 1이 **먼저 trim**하라고 정했으므로 공백은 입력
+   표기가 아니라 타이핑이다. 같은 문서 §검증의 `" 21"` → `NOT_DECIMAL` 항목은 절차 1과 모순이라
+   절차를 따랐고, unit에 `treats surrounding whitespace as typing`으로 고정했다.
+
+또 하나: 카드에 `저장`이라는 **단어 금지**는 그대로 지킬 수 없다 — 설명 문구가
+`저장되지 않으며 새로고침하면 사라집니다.`이기 때문이다. 대신 **저장 어포던스 금지**로 검증한다:
+E2E가 카드 안 `button`·`a`·`[role=button]` **0개**, `input` 2개, `주문`·`발행` 문구 0을 확인한다.
+
+#### NOT TESTED / 남는 것
+
+- **저장이 없다.** 운영자는 값을 남길 수 없고, 확인 후 레거시 admin에 직접 입력해야 한다 —
+  O-1·O-2의 명시적 결과이며 저장 경로는 O-8의 별도 결정이다.
+- 사이즈 목록·선택·편집, `admin/state.json` 읽기/쓰기, 발행: **범위 밖**.
+- 실기기(모바일 브라우저) 확인 없음. 자동 게이트는 Chromium 2 viewport뿐이다.
