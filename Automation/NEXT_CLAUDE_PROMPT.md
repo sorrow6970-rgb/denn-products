@@ -1,9 +1,11 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-036-admin-auth-private-state-read-implementation-approval`
+상태: `READY_FOR_CODEX`
+active_unit: `spec-036-contract-correction-review`
 
-**스펙 036 구현 계약이 작성됐다: `docs/rebuild/specs/036-admin-auth-private-state-read.md`.**
+**스펙 036 구현 계약이 작성되고(초판 `77b5b47`) 정확성 보완까지 끝났다:
+`docs/rebuild/specs/036-admin-auth-private-state-read.md`(개정 이력 블록 참조).**
+**다음은 Codex의 보완된 계약 검토**이며, 그 뒤 Founder의 구현 착수 승인이 있어야 코드를 시작한다.
 **구현은 아직 승인되지 않았다.** Founder가 계약을 검토해 **구현 착수를 별도로 승인**하기 전에는
 `packages/firebase`·`apps/admin`에 코드를 쓰지 않고 **`firebase` SDK도 추가하지 않는다**.
 
@@ -17,14 +19,15 @@ active_unit: `spec-036-admin-auth-private-state-read-implementation-approval`
 
 ## Founder가 승인해야 할 것
 
-1. 계약 내용 — 특히 **§2 `firebase@12.16.0` 정확 고정과 서브패스 `@denn/firebase/admin-read` 전용
-   공개**, **§3 기본 비활성 + `VITE_DENN_ADMIN_FIREBASE_ENABLED=true`와 완전한 config가 있을 때만
-   초기화**, **§5 안전 오류 코드 15개**, **§7 허용 파일 9경로**
+1. 계약 내용 — 특히 **§2 `firebase@12.17.1` 정확 고정과 서브패스 `@denn/firebase/admin-read` 전용
+   공개**, **§3.1 플래그 정확 비교 + 공개 config 5개 전부 비어 있지 않은 문자열일 때만 초기화**,
+   **§4.1~4.2 공개 타입과 `correlationId` 주입 책임**, **§5.3 안전 오류 15개 매핑 표**,
+   **§5.1 20 MiB = 클라이언트 상한(서버 read 보장 아님)**, **§7 허용 파일 9경로**
 2. **구현 착수** 자체
 
 ## 승인되면 첫 작업 순서 (참고)
 
-`firebase@12.16.0` 추가 + lockfile 갱신 → `packages/firebase/src/admin-read/**`(합성 fake 주입 가능한
+`firebase@12.17.1` 추가 + lockfile 갱신 → `packages/firebase/src/admin-read/**`(합성 fake 주입 가능한
 AuthPort·AdminStateReadPort) → `apps/admin/src/admin-read/**` + 카드 배치 →
 `tests/e2e/admin-auth-read.spec.ts` → §9 게이트 전량.
 
@@ -40,7 +43,9 @@ AuthPort·AdminStateReadPort) → `apps/admin/src/admin-read/**` + 카드 배치
 
 ## UNCONFIRMED (추정 금지)
 
-`firebase@12.16.0`의 실제 존재와 Node 24 / Vite 8 / TS 7 호환성 · 운영자 계정의 실재·로그인 가능 여부 ·
+**`firebase@12.17.1`의 실제 설치·빌드 호환성**(Node 24 / Vite 8 / TS 7 / pnpm workspace —
+버전 **존재 자체는 VERIFIED**, 호환성만 구현 단계 frozen install에서 확인) ·
+운영자 계정의 실재·로그인 가능 여부 ·
 `storage.rules`의 실제 배포 여부와 거부 동작 · 실제 `admin/state.json`의 존재·크기·내용 ·
 실제 Storage CORS와 `getBytes` 동작.
 

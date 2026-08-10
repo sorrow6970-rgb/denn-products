@@ -1422,3 +1422,69 @@
 - **예상 밖 dirty 파일**: 없음. 보호 대상 3개는 restore·checkout·stage·commit 하지 않았다.
 - **권장 다음 상태**: `FOUNDER_DECISION_REQUIRED` 유지. **Founder가 계약을 검토하고 구현 착수를
   별도로 승인**해야 하며, 그 전에는 코드 작성과 `firebase` SDK 추가를 시작하지 않는다.
+
+## 2026-08-10 — 스펙 036 계약 정확성 보완 (READY_FOR_CODEX)
+
+- **목적**: 계약 초판(`77b5b47`)의 **버전·판정 규칙·타입·오류 매핑·상한 설명** 5개 부정확을 고친다.
+  **제품 결정과 범위는 하나도 바뀌지 않았다.** 구현은 여전히 시작하지 않았다.
+- **적용 범위**: 문서 전용. 제품 코드·테스트·CSS·설정·manifest·`package.json`·lockfile·의존성
+  diff **0**. **`firebase` SDK 미추가.** Firebase·network·live·emulator·운영 데이터·Rules·Hosting·
+  deploy 실행·변경 **0**.
+- **기준**: `77b5b47`.
+- **수정 항목 5가지**:
+  1. **SDK 버전** — `firebase@12.16.0` → **`firebase@12.17.1` 정확 고정**(2026-08-04 최신 공식
+     릴리스). 출처: <https://firebase.google.com/support/release-notes/js> ·
+     <https://firebase.google.com/docs/web/setup>. **버전 존재를 VERIFIED로 기록**하고 초판의
+     "존재 여부 UNCONFIRMED"는 제거했다. §9 게이트 주석과 §10 STOP 조건의 버전도 함께 고쳤다.
+  2. **config 완전성 판정**(§3.1 신설) — 플래그는 **정확히
+     `VITE_DENN_ADMIN_FIREBASE_ENABLED === "true"`**(`"1"`·`"TRUE"`·`"yes"`는 비활성),
+     공개 config **5개**(`API_KEY`·`AUTH_DOMAIN`·`PROJECT_ID`·`STORAGE_BUCKET`·`APP_ID`)를
+     **모두 `trim()` 후 비어 있지 않은 문자열**로 확보했을 때만 adapter 생성. 하나라도 없으면
+     **`UNCONFIGURED` + `initializeApp`/Auth observer/Storage 0회**.
+     **`packages/firebase`는 `import.meta.env`를 직접 읽지 않고 `apps/admin`이 만든 `AdminFirebaseConfig`
+     만 주입받는다.** `env.d.ts`는 6개 키를 **`string | undefined`** 로 선언한다.
+  3. **공개 타입 확정**(§4.1~4.2) — `Promise<Result>`처럼 **타입 인자가 빠진 표현을 제거**하고
+     `packages/shared/src/index.ts:19`의 `Result<T, E>`를 **`E` 생략 없이** 사용한다.
+     `OperatorAuthErrorCode` · `AdminReadErrorCode` · `SafeAdminReadError` ·
+     `OperatorAuthActionResult` · `AdminStateLoadResult`를 완전 정의했고, sign-in/sign-out/load의
+     **성공 value와 실패 error 형태**를 명시했다. **`correlationId`는 호출자(`apps/admin`)가 생성해
+     세 시그니처 모두에 주입**하며 형식은 `/^[0-9a-f]{8,64}$/`(비식별 난수), 위반은
+     `INVALID_REQUEST`(SDK 호출 0회). Firebase `User`·credential·token·raw SDK error는 공개 타입에 **없다**.
+  4. **안전 오류 15개 매핑 표**(§5.3~5.4) — category / code / retryable / 발생 조건 /
+     대응 SDK code·로컬 검증 단계를 표로 고정했다. **invalid credential 계열
+     (`invalid-credential`·`wrong-password`·`user-not-found`·`invalid-email`·`user-disabled`)은
+     계정 존재 추론을 막기 위해 `INVALID_CREDENTIAL` 하나로 통합**했다
+     (`decisions/2026-07-21-security-and-privacy.md` §1 근거). `auth/too-many-requests` →
+     `AUTH_RATE_LIMITED`, `auth/network-request-failed` → `NETWORK_UNAVAILABLE`,
+     `storage/object-not-found` → `ADMIN_STATE_NOT_FOUND`, `storage/unauthorized` →
+     `ADMIN_STATE_FORBIDDEN`, `storage/download-size-exceeded` → `RESPONSE_TOO_LARGE`,
+     미등록 code는 `UNEXPECTED_ADMIN_READ_ERROR`로 접는다. **`NETWORK_TIMEOUT`은 SDK code가 아니라
+     앱 wrapper 타임아웃 상태**임을 근거와 함께 구분했다(SDK는 안정된 timeout code를 보장하지 않는다).
+     raw code/message 비노출, **자동 retry 0** 유지.
+  5. **20 MiB 설명 정정**(§5.1) — `ADMIN_STATE_MAX_BYTES = 20 × 1024 × 1024 − 1 =
+     **20,971,519 bytes**`. **서버가 read 크기를 제한하는 것이 아니다**:
+     `storage.rules:14`가 **"read 조건에 `request.resource.size` 금지(read시 `resource=null` →
+     항상 거부)"** 라고 명시하고, `admin/`의 `:26`은 크기 조건 없는 `allow read: if op();`다.
+     이 값은 write-side `okSize()`(`:22`)와 숫자를 맞춘 **클라이언트 `getBytes` 안전 상한**이며
+     **서버 read 보장으로 표현하지 않는다**.
+- **변경 파일**:
+  - `docs/rebuild/specs/036-admin-auth-private-state-read.md` (개정 이력 블록 + §2·§3.1·§4.1·§4.2·
+    §5.1·§5.2·§5.3·§5.4·§9·§10·§11)
+  - `Automation/DENN_AUTOMATION_STATE.md` (`state: READY_FOR_CODEX`,
+    `active_unit: spec-036-contract-correction-review`, `next_transition: WAITING_FOR_CODEX`,
+    `baseline_commit: 77b5b47`)
+  - `Automation/NEXT_CLAUDE_PROMPT.md`, `docs/codex-claude-handoff/CURRENT.md`,
+    `docs/live/CLAUDE_LIVE_PATCH_LOG.md` (이 항목)
+- **검증 결과**: `git diff --check 77b5b47..HEAD` **PASS(클린)** · 변경 경로 = **허용 문서 5개뿐** ·
+  제품 코드·테스트·manifest·`package.json`·lockfile·의존성 diff **0** ·
+  `firebase` 의존성 저장소 전역 **0건**(미추가 확인) · HEAD=origin, ahead/behind **0/0** ·
+  dirty = 보호 대상 3개뿐(restore·checkout·stage·commit 안 함).
+  format·lint·typecheck·unit·build·E2E는 **문서 전용 변경이라 실행하지 않았다**.
+- **미검증 경계(NOT VERIFIED / UNCONFIRMED)**:
+  - **`firebase@12.17.1`의 실제 설치·빌드 호환성**(Node 24 / Vite 8 / TypeScript 7 / pnpm workspace)
+    — **버전 존재는 VERIFIED**, 호환성은 구현 단계 `pnpm install --frozen-lockfile`에서 처음 확인된다
+  - 운영자 계정의 실재·로그인 가능 여부 · `storage.rules`의 실제 배포 여부와 거부 동작
+  - 실제 `admin/state.json`의 존재·크기·내용 · 실제 Storage CORS와 `getBytes` 동작
+  - Firebase SDK가 timeout 계열 error code를 실제로 어떻게 내는지(그래서 wrapper 타임아웃으로 고정)
+- **권장 다음 상태**: `READY_FOR_CODEX` — **Codex가 보완된 계약을 검토**하고, 그 뒤
+  **Founder가 구현 착수를 별도 승인**해야 코드 작성과 SDK 추가를 시작한다.

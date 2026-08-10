@@ -4,17 +4,17 @@
 updated_at: 2026-08-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-036-contract-authoring
-active_unit: spec-036-admin-auth-private-state-read-implementation-approval
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 6daf365
+completed_unit: spec-036-contract-correction
+active_unit: spec-036-contract-correction-review
+state: READY_FOR_CODEX
+baseline_commit: 77b5b47
 candidate_commit: none-product-code-unchanged
 verified_commit: e9e2af6
-origin_relation: "docs-only contract commit on top of 6daf365; HEAD=origin, ahead/behind 0/0"
+origin_relation: "docs-only contract-correction commit on top of 77b5b47; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: WAITING_FOR_FOUNDER
+next_transition: WAITING_FOR_CODEX
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
@@ -251,7 +251,7 @@ L-1~L-4 손실 시나리오(소스 기반 구조적 결론, **재현 안 함**) 
 (`READY_FOR_CODEX`)와 **모순**됐다.
 
 **원인**: Codex가 작업 트리의 STATE yaml을 `CODEX_PASSED`로 바꿔 둔 뒤에, Claude가 종료 문서를
-쓰면서 **자기가 이전에 쓴 문자열**(`state: FOUNDER_DECISION_REQUIRED …` → `COMMITTED` → …)을 기준으로 치환해
+쓰면서 **자기가 이전에 쓴 문자열**(`state: READY_FOR_CODEX …` → `COMMITTED` → …)을 기준으로 치환해
 **두 줄만 조용히 no-op** 됐다. 같은 커밋의 다른 필드(`completed_unit`·`active_unit`·`verified_commit`·
 `origin_relation`)는 전부 정상 반영됐고, **커밋된 서술 내용과 조사 보고서에는 오류가 없다.**
 
@@ -1393,3 +1393,48 @@ NOT TESTED 경계). 쓰기 port·저장 UI·발행·revision/충돌·tombstone·
 새 자동화·반복 작업을 만들지 않았다.
 
 다음 전이: **Founder의 계약 검토 + 구현 착수 승인**.
+
+
+## 스펙 036 계약 정확성 보완 — READY_FOR_CODEX (Claude Code, 2026-08-10)
+
+기준 `77b5b47`. **문서 전용 보완이며 제품 결정·구현 변화 0.**
+계약: `docs/rebuild/specs/036-admin-auth-private-state-read.md`(개정 이력 블록 참조).
+제품 코드·테스트·CSS·설정·manifest·package.json·lockfile·의존성 diff **0**,
+**`firebase` SDK 미추가**, Firebase·network·live·emulator·운영 데이터·Rules·Hosting·deploy **0**.
+
+고친 것 5가지:
+
+1. **SDK 버전** `firebase@12.16.0` → **`firebase@12.17.1` 정확 고정**(2026-08-04 최신 공식 릴리스,
+   출처 firebase.google.com 릴리스 노트·web setup). **버전 존재는 VERIFIED**로 기록하고 초판의
+   "존재 여부 UNCONFIRMED"는 제거했다. **Node 24 / Vite 8 / TS 7 / 현재 pnpm workspace와의
+   실제 설치·빌드 호환성만 UNCONFIRMED**로 남으며 구현 단계 frozen install에서 처음 확인된다.
+   **이번 라운드에 설치·lockfile 갱신은 하지 않았다.**
+2. **config 완전성 판정** — 플래그는 **정확히 `VITE_DENN_ADMIN_FIREBASE_ENABLED === "true"`**,
+   공개 config **5개**(`API_KEY`·`AUTH_DOMAIN`·`PROJECT_ID`·`STORAGE_BUCKET`·`APP_ID`)를
+   **모두 비어 있지 않은 문자열**로 확보했을 때만 adapter 생성. 하나라도 누락·빈 문자열이면
+   **`UNCONFIGURED` + `initializeApp`/Auth observer/Storage 0회**.
+   **`packages/firebase`는 `import.meta.env`를 직접 읽지 않고 `apps/admin`이 만든 typed config만
+   주입받는다.** 실제 값 하드코딩·`.env` commit 금지 유지.
+3. **공개 타입을 유효한 TypeScript로 확정** — `Promise<Result>`처럼 타입 인자가 빠진 표현 제거.
+   `packages/shared/src/index.ts:19`의 `Result<T, E>`를 **`E` 생략 없이** 사용하고
+   `OperatorAuthErrorCode`·`AdminReadErrorCode`·`SafeAdminReadError`·`OperatorAuthActionResult`·
+   `AdminStateLoadResult`를 완전 정의했다. **`correlationId`는 호출자(`apps/admin`)가 생성·주입**하며
+   **sign-in/sign-out/load 세 시그니처 모두에 명시**하고 형식은 `/^[0-9a-f]{8,64}$/`(비식별 난수)다.
+   Firebase `User`·credential·token·raw SDK error는 공개 타입에 **없다**.
+4. **안전 오류 15개 매핑 표** 추가 — category / code / retryable / 발생 조건 /
+   대응 SDK code·로컬 검증 단계. **invalid credential 계열은 계정 존재 추론을 막기 위해
+   `INVALID_CREDENTIAL` 하나로 통합**, `auth/too-many-requests` → `AUTH_RATE_LIMITED`,
+   `auth/network-request-failed` → `NETWORK_UNAVAILABLE`,
+   `storage/object-not-found` → `ADMIN_STATE_NOT_FOUND`, `storage/unauthorized` → `ADMIN_STATE_FORBIDDEN`,
+   `storage/download-size-exceeded` → `RESPONSE_TOO_LARGE`, 미등록 code는
+   `UNEXPECTED_ADMIN_READ_ERROR`로 접는다. **`NETWORK_TIMEOUT`은 SDK code가 아니라 앱 wrapper
+   타임아웃 상태**임을 근거와 함께 구분했다. raw code/message 비노출·자동 retry 0 유지.
+5. **20 MiB 설명 정정** — `ADMIN_STATE_MAX_BYTES = 20 × 1024 × 1024 − 1 = **20,971,519 bytes**`.
+   `storage.rules:14`의 경고(read 조건에 `request.resource.size` 금지)와 `:26`의
+   `allow read: if op();`로 보아 **서버는 read 크기를 제한하지 않는다**. 이 값은 write-side
+   `okSize()`(`:22`)와 숫자를 맞춘 **클라이언트 `getBytes` 안전 상한**이며 **서버 read 보장이 아니다**.
+
+**구현은 여전히 시작하지 않았다.** 다음 전이: **Codex가 보완된 계약을 검토**한다.
+검토 통과 후 Founder의 **구현 착수 승인**이 있어야 코드 작성과 `firebase` SDK 추가를 시작한다.
+
+보호 대상 3개는 restore·checkout·stage·commit 하지 않았다. 자동화·반복 작업은 만들지 않았다.

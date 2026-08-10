@@ -9,6 +9,19 @@
 근거 조사: `reviews/2026-08-10-admin-auth-write-founder-decision-options.md`,
 `reviews/2026-07-31-admin-write-boundary-investigation.md`
 
+> **개정 이력** — 2026-08-10 계약 정확성 보완(초판 `77b5b47`, 제품 코드 변경 0):
+> ① SDK 고정 버전을 **`12.16.0` → `12.17.1`**(2026-08-04 최신 공식 릴리스)로 바꾸고
+> **버전 존재를 VERIFIED로 기록**했다(§2). 설치·빌드 호환성만 UNCONFIRMED로 남는다.
+> ② 활성화 판정을 **플래그 정확 비교 + 공개 config 5개 전부 비어 있지 않은 문자열**로 고정하고,
+> **`packages/firebase`는 `import.meta.env`를 읽지 않고 주입만 받는다**를 명시했다(§3.1).
+> ③ 공개 타입을 **유효한 TypeScript로 완전 정의**했다 — `Promise<Result>`처럼 타입 인자가 빠진
+> 표현을 제거하고 `OperatorAuthErrorCode`·`AdminReadErrorCode`·`SafeAdminReadError`·
+> `OperatorAuthActionResult`·`AdminStateLoadResult`와 **`correlationId` 주입 책임**을 확정했다(§4.1~4.2).
+> ④ **안전 오류 15개 매핑 표**(category/retryable/발생 조건/SDK code)를 추가하고
+> `NETWORK_TIMEOUT`이 **SDK code가 아니라 앱 wrapper 상태**임을 구분했다(§5.3~5.4).
+> ⑤ **20 MiB는 서버 read 보장이 아니라 클라이언트 안전 상한**임을 `storage.rules:14`·`:22`·`:26`
+> 근거와 함께 정정했다(§5.1).
+
 ---
 
 ## 0. 목표 (WHY)
@@ -45,7 +58,7 @@ Founder 결정 F-B·F-E로 **차단**되어 있다(F-E = E3-strong: 원자적 pr
 
 | 항목 | 계약 |
 | --- | --- |
-| SDK 버전 | **`firebase@12.16.0` 정확 고정** (범위 지정자 금지) |
+| SDK 버전 | **`firebase@12.17.1` 정확 고정** (범위 지정자 금지) |
 | 추가 시점 | **구현 단계에서만** `packages/firebase/package.json` + `pnpm-lock.yaml`에 추가 |
 | admin 앱 의존성 | `apps/admin/package.json`에 `@denn/firebase`를 **workspace 의존성**으로 추가 |
 | 공개 경로 | admin 기능은 **새 서브패스 `@denn/firebase/admin-read`로만** 공개 |
@@ -59,45 +72,157 @@ Founder 결정 F-B·F-E로 **차단**되어 있다(F-E = E3-strong: 원자적 pr
 있고 고객 앱이 그 배럴을 import하므로, **admin 코드가 루트에 노출되는 순간 고객 번들이 오염된다.**
 이 스펙의 번들 격리는 **선언이 아니라 E2E로 검증**한다(§8).
 
-> ⚠️ **UNCONFIRMED**: `firebase@12.16.0`이 레지스트리에 실제로 존재하는지, Node 24 / Vite 8 /
-> TypeScript 7 조합과 호환되는지는 **확인하지 않았다**(실제 network 금지). 설치는 구현 단계의
-> 첫 작업이며, 버전이 없거나 peer/engine이 충돌하면 **STOP**(§10)이다.
+**버전 근거 (2026-08-10 보완)**
+
+- **VERIFIED — 버전 존재**: `firebase@12.17.1`은 **2026-08-04 릴리스된 최신 공식 버전**이다.
+  출처: <https://firebase.google.com/support/release-notes/js> ·
+  <https://firebase.google.com/docs/web/setup>
+  (초판이 적었던 `12.16.0`도 실재하지만 최신이 아니므로 **`12.17.1`로 고정을 변경**했다.
+  초판의 "버전 존재 여부 UNCONFIRMED" 표기는 **제거**한다.)
+- ⚠️ **여전히 UNCONFIRMED — 설치·빌드 호환성**: `12.17.1`이 **Node 24 / Vite 8 / TypeScript 7**과
+  현재 **pnpm workspace**에서 실제로 설치·빌드되는지는 **확인하지 않았다.** 확인 시점은
+  **구현 단계의 `pnpm install --frozen-lockfile`** 이며, peer/engine 충돌이나 타입 오류가 나면
+  **STOP**(§10)이다. **이 계약 라운드에서는 실제 설치도 lockfile 갱신도 하지 않는다.**
 
 ## 3. 앱 구성과 실제 네트워크 차단
 
-- **`apps/admin`이 Firebase 구성과 기능 활성화 여부를 소유한다.** `packages/firebase`는 구성을
-  스스로 읽지 않는다(주입만 받는다).
+- **`apps/admin`이 Firebase 구성과 기능 활성화 여부를 소유한다.**
+  **`packages/firebase`는 `import.meta.env`를 직접 읽지 않는다** — `apps/admin`이 만든
+  **typed config 객체만 주입**받는다(주입되지 않으면 adapter 자체가 생성되지 않는다).
 - **기본값은 비활성이다.**
-- **`VITE_DENN_ADMIN_FIREBASE_ENABLED=true`** 와 **필수 공개 Firebase config가 모두 있을 때만**
-  SDK adapter를 초기화한다.
-- config가 없거나 **불완전하면** 고정 **`UNCONFIGURED`** 상태를 표시하고
-  **SDK 초기화·Auth observer·Storage 요청을 모두 0회**로 유지한다.
-  (부분 config로 초기화를 시도하지 않는다 — fail-closed.)
+
+### 3.1 활성화 판정 (정확한 규칙)
+
+**활성화 플래그는 정확히 `VITE_DENN_ADMIN_FIREBASE_ENABLED === "true"` 일 때만 인정한다.**
+`"1"`·`"TRUE"`·`"yes"`·빈 문자열·미정의는 전부 **비활성**이다(문자열 정확 비교, 강제 변환 금지).
+
+그리고 다음 **5개 공개 config를 모두 "비어 있지 않은 문자열"로 확보한 경우에만** adapter를 생성한다:
+
+| 환경 변수 | 필수 |
+| --- | --- |
+| `VITE_DENN_ADMIN_FIREBASE_API_KEY` | ✔ |
+| `VITE_DENN_ADMIN_FIREBASE_AUTH_DOMAIN` | ✔ |
+| `VITE_DENN_ADMIN_FIREBASE_PROJECT_ID` | ✔ |
+| `VITE_DENN_ADMIN_FIREBASE_STORAGE_BUCKET` | ✔ |
+| `VITE_DENN_ADMIN_FIREBASE_APP_ID` | ✔ |
+
+```ts
+// apps/admin 소유. packages/firebase는 이 객체만 받는다.
+export interface AdminFirebaseConfig {
+  readonly apiKey: string;
+  readonly authDomain: string;
+  readonly projectId: string;
+  readonly storageBucket: string;
+  readonly appId: string;
+}
+```
+
+- **플래그가 `"true"`가 아니거나, 위 5개 중 하나라도 누락·빈 문자열(`trim()` 후 길이 0)이면
+  `UNCONFIGURED`** 이며 **`initializeApp` · Auth observer 등록 · Storage 요청이 모두 0회**다.
+  **부분 config로 초기화를 시도하지 않는다 — fail-closed.**
+- `UNCONFIGURED`는 **오류가 아니라 명시 상태**다(§6 문구 고정).
 - **실제 config 값을 저장소에 새로 하드코딩하지 않는다. `.env` 파일을 commit하지 않는다.**
 - **기본 unit/build/E2E에서 실제 Firebase endpoint 요청은 0건**이어야 한다.
 - **live 검증은 별도 Founder 승인 전에는 작성하지도 실행하지도 않는다**
   (`*.live.test.ts`는 `vitest.config.ts:17`로 기본 게이트에서 제외되지만, **파일 자체를 만들지 않는다**).
 
-`apps/admin/src/env.d.ts`는 현재 CSS 앰비언트 선언뿐이므로, `ImportMetaEnv` 타입 선언을 **추가**한다.
+`apps/admin/src/env.d.ts`는 현재 CSS 앰비언트 선언뿐이므로, 위 6개 키를
+**전부 `string | undefined`** 로 선언하는 `ImportMetaEnv`를 **추가**한다(있다고 단정하지 않는다).
 
 ## 4. AuthPort 계약
 
 **공개 포트는 Firebase `User` 객체·token·credential·raw SDK error를 외부로 노출하지 않는다.**
 
+### 4.1 공개 타입 (유효한 TypeScript — 필수 타입 인자 생략 금지)
+
+`packages/shared/src/index.ts:19`의 계약을 **그대로** 사용한다:
+`export type Result<T, E = string> = { ok: true; value: T } | { ok: false; error: E };`
+**`E`를 생략하지 않는다**(기본값 `string`으로 흘러가면 안전 오류 계약이 무너진다).
+
 ```ts
-type OperatorAuthState =
+import type { CatalogDocumentV1, CatalogIssue, CatalogReadReport, Result } from "@denn/shared";
+
+/** 인증 단계에서만 발생하는 코드. AdminReadErrorCode의 부분집합이다. */
+export type OperatorAuthErrorCode =
+  | "INVALID_REQUEST"
+  | "AUTH_PERSISTENCE_FAILED"
+  | "INVALID_CREDENTIAL"
+  | "AUTH_RATE_LIMITED"
+  | "NETWORK_UNAVAILABLE"
+  | "NETWORK_TIMEOUT"
+  | "ANONYMOUS_NOT_ALLOWED"
+  | "UNEXPECTED_ADMIN_READ_ERROR";
+
+/** 이 스펙이 노출하는 코드 전체 = 15개(§5). 이 밖의 코드는 존재하지 않는다. */
+export type AdminReadErrorCode =
+  | OperatorAuthErrorCode
+  | "AUTH_NOT_READY"
+  | "AUTH_REQUIRED"
+  | "ADMIN_STATE_NOT_FOUND"
+  | "ADMIN_STATE_FORBIDDEN"
+  | "RESPONSE_TOO_LARGE"
+  | "INVALID_JSON"
+  | "INVALID_CATALOG";
+
+export type AdminReadErrorCategory = "VALIDATION" | "AUTH" | "NETWORK" | "UNKNOWN";
+
+/**
+ * 유일한 오류 표면. Firebase User·credential·token·raw SDK error·email·uid·원문은 들어가지 않는다.
+ * `issues`는 spec 012의 `{code, path}`만 담는 INVALID_CATALOG 전용 필드다.
+ */
+export interface SafeAdminReadError {
+  readonly category: AdminReadErrorCategory;
+  readonly code: AdminReadErrorCode;
+  readonly retryable: boolean;
+  readonly correlationId: string;
+  readonly issues?: readonly CatalogIssue[];
+}
+
+export type OperatorAuthState =
   | { readonly status: "initializing" }
   | { readonly status: "signed-out" }
   | { readonly status: "authenticated" }          // 비익명 세션만
   | { readonly status: "error"; readonly code: AdminReadErrorCode };
 
-interface OperatorAuthPort {
+/** sign-in / sign-out 성공은 "상태가 이렇게 됐다"만 알린다. 사용자 객체를 돌려주지 않는다. */
+export interface OperatorAuthActionValue {
+  readonly state: OperatorAuthState;
+  readonly correlationId: string;
+}
+export type OperatorAuthActionResult = Result<OperatorAuthActionValue, SafeAdminReadError>;
+
+/** load 성공 value. 검증된 문서와 spec 012 report만 담는다(원문 JSON·bytes 없음). */
+export interface AdminStateLoadValue {
+  readonly document: CatalogDocumentV1;
+  readonly report: CatalogReadReport;
+  readonly byteLength: number;      // 안전한 숫자 메타(내용 아님)
+  readonly correlationId: string;
+}
+export type AdminStateLoadResult = Result<AdminStateLoadValue, SafeAdminReadError>;
+
+export interface OperatorAuthPort {
   subscribe(listener: (state: OperatorAuthState) => void): () => void; // returns unsubscribe
   currentOperator(): OperatorAuthState;
-  signInWithEmailPassword(email: string, password: string): Promise<Result>;
-  signOut(): Promise<Result>;
+  signInWithEmailPassword(
+    email: string,
+    password: string,
+    request: { readonly correlationId: string },
+  ): Promise<OperatorAuthActionResult>;
+  signOut(request: { readonly correlationId: string }): Promise<OperatorAuthActionResult>;
 }
 ```
+
+### 4.2 `correlationId` 책임 (고정)
+
+- **호출자(=`apps/admin`)가 생성해 주입한다.** `packages/firebase`는 만들지 않는다 —
+  UI가 "이 클릭에 대한 응답"을 식별해야 하고(늦은 결과 무시, §5), port가 몰래 만들면 그 연결이 끊긴다.
+- **`signInWithEmailPassword` · `signOut` · `load` 세 시그니처 모두에 명시**한다(위 타입 참조).
+- **형식**: 소문자 16진 8~64자(`/^[0-9a-f]{8,64}$/`). **개인정보·email·uid·타임스탬프 원문 금지.**
+  생성은 `crypto.randomUUID()`의 하이픈 제거 등 **비식별 난수**만 사용한다.
+- 형식 위반은 **`INVALID_REQUEST`** 이며 이때 **SDK 호출 0회**다.
+- `correlationId`는 **성공/실패 양쪽 payload에 그대로 되돌려 준다**(위 타입).
+
+**Firebase `User`·credential·token·raw SDK error는 위 공개 타입 어디에도 포함되지 않는다.**
 
 필수 동작·규율:
 
@@ -127,12 +252,34 @@ interface OperatorAuthPort {
 
 ```ts
 export const ADMIN_STATE_OBJECT_PATH = "admin/state.json";
-export const ADMIN_STATE_MAX_BYTES = 20 * 1024 * 1024 - 1; // storage.rules okSize() 미만
+/** 20 × 1024 × 1024 − 1 = 20,971,519 bytes. 클라이언트 측 안전 상한이다(아래 5.1). */
+export const ADMIN_STATE_MAX_BYTES = 20 * 1024 * 1024 - 1;
+
+export interface AdminStateReadPort {
+  load(request: { readonly correlationId: string }): Promise<AdminStateLoadResult>;
+}
 ```
 
-- **호출자가 path·bucket·URL을 주입할 수 없다.** 경로는 상수이며 인자가 아니다.
-- 최대 읽기 크기는 **20 MiB 미만**으로 제한한다(`storage.rules:22` `okSize()`와 같은 상한).
-- **`getBytes(ref, maxDownloadSizeBytes)`** 를 사용한다(`getDownloadURL` 금지 — §5 규율).
+- **호출자가 path·bucket·URL을 주입할 수 없다.** 경로는 상수이며 **인자가 아니다**
+  (`load`의 유일한 인자는 `{ correlationId }`다).
+- **`getBytes(ref, maxDownloadSizeBytes)`** 를 사용한다(`getDownloadURL` 금지 — 아래 규율).
+
+### 5.1 ★ 20 MiB의 정확한 의미 (초판 설명 정정)
+
+`ADMIN_STATE_MAX_BYTES = 20 × 1024 × 1024 − 1 = **20,971,519 bytes**`.
+
+**이것은 서버가 보장하는 read 상한이 아니다.**
+
+- `storage.rules:22`의 `okSize()`는 `request.resource.size`를 보는데, 이 값은 **업로드(write) 때만**
+  존재한다. `admin/` 규칙은 `allow read: if op();`(`:26`)로 **크기 조건이 없다.**
+- 규칙 파일 스스로 그 이유를 적어 두었다 — `storage.rules:14`:
+  **"⚠️ read 조건에 `request.resource.size` 금지(read시 `resource=null` → 항상 거부)."**
+
+따라서 이 상수는 **`storage.rules`의 write-side `okSize()` 정책과 숫자를 맞춘
+클라이언트 `getBytes` 안전 상한**이며, **"서버가 이 크기 이상은 안 준다"는 보장으로 표현하지 않는다.**
+초과 시 SDK가 `storage/download-size-exceeded`로 실패하고 **`RESPONSE_TOO_LARGE`** 로 매핑된다(§5.3).
+
+### 5.2 `load` 순서와 규율
 
 `load({ correlationId })` **순서(고정)**:
 
@@ -159,18 +306,48 @@ export const ADMIN_STATE_MAX_BYTES = 20 * 1024 * 1024 - 1; // storage.rules okSi
 - **unmount 후 React state 갱신 0**
 - 오류에 **원문 JSON·base64·객체 URL·token·email·uid·SDK raw message 미포함**
 
-**안전 오류 코드(확정)** — `public-catalog/types.ts:19-33`의 선례와 같은 형태
-(`category` / `code` / `retryable` / `correlationId` + 최소 안전 메타):
+### 5.3 안전 오류 매핑 표 (확정)
 
-```
-INVALID_REQUEST · AUTH_NOT_READY · AUTH_REQUIRED · ANONYMOUS_NOT_ALLOWED ·
-AUTH_PERSISTENCE_FAILED · INVALID_CREDENTIAL · AUTH_RATE_LIMITED ·
-NETWORK_UNAVAILABLE · NETWORK_TIMEOUT · ADMIN_STATE_NOT_FOUND · ADMIN_STATE_FORBIDDEN ·
-RESPONSE_TOO_LARGE · INVALID_JSON · INVALID_CATALOG · UNEXPECTED_ADMIN_READ_ERROR
-```
+`public-catalog/types.ts:19-33`의 선례와 같은 형태(`category`/`code`/`retryable`/`correlationId`
++ 최소 안전 메타). **아래 15개가 전부**이며, **`retryable`은 "사용자가 다시 눌러 볼 가치가 있는가"**
+를 뜻한다 — **자동 retry는 어느 코드에서도 0이다.**
 
-이 15개가 **전부**다. 매핑되지 않는 SDK 오류는 **`UNEXPECTED_ADMIN_READ_ERROR`로 접는다**
-(raw code를 그대로 흘리지 않는다).
+| category | code | retryable | 발생 조건 | 대응 Firebase SDK code / 로컬 검증 단계 |
+| --- | --- | --- | --- | --- |
+| VALIDATION | `INVALID_REQUEST` | ✗ | `correlationId` 형식 위반 | **로컬** §4.2 검증(SDK 호출 전) |
+| AUTH | `AUTH_NOT_READY` | ✓ | observer 초기 판정 미완 상태에서 `load` | **로컬** load 순서 2 |
+| AUTH | `AUTH_REQUIRED` | ✗ | `signed-out` 상태에서 `load` | **로컬** load 순서 3 |
+| AUTH | `ANONYMOUS_NOT_ALLOWED` | ✗ | 세션이 `isAnonymous === true` | **로컬** load 순서 3 / observer 판정 |
+| AUTH | `AUTH_PERSISTENCE_FAILED` | ✓ | `setPersistence(browserLocalPersistence)` 실패 | `setPersistence` rejection **전부**(코드 무관, fail-closed) |
+| AUTH | `INVALID_CREDENTIAL` | ✗ | 로그인 자격 증명 거부 | `auth/invalid-credential` · `auth/wrong-password` · `auth/user-not-found` · `auth/invalid-email` · `auth/user-disabled` **→ 하나로 합침** |
+| AUTH | `AUTH_RATE_LIMITED` | ✓ | 시도 과다로 일시 차단 | `auth/too-many-requests` |
+| NETWORK | `NETWORK_UNAVAILABLE` | ✓ | 네트워크 도달 실패 | `auth/network-request-failed` · `storage/retry-limit-exceeded` |
+| NETWORK | `NETWORK_TIMEOUT` | ✓ | **앱 wrapper 타임아웃 초과** (§5.4) | **로컬** wrapper — **SDK code가 아니다** |
+| VALIDATION | `ADMIN_STATE_NOT_FOUND` | ✗ | `admin/state.json` 부재 | `storage/object-not-found` |
+| AUTH | `ADMIN_STATE_FORBIDDEN` | ✗ | Rules가 read 거부 | `storage/unauthorized` |
+| VALIDATION | `RESPONSE_TOO_LARGE` | ✗ | 객체가 `ADMIN_STATE_MAX_BYTES` 초과 | `storage/download-size-exceeded` |
+| VALIDATION | `INVALID_JSON` | ✗ | UTF-8 decode 실패 또는 `JSON.parse` 실패 | **로컬** load 순서 6·7 |
+| VALIDATION | `INVALID_CATALOG` | ✗ | `readLegacyCatalog`가 `ok:false` | **로컬** load 순서 8 (`issues`는 `{code,path}`만) |
+| UNKNOWN | `UNEXPECTED_ADMIN_READ_ERROR` | ✗ | 위 어디에도 매핑되지 않음 | **미등록 SDK code 전부를 여기로 접는다** |
+
+**★ `INVALID_CREDENTIAL` 통합 이유**: `auth/user-not-found`와 `auth/wrong-password`를 구분해 보여주면
+**계정 존재 여부를 추론**할 수 있다(`decisions/2026-07-21-security-and-privacy.md` §1 —
+"로그인 오류에 계정 존재 여부를 과도하게 노출하지 않는다"). 따라서 **하나로 합친다.**
+
+**raw SDK `code`/`message`는 반환값·UI·로그 어디에도 노출하지 않는다.** 매핑은 내부에서만 일어나고,
+밖으로 나가는 것은 위 표의 15개 코드뿐이다.
+
+### 5.4 `NETWORK_TIMEOUT`의 근거 (구분 고정)
+
+Firebase SDK는 **"timeout"이라는 안정된 공개 error code를 보장하지 않는다** — Auth는
+`auth/network-request-failed`로, Storage는 재시도 후 `storage/retry-limit-exceeded`로 나타난다.
+따라서 **`NETWORK_TIMEOUT`은 SDK code 매핑이 아니라 앱 wrapper가 스스로 만든 상태**다:
+
+- port가 각 호출을 **자체 타임아웃(고정 상수, 예: 10s — 구현 시 상수로 노출)** 으로 감싸고,
+  그 기한을 넘기면 **대기를 중단하고 `NETWORK_TIMEOUT`을 반환**한다.
+- 이때도 **자동 retry는 0**이고, 늦게 도착한 결과는 **무시**된다(§5 규율의 세대 카운터).
+- SDK가 먼저 `auth/network-request-failed`·`storage/retry-limit-exceeded`로 실패하면
+  그것은 **`NETWORK_UNAVAILABLE`** 이다. 두 코드는 이렇게 **출처로 구분**된다.
 
 ## 6. admin UI 계약
 
@@ -255,7 +432,7 @@ pnpm-lock.yaml
 허용/금지 diff 확인 → **고객 dist SHA-256 전후 비교** → ports 4183/4184 → OS temp staging →
 **실제 network 0 확인**
 
-> ⚠️ `pnpm install --frozen-lockfile`은 **`firebase@12.16.0`을 lockfile에 반영한 뒤**에만 통과한다.
+> ⚠️ `pnpm install --frozen-lockfile`은 **`firebase@12.17.1`을 lockfile에 반영한 뒤**에만 통과한다.
 > 의존성 추가 커밋과 lockfile 갱신은 **구현 단계의 첫 작업**이며, 이 계약 문서 단계에서는 하지 않는다.
 
 ## 10. STOP 조건 (구현하지 않고 보고)
@@ -267,10 +444,13 @@ pnpm-lock.yaml
 - **실제 Firebase 요청 없이는 기본 게이트가 통과하지 않음**
 - **쓰기·발행·마이그레이션**이 필요함
 - **`packages/firebase` 루트 export** 또는 **고객 번들 변경**이 필요함
-- **`firebase@12.16.0` 외 신규 의존성**이 필요하거나, 그 버전이 **존재하지 않거나 호환되지 않음**
+- **`firebase@12.17.1` 외 신규 의존성**이 필요하거나, 그 버전이 **Node 24 / Vite 8 / TS 7 /
+  현재 pnpm workspace와 호환되지 않음**(버전 존재 자체는 VERIFIED, §2)
 
 ## 11. NOT TESTED (이 스펙이 끝나도 확인되지 않는 것)
 
+- **`firebase@12.17.1`의 실제 설치·빌드 호환성**(Node 24 / Vite 8 / TS 7 / pnpm workspace) —
+  구현 단계 `frozen install`에서 처음 확인된다
 - 기존 운영자 계정의 **실제 존재·로그인 가능 여부**
 - **`storage.rules`의 실제 배포 여부**
 - 실제 `admin/state.json`의 **존재·크기·내용**
