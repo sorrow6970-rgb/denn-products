@@ -7,12 +7,45 @@
 > 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
 > Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
 
-상태: **스펙 033 로컬 액자 PNG export DONE. 구현 `4246503`, 구현 기록 `9e2d408`.
-Codex 독립 게이트 frozen·format·lint·typecheck·unit 1174/1174·build·Chromium 129/129·
-diff·dist hash·ports·temp PASS. Founder 지시에 따라 다음 스펙은 시작하지 않고 자동화를 PAUSED로
-전환한다. 실제 upload/order/Firebase/network/deploy는 계속 금지다. Founder F-A~F-E(admin)는
-독립·미결이다.**
-승인 원문을 이 Codex 대화에서 재확인했다. Codex는 E-1/C-1을 동일 preview plan +
+상태: **스펙 034·035 DONE (2026-08-10). 운영자 cm 입력 최소 범위가 코드로 닫혔다.**
+Founder 승인 O-1~O-8 + 구조 결정 N-1~N-10 = `decisions/2026-08-10-operator-cm-input-decisions.md`
+(계약 `d3bed91`). **034**(`ff7a49a`) legacy `wcm`/`hcm` 읽기 정규화·충돌 fail-closed,
+**035**(`e9e2af6`) 운영자 cm 로컬 입력·검증 UI. 게이트: frozen·format·lint·typecheck·
+unit **1213/1213**·build·Chromium E2E **131/131**·dist hash E2E 전후 동일·ports/temp 0.
+**Auth·Firebase 쓰기·발행·실제 network·deploy는 계속 0**이며 O-8로 미뤄졌다.
+다음 = **Codex 독립 재검수 대기**. Founder F-A~F-E(admin 쓰기 경계)는 여전히 미결이다.
+
+> **★★ 스펙 034 DONE(2026-08-10, `ff7a49a`, 기록 `5097179`)**: 레거시 `wcm`/`hcm`을 **읽는 순간
+> 메모리에서** canonical로 정규화한다(N-1: 정규화는 `readLegacyCatalog` 안, `projectFramePrintPhysicalSize`
+> **무변경**). canonical이 **없을 때만** 승격(O-3), 공존하며 **다르면 fatal `CONFLICTING_PRINT_SIZE`**
+> (O-4, 허용오차 0 — `21.000001`도 실패). 승격은 **`cloneJsonSafe` 결과에만** 쓰므로 입력은 안 바뀐다(O-5).
+> **canonical 검증이 먼저**이고 실패 시 legacy를 보지 않는다(N-3). 승격 불가(반쪽·타입·범위 밖)는
+> **warning `LEGACY_PRINT_SIZE_IGNORED`이지 fatal이 아니다**(N-5) — 인쇄는 계속 차단되지만 쓰레기 값
+> 하나가 고객 카탈로그 전체를 못 읽게 만들지는 않는다. `wcm`/`hcm`은 인정 필드가 되어 `UNKNOWN_FIELD`에서
+> 빠지고 값은 문서에 그대로 남는다. **다른 6쌍의 cm 이름 후보와 이름·`sub` 파싱은 계속 금지**(P-2).
+> unit +19, E2E 129/129.
+
+> **★★ 스펙 035 DONE(2026-08-10, `e9e2af6`, 기록 `0bc2aa8`)**: **리빌드 최초의 운영자 기능**.
+> `evaluateOperatorPrintSizeInput(widthText, heightText)`가 후보 카탈로그를 만들어
+> **`readLegacyCatalog` + `projectFramePrintPhysicalSize`를 실제로 실행**해 판정한다(N-7) —
+> `> 0`·`<= 500`·all-or-nothing 규칙이 UI에 **복사되지 않는다**. 표기 검사는 `/^\d+(\.\d+)?$/`
+> 하나이고 **`parseFloat`를 쓰지 않는다**(N-8: 레거시 `parseFloat(...)||1`이 `"abc"`를 **1 cm**로
+> 저장했고 1 cm는 유효 범위라 뒤에서 잡을 수 없었다). **prefill 0**(레거시 `21` 날조 재현 금지),
+> **`sub` 무관**(O-6), **저장·전송·클립보드·다운로드 0**(O-1). admin 카드에 **클릭 가능한 요소가 0개**이고
+> 새로고침하면 값이 사라지는 것을 E2E가 확인한다. unit +20, E2E +2(131/131).
+> **⚠️ 보고**: 고객 `dist` JS 해시가 바뀌었다(`49cae2d3…`→`f86d446d…`, −28 byte) — 배럴 추가로
+> **minifier 식별자 배치가 밀린 것**이고, authoring 코드 문자열은 고객 번들에 **0건**(tree-shaken).
+> E2E **전후** 해시 동일이라는 본래 불변식은 유지된다.
+> **남는 것**: 운영자는 값을 **저장할 수 없다**(확인 후 레거시 admin에 직접 입력) — O-1·O-2의 결과이고
+> 저장 경로·revision·충돌·발행은 **O-8의 별도 Founder 결정**이다. 실기기 확인 없음.
+
+---
+
+## 스펙 033 이전 기록 (그대로 보존)
+
+> **스펙 033 DONE(2026-07-31)**: 구현 `4246503`, 기록 `9e2d408`. Codex 독립 게이트 frozen·format·
+> lint·typecheck·unit 1174/1174·build·Chromium 129/129·diff·dist hash·ports·temp PASS.
+> 승인 원문을 이 Codex 대화에서 재확인했다. Codex는 E-1/C-1을 동일 preview plan +
 detached HTMLCanvasElement uniform transform으로 확정했고, E-2는 Chromium pixel E2E 판정,
 E-3은 minLongSide/maxPixels 동시 충족 불가 시 fail-closed로 확정했다. 구현 계약:
 `docs/rebuild/specs/033-local-frame-png-export.md`. 실제 upload/order/Firebase/network/deploy는
