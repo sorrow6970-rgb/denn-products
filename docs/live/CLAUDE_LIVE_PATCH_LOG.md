@@ -1318,3 +1318,50 @@
 - **승인 상태**: **여전히 Founder 승인 0건.** 보고서 §8은 예시 문장이며, 7번 항목은
   **E2-best-effort / E3-strong 중 Founder가 직접 골라야 하는 자리**다.
 - **권장 다음 상태**: `FOUNDER_DECISION_REQUIRED` 유지. 구현 계약·Codex 구조 결정 확정 없음.
+
+## 2026-08-10 — F-A~F-E Founder 결정 정본 기록 (READY_FOR_CODEX)
+
+- **목적**: Founder가 실제로 승인한 F-A~F-E를 **정본 문서로 고정**하고, 상태를
+  `FOUNDER_DECISION_REQUIRED` → **`READY_FOR_CODEX`** 로 전환한다. 다음 작업은
+  **"Auth + `admin/state.json` 읽기 전용 구현 계약 작성"(Codex)** 이다.
+- **적용 범위**: 문서 전용. 제품 코드·테스트·CSS·설정·manifest·lockfile·의존성 diff **0**.
+  **`firebase` SDK는 이번에 추가하지 않았다**(추가 자체는 F-A로 승인됐고 실행은 구현 단계).
+  실제 Firebase·network·live·emulator·Rules·Hosting·deploy 실행·변경 **0**.
+- **기준**: `8ea0c30`.
+- **승인된 결정(요약)**:
+  - **F-A** Auth 도입, **1단계 = Auth + `admin/state.json` 읽기, 쓰기 0**, 기존 비익명 운영자 계정
+    **1개만**, **`firebase` 모듈러 SDK 신규 의존성 승인**. 신규 계정·다중 계정·역할 권한·
+    **Rules 변경은 승인하지 않음**. 계정의 실제 존재·접근 가능 여부는 **UNCONFIRMED**로 기록.
+  - **F-B** `published/state.json` **발행 제외**, 쓰기를 열더라도 **admin 상태 저장만**,
+    고객 공개 발행은 **별도 승인 + 별도 스펙**, 저장 UI에 **"발행되지 않음" 표시 필수**.
+  - **F-C** `admin/state.json`은 **읽기만 공유**, 향후 쓰기는 **레거시와 격리된 rebuild 전용 경로**,
+    경로는 **Codex 구조 계약**에서 확정, **레거시 공유 쓰기 금지**.
+  - **F-D** 정규화 결과 **메모리 전용 유지**, **저장 payload에 승격 결과 미포함**,
+    되쓰기·삭제·마이그레이션 **금지**.
+  - **F-E** **E3-strong** — last-writer-wins 손실 **불허**, 원자적 precondition·잠금 가능성을
+    **별도 조사·검증하기 전까지 쓰기 구현 차단**, Rules 변경·Firestore 잠금은 **별도 승인 대상**.
+- **아직 승인되지 않은 것**: **제품 구현 자체** · 실제 Firebase/network/live/emulator/운영 데이터 접근 ·
+  Rules/Hosting/배포 · 신규·다중 계정·역할 · 발행 · 레거시 공유 쓰기 · cm 되쓰기/마이그레이션 ·
+  **쓰기 구현 전반**.
+- **변경 파일**:
+  - `docs/codex-claude-handoff/decisions/2026-08-10-admin-auth-write-boundary-decisions.md` (신규 정본)
+  - `Automation/DENN_AUTOMATION_STATE.md` (`state: READY_FOR_CODEX`,
+    `active_unit: admin-auth-read-only-contract`, `next_transition: WAITING_FOR_CODEX`,
+    `baseline_commit: 8ea0c30`)
+  - `Automation/NEXT_CLAUDE_PROMPT.md` (Codex 계약 작성 지시로 교체)
+  - `docs/codex-claude-handoff/CURRENT.md` (상단 상태 블록 전환)
+  - `docs/live/CLAUDE_LIVE_PATCH_LOG.md` (이 항목)
+- **조사 보고서 §8의 예시 승인 프롬프트는 superseded**다. 정본은 위 결정 문서 하나뿐이며,
+  **예시 문장을 실제 승인으로 기록하지 않았다** — 이번 기록은 Founder가 직접 보낸 승인 원문을
+  그대로 인용한다.
+- **커밋/push**: 문서 전용 단일 커밋 → fast-forward push. force·merge·rebase·`reset --hard` 없음.
+- **실행한 검증**: `git diff --check 8ea0c30..HEAD`, 변경 경로가 허용 문서뿐인지 확인,
+  제품 코드·테스트·의존성·lockfile diff **0** 확인, HEAD/origin/ahead-behind·dirty 경로 확인.
+  (format·lint·typecheck·unit·build·E2E는 **문서 전용 변경이라 실행하지 않았다**.)
+- **예상 밖 dirty 파일**: 없음. 보호 대상 3개는 restore·checkout·stage·commit 하지 않았다.
+- **Codex가 다음에 할 일**: 허용 파일 목록 · AuthPort(실패 시 조용한 no-op 금지) ·
+  읽기 port와 경로 allowlist(`admin/state.json` 읽기만) · 합성 fake 검증 범위(실제 network 0) ·
+  `firebase` SDK 추가 방식 · NOT TESTED 경계. **쓰기 port·저장 UI·발행·revision/충돌·tombstone·
+  마이그레이션은 계약에 넣지 않는다.**
+- **권장 다음 상태**: `READY_FOR_CODEX` 유지. 계약이 나오면 Founder가 재검토하고,
+  **구현 착수는 그 뒤 별도 승인**이다.

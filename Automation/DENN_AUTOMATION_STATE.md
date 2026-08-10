@@ -4,17 +4,17 @@
 updated_at: 2026-08-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: fa-fe-decision-options-doc-correction
-active_unit: admin-auth-write-publish-decision
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 24d0c04
+completed_unit: fa-fe-founder-decision-record
+active_unit: admin-auth-read-only-contract
+state: READY_FOR_CODEX
+baseline_commit: 8ea0c30
 candidate_commit: none-product-code-unchanged
 verified_commit: e9e2af6
-origin_relation: "docs-only correction commit on top of 24d0c04; HEAD=origin, ahead/behind 0/0"
+origin_relation: "docs-only decision-record commit on top of 8ea0c30; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: WAITING_FOR_FOUNDER
+next_transition: WAITING_FOR_CODEX
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
@@ -1310,3 +1310,39 @@ Firebase·network·live·emulator·Rules·Hosting·deploy 실행·변경 **0**.
 자동화 루프는 삭제된 상태이고 **새 자동화나 반복 작업을 만들지 않았다** — 이후는 수동 인수인계만 쓴다.
 
 다음 전이: **Founder가 F-A~F-E를 명시적으로 결정**(F-E는 E2-best-effort / E3-strong 택일)해야 한다.
+
+
+## F-A~F-E Founder 결정 정본 기록 — READY_FOR_CODEX (Claude Code, 2026-08-10)
+
+기준 `8ea0c30`. **결정 정본**: `docs/codex-claude-handoff/decisions/2026-08-10-admin-auth-write-boundary-decisions.md`
+(승인 원문 그대로 수록). 조사 보고서 §8의 예시 프롬프트는 **superseded**.
+
+**Founder 승인 (2026-08-10, 실제 승인)**
+
+- **F-A** 운영자 Auth 도입. **1단계 = Auth + `admin/state.json` 읽기, 쓰기 0.**
+  기존 비익명 운영자 계정 **1개만**. **`firebase` 모듈러 SDK 신규 의존성 승인.**
+  신규 계정·다중 계정·역할 권한·**Rules 변경은 승인하지 않음**.
+  ⚠️ 계정의 실제 존재·접근 가능 여부는 저장소에서 확인 불가 → **UNCONFIRMED**로 기록.
+- **F-B** `published/state.json` **발행 제외**. 쓰기를 열더라도 **admin 상태 저장만**.
+  고객 공개 발행은 **별도 승인 + 별도 스펙**. 저장 UI에 **"발행되지 않음" 표시 필수**.
+- **F-C** `admin/state.json`은 **읽기만 공유**. 향후 쓰기는 **레거시와 격리된 rebuild 전용 경로**.
+  경로는 **Codex 구조 계약**에서 확정. **레거시 파일 공유 쓰기 금지**.
+- **F-D** 정규화 결과 **메모리 전용 유지**, **저장 payload에 승격 결과 미포함**,
+  되쓰기·삭제·마이그레이션 **금지**(별도 스펙 + 별도 승인).
+- **F-E** **E3-strong** — last-writer-wins 손실 **불허**, 원자적 precondition·잠금 가능성을
+  **별도 조사·검증하기 전까지 쓰기 구현 차단**. SDK 지원 여부·Firestore 잠금 필요 여부·
+  Rules 변경 필요 여부는 **UNCONFIRMED** 유지, 도입은 **별도 승인 대상**.
+
+**승인되지 않은 것**: 제품 구현 자체 · 실제 Firebase/network/live/emulator/운영 데이터 접근 ·
+Rules/Hosting/배포 · 신규 계정·다중 계정·역할 · 발행 · 레거시 공유 쓰기 · cm 되쓰기/마이그레이션 ·
+**쓰기 구현 전반**.
+
+이번 라운드는 **문서 전용**이다. 제품 코드·테스트·CSS·설정·manifest·lockfile·의존성 diff **0**,
+**`firebase` SDK도 아직 추가하지 않았다**(추가는 승인됐고 실행은 구현 단계). 실제 Firebase·network·
+live·emulator·Rules·Hosting·deploy **0**. 보호 대상 3개는 restore·checkout·stage·commit 하지 않았다.
+
+다음 전이: **Codex가 "Auth + `admin/state.json` 읽기 전용 구현 계약"을 작성**한다
+(허용 파일·AuthPort·읽기 port와 경로 allowlist·합성 fake 검증 범위·`firebase` SDK 추가 방식·
+NOT TESTED 경계). 쓰기 port·저장 UI·발행·revision/충돌·tombstone·마이그레이션은 **계약에 넣지 않는다**.
+계약 작성 후 Founder가 다시 검토하며, **구현 착수는 그 뒤 별도 승인**이다.
+자동화 루프는 삭제된 상태이고 새 자동화·반복 작업을 만들지 않는다.

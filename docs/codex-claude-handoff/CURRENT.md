@@ -9,7 +9,22 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **스펙 034·035 DONE (2026-08-10). 운영자 cm 입력 최소 범위가 코드로 닫혔다.**
+상태: **`READY_FOR_CODEX` — F-A~F-E Founder 결정 확정(2026-08-10, 기준 `8ea0c30`).**
+정본 `decisions/2026-08-10-admin-auth-write-boundary-decisions.md`(승인 원문 수록).
+**F-A** Auth 도입, **1단계 = Auth + `admin/state.json` 읽기, 쓰기 0**, 기존 비익명 계정 1개,
+**`firebase` SDK 신규 의존성 승인**(신규/다중 계정·역할·**Rules 변경은 미승인**) ·
+**F-B** 발행 제외, 쓰기를 열더라도 admin 저장만, 저장 UI에 **"발행되지 않음" 표시 필수** ·
+**F-C** `admin/state.json`은 **읽기만 공유**, 향후 쓰기는 **격리된 rebuild 전용 경로**(경로는 Codex 계약) ·
+**F-D** 정규화 결과 **메모리 전용**, **저장 payload 미포함**, 되쓰기·삭제·마이그레이션 금지 ·
+**F-E** **E3-strong** — last-writer-wins 불허, 원자적 precondition·잠금 가능성 **조사·검증 전까지
+쓰기 구현 차단**.
+**아직 승인되지 않은 것**: 제품 구현 자체 · 실제 Firebase/network/live/emulator/운영 데이터 ·
+Rules/Hosting/배포 · 발행 · 레거시 공유 쓰기 · cm 마이그레이션 · **쓰기 구현 전반**.
+**UNCONFIRMED**: 운영자 계정의 실제 존재·접근 가능 여부 · Rules 실제 배포/거부 동작 ·
+Web SDK의 Storage 원자적 precondition 지원 · Firestore 잠금·Rules 변경 필요 여부.
+**다음 = Codex가 "Auth + `admin/state.json` 읽기 전용 구현 계약"을 작성**한다(구현 착수 아님).
+
+> **이전 상태(참고)** — 스펙 034·035 DONE (2026-08-10). 운영자 cm 입력 최소 범위가 코드로 닫혔다.
 Founder 승인 O-1~O-8 + 구조 결정 N-1~N-10 = `decisions/2026-08-10-operator-cm-input-decisions.md`
 (계약 `d3bed91`). **034**(`ff7a49a`) legacy `wcm`/`hcm` 읽기 정규화·충돌 fail-closed,
 **035**(`e9e2af6`) 운영자 cm 로컬 입력·검증 UI. 게이트: frozen·format·lint·typecheck·
