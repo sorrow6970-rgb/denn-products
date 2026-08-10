@@ -343,3 +343,178 @@ describe("frameSizes physical print size (spec 032)", () => {
     }
   });
 });
+
+// --- spec 034: legacy wcm/hcm normalization ---------------------------------
+
+describe("frameSizes legacy cm normalization (spec 034)", () => {
+  const size = (over: Record<string, unknown>) => ({
+    frameSizes: [{ id: "s", name: "s", aspect: 1.41, ...over }],
+  });
+  const firstSize = (res: CatalogReadResult): Record<string, unknown> => {
+    if (!res.ok) throw new Error("expected a readable catalog");
+    const sizes = res.document.data.frameSizes;
+    if (!sizes) throw new Error("expected frameSizes");
+    return sizes[0] as unknown as Record<string, unknown>;
+  };
+  const warningCodes = (res: CatalogReadResult) => res.report.warnings.map((w) => w.code);
+
+  it("promotes a complete legacy pair into the canonical fields", () => {
+    const res = readLegacyCatalog(fx.okLegacyPrintSize);
+    expect(res.ok).toBe(true);
+    expect(firstSize(res).printWidthCm).toBe(21);
+    expect(firstSize(res).printHeightCm).toBe(29.7);
+    expect(warningCodes(res)).toContain("LEGACY_PRINT_SIZE_NORMALIZED");
+    expect(res.report.warnings.find((w) => w.code === "LEGACY_PRINT_SIZE_NORMALIZED")?.path).toBe(
+      "frameSizes[0].wcm",
+    );
+  });
+
+  it("keeps the legacy fields verbatim next to the promoted pair", () => {
+    const res = readLegacyCatalog(fx.okLegacyPrintSize);
+    expect(firstSize(res).wcm).toBe(21);
+    expect(firstSize(res).hcm).toBe(29.7);
+  });
+
+  it("does NOT write the promotion back into the caller's input", () => {
+    const input = { frameSizes: [{ id: "s", name: "s", aspect: 1.41, wcm: 21, hcm: 29.7 }] };
+    const before = JSON.stringify(input);
+    const res = readLegacyCatalog(input);
+    expect(res.ok).toBe(true);
+    expect(JSON.stringify(input)).toBe(before);
+    expect("printWidthCm" in input.frameSizes[0]).toBe(false);
+  });
+
+  it("stops reporting the legacy pair as an unknown field", () => {
+    const res = readLegacyCatalog(fx.okLegacyPrintSize);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.report.unknownPaths).not.toContain("frameSizes[0].wcm");
+    expect(res.report.unknownPaths).not.toContain("frameSizes[0].hcm");
+    expect(Object.keys(res.report.extensions)).not.toContain("frameSizes[0].wcm");
+  });
+
+  it("is idempotent: re-reading the promoted document neither conflicts nor re-normalizes", () => {
+    const first = readLegacyCatalog(fx.okLegacyPrintSize);
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    const second = readLegacyCatalog(first.document);
+    expect(second.ok).toBe(true);
+    expect(warningCodes(second)).not.toContain("LEGACY_PRINT_SIZE_NORMALIZED");
+    expect(firstSize(second).printWidthCm).toBe(21);
+  });
+
+  it("is deterministic", () => {
+    const a = readLegacyCatalog(fx.okLegacyPrintSize);
+    const b = readLegacyCatalog(fx.okLegacyPrintSize);
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  });
+
+  it("accepts an agreeing legacy + canonical pair without promoting anything", () => {
+    const res = readLegacyCatalog(fx.okLegacyPrintSizeAgrees);
+    expect(res.ok).toBe(true);
+    expect(warningCodes(res)).not.toContain("LEGACY_PRINT_SIZE_NORMALIZED");
+    expect(warningCodes(res)).not.toContain("LEGACY_PRINT_SIZE_IGNORED");
+  });
+
+  it("accepts ONE agreeing legacy field alongside the canonical pair", () => {
+    const res = readLegacyCatalog(size({ printWidthCm: 21, printHeightCm: 29.7, wcm: 21 }));
+    expect(res.ok).toBe(true);
+  });
+
+  it("FAILS CLOSED when a legacy value contradicts the canonical one", () => {
+    const res = readLegacyCatalog(fx.errConflictingLegacyPrintSize);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.errors).toEqual([{ code: "CONFLICTING_PRINT_SIZE", path: "frameSizes[0].wcm" }]);
+  });
+
+  it("reports every contradicting side, on the LEGACY path", () => {
+    const res = readLegacyCatalog(
+      size({ printWidthCm: 21, printHeightCm: 29.7, wcm: 30, hcm: 40 }),
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.errors.map((e) => e.path).sort()).toEqual([
+      "frameSizes[0].hcm",
+      "frameSizes[0].wcm",
+    ]);
+    for (const e of res.errors) {
+      expect(Object.keys(e).sort()).toEqual(["code", "path"]);
+      expect(e.path).not.toContain("30");
+    }
+  });
+
+  it("uses no tolerance at all", () => {
+    const res = readLegacyCatalog(size({ printWidthCm: 21, printHeightCm: 29.7, wcm: 21.000001 }));
+    expect(res.ok).toBe(false);
+  });
+
+  it("judges a broken canonical declaration FIRST and does not let legacy paper over it", () => {
+    // canonical half-declared + a complete legacy pair: spec 032's error stands alone
+    const res = readLegacyCatalog(size({ printWidthCm: 21, wcm: 21, hcm: 29.7 }));
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.errors).toEqual([{ code: "INVALID_NUMBER", path: "frameSizes[0].printHeightCm" }]);
+  });
+
+  it("ignores an unusable legacy pair WITHOUT taking the catalog down", () => {
+    for (const value of [0, -1, 500.5, 1000, "21", null, true, {}]) {
+      const res = readLegacyCatalog(size({ wcm: value, hcm: 29.7 }));
+      expect(res.ok, JSON.stringify(String(value))).toBe(true);
+      if (!res.ok) continue;
+      expect(warningCodes(res)).toContain("LEGACY_PRINT_SIZE_IGNORED");
+      expect(firstSize(res).printWidthCm).toBeUndefined();
+      expect(firstSize(res).printHeightCm).toBeUndefined();
+    }
+  });
+
+  it("ignores half a legacy pair and reports the MISSING side", () => {
+    const res = readLegacyCatalog(fx.okHalfLegacyPrintSize);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.report.warnings).toContainEqual({
+      code: "LEGACY_PRINT_SIZE_IGNORED",
+      path: "frameSizes[0].hcm",
+    });
+    expect(firstSize(res).printWidthCm).toBeUndefined();
+  });
+
+  it("says nothing about a size that declares no cm at all", () => {
+    const res = readLegacyCatalog(size({ sub: "21×29.7 cm" }));
+    expect(res.ok).toBe(true);
+    expect(warningCodes(res)).not.toContain("LEGACY_PRINT_SIZE_IGNORED");
+    expect(warningCodes(res)).not.toContain("LEGACY_PRINT_SIZE_NORMALIZED");
+  });
+
+  it("never promotes from sub, name, aspect or the logical w/h", () => {
+    const res = readLegacyCatalog({
+      frameSizes: [
+        { id: "s", name: "A4 21x29.7cm", sub: "21x29.7cm", aspect: 1.41, w: 21, h: 29.7 },
+      ],
+    });
+    expect(res.ok).toBe(true);
+    expect(firstSize(res).printWidthCm).toBeUndefined();
+  });
+
+  it("survives a hostile getter that changes the legacy value after the check", () => {
+    let reads = 0;
+    const hostile = {
+      frameSizes: [
+        {
+          id: "s",
+          name: "s",
+          aspect: 1.41,
+          get wcm() {
+            reads++;
+            return reads > 1 ? 999 : 21;
+          },
+          hcm: 29.7,
+        },
+      ],
+    };
+    const res = readLegacyCatalog(hostile);
+    expect(res.ok).toBe(true);
+    // the JSON-safe clone froze the value long before normalization looked at it
+    expect(firstSize(res).printWidthCm).toBe(21);
+  });
+});

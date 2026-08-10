@@ -90,6 +90,12 @@ const ITEM_KNOWN: Record<string, Set<string>> = {
     // from these and never from a name, label or the logical w/h.
     "printWidthCm",
     "printHeightCm",
+    // spec 034: the ONE legacy alias pair the legacy admin actually writes (denn-admin.html:1698).
+    // Recognised so it can be normalised (see normalizeLegacyPrintSizeCm) instead of being dropped
+    // into UNKNOWN_FIELD. The other legacy cm candidates (wCm/widthCm/cmW/printWcm) and the
+    // name/sub/label parsing the legacy consumer did are still FORBIDDEN — spec 032 P-2.
+    "wcm",
+    "hcm",
   ]),
   frameColors: new Set(["id", "name", "fill", "grain", "custom"]),
   frameTemplates: new Set([
@@ -274,7 +280,14 @@ export function readLegacyCatalog(input: unknown): CatalogReadResult {
       }
       if (key === "frameSizes") {
         validatePositive(item.aspect, `${p}.aspect`, fatals);
+        const beforePrintSize = fatals.length;
         validatePrintSizeCm(item, p, fatals);
+        // spec 034 N-3: the canonical declaration is judged FIRST and alone. If it is already
+        // broken, the legacy alias must not paper over it — the operator has to see which
+        // declaration is wrong, not have one silently win.
+        if (fatals.length === beforePrintSize) {
+          normalizeLegacyPrintSizeCm(item, p, fatals, warnings);
+        }
       }
       if (key === "frameTemplates") validateFrameTemplateType(item.type, p, warnings);
       if (itemKnown) {
@@ -326,6 +339,10 @@ function validatePositive(value: JsonValue, path: string, fatals: CatalogIssue[]
 /** spec 032: the largest physical dimension a print size may declare, in centimetres. */
 const MAX_PRINT_CM = 500;
 
+/** A usable physical dimension: a finite number, greater than 0, at most `MAX_PRINT_CM`. */
+const isPrintSizeCm = (value: JsonValue): boolean =>
+  isFinitePositive(value) && (value as number) <= MAX_PRINT_CM;
+
 /**
  * Validate the operator-authored physical print size (spec 032).
  *
@@ -356,10 +373,70 @@ function validatePrintSizeCm(
     return;
   }
 
-  const inRange = (value: JsonValue): boolean =>
-    isFinitePositive(value) && (value as number) <= MAX_PRINT_CM;
-  if (!inRange(width)) fatals.push({ code: "INVALID_NUMBER", path: `${path}.printWidthCm` });
-  if (!inRange(height)) fatals.push({ code: "INVALID_NUMBER", path: `${path}.printHeightCm` });
+  if (!isPrintSizeCm(width)) fatals.push({ code: "INVALID_NUMBER", path: `${path}.printWidthCm` });
+  if (!isPrintSizeCm(height))
+    fatals.push({ code: "INVALID_NUMBER", path: `${path}.printHeightCm` });
+}
+
+/**
+ * Normalize the ONE legacy physical-size pair (`wcm`/`hcm`) against the canonical pair (spec 034).
+ *
+ * The legacy admin has been writing `wcm`/`hcm` all along (denn-admin.html:1698), so a size can
+ * carry the operator's real measurements in fields this rebuild used to ignore. Two rules, and
+ * only these two:
+ *
+ * - Canonical pair present → the legacy fields may only AGREE. A different value is a fatal
+ *   `CONFLICTING_PRINT_SIZE` on the LEGACY path: two contradicting operator declarations cannot be
+ *   resolved by code, and no tolerance is allowed (21 vs 21.1 is ~12 px at 300 dpi — a tolerance
+ *   constant would just be the size of the print defect it permits).
+ * - Canonical pair absent → a complete, in-range legacy pair is PROMOTED, but only into the
+ *   already-cloned document. The caller's input is never written back (Founder O-5), and the raw
+ *   `wcm`/`hcm` stay in place next to the promoted fields.
+ *
+ * An unusable legacy value (half a pair, wrong type, out of range) is a WARNING, not a fatal: it is
+ * pre-existing operational data, a fatal would take the whole customer catalog down, and skipping
+ * the promotion already blocks printing (the projection stays `null`), which is the property that
+ * matters. Nothing here reads `aspect`, `sub`, `name` or the logical `w`/`h`.
+ */
+function normalizeLegacyPrintSizeCm(
+  item: Record<string, JsonValue>,
+  path: string,
+  fatals: CatalogIssue[],
+  warnings: CatalogIssue[],
+): void {
+  // each field is read exactly once: a drifting getter must not return one value to the check and
+  // another to the promotion
+  const legacyWidth = item.wcm;
+  const legacyHeight = item.hcm;
+  if (legacyWidth === undefined && legacyHeight === undefined) return;
+
+  const width = item.printWidthCm;
+  const height = item.printHeightCm;
+
+  // validatePrintSizeCm already passed, so the canonical pair is either fully valid or fully absent
+  if (width !== undefined && height !== undefined) {
+    if (legacyWidth !== undefined && legacyWidth !== width) {
+      fatals.push({ code: "CONFLICTING_PRINT_SIZE", path: `${path}.wcm` });
+    }
+    if (legacyHeight !== undefined && legacyHeight !== height) {
+      fatals.push({ code: "CONFLICTING_PRINT_SIZE", path: `${path}.hcm` });
+    }
+    return;
+  }
+
+  if (isPrintSizeCm(legacyWidth) && isPrintSizeCm(legacyHeight)) {
+    item.printWidthCm = legacyWidth;
+    item.printHeightCm = legacyHeight;
+    warnings.push({ code: "LEGACY_PRINT_SIZE_NORMALIZED", path: `${path}.wcm` });
+    return;
+  }
+
+  if (!isPrintSizeCm(legacyWidth)) {
+    warnings.push({ code: "LEGACY_PRINT_SIZE_IGNORED", path: `${path}.wcm` });
+  }
+  if (!isPrintSizeCm(legacyHeight)) {
+    warnings.push({ code: "LEGACY_PRINT_SIZE_IGNORED", path: `${path}.hcm` });
+  }
 }
 
 function validateFrameTemplateType(type: JsonValue, path: string, warnings: CatalogIssue[]): void {

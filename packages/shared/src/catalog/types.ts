@@ -23,8 +23,18 @@ export type CatalogIssueCode =
   | "DUPLICATE_ID"
   | "INVALID_NUMBER"
   | "UNSAFE_STORAGE_PATH"
+  // spec 034: legacy `wcm`/`hcm` and canonical printWidthCm/printHeightCm both declared, with
+  // different values. Nothing decides which one is right, so the read fails closed. The `path`
+  // always points at the LEGACY field, because the canonical pair is the authoritative one.
+  | "CONFLICTING_PRINT_SIZE"
   // warning
   | "UNKNOWN_FIELD"
+  // spec 034: a legacy `wcm`/`hcm` pair was promoted to the canonical fields IN MEMORY (the
+  // caller's input is never written back). `path` is the legacy `.wcm`.
+  | "LEGACY_PRINT_SIZE_NORMALIZED"
+  // spec 034: a legacy cm field exists but is not a usable pair, so nothing was promoted and the
+  // size stays un-printable. `path` points at each offending legacy field.
+  | "LEGACY_PRINT_SIZE_IGNORED"
   | "UNKNOWN_FRAME_TEMPLATE_TYPE"
   | "INVALID_DATA_URL"
   | "INVALID_REVISION";

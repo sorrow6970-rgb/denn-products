@@ -3,6 +3,7 @@
 // catalog variants and real Canvas previews are NOT covered here (NOT VERIFIED / later specs).
 
 import { describe, expect, it } from "vitest";
+import { readLegacyCatalog } from "../read";
 import type { CatalogDocumentV1 } from "../types";
 import {
   type CasePreviewSelection,
@@ -1114,6 +1115,33 @@ describe("projectFramePrintPhysicalSize — nothing declared", () => {
       "s1",
     );
     expect(result.ok).toBe(false);
+  });
+});
+
+// --- spec 034: the projection sees a normalized legacy pair -------------------
+
+describe("projectFramePrintPhysicalSize — legacy wcm/hcm (spec 034)", () => {
+  it("projects a legacy-only pair once the read has normalized it", () => {
+    const read = readLegacyCatalog({
+      frameSizes: [{ id: "s1", name: "s1", sub: "21×29.7 cm", aspect: 1.41, wcm: 21, hcm: 29.7 }],
+    });
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    const result = projectFramePrintPhysicalSize(read.document, "s1");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value).toEqual({ widthCm: 21, heightCm: 29.7 });
+  });
+
+  it("stays null when the legacy pair was not usable (nothing is guessed)", () => {
+    const read = readLegacyCatalog({
+      frameSizes: [{ id: "s1", name: "s1", aspect: 1.41, wcm: 21 }],
+    });
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    const result = projectFramePrintPhysicalSize(read.document, "s1");
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toBeNull();
   });
 });
 

@@ -152,6 +152,26 @@ export const errPrintSizeTooLarge: unknown = {
 export const okPrintSize: unknown = {
   frameSizes: [{ id: "s", name: "s", aspect: 1.41, printWidthCm: 21, printHeightCm: 29.7 }],
 };
+/** spec 034: only the legacy pair the legacy admin writes — promoted in memory on read. */
+export const okLegacyPrintSize: unknown = {
+  frameSizes: [{ id: "s", name: "s", sub: "21×29.7 cm", aspect: 1.41, wcm: 21, hcm: 29.7 }],
+};
+/** spec 034: legacy and canonical pairs agree — no conflict, no promotion. */
+export const okLegacyPrintSizeAgrees: unknown = {
+  frameSizes: [
+    { id: "s", name: "s", aspect: 1.41, printWidthCm: 21, printHeightCm: 29.7, wcm: 21, hcm: 29.7 },
+  ],
+};
+/** spec 034: legacy width contradicts the canonical width → fail closed. */
+export const errConflictingLegacyPrintSize: unknown = {
+  frameSizes: [
+    { id: "s", name: "s", aspect: 1.41, printWidthCm: 21, printHeightCm: 29.7, wcm: 30, hcm: 29.7 },
+  ],
+};
+/** spec 034: half a legacy pair — nothing is promoted and nothing is guessed. */
+export const okHalfLegacyPrintSize: unknown = {
+  frameSizes: [{ id: "s", name: "s", aspect: 1.41, wcm: 21 }],
+};
 
 export const errUnsafeStoragePath: unknown = {
   frameTemplates: [{ id: "x", name: "x", type: "uploaded", storagePath: "javascript:alert(1)" }],
