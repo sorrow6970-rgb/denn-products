@@ -1488,3 +1488,69 @@
   - Firebase SDK가 timeout 계열 error code를 실제로 어떻게 내는지(그래서 wrapper 타임아웃으로 고정)
 - **권장 다음 상태**: `READY_FOR_CODEX` — **Codex가 보완된 계약을 검토**하고, 그 뒤
   **Founder가 구현 착수를 별도 승인**해야 코드 작성과 SDK 추가를 시작한다.
+
+## 2026-08-10 — 스펙 036 계약 타입·비동기 경계 보완 (READY_FOR_CODEX)
+
+- **목적**: 계약(`9fb1456`)의 **타입 범위·비동기 권위·timeout 범위·비노출 검증 문구** 4건을 고친다.
+  **제품 결정·범위는 바뀌지 않았고 구현은 시작하지 않았다.**
+- **적용 범위**: 문서 전용. 제품 코드·테스트·CSS·설정·manifest·`package.json`·lockfile·의존성
+  diff **0**. **`firebase` SDK 미추가.** Firebase·network·live·emulator·운영 데이터·Rules·Hosting·
+  deploy 실행·변경 **0**.
+- **기준**: `9fb1456`.
+- **수정 내용 4가지**:
+  1. **`OperatorAuthState` 오류 타입 축소**(§4.1) — `error`의 코드를 `AdminReadErrorCode` →
+     **`OperatorAuthErrorCode`**. `INVALID_CATALOG`·`ADMIN_STATE_NOT_FOUND`·`ADMIN_STATE_FORBIDDEN`·
+     `RESPONSE_TOO_LARGE`·`INVALID_JSON`·`AUTH_NOT_READY`·`AUTH_REQUIRED` 같은 catalog/storage·load
+     전용 코드가 **인증 observer 상태에 타입상 들어올 수 없다**.
+  2. **observer가 인증 상태의 유일한 권위**(§4.3 신설) — `OperatorAuthActionValue`에서
+     **`state` 필드를 제거**하고 성공 값은 `correlationId`만 반환한다.
+     `signInWithEmailPassword`/`signOut`의 Promise 성공은 **SDK action 완료만** 뜻하며,
+     `authenticated`/`signed-out` 확정은 **`onAuthStateChanged` observer만** 담당한다.
+     **action Promise 완료 순서와 observer 통지 순서를 가정하지 않으며**, UI는 action 결과의 상태로
+     인증 상태를 **덮어쓰지 않는다**(덮어쓸 값 자체를 타입에서 없앤 것이 강제 수단).
+     §8에 합성 테스트 3건 추가: ① sign-in Promise가 observer보다 먼저 끝나도 **조기 전환 없음**
+     ② observer가 먼저 통지돼도 **늦은 action이 되돌리지 않음** ③ **sign-out 동일 규율**.
+  3. **`NETWORK_TIMEOUT` 상수·범위 확정**(§5.4) — "예: 10s" 표현 제거,
+     **`export const ADMIN_STATE_READ_TIMEOUT_MS = 30_000;`** 고정.
+     wrapper는 **`AdminStateReadPort`의 `getBytes` 읽기에만** 적용하고
+     **`signInWithEmailPassword`·`signOut`·`onAuthStateChanged`에는 적용하지 않는다** —
+     Auth action은 timeout 반환 후 SDK가 **늦게 성공하면 실제 세션을 바꿔** 반환 결과와 실제 상태가
+     갈라지기 때문이다. `getBytes`는 읽기 전용이므로 30초 초과 시 `NETWORK_TIMEOUT`을 반환하고
+     **늦게 끝난 underlying Promise의 결과를 폐기**한다. ⚠️ **실제 SDK 요청 취소를 지원한다고
+     주장하지 않는다**(대기를 포기할 뿐). 늦은 완료는 **generation/`correlationId`로 무시**하고
+     UI·메모리 상태를 갱신하지 않으며 **자동 retry는 0**이다. fake timer 테스트로
+     **29,999 ms 미완료 · 30,000 ms timeout · timeout 후 늦은 성공 무시**를 §8에 고정했다.
+  4. **비노출 검증 문구 정정**(§8.1 신설) — 초판의 "raw secret fixture가 **결과**에 0건"은 과했다.
+     성공 결과는 검증된 `CatalogDocumentV1`/`CatalogReadReport`를 반환하므로 **정상 카탈로그에
+     합법적으로 들어 있는 `data:` URL·base64가 성공 값에 존재할 수 있다.** 검증을 다음으로 분리:
+     ① SDK raw error에 심은 가짜 token/email/uid/raw message → `SafeAdminReadError`와
+     `JSON.stringify(error)`에 **0건** ② invalid UTF-8/JSON/catalog 실패 시 **원문 bytes/JSON/base64가
+     error에 0건** ③ **UI·console/log에는 성공·실패 모두** raw catalog/base64/경로/token/email/uid
+     **0건** ④ 성공 `AdminStateLoadValue`의 **합법적 카탈로그 data URL 제거는 요구하지 않음**
+     ⑤ 성공 값에 **원문 bytes·원문 JSON 문자열을 별도 보존하지 않음**.
+     성공 값은 **메모리 전용**이며 **스펙 035 UI·localStorage·IndexedDB·주문·upload·publish와
+     연결하지 않는다**.
+- **변경 파일**:
+  - `docs/rebuild/specs/036-admin-auth-private-state-read.md` (개정 이력 2차 블록 + §4.1·§4.3·§5.4·§8·§8.1)
+  - `Automation/DENN_AUTOMATION_STATE.md` (`state: READY_FOR_CODEX`,
+    `active_unit: spec-036-final-contract-review`, `baseline_commit: 9fb1456`,
+    `next_transition: WAITING_FOR_CODEX`)
+  - `Automation/NEXT_CLAUDE_PROMPT.md`, `docs/codex-claude-handoff/CURRENT.md`,
+    `docs/live/CLAUDE_LIVE_PATCH_LOG.md` (이 항목)
+- **검증 결과**: `git diff --check 9fb1456..HEAD` **PASS(클린)** · 변경 경로 = **허용 문서 5개뿐** ·
+  제품 코드·테스트·`package.json`·lockfile·의존성 diff **0** ·
+  `firebase` 의존성 저장소 전역 **0건**(미추가 확인) · HEAD=origin, ahead/behind **0/0** ·
+  dirty = 보호 대상 3개뿐(restore·checkout·stage·commit 안 함).
+  format·lint·typecheck·unit·build·E2E는 **문서 전용 변경이라 실행하지 않았다**.
+- **미검증 경계(UNCONFIRMED / NOT VERIFIED)**:
+  - **`firebase@12.17.1`의 실제 설치·빌드 호환성**(Node 24 / Vite 8 / TS 7 / pnpm workspace) —
+    버전 **존재는 VERIFIED**, 호환성은 구현 단계 `frozen install`에서 처음 확인된다
+  - **Firebase SDK가 실제로 어떤 timeout/네트워크 error code를 내는지** — 그래서 `NETWORK_TIMEOUT`을
+    SDK 매핑이 아닌 **앱 wrapper 상태**로 고정했다
+  - **`getBytes`가 30초 안에 끝나는지, 실제 요청이 취소되는지** — 취소는 **주장하지 않는다**
+  - 운영자 계정의 실재·로그인 가능 여부 · `storage.rules` 실제 배포 여부와 거부 동작 ·
+    실제 `admin/state.json` 존재·크기·내용 · 실제 Storage CORS 동작
+  - **observer와 action Promise의 실제 도착 순서** — 순서를 가정하지 않는 계약으로 대응했고,
+    합성 fake로만 두 순서를 재현한다
+- **권장 다음 상태**: `READY_FOR_CODEX` — **Codex의 최종 계약 검토**, 그 뒤 **Founder의 구현 착수
+  승인**이 있어야 코드 작성과 SDK 추가를 시작한다.

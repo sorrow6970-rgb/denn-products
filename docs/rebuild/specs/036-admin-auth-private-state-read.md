@@ -21,6 +21,17 @@
 > `NETWORK_TIMEOUT`이 **SDK code가 아니라 앱 wrapper 상태**임을 구분했다(§5.3~5.4).
 > ⑤ **20 MiB는 서버 read 보장이 아니라 클라이언트 안전 상한**임을 `storage.rules:14`·`:22`·`:26`
 > 근거와 함께 정정했다(§5.1).
+>
+> **2차 보완(같은 날, 초판 `9fb1456`)** — 타입·비동기 경계:
+> ⑥ `OperatorAuthState`의 `error` 코드를 **`OperatorAuthErrorCode`로 축소**해 catalog/storage 전용
+> 코드가 인증 observer 상태에 **타입상 들어올 수 없게** 했다(§4.1).
+> ⑦ **observer를 인증 상태의 유일한 권위로 고정** — `OperatorAuthActionValue`에서 `state`를 제거하고
+> action Promise는 **"SDK action 완료"만** 뜻하도록 했다(§4.3 + §8 테스트 3건).
+> ⑧ **`ADMIN_STATE_READ_TIMEOUT_MS = 30_000` 확정**, wrapper는 **`getBytes` 읽기에만** 적용하고
+> **Auth action·observer에는 적용하지 않는다**(늦은 성공이 실제 세션을 바꿔 반환값과 갈라지기 때문).
+> **실제 SDK 취소는 주장하지 않고**, 늦은 결과 폐기만 보장한다(§5.4).
+> ⑨ **비노출 검증 경계 정정** — 성공 값에는 검증된 문서가 들어가므로 **합법적 카탈로그 `data:` URL을
+> 제거하라고 요구하지 않는다**. 대신 raw error·실패 원문·UI/로그 쪽을 각각 분리해 고정했다(§8.1).
 
 ---
 
@@ -178,15 +189,21 @@ export interface SafeAdminReadError {
   readonly issues?: readonly CatalogIssue[];
 }
 
+/**
+ * observer가 관찰한 인증 상태. `error`의 코드는 **인증 단계 코드로 제한**된다 —
+ * catalog/storage 전용 코드(`INVALID_CATALOG`·`ADMIN_STATE_*` 등)는 **타입상 들어올 수 없다**.
+ */
 export type OperatorAuthState =
   | { readonly status: "initializing" }
   | { readonly status: "signed-out" }
   | { readonly status: "authenticated" }          // 비익명 세션만
-  | { readonly status: "error"; readonly code: AdminReadErrorCode };
+  | { readonly status: "error"; readonly code: OperatorAuthErrorCode };
 
-/** sign-in / sign-out 성공은 "상태가 이렇게 됐다"만 알린다. 사용자 객체를 돌려주지 않는다. */
+/**
+ * sign-in / sign-out 성공은 **SDK action이 끝났다는 사실만** 알린다.
+ * 상태는 담지 않는다 — 인증 상태의 권위는 observer 하나뿐이다(§4.3).
+ */
 export interface OperatorAuthActionValue {
-  readonly state: OperatorAuthState;
   readonly correlationId: string;
 }
 export type OperatorAuthActionResult = Result<OperatorAuthActionValue, SafeAdminReadError>;
@@ -223,6 +240,27 @@ export interface OperatorAuthPort {
 - `correlationId`는 **성공/실패 양쪽 payload에 그대로 되돌려 준다**(위 타입).
 
 **Firebase `User`·credential·token·raw SDK error는 위 공개 타입 어디에도 포함되지 않는다.**
+
+### 4.3 ★ observer가 인증 상태의 **유일한 권위**다
+
+`signInWithEmailPassword` / `signOut`의 **Promise 성공은 "SDK action이 완료됐다"는 뜻일 뿐이며,
+`authenticated` / `signed-out` 확정은 `onAuthStateChanged` observer만 담당한다.**
+
+- **action Promise 완료 순서와 observer 통지 순서를 가정하지 않는다.** 둘 중 무엇이 먼저 와도 된다.
+- **UI는 action 결과로 인증 상태를 덮어쓰지 않는다.** 화면의 인증 상태는 **오직 `subscribe`가
+  전달한 값**에서 온다. action 결과는 **버튼의 진행 표시(`signing-in`)를 끝내는 데만** 쓴다.
+- `OperatorAuthActionValue`에 **`state` 필드가 없는 것이 이 규율의 타입 수준 강제**다 —
+  덮어쓸 값 자체를 주지 않는다.
+
+**왜 중요한가**: 두 개의 권위가 생기면 "로그인 성공했다는데 화면은 로그아웃"·"로그아웃했는데
+authenticated로 남음" 같은 상태 분기가 재현하기 어려운 형태로 생긴다. 레거시가
+`_ready` 플래그와 observer를 함께 쓰며 겪은 문제와 같은 계열이다(`denn-admin.html:14810-14828`).
+
+**합성 테스트로 고정할 것**(§8):
+
+1. **sign-in Promise가 observer보다 먼저 완료돼도 `authenticated`로 조기 전환하지 않는다.**
+2. **observer가 먼저 통지돼도 나중에 끝난 action 완료가 그 상태를 되돌리지 않는다.**
+3. **sign-out도 같은 단일 권위 규율**을 따른다(Promise 성공만으로 `signed-out` 표시 금지).
 
 필수 동작·규율:
 
@@ -341,13 +379,41 @@ export interface AdminStateReadPort {
 
 Firebase SDK는 **"timeout"이라는 안정된 공개 error code를 보장하지 않는다** — Auth는
 `auth/network-request-failed`로, Storage는 재시도 후 `storage/retry-limit-exceeded`로 나타난다.
-따라서 **`NETWORK_TIMEOUT`은 SDK code 매핑이 아니라 앱 wrapper가 스스로 만든 상태**다:
+따라서 **`NETWORK_TIMEOUT`은 SDK code 매핑이 아니라 앱 wrapper가 스스로 만든 상태**다.
 
-- port가 각 호출을 **자체 타임아웃(고정 상수, 예: 10s — 구현 시 상수로 노출)** 으로 감싸고,
-  그 기한을 넘기면 **대기를 중단하고 `NETWORK_TIMEOUT`을 반환**한다.
-- 이때도 **자동 retry는 0**이고, 늦게 도착한 결과는 **무시**된다(§5 규율의 세대 카운터).
+**상수(확정)**
+
+```ts
+export const ADMIN_STATE_READ_TIMEOUT_MS = 30_000;
+```
+
+**적용 범위(확정)** — timeout wrapper는 **`AdminStateReadPort`의 `getBytes` 읽기에만** 적용한다.
+
+| 대상 | wrapper |
+| --- | --- |
+| `getBytes`(admin state 읽기) | **적용** — 30,000 ms 초과 시 `NETWORK_TIMEOUT` |
+| `signInWithEmailPassword` | **적용하지 않는다** |
+| `signOut` | **적용하지 않는다** |
+| `onAuthStateChanged` | **적용하지 않는다** |
+
+**★ Auth action에 로컬 timeout을 걸지 않는 이유**: Auth action은 **부수효과가 있다**.
+timeout으로 실패를 반환한 뒤 SDK가 **늦게 성공하면 실제 세션이 바뀐다** —
+반환값("실패")과 실제 상태("로그인됨")가 **갈라진다**. 읽기와 달리 되돌릴 수도 없다.
+그래서 Auth action은 SDK가 스스로 끝낼 때까지 기다리고, 상태는 **observer가 알려준다**(§4.3).
+
+**`getBytes` timeout 규율**
+
+- **읽기 전용이라 부수효과가 없다.** 30,000 ms를 넘기면 **대기를 중단하고 `NETWORK_TIMEOUT`을
+  반환**하며, underlying Promise가 **늦게 끝나더라도 그 결과를 폐기**한다.
+- ⚠️ **실제 SDK 요청 취소를 지원한다고 주장하지 않는다.** wrapper는 **대기를 포기할 뿐**이고,
+  네트워크 요청은 계속 진행될 수 있다. 계약이 보장하는 것은 **늦은 결과가 반영되지 않는다**는 것뿐이다.
+- 늦은 완료는 **generation / `correlationId`로 무시**하며 **UI·메모리 상태를 갱신하지 않는다**.
+- **자동 retry는 0이다**(timeout 후에도 재시도하지 않는다. 재시도는 사용자의 버튼 클릭뿐).
 - SDK가 먼저 `auth/network-request-failed`·`storage/retry-limit-exceeded`로 실패하면
   그것은 **`NETWORK_UNAVAILABLE`** 이다. 두 코드는 이렇게 **출처로 구분**된다.
+
+**fake timer 테스트로 고정**(§8): **29,999 ms에서는 아직 미완료** · **30,000 ms에서 `NETWORK_TIMEOUT`** ·
+**timeout 이후 도착한 늦은 성공은 무시**(결과·상태 갱신 0).
 
 ## 6. admin UI 계약
 
@@ -403,19 +469,42 @@ pnpm-lock.yaml
 - **최대 크기 인자 전달 확인**
 - auth / storage 오류 → **안전 코드 매핑**(15개 밖으로 새지 않음)
 - **invalid UTF-8 / JSON / catalog → fail-closed**
-- **raw secret fixture**(가짜 token·email·uid·base64)가 **결과·오류·`JSON.stringify` 결과에 0건**
 - **write/upload/delete/published API 표면 0**(모듈 export에 존재하지 않음)
+- **observer 단일 권위**(§4.3): ① sign-in Promise가 observer보다 먼저 끝나도 `authenticated`로
+  **조기 전환하지 않음** ② observer가 먼저 통지돼도 **늦게 끝난 action이 상태를 되돌리지 않음**
+  ③ **sign-out도 동일**
+- **fake timer로 `getBytes` timeout 고정**(§5.4): **29,999 ms 미완료** · **30,000 ms에서
+  `NETWORK_TIMEOUT`** · **timeout 이후 늦은 성공은 폐기**(결과·상태 갱신 0, 자동 retry 0)
+
+### 8.1 ★ 비노출 검증의 정확한 경계 (초판 문구 정정)
+
+초판의 "raw secret fixture가 **결과**에 0건"은 과했다. **성공 결과는 검증된 `CatalogDocumentV1`과
+`CatalogReadReport`를 그대로 반환**하므로, **정상 카탈로그에 합법적으로 들어 있는 `data:` URL이나
+base64가 성공 값에 존재할 수 있다.** 따라서 검증을 다음처럼 **분리**한다.
+
+| # | 검증 대상 | 요구 |
+| --- | --- | --- |
+| 1 | **SDK raw error**에 심은 가짜 token·email·uid·raw message | `SafeAdminReadError`와 **`JSON.stringify(error)` 결과에 0건** |
+| 2 | invalid **UTF-8 / JSON / catalog** 실패 | **원문 bytes·원문 JSON·base64가 error에 0건** (`issues`는 `{code,path}`만) |
+| 3 | **UI와 console/log** | **성공·실패 모두** raw catalog·base64·경로·token·email·uid **0건** |
+| 4 | 성공 `AdminStateLoadValue` | 검증된 `CatalogDocumentV1`/`Report`가 **존재할 수 있다** — **합법적인 카탈로그 `data:` URL까지 제거하라고 요구하지 않는다** |
+| 5 | 성공 값의 구성 | **원문 bytes와 원문 JSON 문자열을 별도로 보존하지 않는다**(`byteLength` 같은 안전 숫자 메타만) |
+
+**성공 값의 취급**: **메모리 전용**이며 **스펙 035 UI·localStorage·IndexedDB·주문·upload·publish와
+연결하지 않는다**(§1 제외 항목, F-B·F-D).
 
 **`apps/admin`** (정적 마크업 + 순수 로직)
 
 - **기본 `unconfigured`에서 Firebase adapter 생성·네트워크 0**
-- 로그인 상태 전이(`initializing → signed-out → signing-in → authenticated`)
+- 로그인 상태 전이(`initializing → signed-out → signing-in → authenticated`) —
+  **전이의 출처는 observer뿐**(§4.3)
 - **password 정리**(시도 종료·unmount)
 - **StrictMode subscribe/unsubscribe 균형**
 - **중복 클릭 방지**(단일 in-flight)
 - **늦은 결과 무시**와 **unmount 후 상태 변경 0**
 - 성공/실패 **접근성 문구**
 - **저장·발행 affordance 0**
+- **화면·console에 raw catalog·base64·경로·token·email·uid 0건**(위 표 3)
 
 **E2E** (`tests/e2e/admin-auth-read.spec.ts`)
 

@@ -9,8 +9,9 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — 스펙 036 계약 작성(`77b5b47`) + 정확성 보완 완료(2026-08-10).
-구현은 아직 승인되지 않았다. 다음 = Codex의 보완된 계약 검토.**
+상태: **`READY_FOR_CODEX` — 스펙 036 계약 작성(`77b5b47`) + 1차 보완(`9fb1456`) +
+2차 타입·비동기 경계 보완 완료(2026-08-10).
+구현은 아직 승인되지 않았다. 다음 = Codex의 최종 계약 검토.**
 계약 `docs/rebuild/specs/036-admin-auth-private-state-read.md` — **운영자 Email/Password 인증 +
 비익명 세션 관찰/복원 + 고정 `admin/state.json` 읽기 + `readLegacyCatalog` 검증 + 메모리 전용**.
 저장·쓰기·발행·업로드·revision·충돌·tombstone·마이그레이션은 **전부 제외**(F-B·F-D·F-E).
@@ -34,7 +35,17 @@ SDK·observer·Storage **0회**) · **안전 오류 코드 15개 확정** · 미
 쓰지 말라고 명시, `:26`은 크기 조건 없는 `allow read: if op();`).
 **UNCONFIRMED**: `firebase@12.17.1`의 실제 설치·빌드 호환성 · 운영자 계정 실재 ·
 Rules 실제 배포·거부 동작 · 실제 `admin/state.json` 내용.
-**다음 = Codex가 보완된 계약을 검토**하고, 이어서 **Founder가 구현 착수를 별도 승인**해야 한다.
+**★ 2차 보완 — 타입·비동기 경계**(제품 결정 변화 0): ⑥ `OperatorAuthState`의 `error` 코드를
+**`OperatorAuthErrorCode`로 축소**(catalog/storage 코드가 인증 상태에 타입상 못 들어옴) ·
+⑦ **observer가 인증 상태의 유일한 권위** — `OperatorAuthActionValue`에서 `state` 제거, action
+Promise는 **SDK 완료만** 의미하고 **완료 순서를 가정하지 않으며** UI가 상태를 덮어쓰지 않는다 ·
+⑧ **`ADMIN_STATE_READ_TIMEOUT_MS = 30_000`** 확정, **`getBytes` 읽기에만 적용**하고
+**Auth action·observer에는 걸지 않는다**(늦은 성공이 실제 세션을 바꿔 반환값과 갈라지므로).
+**실제 SDK 취소는 주장하지 않고** 늦은 결과 폐기만 보장, 자동 retry 0 ·
+⑨ **비노출 검증 경계 정정** — 성공 값에는 검증된 문서가 들어가므로 **합법적 카탈로그 `data:` URL
+제거는 요구하지 않고**, raw error·실패 원문·UI/로그를 각각 분리해 고정했다(성공 값은 **메모리 전용**,
+스펙 035 UI·localStorage·IndexedDB·주문·upload·publish와 **연결 금지**).
+**다음 = Codex가 최종 계약을 검토**하고, 이어서 **Founder가 구현 착수를 별도 승인**해야 한다.
 그 전에는 코드·SDK 추가 0.
 
 > **이전 상태(참고)** — `READY_FOR_CODEX` · F-A~F-E Founder 결정 확정(2026-08-10, 기준 `8ea0c30`).

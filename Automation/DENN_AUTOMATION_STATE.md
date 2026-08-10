@@ -4,13 +4,13 @@
 updated_at: 2026-08-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-036-contract-correction
-active_unit: spec-036-contract-correction-review
+completed_unit: spec-036-contract-final-correction
+active_unit: spec-036-final-contract-review
 state: READY_FOR_CODEX
-baseline_commit: 77b5b47
+baseline_commit: 9fb1456
 candidate_commit: none-product-code-unchanged
 verified_commit: e9e2af6
-origin_relation: "docs-only contract-correction commit on top of 77b5b47; HEAD=origin, ahead/behind 0/0"
+origin_relation: "docs-only final contract-correction commit on top of 9fb1456; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
@@ -1437,4 +1437,43 @@ NOT TESTED 경계). 쓰기 port·저장 UI·발행·revision/충돌·tombstone·
 **구현은 여전히 시작하지 않았다.** 다음 전이: **Codex가 보완된 계약을 검토**한다.
 검토 통과 후 Founder의 **구현 착수 승인**이 있어야 코드 작성과 `firebase` SDK 추가를 시작한다.
 
+보호 대상 3개는 restore·checkout·stage·commit 하지 않았다. 자동화·반복 작업은 만들지 않았다.
+
+
+## 스펙 036 계약 타입·비동기 경계 보완 — READY_FOR_CODEX (Claude Code, 2026-08-10)
+
+기준 `9fb1456`. **문서 전용이며 제품 결정·범위 변화 0.** 계약:
+`docs/rebuild/specs/036-admin-auth-private-state-read.md`(개정 이력 "2차 보완" 블록).
+제품 코드·테스트·CSS·설정·manifest·`package.json`·lockfile·의존성 diff **0**,
+**`firebase` SDK 미추가**, Firebase·network·live·emulator·운영 데이터·Rules·Hosting·deploy **0**.
+
+고친 것 4가지:
+
+1. **`OperatorAuthState` 오류 타입 축소** — `error`의 코드가 `AdminReadErrorCode` → **`OperatorAuthErrorCode`**.
+   `INVALID_CATALOG`·`ADMIN_STATE_*` 같은 catalog/storage 전용 코드가 **인증 observer 상태에
+   타입상 들어올 수 없다**.
+2. **observer가 인증 상태의 유일한 권위**(§4.3) — `OperatorAuthActionValue`에서 **`state` 필드 제거**,
+   성공 값은 `correlationId`만. sign-in/sign-out Promise 성공은 **SDK action 완료**만 뜻하고
+   `authenticated`/`signed-out` 확정은 **`onAuthStateChanged`만** 담당한다.
+   **action 완료 순서와 observer 통지 순서를 가정하지 않으며**, UI는 action 결과로 인증 상태를
+   덮어쓰지 않는다. 합성 테스트 3건(조기 전환 금지 / 늦은 action이 되돌리지 않음 / sign-out 동일)을
+   §8에 추가했다.
+3. **timeout 상수와 범위 확정**(§5.4) — "예: 10s" 제거,
+   **`ADMIN_STATE_READ_TIMEOUT_MS = 30_000`** 고정. wrapper는 **`AdminStateReadPort`의 `getBytes`
+   읽기에만** 적용하고 **`signInWithEmailPassword`·`signOut`·`onAuthStateChanged`에는 적용하지 않는다**
+   (Auth action은 timeout 반환 후 SDK가 늦게 성공하면 **실제 세션이 바뀌어 반환값과 갈라진다**).
+   `getBytes`는 읽기 전용이라 30초 초과 시 `NETWORK_TIMEOUT`을 반환하고 **늦은 완료를 폐기**하되,
+   **실제 SDK 요청 취소를 지원한다고 주장하지 않는다**. 늦은 완료는 generation/`correlationId`로
+   무시하고 UI·메모리 상태를 갱신하지 않으며 **자동 retry는 0**. fake timer 테스트
+   (29,999 ms 미완료 / 30,000 ms timeout / timeout 후 늦은 성공 무시)를 §8에 고정했다.
+4. **비노출 검증 문구 정정**(§8.1) — 성공 결과는 검증된 `CatalogDocumentV1`/`CatalogReadReport`를
+   반환하므로 **정상 카탈로그의 합법적 `data:` URL·base64가 성공 값에 있을 수 있다.** 따라서
+   ① SDK raw error의 가짜 token/email/uid/raw message는 `SafeAdminReadError`와
+   `JSON.stringify(error)`에 **0건** ② invalid UTF-8/JSON/catalog 실패 시 **원문 bytes/JSON/base64가
+   error에 0건** ③ **UI·console/log에는 성공·실패 모두 raw catalog/base64/경로/token/email/uid 0건**
+   ④ 성공 값의 **합법적 카탈로그 data URL 제거는 요구하지 않음** ⑤ 성공 값에 **원문 bytes·원문 JSON
+   문자열을 별도 보존하지 않음**으로 분리했다. 성공 값은 **메모리 전용**이며 스펙 035 UI·localStorage·
+   IndexedDB·주문·upload·publish와 **연결하지 않는다**.
+
+**구현은 시작하지 않았다.** 다음 전이: **Codex의 최종 계약 검토**, 그 뒤 Founder의 **구현 착수 승인**.
 보호 대상 3개는 restore·checkout·stage·commit 하지 않았다. 자동화·반복 작업은 만들지 않았다.

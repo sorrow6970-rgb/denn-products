@@ -1,11 +1,12 @@
 # NEXT CLAUDE PROMPT
 
 상태: `READY_FOR_CODEX`
-active_unit: `spec-036-contract-correction-review`
+active_unit: `spec-036-final-contract-review`
 
-**스펙 036 구현 계약이 작성되고(초판 `77b5b47`) 정확성 보완까지 끝났다:
-`docs/rebuild/specs/036-admin-auth-private-state-read.md`(개정 이력 블록 참조).**
-**다음은 Codex의 보완된 계약 검토**이며, 그 뒤 Founder의 구현 착수 승인이 있어야 코드를 시작한다.
+**스펙 036 구현 계약이 작성(초판 `77b5b47`)되고 **1차 정확성 보완(`9fb1456`)** 과
+**2차 타입·비동기 경계 보완**까지 끝났다: `docs/rebuild/specs/036-admin-auth-private-state-read.md`
+(개정 이력 블록 ①~⑨ 참조).**
+**다음은 Codex의 최종 계약 검토**이며, 그 뒤 Founder의 구현 착수 승인이 있어야 코드를 시작한다.
 **구현은 아직 승인되지 않았다.** Founder가 계약을 검토해 **구현 착수를 별도로 승인**하기 전에는
 `packages/firebase`·`apps/admin`에 코드를 쓰지 않고 **`firebase` SDK도 추가하지 않는다**.
 
@@ -22,7 +23,10 @@ active_unit: `spec-036-contract-correction-review`
 1. 계약 내용 — 특히 **§2 `firebase@12.17.1` 정확 고정과 서브패스 `@denn/firebase/admin-read` 전용
    공개**, **§3.1 플래그 정확 비교 + 공개 config 5개 전부 비어 있지 않은 문자열일 때만 초기화**,
    **§4.1~4.2 공개 타입과 `correlationId` 주입 책임**, **§5.3 안전 오류 15개 매핑 표**,
-   **§5.1 20 MiB = 클라이언트 상한(서버 read 보장 아님)**, **§7 허용 파일 9경로**
+   **§5.1 20 MiB = 클라이언트 상한(서버 read 보장 아님)**, **§7 허용 파일 9경로**,
+   **§4.3 observer가 인증 상태의 유일한 권위**(action 결과로 상태를 덮어쓰지 않는다),
+   **§5.4 `ADMIN_STATE_READ_TIMEOUT_MS = 30_000`이 `getBytes`에만 적용**(Auth action·observer 제외),
+   **§8.1 비노출 검증 경계**(성공 값의 합법적 카탈로그 data URL 제거는 요구하지 않음)
 2. **구현 착수** 자체
 
 ## 승인되면 첫 작업 순서 (참고)
