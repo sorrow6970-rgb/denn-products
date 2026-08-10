@@ -1,6 +1,6 @@
 # 스펙 034 — 레거시 `wcm`/`hcm` 읽기 정규화와 충돌 fail-closed
 
-상태: **READY** — 계약 작성 2026-08-10, 기준 HEAD `f88ab70`
+상태: **DONE (Claude)** — 구현 `ff7a49a`, 계약 `d3bed91`, 기준 HEAD `f88ab70`
 
 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-10-operator-cm-input-decisions.md`
 (Founder O-1~O-8, 구조 N-1~N-10)
@@ -138,3 +138,58 @@
 - 승격 실패를 warning으로 둔 선택(N-5)은 **인쇄 차단은 유지**하되 카탈로그 가용성을 지킨다.
   뒤집으려면 fatal로 올리면 되고, 그때 unit 한 건만 바뀐다.
 - 롤백: 이 스펙의 커밋만 되돌리면 read는 032 시점 동작(=`wcm` 무시)으로 정확히 돌아간다.
+
+---
+
+### DONE (Claude) — 2026-08-10, 커밋 `ff7a49a`
+
+#### 바꾼 파일 (허용 목록 안)
+
+| 파일 | 내용 |
+| --- | --- |
+| `packages/shared/src/catalog/types.ts` | fatal `CONFLICTING_PRINT_SIZE`, warning `LEGACY_PRINT_SIZE_NORMALIZED`·`LEGACY_PRINT_SIZE_IGNORED` |
+| `packages/shared/src/catalog/read.ts` | `frameSizes` allowlist에 `wcm`·`hcm`, `isPrintSizeCm` 공용화, `normalizeLegacyPrintSizeCm` 신설·호출 |
+| `packages/shared/src/catalog/read.test.ts` | 승격/보존/비변형/멱등/결정성/충돌/순서/무시/hostile getter 17건 |
+| `packages/shared/src/catalog/fixtures/index.ts` | `okLegacyPrintSize`·`okLegacyPrintSizeAgrees`·`errConflictingLegacyPrintSize`·`okHalfLegacyPrintSize` |
+| `packages/shared/src/catalog/preview/project.test.ts` | read→projection 왕복 2건 |
+
+`preview/project.ts`는 **무변경**이다 — N-1대로 정규화가 projection보다 앞 단계에서 끝나므로
+projection은 legacy 필드를 알 필요가 없다.
+
+#### 계약 구현 요지
+
+- 호출 지점에서 `fatals.length`를 비교해 **canonical 검증이 fatal을 냈으면 legacy 처리를 건너뛴다**(N-3).
+  unit `judges a broken canonical declaration FIRST`가 이 순서를 고정한다.
+- 승격은 `cloneJsonSafe` 결과에만 쓴다. unit이 **입력 객체에 `printWidthCm`이 생기지 않음**을 확인한다.
+- `wcm`/`hcm`은 승격 후에도 문서에 원값으로 남고, `UNKNOWN_FIELD`·`extensions`에서는 빠진다.
+- 충돌 비교는 `===` 하나다. `21.000001`도 fatal임을 unit으로 고정했다(허용오차 0).
+- 승격 불가(한쪽만·타입 아님·범위 밖)는 **warning**이며 read는 `ok`, projection은 `null`을 유지한다.
+- `NaN`/`Infinity`는 이 함수에 도달하지 않는다 — `cloneJsonSafe`가 앞서 `NON_FINITE_NUMBER`로
+  전체 read를 실패시킨다(기존 계약, 변경 없음).
+
+#### 검증 결과
+
+| 게이트 | 결과 |
+| --- | --- |
+| frozen install | PASS |
+| lockfile diff | **0** |
+| format / lint(`--error-on-warnings`) / typecheck | PASS |
+| unit | **1193/1193 PASS** (033 시점 1174 → **+19**) |
+| 독립 build | PASS (mockup 287.76 kB / gzip 88.80 kB, admin 193.53 kB / gzip 61.09 kB) |
+| 전체 Chromium E2E | **129/129 PASS** |
+| 고객 `dist` SHA-256 (E2E 전후) | **동일** `49cae2d3…7b44bc` |
+| `pnpm check` | `✓ check passed` |
+| `git diff --check` | 클린 (CRLF 경고만) |
+| forbidden diff (`apps/**`, `packages/render/**`) | **0** |
+| ports 4183/4184 LISTENING | **0** |
+| OS temp `denn-e2e-*` | **0** |
+
+스펙 §검증의 신규 unit 항목은 전부 커버했다. 문자열 `"21"`·`null`·`true`·`{}`·`0`·`-1`·`500.5`·
+`1000`은 승격되지 않고 `LEGACY_PRINT_SIZE_IGNORED`로 남으며 read는 `ok`다.
+
+#### NOT TESTED / 남는 것
+
+- **실제 발행본에 `wcm`/`hcm`이 몇 건 있는지** — 실제 network 금지라 여전히 **NOT VERIFIED**.
+- 충돌 fatal이 실제 운영 카탈로그에서 발생할 수 있는지 (현재 리빌드에 canonical을 쓰는 쓰기 경로가
+  없어 공존 자체가 만들어지지 않는다).
+- 되쓰기·저장·발행은 **O-8로 연기**된 별도 스펙이다.
