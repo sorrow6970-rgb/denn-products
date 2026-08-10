@@ -2,12 +2,14 @@
 // Browse selectors over a validated CatalogDocumentV1 (spec 016).
 // Template image projection over a validated CatalogDocumentV1 (spec 018).
 // Preview geometry projection over a validated CatalogDocumentV1 (spec 023).
+// Operator authoring validation for the physical print size (spec 035).
+export * from "./authoring";
 export * from "./browse";
 export * from "./images";
 export * from "./preview";
 export type { JsonObject, JsonPrimitive, JsonValue } from "./json";
 export { isPlainObject } from "./json";
-export { isCatalogDocumentV1, readLegacyCatalog } from "./read";
+export { isCatalogDocumentV1, MAX_PRINT_CM, readLegacyCatalog } from "./read";
 export type {
   CatalogDocumentV1,
   CatalogExtensions,

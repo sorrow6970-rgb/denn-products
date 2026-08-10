@@ -78,7 +78,9 @@ for (const vp of VIEWPORTS) {
       const s = getComputedStyle(el);
       return { tag: el.tagName, outlineStyle: s.outlineStyle, outlineWidth: s.outlineWidth };
     });
-    expect(focus?.tag).toBe("BUTTON");
+    // spec 035 put the operator print-size card above the primitive demo, so the first tab stop is
+    // now its text input. What this test pins is that the FIRST focusable shows a visible outline.
+    expect(["BUTTON", "INPUT"]).toContain(focus?.tag);
     expect(focus?.outlineStyle).not.toBe("none");
     expect(focus?.outlineWidth).not.toBe("0px");
 

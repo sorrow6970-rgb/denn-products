@@ -336,8 +336,12 @@ function validatePositive(value: JsonValue, path: string, fatals: CatalogIssue[]
   if (!isFinitePositive(value)) fatals.push({ code: "INVALID_NUMBER", path });
 }
 
-/** spec 032: the largest physical dimension a print size may declare, in centimetres. */
-const MAX_PRINT_CM = 500;
+/**
+ * spec 032: the largest physical dimension a print size may declare, in centimetres.
+ * Exported since spec 035 so the operator-facing message states the limit by reference instead of
+ * re-typing the number.
+ */
+export const MAX_PRINT_CM = 500;
 
 /** A usable physical dimension: a finite number, greater than 0, at most `MAX_PRINT_CM`. */
 const isPrintSizeCm = (value: JsonValue): boolean =>

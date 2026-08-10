@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { APP_IDS, BRAND } from "@denn/shared";
 import { Badge, Button, Card, Chip, TextField, VisuallyHidden } from "@denn/ui";
+import { PrintSizeCmDraft } from "./PrintSizeCmDraft";
 
 // Primitive showcase shell only (spec 011): renders @denn/ui primitives to verify the
 // package boundary and real render. No product features, no click side effects
@@ -17,6 +18,9 @@ export function App(): React.JSX.Element {
           <h1>{BRAND} Admin Rebuild</h1>
           <p data-testid="app-id">{APP_IDS.admin}</p>
         </Card>
+
+        {/* spec 035: the first operator feature — local validation only, no save path. */}
+        <PrintSizeCmDraft />
 
         <Card>
           <div className="denn-stack">
