@@ -1,20 +1,21 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-07-31
+updated_at: 2026-08-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-035-operator-print-size-cm-input
+completed_unit: fa-fe-founder-decision-options-investigation
 active_unit: admin-auth-write-publish-decision
 state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 2a0cfd3
-candidate_commit: e9e2af6
+baseline_commit: 267ea72
+candidate_commit: none-product-code-unchanged
 verified_commit: e9e2af6
-origin_relation: "spec034/035 pushed through 7fc2f07; HEAD=origin, ahead/behind 0/0"
+origin_relation: "docs-only handoff commit on top of 267ea72; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: WAITING_FOR_CLAUDE
+next_transition: WAITING_FOR_FOUNDER
+automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
@@ -1252,3 +1253,31 @@ Founder가 순서를 명시적으로 앞당겨 결정했다. **조사 보고서�
 다음 전이: Codex가 이 결정과 보완된 조사 보고서를 입력으로 **스펙 032 구현 계약**을 작성하면
 `WAITING_FOR_CLAUDE`. 계약은 최소한 **C-1(후보 A/B/C 택일)** 과 허용 파일·게이트·NOT TESTED 경계를
 확정해야 한다.
+
+
+## F-A~F-E Founder 결정 선택지 조사 완료 — FOUNDER_DECISION_REQUIRED (Claude Code, 2026-08-10)
+
+기준 HEAD = origin = `267ea72`(스펙 034·035 `CODEX_PASSED`), ahead/behind 0/0.
+**읽기 전용 조사 + 문서 인수인계만 수행했다.** 제품 코드·테스트·설정·lockfile·의존성 diff **0**,
+실제 Firebase·network·live·emulator·Rules·Hosting·deploy **0**.
+
+정리 문서: `docs/codex-claude-handoff/reviews/2026-08-10-admin-auth-write-founder-decision-options.md`
+
+- F-A 운영자 Auth 도입 시점·인증 방식·허용 계정 정책 (+ `firebase` SDK 신규 의존성 승인 필요)
+- F-B `admin/state.json` 저장만 vs `published/state.json` 발행 포함
+- F-C 레거시 운영 경로 공유 vs 리빌드 전용 격리
+- F-D legacy `wcm`/`hcm` 정규화 결과 되쓰기 vs 메모리 전용
+- F-E last-writer-wins 허용 vs revision precondition/잠금
+
+**다섯 항목 모두 미결이다.** 조사 문서 §8의 승인 프롬프트는 **예시이며 Founder가 말한 적이 없다** —
+승인으로 취급하지 않는다. 각 항목의 최소 안전 권장안(A2+계정 1개 / B1 / 읽기만 공유 / D1 유지 / E2)은
+**Claude의 권장이지 결정이 아니다**.
+
+Codex 다음 검토: 근거 라인 정확성, L-1~L-4 구조적 결론(재현 안 함 = UNCONFIRMED),
+**X-7(신규)** 쓰기 payload에서 스펙 034 승격 필드 제외와 legacy pair 처리, X-1~X-6.
+
+워킹트리 dirty 3개는 전부 알려진 보호 대상(spec-018 PNG 2개 + content diff 0인
+`packages/render/src/plan/index.ts`)이며 stage·commit·복원하지 않았다.
+
+다음 전이: **Founder가 F-A~F-E를 명시적으로 결정**해야 한다. 그 전에는 결정 문서 작성·구현·
+Firebase 표면 접근을 시작하지 않는다. 자동화 루프는 삭제된 상태이며 새로 만들지 않는다.

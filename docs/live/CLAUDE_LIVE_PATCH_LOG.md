@@ -1220,3 +1220,57 @@
 - 고객 bundle byte hash 변화는 authoring 코드·문구 0건, `apps/mockup/**` diff 0, 고객 회귀 E2E PASS를
   근거로 비기능적 module graph/minifier 순서 변화로 승인했다.
 - 스펙 034·035 DONE. 다음 실제 Auth·저장·충돌·발행은 `FOUNDER_DECISION_REQUIRED`.
+
+## 2026-08-10 — F-A~F-E Founder 결정 선택지 조사 (읽기 전용)
+
+- **목적**: 스펙 034·035가 `CODEX_PASSED`로 닫힌 뒤 남은 유일한 차단 지점인 **admin Auth·저장·
+  revision·충돌·publish**에 대해, Founder가 결정할 수 있도록 근거·대안·위험·최소 안전 권장안을
+  정리한다. **결정하거나 구현하지 않는다.**
+- **적용 범위**: 문서 전용. 제품 코드·테스트·CSS·설정·lockfile·의존성 변경 **0**.
+  실제 Firebase·network·live·emulator·Rules·Hosting·deploy 실행 **0**. 운영 데이터·secret 접근 0.
+- **변경 파일**:
+  - `docs/codex-claude-handoff/reviews/2026-08-10-admin-auth-write-founder-decision-options.md` (신규)
+  - `docs/live/CLAUDE_LIVE_PATCH_LOG.md` (이 항목)
+  - `Automation/DENN_AUTOMATION_STATE.md`
+  - `Automation/NEXT_CLAUDE_PROMPT.md`
+  - `docs/codex-claude-handoff/CURRENT.md`
+- **커밋/push**: 문서 전용 단일 커밋 → `rebuild/modern-studio`에 **fast-forward push**.
+  force push·merge·rebase·`reset --hard` **없음**.
+- **HEAD/origin**: 조사 시작 시 HEAD = origin = `267ea72`, ahead/behind **0/0**.
+  이 커밋 후 HEAD = origin (동기), 커밋 해시는 최종 보고에 기록한다.
+- **실행한 검증(읽기 전용만)**:
+  - `git status -sb` / `git rev-parse HEAD` / `git rev-parse origin/...` /
+    `git rev-list --left-right --count HEAD...origin/...` → `267ea72`, **0/0**
+  - `git log --oneline`, `git show --stat 267ea72`(Codex pass 커밋 내용 확인)
+  - `md5sum`으로 `Automation/*` · `CURRENT.md` · 스펙 034/035 문서가 `267ea72` 이후 **무변경**임을 확인
+  - 저장소 전역 grep: `uploadString|uploadBytes|setDoc|updateDoc|signInWithEmailAndPassword|
+    onAuthStateChanged|getAuth` → **0건**, `firebase` 의존성 → package.json·lockfile **0건**
+  - 근거 라인 실측: `storage.rules:18-28`, `firestore.rules:19-21`, `firebase.json:3`,
+    `denn-admin.html` 720-744 / 746-779 / 1640 / 1668-1685 / 1687-1698 / 2018 /
+    14806-14828 / 14909 / 14932-14951, `denn-mockup-tool.html:15473,15521`,
+    `packages/firebase/src/index.ts:2,26`, `public-catalog/location.ts:11-14`,
+    `public-catalog/reader.ts:1-3`, `vitest.config.ts:17`
+- **실행하지 않은 검증**: format·lint·typecheck·unit·build·E2E·`pnpm check` — **문서 전용
+  변경이라 돌리지 않았다**(제품 코드 diff 0). 실제 Firebase·network·live·emulator·Rules·deploy도
+  지시대로 실행하지 않았다.
+- **통과하지 못한 검증**: 없음(위 읽기 전용 확인은 전부 기대치와 일치).
+- **예상 밖 dirty 파일**: **없음.** 워킹트리의 3개는 전부 **알려진 보호 대상**이며
+  `docs/rebuild/results/spec-018/browse-desktop-1280x800.png`,
+  `docs/rebuild/results/spec-018/browse-mobile-390x844.png`,
+  content diff 0인 `packages/render/src/plan/index.ts` — **stage·commit·복원하지 않았다.**
+- **남은 차단 조건 / 필요한 Founder 결정**: **F-A~F-E 전부 미결이다.**
+  - F-A 운영자 Auth 도입 시점·인증 방식·허용 계정 정책 (+ `firebase` SDK **신규 의존성 승인**)
+  - F-B `admin/state.json` 저장만인지 `published/state.json` 발행까지인지
+  - F-C 레거시 운영 경로 공유인지 리빌드 전용 격리인지
+  - F-D legacy `wcm`/`hcm` 정규화 결과를 저장소에 되쓸지 메모리 전용으로 둘지
+  - F-E last-writer-wins 허용인지 revision precondition/잠금 도입인지
+  - ⚠️ **조사 §8의 승인 프롬프트는 예시이며 Founder가 말한 적 없다. 승인으로 기록하지 않는다.**
+- **Codex가 다음에 검토할 항목**:
+  - 조사 문서의 **근거 라인 정확성**과 L-1~L-4 구조적 결론의 타당성(재현은 안 했다 = UNCONFIRMED)
+  - **X-7(신규)**: 쓰기 payload에서 스펙 034 승격 필드를 제외하고 legacy pair를 어떻게 다룰지 —
+    되쓰기를 허용하면 `CONFLICTING_PRINT_SIZE` fatal로 **카탈로그 전체 read 실패**가 가능하다
+  - X-1 rev 표현 · X-2 충돌 시 병합 vs fail-closed · X-3 `frameSizes` tombstone ·
+    X-4 write port와 경로 allowlist · X-5 정규화 검증 재적용 범위 · X-6 저장 경로 A/B/C 명시 답
+  - Founder 결정이 내려진 뒤에야 구현 계약을 쓴다는 순서 자체
+- **권장 다음 상태**: `FOUNDER_DECISION_REQUIRED` 유지. Founder가 F-A~F-E를 명시적으로 결정하기
+  전에는 결정 문서 작성·구현·Firebase 표면 접근을 시작하지 않는다.

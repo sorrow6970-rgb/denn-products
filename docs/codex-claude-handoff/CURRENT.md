@@ -19,6 +19,23 @@ check·diff·forbidden 범위·ports/temp PASS로 완료됐다. 고객 bundle by
 고객 회귀 E2E 전량 PASS라 비기능 변화로 승인했다. 다음 = **FOUNDER_DECISION_REQUIRED** —
 Founder F-A~F-E(admin Auth·쓰기·충돌·발행)가 여전히 미결이다.
 
+> **★ F-A~F-E 선택지 조사(2026-08-10, 읽기 전용, 기준 `267ea72`)**: 보고서
+> `reviews/2026-08-10-admin-auth-write-founder-decision-options.md`.
+> **문서 전용 — 제품 코드·테스트·설정·lockfile·의존성 diff 0, 실제 Firebase·network·live·
+> emulator·Rules·deploy 0.** 각 항목을 근거(정확한 경로/라인)·대안·위험·최소 안전 권장안·
+> 미룰 경우 차단되는 작업으로 정리했다.
+> **★★ 다섯 항목 전부 미결이며, 보고서 §8의 승인 프롬프트는 예시일 뿐 Founder가 말한 적이 없다.**
+> 권장안(A2+계정 1개 / B1 저장만 / 읽기만 공유 / D1 메모리 전용 유지 / E2 단조 rev+재확인 후
+> fail-closed)은 **Claude의 권장이지 결정이 아니다**.
+> **★ 새 발견 X-7**: F-D에서 되쓰기를 허용하면 스펙 034 N-4의 `CONFLICTING_PRINT_SIZE`가
+> **자기 발등을 찍는다** — 리빌드가 canonical만 갱신하고 legacy `wcm`을 남기면 다음 read부터
+> **카탈로그 전체가 fatal로 안 읽힌다**. 레거시 `confirmEditSz`(`denn-admin.html:1668-1685`)는
+> cm을 저장하지 않아 한 번 어긋나면 **스스로 맞춰지지 않는다**. 저장 스펙은
+> **쓰기 payload에서 승격 필드를 제외**하는 계약을 반드시 포함해야 한다.
+> **NOT VERIFIED**: 실제 `admin/state.json`·`published/state.json` 내용, L-1~L-4 재현,
+> 실제 Rules 거부 동작, Console 계정 상태, Web SDK의 Storage precondition 지원 여부,
+> 인쇄소 요구(P-4a 유지).
+
 > **★★ 스펙 034 DONE(2026-08-10, `ff7a49a`, 기록 `5097179`)**: 레거시 `wcm`/`hcm`을 **읽는 순간
 > 메모리에서** canonical로 정규화한다(N-1: 정규화는 `readLegacyCatalog` 안, `projectFramePrintPhysicalSize`
 > **무변경**). canonical이 **없을 때만** 승격(O-3), 공존하며 **다르면 fatal `CONFLICTING_PRINT_SIZE`**
