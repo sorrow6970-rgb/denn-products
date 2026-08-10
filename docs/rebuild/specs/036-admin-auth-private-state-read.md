@@ -744,3 +744,49 @@ unit은 라운드 1 전 1258 → **1271**(+13).
 - 운영자 계정 실재·로그인 · `storage.rules` 실제 배포·거부 · 실제 `admin/state.json` ·
   인증 만료·갱신 · 실제 Storage CORS·`getBytes` · 실기기 · 쓰기 원자성 ·
   **실제 SDK 오류 코드 문자열**(매핑은 합성 fake로만 검증).
+
+
+---
+
+### CORRECTION_REQUIRED 라운드 2 (Claude) — 2026-08-10, **문서 전용**
+
+기준 `1796a2d`. **제품 코드·테스트·설정·manifest·lockfile·`pnpm-workspace.yaml` 변경 0.**
+제품 코드의 4개 결함(`b7ee207`)은 Codex 독립 재검증을 통과했다:
+frozen install PASS · format/lint 각 **153 파일** PASS · typecheck PASS ·
+unit **1271/1271** + **invalid dynamic import warning 0** · build PASS ·
+Chromium E2E **134/134** · `pnpm check` PASS · diff check·금지 경로 diff 0 ·
+ports 4183/4184·E2E temp 잔여 0.
+
+#### ★ 고객 JS 해시 기록 정정 — 두 값은 서로 다른 것을 측정했다
+
+Codex가 "`f86d446d…7bbc09`가 재현되지 않는다"고 보고했다. **재현 확인 결과, 두 값 모두 지금
+재현된다.** 재현되지 않은 것이 아니라 **측정 대상이 달랐고, 내 기록의 라벨이 틀렸다.**
+
+| 값 | 실제로 무엇인가 | 재현 명령 |
+| --- | --- | --- |
+| **`fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685`** | **고객 JS 파일 자체의 SHA-256** — `apps/mockup/dist/assets/index-W_cZpbdf.js`, **287,741 bytes** | `sha256sum apps/mockup/dist/assets/index-W_cZpbdf.js` |
+| `f86d446dde121bce287b393f905a02208b106face54b0803033eb800437bbc09` | **`dist` 트리 전체의 집계 다이제스트**(각 파일 해시 목록을 다시 해시) — JS 파일 하나의 해시가 **아니다** | `find apps/mockup/dist -type f \| sort \| xargs sha256sum \| sha256sum` |
+
+- **정정 대상**: 스펙 036 DONE·라운드 1 기록과 live 로그에서 `f86d446d…7bbc09`를
+  **"고객 dist SHA-256"** 이라고 쓴 라벨. 값 자체는 당시에도 지금도 유효하지만
+  **파일 해시가 아니라 트리 집계값**이다. **과거 기록은 지우지 않고 이 항목으로 정정한다.**
+- **앞으로의 정본은 파일 해시**다. 집계 다이제스트는 `xargs sha256sum` 출력에 **경로 문자열이
+  포함**되고 정렬·셸 환경에 의존해 **기계 간 비교에 부적합**하다. 파일명·바이트 수·파일 해시
+  **세 가지를 함께** 기록한다.
+
+#### 확인된 재현 (Codex 4건 + Claude 1건)
+
+1. 현재 HEAD에서 독립 build **2회** → 파일명·크기·해시 동일 (Codex)
+2. E2E **전후** 동일 (Codex)
+3. 기준 계약 커밋 **`765dfb4`의 임시 archive**를 동일한 고정 toolchain으로 build → **동일** (Codex)
+4. Firebase / admin-read / 고객 유출 문자열 검사 → **0건** (Codex)
+5. 현재 HEAD에서 **두 측정 방식 모두 재현** — 파일 해시 `fc7660e5…`, 집계 `f86d446d…` (Claude, 위 표)
+
+→ 제품 불변식 **"기준과 현재 고객 JS가 byte-identical"** 은 **PASS**다. 스펙 036의 어떤 코드도
+고객 번들에 들어가지 않았다.
+
+#### 이 라운드의 검증
+
+변경 경로 = 허용 문서 5개뿐 · `git diff --check` PASS ·
+제품 코드/test/config/manifest/lockfile diff **0** · HEAD=origin, ahead/behind **0/0** ·
+working tree = 보호 대상 3개뿐.

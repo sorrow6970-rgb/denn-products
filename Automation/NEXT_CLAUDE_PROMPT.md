@@ -5,7 +5,9 @@ active_unit: `spec-036-codex-independent-verification`
 
 **스펙 036 구현 `fd92fbc` + CORRECTION_REQUIRED 라운드 1 보완 `b7ee207`이 끝났다**
 (계약 `765dfb4`, 결정 정본 `decisions/2026-08-10-admin-auth-write-boundary-decisions.md`).
-다음은 **Codex 독립 재검증**이다. 다음 스펙은 시작하지 않는다.
+제품 4개 결함은 **Codex 독립 재검증을 통과**했고, 이어서 **라운드 2(문서 전용)** 로
+고객 JS 해시 기록을 정정했다. 다음은 **Codex의 확인과 스펙 036 종료 판단**이다.
+다음 스펙은 시작하지 않는다.
 
 **라운드 1에서 고친 4가지**: ① 초기화·observer 오류 fail-closed(`onAuthStateChanged(listener, onError)`,
 unhandled rejection 0, `initializing` 고정 제거, raw error 비노출) · ② 공개 옵션에서 `timeoutMs` 제거로
@@ -22,7 +24,12 @@ unhandled rejection 0, `initializing` 고정 제거, raw error 비노출) · ②
 
 - frozen install / format / lint / typecheck / **unit 1271** / build / **Chromium E2E 134** / `pnpm check`
 - `pnpm test:unit`에 **invalid dynamic import warning 0건**
-- **고객 `dist` SHA-256 = `f86d446d…7bbc09`**(구현 전후 동일)과 고객 번들 문자열 0건
+- **고객 JS 파일 해시**(정본): `apps/mockup/dist/assets/index-W_cZpbdf.js` · **287,741 bytes** ·
+  `fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685`
+  ⚠️ 이전 문서의 `f86d446d…7bbc09`는 **`dist` 트리 집계 다이제스트**
+  (`find … | xargs sha256sum | sha256sum`)이며 **파일 해시가 아니다**. 값은 재현되지만 라벨이
+  틀렸던 것이고, 라운드 2에서 정정했다. 앞으로는 **파일명+바이트+파일 해시**로 기록한다.
+- 고객 번들의 Firebase/admin-read 문자열 0건
 - 금지 diff 0: `apps/mockup/**` · `packages/render/**` · `packages/shared/**` ·
   `packages/firebase/src/index.ts` · `storage.rules` · `firestore.rules` · `firebase.json` ·
   **`pnpm-workspace.yaml`**

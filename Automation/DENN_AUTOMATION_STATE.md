@@ -4,15 +4,15 @@
 updated_at: 2026-08-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-036-correction-round-1
+completed_unit: spec-036-correction-round-2-docs
 active_unit: spec-036-codex-independent-verification
 state: READY_FOR_CODEX
-baseline_commit: e873049
-candidate_commit: b7ee207
+baseline_commit: 1796a2d
+candidate_commit: b7ee207 (product, CODEX_PASSED); round 2 is docs-only
 verified_commit: e9e2af6
-origin_relation: "correction b7ee207 pushed on top of e873049; HEAD=origin, ahead/behind 0/0"
+origin_relation: "docs-only round-2 commit on top of 1796a2d; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
-fix_round: 1
+fix_round: 2
 max_fix_rounds: 3
 next_transition: WAITING_FOR_CODEX
 automation_loop: removed (no new automation or recurring task is created)
@@ -1534,3 +1534,31 @@ ports 4183/4184 **0** · OS temp **0**.
 
 보호 대상 3개는 restore·checkout·stage·commit 하지 않았다. 자동화·반복 작업은 만들지 않았고
 다음 스펙도 시작하지 않았다. 다음 전이: **Codex 독립 재검증**.
+
+
+## 스펙 036 CORRECTION_REQUIRED 라운드 2 — 문서 전용 해시 기록 정정 (Claude Code, 2026-08-10)
+
+기준 `1796a2d`. **제품 코드·테스트·CSS·config·manifest·lockfile·`pnpm-workspace.yaml` 변경 0.**
+제품 보완 `b7ee207`의 4개 결함은 **Codex 독립 재검증 통과**(frozen install · format/lint 각 153 파일 ·
+typecheck · unit **1271/1271** + invalid dynamic import warning **0** · build · Chromium **134/134** ·
+check · diff·금지 diff 0 · ports/temp 0).
+
+**★ 고객 JS 해시 기록 정정 — 두 값은 서로 다른 측정이며 둘 다 현재 재현된다.**
+
+- **정본(파일 해시)**: `apps/mockup/dist/assets/index-W_cZpbdf.js` · **287,741 bytes** ·
+  SHA-256 **`fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685`**
+- 이전 기록 `f86d446dde121bce287b393f905a02208b106face54b0803033eb800437bbc09`는
+  **`dist` 트리 집계 다이제스트**(`find … | xargs sha256sum | sha256sum`)이며 **JS 파일 해시가 아니다**.
+  값은 지금도 재현되지만, 그것을 **"고객 dist SHA-256"이라고 부른 라벨이 틀렸다**.
+  **과거 기록은 삭제·덮어쓰기 하지 않고** 스펙 036 라운드 2 절과 live 로그로 정정했다.
+- 앞으로는 **파일명 + 바이트 수 + 파일 해시**를 함께 기록한다. 집계 다이제스트는 경로 문자열과
+  정렬·셸 환경에 의존해 기계 간 비교에 부적합하다.
+- 재현: Codex 4건(독립 build 2회 · E2E 전후 · `765dfb4` archive 재빌드 · 유출 문자열 0건) +
+  Claude 1건(두 측정 방식 모두 재현). → **"기준과 현재 고객 JS byte-identical" PASS.**
+
+이 라운드는 문서 전용이라 게이트를 재실행하지 않았다(직전 라운드 수치가 정본).
+`pnpm-workspace.yaml`의 `allowBuilds`는 여전히 **NOT VERIFIED**이며 수정·`approve-builds` 모두 하지 않았다.
+Codex의 새 클론 시도는 **registry EACCES로 중단**돼 성공·실패로 단정하지 않는다.
+
+보호 대상 3개는 restore·checkout·stage·commit 하지 않았다. 자동화·반복 작업 0, 다음 스펙 미착수.
+다음 전이: **Codex 확인 후 스펙 036 종료 판단**.

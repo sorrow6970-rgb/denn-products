@@ -19,7 +19,20 @@ rejection 전 unsubscribe 시 callback 0회** · ② **30,000 ms timeout을 공�
 중복 signOut·진행 중 load/signIn을 막되 **새 상태·문구 0**, observer 단일 권위 유지 ·
 ④ **Vite invalid dynamic import 경고 제거**(`vi.resetModules()` + 정적 import).
 라운드 1 게이트: frozen install exit 0 · format · lint · typecheck · **unit 1271/1271**(+13) ·
-build · **E2E 134/134** · check · 금지 diff 0 · 고객 dist SHA-256 **동일** · 실제 요청 0 · ports/temp 0.
+build · **E2E 134/134** · check · 금지 diff 0 · 고객 JS byte-identical · 실제 요청 0 · ports/temp 0.
+**제품 4개 결함은 Codex 독립 재검증 통과**(format/lint 각 153 파일, unit 1271/1271 +
+invalid dynamic import warning 0, Chromium 134/134, ports/temp 0).
+
+**★ 라운드 2(문서 전용) — 고객 JS 해시 기록 정정**: 정본은 **파일 해시**다 —
+`apps/mockup/dist/assets/index-W_cZpbdf.js` · **287,741 bytes** ·
+SHA-256 **`fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685`**.
+이전 기록 `f86d446dde121bce287b393f905a02208b106face54b0803033eb800437bbc09`는
+**`dist` 트리 집계 다이제스트**(`find … | xargs sha256sum | sha256sum`)이며 **JS 파일 해시가 아니다** —
+값 자체는 현재도 재현되지만 **"고객 dist SHA-256"이라는 라벨이 틀렸다**.
+과거 기록은 **삭제·덮어쓰지 않고** 스펙 036 라운드 2 절과 live 로그로 정정했다.
+재현: Codex 4건(독립 build 2회 · E2E 전후 · `765dfb4` archive 재빌드 · 유출 문자열 0건) +
+Claude 1건(두 측정 방식 모두 재현) → **"기준과 현재 고객 JS byte-identical" PASS**.
+앞으로는 **파일명 + 바이트 수 + 파일 해시**를 함께 기록한다.
 Founder가 계약 `765dfb4`와 **구현 착수를 승인**했다. 운영자 Email/Password Auth + 비익명 세션 관찰 +
 고정 `admin/state.json` 읽기 + `readLegacyCatalog` 검증 + **메모리 전용**이며,
 쓰기·발행·업로드·revision·충돌·tombstone·마이그레이션은 **0**이다(F-B·F-D·F-E).

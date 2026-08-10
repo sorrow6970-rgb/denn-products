@@ -1652,3 +1652,42 @@
 - **보호 대상**: spec-018 PNG 2개 + content diff 0인 `packages/render/src/plan/index.ts` —
   restore·checkout·stage·commit **하지 않았다**.
 - **권장 다음 상태**: `READY_FOR_CODEX` — Codex 독립 재검증. 다음 스펙은 시작하지 않는다.
+
+## 2026-08-10 — 스펙 036 CORRECTION_REQUIRED 라운드 2 (문서 전용, 해시 기록 정정)
+
+- **기준**: `1796a2d`. **제품 코드·테스트·CSS·config·manifest·lockfile·`pnpm-workspace.yaml`
+  변경 0.** 제품 보완 `b7ee207`의 4개 결함은 **Codex 독립 재검증 통과**
+  (frozen install · format/lint 각 **153 파일** · typecheck · unit **1271/1271** +
+  invalid dynamic import warning **0** · build · Chromium **134/134** · check ·
+  diff·금지 경로 diff 0 · ports 4183/4184·E2E temp 잔여 0).
+- **★ 정정 내용 — 라벨이 틀렸다. 값이 사라진 게 아니다.**
+  Codex가 `f86d446d…7bbc09`를 재현하지 못했다고 보고했고, 확인해 보니 **두 값 모두 현재 HEAD에서
+  그대로 재현된다.** 서로 **다른 것을 측정**했을 뿐이다:
+  - **`fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685`**
+    = **고객 JS 파일 자체의 SHA-256**. 파일 `apps/mockup/dist/assets/index-W_cZpbdf.js`,
+    크기 **287,741 bytes**. 재현: `sha256sum apps/mockup/dist/assets/index-W_cZpbdf.js`
+  - `f86d446dde121bce287b393f905a02208b106face54b0803033eb800437bbc09`
+    = **`dist` 트리 전체의 집계 다이제스트**(파일별 해시 목록을 다시 해시한 값)이며
+    **JS 파일 하나의 해시가 아니다**. 재현:
+    `find apps/mockup/dist -type f | sort | xargs sha256sum | sha256sum`
+  - 따라서 이전 라운드들에서 이 값을 **"고객 dist SHA-256"** 이라고 적은 **라벨이 부정확**했다.
+    **과거 기록은 지우거나 덮어쓰지 않았고**, 이 항목과 스펙 036 라운드 2 절로 정정한다.
+  - 앞으로의 정본은 **파일 해시**다. 집계 다이제스트는 `xargs sha256sum` 출력에 **경로 문자열이
+    포함**되고 정렬·셸 환경에 의존해 **기계 간 비교에 부적합**하다. 기록은
+    **파일명 + 바이트 수 + 파일 해시** 세 가지를 함께 남긴다.
+- **확인된 재현**: ① 현재 HEAD 독립 build 2회 동일(Codex) ② E2E 전후 동일(Codex)
+  ③ 기준 계약 커밋 `765dfb4` 임시 archive를 동일 고정 toolchain으로 build → 동일(Codex)
+  ④ Firebase/admin-read/고객 유출 문자열 **0건**(Codex) ⑤ 현재 HEAD에서 **두 측정 방식 모두 재현**
+  (Claude). → 제품 불변식 **"기준과 현재 고객 JS byte-identical" PASS**.
+- **변경 파일(5, 전부 허용 문서)**: `docs/rebuild/specs/036-admin-auth-private-state-read.md`,
+  `docs/live/CLAUDE_LIVE_PATCH_LOG.md`, `docs/codex-claude-handoff/CURRENT.md`,
+  `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`.
+- **검증**: 변경 경로 허용 문서 5개뿐 · `git diff --check` PASS ·
+  제품 코드/test/config/manifest/lockfile diff **0** · HEAD=origin, ahead/behind **0/0** ·
+  working tree = 보호 대상 3개뿐(restore·checkout·stage·commit 하지 않음).
+  이 라운드는 문서 전용이라 format·lint·typecheck·unit·build·E2E는 **실행하지 않았다**
+  (직전 라운드 수치가 정본).
+- **NOT VERIFIED(변동 없음)**: `pnpm-workspace.yaml`의 `allowBuilds` — 수정하지 않았고
+  `pnpm approve-builds`도 실행하지 않았다. 새 클론 frozen install 재발 여부는 확인되지 않았고,
+  **Codex의 새 클론 시도는 registry EACCES로 중단**돼 성공·실패로 단정하지 않는다.
+- **권장 다음 상태**: `READY_FOR_CODEX`. 다음 스펙은 시작하지 않는다.
