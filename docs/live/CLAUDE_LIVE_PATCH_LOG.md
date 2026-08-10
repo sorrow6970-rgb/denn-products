@@ -1365,3 +1365,60 @@
   마이그레이션은 계약에 넣지 않는다.**
 - **권장 다음 상태**: `READY_FOR_CODEX` 유지. 계약이 나오면 Founder가 재검토하고,
   **구현 착수는 그 뒤 별도 승인**이다.
+
+## 2026-08-10 — 스펙 036 구현 계약 작성 (FOUNDER_DECISION_REQUIRED)
+
+- **목적**: Founder F-A~F-E 결정(정본 `decisions/2026-08-10-admin-auth-write-boundary-decisions.md`)의
+  1단계인 **"Auth + `admin/state.json` 읽기 전용"** 구현 계약을 문서로 확정한다.
+  **구현은 하지 않는다.**
+- **적용 범위**: 문서 전용. 제품 코드·테스트·CSS·설정·manifest·lockfile·의존성 diff **0**.
+  **`firebase` SDK 미추가.** 실제 Firebase·network·live·emulator·운영 데이터·Rules·Hosting·deploy **0**.
+- **기준**: `6daf365`.
+- **변경 파일**:
+  - `docs/rebuild/specs/036-admin-auth-private-state-read.md` (신규 계약)
+  - `Automation/DENN_AUTOMATION_STATE.md` (`state: FOUNDER_DECISION_REQUIRED`,
+    `active_unit: spec-036-admin-auth-private-state-read-implementation-approval`,
+    `baseline_commit: 6daf365`, `next_transition: WAITING_FOR_FOUNDER`)
+  - `Automation/NEXT_CLAUDE_PROMPT.md` (구현 착수 승인 대기로 교체)
+  - `docs/codex-claude-handoff/CURRENT.md` (상단 상태 블록 전환)
+  - `docs/live/CLAUDE_LIVE_PATCH_LOG.md` (이 항목)
+- **계약이 고정한 것(요약)**:
+  - **범위**: Email/Password 인증 · 비익명 세션 관찰/복원 · 고정 `admin/state.json` 읽기 ·
+    `readLegacyCatalog` 검증 · **메모리 전용**. 저장·쓰기·발행·업로드·revision·충돌·tombstone·
+    마이그레이션 **전부 제외**.
+  - **SDK/경계**: `firebase@12.16.0` **정확 고정**, 구현 단계에서만
+    `packages/firebase/package.json` + `pnpm-lock.yaml`에 추가. admin 기능은
+    **`@denn/firebase/admin-read` 서브패스 전용**이고 **루트 배럴
+    `packages/firebase/src/index.ts`는 수정 금지**(고객 번들 오염 방지 — 근거 `:2`의 경계 선언과
+    `package.json:6`의 단일 `"."` export). `packages/shared`·`packages/render` 무수정.
+  - **활성화**: 기본 **비활성**. `VITE_DENN_ADMIN_FIREBASE_ENABLED=true` + **완전한** 공개 config가
+    모두 있을 때만 초기화, 아니면 `UNCONFIGURED` 고정 상태 + SDK·observer·Storage **0회**.
+    실제 config 하드코딩·`.env` commit·live 테스트 파일 작성 **금지**.
+  - **AuthPort**: `User`/token/credential/raw error 비노출 · `onAuthStateChanged`로 초기 판정
+    (`currentUser` 추정 금지) · 익명은 authenticated 불인정 · 가입/재설정/다중계정 UI 0 ·
+    이메일 하드코딩 0 · password 저장·로그 0 및 시도 종료·unmount 시 정리 ·
+    `browserLocalPersistence` 실패 **fail-closed** · 오류는 안전 category/code만.
+    **계정 1개는 운영 정책이며 Rules가 UID/email을 강제하지 않는다는 한계를 계약에 명시했다.**
+  - **AdminStateReadPort**: `ADMIN_STATE_OBJECT_PATH = "admin/state.json"` 상수(주입 불가) ·
+    20 MiB 미만 · `getBytes(ref, max)` · **9단계 고정 순서** · 미인증/익명/초기화중 Storage **0회** ·
+    write/upload/delete/`getDownloadURL`/published **0** · 자동 retry 0 · stale을 fresh로 위장 금지 ·
+    **중복 load는 단일 in-flight 재사용**(UI 비활성화는 보조) · 늦은 결과 무시 · unmount 후 setState 0 ·
+    **안전 오류 코드 15개 확정**.
+  - **UI**: 8상태 · 명시적 `운영자 상태 불러오기` 클릭에서만 read · 자동 read/retry/polling 0 ·
+    성공 문구 1개 · raw/경로/uid/email/SDK 원문 비표시 · 저장·발행·업로드·주문 버튼 0 ·
+    **스펙 035 카드와 연결하지 않음** · `role=status`/`aria-live`/label 연결 명시.
+  - **허용 파일 9경로 + 문서**, `packages/firebase/src/index.ts` 금지,
+    `apps/admin/vite.config.ts`·CSS 기본 금지(필요 시 STOP).
+  - **검증**: 합성 fake 전용 unit(패키지·앱) + E2E(Firebase 요청 0 · **고객 번들에
+    `firebase/auth`·`firebase/storage`·admin-read 문구 0** · **고객 dist SHA-256 동일**) +
+    §9 게이트 순서 + **STOP 조건 8개** + **NOT TESTED 8개**.
+- **UNCONFIRMED**: **`firebase@12.16.0`이 레지스트리에 실제로 존재하는지와 Node 24/Vite 8/TS 7
+  호환성**(실제 network 금지 — 설치는 구현 단계 첫 작업이며 실패 시 STOP) · 운영자 계정 실재 여부 ·
+  `storage.rules` 실제 배포·거부 동작 · 실제 `admin/state.json` 존재·크기·내용.
+- **커밋/push**: 문서 전용 단일 커밋 → fast-forward push. force·merge·rebase·`reset --hard` 없음.
+- **실행한 검증**: `git diff --check 6daf365..HEAD`, 변경 경로가 허용 문서뿐인지 확인,
+  제품 코드·테스트·manifest·lockfile·의존성 diff **0** 확인, HEAD/origin/ahead-behind·dirty 경로 확인.
+  (format·lint·typecheck·unit·build·E2E는 **문서 전용 변경이라 실행하지 않았다**.)
+- **예상 밖 dirty 파일**: 없음. 보호 대상 3개는 restore·checkout·stage·commit 하지 않았다.
+- **권장 다음 상태**: `FOUNDER_DECISION_REQUIRED` 유지. **Founder가 계약을 검토하고 구현 착수를
+  별도로 승인**해야 하며, 그 전에는 코드 작성과 `firebase` SDK 추가를 시작하지 않는다.

@@ -9,7 +9,24 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — F-A~F-E Founder 결정 확정(2026-08-10, 기준 `8ea0c30`).**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 036 구현 계약 작성 완료(2026-08-10, 기준 `6daf365`).
+구현은 아직 승인되지 않았다.**
+계약 `docs/rebuild/specs/036-admin-auth-private-state-read.md` — **운영자 Email/Password 인증 +
+비익명 세션 관찰/복원 + 고정 `admin/state.json` 읽기 + `readLegacyCatalog` 검증 + 메모리 전용**.
+저장·쓰기·발행·업로드·revision·충돌·tombstone·마이그레이션은 **전부 제외**(F-B·F-D·F-E).
+핵심 경계: **`firebase@12.16.0` 정확 고정**(구현 단계에서만 추가) · admin 기능은
+**서브패스 `@denn/firebase/admin-read` 전용**이고 **루트 배럴 수정 금지** ·
+**고객 번들에 Firebase SDK 0**(번들 문자열 + dist SHA-256으로 검증) · 기본 **비활성**이며
+`VITE_DENN_ADMIN_FIREBASE_ENABLED=true` + 완전한 config일 때만 초기화(아니면 `UNCONFIGURED`,
+SDK·observer·Storage **0회**) · **안전 오류 코드 15개 확정** · 미인증/익명에서 Storage **0회** ·
+자동 retry·polling **0** · **단일 in-flight** · password 저장·로그 0 ·
+`browserLocalPersistence` 실패는 **fail-closed**.
+⚠️ **계정 1개는 운영 정책이며 `storage.rules`는 UID/email allowlist를 강제하지 않는다**(Rules 변경 미승인).
+**UNCONFIRMED**: `firebase@12.16.0`의 실제 존재·호환성(실제 network 금지) · 운영자 계정 실재 ·
+Rules 실제 배포·거부 동작 · 실제 `admin/state.json` 내용.
+**다음 = Founder가 계약을 검토하고 구현 착수를 별도 승인**해야 한다. 그 전에는 코드·SDK 추가 0.
+
+> **이전 상태(참고)** — `READY_FOR_CODEX` · F-A~F-E Founder 결정 확정(2026-08-10, 기준 `8ea0c30`).
 정본 `decisions/2026-08-10-admin-auth-write-boundary-decisions.md`(승인 원문 수록).
 **F-A** Auth 도입, **1단계 = Auth + `admin/state.json` 읽기, 쓰기 0**, 기존 비익명 계정 1개,
 **`firebase` SDK 신규 의존성 승인**(신규/다중 계정·역할·**Rules 변경은 미승인**) ·

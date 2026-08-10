@@ -4,17 +4,17 @@
 updated_at: 2026-08-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: fa-fe-founder-decision-record
-active_unit: admin-auth-read-only-contract
-state: READY_FOR_CODEX
-baseline_commit: 8ea0c30
+completed_unit: spec-036-contract-authoring
+active_unit: spec-036-admin-auth-private-state-read-implementation-approval
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: 6daf365
 candidate_commit: none-product-code-unchanged
 verified_commit: e9e2af6
-origin_relation: "docs-only decision-record commit on top of 8ea0c30; HEAD=origin, ahead/behind 0/0"
+origin_relation: "docs-only contract commit on top of 6daf365; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: WAITING_FOR_CODEX
+next_transition: WAITING_FOR_FOUNDER
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
@@ -251,7 +251,7 @@ L-1~L-4 손실 시나리오(소스 기반 구조적 결론, **재현 안 함**) 
 (`READY_FOR_CODEX`)와 **모순**됐다.
 
 **원인**: Codex가 작업 트리의 STATE yaml을 `CODEX_PASSED`로 바꿔 둔 뒤에, Claude가 종료 문서를
-쓰면서 **자기가 이전에 쓴 문자열**(`state: READY_FOR_CODEX …` → `COMMITTED` → …)을 기준으로 치환해
+쓰면서 **자기가 이전에 쓴 문자열**(`state: FOUNDER_DECISION_REQUIRED …` → `COMMITTED` → …)을 기준으로 치환해
 **두 줄만 조용히 no-op** 됐다. 같은 커밋의 다른 필드(`completed_unit`·`active_unit`·`verified_commit`·
 `origin_relation`)는 전부 정상 반영됐고, **커밋된 서술 내용과 조사 보고서에는 오류가 없다.**
 
@@ -1346,3 +1346,50 @@ live·emulator·Rules·Hosting·deploy **0**. 보호 대상 3개는 restore·che
 NOT TESTED 경계). 쓰기 port·저장 UI·발행·revision/충돌·tombstone·마이그레이션은 **계약에 넣지 않는다**.
 계약 작성 후 Founder가 다시 검토하며, **구현 착수는 그 뒤 별도 승인**이다.
 자동화 루프는 삭제된 상태이고 새 자동화·반복 작업을 만들지 않는다.
+
+
+## 스펙 036 구현 계약 작성 완료 — FOUNDER_DECISION_REQUIRED (Claude Code, 2026-08-10)
+
+기준 `6daf365`. 계약: `docs/rebuild/specs/036-admin-auth-private-state-read.md` (신규).
+입력은 Founder 결정 정본 `decisions/2026-08-10-admin-auth-write-boundary-decisions.md`다.
+
+**이번 라운드는 계약 문서 작성뿐이다.** 제품 코드·테스트·CSS·설정·manifest·lockfile·의존성 diff **0**,
+**`firebase` SDK 미추가**, 실제 Firebase·network·live·emulator·운영 데이터·Rules·Hosting·deploy **0**.
+
+계약이 고정한 것:
+
+- **범위** Email/Password 인증 · 비익명 세션 관찰/복원 · 고정 `admin/state.json` 읽기 ·
+  `readLegacyCatalog` 검증 · **메모리 전용**. 저장·쓰기·발행·업로드·revision·충돌·tombstone·
+  마이그레이션 **전부 제외**.
+- **경계** `firebase@12.16.0` 정확 고정(구현 단계에서만 추가) · admin 기능은 **서브패스
+  `@denn/firebase/admin-read` 전용** · **루트 배럴 `packages/firebase/src/index.ts` 수정 금지** ·
+  **고객 번들에 Firebase SDK 0** · `packages/shared`·`packages/render` 무수정.
+- **활성화** 기본 비활성. `VITE_DENN_ADMIN_FIREBASE_ENABLED=true` + 완전한 공개 config가 모두
+  있을 때만 초기화. 아니면 `UNCONFIGURED` 고정 상태 + SDK/observer/Storage **0회**.
+  `.env`·실제 config **commit 금지**. live 테스트는 **작성도 실행도 금지**.
+- **AuthPort** `User`/token/credential/raw error 비노출 · `onAuthStateChanged`로 초기 판정 ·
+  익명은 authenticated 불인정 · 가입/재설정/다중계정 UI 0 · 이메일 하드코딩 0 ·
+  password 저장·로그 0 및 종료·unmount 시 정리 · `browserLocalPersistence` 실패는 **fail-closed** ·
+  **계정 1개는 운영 정책이며 Rules가 UID/email을 강제하지 않는다는 한계 명시**.
+- **ReadPort** 경로 상수 고정(주입 불가) · 20 MiB 미만 · `getBytes` · 9단계 고정 순서 ·
+  미인증/익명/초기화중 Storage **0회** · write/upload/delete/`getDownloadURL`/published **0** ·
+  자동 retry 0 · stale을 fresh로 위장 금지 · **단일 in-flight 재사용** · 늦은 결과 무시 ·
+  unmount 후 setState 0 · **안전 오류 코드 15개 확정**.
+- **UI** 8상태 · 명시적 버튼 클릭에서만 read · 자동 read/retry/polling 0 · 성공 문구 1개 ·
+  raw/경로/uid/email/SDK 원문 비표시 · 저장·발행·업로드·주문 버튼 0 ·
+  스펙 035 카드와 **연결하지 않음** · `role=status`/`aria-live` 명시.
+- **허용 파일** 9경로 + 문서(§7). `packages/firebase/src/index.ts` 금지,
+  `apps/admin/vite.config.ts`·CSS 기본 금지(필요 시 STOP).
+- **검증** 합성 fake 전용 unit(패키지·앱) + E2E(Firebase 요청 0, 고객 번들 문자열 0,
+  고객 dist SHA-256 동일) + 게이트 순서 + STOP 조건 8개 + NOT TESTED 8개.
+
+**UNCONFIRMED**: `firebase@12.16.0`의 실제 존재와 Node 24/Vite 8/TS 7 호환성(실제 network 금지) ·
+운영자 계정 실재 여부 · Rules 실제 배포·거부 동작 · 실제 `admin/state.json` 내용.
+
+**구현은 아직 승인되지 않았다.** Founder가 이 계약을 검토해 **구현 착수를 별도로 승인**해야 하며,
+그 전에는 `packages/firebase`·`apps/admin` 코드와 `firebase` SDK 추가를 시작하지 않는다.
+
+보호 대상 3개는 restore·checkout·stage·commit 하지 않았다. 자동화 루프는 삭제된 상태이고
+새 자동화·반복 작업을 만들지 않았다.
+
+다음 전이: **Founder의 계약 검토 + 구현 착수 승인**.
