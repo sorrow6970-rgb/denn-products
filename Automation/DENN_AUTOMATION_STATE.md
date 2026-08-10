@@ -4,17 +4,17 @@
 updated_at: 2026-08-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-036-correction-round-2-docs
-active_unit: spec-036-codex-independent-verification
+completed_unit: spec-036-correction-round-3-doc-hygiene
+active_unit: spec-036-closure-doc-verification
 state: READY_FOR_CODEX
-baseline_commit: 1796a2d
-candidate_commit: b7ee207 (product, CODEX_PASSED); round 2 is docs-only
-verified_commit: e9e2af6
-origin_relation: "docs-only round-2 commit on top of 1796a2d; HEAD=origin, ahead/behind 0/0"
+baseline_commit: 91acec0
+candidate_commit: none (rounds 2-3 are docs-only; last product change is b7ee207)
+verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
+origin_relation: "docs-only round-3 commit on top of 91acec0; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
-fix_round: 2
+fix_round: 3
 max_fix_rounds: 3
-next_transition: WAITING_FOR_CODEX
+next_transition: WAITING_FOR_CODEX   # Codex reviews the CLOSURE DOCS; product verification is done
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
@@ -1562,3 +1562,36 @@ Codex의 새 클론 시도는 **registry EACCES로 중단**돼 성공·실패로
 
 보호 대상 3개는 restore·checkout·stage·commit 하지 않았다. 자동화·반복 작업 0, 다음 스펙 미착수.
 다음 전이: **Codex 확인 후 스펙 036 종료 판단**.
+
+
+## 스펙 036 CORRECTION_REQUIRED 라운드 3 — 문서 위생 (Claude Code, 2026-08-10)
+
+기준 `91acec0`. **문서 전용.** 제품 코드·테스트·CSS·config·manifest·`package.json`·lockfile·
+`pnpm-workspace.yaml` 변경 **0**. 전체 테스트는 반복하지 않았다(제품 수치는 `b7ee207` 검증분이 정본).
+
+**커밋 구분(중요)**
+
+- **제품 검증 커밋 = `b7ee207`** — 구현 `fd92fbc` + 라운드 1 보완. **Codex 독립 검증 통과.**
+- **문서 커밋** — 라운드 2 `91acec0`(해시 기록 정정), 라운드 3(이 항목).
+  **`b7ee207` 이후 제품 코드 변경은 없다.**
+
+**고친 불일치 4가지**
+
+1. `verified_commit`이 **스펙 035 시절 값 `e9e2af6`** 으로 남아 있었다 → 실제 검증된 제품 커밋
+   **`b7ee207`** 으로 정정.
+2. `active_unit`이 `spec-036-codex-independent-verification`이었으나 제품 재검증은 이미 끝났다 →
+   **`spec-036-closure-doc-verification`** 으로 정정.
+3. `candidate_commit`에 제품/문서 커밋이 섞여 있었다 → 문서 라운드에는 제품 후보가 없음을 명시.
+4. `CURRENT.md` 상단 정본 요약이 "다음 = Codex 독립 재검증"이라 말하고, 같은 블록에서
+   `f86d446d…`를 다시 **"고객 dist SHA-256"** 이라 부르며, 게이트 수치도 **unit 1258**로
+   낡아 있었다 → 종료 문서 확인 단계로, 정본 해시는 **파일명 + 287,741 bytes + `fc7660e5…`**,
+   `f86d446d…`는 **dist 트리 집계 다이제스트**로만, 수치는 **unit 1271/1271 · E2E 134/134**로 정정.
+
+live 로그와 스펙 036의 과거 append 기록은 **삭제·덮어쓰지 않았다**. `CURRENT.md` 상단 요약만
+현재 사실로 재작성했다.
+
+`pnpm-workspace.yaml`의 `allowBuilds`는 여전히 **NOT VERIFIED**(수정·`approve-builds` 모두 안 함,
+Codex 새 클론 시도는 registry EACCES로 중단). 보호 대상 3개는 restore·checkout·stage·commit 하지
+않았다. 자동화·반복 작업 0, 다음 스펙 미착수.
+
+다음 전이: **Codex의 종료 문서 확인 → 스펙 036 종료 판단.**

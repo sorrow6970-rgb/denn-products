@@ -9,45 +9,51 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — 스펙 036 구현(`fd92fbc`) + **CORRECTION_REQUIRED 라운드 1 보완
-(`b7ee207`)** 완료(2026-08-10). 다음 = Codex 독립 재검증.**
-**라운드 1에서 고친 4가지**: ① Firebase 초기화·observer 오류를 **fail-closed**로 —
-`onAuthStateChanged(listener, onError)` 경계 추가, SDK error callback 전달, lazy facade의 factory
-rejection 라우팅 → **unhandled rejection 0 · raw error 비노출 · `initializing` 영구 고정 제거 ·
-rejection 전 unsubscribe 시 callback 0회** · ② **30,000 ms timeout을 공개 계약으로 고정** —
-공개 옵션에서 `timeoutMs` 제거, seam은 내부 전용 · ③ **로그아웃 동시성 차단** — 내부 가드로
-중복 signOut·진행 중 load/signIn을 막되 **새 상태·문구 0**, observer 단일 권위 유지 ·
-④ **Vite invalid dynamic import 경고 제거**(`vi.resetModules()` + 정적 import).
-라운드 1 게이트: frozen install exit 0 · format · lint · typecheck · **unit 1271/1271**(+13) ·
-build · **E2E 134/134** · check · 금지 diff 0 · 고객 JS byte-identical · 실제 요청 0 · ports/temp 0.
-**제품 4개 결함은 Codex 독립 재검증 통과**(format/lint 각 153 파일, unit 1271/1271 +
-invalid dynamic import warning 0, Chromium 134/134, ports/temp 0).
+상태: **`READY_FOR_CODEX` — 스펙 036 제품 구현·보완은 Codex 독립 재검증을 **통과**했다.
+현재 단계는 **종료 문서 확인**이다(2026-08-10, 문서 HEAD `91acec0`).**
 
-**★ 라운드 2(문서 전용) — 고객 JS 해시 기록 정정**: 정본은 **파일 해시**다 —
-`apps/mockup/dist/assets/index-W_cZpbdf.js` · **287,741 bytes** ·
-SHA-256 **`fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685`**.
-이전 기록 `f86d446dde121bce287b393f905a02208b106face54b0803033eb800437bbc09`는
-**`dist` 트리 집계 다이제스트**(`find … | xargs sha256sum | sha256sum`)이며 **JS 파일 해시가 아니다** —
-값 자체는 현재도 재현되지만 **"고객 dist SHA-256"이라는 라벨이 틀렸다**.
-과거 기록은 **삭제·덮어쓰지 않고** 스펙 036 라운드 2 절과 live 로그로 정정했다.
-재현: Codex 4건(독립 build 2회 · E2E 전후 · `765dfb4` archive 재빌드 · 유출 문자열 0건) +
-Claude 1건(두 측정 방식 모두 재현) → **"기준과 현재 고객 JS byte-identical" PASS**.
-앞으로는 **파일명 + 바이트 수 + 파일 해시**를 함께 기록한다.
-Founder가 계약 `765dfb4`와 **구현 착수를 승인**했다. 운영자 Email/Password Auth + 비익명 세션 관찰 +
-고정 `admin/state.json` 읽기 + `readLegacyCatalog` 검증 + **메모리 전용**이며,
-쓰기·발행·업로드·revision·충돌·tombstone·마이그레이션은 **0**이다(F-B·F-D·F-E).
-**`firebase@12.17.1`** 정확 고정, admin 기능은 **`@denn/firebase/admin-read` 서브패스 전용**,
-**루트 배럴 무변경**, SDK는 **동적 import** → **고객 `dist` SHA-256이 구현 전후 동일**
-(`f86d446d…7bbc09`)이고 admin 번들에서 Firebase는 lazy 청크로 분리된다.
-기본 **비활성**: 플래그가 정확히 `"true"`가 아니거나 공개 config 5개 중 하나라도 비면
-`initializeApp`·observer·Storage **0회**.
-게이트: frozen install PASS · format · lint · typecheck · **unit 1258/1258** · build ·
-**Chromium E2E 134/134** · check · diff·금지 diff 0 · ports/temp 0 · **실제 Firebase 요청 0건**.
-⚠️ **`pnpm-workspace.yaml`의 `allowBuilds` 3줄은 제거했고 커밋하지 않았다** — 제거 상태에서
-frozen install은 exit 0이지만 **`node_modules` 없는 새 클론에서 재발 가능(NOT VERIFIED)**이며,
+- **제품 검증 커밋 = `b7ee207`** (구현 `fd92fbc` + CORRECTION_REQUIRED 라운드 1 보완).
+  Codex 독립 게이트: frozen install PASS · format/lint 각 **153 파일** PASS · typecheck PASS ·
+  **unit 1271/1271** + **invalid dynamic import warning 0** · build PASS ·
+  **Chromium E2E 134/134** · `pnpm check` PASS · diff check·금지 경로 diff **0** ·
+  ports 4183/4184·E2E temp 잔여 **0**.
+- **문서 라운드**: 라운드 2 `91acec0`(해시 기록 정정), 라운드 3(이 항목, 문서 위생).
+  **제품 코드 변경은 `b7ee207`이 마지막이다.**
+
+**스펙 036 내용**: 운영자 Email/Password Auth + 비익명 세션 관찰/복원 + 고정 `admin/state.json`
+읽기 + `readLegacyCatalog` 검증 + **메모리 전용**. 쓰기·발행·업로드·revision·충돌·tombstone·
+마이그레이션은 **0**(F-B·F-D·F-E). **`firebase@12.17.1`** 정확 고정, admin 기능은
+**`@denn/firebase/admin-read` 서브패스 전용**, **루트 배럴 무변경**, SDK는 **동적 import**라
+admin 번들에서 Firebase는 lazy 청크로 분리된다. 기본 **비활성**: 플래그가 정확히 `"true"`가
+아니거나 공개 config 5개 중 하나라도 비면 `initializeApp`·observer·Storage **0회**.
+
+**라운드 1에서 고친 4가지**: ① Firebase 초기화·observer 오류 **fail-closed**
+(`onAuthStateChanged(listener, onError)`, SDK error callback 전달, lazy facade의 factory rejection
+라우팅 → unhandled rejection 0 · raw error 비노출 · `initializing` 영구 고정 제거 ·
+rejection 전 unsubscribe 시 callback 0회) · ② **30,000 ms timeout 공개 계약 고정**(공개 옵션에서
+`timeoutMs` 제거, seam은 내부 전용) · ③ **로그아웃 동시성 차단**(새 상태·문구 0, observer 단일
+권위 유지) · ④ **Vite invalid dynamic import 경고 제거**.
+
+**★ 고객 번들 불변식 (정본 기록 방식 = 파일명 + 바이트 수 + 파일 해시)**
+
+- **파일**: `apps/mockup/dist/assets/index-W_cZpbdf.js`
+- **크기**: **287,741 bytes**
+- **SHA-256**: **`fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685`**
+- `f86d446dde121bce287b393f905a02208b106face54b0803033eb800437bbc09`는
+  **`dist` 트리 집계 다이제스트**(`find … | xargs sha256sum | sha256sum`)다. 파일 해시가 아니므로
+  **"고객 dist SHA-256"으로 부르지 않는다.**
+- 재현: Codex 4건(독립 build 2회 · E2E 전후 · 기준 계약 커밋 `765dfb4` archive 재빌드 ·
+  Firebase/admin-read/고객 유출 문자열 0건) + Claude 1건(두 측정 방식 모두 재현).
+  → **"기준과 현재 고객 JS byte-identical" PASS.**
+
+⚠️ **`pnpm-workspace.yaml`의 `allowBuilds`**: 수정하지 않았고 `pnpm approve-builds`도 실행하지
+않았다. `node_modules` 없는 새 클론에서의 frozen install 재발 여부는 **NOT VERIFIED**이며,
+Codex의 새 클론 시도는 **registry EACCES로 중단**돼 성공·실패로 단정하지 않는다.
 수정은 **별도 Founder 승인 대상**이다.
 **NOT TESTED**: 운영자 계정 실재·로그인 · Rules 실제 배포·거부 · 실제 `admin/state.json` ·
 인증 만료·갱신 · 실제 Storage CORS·`getBytes` · 실기기 · 쓰기 원자성 · 실제 SDK 오류 코드 문자열.
+
+> live 로그와 스펙 036의 과거 append 기록은 **그대로 보존**한다. 이 상단 요약만 현재 사실에 맞춘다.
 
 > **이전 상태(참고)** — 스펙 036 계약 작성(`77b5b47`) + 1차 보완(`9fb1456`) + 2차 타입·비동기 보완.
 계약 `docs/rebuild/specs/036-admin-auth-private-state-read.md` — **운영자 Email/Password 인증 +

@@ -1691,3 +1691,42 @@
   `pnpm approve-builds`도 실행하지 않았다. 새 클론 frozen install 재발 여부는 확인되지 않았고,
   **Codex의 새 클론 시도는 registry EACCES로 중단**돼 성공·실패로 단정하지 않는다.
 - **권장 다음 상태**: `READY_FOR_CODEX`. 다음 스펙은 시작하지 않는다.
+
+## 2026-08-10 — 스펙 036 CORRECTION_REQUIRED 라운드 3 (문서 위생)
+
+- **기준**: `91acec0`. **문서 전용.** 제품 코드·테스트·CSS·config·manifest·`package.json`·
+  lockfile·`pnpm-workspace.yaml` 변경 **0**. 전체 테스트는 반복하지 않았다 —
+  제품 수치의 정본은 **`b7ee207`** 에 대한 Codex 독립 검증분이다.
+- **커밋 구분(이 라운드의 핵심)**:
+  - **제품 검증 커밋 = `b7ee207`**(구현 `fd92fbc` + 라운드 1 보완) — Codex 독립 검증 통과.
+  - **문서 커밋** = 라운드 2 `91acec0`(해시 기록 정정), 라운드 3(이 항목).
+    **`b7ee207` 이후 제품 코드 변경은 없다.**
+- **불일치 → 정정 (4건)**
+  1. `Automation/DENN_AUTOMATION_STATE.md`의 `verified_commit`이 **스펙 035 시절 값 `e9e2af6`** 로
+     남아 있어, 스펙 036에서 실제로 검증된 제품 커밋과 달랐다 → **`b7ee207`** 로 정정하고
+     무엇을 가리키는지 주석으로 남겼다.
+  2. 같은 파일 `active_unit`이 `spec-036-codex-independent-verification`이었으나 **제품 재검증은
+     이미 끝난 상태**였다 → **`spec-036-closure-doc-verification`** 으로 정정,
+     `next_transition`에 "Codex는 종료 문서를 본다"를 명시.
+  3. `candidate_commit`에 제품 커밋과 문서 라운드가 섞여 있었다 →
+     **문서 라운드에는 제품 후보가 없음**을 명시(`last product change is b7ee207`).
+  4. `docs/codex-claude-handoff/CURRENT.md` 상단 정본 요약이 ⓐ "다음 = Codex 독립 재검증"이라
+     말하고 ⓑ 같은 블록 아래에서 `f86d446d…`를 다시 **"고객 dist SHA-256"** 이라 부르며
+     ⓒ 게이트 수치가 **unit 1258**로 낡아 있었다 → **종료 문서 확인 단계**로 고치고,
+     정본 해시를 **파일명 + 287,741 bytes + `fc7660e5…`** 로, `f86d446d…`는
+     **`dist` 트리 집계 다이제스트**로만 표기하고, 수치를 **unit 1271/1271 · Chromium E2E 134/134**
+     로 맞췄다.
+- **보존**: live 로그와 스펙 036의 **과거 append 기록은 삭제·덮어쓰지 않았다.**
+  `CURRENT.md`는 상단 정본 요약만 현재 사실로 재작성했고, 그 아래 이력 블록은 그대로 두었다.
+  스펙 036은 **종료 상태 문구 한 곳만** 갱신했다.
+- **변경 파일(5)**: `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md` ·
+  `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md` ·
+  `docs/rebuild/specs/036-admin-auth-private-state-read.md`(종료 상태 문구만).
+- **검증**: `git diff --check` PASS · 변경 경로 = 허용 문서뿐 ·
+  제품 코드/test/config/manifest/lockfile diff **0** · HEAD=origin, ahead/behind **0/0** ·
+  working tree = 보호 대상 3개뿐(restore·checkout·stage·commit 하지 않음).
+- **NOT VERIFIED(변동 없음)**: `pnpm-workspace.yaml`의 `allowBuilds` — 수정·`approve-builds`
+  모두 하지 않았고, 새 클론 frozen install 재발 여부는 미확인이며 Codex 시도는 **registry EACCES로
+  중단**돼 성공·실패로 단정하지 않는다.
+- **권장 다음 상태**: `READY_FOR_CODEX` — **Codex의 종료 문서 확인 → 스펙 036 종료 판단.**
+  다음 스펙은 시작하지 않는다.

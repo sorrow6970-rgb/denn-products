@@ -1,6 +1,8 @@
 # 스펙 036 — 운영자 Auth + 비공개 `admin/state.json` 읽기 전용
 
-상태: **DONE (Claude)** — 구현 `fd92fbc`, **CORRECTION_REQUIRED 라운드 1 보완 `b7ee207`**.
+상태: **DONE (Claude)** — 구현 `fd92fbc` + 라운드 1 보완 **`b7ee207`(제품, Codex 독립 검증 통과)**.
+라운드 2·3은 **문서 전용**(해시 기록 정정 `91acec0`, 문서 위생). **`b7ee207` 이후 제품 코드 변경 0.**
+현재 단계 = **종료 문서 확인**.
 
 작성 2026-08-10 · 기준 HEAD = origin = `6daf365`
 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-10-admin-auth-write-boundary-decisions.md`
