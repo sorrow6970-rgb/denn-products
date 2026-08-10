@@ -1,11 +1,13 @@
 # 현재 상태
 
-> 작업 운영 규칙(2026-07-29): **보호형 자동 검수 루프 ON**. 정본은
-> `docs/codex-claude-handoff/AUTO_REVIEW_LOOP.md`. 현재 승인된 스펙 안의
-> 구현→게이트→분리 커밋→fast-forward push→Codex 지적 보완을 최대 3회 자동 반복하고,
-> 승인 시 종료 문서 push 후 다음 스펙 전에 멈춘다. 계약 불명확·범위 확대·신규 의존성·
-> 운영 데이터/secret·실제 network/live·Firebase/Rules/CORS/Hosting/배포·운영본 변경·
-> Git divergence/force·비재현/flaky·잔류 프로세스가 발생하면 즉시 STOP REPORT한다.
+> 작업 운영 규칙(2026-08-10 갱신): **자동 검수 루프는 삭제됐다. 앞으로는 수동 인수인계만 사용한다.**
+> 새 자동화나 반복 작업을 만들지 않는다. 각 단위는 Founder의 명시적 지시로 시작하고,
+> 끝나면 `docs/live/CLAUDE_LIVE_PATCH_LOG.md` + `Automation/DENN_AUTOMATION_STATE.md` +
+> `Automation/NEXT_CLAUDE_PROMPT.md` + 이 문서를 실제 상태와 일치시킨다.
+> 계약 불명확·범위 확대·신규 의존성·운영 데이터/secret·실제 network/live·
+> Firebase/Rules/CORS/Hosting/배포·운영본 변경·Git divergence/force·비재현/flaky·
+> 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
+> (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
 상태: **스펙 034·035 DONE (2026-08-10). 운영자 cm 입력 최소 범위가 코드로 닫혔다.**
 Founder 승인 O-1~O-8 + 구조 결정 N-1~N-10 = `decisions/2026-08-10-operator-cm-input-decisions.md`
@@ -25,8 +27,20 @@ Founder F-A~F-E(admin Auth·쓰기·충돌·발행)가 여전히 미결이다.
 > emulator·Rules·deploy 0.** 각 항목을 근거(정확한 경로/라인)·대안·위험·최소 안전 권장안·
 > 미룰 경우 차단되는 작업으로 정리했다.
 > **★★ 다섯 항목 전부 미결이며, 보고서 §8의 승인 프롬프트는 예시일 뿐 Founder가 말한 적이 없다.**
-> 권장안(A2+계정 1개 / B1 저장만 / 읽기만 공유 / D1 메모리 전용 유지 / E2 단조 rev+재확인 후
-> fail-closed)은 **Claude의 권장이지 결정이 아니다**.
+> 권장안(A2+계정 1개 / B1 저장만 / 읽기만 공유 / D1 메모리 전용 유지)은 **Claude의 권장이지
+> 결정이 아니다**.
+> **★ 2026-08-10 문서 정확성 보완(`CORRECTION_REQUIRED` 판정, 초판 `24d0c04`)** — 제품 결정 변화 0:
+> ① "저장소 전역 grep 0건"은 **틀렸다**. 0건은 **리빌드 `apps/**`·`packages/**` 한정**이고
+> **레거시 `denn-admin.html`·`denn-mockup-tool.html`에는 Auth/write 코드가 존재한다**
+> (인증 심볼 7건/4건, `uploadString` `:14782`·`:14838`·`:15475`·`:15560`).
+> ② `storage.rules`는 **파일이 의도하는 정책만 확인**됐고 **실제 배포 여부·거부 동작은 UNCONFIRMED**다.
+> ③ **F-E 모순 제거** — E2는 **원자적 precondition이 아니며 잔류 last-writer-wins 손실 가능성이
+> 남는다**. 선택지를 **E2-best-effort**(경합 창·잔류 손실 명시적 수용) / **E3-strong**(손실 불허,
+> 원자적 precondition·잠금 지원 가능성 조사·검증 전까지 **쓰기 구현 차단**, Rules·Firestore 잠금은
+> 별도 승인)으로 **택일 분리**했다. "손실 불허 + E2 승인" 문장은 삭제했다.
+> ④ **단계 관계 명시** — **1단계 = Auth + `admin/state.json` 읽기, 쓰기 0**.
+> `B1 저장만`은 **향후 쓰기 단계의 정책 권장안이지 현재 구현 허가가 아니고**,
+> **쓰기 계약은 Founder의 쓰기 단계 착수 승인 전에는 작성하지 않는다**.
 > **★ 새 발견 X-7**: F-D에서 되쓰기를 허용하면 스펙 034 N-4의 `CONFLICTING_PRINT_SIZE`가
 > **자기 발등을 찍는다** — 리빌드가 canonical만 갱신하고 legacy `wcm`을 남기면 다음 read부터
 > **카탈로그 전체가 fatal로 안 읽힌다**. 레거시 `confirmEditSz`(`denn-admin.html:1668-1685`)는
@@ -143,6 +157,9 @@ E-3은 minLongSide/maxPixels 동시 충족 불가 시 fail-closed로 확정했�
 > **① 인증 경계는 이미 확정** — `storage.rules`의 `op()`가 `admin/`을 **non-anonymous만 read+write**로
 > 잠갔다(20 MiB cap). 리빌드는 재현이 아니라 **만족**시키면 된다. ⚠️ 레거시 `dennCloudSaveAdminV`의
 > **미인증 조용한 return**은 계승 금지.
+> **⚠️ 2026-08-10 정정으로 superseded**: "이미 확정"은 과한 표현이다. 확인된 것은 **저장소의
+> `storage.rules` 파일이 의도하는 정책**이며, **실제 운영 Firebase 배포 여부와 거부 동작은
+> UNCONFIRMED**다.
 > **② ★ 실제 network 없이 검증할 선례가 있다** — `public-catalog/reader.ts`의 **주입 transport(`FetchLike`)
 > + 100% 합성 fake + `*.live.test.ts` 기본 게이트 제외**(`vitest.config.ts:17`). write port도 같은 형태면 된다.
 > **③ ★★ 레거시 admin 동기화 = 사실상 last-writer-wins** — `__cloudRev = Date.now()`는 **벽시계**이고

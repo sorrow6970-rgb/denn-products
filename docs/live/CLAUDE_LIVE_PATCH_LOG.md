@@ -1243,8 +1243,13 @@
     `git rev-list --left-right --count HEAD...origin/...` → `267ea72`, **0/0**
   - `git log --oneline`, `git show --stat 267ea72`(Codex pass 커밋 내용 확인)
   - `md5sum`으로 `Automation/*` · `CURRENT.md` · 스펙 034/035 문서가 `267ea72` 이후 **무변경**임을 확인
-  - 저장소 전역 grep: `uploadString|uploadBytes|setDoc|updateDoc|signInWithEmailAndPassword|
-    onAuthStateChanged|getAuth` → **0건**, `firebase` 의존성 → package.json·lockfile **0건**
+  - **리빌드 범위(`apps/**`·`packages/**`) grep**: `uploadString|uploadBytes|setDoc|updateDoc|
+    signInWithEmailAndPassword|onAuthStateChanged|getAuth` → **0건**,
+    `firebase` 의존성 → 리빌드 package.json·lockfile **0건**
+    ⚠️ **저장소 전역이 아니다** — 레거시 운영본에는 존재한다:
+    `denn-admin.html` 인증 심볼 7건 + `uploadString` 2건(`:14782`, `:14838`),
+    `denn-mockup-tool.html` 인증 심볼 4건 + `uploadString` 2건(`:15475`, `:15560`)
+    (2026-08-10 보완: 초판의 "저장소 전역 grep 0건" 표현은 **틀렸다**)
   - 근거 라인 실측: `storage.rules:18-28`, `firestore.rules:19-21`, `firebase.json:3`,
     `denn-admin.html` 720-744 / 746-779 / 1640 / 1668-1685 / 1687-1698 / 2018 /
     14806-14828 / 14909 / 14932-14951, `denn-mockup-tool.html:15473,15521`,
@@ -1274,3 +1279,42 @@
   - Founder 결정이 내려진 뒤에야 구현 계약을 쓴다는 순서 자체
 - **권장 다음 상태**: `FOUNDER_DECISION_REQUIRED` 유지. Founder가 F-A~F-E를 명시적으로 결정하기
   전에는 결정 문서 작성·구현·Firebase 표면 접근을 시작하지 않는다.
+
+## 2026-08-10 — F-A~F-E 조사 문서 정확성 보완 (CORRECTION_REQUIRED)
+
+- **목적**: 초판(`24d0c04`)의 **사실 오류·논리 모순·범위 혼동**을 고친다. **제품 결정은 하나도
+  바뀌지 않는다.** 여전히 F-A~F-E는 전부 미결이다.
+- **적용 범위**: 문서 전용. 제품 코드·테스트·CSS·설정·manifest·lockfile·의존성 diff **0**.
+  Firebase·network·live·emulator·Rules·Hosting·deploy 실행·변경 **0**.
+- **고친 내용 4가지**:
+  1. **"저장소 전역 grep 0건" 주장 제거.** 실제 검색 범위는 **리빌드 `apps/**`·`packages/**`뿐**이며,
+     **레거시 `denn-admin.html`·`denn-mockup-tool.html`에는 Auth/write 코드가 존재한다**
+     (인증 심볼 7건/4건, `uploadString` `:14782`·`:14838`·`:15475`·`:15560`).
+     조사 보고서 §0·§1·신설 §1.1과 이 로그의 직전 항목 양쪽을 동일하게 고쳤다.
+  2. **"인증 경계는 서버에 이미 확정" → "저장소의 `storage.rules`가 의도하는 정책은 확인됐다".**
+     해당 Rules가 **실제 운영 Firebase에 배포됐는지와 실제 거부 동작은 UNCONFIRMED**로 유지한다.
+     ⚠️ 같은 표현이 **2026-07-31 admin 쓰기 경계 조사 기록**(이 로그의 해당 항목,
+     `CURRENT.md`, `Automation/DENN_AUTOMATION_STATE.md`)에도 남아 있다. 과거 기록은 append-only라
+     문장을 지우지 않고 **`CURRENT.md`에 superseded 표시**를 달았다. 앞으로는 이 정정이 정본이다.
+  3. **F-E 모순 제거.** E2(단조 rev + 쓰기 직전 재확인)는 **원자적 precondition이 아니다** —
+     두 클라이언트가 같은 revision으로 재확인을 통과할 수 있어 **잔류 last-writer-wins 손실
+     가능성이 남는다**. 따라서 "last-writer-wins를 허용하지 않으면서 E2를 승인한다"는 문장을
+     **삭제**하고 **E2-best-effort**(경합 창과 잔류 손실을 명시적으로 수용) /
+     **E3-strong**(손실 불허, 원자적 precondition·잠금 지원 가능성을 별도 조사·검증하기 전까지
+     쓰기 구현 차단, Rules·Firestore 잠금은 별도 승인)으로 **택일 선택지**를 분리했다.
+  4. **F-A·F-B·F-C 단계 관계 명시**(보고서 §4.4). **1단계 = Auth + `admin/state.json` 읽기,
+     쓰기 0.** `B1 저장만`은 **향후 쓰기 단계를 열 경우의 정책 권장안이지 현재 구현 허가가 아니다.**
+     **쓰기 계약은 Founder가 쓰기 단계 착수를 별도 승인하기 전에는 작성하지 않는다.**
+- **변경 파일**:
+  - `docs/codex-claude-handoff/reviews/2026-08-10-admin-auth-write-founder-decision-options.md`
+  - `docs/live/CLAUDE_LIVE_PATCH_LOG.md` (직전 항목의 grep 문장 수정 + 이 항목)
+  - `docs/codex-claude-handoff/CURRENT.md` (상단 "보호형 자동 검수 루프 ON" 제거 → 수동 인수인계)
+  - `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md` (상태 일치 확인·갱신)
+- **커밋/push**: 문서 전용 단일 커밋 → fast-forward push. force·merge·rebase·`reset --hard` 없음.
+- **실행한 검증**: `git diff --check 24d0c04..HEAD`, 변경 경로가 허용 문서뿐인지 확인,
+  제품 코드·의존성·lockfile diff **0** 확인, HEAD/origin/ahead-behind·dirty 경로 확인.
+  (format·lint·typecheck·unit·build·E2E는 **문서 전용 변경이라 실행하지 않았다**.)
+- **예상 밖 dirty 파일**: 없음. 보호 대상 3개는 stage·commit·restore·checkout 하지 않았다.
+- **승인 상태**: **여전히 Founder 승인 0건.** 보고서 §8은 예시 문장이며, 7번 항목은
+  **E2-best-effort / E3-strong 중 Founder가 직접 골라야 하는 자리**다.
+- **권장 다음 상태**: `FOUNDER_DECISION_REQUIRED` 유지. 구현 계약·Codex 구조 결정 확정 없음.

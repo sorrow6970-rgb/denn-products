@@ -4,13 +4,13 @@
 updated_at: 2026-08-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: fa-fe-founder-decision-options-investigation
+completed_unit: fa-fe-decision-options-doc-correction
 active_unit: admin-auth-write-publish-decision
 state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 267ea72
+baseline_commit: 24d0c04
 candidate_commit: none-product-code-unchanged
 verified_commit: e9e2af6
-origin_relation: "docs-only handoff commit on top of 267ea72; HEAD=origin, ahead/behind 0/0"
+origin_relation: "docs-only correction commit on top of 24d0c04; HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
 fix_round: 0
 max_fix_rounds: 3
@@ -1281,3 +1281,32 @@ Codex 다음 검토: 근거 라인 정확성, L-1~L-4 구조적 결론(재현 �
 
 다음 전이: **Founder가 F-A~F-E를 명시적으로 결정**해야 한다. 그 전에는 결정 문서 작성·구현·
 Firebase 표면 접근을 시작하지 않는다. 자동화 루프는 삭제된 상태이며 새로 만들지 않는다.
+
+
+## F-A~F-E 조사 문서 정확성 보완 — FOUNDER_DECISION_REQUIRED 유지 (Claude Code, 2026-08-10)
+
+검토 기준 `24d0c04`, 판정 `CORRECTION_REQUIRED`. **문서 전용 보완이며 제품 결정 변화 0.**
+제품 코드·테스트·CSS·설정·manifest·lockfile·의존성 diff **0**,
+Firebase·network·live·emulator·Rules·Hosting·deploy 실행·변경 **0**.
+
+고친 것 4가지:
+
+1. **"저장소 전역 grep 0건" 주장 제거.** 0건은 **리빌드 `apps/**`·`packages/**` 한정**이고,
+   레거시 `denn-admin.html`(인증 7건 + `uploadString` `:14782`·`:14838`)와
+   `denn-mockup-tool.html`(인증 4건 + `uploadString` `:15475`·`:15560`)에는 **존재한다**.
+2. **"인증 경계는 서버에 이미 확정" → "`storage.rules` 파일이 의도하는 정책은 확인".**
+   실제 배포 여부와 거부 동작은 **UNCONFIRMED**로 유지.
+3. **F-E 모순 제거.** E2는 원자적 precondition이 아니고 **잔류 last-writer-wins 손실 가능성이
+   남는다**. **E2-best-effort**(경합 창·잔류 손실 수용) / **E3-strong**(손실 불허, 지원 가능성
+   조사·검증 전까지 쓰기 구현 차단, Rules·잠금은 별도 승인)으로 **택일 분리**.
+4. **단계 관계 명시.** 1단계 = Auth + `admin/state.json` **읽기**, 쓰기 0.
+   `B1 저장만`은 향후 쓰기 단계의 정책 권장안이며 **현재 구현 허가가 아니다.**
+   **쓰기 계약은 Founder의 쓰기 단계 착수 승인 전에는 작성하지 않는다.**
+
+**Founder 승인은 여전히 0건이다.** 보고서 §8은 예시이며 7번 항목은 E2-best-effort / E3-strong 중
+**Founder가 직접 골라야 하는 자리**다. 구현 계약·Codex 구조 결정 확정 **없음**.
+
+워킹트리 dirty 3개는 알려진 보호 대상이며 restore·checkout·stage·commit 하지 않았다.
+자동화 루프는 삭제된 상태이고 **새 자동화나 반복 작업을 만들지 않았다** — 이후는 수동 인수인계만 쓴다.
+
+다음 전이: **Founder가 F-A~F-E를 명시적으로 결정**(F-E는 E2-best-effort / E3-strong 택일)해야 한다.
