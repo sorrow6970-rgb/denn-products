@@ -1,8 +1,28 @@
 # 핸드오프 — 스펙 037 운영자 상태 쓰기 C5 계약 (2026-08-11)
 
-작성: Claude Code · 초판 커밋 `c654023` · 브랜치 `rebuild/modern-studio`
-**보완 라운드 1** `41b54b9` · 상태 동기화 `fad819f` ·
-**보완 라운드 2 (CORRECTION_REQUIRED) 적용** · 보완 기준 HEAD = origin = `fad819f`
+작성: Claude Code · 초판 `c654023` · 브랜치 `rebuild/modern-studio`
+**라운드 1** `41b54b9` · **라운드 2** `d5789db` · 동기화 `fad819f`·`f694211` ·
+**보완 라운드 3 (CORRECTION_REQUIRED) 적용** · 보완 기준 HEAD = origin = `f694211`
+
+> ## ★★ 보완 라운드 3 — 마지막 결함 2건을 닫았다
+>
+> | # | 라운드 2의 결함 | 정정 |
+> | --- | --- | --- |
+> | **1** | `loadBaseline`의 읽기/network/invalid 상태를 **`WRITE_UPLOAD_FAILED`·`WRITE_UPLOAD_OUTCOME_UNKNOWN`·`WRITE_HEAD_FAILED`로 표현**했다. **읽기 작업에 "upload" 오류를 반환**하고 **persisted object invalid를 "head transaction 실패"와 합치는 것은 공개 API 의미가 틀리다** | **오류 표면을 분리**했다(계약 §5.4·§5.6). **`save`만** `SafeAdminWriteError` + 8개 `WRITE_*`를 쓴다. **`loadBaseline`은 스펙 036의 `SafeAdminReadError` 의미를 재사용**하고, **head 문서 자체의 스키마 위반만** 신규 **`REBUILD_BASELINE_INVALID`** 하나로 구분한다. **read timeout은 상태를 바꾸지 않으므로 `NETWORK_TIMEOUT`이지 upload outcome unknown이 아니다.** **`WRITE_HEAD_FAILED`는 save의 head transaction이 명확히 실패한 경우로 다시 좁혔다** |
+> | **2** | **timeout 뒤 head가 base에 머물러 있으면 commit 미반영을 확정**하고 `WRITE_HEAD_FAILED`를 반환했다 | **★ timeout은 SDK transaction을 취소하지 않는다.** reconciliation read 순간에 base여도 **원 transaction이 나중에 서버에서 성공할 수 있다.** → **base 관측은 "아직 아님"이지 "영원히 아님"이 아니다** → **`WRITE_COMMIT_OUTCOME_UNKNOWN` 유지**, **orphan이라고 부르지 않는다**. `base+1`인데 **`objectPath`가 다르면 `WRITE_CONFLICT` 확정**(head가 더 이상 `expectedBase`가 아니므로 우리 late commit은 CAS에서 이길 수 없다). **`base+1` 초과는 판정 불가** |
+>
+> **★ 교정 2는 Codex의 라운드 2 지시에도 포함됐던 오류다.** 최종 계약에서 바로잡았다.
+> 오판했다면 **서버에서 나중에 성공한 commit을 실패로 보고하고, 운영자가 같은 payload를 다시
+> 보내게 만들어 불필요한 revision과 객체를 만든다**(위험 **R-15**).
+>
+> **라운드 2에서 열어 둔 질문은 해소됐다** — "`loadBaseline` 실패를 8코드 안에서 어떻게 부르는가"에
+> 대해 라운드 2는 `WRITE_HEAD_FAILED`의 의미를 넓히는 절충을 썼는데, **교정 1이 그 절충을 폐기**했다.
+> **오류 표면 자체를 분리하는 것이 옳은 답**이고, **9번째 `WRITE_*` 코드는 만들지 않았다.**
+>
+> **확인한 사실**: `SafeAdminReadError`는 **`@denn/firebase/admin-read` 배럴이 이미 export한다**
+> (`packages/firebase/src/admin-read/index.ts`). 자기 package subpath 순환이 문제가 되면 구현은
+> **내부 relative type import**를 써도 되며, **`import type`은 컴파일 시 지워지므로 런타임 결합·
+> 번들 영향은 어느 쪽이든 0**이다. **`admin-read/**` 무수정 경계는 유지된다.**
 
 > ## ★★ 보완 라운드 2 — Codex가 남긴 계약 결함 4건을 정정했다
 >
@@ -75,8 +95,8 @@
 | **Z-1** | UID 제한은 **`rebuild-admin-state/**` 와 `/rebuildAdminState/head`에만**. **`op()` 본체는 건드리지 않는다**(건드리면 레거시 발행·자산 업로드까지 잠긴다). 실제 UID는 **UNCONFIRMED**, 커밋 금지, emulator는 **합성 UID** |
 | **Z-2** | `rebuild-admin-state/objects/{operationId}.json` — **별도 최상위 경로**(OR 우회 구조적 차단), `operationId` = 저장 시작 시 1회 생성 **UUID**, 경로에 revision·문구·id·시간 **금지**, `resource == null` **create-only**, update/delete 금지 |
 | **Z-3** | `/rebuildAdminState/head` **단일 문서**, 키 3개(`schemaVersion`/`revision`/`objectPath`)만. 최초 create는 `revision 1`, 이후는 transaction에서 `expectedBase` 일치 시 **정확히 +1 + `objectPath` 교체**. `firestore.rules`가 **`get`(승인 UID + `head` 문서만) · `list` 거부 · create/update/delete 전 분기를 이중 강제**〔교정 1〕. **Rules가 객체 실존을 증명한다고 주장하지 않는다** |
-| **Z-4** | `@denn/firebase/admin-write` 서브패스, **루트 배럴 무변경**, SDK는 **admin 전용 lazy 경계 안**, 주입 facade + 합성 fake, **저장 버튼·UI 연결 제외**, **`loadBaseline`/`save` 각각 단일 in-flight**, **앱 자동 retry·merge 0**, ⚠️ **SDK 내부 재시도가 있으므로 "요청 1회"를 주장하지 않는다**, **오류 8코드**(`WRITE_HEAD_FAILED`도 `retryable:false`〔교정 3〕), **transaction callback 재실행 계약**〔교정 4〕, **공개 타입 고정**〔교정 5〕 |
-| **Z-5** | head 없음 → legacy를 **revision 0** 기준으로 읽기 / head 있음 → **그 객체만**, 없거나 invalid면 **fail-closed(legacy fallback 0)**. `expectedBase`는 **편집 시작 로드의 revision**으로 고정, 자동 재채택·자동 병합 0, **commit 성공 후에만** 로컬 기준 갱신 |
+| **Z-4** | `@denn/firebase/admin-write` 서브패스, **루트 배럴 무변경**, SDK는 **admin 전용 lazy 경계 안**, 주입 facade + 합성 fake, **저장 버튼·UI 연결 제외**, **`loadBaseline`/`save` 각각 단일 in-flight**, **앱 자동 retry·merge 0**, ⚠️ **SDK 내부 재시도가 있으므로 "요청 1회"를 주장하지 않는다**, **transaction callback 재실행 계약**, **공개 타입 고정**. **★ 오류 표면 분리**〔라운드 3 교정 1〕 — **`save`만 `SafeAdminWriteError` + 8개 `WRITE_*`**, **`loadBaseline`은 스펙 036 `SafeAdminReadError` + 신규 `REBUILD_BASELINE_INVALID` 하나** |
+| **Z-5** | head 없음 → legacy를 **revision 0** 기준으로 읽기 / head 있음 → **그 객체만**, 없거나 invalid면 **fail-closed(legacy fallback 0)**. `expectedBase`는 **편집 시작 로드의 revision**으로 고정(head 부재면 **`0`**, 그리고 **최초 create도 `expectedBase === 0`을 강제**), 자동 재채택·자동 병합 0, **commit 성공 후에만** 로컬 기준 갱신. **★ 결과 불명은 `save` 내부 bounded reconciliation이 판정**하며 **base 관측은 미판정**〔라운드 3 교정 2〕 |
 | **Z-6** | **로컬 emulator만**, **신규 `firebase.emulator.json` 전용 config**〔교정 2〕 + **`--project demo-denn-emulator`** 를 **둘 다** 명시(`firebase.json`은 **구현 단계에서도 수정 금지**), 기본 게이트와 **분리**(`*.emulator.test.ts` + `pnpm test:emulator`), **실제 Rules로 12개 시나리오**(head `get` 성공/거부·`list` 거부·callback 재실행 시 upload 반복 0·commit outcome unknown 재조회 판정 추가), 설치·다운로드·포트 강제 해제는 **STOP** |
 | **Z-7** | **tombstone·자동 merge 도입 안 함.** 저장은 **문서 전체 CAS**, 충돌 시 전체 거부. **L-4는 별도 후속 스펙** |
 | **Z-8** | **이번 스펙에서 배포 0.** 실제 UID + orphan 정책 + emulator PASS 전에는 운영 쓰기 미개방. **legacy 저장을 먼저 닫지 않는다.** cutover는 별도 승인·별도 스펙 |
@@ -129,13 +149,12 @@ G-1의 "legacy `admin/state.json` 읽기 전용 고정"을 배포하면 **이 �
 
 ## 7. 승인 상태와 다음 단계 (문구 통일)
 
-- **이번 라운드에서 구현 착수를 승인하지 않는다.**
-- **보완 문서 push 후 상태는 `READY_FOR_CODEX`.**
-- **Codex 보완 라운드 2 재검토 전 구현은 0이다.**
-- **Codex 통과 후에도 실제 제품 UI 연결 · live Firebase · Rules 배포 · 운영 쓰기는 계속 금지**다.
-- **★ port/Rules/config/test 구현 착수 여부를 이 문서가 추측하지 않는다.**
-  G-5가 허용한 범위(**합성 fake · 로컬 emulator**)와 결정 문서 §2가 금지한 **"제품 구현 착수"** 의
-  경계 판정은 **Codex의 다음 검수 몫**이며, 이 핸드오프는 **양쪽을 구분해 기록할 뿐 결론을 내리지 않는다.**
+- **이번 라운드는 계약 문서 보완만 승인한다.**
+- **보완 push 후 상태는 `READY_FOR_CODEX`, `fix_round: 3`.**
+- **Codex 최종 계약 검토 전 port/Rules/config/test 구현은 0이다.**
+- **실제 제품 UI · live Firebase · Rules 배포 · 운영 쓰기는 계속 금지**다.
+- **★ G-5의 합성 fake·로컬 emulator 허용과 결정 문서 §2의 "제품 구현 착수" 금지 사이 경계는
+  이번 문서 교정에서 추측하지 않는다. Codex 최종 검토 후 Founder 확인 대상으로 남긴다.**
 - 운영 쓰기 개방은 **실제 UID + orphan 보존/비용/정리 정책 + emulator PASS**가 전부 확인된 뒤
   **별도 cutover 스펙 + 별도 Founder 승인**에서 다룬다.
 

@@ -2758,3 +2758,161 @@ emulator 사전 확인 결과(Java 21.0.11 · firebase-tools 15.22.4 전역 · e
 - 보호 대상 6개는 **전부 손대지 않았다.**
 - **다음**: Codex가 보완 라운드 2(`d5789db`)를 재검토하고 결과와 다음 Claude 지시를
   `Automation/NEXT_CLAUDE_PROMPT.md`에 남긴다. 그 전까지 Claude는 새 작업을 시작하지 않는다.
+
+## 2026-08-11 — Codex 스펙 037 계약 재검토 · CORRECTION_REQUIRED 라운드 3
+
+- **검수 대상**: 보완 계약 `d5789db` + 상태 동기화 `f694211`.
+- **Git 근거**: HEAD=origin=`f694211`, ahead/behind 0/0.
+- `git diff --check fad819f..d5789db` **PASS**.
+- `git diff --check d5789db..f694211` **PASS**.
+- 변경 범위는 허용 문서와 상태 동기화 문서뿐이며 금지된 제품/Rules/config/test diff **0**.
+- 실제 emulator·Firebase/network/live·배포 실행 **0**.
+
+### 판정
+
+라운드 2의 네 교정은 반영됐지만 최종 계약 결함 2건이 남아
+**`CORRECTION_REQUIRED` 라운드 3**으로 판정한다.
+
+1. **읽기/쓰기 오류 의미 혼합** — `loadBaseline`의 read/network/invalid 상태를
+   `WRITE_UPLOAD_*` 또는 transaction 실패용 `WRITE_HEAD_FAILED`로 반환한다.
+   `loadBaseline`은 기존 `SafeAdminReadError` 의미를 재사용하고 rebuild head 스키마 위반만
+   baseline 전용 안전 오류로 분리해야 한다.
+2. **timeout reconciliation race** — transaction timeout은 원 transaction을 취소하지 않는다.
+   reconciliation 순간 head가 base라고 해도 transaction이 나중에 성공할 수 있으므로
+   “미반영 확정/orphan”으로 판정할 수 없다. exact operation path 관측만 성공 확정이며,
+   base 관측은 `WRITE_COMMIT_OUTCOME_UNKNOWN`을 유지해야 한다.
+
+두 번째 항목의 잘못된 base 판정은 **Codex 라운드 2 지시에도 포함됐던 오류**이며,
+이번 최종 계약 교정에서 명시적으로 바로잡는다.
+
+### 다음
+
+- 정확한 최종 교정 지시는 `Automation/NEXT_CLAUDE_PROMPT.md`에 기록했다.
+- Claude는 허용 문서 6개만 보완해 일반 fast-forward push하고 `READY_FOR_CODEX`로 전환한다.
+- 구현·Rules/config/test 변경과 emulator 실행은 계속 금지한다.
+- 자동화나 반복 작업을 만들지 않는다.
+
+## 2026-08-11 — 스펙 037 계약 보완 라운드 3 (최종, CORRECTION_REQUIRED, 문서 전용)
+
+> **★ 위의 Codex 라운드 3 검수 항목과 라운드 2·1·초판 항목은 삭제하지 않는다.**
+
+- **기준**: HEAD=origin=`f694211`, ahead/behind 0/0. `fix_round: 3 / max 3`.
+- **상태**: `CORRECTION_REQUIRED` / `CLAUDE_WORKING` → **`READY_FOR_CODEX`**.
+- **변경 파일(6, 전부 허용 문서)**:
+  - `docs/rebuild/specs/037-admin-write-c5-emulator-contract.md` (라운드 3 정정본)
+  - `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`
+  - `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md`
+  - `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
+  - ※ Codex가 작업 트리에 남긴 **라운드 3 검수 기록도 함께** 커밋한다.
+- **실행하지 않음**: `apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·
+  `firebase.json`·`firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml`·
+  `.firebaserc` 수정 **0** · 신규 의존성 0 · **실제 emulator 실행 0** ·
+  실제 Firebase/network/live/운영 데이터 접근 0 · upload/write/delete/publish/deploy 0 ·
+  force push·merge·rebase·`reset --hard`·broad delete 0 · 자동화 생성 0 · **구현 착수 0**.
+
+### 교정 1 — `loadBaseline`과 `save`의 오류 표면을 분리 (§5.4 · §5.6 · §6.1)
+
+**라운드 2의 결함**: `loadBaseline`의 읽기/network/invalid 상태를
+**`WRITE_UPLOAD_FAILED` · `WRITE_UPLOAD_OUTCOME_UNKNOWN` · `WRITE_HEAD_FAILED`** 로 표현했다.
+**읽기 작업에 "upload" 오류를 반환**하고 **persisted object invalid를 "head transaction 실패"와
+합치는 것은 공개 API 의미가 틀리다.**
+
+정정:
+
+- **`save`만 `SafeAdminWriteError`와 기존 8개 `WRITE_*` 코드를 사용한다.**
+- **`loadBaseline`은 스펙 036의 공개 `SafeAdminReadError` 의미를 재사용**하되,
+  **rebuild head 자체의 스키마 위반을 구분할 baseline 전용 안전 오류 1개**
+  (**`REBUILD_BASELINE_INVALID`**, `category: "VALIDATION"`, `retryable: false`)만 추가한다.
+- **head 없음에서 legacy read가 실패하면 스펙 036의 기존 read 오류를 그대로 보존**한다.
+- **head 있음에서 참조 객체가 없거나 JSON/catalog가 invalid하면 대응하는 기존 read 오류를 보존**한다
+  (`ADMIN_STATE_NOT_FOUND` / `INVALID_JSON` / `INVALID_CATALOG` …).
+- **head 문서 자체의 허용 키 / `revision` / `objectPath` / `schemaVersion` 위반만
+  `REBUILD_BASELINE_INVALID`** 이다.
+- **read timeout/network 실패는 상태를 변경하지 않으므로 upload outcome unknown으로 부르지 않는다**
+  (`NETWORK_TIMEOUT` / `NETWORK_UNAVAILABLE`).
+- **`WRITE_HEAD_FAILED`는 save의 head transaction이 명확히 실패한 경우로 다시 좁혔다.**
+- **오류에는 raw message · email · UID · token · object bytes/path · `operationId`를 노출하지 않는다.**
+- **`packages/firebase/src/admin-read/**`를 수정하지 않는다는 경계는 유지한다.**
+
+**확인한 사실**: `SafeAdminReadError`는 **`@denn/firebase/admin-read` 배럴이 이미 export한다**
+(`packages/firebase/src/admin-read/index.ts`). 자기 package subpath 순환이 문제가 되면 구현은
+**내부 relative type import**를 써도 되지만 **공개 의미는 `@denn/firebase/admin-read`의
+`SafeAdminReadError`와 동일**해야 한다. **`import type`은 컴파일 시 지워지므로 런타임 결합·
+번들 영향은 어느 쪽이든 0**이다.
+
+### 교정 2 — timeout 뒤 base 관측은 commit 미반영의 증거가 아니다 (§6.6)
+
+**라운드 2의 결함**: transaction 결과 불명 뒤 head가 논리적 base에 머물러 있으면
+**commit 미반영을 확정**하고 `WRITE_HEAD_FAILED`를 반환했다.
+그러나 **timeout은 SDK transaction을 취소하지 않는다.** reconciliation read 순간에는 base여도
+**원 transaction이 나중에 서버에서 성공할 수 있다.**
+
+> **★ 이 잘못된 분기는 Codex의 라운드 2 지시에도 포함됐던 오류다. 최종 계약에서 바로잡았다.**
+
+정정된 판정:
+
+- **transaction이 명확히 reject되어 미반영이 확정된 경우는 결과 불명 reconciliation에 들어오지 않고**
+  기존 **`WRITE_HEAD_FAILED`** 또는 **`WRITE_CONFLICT`** 분기로 끝난다.
+- transaction 결과가 불명확해 reconciliation에 들어온 경우:
+  - head가 `revision === expectedBase + 1`이고 `objectPath`가 **이번 `operationId`** 이면 **성공 확정**.
+  - head가 `revision === expectedBase + 1`이고 **다른 `objectPath`** 이면 **다른 writer 승리 확정**.
+    head가 더 이상 `expectedBase`가 아니므로 **이번 operation의 late commit은 CAS에서 이길 수 없다**
+    → **`WRITE_CONFLICT`**, 업로드 객체는 **orphan**.
+  - head가 **여전히 논리적 base에 있으면 late commit 가능성이 남아 있으므로 미판정** →
+    **`WRITE_COMMIT_OUTCOME_UNKNOWN` 유지**. **orphan이라고 부르지 않는다.**
+  - head `revision`이 **`expectedBase + 1`보다 크면** 이번 commit이 중간에 성공했는지 판정할 수 없으므로
+    **`WRITE_COMMIT_OUTCOME_UNKNOWN` 유지**.
+  - **reconciliation read 실패/timeout도 `WRITE_COMMIT_OUTCOME_UNKNOWN`.**
+- **결과 불명 시 자동 재업로드 · transaction 재호출 · 삭제 · 성공/실패 추측은 계속 0이다.**
+- **bounded reconciliation read 최대 1회 규칙은 유지한다.**
+- **timeout 이후 도착한 SDK 결과가 UI·반환값을 뒤집지 않는 규칙과, 원 transaction이 서버에서
+  늦게 성공할 수 있다는 사실을 동시에 명시**했다 — 두 규칙은 양립한다.
+  앱은 **자기 반환값을 바꾸지 않을 뿐**이고 **서버의 진실은 다음 `loadBaseline`이 알려 준다.**
+- **§5.4 · §6.5~§6.6 · fake F-3~F-5 · 위험 표 · handoff의 의미를 모두 일치**시켰다.
+- **orphan 정의도 정정**했다(§6.7): orphan = head가 참조하지 않는 것이 **확정된** 불변 객체 —
+  §6.5의 명확한 실패·거부 분기와 §6.6의 **"다른 writer 승리 확정"** 분기에서만 그렇게 부른다.
+  **두 `*_OUTCOME_UNKNOWN` 상태는 orphan이 아니라 "미판정"이다.**
+
+### 라운드 2에서 열어 둔 질문 — 해소됨
+
+"`loadBaseline` 실패를 8코드 안에서 어떻게 부르는가"에 대해 라운드 2는
+**`WRITE_HEAD_FAILED`의 의미를 넓히는 절충**을 썼다. **교정 1이 그 절충을 폐기**했다 —
+**오류 표면 자체를 분리하는 것이 옳은 답**이고, **9번째 `WRITE_*` 코드는 만들지 않았다.**
+
+### 신규 위험 2건
+
+- **R-14** 읽기 실패를 "upload 오류"로 보고해 공개 API 의미가 틀어진다 → §5.4 표면 분리 + **F-6**.
+- **R-15** timeout 뒤 base 관측을 "미반영 확정"으로 오판해, **서버에서 나중에 성공한 commit을 실패로
+  보고하고 운영자가 같은 payload를 다시 보내게 만든다** → §6.6 **미판정 유지 · orphan 아님 ·
+  재전송 금지** + **F-4·F-5**.
+
+### 승인 경계 (§16)
+
+- **이번 라운드는 계약 문서 보완만 승인한다.**
+- **보완 push 후 상태는 `READY_FOR_CODEX`, `fix_round: 3`.**
+- **Codex 최종 계약 검토 전 port/Rules/config/test 구현 0.**
+- **실제 제품 UI · live Firebase · Rules 배포 · 운영 쓰기는 계속 금지.**
+- **★ G-5의 합성 fake·로컬 emulator 허용과 결정 문서 §2의 "제품 구현 착수" 금지 사이 경계는
+  이번 문서 교정에서 추측하지 않는다. Codex 최종 검토 후 Founder 확인 대상으로 남긴다.**
+
+### 유지 (라운드 2에서 바뀌지 않은 것)
+
+C5 구조(불변 객체 + 단일 Firestore head CAS) · Z-1(`op()` 무변경, 실제 UID UNCONFIRMED) ·
+Z-2(별도 최상위 경로, UUID save당 1회, `resource == null` create-only) ·
+Z-3 §4.3 **최초 create도 `expectedBase === 0` 강제** + §4.4 Rules 전 분기 · §5.5 callback 재실행 계약 ·
+§5.7 safe-integer 범위 · Z-7(tombstone·자동 merge 없음) · Z-8(배포 0) ·
+**저장 버튼·admin UI 연결 제외** · `firebase.emulator.json` + `demo-denn-emulator` 강제 ·
+§7.5 (A) emulator E-1~E-8 / (B) fake F-1~F-10 분리와 (C)(D) 경계 ·
+emulator 사전 확인 결과(Java 21.0.11 · firebase-tools 15.22.4 전역 · jar 캐시됨 · 포트 free ·
+**Auth emulator binary UNCONFIRMED**) · **R-1**(Rules 배포가 운영자의 유일한 저장 경로를 닫는다) ·
+**R-2**(`.firebaserc` default가 운영 프로젝트).
+
+### 검증
+
+- `git diff --check f694211..HEAD` **PASS**
+- 변경 경로 = **허용 문서 6개뿐**
+- 금지 범위(`apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
+  `firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc`) diff **0**
+- HEAD=origin, ahead/behind **0/0**
+- working tree = **보호 대상만** — 전부 손대지 않음
+- **다음 상태**: `READY_FOR_CODEX`, `fix_round: 3`. 구현하지 않았고 자동화도 만들지 않았다.

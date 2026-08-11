@@ -6,20 +6,108 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-036-admin-auth-private-state-read
 active_unit: spec-037-admin-write-c5-emulator-contract   # CONTRACT CORRECTION ONLY; implementation not started
-state: READY_FOR_CODEX   # correction round 2 applied to the contract; Codex re-reviews it next
-baseline_commit: fad819f
-candidate_commit: d5789db   # docs-only contract after correction round 2; not yet approved
+state: READY_FOR_CODEX   # correction round 3 applied; Codex final contract review next
+baseline_commit: f694211
+candidate_commit: PENDING_ROUND_3   # replaced with the round-3 commit hash in the follow-up sync commit
 verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "correction round 2 started at HEAD=origin=fad819f, ahead/behind 0/0; docs-only fast-forward commit carries Codex's round-2 review text too"
+origin_relation: "correction round 3 started at HEAD=origin=f694211, ahead/behind 0/0; docs-only fast-forward commit carries Codex's round-3 review text too"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts + Founder-owned taste-v2 work (docs/rebuild/design/taste-v2/, docs/rebuild/design/README.md, docs/rebuild/specs/038-page-design-prototype.md); Claude must not restore/stage/commit any of them"
-fix_round: 2
+fix_round: 3
 max_fix_rounds: 3
-next_transition: CODEX_CONTRACT_RE_REVIEW_ROUND_2   # manual workflow; no automatic task
+next_transition: CODEX_FINAL_CONTRACT_REVIEW   # manual workflow; no automatic task
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 스펙 037 계약 보완 라운드 3 완료 — READY_FOR_CODEX (2026-08-11)
+
+계약: `docs/rebuild/specs/037-admin-write-c5-emulator-contract.md`(라운드 3 정정본) ·
+핸드오프: `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`
+기준 HEAD `f694211` → 보완 커밋(hash는 후속 동기화 커밋에서 확정). **문서 전용 —
+`apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
+`firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc` diff 0**,
+신규 의존성 0, 실제 Firebase/network/live/**emulator 실행**/운영 데이터 접근 0,
+upload/write/delete/publish/deploy 0, 자동화 생성 0. **구현 착수 0.**
+> 이 커밋은 Codex가 작업 트리에 남긴 라운드 3 검수 기록도 함께 커밋한다.
+
+### Codex 지적 2건을 정정했다
+
+1. **★ `loadBaseline`과 `save`의 오류 표면을 분리했다(§5.4·§5.6·§6.1).**
+   라운드 2는 **읽기 작업에 `WRITE_UPLOAD_FAILED`·`WRITE_UPLOAD_OUTCOME_UNKNOWN`을 반환**하고
+   **persisted object invalid를 "head transaction 실패"와 합쳤다** — **공개 API 의미가 틀리다.**
+   정정: **`save`만** `SafeAdminWriteError` + 8개 `WRITE_*`를 쓴다.
+   **`loadBaseline`은 스펙 036의 공개 `SafeAdminReadError` 의미를 재사용**하고,
+   **head 문서 자체의 허용 키/`revision`/`objectPath`/`schemaVersion` 위반만**
+   신규 **`REBUILD_BASELINE_INVALID`** 하나로 구분한다(**baseline 전용 유일 추가 코드**).
+   head 없음의 legacy read 실패와 head 있음의 참조 객체 없음·JSON/catalog invalid는
+   **스펙 036의 기존 read 오류를 그대로 보존**한다.
+   **read timeout/network 실패는 상태를 변경하지 않으므로 upload outcome unknown으로 부르지 않는다**
+   (`NETWORK_TIMEOUT`/`NETWORK_UNAVAILABLE`).
+   **`WRITE_HEAD_FAILED`는 save의 head transaction이 명확히 실패한 경우로 다시 좁혔다.**
+   오류에 raw message·email·UID·token·object bytes/path·`operationId` 비노출 유지,
+   **`packages/firebase/src/admin-read/**` 무수정 경계 유지.**
+   **확인**: `SafeAdminReadError`는 **`@denn/firebase/admin-read` 배럴이 이미 export한다**.
+   자기 package subpath 순환이 문제면 **내부 relative type import 허용**하되 **공개 의미는 동일**해야 하며,
+   **`import type`은 컴파일 시 지워져 런타임 결합·번들 영향이 어느 쪽이든 0**이다.
+2. **★★ timeout 뒤 base 관측은 commit 미반영의 증거가 아니다(§6.6).**
+   **timeout은 SDK transaction을 취소하지 않는다** — reconciliation read 순간에 base여도
+   **원 transaction이 나중에 서버에서 성공할 수 있다.**
+   **이 잘못된 분기는 Codex의 라운드 2 지시에도 포함됐던 오류이며 최종 계약에서 바로잡았다.**
+   정정된 판정: **명확히 reject된 경우는 reconciliation에 들어오지 않고** 기존
+   `WRITE_HEAD_FAILED`/`WRITE_CONFLICT`로 끝난다. reconciliation에 들어온 경우 —
+   `revision === expectedBase + 1` **AND** `objectPath`가 이번 operation → **성공 확정** /
+   `revision === expectedBase + 1` **AND** 다른 `objectPath` → **다른 writer 승리 확정
+   `WRITE_CONFLICT`**(head가 더 이상 `expectedBase`가 아니라 우리 late commit은 CAS에서 이길 수 없다),
+   업로드 객체는 **orphan** / **여전히 논리적 base → late commit 가능성이 남아 미판정
+   `WRITE_COMMIT_OUTCOME_UNKNOWN`, orphan이라 부르지 않는다** /
+   `revision > expectedBase + 1` → **판정 불가 `WRITE_COMMIT_OUTCOME_UNKNOWN`** /
+   reconciliation read 실패·timeout → **`WRITE_COMMIT_OUTCOME_UNKNOWN`**.
+   **자동 재업로드·transaction 재호출·삭제·성공/실패 추측 계속 0**, **bounded read 최대 1회 유지**,
+   **늦게 도착한 SDK 결과가 UI·반환값을 뒤집지 않는다는 규칙과 원 transaction이 서버에서 늦게
+   성공할 수 있다는 사실을 동시에 명시**했다(앱은 자기 반환값을 바꾸지 않을 뿐이고,
+   서버의 진실은 다음 `loadBaseline`이 알려 준다).
+   §5.4·§6.5~§6.6·fake **F-3~F-5**·위험 표·handoff의 의미를 모두 일치시켰다.
+
+### 라운드 2에서 열어 둔 질문 — 해소됨
+
+"`loadBaseline` 실패를 8코드 안에서 어떻게 부르는가"에 대해 라운드 2는
+**`WRITE_HEAD_FAILED`의 의미를 넓히는 절충**을 썼다. **교정 1이 그 절충을 폐기**했다 —
+**오류 표면 자체를 분리하는 것이 옳은 답**이고 **9번째 `WRITE_*` 코드는 만들지 않았다.**
+
+### 신규 위험 2건
+
+**R-14** 읽기 실패를 "upload 오류"로 보고해 공개 API 의미가 틀어짐 → §5.4 표면 분리 + F-6 ·
+**R-15** timeout 뒤 base 관측을 "미반영 확정"으로 오판해 **서버에서 나중에 성공한 commit을 실패로
+보고하고 운영자가 같은 payload를 다시 보내게 만듦** → §6.6 미판정 유지 + 재전송 금지 + F-4·F-5.
+
+### 승인 경계 (§16)
+
+**이번 라운드는 계약 문서 보완만 승인한다.** push 후 **`READY_FOR_CODEX`, `fix_round: 3`**.
+**Codex 최종 계약 검토 전 port/Rules/config/test 구현 0.**
+**실제 제품 UI · live Firebase · Rules 배포 · 운영 쓰기는 계속 금지.**
+**★ G-5의 합성 fake·로컬 emulator 허용과 결정 문서 §2의 "제품 구현 착수" 금지 사이 경계는
+이번 문서 교정에서 추측하지 않는다 — Codex 최종 검토 후 Founder 확인 대상으로 남긴다.**
+
+> 아래 Codex 라운드 3 검수 기록과 그 아래 라운드 2·1·초판 기록은 **이력 보존을 위해 삭제하지 않는다.**
+
+## Codex 스펙 037 계약 재검토 — CORRECTION_REQUIRED 라운드 3 (2026-08-11)
+
+Codex는 보완 계약 `d5789db`와 상태 동기화 `f694211`을 검토했다.
+HEAD=origin=`f694211`, ahead/behind 0/0, 허용 문서 범위와 `git diff --check` PASS,
+제품/Rules/config/test diff 0은 확인됐다. 라운드 2의 네 교정도 반영됐다.
+
+그러나 최종 계약 결함 2건이 남았다.
+
+1. `loadBaseline`의 읽기 실패를 `WRITE_UPLOAD_*`/`WRITE_HEAD_FAILED`로 표현해 공개 오류 의미가 틀리다.
+2. transaction timeout 뒤 head가 base인 관측은 late commit 가능성 때문에 미반영 확정 증거가 아니다.
+
+정확한 최종 교정 지시는 `Automation/NEXT_CLAUDE_PROMPT.md`가 정본이다.
+제품 구현·Rules/config/test 변경·emulator 실행은 계속 금지한다.
+
+> 아래 `Claude 스펙 037 계약 보완 라운드 2 완료` 섹션은 `d5789db` 기록이며,
+> 위 Codex 라운드 3 판정이 이를 supersede한다.
 
 ## Claude 스펙 037 계약 보완 라운드 2 완료 — READY_FOR_CODEX (2026-08-11)
 

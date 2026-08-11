@@ -9,13 +9,60 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — 스펙 037 계약의 **보완 라운드 2**를 문서 전용으로 완료했다
-(2026-08-11, 기준 `fad819f` → **보완 커밋 `d5789db`**). Codex가 지적한 계약 결함 **4건을 정정**했다.
+상태: **`READY_FOR_CODEX` — 스펙 037 계약의 **보완 라운드 3(최종)**을 문서 전용으로 완료했다
+(2026-08-11, 기준 `f694211`). Codex가 지적한 최종 계약 결함 **2건을 정정**했다.
 `apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
 `firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc` diff **0**,
 신규 의존성 0, 실제 Firebase·network·live·**emulator 실행**·운영 데이터 접근 0,
 upload/write/publish/deploy 0, 자동화 생성 0. **구현 착수 0.**
-**다음 = Codex가 보완 라운드 2를 재검토**한다.**
+**다음 = Codex 최종 계약 검토.**
+
+> ### ★★ 보완 라운드 3 — 정정한 2건
+>
+> 1. **★ `loadBaseline`과 `save`의 오류 표면 분리(계약 §5.4·§5.6·§6.1).**
+>    라운드 2는 **읽기 작업에 `WRITE_UPLOAD_FAILED`·`WRITE_UPLOAD_OUTCOME_UNKNOWN`을 반환**하고
+>    **persisted object invalid를 "head transaction 실패"와 합쳤다** — **공개 API 의미가 틀리다.**
+>    정정: **`save`만** `SafeAdminWriteError` + **8개 `WRITE_*`**.
+>    **`loadBaseline`은 스펙 036의 `SafeAdminReadError` 의미를 재사용**하고
+>    **head 문서 자체의 허용 키/`revision`/`objectPath`/`schemaVersion` 위반만**
+>    신규 **`REBUILD_BASELINE_INVALID`** 하나로 구분한다.
+>    head 없음의 legacy read 실패, head 있음의 참조 객체 없음·JSON/catalog invalid는
+>    **기존 read 오류를 그대로 보존**한다. **read timeout/network 실패는 상태를 바꾸지 않으므로
+>    upload outcome unknown으로 부르지 않는다.**
+>    **`WRITE_HEAD_FAILED`는 save의 head transaction이 명확히 실패한 경우로 다시 좁혔다.**
+>    **확인**: `SafeAdminReadError`는 **`@denn/firebase/admin-read` 배럴이 이미 export한다.**
+>    순환이 문제면 **내부 relative type import 허용**하되 **공개 의미 동일**,
+>    **`import type`은 컴파일 시 지워져 런타임·번들 영향 0**. **`admin-read/**` 무수정 유지.**
+> 2. **★★ timeout 뒤 base 관측은 commit 미반영의 증거가 아니다(§6.6).**
+>    **timeout은 SDK transaction을 취소하지 않는다** — reconciliation read 순간에 base여도
+>    **원 transaction이 나중에 서버에서 성공할 수 있다.**
+>    **이 잘못된 분기는 Codex의 라운드 2 지시에도 포함됐던 오류이며 최종 계약에서 바로잡았다.**
+>    정정: 명확히 reject된 경우는 **reconciliation에 들어오지 않는다**. 들어온 경우 —
+>    `base+1` **AND** `objectPath`가 이번 것 → **성공 확정** / `base+1` **AND** 다른 `objectPath`
+>    → **다른 writer 승리 확정 `WRITE_CONFLICT`**(head가 더 이상 `expectedBase`가 아니라 우리
+>    late commit은 CAS에서 이길 수 없다), 객체는 **orphan** / **여전히 논리적 base → 미판정
+>    `WRITE_COMMIT_OUTCOME_UNKNOWN`, orphan이라 부르지 않는다** / `base+1` 초과 → **판정 불가** /
+>    reconciliation read 실패·timeout → **판정 불가**.
+>    **자동 재업로드·transaction 재호출·삭제·추측 계속 0**, **bounded read 최대 1회 유지**,
+>    **늦은 결과가 반환값을 뒤집지 않는다는 규칙과 원 transaction이 서버에서 늦게 성공할 수 있다는
+>    사실을 동시에 명시**했다 — 앱은 자기 반환값을 바꾸지 않을 뿐이고 **서버의 진실은 다음
+>    `loadBaseline`이 알려 준다.**
+>
+> **라운드 2에서 열어 둔 질문은 해소됐다** — `WRITE_HEAD_FAILED`의 의미를 넓히던 절충을
+> **교정 1이 폐기**했다. **오류 표면 분리가 옳은 답**이고 **9번째 `WRITE_*` 코드는 만들지 않았다.**
+>
+> **신규 위험**: **R-14** 읽기 실패를 "upload 오류"로 보고 · **R-15** timeout 뒤 base 관측을
+> "미반영 확정"으로 오판해 **서버에서 나중에 성공한 commit을 실패로 보고하고 운영자가 같은 payload를
+> 다시 보내게 만듦**.
+>
+> **승인 경계(§16)**: **이번 라운드는 계약 문서 보완만 승인.** push 후 **`READY_FOR_CODEX`,
+> `fix_round: 3`**. **Codex 최종 계약 검토 전 port/Rules/config/test 구현 0.**
+> **실제 제품 UI · live Firebase · Rules 배포 · 운영 쓰기 계속 금지.**
+> **★ G-5의 fake·emulator 허용과 결정 문서 §2의 "제품 구현 착수" 금지 사이 경계는 추측하지 않는다 —
+> Codex 최종 검토 후 Founder 확인 대상.**
+
+> 아래 `보완 라운드 2` 기록은 `d5789db`의 완료 이력이며,
+> 위 Codex 라운드 3 판정이 현재 상태를 supersede한다.
 
 > ### ★★ 보완 라운드 2 — 정정한 4건
 >
