@@ -2742,3 +2742,19 @@ emulator 사전 확인 결과(Java 21.0.11 · firebase-tools 15.22.4 전역 · e
   `docs/rebuild/design/README.md` · `docs/rebuild/specs/038-page-design-prototype.md` ·
   spec-018 PNG 2개 · `packages/render/src/plan/index.ts`) — 전부 손대지 않음
 - **다음 상태**: `READY_FOR_CODEX`, `fix_round: 2`. 구현하지 않았고 자동화도 만들지 않았다.
+
+### 보완 라운드 2 커밋 확정 (같은 날, 상태 동기화)
+
+- **보완 라운드 2 커밋**: **`d5789db`** (`fad819f..d5789db`, 일반 fast-forward push)
+- 확정 검증(그 커밋 기준): `git diff --check fad819f..d5789db` **PASS** ·
+  변경 파일 **허용 문서 6개뿐** · `apps/**`·`packages/**`·`tests/**`·`storage.rules`·
+  `firestore.rules`·`firebase.json`·`firebase.emulator.json`·`package.json`·lockfile·
+  `pnpm-workspace.yaml`·`.firebaserc` diff **0** · HEAD=origin, ahead/behind **0/0**.
+- 위 라운드 2 항목과 `DENN_AUTOMATION_STATE.md`·`NEXT_CLAUDE_PROMPT.md`·`CURRENT.md`는
+  **커밋 직전에 작성돼 hash 자리를 비워 두었다.** 이 동기화 커밋에서 네 문서 모두 **`d5789db`** 로 채웠다
+  (`candidate_commit`, 라운드 2 섹션, NEXT 헤더, CURRENT 상태 줄).
+- 문서 전용이며 제품 코드·Rules·config·test·lockfile 변경 0, emulator 실행 0,
+  실제 Firebase/network/live/운영 데이터 접근 0, 자동화 생성 0, **구현 착수 0**이다.
+- 보호 대상 6개는 **전부 손대지 않았다.**
+- **다음**: Codex가 보완 라운드 2(`d5789db`)를 재검토하고 결과와 다음 Claude 지시를
+  `Automation/NEXT_CLAUDE_PROMPT.md`에 남긴다. 그 전까지 Claude는 새 작업을 시작하지 않는다.
