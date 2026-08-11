@@ -5,12 +5,12 @@ updated_at: 2026-08-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-036-admin-auth-private-state-read
-active_unit: spec-037-candidate-admin-write-atomicity-investigation   # READ-ONLY investigation, docs only
-state: READY_FOR_CODEX   # Founder G-1..G-5 approved and recorded; Codex writes the spec 037 contract next
-baseline_commit: 3b4ebda
+active_unit: spec-037-admin-write-c5-emulator-contract   # CONTRACT DOCUMENT ONLY; implementation not started
+state: READY_FOR_CODEX   # spec 037 contract written from Codex Z-1..Z-8; Codex reviews it next
+baseline_commit: dc5666d
 candidate_commit: none (investigation is documentation only; no product code exists for spec 037)
 verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "Founder decision round started at HEAD=origin=3b4ebda, ahead/behind 0/0; docs-only fast-forward commit"
+origin_relation: "spec 037 contract round started at HEAD=origin=dc5666d, ahead/behind 0/0; docs-only fast-forward commit"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts + Founder-owned taste-v2 work (docs/rebuild/design/taste-v2/, docs/rebuild/design/README.md, docs/rebuild/specs/038-page-design-prototype.md); Claude must not restore/stage/commit any of them"
 fix_round: 1
 max_fix_rounds: 3
@@ -20,6 +20,89 @@ commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 스펙 037 C5 구현 계약 작성 완료 — READY_FOR_CODEX (2026-08-11)
+
+계약: **`docs/rebuild/specs/037-admin-write-c5-emulator-contract.md`**
+핸드오프: `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`
+기준 HEAD `dc5666d`. 입력 = Founder G-1~G-5(`dc5666d`, Codex 검수 통과) + **Codex 구조 결정 Z-1~Z-8**.
+**문서 전용 — `apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
+`package.json`·lockfile·`pnpm-workspace.yaml` diff 0**, 신규 의존성 0,
+실제 Firebase/network/live/**emulator 실행**/운영 데이터 접근 0, upload/write/delete/publish/deploy 0,
+자동화 생성 0. **구현 착수 0.**
+**★ 이 계약은 실제 저장 구현도 admin UI 연결도 승인하지 않는다.**
+
+### 계약이 확정한 것 (Z-1 ~ Z-8)
+
+- **Z-1** UID 제한은 **`rebuild-admin-state/**`와 `/rebuildAdminState/head`에만**.
+  **`op()` 본체 무변경** — 바꾸면 `published/`·`templates/`·`placeholders/`·`guides/`·`mockups/`·
+  `editor-overlays/` write까지 우발적으로 잠긴다(`storage.rules:18-21`·`:35-40`).
+  실제 UID는 **UNCONFIRMED**이고 **추측·예시 기록 금지**, 커밋 Rules에는 **표시된 placeholder**만.
+  emulator는 **합성 UID `emulator-operator-DO-NOT-DEPLOY`**(실제 형식과 명확히 구분).
+- **Z-2** `rebuild-admin-state/objects/{operationId}.json` — **별도 최상위 경로**라 OR 우회가
+  **구조적으로 발생하지 않는다**. `operationId` = 저장 시작 시 **1회 생성 UUID**(재시도해도 재생성 안 함).
+  경로에 **revision·문구·catalog id·이메일·UID·시간·파일명 금지**. content-addressed **미사용**.
+  `application/json` · 20 MiB 미만 · **`resource == null` create-only**, update/delete 금지.
+- **Z-3** `/rebuildAdminState/head` **단일 문서**, 허용 키 **3개**(`schemaVersion`=1 / `revision`≥1 정수 /
+  `objectPath`). 이메일·UID·문구·원문 catalog·token·오류 원문 **금지**.
+  최초 create는 **revision 1**, 이후는 transaction에서 **`expectedBase` 일치 시에만 정확히 +1**.
+  `firestore.rules`가 **경로·UID·허용 키·최초 1·이후 +1을 이중 강제**.
+  **★ Rules가 Storage 객체의 실제 존재를 원자적으로 증명한다고 주장하지 않는다.**
+- **Z-4** `@denn/firebase/admin-write` 서브패스, **루트 배럴 무변경**, SDK·Firestore는
+  **admin 전용 lazy 경계 안**, 주입 facade + 합성 fake, 기본 상태에서 **adapter 생성·네트워크 0**,
+  **저장 버튼·UI 연결 제외**, **단일 in-flight**, **앱 자동 retry·merge 0**.
+  ⚠️ **SDK 내부 재시도가 있으므로 "네트워크 요청 정확히 1회"를 주장하지 않는다** —
+  대신 `operationId` 고정 + `resource == null`이 **두 번째 쓰기를 서버에서 거부**한다.
+  **오류 8코드**(`WRITE_CONFLICT`/`AUTH_REQUIRED`/`FORBIDDEN`/`INVALID_INPUT`/`UPLOAD_FAILED`/
+  `UPLOAD_OUTCOME_UNKNOWN`/`HEAD_FAILED`/`COMMIT_OUTCOME_UNKNOWN`),
+  **CONFLICT·OUTCOME_UNKNOWN은 `retryable:false` + 재읽기 후 명시적 재시도만**.
+  raw message·email·UID·token·object bytes **비노출**.
+- **Z-5** head 없음 → legacy를 **revision 0** 기준으로 읽기 / head 있음 → **그 객체만** 읽고 검증,
+  **없거나 invalid면 fail-closed(legacy 조용한 fallback 0)**.
+  `expectedBase`는 **편집 시작 로드의 revision** 고정, 저장 직전 **자동 재채택·자동 병합 0**,
+  **commit 성공 후에만** 로컬 기준 갱신. upload 성공 후 commit 전 실패 = **orphan + head 불변**.
+  commit 결과 불명은 **추측 금지 → `WRITE_COMMIT_OUTCOME_UNKNOWN`**.
+- **Z-6** **로컬 emulator만**, **`demo-` 접두 프로젝트 강제**, 기본 게이트와 **분리**
+  (`*.emulator.test.ts` + `vitest.emulator.config.ts` + `pnpm test:emulator` — `*.live.test.ts` 선례 그대로),
+  **실제 Rules로 7개 시나리오** 검증. 설치·다운로드·신규 의존성·포트 강제 해제·프로세스 종료는 **STOP**.
+  **fake는 호출 순서·오류 매핑만 증명하고 서버 Rules 원자성을 증명하지 않는다**를 명시.
+- **Z-7** **tombstone·자동 merge 도입 안 함.** 저장은 **문서 전체 CAS**, 충돌 시 전체 거부.
+  **L-4 삭제 부활은 별도 후속 스펙.** 충돌 후 재읽기·재적용은 **운영자의 명시적 행동**.
+- **Z-8** **이번 스펙에서 Rules·앱 배포 0.** 실제 UID + orphan 보존/비용/정리 정책 + emulator PASS가
+  **모두** 확인되기 전 운영 쓰기 미개방. **legacy 저장을 먼저 닫지 않는다.**
+  cutover는 **별도 Founder 승인 + 별도 배포 스펙**.
+
+### ★ Emulator 사전 확인 (읽기 전용 · 설치 0 · 다운로드 0 · 실행 0)
+
+**Java `openjdk 21.0.11 LTS` 사용 가능** · **firebase-tools 전역 `15.22.4` 사용 가능**
+(**저장소 의존성 아님** → lockfile 변경 불필요) ·
+**emulator binary 캐시됨**(`cloud-firestore-emulator-v1.21.0.jar`,
+`cloud-storage-rules-runtime-v1.1.3.jar`, `ui-v1.15.0`) ·
+**포트 4000·4400·4500·8080·9099·9199·4183·4184 전부 free**.
+⚠️ **Auth emulator 별도 jar은 캐시에 없다** — 내장으로 보이나 **UNCONFIRMED**이며
+**첫 실행에서 다운로드를 시도하면 즉시 STOP**이다.
+
+### ★★ 계약이 못 박은 두 위험
+
+- **R-1 Rules 배포가 운영자의 유일한 저장 경로를 닫는다.** `denn-admin.html:740`이 지금 유일한
+  저장 경로다(스펙 035). **이번엔 Rules를 수정도 배포도 하지 않았고** UID 정본 전 배포가 차단이므로
+  **현재는 안전**하다. 위험은 배포 시점이며 **Z-8이 순서를 STOP 대상으로 고정**했다.
+- **R-2 emulator가 실제 프로젝트 id로 뜰 수 있다.** `.firebaserc`의 `projects.default`가
+  **실제 운영 프로젝트 `denn-products`** 다. → **`demo-` 접두 프로젝트 id 명시 강제** +
+  **emulator host 미설정 시 테스트 시작 거부** + **`.firebaserc` 수정 금지**.
+
+### NOT TESTED / UNCONFIRMED (계약이 끝나도 남는 것)
+
+실제 Firebase 프로젝트 동작 전부(Rules 실제 배포·거부, 실제 bucket, 운영 데이터) ·
+**실제 운영자 UID와 계정 실재·로그인** · 실제 네트워크 지연·단절 · 실기기·다중 기기 ·
+**Auth emulator binary 가용성** · 운영 규모 payload · orphan 누적 실제 비용 ·
+**L-4 삭제 부활**(범위 밖) · `pnpm-workspace.yaml`의 `allowBuilds`(이월).
+
+### 다음
+
+**Codex가 이 계약을 검토**한다. 승인 후 **Founder가 구현 착수를 별도 승인**해야 한다
+(현재 승인 범위 = 계약 작성 + 합성 fake + 로컬 emulator 검증까지).
+구현 단위는 **port + Rules 목표 상태 + emulator 검증까지**이며 **UI 연결을 포함하지 않는다.**
 
 ## Founder G-1~G-5 승인 기록 — 문서 전용 · READY_FOR_CODEX (2026-08-11)
 

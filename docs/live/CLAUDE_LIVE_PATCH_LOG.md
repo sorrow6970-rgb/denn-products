@@ -2133,3 +2133,178 @@ G-5가 차단 해제 조건을 **"emulator 검증 통과"** 로 구체화했다 
   `packages/render/src/plan/index.ts` · Founder 소유 taste-v2 작업 3개) — 전부 손대지 않음
 - **다음 상태**: `READY_FOR_CODEX`에서 **멈춘다.** Codex가 구조 결정과 스펙 037 구현 계약을
   검토·작성하기 전에는 구현을 시작하지 않는다. 자동화나 반복 작업은 만들지 않았다.
+
+## 2026-08-11 — 스펙 037 C5 구현 계약 작성 (문서 전용)
+
+- **기준**: HEAD=origin=`dc5666d`, ahead/behind 0/0.
+- **입력**: Founder **G-1~G-5**(`dc5666d`, Codex 검수 통과) + **Codex 구조 결정 Z-1~Z-8**.
+- **상태**: `READY_FOR_CODEX` 유지. **다음 주체 = Codex(계약 검토)**.
+- **변경 파일(6, 전부 문서)**:
+  - `docs/rebuild/specs/037-admin-write-c5-emulator-contract.md` (신규 계약)
+  - `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md` (신규 핸드오프)
+  - `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md`
+  - `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
+- **실행하지 않음**: `apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·
+  `firebase.json`·`package.json`·lockfile·`pnpm-workspace.yaml` 수정 **0** · 신규 의존성 0 ·
+  실제 Firebase/network/live/**emulator 실행**/운영 데이터 접근 0 ·
+  upload/write/delete/publish/deploy 0 · force push·merge·rebase·`reset --hard`·broad delete 0 ·
+  자동화 생성 0 · **구현 착수 0**.
+- **★ 이 계약은 실제 저장 구현도 admin UI 연결도 승인하지 않는다.**
+
+### 설계 요지 — 왜 C5인가
+
+조사가 확인한 사실이 설계를 강제했다. **Firebase Web SDK 공개 Storage API에 generation 기반
+조건부 쓰기가 없고**(`@firebase/storage@0.14.4` dist 전량 grep 0건, `generation` mapping
+`writable=false`), **고정 경로 rev+1 Rules가 CAS처럼 동작한다는 보장도 공식 문서에서 찾지
+못했으며**(C3 = NOT PROVEN), **Firestore lock만으로는 cross-service 간극이 남는다**(C4 = FAIL).
+
+→ **덮어쓰기를 아예 없앤다.** 객체는 **매번 새 불투명 경로에 한 번만 생성**되고,
+**가변 지점은 Firestore head 문서 하나**뿐이며 그 이동만 **transaction CAS**로 보호한다.
+
+> **★ 안전 근거는 Storage와 Firestore 사이의 cross-service 원자성이 아니다.**
+> **불변 객체를 먼저 만들고 단일 가변 정본만 CAS로 옮기기 때문**이다.
+> 간극에서 실패하면 **orphan 객체 + 명시적 충돌**이 되고, **남의 바이트를 덮는 일은 일어나지 않는다.**
+
+### 계약이 확정한 것 (Z-1 ~ Z-8)
+
+- **Z-1 UID 제한 범위** — `rebuild-admin-state/**` 와 `/rebuildAdminState/head`에**만** 적용한다.
+  **★ `op()` 본체는 건드리지 않는다** — `storage.rules:18-21`의 `op()`는 `published/`·`templates/`·
+  `placeholders/`·`guides/`·`mockups/`·`editor-overlays/` write에도 함께 쓰이므로(`:35-40`),
+  바꾸면 **레거시 발행(`denn-admin.html:14946`)과 자산 업로드까지 우발적으로 잠긴다.**
+  UID는 **새 함수로 새 경로에만** 건다. 실제 UID는 **UNCONFIRMED** —
+  **추측하지 않았고 예시 값을 실제처럼 기록하지 않았다.** 커밋 Rules에는 **표시된 placeholder**만 두고,
+  emulator는 **합성 UID `emulator-operator-DO-NOT-DEPLOY`**(실제 Firebase UID 형식과 명확히 구분)를 쓴다.
+- **Z-2 Storage 경로** — `rebuild-admin-state/objects/{operationId}.json`.
+  **기존 `admin/{p=**}` 하위가 아닌 별도 최상위 경로**라 **겹치는 상위 match가 없고 OR 우회가
+  구조적으로 발생하지 않는다**(`storage.rules:5-7` 머리말이 경고한 문제).
+  `operationId` = 저장 작업 시작 시 **1회 생성하는 무작위 UUID**이며 **재시도해도 새로 만들지 않는다**.
+  경로에 **revision·고객 문구·catalog id·이메일·UID·시간·파일명 금지**.
+  **content-addressed identifier 미사용.** `application/json`, **20 MiB 미만**,
+  **`resource == null` create-only**, **update/delete 금지**.
+- **Z-3 Firestore head** — `/rebuildAdminState/head` **단일 문서**가 유일한 가변 정본.
+  허용 키 **3개**(`schemaVersion: 1` / `revision`: 1 이상 정수 / `objectPath`).
+  **이메일·UID·고객 문구·원문 catalog·token·오류 원문 저장 금지.**
+  최초 commit은 **head 부재 확인 후 revision 1로 create**, 이후는 transaction에서
+  **현재 revision과 `expectedBase`가 같을 때만 정확히 +1**.
+  `firestore.rules`가 **허용 키·정확한 문서 경로·승인 UID·최초 1·이후 +1을 이중 강제**하고
+  `spaces/{token}`과 catch-all은 무변경.
+  **★ Firestore Rules가 Storage 객체의 실제 존재를 원자적으로 증명한다고 주장하지 않는다** —
+  Rules는 `objectPath` **문자열 형태**만 검사할 수 있고, 그 간극은 **읽기 fail-closed**(Z-5)가 흡수한다.
+- **Z-4 패키지·port 경계** — 공개 표면 후보 **`@denn/firebase/admin-write`**,
+  **`packages/firebase/src/index.ts` 루트 배럴 무변경**, **SDK·Firestore는 admin 전용 lazy 경계 밖으로
+  노출 금지**(`sdk-facade.ts:24-28` 동적 import 패턴), **주입 facade + 합성 fake**,
+  기본 앱 상태에서 **write adapter 생성·네트워크 0**.
+  **이번 첫 구현 단위에 저장 버튼과 실제 admin UI 연결을 포함하지 않는다.**
+  **한 번에 하나의 save만**, **앱 수준 자동 retry 0 · 자동 merge 0**.
+  ⚠️ **Firebase SDK 내부 재시도가 존재하므로**(업로드 재시도 창 10분, `index.esm.js:37`·`:43`)
+  **"네트워크 요청 자체가 정확히 1회"라고 단정하지 않는다** — 대신 `operationId`를 고정해
+  SDK가 다시 쏘아도 **같은 불투명 경로**를 향하고 `resource == null`이 **두 번째를 서버에서 거부**한다.
+  **오류 8분기**: `WRITE_CONFLICT` · `WRITE_AUTH_REQUIRED` · `WRITE_FORBIDDEN` ·
+  `WRITE_INVALID_INPUT` · `WRITE_UPLOAD_FAILED` · `WRITE_UPLOAD_OUTCOME_UNKNOWN` ·
+  `WRITE_HEAD_FAILED` · `WRITE_COMMIT_OUTCOME_UNKNOWN`.
+  **CONFLICT와 두 OUTCOME_UNKNOWN은 `retryable: false`이며 재읽기 후 사용자의 명시적 재시도만** 허용한다
+  (자동 재시도가 곧 덮어쓰기 위험이다).
+  **raw SDK message·email·UID·token·object bytes를 오류·로그·UI에 노출하지 않는다.**
+- **Z-5 읽기 기준과 `expectedBase`** — head가 **없으면** legacy `admin/state.json`을
+  **revision 0**의 초기 기준으로 읽을 수 있다. head가 **있으면 head가 가리키는 rebuild 객체만** 읽고 검증한다.
+  **head가 있는데 객체가 없거나 invalid하면 fail-closed** 하고 **legacy로 조용히 fallback하지 않는다**
+  (조용한 fallback은 옛 데이터를 최신처럼 보여 주고 그 위에 저장하게 만들어 **실제 손실**을 만든다).
+  `expectedBase`는 **사용자가 편집을 시작한 정확한 로드 결과의 revision**으로 고정하며,
+  **저장 직전 자동 재채택·자동 병합 0**. **commit 성공 후에만** 로컬 기준을 반환된 새 revision으로 갱신한다.
+  **upload 성공 후 head commit 전 실패는 orphan으로 남고 head는 바뀌지 않는다.**
+  **commit 결과를 확인할 수 없는 timeout은 성공이나 실패로 추측하지 않고
+  `WRITE_COMMIT_OUTCOME_UNKNOWN`으로 처리**한다.
+- **Z-6 Emulator 검증 계약** — 실제 Firebase 프로젝트·운영 bucket·운영 데이터·live network **접근 0**,
+  **로컬 emulator만**. 기본 unit/E2E와 **분리**해 `*.emulator.test.ts` + `vitest.emulator.config.ts` +
+  **`pnpm test:emulator`** 명시적 명령에서만 실행한다(`vitest.config.ts:17`의 `*.live.test.ts`
+  제외 선례를 그대로 따름). **실제 Rules로 7개 시나리오**를 검증한다:
+  ① 승인된 합성 UID만 객체 생성·head transaction 가능 ② 다른 UID·익명·미인증 거부
+  ③ 동일 `operationId` 덮어쓰기와 delete 거부 ④ 같은 `expectedBase`의 두 writer 중
+  **head 이동은 하나뿐이고 다른 쪽은 명시적 충돌** ⑤ upload 성공 후 commit 전 중단은
+  **orphan만 남기고 head 불변** ⑥ timeout·늦은 성공·commit 결과 불명에서 **조용한 재시도·덮어쓰기 0**
+  ⑦ 중복 탭·인증 만료 상당에서 **조용한 데이터 손실 0**.
+  **★ fake 테스트는 호출 순서와 오류 매핑을 증명할 뿐 서버 Rules 원자성을 증명하지 않는다**를 명시했다.
+- **Z-7 tombstone·병합** — 스펙 037에서 **도입하지 않는다**. 저장은 **문서 전체 CAS**이며
+  `expectedBase` 충돌 시 **문서 전체를 거부**한다(부분 반영 없음).
+  **L-4 삭제 부활의 자동 병합은 별도 후속 스펙**으로 유지한다 — **원자성은 병합 의미론을 고치지 않는다.**
+  충돌 후 최신본을 다시 읽고 재적용하는 것은 **운영자의 명시적 행동**이어야 한다.
+- **Z-8 배포 순서** — **이번 스펙에서 어떤 Rules나 앱도 배포하지 않는다.**
+  실제 UID · orphan 보존/비용/정리 정책 · emulator PASS가 **모두** 확인되기 전 운영 쓰기를 열지 않는다.
+  **현재 legacy `admin/state.json` 저장을 먼저 닫아 운영자가 아무 데도 저장할 수 없는 구간을
+  만들지 않는다.** 실제 cutover 순서는 **별도 Founder 승인과 별도 배포 스펙** 대상이며,
+  이 계약은 **목표 상태와 STOP 조건만** 기록한다.
+
+### ★ Emulator 사전 확인 결과 (읽기 전용 · 설치 0 · 다운로드 0 · 실행 0)
+
+| 항목 | 결과 |
+| --- | --- |
+| **Java** | **사용 가능** — `openjdk 21.0.11 2026-04-21 LTS` (Microsoft build) |
+| **firebase-tools** | **사용 가능** — 전역 **15.22.4**. **저장소 의존성이 아니다**(어느 `package.json`에도 없음) → **lockfile 변경 불필요** |
+| **Firestore emulator** | **캐시됨** `~/.cache/firebase/emulators/cloud-firestore-emulator-v1.21.0.jar` |
+| **Storage rules runtime** | **캐시됨** `cloud-storage-rules-runtime-v1.1.3.jar` |
+| **Emulator UI** | **캐시됨** `ui-v1.15.0` |
+| **Auth emulator binary** | 별도 jar **없음**. firebase-tools 내장으로 보이나 **이 조사에서 확인하지 않았다 → UNCONFIRMED** |
+| **포트** 4000·4400·4500·8080·9099·9199·4183·4184 | **전부 free**(확인 시점) |
+| `.firebaserc` | `projects.default = "denn-products"` ← **실제 운영 프로젝트 id** |
+
+**결론: 현재 환경은 새 설치 없이 emulator 검증을 시작할 수 있는 것으로 보인다.**
+⚠️ **Auth emulator만 UNCONFIRMED**이며, **첫 실행에서 binary 다운로드·설치·신규 의존성이
+필요해지면 실행하지 말고 STOP**이다. **타 프로세스 종료와 점유 포트 강제 해제도 하지 않는다.**
+
+### ★★ 계약이 못 박은 두 위험
+
+- **R-1 — Rules 배포가 운영자의 유일한 저장 경로를 닫는다.**
+  `denn-admin.html:740` = `uploadDataUrl(dataUrl,'admin/state.json')`이 스펙 035 기준
+  **운영자가 상태를 저장하는 유일한 경로**다(리빌드 admin은 저장 불가).
+  G-1의 "legacy `admin/state.json` 읽기 전용 고정"을 배포하면 **이 저장이 서버에서 거부된다.**
+  **현재는 안전하다** — 이번 스펙에서 Rules를 **수정도 배포도 하지 않았고**, UID 정본 전 배포가 차단이다.
+  **위험은 배포 시점이며 Z-8이 그 순서를 STOP 대상으로 못 박았다.**
+- **R-2 — emulator가 실제 프로젝트 id로 뜰 수 있다.**
+  `.firebaserc`의 `projects.default`가 **실제 운영 프로젝트 `denn-products`** 이므로
+  `--project`를 생략한 emulator 실행은 **그 id로 동작**하고, 설정이 어긋나면 클라이언트 SDK가
+  **실제 프로젝트로 나갈 수 있다.** → 계약은 **`demo-` 접두 프로젝트 id 명시를 강제**하고
+  (예 `demo-denn-emulator`, Firebase가 emulator 전용으로 다루며 실제 자격 증명이 없다),
+  **emulator host 환경변수가 없으면 테스트 시작 자체를 거부**하며, **`.firebaserc`는 수정하지 않는다.**
+
+### 그 밖에 계약이 명시한 안전장치
+
+- **R-3** emulator 사본 Rules가 실제 Rules와 갈라지면 검증이 무의미해지므로,
+  **UID 라인을 제외한 diff가 0**임을 **단위 테스트가 직접 고정**한다.
+  이 테스트가 없으면 "실제 Rules를 검증했다"고 말할 수 없다.
+- **R-8** `op()`를 건드리면 레거시 발행·자산 업로드가 함께 잠기므로 **`op()` 무변경**을 못 박았다.
+- **고객 번들 불변식**: 이번 구현 단위는 `apps/**`를 건드리지 않으므로
+  **고객 dist SHA-256이 반드시 동일해야 하고**, 달라지면 원인을 밝히기 전까지 진행 금지다.
+
+### NOT TESTED / UNCONFIRMED (계약이 끝나도 남는 것)
+
+실제 Firebase 프로젝트에서의 동작 전부(실제 Rules 배포·거부, 실제 bucket, 운영 데이터) ·
+**실제 운영자 UID와 그 계정의 실재·로그인** · 실제 네트워크 지연·단절에서의 거동
+(emulator는 로컬이라 타이밍이 다르다) · 실기기·다중 기기 동시 편집 ·
+**Auth emulator binary 가용성** · 운영 규모 payload(실제 `admin/state.json` 크기·내용) ·
+orphan 누적의 실제 비용 · **L-4 삭제 부활**(이 스펙이 다루지 않는다) ·
+`pnpm-workspace.yaml`의 `allowBuilds`(이월, 미해결).
+
+### 다음
+
+1. **Codex가 이 계약을 검토**한다.
+2. 승인되면 **Founder가 구현 착수를 별도 승인**해야 한다
+   (현재 승인 범위 = **계약 작성 + 합성 fake + 로컬 emulator 검증까지**).
+3. 구현 단위는 **port + Rules 목표 상태 + emulator 검증까지**이며 **UI 연결을 포함하지 않는다.**
+4. 운영 쓰기 개방은 **실제 UID + orphan 정책 + emulator PASS**가 전부 확인된 뒤
+   **별도 cutover 스펙**에서 다룬다.
+
+### 보호 대상 (수정·삭제·restore·checkout·stage·commit 금지)
+
+`docs/rebuild/design/taste-v2/**`(**Founder 소유의 별도 작업**) · `docs/rebuild/design/README.md` ·
+`docs/rebuild/specs/038-page-design-prototype.md` ·
+`docs/rebuild/results/spec-018/browse-desktop-1280x800.png` ·
+`docs/rebuild/results/spec-018/browse-mobile-390x844.png` · `packages/render/src/plan/index.ts`.
+**전부 손대지 않았다.** force push · merge · rebase · `reset --hard` · broad delete **0**.
+
+### 검증
+
+- `git diff --check` **PASS**(exit 0) · 변경 경로 = **허용 문서 6개뿐**
+- `apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
+  `package.json`·lockfile·`pnpm-workspace.yaml` diff **0**
+- working tree = **보호 대상만**
+- **다음 상태**: `READY_FOR_CODEX`에서 **멈춘다.** 자동화나 반복 작업은 만들지 않았다.
