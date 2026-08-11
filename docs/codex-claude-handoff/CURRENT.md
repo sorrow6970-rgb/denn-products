@@ -10,7 +10,8 @@
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
 상태: **`READY_FOR_CODEX` — Founder가 2026-08-11에 **스펙 037 최종 계약 `9805c26` 승인 + 로컬
-비-UI 구현·검증 착수를 승인**했고, 이번 라운드는 그 승인을 **문서에만** 기록했다(기준 `2f0ca7d`).
+비-UI 구현·검증 착수를 승인**했고, 이번 라운드는 그 승인을 **문서에만** 기록했다
+(기준 `2f0ca7d` → **승인 기록 커밋 `4f2ab0b`**).
 정본 `decisions/2026-08-11-spec-037-implementation-authorization.md`(승인 원문 수록).
 제품 코드·`storage.rules`·`firestore.rules`·`firebase.json`·`firebase.emulator.json`·
 `package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc`·test diff **0**, 신규 의존성 0,

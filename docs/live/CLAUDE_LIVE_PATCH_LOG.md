@@ -3090,3 +3090,19 @@ orphan 누적의 실제 비용 · `pnpm-workspace.yaml`의 `allowBuilds`(이월,
 - working tree = **보호 대상만**
 - **다음 상태**: `READY_FOR_CODEX`. **구현은 2단계 Codex 확인 후에 시작한다.**
   자동화나 반복 작업은 만들지 않았다.
+
+### 승인 기록 커밋 확정 (같은 날, 상태 동기화)
+
+- **Founder 승인 기록 커밋**: **`4f2ab0b`** (`2f0ca7d..4f2ab0b`, 일반 fast-forward push)
+- 확정 검증(그 커밋 기준): `git diff --check 2f0ca7d..4f2ab0b` **PASS** ·
+  변경 파일 **허용 문서 5개뿐**(결정 정본 신규 + STATE/NEXT/CURRENT/live) ·
+  제품 코드·test·`storage.rules`·`firestore.rules`·`firebase.json`·`firebase.emulator.json`·
+  `package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc` diff **0** ·
+  HEAD=origin, ahead/behind **0/0**.
+- 네 문서(`DENN_AUTOMATION_STATE.md` 승인 섹션 · `NEXT_CLAUDE_PROMPT.md` 헤더 ·
+  `CURRENT.md` 상태 줄 · 이 로그)에 **`4f2ab0b`** 을 채웠다.
+- 문서 전용이며 **실제 emulator 실행 0**, 실제 Firebase/network/live/운영 데이터 접근 0,
+  자동화 생성 0, **구현 착수 0**이다.
+- 보호 대상 6개는 **전부 손대지 않았다.**
+- **다음**: **NEXT §3 2단계 — Codex가 승인 기록과 최종 구현 허용 파일을 확인**한다.
+  그 확인 전에는 **3단계 비-UI 구현을 시작하지 않는다.**

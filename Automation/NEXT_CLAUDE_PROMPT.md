@@ -2,7 +2,7 @@
 
 상태: `READY_FOR_CODEX`
 active_unit: `spec-037-admin-write-c5-emulator-implementation-authorization`
-기준: HEAD=origin=`2f0ca7d` → 승인 기록 커밋(후속 동기화 커밋에서 hash 확정)
+기준: `2f0ca7d` → **승인 기록 커밋 `4f2ab0b`** (+ 상태 동기화 커밋)
 최종 계약: **`9805c26`** — Codex 판정 **`CONTRACT_PASSED`**
 다음 주체: **Codex** — **NEXT §3 2단계: 승인 기록과 최종 구현 허용 파일 확인**
 

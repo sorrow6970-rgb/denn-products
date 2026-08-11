@@ -24,7 +24,8 @@ deploy: forbidden
 ## Founder 스펙 037 구현 착수 승인 기록 — 문서 전용 · READY_FOR_CODEX (2026-08-11)
 
 정본: **`docs/codex-claude-handoff/decisions/2026-08-11-spec-037-implementation-authorization.md`**
-(승인 원문 수록) · 기준 HEAD `2f0ca7d` · 승인 대상 계약 **`9805c26`**(Codex `CONTRACT_PASSED`).
+(승인 원문 수록) · 기준 HEAD `2f0ca7d` → **승인 기록 커밋 `4f2ab0b`** ·
+승인 대상 계약 **`9805c26`**(Codex `CONTRACT_PASSED`).
 **문서 전용 — 제품 코드·`storage.rules`·`firestore.rules`·`firebase.json`·`firebase.emulator.json`·
 `package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc`·test diff 0**, 신규 의존성 0,
 실제 Firebase/network/live/**emulator 실행**/운영 데이터 접근 0, 자동화 생성 0.
