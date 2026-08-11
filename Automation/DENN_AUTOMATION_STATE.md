@@ -1,18 +1,18 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-08-10
+updated_at: 2026-08-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-036-admin-auth-private-state-read
-active_unit: none
-state: WAITING_FOR_NEXT_SPEC
-baseline_commit: a0543fb
-candidate_commit: none (spec 036 is DONE; last product change is b7ee207)
+active_unit: spec-037-candidate-admin-write-atomicity-investigation   # READ-ONLY investigation, docs only
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: 68fe339
+candidate_commit: none (investigation is documentation only; no product code exists for spec 037)
 verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "Codex confirmed docs-only closure commit a0543fb; HEAD=origin, ahead/behind 0/0 before final status commit"
+origin_relation: "started at HEAD=origin=68fe339, ahead/behind 0/0; investigation pushed as ordinary fast-forward commits"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
-fix_round: 3
+fix_round: 0
 max_fix_rounds: 3
 next_transition: FOUNDER_EXPLICIT_RESUME   # manual workflow; no automatic next-spec start
 automation_loop: removed (no new automation or recurring task is created)
@@ -20,6 +20,85 @@ commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 운영자 저장 원자성 읽기 전용 조사 완료 — FOUNDER_DECISION_REQUIRED (2026-08-11)
+
+보고서: `docs/codex-claude-handoff/reviews/2026-08-11-admin-write-atomicity-investigation.md`
+기준 HEAD `68fe339`. **문서 전용 — 제품 코드·테스트·CSS·config·manifest·`package.json`·lockfile·
+`storage.rules`·`firestore.rules`·`firebase.json` diff 0**, 신규 의존성 0,
+**실제 Firebase endpoint·운영 bucket·emulator·운영 데이터 요청 0**, upload/write/delete/publish/deploy 0,
+새 자동화·반복 작업 0. 스펙 037 제품 코드·구현 계약은 **작성하지 않았다**.
+
+### ★★ 결론 — F-E는 해제되지 않았다
+
+**현재 client-only + 기존 Rules 경계에서 E3-strong은 구현 불가능하다.** 따라서 **쓰기 구현을 열지 않는다.**
+
+1. **Firebase Web SDK 12.17.1(`@firebase/storage@0.14.4`)의 공개 Storage 쓰기 API에 조건부 쓰기가 없다.**
+   `uploadBytes`/`uploadBytesResumable`/`uploadString`/`updateMetadata`의 인자는 `ref`/`data`/`metadata`
+   뿐이고 precondition 파라미터가 **아예 없다**. dist 전량 grep에서
+   `ifGenerationMatch`·`ifMetagenerationMatch`·`precondition`·`etag` **0건**.
+2. **★ 내부 구현이 그것을 구조적으로 막는다.** `index.esm.js:1413-1414`의 `generation`/`metageneration`
+   mapping은 `writable = false`이고 `:1505-1515 toResourceString`이 writable만 직렬화한다 →
+   **generation은 요청 body에 실릴 수 없다.** `:1825`/`:1866` 업로드 urlParams는 `{ name }` 뿐,
+   `:1752-1764` updateMetadata PATCH에 `If-Match` 헤더 없음.
+   `generation`/`metageneration`은 **`FullMetadata` 읽기 필드일 뿐 쓰기 precondition 입력이 아니다.**
+3. **★ endpoint가 다르다.** 클라이언트는 `firebasestorage.googleapis.com/v0/...`(`:27`, `:571-577`)로 가고,
+   `ifGenerationMatch`가 문서화된 곳은 `storage.googleapis.com` **GCS JSON API**다.
+   문서화되지 않은 우회는 **제품 계약으로 쓰지 않는다**.
+4. **★ Storage Rules만으로는 안 된다.** Rules는 **요청별 술어**라 두 운영자가 같은 base로 동시에
+   `rev+1`을 제출하면 **둘 다 통과**한다. 게다가 공식 정의상 `create`="writes to file contents",
+   `update`="updates to (pre-existing) file **metadata**" 라 **콘텐츠 덮어쓰기는 `update`가 아니라
+   `create`** 이고, `request.resource`는 **`generation`·`metageneration`·`etag`를 제외**한다.
+5. **★ Firestore lock만으로도 안 된다.** cross-service 원자성이 **공식 문서에 존재하지 않는다** —
+   업로드 성공 후 revision 갱신 실패 / lease 만료+clock skew / SDK 자동 재시도(업로드 창 **10분**,
+   `:37`·`:43`)의 늦은 도착에서 **손실이 남는다**.
+6. **열린 길은 둘뿐이고 둘 다 새 권한이 필요하다.**
+   **C5** = Firestore head 포인터(CAS) + **revision별 immutable 객체**(덮어쓰기 0) → 신규 의존성 0
+   (Firestore가 이미 `firebase@12.17.1` 안에 있다)이지만 **`firestore.rules` 변경 필수**
+   (현재 catch-all `allow read, write: if false`가 새 컬렉션을 전부 거부) + orphan 정리 정책 필요.
+   **C6** = 서버/Cloud Function이 GCS JSON API `ifGenerationMatch`로 쓰기 → 문서상 가장 확실(412)이나
+   **client-only 경계를 벗어나고** 저장소에 함수 기반이 **전혀 없다**.
+7. **★ 원자성은 L-4(삭제 부활)를 고치지 않는다.** 그건 병합 의미론 문제이며 tombstone 계약이 따로 필요하다.
+
+### 공식 근거 (전부 2026-08-11 확인, Firebase/Google 문서만)
+
+GCS `request-preconditions`(4종 precondition은 **JSON/XML API·gcloud·서버 라이브러리** 표면,
+`ifGenerationMatch=0`=부재 시에만, 실패 **412**, **Firebase Web SDK 언급 없음**) ·
+`json_api/v1/objects/insert` · `storage/docs/metadata`(**generation은 서버 할당이고 단조 증가가 아니다**) ·
+`storage/docs/consistency`(strong read-after-write, **동시 쓰기 승자는 미문서화**, 회피책은 "use preconditions") ·
+Firebase `storage/web/file-metadata`(**generation/metageneration 읽기 전용**) · `storage/web/upload-files` ·
+`storage/security/core-syntax`(**create/update 정의**) · `storage/security/rules-conditions`
+(**request.resource는 generation/metageneration/etag 제외**) · `rules/rules-language` ·
+`firestore/manage-data/transactions`(**Firestore 밖 서비스 트랜잭션 서술 없음**).
+⚠️ `docs/reference/js/storage*`·`docs/reference/security/storage`는 JS 렌더링이라 **본문 미취득** —
+그 자리를 설치된 `storage-public.d.ts`로 대체했고 보고서 §3.1에 그렇게 기록했다.
+
+### UNCONFIRMED
+
+Rules 평가와 object write의 **원자성** · 덮어쓰기 `create`에서 `resource`가 채워지는지 ·
+Storage Rules의 "객체 부재" 판정 수단 · `/v0` 표면이 precondition 쿼리를 수용하는지 ·
+참조 문서 3페이지 본문. **NOT VERIFIED**: C5·C6의 실제 동시성 동작(실행 0) · 실제 412 ·
+Rules 실제 배포·거부 · 실제 `admin/state.json` · L-1~L-4 재현 · Firestore 번들 실측.
+
+### STOP — Founder 결정 (승인된 적 없음)
+
+**G-1** `storage.rules` 변경 승인 · **G-2** Firestore 사용 + `firestore.rules` 변경 승인 ·
+**G-3** backend/Cloud Function 승인 · **G-4** 운영 비용·orphan 복구 정책 ·
+**★ G-5** C5(Firestore) / C6(backend) / **"쓰기를 계속 열지 않는다"** 중 택일.
+
+### Codex 구조 결정 후보 (미결)
+
+**Y-1** revision 형식(generation은 카운터로 못 씀) · **Y-2** 격리 경로 —
+**경로 형태와 원자성 전략은 함께 정해야 한다**(단일 고정 경로를 고르면 C5가 성립하지 않는다) ·
+**Y-3** port 경계(⚠️ SDK 내부 재시도 때문에 "retry 0"이 port만으로 보장되지 않는다) ·
+**Y-4** 충돌 오류 코드 · **Y-5** 합성 fake 검증 범위(동시성은 재현 가능, **서버 원자성은 증명 불가**) ·
+**Y-6** L-4 tombstone · **Y-7** orphan 식별·정리.
+
+### 유지
+
+F-B·F-C·F-D·F-E 무변경. 스펙 036 계약 무변경. 리빌드 `apps/**`·`packages/**`의 **쓰기 표면 0건** 유지.
+`firebase.json`의 `hosting.public`은 여전히 `"."` 이라 **deploy 금지 상태 그대로**다.
+알려진 스펙 018 PNG 2개와 content diff 0인 `packages/render/src/plan/index.ts`: **손대지 않았다.**
 
 ## Claude 스펙 033 구현 완료 — READY_FOR_CODEX (2026-07-31)
 
