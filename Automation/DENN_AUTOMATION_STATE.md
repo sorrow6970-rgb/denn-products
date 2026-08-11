@@ -8,9 +8,9 @@ completed_unit: spec-036-admin-auth-private-state-read
 active_unit: spec-037-admin-write-c5-emulator-contract   # CONTRACT CORRECTION ONLY; implementation not started
 state: READY_FOR_CODEX   # correction round 1 applied to the contract; Codex re-reviews it next
 baseline_commit: c654023
-candidate_commit: c654023   # docs-only contract candidate; product code does not exist for spec 037
+candidate_commit: 41b54b9   # docs-only contract after correction round 1; product code does not exist for spec 037
 verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "correction round 1 started at HEAD=origin=c654023, ahead/behind 0/0; docs-only fast-forward commit carries Codex's review text too"
+origin_relation: "correction round 1 ran c654023 -> 41b54b9 (docs-only fast-forward, carries Codex's review text); HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts + Founder-owned taste-v2 work (docs/rebuild/design/taste-v2/, docs/rebuild/design/README.md, docs/rebuild/specs/038-page-design-prototype.md); Claude must not restore/stage/commit any of them"
 fix_round: 1
 max_fix_rounds: 3
@@ -25,7 +25,8 @@ deploy: forbidden
 
 계약: `docs/rebuild/specs/037-admin-write-c5-emulator-contract.md`(정정본) ·
 핸드오프: `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`
-기준 HEAD `c654023`. **문서 전용 — `apps/**`·`packages/**`·`tests/**`·`storage.rules`·
+기준 HEAD `c654023` → **보완 커밋 `41b54b9`**(fast-forward push, HEAD=origin, ahead/behind 0/0).
+**문서 전용 — `apps/**`·`packages/**`·`tests/**`·`storage.rules`·
 `firestore.rules`·`firebase.json`·`firebase.emulator.json`·`package.json`·lockfile·
 `pnpm-workspace.yaml` diff 0**, 신규 의존성 0, 실제 Firebase/network/live/**emulator 실행**/
 운영 데이터 접근 0, upload/write/delete/publish/deploy 0, 자동화 생성 0. **구현 착수 0.**

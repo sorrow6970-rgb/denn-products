@@ -2,10 +2,14 @@
 
 상태: `READY_FOR_CODEX`
 active_unit: `spec-037-admin-write-c5-emulator-contract` (**계약 보완 라운드 1 완료 · 구현 미착수**)
-fix_round: 1 / max 3 · 기준: HEAD=origin=`c654023` → 보완 커밋
+fix_round: 1 / max 3 · 기준 `c654023` → **보완 커밋 `41b54b9`** (+ 상태 동기화 커밋)
 다음 주체: **Codex** — 보완 라운드 1 재검토
 
 **Codex가 지적한 계약 결함 5건을 문서 전용으로 정정했다.** 구현은 시작하지 않았다.
+
+> **★ 이 파일에는 현재 Claude가 수행할 작업 항목이 없다.**
+> §1~§3은 **이미 완료된 정정 내역**과 **Codex가 확인할 것**이다.
+> Codex가 재검토 결과와 다음 Claude 지시를 이 파일에 남기기 전까지 Claude는 새 작업을 시작하지 않는다.
 
 - 계약: **`docs/rebuild/specs/037-admin-write-c5-emulator-contract.md`**(정정본)
 - 핸드오프: `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`

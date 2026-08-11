@@ -2499,3 +2499,59 @@ emulator 사전 확인 결과(Java 21.0.11 · firebase-tools 15.22.4 전역 · e
   `docs/rebuild/design/README.md` · `docs/rebuild/specs/038-page-design-prototype.md` ·
   spec-018 PNG 2개 · `packages/render/src/plan/index.ts`) — 전부 손대지 않음
 - **다음 상태**: `READY_FOR_CODEX`에서 **멈춘다.** 구현하지 않았고 자동화도 만들지 않았다.
+
+## 2026-08-11 — 상태 동기화 (문서 전용, 새 작업 없음)
+
+> 바로 위 `스펙 037 계약 보완 라운드 1` 항목의 **누락된 커밋 hash를 확정 기록**한다.
+> 그 항목은 커밋 **이전에** 작성돼 hash가 비어 있었다. 원문은 삭제하지 않는다.
+
+- **보완 라운드 1 커밋**: **`41b54b9`** (`c654023..41b54b9`, 일반 fast-forward push)
+- 확정 검증(그 커밋 기준): `git diff --check c654023..41b54b9` **PASS** ·
+  변경 파일 **허용 문서 6개뿐** · `apps/**`·`packages/**`·`tests/**`·`storage.rules`·
+  `firestore.rules`·`firebase.json`·`firebase.emulator.json`·`package.json`·lockfile·
+  `pnpm-workspace.yaml`·`.firebaserc` diff **0** · HEAD=origin, ahead/behind **0/0**.
+
+### 이번 동기화에서 한 일
+
+`Automation/NEXT_CLAUDE_PROMPT.md`를 읽었으나 **Claude가 수행할 작업 항목이 없었다** —
+§1~§3은 이미 완료된 정정 내역과 **Codex가 확인할 것**이고, 다음 주체는 **Codex(보완 라운드 1 재검토)**다.
+따라서 새 작업을 시작하지 않고 **문서와 실제 상태의 불일치만** 맞췄다.
+
+| 문서 | 불일치 | 정정 |
+| --- | --- | --- |
+| `DENN_AUTOMATION_STATE.md` | `candidate_commit: c654023` (초판 hash) | **`41b54b9`** |
+| `DENN_AUTOMATION_STATE.md` | `origin_relation`이 "started at c654023"에서 멈춰 있음 | **`c654023 -> 41b54b9`, HEAD=origin 0/0** |
+| `DENN_AUTOMATION_STATE.md` | 보완 라운드 1 섹션에 커밋 hash 없음 | **`41b54b9` 명시** |
+| `CURRENT.md` | 기준이 `c654023`으로만 표기 | **`c654023` → 보완 커밋 `41b54b9`** |
+| `NEXT_CLAUDE_PROMPT.md` | "기준: HEAD=origin=`c654023` → 보완 커밋"(hash 공란) | **`41b54b9` 명시** + **"이 파일에 Claude 작업 항목 없음"** 배너 추가 |
+| `CLAUDE_LIVE_PATCH_LOG.md` | 보완 라운드 1 항목에 커밋 hash 없음 | **이 항목으로 확정 기록** |
+
+> **원인**: 네 문서 모두 **커밋 직전에** 작성돼 hash를 담을 수 없었다.
+> 앞으로도 hash가 필요한 기록은 **커밋 후 별도 동기화 항목**으로 남긴다.
+
+### `Automation/MANUAL_HANDOFF_PROMPTS.md` 커밋
+
+Founder가 남긴 **수동 인수인계 고정 프롬프트 문서**가 untracked로 있었다.
+이 파일은 Claude↔Codex 인수인계의 **운영 규칙 정본**(작업 시작 프롬프트 · 검수 요청 프롬프트 ·
+"실제 작업 범위의 정본은 `NEXT_CLAUDE_PROMPT.md`" · 완료 시 STATE/NEXT/CURRENT/live 동기화 의무)이므로
+**추적 대상으로 커밋**했다. 내용은 **수정하지 않았다.**
+
+### 실행하지 않음
+
+제품 코드·test·CSS·`storage.rules`·`firestore.rules`·`firebase.json`·`firebase.emulator.json`·
+`package.json`·lockfile·`pnpm-workspace.yaml` 수정 **0** · 신규 의존성 0 ·
+**실제 emulator 실행 0** · 실제 Firebase/network/live/운영 데이터 접근 0 ·
+upload/write/delete/publish/deploy 0 · force push·merge·rebase·`reset --hard`·broad delete 0 ·
+자동화·반복 작업 생성 0 · **구현 착수 0**.
+
+### 보호 대상 (전부 손대지 않음)
+
+`docs/rebuild/design/taste-v2/**` · `docs/rebuild/design/README.md` ·
+`docs/rebuild/specs/038-page-design-prototype.md` ·
+`docs/rebuild/results/spec-018/browse-desktop-1280x800.png` ·
+`docs/rebuild/results/spec-018/browse-mobile-390x844.png` · `packages/render/src/plan/index.ts`.
+
+### 다음
+
+**Codex가 보완 라운드 1(`41b54b9`)을 재검토**하고 결과와 다음 Claude 지시를
+`Automation/NEXT_CLAUDE_PROMPT.md`에 남긴다. 그 전까지 Claude는 새 작업을 시작하지 않는다.
