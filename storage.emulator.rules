@@ -32,7 +32,7 @@ service firebase.storage {
     //   op()를 UID 제한으로 바꾸면 published/·templates/·guides/ 등 레거시 write까지 함께 잠긴다.
     function approvedOperator() {
       return op()
-        && request.auth.uid == 'UNCONFIRMED_OPERATOR_UID_REPLACE_BEFORE_DEPLOY';
+        && request.auth.uid == 'emulator-operator-DO-NOT-DEPLOY';
     }
 
     // 리빌드 전용 불변 상태 객체 — 별도 최상위 경로라 겹치는 상위 match가 없다.

@@ -27,7 +27,7 @@ service cloud.firestore {
       function approvedOperator() {
         return request.auth != null
           && request.auth.token.firebase.sign_in_provider != 'anonymous'
-          && request.auth.uid == 'UNCONFIRMED_OPERATOR_UID_REPLACE_BEFORE_DEPLOY';
+          && request.auth.uid == 'emulator-operator-DO-NOT-DEPLOY';
       }
       function validHeadKeys() {
         return request.resource.data.keys().hasOnly(['schemaVersion', 'revision', 'objectPath'])

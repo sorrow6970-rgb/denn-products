@@ -26,6 +26,10 @@ const BIOME_TARGETS = [
   "scripts",
   "vitest.config.ts",
   "vitest.live.config.ts",
+  // Opt-in emulator config (spec 037). Listed here as well as in package.json: biome only checks
+  // the paths it is given, so a config missing from this list is silently skipped rather than
+  // failing — which reads as "checked" when it was not.
+  "vitest.emulator.config.ts",
   "playwright.config.ts",
   "playwright.live.config.ts",
 ];

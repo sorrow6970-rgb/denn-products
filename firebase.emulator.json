@@ -1,0 +1,33 @@
+{
+  "_comment": [
+    "LOCAL EMULATOR ONLY (spec 037 section 7.3). Never used for deployment.",
+    "Deliberately separate from firebase.json so the deploy config and the synthetic-UID rules",
+    "copies can never be mixed up. There is no hosting block here on purpose.",
+    "Run with BOTH flags: --config firebase.emulator.json --project demo-denn-emulator",
+    "The demo- project prefix is what guarantees no real credentials can be reached."
+  ],
+  "storage": {
+    "rules": "storage.emulator.rules"
+  },
+  "firestore": {
+    "rules": "firestore.emulator.rules"
+  },
+  "emulators": {
+    "singleProjectMode": true,
+    "auth": {
+      "host": "127.0.0.1",
+      "port": 9099
+    },
+    "firestore": {
+      "host": "127.0.0.1",
+      "port": 8080
+    },
+    "storage": {
+      "host": "127.0.0.1",
+      "port": 9199
+    },
+    "ui": {
+      "enabled": false
+    }
+  }
+}

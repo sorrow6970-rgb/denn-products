@@ -14,7 +14,10 @@ export default defineConfig({
     ],
     // Live network validation (*.live.test.ts, spec 014) is opt-in only — never in the
     // default gate. It runs via vitest.live.config.ts.
-    exclude: [...configDefaults.exclude, "**/*.live.test.ts"],
+    // Local emulator validation (*.emulator.test.ts, spec 037) is opt-in the same way and runs via
+    // vitest.emulator.config.ts. Both patterns end in `.test.ts`, so the include above would pick
+    // them up without these excludes.
+    exclude: [...configDefaults.exclude, "**/*.live.test.ts", "**/*.emulator.test.ts"],
     environment: "node",
   },
 });

@@ -8,6 +8,10 @@
     "./admin-read": {
       "types": "./src/admin-read/index.ts",
       "default": "./src/admin-read/index.ts"
+    },
+    "./admin-write": {
+      "types": "./src/admin-write/index.ts",
+      "default": "./src/admin-write/index.ts"
     }
   },
   "main": "./src/index.ts",
