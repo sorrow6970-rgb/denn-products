@@ -2555,3 +2555,190 @@ upload/write/delete/publish/deploy 0 · force push·merge·rebase·`reset --hard
 
 **Codex가 보완 라운드 1(`41b54b9`)을 재검토**하고 결과와 다음 Claude 지시를
 `Automation/NEXT_CLAUDE_PROMPT.md`에 남긴다. 그 전까지 Claude는 새 작업을 시작하지 않는다.
+
+## 2026-08-11 — Codex 스펙 037 계약 재검토 · CORRECTION_REQUIRED 라운드 2
+
+- **검수 대상**: 보완 계약 `41b54b9` + 상태 동기화 `fad819f`.
+- **Git 근거**: HEAD=origin=`fad819f`, ahead/behind 0/0.
+- `git diff --check c654023..41b54b9` **PASS**.
+- `git diff --check 41b54b9..fad819f` **PASS**.
+- 보완 커밋은 허용 문서 6개, 동기화 커밋은 상태 문서 4개 +
+  `Automation/MANUAL_HANDOFF_PROMPTS.md`뿐이다.
+- `apps/**`·`packages/**`·`tests/**`·Rules/config/manifest/lockfile diff **0**.
+- 제품 구현·실제 emulator·Firebase/network/live·배포 실행 **0**.
+
+### 판정
+
+최초 지적 5건의 방향은 반영됐지만 구현 전에 닫아야 할 계약 결함 4건이 남아
+**`CORRECTION_REQUIRED` 라운드 2**로 판정한다.
+
+1. **최초 create의 CAS 누락** — head가 없을 때 `expectedBase == 0`을 확인하지 않고 revision 1을 만든다.
+2. **공개 타입 미완결** — 존재하지 않는 `Catalog`를 사용하고 `SafeAdminWriteError`의 정확한 타입이 없다.
+3. **호출 불가능한 결과 불명 절차** — `operationId`는 내부인데 호출자에게 head의 `objectPath` 비교를 요구한다.
+4. **검증 책임 혼합** — 결정적 seam 없이 callback 재실행과 commit outcome unknown을
+   “실제 Rules emulator” 표에 포함했다.
+
+### 다음
+
+- 정확한 문서 교정 지시는 `Automation/NEXT_CLAUDE_PROMPT.md`에 기록했다.
+- Claude는 허용 문서 6개만 보완해 일반 fast-forward push하고 `READY_FOR_CODEX`로 전환한다.
+- 구현·Rules/config/test 변경과 emulator 실행은 계속 금지한다.
+- 자동화나 반복 작업을 만들지 않는다.
+
+## 2026-08-11 — 스펙 037 계약 보완 라운드 2 (CORRECTION_REQUIRED, 문서 전용)
+
+> **★ 위의 Codex 라운드 2 검수 항목, 라운드 1 항목, 초판 항목은 삭제하지 않는다.**
+
+- **기준**: HEAD=origin=`fad819f`, ahead/behind 0/0. `fix_round: 2 / max 3`.
+- **상태**: `CORRECTION_REQUIRED` / `CLAUDE_WORKING` → **`READY_FOR_CODEX`**.
+- **변경 파일(6, 전부 허용 문서)**:
+  - `docs/rebuild/specs/037-admin-write-c5-emulator-contract.md` (라운드 2 정정본)
+  - `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`
+  - `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md`
+  - `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
+  - ※ Codex가 작업 트리에 남긴 **라운드 2 검수 기록도 함께** 커밋한다.
+- **실행하지 않음**: `apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·
+  `firebase.json`·`firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml`·
+  `.firebaserc` 수정 **0** · 신규 의존성 0 · **실제 emulator 실행 0** ·
+  실제 Firebase/network/live/운영 데이터 접근 0 · upload/write/delete/publish/deploy 0 ·
+  force push·merge·rebase·`reset --hard`·broad delete 0 · 자동화 생성 0 · **구현 착수 0**.
+
+### 교정 1 — 최초 head 생성도 `expectedBase == 0`을 강제 (§4.3, §5.7)
+
+**라운드 1의 결함**: head가 없으면 `expectedBase`를 **확인하지 않고** revision 1을 생성했다.
+이는 G-2의 "`expectedBase`와 현재 head가 일치할 때만 변경"과 **모순**이다.
+구체적 위험: **`expectedBase`가 5인 편집 세션**(사용자가 revision 5를 보고 편집 중)이
+**head가 사라진 상황에서 revision 1을 만들어 5번까지의 이력을 조용히 밀어낼 수 있었다.**
+
+정정:
+
+- **head 없음은 논리적 revision `0`으로 취급한다.**
+- head가 없을 때 **`expectedBase === 0`인 경우에만** revision 1 create를 허용한다.
+- head가 없는데 **`expectedBase !== 0`이면 upload 뒤 head는 변경하지 않고 `WRITE_CONFLICT`** 로 끝낸다.
+- **`expectedBase`는 0 이상의 safe integer만** 허용하고, 그 밖의 값은
+  **upload 전에 `WRITE_INVALID_INPUT`**(Storage 호출 0회)이다.
+- **persisted head `revision`도 1 이상의 safe integer만 유효**하며,
+  **`+1`이 여전히 safe integer가 아니면 fail-closed**한다
+  (`MAX_SAFE_INTEGER + 1 === MAX_SAFE_INTEGER + 2`라 검사가 없으면 CAS가 무너진다).
+- 위 분기를 **§4.3 · §5.4 · §5.7 · §6.1~§6.5 · fake/emulator 검증표**에 같은 의미로 반영했다.
+- **Firestore Rules의 create `revision == 1`, update 정확히 `+1` 규칙은 유지**하고,
+  **`expectedBase` 자체는 클라이언트 transaction 계약에서 검사**한다
+  (Rules는 요청자의 base를 알 수 없다).
+
+### 교정 2 — 공개 타입 블록을 실제 저장소 타입으로 완결 (§5.6)
+
+**라운드 1의 결함**: "정확한 타입" 블록이 **존재하지 않는 `Catalog`** 를 쓰고
+**설명문에서만** `CatalogDocumentV1`에 바인딩한다고 적었다. 공개 계약으로는 불완전하다.
+
+정정:
+
+- 타입 블록 자체가 **`CatalogDocumentV1`을 사용**한다. **`Catalog` alias나 동의어 타입을 만들지 않는다.**
+- **기존 `@denn/shared`의 `Result`를 사용한다고 import/type 표면까지 명시**했다
+  (`packages/shared/src/index.ts:19`의 정의를 주석으로 함께 기록).
+- **`AdminWriteErrorCode`(8개 union) · `AdminWriteErrorCategory` · `SafeAdminWriteError`** 의
+  정확한 공개 타입을 함께 고정했다.
+- **오류 코드는 계약의 8개만 허용**하고 **category/retryable 매핑은 §5.4 정본 표 한 곳**과 일치한다.
+- **안전 오류에는 `correlationId` 외** raw SDK message · email · UID · token ·
+  **object bytes** · **`objectPath`** · **`operationId`** 가 **들어가지 않는다**.
+- **`AdminStateRevision`의 런타임 유효 범위**를 교정 1의 safe-integer 규칙과 일치하도록 명시했다.
+
+### 교정 3 — commit 결과 불명의 재조회 주체와 반환 의미 (§6.6)
+
+**라운드 1의 결함**: `operationId`를 port 내부에 숨기면서 **호출자에게 head를 재조회해
+`objectPath`를 비교하라**고 했다. **호출자는 내부 `operationId`를 알 수 없어 그 절차를 수행할 수 없다.**
+
+정정:
+
+- transaction 결과가 불명확하면 **`save` 내부가 자신이 보유한 `operationId`로
+  read-only reconciliation을 수행**한다.
+- **reconciliation은 write retry가 아니다** — **Storage 재업로드 0 · transaction 재호출 0**.
+- **동일 save 호출 안에서 bounded read를 최대 1회** 수행한다(무한 polling 금지).
+  **transaction callback 안에서 하지 않는다**(§5.5 부작용 금지).
+- **판정 3분기**:
+  - head가 **`{ revision: expectedBase + 1, objectPath: 이번 operationId 경로 }`** 이면
+    **save 성공으로 반환**한다.
+  - head가 **여전히 논리적 base revision에 머물렀음이 확인되면**(head 부재 = base `0`,
+    또는 `revision === expectedBase`) **commit 미반영으로 판정**하되
+    **이미 업로드된 객체는 orphan이며 자동 재전송·삭제하지 않는다** → **`WRITE_HEAD_FAILED`**.
+  - **다른 writer가 head를 이동시켜 이번 commit의 중간 성공 여부를 판정할 수 없거나**
+    (`revision`이 `base`도 `base+1`도 아님, 또는 `base+1`인데 `objectPath`가 우리 것이 아님),
+    **reconciliation read 자체가 실패/timeout이면 `WRITE_COMMIT_OUTCOME_UNKNOWN`을 유지**한다.
+- `objectPath` 비교가 성립하는 이유는 **§4.4가 update마다 `objectPath` 교체를 강제**하기 때문이다.
+- **호출자에게 `operationId`나 object path를 오류로 노출하지 않는다**(성공 값에만 `objectPath`가 나간다).
+- **`loadBaseline`은 정상 baseline 로드 API이고, 내부 결과 불명 reconciliation을 호출자에게
+  떠넘기는 API로 사용하지 않는다.**
+- 위 분기의 정확한 오류 코드와 반환값을 **§5.4 · §5.6 · §6.5 · 결정적 fake 테스트(F-4)** 에 일치시켰다.
+
+### 교정 4 — fake와 emulator가 증명하는 항목을 분리 (§7.5)
+
+**라운드 1의 결함**: §7.5가 **"실제 Rules 사용" 표에 transaction callback 재실행과
+commit outcome unknown까지** 넣었지만, **계약에 그 둘을 emulator에서 안전하고 결정적으로
+유발하는 방법이 없다.**
+
+정정:
+
+- **(A) emulator + 실제 Rules 검증** — **E-1~E-8**: 승인 UID / 다른 UID / 익명 / 미인증 ·
+  Storage **create-only**와 `update`/`delete` 거부 · head **`get` 허용·거부** · **`list` 거부** ·
+  **키 / `objectPath` 형태 / revision Rules** · **두 writer CAS** · **orphan 시 head 불변**.
+  (두 writer CAS와 orphan은 **seam이 필요 없다** — 실제로 동시에 실행하고 관측하면 된다.)
+- **(B) 주입 fake 결정적 검증** — **F-1~F-10**: **callback 다회 실행** · **upload 반복 0** ·
+  앱 **`runTransaction` 1회** · **upload/commit outcome unknown** · **bounded reconciliation** ·
+  **늦은 성공 폐기** · **오류 매핑과 비노출** · §5.7 범위 검증 · §4.3 최초 create 분기 · baseline 분기.
+- **★ emulator에 callback 재실행·commit outcome unknown을 남기려면 결정적이고 비파괴적인
+  재현 seam을 계약이 정확히 제시해야 한다. 제시할 수 없으므로 fake 항목으로만 분류하고
+  emulator 증명이라고 주장하지 않는다.**
+- **(C) 재현 금지**: 실제 network 차단 · 프로세스 강제 종료 · 포트 강제 해제 · emulator kill ·
+  실제 Firebase 접근으로 **재현하지 않는다**.
+- **(D) 양방향 경계**: **합성 fake는 Rules 원자성을 증명하지 않고, emulator는 앱 오류 분기 전체를
+  증명하지 않는다.** 어느 쪽도 상대의 결론을 빌려 쓰지 않는다.
+
+### ★ Codex가 확인해 줘야 할 판단 1건 — `loadBaseline` 실패 코드 이름
+
+교정 2가 **"계약의 8개 코드만 허용"** 을 요구하는데, 8코드는 `save` 기준으로 만들어졌고
+**`loadBaseline`이 겪는 "persisted head 또는 그 객체가 계약을 위반해 사용할 수 없음"** 에
+정확히 대응하는 이름이 없다.
+
+**9번째 코드를 임의로 만들지 않고 `WRITE_HEAD_FAILED`의 의미를 확장**했다 —
+"head transaction이 명확히 실패했다 **또는** persisted head/그 객체가 계약을 위반해 사용할 수 없다".
+둘 다 **확정된 실패**이고 **`retryable: false`** 라 성질이 같다.
+**이름이 `HEAD`인데 참조 객체까지 포함하는 점은 의도적 절충**이며, 다른 이름을 원하면
+**계약만 고치면 된다**(제품 코드는 아직 없다). 계약 **§0.1 · §5.4**에 기록했다.
+
+### 신규 위험 3건
+
+- **R-11** head가 사라진 상황에서 revision 1을 만들어 이력을 밀어낸다 → §4.3 + **F-9**.
+- **R-12** 호출자가 수행할 수 없는 복구 절차를 계약이 요구한다 → §6.6 + **F-4**.
+- **R-13** fake로만 가능한 것을 "실제 Rules로 검증했다"고 오인한다 → §7.5 **(A)/(B) 분리 + (D) 경계**.
+
+### 승인 상태 문구 통일 (§16)
+
+- **이번 라운드에서 구현 착수를 승인하지 않는다.**
+- **보완 문서 push 후 상태는 `READY_FOR_CODEX`.**
+- **Codex 보완 라운드 2 재검토 전 구현은 0이다.**
+- **Codex 통과 후에도 실제 제품 UI 연결 · live Firebase · Rules 배포 · 운영 쓰기는 계속 금지**다.
+- **★ port/Rules/config/test 구현 착수 여부를 추측하지 않는다.** G-5가 허용한 범위
+  (**합성 fake · 로컬 emulator**)와 결정 문서 §2가 금지한 **"제품 구현 착수"** 의 경계 판정은
+  **Codex의 다음 검수 몫**이며, 계약과 핸드오프는 **양쪽을 구분해 기록할 뿐 결론을 내리지 않는다.**
+
+### 유지 (라운드 1에서 바뀌지 않은 것)
+
+C5 구조(불변 객체 + 단일 Firestore head CAS) · Z-1(`op()` 무변경, 실제 UID UNCONFIRMED) ·
+Z-2(별도 최상위 경로, UUID save당 1회, `resource == null` create-only) ·
+Z-3 §4.4 Rules 전 분기(`get`/`list`/create/update/delete) · Z-7(tombstone·자동 merge 없음) ·
+Z-8(배포 0, legacy 저장을 먼저 닫지 않음) · **저장 버튼·admin UI 연결 제외** ·
+`firebase.emulator.json` + `demo-denn-emulator` 강제(`firebase.json` 무수정) ·
+emulator 사전 확인 결과(Java 21.0.11 · firebase-tools 15.22.4 전역 · emulator jar 캐시됨 ·
+포트 free · **Auth emulator binary UNCONFIRMED**) ·
+**R-1**(Rules 배포가 운영자의 유일한 저장 경로를 닫는다) · **R-2**(`.firebaserc` default가 운영 프로젝트).
+
+### 검증
+
+- `git diff --check fad819f..HEAD` **PASS**
+- 변경 경로 = **허용 문서 6개뿐**
+- 금지 범위(`apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
+  `firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc`) diff **0**
+- HEAD=origin, ahead/behind **0/0**
+- working tree = **보호 대상만**(`docs/rebuild/design/taste-v2/**` ·
+  `docs/rebuild/design/README.md` · `docs/rebuild/specs/038-page-design-prototype.md` ·
+  spec-018 PNG 2개 · `packages/render/src/plan/index.ts`) — 전부 손대지 않음
+- **다음 상태**: `READY_FOR_CODEX`, `fix_round: 2`. 구현하지 않았고 자동화도 만들지 않았다.

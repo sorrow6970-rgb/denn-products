@@ -1,7 +1,27 @@
 # 핸드오프 — 스펙 037 운영자 상태 쓰기 C5 계약 (2026-08-11)
 
-작성: Claude Code · 초판 기준 HEAD = origin = `dc5666d`(커밋 `c654023`) · 브랜치 `rebuild/modern-studio`
-**보완 라운드 1 (CORRECTION_REQUIRED) 적용** · 보완 기준 HEAD = origin = `c654023`
+작성: Claude Code · 초판 커밋 `c654023` · 브랜치 `rebuild/modern-studio`
+**보완 라운드 1** `41b54b9` · 상태 동기화 `fad819f` ·
+**보완 라운드 2 (CORRECTION_REQUIRED) 적용** · 보완 기준 HEAD = origin = `fad819f`
+
+> ## ★★ 보완 라운드 2 — Codex가 남긴 계약 결함 4건을 정정했다
+>
+> | # | 라운드 1의 결함 | 정정 |
+> | --- | --- | --- |
+> | **1** | head가 없을 때 **`expectedBase`를 확인하지 않고 revision 1을 생성**해 **G-2("`expectedBase`와 현재 head가 일치할 때만 변경")와 모순**됐다 | **head 없음 = 논리적 revision `0`.** **`expectedBase === 0`일 때만** create 허용하고, 아니면 **`WRITE_CONFLICT`**(head 불변)다. **`expectedBase`는 0 이상 safe integer**만 허용하며 위반은 **upload 전 `WRITE_INVALID_INPUT`**(Storage 호출 0회). **persisted `revision`은 1 이상 safe integer**이고 **`+1`이 여전히 safe integer**여야 하며 아니면 **fail-closed**. 계약 §4.3·§5.4·§5.7·§6.1~6.5·검증표에 같은 의미로 반영 |
+> | **2** | "정확한 공개 타입" 블록이 **존재하지 않는 `Catalog`** 를 쓰고 설명문에서만 바인딩했으며 **`SafeAdminWriteError`가 미완결**이었다 | 타입 블록이 **`CatalogDocumentV1`을 직접** 쓴다(**alias·동의어 0**). `Result`는 **import 표면까지 명시**. **`AdminWriteErrorCode`·`AdminWriteErrorCategory`·`SafeAdminWriteError` 공개 타입 고정**. **8코드 정본 매핑 표를 §5.4 한 곳으로** 통일. **`AdminStateRevision` 런타임 범위**를 교정 1과 일치시킴 |
+> | **3** | `operationId`를 port 내부에 숨기면서 **호출자에게 head 재조회를 요구** — **호출자는 수행할 수 없었다** | **`save` 내부가 자신의 `operationId`로 read-only reconciliation을 수행**한다(§6.6). **write retry가 아니다** — **재업로드 0 · transaction 재호출 0 · bounded read 최대 1회**. 판정 3분기 고정(성공 / **미반영 확정 = `WRITE_HEAD_FAILED` + orphan** / **판정 불가 = `WRITE_COMMIT_OUTCOME_UNKNOWN`**). **오류에 `operationId`·object path 비노출**. **`loadBaseline`은 reconciliation API가 아니다** |
+> | **4** | §7.5가 **"실제 Rules 사용" 표에 callback 재실행·commit outcome unknown**까지 넣었지만 **결정적 재현 방법이 없었다** | **증명 주체를 (A) emulator / (B) fake 로 분리**했다. **결정적·비파괴적 seam을 제시할 수 없으므로 두 항목은 fake 전용으로 재분류**하고 **emulator 증명이라고 주장하지 않는다.** network 차단·프로세스 종료·포트 강제 해제·emulator kill·실제 Firebase로 **재현하지 않는다.** **(D) 양방향 경계** 명시 — fake는 Rules 원자성을, emulator는 앱 오류 분기 전체를 증명하지 않는다 |
+>
+> ### ★ Codex가 확인해 줘야 할 판단 1건
+>
+> 교정 2가 **"8코드만 허용"** 을 요구하는데, 8코드는 `save` 기준이라 **`loadBaseline`의
+> "persisted head 또는 그 객체가 계약을 위반해 사용할 수 없음"** 에 맞는 이름이 없다.
+> **9번째 코드를 만들지 않고 `WRITE_HEAD_FAILED`의 의미를 확장**했다 —
+> "head transaction 실패 **또는** persisted head/그 객체가 계약 위반으로 사용 불가".
+> 둘 다 **확정 실패**이고 **`retryable: false`** 로 성질이 같다.
+> **이름이 `HEAD`인데 참조 객체까지 포함하는 점은 의도적 절충**이며, 다른 이름을 원하면
+> **계약만 고치면 된다**(제품 코드는 아직 없다).
 
 > ## ★ 보완 라운드 1 — Codex가 지적한 계약 결함 5건을 정정했다
 >
@@ -107,13 +127,17 @@ G-1의 "legacy `admin/state.json` 읽기 전용 고정"을 배포하면 **이 �
 - **원자성은 L-4(삭제 부활)를 고치지 않는다.** 병합 의미론 문제이며 별도 스펙이 필요하다.
 - **실제 운영자 UID는 여전히 UNCONFIRMED다.** 추측하지 않았고 예시 값을 실제처럼 적지 않았다.
 
-## 7. 다음 단계
+## 7. 승인 상태와 다음 단계 (문구 통일)
 
-1. **Codex가 이 계약을 검토**한다.
-2. 승인되면 **Founder가 구현 착수를 별도 승인**한다(현재 승인 범위는 계약 작성 + fake + emulator까지).
-3. 구현 단위는 **port + Rules 목표 상태 + emulator 검증까지**이며 **UI 연결은 포함하지 않는다.**
-4. 운영 쓰기 개방은 **실제 UID + orphan 정책 + emulator PASS**가 전부 확인된 뒤,
-   **별도 cutover 스펙**에서 다룬다.
+- **이번 라운드에서 구현 착수를 승인하지 않는다.**
+- **보완 문서 push 후 상태는 `READY_FOR_CODEX`.**
+- **Codex 보완 라운드 2 재검토 전 구현은 0이다.**
+- **Codex 통과 후에도 실제 제품 UI 연결 · live Firebase · Rules 배포 · 운영 쓰기는 계속 금지**다.
+- **★ port/Rules/config/test 구현 착수 여부를 이 문서가 추측하지 않는다.**
+  G-5가 허용한 범위(**합성 fake · 로컬 emulator**)와 결정 문서 §2가 금지한 **"제품 구현 착수"** 의
+  경계 판정은 **Codex의 다음 검수 몫**이며, 이 핸드오프는 **양쪽을 구분해 기록할 뿐 결론을 내리지 않는다.**
+- 운영 쓰기 개방은 **실제 UID + orphan 보존/비용/정리 정책 + emulator PASS**가 전부 확인된 뒤
+  **별도 cutover 스펙 + 별도 Founder 승인**에서 다룬다.
 
 ## 8. 보호 대상 (수정·삭제·restore·checkout·stage·commit 금지)
 

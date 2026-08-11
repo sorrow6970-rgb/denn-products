@@ -6,20 +6,114 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-036-admin-auth-private-state-read
 active_unit: spec-037-admin-write-c5-emulator-contract   # CONTRACT CORRECTION ONLY; implementation not started
-state: READY_FOR_CODEX   # correction round 1 applied to the contract; Codex re-reviews it next
-baseline_commit: c654023
-candidate_commit: 41b54b9   # docs-only contract after correction round 1; product code does not exist for spec 037
+state: READY_FOR_CODEX   # correction round 2 applied to the contract; Codex re-reviews it next
+baseline_commit: fad819f
+candidate_commit: 41b54b9   # docs-only contract after correction round 1; not yet approved
 verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "correction round 1 ran c654023 -> 41b54b9 (docs-only fast-forward, carries Codex's review text); HEAD=origin, ahead/behind 0/0"
+origin_relation: "correction round 2 started at HEAD=origin=fad819f, ahead/behind 0/0; docs-only fast-forward commit carries Codex's round-2 review text too"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts + Founder-owned taste-v2 work (docs/rebuild/design/taste-v2/, docs/rebuild/design/README.md, docs/rebuild/specs/038-page-design-prototype.md); Claude must not restore/stage/commit any of them"
-fix_round: 1
+fix_round: 2
 max_fix_rounds: 3
-next_transition: CODEX_CONTRACT_RE_REVIEW   # manual workflow; no automatic task
+next_transition: CODEX_CONTRACT_RE_REVIEW_ROUND_2   # manual workflow; no automatic task
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 스펙 037 계약 보완 라운드 2 완료 — READY_FOR_CODEX (2026-08-11)
+
+계약: `docs/rebuild/specs/037-admin-write-c5-emulator-contract.md`(라운드 2 정정본) ·
+핸드오프: `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`
+기준 HEAD `fad819f` → 보완 커밋(아래 live log에 hash 확정). **문서 전용 —
+`apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
+`firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc` diff 0**,
+신규 의존성 0, 실제 Firebase/network/live/**emulator 실행**/운영 데이터 접근 0,
+upload/write/delete/publish/deploy 0, 자동화 생성 0. **구현 착수 0.**
+> 이 커밋은 Codex가 작업 트리에 남긴 라운드 2 검수 기록도 함께 커밋한다.
+
+### Codex 지적 4건을 정정했다
+
+1. **★ 최초 head 생성도 `expectedBase === 0`을 강제한다(§4.3).**
+   라운드 1은 "head 없으면 무조건 revision 1 create"였다 — **`expectedBase`가 5인 편집 세션이
+   head가 사라진 상황에서 revision 1을 만들어 이력을 조용히 밀어낼 수 있었다**(G-2 위반).
+   정정: **head 없음 = 논리적 revision `0`**, **`expectedBase === 0`일 때만 create**,
+   아니면 **`WRITE_CONFLICT`**(head 불변). **`expectedBase`는 0 이상 safe integer**만 허용하고
+   위반은 **upload 전 `WRITE_INVALID_INPUT`**(Storage 호출 0회). **persisted `revision`은
+   1 이상 safe integer이고 `+1`이 여전히 safe integer**여야 하며 아니면 **fail-closed**(§5.7).
+   **Firestore Rules의 create `revision == 1` / update 정확히 `+1`은 유지**하고,
+   **`expectedBase` 자체는 클라이언트 transaction 계약에서 검사**한다(Rules는 요청자의 base를 모른다).
+2. **★ 공개 타입 블록을 저장소 실제 타입으로 완결했다(§5.6).**
+   타입 블록이 **`CatalogDocumentV1`을 직접** 쓰고 **alias·동의어를 만들지 않는다**.
+   `Result`는 **import 표면까지 명시**(`packages/shared/src/index.ts:19`).
+   **`AdminWriteErrorCode`(8개 union)·`AdminWriteErrorCategory`·`SafeAdminWriteError`** 공개 타입 고정.
+   **정본 매핑 표는 §5.4 한 곳**이며 category/retryable은 코드의 속성이다.
+   **`SafeAdminWriteError`에는 `correlationId` 외 raw message·email·UID·token·object bytes·
+   `objectPath`·`operationId`가 들어가지 않는다.** `AdminStateRevision` 런타임 범위는 §5.7과 일치.
+3. **★ 결과 불명 재조회를 port 내부로 옮겼다(§6.6).**
+   라운드 1은 **호출자에게 head 재조회를 요구했지만 `operationId`가 내부라 수행 불가능**했다.
+   정정: **`save` 내부가 자신의 `operationId`로 read-only reconciliation**을 수행한다.
+   **write retry가 아니다** — **재업로드 0 · transaction 재호출 0 · bounded read 최대 1회** ·
+   **callback 안에서 하지 않는다**. 판정 3분기: `revision === expectedBase + 1` **그리고**
+   `objectPath`가 우리 것 → **성공 반환** / **논리적 base에 머무름**(head 부재 또는
+   `revision === expectedBase`) → **미반영 확정 `WRITE_HEAD_FAILED`**, 객체는 **orphan**이고
+   **자동 재전송·삭제 0** / **그 밖 전부**(다른 writer가 head를 옮김, `base+1`인데 `objectPath`가
+   다름, reconciliation read 실패·timeout) → **`WRITE_COMMIT_OUTCOME_UNKNOWN` 유지**.
+   **오류에 `operationId`·object path 비노출**, **`loadBaseline`은 reconciliation API가 아니다**.
+4. **★ fake와 emulator가 증명하는 항목을 분리했다(§7.5).**
+   **(A) emulator + 실제 Rules** = E-1~E-8(승인/다른 UID/익명/미인증, Storage create-only·update/
+   delete 거부, head `get` 허용·거부, `list` 거부, 키/경로/revision Rules, **두 writer CAS**,
+   **orphan 시 head 불변**). **(B) 주입 fake** = F-1~F-10(**callback 다회 실행**, **upload 반복 0**,
+   앱 `runTransaction` 1회, **upload/commit outcome unknown**, **bounded reconciliation**,
+   늦은 성공 폐기, 오류 매핑·비노출, §5.7 범위, §4.3 최초 create 분기, baseline 분기).
+   **★ callback 재실행과 commit outcome unknown을 emulator에서 결정적·비파괴적으로 유발할 seam을
+   제시할 수 없으므로 fake 전용으로 재분류하고 emulator 증명이라고 주장하지 않는다.**
+   **(C) 재현 금지**: network 차단·프로세스 강제 종료·포트 강제 해제·emulator kill·실제 Firebase.
+   **(D) 양방향 경계**: fake는 Rules 원자성을, emulator는 앱 오류 분기 전체를 증명하지 않는다.
+
+### ★ Codex가 확인해 줘야 할 판단 1건
+
+교정 2가 **"8코드만 허용"** 을 요구하는데, 8코드는 `save` 기준이라 **`loadBaseline`의
+"persisted head 또는 그 객체가 계약을 위반해 사용할 수 없음"** 에 맞는 이름이 없다.
+**9번째 코드를 만들지 않고 `WRITE_HEAD_FAILED`의 의미를 확장**했다 — "head transaction 실패
+**또는** persisted head/그 객체가 계약 위반으로 사용 불가". 둘 다 **확정 실패**이고
+**`retryable: false`** 로 성질이 같다. **이름이 `HEAD`인데 참조 객체까지 포함하는 점은 의도적 절충**이며
+다른 이름을 원하면 **계약만 고치면 된다**(제품 코드는 아직 없다). 계약 §0.1·§5.4에 기록했다.
+
+### 신규 위험 3건
+
+**R-11** head가 사라진 상황에서 revision 1을 만들어 이력을 밀어냄 → §4.3 + F-9 ·
+**R-12** 호출자가 수행할 수 없는 복구 절차를 계약이 요구함 → §6.6 + F-4 ·
+**R-13** fake로만 가능한 것을 "실제 Rules로 검증했다"고 오인 → §7.5 (A)/(B) 분리 + (D) 경계.
+
+### 승인 상태 (문구 통일 — §16)
+
+**이번 라운드에서 구현 착수를 승인하지 않는다.** push 후 상태는 **`READY_FOR_CODEX`**,
+**Codex 보완 라운드 2 재검토 전 구현 0**, **통과 후에도 실제 제품 UI 연결·live Firebase·
+Rules 배포·운영 쓰기는 계속 금지**. **★ port/Rules/config/test 구현 착수 여부는 추측하지 않고**
+G-5 허용 범위(합성 fake·로컬 emulator)와 결정 문서 §2의 "제품 구현 착수" 금지를 **구분해 기록만** 했다 —
+경계 판정은 **Codex의 다음 검수 몫**이다.
+
+> 아래 Codex 라운드 2 검수 기록과 그 아래 라운드 1·초판 기록은 **이력 보존을 위해 삭제하지 않는다.**
+
+## Codex 스펙 037 계약 재검토 — CORRECTION_REQUIRED 라운드 2 (2026-08-11)
+
+Codex는 보완 계약 `41b54b9`와 상태 동기화 `fad819f`를 검토했다.
+HEAD=origin=`fad819f`, ahead/behind 0/0, 문서 전용 범위와 `git diff --check` PASS,
+제품/Rules/config/test diff 0은 확인됐다. 최초 지적 5건의 방향도 반영됐다.
+
+그러나 구현 전 닫아야 할 계약 결함 4건이 남았다.
+
+1. head가 없을 때 `expectedBase == 0`을 검사하지 않고 revision 1을 생성해 G-2와 모순된다.
+2. “정확한 공개 타입”이 존재하지 않는 `Catalog`를 사용하고 `SafeAdminWriteError` 타입을 완결하지 않았다.
+3. 내부 `operationId`를 숨기면서 결과 불명 재조회를 호출자에게 요구해 공개 API로 수행할 수 없다.
+4. 실제 Rules emulator 표에 callback 재실행과 commit outcome unknown을 넣었지만 결정적 재현 방법이 없다.
+
+정확한 교정 지시는 `Automation/NEXT_CLAUDE_PROMPT.md`가 정본이다.
+제품 구현·Rules/config/test 변경·emulator 실행은 계속 금지한다.
+
+> 아래 `Claude 스펙 037 계약 보완 라운드 1 완료` 섹션은 `41b54b9` 기록이며,
+> 위 Codex 라운드 2 판정이 이를 supersede한다.
 
 ## Claude 스펙 037 계약 보완 라운드 1 완료 — READY_FOR_CODEX (2026-08-11)
 
