@@ -3384,3 +3384,86 @@ tombstone·자동 merge · 신규 의존성·다운로드·설치 · `firebase.j
 ### 다음
 
 **Codex 보완 라운드 1 재검증** — 독립 게이트 + emulator 게이트 명시 실행.
+
+## 2026-08-11 — ★★ 스펙 037 종료 — DONE / CODEX_PASSED
+
+- **기준**: HEAD=origin=`91a7813`, ahead/behind 0/0.
+- **제품 검증 커밋**: **`ead06ab`**(구현 `d83aee9` + 보완 라운드 1) · 기록 `91a7813` ·
+  **종료 문서는 이 커밋**(문서 전용).
+- **상태**: `READY_FOR_CODEX` → **`WAITING_FOR_NEXT_MANUAL_TASK`**.
+  **다음 스펙은 자동으로 시작하지 않는다.**
+- **변경 파일(6, 전부 허용 문서)**: 스펙 037 계약(상태 → DONE + §17 종료 절) ·
+  spec037 handoff · STATE · NEXT · CURRENT · 이 로그.
+- **제품 코드·Rules·config·test·lockfile 추가 수정 0.** 실제 Firebase/network/live/배포 0.
+  자동화·반복 작업 생성 0.
+
+### Codex 독립 재검증 결과 — `CODEX_PASSED`
+
+| 항목 | 결과 |
+| --- | --- |
+| HEAD=origin | `91a7813`, ahead/behind **0/0** |
+| 변경 범위 | **허용 4파일뿐** — `write-port.ts` · `sdk-facade.ts` · `admin-write.test.ts` · 신규 `sdk-facade.test.ts` |
+| `pnpm install --offline --frozen-lockfile` | **PASS**, **lockfile diff 0** |
+| format / lint / typecheck / unit / build | **PASS** |
+| unit | **1318/1318** |
+| Chromium E2E | **134/134** |
+| **고객 번들 SHA-256** | **`FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`** |
+| **local `demo-denn-emulator` Rules 게이트** | **10/10 PASS** |
+| ports 4183/4184/8080/9099/9199 | 잔류 **0** |
+| `git diff --check` | **PASS** |
+| 추가 결함 | **없음** |
+
+### 스펙 037이 실제로 닫은 것 — 로컬 비-UI 구현·검증까지
+
+`@denn/firebase/admin-write` port — **불변 객체 생성 + 단일 Firestore head CAS + 결과 불명 시
+bounded reconciliation**. **두 오류 표면**(`save`는 8개 `WRITE_*`, `loadBaseline`은 스펙 036
+read 오류 + `REBUILD_BASELINE_INVALID`). `storage.rules`/`firestore.rules`의 **목표 상태**
+(placeholder UID). emulator 전용 config와 Rules 사본. opt-in fake/emulator 검증.
+
+**설계 요지**: 객체는 **매번 새 불투명 경로에 한 번만** 생성되고 **가변 지점은 head 하나**뿐이라,
+중간에 실패해도 **참조되지 않는 객체와 그대로인 head**만 남고 **남의 바이트를 덮지 않는다.**
+이는 **cross-service 원자성이 아니라 "불변 객체 우선 + 단일 가변 정본"** 이며, 문서와 코드가
+그렇게 주장하지 않는다는 점을 계약이 명시한다.
+
+### ★ 여전히 NOT TESTED이자 금지
+
+- **실제 Firebase 프로젝트 · 운영 bucket · 운영 데이터 · live network** — 접근 **0**, **NOT TESTED**.
+- **실제 운영자 UID** — **UNCONFIRMED**. 배포 대상 Rules에 **UNCONFIRMED placeholder**가 남아 있어
+  **현 상태로는 배포할 수 없다**.
+- **Rules · Hosting 배포** — **금지**. ⚠️ 배포하면 `denn-admin.html:740`의 저장이 서버에서 거부되므로
+  **배포 순서 자체가 STOP 대상**이다. cutover는 **별도 스펙 + 별도 Founder 승인**.
+- **운영 쓰기 활성화** — **금지**. 전제(**실제 UID + orphan 보존/비용/정리 정책 + emulator PASS**) 중
+  **emulator PASS 하나만 충족**됐다.
+- **`apps/**`와 모든 UI 연결 · 저장 버튼** — 범위 밖, **금지**.
+- **`published/state.json` 발행 · legacy `admin/state.json` 공유 쓰기 · orphan 삭제·자동 정리 ·
+  tombstone·자동 merge·L-4 해결** — 전부 **금지**, 각각 별도 스펙.
+- **실제 네트워크 지연·단절 · 실기기 · 다중 기기 동시 편집 · 운영 규모 payload ·
+  orphan 누적 실제 비용** — **NOT TESTED**.
+- `pnpm-workspace.yaml`의 `allowBuilds` — 이월, **미해결**.
+
+### 증명 경계 (유지)
+
+> **합성 fake는 서버 Rules의 원자성을 증명하지 않고, emulator는 앱 오류 분기 전체를 증명하지 않는다.**
+> transaction callback 재실행과 commit outcome unknown은 **결정적·비파괴적 seam이 없어 fake 전용**이며
+> **emulator 증명이라고 주장하지 않는다.** **emulator는 실제 Firebase가 아니다.**
+
+### 스펙 037 전체 이력 (보존)
+
+계약 초판 `c654023` → 보완 라운드 1 `41b54b9` → 라운드 2 `d5789db` → **라운드 3 `9805c26`
+(Codex `CONTRACT_PASSED`)** → Founder 구현 착수 승인 `4f2ab0b` → 허용 범위 검토 `f8590e4`
+(**A-12 `.gitignore` · A-13 `scripts/check.mjs` 최소 확장**) → 구현 `d83aee9` →
+**구현 보완 라운드 1 `ead06ab`**(payload 사전 검증 · Firebase app 소유권 · emulator `demo-` 가드) →
+기록 `91a7813` → **종료(이 커밋)**.
+
+### 다음
+
+**`WAITING_FOR_NEXT_MANUAL_TASK`.** 다음 스펙은 **자동으로 시작하지 않는다.**
+Founder가 명시적으로 지시할 때 새 작업 범위를 정한다. 자동화나 반복 작업은 만들지 않았다.
+참고 후보(**아무것도 승인되지 않았다**): cutover 스펙(실제 UID → Rules 배포 순서 → 운영 쓰기) ·
+admin UI 연결(저장 버튼 + 스펙 035 결합) · orphan 정책(G-4) · L-4/tombstone · 발행(F-B) · C6 재검토(G-3).
+
+### 검증
+
+- `git diff --check 91a7813..HEAD` **PASS** · 변경 경로 = **허용 문서 6개뿐**
+- 제품 코드·Rules·config·test·lockfile diff **0**
+- HEAD=origin, ahead/behind **0/0** · working tree = **보호 대상 6개만**

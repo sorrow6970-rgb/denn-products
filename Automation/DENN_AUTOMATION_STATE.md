@@ -4,22 +4,76 @@
 updated_at: 2026-08-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-036-admin-auth-private-state-read
-active_unit: spec-037-admin-write-c5-emulator-implementation   # local non-UI implementation landed
-state: READY_FOR_CODEX   # correction round 1 applied to the implementation; Codex re-verifies
-baseline_commit: d4d42d6
-candidate_commit: ead06ab   # spec 037 implementation + correction round 1 (contract 9805c26, authorization 4f2ab0b)
-verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "correction round 1 ran d4d42d6 -> ead06ab (fast-forward); HEAD=origin, ahead/behind 0/0"
+completed_unit: spec-037-admin-write-c5-emulator   # DONE, CODEX_PASSED
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK   # spec 037 is DONE; no next spec is started automatically
+baseline_commit: 91a7813
+candidate_commit: none (spec 037 is DONE; last product change is ead06ab)
+verified_commit: ead06ab   # product, CODEX_PASSED (d83aee9 implementation + correction round 1)
+origin_relation: "Codex verified HEAD=origin=91a7813, ahead/behind 0/0; closure docs land as a separate fast-forward commit"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts + Founder-owned taste-v2 work (docs/rebuild/design/taste-v2/, docs/rebuild/design/README.md, docs/rebuild/specs/038-page-design-prototype.md); Claude must not restore/stage/commit any of them"
-fix_round: 1   # implementation corrections (the contract rounds are closed)
+fix_round: 1   # implementation correction round 1, CODEX_PASSED
 max_fix_rounds: 3
-next_transition: CODEX_REVERIFY_CORRECTION_1   # independent gates + the separate emulator gate
+next_transition: FOUNDER_EXPLICIT_RESUME   # manual workflow; no automatic next-spec start
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## ★★ 스펙 037 종료 — DONE / CODEX_PASSED (2026-08-11)
+
+Codex가 보완 코드 **`ead06ab`** 와 기록 **`91a7813`** 을 독립 재검증해 **`CODEX_PASSED`** 로 판정했다.
+**기능 코드·Rules·config·test·lockfile은 추가 수정 0**이고 종료 문서만 별도 fast-forward 커밋으로 처리했다.
+
+### Codex 독립 검증 결과
+
+| 항목 | 결과 |
+| --- | --- |
+| HEAD=origin | `91a7813`, ahead/behind **0/0** |
+| 변경 범위 | **허용 4파일뿐** — `write-port.ts` · `sdk-facade.ts` · `admin-write.test.ts` · 신규 `sdk-facade.test.ts` |
+| `pnpm install --offline --frozen-lockfile` | **PASS**, **lockfile diff 0** |
+| format / lint / typecheck / unit / build | **PASS** |
+| unit | **1318/1318** |
+| Chromium E2E | **134/134** |
+| **고객 번들 SHA-256** | **`FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`** |
+| **local `demo-denn-emulator` Rules 게이트** | **10/10 PASS** |
+| ports 4183/4184/8080/9099/9199 | 잔류 **0** |
+| `git diff --check` | **PASS** |
+| 추가 결함 | **없음** |
+
+### 종료된 것 — 로컬 비-UI 구현·검증까지
+
+`@denn/firebase/admin-write` port(**불변 객체 생성 + 단일 Firestore head CAS + 결과 불명 시
+bounded reconciliation**) · **두 오류 표면**(`save`는 8개 `WRITE_*`, `loadBaseline`은 스펙 036
+read 오류 + `REBUILD_BASELINE_INVALID`) · `storage.rules`/`firestore.rules` **목표 상태**
+(placeholder UID) · emulator 전용 config와 Rules 사본 · opt-in fake/emulator 검증.
+
+### ★ 여전히 NOT TESTED이자 금지
+
+- **실제 Firebase 프로젝트 · 운영 bucket · 운영 데이터 · live network** — 접근 **0**, **NOT TESTED**.
+- **실제 운영자 UID** — **UNCONFIRMED**. 배포 대상 Rules에 **placeholder가 남아 현 상태로 배포 불가**.
+- **Rules · Hosting 배포** — **금지**. ⚠️ 배포하면 `denn-admin.html:740`의 저장이 서버에서 거부되므로
+  **배포 순서 자체가 STOP 대상**이다. cutover는 **별도 스펙 + 별도 Founder 승인**.
+- **운영 쓰기 활성화** — **금지**. 전제(실제 UID + orphan 보존/비용/정리 정책 + emulator PASS) 중
+  **emulator PASS 하나만 충족**됐다.
+- **`apps/**`와 모든 UI 연결 · 저장 버튼** · **발행** · **legacy 공유 쓰기** ·
+  **orphan 삭제·자동 정리** · **tombstone·자동 merge·L-4** — 전부 **금지**, 각각 별도 스펙.
+- **실제 네트워크 지연·단절 · 실기기 · 다중 기기 동시 편집 · 운영 규모 payload ·
+  orphan 누적 실제 비용** — **NOT TESTED**. `pnpm-workspace.yaml`의 `allowBuilds` — 이월, 미해결.
+
+### 증명 경계 (유지)
+
+**합성 fake는 서버 Rules의 원자성을 증명하지 않고, emulator는 앱 오류 분기 전체를 증명하지 않는다.**
+callback 재실행과 commit outcome unknown은 **결정적·비파괴적 seam이 없어 fake 전용**이며
+**emulator 증명이라고 주장하지 않는다**. **emulator는 실제 Firebase가 아니다.**
+
+### 다음
+
+**`WAITING_FOR_NEXT_MANUAL_TASK`.** 다음 스펙은 **자동으로 시작하지 않는다**.
+Founder가 명시적으로 지시할 때 새 작업 범위를 정한다. 자동화·반복 작업은 만들지 않았다.
+
+> 아래 구현·보완·계약·승인 이력은 **삭제하지 않는다.**
 
 ## Claude 스펙 037 구현 보완 라운드 1 완료 — READY_FOR_CODEX (2026-08-11)
 

@@ -2,7 +2,33 @@
 
 작성: Claude Code · 초판 `c654023` · 브랜치 `rebuild/modern-studio`
 **라운드 1** `41b54b9` · **라운드 2** `d5789db` · 동기화 `fad819f`·`f694211` ·
-**보완 라운드 3 (CORRECTION_REQUIRED) 적용** · 보완 기준 HEAD = origin = `f694211`
+**보완 라운드 3** `9805c26` · **DONE (Codex `CODEX_PASSED`, 2026-08-11)**
+
+> ## ★★ 종료 — 스펙 037 DONE
+>
+> **구현 `d83aee9` + 보완 라운드 1 `ead06ab`, 기록 `91a7813`.**
+> Codex 독립 재검증: HEAD=origin=`91a7813` ahead/behind **0/0** · 변경 범위 **허용 4파일뿐** ·
+> `pnpm install --offline --frozen-lockfile` **PASS**·**lockfile diff 0** ·
+> format/lint/typecheck/unit/build **PASS** · **unit 1318/1318** · **Chromium E2E 134/134** ·
+> **고객 번들 SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`** ·
+> **local `demo-denn-emulator` Rules 게이트 10/10 PASS** ·
+> ports 4183/4184/8080/9099/9199 잔류 **0** · `git diff --check` **PASS** · **추가 결함 없음**.
+>
+> ### 닫힌 것 / 닫히지 않은 것
+>
+> **닫힌 것 = 로컬 비-UI 구현·검증까지.** admin-write port(불변 객체 + 단일 head CAS +
+> bounded reconciliation) · 두 오류 표면 · Rules **목표 상태**(placeholder UID) ·
+> emulator config·Rules 사본 · opt-in fake/emulator 검증.
+>
+> **★ 여전히 NOT TESTED이자 금지**: **실제 Firebase 프로젝트·운영 bucket·운영 데이터·live network** ·
+> **실제 운영자 UID**(배포 대상 Rules에 **UNCONFIRMED placeholder**가 남아 **현 상태로 배포 불가**) ·
+> **Rules·Hosting 배포**(⚠️ 배포하면 `denn-admin.html:740`의 저장이 서버에서 거부되므로
+> **배포 순서 자체가 STOP 대상**) · **운영 쓰기 활성화**(전제 3개 중 emulator PASS 하나만 충족) ·
+> **`apps/**`와 모든 UI 연결·저장 버튼** · 발행 · legacy 공유 쓰기 · orphan 삭제·자동 정리 ·
+> tombstone·자동 merge·L-4 · 실제 네트워크 지연·단절 · 실기기·다중 기기 · 운영 규모 payload.
+>
+> **증명 경계 유지**: **합성 fake는 서버 Rules 원자성을 증명하지 않고, emulator는 앱 오류 분기
+> 전체를 증명하지 않는다.** callback 재실행·commit outcome unknown은 **fake 전용**이다.
 
 > ## ★★ 보완 라운드 3 — 마지막 결함 2건을 닫았다
 >

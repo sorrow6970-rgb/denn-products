@@ -9,11 +9,50 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — 스펙 037 구현의 **보완 라운드 1**을 적용했다(2026-08-11,
-보완 커밋 **`ead06ab`**, 구현 `d83aee9`, 기준 `d4d42d6`). 권한 = Founder 승인 `4f2ab0b` +
-허용 범위 검토 `f8590e4`(**A-12·A-13 확장 포함**), 계약 `9805c26`.
-정본 `decisions/2026-08-11-spec-037-implementation-authorization.md`.
-**다음 = Codex 보완 라운드 1 재검증**(독립 게이트 + **emulator 게이트 명시 실행**).**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — ★★ 스펙 037은 Codex 독립 재검증을 통과해 **DONE**이다
+(2026-08-11, `CODEX_PASSED`). 제품 검증 커밋 **`ead06ab`**(구현 `d83aee9` + 보완 라운드 1),
+기록 `91a7813`. 계약 `9805c26` · 권한 `4f2ab0b` + 범위 검토 `f8590e4`(A-12·A-13 확장 포함).
+**다음 스펙은 자동으로 시작하지 않는다** — Founder가 명시적으로 지시할 때 범위를 정한다.**
+
+> ### ★★ Codex 독립 검증 결과 — `CODEX_PASSED`
+>
+> | 항목 | 결과 |
+> | --- | --- |
+> | HEAD=origin | `91a7813`, ahead/behind **0/0** |
+> | 변경 범위 | **허용 4파일뿐** — `write-port.ts` · `sdk-facade.ts` · `admin-write.test.ts` · 신규 `sdk-facade.test.ts` |
+> | `pnpm install --offline --frozen-lockfile` | **PASS**, **lockfile diff 0** |
+> | format / lint / typecheck / unit / build | **PASS** |
+> | unit | **1318/1318** |
+> | Chromium E2E | **134/134** |
+> | **고객 번들 SHA-256** | **`FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`** |
+> | **local `demo-denn-emulator` Rules 게이트** | **10/10 PASS** |
+> | ports 4183/4184/8080/9099/9199 | 잔류 **0** |
+> | `git diff --check` | **PASS** · 추가 결함 **없음** |
+>
+> ### 닫힌 것 — 로컬 비-UI 구현·검증까지
+>
+> `@denn/firebase/admin-write` port(**불변 객체 생성 + 단일 Firestore head CAS + 결과 불명 시
+> bounded reconciliation**) · **두 오류 표면**(`save`는 8개 `WRITE_*`, `loadBaseline`은 스펙 036
+> read 오류 + `REBUILD_BASELINE_INVALID`) · `storage.rules`/`firestore.rules` **목표 상태**
+> (placeholder UID) · emulator 전용 config와 Rules 사본 · opt-in fake/emulator 검증.
+>
+> ### ★ 여전히 NOT TESTED이자 금지
+>
+> **실제 Firebase 프로젝트·운영 bucket·운영 데이터·live network**(NOT TESTED) ·
+> **실제 운영자 UID**(UNCONFIRMED — 배포 대상 Rules에 **placeholder가 남아 현 상태로 배포 불가**) ·
+> **Rules·Hosting 배포**(금지. ⚠️ 배포하면 `denn-admin.html:740`의 저장이 서버에서 거부되므로
+> **배포 순서 자체가 STOP 대상**이고 cutover는 별도 스펙·별도 승인) ·
+> **운영 쓰기 활성화**(전제 3개 중 **emulator PASS 하나만 충족**) ·
+> **`apps/**`와 모든 UI 연결·저장 버튼** · **발행** · **legacy 공유 쓰기** ·
+> **orphan 삭제·자동 정리** · **tombstone·자동 merge·L-4** ·
+> 실제 네트워크 지연·단절 · 실기기·다중 기기 · 운영 규모 payload · orphan 누적 실제 비용 ·
+> `pnpm-workspace.yaml`의 `allowBuilds`(이월).
+>
+> ### 증명 경계 (유지)
+>
+> **합성 fake는 서버 Rules의 원자성을 증명하지 않고, emulator는 앱 오류 분기 전체를 증명하지 않는다.**
+> callback 재실행과 commit outcome unknown은 **fake 전용**이며 emulator 증명이라 주장하지 않는다.
+> **emulator는 실제 Firebase가 아니다.**
 
 > ### ★★ 보완 라운드 1 — Codex 지적 3건 (`ead06ab`)
 >

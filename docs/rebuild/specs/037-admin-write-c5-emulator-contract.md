@@ -1,8 +1,12 @@
 # 스펙 037 — 운영자 상태 쓰기 C5 (불변 객체 + 단일 Firestore head) · Emulator 검증 계약
 
-상태: **계약 문서 — 보완 라운드 3 적용 · 구현 미착수 · 미승인**
-작성 2026-08-11 · 초판 `c654023` · **라운드 1** `41b54b9` · **라운드 2** `d5789db` · 동기화 `fad819f`·`f694211`
-**보완 라운드 3 (CORRECTION_REQUIRED, 2026-08-11)** · 보완 기준 HEAD = origin = `f694211`
+상태: **DONE (Codex `CODEX_PASSED`, 2026-08-11)** — 구현 **`d83aee9`** + 보완 라운드 1 **`ead06ab`**,
+기록 **`91a7813`**. **로컬 비-UI 구현·검증까지만** 완료됐고, **실제 Firebase·실제 UID·운영 배포·
+UI 연결은 여전히 NOT TESTED이자 금지**다(§16 · 아래 "종료" 절).
+
+계약 이력: 작성 2026-08-11 · 초판 `c654023` · **라운드 1** `41b54b9` · **라운드 2** `d5789db` ·
+**라운드 3** `9805c26` · 동기화 `fad819f`·`f694211`·`2f0ca7d`
+Founder 구현 착수 승인 **`4f2ab0b`** + 허용 범위 검토 **`f8590e4`**(A-12·A-13 확장 포함)
 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-11-admin-write-atomicity-decisions.md`
 (Founder G-1~G-5, 2026-08-11 승인) · 선행 `decisions/2026-08-10-admin-auth-write-boundary-decisions.md`(F-A~F-E)
 근거 조사: `reviews/2026-08-11-admin-write-atomicity-investigation.md`
@@ -674,3 +678,63 @@ Rules가 `objectPath`의 실제 객체 존재를 증명해야 계약이 성립�
 - **실제 제품 UI · live Firebase · Rules 배포 · 운영 쓰기는 계속 금지**다.
 - **★ G-5의 합성 fake·로컬 emulator 허용과 결정 문서 §2의 "제품 구현 착수" 금지 사이 경계는
   이번 문서 교정에서 추측하지 않는다. Codex 최종 검토 후 Founder 확인 대상으로 남긴다.**
+
+---
+
+## 17. 종료 (DONE) — Codex `CODEX_PASSED` (2026-08-11)
+
+> §16은 **계약 라운드 3 시점의 기록**이다. 그 뒤 Founder가 구현 착수를 승인(`4f2ab0b`)하고
+> 허용 범위 검토(`f8590e4`)로 **A-12·A-13**을 확장했으며, 구현과 보완이 끝나 이 스펙은 **DONE**이다.
+> §16을 삭제하지 않고 이 절이 그 다음 단계를 이어 기록한다.
+
+### 종료 커밋
+
+| 커밋 | 내용 |
+| --- | --- |
+| **`d83aee9`** | C5 비-UI 구현(admin-write port · Rules 목표 상태 · emulator 설정 · 테스트) |
+| **`ead06ab`** | **보완 라운드 1** — Codex 지적 3건(payload 사전 검증 · app 소유권 · emulator `demo-` 가드) |
+| **`91a7813`** | 보완 기록 문서 |
+
+### Codex 독립 재검증 결과 — **`CODEX_PASSED`**
+
+| 항목 | 결과 |
+| --- | --- |
+| HEAD=origin | `91a7813`, ahead/behind **0/0** |
+| 변경 범위 | 허용 4파일뿐 — `write-port.ts` · `sdk-facade.ts` · `admin-write.test.ts` · 신규 `sdk-facade.test.ts` |
+| `pnpm install --offline --frozen-lockfile` | **PASS**, **lockfile diff 0** |
+| format / lint / typecheck / unit / build | **PASS** |
+| unit | **1318/1318** |
+| Chromium E2E | **134/134** |
+| **고객 번들 SHA-256** | **`FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`** (기준과 동일) |
+| **local `demo-denn-emulator` Rules 게이트** | **10/10 PASS** |
+| ports 4183/4184/8080/9099/9199 | 잔류 **0** |
+| `git diff --check` | **PASS** |
+| 추가 결함 | **없음** |
+
+### 이 스펙이 실제로 닫은 것
+
+**로컬 비-UI 구현·검증까지**다. `@denn/firebase/admin-write` port(불변 객체 생성 + 단일 Firestore
+head CAS + 결과 불명 시 bounded reconciliation) · 두 오류 표면 · `storage.rules`/`firestore.rules`의
+**목표 상태**(placeholder UID) · emulator 전용 config와 Rules 사본 · opt-in fake/emulator 검증.
+
+### ★ 이 스펙이 닫지 **않은** 것 — NOT TESTED / 계속 금지
+
+- **실제 Firebase 프로젝트 · 운영 bucket · 운영 데이터 · live network** — 접근 **0**, **NOT TESTED**.
+- **실제 운영자 UID** — 저장소에서 확인 불가. 배포 대상 Rules에는 **UNCONFIRMED placeholder**가
+  그대로 남아 있어 **현 상태로는 배포할 수 없다**. **UNCONFIRMED**.
+- **Rules · Hosting 배포** — **금지**. ⚠️ 배포하면 `denn-admin.html:740`의 저장이 서버에서 거부되므로
+  **배포 순서 자체가 STOP 대상**이다(§9). cutover는 **별도 스펙 + 별도 Founder 승인**.
+- **운영 쓰기 활성화** — **금지**. 전제는 **실제 UID + orphan 보존/비용/정리 정책 + emulator PASS**
+  전부이며 마지막 하나만 충족됐다.
+- **`apps/**`와 모든 UI 연결 · 저장 버튼** — 이번 단위 범위 밖, **금지**.
+- **`published/state.json` 발행 · legacy `admin/state.json` 공유 쓰기 · orphan 삭제·자동 정리 ·
+  tombstone·자동 merge·L-4 해결** — 전부 **금지**이며 각각 별도 스펙 대상이다.
+- **실제 네트워크 지연·단절 · 실기기 · 다중 기기 동시 편집 · 운영 규모 payload ·
+  orphan 누적 실제 비용** — **NOT TESTED**.
+- `pnpm-workspace.yaml`의 `allowBuilds` — 이월, **미해결**.
+
+### 증명 경계 (유지)
+
+> **합성 fake는 서버 Rules의 원자성을 증명하지 않고, emulator는 앱 오류 분기 전체를 증명하지 않는다.**
+> transaction callback 재실행과 commit outcome unknown은 **결정적·비파괴적 seam이 없어 fake 전용**이며
+> **emulator 증명이라고 주장하지 않는다**(§7.5 C·D). **emulator는 실제 Firebase가 아니다.**
