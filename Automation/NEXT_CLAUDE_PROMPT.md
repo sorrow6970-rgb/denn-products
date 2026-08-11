@@ -1,77 +1,69 @@
 # NEXT CLAUDE PROMPT
 
 상태: `READY_FOR_CODEX`
-active_unit: `spec-037-admin-write-c5-emulator-contract` (**계약 문서 작성 완료 · 구현 미착수**)
-다음 주체: **Codex** — 스펙 037 계약 검토
+active_unit: `spec-037-admin-write-c5-emulator-contract` (**계약 보완 라운드 1 완료 · 구현 미착수**)
+fix_round: 1 / max 3 · 기준: HEAD=origin=`c654023` → 보완 커밋
+다음 주체: **Codex** — 보완 라운드 1 재검토
 
-**Founder G-1~G-5(`dc5666d`)와 Codex 구조 결정 Z-1~Z-8을 입력으로 스펙 037 구현 계약을 작성했다.**
-**문서 전용이며 구현은 시작하지 않았다.**
+**Codex가 지적한 계약 결함 5건을 문서 전용으로 정정했다.** 구현은 시작하지 않았다.
 
-- 계약: **`docs/rebuild/specs/037-admin-write-c5-emulator-contract.md`**
+- 계약: **`docs/rebuild/specs/037-admin-write-c5-emulator-contract.md`**(정정본)
 - 핸드오프: `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`
-- 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-11-admin-write-atomicity-decisions.md`
-- 근거 조사: `docs/codex-claude-handoff/reviews/2026-08-11-admin-write-atomicity-investigation.md`
+- 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-11-admin-write-atomicity-decisions.md`(G-1~G-5)
 
 > **★ 이 계약은 실제 저장 구현도 admin UI 연결도 승인하지 않는다.**
-> **Codex 검토 → Founder의 구현 착수 별도 승인** 전에는 코드를 쓰지 않는다.
+> **Codex 재검토 → Founder의 구현 착수 별도 승인** 전에는 코드를 쓰지 않는다.
 
-## 1. 계약 골자 (Z-1 ~ Z-8)
+## 1. 정정한 5건
 
-| Z | 확정 |
-| --- | --- |
-| **Z-1** | UID 제한은 **`rebuild-admin-state/**` + `/rebuildAdminState/head`에만**. **`op()` 무변경**(바꾸면 레거시 발행·자산 업로드까지 잠긴다). 실제 UID **UNCONFIRMED · 추측 금지**, emulator는 **합성 UID** |
-| **Z-2** | `rebuild-admin-state/objects/{operationId}.json` — **별도 최상위 경로**(OR 우회 구조적 차단), UUID **1회 생성**(재시도해도 재생성 안 함), 경로에 revision·문구·id·시간 **금지**, **`resource == null` create-only**, update/delete 금지 |
-| **Z-3** | `/rebuildAdminState/head` 단일 문서, 허용 키 **3개**, 최초 **revision 1**, 이후 transaction에서 **`expectedBase` 일치 시 정확히 +1**, `firestore.rules` **이중 강제**, **Rules가 객체 실존을 증명한다고 주장하지 않음** |
-| **Z-4** | `@denn/firebase/admin-write`, **루트 배럴 무변경**, SDK는 **admin 전용 lazy 경계 안**, **UI 연결 제외**, **단일 in-flight**, **앱 자동 retry·merge 0**, ⚠️ **SDK 내부 재시도로 "요청 1회" 미주장**, **오류 8코드**(CONFLICT·OUTCOME_UNKNOWN = `retryable:false`) |
-| **Z-5** | head 없음 → legacy **revision 0** 기준 / head 있음 → **그 객체만**, 없거나 invalid면 **fail-closed(legacy fallback 0)**. `expectedBase` 고정, **자동 재채택·병합 0**, **commit 성공 후에만** 기준 갱신 |
-| **Z-6** | **로컬 emulator만**, **`demo-` 프로젝트 강제**, 기본 게이트와 **분리**(`*.emulator.test.ts` + `pnpm test:emulator`), **실제 Rules로 7개 시나리오**, 설치·다운로드·포트 강제 해제 **STOP** |
-| **Z-7** | **tombstone·자동 merge 없음.** 문서 전체 CAS, 충돌 시 전체 거부. **L-4는 별도 후속 스펙** |
-| **Z-8** | **배포 0.** 실제 UID + orphan 정책 + emulator PASS 전 운영 쓰기 미개방. **legacy 저장을 먼저 닫지 않는다.** cutover는 별도 승인·별도 스펙 |
+| # | 초판(`c654023`)의 결함 | 정정 |
+| --- | --- | --- |
+| **1** | baseline load에 필요한 **Firestore head `get` 권한이 Rules 계약에 없었다** | §4.4 전면 재작성 — **`get`은 승인 UID + `docId=='head'`만**, **`list` 거부**, create는 **`revision==1`만**, update는 **`revision` 정확히 +1 AND `objectPath`가 이전 값과 달라야** 함, **허용 키 3개**, **`objectPath` 형태 강제**, **delete 금지**, **다른 문서 전부 거부**, **`spaces`·catch-all 무변경** |
+| **2** | **합성 UID Rules 사본을 고를 별도 emulator config가 없어** 배포 config와 섞일 수 있었다 | §7.3 — **`firebase.json`은 구현 단계에서도 수정 금지**, 신규 **`firebase.emulator.json`** 이 **emulator 전용 Rules 사본 + 포트만** 참조, 실행은 **`--config firebase.emulator.json` + `--project demo-denn-emulator`** 를 **둘 다** 포함, **UID 상수 외 diff 0을 unit test로 고정**, `.firebaserc` 무변경. **허용 파일에서 `firebase.json` 제거 · `firebase.emulator.json` 추가** |
+| **3** | **`WRITE_COMMIT_OUTCOME_UNKNOWN`을 orphan으로 단정**해 commit 성공 가능성과 모순 | §6.5 결과 상태 **5행 표**로 분리 — **결과 불명은 orphan이 아니라 "미판정"**, **head 재조회(`objectPath`+`revision`)로만 판정**, **`WRITE_HEAD_FAILED`도 `retryable:false`**, **reload 전 동일 payload 재전송 자동·수동 모두 금지**, **"head commit만 재개" API 미도입**, **명확한 실패만 `WRITE_UPLOAD_FAILED`** |
+| **4** | **transaction callback의 SDK 내부 재실행과 부작용 금지**가 없었다 | §5.5 신설 — **앱은 `runTransaction` 정확히 1회 호출**, **SDK는 callback을 여러 번 실행할 수 있음**, callback 안 **`transaction.get/set` 외 부작용 전면 금지**(UUID·upload·로그·UI·로컬 revision), **`operationId`/`expectedBase`는 호출 전 고정**, **재실행 ≠ 앱 retry** |
+| **5** | **공개 port 타입·입출력**이 없었다 | §5.6 — `AdminStateWritePort`/`AdminStateBaselineValue`/`AdminStateSaveRequest`/`AdminStateSaveValue`를 **이름까지 고정**, **`operationId`는 port 내부 생성**, head 없음에서만 **legacy+revision 0**, 불일치는 **fail-closed**, **`admin-read/**` 무수정**, **중복 검증 금지** |
 
-## 2. ★ Emulator 사전 확인 결과 (읽기 전용 · 설치/다운로드/실행 0)
+**emulator 시나리오 7 → 12개**: **#8** 승인 UID head `get` 성공 · **#9** 다른 UID·익명·미인증 거부 ·
+**#10** head `list` 거부 · **#11** callback 재실행 시 upload 반복 0 ·
+**#12** commit outcome unknown은 재조회로 판정. synthetic Auth 계정은 **emulator 내부 전용**.
 
-| 항목 | 결과 |
-| --- | --- |
-| Java | **사용 가능** `openjdk 21.0.11 LTS` |
-| firebase-tools | **사용 가능** 전역 **15.22.4** · **저장소 의존성 아님** → **lockfile 변경 불필요** |
-| emulator binary | **캐시됨** — Firestore `v1.21.0.jar` · Storage rules runtime `v1.1.3.jar` · UI `v1.15.0` |
-| Auth emulator binary | 별도 jar **없음** — 내장 추정이나 **UNCONFIRMED**. **첫 실행에서 다운로드 시도 시 즉시 STOP** |
-| 포트 4000·4400·4500·8080·9099·9199·4183·4184 | **전부 free** |
+**신규 위험**: **R-9** callback 재실행이 upload 반복/부작용 · **R-10** baseline load가 head를 못 읽음.
 
-## 3. ★★ 계약이 못 박은 두 위험
+## 2. ★ Codex가 판단해 줘야 할 것 — `Catalog` 타입 이름
 
-- **R-1** **Rules 배포가 운영자의 유일한 저장 경로를 닫는다.** `denn-admin.html:740`이 지금
-  유일한 저장 경로다(스펙 035). 이번엔 Rules를 **수정도 배포도 하지 않았고** UID 정본 전 배포가
-  차단이므로 **현재는 안전**하다. 위험은 배포 시점이며 **Z-8이 STOP으로 고정**했다.
-- **R-2** **emulator가 실제 프로젝트 id로 뜰 수 있다** — `.firebaserc`의 default가
-  **실제 운영 프로젝트 `denn-products`**. → **`demo-` 접두 프로젝트 강제** +
-  **emulator host 미설정 시 시작 거부** + **`.firebaserc` 수정 금지**.
+교정 5의 타입 블록은 **`Catalog`** 를 쓰지만 **그 이름의 타입은 저장소에 존재하지 않는다.**
+실제 export는 **`CatalogDocumentV1`**(`packages/shared/src/catalog/types.ts`;
+스펙 036 `AdminStateLoadValue.document`가 그 타입이다).
 
-## 4. Codex가 확인할 것
+계약은 `Catalog`를 **`CatalogDocumentV1`에 바인딩**하고 **동의어·새 타입을 만들지 않는다**고 기록했다
+(교정 5의 "중복 검증 규칙을 만들지 않는다"와 같은 이유). **다른 의도였다면 계약만 정정하면 된다** —
+제품 코드는 아직 없다. `Result`는 `packages/shared/src/index.ts:19`의 기존 타입을 쓴다.
 
-- Z-1~Z-8이 계약에 **정확히** 반영됐는지, **초과 확장이 없는지**
-- **`op()` 무변경**·**루트 배럴 무변경**·**UI 연결 제외**가 명시됐는지
-- 오류 8코드와 **`retryable:false` 분류**가 맞는지
-- **fake가 서버 원자성을 증명하지 않는다**는 경계가 명시됐는지
-- emulator 계약의 **허용 파일 목록**과 **STOP 조건**이 충분한지
-- 실제 UID를 **추측하거나 예시로 기록하지 않았는지**
-- 변경이 **허용 문서 6개**로 한정됐는지
-- 그 뒤 **스펙 037 계약 승인 여부 판단**
+## 3. Codex가 확인할 것
 
-## 5. 계속 금지
+- 교정 1~5가 계약에 **정확히** 반영됐고 **초과 확장이 없는지**
+- **삭제되어야 할 초판 문구**가 남아 있지 않은지 — "결과 불명 = orphan", `firebase.json`
+  emulators 블록, `WRITE_HEAD_FAILED` retryable:true
+- §6.5의 **결과 상태 5행**과 §5.4 **retryable 분류**가 서로 모순 없는지
+- §4.4의 **`objectPath` 교체 강제**가 §6.5의 **재조회 판정**과 정합하는지
+- **`Catalog` → `CatalogDocumentV1` 바인딩** 판단(§2)
+- 변경이 **허용 문서 6개**로 한정됐는지, **Codex 검수 기록과 초판 이력이 보존**됐는지
+- 그 뒤 **보완 라운드 1 승인 여부 판단**
+
+## 4. 계속 금지
 
 - **구현 착수** — Codex 승인 + Founder의 구현 착수 승인 전에는 코드·테스트·CSS 0.
 - **`apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
-  `package.json`·lockfile·`pnpm-workspace.yaml` 수정** — 계약이 허용 파일로 열거했으나
-  **구현 단계에서만**이다.
+  `firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml` 수정** —
+  계약이 허용 파일로 열거했으나 **구현 단계에서만**이다.
+- **실제 emulator 실행** · 실제 Firebase 프로젝트 · 운영 bucket · 운영 데이터 · live network.
 - **Rules 배포 · Hosting 배포 · 운영 쓰기 활성화 · `published/state.json` 발행.**
-- **실제 Firebase 프로젝트 · 운영 bucket · 운영 데이터 · live network · emulator 실행.**
-- **저장 버튼·admin UI 연결**(이번 구현 단위 범위 밖).
-- **tombstone·자동 merge·orphan 삭제·클라이언트 delete 권한.**
+- **저장 버튼·admin UI 연결** · **tombstone·자동 merge·orphan 삭제·클라이언트 delete 권한.**
 - 신규 의존성 · force push · merge · rebase · `reset --hard` · broad delete ·
   새 자동화나 반복 작업.
 
-## 6. 보호 대상 (수정·삭제·restore·checkout·stage·commit 금지)
+## 5. 보호 대상 (수정·삭제·restore·checkout·stage·commit 금지)
 
 - `docs/rebuild/design/taste-v2/**` — **Founder 소유의 별도 작업**
 - `docs/rebuild/design/README.md`
@@ -80,10 +72,9 @@ active_unit: `spec-037-admin-write-c5-emulator-contract` (**계약 문서 작성
 - `docs/rebuild/results/spec-018/browse-mobile-390x844.png`
 - `packages/render/src/plan/index.ts`
 
-## 7. NOT TESTED / UNCONFIRMED
+## 6. NOT TESTED / UNCONFIRMED
 
 실제 Firebase 프로젝트 동작 전부(Rules 실제 배포·거부, 실제 bucket, 운영 데이터) ·
 **실제 운영자 UID와 계정 실재·로그인** · 실제 네트워크 지연·단절 · 실기기·다중 기기 동시 편집 ·
-**Auth emulator binary 가용성** · 운영 규모 payload(실제 `admin/state.json` 크기·내용) ·
-orphan 누적 실제 비용 · **L-4 삭제 부활**(범위 밖) ·
-`pnpm-workspace.yaml`의 `allowBuilds`(이월, 미해결).
+**Auth emulator binary 가용성** · 운영 규모 payload · orphan 누적 실제 비용 ·
+**L-4 삭제 부활**(범위 밖) · `pnpm-workspace.yaml`의 `allowBuilds`(이월, 미해결).

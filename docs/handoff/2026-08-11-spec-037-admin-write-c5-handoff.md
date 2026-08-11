@@ -1,6 +1,23 @@
 # 핸드오프 — 스펙 037 운영자 상태 쓰기 C5 계약 (2026-08-11)
 
-작성: Claude Code · 기준 HEAD = origin = `dc5666d` · 브랜치 `rebuild/modern-studio`
+작성: Claude Code · 초판 기준 HEAD = origin = `dc5666d`(커밋 `c654023`) · 브랜치 `rebuild/modern-studio`
+**보완 라운드 1 (CORRECTION_REQUIRED) 적용** · 보완 기준 HEAD = origin = `c654023`
+
+> ## ★ 보완 라운드 1 — Codex가 지적한 계약 결함 5건을 정정했다
+>
+> | # | 초판의 결함 | 정정 |
+> | --- | --- | --- |
+> | **1** | baseline load에 필요한 **Firestore head `get` 권한이 Rules 계약에 없었다** | 계약 §4.4를 **get/list/create/update/delete 전 분기**로 다시 썼다. **`get`은 승인 UID + `docId == 'head'`만**, **`list` 거부**, `objectPath` 형태 강제, **update 시 `objectPath`가 이전 값과 달라야 함** 추가 |
+> | **2** | **합성 UID Rules 사본을 선택할 별도 emulator config가 없어** 배포 config와 섞일 수 있었다 | **`firebase.json`은 구현 단계에서도 수정하지 않는다.** 신규 **`firebase.emulator.json`** 을 emulator 전용 config로 고정했다. 실행은 **`--config firebase.emulator.json` + `--project demo-denn-emulator`** 를 **모두** 포함한다. 허용 파일에서 **`firebase.json` 제거**, `firebase.emulator.json` 추가 |
+> | **3** | **`WRITE_COMMIT_OUTCOME_UNKNOWN`을 orphan으로 단정**해 "실제로는 commit이 성공했을 수 있다"와 모순됐다 | 계약 §6.5를 **결과 상태 5행 표**로 분리했다. **결과 불명은 orphan이 아니라 "미판정"** 이고, **head 재조회(`objectPath`+`revision`)로만 판정**한다. **`WRITE_HEAD_FAILED`도 `retryable: false`** 로 바꿨고, **reload 전 동일 payload 재전송을 자동·수동 모두 금지**했다. **"head commit만 재개" API는 만들지 않는다** |
+> | **4** | Firestore **transaction callback의 SDK 내부 재실행**과 **callback 부작용 금지**가 없었다 | 계약 §5.5 신설. **앱은 `runTransaction`을 정확히 1회 호출**하되 **SDK는 callback을 여러 번 실행할 수 있다**. callback 안에서 `transaction.get/set` 외 **전면 부작용 금지**(UUID 생성·upload·로그·UI·로컬 revision 변경). **`operationId`와 `expectedBase`는 transaction 호출 전에 고정.** **callback 재실행 ≠ 앱 retry** |
+> | **5** | `@denn/firebase/admin-write`의 **공개 타입·입출력**이 없었다 | 계약 §5.6에 **`AdminStateWritePort`·`AdminStateBaselineValue`·`AdminStateSaveRequest`·`AdminStateSaveValue`를 이름까지 고정**했다. `operationId`는 **port 내부 생성**이고 외부 입력이 아니다. **`packages/firebase/src/admin-read/**`는 이번 첫 구현에서 수정하지 않는다** |
+>
+> **★ 구현 전 확인 필요**: 교정 5의 타입 블록이 쓰는 **`Catalog`라는 타입은 저장소에 존재하지 않는다.**
+> `@denn/shared`가 실제로 내보내는 이름은 **`CatalogDocumentV1`**
+> (`packages/shared/src/catalog/types.ts` — 스펙 036의 `AdminStateLoadValue.document`가 그 타입이다).
+> 계약은 `Catalog`를 **`CatalogDocumentV1`에 바인딩**하고 **동의어·새 타입을 만들지 않는다**고 명시했다.
+> `Result`는 `packages/shared/src/index.ts:19`의 기존 타입을 쓴다.
 계약: `docs/rebuild/specs/037-admin-write-c5-emulator-contract.md`
 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-11-admin-write-atomicity-decisions.md`(G-1~G-5)
 구조 결정: Codex **Z-1 ~ Z-8**
@@ -37,10 +54,10 @@
 | --- | --- |
 | **Z-1** | UID 제한은 **`rebuild-admin-state/**` 와 `/rebuildAdminState/head`에만**. **`op()` 본체는 건드리지 않는다**(건드리면 레거시 발행·자산 업로드까지 잠긴다). 실제 UID는 **UNCONFIRMED**, 커밋 금지, emulator는 **합성 UID** |
 | **Z-2** | `rebuild-admin-state/objects/{operationId}.json` — **별도 최상위 경로**(OR 우회 구조적 차단), `operationId` = 저장 시작 시 1회 생성 **UUID**, 경로에 revision·문구·id·시간 **금지**, `resource == null` **create-only**, update/delete 금지 |
-| **Z-3** | `/rebuildAdminState/head` **단일 문서**, 키 3개(`schemaVersion`/`revision`/`objectPath`)만. 최초 create는 `revision 1`, 이후는 transaction에서 `expectedBase` 일치 시 **정확히 +1**. `firestore.rules`가 **이중 강제**. **Rules가 객체 실존을 증명한다고 주장하지 않는다** |
-| **Z-4** | `@denn/firebase/admin-write` 서브패스, **루트 배럴 무변경**, SDK는 **admin 전용 lazy 경계 안**, 주입 facade + 합성 fake, **저장 버튼·UI 연결 제외**, 단일 in-flight, **앱 자동 retry·merge 0**, ⚠️ **SDK 내부 재시도가 있으므로 "요청 1회"를 주장하지 않는다**, **오류 8코드** |
+| **Z-3** | `/rebuildAdminState/head` **단일 문서**, 키 3개(`schemaVersion`/`revision`/`objectPath`)만. 최초 create는 `revision 1`, 이후는 transaction에서 `expectedBase` 일치 시 **정확히 +1 + `objectPath` 교체**. `firestore.rules`가 **`get`(승인 UID + `head` 문서만) · `list` 거부 · create/update/delete 전 분기를 이중 강제**〔교정 1〕. **Rules가 객체 실존을 증명한다고 주장하지 않는다** |
+| **Z-4** | `@denn/firebase/admin-write` 서브패스, **루트 배럴 무변경**, SDK는 **admin 전용 lazy 경계 안**, 주입 facade + 합성 fake, **저장 버튼·UI 연결 제외**, **`loadBaseline`/`save` 각각 단일 in-flight**, **앱 자동 retry·merge 0**, ⚠️ **SDK 내부 재시도가 있으므로 "요청 1회"를 주장하지 않는다**, **오류 8코드**(`WRITE_HEAD_FAILED`도 `retryable:false`〔교정 3〕), **transaction callback 재실행 계약**〔교정 4〕, **공개 타입 고정**〔교정 5〕 |
 | **Z-5** | head 없음 → legacy를 **revision 0** 기준으로 읽기 / head 있음 → **그 객체만**, 없거나 invalid면 **fail-closed(legacy fallback 0)**. `expectedBase`는 **편집 시작 로드의 revision**으로 고정, 자동 재채택·자동 병합 0, **commit 성공 후에만** 로컬 기준 갱신 |
-| **Z-6** | **로컬 emulator만**, `demo-` 프로젝트 강제, 기본 게이트와 **분리**(`*.emulator.test.ts` + `pnpm test:emulator`), **실제 Rules로 7개 시나리오**, 설치·다운로드·포트 강제 해제는 **STOP** |
+| **Z-6** | **로컬 emulator만**, **신규 `firebase.emulator.json` 전용 config**〔교정 2〕 + **`--project demo-denn-emulator`** 를 **둘 다** 명시(`firebase.json`은 **구현 단계에서도 수정 금지**), 기본 게이트와 **분리**(`*.emulator.test.ts` + `pnpm test:emulator`), **실제 Rules로 12개 시나리오**(head `get` 성공/거부·`list` 거부·callback 재실행 시 upload 반복 0·commit outcome unknown 재조회 판정 추가), 설치·다운로드·포트 강제 해제는 **STOP** |
 | **Z-7** | **tombstone·자동 merge 도입 안 함.** 저장은 **문서 전체 CAS**, 충돌 시 전체 거부. **L-4는 별도 후속 스펙** |
 | **Z-8** | **이번 스펙에서 배포 0.** 실제 UID + orphan 정책 + emulator PASS 전에는 운영 쓰기 미개방. **legacy 저장을 먼저 닫지 않는다.** cutover는 별도 승인·별도 스펙 |
 

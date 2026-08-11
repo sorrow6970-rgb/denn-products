@@ -9,16 +9,68 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — 스펙 037 C5 구현 계약을 **문서 전용**으로 작성했다(2026-08-11, 기준 `dc5666d`).
-계약 `docs/rebuild/specs/037-admin-write-c5-emulator-contract.md` ·
-핸드오프 `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`.
-입력 = Founder **G-1~G-5**(`dc5666d`, Codex 검수 통과) + Codex 구조 결정 **Z-1~Z-8**.
-**`apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
-`package.json`·lockfile·`pnpm-workspace.yaml` diff 0**, 신규 의존성 0,
+상태: **`READY_FOR_CODEX` — 스펙 037 계약의 **보완 라운드 1**을 문서 전용으로 완료했다
+(2026-08-11, 기준 `c654023`). Codex가 지적한 계약 결함 **5건을 정정**했다.
+`apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
+`firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml` diff **0**, 신규 의존성 0,
 실제 Firebase·network·live·**emulator 실행**·운영 데이터 접근 0, upload/write/publish/deploy 0,
 자동화 생성 0. **구현 착수 0.**
-**★ 이 계약은 실제 저장 구현도 admin UI 연결도 승인하지 않는다.**
-**다음 = Codex가 계약을 검토**하고, 이어서 **Founder가 구현 착수를 별도 승인**해야 한다.**
+**다음 = Codex가 보완 라운드 1을 재검토**한다.**
+
+> ### ★ 보완 라운드 1 — 정정한 5건
+>
+> 1. **★ Firestore head read 권한 누락 → 계약 §4.4 전면 재작성.**
+>    **`allow get: if approvedOperator() && docId == 'head'`**(baseline load가 성립한다) ·
+>    **`allow list: if false`** · create는 **`revision == 1`만** · update는
+>    **`revision` 정확히 +1 AND `objectPath`가 이전 값과 달라야** 함 · **허용 키 정확히 3개** ·
+>    **`objectPath`는 `rebuild-admin-state/objects/{UUID}.json` 형태만** · **delete 금지** ·
+>    **다른 `rebuildAdminState` 문서 전부 거부** · **`spaces/{token}`·catch-all 무변경**.
+> 2. **★ emulator Rules 선택을 별도 config로 고정 → §7.3.**
+>    **`firebase.json`은 구현 단계에서도 수정하지 않는다.** 신규 **`firebase.emulator.json`** 이
+>    **emulator 전용 Rules 사본과 포트만** 참조하고, 실행은 **`--config firebase.emulator.json`
+>    + `--project demo-denn-emulator`** 를 **둘 다** 포함한다. emulator 사본에는 **합성 UID만**,
+>    배포 대상 Rules에는 **UNCONFIRMED placeholder만**, 둘의 **UID 상수 외 diff 0을 unit test로 고정**.
+>    `.firebaserc` 무변경. **허용 파일에서 `firebase.json` 제거 · `firebase.emulator.json` 추가.**
+> 3. **★ 결과 불명과 orphan 의미 정정 → §6.5(결과 상태 5행 표).**
+>    초판은 **결과 불명을 orphan으로 단정**해 **commit이 실제로 성공했을 가능성과 모순**됐다.
+>    정정: upload 결과 불명 + transaction 미시작 → **객체는 없거나 orphan일 수 있고 head 불변** /
+>    upload 성공 + transaction 명확히 실패 → **orphan, head 불변** /
+>    **transaction 결과 불명 → head에 연결됐을 수도, orphan일 수도 있다(미판정)**.
+>    **추측 금지 — head를 다시 읽어 `objectPath`와 `revision`으로만 판정**한다
+>    (§4.4가 update마다 `objectPath` 교체를 강제하므로 성립).
+>    **`WRITE_COMMIT_OUTCOME_UNKNOWN` `retryable:false`** · **reload 전 동일 payload 재전송
+>    자동·수동 모두 금지** · **`WRITE_HEAD_FAILED`도 `retryable:false`로 변경** ·
+>    **"head commit만 재개" API 미도입** · **명확한 upload 실패만 `WRITE_UPLOAD_FAILED`**,
+>    서버 반영 불명확은 **`WRITE_UPLOAD_OUTCOME_UNKNOWN`**.
+> 4. **★ transaction callback 재실행 계약 → §5.5 신설.**
+>    **앱은 `runTransaction`을 정확히 1회 호출**하되 **SDK는 callback을 여러 번 실행할 수 있다**.
+>    **callback 안에서 `transaction.get/set` 외 부작용 전면 금지**(UUID 생성·Storage upload·로그·
+>    UI 변경·로컬 revision 변경). **`operationId`와 `expectedBase`는 transaction 호출 전에 고정**,
+>    **재실행마다 head를 다시 읽되 `expectedBase`를 자동 변경하지 않으며** 불일치는 `WRITE_CONFLICT`.
+>    **upload는 transaction 밖 선행이라 재실행으로 반복되지 않는다.**
+>    **callback 내부 재실행 ≠ 앱 수준 retry.**
+> 5. **★ 공개 port 타입 고정 → §5.6.** `AdminStateRevision` ·
+>    `AdminStateBaselineValue{catalog,revision,source}` ·
+>    `AdminStateSaveRequest{correlationId,expectedBase,catalog}` ·
+>    `AdminStateSaveValue{revision,objectPath}` · `AdminStateWritePort{loadBaseline,save}`.
+>    **`operationId`는 port 내부 생성**(외부 입력 아님) · head 없음에서만
+>    **legacy + revision 0 + `source:"legacy"`** · head 있으면 **rebuild 객체만** ·
+>    불일치는 **fail-closed(legacy fallback 0)** · **성공 반환 revision만** 새 baseline으로 채택 ·
+>    **각각 단일 in-flight** · **`admin-read/**` 무수정** · **중복 검증 규칙 금지**.
+>
+> **★ 구현 전 확인 필요 — `Catalog` 타입**: 교정 5의 블록이 쓰는 `Catalog`는
+> **저장소에 존재하지 않는 이름**이다. 실제 export는 **`CatalogDocumentV1`**
+> (`packages/shared/src/catalog/types.ts`; 스펙 036 `AdminStateLoadValue.document`가 그 타입).
+> 계약은 `Catalog`를 **`CatalogDocumentV1`에 바인딩**하고 **동의어·새 타입을 만들지 않는다**고 명시했다.
+> `Result`는 `packages/shared/src/index.ts:19`의 기존 타입.
+>
+> **emulator 시나리오 7 → 12개**: **#8 승인 UID head `get` 성공** · **#9 다른 UID·익명·미인증 거부** ·
+> **#10 head `list` 거부** · **#11 callback 재실행 시 upload 반복 0** ·
+> **#12 commit outcome unknown은 재조회로 판정**. synthetic Auth 계정은 **emulator 내부 전용**.
+> **신규 위험**: **R-9** callback 재실행이 upload를 반복/부작용 · **R-10** baseline load가 head를
+> 읽지 못해 기능 불성립.
+
+> 아래 `스펙 037 계약 골자`와 Codex 검수 기록은 `c654023` 초판 이력이며 **삭제하지 않는다.**
 
 > ### ★★ 스펙 037 계약 골자 — C5 (불변 객체 + 단일 Firestore head)
 >

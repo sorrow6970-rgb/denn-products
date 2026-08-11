@@ -5,21 +5,121 @@ updated_at: 2026-08-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-036-admin-auth-private-state-read
-active_unit: spec-037-admin-write-c5-emulator-contract   # CONTRACT DOCUMENT ONLY; implementation not started
-state: READY_FOR_CODEX   # spec 037 contract written from Codex Z-1..Z-8; Codex reviews it next
-baseline_commit: dc5666d
-candidate_commit: none (investigation is documentation only; no product code exists for spec 037)
+active_unit: spec-037-admin-write-c5-emulator-contract   # CONTRACT CORRECTION ONLY; implementation not started
+state: READY_FOR_CODEX   # correction round 1 applied to the contract; Codex re-reviews it next
+baseline_commit: c654023
+candidate_commit: c654023   # docs-only contract candidate; product code does not exist for spec 037
 verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "spec 037 contract round started at HEAD=origin=dc5666d, ahead/behind 0/0; docs-only fast-forward commit"
+origin_relation: "correction round 1 started at HEAD=origin=c654023, ahead/behind 0/0; docs-only fast-forward commit carries Codex's review text too"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts + Founder-owned taste-v2 work (docs/rebuild/design/taste-v2/, docs/rebuild/design/README.md, docs/rebuild/specs/038-page-design-prototype.md); Claude must not restore/stage/commit any of them"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: FOUNDER_EXPLICIT_RESUME   # manual workflow; no automatic next-spec start
+next_transition: CODEX_CONTRACT_RE_REVIEW   # manual workflow; no automatic task
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 스펙 037 계약 보완 라운드 1 완료 — READY_FOR_CODEX (2026-08-11)
+
+계약: `docs/rebuild/specs/037-admin-write-c5-emulator-contract.md`(정정본) ·
+핸드오프: `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`
+기준 HEAD `c654023`. **문서 전용 — `apps/**`·`packages/**`·`tests/**`·`storage.rules`·
+`firestore.rules`·`firebase.json`·`firebase.emulator.json`·`package.json`·lockfile·
+`pnpm-workspace.yaml` diff 0**, 신규 의존성 0, 실제 Firebase/network/live/**emulator 실행**/
+운영 데이터 접근 0, upload/write/delete/publish/deploy 0, 자동화 생성 0. **구현 착수 0.**
+> 이 커밋은 Codex가 작업 트리에 남긴 검수 기록(아래 섹션·CURRENT·live log)도 함께 커밋한다.
+
+### Codex 지적 5건을 정정했다
+
+1. **★ Firestore head read 권한 누락 → §4.4 전면 재작성.**
+   **`allow get: if approvedOperator() && docId == 'head'`**(baseline load가 성립한다),
+   **`allow list: if false`**, create는 **`revision == 1`만**, update는
+   **`revision`이 정확히 +1 AND `objectPath`가 이전 값과 달라야** 함,
+   **허용 키 정확히 3개**, **`objectPath`는 `rebuild-admin-state/objects/{UUID}.json` 형태만**,
+   **delete 금지**, **다른 `rebuildAdminState` 문서 전부 거부**,
+   **`spaces/{token}`·catch-all 무변경**.
+2. **★ emulator Rules 선택을 별도 config로 고정 → §7.3.**
+   **`firebase.json`은 구현 단계에서도 수정하지 않는다.** 신규 **`firebase.emulator.json`** 이
+   **emulator 전용 Rules 사본과 emulator 포트만** 참조하고, 실행은
+   **`--config firebase.emulator.json` + `--project demo-denn-emulator`** 를 **둘 다** 포함한다.
+   emulator 사본에는 **합성 UID만**, 배포 대상 Rules에는 **UNCONFIRMED placeholder만**,
+   둘의 **UID 상수 외 diff 0을 unit test로 고정**. `.firebaserc` 무변경.
+   **허용 파일에서 `firebase.json` 제거 · `firebase.emulator.json` 추가.**
+3. **★ 결과 불명과 orphan 의미 정정 → §6.5 (결과 상태 5행 표).**
+   초판은 **결과 불명을 orphan으로 단정**했는데, 그러면 **commit이 실제로 성공했을 가능성과 모순**된다.
+   정정: upload 결과 불명 + transaction 미시작 → **객체는 없거나 orphan일 수 있고 head는 불변** /
+   upload 성공 + transaction 명확히 실패 → **orphan, head 불변** /
+   **transaction 결과 불명 → head에 연결됐을 수도, orphan일 수도 있다(미판정)**.
+   **성공·실패·orphan을 추측하지 않고 head를 다시 읽어 `objectPath`와 `revision`으로만 판정**한다
+   (§4.4가 update마다 `objectPath` 교체를 강제하므로 이 판정이 성립한다).
+   **`WRITE_COMMIT_OUTCOME_UNKNOWN`은 `retryable:false`**, **reload 전 동일 payload 재전송은
+   자동·수동 모두 금지**, **`WRITE_HEAD_FAILED`도 upload 이후 발생하므로 `retryable:false`로 변경**,
+   **"head commit만 재개" API는 만들지 않는다**. **명확한 upload 실패만 `WRITE_UPLOAD_FAILED`**,
+   **서버 반영 여부 불명확은 `WRITE_UPLOAD_OUTCOME_UNKNOWN`**.
+4. **★ Firestore transaction callback 재실행 계약 → §5.5 신설.**
+   **앱은 `runTransaction`을 정확히 1회 호출**하지만 **SDK는 callback을 여러 번 실행할 수 있다**
+   (`maxAttempts` 기본 5). **callback 안에서 `transaction.get/set` 외 부작용 전면 금지** —
+   **UUID 생성 · Storage upload · 로그 · UI 변경 · 로컬 revision 변경 금지**.
+   **`operationId`와 `expectedBase`는 transaction 호출 전에 고정**하고,
+   **재실행마다 head를 다시 읽되 `expectedBase`를 자동 변경하지 않으며** 불일치는 `WRITE_CONFLICT`.
+   **upload는 transaction 밖 선행이라 재실행으로 반복되지 않는다.**
+   **callback 내부 재실행 ≠ 앱 수준 retry**를 문서·테스트에서 구분한다.
+5. **★ 공개 port 타입 고정 → §5.6.**
+   `AdminStateRevision` · `AdminStateBaselineValue{catalog,revision,source}` ·
+   `AdminStateSaveRequest{correlationId,expectedBase,catalog}` ·
+   `AdminStateSaveValue{revision,objectPath}` · `AdminStateWritePort{loadBaseline,save}`.
+   **`operationId`는 port 내부에서 save당 1회 생성**하고 **외부 입력이 아니다**.
+   head 없음에서만 **legacy + revision 0 + `source:"legacy"`**, head 있으면 **rebuild 객체만**,
+   불일치는 **fail-closed(legacy fallback 0)**, **성공 반환 revision만** 새 baseline으로 채택.
+   **`loadBaseline`·`save` 각각 단일 in-flight.**
+   **`packages/firebase/src/admin-read/**`는 이번 첫 구현에서 수정하지 않는다**,
+   **중복 검증 규칙 금지**(`readLegacyCatalog`를 다시 구현하지 않는다).
+
+### ★ 구현 전 확인 필요 — 교정 5의 `Catalog` 타입
+
+교정 지시의 타입 블록은 **`Catalog`** 를 쓰지만 **그 이름의 타입은 저장소에 존재하지 않는다.**
+`@denn/shared`가 실제로 내보내는 이름은 **`CatalogDocumentV1`**
+(`packages/shared/src/catalog/types.ts`; 스펙 036 `AdminStateLoadValue.document`가 그 타입이다).
+계약은 `Catalog`를 **`CatalogDocumentV1`에 바인딩**하고 **동의어·새 타입을 만들지 않는다**고 명시했다
+(교정 5의 "중복 검증 규칙 금지"와 같은 이유). `Result`는 `packages/shared/src/index.ts:19`의 기존 타입.
+
+### emulator 시나리오 7 → 12개
+
+기존 7개 + **#8 승인 UID의 head `get` 성공** · **#9 다른 UID·익명·미인증의 head `get` 거부** ·
+**#10 head `list` 거부** · **#11 transaction callback 재실행 시 upload 반복 0** ·
+**#12 commit outcome unknown은 "head가 변경됐을 수도 있음"으로 다루고 재조회로 판정**.
+**synthetic Auth 계정은 emulator 내부에서만 만들며 실제 계정 생성이 아니다.**
+
+### 신규 위험 2건 기록
+
+**R-9** transaction callback 재실행이 upload를 반복하거나 부작용을 남김 → §5.5 + fake·emulator 양쪽 검증.
+**R-10** baseline load가 head를 읽지 못해 기능이 성립하지 않음 → §4.4 `get` 명시 + emulator #8~#10.
+
+### 다음
+
+**Codex가 보완 라운드 1을 재검토**한다. 구현은 시작하지 않았고 자동화도 만들지 않았다.
+
+> 아래 Codex 검수 기록과 그 아래 `c654023` 초판 기록은 **이력 보존을 위해 삭제하지 않는다.**
+
+## Codex 스펙 037 계약 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-11)
+
+Codex는 문서 전용 계약 커밋 `c654023`을 검토했다. HEAD=origin, ahead/behind 0/0,
+허용 문서 6개뿐, `git diff --check` PASS, 제품/Rules/config diff 0은 확인됐다.
+그러나 구현 전에 반드시 닫아야 할 계약 결함 5건이 있다.
+
+1. baseline load에 필요한 Firestore head `get` 권한이 Rules 계약에 없다.
+2. 합성 UID Rules 사본을 선택할 별도 emulator config가 없어 배포 config와 섞일 수 있다.
+3. `WRITE_COMMIT_OUTCOME_UNKNOWN`을 무조건 orphan으로 단정해 실제 commit 성공 가능성과 모순된다.
+4. Firestore transaction callback의 SDK 내부 재실행과 부작용 금지 계약이 없다.
+5. `loadBaseline`/`save` 공개 port의 정확한 타입·입출력이 없다.
+
+정확한 교정 지시는 `Automation/NEXT_CLAUDE_PROMPT.md`가 정본이다.
+제품 구현·Rules/config/test 변경·emulator 실행은 계속 금지한다.
+
+> 아래 `Claude 스펙 037 C5 구현 계약 작성 완료` 섹션은 `c654023` 초판 기록이며,
+> 위 Codex 교정 판정이 이를 supersede한다.
 
 ## Claude 스펙 037 C5 구현 계약 작성 완료 — READY_FOR_CODEX (2026-08-11)
 

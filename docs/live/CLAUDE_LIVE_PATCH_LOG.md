@@ -2308,3 +2308,194 @@ orphan 누적의 실제 비용 · **L-4 삭제 부활**(이 스펙이 다루지 
   `package.json`·lockfile·`pnpm-workspace.yaml` diff **0**
 - working tree = **보호 대상만**
 - **다음 상태**: `READY_FOR_CODEX`에서 **멈춘다.** 자동화나 반복 작업은 만들지 않았다.
+
+## 2026-08-11 — Codex 스펙 037 계약 검수 · CORRECTION_REQUIRED 라운드 1
+
+- **검수 대상**: HEAD=origin=`c654023`, ahead/behind 0/0.
+- **커밋 범위**: 계약·handoff·STATE/NEXT/CURRENT/live 문서 6개뿐.
+- `git diff --check dc5666d..c654023` **PASS**.
+- `apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
+  `package.json`·lockfile·`pnpm-workspace.yaml` diff **0**.
+- **판정**: `CORRECTION_REQUIRED`, 문서 보완 라운드 1. 제품 구현은 계속 금지.
+
+### 결함 5건
+
+1. baseline load에 필요한 `/rebuildAdminState/head`의 **read/get 권한 계약이 누락**됐다.
+2. 합성 UID Rules 사본을 선택할 **별도 emulator config가 없어** 배포 config와 섞일 위험이 있다.
+3. `WRITE_COMMIT_OUTCOME_UNKNOWN`을 **무조건 orphan으로 단정**했지만 실제 transaction이 성공했을 수도 있다.
+4. Firestore transaction callback의 **SDK 내부 재실행과 callback 부작용 금지**가 명시되지 않았다.
+5. `@denn/firebase/admin-write`의 **`loadBaseline`/`save` 공개 타입·입출력**이 정의되지 않았다.
+
+### 다음
+
+- 정확한 교정 프롬프트를 `Automation/NEXT_CLAUDE_PROMPT.md`에 기록했다.
+- Claude는 허용 문서 6개만 보완하고 일반 fast-forward commit/push한 뒤 `READY_FOR_CODEX`로 전환한다.
+- 실제 코드·Rules·config·test·emulator 실행·Firebase/network/live 접근은 0을 유지한다.
+- 자동화나 반복 작업을 만들지 않는다.
+
+## 2026-08-11 — 스펙 037 계약 보완 라운드 1 (CORRECTION_REQUIRED, 문서 전용)
+
+> **★ 위의 Codex 검수 항목과 `c654023` 초판 항목은 삭제하지 않는다.** 아래가 그 정정 기록이다.
+
+- **기준**: HEAD=origin=`c654023`, ahead/behind 0/0. `fix_round: 1 / max 3`.
+- **상태**: `CORRECTION_REQUIRED` / `CLAUDE_WORKING` → **`READY_FOR_CODEX`**.
+- **변경 파일(6, 전부 허용 문서)**:
+  - `docs/rebuild/specs/037-admin-write-c5-emulator-contract.md` (정정본)
+  - `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`
+  - `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md`
+  - `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
+  - ※ 이 커밋은 Codex가 작업 트리에 남긴 **검수 기록과 교정 프롬프트도 함께** 커밋한다.
+- **실행하지 않음**: `apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·
+  `firebase.json`·**`firebase.emulator.json`**·`package.json`·lockfile·`pnpm-workspace.yaml`
+  수정 **0** · 신규 의존성 0 · **실제 emulator 실행 0** ·
+  실제 Firebase/network/live/운영 데이터 접근 0 · upload/write/delete/publish/deploy 0 ·
+  force push·merge·rebase·`reset --hard`·broad delete 0 · 자동화 생성 0 · **구현 착수 0**.
+
+### 교정 1 — Firestore head read 권한 누락 (계약 §4.4 전면 재작성)
+
+초판은 `create`/`update`/`delete`만 적고 **`get`을 적지 않았다.** 그런데 §6.1 baseline load가
+head를 읽어야 하므로 **그대로 구현하면 기능 자체가 성립하지 않는다.**
+
+정정된 목표 규칙:
+
+- **`allow get: if approvedOperator() && docId == 'head'`** — 승인 UID만, **정확히 head 문서만**.
+- **`allow list: if false`** — 컬렉션 열거 금지.
+- **`create`/`update`도 같은 승인 UID만** 허용.
+- **다른 `rebuildAdminState` 문서는 모두 거부.**
+- **허용 키는 `schemaVersion`·`revision`·`objectPath` 정확히 3개뿐.**
+- **create는 `revision == 1`만** 허용.
+- **update는 `revision`이 정확히 1 증가하고 `objectPath`가 이전 값과 달라야** 한다.
+- **`objectPath`는 `rebuild-admin-state/objects/{UUID}.json` 형태만** 허용.
+- **delete 금지.** **`spaces/{token}`과 catch-all 규칙은 변경하지 않는다.**
+
+> `objectPath` 교체 강제는 교정 3의 **결과 판정**에도 쓰인다 — head의 `objectPath`가 이번
+> `operationId`를 가리키면 **commit이 성공한 것**이라고 단정할 수 있게 된다.
+
+### 교정 2 — emulator Rules 선택을 별도 config로 고정 (§7.3)
+
+초판은 `firebase.json`에 `emulators` 블록을 추가한다고 했다 — **배포용 config와 합성 UID Rules가
+섞일 수 있어 위험**하다.
+
+- **`firebase.json`은 구현 단계에서도 수정하지 않는다.**
+- **신규 `firebase.emulator.json`** 을 emulator 전용 config로 사용하며,
+  **emulator 전용 Storage/Firestore Rules 사본과 emulator 포트만** 참조한다.
+- 실행 명령은 **`--config firebase.emulator.json` 과 `--project demo-denn-emulator` 를 모두** 포함한다.
+- **emulator용 Rules 사본에는 합성 UID만** 존재한다.
+- **배포 대상 `storage.rules`/`firestore.rules`에는 UNCONFIRMED 실제 UID placeholder만** 존재하며
+  **live 배포는 계속 차단**한다.
+- **배포 대상 Rules와 emulator Rules는 UID 상수 외 diff 0임을 unit test로 고정**한다.
+- **`.firebaserc`는 수정하지 않는다.**
+- **emulator host 환경변수가 없거나 project id가 `demo-` 접두가 아니면 테스트 시작 전에 실패**한다.
+- **실제 Firebase project·자격 증명·운영 bucket으로 fallback하지 않는다.**
+- **허용 파일 목록에서 `firebase.json`을 제거하고 `firebase.emulator.json`을 추가**했다.
+
+### 교정 3 — 결과 불명과 orphan 의미 수정 (§6.5)
+
+초판은 **`WRITE_COMMIT_OUTCOME_UNKNOWN`을 orphan으로 단정**했다. 그러면 **실제로 commit이
+성공했을 가능성과 모순**된다. 결과가 불명이면 **orphan인지조차 모른다.**
+
+정정된 결과 상태:
+
+| 상황 | 객체 | head | 코드 |
+| --- | --- | --- | --- |
+| upload 명확히 실패(transaction 미시작) | 생성 안 됨 | 불변 | `WRITE_UPLOAD_FAILED` |
+| **upload 결과 불명**(transaction 미시작) | **없거나 orphan일 수 있음** | **불변** | `WRITE_UPLOAD_OUTCOME_UNKNOWN` |
+| upload 성공 + transaction 명확히 실패 | **orphan** | **불변** | `WRITE_HEAD_FAILED` |
+| **upload 성공 + transaction 결과 불명** | **★ head에 연결됐을 수도, orphan일 수도** | **★ 바뀌었을 수도** | `WRITE_COMMIT_OUTCOME_UNKNOWN` |
+| upload 성공 + `expectedBase` 불일치 | orphan | 불변 | `WRITE_CONFLICT` |
+
+- **성공·실패·orphan 여부를 추측하지 않는다.**
+- **반드시 head를 다시 읽어 `objectPath`와 `revision`을 확인해야만 결과를 판정한다.**
+- **`WRITE_COMMIT_OUTCOME_UNKNOWN`은 `retryable:false`.**
+- **reload 전 동일 payload를 자동으로도 수동으로도 재전송하지 않는다**
+  (이미 반영됐을 수 있어 불필요한 revision·객체를 만든다).
+- **`WRITE_HEAD_FAILED`도 upload 이후에 발생하므로 기본 `retryable:false`로 바꿨다.**
+- **별도의 "head commit만 재개" API는 이번 스펙에 만들지 않는다.**
+- **명확한 upload 실패만 `WRITE_UPLOAD_FAILED`**, **서버 반영 여부가 불명확한 오류는
+  `WRITE_UPLOAD_OUTCOME_UNKNOWN`** 으로 분류한다.
+- **orphan의 정의도 정정**했다: orphan = head가 참조하지 않는 것이 **확인된** 불변 객체.
+  **결과 불명은 orphan이 아니라 "미판정"이다.**
+
+### 교정 4 — Firestore transaction callback 재실행 계약 (§5.5 신설)
+
+초판의 "transaction 단 한 번"은 **앱의 호출 횟수**를 뜻했는데 그 구분을 적지 않았다.
+
+- **앱은 `runTransaction`을 정확히 한 번 호출한다.**
+- **★ Firebase SDK는 transaction callback을 내부적으로 여러 번 실행할 수 있다**
+  (공식 문서 "a transaction function might run more than once", `maxAttempts` 기본 5).
+- **callback 안에서는 `transaction.get`/`transaction.set` 이외의 부작용을 금지한다** —
+  **UUID 생성 · Storage upload · 로그 추가 · UI 변경 · 로컬 revision 변경** 전부 금지.
+- **`operationId`와 `expectedBase`는 transaction 호출 전에 고정한다.**
+- **callback 재실행마다 현재 head를 다시 읽되 `expectedBase`를 자동 변경하지 않는다.**
+- **재실행에서 current revision과 `expectedBase`가 다르면 `WRITE_CONFLICT`로 중단한다.**
+- **Storage upload는 transaction 밖에서 선행하며 callback 재실행으로 반복되지 않는다.**
+- **callback 내부 재실행과 앱 수준 retry를 문서·테스트·오류 문구에서 명확히 구분한다.**
+
+### 교정 5 — 공개 port 타입과 baseline/save 입출력 (§5.6)
+
+`AdminStateRevision` · `AdminStateBaselineValue{catalog, revision, source}` ·
+`AdminStateSaveRequest{correlationId, expectedBase, catalog}` ·
+`AdminStateSaveValue{revision, objectPath}` ·
+`AdminStateWritePort{loadBaseline, save}` 를 **이름까지 고정**했다.
+
+- **`operationId`는 port 내부에서 save 호출당 한 번 생성**하며 **외부 입력으로 받지 않는다.**
+- **첫 load에서 head가 없을 때만** legacy `admin/state.json`과 **revision 0**을 반환한다.
+- **head가 있으면 rebuild 객체만 읽는다.**
+- **head/object/schema/catalog 불일치는 fail-closed**하며 **legacy fallback은 0**이다.
+- **save 성공 후 반환 revision만** 호출자가 새 baseline으로 채택할 수 있다.
+- **`loadBaseline`과 `save` 모두 단일 in-flight.**
+- **`packages/firebase/src/admin-read/**`는 이번 첫 구현에서 수정하지 않는다.**
+- legacy read는 **기존 공개 계약을 재사용하거나 facade에서 조합**하되 **중복 검증 규칙을 만들지 않는다.**
+
+#### ★ 구현 전 확인 필요 — `Catalog` 타입 이름
+
+교정 지시의 타입 블록은 **`Catalog`** 를 쓰지만 **그 이름의 타입은 저장소에 존재하지 않는다.**
+`@denn/shared`가 실제로 내보내는 이름은 **`CatalogDocumentV1`**
+(`packages/shared/src/catalog/types.ts` — 스펙 036 `AdminStateLoadValue.document`가 그 타입이다).
+계약은 `Catalog`를 **`CatalogDocumentV1`에 바인딩**하고 **동의어 타입이나 새 타입을 만들지 않는다**고
+명시했다(교정 5의 "중복 검증 규칙 금지"와 같은 이유).
+`Result`는 `packages/shared/src/index.ts:19`의 기존 타입을 쓴다.
+
+### emulator 검증 보완 — 시나리오 7 → 12개
+
+기존 7개(승인 UID만 가능 / 다른 UID·익명·미인증 거부 / 동일 `operationId` 덮어쓰기·delete 거부 /
+두 writer 중 head 이동 하나 + 명시적 충돌 / commit 전 중단은 orphan만 남고 head 불변 /
+timeout·늦은 성공·결과 불명에서 조용한 재시도·덮어쓰기 0 / 중복 탭·인증 만료에서 조용한 손실 0)에
+다음을 추가했다.
+
+- **#8 승인 UID의 head `get` 성공**(baseline load 성립 확인)
+- **#9 다른 UID·익명·미인증의 head `get` 거부**
+- **#10 head `list` 거부**
+- **#11 transaction callback 재실행 시 Storage upload 반복 0**
+- **#12 commit outcome unknown은 "head가 변경됐을 수도 있음"으로 다루고 재조회로 판정**
+- **synthetic Auth 계정은 emulator 내부에서만 만들며 실제 계정 생성이 아니다.**
+
+### 신규 위험 2건
+
+- **R-9** transaction callback 재실행이 upload를 반복하거나 부작용을 남긴다
+  → §5.5 부작용 전면 금지 + upload는 transaction 밖 선행, fake·emulator 양쪽에서 검증.
+- **R-10** baseline load가 head를 읽지 못해 기능이 성립하지 않는다
+  → §4.4 `get` 명시 허용 + `list` 거부, emulator #8~#10이 확인.
+
+### 유지 (초판에서 바뀌지 않은 것)
+
+C5 구조(불변 객체 + 단일 Firestore head CAS) · Z-1(`op()` 무변경, 실제 UID UNCONFIRMED) ·
+Z-2(별도 최상위 경로, UUID 1회 생성, `resource == null` create-only) ·
+Z-7(tombstone·자동 merge 없음, 문서 전체 CAS, L-4는 별도 스펙) ·
+Z-8(배포 0, legacy 저장을 먼저 닫지 않음) · **저장 버튼·admin UI 연결 제외** ·
+emulator 사전 확인 결과(Java 21.0.11 · firebase-tools 15.22.4 전역 · emulator jar 캐시됨 ·
+포트 free · **Auth emulator binary는 UNCONFIRMED**) ·
+**R-1**(Rules 배포가 운영자의 유일한 저장 경로를 닫는다) ·
+**R-2**(`.firebaserc` default가 실제 운영 프로젝트 `denn-products`).
+
+### 검증
+
+- `git diff --check c654023..HEAD` **PASS**
+- 변경 경로 = **허용 문서 6개뿐**
+- `apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
+  `firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml` diff **0**
+- HEAD=origin, ahead/behind **0/0**
+- working tree = **보호 대상만**(`docs/rebuild/design/taste-v2/**` ·
+  `docs/rebuild/design/README.md` · `docs/rebuild/specs/038-page-design-prototype.md` ·
+  spec-018 PNG 2개 · `packages/render/src/plan/index.ts`) — 전부 손대지 않음
+- **다음 상태**: `READY_FOR_CODEX`에서 **멈춘다.** 구현하지 않았고 자동화도 만들지 않았다.
