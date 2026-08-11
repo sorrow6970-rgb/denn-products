@@ -2014,3 +2014,122 @@ Firestore 청크(`firebase-firestore.js` 683,502 bytes)의 실제 번들 영향(
   `packages/render/src/plan/index.ts`) — restore·checkout·stage·commit 하지 않음
 - **다음 상태**: `READY_FOR_CODEX`. Codex가 보완 라운드 1을 검토한다.
   다음 스펙은 시작하지 않았고 자동화도 만들지 않았다.
+
+## 2026-08-11 — Founder G-1~G-5 승인 기록 (문서 전용)
+
+- **기준**: HEAD=origin=`3b4ebda`, ahead/behind 0/0.
+- **정본 문서(신규)**: `docs/codex-claude-handoff/decisions/2026-08-11-admin-write-atomicity-decisions.md`
+  — **승인 원문을 그대로 수록**했다.
+- **상태**: `READY_FOR_CODEX` 유지. **다음 주체 = Codex**(구조 결정 Z-1~Z-8 + 스펙 037 구현 계약 작성).
+- **변경 파일(5, 전부 문서)**:
+  - `docs/codex-claude-handoff/decisions/2026-08-11-admin-write-atomicity-decisions.md` (신규)
+  - `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md`
+  - `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
+- **실행하지 않음**: 제품 코드·test·CSS·config·manifest·`package.json`·lockfile·
+  `pnpm-workspace.yaml` 수정 0 · **`storage.rules`·`firestore.rules`·`firebase.json` 수정 0**
+  (승인은 났으나 계약 확정 후에 한다) · 신규 의존성 0 ·
+  실제 Firebase/network/live/**emulator**/운영 데이터 요청 0 · upload/write/delete/publish/deploy 0 ·
+  force push·merge·rebase·`reset --hard`·broad delete 0 · 자동화 생성 0 ·
+  **스펙 037 구현 계약·제품 코드 작성 0**.
+
+### 확정된 결정
+
+- **G-1 `storage.rules` 최소 변경 승인** — 기존 `admin/{p=**}` **광범위 write 유지 안 함** ·
+  legacy `admin/state.json` **읽기 전용 고정** · **rebuild 전용 경로만 생성** 가능하고
+  **`resource == null`로 덮어쓰기·삭제를 서버에서 차단** ·
+  **겹치는 match의 OR 평가로 불변 조건이 우회되지 않도록 상위 admin write도 함께 좁힘** ·
+  쓰기 권한은 **단순 non-anonymous 전체가 아니라 승인된 기존 운영자 UID 한정** ·
+  **실제 UID가 정본으로 제공되기 전 live Rules 배포 차단**.
+- **G-2 Firestore 사용 + `firestore.rules` 최소 변경 승인**(C5 검증용) —
+  **rebuild 전용 head 문서 하나만 가변 정본** ·
+  head 변경은 **Firestore transaction 안에서 `expectedBase == 현재 head`일 때만** ·
+  **`spaces/{token}`과 기존 Firestore 계약 무변경** ·
+  **Firestore SDK는 admin 전용 lazy 경계 밖으로 노출 금지**.
+- **G-3** Cloud Function·backend·Admin SDK 기반 **C6 미승인 — 예비 대안으로 보류**.
+- **G-4** **orphan = head에서 참조하지 않는 불변 객체**로 구분 ·
+  초기 구현에서 **클라이언트 delete 권한과 자동 정리 불허** ·
+  **보존 기간·비용 한도·권한 있는 정리 주체가 별도 승인되기 전 실제 운영 쓰기 미활성화**.
+- **★ G-5** 스펙 037 다음 구현 계약 후보 = **C5**(고유 불변 Storage 객체 + 단일 Firestore head
+  transaction) · **C3 고정 경로 CAS와 C4 lease/lock은 사용하지 않는다** ·
+  C6은 **C5가 안전하게 성립하지 않을 경우** 재검토 ·
+  **허용 범위 = 구현 계약 작성 + 합성 fake + 로컬 Firebase Emulator 검증까지** ·
+  **실제 Firebase 프로젝트·운영 bucket·운영 데이터·live network·Rules 배포·Hosting 배포·
+  `published/state.json` 발행은 미승인** ·
+  emulator에서 **동시 저장 · timeout · 늦은 성공 · 브라우저 종료 상당 실패 · 인증 만료 · 중복 탭 ·
+  orphan 발생 · head 불변** 검증 · **C5가 emulator 검증을 통과하기 전에는 운영 쓰기를 열지 않는다**.
+
+### ★ 계약이 반드시 다뤄야 할 결과 (결정이 아니라 확인된 사실)
+
+1. **★★ G-1을 배포하면 레거시 운영자 저장 경로가 닫힌다.**
+   `denn-admin.html:740` = `await window.dennFirebase.uploadDataUrl(dataUrl,'admin/state.json');`
+   이것이 **현재 운영자가 상태를 저장하는 유일한 경로**다(스펙 035 종료 기록: 리빌드 admin은
+   값을 저장할 수 없고 운영자는 "확인 후 레거시 admin에 직접 입력"한다).
+   G-1의 "legacy `admin/state.json` 읽기 전용 고정"을 배포하면 **이 저장이 서버에서 거부된다.**
+   **★ 지금 당장 깨지지는 않는다** — G-1이 **UID 정본 제공 전 배포를 차단**했고 이번 라운드에서
+   `storage.rules`를 **수정하지 않았다**. 위험은 **배포 시점**에 발생한다.
+   → **배포 순서가 계약 항목이다(Z-8).** 리빌드 쓰기가 emulator 검증을 통과하기 **전에** Rules를
+   배포하면 **운영자가 아무 데도 저장할 수 없는 구간**이 생긴다.
+2. **★ UID 한정의 적용 범위가 열려 있다.** `storage.rules:18-21`의 `op()`는 `admin/`뿐 아니라
+   `published/`·`templates/`·`placeholders/`·`guides/`·`mockups/`·`editor-overlays/`의 write
+   조건에도 함께 쓰인다(`:35-40`). `op()` 자체에 UID를 걸면 **레거시 발행
+   (`denn-admin.html:14946` = `uploadDataUrl(dataUrl,'published/state.json')`)과 자산 업로드까지
+   UID에 묶인다.** rebuild 전용 경로에만 걸면 레거시 표면은 그대로다. → **Z-1**.
+3. **★ OR 우회 차단은 `admin/` match 자체를 좁혀야 한다.** `storage.rules:5-7` 머리말이 이미
+   경고하듯 Firebase는 **겹치는 match를 OR** 한다. 현재 `match /admin/{p=**}`의
+   `allow write: if op() && okSize();`(`:25-28`)가 하위 전부를 덮으므로, rebuild 경로를 `admin/`
+   아래 두고 `resource == null`을 걸어도 **상위 규칙이 통과시켜 불변성이 무너진다.**
+   → **rebuild 경로가 `admin/` 하위인지 별도 최상위인지가 계약 항목이다(Z-2).**
+4. **★ Emulator 검증은 설정 변경을 수반한다.** `firebase.json`에 **`emulators` 블록이 없고**
+   (현재 `hosting`·`storage`·`firestore`만), 저장소에 `firebase-tools` 의존성이 **없다**
+   (CLAUDE.md §5 기준 전역 설치). G-5가 emulator 검증을 허용했으므로 그 범위로 읽히지만
+   **이번 라운드에서는 아무것도 수정하지 않았다.** → **Z-6이 정확한 파일·범위를 정해야 한다.**
+5. **L-4(삭제 부활)는 C5로 해소되지 않는다.** 원자성은 "누가 이기는가"를 정할 뿐 **병합 의미론을
+   고치지 않는다**. `frameSizes`에는 tombstone이 없다. → **Z-7 별도 계약 필요.**
+
+### 다음 — Codex가 결정·작성할 것 (Z-1 ~ Z-8)
+
+**Z-1** UID 한정 적용 범위 · **Z-2** rebuild 경로 위치·형태(**revision 번호를 경로에 쓰지 않는다**만
+조사에서 확정; 식별자는 operation id vs content-addressed) · **Z-3** head 문서 위치·스키마와
+`firestore.rules` 이중 강제 여부 · **Z-4** write port 경계·오류 코드(⚠️ **SDK 내부 자동 재시도**로
+"retry 0"이 port만으로 보장되지 않는다) · **Z-5** `expectedBase` 캡처 시점 ·
+**Z-6** emulator 검증 범위·허용 파일과 7개 시나리오의 결정적 재현 방법 · **Z-7** L-4 tombstone ·
+**Z-8** 배포 순서.
+
+### 선행 결정과의 관계
+
+**F-A**의 "Rules 변경 미승인"은 **G-1·G-2가 최소 변경으로 대체**한다(배포는 여전히 차단).
+**F-B**(발행 제외)·**F-C**(레거시 읽기만 공유)·**F-D**(정규화 메모리 전용)는 **유지**되며,
+G-1이 F-C를 **서버 규칙으로 더 강하게** 만든다. **F-E**(E3-strong, 쓰기 차단)도 유지되고,
+G-5가 차단 해제 조건을 **"emulator 검증 통과"** 로 구체화했다 — **조사만으로는 열리지 않는다.**
+
+### ★ 신규 보호 대상
+
+- **`docs/rebuild/design/taste-v2/`** — **Founder 소유의 별도 작업.** 수정·삭제·stage·commit 금지.
+- 같은 작업으로 보이는 **`docs/rebuild/design/README.md`**(수정됨)와
+  **`docs/rebuild/specs/038-page-design-prototype.md`**(untracked)도 **손대지 않았다.**
+- 기존 보호 대상 유지: `docs/rebuild/results/spec-018/browse-desktop-1280x800.png` ·
+  `docs/rebuild/results/spec-018/browse-mobile-390x844.png` · `packages/render/src/plan/index.ts`.
+- **force push · merge · rebase · `reset --hard` · broad delete 하지 않는다.**
+
+### UNCONFIRMED / NOT VERIFIED
+
+- **신규**: 실제 운영자 **UID**(저장소에서 확인 불가 — G-1이 배포 차단으로 처리) ·
+  **Emulator에서의 C5 거동**(G-5의 7개 시나리오 **전부 미실행**) ·
+  **`resource == null` 규칙의 실제 거부 동작**(emulator에서도 미확인).
+- **유지**: 덮어쓰기 `create`에서 `resource`가 이전 객체로 채워지는지 ·
+  `firebasestorage.googleapis.com/v0` 표면의 precondition 수용 여부 ·
+  실제 `admin/state.json`·`published/state.json` 내용 · L-1~L-4 재현 · 운영자 계정 실재·로그인 ·
+  실기기 · Firestore 청크 번들 실측 · `pnpm-workspace.yaml`의 `allowBuilds` ·
+  `firebase.google.com/docs/reference/**` 본문(세션 WebFetch 미취득; `resource == null` 인용 출처는
+  Codex 검수이며 `storage/security/rules-conditions`로 교차 확인).
+- **추적 종료**: 고정 경로 `rev+1`의 CAS 보장 — **G-5가 C3를 사용하지 않기로 했으므로** 더 추적하지 않는다.
+
+### 검증
+
+- `git diff --check` **PASS**(exit 0) · 변경 경로 = **허용 문서 5개뿐**
+- `apps/**`·`packages/**`·`tests/**`·`package.json`·lockfile·`pnpm-workspace.yaml` diff **0**
+- `storage.rules`·`firestore.rules`·`firebase.json` diff **0**
+- working tree = **보호 대상만**(spec-018 PNG 2개 · content diff 0인
+  `packages/render/src/plan/index.ts` · Founder 소유 taste-v2 작업 3개) — 전부 손대지 않음
+- **다음 상태**: `READY_FOR_CODEX`에서 **멈춘다.** Codex가 구조 결정과 스펙 037 구현 계약을
+  검토·작성하기 전에는 구현을 시작하지 않는다. 자동화나 반복 작업은 만들지 않았다.

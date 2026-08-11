@@ -9,7 +9,75 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — 스펙 037 후보 "운영자 저장 원자성·충돌 방지 계약" 조사의
+상태: **`READY_FOR_CODEX` — Founder가 2026-08-11에 **G-1~G-5를 승인**했고, 이번 라운드는 그 승인을
+**문서에만** 기록했다(기준 `3b4ebda`). 정본
+`decisions/2026-08-11-admin-write-atomicity-decisions.md`(승인 원문 수록).
+**제품 코드·`storage.rules`·`firestore.rules`·`firebase.json`·config·manifest·`package.json`·
+lockfile·`pnpm-workspace.yaml` diff 0**, 신규 의존성 0, 실제 Firebase·network·live·emulator·
+운영 데이터 접근 0, upload/write/publish/deploy 0, 자동화 생성 0, **스펙 037 구현 계약·제품 코드 작성 0**.
+**다음 = Codex가 구조 결정 Z-1~Z-8을 검토하고 스펙 037 구현 계약을 작성한다.** 그 전에 구현 착수 0.**
+
+> ### ★★ Founder G-1~G-5 확정 (2026-08-11)
+>
+> - **G-1 `storage.rules` 최소 변경 승인.** 기존 `admin/{p=**}` **광범위 write 유지 안 함** ·
+>   legacy `admin/state.json` **읽기 전용 고정** · **rebuild 전용 경로만 생성** 가능하며
+>   **`resource == null`로 덮어쓰기·삭제를 서버에서 차단** · **겹치는 match의 OR 우회 방지를 위해
+>   상위 admin write도 함께 좁힘** · 쓰기 권한은 **승인된 기존 운영자 UID 한정**(단순 non-anon 전체 아님) ·
+>   **실제 UID 정본 제공 전 live Rules 배포 차단**.
+> - **G-2 Firestore 사용 + `firestore.rules` 최소 변경 승인**(C5 검증용).
+>   **rebuild 전용 head 문서 1개만 가변 정본** · head 변경은 **transaction 안에서
+>   `expectedBase == 현재 head`일 때만** · **`spaces/{token}` 등 기존 Firestore 계약 무변경** ·
+>   **Firestore SDK는 admin 전용 lazy 경계 밖으로 노출 금지**.
+> - **G-3 C6(Cloud Function/backend/Admin SDK) 미승인 — 예비 대안으로 보류.**
+> - **G-4 orphan = head가 참조하지 않는 불변 객체.** 초기 구현에서 **클라이언트 delete 권한·자동 정리
+>   불허** · **보존 기간·비용 한도·정리 주체가 별도 승인되기 전 실제 운영 쓰기 미활성화**.
+> - **★ G-5 스펙 037 다음 구현 계약 후보 = C5**(고유 불변 Storage 객체 + 단일 Firestore head
+>   transaction). **C3 고정 경로 CAS·C4 lease/lock 사용 안 함.** C6은 C5가 안전하게 성립하지 않을 때 재검토.
+>   **허용 범위 = 구현 계약 작성 + 합성 fake + 로컬 Firebase Emulator 검증까지.**
+>   emulator에서 **동시 저장 · timeout · 늦은 성공 · 브라우저 종료 상당 실패 · 인증 만료 · 중복 탭 ·
+>   orphan 발생 · head 불변**을 검증한다. **emulator 검증 통과 전 운영 쓰기 미개방.**
+>
+> **승인되지 않은 것**: 실제 Firebase 프로젝트·운영 bucket·운영 데이터·**live network** ·
+> **Rules 배포**(UID 정본 전 차단) · **Hosting 배포** · **`published/state.json` 발행** ·
+> **C6 구현** · **클라이언트 delete·orphan 자동 정리** · **실제 운영 쓰기 활성화**(G-4 + G-5 양쪽 전제) ·
+> 신규/다중 계정·역할 권한 · 레거시 `admin/state.json` 공유 쓰기 · legacy cm 되쓰기·마이그레이션 ·
+> **제품 구현 착수**.
+>
+> ### ★ 계약이 반드시 다뤄야 할 결과 (결정이 아니라 확인된 사실)
+>
+> 1. **★★ G-1을 배포하면 레거시 운영자 저장 경로가 닫힌다.** `denn-admin.html:740`의
+>    `uploadDataUrl(dataUrl,'admin/state.json')`이 **현재 운영자의 유일한 저장 경로**다
+>    (스펙 035: 리빌드 admin은 저장 불가). **지금 깨지지는 않는다** — UID 정본 전 배포가 차단이고
+>    이번에 `storage.rules`를 수정하지 않았다. 위험은 **배포 시점**에 발생한다 → **Z-8 배포 순서**.
+> 2. **★ UID 한정의 적용 범위가 열려 있다.** `storage.rules:18-21`의 `op()`는 `admin/`뿐 아니라
+>    `published/`·`templates/`·`placeholders/`·`guides/`·`mockups/`·`editor-overlays/` write에도
+>    쓰인다(`:35-40`). 전역 적용 시 레거시 발행(`denn-admin.html:14946`)·자산 업로드까지 묶인다 → **Z-1**.
+> 3. **★ OR 우회 차단은 `admin/` match 자체를 좁혀야 한다.** 파일 머리말(`:5-7`)이 이미 경고하듯
+>    현재 `match /admin/{p=**}` write(`:25-28`)가 하위를 전부 덮어 `resource == null`을 무력화한다 → **Z-2**.
+> 4. **★ Emulator 검증은 설정 변경을 수반한다.** `firebase.json`에 **`emulators` 블록이 없고**
+>    저장소에 `firebase-tools` 의존성이 없다. G-5 범위로 읽히지만 **이번엔 아무것도 수정하지 않았다** → **Z-6**.
+> 5. **L-4(삭제 부활)는 C5로 해소되지 않는다** — 병합 의미론 문제, tombstone 별도 계약 → **Z-7**.
+>
+> ### Codex 구조 결정 Z-1~Z-8 (미결)
+>
+> **Z-1** UID 적용 범위 · **Z-2** rebuild 경로 위치·형태(**revision 번호를 경로에 쓰지 않는다**만 확정) ·
+> **Z-3** head 문서 위치·스키마 · **Z-4** write port·오류 코드(⚠️ **SDK 내부 재시도**로 "retry 0"이
+> port만으로 보장 안 됨) · **Z-5** `expectedBase` 캡처 시점 · **Z-6** emulator 검증 범위·허용 파일 ·
+> **Z-7** L-4 tombstone · **Z-8** 배포 순서.
+>
+> ### ★ 신규 보호 대상
+>
+> **`docs/rebuild/design/taste-v2/`는 Founder 소유의 별도 작업이다 — 수정·삭제·stage·commit 금지.**
+> 같은 작업으로 보이는 `docs/rebuild/design/README.md`(수정됨)와
+> `docs/rebuild/specs/038-page-design-prototype.md`(untracked)도 **손대지 않았다.**
+> 기존 보호 대상(spec-018 PNG 2개 + `packages/render/src/plan/index.ts`)도 유지한다.
+> **force push · merge · rebase · `reset --hard` · broad delete 하지 않는다.**
+>
+> **신규 UNCONFIRMED**: 실제 운영자 **UID**(저장소에 없다) · **Emulator에서의 C5 거동**(7개 시나리오
+> 전부 미실행) · **`resource == null` 규칙의 실제 거부 동작**.
+> **추적 종료**: 고정 경로 `rev+1`의 CAS 보장 — **C3를 사용하지 않기로 했으므로** 더 추적하지 않는다.
+
+> **이전 상태(참고)** — 스펙 037 후보 조사의
 **보완 라운드 1(CORRECTION_REQUIRED)** 을 문서 전용으로 완료했다(2026-08-11, 기준 `9c57201`).
 보고서 `reviews/2026-08-11-admin-write-atomicity-investigation.md`. 제품 코드·테스트·config·
 manifest·`package.json`·lockfile·`pnpm-workspace.yaml`·`storage.rules`·`firestore.rules`·
