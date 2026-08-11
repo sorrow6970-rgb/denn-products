@@ -318,9 +318,21 @@ export function createAdminStateWritePort(
     // Validated FIRST: an invalid base must never create an object.
     if (!isValidExpectedBase(request?.expectedBase)) return invalid();
 
+    // The payload is re-validated at runtime against the SAME authority the read path uses.
+    // `CatalogDocumentV1` is only a compile-time claim, and an immutable object is permanent — an
+    // unreadable one would sit at the head forever. Everything downstream serialises the VALIDATED
+    // document, never the caller's object, so a hostile getter cannot swap the bytes afterwards.
+    let validated: ReturnType<typeof readLegacyCatalog>;
+    try {
+      validated = readLegacyCatalog(request?.catalog);
+    } catch {
+      return invalid(); // circular or otherwise hostile input
+    }
+    if (!validated.ok) return invalid();
+
     let json: string;
     try {
-      json = JSON.stringify(request.catalog);
+      json = JSON.stringify(validated.document);
     } catch {
       return invalid();
     }

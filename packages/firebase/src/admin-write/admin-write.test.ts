@@ -6,6 +6,7 @@
 // other's conclusion.
 
 import { readFileSync } from "node:fs";
+import { readLegacyCatalog } from "@denn/shared";
 import { describe, expect, it } from "vitest";
 import type { AdminStateReadPort, OperatorAuthPort, OperatorAuthState } from "../admin-read/types";
 import { HEAD_SCHEMA_VERSION, REBUILD_OBJECT_MAX_BYTES } from "./constants";
@@ -54,6 +55,7 @@ function createHarness(options: FakeOptions = {}) {
   const headSequence = [...(options.headSequence ?? [null])];
   let headIndex = 0;
   let written: AdminStateHead | null = null;
+  let uploaded: string | null = null;
 
   const nextHead = (): unknown | null => {
     const value = headSequence[Math.min(headIndex, headSequence.length - 1)];
@@ -68,8 +70,9 @@ function createHarness(options: FakeOptions = {}) {
       uuidIndex += 1;
       return value;
     },
-    uploadJsonObject: async () => {
+    uploadJsonObject: async (request) => {
       calls.push("uploadJsonObject");
+      uploaded = request.json;
       if (options.upload) await options.upload();
     },
     readObjectBytes: async () => {
@@ -124,6 +127,7 @@ function createHarness(options: FakeOptions = {}) {
     calls,
     port: createAdminStateWritePort({ facade, auth, legacyRead }),
     writtenHead: () => written,
+    uploadedJson: () => uploaded,
   };
 }
 
@@ -543,4 +547,55 @@ describe("emulator rules copies (§7.3)", () => {
       expect(read(deployed).join("\n")).not.toContain(SYNTHETIC);
     });
   }
+});
+
+// ── payload validation before any write (correction round 1) ───────────────────────────────────
+
+describe("catalog payload validation (§5.4, correction round 1)", () => {
+  it("refuses a payload the read authority rejects, before minting an id or uploading", async () => {
+    const h = createHarness();
+    // schemaVersion 2 is an UNSUPPORTED_SCHEMA_VERSION fatal for readLegacyCatalog.
+    const bad = {
+      schemaVersion: 2,
+      migratedFrom: "legacy-v0",
+      data: {},
+    } as unknown as typeof CATALOG;
+    const result = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: bad });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("WRITE_INVALID_INPUT");
+    // an immutable object is permanent, so an unreadable one must never be created at all
+    expect(h.calls).toEqual([]);
+  });
+
+  it("refuses a circular payload without minting an id or uploading", async () => {
+    const h = createHarness();
+    const circular: Record<string, unknown> = { frameSizes: [] };
+    circular.self = circular;
+    const result = await h.port.save({
+      correlationId: CID,
+      expectedBase: 0,
+      catalog: circular as unknown as typeof CATALOG,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("WRITE_INVALID_INPUT");
+    expect(h.calls).toEqual([]);
+  });
+
+  it("uploads the VALIDATED document rather than the caller's object", async () => {
+    const h = createHarness({ headSequence: [null] });
+    const raw = {
+      frameSizes: [{ id: "s", name: "s", aspect: 1.41 }],
+    } as unknown as typeof CATALOG;
+    const result = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: raw });
+    expect(result.ok).toBe(true);
+
+    const json = h.uploadedJson();
+    expect(json).not.toBeNull();
+    const parsed = JSON.parse(json as string);
+    // the validated V1 wrapper, not the raw legacy input that was handed in
+    expect(parsed.schemaVersion).toBe(1);
+    expect(Object.hasOwn(parsed, "data")).toBe(true);
+    // and it round-trips through the same authority
+    expect(readLegacyCatalog(parsed).ok).toBe(true);
+  });
 });

@@ -21,8 +21,8 @@ export interface AdminWriteFirebaseConfig {
  * LOCAL EMULATOR WIRING ONLY.
  *
  * The app never passes this. It exists so the emulator gate can drive the SAME adapter the product
- * would use instead of a look-alike, and it is inert unless supplied. A run that provides it must
- * also use a `demo-` project id, which has no real credentials attached.
+ * would use instead of a look-alike, and it is inert unless supplied. Supplying it requires a
+ * `demo-` project id, which is checked before any SDK is even loaded.
  */
 export interface AdminWriteEmulatorHosts {
   readonly authUrl: string;
@@ -33,32 +33,69 @@ export interface AdminWriteEmulatorHosts {
 }
 
 export interface AdminWriteFacadeOptions {
-  /** Distinct name per Firebase app instance; needed when a test drives two identities at once. */
-  readonly appName?: string;
   readonly emulators?: AdminWriteEmulatorHosts;
 }
+
+const DEMO_PROJECT_PREFIX = "demo-";
+const DEFAULT_APP_NAME = "[DEFAULT]";
+
+/** Config keys that must agree with an already-initialised app before it is reused. */
+const OWNED_CONFIG_KEYS = [
+  "apiKey",
+  "authDomain",
+  "projectId",
+  "storageBucket",
+  "appId",
+] as const satisfies readonly (keyof AdminWriteFirebaseConfig)[];
 
 export async function createFirebaseAdminWriteFacade(
   config: AdminWriteFirebaseConfig,
   options: AdminWriteFacadeOptions = {},
 ): Promise<AdminWriteFacade> {
-  const [{ initializeApp }, auth, firestore, storage] = await Promise.all([
+  // Checked BEFORE any dynamic import, so a non-demo project reaches neither initializeApp nor
+  // Auth, Firestore or Storage. Pointing emulator wiring at a real project id is the one mistake
+  // that could let a local test talk to production.
+  if (options.emulators !== undefined && !config.projectId.startsWith(DEMO_PROJECT_PREFIX)) {
+    throw new Error(
+      `admin-write refused emulator wiring: project id must begin with "${DEMO_PROJECT_PREFIX}"`,
+    );
+  }
+
+  const [{ getApp, getApps, initializeApp }, auth, firestore, storage] = await Promise.all([
     import("firebase/app"),
     import("firebase/auth"),
     import("firebase/firestore"),
     import("firebase/storage"),
   ]);
 
-  const app = initializeApp(
-    {
+  // ★ App ownership. The default app belongs to whoever created it first — in the admin shell that
+  // is spec 036's read adapter. This path REUSES it and never initialises a second one:
+  //   - a duplicate initializeApp of the default app is an SDK error, and
+  //   - a separate named app would carry its OWN auth state, so a write could run under a session
+  //     the operator never signed into. That split is the bug, not a workaround for it.
+  // If an existing app disagrees with the config we were handed, we fail closed rather than write
+  // into whatever project happens to be initialised.
+  const existing = getApps().some((instance) => instance.name === DEFAULT_APP_NAME);
+  let app: import("firebase/app").FirebaseApp;
+  if (existing) {
+    app = getApp();
+    const current = app.options as Partial<Record<string, unknown>>;
+    for (const key of OWNED_CONFIG_KEYS) {
+      if (current[key] !== config[key]) {
+        throw new Error(
+          `admin-write refused to reuse the existing Firebase app: ${key} does not match`,
+        );
+      }
+    }
+  } else {
+    app = initializeApp({
       apiKey: config.apiKey,
       authDomain: config.authDomain,
       projectId: config.projectId,
       storageBucket: config.storageBucket,
       appId: config.appId,
-    },
-    options.appName,
-  );
+    });
+  }
 
   const authInstance = auth.getAuth(app);
   const db = firestore.getFirestore(app);
