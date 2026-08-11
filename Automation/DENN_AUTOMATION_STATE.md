@@ -6,20 +6,81 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-036-admin-auth-private-state-read
 active_unit: spec-037-admin-write-c5-emulator-implementation   # local non-UI implementation landed
-state: READY_FOR_CODEX   # non-UI implementation pushed; Codex runs the independent gates next
-baseline_commit: f8590e4
-candidate_commit: d83aee9   # spec 037 non-UI implementation (contract 9805c26, authorization 4f2ab0b)
+state: READY_FOR_CODEX   # correction round 1 applied to the implementation; Codex re-verifies
+baseline_commit: d4d42d6
+candidate_commit: ead06ab   # spec 037 implementation + correction round 1 (contract 9805c26, authorization 4f2ab0b)
 verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "implementation round ran f8590e4 -> d83aee9 (fast-forward); HEAD=origin, ahead/behind 0/0"
+origin_relation: "correction round 1 ran d4d42d6 -> ead06ab (fast-forward); HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts + Founder-owned taste-v2 work (docs/rebuild/design/taste-v2/, docs/rebuild/design/README.md, docs/rebuild/specs/038-page-design-prototype.md); Claude must not restore/stage/commit any of them"
-fix_round: 3
+fix_round: 1   # implementation corrections (the contract rounds are closed)
 max_fix_rounds: 3
-next_transition: CODEX_INDEPENDENT_GATES   # NEXT step 4; then the separate local emulator gate
+next_transition: CODEX_REVERIFY_CORRECTION_1   # independent gates + the separate emulator gate
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 스펙 037 구현 보완 라운드 1 완료 — READY_FOR_CODEX (2026-08-11)
+
+보완 커밋 **`ead06ab`**(기준 `d4d42d6`, fast-forward, HEAD=origin 0/0). 구현 `d83aee9`의 Codex 지적 3건.
+**변경 파일 4개(전부 허용 목록)**: `write-port.ts` · `sdk-facade.ts` · `admin-write.test.ts` ·
+**`sdk-facade.test.ts`(신규)**. **Rules·emulator config·`apps/**`·`admin-read/**`·manifest·lockfile·
+`firebase.json`·`.firebaserc`·`vitest*.config.ts`·`scripts/check.mjs`·`.gitignore` 전부 무변경.**
+Founder가 `4f2ab0b` 승인과 `f8590e4`의 **A-12·A-13 확장**이 실제 승인임을 재확인했다.
+
+### 교정 1 — payload를 쓰기 전에 정본으로 런타임 검증
+
+`save()`가 **`expectedBase` 검증 뒤, UUID·업로드 전에** `request.catalog`를
+**기존 `readLegacyCatalog` 정본**으로 검증한다. invalid이면 **`WRITE_INVALID_INPUT`** 이고
+**UUID·Storage·Firestore 호출 0**이다. 업로드는 **검증된 `CatalogDocumentV1`을 직렬화**한다.
+**이유**: `CatalogDocumentV1`은 **컴파일 타임 주장일 뿐**이고 이 객체는 **불변**이라,
+읽을 수 없는 payload를 올리면 **head에 영구히 앉는다**. 또 caller 객체가 아니라 검증 결과를
+직렬화하므로 **hostile getter가 나중에 바이트를 바꿔치기할 수 없다**.
+테스트 고정: invalid `schemaVersion`·circular 입력 → **호출 0** · 업로드 JSON이 **검증된 V1 wrapper**로
+**round-trip**.
+
+### 교정 2 — Firebase app 소유권 명시, 두 번째 app 금지
+
+`createFirebaseAdminWriteFacade`가 **스펙 036이 이미 소유한 기본 app을 재사용**한다.
+**기본 app 중복 `initializeApp` 0**, **`appName` 옵션 제거**(named app은 **자기 auth 상태를 따로 들어서**
+운영자가 로그인한 적 없는 세션으로 쓰기가 나갈 수 있다 — **그 분리 자체가 버그**),
+기존 app config가 **키 단위로 하나라도 다르면 fail-closed**. **`admin-read/**` 무수정.**
+
+### 교정 3 — emulator 옵션은 `demo-` 프로젝트에서만
+
+`options.emulators`가 있으면 **`config.projectId`의 `demo-` 접두를 SDK 초기화 전에** 검사하고,
+non-demo면 **`initializeApp`·Auth·Firestore·Storage 호출 0**으로 거부한다.
+검사가 **dynamic import보다 앞**이라 SDK가 로드조차 되지 않는다.
+**emulator 배선을 실제 프로젝트 id에 물리는 것이 로컬 실행이 운영에 닿을 수 있는 유일한 실수**다.
+
+### 신규 `sdk-facade.test.ts` (Firebase 모듈 mock)
+
+기존 app 재사용(`initializeApp` 0회) · named app 0개 · **키별 config 불일치 fail-closed** ·
+Auth/Firestore/Storage를 그 하나의 app에서 각 1회 취득 ·
+**non-demo + emulator → 모든 SDK 진입점 0회** · demo면 connect 3종 호출 ·
+emulator 미지정이면 connect 0 · non-demo라도 emulator 배선 없으면 정상 초기화.
+
+### 게이트 실측
+
+`pnpm check` **PASS** · **unit 1318/1318**(1305 → **+13**) · **Chromium E2E 134/134** ·
+**고객 번들 byte-identical**(`index-W_cZpbdf.js` · 287,741 bytes ·
+`fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685`) ·
+**emulator 게이트 실제 Rules로 10/10 PASS**(분리 실행, **다운로드·설치·포트 강제 해제 0**) ·
+`git diff --check` **PASS** · **forbidden diff 0** · ports 전후 free · 디버그 로그 산출물 0.
+
+### 계속 닫혀 있는 것
+
+`apps/**`·UI 연결 · 저장 버튼 · **실제 UID** · 실제 Firebase/network/live/운영 데이터 ·
+**Rules·Hosting 배포** · 운영 쓰기 · 발행 · legacy 공유 쓰기 · orphan 삭제·자동 정리 ·
+tombstone·자동 merge · 신규 의존성·다운로드·설치.
+⚠️ **Rules는 이번 라운드에 아예 손대지 않았고** 여전히 **UNCONFIRMED placeholder**라 배포 불가다.
+
+### 다음
+
+**Codex 보완 라운드 1 재검증** — 독립 게이트 + **emulator 게이트 명시 실행**.
+
+> 아래 구현 완료 기록과 그 아래 승인·검토·계약 이력은 **삭제하지 않는다.**
 
 ## Claude 스펙 037 C5 비-UI 구현 완료 — READY_FOR_CODEX (2026-08-11)
 

@@ -3300,3 +3300,87 @@ orphan 삭제·자동 정리 · tombstone·자동 merge · 신규 의존성·다
 **NEXT §3 4단계 — Codex가 frozen install · format/lint/typecheck · 전체 unit · 독립 build ·
 전체 Chromium E2E · diff check · forbidden diff · 고객 dist hash · ports/temp를 독립 검증**한다.
 이어서 **5단계 local emulator 게이트를 기본 게이트와 분리해 명시 실행**한다.
+
+## 2026-08-11 — 스펙 037 구현 보완 라운드 1 (CORRECTION_REQUIRED, 코드 커밋 `ead06ab`)
+
+- **기준**: 구현 `d83aee9` + 문서 `d4d42d6` → **보완 커밋 `ead06ab`**(fast-forward, HEAD=origin 0/0).
+- **권한 재확인**: Founder가 `4f2ab0b` 구현 착수 승인과 `f8590e4`의 **A-12·A-13 확장**이
+  Claude Code에 직접 전달한 **실제 승인**임을 확인했다.
+- **변경 파일(4, 전부 허용 목록)**: `write-port.ts` · `sdk-facade.ts` · `admin-write.test.ts` ·
+  **`sdk-facade.test.ts`(신규)**.
+  **무변경**: Rules 4개 · `firebase.emulator.json` · `apps/**` · `admin-read/**` ·
+  `package.json` 2개 · lockfile · `firebase.json` · `.firebaserc` · `vitest*.config.ts` ·
+  `scripts/check.mjs` · `.gitignore` · 보호 대상 6개.
+
+### 교정 1 — payload를 쓰기 전에 정본으로 런타임 검증
+
+`save()`가 **`expectedBase` 검증 뒤, UUID 생성·업로드 전에** `request.catalog`를
+**기존 `readLegacyCatalog` 정본**으로 검증한다. invalid이면 **`WRITE_INVALID_INPUT`** 이고
+**UUID·Storage·Firestore 호출은 0**이다. 업로드에는 **검증된 `CatalogDocumentV1`을 직렬화**한다.
+
+> **왜 중요한가**: `CatalogDocumentV1`은 **컴파일 타임 주장일 뿐**이고, 이 스펙의 객체는 **불변**이라
+> 한 번 만들면 지울 수 없다. 읽을 수 없는 payload를 올리면 **그게 head에 영구히 앉는다.**
+> 또 caller 객체가 아니라 **검증 결과를 직렬화**하므로 hostile getter가 나중에 바이트를 바꿔치기할 수 없다.
+
+고정한 테스트: **invalid `schemaVersion`**(2) → `WRITE_INVALID_INPUT` + **호출 0** ·
+**circular 입력** → `WRITE_INVALID_INPUT` + **호출 0** ·
+**업로드된 JSON이 검증된 V1 wrapper**이고 같은 정본으로 **round-trip**된다.
+
+### 교정 2 — Firebase app 소유권 명시, 두 번째 app 금지
+
+`createFirebaseAdminWriteFacade`가 **스펙 036이 이미 소유한 기본 app을 재사용**한다.
+
+- **기본 app 중복 `initializeApp` 0.**
+- **별도 named app을 만들지 않는다** — `appName` 옵션을 **제거**했다.
+  named app은 **자기 auth 상태를 따로 들고 있어서**, 운영자가 로그인한 적 없는 세션으로
+  쓰기가 나갈 수 있다. **그 분리 자체가 버그**이지 우회책이 아니다.
+- 기존 app의 config가 넘겨받은 config와 **키 단위로 하나라도 다르면 fail-closed**(throw).
+  어떤 프로젝트가 초기화돼 있든 거기에 써 넣지 않는다.
+- **`packages/firebase/src/admin-read/**` 무수정.**
+
+### 교정 3 — emulator 옵션은 `demo-` 프로젝트에서만
+
+`options.emulators`가 있으면 **`config.projectId`의 `demo-` 접두를 SDK 초기화 전에** 검사한다.
+non-demo면 **`initializeApp`·Auth·Firestore·Storage 호출 0**으로 거부한다.
+검사가 **dynamic import보다도 앞**이라 SDK 자체가 로드되지 않는다.
+
+> emulator 배선을 실제 프로젝트 id에 물리는 것이 **로컬 실행이 운영에 닿을 수 있는 유일한 실수**다.
+
+### 신규 `sdk-facade.test.ts` (Firebase 모듈 mock)
+
+기존 app **재사용**(`initializeApp` 0회) · **named app 0개** ·
+**키별 config 불일치 fail-closed**(`projectId`·`storageBucket` 각각) ·
+Auth/Firestore/Storage를 **그 하나의 app에서** 취득(각 1회) ·
+**non-demo + emulator → initializeApp·getAuth·getFirestore·getStorage·connect* 전부 0회** ·
+demo면 **connect 3종 모두 호출** · emulator 미지정이면 **connect 0** ·
+**non-demo라도 emulator 배선이 없으면 정상 초기화**.
+
+### 게이트 실측
+
+| 게이트 | 결과 |
+| --- | --- |
+| `pnpm check` | **PASS**(format · lint · typecheck · unit · build) |
+| unit | **1318/1318** (직전 1305 → **+13**) |
+| Chromium E2E | **134/134** (무회귀) |
+| **고객 번들** | **byte-identical** — `index-W_cZpbdf.js` · **287,741 bytes** · `fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685` |
+| **emulator 게이트** | **실제 Rules로 10/10 PASS**, 기본 게이트와 분리 실행, **다운로드·설치·포트 강제 해제 0** |
+| `git diff --check` · forbidden diff | **PASS** · **0** |
+| ports · 디버그 로그 산출물 | 전후 free · 0 |
+
+### 계속 닫혀 있는 것
+
+`apps/**`와 모든 UI 연결 · 저장 버튼 · **실제 UID** · 실제 Firebase/network/live/운영 데이터 ·
+**Rules·Hosting 배포** · 운영 쓰기 · 발행 · legacy 공유 쓰기 · orphan 삭제·자동 정리 ·
+tombstone·자동 merge · 신규 의존성·다운로드·설치 · `firebase.json`·루트 배럴·`admin-read/**`·`.firebaserc`.
+⚠️ **Rules는 이번 라운드에서 아예 손대지 않았고** 여전히 **UNCONFIRMED placeholder** 상태라 배포 불가다.
+
+### 경계 · NOT TESTED (변동 없음)
+
+**합성 fake는 서버 Rules 원자성을 증명하지 않고, emulator는 앱 오류 분기 전체를 증명하지 않는다.**
+실제 Firebase 프로젝트 동작 전부 · **실제 운영자 UID·계정 실재** · 실제 네트워크 지연·단절 ·
+실기기·다중 기기 · 운영 규모 payload · orphan 누적 실제 비용 · **L-4**(범위 밖) ·
+`pnpm-workspace.yaml`의 `allowBuilds`(이월).
+
+### 다음
+
+**Codex 보완 라운드 1 재검증** — 독립 게이트 + emulator 게이트 명시 실행.
