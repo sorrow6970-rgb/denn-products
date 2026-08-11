@@ -19,6 +19,38 @@
 **★ 구현은 아직 시작하지 않았다** — NEXT §3 순서상 **2단계(Codex의 허용 파일 확인)** 가 먼저다.
 **다음 = Codex가 승인 기록과 최종 구현 허용 파일을 확인**한다.**
 
+> ### ★★ 승인 유효성 확정 + 구현 허용 범위 검토 (2026-08-11, 읽기 전용)
+>
+> **Founder가 `4f2ab0b`의 승인이 Claude Code에 직접 전달한 실제 승인임을 확인하고 유효한 승인으로
+> 확정했다.** 이어서 **구현 허용 범위 검토**를 지시해 수행했다 — 저장소 파일 변경·emulator 실행·
+> network 접근 **0**. 정본 §3.1~§3.3에 기록했다.
+>
+> **막힘 없이 열리는 항목(실측)**: `admin-write` 디렉터리·참조 **0건**(충돌 없음) ·
+> `packages/firebase/tsconfig.json`의 `include:["src"]`가 **자동 typecheck** ·
+> `biome.json`의 `packages/**/src/**`가 **자동 format/lint** ·
+> `./admin-write` export는 **기존 `./admin-read`와 동일 패턴** ·
+> `storage.rules`/`firestore.rules`와 emulator `*.rules` 사본은 **gitignore 무영향** ·
+> **`vitest.config.ts` exclude는 필수**(기본 `include`의 `*.test.{ts,tsx}`가 `*.emulator.test.ts`도 매칭) ·
+> **`connectAuthEmulator`·`connectFirestoreEmulator`·`connectStorageEmulator` 전부 설치된 SDK에 존재
+> → 신규 의존성 0** · 도구(Java 21.0.11 · firebase-tools 15.22.4 · jar 캐시 · 포트 free) 이상 없음.
+>
+> **★★ 공백 2건 — Founder가 최소 범위 확장을 승인**:
+> **① `firebase.emulator.json`이 조용히 gitignore된다** — `.gitignore:2`가 `*.json`이고 예외는
+> `package.json`·`tsconfig*.json`·`biome.json`뿐(`git check-ignore -v`로 확인).
+> `firebase.json`·`.firebaserc`가 멀쩡한 건 **이미 추적 중이라서**일 뿐이다. 그대로면 **config가
+> 커밋되지 않아 다른 환경에서 emulator 게이트를 재현할 수 없다.** → **A-12: `.gitignore`에
+> `!firebase.emulator.json` 한 줄 추가**(`git add -f`는 파일이 ignored로 남아 `git clean -X`에
+> 지워지고 `.gitignore:7` 주석 의도와도 어긋난다).
+> **② `vitest.emulator.config.ts`가 format/lint를 조용히 건너뛴다** —
+> `scripts/check.mjs:22-30`의 `BIOME_TARGETS`와 `package.json`의 `format:check`/`lint`가 config를
+> **명시 열거**하고 `biome.json`의 `"*.ts"`는 **경로 명시 때문에 무효**다. **실패가 아니라 스킵**이라
+> 더 나쁘다. → **A-13: `scripts/check.mjs`의 `BIOME_TARGETS`에 파일명 1개 추가** + `package.json` 동일.
+>
+> **경계**: 두 확장 모두 **기계적·비제품 변경 각 한 줄**이며 **금지 항목은 하나도 열리지 않는다** —
+> `apps/**` · 실제 UID · 실제 Firebase/network/live · Rules/Hosting 배포 · 운영 쓰기 · 발행 ·
+> legacy 공유 쓰기 · orphan 삭제 · 신규 의존성·다운로드·설치 · `firebase.json` · 루트 배럴 ·
+> `admin-read/**` · `.firebaserc` **그대로 금지**, **`pnpm-lock.yaml` diff 0** 유지.
+
 > ### ★★ Founder 승인 (2026-08-11) — 계약 `9805c26` + 로컬 비-UI 구현 착수
 >
 > **승인된 것**: **admin-write port와 합성 fake** · **배포하지 않는 `storage.rules`/`firestore.rules`

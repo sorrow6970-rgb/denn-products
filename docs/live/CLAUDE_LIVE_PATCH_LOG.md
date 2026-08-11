@@ -3106,3 +3106,78 @@ orphan 누적의 실제 비용 · `pnpm-workspace.yaml`의 `allowBuilds`(이월,
 - 보호 대상 6개는 **전부 손대지 않았다.**
 - **다음**: **NEXT §3 2단계 — Codex가 승인 기록과 최종 구현 허용 파일을 확인**한다.
   그 확인 전에는 **3단계 비-UI 구현을 시작하지 않는다.**
+
+## 2026-08-11 — 스펙 037 승인 유효성 확정 + 구현 허용 범위 검토 (읽기 전용, 문서 전용)
+
+- **기준**: HEAD=origin=`7aee0c2`, ahead/behind 0/0.
+- **Founder가 `4f2ab0b`의 승인이 Claude Code에 직접 전달한 실제 Founder 승인임을 확인하고
+  유효한 승인으로 확정했다.** 이어서 **다음 구현 허용 범위 검토**를 지시했다.
+- **검토는 읽기 전용**으로 수행했다 — 저장소 파일 변경 0, **emulator 실행 0**,
+  실제 Firebase/network/live/운영 데이터 접근 0.
+- **상태**: `READY_FOR_CODEX` 유지. **다음 주체 = Codex**(NEXT §3 2단계).
+- **변경 파일(5, 전부 문서)**: 결정 정본(§3.1~§3.3 추가) · STATE · NEXT · CURRENT · 이 로그.
+- **★ 구현은 여전히 시작하지 않았다.**
+
+### 검토 결과 — 막힘 없이 열리는 항목 (실측)
+
+| 항목 | 확인 결과 |
+| --- | --- |
+| `packages/firebase/src/admin-write/**` | **디렉터리 없음**(현재 `admin-read`·`public-catalog`·`public-images`·`index.ts`만), **저장소 전체 `admin-write` 참조 0건** → 충돌 없음 |
+| 자동 typecheck | `packages/firebase/tsconfig.json`의 `include: ["src"]` → `admin-write/**`와 `*.emulator.test.ts` **자동 포함** |
+| 자동 format/lint | `biome.json`의 `files.includes`에 `packages/**/src/**/*.{ts,tsx}` → **소스·emulator 테스트 자동 대상** |
+| `./admin-write` export | 기존 `./admin-read`와 **동일 패턴**(`types` + `default`) — 새 규약 불필요 |
+| `storage.rules`·`firestore.rules` | **추적 중, gitignore 무영향** → 편집 가능(배포는 계속 금지) |
+| emulator 전용 `*.rules` 사본 | **gitignore에 걸리지 않는다**(`git check-ignore` 확인) |
+| `vitest.config.ts` exclude | **반드시 필요** — 기본 `include`의 `packages/**/src/**/*.test.{ts,tsx}`가 **`*.emulator.test.ts`도 매칭**한다(`*.live.test.ts`와 같은 이유) |
+| emulator SDK API | **`connectAuthEmulator`·`connectFirestoreEmulator`·`connectStorageEmulator` 전부 설치된 SDK에 존재** → **신규 의존성 0** |
+| 도구 | Java `21.0.11 LTS` · firebase-tools 전역 `15.22.4` · Firestore/Storage-rules-runtime/UI jar **캐시됨** · 필요한 포트 **전부 free** |
+
+### ★★ 공백 2건 — Founder가 최소 범위 확장을 승인함
+
+**공백 1 — `firebase.emulator.json`이 조용히 gitignore된다.**
+
+- `.gitignore:2`가 **`*.json`** 이고 예외는 **`package.json`·`tsconfig*.json`·`biome.json`뿐**이다.
+- `git check-ignore -v firebase.emulator.json` → **`.gitignore:2:*.json`**.
+- `firebase.json`·`.firebaserc`가 멀쩡한 것은 **이미 추적 중이라서**일 뿐이다
+  (gitignore는 untracked 파일에만 적용된다).
+- 그대로 두면 **config가 커밋되지 않아 Codex와 다른 환경에서 emulator 게이트를 재현할 수 없다** —
+  검증 자체가 무의미해진다.
+- **결정 A-12: `.gitignore`에 `!firebase.emulator.json` 한 줄만 추가한다.**
+  `git add -f`도 동작하지만 파일이 **계속 ignored 상태로 남아** `git clean -X`에 지워지고
+  gitignore를 존중하는 도구가 건너뛴다. 무엇보다 **`.gitignore:7` 주석 자체가
+  "리빌드 설정 JSON은 정상 추적 … git add -f 불필요"** 라고 밝히고 있어 예외 한 줄이 그 의도와 일치한다.
+
+**공백 2 — `vitest.emulator.config.ts`가 format/lint 게이트를 조용히 건너뛴다.**
+
+- `scripts/check.mjs:22-30`의 **`BIOME_TARGETS`** 와 루트 `package.json`의 `format:check`/`lint`가
+  config 파일을 **명시적으로 열거**한다(`vitest.config.ts`·`vitest.live.config.ts`·
+  `playwright.config.ts`·`playwright.live.config.ts`). 새 root config는 그 목록에 없다.
+- `biome.json`의 `includes`에 `"*.ts"`가 있지만 **스크립트가 경로를 명시로 넘기므로 무효**다.
+- **실패가 아니라 스킵**이라 게이트는 통과하는데 검사만 빠진다 — **실패보다 나쁜 형태**다.
+- **결정 A-13: `scripts/check.mjs`의 `BIOME_TARGETS`에 `vitest.emulator.config.ts` 한 개만 추가**하고,
+  루트 `package.json`의 `format:check`·`lint`에도 같은 파일명을 추가한다(후자는 이미 A-8 범위).
+
+### 범위 확장의 경계
+
+- **두 확장 모두 기계적·비제품 변경이며 각각 한 줄**이다. 새 동작을 만들지 않는다.
+- **금지 항목은 하나도 열리지 않는다** — `apps/**`와 모든 UI 연결 · 실제 운영자 UID 추측 ·
+  실제 Firebase project/운영 bucket/live network · Rules·Hosting 배포 · 운영 쓰기 ·
+  `published/state.json` 발행 · legacy 공유 쓰기 · orphan 삭제·자동 정리 ·
+  **신규 의존성·다운로드·설치** 전부 **그대로 금지**.
+- **`firebase.json`·루트 배럴 `packages/firebase/src/index.ts`·`packages/firebase/src/admin-read/**`·
+  `.firebaserc`도 그대로 금지.**
+- **`pnpm-lock.yaml` diff 0** 요구 유지(`--frozen-lockfile` 통과 필수, 변경 필요 시 **STOP**).
+
+### 다음
+
+**NEXT §3 2단계 — Codex가 승인 기록·검토 결과·확장된 허용 파일(A-12·A-13 포함)을 확인**한다.
+그 확인 뒤에 **3단계 비-UI 구현**을 시작한다. **구현 착수 0**, 자동화·반복 작업 생성 0.
+
+### 검증
+
+- `git diff --check 7aee0c2..HEAD` **PASS**
+- 변경 경로 = **허용 문서 5개뿐**(결정 정본 + STATE/NEXT/CURRENT/live)
+- 제품 코드·test·`storage.rules`·`firestore.rules`·`firebase.json`·`firebase.emulator.json`·
+  `package.json`·lockfile·`pnpm-workspace.yaml`·`.gitignore`·`scripts/check.mjs`·`.firebaserc`
+  diff **0** — **확장이 승인됐을 뿐 아직 아무것도 편집하지 않았다**
+- HEAD=origin, ahead/behind **0/0** · working tree = **보호 대상만**

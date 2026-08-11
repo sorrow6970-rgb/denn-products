@@ -21,6 +21,60 @@ push_policy: fast-forward-only
 deploy: forbidden
 ```
 
+## Claude 스펙 037 승인 유효성 확정 + 구현 허용 범위 검토 — READY_FOR_CODEX (2026-08-11)
+
+정본 갱신: `docs/codex-claude-handoff/decisions/2026-08-11-spec-037-implementation-authorization.md`
+§3.1~§3.3 · 기준 HEAD `7aee0c2`.
+**Founder가 `4f2ab0b`의 승인이 Claude Code에 직접 전달한 실제 승인임을 확인하고 유효한 승인으로
+확정했다.** 이어서 **구현 허용 범위 검토**를 지시해 수행했다.
+**검토는 읽기 전용** — 저장소 파일 변경·emulator 실행·network 접근 **0**.
+**문서 전용 라운드이며 구현은 여전히 시작하지 않았다.**
+
+### 검토 결과 — 막힘 없이 열리는 항목 (실측)
+
+- `packages/firebase/src/admin-write/**` **디렉터리 없음**, 저장소 전체에 **`admin-write` 참조 0건** → 충돌 없음.
+- **자동 typecheck**: `packages/firebase/tsconfig.json`의 `include: ["src"]`가
+  `admin-write/**`와 `*.emulator.test.ts`를 **자동 포함**한다.
+- **자동 format/lint**: `biome.json`의 `packages/**/src/**/*.{ts,tsx}`가 **소스·emulator 테스트를 자동 포함**.
+- **`./admin-write` export**는 기존 `./admin-read`와 **동일 패턴** — 새 규약 불필요.
+- `storage.rules`·`firestore.rules` **추적 중**, emulator 전용 `*.rules` 사본도 **gitignore 무영향**.
+- **`vitest.config.ts` exclude는 반드시 필요**하다 — 기본 `include`의
+  `*.test.{ts,tsx}`가 **`*.emulator.test.ts`도 매칭**한다(`*.live.test.ts`와 동일 이유).
+- **emulator SDK API 전부 존재**: `connectAuthEmulator`·`connectFirestoreEmulator`·
+  `connectStorageEmulator` → **신규 의존성 0**.
+- **도구**: Java `21.0.11 LTS` · firebase-tools 전역 `15.22.4` · jar 캐시됨 · 포트 free.
+
+### ★★ 공백 2건 — Founder가 최소 범위 확장을 승인함
+
+1. **`firebase.emulator.json`이 조용히 gitignore된다.** `.gitignore:2`가 `*.json`이고 예외는
+   `package.json`·`tsconfig*.json`·`biome.json`뿐이다(`git check-ignore -v` → `.gitignore:2:*.json`).
+   `firebase.json`·`.firebaserc`가 멀쩡한 건 **이미 추적 중이라서**일 뿐이다.
+   → 그대로면 **config가 커밋되지 않아 다른 환경에서 emulator 게이트를 재현할 수 없다.**
+   **결정 A-12: `.gitignore`에 `!firebase.emulator.json` 한 줄 추가.**
+   (`git add -f`는 파일이 ignored로 남아 `git clean -X`에 지워지고, `.gitignore:7` 주석의
+   "git add -f 불필요" 의도와도 어긋난다.)
+2. **`vitest.emulator.config.ts`가 format/lint를 조용히 건너뛴다.**
+   `scripts/check.mjs:22-30`의 `BIOME_TARGETS`와 루트 `package.json`의 `format:check`/`lint`가
+   **config 파일을 명시 열거**하고, `biome.json`의 `"*.ts"`는 **경로를 명시로 넘기므로 무효**다.
+   → **실패가 아니라 스킵**이라 게이트는 통과하는데 검사만 빠진다.
+   **결정 A-13: `scripts/check.mjs`의 `BIOME_TARGETS`에 파일명 1개 추가** + `package.json`의
+   `format:check`·`lint`에도 동일 추가(후자는 이미 A-8 범위).
+
+### 범위 확장의 경계
+
+**두 확장 모두 기계적·비제품 변경이며 각각 한 줄이다.** **§2 금지 항목은 하나도 열리지 않는다** —
+`apps/**` · 실제 UID · 실제 Firebase/network/live · Rules/Hosting 배포 · 운영 쓰기 · 발행 ·
+legacy 공유 쓰기 · orphan 삭제 · 신규 의존성·다운로드·설치 **그대로 금지**.
+**`firebase.json`·루트 배럴·`admin-read/**`·`.firebaserc`도 그대로 금지.**
+**`pnpm-lock.yaml` diff 0** 요구 유지.
+
+### 다음
+
+**NEXT §3 2단계 — Codex가 승인 기록·검토 결과·확장된 허용 파일(A-12·A-13 포함)을 확인**한다.
+그 확인 뒤에 **3단계 비-UI 구현**을 시작한다. 구현 착수 0, 자동화 생성 0.
+
+> 아래 승인 기록 섹션과 Codex `CONTRACT_PASSED` 기록은 **삭제하지 않는다.**
+
 ## Founder 스펙 037 구현 착수 승인 기록 — 문서 전용 · READY_FOR_CODEX (2026-08-11)
 
 정본: **`docs/codex-claude-handoff/decisions/2026-08-11-spec-037-implementation-authorization.md`**

@@ -12,6 +12,15 @@
 > **구현은 아직 시작하지 않았다** — `NEXT_CLAUDE_PROMPT.md` §3의 순서상
 > **Codex가 이 승인 기록과 최종 허용 파일을 확인한 뒤**에 착수한다.
 
+> ## ★ 승인 유효성 확정 + 허용 범위 검토 결과 (2026-08-11 추가)
+>
+> **Founder가 `4f2ab0b`의 승인이 Claude Code에 직접 전달한 실제 승인임을 확인했고,
+> 이를 유효한 승인으로 확정했다.** 이어서 **다음 구현 허용 범위 검토**를 지시했고, 그 결과가 §3.1~§3.3이다.
+> 검토는 **읽기 전용**으로 수행했고 저장소 파일 변경·emulator 실행·network 접근은 **0**이었다.
+>
+> **검토에서 실질적 공백 2건이 나왔고, Founder가 각각 최소 범위 확장을 승인했다**(§3.2).
+> **그 2건을 포함해도 이번 단계는 여전히 로컬 비-UI 구현·검증까지이며, §2의 금지 항목은 하나도 열리지 않는다.**
+
 ---
 
 ## 0. 승인 원문 (Founder, 2026-08-11)
@@ -69,9 +78,12 @@ firebase.emulator.json                        A-6   (신규 · local-only)
 <emulator 전용 storage/firestore rules 사본>   A-7   (합성 UID만)
 vitest.config.ts                              A-8   (*.emulator.test.ts 제외 추가)
 vitest.emulator.config.ts                     A-8   (신규)
-package.json                                  A-8   (test:emulator 스크립트 추가)
+package.json                                  A-8   (test:emulator 스크립트 + format/lint 대상 추가)
 **/*.emulator.test.ts, 관련 unit/fake 테스트     A-9   (신규)
 스펙 037 handoff / CURRENT / live / STATE / NEXT  A-11
+─── 2026-08-11 Founder 승인 범위 확장 (§3.2) ───────────────────────────
+.gitignore                                    A-12  (`!firebase.emulator.json` 한 줄만)
+scripts/check.mjs                             A-13  (BIOME_TARGETS에 파일명 1개만)
 ```
 
 **여전히 금지(계약 §10과 동일)**: **`firebase.json`** · **`packages/firebase/src/index.ts` 루트 배럴** ·
@@ -80,6 +92,53 @@ package.json                                  A-8   (test:emulator 스크립트 
 
 **`pnpm-lock.yaml`은 변경이 없어야 한다** — 신규 의존성이 승인되지 않았으므로
 `pnpm install --frozen-lockfile`의 lockfile diff가 **0**이어야 한다. 변경이 필요해지면 **STOP**이다.
+
+### 3.1 검토 결과 — 막힘 없이 열리는 항목 (읽기 전용 실측)
+
+| 항목 | 확인 결과 |
+| --- | --- |
+| `packages/firebase/src/admin-write/**` | **디렉터리 없음**(현재 `admin-read`/`public-catalog`/`public-images`/`index.ts`만), **저장소 전체에 `admin-write` 참조 0건** → 이름 충돌 없음 |
+| 자동 typecheck | `packages/firebase/tsconfig.json`의 `include: ["src"]` → **`admin-write/**`와 `*.emulator.test.ts`가 자동 포함**된다 |
+| 자동 format/lint | `biome.json`의 `files.includes`에 `packages/**/src/**/*.{ts,tsx}` → **소스와 emulator 테스트가 자동 대상** |
+| `./admin-write` export | 기존 `./admin-read` 항목과 **동일 패턴**(`types` + `default`) — 새 규약 불필요 |
+| `storage.rules`·`firestore.rules` | **추적 중이며 gitignore 영향 없음** → 편집 가능(배포는 계속 금지) |
+| emulator 전용 rules 사본(`*.rules`) | **gitignore에 걸리지 않는다**(`git check-ignore` 확인) |
+| `vitest.config.ts` exclude | **반드시 필요**하다 — 기본 `include`의 `packages/**/src/**/*.test.{ts,tsx}`가 **`*.emulator.test.ts`도 매칭**한다(`*.live.test.ts`와 같은 이유) |
+| emulator SDK API | **`connectAuthEmulator` · `connectFirestoreEmulator` · `connectStorageEmulator` 가 설치된 SDK에 전부 존재** → **신규 의존성 0** |
+| emulator 도구 | Java `21.0.11 LTS` · firebase-tools 전역 `15.22.4` · Firestore/Storage-rules-runtime/UI jar **캐시됨** · 필요한 포트 **전부 free** |
+
+### 3.2 ★★ 검토에서 나온 공백 2건 — Founder가 최소 범위 확장을 승인함
+
+**공백 1 — `firebase.emulator.json`이 조용히 gitignore된다.**
+
+`.gitignore:2`가 `*.json`이고 예외는 `package.json`·`tsconfig*.json`·`biome.json`뿐이다.
+`git check-ignore -v firebase.emulator.json` → **`.gitignore:2:*.json`**.
+`firebase.json`·`.firebaserc`가 멀쩡한 것은 **이미 추적 중이라서**일 뿐이다(gitignore는 untracked에만 적용).
+→ 그대로 두면 **config가 커밋되지 않아 Codex와 다른 환경에서 emulator 게이트를 재현할 수 없다.**
+
+**결정(A-12)**: **`.gitignore`에 `!firebase.emulator.json` 한 줄만 추가한다.**
+`git add -f`도 동작하지만 파일이 계속 ignored 상태로 남아 `git clean -X`에 지워지고
+gitignore를 존중하는 도구가 건너뛴다. 무엇보다 **`.gitignore:7`의 주석 자체가
+"리빌드 설정 JSON은 정상 추적 … git add -f 불필요"** 라고 밝히고 있어, 예외 한 줄이 그 의도와 일치한다.
+
+**공백 2 — `vitest.emulator.config.ts`가 format/lint 게이트를 조용히 건너뛴다.**
+
+`scripts/check.mjs:22-30`의 `BIOME_TARGETS`와 루트 `package.json`의 `format:check`/`lint`가
+**config 파일을 명시적으로 열거**한다(`vitest.config.ts`·`vitest.live.config.ts`·
+`playwright.config.ts`·`playwright.live.config.ts`). 새 root config는 그 목록에 없다.
+`biome.json`의 `includes`에 `"*.ts"`가 있지만 **스크립트가 경로를 명시로 넘기므로 무효**다.
+→ **실패가 아니라 스킵**이라 게이트는 통과하는데 검사만 빠진다 — 더 나쁜 형태다.
+
+**결정(A-13)**: **`scripts/check.mjs`의 `BIOME_TARGETS`에 `vitest.emulator.config.ts` 한 개만 추가**하고,
+루트 `package.json`의 `format:check`·`lint`에도 같은 파일명을 추가한다(`package.json`은 이미 A-8 범위).
+
+### 3.3 범위 확장의 경계
+
+- **두 확장 모두 기계적·비제품 변경이며 한 줄씩이다.** 새 동작을 만들지 않는다.
+- **§2의 금지 항목은 하나도 열리지 않는다** — `apps/**` · 실제 UID · 실제 Firebase/network/live ·
+  Rules/Hosting 배포 · 운영 쓰기 · 발행 · legacy 공유 쓰기 · orphan 삭제 · 신규 의존성·다운로드·설치는 **그대로 금지**다.
+- **`firebase.json`·루트 배럴·`admin-read/**`·`.firebaserc`도 그대로 금지**다.
+- 확장 후에도 **`pnpm-lock.yaml` diff 0** 요구는 유지된다.
 
 ## 4. ★ emulator 실행 조건 (A-10의 정확한 경계)
 

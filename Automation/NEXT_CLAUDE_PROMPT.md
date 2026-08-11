@@ -39,7 +39,7 @@ active_unit: `spec-037-admin-write-c5-emulator-implementation-authorization`
 **실제 프로젝트 id 또는 `.firebaserc` 사용** · **자동화·반복 작업 생성** ·
 force push · merge · rebase · `reset --hard` · broad delete · 사용자 변경 복원 · 타 프로세스 종료.
 
-## 3. ★ 구현 시 유일한 허용 파일 (승인 범위 = 계약 §10, 일치 확인함)
+## 3. ★ 구현 시 유일한 허용 파일 (승인 범위 = 계약 §10 + 2026-08-11 확장 2건)
 
 ```
 packages/firebase/src/admin-write/**          write port + 합성 fake (신규)
@@ -50,9 +50,12 @@ firebase.emulator.json                        신규 · local-only
 <emulator 전용 storage/firestore rules 사본>   합성 UID만
 vitest.config.ts                              *.emulator.test.ts 제외 추가
 vitest.emulator.config.ts                     신규
-package.json                                  test:emulator 스크립트 추가
+package.json                                  test:emulator 스크립트 + format/lint 대상 추가
 **/*.emulator.test.ts, 관련 unit/fake 테스트
 스펙 037 handoff / CURRENT / live / STATE / NEXT
+─── Founder 승인 범위 확장 (2026-08-11) ────────────────────────────────
+.gitignore                                    A-12 · `!firebase.emulator.json` 한 줄만
+scripts/check.mjs                             A-13 · BIOME_TARGETS에 파일명 1개만
 ```
 
 **여전히 금지**: **`firebase.json`** · **루트 배럴 `packages/firebase/src/index.ts`** ·
@@ -61,6 +64,25 @@ package.json                                  test:emulator 스크립트 추가
 
 **★ `pnpm-lock.yaml` diff는 0이어야 한다** — 신규 의존성이 승인되지 않았으므로
 `pnpm install --frozen-lockfile`이 통과해야 한다. 변경이 필요해지면 **STOP**이다.
+
+### 3.1 확장 2건의 이유 (검토 실측)
+
+- **A-12** `git check-ignore -v firebase.emulator.json` → **`.gitignore:2:*.json`**.
+  예외는 `package.json`·`tsconfig*.json`·`biome.json`뿐이고, `firebase.json`·`.firebaserc`가
+  멀쩡한 건 **이미 추적 중이라서**다. 그대로 두면 **config가 커밋되지 않아 다른 환경에서
+  emulator 게이트를 재현할 수 없다.**
+- **A-13** `scripts/check.mjs:22-30`의 `BIOME_TARGETS`와 `package.json`의 `format:check`/`lint`가
+  config를 **명시 열거**하고, `biome.json`의 `"*.ts"`는 **경로 명시 때문에 무효**다.
+  새 root config가 **실패가 아니라 스킵**된다 — 게이트는 통과하는데 검사만 빠지므로 더 나쁘다.
+
+### 3.2 검토에서 확인된 "그대로 열리는" 항목
+
+`admin-write` 디렉터리·참조 **0건** · `packages/firebase/tsconfig.json`의 `include:["src"]`가
+**자동 typecheck** · `biome.json`의 `packages/**/src/**`가 **자동 format/lint** ·
+`./admin-write`는 **기존 `./admin-read`와 동일 패턴** · `storage.rules`/`firestore.rules`와
+emulator `*.rules` 사본은 **gitignore 무영향** · **`vitest.config.ts` exclude 필수**(기본 `include`가
+`*.emulator.test.ts`도 매칭) · **`connectAuthEmulator`·`connectFirestoreEmulator`·
+`connectStorageEmulator` 전부 설치된 SDK에 존재 → 신규 의존성 0**.
 
 ## 4. ★ emulator 실행 경계
 
@@ -77,8 +99,9 @@ package.json                                  test:emulator 스크립트 추가
 
 | 단계 | 주체 | 내용 | 상태 |
 | --- | --- | --- | --- |
-| **1** | Claude | 승인 원문을 결정/STATE/NEXT/CURRENT/live에 기록 · 문서 전용 fast-forward commit/push | **완료** |
-| **2** | **Codex** | **승인 기록과 최종 구현 허용 파일 확인** | **다음 차례** |
+| **1** | Claude | 승인 원문을 결정/STATE/NEXT/CURRENT/live에 기록 · 문서 전용 fast-forward commit/push | **완료** (`4f2ab0b`) |
+| **1b** | Claude | **승인 유효성 확정 + 구현 허용 범위 검토**(읽기 전용) · 공백 2건 발견 · Founder가 **A-12·A-13 최소 확장 승인** | **완료** |
+| **2** | **Codex** | **승인 기록 · 검토 결과 · 확장된 허용 파일(A-12·A-13 포함) 확인** | **다음 차례** |
 | 3 | Claude | 계약의 **비-UI 구현**을 별도 commit/push | 대기 |
 | 4 | Codex | frozen install · format/lint/typecheck · 전체 unit · 독립 build · 전체 Chromium E2E · diff check · forbidden diff · **고객 dist hash** · ports/temp | 대기 |
 | 5 | — | **기본 게이트와 분리해 local emulator 게이트를 명시적으로 실행.** 다운로드/설치·포트 강제 해제·타 프로세스 종료가 필요하면 **STOP** | 대기 |
