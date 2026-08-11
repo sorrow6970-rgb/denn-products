@@ -2934,3 +2934,159 @@ emulator 사전 확인 결과(Java 21.0.11 · firebase-tools 15.22.4 전역 · j
 - **다음**: **Codex 최종 계약 검토**. 결과와 다음 지시를 `Automation/NEXT_CLAUDE_PROMPT.md`에 남긴다.
   그 전까지 Claude는 새 작업을 시작하지 않는다. `fix_round: 3 / max 3`에 도달했으므로,
   추가 교정이 필요하면 **라운드 한도를 넘기지 말고 Founder 확인을 먼저 받아야 한다.**
+
+## 2026-08-11 — Codex 스펙 037 최종 계약 검토 · CONTRACT_PASSED
+
+- **검수 대상**: 최종 보완 계약 `9805c26` + 상태 동기화 `2f0ca7d`.
+- HEAD=origin=`2f0ca7d`, ahead/behind 0/0.
+- `git diff --check f694211..9805c26` **PASS**.
+- `git diff --check 9805c26..2f0ca7d` **PASS**.
+- 보완 커밋은 허용 문서 6개, 동기화 커밋은 상태 문서 4개뿐이다.
+- 금지된 제품/Rules/config/test/lockfile diff 0, emulator/Firebase/network/live/배포 실행 0.
+
+### 최종 판정
+
+**스펙 037 C5 계약은 PASS다.**
+
+- `save` 8개 `WRITE_*`와 `loadBaseline`의 기존 read 오류 +
+  `REBUILD_BASELINE_INVALID` 표면이 분리돼 의미가 정확하다.
+- timeout은 원 transaction을 취소하지 않는다는 전제와 bounded reconciliation 5분기가 일치한다.
+- base 관측은 `WRITE_COMMIT_OUTCOME_UNKNOWN`, base+1의 다른 objectPath는 `WRITE_CONFLICT`,
+  exact operation path만 성공 확정으로 처리한다.
+- fake와 emulator가 증명하는 범위가 분리돼 서로의 결론을 빌려 쓰지 않는다.
+- 최초 create의 `expectedBase === 0`, safe integer, callback 부작용 금지,
+  Rules get/list/create/update/delete 계약과 보호 경계가 유지된다.
+
+### 다음
+
+계약 §16이 port/Rules/config/test 구현 착수 여부를 Founder 확인 대상으로 남겼으므로
+상태를 **`FOUNDER_DECISION_REQUIRED`**로 전환한다. Codex가 권한을 추론하지 않는다.
+
+- 정확한 로컬 비-UI 구현 승인 범위와 복사 가능한 Founder 승인 문구를
+  `Automation/NEXT_CLAUDE_PROMPT.md`에 기록했다.
+- Founder 승인 전 Claude 작업과 저장소 쓰기·stage·commit·push·emulator 실행은 0이다.
+- 자동화나 반복 작업을 만들지 않는다.
+
+## 2026-08-11 — Founder 스펙 037 구현 착수 승인 기록 (문서 전용, 구현 미착수)
+
+> **★ 위의 Codex `CONTRACT_PASSED` 항목과 라운드 3·2·1·초판 항목은 삭제하지 않는다.**
+
+- **기준**: HEAD=origin=`2f0ca7d`, ahead/behind 0/0.
+- **승인 대상 계약**: **`9805c26`**(보완 라운드 3) — Codex 판정 **`CONTRACT_PASSED`**.
+- **정본 문서(신규)**:
+  `docs/codex-claude-handoff/decisions/2026-08-11-spec-037-implementation-authorization.md`
+  — **승인 원문을 그대로 수록**했다.
+- **상태**: `FOUNDER_DECISION_REQUIRED` → **`READY_FOR_CODEX`**.
+  **다음 주체 = Codex**(NEXT §3 **2단계**: 승인 기록과 최종 구현 허용 파일 확인).
+- **변경 파일(5, 전부 문서)**:
+  - `docs/codex-claude-handoff/decisions/2026-08-11-spec-037-implementation-authorization.md` (신규)
+  - `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md`
+  - `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
+  - ※ Codex가 작업 트리에 남긴 **`CONTRACT_PASSED` 검수 기록도 함께** 커밋한다.
+- **실행하지 않음**: 제품 코드·test·`storage.rules`·`firestore.rules`·`firebase.json`·
+  `firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc` 수정 **0** ·
+  신규 의존성 0 · **실제 emulator 실행 0** · 실제 Firebase/network/live/운영 데이터 접근 0 ·
+  upload/write/delete/publish/deploy 0 · force push·merge·rebase·`reset --hard`·broad delete 0 ·
+  자동화 생성 0.
+- **★ 구현은 아직 시작하지 않았다.** 승인은 났지만 **NEXT §3 순서상 2단계(Codex 확인)가 먼저**다.
+
+### 승인된 것
+
+**스펙 037 최종 C5 계약 `9805c26` 승인** + **계약에 명시된 로컬 비-UI 구현·검증 착수 승인**.
+
+- `packages/firebase/src/admin-write/**` — **write port + 합성 fake**
+- `packages/firebase/package.json` — **`./admin-write` 서브패스 export**
+- **배포하지 않는** `storage.rules` / `firestore.rules` **목표 파일**
+  — 실제 UID는 **UNCONFIRMED placeholder만**, **파일 편집만 허용하며 배포 금지**
+- **`firebase.emulator.json`** 신규 local-only config
+- **emulator 전용 Storage/Firestore Rules 사본**(합성 UID만)
+- `vitest.config.ts` · `vitest.emulator.config.ts` · `package.json`의 **opt-in emulator test 명령**
+- `*.emulator.test.ts` 및 관련 **unit/fake 테스트**
+- **기존에 캐시된 도구만** 이용한 **`demo-denn-emulator` 로컬 emulator 검증**
+- 계약 / STATE / NEXT / CURRENT / live / handoff **종료 문서**
+
+### 승인되지 않은 것
+
+**`apps/**`와 모든 UI 연결**(저장 버튼 · admin 화면 연결 · 실제 고객/운영 경로) ·
+**실제 운영자 UID 추측·기록** · **실제 Firebase project · 운영 bucket/data · live network** ·
+**Rules/Hosting 배포 · 운영 쓰기 활성화 · `published/state.json` 발행** ·
+**legacy `admin/state.json` 공유 쓰기** · **orphan 삭제/자동 정리 · client delete 권한** ·
+**tombstone/자동 merge/L-4 해결** · **신규 의존성 · 도구·binary 다운로드/설치** ·
+**실제 프로젝트 id 또는 `.firebaserc` 사용** · **자동화·반복 작업 생성**.
+
+### ★ 구현 시 유일한 허용 파일 목록 (승인 범위 = 계약 §10, 일치 확인함)
+
+```
+packages/firebase/src/admin-write/**          write port + 합성 fake (신규)
+packages/firebase/package.json                ./admin-write export 추가
+storage.rules                                 계약 §4.2 목표 상태 · placeholder UID · 배포 금지
+firestore.rules                               계약 §4.4 목표 상태 · placeholder UID · 배포 금지
+firebase.emulator.json                        신규 · local-only
+<emulator 전용 storage/firestore rules 사본>   합성 UID만
+vitest.config.ts                              *.emulator.test.ts 제외 추가
+vitest.emulator.config.ts                     신규
+package.json                                  test:emulator 스크립트 추가
+**/*.emulator.test.ts, 관련 unit/fake 테스트
+스펙 037 handoff / CURRENT / live / STATE / NEXT
+```
+
+**여전히 금지**: **`firebase.json`** · **루트 배럴 `packages/firebase/src/index.ts`** ·
+**`packages/firebase/src/admin-read/**`** · **`apps/**`** · `packages/render/**` ·
+`packages/shared/**` · `.firebaserc` · 실제 `.env` · legacy HTML.
+
+**★ `pnpm-lock.yaml` diff는 0이어야 한다** — 신규 의존성이 승인되지 않았으므로
+`pnpm install --frozen-lockfile`이 통과해야 하고, 변경이 필요해지면 **STOP**이다.
+
+### ★ emulator 실행 경계 (승인 문구의 "기존에 캐시된 도구만")
+
+**Java `openjdk 21.0.11 LTS`** · **firebase-tools 전역 `15.22.4`**(저장소 의존성 아님) ·
+**`cloud-firestore-emulator-v1.21.0.jar`** · **`cloud-storage-rules-runtime-v1.1.3.jar`** ·
+**`ui-v1.15.0`** — 2026-08-11 읽기 전용 확인 기준 전부 캐시돼 있다.
+
+- 실행은 **`--config firebase.emulator.json` 과 `--project demo-denn-emulator` 를 모두** 포함한다.
+- **host 환경변수가 없거나 project id가 `demo-` 접두가 아니면 테스트는 시작 전에 실패한다.**
+- **`.firebaserc`는 쓰지도 수정하지도 않는다.**
+- **다운로드·설치·신규 의존성·포트 강제 해제·타 프로세스 종료가 필요하면 실행하지 말고 STOP.**
+- ⚠️ **Auth emulator binary 가용성은 UNCONFIRMED** — **첫 실행에서 다운로드를 시도하면 즉시 STOP.**
+
+### 승인 후 순서 (NEXT §3)
+
+| 단계 | 주체 | 내용 | 상태 |
+| --- | --- | --- | --- |
+| **1** | Claude | 승인 원문 기록 · 문서 전용 fast-forward commit/push | **이 항목에서 완료** |
+| **2** | **Codex** | **승인 기록과 최종 구현 허용 파일 확인** | **다음 차례** |
+| 3 | Claude | 계약의 **비-UI 구현**을 별도 commit/push | 대기 |
+| 4 | Codex | frozen install · format/lint/typecheck · 전체 unit · 독립 build · 전체 Chromium E2E · diff check · forbidden diff · **고객 dist hash** · ports/temp | 대기 |
+| 5 | — | **기본 게이트와 분리한 local emulator 게이트 명시 실행**(문제 시 STOP) | 대기 |
+
+### 이 승인으로도 열리지 않는 것
+
+- **운영 쓰기 개방** — **실제 UID + orphan 보존/비용/정리 정책 + emulator PASS**가 모두 확인된 뒤
+  **별도 cutover 스펙 + 별도 Founder 승인**(계약 §9 · G-4 · G-5).
+- **Rules 배포** — **실제 UID 정본** 전 차단(G-1).
+  ⚠️ 배포하면 `denn-admin.html:740`의 저장이 서버에서 거부되므로 **배포 순서 자체가 STOP 대상**이다.
+- **C6**(Cloud Function/backend) 보류(G-3) · **L-4 삭제 부활 해결** 별도 후속 스펙(계약 §8).
+
+### NOT TESTED / UNCONFIRMED (승인으로 바뀌지 않는다)
+
+실제 Firebase 프로젝트 동작 전부(실제 Rules 배포·거부, 실제 bucket, 운영 데이터) ·
+**실제 운영자 UID와 계정 실재·로그인** · 실제 네트워크 지연·단절에서의 거동 ·
+실기기·다중 기기 동시 편집 · **Auth emulator binary 가용성** · 운영 규모 payload ·
+orphan 누적의 실제 비용 · `pnpm-workspace.yaml`의 `allowBuilds`(이월, 미해결).
+
+### 보호 대상 (전부 손대지 않음)
+
+`docs/rebuild/design/taste-v2/**` · `docs/rebuild/design/README.md` ·
+`docs/rebuild/specs/038-page-design-prototype.md` ·
+`docs/rebuild/results/spec-018/browse-desktop-1280x800.png` ·
+`docs/rebuild/results/spec-018/browse-mobile-390x844.png` · `packages/render/src/plan/index.ts`.
+
+### 검증
+
+- `git diff --check 2f0ca7d..HEAD` **PASS**
+- 변경 경로 = **허용 문서 5개뿐**(결정 정본 신규 + STATE/NEXT/CURRENT/live)
+- 제품 코드·test·Rules·config·lockfile·`.firebaserc` diff **0**
+- HEAD=origin, ahead/behind **0/0**
+- working tree = **보호 대상만**
+- **다음 상태**: `READY_FOR_CODEX`. **구현은 2단계 Codex 확인 후에 시작한다.**
+  자동화나 반복 작업은 만들지 않았다.

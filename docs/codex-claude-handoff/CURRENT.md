@@ -9,13 +9,66 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — 스펙 037 계약의 **보완 라운드 3(최종)**을 문서 전용으로 완료했다
-(2026-08-11, 기준 `f694211` → **보완 커밋 `9805c26`**). Codex가 지적한 최종 계약 결함 **2건을 정정**했다.
-`apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
-`firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc` diff **0**,
-신규 의존성 0, 실제 Firebase·network·live·**emulator 실행**·운영 데이터 접근 0,
-upload/write/publish/deploy 0, 자동화 생성 0. **구현 착수 0.**
-**다음 = Codex 최종 계약 검토.**
+상태: **`READY_FOR_CODEX` — Founder가 2026-08-11에 **스펙 037 최종 계약 `9805c26` 승인 + 로컬
+비-UI 구현·검증 착수를 승인**했고, 이번 라운드는 그 승인을 **문서에만** 기록했다(기준 `2f0ca7d`).
+정본 `decisions/2026-08-11-spec-037-implementation-authorization.md`(승인 원문 수록).
+제품 코드·`storage.rules`·`firestore.rules`·`firebase.json`·`firebase.emulator.json`·
+`package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc`·test diff **0**, 신규 의존성 0,
+실제 Firebase·network·live·**emulator 실행**·운영 데이터 접근 0, 자동화 생성 0.
+**★ 구현은 아직 시작하지 않았다** — NEXT §3 순서상 **2단계(Codex의 허용 파일 확인)** 가 먼저다.
+**다음 = Codex가 승인 기록과 최종 구현 허용 파일을 확인**한다.**
+
+> ### ★★ Founder 승인 (2026-08-11) — 계약 `9805c26` + 로컬 비-UI 구현 착수
+>
+> **승인된 것**: **admin-write port와 합성 fake** · **배포하지 않는 `storage.rules`/`firestore.rules`
+> 목표 파일**(실제 UID는 **UNCONFIRMED placeholder만**, **편집만 허용·배포 금지**) ·
+> **`firebase.emulator.json`과 emulator 전용 Rules 사본**(합성 UID만) ·
+> **opt-in unit/emulator 테스트**(`vitest.config.ts`·`vitest.emulator.config.ts`·`package.json`) ·
+> **기존 캐시 도구만 이용한 `demo-denn-emulator` 로컬 검증**까지.
+>
+> **승인되지 않은 것**: **`apps/**`와 모든 UI 연결**(저장 버튼·admin 화면·실제 고객/운영 경로) ·
+> **실제 운영자 UID 추측·기록** · **실제 Firebase project·운영 bucket/data·live network** ·
+> **Rules/Hosting 배포 · 운영 쓰기 활성화 · `published/state.json` 발행** ·
+> **legacy `admin/state.json` 공유 쓰기** · **orphan 삭제·자동 정리·client delete 권한** ·
+> **tombstone·자동 merge·L-4 해결** · **신규 의존성·도구/binary 다운로드·설치** ·
+> **실제 프로젝트 id 또는 `.firebaserc` 사용** · **자동화·반복 작업 생성**.
+>
+> ### ★ 구현 시 유일한 허용 파일 (승인 범위 = 계약 §10, 일치 확인함)
+>
+> `packages/firebase/src/admin-write/**` · `packages/firebase/package.json`(`./admin-write` export) ·
+> `storage.rules` · `firestore.rules`(**둘 다 placeholder UID · 배포 금지**) ·
+> `firebase.emulator.json` · emulator 전용 rules 사본 · `vitest.config.ts` ·
+> `vitest.emulator.config.ts` · `package.json`(`test:emulator`) · `**/*.emulator.test.ts`와
+> 관련 unit/fake · 스펙 037 handoff/CURRENT/live/STATE/NEXT.
+> **여전히 금지**: **`firebase.json`** · **루트 배럴** · **`packages/firebase/src/admin-read/**`** ·
+> **`apps/**`** · `packages/render/**` · `packages/shared/**` · `.firebaserc` · 실제 `.env` · legacy HTML.
+> **★ `pnpm-lock.yaml` diff 0** — 신규 의존성 미승인이므로 `--frozen-lockfile`이 통과해야 하고,
+> 변경이 필요해지면 **STOP**이다.
+>
+> ### ★ emulator 실행 경계
+>
+> **기존 캐시 도구만**(Java `21.0.11 LTS` · firebase-tools 전역 `15.22.4` ·
+> Firestore `v1.21.0.jar` · Storage rules runtime `v1.1.3.jar` · UI `v1.15.0`).
+> **`--config firebase.emulator.json` + `--project demo-denn-emulator` 둘 다** 명시하고,
+> **host 환경변수가 없거나 `demo-` 접두가 아니면 시작 전에 실패**한다. **`.firebaserc` 사용·수정 0.**
+> **다운로드·설치·신규 의존성·포트 강제 해제·타 프로세스 종료가 필요하면 STOP.**
+> ⚠️ **Auth emulator binary는 UNCONFIRMED** — **첫 실행에서 다운로드 시도 시 즉시 STOP.**
+>
+> ### 다음 순서 (NEXT §3)
+>
+> **1단계(이 커밋) 승인 기록 완료 → 2단계 Codex 확인 → 3단계 Claude 비-UI 구현 별도 commit/push →
+> 4단계 Codex 전체 게이트 검증(frozen·format/lint/typecheck·unit·build·Chromium E2E·diff·
+> forbidden·고객 dist hash·ports/temp) → 5단계 기본 게이트와 분리한 local emulator 게이트 명시 실행.**
+>
+> ### 이 승인으로도 열리지 않는 것
+>
+> **운영 쓰기 개방**(실제 UID + orphan 정책 + emulator PASS 후 **별도 cutover 스펙·별도 승인**) ·
+> **Rules 배포**(실제 UID 정본 전 차단 — ⚠️ 배포하면 `denn-admin.html:740`의 저장이 서버에서
+> 거부되므로 **배포 순서 자체가 STOP 대상**) · **C6**(G-3 보류) · **L-4 해결**(별도 스펙).
+
+> 아래 Codex 최종 계약 검토와 `보완 라운드 3` 기록은 `9805c26` 완료 이력이다.
+> **Codex 판정 = `CONTRACT_PASSED`**(HEAD=origin=`2f0ca7d`, `git diff --check` PASS,
+> 허용 문서 범위만 변경, 제품/Rules/config/test diff 0, emulator/Firebase/network/live 실행 0).
 
 > ### ★★ 보완 라운드 3 — 정정한 2건
 >

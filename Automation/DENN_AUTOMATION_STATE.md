@@ -5,21 +5,103 @@ updated_at: 2026-08-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-036-admin-auth-private-state-read
-active_unit: spec-037-admin-write-c5-emulator-contract   # CONTRACT CORRECTION ONLY; implementation not started
-state: READY_FOR_CODEX   # correction round 3 applied; Codex final contract review next
-baseline_commit: f694211
-candidate_commit: 9805c26   # docs-only contract after correction round 3; not yet approved
+active_unit: spec-037-admin-write-c5-emulator-implementation-authorization
+state: READY_FOR_CODEX   # Founder authorized the local non-UI implementation; Codex confirms the allowed files before Claude starts
+baseline_commit: 2f0ca7d
+candidate_commit: 9805c26   # docs-only final contract, CODEX CONTRACT_PASSED
 verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "correction round 3 started at HEAD=origin=f694211, ahead/behind 0/0; docs-only fast-forward commit carries Codex's round-3 review text too"
+origin_relation: "Founder authorization round started at HEAD=origin=2f0ca7d, ahead/behind 0/0; docs-only fast-forward commit carries Codex's CONTRACT_PASSED text too"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts + Founder-owned taste-v2 work (docs/rebuild/design/taste-v2/, docs/rebuild/design/README.md, docs/rebuild/specs/038-page-design-prototype.md); Claude must not restore/stage/commit any of them"
 fix_round: 3
 max_fix_rounds: 3
-next_transition: CODEX_FINAL_CONTRACT_REVIEW   # manual workflow; no automatic task
+next_transition: CODEX_CONFIRM_ALLOWED_FILES   # NEXT step 2; implementation starts only after that
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Founder 스펙 037 구현 착수 승인 기록 — 문서 전용 · READY_FOR_CODEX (2026-08-11)
+
+정본: **`docs/codex-claude-handoff/decisions/2026-08-11-spec-037-implementation-authorization.md`**
+(승인 원문 수록) · 기준 HEAD `2f0ca7d` · 승인 대상 계약 **`9805c26`**(Codex `CONTRACT_PASSED`).
+**문서 전용 — 제품 코드·`storage.rules`·`firestore.rules`·`firebase.json`·`firebase.emulator.json`·
+`package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc`·test diff 0**, 신규 의존성 0,
+실제 Firebase/network/live/**emulator 실행**/운영 데이터 접근 0, 자동화 생성 0.
+**★ 구현은 아직 시작하지 않았다** — NEXT §3 순서상 **2단계(Codex의 허용 파일 확인)** 가 먼저다.
+
+### 승인된 것
+
+**최종 계약 `9805c26` 승인** + **계약에 명시된 로컬 비-UI 구현·검증 착수 승인**.
+허용 범위: **admin-write port와 합성 fake** · **배포하지 않는 `storage.rules`/`firestore.rules`
+목표 파일**(실제 UID는 **UNCONFIRMED placeholder만**, **편집만 허용·배포 금지**) ·
+**`firebase.emulator.json`과 emulator 전용 Rules 사본**(합성 UID만) ·
+**opt-in unit/emulator 테스트**(`vitest.config.ts`·`vitest.emulator.config.ts`·`package.json` 명령) ·
+**기존 캐시 도구만 이용한 `demo-denn-emulator` 로컬 검증**까지.
+
+### 승인되지 않은 것
+
+**`apps/**`와 모든 UI 연결**(저장 버튼·admin 화면·실제 고객/운영 경로) · **실제 운영자 UID 추측·기록** ·
+**실제 Firebase project·운영 bucket/data·live network** · **Rules/Hosting 배포 · 운영 쓰기 활성화 ·
+`published/state.json` 발행** · **legacy `admin/state.json` 공유 쓰기** ·
+**orphan 삭제·자동 정리·client delete 권한** · **tombstone·자동 merge·L-4 해결** ·
+**신규 의존성·도구/binary 다운로드·설치** · **실제 프로젝트 id 또는 `.firebaserc` 사용** ·
+**자동화·반복 작업 생성**.
+
+### ★ 구현 시 유일한 허용 파일 목록 (승인 범위 = 계약 §10, 일치 확인함)
+
+`packages/firebase/src/admin-write/**` · `packages/firebase/package.json`(`./admin-write` export) ·
+`storage.rules` · `firestore.rules`(**둘 다 placeholder UID · 배포 금지**) ·
+`firebase.emulator.json` · emulator 전용 rules 사본 · `vitest.config.ts` ·
+`vitest.emulator.config.ts` · `package.json`(`test:emulator`) · `**/*.emulator.test.ts`와 관련 unit/fake ·
+스펙 037 handoff/CURRENT/live/STATE/NEXT.
+**여전히 금지**: **`firebase.json`** · **루트 배럴 `packages/firebase/src/index.ts`** ·
+**`packages/firebase/src/admin-read/**`** · **`apps/**`** · `packages/render/**` ·
+`packages/shared/**` · `.firebaserc` · 실제 `.env` · legacy HTML.
+**★ `pnpm-lock.yaml` diff는 0이어야 한다** — 신규 의존성이 승인되지 않았으므로
+`--frozen-lockfile`이 통과해야 하고, 변경이 필요해지면 **STOP**이다.
+
+### ★ emulator 실행 경계
+
+**기존 캐시 도구만**(Java `21.0.11 LTS` · firebase-tools 전역 `15.22.4` ·
+Firestore `v1.21.0.jar` · Storage rules runtime `v1.1.3.jar` · UI `v1.15.0`).
+**`--config firebase.emulator.json` + `--project demo-denn-emulator` 를 둘 다** 명시하고,
+**host 환경변수가 없거나 `demo-` 접두가 아니면 시작 전에 실패**한다. **`.firebaserc` 사용·수정 0.**
+**다운로드·설치·신규 의존성·포트 강제 해제·타 프로세스 종료가 필요하면 STOP.**
+⚠️ **Auth emulator binary는 UNCONFIRMED** — **첫 실행에서 다운로드를 시도하면 즉시 STOP.**
+
+### 다음 순서 (NEXT §3)
+
+**1단계(이 커밋) 승인 기록 완료 → 2단계 Codex가 승인 기록과 허용 파일 확인 →
+3단계 Claude가 비-UI 구현 별도 commit/push → 4단계 Codex 전체 게이트 검증 →
+5단계 기본 게이트와 분리한 local emulator 게이트 명시 실행(문제 시 STOP).**
+
+### 이 승인으로도 열리지 않는 것
+
+**운영 쓰기 개방**(실제 UID + orphan 정책 + emulator PASS 후 **별도 cutover 스펙·별도 승인**) ·
+**Rules 배포**(실제 UID 정본 전 차단 — ⚠️ 배포하면 `denn-admin.html:740`의 저장이 서버에서 거부되므로
+**배포 순서 자체가 STOP 대상**) · **C6**(G-3 보류) · **L-4 해결**(별도 스펙).
+
+> 아래 Codex 최종 계약 검토 기록과 그 아래 라운드 3·2·1·초판 기록은 **삭제하지 않는다.**
+
+## Codex 스펙 037 최종 계약 검토 — CONTRACT_PASSED / FOUNDER_DECISION_REQUIRED (2026-08-11)
+
+Codex는 보완 계약 `9805c26`과 상태 동기화 `2f0ca7d`를 최종 검토했다.
+
+- HEAD=origin=`2f0ca7d`, ahead/behind 0/0.
+- `git diff --check f694211..9805c26` PASS.
+- `git diff --check 9805c26..2f0ca7d` PASS.
+- 보완은 허용 문서 6개, 동기화는 상태 문서 4개뿐이다.
+- 제품/Rules/config/test/lockfile diff 0, emulator/Firebase/network/live 실행 0.
+- 라운드 3의 오류 표면 분리와 timeout reconciliation 정정이 계약 전반에 일치한다.
+
+**계약 판정은 PASS다.** 다만 정본 §16이 port/Rules/config/test 구현 착수 여부를
+Founder 확인 대상으로 남겼으므로 Codex가 권한을 추론하지 않는다.
+정확한 승인 범위와 복사 가능한 Founder 문구는 `Automation/NEXT_CLAUDE_PROMPT.md`에 기록했다.
+
+Founder 승인 전에는 저장소 쓰기·stage·commit·push와 구현/emulator 실행을 모두 금지한다.
+
+> 아래 `Claude 스펙 037 계약 보완 라운드 3 완료` 섹션은 `9805c26` 완료 이력이다.
 
 ## Claude 스펙 037 계약 보완 라운드 3 완료 — READY_FOR_CODEX (2026-08-11)
 
