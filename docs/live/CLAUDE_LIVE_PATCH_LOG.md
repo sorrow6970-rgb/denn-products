@@ -1868,3 +1868,149 @@ Firestore 청크(`firebase-firestore.js` 683,502 bytes)의 실제 번들 영향(
 
 - **다음 상태**: `FOUNDER_DECISION_REQUIRED`. 다음 스펙은 자동으로 시작하지 않는다.
   자동화나 반복 작업은 만들지 않았다.
+
+## 2026-08-11 — 스펙 037 후보 원자성 조사 **보완 라운드 1** (CORRECTION_REQUIRED, 문서 전용)
+
+> **★ 위의 2026-08-11 초판 항목은 삭제하지 않는다.** 아래가 그 정정 기록이며,
+> 초판의 5개 서술이 이 항목으로 **superseded** 된다.
+
+- **기준**: HEAD=origin=`9c57201`, ahead/behind 0/0.
+- **정정 커밋**: **`1e3fd74`** (일반 fast-forward push, `9c57201..1e3fd74`)
+- **초판 커밋**: `768eecf`(조사) + `9c57201`(라이브 로그) — 보존.
+- **상태**: `CORRECTION_REQUIRED` / `CLAUDE_WORKING` → **`READY_FOR_CODEX`**
+  **★ 아직 `FOUNDER_DECISION_REQUIRED`로 넘기지 않는다.**
+  **이 정정이 Codex 검수를 통과한 뒤에만 Founder G-1~G-5 결정을 요청한다.**
+- **변경 파일(4 + 이 로그 = 허용 5개)**:
+  - `docs/codex-claude-handoff/reviews/2026-08-11-admin-write-atomicity-investigation.md`
+  - `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md`
+  - `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
+- **실행하지 않음**: 제품 코드·test·CSS·config·manifest·`package.json`·lockfile·
+  `pnpm-workspace.yaml` 수정 0 · `storage.rules`/`firestore.rules`/`firebase.json` 수정 0 ·
+  신규 의존성 0 · 실제 Firebase/network/live/emulator/운영 데이터 요청 0 ·
+  upload/write/delete/publish/deploy 0 · force push·merge·rebase·`reset --hard` 0 ·
+  자동화 생성 0 · **스펙 037 계약·제품 코드 작성 0**.
+- **보호 대상 3개**(spec-018 PNG 2개 + content diff 0인 `packages/render/src/plan/index.ts`):
+  restore·checkout·stage·commit **하지 않았다**. 커밋 후에도 working tree에 그대로 남아 있다.
+
+### 정정 1 — Storage Rules의 객체 부재 판정 (초판이 틀렸다)
+
+- **초판 서술(폐기)**: "Storage Rules에 Firestore `exists()`에 해당하는 **객체 부재 판정 수단**이
+  있는지 **UNCONFIRMED**", "객체가 없을 때만 생성하는 문서화된 방법이 없다".
+- **정정**: 공식 Rules 참조는 **불변성 강제 예로 `allow write: if resource == null;`** 을 명시한다.
+  → `https://firebase.google.com/docs/reference/security/storage/`
+  **기존 객체가 없으면 `resource`가 null**이고, 이는 **불변 객체 경로에 적용 가능한 규칙**이다.
+  해당 UNCONFIRMED 항목을 **삭제**하고 보고서 §5.1에 근거로 편입했다.
+- **독립 교차 확인(이 세션에서 본문 취득 성공)**:
+  `https://firebase.google.com/docs/storage/security/rules-conditions` 가 `resource`를
+  **"file metadata for the file that *currently exists* at the request path"** 로 정의한다.
+  현재 존재하는 파일이 없으면 그 메타데이터도 없다 → `resource == null` = 객체 부재. **의미 일치.**
+- **⚠️ 취득 기록 정정**: `firebase.google.com/docs/reference/**` 계열은 이 세션 WebFetch로
+  **여전히 본문 미취득**(JS 렌더링 — `.../security/storage`, `.../security/storage/index.html`,
+  `.../js/storage`, `.../js/storage.uploadmetadata`, `firebase.google.cn` 미러까지 전부 재시도).
+  **위 인용의 출처는 Codex 검수**이며 이 문서가 그것을 채택한다.
+  초판이 **"미취득"을 근거로 "수단 없음/UNCONFIRMED"를 도출한 것이 결함**이다 —
+  **미취득은 도구의 한계이지 문서 부재의 증거가 아니다.** 보고서 §4.1에 그렇게 기록했다.
+
+### 정정 2 — 업로드와 metadata가 반드시 별개 요청이라는 단정 (초판이 틀렸다)
+
+- **초판 서술(폐기)**: "콘텐츠 업로드(POST)와 metadata 갱신(PATCH)은 **반드시** 별개 요청이다",
+  "업로드와 revision metadata는 비원자적인 별개 요청".
+- **정정 근거(공식)**: `https://firebase.google.com/docs/storage/web/upload-files` 가
+  `uploadBytes(storageRef, file, metadata)` 형태를 지원하고,
+  `https://firebase.google.com/docs/storage/web/file-metadata` 가 `customMetadata`를 쓰기 가능으로 둔다.
+- **정정 근거(설치된 SDK 실측, `@firebase/storage@0.14.4` `dist/index.esm.js`)**:
+  - `multipartUpload` `:1807-1821` — `toResourceString(metadata_)` 결과가
+    **바이트와 같은 multipart body의 첫 파트**로 들어간다.
+  - `createResumableUpload` `:1865-1876` — 메타데이터 JSON이 **세션 시작 요청의 body**다.
+  - 매핑 `:1443` `new Mapping('metadata','customMetadata', true)` → **customMetadata는 writable**.
+- **정정 결과**: **custom metadata는 업로드 동작에 포함될 수 있다.**
+  **`updateMetadata()`를 별도로 호출한 경우에만** 업로드와 PATCH가 별개다.
+- **★ 유지되는 결론**: 업로드에 metadata를 실어도 **서버 generation precondition/CAS는 생기지 않는다**
+  (업로드 요청 자체가 무조건적). → **Firebase Web SDK 공개 API에 조건부 덮어쓰기가 없다는 결론은 유지.**
+
+### 정정 3 — Rules 동시성 단정 제거 (자기모순 해소)
+
+- **초판의 모순**: Rules 평가와 write의 원자성을 **UNCONFIRMED**라 적으면서, 동시에
+  "**Rules는 동시 요청을 직렬화하지 않는다**", "**두 요청이 둘 다 통과한다**"고 **단정**하고
+  결정적 타임라인(t0/t1/t2/t3)을 제시했다.
+- **정정**: 그 단정과 타임라인을 **삭제**했다. 남긴 것은 사실 하나뿐이다 —
+  **"공식 문서에서 고정 경로 `rev+1` 검사가 compare-and-set처럼 동작한다는 보장을 찾지 못했다."**
+  근거: `https://firebase.google.com/docs/rules/rules-behavior` (Rules는 **요청 단위 평가**,
+  **원자성·트랜잭션성·동시 요청 처리 서술 없음**) · `https://firebase.google.com/docs/rules/rules-language`
+  (동일) · `https://docs.cloud.google.com/storage/docs/consistency`
+  (**동시 쓰기 승자 미문서화**, race 회피는 **preconditions**만 제시).
+- **C3 판정 변경**: **FAIL → `NOT PROVEN / UNCONFIRMED`.**
+  실패표의 해당 칸도 "FAIL 증명"이 아니라 **보장 근거 부재**로 표기했다.
+- **정책 결론(기록)**: F-E는 "원자성 확인 전까지 쓰기 차단"이므로
+  **확인되지 않은 방식으로 쓰기를 열 수 없다 → 차단 유지.**
+- **분리 명시**: **`resource == null` 불변성 규칙**(정정 1, VERIFIED)과
+  **고정 경로 revision CAS**(정정 3, NOT PROVEN)는 **별개 문제**다. 보고서 §5가 (A)/(B)로 나눠 기술한다.
+
+### 정정 4 — C5 이중 트랜잭션 모순 수정
+
+- **초판의 모순**: ① 트랜잭션으로 rev `N` 예약 → ② `rev-N.json` 업로드 → ③ `head==base`면 커밋.
+  **①이 head를 바꾸면 ③이 반드시 실패**하고, **①이 아무것도 기록하지 않으면 두 writer가 같은 N을 예약**해
+  같은 경로에 쓰게 되어 "덮어쓰기 0" 전제가 무너진다.
+- **정정된 후보 프로토콜(A~H, 단일 트랜잭션)** — 보고서 §6.4:
+  **A** payload별 **안정적인 고유 객체 경로**(random operation id 또는 content-addressed identifier).
+  **revision 번호를 경로에 쓰지 않는다** — 그것이 예약 트랜잭션을 필요하게 만든 원인이다 ·
+  **B** Storage Rules **`resource == null`** 로 기존 객체 덮어쓰기 **서버 금지** ·
+  **C** 객체 업로드 성공 **뒤에 Firestore 트랜잭션을 하나만** 실행 ·
+  **D** 저장 시작 시 캡처한 **`expectedBase`** 와 **현재 `head`** 비교 ·
+  **E** `head != expectedBase`이면 **자동으로 새 base를 채택하지 않고 명시적 충돌로 중단**
+  (조용한 재시도·자동 병합 금지) · **F** 일치할 때만
+  `head = { revision: expectedBase + 1, objectPath, 필요한 안전 metadata }` ·
+  **G** 두 writer 중 **한 명만** head를 바꾸고 다른 writer의 객체는 **orphan** ·
+  **H** **orphan 식별·보존·정리 정책은 Founder 결정 대상으로 유지**(G-4).
+- **반드시 명시한 것**:
+  - **Firestore 트랜잭션의 원자성은 Firestore 문서 안의 read/write에만 적용된다**
+    (`https://firebase.google.com/docs/firestore/manage-data/transactions`).
+  - **Storage 업로드는 그 트랜잭션에 포함되지 않는다.**
+  - **★ 이 설계가 안전할 수 있는 이유는 cross-service 원자성 때문이 아니라,
+    immutable 객체를 먼저 만들고 Firestore `head`만을 단일 가변 정본으로 삼기 때문이다.**
+    B의 서버 강제가 빠지면 논리가 성립하지 않는다.
+  - **실제 동시성·Rules 배포·브라우저 종료는 NOT VERIFIED**다.
+  - **C5를 PASS 또는 승인된 구조로 확정하지 않는다.**
+
+### 정정 5 — C6 판정 정밀화
+
+- **초판**: C6을 **"PASS"** 로 표기.
+- **정정(2층 분리)**:
+  - **조건부 쓰기 메커니즘 자체 = VERIFIED** — `ifGenerationMatch` 실패 시 **412 Precondition Failed**
+    보장. 근거 `https://docs.cloud.google.com/storage/docs/request-preconditions` ·
+    `https://docs.cloud.google.com/storage/docs/json_api/v1/objects/insert`.
+  - **DENN end-to-end 구조 = NOT DESIGNED / NOT VERIFIED** — Cloud Function/backend의 **인증**
+    (운영자 non-anon 검증)·**권한**(서비스 계정 범위)·**payload 제한**·**timeout**·**재시도 정책**·
+    **배포·운영 설계**가 전부 없다. 저장소에 함수 기반 자체가 없다(`firebase.json`에 `functions` 블록
+    없음, `functions/` 디렉터리 없음).
+- → **"C6 전체 PASS"라고 부르지 않는다.**
+
+### 정정 후 결론 (지시된 문구 그대로)
+
+- **Firebase Web SDK 공개 Storage API에는 generation 기반 조건부 쓰기가 확인되지 않았다.**
+- **기존 client-only + 현재 Rules로 E3-strong이 보장된다는 근거는 없다.**
+- **따라서 F-E에 따라 쓰기 구현은 계속 차단한다.**
+- **C5와 C6은 추가 권한이 필요한 후보이며 아직 Founder 선택이나 Codex 구조 승인을 받지 않았다.**
+- **조사 정정 후에만 Founder G-1~G-5 결정을 요청한다.**
+
+### 남은 UNCONFIRMED / NOT VERIFIED
+
+- **UNCONFIRMED**: 고정 경로 `rev+1`의 CAS 보장 · 덮어쓰기 `create`에서 `resource`가 이전 객체로
+  채워지는지 · `firebasestorage.googleapis.com/v0` 표면의 precondition 쿼리 수용 여부.
+- **해소됨(초판에서 삭제)**: "Storage Rules에 객체 부재 판정 수단이 있는지" → **`resource == null`**.
+- **NOT VERIFIED**: C5·C6의 실제 동시성 동작 · `resource == null` 규칙의 **실제 배포·거부 동작** ·
+  실제 412 · 브라우저 종료·네트워크 단절·인증 만료·중복 탭 실거동 · 실제 `admin/state.json` 내용 ·
+  L-1~L-4 재현 · 운영자 계정 실재·로그인 · 실기기 · Firestore 청크 번들 실측 ·
+  `firebase.google.com/docs/reference/**` 본문(이 세션 미취득) ·
+  `pnpm-workspace.yaml`의 `allowBuilds`(이월, 미해결).
+
+### 검증
+
+- `git diff --check` **PASS**(exit 0) · 변경 경로 = **허용 문서 5개뿐**
+- `apps/**`·`packages/**`·`tests/**`·`package.json`·lockfile·`pnpm-workspace.yaml` diff **0**
+- `storage.rules`·`firestore.rules`·`firebase.json` diff **0**
+- HEAD=origin=`1e3fd74`, ahead/behind **0/0**
+- working tree = **보호 대상 3개뿐**(spec-018 PNG 2개 + content diff 0인
+  `packages/render/src/plan/index.ts`) — restore·checkout·stage·commit 하지 않음
+- **다음 상태**: `READY_FOR_CODEX`. Codex가 보완 라운드 1을 검토한다.
+  다음 스펙은 시작하지 않았고 자동화도 만들지 않았다.
