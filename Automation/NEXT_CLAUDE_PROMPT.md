@@ -2,7 +2,7 @@
 
 상태: `READY_FOR_CODEX`
 active_unit: `spec-037-admin-write-c5-emulator-contract` (**계약 보완 라운드 3 완료 · 구현 미착수**)
-fix_round: 3 / max 3 · 기준 `f694211` → 보완 커밋(후속 동기화 커밋에서 hash 확정)
+fix_round: 3 / max 3 · 기준 `f694211` → **보완 커밋 `9805c26`** (+ 상태 동기화 커밋)
 다음 주체: **Codex** — **최종 계약 검토**
 
 **Codex가 지적한 최종 계약 결함 2건을 문서 전용으로 정정했다.** 구현은 시작하지 않았다.

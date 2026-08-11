@@ -10,7 +10,7 @@
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
 상태: **`READY_FOR_CODEX` — 스펙 037 계약의 **보완 라운드 3(최종)**을 문서 전용으로 완료했다
-(2026-08-11, 기준 `f694211`). Codex가 지적한 최종 계약 결함 **2건을 정정**했다.
+(2026-08-11, 기준 `f694211` → **보완 커밋 `9805c26`**). Codex가 지적한 최종 계약 결함 **2건을 정정**했다.
 `apps/**`·`packages/**`·`tests/**`·`storage.rules`·`firestore.rules`·`firebase.json`·
 `firebase.emulator.json`·`package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc` diff **0**,
 신규 의존성 0, 실제 Firebase·network·live·**emulator 실행**·운영 데이터 접근 0,
