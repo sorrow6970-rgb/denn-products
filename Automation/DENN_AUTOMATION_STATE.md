@@ -5,21 +5,104 @@ updated_at: 2026-08-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-036-admin-auth-private-state-read
-active_unit: spec-037-admin-write-c5-emulator-implementation-authorization
-state: READY_FOR_CODEX   # Founder authorized the local non-UI implementation; Codex confirms the allowed files before Claude starts
-baseline_commit: 2f0ca7d
-candidate_commit: 9805c26   # docs-only final contract, CODEX CONTRACT_PASSED
+active_unit: spec-037-admin-write-c5-emulator-implementation   # local non-UI implementation landed
+state: READY_FOR_CODEX   # non-UI implementation pushed; Codex runs the independent gates next
+baseline_commit: f8590e4
+candidate_commit: d83aee9   # spec 037 non-UI implementation (contract 9805c26, authorization 4f2ab0b)
 verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "Founder authorization round started at HEAD=origin=2f0ca7d, ahead/behind 0/0; docs-only fast-forward commit carries Codex's CONTRACT_PASSED text too"
+origin_relation: "implementation round ran f8590e4 -> d83aee9 (fast-forward); HEAD=origin, ahead/behind 0/0"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts + Founder-owned taste-v2 work (docs/rebuild/design/taste-v2/, docs/rebuild/design/README.md, docs/rebuild/specs/038-page-design-prototype.md); Claude must not restore/stage/commit any of them"
 fix_round: 3
 max_fix_rounds: 3
-next_transition: CODEX_CONFIRM_ALLOWED_FILES   # NEXT step 2; implementation starts only after that
+next_transition: CODEX_INDEPENDENT_GATES   # NEXT step 4; then the separate local emulator gate
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## Claude 스펙 037 C5 비-UI 구현 완료 — READY_FOR_CODEX (2026-08-11)
+
+구현 커밋 **`d83aee9`**(기준 `f8590e4`, fast-forward push, HEAD=origin, ahead/behind 0/0).
+권한: Founder 승인 `4f2ab0b` + 허용 범위 검토 `f8590e4`(**A-12·A-13 확장 포함**). 계약 `9805c26`.
+
+### 구현 범위 (허용 목록 안에서만)
+
+`packages/firebase/src/admin-write/**`(신규 9파일: constants·types·errors·head·facade·write-port·
+sdk-facade·index·emulator-env) · `packages/firebase/package.json`(`./admin-write` export) ·
+`storage.rules`·`firestore.rules`(**목표 상태, placeholder UID, 배포 0**) ·
+`firebase.emulator.json` + emulator rules 사본 2개 · `vitest.config.ts`·`vitest.emulator.config.ts`·
+`package.json` · **A-12 `.gitignore` 한 줄** · **A-13 `scripts/check.mjs` 파일명 1개**.
+**`firebase.json`·루트 배럴·`admin-read/**`·`apps/**`·`.firebaserc` 무변경.**
+
+### 설계 요지
+
+`save`는 **operationId를 호출당 1회** 발급하고(재시도·callback 재실행에서 재발급 0) 업로드한 뒤
+**`runTransaction`을 정확히 1회** 호출한다. **callback은 순수**해서 SDK가 여러 번 돌려도 안전하다.
+**head 부재 = 논리 revision 0**이며 **`expectedBase === 0`일 때만** revision 1을 만든다.
+결과 불명일 때만 **read-only bounded reconciliation 1회**를 돌리고, **base 관측은 미판정**으로 남긴다
+(**timeout은 SDK transaction을 취소하지 않는다**). `loadBaseline`은 head 없으면
+**스펙 036 read port를 그대로 재사용**하고, head가 있으면 **그 객체만** 읽으며 legacy fallback 0이다.
+
+### 게이트 실측
+
+frozen install **PASS · lockfile diff 0**(신규 의존성 0) · `pnpm check` **PASS** ·
+**unit 1305/1305**(1271 → **+34**) · **Chromium E2E 134/134**(무회귀) ·
+**★ 고객 번들 byte-identical** — `apps/mockup/dist/assets/index-W_cZpbdf.js` · **287,741 bytes** ·
+`fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685`,
+유출 문자열(`admin-write`·`rebuildAdminState`·`firebase/firestore`) **0건** ·
+`git diff --check` **PASS** · ports 4183/4184·8080/9099/9199 전후 **free**.
+
+### ★ emulator 게이트 — 실제 Rules로 **10/10 PASS**
+
+`firebase emulators:exec --config firebase.emulator.json --project demo-denn-emulator` 로
+**기본 게이트와 분리해 명시 실행**. **다운로드·설치·신규 의존성·포트 강제 해제·프로세스 종료 0**,
+emulator가 `Detected demo project ID "demo-denn-emulator"` 확인, 종료 후 잔여 0, 디버그 로그 산출물 0.
+검증: 승인 UID만 가능 / **다른 UID·익명·미인증 거부**(양 서비스) / **동일 경로 재업로드·delete·
+비-JSON contentType 거부** / **head `get` 허용·타 identity 거부·`list` 거부** /
+**키 4개·잘못된 objectPath·최초 revision≠1·`+2`·동일 revision·`objectPath` 미교체 거부**,
+정상 `+1`+경로 교체 통과, head delete 거부 / **두 writer 동시 commit → 정확히 하나만 성공,
+head 정확히 +1, 진 쪽 객체는 orphan이고 head 불변**.
+> ⚠️ 첫 실행 1건 실패는 **rule이 정상 동작한 결과**였다 — `resetEmulatorState`가 Firestore만 비워
+> E-3의 "첫" 업로드가 실은 덮어쓰기였고 create-only가 거부했다. **테스트가 시나리오마다 새 경로를
+> 쓰도록 고쳤고 제품 코드는 바뀌지 않았다.**
+
+### fake 게이트 34개
+
+호출 순서 · **callback 4회 재실행에도 upload 1회·UUID 1회·`runTransaction` 1회** ·
+**재실행 중 head가 움직여도 `expectedBase` 자동 재채택 0** · upload 실패 시 transaction 0회 ·
+미인증에서 네트워크 0 · **단일 in-flight** · **reconciliation 5분기**(read 최대 1회·재업로드 0·
+재transaction 0) · **명확한 reject는 reconciliation 0회** · §5.7 범위(무효 base는 Storage 0회) ·
+§4.3 최초 create 분기 · baseline 5분기 · **비노출**(오류 직렬화에 raw message·operationId·
+objectPath 0건, 키 정확히 4개) · **Rules 사본이 UID 라인만 다름** + **배포본에 placeholder 잔존** 고정.
+
+### 경계 (정직하게)
+
+**합성 fake는 서버 Rules 원자성을 증명하지 않고, emulator는 앱 오류 분기 전체를 증명하지 않는다.**
+callback 재실행·commit outcome unknown은 **결정적·비파괴적 seam이 없어 fake 전용**이며
+emulator 증명이라 주장하지 않는다. **emulator는 실제 Firebase가 아니다.**
+
+### 계속 닫혀 있는 것
+
+`apps/**`와 모든 UI 연결 · 저장 버튼 · **실제 UID** · 실제 Firebase/network/live/운영 데이터 ·
+**Rules·Hosting 배포** · 운영 쓰기 활성화 · 발행 · legacy 공유 쓰기 · orphan 삭제·자동 정리 ·
+tombstone·자동 merge · 신규 의존성·다운로드·설치 · `firebase.json`·루트 배럴·`admin-read/**`·`.firebaserc`.
+⚠️ **Rules는 편집만 했고 배포하지 않았다.** 배포하면 `denn-admin.html:740`의 저장이 서버에서
+거부되므로 **배포 순서 자체가 STOP 대상**이다(계약 §9).
+
+### NOT TESTED / UNCONFIRMED
+
+실제 Firebase 프로젝트 동작 전부 · **실제 운영자 UID·계정 실재·로그인** · 실제 네트워크 지연·단절 ·
+실기기·다중 기기 동시 편집 · 운영 규모 payload · orphan 누적 실제 비용 · **L-4**(범위 밖) ·
+`pnpm-workspace.yaml`의 `allowBuilds`(이월).
+
+### 다음
+
+**NEXT §3 4단계 — Codex 독립 게이트 검증**(frozen · format/lint/typecheck · unit · build ·
+Chromium E2E · diff check · forbidden diff · **고객 dist hash** · ports/temp),
+이어서 **5단계 local emulator 게이트 명시 실행**.
+
+> 아래 승인·검토 기록과 Codex `CONTRACT_PASSED` 기록은 **삭제하지 않는다.**
 
 ## Claude 스펙 037 승인 유효성 확정 + 구현 허용 범위 검토 — READY_FOR_CODEX (2026-08-11)
 

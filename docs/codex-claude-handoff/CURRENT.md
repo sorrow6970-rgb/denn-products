@@ -9,15 +9,63 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` — Founder가 2026-08-11에 **스펙 037 최종 계약 `9805c26` 승인 + 로컬
-비-UI 구현·검증 착수를 승인**했고, 이번 라운드는 그 승인을 **문서에만** 기록했다
-(기준 `2f0ca7d` → **승인 기록 커밋 `4f2ab0b`**).
-정본 `decisions/2026-08-11-spec-037-implementation-authorization.md`(승인 원문 수록).
-제품 코드·`storage.rules`·`firestore.rules`·`firebase.json`·`firebase.emulator.json`·
-`package.json`·lockfile·`pnpm-workspace.yaml`·`.firebaserc`·test diff **0**, 신규 의존성 0,
-실제 Firebase·network·live·**emulator 실행**·운영 데이터 접근 0, 자동화 생성 0.
-**★ 구현은 아직 시작하지 않았다** — NEXT §3 순서상 **2단계(Codex의 허용 파일 확인)** 가 먼저다.
-**다음 = Codex가 승인 기록과 최종 구현 허용 파일을 확인**한다.**
+상태: **`READY_FOR_CODEX` — 스펙 037 **C5 비-UI 구현이 들어갔다**(2026-08-11, 구현 커밋
+**`d83aee9`**, 기준 `f8590e4`). 권한 = Founder 승인 `4f2ab0b` + 허용 범위 검토 `f8590e4`
+(**A-12·A-13 확장 포함**), 계약 `9805c26`.
+정본 `decisions/2026-08-11-spec-037-implementation-authorization.md`.
+**다음 = Codex 독립 게이트 검증**(NEXT §3 4단계), 이어서 **5단계 local emulator 게이트 명시 실행**.**
+
+> ### ★★ 게이트 실측 (구현 `d83aee9`)
+>
+> | 게이트 | 결과 |
+> | --- | --- |
+> | frozen install | **PASS**, **lockfile diff 0**(신규 의존성 0) |
+> | `pnpm check` | **PASS**(format·lint·typecheck·unit·build) |
+> | unit | **1305/1305** (기준 1271 → **+34**) |
+> | Chromium E2E | **134/134** (무회귀) |
+> | **고객 번들** | **★ byte-identical** — `apps/mockup/dist/assets/index-W_cZpbdf.js` · **287,741 bytes** · `fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685` |
+> | 고객 번들 유출 문자열 | `admin-write`·`rebuildAdminState`·`firebase/firestore` **0건** |
+> | **emulator 게이트** | **★ 실제 Rules로 10/10 PASS** (기본 게이트와 분리 실행) |
+> | `git diff --check` · ports | **PASS** · 4183/4184·8080/9099/9199 전후 **free** |
+>
+> ### 구현된 것
+>
+> `packages/firebase/src/admin-write/**`(신규 9파일) · `./admin-write` 서브패스 export ·
+> `storage.rules`/`firestore.rules` **목표 상태**(placeholder UID, **배포 0**) ·
+> `firebase.emulator.json` + emulator rules 사본 2개 · `vitest.config.ts`/`vitest.emulator.config.ts`/
+> `package.json` · **A-12 `.gitignore` 한 줄** · **A-13 `scripts/check.mjs` 파일명 1개**.
+> **`firebase.json`·루트 배럴·`admin-read/**`·`apps/**`·`.firebaserc` 무변경.**
+>
+> **설계**: `save`는 **operationId를 호출당 1회** 발급하고(재시도·callback 재실행에서 재발급 0)
+> 업로드 후 **`runTransaction`을 정확히 1회** 호출한다. **callback은 순수**라 SDK가 여러 번 돌려도
+> 안전하다. **head 부재 = 논리 revision 0**이고 **`expectedBase === 0`일 때만** revision 1을 만든다.
+> 결과 불명일 때만 **bounded read 1회**로 판정하고 **base 관측은 미판정**으로 남긴다
+> (**timeout은 SDK transaction을 취소하지 않는다**). `loadBaseline`은 head 없으면
+> **스펙 036 read port를 그대로 재사용**하고, head가 있으면 **그 객체만** 읽으며 **legacy fallback 0**.
+>
+> ### emulator에서 실제 Rules로 확인된 것 (E-1~E-8)
+>
+> 승인 UID만 가능 / **다른 UID·익명·미인증 거부**(Storage·Firestore 양쪽) /
+> **동일 경로 재업로드·delete·비-JSON contentType 거부** /
+> **head `get` 허용·타 identity 거부·`list` 거부** / **키 4개·잘못된 objectPath·최초 revision≠1·
+> `+2`·동일 revision·`objectPath` 미교체 거부**, 정상 `+1`+경로 교체 통과, head delete 거부 /
+> **두 writer 동시 commit → 정확히 하나만 성공하고 head는 정확히 +1**, **진 쪽 객체는 orphan,
+> head 불변**. **다운로드·설치·포트 강제 해제·프로세스 종료 0.**
+> ⚠️ 첫 실행 1건 실패는 **rule이 정상 동작한 결과**였다(Storage가 리셋되지 않아 setup 업로드가
+> 덮어쓰기가 됐고 create-only가 거부). **테스트만 고쳤고 제품 코드는 바뀌지 않았다.**
+>
+> ### 경계 (정직하게)
+>
+> **합성 fake는 서버 Rules 원자성을 증명하지 않고, emulator는 앱 오류 분기 전체를 증명하지 않는다.**
+> callback 재실행·commit outcome unknown은 **fake 전용**이며 emulator 증명이라 주장하지 않는다.
+>
+> ### 계속 닫혀 있는 것
+>
+> `apps/**`와 모든 UI 연결 · 저장 버튼 · **실제 UID** · 실제 Firebase/network/live/운영 데이터 ·
+> **Rules·Hosting 배포** · 운영 쓰기 · 발행 · legacy 공유 쓰기 · orphan 삭제·자동 정리 ·
+> tombstone·자동 merge · 신규 의존성·다운로드·설치.
+> ⚠️ **Rules는 편집만 했고 배포하지 않았다** — 배포하면 `denn-admin.html:740`의 저장이 서버에서
+> 거부되므로 **배포 순서 자체가 STOP 대상**이다.
 
 > ### ★★ 승인 유효성 확정 + 구현 허용 범위 검토 (2026-08-11, 읽기 전용)
 >

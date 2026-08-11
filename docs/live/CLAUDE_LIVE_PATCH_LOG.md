@@ -3181,3 +3181,122 @@ orphan 누적의 실제 비용 · `pnpm-workspace.yaml`의 `allowBuilds`(이월,
   `package.json`·lockfile·`pnpm-workspace.yaml`·`.gitignore`·`scripts/check.mjs`·`.firebaserc`
   diff **0** — **확장이 승인됐을 뿐 아직 아무것도 편집하지 않았다**
 - HEAD=origin, ahead/behind **0/0** · working tree = **보호 대상만**
+
+## 2026-08-11 — 스펙 037 C5 비-UI 구현 완료 (구현 커밋 `d83aee9`)
+
+- **기준**: HEAD=origin=`f8590e4` → **구현 커밋 `d83aee9`** (fast-forward push, ahead/behind 0/0).
+- **권한**: Founder 승인 `4f2ab0b` + 허용 범위 검토 `f8590e4`(A-12·A-13 확장 포함).
+  Founder가 승인 유효성을 재확인하고 구현 착수를 지시했다.
+- **상태**: `READY_FOR_CODEX` — **Codex 전체 게이트 검증(NEXT §3 4단계)** 차례.
+
+### 구현한 것
+
+- **`packages/firebase/src/admin-write/**`** (신규 9파일) — `constants` · `types`(공개 타입 전부) ·
+  `errors`(두 오류 표면) · `head`(스키마·범위 검증) · `facade`(주입 경계) ·
+  `write-port`(port 본체) · `sdk-facade`(동적 import 실 어댑터) · `index`(배럴) ·
+  `emulator-env`(emulator 하네스, 배럴 미노출).
+- **`packages/firebase/package.json`** — `./admin-write` 서브패스 export(기존 `./admin-read`와 동일 패턴).
+  **루트 배럴 무변경**, **`admin-read/**` 무변경**.
+- **`storage.rules`·`firestore.rules`** — 계약 목표 상태. **UNCONFIRMED placeholder UID**.
+  **`op()` 무변경**(레거시 발행·자산 업로드가 함께 잠기지 않는다) · `admin/` write 닫힘 ·
+  `rebuild-admin-state/objects/{id}` **create-only**(`resource == null`, update/delete 거부) ·
+  head는 **`get`은 head 문서만 / `list` 거부 / create `revision==1` / update 정확히 `+1` +
+  `objectPath` 교체 / delete 거부**. `spaces`·catch-all 무변경.
+- **`firebase.emulator.json`** + **`storage.emulator.rules`·`firestore.emulator.rules`**
+  — emulator 전용. **`firebase.json` 무수정**.
+- **`vitest.config.ts`**(`*.emulator.test.ts` 제외) · **`vitest.emulator.config.ts`** ·
+  **`package.json`**(`test:emulator` + format/lint 대상).
+- **A-12 `.gitignore`** 한 줄(`!firebase.emulator.json`) · **A-13 `scripts/check.mjs`** 파일명 1개.
+
+### 설계 요지
+
+`save`는 **operationId를 호출당 1회** 발급하고(재시도·callback 재실행에서 재발급 0),
+업로드한 뒤 **`runTransaction`을 정확히 1회** 호출한다. callback은 **순수**해서 SDK가 여러 번
+돌려도 안전하다(UUID 발급·업로드·로그·로컬 revision 변경 전부 callback 밖).
+**head 부재 = 논리 revision 0**이며 **`expectedBase === 0`일 때만** revision 1을 만든다.
+transaction 결과가 불명확할 때만 **read-only bounded reconciliation 1회**를 수행하고,
+**base 관측은 "아직 아님"이라 미판정(`WRITE_COMMIT_OUTCOME_UNKNOWN`)** 으로 남긴다 —
+**timeout은 SDK transaction을 취소하지 않기 때문**이다.
+`loadBaseline`은 head 없으면 **스펙 036 read port를 그대로 재사용**해 legacy를 revision 0으로 읽고,
+head가 있으면 **그 객체만** 읽으며 **legacy로 조용히 fallback하지 않는다**.
+
+### 게이트 실측
+
+| 게이트 | 결과 |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | **PASS**, **lockfile diff 0**(신규 의존성 0) |
+| `pnpm check`(format·lint·typecheck·unit·build) | **PASS** |
+| unit | **1305/1305** (기준 1271 → **+34**) |
+| Chromium E2E | **134/134** (기준과 동일, 무회귀) |
+| **고객 번들** | **byte-identical** — `apps/mockup/dist/assets/index-W_cZpbdf.js` · **287,741 bytes** · `fc7660e5730262888ea896a3ba5a9494c8ecb61e4d2e0a972849e72d0abf0685` |
+| 고객 번들 유출 문자열 | `admin-write`·`rebuildAdminState`·`rebuild-admin-state`·`firebase/firestore` **0건** |
+| `git diff --check` | **PASS** |
+| ports 4183/4184 · 8080/9099/9199 | 전후 **free** |
+
+### ★ emulator 게이트 — 실제 Rules로 10/10 PASS
+
+`firebase emulators:exec --config firebase.emulator.json --project demo-denn-emulator`
+로 **기본 게이트와 분리해 명시 실행**했다. **다운로드·설치·신규 의존성·포트 강제 해제·
+타 프로세스 종료 0**. emulator가 `Detected demo project ID "demo-denn-emulator"` 를 확인했고
+종료 후 잔여 프로세스·포트 없음. 디버그 로그 산출물도 남기지 않았다.
+
+검증된 항목(E-1~E-8): 승인 UID만 객체 생성·head get·head 쓰기 / **다른 UID·익명·미인증 거부**
+(Storage·Firestore 양쪽) / **동일 경로 재업로드 거부·delete 거부·비-JSON contentType 거부** /
+**head `get` 허용, 다른 identity 거부, `list` 거부** / **키 4개·잘못된 objectPath·최초 revision≠1 거부**,
+**`+2`·동일 revision·`objectPath` 미교체 거부**, **정상 `+1`+경로 교체는 통과**, **head delete 거부** /
+**두 writer 동시 commit → 정확히 하나만 성공하고 head는 정확히 +1**, **진 쪽 객체는 orphan으로
+남고 head는 불변**.
+
+> ⚠️ 첫 실행에서 1건이 실패했는데, 원인은 **rule이 정상 동작한 것**이었다 —
+> `resetEmulatorState`가 Firestore만 비우고 Storage는 남겨서 E-3의 "첫" 업로드가 실은 기존 객체
+> 덮어쓰기였고 create-only가 거부했다. **테스트가 매 시나리오마다 새 경로를 쓰도록 고쳤다**
+> (실제 save가 매번 새 UUID를 쓰는 것과 같은 형태). 제품 코드는 바뀌지 않았다.
+
+### fake 게이트 — 34개 (§7.5 B)
+
+호출 순서 고정 · **operationId 1회 발급**(callback 4회 재실행에도 upload 1회·UUID 1회·
+`runTransaction` 1회) · **callback 재실행 중 head가 움직여도 `expectedBase` 자동 재채택 0** ·
+upload 실패 시 **transaction 호출 0** · **미인증에서 네트워크 호출 0** · **단일 in-flight**
+(두 번째 호출이 같은 promise 반환) · **reconciliation 5분기**(성공 확정 / 다른 writer 승리 확정
+`WRITE_CONFLICT` / base 관측 미판정 / base+1 초과 미판정 / read 실패 미판정, **read 최대 1회·
+재업로드 0·재transaction 0**) · **명확한 reject는 reconciliation 0회** ·
+**§5.7 범위 검증**(무효 base는 Storage 호출 0회) · **§4.3 최초 create 분기**(head 부재 +
+`expectedBase≠0` → `WRITE_CONFLICT`, head 쓰기 0) · **baseline 5분기** ·
+**비노출**(raw message·operationId·objectPath가 오류 직렬화에 0건, 키는 정확히 4개) ·
+**Rules 사본이 UID 라인만 다름**을 고정하고 **배포본에 placeholder가 남아 있음**도 고정.
+
+### 정직하게 남기는 경계
+
+- **합성 fake는 서버 Rules 원자성을 증명하지 않고, emulator는 앱 오류 분기 전체를 증명하지 않는다.**
+  callback 재실행과 commit outcome unknown은 **결정적·비파괴적 seam이 없어 fake 전용**이며
+  emulator 증명이라고 주장하지 않는다.
+- **emulator는 실제 Firebase가 아니다.**
+
+### NOT TESTED / UNCONFIRMED
+
+실제 Firebase 프로젝트 동작 전부(실제 Rules 배포·거부, 실제 bucket, 운영 데이터) ·
+**실제 운영자 UID와 계정 실재·로그인** · 실제 네트워크 지연·단절 · 실기기·다중 기기 동시 편집 ·
+운영 규모 payload · orphan 누적 실제 비용 · **L-4 삭제 부활**(범위 밖) ·
+`pnpm-workspace.yaml`의 `allowBuilds`(이월).
+
+### 계속 닫혀 있는 것
+
+**`apps/**`와 모든 UI 연결 · 저장 버튼 · 실제 UID · 실제 Firebase/network/live/운영 데이터 ·
+Rules·Hosting 배포 · 운영 쓰기 활성화 · `published/state.json` 발행 · legacy 공유 쓰기 ·
+orphan 삭제·자동 정리 · tombstone·자동 merge · 신규 의존성·다운로드·설치 ·
+`firebase.json` · 루트 배럴 · `admin-read/**` · `.firebaserc`.**
+⚠️ **Rules는 편집만 했고 배포하지 않았다.** 실제 UID 정본 전 배포 금지이며,
+배포하면 `denn-admin.html:740`의 저장이 서버에서 거부되므로 **배포 순서 자체가 STOP 대상**이다.
+
+### 보호 대상 (전부 손대지 않음)
+
+`docs/rebuild/design/taste-v2/**` · `docs/rebuild/design/README.md` ·
+`docs/rebuild/specs/038-page-design-prototype.md` ·
+`docs/rebuild/results/spec-018/browse-desktop-1280x800.png` ·
+`docs/rebuild/results/spec-018/browse-mobile-390x844.png` · `packages/render/src/plan/index.ts`.
+
+### 다음
+
+**NEXT §3 4단계 — Codex가 frozen install · format/lint/typecheck · 전체 unit · 독립 build ·
+전체 Chromium E2E · diff check · forbidden diff · 고객 dist hash · ports/temp를 독립 검증**한다.
+이어서 **5단계 local emulator 게이트를 기본 게이트와 분리해 명시 실행**한다.
