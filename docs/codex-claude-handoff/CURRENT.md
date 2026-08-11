@@ -9,53 +9,88 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 037 후보 "운영자 저장 원자성·충돌 방지 계약"의
-읽기 전용 조사를 완료했다(2026-08-11, 기준 `68fe339`). 보고서
-`reviews/2026-08-11-admin-write-atomicity-investigation.md`. 문서 전용이며 제품 코드·테스트·config·
-lockfile·`storage.rules`·`firestore.rules`·`firebase.json` diff 0, 신규 의존성 0,
-실제 Firebase·network·live·emulator·운영 데이터 접근 0, upload/write/publish/deploy 0.**
+상태: **`READY_FOR_CODEX` — 스펙 037 후보 "운영자 저장 원자성·충돌 방지 계약" 조사의
+**보완 라운드 1(CORRECTION_REQUIRED)** 을 문서 전용으로 완료했다(2026-08-11, 기준 `9c57201`).
+보고서 `reviews/2026-08-11-admin-write-atomicity-investigation.md`. 제품 코드·테스트·config·
+manifest·`package.json`·lockfile·`pnpm-workspace.yaml`·`storage.rules`·`firestore.rules`·
+`firebase.json` diff 0, 신규 의존성 0, 실제 Firebase·network·live·emulator·운영 데이터 접근 0,
+upload/write/publish/deploy 0, 자동화 생성 0, 스펙 037 계약·제품 코드 작성 0.**
+**★ 아직 `FOUNDER_DECISION_REQUIRED`로 넘기지 않는다 — 이 정정이 Codex 검수를 통과한 뒤에만
+Founder G-1~G-5 결정을 요청한다.**
 
-> ### ★★ 결론 — **F-E는 해제되지 않았다. 쓰기 구현을 열지 않는다.**
+> ### ★★ 정정 후 결론 — **F-E는 해제되지 않았다. 쓰기 구현을 계속 차단한다.**
 >
-> **현재 client-only + 기존 Rules 경계에서 E3-strong은 구현 불가능**하다.
-> 1. **Firebase Web SDK 12.17.1(`@firebase/storage@0.14.4`)의 공개 Storage 쓰기 API에 조건부 쓰기가 없다.**
->    `uploadBytes`/`uploadBytesResumable`/`uploadString`/`updateMetadata` 인자는 `ref`/`data`/`metadata`뿐이고,
->    dist 전량 grep에서 `ifGenerationMatch`·`ifMetagenerationMatch`·`precondition`·`etag` **0건**.
-> 2. **★ 내부 구현이 구조적으로 막는다.** `generation`/`metageneration` mapping은 `writable=false`
->    (`index.esm.js:1413-1414`)이고 `toResourceString`(`:1505-1515`)이 writable만 직렬화한다 →
->    **요청 body에 실릴 수 없다.** 업로드 urlParams는 `{ name }`뿐(`:1825`·`:1866`),
->    updateMetadata PATCH에 `If-Match` 없음(`:1752-1764`).
->    **generation/metageneration은 `FullMetadata` 읽기 필드이지 쓰기 precondition 입력이 아니다.**
-> 3. **★ endpoint가 다르다** — 클라이언트는 `firebasestorage.googleapis.com/v0`(`:27`·`:571-577`),
->    `ifGenerationMatch`가 문서화된 곳은 `storage.googleapis.com` **GCS JSON API**다.
->    문서화되지 않은 우회는 제품 계약으로 쓰지 않는다.
-> 4. **★ Storage Rules만으로는 안 된다** — Rules는 **요청별 술어**라 같은 base로 동시에 `rev+1`을
->    제출하면 **둘 다 통과**한다. 공식 정의상 `create`="writes to file contents",
->    `update`="updates to (pre-existing) file **metadata**" 라 **콘텐츠 덮어쓰기는 `create`** 이고,
->    `request.resource`는 **`generation`·`metageneration`·`etag`를 제외**한다.
-> 5. **★ Firestore lock만으로도 안 된다** — cross-service 원자성이 **공식 문서에 없다**.
->    업로드 성공 후 revision 갱신 실패 / lease 만료+clock skew / **SDK 자동 재시도**(업로드 창 10분)의
->    늦은 도착에서 손실이 남는다.
-> 6. **열린 길은 둘뿐이고 둘 다 새 권한이 필요하다** — **C5**(Firestore head CAS +
->    **revision별 immutable 객체**, 덮어쓰기 0; 신규 의존성 0이나 **`firestore.rules` 변경 필수** —
->    현재 catch-all `allow read, write: if false`가 새 컬렉션을 전부 거부 — 그리고 orphan 정리 정책 필요) /
->    **C6**(서버·Cloud Function이 GCS JSON API `ifGenerationMatch`로 쓰기; 문서상 가장 확실한 **412**이나
->    **client-only 경계를 벗어나고** 저장소에 함수 기반이 **전무**).
-> 7. **★ 원자성은 L-4(삭제 부활)를 고치지 않는다** — 병합 의미론 문제이고 tombstone 계약이 따로 필요하다.
+> - **Firebase Web SDK 공개 Storage API에는 generation 기반 조건부 쓰기가 확인되지 않았다.**
+> - **기존 client-only + 현재 Rules로 E3-strong이 보장된다는 근거는 없다.**
+> - **따라서 F-E에 따라 쓰기 구현은 계속 차단한다.**
+> - **C5와 C6은 추가 권한이 필요한 후보이며 아직 Founder 선택이나 Codex 구조 승인을 받지 않았다.**
 >
-> **STOP — Founder 결정(승인된 적 없음)**: **G-1** `storage.rules` 변경 · **G-2** Firestore 사용 +
-> `firestore.rules` 변경 · **G-3** backend/Cloud Function · **G-4** 운영 비용·orphan 복구 정책 ·
-> **★ G-5 C5 / C6 / "쓰기를 계속 열지 않는다" 택일**("열지 않는다"도 정당한 선택지 — 그러면 운영자는
-> 계속 레거시 admin에서 저장한다).
+> ### 보완 라운드 1에서 정정한 5건 (초판 `768eecf`의 결함)
+>
+> 1. **★ Storage Rules의 객체 부재 판정 — 초판이 틀렸다.** 공식 Rules 참조는 불변성 강제 예로
+>    **`allow write: if resource == null;`** 을 명시한다
+>    (`firebase.google.com/docs/reference/security/storage/`). 초판의 **"객체 부재 판정 수단 없음 /
+>    UNCONFIRMED"** 주장을 **삭제**하고, **기존 객체가 없을 때 `resource`가 null이라는 근거**와
+>    **불변 객체 경로에 적용 가능한 규칙**임을 기록했다(§5.1).
+>    교차 확인: `storage/security/rules-conditions`가 `resource`를
+>    **"the file that *currently exists* at the request path"** 로 정의한다.
+>    ⚠️ 참조 페이지 본문은 이 세션 WebFetch로 **여전히 미취득**(JS 렌더링) — **인용 출처는 Codex 검수**이며
+>    §4.1이 그 사실과 교차 확인 근거를 함께 기록한다. **미취득은 도구 한계이지 문서 부재의 증거가 아니다.**
+> 2. **★ 업로드와 metadata가 반드시 별개 요청이라는 단정 — 틀렸다.**
+>    `uploadBytes(ref, file, metadata)`의 custom metadata는 **같은 업로드 동작에 실린다**
+>    (`index.esm.js:1807-1821` multipart body 첫 파트 / `:1865-1876` resumable 세션 시작 body).
+>    **`updateMetadata()`를 따로 호출한 경우에만** PATCH가 별개다.
+>    **단 업로드에 metadata를 실어도 서버 generation precondition/CAS가 생기지 않으므로,
+>    공개 API에 조건부 덮어쓰기가 없다는 결론은 유지된다.**
+> 3. **★ Rules 동시성 단정 제거(자기모순 해소).** "Rules는 동시 요청을 직렬화하지 않는다 /
+>    둘 다 통과한다"는 단정과 결정적 타임라인을 **삭제**했다. 남긴 사실은
+>    **"공식 문서에서 고정 경로 `rev+1` 검사가 compare-and-set처럼 동작한다는 보장을 찾지 못했다"** 뿐이다.
+>    **C3 판정 = FAIL → `NOT PROVEN / UNCONFIRMED`.** 정책 결론은
+>    **확인되지 않은 방식으로 쓰기를 열 수 없으므로 차단 유지**다.
+>    **`resource == null` 불변성 규칙과 고정 경로 revision CAS는 별개 문제**로 분리했다(§5).
+> 4. **★ C5 이중 트랜잭션 모순 수정.** 초판의 "예약 → 업로드 → 커밋"은 모순이었다(예약이 head를 바꾸면
+>    커밋의 `head==base`가 실패하고, 아무것도 기록하지 않으면 두 writer가 **같은 N을 예약**한다).
+>    **A~H 단일 트랜잭션 후보**로 재분석했다(§6.4): **A** operation id / content-addressed id 기반
+>    **고유 경로**(revision 번호를 경로에 쓰지 않는다) · **B** Storage Rules `resource == null`로
+>    **덮어쓰기 서버 금지** · **C** 업로드 성공 뒤 **Firestore 트랜잭션 하나만** ·
+>    **D** `expectedBase` vs 현재 head 비교 · **E** 불일치 시 **자동 재채택 없이 명시적 충돌 중단** ·
+>    **F** 일치 시에만 `head = {revision: expectedBase+1, objectPath, 안전 metadata}` ·
+>    **G** 한 명만 head 이동, 나머지는 **orphan** · **H** orphan 정책은 **Founder 결정 유지**.
+>    **명시**: Firestore 트랜잭션 원자성은 **Firestore 문서 안의 read/write에만** 적용되고
+>    **Storage 업로드는 트랜잭션에 포함되지 않는다.** 이 설계가 안전할 수 있는 이유는
+>    **cross-service 원자성 때문이 아니라 immutable 객체를 먼저 만들고 Firestore head만을 단일 가변
+>    정본으로 삼기 때문**이다. 실제 동시성·Rules 배포·브라우저 종료는 **NOT VERIFIED**이며
+>    **C5를 PASS나 승인된 구조로 확정하지 않는다.**
+> 5. **★ C6 판정 정밀화.** **GCS `ifGenerationMatch` 메커니즘 자체는 VERIFIED**(실패 시 **412** 보장).
+>    그러나 **DENN Cloud Function/backend의 인증·권한·payload 제한·timeout·재시도·배포·운영 설계가
+>    존재하지 않으므로 "C6 전체 PASS"라고 부르지 않는다** →
+>    **"메커니즘 후보 VERIFIED / DENN end-to-end 구조 NOT DESIGNED·NOT VERIFIED"**.
+>
+> ### 변하지 않은 SDK 실측 근거
+>
+> `@firebase/storage@0.14.4`의 쓰기 4종 인자는 `ref`/`data`/`metadata`뿐이고 dist 전량 grep에서
+> `ifGenerationMatch`·`ifMetagenerationMatch`·`precondition`·`etag` **0건**.
+> `generation`/`metageneration` mapping은 `writable=false`(`:1413-1414`)이고
+> `toResourceString`(`:1505-1515`)이 writable만 직렬화하므로 **요청 body에 실릴 수 없다**.
+> 업로드 urlParams는 `{ name }`뿐(`:1825`·`:1866`), `updateMetadata` PATCH에 `If-Match` 없음.
+> 클라이언트 endpoint는 `firebasestorage.googleapis.com/v0`(`:27`·`:571-577`)로
+> `ifGenerationMatch`가 문서화된 `storage.googleapis.com` **GCS JSON API와 다른 표면**이다.
+> **★ 원자성은 L-4(삭제 부활)를 고치지 않는다** — 병합 의미론 문제이고 tombstone 계약이 따로 필요하다.
+>
 > **Codex 후보(미결)**: Y-1 revision 형식(**generation은 단조 증가가 아니다**) ·
-> Y-2 격리 경로(**경로와 원자성 전략을 함께 정해야 한다**) · Y-3 port 경계(⚠️ **SDK 내부 재시도**로
-> "retry 0"이 port만으로 보장되지 않는다) · Y-4 충돌 오류 코드 · Y-5 합성 fake 범위
-> (동시성 재현 가능, **서버 원자성 증명 불가**) · Y-6 L-4 tombstone · Y-7 orphan 정리.
-> **UNCONFIRMED**: Rules 평가와 write의 원자성 · 덮어쓰기 `create`의 `resource` · Storage Rules의
-> "객체 부재" 판정 · `/v0`의 precondition 수용 · `docs/reference/js/storage*`와
-> `docs/reference/security/storage` 본문(JS 렌더링, 미취득 → 설치된 `storage-public.d.ts`로 대체).
-> **NOT VERIFIED**: C5·C6의 실제 동시성 동작 · 실제 412 · Rules 실제 배포·거부 ·
-> 실제 `admin/state.json` · L-1~L-4 재현 · Firestore 번들 실측.
+> **Y-2 격리 경로 — ★ 정정 반영**: C5는 revision 번호가 아니라 **operation id / content-addressed id
+> 기반 고유 경로**를 요구하며, 단일 고정 경로를 고르면 C5가 아니라 C3(미확인) 쪽이 된다 ·
+> Y-3 port 경계(⚠️ **SDK 내부 재시도**로 "retry 0"이 port만으로 보장되지 않는다) ·
+> Y-4 충돌 오류 코드 · Y-5 합성 fake 범위(호출 순서·충돌 분기 재현 가능, **서버 원자성·Rules 거부
+> 증명 불가**) · Y-6 L-4 tombstone · Y-7 orphan 식별·보존·정리 · Y-8 C3를 실제로 확인할지 포기할지.
+> **Founder 후보(지금 요청하지 않는다)**: G-1 `storage.rules` 변경 · G-2 Firestore +
+> `firestore.rules` 변경 · G-3 backend/Cloud Function · G-4 비용·orphan 정책 ·
+> G-5 C5 / C6 / "쓰기를 계속 열지 않는다" 택일.
+> **UNCONFIRMED**: 고정 경로 `rev+1`의 CAS 보장 · 덮어쓰기 `create`에서 `resource`가 채워지는지 ·
+> `/v0`의 precondition 수용 여부. **해소됨**: "객체 부재 판정 수단" → `resource == null`.
+> **NOT VERIFIED**: C5·C6의 실제 동시성 동작 · `resource == null` 규칙의 실제 배포·거부 · 실제 412 ·
+> 브라우저 종료·네트워크 단절·인증 만료·중복 탭 실거동 · 실제 `admin/state.json` · L-1~L-4 재현 ·
+> Firestore 번들 실측 · `docs/reference/**` 본문(이 세션 미취득).
 
 > **이전 상태(참고)** — `WAITING_FOR_NEXT_SPEC`. 스펙 036은 Codex 독립 재검증과 종료 문서 확인을
 모두 통과해 DONE이다(2026-08-10, 종료 문서 `a0543fb`).

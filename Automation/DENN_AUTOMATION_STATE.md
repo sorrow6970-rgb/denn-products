@@ -6,13 +6,13 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-036-admin-auth-private-state-read
 active_unit: spec-037-candidate-admin-write-atomicity-investigation   # READ-ONLY investigation, docs only
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 68fe339
+state: READY_FOR_CODEX   # correction round 1 applied; NOT FOUNDER_DECISION_REQUIRED yet
+baseline_commit: 9c57201
 candidate_commit: none (investigation is documentation only; no product code exists for spec 037)
 verified_commit: b7ee207   # product, CODEX_PASSED (fd92fbc implementation + round-1 corrections)
-origin_relation: "started at HEAD=origin=68fe339, ahead/behind 0/0; investigation pushed as ordinary fast-forward commits"
+origin_relation: "correction round 1 started at HEAD=origin=9c57201, ahead/behind 0/0; docs-only fast-forward commits"
 working_tree: "dirty: the two known spec-018 PNGs + content-diff-0 packages/render/src/plan/index.ts; Claude must not restore/stage/commit them"
-fix_round: 0
+fix_round: 1
 max_fix_rounds: 3
 next_transition: FOUNDER_EXPLICIT_RESUME   # manual workflow; no automatic next-spec start
 automation_loop: removed (no new automation or recurring task is created)
@@ -21,7 +21,91 @@ push_policy: fast-forward-only
 deploy: forbidden
 ```
 
-## Claude 운영자 저장 원자성 읽기 전용 조사 완료 — FOUNDER_DECISION_REQUIRED (2026-08-11)
+## Claude 원자성 조사 보완 라운드 1 — READY_FOR_CODEX (2026-08-11)
+
+보고서: `docs/codex-claude-handoff/reviews/2026-08-11-admin-write-atomicity-investigation.md`
+기준 HEAD `9c57201`. **문서 전용 — 제품 코드·테스트·CSS·config·manifest·`package.json`·lockfile·
+`pnpm-workspace.yaml`·`storage.rules`·`firestore.rules`·`firebase.json` diff 0**, 신규 의존성 0,
+실제 Firebase/network/live/emulator/운영 데이터 접근 0, upload/write/delete/publish/deploy 0,
+자동화 생성 0. **스펙 037 계약·제품 코드 작성 0.**
+**Founder G-1~G-5 결정은 아직 요청하지 않는다** — 이 정정이 Codex 검수를 통과한 뒤에 요청한다.
+
+### Codex 지적 5건을 정정했다
+
+1. **★ Storage Rules의 객체 부재 판정 — 초판이 틀렸다.** 공식 Rules 참조는 불변성 강제 예로
+   **`allow write: if resource == null;`** 을 명시한다(`firebase.google.com/docs/reference/security/storage/`).
+   초판의 **"객체 부재 판정 수단 없음 / UNCONFIRMED"** 주장을 **삭제**하고,
+   **기존 객체가 없을 때 `resource`가 null이라는 근거**와 **불변 객체 경로에 적용 가능한 규칙**임을
+   보고서 §5.1에 기록했다. 교차 확인: `storage/security/rules-conditions`가 `resource`를
+   **"the file that *currently exists* at the request path"** 로 정의한다.
+   ⚠️ **참조 페이지 본문은 이 세션 WebFetch로 여전히 미취득**(JS 렌더링, `.cn` 미러·`index.html` 포함
+   전부 재시도) — **인용 출처는 Codex 검수**이며, 보고서 §4.1이 그 사실과 교차 확인 근거를 함께 기록한다.
+   초판의 "본문 미취득" 기록은 **도구 한계이지 문서 부재의 증거가 아니다**로 정정했다.
+2. **★ 업로드와 metadata가 반드시 별개 요청이라는 단정 — 틀렸다.**
+   `uploadBytes(storageRef, file, metadata)` 형태가 공식 지원되고, 설치된 SDK 소스가
+   **metadata JSON이 바이트와 같은 multipart body의 첫 파트**(`index.esm.js:1807-1821`)이고
+   resumable에서는 **세션 시작 요청의 body**(`:1865-1876`)임을 보여 준다.
+   → **custom metadata는 업로드 동작에 포함될 수 있다**, **`updateMetadata()`를 따로 부른 경우에만
+   PATCH가 별개**로 정정했다. **단 업로드에 metadata를 실어도 서버 generation precondition/CAS가
+   생기지 않으므로, 공개 API에 조건부 덮어쓰기가 없다는 결론은 유지**한다.
+3. **★ Rules 동시성 단정 제거(자기모순 해소).** 초판은 원자성을 UNCONFIRMED라 적으면서 동시에
+   "Rules는 동시 요청을 직렬화하지 않는다 / 둘 다 통과한다"고 단정했다.
+   **단정과 결정적 타임라인을 삭제**하고, 남긴 것은
+   **"공식 문서에서 고정 경로 `rev+1` 검사가 compare-and-set처럼 동작한다는 보장을 찾지 못했다"** 뿐이다.
+   **C3 판정 = FAIL → `NOT PROVEN / UNCONFIRMED`.**
+   정책 결론: **확인되지 않은 방식으로 쓰기를 열 수 없으므로 F-E 차단을 유지한다.**
+   **`resource == null` 불변성 규칙과 고정 경로 revision CAS는 별개 문제**로 분리했다(보고서 §5).
+4. **★ C5 이중 트랜잭션 모순 수정.** 초판의 "예약 → 업로드 → 커밋"은 모순이다 —
+   예약이 head를 바꾸면 커밋의 `head==base`가 실패하고, 아무것도 기록하지 않으면 두 writer가
+   **같은 N을 예약**한다. **A~H 단일 트랜잭션 후보**로 다시 분석했다(보고서 §6.4):
+   **A** operation id / content-addressed id 기반 **고유 경로**(revision 번호를 경로에 쓰지 않는다) ·
+   **B** Storage Rules `resource == null`로 **덮어쓰기 서버 금지** · **C** 업로드 성공 뒤
+   **Firestore 트랜잭션 하나만** · **D** `expectedBase` vs 현재 head 비교 ·
+   **E** 불일치 시 **자동 재채택 없이 명시적 충돌 중단** · **F** 일치 시에만
+   `head = {revision: expectedBase+1, objectPath, 안전 metadata}` · **G** 한 명만 head 이동, 나머지는
+   **orphan** · **H** orphan 정책은 **Founder 결정 유지**.
+   **명시**: Firestore 트랜잭션 원자성은 **Firestore 문서 안의 read/write에만** 적용되고
+   **Storage 업로드는 트랜잭션에 포함되지 않는다**. 이 설계가 안전할 수 있는 이유는
+   **cross-service 원자성 때문이 아니라 immutable 객체를 먼저 만들고 Firestore head만을
+   단일 가변 정본으로 삼기 때문**이다. 실제 동시성·Rules 배포·브라우저 종료는 **NOT VERIFIED**이며
+   **C5를 PASS나 승인된 구조로 확정하지 않는다.**
+5. **★ C6 판정 정밀화.** **GCS `ifGenerationMatch` 메커니즘 자체는 VERIFIED**(실패 시 412 보장,
+   `docs.cloud.google.com/storage/docs/request-preconditions`). 그러나 **DENN Cloud Function/backend의
+   인증·권한·payload 제한·timeout·재시도·배포·운영 설계가 존재하지 않으므로 "C6 전체 PASS"라고 부르지
+   않는다** → **"조건부 쓰기 메커니즘 후보 VERIFIED / DENN end-to-end 구조 NOT DESIGNED·NOT VERIFIED"**.
+
+### 정정 후 결론 (지시된 문구)
+
+- **Firebase Web SDK 공개 Storage API에는 generation 기반 조건부 쓰기가 확인되지 않았다.**
+- **기존 client-only + 현재 Rules로 E3-strong이 보장된다는 근거는 없다.**
+- **따라서 F-E에 따라 쓰기 구현은 계속 차단한다.**
+- **C5와 C6은 추가 권한이 필요한 후보이며 아직 Founder 선택이나 Codex 구조 승인을 받지 않았다.**
+- **조사 정정 후에만 Founder G-1~G-5 결정을 요청한다.**
+
+### 남은 UNCONFIRMED / NOT VERIFIED
+
+**UNCONFIRMED**: 고정 경로 `rev+1`의 CAS 보장(§5.2) · 덮어쓰기 `create`에서 `resource`가 채워지는지 ·
+`/v0` 표면의 precondition 수용 여부.
+**해소됨**: "Storage Rules에 객체 부재 판정 수단이 있는지" → `resource == null`로 **해소**.
+**NOT VERIFIED**: C5·C6의 실제 동시성 동작 · `resource == null` 규칙의 실제 배포·거부 · 실제 412 ·
+브라우저 종료·네트워크 단절·인증 만료·중복 탭 실거동 · 실제 `admin/state.json` · L-1~L-4 재현 ·
+Firestore 번들 실측 · `docs/reference/**` 본문(이 세션 미취득).
+
+### 유지
+
+F-B·F-C·F-D·F-E 무변경. 스펙 036 계약 무변경. 리빌드 쓰기 표면 **0건** 유지.
+`firebase.json`의 `hosting.public`은 여전히 `"."` 이라 **deploy 금지 상태 그대로**다.
+보호 대상 3개(spec-018 PNG 2개 + `packages/render/src/plan/index.ts`)는
+**restore·checkout·stage·commit 하지 않았다.**
+
+## Claude 운영자 저장 원자성 읽기 전용 조사 완료 — 초판 (2026-08-11)
+
+> ⚠️ **이 섹션은 초판(`768eecf`) 기록이다. 위의 "보완 라운드 1"이 아래 5개 항목을 정정했다**:
+> ① Storage Rules 객체 부재 판정(→ `resource == null`로 가능) · ② 업로드와 metadata가 반드시
+> 별개 요청이라는 단정(→ 같은 요청일 수 있다) · ③ Rules 동시성 단정(→ `NOT PROVEN`) ·
+> ④ C5 프로토콜(→ A~H 단일 트랜잭션) · ⑤ C6 판정(→ 메커니즘 VERIFIED / 구조 NOT DESIGNED).
+> **상태도 `FOUNDER_DECISION_REQUIRED` → `READY_FOR_CODEX`로 바뀌었다.**
+> 아래 원문은 이력 보존을 위해 삭제하지 않는다.
 
 보고서: `docs/codex-claude-handoff/reviews/2026-08-11-admin-write-atomicity-investigation.md`
 기준 HEAD `68fe339`. **문서 전용 — 제품 코드·테스트·CSS·config·manifest·`package.json`·lockfile·
