@@ -7,10 +7,10 @@ pipeline: rebuild-modern-studio
 completed_unit: spec-039-g4-orphan-identification-structure-a   # DONE, CODEX_PASSED, LOCAL_ONLY
 active_unit: none
 state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 7843e85
+baseline_commit: 7843e85   # spec 039 implementation + closure
 candidate_commit: 7843e85   # spec 039 implementation + closure, CODEX_PASSED
 verified_commit: ead06ab   # product, CODEX_PASSED (d83aee9 implementation + correction round 1)
-origin_relation: "HEAD=origin=7843e85, ahead/behind 0/0 after fast-forward push"
+origin_relation: "HEAD=origin, ahead/behind 0/0 after completion-state fast-forward push"
 working_tree: "dirty only from protected Founder/user changes: design README/taste-v2/spec038, spec-018 PNGs x2, packages/render/src/plan/index.ts, and untracked AGENTS.md"
 fix_round: 0
 max_fix_rounds: 3
