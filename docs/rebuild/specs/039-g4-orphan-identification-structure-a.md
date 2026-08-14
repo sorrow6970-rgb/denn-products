@@ -58,4 +58,4 @@ Storage create도 동일 REC의 존재를 Rules에서 확인한다. 따라서 �
 - 고객 번들 SHA-256:
   `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`.
 - 실제 Firebase·실제 UID·IAM·배포·UI·delete·자동 정리는 NOT TESTED/금지 유지.
-- 후보는 stage/commit/push하지 않았다.
+- 구현·종료 커밋: `7843e85` (일반 fast-forward push 완료).

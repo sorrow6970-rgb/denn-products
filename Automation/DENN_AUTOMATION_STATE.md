@@ -7,11 +7,11 @@ pipeline: rebuild-modern-studio
 completed_unit: spec-039-g4-orphan-identification-structure-a   # DONE, CODEX_PASSED, LOCAL_ONLY
 active_unit: none
 state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: eae9be4
-candidate_commit: none (implementation is UNCOMMITTED and UNSTAGED)
+baseline_commit: 7843e85
+candidate_commit: 7843e85   # spec 039 implementation + closure, CODEX_PASSED
 verified_commit: ead06ab   # product, CODEX_PASSED (d83aee9 implementation + correction round 1)
-origin_relation: "HEAD=origin=eae9be4, ahead/behind 0/0; spec 039 candidate is UNCOMMITTED and UNSTAGED"
-working_tree: "dirty: protected Founder/user changes remain untouched; G-4 documents plus spec 039 admin-write/Rules target/test implementation are uncommitted and unstaged"
+origin_relation: "HEAD=origin=7843e85, ahead/behind 0/0 after fast-forward push"
+working_tree: "dirty only from protected Founder/user changes: design README/taste-v2/spec038, spec-018 PNGs x2, packages/render/src/plan/index.ts, and untracked AGENTS.md"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: NEXT_MANUAL_TASK
@@ -28,7 +28,7 @@ deploy: forbidden
 - **계속 금지**: 실제 삭제, delete 권한, 자동 정리, 보존 스케줄, IAM 활성화, 실제 UID, 배포, UI.
 - **로컬 검증**: targeted unit **51/51**, Firebase typecheck PASS, `pnpm check` PASS
   (unit **1322/1322**), Chromium E2E **134/134**, demo emulator Rules **13/13**.
-- **Git**: stage/commit/push 0. Codex 검수까지 끝났으며 다음 구현을 자동 시작하지 않는다.
+- **Git**: 구현·종료 커밋 `7843e85`을 일반 fast-forward push했다. 다음 구현은 자동 시작하지 않는다.
 
 ### Codex 최종 판정
 

@@ -3,7 +3,7 @@
 상태: `WAITING_FOR_NEXT_MANUAL_TASK`
 active_unit: `none`
 completed_unit: `spec-039-g4-orphan-identification-structure-a` — **DONE / `CODEX_PASSED` / LOCAL_ONLY**
-기준: HEAD=origin=`eae9be4`, ahead/behind **0/0**
+기준: HEAD=origin=`7843e85`, ahead/behind **0/0**
 next_transition: **`NEXT_MANUAL_TASK`**
 
 **Founder 결정은 `D-1=A`, `D-2=O-3`, `D-3=N`이다. Structure A 식별 구조의 로컬 구현과
@@ -20,7 +20,7 @@ next_transition: **`NEXT_MANUAL_TASK`**
   demo emulator 13/13 PASS.
 
 - 실제 Firebase·UID·IAM·배포·UI·delete·자동 정리는 NOT TESTED/금지 유지.
-- stage/commit/push하지 않았다. 다음 수동 지시를 기다린다.
+- 구현·종료 커밋 `7843e85` fast-forward push 완료. 다음 수동 지시를 기다린다.
 
 > 아래 `## 1`부터는 2026-08-11 Founder 결정 전의 역사 기록이다. 현재 작업 지시로 사용하지 않는다.
 

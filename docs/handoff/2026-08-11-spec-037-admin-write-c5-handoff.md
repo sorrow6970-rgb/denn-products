@@ -235,4 +235,5 @@ G-1의 "legacy `admin/state.json` 읽기 전용 고정"을 배포하면 **이 �
 ### 9.1 Codex 종료 판정
 
 2026-08-14 독립 검수 결과 **CODEX_PASSED**, 발견 결함 0. 스펙 039는
-`DONE / LOCAL_ONLY`이며 상태는 `WAITING_FOR_NEXT_MANUAL_TASK`다. 실제 서비스와 삭제 경계는 열지 않았다.
+`DONE / LOCAL_ONLY`이며 구현·종료 커밋 `7843e85`을 fast-forward push했다. 상태는
+`WAITING_FOR_NEXT_MANUAL_TASK`이고 실제 서비스와 삭제 경계는 열지 않았다.
