@@ -41,6 +41,8 @@ service firebase.storage {
       allow read:   if approvedOperator();
       allow create: if approvedOperator()
                        && resource == null
+                       && firestore.exists(
+                            /databases/(default)/documents/rebuildAdminStateObjects/$(objectId))
                        && okSize()
                        && request.resource.contentType == 'application/json';
       allow update: if false;

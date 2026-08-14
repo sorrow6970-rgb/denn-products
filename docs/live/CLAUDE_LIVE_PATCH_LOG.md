@@ -3467,3 +3467,539 @@ admin UI 연결(저장 버튼 + 스펙 035 결합) · orphan 정책(G-4) · L-4/
 - `git diff --check 91a7813..HEAD` **PASS** · 변경 경로 = **허용 문서 6개뿐**
 - 제품 코드·Rules·config·test·lockfile diff **0**
 - HEAD=origin, ahead/behind **0/0** · working tree = **보호 대상 6개만**
+
+## 2026-08-11 — G-4 orphan 보존 방향 + 안전 삭제 조건 설계 (문서 전용 · 미커밋)
+
+> ⚠️ **아래 초판 항목은 보완 라운드 1(이 로그 마지막 항목)이 세 가지를 정정했다.**
+> ① "Storage Rules는 Firestore를 읽을 수 없다"는 **틀렸다** ②
+> SDC의 objectPath 재사용 증명은 **현재 Rules에서 성립하지 않는다** ③ 변경 문서는 **6개**다.
+> 원문은 이력으로 보존한다.
+
+- **기준**: HEAD=origin=`eae9be4`, ahead/behind 0/0.
+- **⚠️ 이 라운드의 문서는 지시에 따라 `commit`·`push`·`stage`하지 않았다.** Codex 검수 대기.
+- **정본(신규)**: `docs/codex-claude-handoff/decisions/2026-08-11-g4-orphan-retention-decisions.md`
+- **변경 문서(6)** ⟵ *보완 라운드 1에서 5 → 6으로 정정*: 위 정본(신규) ·
+  `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md` ·
+  `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md` ·
+  **`docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`**(초판에서 누락돼 있었다).
+- **실행하지 않음**: 제품 코드·Rules·config·test·`package.json`·lockfile 수정 **0** ·
+  **실제 객체 조회·나열·삭제 0** · 실제 Firebase/network/live/운영 데이터/실제 UID 접근 0 ·
+  Rules·Hosting 배포 0 · 운영 쓰기 0 · UI 연결 0 · 발행 0 · orphan 삭제·자동 정리 0 ·
+  C6 구현 0 · L-4/tombstone 구현 0 · 자동화·반복 작업 0 ·
+  commit/push/stage/merge/rebase/checkout/reset **0**.
+
+### Founder 방향 (기록된 그대로)
+
+과거 정상 저장본을 **영구 버전 이력으로 보존할 필요는 없다** · **안전하게 식별할 수 있을 때**
+삭제 후보로 본다 · **현재 사용 중이거나 저장 성공 여부가 미확정인 객체를 삭제해도 된다는 뜻은 아니다** ·
+**실제 삭제·자동 정리 구현·Rules 변경·백엔드 구현·배포 승인이 아니다.**
+
+> **확정된 것은 "과거 정상 저장본에 영구 보존 요구가 없다" 하나뿐**이고,
+> 삭제 여부·시점·주체·주기는 **D-1~D-3으로 남았다.**
+> 선행 G-4의 **클라이언트 delete 권한·자동 정리 불허**와 **운영 쓰기 미활성화**는 그대로 유지된다.
+
+### ★★ 핵심 발견 — 지금은 세 집단을 구분할 수 없다
+
+| 집단 | 정의 | Storage만으로 구분 |
+| --- | --- | --- |
+| **P1 현재 사용 중** | `X === head.objectPath` | **가능**(head 1회 읽기) |
+| **P2 과거 정상 저장본** | 어떤 revision `R`에서 head였고 지금은 아니다 | **불가능** |
+| **P3 미확정 / 늦게 성공 가능** | upload/commit 결과 불명, 또는 원 transaction이 아직 늦게 성공할 수 있다 | **불가능** |
+
+**P2와 P3이 Storage에서 똑같이 생겼다.** 가르는 정보는 **"이 객체가 한 번이라도 head였는가"** 인데
+**어디에도 기록돼 있지 않다**:
+
+- head 문서는 **정확히 3키** — `constants.ts:33`의 `HEAD_ALLOWED_KEYS`,
+  `head.ts:74-77`의 길이·키 검사, `firestore.rules`의 `validHeadKeys()`가 **`hasOnly`+`hasAll`로
+  서버에서도 강제**. → **revision → objectPath 이력이 들어갈 자리가 없다.**
+- 구현에 **나열도 삭제도 없다** — `facade.ts`에 `list`/`delete` 부재,
+  `index.ts:7`이 *"no delete API here, by construction"*.
+- `storage.rules`의 `rebuild-admin-state/objects/{objectId}`는
+  **`allow update: if false` · `allow delete: if false`**.
+
+**★ P2는 실패가 아니라 성공의 부산물이다.** `firestore.rules` update가
+**`objectPath != resource.data.objectPath`** 를 강제하므로 **저장이 성공할 때마다 직전 객체가
+참조에서 떨어진다.** N번 저장하면 P2가 N-1개다.
+
+### P3이 되는 정확한 경계 (현재 구현)
+
+`WRITE_UPLOAD_OUTCOME_UNKNOWN` → **객체 존재 여부조차 모름**, head 불변(transaction 미호출) ·
+`WRITE_COMMIT_OUTCOME_UNKNOWN` → 객체는 있으나 **head가 나중에 채택할 수 있다**
+(계약 §6.6 · `write-port.ts:288`).
+**확정 orphan**은 `WRITE_CONFLICT`(callback, `write-port.ts:252`) ·
+`WRITE_HEAD_FAILED`(`:253`) · reconciliation의 **다른 writer 승리 확정** `WRITE_CONFLICT`(`:301-302`)
+뿐인데, **그 판정은 그 순간 그 클라이언트 메모리에만 있고 어디에도 남지 않는다.**
+
+### 안전 삭제 조건 (SDC) — 4조건 AND
+
+| # | 조건 |
+| --- | --- |
+| **SDC-1** | `X !== head.objectPath` (**필요조건일 뿐**) |
+| **SDC-2** | **어떤 revision `R`에서 `head.objectPath === X`였다는 durable 기록이 존재한다** |
+| **SDC-3** | `현재 head.revision > R` |
+| **SDC-4** | SDC-1·SDC-3을 판정한 head 관측이 SDC-2 기록보다 **나중**이다 |
+
+**증명 논리**: X가 R의 head였다면 그 commit은 **이미 성공**했으므로 **P3이 아니다**.
+CAS는 `head.revision === expectedBase`일 때만 성립하고(계약 §4.3) Rules가 update를
+**정확히 `+1`** 로 강제하므로 **revision은 단조 증가**한다 → `head.revision > R` 이후
+**어떤 transaction도 head를 X로 되돌릴 수 없다**. ⇒ **X는 P2 확정.**
+
+> **SDC-1·SDC-3은 head 한 번 읽기로 판정 가능하다. SDC-2만 오늘 존재하지 않는다** — 이것이 유일한 결손.
+
+### 검증 — 단독 조건은 안전하지 않다
+
+- **"head가 현재 가리키지 않는다" 단독 → 안전하지 않다.** 그건 **SDC-1뿐**이라 **P1만 제외**하고
+  **P2와 P3을 전혀 구분하지 못한다.** P3을 지우면 뒤늦게 성공한 transaction이 가리키는 경로가 비고,
+  `loadBaseline`이 **fail-closed**(계약 §6.2)되어 **운영자가 상태를 아예 읽지 못한다.**
+  legacy fallback도 없다 — 그게 설계상 의도다.
+- **"오래됐다" 단독 → 저장소 근거로 증명 불가.**
+  **upload 쪽은 문서화된 10분 상한**이 있다(`@firebase/storage` `dist/index.esm.js:37`·`:43`).
+  **commit 쪽은 상한이 없다** — `TransactionOptions.maxAttempts` 기본 5는
+  (`@firebase/firestore` `dist/index.d.ts:3083`) **시도 횟수**이지 벽시계 한도가 아니고,
+  총 deadline이나 "이 시각 이후 절대 도착 안 함" 보장을 **공식 문서에서 확인하지 못했다**.
+  탭 정지·네트워크 단절의 지연 상한도 저장소에서 도출할 수 없다.
+  **⇒ 시간 창을 쓰면 그것은 안전 증명이 아니라 Founder가 명시적으로 감수하는 리스크 수용이며,
+  문서에 그렇게 적어야 한다.**
+
+### 필요한 최소 구조 (SDC-2를 만드는 방법)
+
+- **M-1** head에 **직전 objectPath**를 함께 기록(4번째 키) → **한 번에 정확히 하나의 P2**가 증명된다.
+  변경: `firestore.rules`의 `hasOnly`/`hasAll` · `HEAD_ALLOWED_KEYS` · `validateHead` · compute · 테스트.
+  한계: 정리가 한 스텝만 밀려도 **그 이전 객체는 다시 미상**.
+- **M-2** **같은 transaction 안에서** append-only 이력 문서(`revision → objectPath`)를 함께 기록 →
+  **완전한 체인**. **head와 이력이 둘 다 Firestore라 하나의 transaction이 다중 문서를 원자적으로
+  갱신**하므로 **끊긴 체인이 생기지 않는다** — 이건 스펙 037이 불가능하다고 기록한
+  **cross-service 원자성이 아니다**. 비용: 저장마다 Firestore 쓰기 1건 추가.
+- **M-3** 객체 `customMetadata` → **불충분**. 업로드 시점엔 commit 결과를 모르므로
+  **supersession을 증명하지 못한다.**
+- (참고, 이번 범위 밖) **한 번도 head가 된 적 없는 실패 산물**은 SDC로 영원히 삭제 불가라 누적된다.
+  그것까지 덮으려면 업로드 **전에** `(operationId, expectedBase)`를 durable하게 기록하고
+  **`head.revision > expectedBase`** 로 "CAS에서 영원히 이길 수 없음"을 판정해야 한다 — **별도 결정**.
+
+### ★★ 결정적 제약 — Storage Rules는 SDC를 강제할 수 없다
+
+**Storage 보안 규칙은 Firestore를 읽을 수 없다.** 클라이언트에 `delete` 권한을 주더라도 서버는
+**"이 객체가 정말 밀려났는가"를 검증할 수단이 없고**, SDC는 **클라이언트의 선의에만** 의존하게 된다 —
+이 스펙이 일관되게 지켜온 fail-closed 원칙과 어긋난다.
+**⇒ SDC를 실제로 강제할 수 있는 주체는 (i) 사람이 판단하는 out-of-band 삭제, 또는
+(ii) Firestore와 Storage를 모두 읽을 수 있는 backend뿐이다.**
+
+### 선택지 (권한 / 변경 / 위험)
+
+- **O-1 운영자 수동 정리** — 저장소 밖 콘솔 접근 필요, Rules 변경 **0**.
+  단 사람이 SDC를 확인하려면 **M-1/M-2 중 하나는 있어야 한다**(없으면 P2/P3 구분 불가).
+  **사람이 P3을 P2로 오인하면 서버가 막아 주지 않는다.**
+- **O-2 별도 백엔드/Admin SDK** — **G-3 재개** + 서비스 계정 + 함수 배포·과금.
+  저장소에 `functions/`도 `firebase.json`의 `functions` 블록도 **없다**.
+  **SDC를 실제로 강제할 수 있는 유일한 자동 경로**지만 **규칙이 틀리면 자동으로 손해가 난다.**
+- **O-3 안전 식별 구조가 생길 때까지 삭제 보류** — 권한·변경 **0**, **오삭제 위험 0**,
+  비용 단조 증가(상한 UNCONFIRMED). **현재 상태가 이것이다.**
+
+### 남은 Founder 결정 — 3개
+
+**D-1 완료 판정 방식**: SDC 증명(M-1/M-2 도입) / **시간 창(= 리스크 수용, 값 필요)** / 혼합 ·
+**D-2 정리 주체**: 없음(보류) / 운영자 수동 / **backend(= G-3 재개)** ·
+**D-3 보존 개수·주기**: 직전 K개 · 정리 주기 · 비용 상한.
+> **D-1=SDC + D-2=없음** 조합도 유효하다 — 삭제는 안 일어나지만 구조는 준비된다.
+
+### UNCONFIRMED / NOT TESTED (추정하지 않았다)
+
+실제 `admin/state.json` 크기·내용 **NOT TESTED** · 리빌드 payload 크기 **UNCONFIRMED**
+(참고 자릿수: 레거시 `published/state.json`이 base64 내장으로 **492KB**였고 외부화로 줄였다 —
+`denn-admin.html:14905-14906`. **리빌드가 같다는 근거는 없다**) ·
+**저장 빈도 미결정**(⚠️ 레거시 admin 저장은 **3초 디바운스**였다 —
+`reviews/2026-07-31-admin-write-boundary-investigation.md:74`. **저장마다 새 불변 객체가 생기는
+구조에서 이 값이 객체 수를 지배한다**) · bucket 객체 수·용량·location·storage class·기존 lifecycle
+**NOT TESTED/UNCONFIRMED**(bucket 레벨이라 저장소 밖이고 `firebase.json`에 lifecycle 항목 없음) ·
+GCS 요금 **UNCONFIRMED** · **늦은 commit의 실제 지연 상한 UNCONFIRMED** ·
+**Storage prefix 나열이 현재 Rules에서 허용되는지 UNCONFIRMED**
+(`match`가 객체 단위이고, 스펙 037 emulator가 검증한 `list` 거부는 **Firestore head 쪽**이다.
+emulator로 확인 가능하나 이번 라운드에서는 실행하지 않았다).
+
+### 인접 경계만 기록 (범위 확장 아님)
+
+**C6(G-3)** — O-2를 고르면 그것이 곧 G-3 재개다. **L-4/tombstone** — 문서 *내부*의 삭제 의미론이라
+객체 수준 orphan과 **다른 문제**이며 섞지 않는다. **발행(F-B)** — `published/`는 별도 경로라
+`rebuild-admin-state/` 정책을 **상속하지 않는다**.
+
+### 다음
+
+**Codex 검수** → 그 뒤 **Founder가 D-1~D-3 응답**.
+그 전에는 **구현 계약도 다음 구현도 시작하지 않는다.** 커밋 여부도 Codex/Founder 지시를 따른다.
+
+## 2026-08-11 — G-4 문서 보완 라운드 1 (CORRECTION_REQUIRED · 문서 전용 · 미커밋)
+
+> ⚠️ **아래 라운드 1 항목의 세 서술을 보완 라운드 2(이 로그 마지막 항목)가 폐기했다.**
+> ① "같은 transaction의 형제 쓰기를 Rules가 볼 수 없다" · "REC과 head를 같은 transaction으로 묶을 수
+> 없다" → **`getAfter()`로 가능하다** · ② "공식 문서에 총 deadline이 없다" → **lock 20초·최대 270초·
+> idle 60초·유한 재시도가 명시돼 있다** · ③ `REC(objectId)` 표기 → **`objectId`는 실제로
+> `"<uuid>.json"`이라 매핑이 성립하지 않았다.** 원문은 이력으로 보존한다.
+
+- **기준**: HEAD=origin=`eae9be4`, ahead/behind 0/0.
+- **⚠️ `commit`·`push`·`stage` 하지 않았다.** Codex **재검수** 대기.
+- **변경 문서 6개**(= 초판에서 5개로 잘못 적었던 것을 정정): 정본
+  `decisions/2026-08-11-g4-orphan-retention-decisions.md`(신규) ·
+  `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md` ·
+  `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md` ·
+  **`docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`**.
+- **실행하지 않음**: 제품 코드·`firestore.rules`·`storage.rules`·config·test·`package.json`·lockfile
+  수정 **0** · **실제 객체 조회·나열·삭제 0** · 실제 Firebase/project/bucket/운영 데이터/실제 UID
+  접근 0 · **emulator 실행 0** · 배포·운영 쓰기·UI 연결·발행·자동 정리·C6·L-4 구현 0 ·
+  자동화·반복 작업 0 · commit/push/stage/merge/rebase/checkout/reset **0**.
+
+### 교정 1 — "Storage Rules는 Firestore를 읽을 수 없다"는 **내 서술이 틀렸다**
+
+공식 문서 `https://firebase.google.com/docs/storage/security/rules-conditions` (2026-08-11 확인):
+
+> *"Using the `firestore.get()` and `firestore.exists()` functions, your security rules can evaluate
+> incoming requests against documents in Cloud Firestore."*
+
+**같은 페이지의 공식 제약 4개(인용)**
+
+1. *"Storage Security Rules can only access documents from the **default Cloud Firestore database**
+   when multiple databases are active."*
+2. **★ *"No more than two Firestore documents may be accessed in a single Rules evaluation."***
+3. *"…reads of documents from Storage Security Rules **count towards your project's Firestore quota
+   and billing**."*
+4. 첫 저장 시 **콘솔/CLI에서 두 제품 연결 권한 활성화 프롬프트**가 뜨고 **IAM role 제거로 비활성화** 가능.
+
+⇒ 초판의 **"SDC를 강제할 수 있는 주체는 사람 또는 backend뿐"** 결론을 **폐기**하고,
+**O-4 — Storage Rules가 `firestore.get()`으로 직접 서버 강제** 선택지를 신설해 분석했다.
+⚠️ **클라이언트 delete 권한 승인도 구현 승인도 아니다.** 잔여 위험이 해소되기 전까지 **삭제 금지**.
+
+> **제약 2가 설계를 지배한다** — 삭제 조건이 Firestore 문서를 **정확히 2개**(HEAD + REC) 쓰므로
+> **한도를 정확히 소진하고 확장 여지가 0**이다.
+
+⚠️ `https://firebase.google.com/docs/reference/security/storage`는 이 세션 WebFetch로 **본문 미취득**
+(내비게이션만 반환 — 스펙 037 때와 동일). 위 인용은 전부 `rules-conditions`에서 왔다.
+
+### 교정 2 — SDC 증명의 objectPath 재사용 결함
+
+**초판의 주장**: *"`head.revision > R`이면 어떤 transaction도 head를 X로 되돌릴 수 없다."*
+**현재 Rules에서 성립하지 않는다.** `firestore.rules:57-60`:
+
+```
+&& request.resource.data.revision == resource.data.revision + 1
+&& request.resource.data.objectPath != resource.data.objectPath;
+```
+
+**비교 대상이 "직전 값" 하나뿐**이라 **A → B → A**가 막히지 않는다.
+
+**★ 더 깊은 문제도 찾았다 — 삭제가 불변성 자체를 깬다.**
+`storage.rules`의 create가 **`resource == null`** 이므로 **X를 지우는 순간 경로 X가 다시 생성
+가능해진다.** 같은 경로에 다른 내용이 올라올 수 있고, 위 결함과 겹치면 head가 그것을 가리킬 수도 있다.
+⇒ **"객체는 불변"이라는 토대는 "아무것도 지우지 않는 한"에서만 성립한다.**
+
+**재설계 — 경로를 키로 하는 write-once 소비 기록(REC)**
+
+```
+/rebuildAdminStateObjects/{operationId}   =  { claimedBase: <0 이상 정수> }
+Firestore Rules: allow create(승인 UID · 키가 정확히 claimedBase) / allow update, delete: if false
+클라이언트가 업로드 *전에* 생성 = 그 경로를 선점·소각
+```
+
+- **head 규칙 보강**: create는 `firestore.get(REC(new)).claimedBase == 0`,
+  update는 **`firestore.get(REC(new)).claimedBase == resource.data.revision`**.
+  REC이 **write-once**라 `claimedBase`가 **불변** ⇒ **한 경로는 정확히 한 번의 전이
+  (`claimedBase → claimedBase+1`)에서만 head가 될 수 있다** ⇒ **A → B → A 구조적 불가.**
+  (head 규칙의 Firestore 접근 **1개**, 한도 이내.)
+- **안전 삭제 조건 SDC′** (Storage delete 규칙):
+  **`approvedOperator() && firestore.get(HEAD).revision > firestore.get(REC(objectId)).claimedBase + 1`**
+  → **Firestore 접근 정확히 2개 = 한도와 동일, 여유 0.**
+- **증명**: ① head 규칙이 REC을 요구하므로 head가 가리키는 모든 경로에 REC이 있다.
+  ② X가 head였다면 그 전이는 `claimedBase_X → claimedBase_X + 1`.
+  ③ `head.revision > claimedBase_X + 1` ⇒ 지금 head가 아니고 `claimedBase_X`가 불변이라
+  **다시는 head가 될 수 없다** ⇒ **P2 확정.**
+  ④ 한 번도 head가 아니었다면(실패 산물) 그 transaction은 `head.revision == claimedBase_X`에서만
+  이길 수 있는데 이미 지났으므로 **영원히 못 이긴다.**
+  ⑤ **P3은 자동 보호** — `head.revision ≤ claimedBase_X + 1` 동안 조건이 성립하지 않는다.
+  **★ 하나의 조건이 P1 보호·P2 식별·P3 보호·실패 산물 회수를 모두 덮는다 ⇒ 시간 창이 필요 없다.**
+- **원자성 질문에 대한 답**: head 갱신과 REC을 **같은 transaction의 다중 문서 쓰기로 묶을 수 없다** —
+  Rules는 각 쓰기를 **독립 평가**하고 `get`/`exists`는 **커밋된 상태만** 보므로 형제 쓰기를 볼 수 없다.
+  **그래서 원자성 대신 순서를 강제한다**: REC을 **먼저** 만들고 head 규칙이 그것을 **요구**한다.
+  **REC만 만들고 head를 못 옮겨도 무해**하다(경로만 소각).
+- **잔여 한계**: 삭제 후 Storage create가 다시 열려 **참조 불가능한 stray 객체**가 생길 수 있다
+  (head 무결성은 안전). 차단하려면 create 규칙에도 Firestore 조회 2개를 넣어야 하고,
+  그러면 **다른 writer가 먼저 head를 옮겼을 때 우리 업로드가 `WRITE_FORBIDDEN`이 되어
+  계약 §5.4의 오류 의미가 바뀐다** — 트레이드오프로 기록했고 채택 여부는 결정 사항이다.
+
+**M-1 · M-2 재검토 — 둘 다 재사용을 막지 못한다**
+
+| 구조 | 차단? | 이유 |
+| --- | --- | --- |
+| **M-1** head에 **직전 objectPath 1개** | **✘ 불충분** | A→B→A에서 **직전은 B**다. A는 비교 대상에 없다 |
+| **M-2** **revision → objectPath 이력** | **✘ 불충분** | 키가 `revision`이라 **경로로 역조회가 불가능**하고, **접근 한도 2** 때문에 이력 순회도 불가능하다 |
+
+⇒ **revision→objectPath 이력만으로는 부족하고, `objectPath`(= `operationId`)를 키로 하는
+uniqueness/consumption 기록이 필요하다.**
+
+### 교정 3 — 변경 문서 개수 5 → 6
+
+초판이 **handoff(`docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`)를 빠뜨렸다.**
+STATE의 `working_tree`와 초판 live log 항목을 모두 **6개**로 정정하고 파일명을 전부 열거했다.
+
+### 유지되는 판정
+
+- **"head가 현재 가리키지 않는다" 단독 = 안전하지 않다** — P2/P3 미구분 →
+  P3을 지우면 `loadBaseline`이 **fail-closed**되어 운영자가 상태를 아예 못 읽는다.
+- **"오래됐다" 단독 = 증명 불가** — upload는 **10분** 상한이 문서화됐으나
+  (`@firebase/storage` `index.esm.js:37`·`:43`) **commit 늦은 성공에는 상한이 없다**
+  (`maxAttempts` 5는 **시도 횟수**, `@firebase/firestore` `index.d.ts:3083`).
+  **시간 창은 리스크 수용이지 증명이 아니다.** 단 **SDC′를 채택하면 시간 창 자체가 불필요**해진다.
+- **★ REC이 없는 현재 구조에서는 어떤 객체도 안전하다고 증명할 수 없다 ⇒ 삭제 보류(O-3)가 기본값이다.**
+
+### 선택지 (O-4 신설)
+
+**O-1 운영자 수동**(Rules 변경 0, 사람이 P3을 오인해도 서버가 안 막는다) ·
+**O-2 backend/Admin SDK**(**G-3 재개**, 규칙이 틀리면 자동으로 손해) ·
+**★ O-4 Storage Rules 서버 강제**(클라이언트 delete 권한 + IAM 활성화 필요 ·
+**접근 한도 2를 정확히 소진** · Firestore quota/billing 증가 · **기본 DB만** · 실제 동작 **NOT TESTED**) ·
+**O-3 삭제 보류**(위험 0, **현재 상태이자 기본값**).
+
+### 남은 Founder 결정 — 3개 (재검수 **후에** 묻는다)
+
+**D-1 완료 판정 방식**(SDC′ 증명 / 시간 창=리스크 수용 / 혼합) ·
+**D-2 정리 주체**(없음 / 운영자 수동 / backend=G-3 재개 / **O-4 Storage Rules 서버 강제**) ·
+**D-3 보존 개수·주기**.
+
+### UNCONFIRMED / NOT TESTED
+
+**§5 설계(REC + `firestore.get()` 규칙)의 실제 동작 NOT TESTED** — emulator로 검증 가능하나
+이번 라운드에서 실행하지 않았다 · 실제 `admin/state.json` 크기·내용 **NOT TESTED** ·
+리빌드 payload 크기 **UNCONFIRMED** · **저장 빈도 미결정**(⚠️ 레거시 **3초 디바운스** —
+저장마다 **객체 1개 + REC 1개**가 생기는 구조에서 객체 수와 **Firestore 비용**을 지배한다) ·
+bucket 객체 수·용량·location·class·lifecycle **NOT TESTED/UNCONFIRMED** ·
+GCS·Firestore 요금 **UNCONFIRMED** · 늦은 commit 지연 상한 **UNCONFIRMED** ·
+Storage prefix 나열 허용 여부 **UNCONFIRMED** ·
+`docs/reference/security/storage` 본문 **이 세션 미취득**.
+
+### 다음
+
+**Codex 재검수 — 수정된 안전성 증명을 먼저 검수받는다.**
+통과 후에야 **Founder에게 D-1~D-3을 다시 묻는다.** 그 전에는 구현 계약도 구현도 시작하지 않는다.
+
+## 2026-08-11 — G-4 문서 보완 라운드 2 (CORRECTION_REQUIRED · 문서 전용 · 미커밋)
+
+- **기준**: HEAD=origin=`eae9be4`, ahead/behind 0/0.
+- **⚠️ `commit`·`push`·`stage` 하지 않았다.** Codex **재검수(라운드 2)** 대기.
+- **변경 문서 6개**: 정본 `decisions/2026-08-11-g4-orphan-retention-decisions.md` ·
+  `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md` ·
+  `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md` ·
+  `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`.
+- **실행하지 않음**: 제품 코드·`firestore.rules`·`storage.rules`·config·test·`package.json`·lockfile
+  수정 **0** · **실제 객체 조회·나열·삭제 0** · 실제 Firebase/project/bucket/운영 데이터/실제 UID
+  접근 0 · **emulator 실행 0** · 배포·운영 쓰기·UI 연결·자동 정리 0 · 자동화 0 ·
+  commit/push/stage/merge/rebase/checkout/reset **0**.
+
+### 교정 1 — `getAfter()` 누락으로 원자성 설명이 틀렸다
+
+**라운드 1의 서술 두 개를 폐기한다** — *"같은 transaction의 형제 쓰기를 Rules가 볼 수 없다"* ·
+*"REC과 head를 같은 transaction의 다중 문서 쓰기로 묶을 수 없다"*.
+
+**근거** — `https://firebase.google.com/docs/firestore/enterprise/security/rules-conditions`
+(2026-08-11 확인):
+
+> *"For writes, you can use the `getAfter()` function to access the state of a document **after a
+> transaction or batch of writes completes but before the transaction or batch commits**."*
+
+**★ 접근 한도 두 개를 분리했다** (라운드 1은 구분하지 않았다):
+
+| 어디 | 한도 | 출처 |
+| --- | --- | --- |
+| **Storage Rules** → Firestore (`firestore.get()`) | **문서 2개** | `storage/security/rules-conditions` |
+| **Firestore Rules** → Firestore | *"10 for single-document requests and query requests. 20 for multi-document reads, transactions, and batched writes."* | `firestore/enterprise/security/rules-conditions` |
+
+**구조 A(순차) vs B(원자 동반) 재비교**
+
+| 항목 | **A 순차** | **B 원자 동반(`getAfter`)** |
+| --- | --- | --- |
+| crash 시 | **REC만 남고 head 미이동** → 경로가 **소각된 채** 남음 | all-or-nothing → **REC도 head도 안 남음** |
+| **★ 그 결과** | 객체에 **REC이 있다** ⇒ **SDC′로 회수 가능** | 객체에 **REC이 없다** ⇒ **영원히 판정 불가**(실패 산물 누적) |
+| callback 재실행 | REC은 이미 커밋 → 무관, `compute` 순수 유지 | `tx.set(REC)`은 §5.5가 허용한 `transaction.set`이라 계약 위반 아님, 재실행 시 버퍼 리셋 |
+| Rules access | head 규칙 `get` **1회**(Firestore 한도 **20** 중 1) | head 규칙 `getAfter` **1회**(동일 한도 안) |
+| REC write-once | `update/delete: if false`로 성립 | 동일. **transaction 안 create도 create로 평가** |
+| 경로 재사용 차단 | head 규칙의 `claimedBase == resource.data.revision` | **REC이 이미 있으면 create 실패** → 자동 차단(더 단순) |
+| 최초 head create | `get(REC).claimedBase == 0` | `getAfter(REC).claimedBase == 0` |
+| **스펙 037 `runTransaction` 1회 계약** | **유지**, 단 저장 순서에 **"업로드 전 Firestore 쓰기 1회"** 추가 → **계약 변경** | **유지 + 순서 변경도 없음** → **계약 변경이 더 작다** |
+| **Storage create 단계 stray 차단** | **가능**(업로드 시점에 REC 존재) | **불가능**(업로드 시점에 REC 없음) |
+| 비용 | Firestore 쓰기 1 + read 1 | Firestore 쓰기 1(같은 transaction) + read 1 |
+| 테스트 | fake: REC→upload→transaction 순서 · emulator: REC 없는 head 거부, 재사용 거부, 고아 REC 무해 | fake: 동일 transaction 2문서 · emulator: **REC 없이 head만 쓰기 거부**(`getAfter` 동작), 재사용 거부 |
+
+> **판정: B는 공식 근거로 실행 가능하다. 불가능하다고 단정하지 않는다.**
+> **★ 다만 회수 범위가 역전된다** — B가 더 우아해 보이지만 **실패 시 REC 없는 객체**를 만들어
+> **SDC′로 영원히 회수할 수 없다**. A는 반대로 **실패 산물까지 회수 가능**하고
+> **Storage create 단계의 stray 차단**도 된다.
+> **⇒ G-4의 목적이 "과거 정상 저장본 회수"뿐이면 둘 다 충분하고, "실패 산물까지"라면 A가 필요하다.**
+> **어느 쪽도 채택하지 않았다. 둘 다 NOT TESTED.**
+
+### 교정 2 — transaction 시간 제한
+
+**라운드 1의 *"공식 문서에 총 deadline이 없다"* 는 부정확했다.**
+**근거** — `https://docs.cloud.google.com/firestore/docs/manage-data/transactions` (2026-08-11 확인):
+
+| 조건 | 값 |
+| --- | --- |
+| lock deadline | *"exceeded the lock deadline (**20 seconds**)"* |
+| 최대 지속 / idle | *"exceeds the **270-second** time limit or the **60-second** idle expiration time"* |
+| 최대 요청 크기 | *"maximum request size of **10 MiB**"* |
+| 재시도 | 경합 시 자동 재실행하되 **유한 횟수** 후 실패 |
+| 순서 | *"Read operations must always be executed before any write operations."* |
+
+SDK `TransactionOptions.maxAttempts` 기본값 **5**(`@firebase/firestore` `dist/index.d.ts:3083`).
+
+**★ 반드시 분리한다**
+
+| | 상태 |
+| --- | --- |
+| 서버 transaction / 개별 SDK transaction의 **공식 제한** | **확정** — 20초 lock · **270초** · 60초 idle · **유한 재시도** |
+| **`save()` 호출 전체의 실제 벽시계 상한** — 탭 정지 · JS 스케줄링 정지 · SDK backoff·재시도 · Storage 업로드 재시도(**10분**, `@firebase/storage` `index.esm.js:37`·`:43`) 포함 | **UNCONFIRMED** |
+
+> **"공식 제한이 전혀 없다"(틀림)와 "호출 전체의 절대 상한을 증명하지 못했다"(사실)는 다른 진술이다.**
+> 순진한 상한(5회 × 270초)은 **문서화되지 않은 재시도 간 backoff와 브라우저 정지**를 포함하지 않아
+> **증명이 아니다.**
+> ⚠️ **이 정정만으로 임의의 시간 기반 삭제를 안전하다고 승인하지 않는다.**
+> **SDC′를 채택하면 시간 창 자체가 불필요하다.**
+
+### 교정 3 — REC 문서 ID ↔ Storage `objectId` 매핑
+
+**라운드 1의 결함**: Storage Rules `match /rebuild-admin-state/objects/{objectId}` 에서
+**`objectId`의 실제 값은 `"<uuid>.json"`**(확장자 포함)인데 REC은 `/rebuildAdminStateObjects/{operationId}`
+(**확장자 없음**)였다 → **`REC(objectId)`가 같은 문서를 가리키지 못했다.**
+
+**확정 매핑 — 문자열 변환 0**
+
+| # | 결정 |
+| --- | --- |
+| 1 | **REC 문서 ID = Storage `objectId` 세그먼트 그대로 = `"<uuid>.json"`** |
+| 2 | **Storage Rules는 `objectId`를 변환 없이 직접 보간** — `firestore.get(/databases/(default)/documents/rebuildAdminStateObjects/$(objectId))` |
+| 3 | **head는 `objectPath` 대신 `recId`를 담는다**(값이 곧 REC 문서 ID이자 Storage 세그먼트) |
+| 4 | **전체 경로는 클라이언트가** 상수 접두사 + `recId`로 만든다(Rules는 만들지 않는다) |
+| 5 | head 규칙은 **`$(request.resource.data.recId)`로 직접 보간**해 REC 조회 |
+| 6 | `recId`는 **정규식으로만** 검증 — `^[0-9a-f]{8}-…-[0-9a-f]{12}[.]json$` |
+
+**⇒ 문자열 파싱·분해·연결을 하나도 쓰지 않는다.** 양쪽 Rules가 **같은 문자열을 문서 ID로 직접 사용**한다.
+
+**채택하지 않은 대안**: `objectPath`+`recId` 병기 후 일치 검증(**문자열 `+` 연결 필요 → 지원
+UNCONFIRMED**) · `objectPath` 파싱(**`split` 등 지원 UNCONFIRMED**) ·
+일치 검증 없이 `recId`만 사용(**head 경로와 REC이 어긋날 수 있어 기각**).
+> **원칙: 공식 지원을 확인하지 못한 문자열 함수는 설계에 넣지 않는다.**
+
+**head 스키마 변경(= 스펙 037 계약 변경)**: `{schemaVersion, revision, objectPath}` →
+`{schemaVersion, revision, recId}` — **키 개수 3 유지**, 재사용 차단 조건도
+`objectPath != …` → **`recId != resource.data.recId`**.
+영향: 계약 §4.3·§4.4·§5.6 · `constants.ts` · `head.ts` · `types.ts` · `write-port.ts` ·
+`firestore.rules` · unit/emulator 테스트. **아직 승인되지 않았다.**
+
+### 유지되는 판정
+
+- **"head 미참조" 단독 = 안전하지 않다**(P2/P3 미구분 → `loadBaseline` fail-closed).
+- **"오래됐다" 단독 = 여전히 안전 증명이 아니다**(§교정 2의 분리).
+- **★ REC이 없는 현재 구조에서는 어떤 객체도 안전하다고 증명할 수 없다 ⇒ 삭제 보류(O-3)가 기본값.**
+- 라운드 1의 정정 3건(**Storage Rules가 Firestore를 읽을 수 있다** → O-4 신설 ·
+  **A→B→A 미차단 + 삭제가 경로 재생성을 열어 불변성을 깬다** · **변경 문서 6개**)도 **유지**된다.
+
+### 남은 Founder 결정 — 3개 (**재검수 통과 전까지 묻지 않는다**)
+
+**D-1 완료 판정 방식과 구조**(SDC′+A / SDC′+B / 시간 창 / 혼합) ·
+**D-2 정리 주체**(없음 / 운영자 수동 / backend=G-3 재개 / Storage Rules 서버 강제 O-4) ·
+**D-3 보존 개수·주기**.
+
+### UNCONFIRMED / NOT TESTED
+
+**구조 A·B 및 REC + `firestore.get()`/`getAfter()` 규칙의 실제 동작 NOT TESTED**(emulator 미실행) ·
+**Rules의 문자열 연결(`+`)·분해(`split` 등) 지원 여부 UNCONFIRMED**(설계에 쓰지 않았다) ·
+**`save()` 호출 전체의 벽시계 상한 UNCONFIRMED**(개별 transaction 제한은 확정) ·
+실제 `admin/state.json` 크기·내용 **NOT TESTED** · 리빌드 payload 크기 **UNCONFIRMED** ·
+**저장 빈도 미결정**(⚠️ 레거시 **3초 디바운스**; 저장마다 **객체 1개 + REC 1개**가 생기고
+Storage Rules의 `firestore.get()`도 **quota/billing에 포함**된다) ·
+bucket 객체 수·용량·location·class·lifecycle **NOT TESTED/UNCONFIRMED** ·
+GCS·Firestore 요금 **UNCONFIRMED** · Storage prefix 나열 허용 여부 **UNCONFIRMED** ·
+`docs/reference/security/storage` 및 `docs/reference/rules/rules.firestore` 본문 **이 세션 미취득**
+(WebFetch가 내비게이션만 반환 — 인용은 전부 취득 성공한 페이지에서 왔다).
+
+### 다음
+
+**Codex 재검수(라운드 2).** 통과 후에야 **Founder에게 D-1~D-3을 묻는다.**
+그 전에는 구현 계약도 구현도 시작하지 않는다.
+
+## 2026-08-11 — ★ G-4 보완 라운드 2 Codex 문서 검수 통과 · 오늘 세션 종료
+
+- **기준**: HEAD=origin=`eae9be4`, ahead/behind 0/0.
+- **문서 검수 결과**: **`DOCUMENT_REVIEW_PASSED`**.
+- **상태**: `READY_FOR_CODEX` → **`FOUNDER_DECISION_REQUIRED`** ·
+  `active_unit: g4-orphan-retention-policy` ·
+  `completed_unit: spec-037-admin-write-c5-emulator`(**DONE / CODEX_PASSED 유지**) ·
+  `next_transition: FOUNDER_G4_D1_D3_DECISION`.
+- **⚠️ G-4 문서 6개는 여전히 `commit`·`push`·`stage` 하지 않았다.** 커밋 여부는 별도 지시를 따른다.
+- **변경 문서 6개**(이번 동기화도 동일 범위): 정본
+  `decisions/2026-08-11-g4-orphan-retention-decisions.md` ·
+  `Automation/DENN_AUTOMATION_STATE.md` · `Automation/NEXT_CLAUDE_PROMPT.md` ·
+  `docs/codex-claude-handoff/CURRENT.md` · `docs/live/CLAUDE_LIVE_PATCH_LOG.md` ·
+  `docs/handoff/2026-08-11-spec-037-admin-write-c5-handoff.md`.
+- **실행하지 않음**: 제품 코드·`firestore.rules`·`storage.rules`·config·test·`package.json`·lockfile
+  수정 **0** · **실제 객체 조회·나열·삭제 0** · 실제 Firebase/project/bucket/운영 데이터/실제 UID
+  접근 0 · **emulator 실행 0** · 배포·운영 쓰기·UI 연결·발행·자동 정리 0 · 자동화·반복 작업 0 ·
+  commit/push/stage/merge/rebase/checkout/reset **0**.
+
+### Codex 최종 판정
+
+- **G-4 보완 라운드 2 문서 검수 통과.**
+- **`getAfter()` 원자성 정정 · transaction 시간 제한 정정 · REC ID 매핑 정정**이 반영됐다.
+- **구조 A와 B는 모두 "가능한 후보"로만 기록됐으며 어느 것도 채택되지 않았다.**
+- **구조 A/B 및 REC·Rules 동작은 NOT TESTED다.**
+- **실제 삭제 · 자동 정리 · Rules 변경 · head 스키마 변경 · 클라이언트 delete 권한 ·
+  IAM 활성화 · 구현·배포 승인이 아니다.**
+- **현재 기본 정책은 계속 `O-3 삭제 보류`다.**
+- **다음 단계는 Founder의 D-1~D-3 결정이며 오늘은 결정하지 않는다.**
+
+### 남은 Founder 결정 — **선택지 그대로 보존** (아무것도 고르지 않았다)
+
+| # | 질문 | 선택지 |
+| --- | --- | --- |
+| **D-1** | 완료 판정 방식과 구조 | **SDC′ + 구조 A**(실패 산물까지 회수 · Storage create stray 차단 가능 · 계약 변경 큼) / **SDC′ + 구조 B**(원자성 서버 강제 · 계약 변경 작음 · 실패 산물 회수 불가) / **시간 창**(= 리스크 수용) / 혼합 |
+| **D-2** | 정리 주체 | 없음(O-3 보류) / 운영자 수동(O-1) / backend(O-2 = G-3 재개) / Storage Rules 서버 강제(O-4) |
+| **D-3** | 보존 개수·주기 | 직전 K개 · 정리 주기 · 비용 상한 |
+
+> **D-1 = SDC′ + D-2 = 없음** 조합도 유효하다 — 삭제는 일어나지 않지만 구조는 준비된다.
+
+### 이 세션에서 확정된 것 / 확정되지 않은 것
+
+**확정**: Founder 방향(**과거 정상 저장본에 영구 보존 요구 없음**) · 세 집단(P1/P2/P3) 구분 문제 ·
+**"head 미참조" 단독·"오래됐다" 단독으로는 안전을 증명할 수 없다** ·
+**Storage Rules가 `firestore.get()`/`exists()`로 Firestore를 읽을 수 있다**(제약 4개) ·
+**`getAfter()`로 원자 동반 쓰기를 강제할 수 있다** ·
+**transaction 공식 제한**(lock 20초 · 최대 270초 · idle 60초 · 유한 재시도) ·
+**REC ID = Storage `objectId` 세그먼트** 매핑(문자열 함수 0) ·
+**현재 구조에서는 어떤 객체도 안전하다고 증명할 수 없다 ⇒ `O-3 삭제 보류`가 기본값.**
+
+**확정되지 않음**: D-1~D-3 · 구조 A/B 채택 · head 스키마 변경 · Rules 변경 · 삭제 실행 ·
+정리 주체 · 보존 기간·비용 한도.
+
+### 세션 종료
+
+**오늘 작업은 여기서 끝낸다. 다음 작업은 자동으로 시작하지 않는다.**
+Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정본 §14).
+자동화나 반복 작업은 만들지 않았다.
+
+## 2026-08-14 — G-4 Structure A 식별 구조 로컬 구현 · READY_FOR_CODEX
+
+- Founder 승인: **D-1=A, D-2=O-3, D-3=N**.
+- 구현: write-once REC `/rebuildAdminStateObjects/{UUID.json}` 선행 create, head `recId` 전환,
+  Storage/head Rules의 동일 REC 확인, A→B→A 재사용 차단.
+- 삭제 경계: Storage/REC/head delete는 모두 계속 거부. 삭제 API·자동 정리·보존 스케줄 0.
+- 검증: targeted unit **51/51**, Firebase typecheck PASS, `pnpm check` PASS(unit **1322/1322**),
+  Chromium E2E **134/134**, local `demo-denn-emulator` Rules **13/13**.
+- 실제 Firebase/project/bucket/UID/network, IAM 활성화, Rules/Hosting 배포, UI 연결 0.
+- Git: 기준 HEAD=origin `eae9be4`; stage/commit/push 0. 보호 대상과 사용자 `AGENTS.md` 변경은
+  수정·복원·stage하지 않았다. 다음은 `CODEX_REVIEW_SPEC_039`; 자동 다음 작업 0.
+
+## 2026-08-14 — 스펙 039 Codex 독립 검수 통과 · 로컬 종료
+
+- 판정: **CODEX_PASSED**, 발견 결함 0.
+- 검수 범위: REC write-once, `claimedBase`, head `recId`, Storage REC 존재 검사,
+  A→B→A 차단, 결과 미확정 오류, delete 전면 거부, 공개 경계·forbidden diff.
+- 게이트 유지: targeted 51/51, unit 1322/1322, Chromium 134/134, emulator 13/13,
+  고객 번들 SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`.
+- 실제 Firebase·UID·IAM·배포·UI·delete·자동 정리는 NOT TESTED/금지.
+- 스펙 039: `DONE / CODEX_PASSED / LOCAL_ONLY`; 상태 `WAITING_FOR_NEXT_MANUAL_TASK`.
+- stage/commit/push 0. 다음 작업 자동 시작 0.

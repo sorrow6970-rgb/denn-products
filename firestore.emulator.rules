@@ -7,8 +7,8 @@ rules_version = '2';
 //
 // rebuildAdminState/head: 리빌드 운영자 상태의 ★유일한 가변 정본(스펙 037 §4.3~4.4).
 //   revision을 정확히 1씩 올리는 compare-and-set으로만 움직이며, Storage 객체는 불변이다.
-//   ⚠️ Rules는 objectPath 문자열의 형태만 검사한다. 그 경로에 객체가 실제로 있는지는
-//      cross-service 질문이라 Rules로 증명할 수 없고, 읽기 fail-closed가 그 간극을 흡수한다.
+// rebuildAdminStateObjects/{recId}: G-4 구조 A의 write-once 소비 기록(REC).
+//   REC은 upload 전에 별도 create되고, head는 REC의 claimedBase가 현재 revision과 맞을 때만 이동한다.
 //
 // ★★ 배포 금지 (스펙 037 §9 / Founder G-1)
 //   APPROVED_OPERATOR_UID가 UNCONFIRMED placeholder다. 실제 운영자 UID 정본 제공 전 배포하지 않는다.
@@ -30,17 +30,20 @@ service cloud.firestore {
           && request.auth.uid == 'emulator-operator-DO-NOT-DEPLOY';
       }
       function validHeadKeys() {
-        return request.resource.data.keys().hasOnly(['schemaVersion', 'revision', 'objectPath'])
-          && request.resource.data.keys().hasAll(['schemaVersion', 'revision', 'objectPath']);
+        return request.resource.data.keys().hasOnly(['schemaVersion', 'revision', 'recId'])
+          && request.resource.data.keys().hasAll(['schemaVersion', 'revision', 'recId']);
       }
-      function validObjectPath() {
-        return request.resource.data.objectPath is string
-          && request.resource.data.objectPath.matches(
-               '^rebuild-admin-state/objects/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.]json$');
+      function validRecId() {
+        return request.resource.data.recId is string
+          && request.resource.data.recId.matches(
+               '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.]json$');
       }
       function validRevision() {
         return request.resource.data.revision is int
           && request.resource.data.schemaVersion == 1;
+      }
+      function claim() {
+        return get(/databases/$(database)/documents/rebuildAdminStateObjects/$(request.resource.data.recId));
       }
 
       // baseline load가 성립하려면 head를 읽을 수 있어야 한다.
@@ -49,17 +52,38 @@ service cloud.firestore {
 
       // 최초 생성은 revision 1만.
       allow create: if approvedOperator() && docId == 'head'
-                       && validHeadKeys() && validObjectPath() && validRevision()
-                       && request.resource.data.revision == 1;
+                       && validHeadKeys() && validRecId() && validRevision()
+                       && request.resource.data.revision == 1
+                       && claim().data.claimedBase == 0;
 
-      // 이후에는 정확히 +1이고 objectPath가 이전 값과 달라야 한다.
-      // (objectPath 교체 강제가 결과 불명 시 "내 commit이 반영됐는가" 판정을 가능하게 한다.)
+      // 이후에는 정확히 +1이고 recId가 이전 값과 달라야 한다.
+      // REC의 claimedBase 일치가 과거 recId 재사용을 막고 결과 불명 판정을 가능하게 한다.
       allow update: if approvedOperator() && docId == 'head'
-                       && validHeadKeys() && validObjectPath() && validRevision()
+                       && validHeadKeys() && validRecId() && validRevision()
                        && request.resource.data.revision == resource.data.revision + 1
-                       && request.resource.data.objectPath != resource.data.objectPath;
+                       && request.resource.data.recId != resource.data.recId
+                       && claim().data.claimedBase == resource.data.revision;
 
       allow delete: if false;
+    }
+
+    // G-4 구조 A의 영구 소비 기록. 문서 ID는 Storage objectId와 동일한 UUID.json이다.
+    match /rebuildAdminStateObjects/{recId} {
+      function approvedOperator() {
+        return request.auth != null
+          && request.auth.token.firebase.sign_in_provider != 'anonymous'
+          && request.auth.uid == 'emulator-operator-DO-NOT-DEPLOY';
+      }
+      function validRecId() {
+        return recId.matches(
+          '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.]json$');
+      }
+      allow create: if approvedOperator() && validRecId()
+                      && request.resource.data.keys().hasOnly(['claimedBase'])
+                      && request.resource.data.keys().hasAll(['claimedBase'])
+                      && request.resource.data.claimedBase is int
+                      && request.resource.data.claimedBase >= 0;
+      allow read, update, delete: if false;
     }
 
     // 그 외 컬렉션 기본 거부.

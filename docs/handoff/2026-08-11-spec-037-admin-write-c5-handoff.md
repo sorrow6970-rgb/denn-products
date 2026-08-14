@@ -4,6 +4,10 @@
 **라운드 1** `41b54b9` · **라운드 2** `d5789db` · 동기화 `fad819f`·`f694211` ·
 **보완 라운드 3** `9805c26` · **DONE (Codex `CODEX_PASSED`, 2026-08-11)**
 
+> **2026-08-14 후속 갱신:** Founder가 `D-1=A`, `D-2=O-3`, `D-3=N`을 승인했고 스펙 039
+> Structure A 식별 구조를 로컬 구현·검증했다. 아래의 “미채택/NOT TESTED” 문구는 당시 이력이며,
+> 현재 상태는 이 문서 마지막 §9와 `CURRENT.md`를 따른다.
+
 > ## ★★ 종료 — 스펙 037 DONE
 >
 > **구현 `d83aee9` + 보완 라운드 1 `ead06ab`, 기록 `91a7813`.**
@@ -29,6 +33,30 @@
 >
 > **증명 경계 유지**: **합성 fake는 서버 Rules 원자성을 증명하지 않고, emulator는 앱 오류 분기
 > 전체를 증명하지 않는다.** callback 재실행·commit outcome unknown은 **fake 전용**이다.
+>
+> ### 후속 — G-4 orphan 정책 (2026-08-11, 별도 문서)
+>
+> 이 스펙이 남긴 **orphan 보존·비용·정리 정책(G-4)** 은 별도 정본으로 이어진다:
+> **`decisions/2026-08-11-g4-orphan-retention-decisions.md`**.
+> Founder 방향은 **과거 정상 저장본에 영구 보존 요구가 없다**는 것 하나이며,
+> **실제 삭제·자동 정리·Rules 변경·백엔드·배포는 여전히 미승인**이다.
+> 그 문서가 **안전 삭제 조건(SDC′)** 을 설계하고, **"head 미참조" 단독과 "오래됐다" 단독으로는
+> 안전을 증명할 수 없다**는 것을 기록한다.
+>
+> **보완 라운드 2까지 반영됐고 Codex 문서 검수를 통과했다** (`DOCUMENT_REVIEW_PASSED`, 2026-08-11, **미커밋**).
+> **구조 A·B는 후보로만 기록됐고 어느 것도 채택되지 않았으며 둘 다 NOT TESTED다.**
+> **현재 기본 정책은 계속 `O-3 삭제 보류`이고, 다음 단계는 Founder의 D-1~D-3 결정이다.** 그 과정에서 **내 사실 오류 4건이
+> 정정**됐다: ~~"Storage Rules는 Firestore를 읽을 수 없다"~~(→ **`firestore.get()`/`exists()` 지원**),
+> ~~"같은 transaction의 형제 쓰기를 볼 수 없다"~~(→ **`getAfter()` 지원**),
+> ~~"공식 총 deadline이 없다"~~(→ **lock 20초·최대 270초·idle 60초·유한 재시도**),
+> 그리고 **REC 문서 ID ↔ Storage `objectId` 매핑 불성립**(→ **REC ID = `objectId` 세그먼트 그대로**).
+>
+> ### ⚠️ 이 스펙에 예고된 계약 변경 가능성
+>
+> G-4가 **SDC′를 채택하면 head 스키마가 `objectPath` → `recId`로 바뀐다**(키 개수 3은 유지).
+> 영향: **계약 §4.3·§4.4·§5.6** · `constants.ts`(`HEAD_ALLOWED_KEYS`) · `head.ts`(`validateHead`) ·
+> `types.ts` · `write-port.ts` · `firestore.rules` · unit/emulator 테스트.
+> **아직 승인되지 않았고 이 스펙의 DONE 상태를 바꾸지 않는다** — D-1·D-2 결정 후에만 열린다.
 
 > ## ★★ 보완 라운드 3 — 마지막 결함 2건을 닫았다
 >
@@ -194,3 +222,17 @@ G-1의 "legacy `admin/state.json` 읽기 전용 고정"을 배포하면 **이 �
 - `packages/render/src/plan/index.ts`
 
 **force push · merge · rebase · `reset --hard` · broad delete 하지 않는다.**
+
+## 9. G-4 후속 — Founder D-1=A / D-2=O-3 / D-3=N (2026-08-14)
+
+- 스펙 039에서 Structure A 식별 구조만 로컬 구현했다.
+- REC ID는 Storage objectId와 같은 `UUID.json`; head는 `recId`를 사용한다.
+- `REC → upload → head transaction` 순서이며 REC과 객체는 create-only다.
+- demo emulator Rules 13/13, 전체 unit 1322/1322, Chromium E2E 134/134 PASS.
+- 실제 삭제·delete 권한·자동 정리·보존 주기·IAM·실제 UID·배포·UI는 계속 금지다.
+- 구현 직후 상태는 `READY_FOR_CODEX`였고 후보는 stage/commit/push하지 않았다.
+
+### 9.1 Codex 종료 판정
+
+2026-08-14 독립 검수 결과 **CODEX_PASSED**, 발견 결함 0. 스펙 039는
+`DONE / LOCAL_ONLY`이며 상태는 `WAITING_FOR_NEXT_MANUAL_TASK`다. 실제 서비스와 삭제 경계는 열지 않았다.

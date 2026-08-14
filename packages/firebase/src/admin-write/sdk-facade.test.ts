@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   getFirestoreCalls: 0,
   getStorageCalls: 0,
   connectCalls: [] as string[],
+  setDocCalls: [] as { ref: unknown; data: unknown }[],
 }));
 
 vi.mock("firebase/app", () => ({
@@ -44,7 +45,10 @@ vi.mock("firebase/firestore", () => ({
   connectFirestoreEmulator: () => {
     state.connectCalls.push("firestore");
   },
-  doc: () => ({ kind: "docRef" }),
+  doc: (_db: unknown, collection: string, id: string) => ({ kind: "docRef", collection, id }),
+  setDoc: async (ref: unknown, data: unknown) => {
+    state.setDocCalls.push({ ref, data });
+  },
   getDoc: async () => ({ exists: () => false }),
   runTransaction: async () => undefined,
 }));
@@ -92,6 +96,7 @@ beforeEach(() => {
   state.getFirestoreCalls = 0;
   state.getStorageCalls = 0;
   state.connectCalls = [];
+  state.setDocCalls = [];
 });
 
 describe("app ownership", () => {
@@ -167,5 +172,25 @@ describe("emulator guard", () => {
     const production = { ...CONFIG, projectId: "denn-products" };
     await expect(createFirebaseAdminWriteFacade(production)).resolves.toBeDefined();
     expect(state.initializeAppCalls).toBe(1);
+  });
+});
+
+describe("structure A REC adapter", () => {
+  it("writes the exact UUID.json REC id and claimedBase", async () => {
+    const facade = await createFirebaseAdminWriteFacade(CONFIG);
+    await facade.createObjectClaim({
+      recId: "11111111-2222-3333-4444-555555555555.json",
+      claimedBase: 7,
+    });
+    expect(state.setDocCalls).toEqual([
+      {
+        ref: {
+          kind: "docRef",
+          collection: "rebuildAdminStateObjects",
+          id: "11111111-2222-3333-4444-555555555555.json",
+        },
+        data: { claimedBase: 7 },
+      },
+    ]);
   });
 });

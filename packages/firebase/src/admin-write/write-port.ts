@@ -18,13 +18,14 @@ import {
 import {
   baselineInvalidError,
   classifyTransactionError,
+  mapClaimError,
   mapBaselineReadError,
   mapUploadError,
   readError,
   writeError,
 } from "./errors";
 import type { AdminWriteFacade } from "./facade";
-import { isValidExpectedBase, objectPathFor, validateHead } from "./head";
+import { isValidExpectedBase, objectPathForRecId, recIdFor, validateHead } from "./head";
 import type {
   AdminStateBaselineResult,
   AdminStateHead,
@@ -139,7 +140,7 @@ export function createAdminStateWritePort(
     let bytes: Uint8Array;
     try {
       bytes = await facade.readObjectBytes({
-        objectPath: validated.head.objectPath,
+        objectPath: objectPathForRecId(validated.head.recId),
         maxDownloadSizeBytes: REBUILD_OBJECT_MAX_BYTES,
       });
     } catch (error) {
@@ -211,7 +212,16 @@ export function createAdminStateWritePort(
     // not on a callback re-run. A repeated upload therefore targets the same opaque path, where
     // `resource == null` refuses it on the server.
     const operationId = facade.randomOperationId();
-    const objectPath = objectPathFor(operationId);
+    const recId = recIdFor(operationId);
+    const objectPath = objectPathForRecId(recId);
+
+    try {
+      await facade.createObjectClaim({ recId, claimedBase: expectedBase });
+    } catch (error) {
+      // Structure A stops before Storage on every claim failure. An unknown claim outcome may have
+      // left a consumed REC, but it cannot have created or overwritten object bytes.
+      return fail(mapClaimError(error));
+    }
 
     try {
       await facade.uploadJsonObject({
@@ -231,7 +241,7 @@ export function createAdminStateWritePort(
         // A missing head is logical revision 0 — it is NOT a licence to start over. An editing
         // session based on revision 5 must not be able to write revision 1 here.
         if (expectedBase !== NO_HEAD_REVISION) throw abortSignal(CONFLICT_SIGNAL);
-        return { schemaVersion: HEAD_SCHEMA_VERSION, revision: 1, objectPath };
+        return { schemaVersion: HEAD_SCHEMA_VERSION, revision: 1, recId };
       }
       const validated = validateHead(current);
       if (!validated.ok) throw abortSignal(HEAD_UNUSABLE_SIGNAL);
@@ -240,7 +250,7 @@ export function createAdminStateWritePort(
       return {
         schemaVersion: HEAD_SCHEMA_VERSION,
         revision: validated.head.revision + 1,
-        objectPath,
+        recId,
       };
     };
 
@@ -257,7 +267,7 @@ export function createAdminStateWritePort(
 
       // Indeterminate. A local timeout does NOT cancel the SDK transaction, so we cannot call this
       // a failure — one bounded read-only reconciliation decides it, or it stays undecided.
-      return reconcile(correlationId, expectedBase, objectPath);
+      return reconcile(correlationId, expectedBase, recId);
     }
   };
 
@@ -270,7 +280,7 @@ export function createAdminStateWritePort(
   const reconcile = async (
     correlationId: string,
     expectedBase: number,
-    objectPath: string,
+    recId: string,
   ): Promise<AdminStateSaveResult> => {
     const unknownOutcome: AdminStateSaveResult = {
       ok: false,
@@ -293,9 +303,12 @@ export function createAdminStateWritePort(
     const head = validated.head;
 
     if (head.revision === expectedBase + 1) {
-      if (head.objectPath === objectPath) {
-        // Our commit landed. `objectPath` differs on every update by rule, so this identifies us.
-        return { ok: true, value: { revision: head.revision, objectPath } };
+      if (head.recId === recId) {
+        // Our commit landed. A write-once REC makes this recId unique to this transition.
+        return {
+          ok: true,
+          value: { revision: head.revision, objectPath: objectPathForRecId(recId) },
+        };
       }
       // Another writer won. The head is no longer `expectedBase`, and a revision only advances, so
       // this operation's late commit can never win the CAS — the uploaded object is an orphan.

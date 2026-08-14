@@ -12,13 +12,16 @@ export {
   HEAD_DOCUMENT_PATH,
   HEAD_SCHEMA_VERSION,
   NO_HEAD_REVISION,
+  OBJECT_CLAIM_COLLECTION_ID,
   REBUILD_OBJECT_CONTENT_TYPE,
   REBUILD_OBJECT_MAX_BYTES,
   REBUILD_OBJECT_PATH_PATTERN,
   REBUILD_OBJECT_PREFIX,
+  REBUILD_OBJECT_REC_ID_PATTERN,
 } from "./constants";
 export type {
   AdminWriteFacade,
+  AdminWriteClaimRequest,
   AdminWriteReadRequest,
   AdminWriteUploadRequest,
 } from "./facade";

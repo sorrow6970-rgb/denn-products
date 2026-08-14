@@ -4,8 +4,13 @@
 // pull the SDK in, does not initialise an app and does not touch the network. Unit tests never call
 // this factory — they inject a synthetic facade.
 
-import { HEAD_COLLECTION_ID, HEAD_DOCUMENT_ID } from "./constants";
-import type { AdminWriteFacade, AdminWriteReadRequest, AdminWriteUploadRequest } from "./facade";
+import { HEAD_COLLECTION_ID, HEAD_DOCUMENT_ID, OBJECT_CLAIM_COLLECTION_ID } from "./constants";
+import type {
+  AdminWriteClaimRequest,
+  AdminWriteFacade,
+  AdminWriteReadRequest,
+  AdminWriteUploadRequest,
+} from "./facade";
 import type { AdminStateHead } from "./types";
 
 /** Public Firebase configuration, owned and validated by the app (same rule as spec 036 §3.1). */
@@ -113,6 +118,11 @@ export async function createFirebaseAdminWriteFacade(
   return {
     // Node 24 and every target browser expose this; it is on the facade so a fake can count calls.
     randomOperationId: () => crypto.randomUUID(),
+
+    createObjectClaim: async (request: AdminWriteClaimRequest) => {
+      const claimRef = firestore.doc(db, OBJECT_CLAIM_COLLECTION_ID, request.recId);
+      await firestore.setDoc(claimRef, { claimedBase: request.claimedBase });
+    },
 
     uploadJsonObject: async (request: AdminWriteUploadRequest) => {
       const objectRef = storage.ref(storageInstance, request.objectPath);

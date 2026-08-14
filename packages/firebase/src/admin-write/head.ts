@@ -6,7 +6,7 @@
 import {
   HEAD_ALLOWED_KEYS,
   HEAD_SCHEMA_VERSION,
-  REBUILD_OBJECT_PATH_PATTERN,
+  REBUILD_OBJECT_REC_ID_PATTERN,
   REBUILD_OBJECT_PREFIX,
 } from "./constants";
 import type { AdminStateHead } from "./types";
@@ -36,12 +36,16 @@ export function isValidPersistedRevision(value: unknown): value is number {
   );
 }
 
-export function isValidObjectPath(value: unknown): value is string {
-  return typeof value === "string" && REBUILD_OBJECT_PATH_PATTERN.test(value);
+export function isValidRecId(value: unknown): value is string {
+  return typeof value === "string" && REBUILD_OBJECT_REC_ID_PATTERN.test(value);
 }
 
-export function objectPathFor(operationId: string): string {
-  return `${REBUILD_OBJECT_PREFIX}${operationId}.json`;
+export function recIdFor(operationId: string): string {
+  return `${operationId}.json`;
+}
+
+export function objectPathForRecId(recId: string): string {
+  return `${REBUILD_OBJECT_PREFIX}${recId}`;
 }
 
 export type HeadValidation =
@@ -60,13 +64,13 @@ export function validateHead(raw: unknown): HeadValidation {
   let keys: string[];
   let schemaVersion: unknown;
   let revision: unknown;
-  let objectPath: unknown;
+  let recId: unknown;
   try {
     const source = raw as Record<string, unknown>;
     keys = Object.keys(source);
     schemaVersion = source.schemaVersion;
     revision = source.revision;
-    objectPath = source.objectPath;
+    recId = source.recId;
   } catch {
     return { ok: false };
   }
@@ -77,7 +81,7 @@ export function validateHead(raw: unknown): HeadValidation {
   }
   if (schemaVersion !== HEAD_SCHEMA_VERSION) return { ok: false };
   if (!isValidPersistedRevision(revision)) return { ok: false };
-  if (!isValidObjectPath(objectPath)) return { ok: false };
+  if (!isValidRecId(recId)) return { ok: false };
 
-  return { ok: true, head: { schemaVersion: HEAD_SCHEMA_VERSION, revision, objectPath } };
+  return { ok: true, head: { schemaVersion: HEAD_SCHEMA_VERSION, revision, recId } };
 }

@@ -4,7 +4,7 @@
 // message / email / uid / token / bytes / path are dropped.
 //
 // TWO surfaces, deliberately not merged:
-//   - save         -> SafeAdminWriteError (the eight WRITE_* codes)
+//   - save         -> SafeAdminWriteError (including the structure-A claim stage)
 //   - loadBaseline -> SafeAdminReadError (spec 036) + SafeAdminBaselineInvalidError
 
 import type { CatalogIssue } from "@denn/shared";
@@ -36,6 +36,8 @@ const WRITE_CODE_META: Record<
   WRITE_AUTH_REQUIRED: { category: "AUTH", retryable: true },
   WRITE_FORBIDDEN: { category: "AUTH", retryable: false },
   WRITE_INVALID_INPUT: { category: "VALIDATION", retryable: false },
+  WRITE_CLAIM_FAILED: { category: "UNKNOWN", retryable: false },
+  WRITE_CLAIM_OUTCOME_UNKNOWN: { category: "UNKNOWN", retryable: false },
   WRITE_UPLOAD_FAILED: { category: "NETWORK", retryable: true },
   WRITE_UPLOAD_OUTCOME_UNKNOWN: { category: "NETWORK", retryable: false },
   WRITE_HEAD_FAILED: { category: "VALIDATION", retryable: false },
@@ -133,6 +135,22 @@ export function mapUploadError(error: unknown): AdminWriteErrorCode {
       return "WRITE_UPLOAD_FAILED";
     default:
       return "WRITE_UPLOAD_OUTCOME_UNKNOWN";
+  }
+}
+
+/** A separate REC commit precedes upload in structure A; unknown outcomes must never auto-retry. */
+export function mapClaimError(error: unknown): AdminWriteErrorCode {
+  switch (rawCode(error)) {
+    case "permission-denied":
+      return "WRITE_FORBIDDEN";
+    case "unauthenticated":
+      return "WRITE_AUTH_REQUIRED";
+    case "already-exists":
+    case "invalid-argument":
+    case "failed-precondition":
+      return "WRITE_CLAIM_FAILED";
+    default:
+      return "WRITE_CLAIM_OUTCOME_UNKNOWN";
   }
 }
 

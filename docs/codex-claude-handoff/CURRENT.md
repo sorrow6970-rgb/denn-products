@@ -9,10 +9,165 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — ★★ 스펙 037은 Codex 독립 재검증을 통과해 **DONE**이다
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 039 Structure A 식별 구조가
+`DONE / CODEX_PASSED / LOCAL_ONLY`로 종료됐다.**
+
+REC은 upload 전 `/rebuildAdminStateObjects/{UUID.json}`에 write-once로 생성되고, head는 `recId`와
+REC의 `claimedBase`를 검사한다. 로컬 게이트: targeted unit **51/51**, Firebase typecheck PASS,
+`pnpm check` PASS(unit **1322/1322**), Chromium E2E **134/134**, demo emulator Rules **13/13**.
+
+**실제 삭제·delete 권한·자동 정리·보존 스케줄·IAM 활성화·실제 UID·배포·UI 연결은 여전히 금지다.**
+Codex 독립 검수 발견 결함은 0이다. 현재 후보는 미커밋·미스테이지이며 다음 전이는
+`NEXT_MANUAL_TASK`다. 다음 스펙은 자동으로 시작하지 않는다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` — G-4 보완 라운드 2 문서가 Codex 검수를 통과**했다
+(`DOCUMENT_REVIEW_PASSED`, 2026-08-11, 기준 HEAD=origin=`eae9be4`).
+**오늘 세션은 여기서 종료하며 다음 작업은 자동으로 시작하지 않는다.**
+`completed_unit`은 **`spec-037-admin-write-c5-emulator` — DONE / CODEX_PASSED** 유지,
+`next_transition = FOUNDER_G4_D1_D3_DECISION`.
+
+> ### ★ Codex 최종 판정
+>
+> - **G-4 보완 라운드 2 문서 검수 통과** — **`getAfter()` 원자성 정정 · transaction 시간 제한 정정 ·
+>   REC ID 매핑 정정**이 모두 반영됐다.
+> - **구조 A와 B는 모두 "가능한 후보"로만 기록됐고 어느 것도 채택되지 않았다.**
+> - **구조 A/B 및 REC·Rules 동작은 NOT TESTED다.**
+> - **실제 삭제 · 자동 정리 · Rules 변경 · head 스키마 변경 · 클라이언트 delete 권한 ·
+>   IAM 활성화 · 구현·배포 승인이 아니다.**
+> - **현재 기본 정책은 계속 `O-3 삭제 보류`다.**
+> - **다음 단계는 Founder의 D-1~D-3 결정이며 오늘은 결정하지 않는다.**
+>
+> ⚠️ **G-4 문서 6개는 여전히 미커밋·미스테이지**다. 커밋 여부는 별도 지시를 따른다.
+
+> **이전 상태(참고)** — 보완 라운드 2를 적용했다. Codex 재검수 3건 중 **또 두 건이 내 사실 오류**였다.
+정본 `decisions/2026-08-11-g4-orphan-retention-decisions.md`(신규).
+**⚠️ 이 라운드의 문서는 지시에 따라 `commit`·`push`·`stage`하지 않았다** — 워킹 트리에 미커밋으로 남아
+**Codex 검수 대기**다. **제품 코드·Rules·config·test·`package.json`·lockfile 변경 0**,
+**실제 객체 조회·나열·삭제 0**, 실제 Firebase·network·live·운영 데이터·실제 UID 접근 0,
+배포·운영 쓰기·UI 연결·발행·자동 정리·C6·L-4 구현 0, 자동화 0.
+**다음 = Codex 재검수(수정된 안전성 증명을 먼저 검수) → 그 뒤에 Founder에게 D-1~D-3.**
+그 전에는 구현 계약도 구현도 시작하지 않는다. **변경 문서는 6개다.**
+
+> ### ★★ 보완 라운드 2 — 정정한 3건
+>
+> 1. **★ `getAfter()` 누락으로 원자성 설명이 틀렸다.** 라운드 1의 **"형제 쓰기를 볼 수 없다"** ·
+>    **"REC과 head를 같은 transaction으로 묶을 수 없다"** 는 **폐기**한다. 공식 문서:
+>    *"`getAfter()` … access the state of a document **after a transaction or batch of writes
+>    completes but before the transaction or batch commits**."* → **구조 B가 가능하다.**
+>    A(순차)/B(원자 동반)를 8항목으로 재비교했다. **★ 역전**: B는 crash 시 **REC이 안 남아
+>    업로드된 객체를 SDC′로 영원히 판정할 수 없고**, A는 REC이 남아 **실패 산물까지 회수 가능**하며
+>    **Storage create 단계 stray 차단**도 된다. 대신 B는 **원자성 서버 강제 + 계약 변경 최소**.
+>    **어느 쪽도 채택하지 않았고 둘 다 NOT TESTED.**
+>    **★ 한도 분리**: **Storage Rules → Firestore 문서 2개**, **Firestore Rules single 10 / multi·
+>    transaction·batch 20**.
+> 2. **★ transaction 시간 제한 서술을 정정했다.** *"공식 총 deadline이 없다"* 는 **부정확했다** —
+>    공식 문서가 **lock deadline 20초 · 최대 270초 · idle 60초 · 유한 재시도 · 요청 10 MiB**를 명시한다.
+>    **★ 단 분리한다**: **개별 transaction의 공식 제한은 확정**, **탭 정지·JS 정지·SDK backoff·
+>    Storage 업로드 재시도(10분)를 포함한 `save()` 호출 전체의 벽시계 상한은 UNCONFIRMED.**
+>    **"공식 제한이 없다"(틀림) ≠ "호출 전체 절대 상한을 증명 못 했다"(사실).**
+>    ⚠️ **이 정정만으로 시간 기반 삭제를 안전하다고 승인하지 않는다.**
+> 3. **★ REC 문서 ID ↔ Storage `objectId` 매핑을 실행 가능하게 확정했다.**
+>    `objectId`의 실제 값은 **`"<uuid>.json"`** 인데 REC은 확장자 없는 `{operationId}`였다 →
+>    **같은 문서를 못 가리켰다.** 확정: **REC 문서 ID = `objectId` 세그먼트 그대로** ·
+>    Storage Rules는 **변환 없이 직접 보간** · **head는 `objectPath` 대신 `recId`**(3키 유지) ·
+>    경로 합성은 **클라이언트가** · `recId`는 **정규식으로만** 검증.
+>    **⇒ 문자열 파싱·연결 0.** Rules의 `+` 연결·`split`은 **지원 미확인(UNCONFIRMED)이라 쓰지 않았다.**
+>    ⚠️ **스펙 037 계약 변경**이다.
+>
+> ### 라운드 1에서 정정했던 3건 (유지)
+>
+> 1. **★ "Storage Rules는 Firestore를 읽을 수 없다"는 서술을 폐기했다.**
+>    공식 문서(`firebase.google.com/docs/storage/security/rules-conditions`, 2026-08-11 확인)가
+>    **`firestore.get()` / `firestore.exists()`** 를 명시한다.
+>    **공식 제약 4개**: **기본 Firestore DB만** · **★ 평가당 문서 접근 최대 2개** ·
+>    **Firestore quota/billing 포함** · **두 제품 연결 IAM 활성화 필요**.
+>    → **"강제 주체는 사람 또는 backend뿐"** 결론도 **폐기**하고 **O-4(Storage Rules 서버 강제)** 신설.
+>    ⚠️ **클라이언트 delete 권한 승인도 구현 승인도 아니다.**
+> 2. **★★ SDC 증명의 objectPath 재사용 결함을 고쳤다.**
+>    `firestore.rules:57-60`은 **직전 값과만 다르면 통과**하므로 **A → B → A가 막히지 않는다** —
+>    초판의 "되돌아갈 수 없다"는 **성립하지 않는다.**
+>    **★ 더 깊은 문제**: `storage.rules` create가 **`resource == null`** 이라
+>    **삭제하는 순간 그 경로가 다시 생성 가능해진다** — **삭제가 불변성 자체를 깬다.**
+>    → **재설계**: `operationId`를 **키로 하는 write-once 소비 기록 REC**을 **업로드 전에** 만들고,
+>    head 규칙이 **`firestore.get(REC).claimedBase == resource.data.revision`** 을 요구한다.
+>    `claimedBase`가 불변이라 **한 경로는 정확히 한 번의 전이에서만 head가 될 수 있다**(재사용 불가).
+>    **SDC′ = `head.revision > REC.claimedBase + 1`**, **Firestore 접근 정확히 2개 = 한도와 동일**.
+>    **★ 이 하나가 P1 보호·P2 식별·P3 보호·실패 산물 회수를 다 덮어 시간 창이 불필요해진다.**
+>    ~~**원자성**: 같은 transaction의 다중 문서로는 묶을 수 없다~~ ⚠️ **라운드 2가 폐기** —
+>    `getAfter()`로 **묶을 수 있다**(구조 B). **순서 강제(구조 A)** 도 여전히 유효하며
+>    실패 산물 회수 범위가 더 넓다.
+>    **M-1·M-2는 둘 다 불충분** — M-1은 직전 1개만 비교, M-2는 키가 revision이라 **경로 역조회 불가**.
+> 3. **변경 문서 개수 5 → 6 정정**(handoff 포함).
+>
+> **유지되는 판정**: "head 미참조" 단독·"오래됐다" 단독 모두 **불충분**이며,
+> **REC이 없는 현재 구조에서는 어떤 객체도 안전하다고 증명할 수 없다 ⇒ 삭제 보류(O-3)가 기본값.**
+
+> ### ★★ Founder 방향 (과장 없이)
+>
+> **과거 정상 저장본을 영구 버전 이력으로 보존할 필요는 없다** · **안전하게 식별할 수 있을 때**
+> 삭제 후보로 본다 · **현재 사용 중이거나 저장 성공 여부가 미확정인 객체를 삭제해도 된다는 뜻은 아니다** ·
+> **실제 삭제·자동 정리 구현·Rules 변경·백엔드 구현·배포 승인이 아니다.**
+> → **확정된 것은 "과거 정상 저장본에 영구 보존 요구가 없다" 하나뿐**이고, 삭제 여부·시점·주체·주기는
+> **D-1~D-3으로 남았다.** 선행 G-4의 **delete 권한·자동 정리·운영 쓰기 개방 미승인**은 그대로다.
+>
+> ### ★★ 핵심 발견 — 지금은 세 집단을 구분할 수 없다
+>
+> **P1 현재 사용 중**(`X === head.objectPath`, 구분 가능) · **P2 과거 정상 저장본** ·
+> **P3 미확정·늦게 성공 가능** — **P2와 P3이 Storage에서 똑같이 생겼다.**
+> 가르는 정보(**"한 번이라도 head였는가"**)가 **어디에도 기록돼 있지 않다**:
+> head는 **정확히 3키**(`constants.ts:33` · `head.ts:74-77` · `firestore.rules`의 `hasOnly`+`hasAll`),
+> 구현에 **나열도 삭제도 없고**(`facade.ts`에 부재, `index.ts:7`이 명시),
+> `storage.rules`는 `allow update: if false` · `allow delete: if false`.
+> **P2는 실패가 아니라 성공의 부산물**이다 — update가 `objectPath` 교체를 강제하므로
+> **저장이 성공할 때마다 직전 객체가 참조에서 떨어진다.**
+>
+> ### 안전 삭제 조건 (SDC) — 4조건 AND
+>
+> **SDC-1** `X !== head.objectPath`(필요조건일 뿐) · **SDC-2** *"revision R에서 head였다"* 는
+> **durable 기록** · **SDC-3** `현재 head.revision > R` · **SDC-4** 판정 순서.
+> **증명 논리**: X가 R의 head였다면 그 commit은 **이미 성공**했으므로 P3이 아니고,
+> CAS가 `head.revision === expectedBase`를 요구하는데 revision은 **정확히 +1로 단조 증가**하므로
+> **head는 X로 되돌아갈 수 없다.** → **SDC-2만 오늘 존재하지 않는다.**
+>
+> ### 검증 결과
+>
+> - **"head가 현재 가리키지 않는다" 단독 = 안전하지 않다.** SDC-1뿐이라 **P2/P3을 구분 못 한다.**
+>   P3을 지우면 늦게 성공한 transaction의 경로가 비고 `loadBaseline`이 **fail-closed**되어
+>   **운영자가 상태를 아예 못 읽는다**(legacy fallback 없음 — 의도된 설계).
+> - **"오래됐다" 단독 = 저장소 근거로 증명 불가.** upload는 **10분** 재시도 상한이 문서화돼 있으나
+>   (`@firebase/storage` `index.esm.js:37`·`:43`) **commit의 늦은 성공에는 상한이 없다**
+>   (`maxAttempts` 기본 5는 **시도 횟수**, `@firebase/firestore` `index.d.ts:3083`).
+>   **⇒ 시간 창은 안전 증명이 아니라 Founder가 감수하는 리스크 수용이다.**
+>
+> ### 최소 구조와 결정적 제약
+>
+> **M-1** head에 **직전 objectPath**를 함께 기록(4번째 키) → 한 번에 하나의 P2 증명 ·
+> **M-2** **같은 transaction 안에서** append-only 이력 기록 → 완전한 체인
+> (**둘 다 Firestore라 다중 문서 원자성이 성립** — cross-service 원자성이 아니다) ·
+> **M-3** 객체 `customMetadata` = **불충분**(업로드 시점엔 commit 결과를 모른다).
+>
+> ⚠️ **다음 문단은 폐기됐다(보완 라운드 1 교정 1)** — Storage Rules는 **`firestore.get()`/
+> `firestore.exists()`로 기본 Firestore DB를 읽을 수 있다.** 원문은 이력으로만 남긴다.
+> ~~**Storage Rules는 Firestore를 읽을 수 없어 SDC를 강제할 수 없다.** 클라이언트에 delete를 주면
+> 서버가 "정말 밀려났는가"를 검증할 수단이 없어 SDC가 클라이언트 선의에만 의존한다.
+> ⇒ 강제 가능한 주체는 (i) 사람이 판단하는 out-of-band 삭제, (ii) 양쪽을 읽는 backend뿐이다.~~
+>
+> ### 선택지와 남은 결정
+>
+> **O-1 운영자 수동**(Rules 변경 0, 그러나 사람이 P3을 오인해도 서버가 안 막는다) ·
+> **O-2 backend/Admin SDK**(**G-3 재개** · SDC를 강제할 수 있는 유일한 자동 경로지만 **규칙이 틀리면
+> 자동으로 손해**) · **O-3 보류**(위험 0, 비용 단조 증가, **현재 상태**).
+> **남은 Founder 결정 3개**: **D-1 완료 판정 방식**(SDC 증명 / 시간 창=리스크 수용 / 혼합) ·
+> **D-2 정리 주체**(없음 / 운영자 수동 / backend=G-3 재개) · **D-3 보존 개수·주기**.
+>
+> **UNCONFIRMED / NOT TESTED**: 실제 `admin/state.json` 크기·내용 · 리빌드 payload 크기 ·
+> **저장 빈도 미결정**(⚠️ 레거시 **3초 디바운스**가 객체 수를 지배할 값) · bucket 객체 수·용량·
+> location·class·lifecycle · GCS 요금 · **늦은 commit 지연 상한** ·
+> **Storage prefix 나열의 Rules 허용 여부**(emulator로 확인 가능하나 미실행).
+
+> **이전 상태(참고)** — ★★ 스펙 037은 Codex 독립 재검증을 통과해 **DONE**이다
 (2026-08-11, `CODEX_PASSED`). 제품 검증 커밋 **`ead06ab`**(구현 `d83aee9` + 보완 라운드 1),
 기록 `91a7813`. 계약 `9805c26` · 권한 `4f2ab0b` + 범위 검토 `f8590e4`(A-12·A-13 확장 포함).
-**다음 스펙은 자동으로 시작하지 않는다** — Founder가 명시적으로 지시할 때 범위를 정한다.**
 
 > ### ★★ Codex 독립 검증 결과 — `CODEX_PASSED`
 >

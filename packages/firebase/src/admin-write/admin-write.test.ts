@@ -18,15 +18,16 @@ import { createAdminStateWritePort } from "./write-port";
 const CID = "abcdef01";
 const UUID_A = "11111111-2222-3333-4444-555555555555";
 const UUID_B = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+const REC_A = `${UUID_A}.json`;
+const REC_B = `${UUID_B}.json`;
 const PATH_A = `rebuild-admin-state/objects/${UUID_A}.json`;
-const PATH_B = `rebuild-admin-state/objects/${UUID_B}.json`;
 
 const CATALOG = { version: 1, items: [] } as unknown as Parameters<
   ReturnType<typeof createAdminStateWritePort>["save"]
 >[0]["catalog"];
 
-function headDoc(revision: number, objectPath: string): AdminStateHead {
-  return { schemaVersion: HEAD_SCHEMA_VERSION, revision, objectPath };
+function headDoc(revision: number, recId: string): AdminStateHead {
+  return { schemaVersion: HEAD_SCHEMA_VERSION, revision, recId };
 }
 
 function sdkError(code: string): Error {
@@ -39,6 +40,7 @@ interface FakeOptions {
   readonly authState?: OperatorAuthState;
   readonly uuids?: readonly string[];
   readonly upload?: () => Promise<void>;
+  readonly claim?: () => Promise<void>;
   /** Number of times the fake SDK re-runs the transaction callback before settling. */
   readonly callbackRuns?: number;
   readonly headSequence?: readonly (unknown | null)[];
@@ -69,6 +71,10 @@ function createHarness(options: FakeOptions = {}) {
       const value = uuids[Math.min(uuidIndex, uuids.length - 1)] ?? UUID_A;
       uuidIndex += 1;
       return value;
+    },
+    createObjectClaim: async () => {
+      calls.push("createObjectClaim");
+      if (options.claim) await options.claim();
     },
     uploadJsonObject: async (request) => {
       calls.push("uploadJsonObject");
@@ -164,12 +170,12 @@ describe("revision range (§5.7)", () => {
 
 describe("head validation (§4.3)", () => {
   it("accepts exactly the three contract keys", () => {
-    expect(validateHead(headDoc(3, PATH_A)).ok).toBe(true);
+    expect(validateHead(headDoc(3, REC_A)).ok).toBe(true);
   });
 
-  it("refuses a fourth key, a wrong schemaVersion and a malformed objectPath", () => {
-    expect(validateHead({ ...headDoc(3, PATH_A), extra: 1 }).ok).toBe(false);
-    expect(validateHead({ ...headDoc(3, PATH_A), schemaVersion: 2 }).ok).toBe(false);
+  it("refuses a fourth key, a wrong schemaVersion and a malformed recId", () => {
+    expect(validateHead({ ...headDoc(3, REC_A), extra: 1 }).ok).toBe(false);
+    expect(validateHead({ ...headDoc(3, REC_A), schemaVersion: 2 }).ok).toBe(false);
     expect(validateHead({ ...headDoc(3, "admin/state.json") }).ok).toBe(false);
     expect(validateHead(null).ok).toBe(false);
     expect(validateHead([]).ok).toBe(false);
@@ -183,7 +189,7 @@ describe("first head create (§4.3)", () => {
     const h = createHarness({ headSequence: [null] });
     const result = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     expect(result).toEqual({ ok: true, value: { revision: 1, objectPath: PATH_A } });
-    expect(h.writtenHead()).toEqual(headDoc(1, PATH_A));
+    expect(h.writtenHead()).toEqual(headDoc(1, REC_A));
   });
 
   it("refuses to start over when there is no head but expectedBase is not 0", async () => {
@@ -203,17 +209,13 @@ describe("transaction callback re-execution (§5.5)", () => {
   it("runs the callback many times while uploading once and minting one operation id", async () => {
     const h = createHarness({
       callbackRuns: 4,
-      headSequence: [
-        headDoc(7, PATH_B),
-        headDoc(7, PATH_B),
-        headDoc(7, PATH_B),
-        headDoc(7, PATH_B),
-      ],
+      headSequence: [headDoc(7, REC_B), headDoc(7, REC_B), headDoc(7, REC_B), headDoc(7, REC_B)],
     });
     const result = await h.port.save({ correlationId: CID, expectedBase: 7, catalog: CATALOG });
     expect(result).toEqual({ ok: true, value: { revision: 8, objectPath: PATH_A } });
 
     expect(h.calls.filter((c) => c === "computeCallback")).toHaveLength(4);
+    expect(h.calls.filter((c) => c === "createObjectClaim")).toHaveLength(1);
     expect(h.calls.filter((c) => c === "uploadJsonObject")).toHaveLength(1);
     expect(h.calls.filter((c) => c === "randomOperationId")).toHaveLength(1);
     expect(h.calls.filter((c) => c === "runHeadTransaction")).toHaveLength(1);
@@ -222,7 +224,7 @@ describe("transaction callback re-execution (§5.5)", () => {
   it("does not re-adopt a new base when the head moves between callback runs", async () => {
     const h = createHarness({
       callbackRuns: 2,
-      headSequence: [headDoc(7, PATH_B), headDoc(9, PATH_B)],
+      headSequence: [headDoc(7, REC_B), headDoc(9, REC_B)],
     });
     const result = await h.port.save({ correlationId: CID, expectedBase: 7, catalog: CATALOG });
     expect(result.ok).toBe(false);
@@ -234,6 +236,7 @@ describe("transaction callback re-execution (§5.5)", () => {
     await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     expect(h.calls).toEqual([
       "randomOperationId",
+      "createObjectClaim",
       "uploadJsonObject",
       "runHeadTransaction",
       "computeCallback",
@@ -267,6 +270,35 @@ describe("upload outcomes (§6.5)", () => {
   });
 });
 
+describe("G-4 structure A claim", () => {
+  it("creates the write-once REC before upload", async () => {
+    const h = createHarness({ headSequence: [null] });
+    await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
+    expect(h.calls.indexOf("createObjectClaim")).toBeLessThan(h.calls.indexOf("uploadJsonObject"));
+  });
+
+  it("stops before Storage when REC creation fails definitively", async () => {
+    const h = createHarness({ claim: () => Promise.reject(sdkError("already-exists")) });
+    const result = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("WRITE_CLAIM_FAILED");
+    expect(h.calls).not.toContain("uploadJsonObject");
+    expect(h.calls).not.toContain("runHeadTransaction");
+  });
+
+  it("does not retry an unknown REC outcome or touch Storage", async () => {
+    const h = createHarness({ claim: () => Promise.reject(sdkError("deadline-exceeded")) });
+    const result = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe("WRITE_CLAIM_OUTCOME_UNKNOWN");
+      expect(result.error.retryable).toBe(false);
+    }
+    expect(h.calls.filter((call) => call === "createObjectClaim")).toHaveLength(1);
+    expect(h.calls).not.toContain("uploadJsonObject");
+  });
+});
+
 // ── F-4 / §6.6 bounded reconciliation ──────────────────────────────────────────────────────────
 
 describe("reconciliation after an indeterminate transaction (§6.6)", () => {
@@ -274,7 +306,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
 
   it("confirms success when the head advanced by one and points at this operation", async () => {
     const h = createHarness({
-      headSequence: [headDoc(4, PATH_B), headDoc(5, PATH_A)],
+      headSequence: [headDoc(4, REC_B), headDoc(5, REC_A)],
       transactionError: indeterminate,
     });
     const result = await h.port.save({ correlationId: CID, expectedBase: 4, catalog: CATALOG });
@@ -287,7 +319,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
 
   it("declares a definite conflict when another writer took base+1", async () => {
     const h = createHarness({
-      headSequence: [headDoc(4, PATH_B), headDoc(5, PATH_B)],
+      headSequence: [headDoc(4, REC_B), headDoc(5, REC_B)],
       transactionError: indeterminate,
     });
     const result = await h.port.save({ correlationId: CID, expectedBase: 4, catalog: CATALOG });
@@ -299,7 +331,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
 
   it("stays undecided when the head is still at the base, because a late commit may still land", async () => {
     const h = createHarness({
-      headSequence: [headDoc(4, PATH_B), headDoc(4, PATH_B)],
+      headSequence: [headDoc(4, REC_B), headDoc(4, REC_B)],
       transactionError: indeterminate,
     });
     const result = await h.port.save({ correlationId: CID, expectedBase: 4, catalog: CATALOG });
@@ -312,7 +344,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
 
   it("stays undecided when the head moved beyond base+1", async () => {
     const h = createHarness({
-      headSequence: [headDoc(4, PATH_B), headDoc(9, PATH_B)],
+      headSequence: [headDoc(4, REC_B), headDoc(9, REC_B)],
       transactionError: indeterminate,
     });
     const result = await h.port.save({ correlationId: CID, expectedBase: 4, catalog: CATALOG });
@@ -326,6 +358,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
     let getHeadCount = 0;
     const facade: AdminWriteFacade = {
       randomOperationId: () => UUID_A,
+      createObjectClaim: async () => undefined,
       uploadJsonObject: async () => {
         calls.push("upload");
       },
@@ -333,14 +366,14 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
       getHead: async () => {
         getHeadCount += 1;
         if (getHeadCount > 1) throw sdkError("unavailable");
-        return headDoc(4, PATH_B);
+        return headDoc(4, REC_B);
       },
       runHeadTransaction: async (compute) => {
         compute(await facadeHead());
         throw indeterminate;
       },
     };
-    const facadeHead = async () => headDoc(4, PATH_B) as unknown;
+    const facadeHead = async () => headDoc(4, REC_B) as unknown;
     const port = createAdminStateWritePort({
       facade,
       auth: {
@@ -358,7 +391,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
 
   it("does not reconcile when the transaction failed definitively", async () => {
     const h = createHarness({
-      headSequence: [headDoc(4, PATH_B)],
+      headSequence: [headDoc(4, REC_B)],
       transactionError: sdkError("permission-denied"),
     });
     const result = await h.port.save({ correlationId: CID, expectedBase: 4, catalog: CATALOG });
@@ -463,7 +496,7 @@ describe("loadBaseline (§6.1, §6.2)", () => {
 
   it("reads only the rebuild object when a head exists, and never falls back to legacy", async () => {
     const h = createHarness({
-      headSequence: [headDoc(6, PATH_A)],
+      headSequence: [headDoc(6, REC_A)],
       readObjectBytes: async () => new TextEncoder().encode("{}"),
     });
     const result = await h.port.loadBaseline({ correlationId: CID });
@@ -478,7 +511,7 @@ describe("loadBaseline (§6.1, §6.2)", () => {
 
   it("fails closed with the baseline-only code when the head document itself is malformed", async () => {
     const h = createHarness({
-      headSequence: [{ schemaVersion: 1, revision: 0, objectPath: PATH_A }],
+      headSequence: [{ schemaVersion: 1, revision: 0, recId: REC_A }],
     });
     const result = await h.port.loadBaseline({ correlationId: CID });
     expect(result.ok).toBe(false);
@@ -488,7 +521,7 @@ describe("loadBaseline (§6.1, §6.2)", () => {
 
   it("keeps a missing referenced object on the existing read code, not on a write code", async () => {
     const h = createHarness({
-      headSequence: [headDoc(6, PATH_A)],
+      headSequence: [headDoc(6, REC_A)],
       readObjectBytes: () => Promise.reject(sdkError("storage/object-not-found")),
     });
     const result = await h.port.loadBaseline({ correlationId: CID });
@@ -509,7 +542,7 @@ describe("loadBaseline (§6.1, §6.2)", () => {
 
   it("fails closed on malformed JSON in the referenced object", async () => {
     const h = createHarness({
-      headSequence: [headDoc(6, PATH_A)],
+      headSequence: [headDoc(6, REC_A)],
       readObjectBytes: async () => new TextEncoder().encode("{not json"),
     });
     const result = await h.port.loadBaseline({ correlationId: CID });
@@ -537,9 +570,12 @@ describe("emulator rules copies (§7.3)", () => {
       const differing = a.map((line, i) => [line, b[i]] as const).filter(([x, y]) => x !== y);
       // Without this the emulator would be testing something other than the real rules, and the
       // whole "verified against the real rules" claim would be hollow.
-      expect(differing).toHaveLength(1);
-      expect(differing[0][0]).toContain(PLACEHOLDER);
-      expect(differing[0][1]).toContain(SYNTHETIC);
+      expect(differing.length).toBeGreaterThan(0);
+      for (const [targetLine, emulatorLine] of differing) {
+        expect(targetLine).toContain(PLACEHOLDER);
+        expect(emulatorLine).toContain(SYNTHETIC);
+        expect(emulatorLine).toBe(targetLine.replace(PLACEHOLDER, SYNTHETIC));
+      }
     });
 
     it(`${deployed} still carries the UNCONFIRMED placeholder, so it cannot be deployed as-is`, () => {

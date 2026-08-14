@@ -12,6 +12,9 @@
  */
 export const REBUILD_OBJECT_PREFIX = "rebuild-admin-state/objects/";
 
+/** Write-once Firestore consumption record used by G-4 structure A. */
+export const OBJECT_CLAIM_COLLECTION_ID = "rebuildAdminStateObjects";
+
 /**
  * The ONLY object path shape this spec writes or reads.
  *
@@ -22,6 +25,10 @@ export const REBUILD_OBJECT_PREFIX = "rebuild-admin-state/objects/";
 export const REBUILD_OBJECT_PATH_PATTERN =
   /^rebuild-admin-state\/objects\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.json$/;
 
+/** REC document id and Storage object-id segment are deliberately the exact same string. */
+export const REBUILD_OBJECT_REC_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.json$/;
+
 /** Firestore location of the single mutable source of truth (spec 037 §4.3). */
 export const HEAD_COLLECTION_ID = "rebuildAdminState";
 export const HEAD_DOCUMENT_ID = "head";
@@ -30,7 +37,7 @@ export const HEAD_DOCUMENT_ID = "head";
 export const HEAD_SCHEMA_VERSION = 1;
 
 /** Exactly three keys. A fourth key is a contract violation, not an extension. */
-export const HEAD_ALLOWED_KEYS = ["schemaVersion", "revision", "objectPath"] as const;
+export const HEAD_ALLOWED_KEYS = ["schemaVersion", "revision", "recId"] as const;
 
 /** Objects are JSON; the create rule refuses any other content type. */
 export const REBUILD_OBJECT_CONTENT_TYPE = "application/json";

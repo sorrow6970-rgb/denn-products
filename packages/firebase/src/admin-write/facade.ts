@@ -16,6 +16,11 @@ export interface AdminWriteReadRequest {
   readonly maxDownloadSizeBytes: number;
 }
 
+export interface AdminWriteClaimRequest {
+  readonly recId: string;
+  readonly claimedBase: number;
+}
+
 export interface AdminWriteFacade {
   /**
    * Mints the per-save operation id.
@@ -24,6 +29,9 @@ export interface AdminWriteFacade {
    * exactly once per save — including across transaction callback re-runs (§7.5 F-1).
    */
   randomOperationId(): string;
+
+  /** Creates the write-once REC before Storage is touched (G-4 structure A). */
+  createObjectClaim(request: AdminWriteClaimRequest): Promise<void>;
 
   /**
    * Creates the immutable object. MUST NOT overwrite: the create-only rule

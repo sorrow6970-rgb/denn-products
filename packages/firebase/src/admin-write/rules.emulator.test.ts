@@ -22,6 +22,7 @@ const OTHER_UID = "emulator-intruder-DO-NOT-DEPLOY";
 const PASSWORD = "emulator-password-0000";
 
 const path = (uuid: string) => `rebuild-admin-state/objects/${uuid}.json`;
+const recIdFromPath = (objectPath: string) => objectPath.slice(objectPath.lastIndexOf("/") + 1);
 
 // Storage objects are immutable and `resetEmulatorState` only clears Firestore, so every scenario
 // mints its own paths — exactly as a real save does. Reusing one would make the create-only rule
@@ -81,11 +82,17 @@ async function upload(client: Client, objectPath: string, contentType = "applica
 }
 
 const headRef = (client: Client) => client.firestore.doc(client.db, "rebuildAdminState", "head");
+const claimRef = (client: Client, recId: string) =>
+  client.firestore.doc(client.db, "rebuildAdminStateObjects", recId);
+
+async function claim(client: Client, objectPath: string, claimedBase: number): Promise<void> {
+  await client.firestore.setDoc(claimRef(client, recIdFromPath(objectPath)), { claimedBase });
+}
 
 const headDoc = (revision: number, objectPath: string) => ({
   schemaVersion: HEAD_SCHEMA_VERSION,
   revision,
-  objectPath,
+  recId: recIdFromPath(objectPath),
 });
 
 async function expectRejected(run: () => Promise<unknown>): Promise<void> {
@@ -110,6 +117,7 @@ describe("E-1/E-2 identity gating", () => {
   it("lets the approved operator create an object and the head", async () => {
     await resetEmulatorState(env);
     const objectPath = freshPath();
+    await claim(approved, objectPath, 0);
     await upload(approved, objectPath);
     await approved.firestore.setDoc(headRef(approved), headDoc(1, objectPath));
     const snap = await approved.firestore.getDoc(headRef(approved));
@@ -118,6 +126,8 @@ describe("E-1/E-2 identity gating", () => {
 
   it("refuses another uid and an unauthenticated client on both services", async () => {
     const objectPath = freshPath();
+    await expectRejected(() => claim(other, objectPath, 0));
+    await expectRejected(() => claim(anonymous, objectPath, 0));
     await expectRejected(() => upload(other, objectPath));
     await expectRejected(() => upload(anonymous, objectPath));
     await expectRejected(() => other.firestore.setDoc(headRef(other), headDoc(9, objectPath)));
@@ -130,6 +140,7 @@ describe("E-1/E-2 identity gating", () => {
 describe("E-3 storage is create-only", () => {
   it("refuses a second write to the same path and refuses delete", async () => {
     const objectPath = freshPath();
+    await claim(approved, objectPath, 0);
     await upload(approved, objectPath);
     // This is what makes an SDK-level retry harmless instead of destructive.
     await expectRejected(() => upload(approved, objectPath));
@@ -139,14 +150,32 @@ describe("E-3 storage is create-only", () => {
   });
 
   it("refuses a non-JSON content type", async () => {
-    await expectRejected(() => upload(approved, freshPath(), "text/plain"));
+    const objectPath = freshPath();
+    await claim(approved, objectPath, 0);
+    await expectRejected(() => upload(approved, objectPath, "text/plain"));
+  });
+
+  it("refuses upload when the matching write-once REC does not exist", async () => {
+    await expectRejected(() => upload(approved, freshPath()));
+  });
+
+  it("refuses REC update and delete", async () => {
+    const objectPath = freshPath();
+    const recId = recIdFromPath(objectPath);
+    await claim(approved, objectPath, 0);
+    await expectRejected(() =>
+      approved.firestore.setDoc(claimRef(approved, recId), { claimedBase: 1 }),
+    );
+    await expectRejected(() => approved.firestore.deleteDoc(claimRef(approved, recId)));
   });
 });
 
 describe("E-4/E-5 head read", () => {
   it("lets the approved operator get the head and refuses every other identity", async () => {
     await resetEmulatorState(env);
-    await approved.firestore.setDoc(headRef(approved), headDoc(1, freshPath()));
+    const objectPath = freshPath();
+    await claim(approved, objectPath, 0);
+    await approved.firestore.setDoc(headRef(approved), headDoc(1, objectPath));
     await expect(approved.firestore.getDoc(headRef(approved))).resolves.toBeDefined();
     await expectRejected(() => other.firestore.getDoc(headRef(other)));
     await expectRejected(() => anonymous.firestore.getDoc(headRef(anonymous)));
@@ -160,27 +189,29 @@ describe("E-4/E-5 head read", () => {
 });
 
 describe("E-6 head schema and revision rules", () => {
-  it("refuses a fourth key, a bad objectPath, and a first revision other than 1", async () => {
+  it("refuses a fourth key, a bad recId, and a first revision other than 1", async () => {
     await resetEmulatorState(env);
+    const extraPath = freshPath();
+    await claim(approved, extraPath, 0);
     await expectRejected(() =>
-      approved.firestore.setDoc(headRef(approved), { ...headDoc(1, freshPath()), extra: true }),
+      approved.firestore.setDoc(headRef(approved), { ...headDoc(1, extraPath), extra: true }),
     );
     await expectRejected(() =>
       approved.firestore.setDoc(headRef(approved), headDoc(1, "admin/state.json")),
     );
-    await expectRejected(() =>
-      approved.firestore.setDoc(headRef(approved), headDoc(2, freshPath())),
-    );
+    await expectRejected(() => approved.firestore.setDoc(headRef(approved), headDoc(2, extraPath)));
   });
 
-  it("refuses an update that is not exactly +1 or that reuses the objectPath", async () => {
+  it("refuses an update that is not exactly +1 or that reuses the recId", async () => {
     await resetEmulatorState(env);
     const first = freshPath();
     const second = freshPath();
+    await claim(approved, first, 0);
+    await claim(approved, second, 1);
     await approved.firestore.setDoc(headRef(approved), headDoc(1, first));
     await expectRejected(() => approved.firestore.setDoc(headRef(approved), headDoc(3, second)));
     await expectRejected(() => approved.firestore.setDoc(headRef(approved), headDoc(1, second)));
-    // objectPath must change, which is what later makes "did my commit land?" answerable
+    // recId must change, which is what later makes "did my commit land?" answerable
     await expectRejected(() => approved.firestore.setDoc(headRef(approved), headDoc(2, first)));
     await expect(
       approved.firestore.setDoc(headRef(approved), headDoc(2, second)),
@@ -195,10 +226,14 @@ describe("E-6 head schema and revision rules", () => {
 describe("E-7/E-8 two-writer compare-and-set", () => {
   it("advances the head exactly once and leaves the loser's object unreferenced", async () => {
     await resetEmulatorState(env);
-    await approved.firestore.setDoc(headRef(approved), headDoc(1, freshPath()));
+    const initial = freshPath();
+    await claim(approved, initial, 0);
+    await approved.firestore.setDoc(headRef(approved), headDoc(1, initial));
 
     const objectA = freshPath();
     const objectB = freshPath();
+    await claim(approved, objectA, 1);
+    await claim(approved, objectB, 1);
     await upload(approved, objectA);
     await upload(approved, objectB);
 
@@ -215,12 +250,25 @@ describe("E-7/E-8 two-writer compare-and-set", () => {
     expect(fulfilled).toHaveLength(1);
 
     const snap = await approved.firestore.getDoc(headRef(approved));
-    const head = snap.data() as { revision: number; objectPath: string };
+    const head = snap.data() as { revision: number; recId: string };
     expect(head.revision).toBe(2); // exactly +1, never +2
     // the loser's object still exists but nothing references it — an orphan, and the head is intact
-    const loser = head.objectPath === objectA ? objectB : objectA;
+    const loser = head.recId === recIdFromPath(objectA) ? objectB : objectA;
     await expect(
       approved.storage.getBytes(approved.storage.ref(approved.storageInstance, loser)),
     ).resolves.toBeDefined();
+  });
+
+  it("prevents A → B → A because the old REC cannot be consumed again", async () => {
+    await resetEmulatorState(env);
+    const objectA = freshPath();
+    const objectB = freshPath();
+    await claim(approved, objectA, 0);
+    await approved.firestore.setDoc(headRef(approved), headDoc(1, objectA));
+    await claim(approved, objectB, 1);
+    await approved.firestore.setDoc(headRef(approved), headDoc(2, objectB));
+
+    await expectRejected(() => claim(approved, objectA, 2));
+    await expectRejected(() => approved.firestore.setDoc(headRef(approved), headDoc(3, objectA)));
   });
 });

@@ -1,7 +1,7 @@
 // Public contract types for the rebuild admin-state write path (spec 037 §5.6).
 //
 // The two operations use DIFFERENT error surfaces on purpose (§5.4):
-//   - `save`         -> SafeAdminWriteError, the eight WRITE_* codes
+//   - `save`         -> SafeAdminWriteError, including the structure-A claim stage
 //   - `loadBaseline` -> spec 036's SafeAdminReadError, plus exactly one baseline-only code
 // Reporting a read failure as an "upload" error would state something untrue about the API.
 
@@ -21,12 +21,14 @@ export type AdminStateRevision = number;
 
 export type AdminWriteErrorCategory = "VALIDATION" | "AUTH" | "NETWORK" | "UNKNOWN";
 
-/** The eight codes of the §5.4 (A) canonical table. Nothing outside this union exists. */
+/** Save errors, including the G-4 structure-A claim stage. */
 export type AdminWriteErrorCode =
   | "WRITE_CONFLICT"
   | "WRITE_AUTH_REQUIRED"
   | "WRITE_FORBIDDEN"
   | "WRITE_INVALID_INPUT"
+  | "WRITE_CLAIM_FAILED"
+  | "WRITE_CLAIM_OUTCOME_UNKNOWN"
   | "WRITE_UPLOAD_FAILED"
   | "WRITE_UPLOAD_OUTCOME_UNKNOWN"
   | "WRITE_HEAD_FAILED"
@@ -49,7 +51,7 @@ export interface SafeAdminWriteError {
 // ── loadBaseline-only error surface ────────────────────────────────────────────────────────────
 
 /**
- * A violation of the head document ITSELF (allowed keys / revision / objectPath / schemaVersion).
+ * A violation of the head document ITSELF (allowed keys / revision / recId / schemaVersion).
  * The single baseline-only code added by this spec.
  *
  * A missing referenced object, or invalid JSON/catalog inside it, keeps its existing spec 036 read
@@ -113,5 +115,5 @@ export interface AdminStateWritePort {
 export interface AdminStateHead {
   readonly schemaVersion: number;
   readonly revision: AdminStateRevision;
-  readonly objectPath: string;
+  readonly recId: string;
 }
