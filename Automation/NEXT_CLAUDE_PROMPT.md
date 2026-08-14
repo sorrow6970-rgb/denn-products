@@ -2,12 +2,27 @@
 
 상태: `WAITING_FOR_NEXT_MANUAL_TASK`
 active_unit: `none`
-completed_unit: `spec-039-g4-orphan-identification-structure-a` — **DONE / `CODEX_PASSED` / LOCAL_ONLY**
-기준: HEAD=origin, ahead/behind **0/0** · 스펙 039 구현·종료 커밋 `7843e85`
+completed_unit: `spec-040-admin-write-local-ui-connection-contract` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_UI**
+기준: 스펙 040 구현 커밋 **`1160bc4`** · 종료 문서 커밋 및 fast-forward push 완료 후 HEAD=origin, ahead/behind **0/0**
 next_transition: **`NEXT_MANUAL_TASK`**
 
 **Founder 결정은 `D-1=A`, `D-2=O-3`, `D-3=N`이다. Structure A 식별 구조의 로컬 구현과
 검증과 Codex 독립 검수가 끝났다(`CODEX_PASSED`, 발견 결함 0). 다음 작업은 자동으로 시작하지 않는다.**
+
+## ★ 스펙 040 종료
+
+정본: `docs/rebuild/specs/040-admin-write-local-ui-connection-contract.md`
+
+- Founder 승인: **U-1=A, U-2=A, U-3=A**.
+- 구현 파일: `apps/admin/src/admin-write/session-controller.ts` + unit.
+- UI/App wiring/write adapter 생성 0.
+- Codex 보완: 동일 auth 재통지 no-op, hostile input fail-closed.
+- 최종 게이트: targeted 11/11, unit 1333/1333, Chromium 134/134, 고객 hash 동일.
+
+판정 `CODEX_PASSED`. 다음 수동 지시를 기다린다. 실제 Firebase·UID·IAM·배포·운영 쓰기·
+UI 저장·delete·발행은 금지다.
+
+> 아래 `## 0`부터는 완료된 스펙 039 및 그 이전 역사 기록이다. 현재 작업 지시로 사용하지 않는다.
 
 ## 0. 이번 후보
 

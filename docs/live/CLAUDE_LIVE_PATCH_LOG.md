@@ -4014,3 +4014,40 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태: `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 작업 자동 시작 0.
 
 - 후속 상태 동기화 커밋: `195112b` — `spec 039: record completion state`, fast-forward push 성공.
+
+## 2026-08-14 — 스펙 040 후보 UI 연결 계약 조사 · Founder 결정 대기
+
+- 문서 전용 조사. 제품 코드·Rules·config·test·manifest·lockfile 변경 0.
+- 확인: spec 036 controller는 카탈로그/revision을 보존하지 않고, spec 035 draft는 특정 frameSize에
+  연결되지 않아 현재 저장 버튼은 전체 문서 CAS 입력을 구성할 수 없다.
+- 제안: baseline catalog + exact revision을 메모리에 소유하는 write-session controller 선행.
+- Founder 결정: U-1~U-3, 권장값 모두 A.
+- 실제 Firebase·UID·IAM·배포·운영 쓰기·UI 저장 버튼·delete·자동 정리·발행은 금지 유지.
+- 신규 문서: spec 040 후보 계약 + handoff. stage/commit/push 0, 자동화 0.
+
+## 2026-08-14 — 스펙 040 U-1~U-3 승인 · write-session controller 구현
+
+- Founder 승인: U-1=A, U-2=A, U-3=A.
+- 구현: framework-free session controller + 합성 unit. UI/App wiring/write adapter 생성 0.
+- 고정: exact expectedBase, dirty 폐기 확인, single in-flight, invalid catalog write 0,
+  conflict/outcome-unknown 자동 retry 0, upload 확정 실패 명시 재시도, late auth/dispose 결과 무시.
+- 검증: targeted 9/9, `pnpm check` PASS(unit 1331/1331), Chromium 134/134 PASS,
+  고객 SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`.
+- 실제 Firebase/emulator/UID/IAM/배포/운영 쓰기/UI/delete/발행 0.
+- 상태: READY_FOR_CODEX, stage/commit/push 0, 자동화 0.
+
+## 2026-08-14 — 스펙 040 Codex 보완 라운드 1 · CODEX_PASSED
+
+- 결함 1: 동일 `authenticated` observer 재통지가 baseline/dirty draft를 초기화 → 동등 상태 no-op.
+- 결함 2: revoked Proxy 입력에서 validation throw가 reject 가능 → `WRITE_INVALID_INPUT` fail-closed.
+- 회귀: baseline/dirty 보존, raw 오류 비노출, Storage/write 호출 0을 unit으로 고정.
+- targeted 11/11, 전체 unit 1333/1333, `pnpm check` PASS. 추가 결함 0.
+- 최종: `DONE / CODEX_PASSED / LOCAL_ONLY / NO_UI`, `WAITING_FOR_NEXT_MANUAL_TASK`.
+- 실제 Firebase/emulator/UID/IAM/배포/운영 쓰기/UI/delete/발행 0. stage/commit/push 0.
+
+## 2026-08-14 — 스펙 040 검증 완료 변경 커밋
+
+- 구현·계약 커밋: **`1160bc4`** — `spec 040: add local admin write session controller`.
+- 포함 범위: session controller + unit + spec 040 계약 + handoff, 정확히 4개 파일.
+- 종료 상태 문서 4개는 별도 일반 커밋으로 기록하고 함께 fast-forward push한다.
+- 보호 대상과 기존 Founder/user 변경은 stage·commit하지 않았다.

@@ -4,15 +4,15 @@
 updated_at: 2026-08-14
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-039-g4-orphan-identification-structure-a   # DONE, CODEX_PASSED, LOCAL_ONLY
+completed_unit: spec-040-admin-write-local-ui-connection-contract   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_UI
 active_unit: none
 state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 7843e85   # spec 039 implementation + closure
-candidate_commit: 7843e85   # spec 039 implementation + closure, CODEX_PASSED
+baseline_commit: 1160bc4   # spec 040 local controller + contract, CODEX_PASSED
+candidate_commit: 1160bc4   # spec 040 implementation, CODEX_PASSED
 verified_commit: ead06ab   # product, CODEX_PASSED (d83aee9 implementation + correction round 1)
 origin_relation: "HEAD=origin, ahead/behind 0/0 after completion-state fast-forward push"
-working_tree: "dirty only from protected Founder/user changes: design README/taste-v2/spec038, spec-018 PNGs x2, packages/render/src/plan/index.ts, and untracked AGENTS.md"
-fix_round: 0
+working_tree: "dirty only from protected Founder/user changes after spec 040 completion documents are committed"
+fix_round: 1
 max_fix_rounds: 3
 next_transition: NEXT_MANUAL_TASK
 automation_loop: removed (no new automation or recurring task is created)
@@ -20,6 +20,26 @@ commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 040 후보 계약 조사 (2026-08-14)
+
+- 현재 read controller는 catalog/revision을 버리고, print-size draft는 특정 항목에 연결되지 않아
+  저장 버튼을 바로 붙일 수 없다.
+- 전체 baseline과 exact revision을 보존하는 write-session 경계를 먼저 제안했다.
+- 상태: 문서 전용, 제품 코드·Rules·config·test 변경 0.
+- 다음: Founder U-1~U-3 결정. 권장값은 모두 A.
+
+### Founder 승인 및 구현
+
+U-1=A/U-2=A/U-3=A 승인. framework-free write-session controller + unit만 구현했다.
+UI/App wiring/write adapter 생성 0. targeted 9/9, 전체 unit 1331/1331, Chromium 134/134 PASS.
+다음은 Codex 독립 검수다.
+
+### Codex 최종 판정
+
+CORRECTION_REQUIRED 2건(동일 auth 재통지 초기화, hostile input rejection)을 보완했다.
+targeted 11/11, 전체 unit 1333/1333 PASS, 추가 결함 0. **CODEX_PASSED**.
+다음 작업은 자동 시작하지 않는다.
 
 ## ★ Founder D-1=A · D-2=O-3 · D-3=N 구현 결과 (2026-08-14)
 

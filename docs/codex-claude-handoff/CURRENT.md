@@ -9,8 +9,20 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 039 Structure A 식별 구조가
-`DONE / CODEX_PASSED / LOCAL_ONLY`로 종료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 040 write-session controller가
+`DONE / CODEX_PASSED / LOCAL_ONLY / NO_UI`로 종료됐다.**
+
+현재 UI는 baseline catalog/revision을 보존하지 않고 print-size draft도 특정 frame size에 연결되지 않아
+저장 버튼을 바로 추가할 수 없다. 권장안은 write-session controller를 먼저 분리하는 U-1=A,
+dirty 재로드 명시 폐기 확인 U-2=A, 확정 upload 실패도 자동 retry 0인 U-3=A다.
+
+변경 제품 범위는 `apps/admin/src/admin-write/session-controller.ts` + unit뿐이다. targeted 9/9,
+독립 검수 결함 2건을 보완해 targeted 11/11, 전체 unit 1333/1333 PASS, 추가 결함 0이다.
+Chromium 134/134와 고객 hash 동일도 유지한다. 실제 Firebase·UID·IAM·배포·UI 저장·delete·발행은
+금지다. 구현·계약 커밋은 **`1160bc4`**다. 다음 전이는 `NEXT_MANUAL_TASK`다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 039 Structure A 식별 구조가
+> `DONE / CODEX_PASSED / LOCAL_ONLY`로 종료됐다.**
 
 REC은 upload 전 `/rebuildAdminStateObjects/{UUID.json}`에 write-once로 생성되고, head는 `recId`와
 REC의 `claimedBase`를 검사한다. 로컬 게이트: targeted unit **51/51**, Firebase typecheck PASS,
