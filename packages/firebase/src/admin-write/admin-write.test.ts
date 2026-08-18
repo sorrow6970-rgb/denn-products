@@ -22,9 +22,13 @@ const REC_A = `${UUID_A}.json`;
 const REC_B = `${UUID_B}.json`;
 const PATH_A = `rebuild-admin-state/objects/${UUID_A}.json`;
 
-const CATALOG = { version: 1, items: [] } as unknown as Parameters<
-  ReturnType<typeof createAdminStateWritePort>["save"]
->[0]["catalog"];
+const CATALOG: Parameters<ReturnType<typeof createAdminStateWritePort>["save"]>[0]["catalog"] = {
+  schemaVersion: 1,
+  migratedFrom: "legacy-v0",
+  data: {},
+};
+const CATALOG_READ = readLegacyCatalog(CATALOG);
+if (!CATALOG_READ.ok) throw new Error("synthetic catalog must be valid");
 
 function headDoc(revision: number, recId: string): AdminStateHead {
   return { schemaVersion: HEAD_SCHEMA_VERSION, revision, recId };
@@ -58,6 +62,8 @@ function createHarness(options: FakeOptions = {}) {
   let headIndex = 0;
   let written: AdminStateHead | null = null;
   let uploaded: string | null = null;
+  let hasGetHeadOverride = false;
+  let getHeadOverride: unknown | null = null;
 
   const nextHead = (): unknown | null => {
     const value = headSequence[Math.min(headIndex, headSequence.length - 1)];
@@ -84,11 +90,15 @@ function createHarness(options: FakeOptions = {}) {
     readObjectBytes: async () => {
       calls.push("readObjectBytes");
       if (options.readObjectBytes) return options.readObjectBytes();
-      return new TextEncoder().encode("{}");
+      return new TextEncoder().encode(JSON.stringify(CATALOG));
     },
     getHead: async () => {
       calls.push("getHead");
       if (options.getHeadError !== undefined) throw options.getHeadError;
+      if (hasGetHeadOverride) {
+        hasGetHeadOverride = false;
+        return getHeadOverride;
+      }
       return nextHead();
     },
     runHeadTransaction: async (compute) => {
@@ -119,8 +129,8 @@ function createHarness(options: FakeOptions = {}) {
         options.legacyResult ?? {
           ok: true,
           value: {
-            document: CATALOG as never,
-            report: {} as never,
+            document: CATALOG,
+            report: CATALOG_READ.report,
             byteLength: 2,
             correlationId: CID,
           },
@@ -129,9 +139,18 @@ function createHarness(options: FakeOptions = {}) {
     },
   };
 
+  const port = createAdminStateWritePort({ facade, auth, legacyRead });
   return {
     calls,
-    port: createAdminStateWritePort({ facade, auth, legacyRead }),
+    port,
+    prime: async (revision: number) => {
+      hasGetHeadOverride = true;
+      getHeadOverride = revision === 0 ? null : headDoc(revision, REC_B);
+      const result = await port.loadBaseline({ correlationId: CID });
+      if (!result.ok || result.value.revision !== revision)
+        throw new Error("failed to prime baseline");
+      calls.length = 0;
+    },
     writtenHead: () => written,
     uploadedJson: () => uploaded,
   };
@@ -187,6 +206,7 @@ describe("head validation (§4.3)", () => {
 describe("first head create (§4.3)", () => {
   it("creates revision 1 when there is no head and expectedBase is 0", async () => {
     const h = createHarness({ headSequence: [null] });
+    await h.prime(0);
     const result = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     expect(result).toEqual({ ok: true, value: { revision: 1, objectPath: PATH_A } });
     expect(h.writtenHead()).toEqual(headDoc(1, REC_A));
@@ -196,6 +216,7 @@ describe("first head create (§4.3)", () => {
     // Without this, an editing session based on revision 5 would write revision 1 and push five
     // revisions of history aside.
     const h = createHarness({ headSequence: [null] });
+    await h.prime(5);
     const result = await h.port.save({ correlationId: CID, expectedBase: 5, catalog: CATALOG });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("WRITE_CONFLICT");
@@ -211,6 +232,7 @@ describe("transaction callback re-execution (§5.5)", () => {
       callbackRuns: 4,
       headSequence: [headDoc(7, REC_B), headDoc(7, REC_B), headDoc(7, REC_B), headDoc(7, REC_B)],
     });
+    await h.prime(7);
     const result = await h.port.save({ correlationId: CID, expectedBase: 7, catalog: CATALOG });
     expect(result).toEqual({ ok: true, value: { revision: 8, objectPath: PATH_A } });
 
@@ -226,6 +248,7 @@ describe("transaction callback re-execution (§5.5)", () => {
       callbackRuns: 2,
       headSequence: [headDoc(7, REC_B), headDoc(9, REC_B)],
     });
+    await h.prime(7);
     const result = await h.port.save({ correlationId: CID, expectedBase: 7, catalog: CATALOG });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("WRITE_CONFLICT");
@@ -233,6 +256,7 @@ describe("transaction callback re-execution (§5.5)", () => {
 
   it("fixes the operation id before the transaction, in contract order", async () => {
     const h = createHarness({ headSequence: [null] });
+    await h.prime(0);
     await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     expect(h.calls).toEqual([
       "randomOperationId",
@@ -251,6 +275,7 @@ describe("upload outcomes (§6.5)", () => {
     const h = createHarness({
       upload: () => Promise.reject(sdkError("storage/quota-exceeded")),
     });
+    await h.prime(0);
     const result = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("WRITE_UPLOAD_FAILED");
@@ -261,6 +286,7 @@ describe("upload outcomes (§6.5)", () => {
     const h = createHarness({
       upload: () => Promise.reject(sdkError("storage/retry-limit-exceeded")),
     });
+    await h.prime(0);
     const result = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -273,12 +299,14 @@ describe("upload outcomes (§6.5)", () => {
 describe("G-4 structure A claim", () => {
   it("creates the write-once REC before upload", async () => {
     const h = createHarness({ headSequence: [null] });
+    await h.prime(0);
     await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     expect(h.calls.indexOf("createObjectClaim")).toBeLessThan(h.calls.indexOf("uploadJsonObject"));
   });
 
   it("stops before Storage when REC creation fails definitively", async () => {
     const h = createHarness({ claim: () => Promise.reject(sdkError("already-exists")) });
+    await h.prime(0);
     const result = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("WRITE_CLAIM_FAILED");
@@ -288,6 +316,7 @@ describe("G-4 structure A claim", () => {
 
   it("does not retry an unknown REC outcome or touch Storage", async () => {
     const h = createHarness({ claim: () => Promise.reject(sdkError("deadline-exceeded")) });
+    await h.prime(0);
     const result = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -309,6 +338,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
       headSequence: [headDoc(4, REC_B), headDoc(5, REC_A)],
       transactionError: indeterminate,
     });
+    await h.prime(4);
     const result = await h.port.save({ correlationId: CID, expectedBase: 4, catalog: CATALOG });
     expect(result).toEqual({ ok: true, value: { revision: 5, objectPath: PATH_A } });
     // exactly one bounded read, no re-upload, no second transaction
@@ -322,6 +352,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
       headSequence: [headDoc(4, REC_B), headDoc(5, REC_B)],
       transactionError: indeterminate,
     });
+    await h.prime(4);
     const result = await h.port.save({ correlationId: CID, expectedBase: 4, catalog: CATALOG });
     expect(result.ok).toBe(false);
     // the head is no longer expectedBase and a revision only advances, so our late commit can
@@ -334,6 +365,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
       headSequence: [headDoc(4, REC_B), headDoc(4, REC_B)],
       transactionError: indeterminate,
     });
+    await h.prime(4);
     const result = await h.port.save({ correlationId: CID, expectedBase: 4, catalog: CATALOG });
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -347,6 +379,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
       headSequence: [headDoc(4, REC_B), headDoc(9, REC_B)],
       transactionError: indeterminate,
     });
+    await h.prime(4);
     const result = await h.port.save({ correlationId: CID, expectedBase: 4, catalog: CATALOG });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("WRITE_COMMIT_OUTCOME_UNKNOWN");
@@ -362,7 +395,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
       uploadJsonObject: async () => {
         calls.push("upload");
       },
-      readObjectBytes: async () => new Uint8Array(),
+      readObjectBytes: async () => new TextEncoder().encode(JSON.stringify(CATALOG)),
       getHead: async () => {
         getHeadCount += 1;
         if (getHeadCount > 1) throw sdkError("unavailable");
@@ -384,6 +417,8 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
       },
       legacyRead: { load: async () => ({ ok: false, error: {} as never }) },
     });
+    const loaded = await port.loadBaseline({ correlationId: CID });
+    expect(loaded.ok).toBe(true);
     const result = await port.save({ correlationId: CID, expectedBase: 4, catalog: CATALOG });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("WRITE_COMMIT_OUTCOME_UNKNOWN");
@@ -394,6 +429,7 @@ describe("reconciliation after an indeterminate transaction (§6.6)", () => {
       headSequence: [headDoc(4, REC_B)],
       transactionError: sdkError("permission-denied"),
     });
+    await h.prime(4);
     const result = await h.port.save({ correlationId: CID, expectedBase: 4, catalog: CATALOG });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("WRITE_FORBIDDEN");
@@ -416,6 +452,7 @@ describe("error surface (§5.4)", () => {
 
   it("keeps every raw detail out of the error envelope", async () => {
     const h = createHarness({ upload: () => Promise.reject(sdkError("storage/unauthorized")) });
+    await h.prime(0);
     const result = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -434,6 +471,7 @@ describe("error surface (§5.4)", () => {
 
   it("runs one save at a time", async () => {
     const h = createHarness({ headSequence: [null] });
+    await h.prime(0);
     const first = h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     const second = h.port.save({ correlationId: CID, expectedBase: 0, catalog: CATALOG });
     expect(second).toBe(first); // the second click reuses the running promise
@@ -619,6 +657,7 @@ describe("catalog payload validation (§5.4, correction round 1)", () => {
 
   it("uploads the VALIDATED document rather than the caller's object", async () => {
     const h = createHarness({ headSequence: [null] });
+    await h.prime(0);
     const raw = {
       frameSizes: [{ id: "s", name: "s", aspect: 1.41 }],
     } as unknown as typeof CATALOG;
@@ -633,5 +672,146 @@ describe("catalog payload validation (§5.4, correction round 1)", () => {
     expect(Object.hasOwn(parsed, "data")).toBe(true);
     // and it round-trips through the same authority
     expect(readLegacyCatalog(parsed).ok).toBe(true);
+  });
+});
+
+describe("F-D legacy print-size write-back guard (spec 041 W-1)", () => {
+  const legacyBaseline = () => {
+    const read = readLegacyCatalog({
+      frameSizes: [
+        { id: "legacy", name: "Legacy", wcm: 10, hcm: 20 },
+        { id: "editable", name: "Editable" },
+      ],
+    });
+    if (!read.ok) throw new Error("synthetic legacy baseline must be valid");
+    return read;
+  };
+
+  it("removes only read-time promoted canonical fields from the persisted payload", async () => {
+    const read = legacyBaseline();
+    const h = createHarness({
+      legacyResult: {
+        ok: true,
+        value: {
+          document: read.document,
+          report: read.report,
+          byteLength: 100,
+          correlationId: CID,
+        },
+      },
+      headSequence: [null],
+    });
+    const loaded = await h.port.loadBaseline({ correlationId: CID });
+    expect(loaded.ok && loaded.value.promotedLegacyPrintSizeIds).toEqual(["legacy"]);
+    if (!loaded.ok) return;
+    const candidate = structuredClone(loaded.value.catalog);
+    const editable = candidate.data.frameSizes?.find((item) => item.id === "editable");
+    if (editable === undefined) throw new Error("missing editable fixture");
+    editable.printWidthCm = 30;
+    editable.printHeightCm = 40;
+
+    const saved = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: candidate });
+    expect(saved.ok).toBe(true);
+    const persisted = JSON.parse(h.uploadedJson() as string);
+    const legacy = persisted.data.frameSizes[0];
+    expect(legacy).toMatchObject({ id: "legacy", wcm: 10, hcm: 20 });
+    expect(legacy).not.toHaveProperty("printWidthCm");
+    expect(legacy).not.toHaveProperty("printHeightCm");
+    expect(persisted.data.frameSizes[1]).toMatchObject({
+      id: "editable",
+      printWidthCm: 30,
+      printHeightCm: 40,
+    });
+    expect(readLegacyCatalog(persisted).ok).toBe(true);
+  });
+
+  it.each(["change", "remove"] as const)(
+    "rejects legacy field %s before id minting or upload",
+    async (mode) => {
+      const read = legacyBaseline();
+      const h = createHarness({
+        legacyResult: {
+          ok: true,
+          value: {
+            document: read.document,
+            report: read.report,
+            byteLength: 100,
+            correlationId: CID,
+          },
+        },
+      });
+      const loaded = await h.port.loadBaseline({ correlationId: CID });
+      if (!loaded.ok) throw new Error("expected baseline");
+      const candidate = structuredClone(loaded.value.catalog);
+      const legacy = candidate.data.frameSizes?.[0];
+      if (legacy === undefined) throw new Error("missing legacy fixture");
+      if (mode === "change") {
+        legacy.wcm = 11;
+        legacy.printWidthCm = 11;
+      } else {
+        delete legacy.wcm;
+        delete legacy.hcm;
+      }
+      const callCount = h.calls.length;
+      const saved = await h.port.save({ correlationId: CID, expectedBase: 0, catalog: candidate });
+      expect(saved.ok).toBe(false);
+      if (!saved.ok) expect(saved.error.code).toBe("WRITE_INVALID_INPUT");
+      expect(h.calls.slice(callCount)).toEqual([]);
+    },
+  );
+
+  it("rejects a legacy-bearing save without trusted same-revision load provenance", async () => {
+    const read = legacyBaseline();
+    const h = createHarness();
+    const saved = await h.port.save({
+      correlationId: CID,
+      expectedBase: 0,
+      catalog: read.document,
+    });
+    expect(saved.ok).toBe(false);
+    expect(h.calls).toEqual([]);
+  });
+
+  it("preserves an originally canonical pair that merely agrees with legacy fields", async () => {
+    const read = readLegacyCatalog({
+      frameSizes: [
+        {
+          id: "both",
+          name: "Both",
+          wcm: 10,
+          hcm: 20,
+          printWidthCm: 10,
+          printHeightCm: 20,
+        },
+      ],
+    });
+    if (!read.ok) throw new Error("synthetic canonical baseline must be valid");
+    const h = createHarness({
+      legacyResult: {
+        ok: true,
+        value: {
+          document: read.document,
+          report: read.report,
+          byteLength: 100,
+          correlationId: CID,
+        },
+      },
+      headSequence: [null],
+    });
+    const loaded = await h.port.loadBaseline({ correlationId: CID });
+    expect(loaded.ok && loaded.value.promotedLegacyPrintSizeIds).toEqual([]);
+    if (!loaded.ok) return;
+    const saved = await h.port.save({
+      correlationId: CID,
+      expectedBase: 0,
+      catalog: loaded.value.catalog,
+    });
+    expect(saved.ok).toBe(true);
+    expect(JSON.parse(h.uploadedJson() as string).data.frameSizes[0]).toMatchObject({
+      wcm: 10,
+      hcm: 20,
+      printWidthCm: 10,
+      printHeightCm: 20,
+    });
   });
 });

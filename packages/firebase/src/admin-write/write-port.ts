@@ -7,6 +7,7 @@
 // it is.
 
 import { readLegacyCatalog } from "@denn/shared";
+import type { CatalogDocumentV1, CatalogItemV1, CatalogReadReport, JsonValue } from "@denn/shared";
 import type { AdminStateReadPort, OperatorAuthPort } from "../admin-read/types";
 import {
   CORRELATION_ID_PATTERN,
@@ -90,6 +91,87 @@ function decodeCatalog(bytes: Uint8Array): DecodedCatalog {
   return { ok: true, document: readLegacyCatalog(parsed) };
 }
 
+const NORMALIZED_PRINT_SIZE_PATH = /^frameSizes\[(\d+)\]\.wcm$/;
+
+function promotedLegacyPrintSizeIds(
+  document: CatalogDocumentV1,
+  report: CatalogReadReport,
+): readonly string[] {
+  const sizes = document.data.frameSizes ?? [];
+  const ids: string[] = [];
+  for (const warning of report.warnings) {
+    if (warning.code !== "LEGACY_PRINT_SIZE_NORMALIZED") continue;
+    const match = NORMALIZED_PRINT_SIZE_PATH.exec(warning.path);
+    if (match === null) continue;
+    const index = Number(match[1]);
+    const id = sizes[index]?.id;
+    if (typeof id === "string" && !ids.includes(id)) ids.push(id);
+  }
+  return ids;
+}
+
+const owns = (item: CatalogItemV1, key: "wcm" | "hcm"): boolean => Object.hasOwn(item, key);
+
+function sameJsonValue(a: JsonValue | undefined, b: JsonValue | undefined): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/**
+ * F-D: legacy fields are immutable and read-time promotions never enter the persisted payload.
+ * The trusted provenance comes only from this port's own loadBaseline result at expectedBase.
+ */
+function buildPersistedCatalog(
+  candidate: CatalogDocumentV1,
+  expectedBase: number,
+  loaded: AdminStateBaselineResult | null,
+): CatalogDocumentV1 | null {
+  const candidateSizes = candidate.data.frameSizes ?? [];
+  const candidateHasAnyLegacy = candidateSizes.some(
+    (item) => owns(item, "wcm") || owns(item, "hcm"),
+  );
+  const trusted = loaded?.ok && loaded.value.revision === expectedBase ? loaded.value : null;
+  const baselineHasAnyLegacy =
+    trusted?.catalog.data.frameSizes?.some((item) => owns(item, "wcm") || owns(item, "hcm")) ??
+    false;
+  if (!candidateHasAnyLegacy && !baselineHasAnyLegacy) return candidate;
+  if (trusted === null) return null;
+
+  const baselineSizes = trusted.catalog.data.frameSizes ?? [];
+  const baselineById = new Map(baselineSizes.map((item) => [item.id, item] as const));
+  const candidateById = new Map(candidateSizes.map((item) => [item.id, item] as const));
+
+  for (const item of candidateSizes) {
+    const baseline = baselineById.get(item.id);
+    const candidateHasLegacy = owns(item, "wcm") || owns(item, "hcm");
+    if (baseline === undefined) {
+      if (candidateHasLegacy) return null;
+      continue;
+    }
+    for (const key of ["wcm", "hcm"] as const) {
+      if (owns(item, key) !== owns(baseline, key)) return null;
+      if (owns(item, key) && !sameJsonValue(item[key], baseline[key])) return null;
+    }
+  }
+  for (const item of baselineSizes) {
+    if ((owns(item, "wcm") || owns(item, "hcm")) && !candidateById.has(item.id)) return null;
+  }
+
+  const promoted = new Set(trusted.promotedLegacyPrintSizeIds);
+  return {
+    ...candidate,
+    data: {
+      ...candidate.data,
+      frameSizes: candidateSizes.map((item) => {
+        if (!promoted.has(item.id)) return item;
+        const clean = { ...item };
+        delete clean.printWidthCm;
+        delete clean.printHeightCm;
+        return clean;
+      }),
+    },
+  };
+}
+
 export interface AdminStateWritePortOptions {
   readonly facade: AdminWriteFacade;
   readonly auth: OperatorAuthPort;
@@ -112,6 +194,7 @@ export function createAdminStateWritePort(
   // starting a second request; disabling a button is a nicety, this is the guarantee.
   let saveInFlight: Promise<AdminStateSaveResult> | null = null;
   let baselineInFlight: Promise<AdminStateBaselineResult> | null = null;
+  let loadedBaseline: AdminStateBaselineResult | null = null;
 
   // ── loadBaseline ─────────────────────────────────────────────────────────────────────────────
 
@@ -127,9 +210,18 @@ export function createAdminStateWritePort(
       // No head yet: the legacy document is the baseline, at logical revision 0.
       const legacy = await legacyRead.load({ correlationId });
       if (!legacy.ok) return { ok: false, error: legacy.error }; // spec 036 error, preserved verbatim
+      const value = {
+        catalog: legacy.value.document,
+        revision: NO_HEAD_REVISION,
+        source: "legacy" as const,
+        promotedLegacyPrintSizeIds: promotedLegacyPrintSizeIds(
+          legacy.value.document,
+          legacy.value.report,
+        ),
+      };
       return {
         ok: true,
-        value: { catalog: legacy.value.document, revision: NO_HEAD_REVISION, source: "legacy" },
+        value,
       };
     }
 
@@ -166,6 +258,10 @@ export function createAdminStateWritePort(
         catalog: decoded.document.document,
         revision: validated.head.revision,
         source: "rebuild",
+        promotedLegacyPrintSizeIds: promotedLegacyPrintSizeIds(
+          decoded.document.document,
+          decoded.document.report,
+        ),
       },
     };
   };
@@ -189,9 +285,14 @@ export function createAdminStateWritePort(
     }
     if (baselineInFlight !== null) return baselineInFlight;
 
-    const pending = runBaseline(correlationId).finally(() => {
-      baselineInFlight = null; // a manual retry is allowed; an automatic one is not
-    });
+    const pending = runBaseline(correlationId)
+      .then((result) => {
+        loadedBaseline = result.ok ? result : null;
+        return result;
+      })
+      .finally(() => {
+        baselineInFlight = null; // a manual retry is allowed; an automatic one is not
+      });
     baselineInFlight = pending;
     return pending;
   };
@@ -343,9 +444,37 @@ export function createAdminStateWritePort(
     }
     if (!validated.ok) return invalid();
 
+    if (authBlocked(auth)) {
+      // Nothing is uploaded and no transaction runs in this branch.
+      return Promise.resolve({
+        ok: false,
+        error: writeError("WRITE_AUTH_REQUIRED", correlationId),
+      });
+    }
+
+    // expectedBase is not caller lore: it must be the exact revision this port loaded. Besides
+    // preventing fabricated bases, this is what makes F-D provenance authoritative even when a
+    // candidate removed every legacy field and would otherwise look like a legacy-free catalog.
+    if (
+      loadedBaseline === null ||
+      !loadedBaseline.ok ||
+      loadedBaseline.value.revision !== request.expectedBase
+    ) {
+      return invalid();
+    }
+
+    const persisted = buildPersistedCatalog(
+      validated.document,
+      request.expectedBase,
+      loadedBaseline,
+    );
+    if (persisted === null) return invalid();
+
     let json: string;
     try {
-      json = JSON.stringify(validated.document);
+      // Do not stringify validated.document directly: readLegacyCatalog intentionally promotes
+      // legacy wcm/hcm in memory, while F-D forbids that promotion from becoming a write-back.
+      json = JSON.stringify(persisted);
     } catch {
       return invalid();
     }
@@ -358,14 +487,6 @@ export function createAdminStateWritePort(
       return invalid();
     }
     if (byteLength > REBUILD_OBJECT_MAX_BYTES) return invalid();
-
-    if (authBlocked(auth)) {
-      // Nothing is uploaded and no transaction runs in this branch.
-      return Promise.resolve({
-        ok: false,
-        error: writeError("WRITE_AUTH_REQUIRED", correlationId),
-      });
-    }
 
     if (saveInFlight !== null) return saveInFlight;
 

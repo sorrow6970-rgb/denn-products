@@ -13,7 +13,12 @@ function harness() {
   const calls: string[] = [];
   let loadResult: Awaited<ReturnType<AdminStateWritePort["loadBaseline"]>> = {
     ok: true,
-    value: { catalog: CATALOG, revision: 4, source: "rebuild" },
+    value: {
+      catalog: CATALOG,
+      revision: 4,
+      source: "rebuild",
+      promotedLegacyPrintSizeIds: [],
+    },
   };
   let saveResult: Awaited<ReturnType<AdminStateWritePort["save"]>> = {
     ok: true,
@@ -87,7 +92,7 @@ describe("admin write session controller", () => {
     await h.controller.loadBaseline();
     await h.controller.save(CATALOG);
     expect(h.calls).toEqual(["load"]);
-    h.controller.markDraftValidity(true);
+    h.controller.setDraftState({ dirty: true, valid: true });
     await h.controller.save(CATALOG);
     expect(h.calls).toEqual(["load", "save:4"]);
     expect(h.controller.getSnapshot()).toMatchObject({ status: "ready-clean", revision: 5 });
@@ -96,7 +101,7 @@ describe("admin write session controller", () => {
   it("requires explicit discard before a dirty reload", async () => {
     const h = harness();
     await h.controller.loadBaseline();
-    h.controller.markDraftValidity(true);
+    h.controller.setDraftState({ dirty: true, valid: true });
     await h.controller.loadBaseline();
     expect(h.controller.getSnapshot().status).toBe("discard-confirmation");
     expect(h.calls).toEqual(["load"]);
@@ -117,7 +122,7 @@ describe("admin write session controller", () => {
         error: { category: "UNKNOWN", code, retryable: false, correlationId: CID },
       });
       await h.controller.loadBaseline();
-      h.controller.markDraftValidity(true);
+      h.controller.setDraftState({ dirty: true, valid: true });
       await h.controller.save(CATALOG);
       expect(h.controller.getSnapshot().canSave).toBe(false);
       expect(h.controller.getSnapshot().status).toBe(
@@ -140,7 +145,7 @@ describe("admin write session controller", () => {
       },
     });
     await h.controller.loadBaseline();
-    h.controller.markDraftValidity(true);
+    h.controller.setDraftState({ dirty: true, valid: true });
     await h.controller.save(CATALOG);
     expect(h.controller.getSnapshot().canSave).toBe(true);
     await h.controller.save(CATALOG);
@@ -150,7 +155,7 @@ describe("admin write session controller", () => {
   it("runtime-validates the catalog again and makes an invalid draft perform zero writes", async () => {
     const h = harness();
     await h.controller.loadBaseline();
-    h.controller.markDraftValidity(true);
+    h.controller.setDraftState({ dirty: true, valid: true });
     await h.controller.save({ schemaVersion: 999 } as unknown as CatalogDocumentV1);
     expect(h.calls.filter((call) => call.startsWith("save"))).toHaveLength(0);
     expect(h.controller.getSnapshot()).toMatchObject({
@@ -162,7 +167,7 @@ describe("admin write session controller", () => {
   it("turns a hostile catalog getter into WRITE_INVALID_INPUT without rejecting", async () => {
     const h = harness();
     await h.controller.loadBaseline();
-    h.controller.markDraftValidity(true);
+    h.controller.setDraftState({ dirty: true, valid: true });
     const hostile = Proxy.revocable({}, {});
     hostile.revoke();
     await expect(h.controller.save(hostile.proxy as CatalogDocumentV1)).resolves.toBeUndefined();
@@ -177,7 +182,7 @@ describe("admin write session controller", () => {
   it("preserves the baseline and dirty state on an equivalent auth notification", async () => {
     const h = harness();
     await h.controller.loadBaseline();
-    h.controller.markDraftValidity(true);
+    h.controller.setDraftState({ dirty: true, valid: true });
     const before = h.controller.getBaseline();
     h.auth({ status: "authenticated" });
     expect(h.controller.getBaseline()).toBe(before);
@@ -185,6 +190,15 @@ describe("admin write session controller", () => {
       status: "ready-dirty-valid",
       revision: 4,
     });
+  });
+
+  it("returns to clean when an editor reports that the draft equals its baseline", async () => {
+    const h = harness();
+    await h.controller.loadBaseline();
+    h.controller.setDraftState({ dirty: true, valid: true });
+    expect(h.controller.getSnapshot().status).toBe("ready-dirty-valid");
+    h.controller.setDraftState({ dirty: false, valid: true });
+    expect(h.controller.getSnapshot()).toMatchObject({ status: "ready-clean", canSave: false });
   });
 
   it("makes load single-in-flight and ignores a late result after auth loss", async () => {
@@ -214,7 +228,7 @@ describe("admin write session controller", () => {
   it("ignores a late save result after auth loss", async () => {
     const h = harness();
     await h.controller.loadBaseline();
-    h.controller.markDraftValidity(true);
+    h.controller.setDraftState({ dirty: true, valid: true });
     h.holdSave();
     const pending = h.controller.save(CATALOG);
     h.auth({ status: "signed-out" });

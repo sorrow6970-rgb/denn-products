@@ -37,7 +37,7 @@ export interface AdminWriteSessionController {
   /** The validated in-memory baseline; never raw bytes or JSON. */
   getBaseline(): AdminStateBaselineValue | null;
   loadBaseline(options?: { readonly discardDirty?: boolean }): Promise<void>;
-  markDraftValidity(valid: boolean): void;
+  setDraftState(state: { readonly dirty: boolean; readonly valid: boolean }): void;
   save(catalog: CatalogDocumentV1): Promise<void>;
   dispose(): void;
 }
@@ -181,10 +181,14 @@ export function createAdminWriteSessionController(
     publish();
   };
 
-  const markDraftValidity = (valid: boolean): void => {
+  const setDraftState = (draft: { readonly dirty: boolean; readonly valid: boolean }): void => {
     if (disposed || authState.status !== "authenticated" || baseline === null) return;
     if (!status.startsWith("ready-")) return;
-    status = valid ? "ready-dirty-valid" : "ready-dirty-invalid";
+    status = draft.dirty
+      ? draft.valid
+        ? "ready-dirty-valid"
+        : "ready-dirty-invalid"
+      : "ready-clean";
     errorCode = null;
     publish();
   };
@@ -226,6 +230,7 @@ export function createAdminWriteSessionController(
         catalog: validated.document,
         revision: result.value.revision,
         source: "rebuild",
+        promotedLegacyPrintSizeIds: baseline.promotedLegacyPrintSizeIds,
       };
       status = "ready-clean";
       errorCode = null;
@@ -256,7 +261,7 @@ export function createAdminWriteSessionController(
     getSnapshot: () => snapshot,
     getBaseline: () => baseline,
     loadBaseline,
-    markDraftValidity,
+    setDraftState,
     save,
     dispose,
   };

@@ -73,6 +73,8 @@ export interface AdminStateBaselineValue {
   readonly catalog: CatalogDocumentV1;
   readonly revision: AdminStateRevision;
   readonly source: "legacy" | "rebuild";
+  /** Stable IDs whose canonical print-size pair exists only because readLegacyCatalog promoted wcm/hcm in memory. */
+  readonly promotedLegacyPrintSizeIds: readonly string[];
 }
 
 export interface AdminStateSaveRequest {
@@ -104,6 +106,9 @@ export interface AdminStateWritePort {
   /**
    * Uploads an immutable object, then advances the head by exactly one inside a transaction —
    * only when the head still matches `expectedBase`.
+   * A successful loadBaseline on this same port instance, returning that exact revision, is a
+   * runtime precondition. This binds F-D normalization provenance to the save instead of trusting
+   * a caller-supplied revision.
    *
    * `operationId` is minted inside the port per call and is deliberately absent from this type:
    * a caller cannot choose the object path.
