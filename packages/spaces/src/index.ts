@@ -1,6 +1,5 @@
-// @denn/spaces — space token / schema-version identifier types only.
-// NO PBKDF2 / AES-GCM implementation. Does NOT claim compatibility with existing ?space links.
-// Encryption + link compatibility are implemented/verified in a later spec.
+// @denn/spaces — legacy crypto envelope plus token / schema-version identifiers.
+// Firestore and ?space link/scene application are not implemented here.
 
 export type SpaceToken = string & { readonly __spaceBrand: "space-token" };
 
@@ -16,4 +15,13 @@ export interface SpaceRef {
 }
 
 export const SPACES_NOT_IMPLEMENTED =
-  "space encryption + link compatibility are implemented in a later spec" as const;
+  "space Firestore + link compatibility are implemented in a later spec" as const;
+
+export {
+  createSpaceCrypto,
+  LEGACY_SPACE_CRYPTO,
+  type SpaceCryptoErrorCode,
+  type SpaceCryptoPort,
+  type SpaceCryptoResult,
+  type SpaceEncryptedEnvelope,
+} from "./crypto";
