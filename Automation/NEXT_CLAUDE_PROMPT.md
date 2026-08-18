@@ -2,9 +2,18 @@
 
 상태: `WAITING_FOR_NEXT_MANUAL_TASK`
 active_unit: `none`
-completed_unit: `spec-041-admin-frame-print-size-editor-local` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_APP_WIRING**
-기준: 스펙 041 구현 커밋 **`27e6ff4`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
+completed_unit: `spec-042-admin-write-editor-browser-fixture` — **DONE / CODEX_PASSED / LOCAL_ONLY / FIXTURE_ONLY / NO_APP_WIRING**
+기준: 스펙 042 구현 커밋 **`d0fb7c3`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
 next_transition: **`NEXT_MANUAL_TASK`**
+
+## ★ 스펙 042 종료 — 합성 로컬 브라우저 fixture
+
+Founder X-1=A/X-2=A/X-3=A에 따라 실제 session controller/editor를 합성 auth/write fake에 연결한
+별도 Chromium fixture를 구현했다. production `App.tsx`·composition·Firebase adapter/network는 0이다.
+
+`pnpm check` PASS(unit 1356/1356), Chromium 139/139(신규 5), 고객 JS hash 동일.
+실제 Firebase/emulator/UID/IAM/배포/운영 쓰기/UI 연결/delete/발행은 NOT TESTED/금지다.
+다음 수동 지시를 기다린다.
 
 ## ★ 스펙 041 종료 — W-1 F-D provenance
 

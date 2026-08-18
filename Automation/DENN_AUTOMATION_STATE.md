@@ -4,14 +4,14 @@
 updated_at: 2026-08-18
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-041-admin-frame-print-size-editor-local   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_APP_WIRING
+completed_unit: spec-042-admin-write-editor-browser-fixture   # DONE, CODEX_PASSED, LOCAL_ONLY, FIXTURE_ONLY, NO_APP_WIRING
 active_unit: none
 state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 27e6ff4   # spec 041 implementation + W-1 F-D correction
-candidate_commit: 27e6ff4   # CODEX_PASSED
-verified_commit: 27e6ff4   # targeted 74, unit 1356, Chromium 134
-origin_relation: "HEAD=origin, ahead/behind 0/0 after completion-state fast-forward push"
-working_tree: "dirty only from protected Founder/user changes after spec 041 completion documents are committed"
+baseline_commit: d0fb7c3   # spec 042 local browser fixture
+candidate_commit: d0fb7c3   # CODEX_PASSED
+verified_commit: d0fb7c3   # unit 1356, Chromium 139
+origin_relation: "completion-state commit pending fast-forward push"
+working_tree: "completion documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 2
 max_fix_rounds: 3
 next_transition: NEXT_MANUAL_TASK
@@ -20,6 +20,16 @@ commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 042 완료 · 로컬 브라우저 fixture (2026-08-18)
+
+- Founder X-1=A/X-2=A/X-3=A 범위의 합성 auth/write fixture를 별도 Vite entry로 구현했다.
+- 실제 session controller/editor를 사용하되 `App.tsx`, production composition, Firebase facade/network는 0이다.
+- 명시적 load, 선택·prefill, invalid, exact-base save, conflict/outcome-unknown, discard reload를 검증했다.
+- `pnpm check` PASS(unit 1356/1356), Chromium 139/139(신규 5), 고객 JS hash 동일,
+  `git diff --check` PASS, 포트/temp 잔류 0.
+- 구현 커밋 `d0fb7c3`. 실제 Firebase/emulator/UID/IAM/배포/운영 쓰기/UI 연결/delete/발행은
+  NOT TESTED/금지 유지. 다음 수동 작업을 기다린다.
 
 ## 스펙 041 완료 · W-1 F-D 보완 (2026-08-18)
 

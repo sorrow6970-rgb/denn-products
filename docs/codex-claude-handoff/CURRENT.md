@@ -9,7 +9,18 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 041이 `DONE / CODEX_PASSED / LOCAL_ONLY / NO_APP_WIRING`으로 종료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 042가 `DONE / CODEX_PASSED / LOCAL_ONLY / FIXTURE_ONLY / NO_APP_WIRING`으로 종료됐다.**
+
+Founder X-1=A/X-2=A/X-3=A에 따라 합성 auth/write fake와 실제 session controller/editor를 연결한
+별도 Chromium fixture를 구현했다. production `App.tsx`·composition·Firebase adapter/network는 0이다.
+명시적 load, 선택·prefill, invalid, exact-base save, conflict/outcome-unknown, discard reload를 검증했다.
+
+`pnpm check` PASS(unit 1356/1356), Chromium 139/139(신규 5), 고객 JS hash 동일,
+`git diff --check` PASS. 구현 커밋 `d0fb7c3`. 실제 Firebase/emulator/UID/IAM/배포/운영 쓰기/
+UI 연결/delete/발행은 NOT TESTED/금지이며 다음 전이는 `NEXT_MANUAL_TASK`다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 041이
+> `DONE / CODEX_PASSED / LOCAL_ONLY / NO_APP_WIRING`으로 종료됐다.**
 
 Founder V-1=A/V-2=A/V-3=A 및 W-1=A에 따라 stable ID immutable edit, 격리 React editor,
 baseline provenance, same-port exact load precondition, legacy field 불변 검사와 승격 canonical payload

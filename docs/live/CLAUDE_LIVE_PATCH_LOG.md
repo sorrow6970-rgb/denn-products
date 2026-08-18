@@ -4074,3 +4074,16 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`, diff-check PASS.
 - 구현·계약 커밋 `27e6ff4`. App/UI 연결·실제 Firebase/network/emulator·Rules/config·운영 쓰기·
   발행·delete·deploy 0. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`.
+
+## 2026-08-18 — 스펙 042 로컬 브라우저 fixture · CODEX_PASSED
+
+- Founder 승인: X-1=A, X-2=A, X-3=A.
+- 별도 HTML/Vite entry와 합성 auth/write fake로 실제 session controller/editor의 브라우저 경계를
+  검증했다. production `App.tsx`·composition·Firebase adapter/network 변경 0.
+- 시나리오: 명시적 baseline load, 안정 선택/prefill, invalid save 0, exact expectedBase 1회 save,
+  conflict/outcome-unknown 자동 retry 0, 명시적 discard reload.
+- 게이트: `pnpm check` PASS(unit 1356/1356), Chromium **139/139**(신규 5), 고객 JS SHA-256
+  `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`, diff-check PASS,
+  포트 4183/4184·OS temp 잔류 0.
+- 구현 커밋 `d0fb7c3`. 실제 Firebase/emulator/UID/IAM/Rules·Hosting 배포/운영 쓰기/UI 연결/
+  delete/발행은 NOT TESTED/금지. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
