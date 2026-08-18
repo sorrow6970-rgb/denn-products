@@ -5,21 +5,30 @@ updated_at: 2026-08-18
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-043-admin-ui-composition-preconnection-contract   # DONE, CODEX_PASSED, LOCAL_GATED, PRODUCTION_WRITE_DISABLED
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
+active_unit: spec-044-admin-write-cutover-readiness-investigation
+state: FOUNDER_DECISION_REQUIRED
 baseline_commit: 41e86e1   # spec 043 gated composition implementation
 candidate_commit: 41e86e1   # CODEX_PASSED
 verified_commit: 41e86e1   # targeted 52, unit 1363, Chromium 139
-origin_relation: "completion-state commit pending fast-forward push"
-working_tree: "completion documents plus protected Founder/user changes; protected paths remain unstaged"
-fix_round: 1
+origin_relation: "HEAD=origin, ahead/behind 0/0 at spec 044 investigation start"
+working_tree: "spec 044 documents plus protected Founder/user changes; protected paths remain unstaged"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_SPEC_044_K1_K3_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 044 cutover 준비도 조사 · Founder 결정 대기 (2026-08-18)
+
+- 스펙 043 종료 후 사용자의 다음 단위 착수 지시에 따라 문서 전용 조사를 진행했다.
+- 운영 write NOT READY: 실제 UID 없음, G-4 비용 상한 미결정, deploy-safe Hosting/admin route 없음,
+  최종 Rules 선행 시 legacy 무저장 구간, actual-write 이후 단순 Hosting rollback 불충분.
+- 권장: K-1=A 비용/용량 상한 전 차단 유지, K-2=A local-only Hosting 패키징 스펙 045,
+  K-3=A transitional Rules 방향.
+- 제품 코드·Rules/config/test/package/lockfile 변경 0. 실제 Firebase/network/deploy/운영 쓰기 0.
 
 ## 스펙 043 완료 · gated admin write composition (2026-08-18)
 

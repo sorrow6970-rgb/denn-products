@@ -4112,3 +4112,13 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `git diff --check` PASS, 포트 4183/4184·OS temp 잔류 0.
 - 구현 커밋 `41e86e1`. 실제 Firebase/network/emulator/UID/IAM/Rules·Hosting 배포/운영 쓰기/발행/
   delete는 NOT TESTED/금지. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`.
+
+## 2026-08-18 — 스펙 044 admin write cutover 준비도 조사 · Founder 결정 대기
+
+- 스펙 043 종료 후 다음 수동 단위 착수 승인에 따라 문서 전용 조사.
+- 판정 NOT READY: 실제 UID 정본 0, G-4 비용 상한 미결정, `hosting.public: "."`로 deploy-safe admin
+  artifact/route 0, 최종 Rules 선행 시 legacy 무저장 구간, actual-write 후 단순 Hosting rollback 불충분.
+- 후보 C-1 최종 Rules 선행은 기각. C-2 app 선행과 C-3 transitional Rules를 비교했다.
+- 권장 K-1=A/K-2=A/K-3=A. 스펙 045는 결정 전 시작하지 않는다.
+- 신규 spec 044 + handoff와 상태 문서만 변경. 제품 코드·Rules/config/test/package/lockfile 0,
+  실제 Firebase/network/UID/Rules·Hosting 배포/운영 write flag/운영 쓰기/발행/delete 0.

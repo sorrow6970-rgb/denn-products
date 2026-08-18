@@ -9,7 +9,19 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 043이 `DONE / CODEX_PASSED / LOCAL_GATED / PRODUCTION_WRITE_DISABLED`로 종료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 044 admin write cutover 준비도 조사가 완료됐다.**
+
+운영 write는 **NOT READY**다. 실제 UID 정본이 없고, G-4 D-2=O-3/D-3=N은 비용 상한을 정하지
+않았으며, 현재 `firebase.json`은 `hosting.public: "."`라 Vite admin의 안전한 배포 artifact/route가
+없다. 최종 Rules를 먼저 배포하면 legacy 저장이 닫혀 무저장 구간이 생기며, actual-write 뒤 Hosting만
+rollback해도 rebuild head 변경은 legacy로 돌아가지 않는다.
+
+권장 결정은 K-1=A(비용/용량 상한 전 차단 유지), K-2=A(local-only Hosting 패키징 스펙 045),
+K-3=A(transitional Rules→app→legacy close 방향)다. 제품 코드·Rules/config/test 변경과 실제
+Firebase/network/deploy/운영 쓰기는 0. Founder 결정 전 다음 구현을 시작하지 않는다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 043이
+> `DONE / CODEX_PASSED / LOCAL_GATED / PRODUCTION_WRITE_DISABLED`로 종료됐다.**
 
 Founder Y-2=A/Y-3=A/Y-4=A/Y-5=A에 따라 app composition root가 config 1회, auth port 1개와
 legacy read port를 공유하고 write session을 별도 exact-true gate 뒤에 둔다. write-enabled composition은

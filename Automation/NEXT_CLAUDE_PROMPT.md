@@ -1,10 +1,25 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-044-admin-write-cutover-readiness-investigation`
 completed_unit: `spec-043-admin-ui-composition-preconnection-contract` — **DONE / CODEX_PASSED / LOCAL_GATED / PRODUCTION_WRITE_DISABLED**
 기준: 스펙 043 구현 커밋 **`41e86e1`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
-next_transition: **`NEXT_MANUAL_TASK`**
+next_transition: **`FOUNDER_SPEC_044_K1_K3_DECISION`**
+
+## ★ 스펙 044 Founder 결정 대기
+
+정본: `docs/rebuild/specs/044-admin-write-cutover-readiness-investigation.md`
+
+운영 write는 NOT READY다. 실제 UID 정본, G-4 비용 상한, deploy-safe Hosting/admin route와 단계적
+cutover/rollback 계약이 없다.
+
+권장값:
+
+- K-1=A: 비용/용량 상한·관찰 주체 결정 전 운영 쓰기 차단 유지
+- K-2=A: 다음은 local-only deploy-safe Hosting/admin route 패키징 스펙 045
+- K-3=A: 향후 transitional Rules→app→legacy close 방향
+
+Founder 결정 전 스펙 045 구현과 실제 UID/Rules/Hosting/write 활성화를 시작하지 않는다.
 
 ## ★ 스펙 043 종료 — gated admin write composition
 
