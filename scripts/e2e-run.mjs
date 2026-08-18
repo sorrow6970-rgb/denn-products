@@ -67,6 +67,11 @@ async function main() {
         ["build", "--config", "apps/mockup/vite.e2e-fixture.config.ts"],
         { DENN_E2E_FIXTURE_OUT_DIR: mockupOut },
       ],
+      [
+        "vite",
+        ["build", "--config", "apps/admin/vite.e2e-fixture.config.ts"],
+        { DENN_E2E_ADMIN_FIXTURE_OUT_DIR: adminOut },
+      ],
       ["playwright", ["test"], { DENN_E2E_STAGING: staging }],
     ];
     for (const [command, args, env] of steps) {
