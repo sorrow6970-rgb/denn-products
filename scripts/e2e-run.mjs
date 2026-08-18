@@ -19,6 +19,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { assembleHostingStage } from "./hosting-stage.mjs";
 
 export const STAGING_PREFIX = "denn-e2e-";
 
@@ -55,28 +56,56 @@ async function main() {
   const staging = mkdtempSync(join(tmpdir(), STAGING_PREFIX));
   const mockupOut = join(staging, "mockup");
   const adminOut = join(staging, "admin");
+  const adminHostingOut = join(staging, "admin-hosting-source");
   process.stdout.write(`e2e staging: ${staging}\n`);
 
   let status = 1;
   try {
-    const steps = [
+    const buildSteps = [
       ["vite", ["build", "apps/mockup", "--outDir", `"${mockupOut}"`, "--emptyOutDir"], {}],
       ["vite", ["build", "apps/admin", "--outDir", `"${adminOut}"`, "--emptyOutDir"], {}],
       [
         "vite",
-        ["build", "--config", "apps/mockup/vite.e2e-fixture.config.ts"],
-        { DENN_E2E_FIXTURE_OUT_DIR: mockupOut },
+        [
+          "build",
+          "apps/admin",
+          "--base",
+          "/admin/",
+          "--outDir",
+          `"${adminHostingOut}"`,
+          "--emptyOutDir",
+        ],
+        {},
       ],
-      [
-        "vite",
-        ["build", "--config", "apps/admin/vite.e2e-fixture.config.ts"],
-        { DENN_E2E_ADMIN_FIXTURE_OUT_DIR: adminOut },
-      ],
-      ["playwright", ["test"], { DENN_E2E_STAGING: staging }],
     ];
-    for (const [command, args, env] of steps) {
+    for (const [command, args, env] of buildSteps) {
       status = run(command, args, env);
       if (status !== 0) break;
+    }
+    if (status === 0) {
+      assembleHostingStage({
+        repoRoot: dirname(dirname(fileURLToPath(import.meta.url))),
+        e2eRoot: staging,
+        mockupOut,
+        adminOut: adminHostingOut,
+      });
+      const steps = [
+        [
+          "vite",
+          ["build", "--config", "apps/mockup/vite.e2e-fixture.config.ts"],
+          { DENN_E2E_FIXTURE_OUT_DIR: mockupOut },
+        ],
+        [
+          "vite",
+          ["build", "--config", "apps/admin/vite.e2e-fixture.config.ts"],
+          { DENN_E2E_ADMIN_FIXTURE_OUT_DIR: adminOut },
+        ],
+        ["playwright", ["test"], { DENN_E2E_STAGING: staging }],
+      ];
+      for (const [command, args, env] of steps) {
+        status = run(command, args, env);
+        if (status !== 0) break;
+      }
     }
   } finally {
     // Exactly the directory this run created — guarded, and never a repo path.

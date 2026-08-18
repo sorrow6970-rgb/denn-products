@@ -9,7 +9,7 @@
 
 import { join } from "node:path";
 import { closePreviewServers, startPreviewServers } from "../scripts/e2e-preview.mjs";
-import { ADMIN_PORT, MOCKUP_PORT } from "../playwright.config";
+import { ADMIN_PORT, HOSTING_PORT, MOCKUP_PORT } from "../playwright.config";
 
 export default async function globalSetup(): Promise<() => Promise<void>> {
   const staging = process.env.DENN_E2E_STAGING;
@@ -21,6 +21,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   const handles = await startPreviewServers([
     { app: "mockup", port: MOCKUP_PORT, outDir: join(staging, "mockup") },
     { app: "admin", port: ADMIN_PORT, outDir: join(staging, "admin") },
+    { app: "hosting", port: HOSTING_PORT, outDir: join(staging, "hosting", "public") },
   ]);
   // Returned to Playwright as global teardown; runs after the last test, including on failure.
   return async () => {

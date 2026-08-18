@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export const MOCKUP_PORT = 4183;
 export const ADMIN_PORT = 4184;
+export const HOSTING_PORT = 4185;
 
 export default defineConfig({
   testDir: "./tests/e2e",

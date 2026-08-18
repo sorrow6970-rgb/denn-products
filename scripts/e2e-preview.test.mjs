@@ -73,6 +73,7 @@ describe("app roots", () => {
     expect([...PREVIEW_APP_ROOTS.entries()]).toEqual([
       ["mockup", "apps/mockup"],
       ["admin", "apps/admin"],
+      ["hosting", "."],
     ]);
     expect(resolveAppRoot("mockup")).toBe("apps/mockup");
     expect(resolveAppRoot("legacy")).toBeNull();

@@ -64,6 +64,7 @@ export async function assertPortAvailable(port, options) {
 export const PREVIEW_APP_ROOTS = new Map([
   ["mockup", "apps/mockup"],
   ["admin", "apps/admin"],
+  ["hosting", "."],
 ]);
 
 export function resolveAppRoot(app) {
