@@ -10,6 +10,7 @@ export type AdminFirebaseConfigResolution =
 
 /** Only the exact string "true" enables the feature — "1", "TRUE" and "yes" do not. */
 const ENABLED_FLAG = "VITE_DENN_ADMIN_FIREBASE_ENABLED";
+const WRITE_ENABLED_FLAG = "VITE_DENN_ADMIN_WRITE_ENABLED";
 
 const KEYS = {
   apiKey: "VITE_DENN_ADMIN_FIREBASE_API_KEY",
@@ -55,4 +56,13 @@ export function resolveAdminFirebaseConfig(
     status: "configured",
     config: { apiKey, authDomain, projectId, storageBucket, appId },
   };
+}
+
+/** Write is a second, stricter gate. A partial/off read config can never enable it. */
+export function resolveAdminWriteEnabled(
+  env: ImportMetaEnv | Record<string, unknown> | undefined,
+  resolution: AdminFirebaseConfigResolution = resolveAdminFirebaseConfig(env),
+): boolean {
+  if (resolution.status !== "configured" || env === undefined || env === null) return false;
+  return (env as Record<string, unknown>)[WRITE_ENABLED_FLAG] === "true";
 }

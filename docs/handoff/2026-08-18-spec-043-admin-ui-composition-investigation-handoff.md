@@ -1,6 +1,6 @@
 # 스펙 043 — admin UI composition 사전 조사 handoff
 
-상태: **FOUNDER_DECISION_REQUIRED / DOCUMENT_ONLY / NO_PRODUCT_WIRING**
+상태: **DONE / CODEX_PASSED / LOCAL_GATED / PRODUCTION_WRITE_DISABLED**
 
 ## 확인 결과
 
@@ -18,5 +18,17 @@
 - Y-4=A 권장: read와 분리된 exact-true write enable gate.
 - Y-5=A 권장: 명시 load 시 rejection-safe lazy write port 생성.
 
-이번 단위는 문서만 작성했다. 제품 코드, Rules/config/package/lockfile, 실제 Firebase/network/emulator,
-운영 쓰기·배포·발행·delete는 변경하거나 실행하지 않았다.
+초기 조사 단계에서는 문서만 작성했고 아래 Founder 승인 뒤 로컬 gated composition을 구현했다.
+Rules/package/lockfile과 실제 Firebase/network/emulator, 운영 쓰기·배포·발행·delete는 변경하거나
+실행하지 않았다.
+
+## Founder 승인 및 구현 결과
+
+- 승인: **Y-2=A/Y-3=A/Y-4=A/Y-5=A**.
+- 단일 composition/auth 권위, production auth-only mode, 별도 exact-true write gate, 명시 load lazy
+  write holder를 구현했다.
+- 기본 production env에서는 write controller/editor 0이다. 합성 fixture는 실제 composition root를
+  지나며 factory call이 load 전 0, load 후 1임을 Chromium에서 검증한다.
+- targeted 52/52, unit 1363/1363, Chromium 139/139, 고객 JS hash 동일, diff-check PASS.
+- 실제 write flag 활성화, Firebase/network/emulator/UID/IAM/Rules 배포/운영 쓰기·발행·delete는
+  NOT TESTED/금지 유지다.

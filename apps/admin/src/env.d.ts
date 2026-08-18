@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_DENN_ADMIN_FIREBASE_PROJECT_ID?: string;
   readonly VITE_DENN_ADMIN_FIREBASE_STORAGE_BUCKET?: string;
   readonly VITE_DENN_ADMIN_FIREBASE_APP_ID?: string;
+  readonly VITE_DENN_ADMIN_WRITE_ENABLED?: string;
 }
 
 interface ImportMeta {

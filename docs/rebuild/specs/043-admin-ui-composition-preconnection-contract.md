@@ -1,6 +1,6 @@
 # 스펙 043 후보 — production 연결 전 admin UI composition 계약 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / DOCUMENT_ONLY / NO_PRODUCT_WIRING**
+상태: **DONE / CODEX_PASSED / LOCAL_GATED / PRODUCTION_WRITE_DISABLED**
 
 ## 목표 (WHY)
 
@@ -138,3 +138,24 @@ C6/L-4, 신규 의존성, package/Rules/config 범위 확대가 필요하면 중
 현재 코드는 local controller/editor와 browser fixture까지 검증됐지만 production composition 계약은 없다.
 기존 read factory를 그대로 둔 채 editor만 추가하는 것은 단일 auth 권위와 중복 load 의미를 해결하지
 못한다. 권장안은 **Y-2=A, Y-3=A, Y-4=A, Y-5=A**이며, Founder 결정 전 `App.tsx` 연결은 열지 않는다.
+
+## Founder 승인 — 2026-08-18
+
+**Y-2=A, Y-3=A, Y-4=A, Y-5=A**를 승인했다. 승인은 로컬 gated composition 구현과 합성 검증까지며
+실제 write flag 활성화, 실제 Firebase/UID/Rules 배포/운영 쓰기 승인이 아니다.
+
+## DONE (Codex) — 2026-08-18
+
+- 앱 composition root가 config를 1회 해석하고 read/write controller에 같은 auth와 legacy read port를
+  주입하도록 구현했다. 기존 read-only env factory는 변경하지 않았다.
+- `VITE_DENN_ADMIN_WRITE_ENABLED` exact-`"true"` 보조 gate를 추가했다. 기본 production build에서는
+  editor/write controller가 없으며 기존 local draft/read-only card를 유지한다.
+- write-enabled composition에서는 auth-only card와 C5 editor를 표시한다. legacy-only load action은
+  숨기고 C5 baseline load만 남긴다.
+- lazy write holder는 첫 명시 load 전에 factory 0, 성공 후 같은 port 고정, init rejection safe code,
+  자동 retry 0을 보장한다. 합성 Chromium fixture도 실제 composition root를 사용하도록 전환했다.
+- 검증: targeted 52/52, `pnpm check` PASS(unit 1363/1363), Chromium 139/139,
+  고객 JS SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`,
+  `git diff --check` PASS, 포트/temp 잔류 0.
+- 실제 Firebase/network/emulator/UID/IAM/Rules·Hosting 배포/운영 write flag/운영 쓰기/발행/delete는
+  실행하지 않았으며 NOT TESTED/금지다.

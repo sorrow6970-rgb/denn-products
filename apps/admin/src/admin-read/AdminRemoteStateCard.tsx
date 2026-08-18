@@ -41,9 +41,13 @@ const ERROR_TEXT: Record<string, string> = {
 
 export interface AdminRemoteStateCardProps {
   readonly controller: AdminRemoteController;
+  readonly mode?: "read" | "auth-only";
 }
 
-export function AdminRemoteStateCard({ controller }: AdminRemoteStateCardProps): React.JSX.Element {
+export function AdminRemoteStateCard({
+  controller,
+  mode = "read",
+}: AdminRemoteStateCardProps): React.JSX.Element {
   const [snapshot, setSnapshot] = useState<AdminRemoteSnapshot>(() => controller.getSnapshot());
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -83,10 +87,11 @@ export function AdminRemoteStateCard({ controller }: AdminRemoteStateCardProps):
   return (
     <Card>
       <div className="denn-stack">
-        <h2>운영자 원격 상태 읽기</h2>
+        <h2>{mode === "auth-only" ? "운영자 로그인" : "운영자 원격 상태 읽기"}</h2>
         <p>
-          비공개 운영자 상태를 한 번 읽어 계약을 통과하는지만 확인합니다. 저장·발행·업로드는 하지
-          않습니다.
+          {mode === "auth-only"
+            ? "운영자 인증 상태를 확인합니다. 편집 기준은 아래 편집기에서 명시적으로 불러옵니다."
+            : "비공개 운영자 상태를 한 번 읽어 계약을 통과하는지만 확인합니다. 저장·발행·업로드는 하지 않습니다."}
         </p>
 
         {status !== "unconfigured" && canSignIn ? (
@@ -117,9 +122,11 @@ export function AdminRemoteStateCard({ controller }: AdminRemoteStateCardProps):
 
         {canLoad ? (
           <div className="denn-row">
-            <Button variant="primary" onClick={onLoad} data-testid="admin-read-load">
-              운영자 상태 불러오기
-            </Button>
+            {mode === "read" ? (
+              <Button variant="primary" onClick={onLoad} data-testid="admin-read-load">
+                운영자 상태 불러오기
+              </Button>
+            ) : null}
             <Button variant="ghost" onClick={onSignOut} data-testid="admin-read-signout">
               로그아웃
             </Button>

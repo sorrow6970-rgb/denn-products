@@ -11,7 +11,7 @@ import type {
   OperatorAuthState,
 } from "@denn/firebase/admin-read";
 import { AdminRemoteStateCard } from "./AdminRemoteStateCard";
-import { resolveAdminFirebaseConfig } from "./config";
+import { resolveAdminFirebaseConfig, resolveAdminWriteEnabled } from "./config";
 import { createAdminRemoteController } from "./controller";
 import {
   createAdminRemoteControllerFromEnv,
@@ -131,6 +131,23 @@ describe("resolveAdminFirebaseConfig", () => {
       "storageBucket",
     ]);
     expect(result.config.apiKey).toBe("k");
+  });
+
+  it("keeps write behind a separate exact-true flag and a complete read config", () => {
+    expect(resolveAdminWriteEnabled(FULL_ENV)).toBe(false);
+    expect(resolveAdminWriteEnabled({ ...FULL_ENV, VITE_DENN_ADMIN_WRITE_ENABLED: "TRUE" })).toBe(
+      false,
+    );
+    expect(resolveAdminWriteEnabled({ ...FULL_ENV, VITE_DENN_ADMIN_WRITE_ENABLED: "true" })).toBe(
+      true,
+    );
+    expect(
+      resolveAdminWriteEnabled({
+        ...FULL_ENV,
+        VITE_DENN_ADMIN_FIREBASE_APP_ID: "",
+        VITE_DENN_ADMIN_WRITE_ENABLED: "true",
+      }),
+    ).toBe(false);
   });
 });
 
@@ -378,6 +395,22 @@ describe("AdminRemoteStateCard", () => {
     ]) {
       expect(out, forbidden).not.toContain(forbidden);
     }
+  });
+
+  it("has an auth-only production mode with sign-out but no legacy load action", () => {
+    const auth = fakeAuth({ status: "authenticated" });
+    const controller = createAdminRemoteController({
+      ports: { auth: auth.port, read: fakeRead(OK_LOAD).port },
+      createCorrelationId: cid,
+    });
+    controller.subscribe(() => {});
+    const out = renderToStaticMarkup(
+      <AdminRemoteStateCard controller={controller} mode="auth-only" />,
+    );
+    expect(out).toContain("운영자 로그인");
+    expect(out).toContain("로그아웃");
+    expect(out).not.toContain("운영자 상태 불러오기");
+    expect(out).not.toContain('data-testid="admin-read-load"');
   });
 });
 

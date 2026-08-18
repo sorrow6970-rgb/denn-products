@@ -1,14 +1,13 @@
 import { useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import "@denn/ui/theme.css";
-import type { OperatorAuthPort, OperatorAuthState } from "@denn/firebase/admin-read";
+import type { AdminFirebaseFacade } from "@denn/firebase/admin-read";
 import type { AdminStateSaveResult, AdminStateWritePort } from "@denn/firebase/admin-write";
 import type { CatalogDocumentV1 } from "@denn/shared";
+import { createAdminOperatorCompositionFromEnv } from "../admin-composition/create";
+import { AdminRemoteStateCard } from "../admin-read/AdminRemoteStateCard";
 import { FramePrintSizeEditor } from "../admin-write/FramePrintSizeEditor";
-import {
-  createAdminWriteSessionController,
-  type AdminWriteSessionController,
-} from "../admin-write/session-controller";
+import type { AdminWriteSessionController } from "../admin-write/session-controller";
 
 type SaveMode = "success" | "conflict" | "outcome-unknown";
 
@@ -37,21 +36,22 @@ function createFixture() {
   let catalog = structuredClone(INITIAL_CATALOG);
   let mode: SaveMode = "success";
   let saveCalls = 0;
+  let writeFactoryCalls = 0;
   let lastExpectedBase: number | null = null;
   const diagnosticListeners = new Set<() => void>();
   const notifyDiagnostics = (): void => {
     for (const listener of [...diagnosticListeners]) listener();
   };
 
-  const authenticated: OperatorAuthState = { status: "authenticated" };
-  const auth: OperatorAuthPort = {
-    currentOperator: () => authenticated,
-    subscribe: (listener) => {
-      listener(authenticated);
+  const readFacade: AdminFirebaseFacade = {
+    setPersistenceLocal: async () => undefined,
+    onAuthStateChanged: (listener) => {
+      listener({ isAnonymous: false });
       return () => undefined;
     },
-    signInWithEmailPassword: async () => ({ ok: true, value: { correlationId: CID } }),
-    signOut: async () => ({ ok: true, value: { correlationId: CID } }),
+    signInWithEmailPassword: async () => undefined,
+    signOut: async () => undefined,
+    readObjectBytes: async () => new Uint8Array(),
   };
 
   const write: AdminStateWritePort = {
@@ -96,14 +96,34 @@ function createFixture() {
     },
   };
 
-  const controller = createAdminWriteSessionController({
-    auth,
-    write,
-    createCorrelationId: () => CID,
-  });
+  const composition = createAdminOperatorCompositionFromEnv(
+    {
+      VITE_DENN_ADMIN_FIREBASE_ENABLED: "true",
+      VITE_DENN_ADMIN_WRITE_ENABLED: "true",
+      VITE_DENN_ADMIN_FIREBASE_API_KEY: "synthetic-api-key",
+      VITE_DENN_ADMIN_FIREBASE_AUTH_DOMAIN: "synthetic.invalid",
+      VITE_DENN_ADMIN_FIREBASE_PROJECT_ID: "demo-synthetic",
+      VITE_DENN_ADMIN_FIREBASE_STORAGE_BUCKET: "synthetic.invalid",
+      VITE_DENN_ADMIN_FIREBASE_APP_ID: "synthetic-app-id",
+    },
+    {
+      makeReadFacade: async () => readFacade,
+      makeWritePort: async () => {
+        writeFactoryCalls += 1;
+        notifyDiagnostics();
+        return write;
+      },
+      createCorrelationId: () => CID,
+    },
+  );
+  const controller = composition.writeController;
+  if (controller === null) {
+    throw new Error("synthetic write composition must be enabled");
+  }
 
   return {
     controller,
+    remoteController: composition.remoteController,
     setMode(next: SaveMode) {
       mode = next;
       notifyDiagnostics();
@@ -112,8 +132,9 @@ function createFixture() {
       diagnosticListeners.add(listener);
       return () => diagnosticListeners.delete(listener);
     },
-    diagnosticSnapshot: () => `${mode}:${saveCalls}:${lastExpectedBase ?? "none"}`,
-    diagnostics: () => ({ mode, saveCalls, lastExpectedBase }),
+    diagnosticSnapshot: () =>
+      `${mode}:${writeFactoryCalls}:${saveCalls}:${lastExpectedBase ?? "none"}`,
+    diagnostics: () => ({ mode, writeFactoryCalls, saveCalls, lastExpectedBase }),
   };
 }
 
@@ -135,6 +156,7 @@ function Diagnostics({ controller }: { readonly controller: AdminWriteSessionCon
     <section aria-label="합성 fixture 진단">
       <p data-testid="fixture-status">{session.status}</p>
       <p data-testid="fixture-revision">{session.revision ?? "none"}</p>
+      <p data-testid="fixture-write-factory-calls">{diagnostics.writeFactoryCalls}</p>
       <p data-testid="fixture-save-calls">{diagnostics.saveCalls}</p>
       <p data-testid="fixture-expected-base">{diagnostics.lastExpectedBase ?? "none"}</p>
       <button type="button" onClick={() => fixture.setMode("success")}>
@@ -155,6 +177,7 @@ function FixtureApp() {
     <main className="denn-shell">
       <div className="denn-shell__inner">
         <h1>Admin write E2E fixture (not a product screen)</h1>
+        <AdminRemoteStateCard controller={fixture.remoteController} mode="auth-only" />
         <FramePrintSizeEditor controller={fixture.controller} />
         <Diagnostics controller={fixture.controller} />
       </div>

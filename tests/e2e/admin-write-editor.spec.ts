@@ -11,6 +11,8 @@ async function openFixture(page: Page): Promise<string[]> {
   });
   await page.goto(FIXTURE_URL);
   await expect(page.getByTestId("fixture-status")).toHaveText("unloaded");
+  await expect(page.getByTestId("fixture-write-factory-calls")).toHaveText("0");
+  await expect(page.getByTestId("admin-read-load")).toHaveCount(0);
   return external;
 }
 
@@ -18,6 +20,7 @@ async function loadBaseline(page: Page): Promise<void> {
   await page.getByRole("button", { name: "편집 기준 불러오기" }).click();
   await expect(page.getByTestId("fixture-status")).toHaveText("ready-clean");
   await expect(page.getByTestId("fixture-revision")).toHaveText("3");
+  await expect(page.getByTestId("fixture-write-factory-calls")).toHaveText("1");
 }
 
 test("explicit load, stable selection, canonical prefill and legacy read-only", async ({

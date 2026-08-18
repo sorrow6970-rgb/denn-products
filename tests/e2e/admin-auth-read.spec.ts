@@ -39,6 +39,7 @@ for (const vp of VIEWPORTS) {
     await expect(page.getByTestId("admin-read-email")).toHaveCount(0);
     await expect(page.getByTestId("admin-read-password")).toHaveCount(0);
     await expect(page.getByTestId("admin-read-load")).toHaveCount(0);
+    await expect(page.getByTestId("frame-print-size-editor")).toHaveCount(0);
 
     // no save / publish / order affordance anywhere in the card
     const card = page
