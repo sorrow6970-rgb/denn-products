@@ -9,8 +9,18 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 040 write-session controller가
-`DONE / CODEX_PASSED / LOCAL_ONLY / NO_UI`로 종료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 041이 `DONE / CODEX_PASSED / LOCAL_ONLY / NO_APP_WIRING`으로 종료됐다.**
+
+Founder V-1=A/V-2=A/V-3=A 및 W-1=A에 따라 stable ID immutable edit, 격리 React editor,
+baseline provenance, same-port exact load precondition, legacy field 불변 검사와 승격 canonical payload
+제거를 구현했다. legacy field 포함 size는 읽기 전용이다.
+
+독립 보완으로 invalid partial 초안의 dirty 상태 오류를 수정했다. targeted 74/74, 전체 unit 1356/1356,
+Chromium 134/134, 고객 JS hash 동일. 구현 커밋 `27e6ff4`. `App.tsx` 연결·실제 Firebase/emulator/
+운영 쓰기·Rules/config/deploy는 0이며 계속 금지다. 다음 전이는 `NEXT_MANUAL_TASK`다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 040 write-session controller가
+> `DONE / CODEX_PASSED / LOCAL_ONLY / NO_UI`로 종료됐다.**
 
 현재 UI는 baseline catalog/revision을 보존하지 않고 print-size draft도 특정 frame size에 연결되지 않아
 저장 버튼을 바로 추가할 수 없다. 권장안은 write-session controller를 먼저 분리하는 U-1=A,

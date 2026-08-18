@@ -4051,3 +4051,26 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 포함 범위: session controller + unit + spec 040 계약 + handoff, 정확히 4개 파일.
 - 종료 상태 문서 4개는 별도 일반 커밋으로 기록하고 함께 fast-forward push한다.
 - 보호 대상과 기존 Founder/user 변경은 stage·commit하지 않았다.
+
+## 2026-08-14 — 스펙 041 WIP · F-D provenance 충돌 STOP
+
+- Founder 결정: V-1=A, V-2=A, V-3=A.
+- WIP: stable ID 선택 기반 immutable print-size edit, 격리 React editor, session clean 복귀 입력.
+- 검증: targeted 25/25, shared/admin typecheck PASS.
+- 발견: legacy `wcm/hcm` 메모리 정규화 provenance가 baseline에서 소실되고 현재 save 직렬화가 승격
+  canonical 필드를 payload에 포함할 수 있어 F-D와 충돌한다.
+- 실제 운영 데이터는 조회하지 않아 영향 수는 NOT TESTED. 전체 check/E2E/hash는 STOP 이후 NOT RUN.
+- 상태: `FOUNDER_DECISION_REQUIRED`; 권장 W-1=A. 완료·App 연결·실제 쓰기 금지.
+
+## 2026-08-18 — 스펙 041 W-1=A 보완 · CODEX_PASSED
+
+- Founder 승인: W-1=A.
+- F-D 보완: baseline `promotedLegacyPrintSizeIds`, same-port exact loaded revision save 전제조건,
+  legacy `wcm/hcm` 추가·변경·삭제 거부, read-time 승격 canonical만 payload에서 제거.
+- 원래 canonical+legacy pair는 보존하며 legacy field 포함 size는 순수 edit/UI 모두 읽기 전용.
+- 독립 보완: invalid partial 입력이 clean으로 보이던 dirty 판정을 `dirty-invalid`로 수정.
+- 검증: targeted 74/74, `pnpm check` PASS(unit 1356/1356), Chromium 134/134,
+  고객 JS `index-W_cZpbdf.js` 287,741 bytes · SHA-256
+  `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`, diff-check PASS.
+- 구현·계약 커밋 `27e6ff4`. App/UI 연결·실제 Firebase/network/emulator·Rules/config·운영 쓰기·
+  발행·delete·deploy 0. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`.

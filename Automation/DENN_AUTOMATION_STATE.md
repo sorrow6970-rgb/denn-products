@@ -1,18 +1,18 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-08-14
+updated_at: 2026-08-18
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-040-admin-write-local-ui-connection-contract   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_UI
+completed_unit: spec-041-admin-frame-print-size-editor-local   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_APP_WIRING
 active_unit: none
 state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 1160bc4   # spec 040 local controller + contract, CODEX_PASSED
-candidate_commit: 1160bc4   # spec 040 implementation, CODEX_PASSED
-verified_commit: ead06ab   # product, CODEX_PASSED (d83aee9 implementation + correction round 1)
+baseline_commit: 27e6ff4   # spec 041 implementation + W-1 F-D correction
+candidate_commit: 27e6ff4   # CODEX_PASSED
+verified_commit: 27e6ff4   # targeted 74, unit 1356, Chromium 134
 origin_relation: "HEAD=origin, ahead/behind 0/0 after completion-state fast-forward push"
-working_tree: "dirty only from protected Founder/user changes after spec 040 completion documents are committed"
-fix_round: 1
+working_tree: "dirty only from protected Founder/user changes after spec 041 completion documents are committed"
+fix_round: 2
 max_fix_rounds: 3
 next_transition: NEXT_MANUAL_TASK
 automation_loop: removed (no new automation or recurring task is created)
@@ -20,6 +20,20 @@ commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 041 완료 · W-1 F-D 보완 (2026-08-18)
+
+- Founder V-1=A/V-2=A/V-3=A 승인 후 순수 immutable edit + 격리 React editor를 구현했다.
+- `App.tsx` 연결, 실제 adapter/Firebase/network/emulator/Rules/config 변경 0.
+- targeted 25/25, shared/admin typecheck PASS.
+- 기존 baseline이 legacy 정규화 provenance를 버리고 save가 검증 document를 직렬화해 F-D 위반
+  가능성을 확인했다. 전체 check/E2E/hash 전 안전 STOP.
+- Founder W-1=A 승인. same-port exact loaded revision을 save 전제조건으로 강제하고 provenance 기반으로
+  read-time 승격 canonical만 payload에서 제거했다. legacy field 추가·변경·삭제 및 직접 편집은 차단한다.
+- 독립 보완: invalid partial 초안이 clean으로 보이던 dirty 판정을 수정했다.
+- targeted 74/74, `pnpm check` PASS(unit 1356/1356), Chromium 134/134, 고객 hash 동일.
+- 구현 커밋 `27e6ff4`. 스펙 041은 로컬 격리 범위에서 DONE / CODEX_PASSED다.
+
 
 ## 스펙 040 후보 계약 조사 (2026-08-14)
 

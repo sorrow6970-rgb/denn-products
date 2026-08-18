@@ -2,9 +2,18 @@
 
 상태: `WAITING_FOR_NEXT_MANUAL_TASK`
 active_unit: `none`
-completed_unit: `spec-040-admin-write-local-ui-connection-contract` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_UI**
-기준: 스펙 040 구현 커밋 **`1160bc4`** · 종료 문서 커밋 및 fast-forward push 완료 후 HEAD=origin, ahead/behind **0/0**
+completed_unit: `spec-041-admin-frame-print-size-editor-local` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_APP_WIRING**
+기준: 스펙 041 구현 커밋 **`27e6ff4`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
 next_transition: **`NEXT_MANUAL_TASK`**
+
+## ★ 스펙 041 종료 — W-1 F-D provenance
+
+Founder W-1=A에 따라 baseline provenance, same-port exact load precondition, legacy field 불변 검사,
+read-time 승격 canonical payload 제거를 구현했다. legacy field 포함 size는 읽기 전용이다.
+
+targeted 74/74, `pnpm check` PASS(unit 1356/1356), Chromium 134/134, 고객 JS hash 동일.
+`App.tsx` 연결·실제 Firebase/emulator/운영 쓰기·Rules/config/deploy는 0이며 계속 금지다.
+다음 수동 지시를 기다린다.
 
 **Founder 결정은 `D-1=A`, `D-2=O-3`, `D-3=N`이다. Structure A 식별 구조의 로컬 구현과
 검증과 Codex 독립 검수가 끝났다(`CODEX_PASSED`, 발견 결함 0). 다음 작업은 자동으로 시작하지 않는다.**
