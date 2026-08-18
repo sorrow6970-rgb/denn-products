@@ -4155,3 +4155,14 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   diff-check·포트/temp 잔류 0.
 - 구현 커밋 `b8f1ac4`. `storage.rules`/`firestore.rules`/`firebase.json`/package/lockfile/apps 변경 0.
 - 실제 UID·Firebase/network/deploy/write/legacy close 0. 다음은 일반 운영 상한과 UID 결정 대기.
+
+## 2026-08-18 — 운영 전환 보류 · 스펙 048 legacy space crypto envelope CODEX_PASSED
+
+- Founder가 admin write 운영 전환을 보류했다. 실제 UID/운영 한도/Rules·Hosting 배포는 계속 차단.
+- `@denn/spaces`에 legacy PBKDF2 120000/SHA-256 → AES-GCM-256, salt 16 bytes, IV 12 bytes,
+  standard base64 `{salt,iv,ct}` 순수 crypto port를 구현했다.
+- fixed vector·한글/emoji·wrong password·tamper·malformed/hostile/circular/BigInt 검증.
+- targeted 20/20, `pnpm check` PASS(unit 1396/1396), Chromium 141/141,
+  고객 SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`,
+  diff-check·포트/temp 잔류 0.
+- 구현 커밋 `283807a`. 실제 Firestore/network/link/scene/UI/deploy 변경 0. 다음 자동 시작 0.

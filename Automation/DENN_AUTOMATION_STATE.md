@@ -4,22 +4,31 @@
 updated_at: 2026-08-18
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-047-transitional-rules-local-gate   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_DEPLOY
-active_unit: admin-write-operational-prerequisites
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: b8f1ac4   # spec 047 local transitional Rules gate
-candidate_commit: b8f1ac4   # CODEX_PASSED
-verified_commit: b8f1ac4   # manifest 12, emulator 4, unit 1378, Chromium 141
+completed_unit: spec-048-legacy-space-crypto-envelope   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: 283807a   # spec 048 legacy space crypto envelope
+candidate_commit: 283807a   # CODEX_PASSED
+verified_commit: 283807a   # targeted 20, unit 1396, Chromium 141
 origin_relation: "implementation committed locally; completion docs and fast-forward push pending"
 working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_OPERATIONAL_LIMITS_AND_UID_DECISION
+next_transition: NEXT_MANUAL_TASK
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 048 legacy space crypto envelope 완료 (2026-08-18)
+
+- 운영 전환은 Founder 지시로 보류했다. 실제 UID/운영 한도/deploy는 계속 차단한다.
+- `@denn/spaces`에 legacy PBKDF2 120000/SHA-256 → AES-GCM-256, 16-byte salt, 12-byte IV,
+  standard base64 `{salt,iv,ct}` 순수 port를 구현했다.
+- targeted 20/20, `pnpm check` unit 1396/1396, Chromium 141/141 PASS, 고객 hash 동일,
+  포트/temp 잔류 0. 구현 커밋 `283807a`.
+- 실제 Firestore/기존 token/link/scene 적용은 NOT TESTED. 다음 자동 시작 0.
 
 ## 스펙 047 transitional Rules 로컬 게이트 완료 (2026-08-18)
 

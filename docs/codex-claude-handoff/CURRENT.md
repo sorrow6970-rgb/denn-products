@@ -9,7 +9,17 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 047은 완료됐고 운영 상한·실제 UID 정본을 기다린다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 048 legacy space crypto envelope가 완료됐다.**
+
+Founder 지시로 운영 전환을 보류했다. `@denn/spaces`에 legacy PBKDF2 120000/SHA-256 → AES-GCM-256,
+salt 16 bytes, IV 12 bytes, standard base64 `{salt,iv,ct}` port를 구현했다. fixed vector와 hostile 입력을
+검증했고 targeted 20/20, `pnpm check` unit 1396/1396, Chromium 141/141, 고객 hash 동일,
+포트/temp 잔류 0. 구현 커밋 `283807a`.
+
+실제 기존 Firestore 문서/`?space=` 링크/scene 적용은 NOT TESTED다. 다음 후보는 local-only document
+shape와 scene validation/projection이며 다음 스펙은 자동 시작하지 않는다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 047은 완료됐고 운영 상한·실제 UID 정본을 기다렸다.**
 
 Founder L-1 canary 한정값/L-2=A/L-3=A에 따라 별도 synthetic transitional Rules, demo-only emulator
 config, fail-closed cutover manifest를 구현했다. manifest 12/12, cutover emulator 4/4, `pnpm check`

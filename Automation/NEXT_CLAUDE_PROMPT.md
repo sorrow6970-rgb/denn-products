@@ -1,12 +1,21 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `admin-write-operational-prerequisites`
-completed_unit: `spec-047-transitional-rules-local-gate` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_DEPLOY**
-기준: 스펙 047 구현 커밋 **`b8f1ac4`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
-next_transition: **`FOUNDER_OPERATIONAL_LIMITS_AND_UID_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-048-legacy-space-crypto-envelope` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 048 구현 커밋 **`283807a`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
+next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 047 종료 · 운영 선행조건 결정 대기
+## ★ 스펙 048 종료 · 다음 수동 작업 대기
+
+운영 전환은 Founder 지시로 보류했다. `@denn/spaces`의 legacy crypto envelope를 pure Web Crypto로
+구현했고 fixed vector/hostile input을 검증했다. targeted 20/20, unit 1396/1396, Chromium 141/141,
+고객 hash 동일이다.
+
+실제 Firestore/기존 `?space=` 링크/scene 적용은 NOT TESTED다. 다음 local-only 후보는 `space-v1`
+document shape와 `space-scene-v1` read validation/projection 조사다. 자동 시작하지 않는다.
+
+## 이전 — 스펙 047 종료 · 운영 선행조건 결정 대기
 
 Founder L-1 canary 한정값/L-2=A/L-3=A에 따라 synthetic transitional Rules와 local manifest gate를
 구현했다. manifest 12/12, emulator 4/4, unit 1378/1378, Chromium 141/141 PASS다.
@@ -16,8 +25,7 @@ Founder L-1 canary 한정값/L-2=A/L-3=A에 따라 synthetic transitional Rules�
 - 일반 운영 객체 수·총 byte·저장 빈도 상한, 확인 주기와 책임자
 - 실제 승인 운영자 UID 정본
 
-이 값 없이 Rules 후보를 운영 파일로 옮기거나 preview/live 배포를 시작하지 않는다. 실제 Firebase/
-network/deploy/write/legacy close는 계속 금지다.
+운영 전환은 보류됐다. 실제 Firebase/network/deploy/write/legacy close는 계속 금지다.
 
 ## 이전 — 스펙 046 단계적 cutover 계약 · Founder 결정 대기
 
