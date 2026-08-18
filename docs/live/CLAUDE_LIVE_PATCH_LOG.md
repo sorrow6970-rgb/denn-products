@@ -4133,3 +4133,14 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 구현 커밋 `c896fbe`. 실제 `firebase.json`·Rules·package/lockfile·제품 앱 코드 변경 0,
   Firebase CLI/deploy/network/UID/운영 쓰기·발행·delete 0.
 - K-1 비용·용량 상한과 K-3 actual cutover 전략은 미결정이다. 다음 구현 자동 시작 0.
+
+## 2026-08-18 — Founder K-1=A/K-3=A · 스펙 046 단계적 cutover 계약
+
+- K-1=A 비용·용량 상한/관찰 주체 전 운영 write 차단, K-3=A transitional 방향을 정본화했다.
+- Firestore transitional → Storage transitional → write-disabled app → 제한 canary → legacy close의
+  비원자적 단계와 각 STOP 상태를 정의했다.
+- actual-write 전/후 rollback을 분리하고, 이후 legacy fallback/write-back을 금지했다.
+- 공식 Firebase CLI/Rules/Hosting 문서를 2026-08-18 확인했다. 서비스별 partial deploy는 문서화되어
+  있으나 cross-service atomic deploy 보장은 확인하지 못했다.
+- 남은 Founder 결정: L-1 비용·관찰, L-2 dual-window 접근, L-3 canary/close 기준(권장 모두 A).
+- 문서 전용. 제품 코드·Rules/config/test/package/lockfile 및 실제 Firebase/deploy/write 변경 0.

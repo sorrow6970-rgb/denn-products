@@ -9,7 +9,17 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 045 local Hosting 패키징은 완료됐고 K-1/K-3 결정을 기다린다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 046 단계적 cutover 계약의 L-1~L-3 결정을 기다린다.**
+
+Founder K-1=A/K-3=A를 확정했다. 목표 순서는 Firestore transitional → Storage transitional →
+write-disabled app → 제한 canary → legacy close다. 각 서비스 배포를 원자적이라고 가정하지 않으며,
+actual-write 후에는 Hosting만 legacy로 되돌리거나 legacy에 fallback/write-back하지 않는다.
+
+실제 UID·비용/용량 상한·관찰 주체가 없어 운영 전환은 계속 차단된다. 남은 결정은 L-1 비용·관찰 계약,
+L-2 dual-window legacy 접근, L-3 canary와 close 기준이다. 권장값은 모두 A다. 제품 코드·Rules/config/test/
+package/lockfile 변경과 실제 Firebase/network/deploy/write는 0이다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 045 local Hosting 패키징은 완료됐고 K-1/K-3 결정을 기다렸다.**
 
 K-2=A 방향으로 OS temp allowlist staging을 구현했다. 고객 build는 `/`, `/admin/` base의 admin build는
 `/admin/`에 두고 legacy HTML 두 개만 추가한다. 실제 `firebase.json`은 수정하지 않고 temp candidate

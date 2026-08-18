@@ -5,21 +5,30 @@ updated_at: 2026-08-18
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-045-deploy-safe-hosting-layout-local   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_DEPLOY
-active_unit: spec-044-admin-write-cutover-readiness-investigation
+active_unit: spec-046-admin-write-transitional-cutover-contract
 state: FOUNDER_DECISION_REQUIRED
 baseline_commit: c896fbe   # spec 045 local Hosting layout implementation
 candidate_commit: c896fbe   # CODEX_PASSED
 verified_commit: c896fbe   # targeted 18, unit 1366, Chromium 141
-origin_relation: "local completion docs pending push; verify HEAD=origin after fast-forward push"
-working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
+origin_relation: "HEAD=origin at spec 046 document start; document commit pending"
+working_tree: "spec 046 documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_044_K1_K3_DECISION
+next_transition: FOUNDER_SPEC_046_L1_L3_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 046 단계적 cutover 계약 · Founder 결정 대기 (2026-08-18)
+
+- Founder K-1=A/K-3=A를 정본에 기록했고 스펙 044는 K-1/K-2/K-3 모두 A로 종료했다.
+- 목표 순서: Firestore transitional → Storage transitional → write-disabled app → 제한 canary → legacy close.
+- actual-write 전/후 rollback을 분리했고 이후 legacy fallback/write-back은 금지했다.
+- 실제 UID·비용 상한·관찰 주체가 없어 P1/P4는 차단 상태다.
+- 다음 결정은 L-1 비용·관찰, L-2 dual-window 접근, L-3 canary/close 기준이다.
+- 제품 코드·Rules/config/test/package/lockfile 변경 및 실제 Firebase/deploy/write 0.
 
 ## 스펙 045 완료 · deploy-safe Hosting layout 로컬 패키징 (2026-08-18)
 

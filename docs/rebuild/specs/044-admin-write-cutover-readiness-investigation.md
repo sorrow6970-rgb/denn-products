@@ -1,6 +1,6 @@
 # 스펙 044 후보 — 운영자 C5 write cutover 준비도 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / DOCUMENT_ONLY / NO_DEPLOY**
+상태: **DONE / FOUNDER_K1_A_K2_A_K3_A / DOCUMENT_ONLY / NO_DEPLOY**
 
 ## 목표
 
@@ -127,3 +127,10 @@ orphan delete/자동 정리, 신규 의존성·다운로드, 보호 대상 변�
 
 현재 운영 쓰기는 **NOT READY**다. emulator PASS와 composition 완료만으로 G-1/G-4/Hosting/cutover 조건을
 대체할 수 없다. 권장값은 **K-1=A, K-2=A, K-3=A**이며 Founder 결정 전 스펙 045 구현을 시작하지 않는다.
+
+## Founder 결정 (2026-08-18)
+
+- K-1=A, K-2=A, K-3=A 승인.
+- K-2 local-only 구현은 스펙 045에서 완료했다.
+- K-1 수치·관찰 주체와 K-3 단계별 STOP/rollback 세부 계약은 스펙 046으로 이어간다.
+- 이 결정으로 실제 UID·Rules/Hosting 배포·운영 write·legacy close가 승인된 것은 아니다.
