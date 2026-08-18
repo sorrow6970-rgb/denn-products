@@ -2,11 +2,11 @@
 
 상태: `FOUNDER_DECISION_REQUIRED`
 active_unit: `spec-044-admin-write-cutover-readiness-investigation`
-completed_unit: `spec-043-admin-ui-composition-preconnection-contract` — **DONE / CODEX_PASSED / LOCAL_GATED / PRODUCTION_WRITE_DISABLED**
-기준: 스펙 043 구현 커밋 **`41e86e1`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
+completed_unit: `spec-045-deploy-safe-hosting-layout-local` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_DEPLOY**
+기준: 스펙 045 구현 커밋 **`c896fbe`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
 next_transition: **`FOUNDER_SPEC_044_K1_K3_DECISION`**
 
-## ★ 스펙 044 Founder 결정 대기
+## ★ 스펙 045 종료 · 스펙 044 Founder 잔여 결정 대기
 
 정본: `docs/rebuild/specs/044-admin-write-cutover-readiness-investigation.md`
 
@@ -19,7 +19,11 @@ cutover/rollback 계약이 없다.
 - K-2=A: 다음은 local-only deploy-safe Hosting/admin route 패키징 스펙 045
 - K-3=A: 향후 transitional Rules→app→legacy close 방향
 
-Founder 결정 전 스펙 045 구현과 실제 UID/Rules/Hosting/write 활성화를 시작하지 않는다.
+K-2=A 로컬 패키징은 완료됐다. targeted 18/18, unit 1366/1366, Chromium 141/141, 고객 hash 동일,
+포트/temp 잔류 0이다. 실제 Firebase/UID/Rules/Hosting deploy/write 활성화는 수행하지 않았다.
+
+Founder 결정이 필요한 항목은 K-1 비용·용량 상한 정책과 K-3 actual cutover 전략이다. 두 결정을
+추측하지 말고 다음 구현을 시작하지 않는다.
 
 ## ★ 스펙 043 종료 — gated admin write composition
 

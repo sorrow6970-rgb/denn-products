@@ -4,14 +4,14 @@
 updated_at: 2026-08-18
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-043-admin-ui-composition-preconnection-contract   # DONE, CODEX_PASSED, LOCAL_GATED, PRODUCTION_WRITE_DISABLED
+completed_unit: spec-045-deploy-safe-hosting-layout-local   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_DEPLOY
 active_unit: spec-044-admin-write-cutover-readiness-investigation
 state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 41e86e1   # spec 043 gated composition implementation
-candidate_commit: 41e86e1   # CODEX_PASSED
-verified_commit: 41e86e1   # targeted 52, unit 1363, Chromium 139
-origin_relation: "HEAD=origin, ahead/behind 0/0 at spec 044 investigation start"
-working_tree: "spec 044 documents plus protected Founder/user changes; protected paths remain unstaged"
+baseline_commit: c896fbe   # spec 045 local Hosting layout implementation
+candidate_commit: c896fbe   # CODEX_PASSED
+verified_commit: c896fbe   # targeted 18, unit 1366, Chromium 141
+origin_relation: "local completion docs pending push; verify HEAD=origin after fast-forward push"
+working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: FOUNDER_SPEC_044_K1_K3_DECISION
@@ -20,6 +20,14 @@ commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 045 완료 · deploy-safe Hosting layout 로컬 패키징 (2026-08-18)
+
+- Founder K-2=A 방향으로 OS temp allowlist staging과 로컬 route 검증을 구현했다.
+- 실제 `firebase.json`·Rules·package/lockfile·제품 앱 코드는 변경하지 않았고 Firebase CLI/deploy는 0이다.
+- targeted 18/18, `pnpm check` PASS(unit 1366/1366), Chromium 141/141, 고객 hash 동일,
+  diff-check·포트/temp PASS. 구현 커밋 `c896fbe`.
+- K-1 비용·용량 상한과 K-3 actual cutover 전략은 미결정이다. 상태는 Founder 결정 대기다.
 
 ## 스펙 044 cutover 준비도 조사 · Founder 결정 대기 (2026-08-18)
 

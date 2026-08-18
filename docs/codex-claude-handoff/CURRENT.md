@@ -9,7 +9,17 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 044 admin write cutover 준비도 조사가 완료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 045 local Hosting 패키징은 완료됐고 K-1/K-3 결정을 기다린다.**
+
+K-2=A 방향으로 OS temp allowlist staging을 구현했다. 고객 build는 `/`, `/admin/` base의 admin build는
+`/admin/`에 두고 legacy HTML 두 개만 추가한다. 실제 `firebase.json`은 수정하지 않고 temp candidate
+config만 생성한다. targeted 18/18, `pnpm check` PASS(unit 1366/1366), Chromium 141/141,
+고객 hash 동일, 포트 4183/4184/4185와 temp 잔류 0. 구현 커밋 `c896fbe`.
+
+실제 Firebase/network/UID/Rules·Hosting 배포/운영 쓰기·발행·delete는 NOT TESTED/금지다.
+K-1 비용·용량 상한과 K-3 actual cutover 전략은 아직 미결정이며 다음 구현은 자동 시작하지 않는다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 044 admin write cutover 준비도 조사가 완료됐다.**
 
 운영 write는 **NOT READY**다. 실제 UID 정본이 없고, G-4 D-2=O-3/D-3=N은 비용 상한을 정하지
 않았으며, 현재 `firebase.json`은 `hosting.public: "."`라 Vite admin의 안전한 배포 artifact/route가

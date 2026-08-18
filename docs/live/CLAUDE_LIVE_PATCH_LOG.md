@@ -4122,3 +4122,14 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 권장 K-1=A/K-2=A/K-3=A. 스펙 045는 결정 전 시작하지 않는다.
 - 신규 spec 044 + handoff와 상태 문서만 변경. 제품 코드·Rules/config/test/package/lockfile 0,
   실제 Firebase/network/UID/Rules·Hosting 배포/운영 write flag/운영 쓰기/발행/delete 0.
+
+## 2026-08-18 — 스펙 045 deploy-safe Hosting layout 로컬 패키징 · CODEX_PASSED
+
+- K-2=A 방향으로 실행별 OS temp allowlist staging을 구현했다.
+- 고객 `/`, admin `/admin/`, legacy HTML 두 개의 로컬 artifact/route를 검증했다.
+- targeted unit 18/18, `pnpm check` PASS(unit 1366/1366), Chromium 141/141,
+  고객 JS SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`,
+  `git diff --check` PASS, 포트 4183/4184/4185 및 OS temp 잔류 0.
+- 구현 커밋 `c896fbe`. 실제 `firebase.json`·Rules·package/lockfile·제품 앱 코드 변경 0,
+  Firebase CLI/deploy/network/UID/운영 쓰기·발행·delete 0.
+- K-1 비용·용량 상한과 K-3 actual cutover 전략은 미결정이다. 다음 구현 자동 시작 0.
