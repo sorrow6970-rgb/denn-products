@@ -15,6 +15,9 @@ backup.json
 # ★ firebase.emulator.json 은 신규 파일이라 위 *.json 에 걸린다. emulator 게이트를 다른 환경에서
 #   재현하려면 반드시 추적돼야 하므로 예외로 둔다(스펙 037 A-12). git add -f 는 쓰지 않는다.
 !firebase.emulator.json
+# 스펙 047 local cutover gate의 고정 config/manifest만 추적한다. 다른 *.json은 계속 무시한다.
+!firebase.cutover.emulator.json
+!cutover.local.candidate.json
 
 # 리빌드 빌드 산출물 / 도구 출력
 node_modules/

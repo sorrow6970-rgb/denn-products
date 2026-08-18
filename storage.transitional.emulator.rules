@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// SPEC 047 SYNTHETIC TRANSITIONAL CANDIDATE — LOCAL EMULATOR ONLY. NEVER DEPLOY.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function op() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+    function approvedOperator() {
+      return op() && request.auth.uid == 'emulator-operator-DO-NOT-DEPLOY';
+    }
+    function okSize() { return request.resource.size < 20 * 1024 * 1024; }
+
+    match /rebuild-admin-state/objects/{objectId} {
+      allow read: if approvedOperator();
+      allow create: if approvedOperator()
+        && resource == null
+        && firestore.exists(/databases/(default)/documents/rebuildAdminStateObjects/$(objectId))
+        && okSize()
+        && request.resource.contentType == 'application/json';
+      allow update, delete: if false;
+    }
+
+    // Transitional-only: preserve the existing non-anonymous legacy save window.
+    match /admin/{p=**} {
+      allow read: if op();
+      allow write: if op() && okSize();
+    }
+
+    match /temp-share/{p=**} { allow read: if true; allow write: if okSize(); }
+    match /proofs/{p=**} { allow read: if true; allow write: if okSize(); }
+    match /published/{p=**} { allow read: if true; allow write: if op() && okSize(); }
+    match /templates/{p=**} { allow read: if true; allow write: if op() && okSize(); }
+    match /placeholders/{p=**} { allow read: if true; allow write: if op() && okSize(); }
+    match /guides/{p=**} { allow read: if true; allow write: if op() && okSize(); }
+    match /mockups/{p=**} { allow read: if true; allow write: if op() && okSize(); }
+    match /editor-overlays/{p=**} { allow read: if true; allow write: if op() && okSize(); }
+  }
+}

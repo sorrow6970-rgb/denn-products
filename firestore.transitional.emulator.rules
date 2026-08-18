@@ -1,0 +1,61 @@
+rules_version = '2';
+
+// SPEC 047 SYNTHETIC TRANSITIONAL CANDIDATE — LOCAL EMULATOR ONLY. NEVER DEPLOY.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /spaces/{token} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false;
+    }
+
+    match /rebuildAdminState/{docId} {
+      function approvedOperator() {
+        return request.auth != null
+          && request.auth.token.firebase.sign_in_provider != 'anonymous'
+          && request.auth.uid == 'emulator-operator-DO-NOT-DEPLOY';
+      }
+      function validHead() {
+        return request.resource.data.keys().hasOnly(['schemaVersion', 'revision', 'recId'])
+          && request.resource.data.keys().hasAll(['schemaVersion', 'revision', 'recId'])
+          && request.resource.data.schemaVersion == 1
+          && request.resource.data.revision is int
+          && request.resource.data.recId is string
+          && request.resource.data.recId.matches(
+            '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.]json$');
+      }
+      function claim() {
+        return get(/databases/$(database)/documents/rebuildAdminStateObjects/$(request.resource.data.recId));
+      }
+
+      allow get: if approvedOperator() && docId == 'head';
+      allow list: if false;
+      allow create: if approvedOperator() && docId == 'head' && validHead()
+        && request.resource.data.revision == 1 && claim().data.claimedBase == 0;
+      allow update: if approvedOperator() && docId == 'head' && validHead()
+        && request.resource.data.revision == resource.data.revision + 1
+        && request.resource.data.recId != resource.data.recId
+        && claim().data.claimedBase == resource.data.revision;
+      allow delete: if false;
+    }
+
+    match /rebuildAdminStateObjects/{recId} {
+      function approvedOperator() {
+        return request.auth != null
+          && request.auth.token.firebase.sign_in_provider != 'anonymous'
+          && request.auth.uid == 'emulator-operator-DO-NOT-DEPLOY';
+      }
+      allow create: if approvedOperator()
+        && recId.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.]json$')
+        && request.resource.data.keys().hasOnly(['claimedBase'])
+        && request.resource.data.keys().hasAll(['claimedBase'])
+        && request.resource.data.claimedBase is int
+        && request.resource.data.claimedBase >= 0;
+      allow read, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

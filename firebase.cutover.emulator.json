@@ -1,0 +1,15 @@
+{
+  "_comment": [
+    "SPEC 047 LOCAL CUTOVER EMULATOR ONLY. NEVER DEPLOY.",
+    "Run only with --config firebase.cutover.emulator.json --project demo-denn-cutover."
+  ],
+  "storage": { "rules": "storage.transitional.emulator.rules" },
+  "firestore": { "rules": "firestore.transitional.emulator.rules" },
+  "emulators": {
+    "singleProjectMode": true,
+    "auth": { "host": "127.0.0.1", "port": 9099 },
+    "firestore": { "host": "127.0.0.1", "port": 8080 },
+    "storage": { "host": "127.0.0.1", "port": 9199 },
+    "ui": { "enabled": false }
+  }
+}

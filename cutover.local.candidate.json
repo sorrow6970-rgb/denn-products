@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "mode": "local-only",
+  "projectId": "demo-denn-cutover",
+  "syntheticOperatorUid": "emulator-operator-DO-NOT-DEPLOY",
+  "rules": {
+    "storage": "storage.transitional.emulator.rules",
+    "firestore": "firestore.transitional.emulator.rules"
+  },
+  "canary": {
+    "intentionalSaves": 1,
+    "maxNewObjects": 1,
+    "maxObjectBytesExclusive": 20971520,
+    "observer": "Founder",
+    "immediateReview": true
+  },
+  "gates": {
+    "productionEnabled": false,
+    "actualWriteApproved": false,
+    "legacyCloseApproved": false
+  },
+  "deployCommands": []
+}
