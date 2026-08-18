@@ -1,10 +1,24 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-043-admin-ui-composition-preconnection-contract`
 completed_unit: `spec-042-admin-write-editor-browser-fixture` — **DONE / CODEX_PASSED / LOCAL_ONLY / FIXTURE_ONLY / NO_APP_WIRING**
 기준: 스펙 042 구현 커밋 **`d0fb7c3`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
-next_transition: **`NEXT_MANUAL_TASK`**
+next_transition: **`FOUNDER_SPEC_043_Y2_Y5_DECISION`**
+
+## ★ 스펙 043 Founder 결정 대기
+
+정본: `docs/rebuild/specs/043-admin-ui-composition-preconnection-contract.md`
+
+Y-1=A 문서 조사 결과, 권장값은 **Y-2=A/Y-3=A/Y-4=A/Y-5=A**다.
+
+- Y-2: 단일 app composition root + `OperatorAuthPort` 한 권위
+- Y-3: production에서는 auth-only read card, C5 baseline load 하나만 표시
+- Y-4: read enable과 분리된 exact-true write enable gate
+- Y-5: 첫 명시 load에서 rejection-safe lazy write facade/port 생성
+
+Founder 결정 전 제품 구현·`App.tsx` 연결을 시작하지 않는다. 실제 Firebase·UID·Rules 배포·운영 쓰기·
+발행·delete는 계속 금지다.
 
 ## ★ 스펙 042 종료 — 합성 로컬 브라우저 fixture
 

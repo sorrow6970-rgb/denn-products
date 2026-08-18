@@ -5,21 +5,31 @@ updated_at: 2026-08-18
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-042-admin-write-editor-browser-fixture   # DONE, CODEX_PASSED, LOCAL_ONLY, FIXTURE_ONLY, NO_APP_WIRING
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
+active_unit: spec-043-admin-ui-composition-preconnection-contract
+state: FOUNDER_DECISION_REQUIRED
 baseline_commit: d0fb7c3   # spec 042 local browser fixture
 candidate_commit: d0fb7c3   # CODEX_PASSED
 verified_commit: d0fb7c3   # unit 1356, Chromium 139
-origin_relation: "completion-state commit pending fast-forward push"
-working_tree: "completion documents plus protected Founder/user changes; protected paths remain unstaged"
-fix_round: 2
+origin_relation: "HEAD=origin, ahead/behind 0/0 at spec 043 investigation start"
+working_tree: "spec 043 documents plus protected Founder/user changes; protected paths remain unstaged"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_SPEC_043_Y2_Y5_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 043 composition 사전 조사 · Founder 결정 대기 (2026-08-18)
+
+- Y-1=A에 따라 문서 전용으로 production 연결 전 composition 경계를 조사했다.
+- 현재 read env factory는 auth/read port를 내부에 감춰 write session과 같은 auth instance를 공유할
+  composition API가 없다. legacy-only load와 C5 baseline load도 의미가 다르다.
+- 권장 결정: Y-2=A 단일 composition/auth 권위, Y-3=A production auth-only card,
+  Y-4=A 별도 write enable gate, Y-5=A 명시 load 시 rejection-safe lazy write 생성.
+- 제품 코드·Rules/config/test/package/lockfile 변경 0. 실제 Firebase/network/emulator/배포/운영 쓰기 0.
+- Founder 결정 전 `App.tsx` 연결과 구현을 시작하지 않는다.
 
 ## 스펙 042 완료 · 로컬 브라우저 fixture (2026-08-18)
 

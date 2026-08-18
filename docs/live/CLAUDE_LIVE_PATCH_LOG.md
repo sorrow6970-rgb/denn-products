@@ -4087,3 +4087,14 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   포트 4183/4184·OS temp 잔류 0.
 - 구현 커밋 `d0fb7c3`. 실제 Firebase/emulator/UID/IAM/Rules·Hosting 배포/운영 쓰기/UI 연결/
   delete/발행은 NOT TESTED/금지. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
+
+## 2026-08-18 — 스펙 043 production 연결 전 composition 조사 · Founder 결정 대기
+
+- Founder Y-1=A 승인에 따라 문서 전용 조사 수행.
+- 확인: 기존 read env factory는 auth/read ports를 내부 소유해 write session과 동일 auth instance를
+  공유할 composition API가 없으며, legacy-only load와 C5 baseline load는 서로 다른 동작이다.
+- 권장: Y-2=A 단일 composition/auth, Y-3=A production auth-only card, Y-4=A 별도 write flag,
+  Y-5=A 명시 load 시 rejection-safe lazy write 생성.
+- 신규 spec 043 + handoff와 상태 문서만 변경. 제품 코드·Rules/config/test/package/lockfile 0,
+  실제 Firebase/network/emulator/UID/IAM/배포/운영 쓰기/UI 연결/발행/delete 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`; Y-2~Y-5 결정 전 구현 0.

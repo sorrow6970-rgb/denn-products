@@ -9,7 +9,20 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 042가 `DONE / CODEX_PASSED / LOCAL_ONLY / FIXTURE_ONLY / NO_APP_WIRING`으로 종료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 043 production 연결 전 composition 계약 조사가 완료됐다.**
+
+Y-1=A에 따라 문서 전용으로 확인했다. 현재 read env factory는 auth/read port를 내부에 감춰 write
+session과 같은 auth instance를 공유할 composition API가 없고, legacy-only read load와 C5 baseline
+load를 그대로 함께 노출하면 의미가 다른 중복 동작이 된다. 실제 UID·Rules cutover 전 write만 닫는
+별도 enable gate도 없다.
+
+권장 결정은 **Y-2=A**(단일 composition/auth 권위), **Y-3=A**(production auth-only card),
+**Y-4=A**(별도 exact-true write gate), **Y-5=A**(명시 load 시 rejection-safe lazy write 생성)다.
+제품 코드·Rules/config/test/package/lockfile 변경과 실제 Firebase/network/emulator/배포/운영 쓰기는 0.
+Founder 결정 전 구현과 `App.tsx` 연결을 시작하지 않는다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 042가
+> `DONE / CODEX_PASSED / LOCAL_ONLY / FIXTURE_ONLY / NO_APP_WIRING`으로 종료됐다.**
 
 Founder X-1=A/X-2=A/X-3=A에 따라 합성 auth/write fake와 실제 session controller/editor를 연결한
 별도 Chromium fixture를 구현했다. production `App.tsx`·composition·Firebase adapter/network는 0이다.
