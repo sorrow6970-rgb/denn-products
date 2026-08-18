@@ -9,7 +9,17 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 046 단계적 cutover 계약의 L-1~L-3 결정을 기다린다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 047은 완료됐고 운영 상한·실제 UID 정본을 기다린다.**
+
+Founder L-1 canary 한정값/L-2=A/L-3=A에 따라 별도 synthetic transitional Rules, demo-only emulator
+config, fail-closed cutover manifest를 구현했다. manifest 12/12, cutover emulator 4/4, `pnpm check`
+unit 1378/1378, Chromium 141/141, 고객 hash 동일, 포트/temp 잔류 0. 구현 커밋 `b8f1ac4`.
+
+실제 운영 Rules/config는 변경하지 않았다. 다음 입력은 일반 운영 객체/byte/저장 빈도 상한과 확인
+주기·책임자, 실제 승인 운영자 UID 정본이다. 이 값 전에는 Firebase/network/deploy/write/legacy close를
+열지 않는다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 046 단계적 cutover 계약의 L-1~L-3 결정을 기다렸다.**
 
 Founder K-1=A/K-3=A를 확정했다. 목표 순서는 Firestore transitional → Storage transitional →
 write-disabled app → 제한 canary → legacy close다. 각 서비스 배포를 원자적이라고 가정하지 않으며,

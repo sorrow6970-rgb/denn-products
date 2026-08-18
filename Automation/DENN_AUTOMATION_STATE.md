@@ -4,22 +4,31 @@
 updated_at: 2026-08-18
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-045-deploy-safe-hosting-layout-local   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_DEPLOY
-active_unit: spec-046-admin-write-transitional-cutover-contract
+completed_unit: spec-047-transitional-rules-local-gate   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_DEPLOY
+active_unit: admin-write-operational-prerequisites
 state: FOUNDER_DECISION_REQUIRED
-baseline_commit: c896fbe   # spec 045 local Hosting layout implementation
-candidate_commit: c896fbe   # CODEX_PASSED
-verified_commit: c896fbe   # targeted 18, unit 1366, Chromium 141
-origin_relation: "HEAD=origin at spec 046 document start; document commit pending"
-working_tree: "spec 046 documents plus protected Founder/user changes; protected paths remain unstaged"
+baseline_commit: b8f1ac4   # spec 047 local transitional Rules gate
+candidate_commit: b8f1ac4   # CODEX_PASSED
+verified_commit: b8f1ac4   # manifest 12, emulator 4, unit 1378, Chromium 141
+origin_relation: "implementation committed locally; completion docs and fast-forward push pending"
+working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_046_L1_L3_DECISION
+next_transition: FOUNDER_OPERATIONAL_LIMITS_AND_UID_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 047 transitional Rules 로컬 게이트 완료 (2026-08-18)
+
+- Founder L-1 canary 한정값, L-2=A, L-3=A 승인.
+- 별도 synthetic transitional Rules·demo-only emulator config·fail-closed manifest validator 구현.
+- manifest 12/12, cutover emulator 4/4, `pnpm check` unit 1378/1378, Chromium 141/141 PASS,
+  고객 hash 동일, 포트/temp 잔류 0. 구현 커밋 `b8f1ac4`.
+- 실제 운영 Rules/config·UID·Firebase/deploy/write/legacy close는 0.
+- 다음에는 일반 운영 비용·용량 상한/관찰 주체와 실제 UID 정본이 필요하다.
 
 ## 스펙 046 단계적 cutover 계약 · Founder 결정 대기 (2026-08-18)
 

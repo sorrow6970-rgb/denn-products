@@ -1,12 +1,25 @@
 # NEXT CLAUDE PROMPT
 
 상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-046-admin-write-transitional-cutover-contract`
-completed_unit: `spec-045-deploy-safe-hosting-layout-local` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_DEPLOY**
-기준: 스펙 045 구현 커밋 **`c896fbe`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
-next_transition: **`FOUNDER_SPEC_046_L1_L3_DECISION`**
+active_unit: `admin-write-operational-prerequisites`
+completed_unit: `spec-047-transitional-rules-local-gate` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_DEPLOY**
+기준: 스펙 047 구현 커밋 **`b8f1ac4`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
+next_transition: **`FOUNDER_OPERATIONAL_LIMITS_AND_UID_DECISION`**
 
-## ★ 스펙 046 단계적 cutover 계약 · Founder 결정 대기
+## ★ 스펙 047 종료 · 운영 선행조건 결정 대기
+
+Founder L-1 canary 한정값/L-2=A/L-3=A에 따라 synthetic transitional Rules와 local manifest gate를
+구현했다. manifest 12/12, emulator 4/4, unit 1378/1378, Chromium 141/141 PASS다.
+
+다음 운영 단계에는 두 입력이 필요하다.
+
+- 일반 운영 객체 수·총 byte·저장 빈도 상한, 확인 주기와 책임자
+- 실제 승인 운영자 UID 정본
+
+이 값 없이 Rules 후보를 운영 파일로 옮기거나 preview/live 배포를 시작하지 않는다. 실제 Firebase/
+network/deploy/write/legacy close는 계속 금지다.
+
+## 이전 — 스펙 046 단계적 cutover 계약 · Founder 결정 대기
 
 Founder K-1=A/K-3=A가 승인됐고 K-2=A는 스펙 045에서 완료됐다. 스펙 046은 Firestore transitional →
 Storage transitional → write-disabled app → 제한 canary → legacy close 순서와 actual-write 전/후 rollback을
@@ -18,7 +31,7 @@ Storage transitional → write-disabled app → 제한 canary → legacy close �
 - L-2=A: 승인 UID 한 명·새 `/admin/` 한 탭만 사용하고 dual-window legacy 저장은 절차로 중지
 - L-3=A: 저장 1건과 head/object/REC·재로그인·새 탭 확인 후 별도 승인으로 legacy close
 
-결정 전 Rules 후보 구현을 시작하지 않는다. 실제 UID/Rules/Hosting deploy/write/legacy close는 금지다.
+L-1~L-3은 모두 승인되어 스펙 047 local-only gate가 완료됐다.
 
 ## 이전 — 스펙 045 종료 · 스펙 044 Founder 결정 대기
 

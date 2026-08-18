@@ -4144,3 +4144,14 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   있으나 cross-service atomic deploy 보장은 확인하지 못했다.
 - 남은 Founder 결정: L-1 비용·관찰, L-2 dual-window 접근, L-3 canary/close 기준(권장 모두 A).
 - 문서 전용. 제품 코드·Rules/config/test/package/lockfile 및 실제 Firebase/deploy/write 변경 0.
+
+## 2026-08-18 — 스펙 047 transitional Rules 로컬 게이트 · CODEX_PASSED
+
+- Founder 승인: L-1 최초 canary 1회/신규 객체 1개/20 MiB 미만/Founder 즉시 확인, L-2=A, L-3=A.
+- 실제 운영 파일과 분리된 synthetic transitional Storage/Firestore Rules, demo-only emulator config,
+  local cutover manifest validator를 구현했다.
+- manifest unit 12/12, cutover emulator 4/4, `pnpm check` PASS(unit 1378/1378), Chromium 141/141,
+  고객 SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`,
+  diff-check·포트/temp 잔류 0.
+- 구현 커밋 `b8f1ac4`. `storage.rules`/`firestore.rules`/`firebase.json`/package/lockfile/apps 변경 0.
+- 실제 UID·Firebase/network/deploy/write/legacy close 0. 다음은 일반 운영 상한과 UID 결정 대기.
