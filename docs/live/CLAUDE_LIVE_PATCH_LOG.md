@@ -4098,3 +4098,17 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 신규 spec 043 + handoff와 상태 문서만 변경. 제품 코드·Rules/config/test/package/lockfile 0,
   실제 Firebase/network/emulator/UID/IAM/배포/운영 쓰기/UI 연결/발행/delete 0.
 - 상태 `FOUNDER_DECISION_REQUIRED`; Y-2~Y-5 결정 전 구현 0.
+
+## 2026-08-18 — 스펙 043 Y-2~Y-5=A 구현 · CODEX_PASSED
+
+- Founder 승인: Y-2=A/Y-3=A/Y-4=A/Y-5=A.
+- 구현: 단일 app composition/auth 권위, auth-only production mode, read와 분리된 exact-true write gate,
+  첫 명시 baseline load 시 rejection-safe lazy write port 생성.
+- 기본 production env는 write-disabled라 editor/write controller 0. 운영 write flag 설정 0.
+- 독립 보강: 합성 browser fixture가 실제 composition root를 사용하며 write factory load 전 0/후 1,
+  auth-only legacy load action 0을 검증한다.
+- 게이트: targeted 52/52, `pnpm check` PASS(unit 1363/1363), Chromium 139/139,
+  고객 JS SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`,
+  `git diff --check` PASS, 포트 4183/4184·OS temp 잔류 0.
+- 구현 커밋 `41e86e1`. 실제 Firebase/network/emulator/UID/IAM/Rules·Hosting 배포/운영 쓰기/발행/
+  delete는 NOT TESTED/금지. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`.

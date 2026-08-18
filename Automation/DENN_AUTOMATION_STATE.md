@@ -4,22 +4,34 @@
 updated_at: 2026-08-18
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-042-admin-write-editor-browser-fixture   # DONE, CODEX_PASSED, LOCAL_ONLY, FIXTURE_ONLY, NO_APP_WIRING
-active_unit: spec-043-admin-ui-composition-preconnection-contract
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: d0fb7c3   # spec 042 local browser fixture
-candidate_commit: d0fb7c3   # CODEX_PASSED
-verified_commit: d0fb7c3   # unit 1356, Chromium 139
-origin_relation: "HEAD=origin, ahead/behind 0/0 at spec 043 investigation start"
-working_tree: "spec 043 documents plus protected Founder/user changes; protected paths remain unstaged"
-fix_round: 0
+completed_unit: spec-043-admin-ui-composition-preconnection-contract   # DONE, CODEX_PASSED, LOCAL_GATED, PRODUCTION_WRITE_DISABLED
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: 41e86e1   # spec 043 gated composition implementation
+candidate_commit: 41e86e1   # CODEX_PASSED
+verified_commit: 41e86e1   # targeted 52, unit 1363, Chromium 139
+origin_relation: "completion-state commit pending fast-forward push"
+working_tree: "completion documents plus protected Founder/user changes; protected paths remain unstaged"
+fix_round: 1
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_043_Y2_Y5_DECISION
+next_transition: NEXT_MANUAL_TASK
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 043 완료 · gated admin write composition (2026-08-18)
+
+- Founder Y-2=A/Y-3=A/Y-4=A/Y-5=A 승인.
+- 단일 composition/auth 권위, auth-only production mode, 별도 exact-true write gate, 명시 baseline load
+  시 lazy write port 생성을 구현했다.
+- 독립 보강으로 합성 Chromium fixture도 production composition root를 통과하게 해 factory가 load 전 0,
+  load 후 1임을 검증했다.
+- targeted 52/52, `pnpm check` PASS(unit 1363/1363), Chromium 139/139, 고객 JS hash 동일,
+  diff-check·포트/temp PASS.
+- 구현 커밋 `41e86e1`. 운영 write flag는 설정하지 않았고 실제 Firebase/emulator/UID/IAM/Rules 배포/
+  운영 쓰기·발행·delete는 NOT TESTED/금지 유지다.
 
 ## 스펙 043 composition 사전 조사 · Founder 결정 대기 (2026-08-18)
 

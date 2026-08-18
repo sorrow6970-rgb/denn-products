@@ -9,7 +9,18 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 043 production 연결 전 composition 계약 조사가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 043이 `DONE / CODEX_PASSED / LOCAL_GATED / PRODUCTION_WRITE_DISABLED`로 종료됐다.**
+
+Founder Y-2=A/Y-3=A/Y-4=A/Y-5=A에 따라 app composition root가 config 1회, auth port 1개와
+legacy read port를 공유하고 write session을 별도 exact-true gate 뒤에 둔다. write-enabled composition은
+auth-only card와 C5 editor를 표시하며, write facade/port는 첫 명시 baseline load 때만 생성된다.
+
+합성 fixture도 실제 composition root를 사용해 factory load 전 0/후 1을 검증했다. targeted 52/52,
+`pnpm check` PASS(unit 1363/1363), Chromium 139/139, 고객 JS hash 동일. 구현 커밋 `41e86e1`.
+운영 write flag는 설정하지 않았고 실제 Firebase/emulator/UID/IAM/Rules 배포/운영 쓰기·발행·delete는
+NOT TESTED/금지다. 다음 전이는 `NEXT_MANUAL_TASK`다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 043 production 연결 전 composition 계약 조사가 완료됐다.**
 
 Y-1=A에 따라 문서 전용으로 확인했다. 현재 read env factory는 auth/read port를 내부에 감춰 write
 session과 같은 auth instance를 공유할 composition API가 없고, legacy-only read load와 C5 baseline
