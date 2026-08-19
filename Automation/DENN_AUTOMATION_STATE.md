@@ -4,12 +4,12 @@
 updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-051-space-firestore-read-adapter   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
+completed_unit: spec-052-space-link-open-controller   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
 active_unit: none
 state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: eb7bb2b   # spec 051 local Firestore reader
-candidate_commit: eb7bb2b   # CODEX_PASSED
-verified_commit: eb7bb2b   # targeted 30, unit 1462, Chromium 141
+baseline_commit: 49f51fb   # spec 052 local link/open controller
+candidate_commit: 49f51fb   # CODEX_PASSED
+verified_commit: 49f51fb   # targeted 17, unit 1479, Chromium 141
 origin_relation: "HEAD=origin after completion documents fast-forward push; ahead/behind 0/0"
 working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
@@ -20,6 +20,19 @@ commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 052 space link/open controller 완료 (2026-08-19)
+
+- `?space=` query를 순수 파싱하고 injected Firestore reader + spaces open port를 합성하는 local-only
+  controller를 구현했다. 비밀번호 오류 때 암호문만 메모리에 보존하며 명시 재시도는 재조회하지 않는다.
+- duplicate submit, detach/late result, network retry, outcome별 safe error와 raw token/password 비노출을 고정했다.
+- targeted 17/17, 직접 `node scripts/check.mjs` unit 1479/1479, Chromium 141/141 PASS,
+  고객 hash 동일, 포트/temp/debug 잔류 0. 구현 커밋 `49f51fb`.
+- `pnpm check` wrapper는 PATH의 pnpm 11.19가 dependency-status install을 시도해 직접 check entrypoint로
+  검증했다. Corepack 고정 pnpm 11.15.1의 frozen install은 기존 build script 미승인으로 exit 1이었으나
+  resolved/reused 161, downloaded 0으로 node_modules를 복구했다. build 승인·설정 변경은 하지 않았다.
+- 실제 Firebase/project/token/document/network/route UI/scene application/deploy는 NOT TESTED.
+  다음 자동 시작 0.
 
 ## 스펙 051 space Firestore read adapter 완료 (2026-08-19)
 

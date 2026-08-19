@@ -2,11 +2,23 @@
 
 상태: `WAITING_FOR_NEXT_MANUAL_TASK`
 active_unit: `none`
-completed_unit: `spec-051-space-firestore-read-adapter` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 051 구현 커밋 **`eb7bb2b`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
+completed_unit: `spec-052-space-link-open-controller` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 052 구현 커밋 **`49f51fb`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
 next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 051 종료 · 다음 수동 작업 대기
+## ★ 스펙 052 종료 · 다음 수동 작업 대기
+
+순수 `?space=` parser와 injected Firestore reader + spaces open port controller를 구현했다. 비밀번호 오류
+재시도는 암호문을 메모리에서 재사용하며 network retry만 재조회한다. duplicate submit, detach/late result,
+safe error를 검증했다. targeted 17/17, unit 1479/1479, Chromium 141/141, 고객 hash 동일이다.
+
+`pnpm check` wrapper는 PATH pnpm 11.19의 dependency-status install 시도로 실행되지 않아 같은 정본
+entrypoint인 `node scripts/check.mjs`로 전체 게이트를 통과했다. 신규 다운로드·build 승인·workspace 설정
+변경은 0이다. 실제 Firebase/project/token/document/network/route UI/scene application/deploy는 NOT TESTED다.
+다음 후보는 production 연결 전 password UI composition, Firebase config/factory, scene 적용 경계 조사다.
+다음 작업은 자동 시작하지 않는다.
+
+## 이전 — 스펙 051 종료
 
 Q-1=A/Q-2=A/Q-3=A에 따라 `@denn/firebase/space-read` local adapter를 구현했다. targeted 30/30,
 unit 1462/1462, Chromium 141/141, 고객 hash 동일이다.

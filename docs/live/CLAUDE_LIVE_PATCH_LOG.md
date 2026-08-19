@@ -4205,3 +4205,17 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`, 포트/temp 잔류 0.
 - 구현 커밋 `eb7bb2b`. 실제 Firebase/project/token/document/network/route/UI/deploy 0.
 - 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
+
+## 2026-08-19 — 스펙 052 space link/open controller · CODEX_PASSED
+
+- 순수 `?space=` parser와 injected Firestore reader + spaces open port controller를 구현했다.
+- 비밀번호 오류 재시도는 암호문을 메모리에서 재사용하고 network retry만 재조회한다. duplicate submit,
+  detach/late result, safe error와 raw token/password 비노출을 검증했다.
+- targeted 17/17, 직접 `node scripts/check.mjs` PASS(unit 1479/1479), Chromium 141/141,
+  고객 SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`,
+  `git diff --check` PASS, 포트 4183/4184/8080/9099/9199·temp/debug 잔류 0.
+- `pnpm check` wrapper는 PATH pnpm 11.19의 dependency-status install 시도로 실행되지 않았다. Corepack
+  pnpm 11.15.1 frozen install은 기존 build script 미승인 때문에 exit 1이었으나 resolved/reused 161,
+  downloaded 0으로 node_modules를 복구했다. build 승인·workspace 설정 변경은 0이다.
+- 구현·계약 커밋 `49f51fb`. 실제 Firebase/project/token/document/network/route UI/scene application/
+  deploy는 NOT TESTED/금지. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.

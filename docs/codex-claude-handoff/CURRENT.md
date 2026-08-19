@@ -9,7 +9,23 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 051 space Firestore read adapter가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 052 space link/open controller가 완료됐다.**
+
+순수 `?space=` parser와 injected Firestore reader + spaces open port controller를 구현했다. 비밀번호 오류
+재시도는 암호문을 메모리에서 재사용하고 network retry만 재조회한다. duplicate submit, detach/late result,
+safe error를 고정했다. targeted 17/17, 직접 `node scripts/check.mjs` unit 1479/1479,
+Chromium 141/141, 고객 hash 동일, 포트/temp/debug 잔류 0. 구현 커밋 `49f51fb`.
+
+`pnpm check` wrapper는 PATH pnpm 11.19의 dependency-status install 시도로 실행되지 않았다. Corepack 고정
+pnpm 11.15.1 frozen install은 기존 build script 미승인 때문에 exit 1이었지만 resolved/reused 161,
+downloaded 0으로 node_modules는 복구됐다. build 승인·workspace 설정 변경은 하지 않았고 동일 정본
+check entrypoint를 직접 실행해 전체 게이트를 통과했다.
+
+실제 Firebase/project/token/document/network/route UI/scene application/deploy는 NOT TESTED다. 다음 후보는
+production 연결 전 password UI composition, Firebase config/factory, scene 적용 경계 조사이며 다음 스펙은
+자동 시작하지 않는다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 051 space Firestore read adapter가 완료됐다.**
 
 Founder Q-1=A/Q-2=A/Q-3=A 승인에 따라 `@denn/firebase/space-read` 서브패스에 공식 document-ID
 validator, injected port와 named-app SDK facade를 구현했다. targeted 30/30, `pnpm check` unit 1462/1462,
