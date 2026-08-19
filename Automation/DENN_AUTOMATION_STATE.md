@@ -5,21 +5,28 @@ updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-060-space-post-auth-frame-view   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 98f4430   # spec 060 verified implementation
+active_unit: spec-061-space-production-frame-route-connection-investigation
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: 851ed26   # spec 060 completion
 candidate_commit: none
 verified_commit: 98f4430   # unit 1608, Chromium 145
-origin_relation: "HEAD equals origin after spec 060 completion push"
+origin_relation: "HEAD equals origin after spec 061 investigation push"
 working_tree: "protected Founder/user changes only; protected paths remain unstaged"
-fix_round: 1
+fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_SPEC_061_EE_1_EE_5_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 061 production frame route 연결 조사 (2026-08-19)
+
+- production `SpaceRoute`는 gate까지만 연결됐고 ready child는 아직 placeholder다.
+- 연결 뒤에는 password 성공 후 고정 public catalog GET과 proof/optional art Image read가 활성화된다.
+- controller factory만 합성으로 교체하고 fixed URL을 browser intercept하는 좁은 검증 seam을 권장한다.
+- 권장 EE-1=A~EE-5=A. 결정 전 제품 코드/test 변경과 실제 network는 0이다.
 
 ## 스펙 060 post-auth frame view 조사 (2026-08-19)
 

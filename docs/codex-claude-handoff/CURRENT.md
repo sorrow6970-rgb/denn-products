@@ -9,7 +9,20 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 060 post-auth frame view가 완료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` - 스펙 061 production frame route 연결 조사가 완료됐다.**
+
+production `SpaceRoute`는 `SpacePasswordGate`까지만 연결돼 있고 ready child는 placeholder다. 기존 ready seam에
+스펙 060 `SpacePostAuthFrameView`를 연결할 수 있지만, password 성공 뒤 fixed public catalog GET과
+proof/optional art browser Image read가 새로 활성화된다.
+
+권장 구조는 production root에 controller factory 하나만 좁게 주입하는 것이다. 별도 fixture에서 합성 ready
+controller를 쓰고 fixed catalog/proof URL을 Playwright로 intercept하면 production root/default reader/Image
+결합을 실제 외부 egress 없이 검증할 수 있다. 실제 bucket CORS와 운영 object 성공 근거로는 사용하지 않는다.
+
+Founder 결정 대기: **EE-1=A~EE-5=A 권장**. 정본은
+`docs/rebuild/specs/061-space-production-frame-route-connection-investigation.md`다. 결정 전 제품 구현은 0이다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 060 post-auth frame view가 완료됐다.**
 
 Founder DD-1=A~DD-5=A에 따라 ready-only scene seam, injectable post-auth view, source-bound readiness owner,
 measured content width와 conditional exact-font gate를 구현했다. catalog→asset→owner→width→font→plan의 현재

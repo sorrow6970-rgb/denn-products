@@ -4413,3 +4413,13 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   실제 다양한 폰트·viewport 시각 정확도, clock/non-neutral transform/room/gallery, 편집·인쇄·주문·발행·
   write/delete/deploy는 **NOT TESTED / NOT IMPLEMENTED / 금지**다.
 - 상태 `WAITING_FOR_NEXT_MANUAL_TASK`. 다음 단위 자동 시작 0.
+
+## 2026-08-19 - 스펙 061 production frame route 연결 조사 · Founder 결정 대기
+
+- production `SpaceRoute`의 ready child가 placeholder이며 스펙 060 frame view는 아직 mount되지 않음을 확인했다.
+- 연결 뒤 password 성공 시 fixed public catalog GET과 proof/optional art browser Image read가 활성화된다.
+- 권장 검증은 controller factory만 합성으로 교체하고 fixed URL을 Playwright route intercept로 응답한다.
+  production root/default catalog reader/Image owner를 사용하되 실제 외부 egress는 0으로 유지한다.
+- 권장 **EE-1=A~EE-5=A**. 신규 spec 061 + handoff + STATE/NEXT/CURRENT/live log만 변경했다.
+- 제품 코드/test/package/lockfile/Firebase/Rules/config 변경 0, 실제 Firebase/network/CORS/운영 object/deploy 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`; 결정 전 구현 0.

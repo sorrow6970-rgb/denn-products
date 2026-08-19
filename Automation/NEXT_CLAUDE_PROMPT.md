@@ -1,10 +1,28 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-061-space-production-frame-route-connection-investigation`
 completed_unit: `spec-060-space-post-auth-frame-view` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 060 조사 **`e19c8f5`** · 구현 **`6670fb3`** · StrictMode 보완 **`98f4430`**
-next_transition: **`NEXT_MANUAL_TASK`**
+기준: 스펙 060 종료 **`851ed26`**
+next_transition: **`FOUNDER_SPEC_061_EE_1_EE_5_DECISION`**
+
+## ★ 현재 작업 - 스펙 061 production frame route 연결 조사
+
+정본: `docs/rebuild/specs/061-space-production-frame-route-connection-investigation.md`
+
+production `SpaceRoute`는 인증 성공 뒤에도 placeholder를 유지한다. 스펙 060 child를 기존 ready seam에
+연결하면 그때부터 fixed public catalog GET과 proof/optional art browser Image read가 열린다.
+
+권장 결정:
+
+- **EE-1=A:** ready seam에 `SpacePostAuthFrameView` + production `publicCatalogReader` 연결
+- **EE-2=A:** production root에는 controller factory 하나만 좁게 주입
+- **EE-3=A:** catalog의 기존 명시 retry 외 자동 retry/fallback/stale Canvas 0
+- **EE-4=A:** 합성 controller + Playwright fixed URL intercept로 production root browser 검증
+- **EE-5=A:** App/unit/non-production fixture/E2E/문서 최소 범위만 구현
+
+결정 전 구현하지 않는다. 실제 Firebase/project/network/CORS/운영 object/config/deploy와 room/gallery/clock/
+non-neutral transform, 편집·인쇄·주문·발행·write/delete는 계속 금지다.
 
 ## ★ 스펙 060 종료
 
