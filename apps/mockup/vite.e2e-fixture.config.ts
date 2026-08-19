@@ -35,6 +35,8 @@ export default defineConfig({
   build: {
     outDir,
     emptyOutDir: false,
-    rollupOptions: { input: "e2e-canvas-fixture.html" },
+    rollupOptions: {
+      input: ["e2e-canvas-fixture.html", "e2e-space-frame-fixture.html"],
+    },
   },
 });

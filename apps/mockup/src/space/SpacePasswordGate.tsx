@@ -1,12 +1,23 @@
 import { Badge, Button, Card, TextField } from "@denn/ui";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { SpaceSceneV1 } from "@denn/spaces";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { SpaceLinkOpenController } from "./controller";
 import { safeSpaceViewMessage } from "./messages";
 
 export function SpacePasswordGate({
   controller,
+  renderReady,
 }: {
   readonly controller: SpaceLinkOpenController;
+  /** Injectable post-auth seam. Only the validated scene crosses this view boundary. */
+  readonly renderReady?: (scene: SpaceSceneV1) => ReactNode;
 }): React.JSX.Element {
   const snapshot = useSyncExternalStore(
     controller.subscribe,
@@ -75,7 +86,10 @@ export function SpacePasswordGate({
                 {safeSpaceViewMessage(snapshot.code)}
               </p>
             ) : null}
-            {snapshot.status === "ready" ? (
+            {snapshot.status === "ready" && renderReady !== undefined
+              ? renderReady(snapshot.value.scene)
+              : null}
+            {snapshot.status === "ready" && renderReady === undefined ? (
               <div role="status" aria-live="polite" data-testid="space-status">
                 <p>시안 인증이 완료되었습니다.</p>
                 <p>시안 화면 연결은 다음 안전 검증 단계에서 제공됩니다.</p>
