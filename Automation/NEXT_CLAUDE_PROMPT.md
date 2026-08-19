@@ -2,11 +2,19 @@
 
 상태: `WAITING_FOR_NEXT_MANUAL_TASK`
 active_unit: `none`
-completed_unit: `spec-048-legacy-space-crypto-envelope` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 048 구현 커밋 **`283807a`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
+completed_unit: `spec-049-space-document-scene-read` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 049 구현 커밋 **`3111837`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
 next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 048 종료 · 다음 수동 작업 대기
+## ★ 스펙 049 종료 · 다음 수동 작업 대기
+
+`@denn/spaces`에 `space-v1` document와 `space-scene-v1` plaintext의 순수 reader를 구현했다.
+targeted 44/44, unit 1422/1422, Chromium 141/141, 고객 hash 동일이다.
+
+실제 Firestore/token/link/network/scene UI는 NOT TESTED다. 다음 local-only 후보는 crypto와 두 reader를
+합성하는 순수 read pipeline이다. Firebase adapter·route/UI는 별도 결정 전 시작하지 않는다.
+
+## 이전 — 스펙 048 종료
 
 운영 전환은 Founder 지시로 보류했다. `@denn/spaces`의 legacy crypto envelope를 pure Web Crypto로
 구현했고 fixed vector/hostile input을 검증했다. targeted 20/20, unit 1396/1396, Chromium 141/141,

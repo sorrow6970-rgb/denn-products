@@ -4166,3 +4166,13 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   고객 SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`,
   diff-check·포트/temp 잔류 0.
 - 구현 커밋 `283807a`. 실제 Firestore/network/link/scene/UI/deploy 변경 0. 다음 자동 시작 0.
+
+## 2026-08-19 — 스펙 049 space document·scene read · CODEX_PASSED
+
+- `@denn/spaces`에 `space-v1` document와 `space-scene-v1` plaintext의 local-only 순수 reader를 구현했다.
+- known field detached snapshot, unknown 추가 키 호환, malformed/hostile/circular/BigInt 안전 실패를 검증했다.
+- targeted 44/44, `pnpm check` PASS(unit 1422/1422), Chromium 141/141,
+  고객 SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`,
+  diff-check·포트/temp 잔류 0.
+- 구현·계약 커밋 `3111837`. 실제 Firestore/token/link/network/scene UI/deploy 변경 0.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.

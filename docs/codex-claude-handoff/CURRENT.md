@@ -9,7 +9,16 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 048 legacy space crypto envelope가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 049 space document·scene read가 완료됐다.**
+
+`@denn/spaces`에 `space-v1` document와 `space-scene-v1` plaintext의 순수 reader를 구현했다.
+known field만 detached snapshot으로 투영하며 malformed/hostile 입력은 안전 실패한다. targeted 44/44,
+`pnpm check` unit 1422/1422, Chromium 141/141, 고객 hash 동일, 포트/temp 잔류 0. 구현 커밋 `3111837`.
+
+실제 Firestore/token/link/network/scene UI는 NOT TESTED다. 다음 후보는 local-only 순수 read pipeline이며
+다음 스펙은 자동 시작하지 않는다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 048 legacy space crypto envelope가 완료됐다.**
 
 Founder 지시로 운영 전환을 보류했다. `@denn/spaces`에 legacy PBKDF2 120000/SHA-256 → AES-GCM-256,
 salt 16 bytes, IV 12 bytes, standard base64 `{salt,iv,ct}` port를 구현했다. fixed vector와 hostile 입력을

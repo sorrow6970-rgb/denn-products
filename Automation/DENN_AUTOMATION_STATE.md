@@ -1,16 +1,16 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-08-18
+updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-048-legacy-space-crypto-envelope   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
+completed_unit: spec-049-space-document-scene-read   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
 active_unit: none
 state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 283807a   # spec 048 legacy space crypto envelope
-candidate_commit: 283807a   # CODEX_PASSED
-verified_commit: 283807a   # targeted 20, unit 1396, Chromium 141
-origin_relation: "implementation committed locally; completion docs and fast-forward push pending"
+baseline_commit: 3111837   # spec 049 document/scene reader
+candidate_commit: 3111837   # CODEX_PASSED
+verified_commit: 3111837   # targeted 44, unit 1422, Chromium 141
+origin_relation: "HEAD=origin after completion documents fast-forward push; ahead/behind 0/0"
 working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
@@ -20,6 +20,15 @@ commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 049 space document·scene read 완료 (2026-08-19)
+
+- `space-v1` document와 `space-scene-v1` plaintext를 known-field detached snapshot으로 투영하는
+  local-only 순수 reader를 구현했다.
+- malformed/hostile/circular/BigInt와 known bad type은 raw 값 없이 안전 실패하며 unknown 추가 키는 무시한다.
+- targeted 44/44, `pnpm check` unit 1422/1422, Chromium 141/141 PASS, 고객 hash 동일,
+  포트/temp 잔류 0. 구현 커밋 `3111837`.
+- 실제 Firestore/token/link/network/scene UI는 NOT TESTED. 다음 자동 시작 0.
 
 ## 스펙 048 legacy space crypto envelope 완료 (2026-08-18)
 
