@@ -1,6 +1,8 @@
 # 스펙 056 후보 — space remote proof image owner 경계 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / INVESTIGATION_ONLY / NO_NETWORK**
+상태: **CLAUDE_WORKING / IMPLEMENTATION_APPROVED / LOCAL_ONLY / NO_NETWORK**
+
+Founder 승인(2026-08-19): **V-1=A, V-2=A, V-3=A, V-4=A, V-5=A**.
 
 ## 1. 목적
 
@@ -127,3 +129,21 @@ room/gallery, Rules/config/deploy/write/delete/publish, 신규 dependency는 금
 
 현재 local-only로 안전하게 구현 가능한 최소 단위는 dedicated controller + fake unit이다. V-1~V-5 결정
 전 구현하지 않는다.
+
+## 8. 승인된 구현 계약
+
+- `createSpaceProofImageOwner()`는 framework-free controller이며 import 시 browser API/network 0이다.
+- `load(unknown)`은 스펙 055 `resolveSpaceProofImageUrl`을 먼저 호출한다. 실패하면 createImage/src assignment
+  0이고 public state에는 `INVALID_INPUT`만 남긴다.
+- 성공 source는 closure와 element에만 존재한다. remote element에는 `crossOrigin='anonymous'`를 src보다
+  먼저 한 번 쓰고 src도 한 번만 쓴다. app retry/cache/non-CORS fallback은 0이다.
+- public state는 idle/loading/ready/failed이며 ready는 `space-proof-N` synthetic imageRef와 positive finite
+  intrinsic size만 갖는다. failure는 `INVALID_INPUT|LOAD_FAILED|INVALID_DIMENSIONS|DISPOSED`뿐이다.
+- one-active generation이다. replacement/clear/dispose는 old callback을 detach하고 ready binding을 제거한다.
+  늦은 결과는 state/binding을 바꾸지 않지만 browser wire request 취소는 주장하지 않는다.
+- bindings는 ready synthetic ref에만 decoded drawable을 반환한다. URL/token/object/element/error는 state,
+  error, log, plan에 노출하지 않는다.
+- injected fake로 순서, replacement, late result, clear/dispose, hostile port/property/subscriber를 검증한다.
+
+허용 파일은 `apps/mockup/src/space/proof-image-owner.ts`, 해당 unit, spec 056/handoff/상태 문서뿐이다.
+React hook/App/UI/real Image/network/Canvas/plan/E2E/package/lockfile/Firebase/Rules/config 변경은 승인되지 않았다.
