@@ -1,6 +1,8 @@
 # 스펙 058 후보 — space source-bound readiness adapter 경계 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / INVESTIGATION_ONLY / LOCAL_ONLY / NO_NETWORK**
+상태: **CLAUDE_WORKING / IMPLEMENTATION_APPROVED / LOCAL_ONLY / NO_NETWORK**
+
+Founder 승인(2026-08-19): **BB-1=A, BB-2=A, BB-3=A, BB-4=A, BB-5=A**.
 
 ## 1. 목적
 
