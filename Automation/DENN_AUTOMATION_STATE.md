@@ -4,22 +4,33 @@
 updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-052-space-link-open-controller   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: spec-053-space-production-composition-investigation
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 6116a17   # spec 052 completion documents
-candidate_commit: pending   # investigation documents only
-verified_commit: 49f51fb   # latest verified product commit; targeted 17, unit 1479, Chromium 141
-origin_relation: "HEAD=origin at investigation start; ahead/behind 0/0"
-working_tree: "spec 053 investigation documents plus protected Founder/user changes; protected paths remain unstaged"
+completed_unit: spec-053-space-production-composition   # DONE, CODEX_PASSED, LOCAL_GATED, NO_NETWORK
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: 5e4be63   # spec 053 gated production composition
+candidate_commit: 5e4be63   # CODEX_PASSED
+verified_commit: 5e4be63   # targeted 32, unit 1495, Chromium 143
+origin_relation: "HEAD=origin after completion documents fast-forward push; ahead/behind 0/0"
+working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_053_R1_R4_DECISION
+next_transition: NEXT_MANUAL_TASK
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 053 production space composition 완료 (2026-08-19)
+
+- Founder R-1=A/R-2=A/R-3=A/R-4=A에 따라 space 독점 mode, exact-true complete config,
+  submit lazy named facade, password UI와 StrictMode lifecycle을 구현했다.
+- no-space만 기존 browse를 mount하고 invalid/disabled config는 Firebase init/request 0으로 fail-closed한다.
+- scene은 검증된 ready snapshot까지만 도달하며 preview/image/room 적용은 0이다.
+- targeted 32/32, 전체 check unit 1495/1495, Chromium 143/143 PASS.
+- 고객 entry `index-Det4NToI.js` 304,634 bytes, SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
+- 구현 커밋 `5e4be63`. 실제 Firebase/network/config/deploy/scene 적용은 NOT TESTED/금지.
 
 ## 스펙 053 production space composition 조사 (2026-08-19)
 

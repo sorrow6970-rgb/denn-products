@@ -1,6 +1,6 @@
 # 스펙 053 후보 — space production composition 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / INVESTIGATION_ONLY / NO_NETWORK**
+상태: **DONE / CODEX_PASSED / LOCAL_GATED / NO_NETWORK**
 
 ## 1. 조사 목적
 
@@ -126,4 +126,19 @@ scene/image/room 적용, App 일반 browse 기능 변경, 주문/발행, legacy 
 ## 8. 결론
 
 password gate composition은 local synthetic 범위에서 구현 가능하다. 그러나 scene replay는 별도 안전 계약이
-필요하다. R-1~R-4 결정 전 제품 구현을 시작하지 않는다.
+필요하다. 조사 당시 R-1~R-4 결정 전에는 제품 구현을 시작하지 않았고, 이후 모두 A로 승인된 범위만
+아래와 같이 구현했다.
+
+## DONE (Codex)
+
+- Founder가 R-1=A/R-2=A/R-3=A/R-4=A를 승인했다.
+- production App에서 space query를 일반 catalog보다 먼저 분기하고, valid/invalid space mode가 화면을
+  독점하도록 연결했다. no-space browse 동작은 기존 component로 격리했다.
+- exact-true + complete 5-key config, explicit submit lazy named Firebase facade, safe error/password UI,
+  StrictMode detach→attach 세대 무효화를 구현했다.
+- scene은 controller의 검증된 ready snapshot까지만 도달하며 preview/image/room에는 적용하지 않는다.
+- 자체 검수에서 retryable network 오류의 UI 재시도 폼 누락을 발견해 보완했다.
+- targeted 32/32 후 최종 전체 check PASS(unit 1495/1495), Chromium 143/143 PASS.
+- 고객 entry `index-Det4NToI.js`, 304,634 bytes, SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
+- 구현 커밋 `5e4be63`. 실제 Firebase/project/config/token/document/network/deploy와 scene 적용은 0이다.

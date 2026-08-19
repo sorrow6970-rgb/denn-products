@@ -1,12 +1,25 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-053-space-production-composition-investigation`
-completed_unit: `spec-052-space-link-open-controller` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 052 종료 문서 **`6116a17`** · 스펙 053 조사 문서 commit/push 후 HEAD=origin, ahead/behind **0/0**
-next_transition: **`FOUNDER_SPEC_053_R1_R4_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-053-space-production-composition` — **DONE / CODEX_PASSED / LOCAL_GATED / NO_NETWORK**
+기준: 스펙 053 구현 커밋 **`5e4be63`** · 종료 문서 commit/push 후 HEAD=origin, ahead/behind **0/0**
+next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 053 조사 완료 · Founder 결정 대기
+## ★ 스펙 053 종료 · 다음 수동 작업 대기
+
+R-1=A/R-2=A/R-3=A/R-4=A에 따라 space 독점 mode, complete env config, explicit-submit lazy
+Firebase facade, password gate와 StrictMode lifecycle을 구현했다. no-space만 기존 browse를 mount하며
+invalid/disabled config의 Firebase init/request는 0이다.
+
+targeted 32/32, unit 1495/1495, Chromium 143/143 PASS. 고객 entry는 `index-Det4NToI.js`,
+304,634 bytes, SHA-256 `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`다.
+
+실제 Firebase/project/config/token/document/network/deploy와 scene/image/room 적용은 NOT TESTED다.
+다음 후보는 R-4에 따른 catalog 참조 검증 + view-only scene application 경계 조사다. 다음 작업은 자동
+시작하지 않는다.
+
+## 이전 — 스펙 053 조사와 Founder 결정
 
 정본: `docs/rebuild/specs/053-space-production-composition-investigation.md`
 
@@ -19,7 +32,7 @@ env config, lazy production factory, scene application port는 없다. decrypt s
 - R-3=A 권장: 첫 구현은 password gate/safe errors/ready snapshot까지만
 - R-4=A 권장: scene 적용은 후속 catalog 참조 검증 + view-only port 계약
 
-R-1~R-4 결정 전 구현하지 않는다. 실제 Firebase/network/config/deploy/scene 적용은 금지다.
+R-1~R-4는 모두 A로 승인되어 local gated 구현이 완료됐다.
 
 ## 이전 — 스펙 052 종료
 

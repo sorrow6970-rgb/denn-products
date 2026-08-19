@@ -4229,3 +4229,19 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 신규 spec 053 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/Rules/config 변경 0,
   실제 Firebase/network/token/document/deploy/scene 적용 0.
 - 상태 `FOUNDER_DECISION_REQUIRED`; R-1~R-4 결정 전 구현 0.
+
+## 2026-08-19 — 스펙 053 production space composition · CODEX_PASSED
+
+- Founder R-1=A/R-2=A/R-3=A/R-4=A 승인.
+- space query 독점 mode, exact-true complete config, explicit-submit lazy named facade, password UI와
+  StrictMode detach→attach generation guard를 구현했다.
+- no-space만 기존 browse를 mount한다. invalid/disabled config에서 catalog/Firebase request 0.
+- 자체 검수에서 retryable network 오류의 재시도 폼 누락을 발견해 보완했다.
+- 기존 고객 번들 “Firebase SDK 0” 게이트는 승인된 lazy Firestore 경계에 맞춰 admin Auth/Storage API 0으로
+  정밀화했다. generic Firebase app constants의 `@firebase/auth|storage` 문자열은 제품 import 근거가 아니다.
+- targeted 32/32, 전체 check PASS(unit 1495/1495), Chromium 143/143, diff-check PASS,
+  포트 4183/4184/8080/9099/9199·temp/debug 잔류 0.
+- 고객 entry `index-Det4NToI.js`, 304,634 bytes, SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
+- 구현 커밋 `5e4be63`. 실제 Firebase/project/config/token/document/network/deploy와 scene 적용 0.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
