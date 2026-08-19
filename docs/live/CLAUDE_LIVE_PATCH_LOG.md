@@ -4293,3 +4293,13 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
 - 구현 `82d89ce`. 실제 Firebase/network/object/image/CORS/owner/plan/UI/renderer/deploy는 NOT TESTED/
   NOT IMPLEMENTED. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
+
+## 2026-08-19 — 스펙 056 remote proof image owner 경계 조사 · Founder 결정 대기
+
+- current plan/executor는 URL이 아닌 decoded drawable의 synthetic binding/intrinsic size를 요구한다.
+- template-art owner lifecycle은 참고 가능하지만 proof trust 재검증과 intrinsic ready state가 없다.
+- 권장 V-1=A dedicated owner, V-2=A 내부 trust, V-3=A CORS/one assignment/no retry,
+  V-4=A one-active generation, V-5=A controller/fake unit만.
+- 신규 spec 056 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/Rules/config 0,
+  실제 Firebase/network/Image/UI/plan/deploy 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`; V-1~V-5 결정 전 구현 0.

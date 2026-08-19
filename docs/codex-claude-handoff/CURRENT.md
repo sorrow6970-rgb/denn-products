@@ -9,7 +9,19 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 055 V2-A proof image 경계가 완료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 056 remote proof image owner 경계 조사가 완료됐다.**
+
+current plan/executor는 URL이 아닌 decoded drawable binding과 intrinsic size를 요구한다. template-art owner
+패턴은 검증됐지만 proof trust 재검증과 전용 ready snapshot이 없으므로 dedicated framework-free owner가
+필요하다.
+
+권장 결정은 V-1=A(dedicated owner), V-2=A(owner 내부 trust), V-3=A(CORS/one assignment/no retry),
+V-4=A(one-active generation), V-5=A(controller/fake unit만)다. 정본은
+`docs/rebuild/specs/056-space-proof-image-owner-investigation.md`다.
+
+결정 전 구현 0. 실제 Firebase/network/Image/UI/plan/Rules/deploy는 금지다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 055 V2-A proof image 경계가 완료됐다.**
 
 Founder T-1=A~T-5=A에 따라 exact HTTPS host/bucket, canonical once-encoded `proofs/` object와 constrained
 media query를 검증한다. exact neutral legacy transform만 current identity로 투영하고 non-neutral은

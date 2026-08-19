@@ -1,12 +1,27 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-056-space-proof-image-owner-investigation`
 completed_unit: `spec-055-space-proof-image-boundary` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 055 조사 **`ed610cb`** · 구현 **`82d89ce`** · 종료 문서 commit/push 예정
-next_transition: **`NEXT_MANUAL_TASK`**
+기준: 스펙 055 종료 **`a54e27b`** · 스펙 056 조사 문서 commit/push 예정
+next_transition: **`FOUNDER_SPEC_056_V1_V5_DECISION`**
 
-## ★ 스펙 055 종료
+## ★ 스펙 056 조사 완료 · Founder 결정 대기
+
+정본: `docs/rebuild/specs/056-space-proof-image-owner-investigation.md`
+
+plan은 URL이 아닌 decoded drawable의 synthetic binding과 intrinsic size를 요구한다. 기존 template-art owner
+패턴은 참고 가능하지만 proof trust 재검증/전용 상태가 없어 dedicated owner가 필요하다.
+
+- V-1=A 권장: proof 전용 framework-free controller
+- V-2=A 권장: owner 내부에서 spec055 resolver 재검증
+- V-3=A 권장: anonymous CORS before src, assignment 1회, retry/cache/fallback 0
+- V-4=A 권장: one-active generation, late result 차단, safe intrinsic/binding
+- V-5=A 권장: controller + fake unit만; hook/App/network/plan 0
+
+결정 전 구현하지 않는다. 실제 Firebase/network/Image/UI/plan/Rules/deploy는 금지다.
+
+## 이전 — 스펙 055 종료
 
 Founder T-1=A~T-5=A에 따라 exact Firebase proof REST URL과 exact-neutral transform eligibility를
 pure local 경계로 구현했다. URL은 성공 결과에만 남고 non-neutral transform은 변환하지 않는다.

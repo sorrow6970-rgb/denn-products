@@ -5,16 +5,16 @@ updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-055-space-proof-image-boundary   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
+active_unit: spec-056-space-proof-image-owner-investigation
+state: FOUNDER_DECISION_REQUIRED
 baseline_commit: ed610cb   # spec 055 investigation documents
 candidate_commit: 82d89ce   # validated product implementation
 verified_commit: 82d89ce   # unit 1552, Chromium 143
-origin_relation: "implementation commit pending push; completion documents follow"
-working_tree: "spec 055 completion documents plus protected Founder/user changes; protected paths remain unstaged"
+origin_relation: "HEAD=origin at investigation start; ahead/behind 0/0"
+working_tree: "spec 056 investigation documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_SPEC_056_V1_V5_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
@@ -53,6 +53,14 @@ deploy: forbidden
 - targeted 38/38, 전체 check unit 1552/1552, Chromium 143/143 PASS. 고객 entry/hash 동일.
 - 구현 `82d89ce`. 실제 Firebase/network/image/CORS/owner/plan/UI/renderer/deploy는 NOT TESTED/미구현.
 - 다음 후보 V2-B 조사는 자동 시작하지 않는다.
+
+## 스펙 056 remote proof image owner 경계 조사 (2026-08-19)
+
+- plan에는 URL이 아닌 decoded binding/intrinsic size가 필요하고 기존 template-art owner는 proof trust를
+  재검증하지 않는다.
+- 권장 V-1=A dedicated owner, V-2=A 내부 trust, V-3=A CORS/one assignment/no retry,
+  V-4=A one-active generation, V-5=A controller/fake unit만.
+- 조사 문서만 변경. 실제 network/Image/UI/plan/Rules/config 0.
 
 ## 스펙 053 production space composition 완료 (2026-08-19)
 
