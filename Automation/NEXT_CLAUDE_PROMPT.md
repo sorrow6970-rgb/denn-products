@@ -1,10 +1,20 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-060-space-post-auth-frame-view-investigation`
 completed_unit: `spec-059-space-frame-asset-request-projector` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 059 조사 **`d15dfd6`** · 구현 **`3c5b3ed`** · 종료 문서 commit/push 예정
-next_transition: **`NEXT_MANUAL_TASK`**
+기준: 스펙 059 조사 **`d15dfd6`** · 구현 **`3c5b3ed`** · 종료 **`4fb30cc`**
+next_transition: **`FOUNDER_SPEC_060_DD_1_DD_5_DECISION`**
+
+## ★ 스펙 060 조사 · Founder 결정 대기
+
+정본: `docs/rebuild/specs/060-space-post-auth-frame-view-investigation.md`
+
+권장값은 **DD-1=A, DD-2=A, DD-3=A, DD-4=A, DD-5=A**다. ready-only child, source-bound
+StrictMode owner, measured width/conditional exact-font gate, 단일 fail-closed status를 사용한다. 첫 구현은
+injectable post-auth view와 합성 browser fixture까지만이며 production `App` 연결/network는 0이다.
+
+결정 전 구현하지 않는다.
 
 ## ★ 스펙 059 종료
 

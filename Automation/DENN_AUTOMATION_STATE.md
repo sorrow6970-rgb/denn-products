@@ -5,21 +5,27 @@ updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-059-space-frame-asset-request-projector   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: d15dfd6   # spec 059 investigation
-candidate_commit: 3c5b3ed   # validated product implementation
-verified_commit: 3c5b3ed   # unit 1602, Chromium 143
-origin_relation: "implementation commit pushed; completion documents follow"
-working_tree: "spec 059 completion documents plus protected Founder/user changes; protected paths remain unstaged"
+active_unit: spec-060-space-post-auth-frame-view-investigation
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: 4fb30cc   # spec 059 completion
+candidate_commit: none
+verified_commit: 4fb30cc   # unit 1602, Chromium 143
+origin_relation: "HEAD equals origin before spec 060 investigation documents"
+working_tree: "spec 060 investigation documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_SPEC_060_DD_1_DD_5_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 060 post-auth frame view 조사 (2026-08-19)
+
+- ready-only catalog child, source-bound StrictMode owner, measured width/conditional font gate가 필요하다.
+- 상태를 catalog→asset→owner→width→font→plan→Canvas 순으로 단일 fail-closed derivation한다.
+- 권장 DD-1=A~DD-5=A. 첫 구현은 injectable view/browser fixture만, production App/network 0.
 
 ## 스펙 059 post-auth view composition 조사 (2026-08-19)
 

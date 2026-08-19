@@ -9,7 +9,17 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 059 frame asset request projector가 완료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 060 post-auth frame view 조사가 완료됐다.**
+
+ready-only catalog child와 source-bound readiness controller의 StrictMode-safe React owner가 필요하다. measured
+logical width와 nonempty text에만 필요한 exact-font gate를 분리하고, catalog→asset→owner→width→font→plan→
+Canvas 순서의 단일 fail-closed status로 stale Canvas를 막는다.
+
+권장 결정은 DD-1=A(ready child), DD-2=A(전용 owner hook), DD-3=A(width/font gate),
+DD-4=A(단일 derived status), DD-5=A(injectable browser fixture만)다. 정본은
+`docs/rebuild/specs/060-space-post-auth-frame-view-investigation.md`다. 결정 전 구현하지 않는다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 059 frame asset request projector가 완료됐다.**
 
 Founder CC-1=A~CC-5=A에 따라 첫 구현 범위인 pure projector/unit만 구현했다. detached catalog snapshot,
 exact scene reference, proof trust, art placement/projection/public-image trust를 all-or-nothing으로 적용한다.
