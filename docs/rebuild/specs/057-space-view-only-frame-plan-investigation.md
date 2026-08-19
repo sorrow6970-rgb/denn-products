@@ -1,6 +1,8 @@
 # 스펙 057 후보 — space view-only frame plan composition 경계 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / INVESTIGATION_ONLY / LOCAL_ONLY / NO_NETWORK**
+상태: **CLAUDE_WORKING / IMPLEMENTATION_APPROVED / LOCAL_ONLY / NO_NETWORK**
+
+Founder 승인(2026-08-19): **AA-1=A, AA-2=A, AA-3=A, AA-4=A, AA-5=A, AA-6=A**.
 
 ## 1. 목적
 
@@ -160,3 +162,15 @@ hook, owner 변경, Canvas executor, E2E, package/lockfile, Firebase/Rules/confi
 기존 local primitives만으로 frame plan 합성의 순서와 fail-closed 계약은 구현 가능하다. 하지만 clock가 켜진
 scene과 room/gallery를 완전 재현할 수 없고 실제 image/font/Canvas도 검증되지 않았다. AA-1~AA-5 결정 전
 제품 구현을 시작하지 않는다.
+
+## 10. AA-6 — source-bound readiness 보완
+
+구현 직전 검수에서 owner의 ready `imageRef`만으로는 현재 scene source와 같은 load 결과인지 증명할 수
+없음을 확인했다. Founder는 **AA-6=A**를 승인했다.
+
+- composer는 검증된 scene proof source와 trusted template-art source를 각각 injected readiness resolver에
+  전달한다.
+- resolver는 그 exact source에 연결된 ready binding일 때만 synthetic ref/intrinsic size를 반환한다.
+- stale/mismatch/not-ready/throw는 whole-plan fail-closed다.
+- source는 결과·오류·plan에 포함하지 않는다.
+- 첫 단위는 resolver fake만 사용하고 기존 owner/App/UI/network는 수정하지 않는다.
