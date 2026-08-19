@@ -36,3 +36,10 @@ export {
   type SpaceReadResult,
   type SpaceSceneV1,
 } from "./read";
+export {
+  createSpaceOpenPort,
+  type OpenedSpaceV1,
+  type SpaceOpenErrorCode,
+  type SpaceOpenPort,
+  type SpaceOpenResult,
+} from "./open";
