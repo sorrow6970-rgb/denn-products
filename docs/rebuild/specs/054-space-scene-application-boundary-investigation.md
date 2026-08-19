@@ -1,6 +1,8 @@
 # 스펙 054 후보 — space scene application 경계 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / INVESTIGATION_ONLY / NO_NETWORK**
+상태: **CLAUDE_WORKING / IMPLEMENTATION_APPROVED / LOCAL_ONLY / NO_NETWORK**
+
+Founder 승인(2026-08-19): **S-1=A, S-2=A, S-3=A, S-4=A, S-5=A**.
 
 ## 1. 목적
 
@@ -139,3 +141,24 @@ transform clamp/추측, catalog fallback/자동 선택, Rules/deploy/write/delet
 
 현재 근거로 안전하게 구현 가능한 다음 단위는 V1 순수 catalog 참조 검증기뿐이다. S-1~S-5 결정 전
 제품 구현을 시작하지 않는다.
+
+## 9. 승인된 V1 구현 계약
+
+- `resolveSpaceSceneReferences(document, scene)`는 React/DOM/Canvas/Firebase/IO가 없는 동기 순수 함수다.
+- 두 입력은 타입 주장을 신뢰하지 않고 기존 `isCatalogDocumentV1`·`readSpaceScene` 정본으로 런타임
+  재검증한다. 예외·hostile getter는 안전 오류로 닫는다.
+- frame template과 visible frame size는 scene ID와 exact·단일 일치해야 한다. template type은
+  `builtin|uploaded`만 지원하며 restricted template은 기존 size-key 정규화 결과로 선택 size와
+  호환되어야 한다. fallback·첫 항목 자동 선택은 0이다.
+- color는 exact row ID 또는 exact raw fill로 단 하나의 row가 일치해야 한다. 일치 row가 grain이거나
+  fill이 정확한 6자리 hex가 아니면 거부하고, 성공 출력에는 uppercase `#RRGGBB`만 둔다.
+- photoUrl은 필수 non-empty HTTPS URL 후보인지까지만 검사한다. URL/토큰은 출력하지 않으며
+  `requires-proof-resolution`으로만 분류한다. known bucket과 `proofs/` prefix 검증·fetch는 후속 V2다.
+- imgT는 기존 scene reader가 검증한 값을 적용하거나 출력하지 않고 `validated-unapplied` 상태만 둔다.
+  room/gallery는 `unsupported`이며 성공 snapshot도 `replayComplete: false`다.
+- 성공 snapshot에는 catalog source index와 canonical color처럼 후속 local plan에 필요한 비고객 값만
+  둔다. raw catalog object, ID, URL, text, opaque room 값, 원시 오류는 반환하지 않는다.
+- 오류 code는 원인을 안전하게 분기하되 입력값을 포함하지 않는다. 입력은 변경하지 않는다.
+
+허용 파일은 `apps/mockup/src/space/scene-reference.ts`, 해당 unit, 이 스펙과 spec 054 handoff/상태
+문서뿐이다. App/UI/E2E/Firebase/image/renderer/room/package/lockfile 변경은 승인되지 않았다.
