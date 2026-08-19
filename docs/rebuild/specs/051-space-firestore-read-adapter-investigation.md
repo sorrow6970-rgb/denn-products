@@ -1,6 +1,6 @@
 # 스펙 051 후보 — space Firestore read adapter 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / INVESTIGATION_ONLY / NO_NETWORK**
+상태: **DONE / CODEX_PASSED / FOUNDER_Q1_Q3_APPROVED / LOCAL_ONLY / NO_NETWORK**
 
 확인일: **2026-08-19**
 
@@ -73,3 +73,16 @@ Firebase 공식 문서만 읽었다. `spaces/{token}` 단일 문서를 읽어 �
 
 실제 Firebase/network/project/token/document, live/emulator, Rules/config 변경·배포, anonymous auth 활성화,
 write/create/update/delete, route/UI/scene 적용, 이미지 fetch/upload, 신규 의존성, package/lockfile 버전 변경.
+
+## Founder 결정 (2026-08-19)
+
+**Q-1=A, Q-2=A, Q-3=A 승인.** 위 권장 구조의 local-only adapter와 unit 검증만 구현한다.
+
+## DONE (Codex)
+
+- `@denn/firebase/space-read` 서브패스에 공식 document-ID validator, injected read port와 named-app
+  SDK facade를 구현했다. root barrel과 Auth는 변경하지 않았다.
+- targeted 30/30, `pnpm check` unit 1462/1462, Chromium 141/141 PASS.
+- lone high-surrogate 허용 결함을 targeted 검수에서 발견해 긍정 범위 검사로 보완 후 재검증했다.
+- 고객 JS SHA-256은 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`로 동일하다.
+- 실제 Firebase/project/token/document/network/emulator/route/UI는 NOT TESTED다.

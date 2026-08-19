@@ -12,6 +12,10 @@
     "./admin-write": {
       "types": "./src/admin-write/index.ts",
       "default": "./src/admin-write/index.ts"
+    },
+    "./space-read": {
+      "types": "./src/space-read/index.ts",
+      "default": "./src/space-read/index.ts"
     }
   },
   "main": "./src/index.ts",

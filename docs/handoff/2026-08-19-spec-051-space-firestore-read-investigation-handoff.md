@@ -1,6 +1,6 @@
 # 스펙 051 space Firestore read adapter 조사 handoff
 
-상태: **FOUNDER_DECISION_REQUIRED / INVESTIGATION_ONLY / NO_NETWORK**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
 
 ## 결론
 
@@ -15,3 +15,12 @@ memory cache 허용 여부와 named app 소유 방식도 구현 전에 명시한
 - Q-3=A: named `denn-space-viewer`, config mismatch fail-closed, Auth 0, space-read 서브패스 local unit만
 
 실제 Firebase/Rules 배포/token/document/network/emulator/route/UI는 NOT TESTED이며 접근하지 않았다.
+
+## Founder 승인과 구현
+
+Q-1=A/Q-2=A/Q-3=A 승인에 따라 `@denn/firebase/space-read` 서브패스를 구현했다. Firestore 공식
+document-ID 제약, `getDoc` memory-cache 계약, named `denn-space-viewer` 재사용과 config mismatch
+fail-closed를 unit으로 고정했다. Auth 생성·로그인, root barrel export와 앱 연결은 0이다.
+
+게이트: targeted 30/30, `pnpm check` unit 1462/1462, Chromium 141/141, 고객 hash 동일,
+diff-check·포트/temp 잔류 0. 실제 Firebase/network/token/document는 계속 NOT TESTED다.
