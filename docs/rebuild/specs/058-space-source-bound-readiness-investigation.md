@@ -1,6 +1,6 @@
 # 스펙 058 후보 — space source-bound readiness adapter 경계 조사
 
-상태: **CLAUDE_WORKING / IMPLEMENTATION_APPROVED / LOCAL_ONLY / NO_NETWORK**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
 
 Founder 승인(2026-08-19): **BB-1=A, BB-2=A, BB-3=A, BB-4=A, BB-5=A**.
 
@@ -135,3 +135,16 @@ StrictMode image lifecycle, layout/font/Canvas가 동시에 열린다. 첫 구�
 
 스펙 057과 기존 owner 사이에는 source identity를 소유하는 framework-free adapter 한 층이 필요하다.
 BB-1~BB-5 결정 전 구현하지 않는다.
+
+## 8. DONE (Codex)
+
+- 구현 커밋: `f30bc8a`
+- adapter가 proof/art owner를 독점 생성하고 exact source, 현재 ready snapshot, owner-specific ref,
+  positive intrinsic size와 실제 binding 존재를 모두 확인한다.
+- replacement/clear 전에 source와 직전 ready ref를 무효화해 same-ref late result도 거부한다.
+- hostile factory는 real Image로 fallback하지 않고 inert owner로 닫는다.
+- targeted 8/8, 전체 check unit 1591/1591, Chromium E2E 143/143 PASS.
+- 고객 entry `index-Det4NToI.js` 304,634 bytes, SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`로 동일하다.
+- 실제 Image/network/CORS, React hook, post-auth catalog, layout/font/Canvas/UI/deploy는
+  **NOT TESTED / NOT IMPLEMENTED**다.

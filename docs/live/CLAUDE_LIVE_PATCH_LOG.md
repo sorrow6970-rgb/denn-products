@@ -4350,3 +4350,15 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 권장 BB-1=A~BB-5=A. 신규 spec 058 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/
   Firebase/Rules/config 0, 실제 Image/network/CORS/React/catalog/layout/font/Canvas/UI/deploy 0.
 - 상태 `FOUNDER_DECISION_REQUIRED`; BB-1~BB-5 결정 전 구현 0.
+
+## 2026-08-19 — 스펙 058 source-bound readiness adapter · CODEX_PASSED
+
+- Founder BB-1=A~BB-5=A 승인. adapter가 proof/art owner를 독점 소유하고 source identity를 내부에만 둔다.
+- exact source + ready + owner-specific ref + positive intrinsic + binding을 모두 확인한다.
+- 자체 검수에서 hostile factory를 inert fail-closed로 격리하고, replacement 직전 ref를 차단해 same-ref late
+  result가 새 source로 오인되지 않도록 보완했다.
+- targeted 8/8, 전체 check PASS(unit 1591/1591), Chromium 143/143, `git diff --check` PASS.
+- 고객 entry `index-Det4NToI.js`, 304,634 bytes, SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
+- 구현 `f30bc8a`. 실제 Image/network/CORS/React/post-auth catalog/layout/font/Canvas/UI/deploy는
+  NOT TESTED/NOT IMPLEMENTED. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.

@@ -1,12 +1,24 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-058-space-source-bound-readiness-investigation`
-completed_unit: `spec-057-space-view-only-frame-plan` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 057 조사 **`6cb67df`** · 구현 **`ad0a647`** · 종료 **`1e8e1bb`**
-next_transition: **`FOUNDER_SPEC_058_BB_1_BB_5_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-058-space-source-bound-readiness` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 058 조사 **`926ff1b`** · 구현 **`f30bc8a`** · 종료 문서 commit/push 예정
+next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 058 조사 · Founder 결정 대기
+## ★ 스펙 058 종료
+
+Founder BB-1=A~BB-5=A에 따라 proof/art owner를 독점 소유하는 framework-free adapter를 구현했다.
+exact source, current ready, owner-specific synthetic ref, positive intrinsic size, live binding을 모두 요구한다.
+replacement/clear source-first 무효화와 same-ref late result 방어, composite bindings를 검증했다.
+
+targeted 8/8, 전체 check unit 1591/1591, Chromium 143/143 PASS. 고객 entry/hash 동일. 실제 Image/network/
+CORS/React/post-auth catalog/layout/font/Canvas/UI/deploy는 NOT TESTED/NOT IMPLEMENTED다.
+
+다음 후보는 React hook보다 먼저 post-auth view composition의 catalog load·layout/font·Canvas 연결 경계를
+조사하는 단위다. 자동 시작하지 않는다.
+
+## 이전 — 스펙 058 조사와 Founder 결정
 
 정본: `docs/rebuild/specs/058-space-source-bound-readiness-investigation.md`
 
@@ -19,7 +31,7 @@ adapter가 raw owner를 독점 소유하고 exact source + ready snapshot + bind
 - BB-4=A 권장: source-first lifecycle + combined subscribe/composite bindings
 - BB-5=A 권장: 기존 owner/hook/App/UI/E2E 변경 0
 
-결정 전 구현하지 않는다. 실제 Image/network/CORS/React/catalog/layout/font/Canvas/UI/deploy는 금지다.
+BB-1~BB-5는 모두 A로 승인되어 local adapter 구현이 완료됐다.
 
 ## ★ 스펙 057 종료
 

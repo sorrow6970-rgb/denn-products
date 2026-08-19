@@ -4,17 +4,17 @@
 updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-057-space-view-only-frame-plan   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: spec-058-space-source-bound-readiness-investigation
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 1e8e1bb   # spec 057 completion
-candidate_commit: none
-verified_commit: 1e8e1bb   # unit 1583, Chromium 143
-origin_relation: "HEAD equals origin before spec 058 investigation documents"
-working_tree: "spec 058 investigation documents plus protected Founder/user changes; protected paths remain unstaged"
+completed_unit: spec-058-space-source-bound-readiness   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: 926ff1b   # spec 058 investigation documents
+candidate_commit: f30bc8a   # validated product implementation
+verified_commit: f30bc8a   # unit 1591, Chromium 143
+origin_relation: "implementation commit pushed; completion documents follow"
+working_tree: "spec 058 completion documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_058_BB_1_BB_5_DECISION
+next_transition: NEXT_MANUAL_TASK
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
@@ -26,6 +26,13 @@ deploy: forbidden
 - owner snapshot만으로 source identity를 증명할 수 없어 독점 owner adapter가 필요하다.
 - exact source + ready snapshot + binding 존재를 모두 요구하고 source-first replacement/clear/dispose로 닫는다.
 - 권장 BB-1=A~BB-5=A. 첫 구현은 framework-free adapter/fake unit만, React/App/UI/network 0.
+
+## 스펙 058 source-bound readiness adapter 완료 (2026-08-19)
+
+- Founder BB-1=A~BB-5=A에 따라 owner-exclusive framework-free adapter를 구현했다.
+- exact source + current ready + owner-specific ref + live binding을 요구하고 same-ref late result도 막는다.
+- targeted 8/8, 전체 check unit 1591/1591, Chromium 143/143 PASS. 고객 entry/hash 동일.
+- 구현 `f30bc8a`. 실제 Image/network/CORS/React/catalog/layout/font/Canvas/UI/deploy는 미구현.
 
 ## 스펙 057 view-only frame plan composition 조사 (2026-08-19)
 

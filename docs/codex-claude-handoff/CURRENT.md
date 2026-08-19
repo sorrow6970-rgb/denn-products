@@ -9,7 +9,18 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 058 source-bound readiness adapter 조사가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 058 source-bound readiness adapter가 완료됐다.**
+
+Founder BB-1=A~BB-5=A에 따라 adapter가 raw proof/art owner를 독점 소유한다. exact source, current ready,
+owner-specific ref, intrinsic size와 live binding을 모두 요구하고 replacement/clear 전에 source와 직전 ref를
+무효화한다. composite bindings와 subscriber/hostile factory 격리를 검증했다. 구현 `f30bc8a`.
+
+targeted 8/8, 전체 check unit 1591/1591, Chromium 143/143 PASS. 고객 entry/hash 동일. 실제 Image/network/
+CORS/React/post-auth catalog/layout/font/Canvas/UI/deploy는 NOT TESTED/NOT IMPLEMENTED다.
+
+다음 후보는 post-auth view composition의 catalog/load/layout/font/Canvas 경계 조사이며 자동 시작하지 않는다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 058 source-bound readiness adapter 조사가 완료됐다.**
 
 기존 proof/template-art owner의 ready state는 source identity를 노출하지 않으므로 현재 scene과의 exact
 연계를 스스로 증명하지 못한다. 안전한 adapter는 owner를 독점 소유하고 exact source, current ready state,
