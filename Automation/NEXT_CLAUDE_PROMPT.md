@@ -1,12 +1,23 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-054-space-scene-application-boundary-investigation`
-completed_unit: `spec-053-space-production-composition` — **DONE / CODEX_PASSED / LOCAL_GATED / NO_NETWORK**
-기준: 스펙 053 종료 문서 **`f0600a3`** · 스펙 054 조사 문서 commit/push 후 HEAD=origin, ahead/behind **0/0**
-next_transition: **`FOUNDER_SPEC_054_S1_S5_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-054-space-scene-reference-validator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 054 조사 **`789e5f4`** · 구현 **`62aa9d8`** · 종료 문서 commit/push 예정
+next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 054 조사 완료 · Founder 결정 대기
+## ★ 스펙 054 종료
+
+Founder S-1=A/S-2=A/S-3=A/S-4=A/S-5=A에 따라 exact catalog reference와 단일 solid color,
+HTTPS photo 후보만 검증하는 pure validator를 구현했다. transform은 validated-but-unapplied, room/gallery는
+unsupported, `replayComplete:false`다.
+
+targeted 19/19, 전체 check unit 1514/1514, Chromium 143/143 PASS. 고객 entry/hash는 스펙 053과 동일하다.
+실제 Firebase/network/image fetch/proof prefix trust/UI/renderer/room/deploy는 NOT TESTED/NOT IMPLEMENTED다.
+
+다음 후보는 V2 proof URL trust + view-only frame plan 경계 조사다. 자동 시작하지 않는다.
+
+## 이전 — 스펙 054 조사와 Founder 결정
 
 정본: `docs/rebuild/specs/054-space-scene-application-boundary-investigation.md`
 
@@ -19,7 +30,7 @@ legacy imgT x/y는 Canvas px이고 현재 transform은 normalized 비율이다. 
 - S-4=A 권장: transform validated-but-unapplied, clamp/복사 0
 - S-5=A 권장: room/gallery unsupported, 재현 완료로 간주하지 않음
 
-S-1~S-5 결정 전 구현하지 않는다. 실제 Firebase/network/image/UI/renderer/room/deploy는 금지다.
+S-1~S-5는 모두 A로 승인되어 V1 local-only 구현이 완료됐다.
 
 ## 이전 — 스펙 053 종료
 

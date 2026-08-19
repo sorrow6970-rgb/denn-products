@@ -1,6 +1,6 @@
 # 스펙 054 후보 — space scene application 경계 조사
 
-상태: **CLAUDE_WORKING / IMPLEMENTATION_APPROVED / LOCAL_ONLY / NO_NETWORK**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
 
 Founder 승인(2026-08-19): **S-1=A, S-2=A, S-3=A, S-4=A, S-5=A**.
 
@@ -162,3 +162,16 @@ transform clamp/추측, catalog fallback/자동 선택, Rules/deploy/write/delet
 
 허용 파일은 `apps/mockup/src/space/scene-reference.ts`, 해당 unit, 이 스펙과 spec 054 handoff/상태
 문서뿐이다. App/UI/E2E/Firebase/image/renderer/room/package/lockfile 변경은 승인되지 않았다.
+
+## 10. DONE (Codex)
+
+- 구현 커밋: `62aa9d8`
+- exact template/visible size/compatibility, exact ID/fill 단일 solid color, 필수 HTTPS photo 후보를
+  local-only 순수 함수로 검증한다. fallback·자동 선택·원격 요청은 0이다.
+- 성공 결과는 source index/canonical fill과 `requires-proof-resolution` / `validated-unapplied` /
+  `unsupported` 상태만 반환하며 `replayComplete`는 항상 false다.
+- targeted 19/19, 전체 check unit 1514/1514, Chromium E2E 143/143 PASS.
+- 고객 entry `index-Det4NToI.js` 304,634 bytes, SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`로 스펙 053과 동일하다.
+- 실제 Firebase/network/image fetch/proof prefix trust/transform 적용/room·gallery/UI/deploy는
+  **NOT TESTED / NOT IMPLEMENTED**다.

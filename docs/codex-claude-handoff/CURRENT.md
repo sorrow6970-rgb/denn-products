@@ -9,7 +9,19 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 054 space scene application 경계 조사가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 054 V1 scene reference validator가 완료됐다.**
+
+Founder S-1=A/S-2=A/S-3=A/S-4=A/S-5=A에 따라 `CatalogDocumentV1 + SpaceSceneV1`의 frame 참조를
+local-only로 재검증한다. exact template/visible size/compatibility, exact ID/fill 단일 solid color,
+필수 HTTPS photo 후보만 통과한다. fallback·자동 선택·raw ID/URL/text 출력은 0이다.
+
+transform은 `validated-unapplied`, room/gallery는 `unsupported`, `replayComplete:false`로 유지한다.
+targeted 19/19, 전체 check unit 1514/1514, Chromium 143/143 PASS. 고객 entry/hash 동일. 구현 `62aa9d8`.
+
+실제 Firebase/network/image fetch/proof prefix trust/UI/renderer/room/deploy는 NOT TESTED/NOT IMPLEMENTED다.
+다음 후보는 V2 proof URL trust + view-only frame plan 경계 조사이며 자동 시작하지 않는다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 054 space scene application 경계 조사가 완료됐다.**
 
 scene은 frame-only이며 tpl/size/color를 catalog와 대조하는 API가 없다. legacy imgT x/y는 Canvas px,
 현재 transform은 normalized maxPan 비율이고 capture 크기가 payload에 없어 정확 변환은 UNCONFIRMED다.
@@ -20,7 +32,7 @@ S-3=A(exact ID/fill의 canonical solid만), S-4=A(transform 미적용),
 S-5=A(room/gallery unsupported)다. 정본은
 `docs/rebuild/specs/054-space-scene-application-boundary-investigation.md`다.
 
-결정 전 제품 구현 0. 실제 Firebase/network/image/UI/renderer/room/deploy는 금지다.
+S-1~S-5는 모두 A로 승인되어 V1 local-only 구현이 완료됐다.
 
 > 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 053 production space composition이 완료됐다.**
 

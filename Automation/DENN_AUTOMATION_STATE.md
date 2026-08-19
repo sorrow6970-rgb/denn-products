@@ -4,17 +4,17 @@
 updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-053-space-production-composition   # DONE, CODEX_PASSED, LOCAL_GATED, NO_NETWORK
-active_unit: spec-054-space-scene-application-boundary-investigation
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: f0600a3   # spec 053 completion documents
-candidate_commit: pending   # investigation documents only
-verified_commit: 5e4be63   # latest verified product commit; unit 1495, Chromium 143
-origin_relation: "HEAD=origin at investigation start; ahead/behind 0/0"
-working_tree: "spec 054 investigation documents plus protected Founder/user changes; protected paths remain unstaged"
+completed_unit: spec-054-space-scene-reference-validator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: 789e5f4   # spec 054 investigation documents
+candidate_commit: 62aa9d8   # validated product implementation
+verified_commit: 62aa9d8   # unit 1514, Chromium 143
+origin_relation: "implementation commit pending push; completion documents follow"
+working_tree: "spec 054 completion documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_054_S1_S5_DECISION
+next_transition: NEXT_MANUAL_TASK
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
@@ -29,6 +29,15 @@ deploy: forbidden
 - 권장 S-1=A V1 순수 참조 검증기, S-2=A 필수 exact 참조, S-3=A exact ID/fill solid만,
   S-4=A transform 미적용, S-5=A room/gallery unsupported.
 - 조사 문서만 변경. 실제 network/image/UI/renderer/room 구현 0.
+
+## 스펙 054 V1 scene reference validator 완료 (2026-08-19)
+
+- Founder S-1=A/S-2=A/S-3=A/S-4=A/S-5=A에 따라 local-only 순수 validator를 구현했다.
+- exact template/visible size/compatibility, exact ID/fill 단일 solid color, HTTPS photo 후보를 검증하고
+  transform/room은 적용하지 않으며 replay 완료를 주장하지 않는다.
+- targeted 19/19, 전체 check unit 1514/1514, Chromium 143/143 PASS.
+- 고객 entry/hash 동일. 구현 `62aa9d8`.
+- 실제 Firebase/network/image/proof trust/UI/renderer/room/deploy는 NOT TESTED/금지. 다음 자동 시작 0.
 
 ## 스펙 053 production space composition 완료 (2026-08-19)
 
