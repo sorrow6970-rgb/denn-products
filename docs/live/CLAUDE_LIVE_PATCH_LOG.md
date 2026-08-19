@@ -4195,3 +4195,13 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   Q-3=A named `denn-space-viewer`·Auth 0·local unit 범위.
 - 조사 커밋 `cb97129`. 제품 코드/package/Rules/config 변경 0, 실제 Firebase/network/token/document/emulator 0.
 - 상태 `FOUNDER_DECISION_REQUIRED`; 결정 전 구현 0.
+
+## 2026-08-19 — 스펙 051 space Firestore read adapter · CODEX_PASSED
+
+- Founder Q-1=A/Q-2=A/Q-3=A 승인에 따라 `@denn/firebase/space-read` local adapter를 구현했다.
+- 공식 document-ID validator, `getDoc`, named app 재사용/config mismatch fail-closed와 Auth 0을 고정했다.
+- targeted 중 lone high-surrogate 허용 결함을 발견·보완한 뒤 30/30 PASS.
+- `pnpm check` PASS(unit 1462/1462), Chromium 141/141, 고객 SHA-256
+  `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`, 포트/temp 잔류 0.
+- 구현 커밋 `eb7bb2b`. 실제 Firebase/project/token/document/network/route/UI/deploy 0.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.

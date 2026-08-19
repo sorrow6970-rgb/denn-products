@@ -9,7 +9,16 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 051 space Firestore read adapter 조사가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 051 space Firestore read adapter가 완료됐다.**
+
+Founder Q-1=A/Q-2=A/Q-3=A 승인에 따라 `@denn/firebase/space-read` 서브패스에 공식 document-ID
+validator, injected port와 named-app SDK facade를 구현했다. targeted 30/30, `pnpm check` unit 1462/1462,
+Chromium 141/141, 고객 hash 동일, 포트/temp 잔류 0. 구현 커밋 `eb7bb2b`.
+
+실제 Firebase/project/token/document/network/route/UI는 NOT TESTED다. 다음 후보는 local-only query parsing과
+reader/open 합성 controller이며 다음 스펙은 자동 시작하지 않는다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 051 space Firestore read adapter 조사가 완료됐다.**
 
 실제 Firebase/network 없이 현재 Rules, legacy, 설치 SDK 12.17.1과 Firebase 공식 문서를 확인했다.
 기술 구현은 가능하지만 custom token 호환, cache source, named app 소유를 먼저 결정해야 한다.

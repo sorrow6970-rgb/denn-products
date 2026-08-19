@@ -4,22 +4,30 @@
 updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-050-space-local-read-pipeline   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: spec-051-space-firestore-read-adapter-investigation
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: cb97129   # spec 051 investigation
-candidate_commit: cb97129   # document review candidate
-verified_commit: 202d0f1   # last product gate: spec 050, unit 1432, Chromium 141
+completed_unit: spec-051-space-firestore-read-adapter   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: eb7bb2b   # spec 051 local Firestore reader
+candidate_commit: eb7bb2b   # CODEX_PASSED
+verified_commit: eb7bb2b   # targeted 30, unit 1462, Chromium 141
 origin_relation: "HEAD=origin after completion documents fast-forward push; ahead/behind 0/0"
 working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_Q1_Q3_DECISION
+next_transition: NEXT_MANUAL_TASK
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 051 space Firestore read adapter 완료 (2026-08-19)
+
+- Founder Q-1=A/Q-2=A/Q-3=A 승인에 따라 `@denn/firebase/space-read` local adapter를 구현했다.
+- 공식 document-ID validator, `getDoc`, named app 재사용/config fail-closed, Auth 0을 unit으로 고정했다.
+- targeted 30/30, `pnpm check` unit 1462/1462, Chromium 141/141 PASS, 고객 hash 동일,
+  포트/temp 잔류 0. 구현 커밋 `eb7bb2b`.
+- 실제 Firebase/project/token/document/network/route/UI는 NOT TESTED. 다음 자동 시작 0.
 
 ## 스펙 051 space Firestore read adapter 조사 (2026-08-19)
 

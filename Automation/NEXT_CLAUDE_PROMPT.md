@@ -1,12 +1,20 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-051-space-firestore-read-adapter-investigation`
-completed_unit: `spec-050-space-local-read-pipeline` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 050 구현 커밋 **`cee79c8`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
-next_transition: **`FOUNDER_Q1_Q3_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-051-space-firestore-read-adapter` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 051 구현 커밋 **`eb7bb2b`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
+next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 051 조사 · Founder 결정 필요
+## ★ 스펙 051 종료 · 다음 수동 작업 대기
+
+Q-1=A/Q-2=A/Q-3=A에 따라 `@denn/firebase/space-read` local adapter를 구현했다. targeted 30/30,
+unit 1462/1462, Chromium 141/141, 고객 hash 동일이다.
+
+실제 Firebase/project/token/document/network/route/UI는 NOT TESTED다. 다음 local-only 후보는 `?space=`
+query parsing과 injected Firebase reader + spaces open port를 합성하는 controller 계약 조사다.
+
+## 이전 — 스펙 051 조사 당시 Founder 결정
 
 정본: `docs/rebuild/specs/051-space-firestore-read-adapter-investigation.md`
 
@@ -16,7 +24,7 @@ next_transition: **`FOUNDER_Q1_Q3_DECISION`**
 - Q-2=A: `getDoc` + 기본 memory cache, persistent cache 0
 - Q-3=A: named `denn-space-viewer`, config mismatch fail-closed, Auth 0, local unit 범위
 
-결정 전 adapter 코드/package export를 작성하지 않는다.
+위 세 결정은 모두 A로 승인되어 local adapter 구현과 검증이 완료됐다.
 
 ## 이전 — 스펙 050 종료
 
