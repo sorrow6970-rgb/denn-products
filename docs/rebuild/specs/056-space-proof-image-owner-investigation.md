@@ -1,6 +1,6 @@
 # 스펙 056 후보 — space remote proof image owner 경계 조사
 
-상태: **CLAUDE_WORKING / IMPLEMENTATION_APPROVED / LOCAL_ONLY / NO_NETWORK**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
 
 Founder 승인(2026-08-19): **V-1=A, V-2=A, V-3=A, V-4=A, V-5=A**.
 
@@ -147,3 +147,15 @@ room/gallery, Rules/config/deploy/write/delete/publish, 신규 dependency는 금
 
 허용 파일은 `apps/mockup/src/space/proof-image-owner.ts`, 해당 unit, spec 056/handoff/상태 문서뿐이다.
 React hook/App/UI/real Image/network/Canvas/plan/E2E/package/lockfile/Firebase/Rules/config 변경은 승인되지 않았다.
+
+## 9. DONE (Codex)
+
+- 구현 커밋: `8d93f98`
+- owner 내부 trust 재검증, CORS-before-src, one-active generation, safe ready intrinsic/binding을 구현했다.
+- 자체 검수에서 escaped late callback 검증을 강화했다. replacement/clear 뒤 old callback은 state/binding을
+  바꾸지 않는다.
+- targeted 13/13, 전체 check unit 1565/1565, Chromium E2E 143/143 PASS.
+- 고객 entry `index-Det4NToI.js` 304,634 bytes, SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`로 동일하다.
+- 실제 Firebase/network/object/Image decode/CORS, React hook, plan/UI/renderer/deploy는
+  **NOT TESTED / NOT IMPLEMENTED**다.

@@ -4303,3 +4303,15 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 신규 spec 056 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/Rules/config 0,
   실제 Firebase/network/Image/UI/plan/deploy 0.
 - 상태 `FOUNDER_DECISION_REQUIRED`; V-1~V-5 결정 전 구현 0.
+
+## 2026-08-19 — 스펙 056 remote proof image owner · CODEX_PASSED
+
+- Founder V-1=A/V-2=A/V-3=A/V-4=A/V-5=A 승인.
+- dedicated framework-free owner에 내부 URL trust, anonymous CORS-before-src, one-active generation,
+  safe intrinsic/binding과 replacement/clear/dispose late-result 차단을 구현했다.
+- 자체 검수에서 escaped old callback을 직접 호출하도록 late-result 테스트를 강화했다.
+- targeted 13/13, 전체 check PASS(unit 1565/1565), Chromium 143/143, `git diff --check` PASS.
+- 고객 entry `index-Det4NToI.js`, 304,634 bytes, SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
+- 구현 `8d93f98`. 실제 Firebase/network/Image decode/CORS/hook/plan/UI/renderer/deploy는 NOT TESTED/
+  NOT IMPLEMENTED. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.

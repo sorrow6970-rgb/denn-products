@@ -1,12 +1,22 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-056-space-proof-image-owner-investigation`
-completed_unit: `spec-055-space-proof-image-boundary` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 055 종료 **`a54e27b`** · 스펙 056 조사 문서 commit/push 예정
-next_transition: **`FOUNDER_SPEC_056_V1_V5_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-056-space-proof-image-owner` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 056 조사 **`aba0b4e`** · 구현 **`8d93f98`** · 종료 문서 commit/push 예정
+next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 056 조사 완료 · Founder 결정 대기
+## ★ 스펙 056 종료
+
+Founder V-1=A~V-5=A에 따라 proof 전용 framework-free image owner를 구현했다. owner가 스펙 055 trust를
+재검증하고 CORS-before-src, one-active generation, safe intrinsic/binding과 late-result 차단을 소유한다.
+
+targeted 13/13, 전체 check unit 1565/1565, Chromium 143/143 PASS. 고객 entry/hash 동일. 실제 Firebase/
+network/Image decode/CORS, React hook, plan/UI/renderer/deploy는 NOT TESTED/NOT IMPLEMENTED다.
+
+다음 후보는 V2-C view-only frame plan composition 경계 조사다. 자동 시작하지 않는다.
+
+## 이전 — 스펙 056 조사와 Founder 결정
 
 정본: `docs/rebuild/specs/056-space-proof-image-owner-investigation.md`
 
@@ -19,7 +29,7 @@ plan은 URL이 아닌 decoded drawable의 synthetic binding과 intrinsic size를
 - V-4=A 권장: one-active generation, late result 차단, safe intrinsic/binding
 - V-5=A 권장: controller + fake unit만; hook/App/network/plan 0
 
-결정 전 구현하지 않는다. 실제 Firebase/network/Image/UI/plan/Rules/deploy는 금지다.
+V-1~V-5는 모두 A로 승인되어 dedicated local owner 구현이 완료됐다.
 
 ## 이전 — 스펙 055 종료
 

@@ -9,7 +9,18 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 056 remote proof image owner 경계 조사가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 056 proof image owner가 완료됐다.**
+
+Founder V-1=A~V-5=A에 따라 dedicated framework-free owner를 구현했다. owner 내부 trust 재검증,
+CORS-before-src, one-active generation, safe ready intrinsic/binding, replacement/clear/dispose late-result 차단을
+injected fake로 검증했다. 구현 `8d93f98`.
+
+targeted 13/13, 전체 check unit 1565/1565, Chromium 143/143 PASS. 고객 entry/hash 동일. 실제 Firebase/
+network/Image decode/CORS, React hook, plan/UI/renderer/deploy는 NOT TESTED/NOT IMPLEMENTED다.
+
+다음 후보는 V2-C view-only frame plan composition 경계 조사이며 자동 시작하지 않는다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 056 remote proof image owner 경계 조사가 완료됐다.**
 
 current plan/executor는 URL이 아닌 decoded drawable binding과 intrinsic size를 요구한다. template-art owner
 패턴은 검증됐지만 proof trust 재검증과 전용 ready snapshot이 없으므로 dedicated framework-free owner가
@@ -19,7 +30,7 @@ current plan/executor는 URL이 아닌 decoded drawable binding과 intrinsic siz
 V-4=A(one-active generation), V-5=A(controller/fake unit만)다. 정본은
 `docs/rebuild/specs/056-space-proof-image-owner-investigation.md`다.
 
-결정 전 구현 0. 실제 Firebase/network/Image/UI/plan/Rules/deploy는 금지다.
+V-1~V-5는 모두 A로 승인되어 dedicated local owner 구현이 완료됐다.
 
 > 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 055 V2-A proof image 경계가 완료됐다.**
 
