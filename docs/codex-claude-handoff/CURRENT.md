@@ -9,15 +9,23 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 060 post-auth frame view 조사가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 060 post-auth frame view가 완료됐다.**
 
-ready-only catalog child와 source-bound readiness controller의 StrictMode-safe React owner가 필요하다. measured
-logical width와 nonempty text에만 필요한 exact-font gate를 분리하고, catalog→asset→owner→width→font→plan→
-Canvas 순서의 단일 fail-closed status로 stale Canvas를 막는다.
+Founder DD-1=A~DD-5=A에 따라 ready-only scene seam, injectable post-auth view, source-bound readiness owner,
+measured content width와 conditional exact-font gate를 구현했다. catalog→asset→owner→width→font→plan의 현재
+성공이 모두 증명된 경우에만 Canvas를 mount한다.
 
-권장 결정은 DD-1=A(ready child), DD-2=A(전용 owner hook), DD-3=A(width/font gate),
-DD-4=A(단일 derived status), DD-5=A(injectable browser fixture만)다. 정본은
-`docs/rebuild/specs/060-space-post-auth-frame-view-investigation.md`다. 결정 전 구현하지 않는다.
+자체 검수에서 StrictMode가 state initializer를 두 번 호출할 때 effect 밖 첫 owner가 유실될 수 있는 결함을
+발견했다. inert initializer + effect setup 소유 controller로 보완했고 development React fixture의 실제
+setup→cleanup→setup 및 추가 unmount/remount에서 exact dispose와 subscription 잔류 0을 검증했다.
+
+구현 `6670fb3`, 보완 `98f4430`. `pnpm check` PASS(unit 1608/1608), Chromium 145/145 PASS. 고객 entry
+`index-DhJYvhRi.js` 304,713 bytes, SHA-256
+`C724A8941A5935A685B624EB3DF4A7081EEB8778E83C92BCB8CF7073D3C6B758`.
+
+production `App.tsx` 연결, 실제 Firebase/network/CORS/운영 object, 실제 다양한 폰트·viewport 시각 검증,
+편집·인쇄·주문·발행·write/delete/deploy는 NOT TESTED/NOT IMPLEMENTED 또는 금지다. 다음 단위는 자동
+시작하지 않는다.
 
 > 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 059 frame asset request projector가 완료됐다.**
 

@@ -4,17 +4,17 @@
 updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-059-space-frame-asset-request-projector   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: spec-060-space-post-auth-frame-view-investigation
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 4fb30cc   # spec 059 completion
+completed_unit: spec-060-space-post-auth-frame-view   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: 98f4430   # spec 060 verified implementation
 candidate_commit: none
-verified_commit: 4fb30cc   # unit 1602, Chromium 143
-origin_relation: "HEAD equals origin before spec 060 investigation documents"
-working_tree: "spec 060 investigation documents plus protected Founder/user changes; protected paths remain unstaged"
-fix_round: 0
+verified_commit: 98f4430   # unit 1608, Chromium 145
+origin_relation: "HEAD equals origin after spec 060 completion push"
+working_tree: "protected Founder/user changes only; protected paths remain unstaged"
+fix_round: 1
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_060_DD_1_DD_5_DECISION
+next_transition: NEXT_MANUAL_TASK
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
@@ -26,6 +26,14 @@ deploy: forbidden
 - ready-only catalog child, source-bound StrictMode owner, measured width/conditional font gate가 필요하다.
 - 상태를 catalog→asset→owner→width→font→plan→Canvas 순으로 단일 fail-closed derivation한다.
 - 권장 DD-1=A~DD-5=A. 첫 구현은 injectable view/browser fixture만, production App/network 0.
+
+## 스펙 060 post-auth frame view 완료 (2026-08-19)
+
+- Founder DD-1=A~DD-5=A 승인. ready-only scene seam과 injectable post-auth frame view를 구현했다.
+- source-bound owner, measured width, conditional exact-font, current plan-only Canvas를 fail-closed로 묶었다.
+- 자체 검수에서 StrictMode initializer owner 누수를 발견해 inert initializer + effect-owned controller로 보완했다.
+- `pnpm check` unit 1608/1608, development-React Chromium 145/145 PASS. 구현 `6670fb3`, 보완 `98f4430`.
+- production App 연결/실제 Firebase·network·CORS·폰트·운영 object/deploy는 NOT TESTED/금지다.
 
 ## 스펙 059 post-auth view composition 조사 (2026-08-19)
 

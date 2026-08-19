@@ -4389,3 +4389,27 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 권장 DD-1=A~DD-5=A. 첫 구현은 injectable view + 합성 browser fixture만, production App/network 0.
 - 신규 spec 060 + handoff와 상태 문서만 변경. 제품 코드/test/config/package/lockfile 0.
 - 상태 `FOUNDER_DECISION_REQUIRED`; DD-1~DD-5 결정 전 구현 0.
+
+## 2026-08-19 — 스펙 060 post-auth frame view · CODEX_PASSED
+
+- Founder **DD-1=A~DD-5=A** 승인. `SpacePasswordGate` ready seam은 검증된 scene만 child에 전달하고,
+  production `App.tsx`는 seam을 연결하지 않아 기존 placeholder를 유지한다.
+- injectable post-auth view가 post-auth catalog, all-or-nothing asset request, source-bound proof/art owner,
+  content-box logical width, conditional exact-font readiness와 current plan을 단일 fail-closed 상태로 합성한다.
+  current success가 아니면 Canvas는 0이며 자동 retry/fallback/이전 plan 유지도 0이다.
+- 합성 fixture는 in-memory catalog/auth/open/proof drawable/font port만 사용한다. pre-auth catalog/image 0,
+  외부 request 0, art-none load 0, 0px→420px 복구, exact 33.6px font shorthand, textless font bypass,
+  Canvas 1과 안전한 접근성 이름을 검증했다.
+- 자체 검수 보완: 첫 구현의 owned-record state initializer가 개발 StrictMode의 initializer 이중 호출에서
+  effect 밖 owner를 남길 수 있음을 발견했다. inert initializer + effect-owned controller로 고치고 fixture
+  React를 development로 고정해 실제 setup→cleanup→setup과 추가 unmount/remount의 create/dispose exact 일치,
+  owner subscription 잔류 0을 검증했다.
+- 커밋: 구현 **`6670fb3`**, StrictMode 보완 **`98f4430`**.
+- 게이트: `pnpm check` PASS(unit **1608/1608**), Chromium **145/145**, `git diff --check` PASS,
+  포트 4183/4184/4185 및 `denn-e2e-*` temp/debug log 잔류 0.
+- 고객 entry `index-DhJYvhRi.js`, 304,713 bytes, SHA-256
+  **`C724A8941A5935A685B624EB3DF4A7081EEB8778E83C92BCB8CF7073D3C6B758`**.
+- production `App.tsx` 연결, 실제 Firebase/project/catalog/proof/art network와 CORS/운영 object,
+  실제 다양한 폰트·viewport 시각 정확도, clock/non-neutral transform/room/gallery, 편집·인쇄·주문·발행·
+  write/delete/deploy는 **NOT TESTED / NOT IMPLEMENTED / 금지**다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`. 다음 단위 자동 시작 0.

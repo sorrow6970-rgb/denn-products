@@ -1,6 +1,6 @@
 # 스펙 060 후보 — space post-auth frame view composition 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / INVESTIGATION_ONLY / LOCAL_ONLY / NO_NETWORK**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / PRODUCTION_APP_NOT_CONNECTED**
 
 ## 1. 목적
 
@@ -117,7 +117,51 @@ frame 성공도 clock/room/gallery 미지원 때문에 `replayComplete:false`다
 - clock true, non-neutral transform, room/gallery replay: 미지원
 - 실제 다양한 폰트/viewport 시각 정확도: 후속 visual gate 전 **NOT TESTED**
 
-## 7. 결론
+## 7. 조사 당시 결론
 
-production 연결 전 injectable browser composition으로 lifecycle을 증명해야 한다. DD-1~DD-5 결정 전 구현하지
+production 연결 전 injectable browser composition으로 lifecycle을 증명해야 하며, DD-1~DD-5 결정 전에는
+구현하지 않는다고 결론 냈다. 이후 Founder가 모두 A로 승인한 결과는 아래에 기록한다.
+
+## 8. Founder 승인과 구현 결과
+
+Founder는 **DD-1=A, DD-2=A, DD-3=A, DD-4=A, DD-5=A**를 승인했다.
+
+- `SpacePasswordGate`에는 ready 상태에서만 호출되는 주입 seam을 추가했고, child로는 검증된 `scene`만
+  전달한다. production `App.tsx`는 이 seam을 사용하지 않아 기존 placeholder 동작을 유지한다.
+- `SpacePostAuthFrameView`는 주입된 catalog reader와 source-bound readiness controller만 사용한다.
+  catalog→asset→owner→width→font→plan 순서가 모두 현재 입력에서 성공한 경우에만 Canvas를 mount한다.
+- content-box `ResizeObserver` 폭과 기존 `resolveFrameLogicalWidth`를 사용한다. 0/비정상 폭에는 Canvas가 없다.
+- 현재 nonempty text zone이 있을 때만 `document.fonts.ready`, exact `fonts.check(shorthand)`, detached Canvas
+  measure port를 요구한다. textless frame은 font API를 요구하지 않는다.
+- readiness hook은 render initializer에서 자원을 만들지 않는다. E2E 전용 development React fixture가 실제
+  StrictMode setup→cleanup→setup과 추가 unmount/remount를 실행하고 모든 생성 controller의 exact dispose 및
+  owner subscription 0을 확인한다.
+- 합성 fixture의 proof drawable, catalog, auth/open, font port는 모두 in-memory다. 외부 요청은 0이다.
+
+### 8.1 자체 검수 보완
+
+초기 구현의 owned-record initializer는 개발 StrictMode가 initializer를 두 번 호출할 때 첫 controller가 effect
+소유권 없이 버려질 수 있었다. 자원 없는 inert controller로 시작하고 effect setup마다 실제 controller 하나를
+생성해 같은 setup의 cleanup이 dispose하도록 보완했다. fixture를 development React로 고정해 이 replay를 실제
+Chromium에서 검증했다.
+
+### 8.2 검증
+
+- 구현 커밋: `6670fb3`
+- StrictMode 보완 커밋: `98f4430`
+- `pnpm check`: PASS, unit **1608/1608**
+- `pnpm test:e2e`: Chromium **145/145**
+- `git diff --check`: PASS
+- 포트 4183/4184/4185와 `denn-e2e-*` temp 잔류: 0
+- 고객 entry: `index-DhJYvhRi.js`, 304,713 bytes, SHA-256
+  `C724A8941A5935A685B624EB3DF4A7081EEB8778E83C92BCB8CF7073D3C6B758`
+
+### 8.3 계속 미구현·금지
+
+- production `App.tsx`에서 post-auth child 연결: **0 / NOT IMPLEMENTED**
+- 실제 Firebase/project/catalog/proof/art network와 실제 CORS·폰트·운영 object: **NOT TESTED / 금지**
+- 실제 다양한 viewport 시각 정확도, clock true, non-neutral transform, room/gallery replay: **NOT TESTED / 미지원**
+- 편집·인쇄·주문·발행·write/delete·deploy: **0 / 금지**
+
+스펙 060은 승인된 local injectable composition 범위에서 **DONE / CODEX_PASSED**다. 다음 단위는 자동 시작하지
 않는다.

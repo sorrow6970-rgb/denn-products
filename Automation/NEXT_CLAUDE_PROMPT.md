@@ -1,20 +1,27 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-060-space-post-auth-frame-view-investigation`
-completed_unit: `spec-059-space-frame-asset-request-projector` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 059 조사 **`d15dfd6`** · 구현 **`3c5b3ed`** · 종료 **`4fb30cc`**
-next_transition: **`FOUNDER_SPEC_060_DD_1_DD_5_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-060-space-post-auth-frame-view` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 060 조사 **`e19c8f5`** · 구현 **`6670fb3`** · StrictMode 보완 **`98f4430`**
+next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 060 조사 · Founder 결정 대기
+## ★ 스펙 060 종료
 
 정본: `docs/rebuild/specs/060-space-post-auth-frame-view-investigation.md`
 
-권장값은 **DD-1=A, DD-2=A, DD-3=A, DD-4=A, DD-5=A**다. ready-only child, source-bound
-StrictMode owner, measured width/conditional exact-font gate, 단일 fail-closed status를 사용한다. 첫 구현은
-injectable post-auth view와 합성 browser fixture까지만이며 production `App` 연결/network는 0이다.
+Founder **DD-1=A~DD-5=A**에 따라 ready-only scene seam, injectable view, source-bound owner,
+content-box width, conditional exact-font gate와 합성 browser fixture를 구현했다. current plan success에서만
+Canvas가 mount된다.
 
-결정 전 구현하지 않는다.
+자체 검수에서 StrictMode initializer 이중 호출 owner 누수를 발견해 inert initializer와 effect-owned controller로
+보완했다. development React Chromium fixture가 실제 setup→cleanup→setup과 추가 unmount/remount를 검증한다.
+
+`pnpm check` PASS(unit 1608/1608), Chromium 145/145 PASS. production `App.tsx` 연결, 실제 Firebase/network/
+CORS/운영 object, 실제 다양한 폰트·viewport 시각 검증, 편집·인쇄·주문·발행·write/delete/deploy는
+NOT TESTED/NOT IMPLEMENTED 또는 금지다.
+
+다음 단위를 자동 시작하지 않는다. Founder의 다음 수동 작업을 기다린다.
 
 ## ★ 스펙 059 종료
 
