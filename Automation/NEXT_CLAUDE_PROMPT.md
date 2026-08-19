@@ -1,12 +1,22 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-055-space-proof-image-view-plan-investigation`
-completed_unit: `spec-054-space-scene-reference-validator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 054 종료 **`8c70a46`** · 스펙 055 조사 문서 commit/push 예정
-next_transition: **`FOUNDER_SPEC_055_T1_T5_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-055-space-proof-image-boundary` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 055 조사 **`ed610cb`** · 구현 **`82d89ce`** · 종료 문서 commit/push 예정
+next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 055 조사 완료 · Founder 결정 대기
+## ★ 스펙 055 종료
+
+Founder T-1=A~T-5=A에 따라 exact Firebase proof REST URL과 exact-neutral transform eligibility를
+pure local 경계로 구현했다. URL은 성공 결과에만 남고 non-neutral transform은 변환하지 않는다.
+
+targeted 38/38, 전체 check unit 1552/1552, Chromium 143/143 PASS. 고객 entry/hash 동일.
+실제 Firebase/network/object/image/CORS/owner/plan/UI/renderer/deploy는 NOT TESTED/NOT IMPLEMENTED다.
+
+다음 후보는 V2-B remote proof image owner 경계 조사다. 자동 시작하지 않는다.
+
+## 이전 — 스펙 055 조사와 Founder 결정
 
 정본: `docs/rebuild/specs/055-space-proof-image-view-plan-investigation.md`
 
@@ -19,7 +29,7 @@ intrinsic size를 요구한다. neutral 외 legacy transform 변환은 UNCONFIRM
 - T-4=A 권장: 다음은 V2-A pure resolver/eligibility + unit만
 - T-5=A 권장: future renderer는 editable PreviewComposer와 분리
 
-결정 전 구현하지 않는다. 실제 Firebase/network/image/UI/renderer/Rules/deploy는 금지다.
+T-1~T-5는 모두 A로 승인되어 V2-A local-only 구현이 완료됐다.
 
 ## 이전 — 스펙 054 종료
 

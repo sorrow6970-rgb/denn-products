@@ -1,6 +1,6 @@
 # 스펙 055 후보 — space proof image와 view-only frame plan 경계 조사
 
-상태: **CLAUDE_WORKING / IMPLEMENTATION_APPROVED / LOCAL_ONLY / NO_NETWORK**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
 
 Founder 승인(2026-08-19): **T-1=A, T-2=A, T-3=A, T-4=A, T-5=A**.
 
@@ -166,3 +166,14 @@ Rules/config/deploy/write/delete/publish, external URL fallback, transform clamp
 
 허용 파일은 `apps/mockup/src/space/proof-image.ts`, 해당 unit, 이 스펙과 spec 055 handoff/상태 문서뿐이다.
 App/UI/image owner/Canvas/plan/Firebase SDK/Rules/config/E2E/package/lockfile 변경은 승인되지 않았다.
+
+## 9. DONE (Codex)
+
+- 구현 커밋: `82d89ce`
+- exact host/bucket, canonical once-encoded `proofs/` path와 constrained media query를 검증한다.
+- exact neutral legacy transform만 current identity로 투영하고 non-neutral은 unsupported로 닫는다.
+- targeted 38/38, 전체 check unit 1552/1552, Chromium E2E 143/143 PASS.
+- 고객 entry `index-Det4NToI.js` 304,634 bytes, SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`로 동일하다.
+- 실제 Firebase/network/object/image decode/CORS, image owner, plan/UI/renderer/room/deploy는
+  **NOT TESTED / NOT IMPLEMENTED**다.
