@@ -9,7 +9,19 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 059 post-auth view composition 조사가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 059 frame asset request projector가 완료됐다.**
+
+Founder CC-1=A~CC-5=A에 따라 첫 구현 범위인 pure projector/unit만 구현했다. detached catalog snapshot,
+exact scene reference, proof trust, art placement/projection/public-image trust를 all-or-nothing으로 적용한다.
+hostile getter는 snapshot에서 1회만 읽고 실패 결과에는 source/비밀 원문이 없다. 구현 `3c5b3ed`.
+
+targeted 11/11, 전체 check unit 1602/1602, Chromium 143/143 PASS. 고객 entry
+`index-Det4NToI.js` SHA-256 `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`
+전후 동일. 실제 network/React/layout/font/Image/Canvas/UI/deploy는 NOT TESTED/NOT IMPLEMENTED다.
+
+다음 단위는 자동 시작하지 않는다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 059 post-auth view composition 조사가 완료됐다.**
 
 space route는 인증 성공 뒤에도 public catalog를 load하지 않아 frame plan 입력이 없다. readiness adapter에
 전달할 proof/art source를 exact references, placement, image projection, Firebase public-image trust로 한 번에
@@ -17,7 +29,7 @@ space route는 인증 성공 뒤에도 public catalog를 load하지 않아 frame
 
 권장 결정은 CC-1=A(post-auth catalog만), CC-2=A(pure asset projector), CC-3=A(measured width),
 CC-4=A(exact font gate/plan-ready Canvas), CC-5=A(첫 구현 projector/unit만)다. 정본은
-`docs/rebuild/specs/059-space-post-auth-view-composition-investigation.md`다. 결정 전 구현하지 않는다.
+`docs/rebuild/specs/059-space-post-auth-view-composition-investigation.md`다. Founder가 모두 A로 승인했다.
 
 > 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 058 source-bound readiness adapter가 완료됐다.**
 

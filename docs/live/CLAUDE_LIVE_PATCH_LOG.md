@@ -4371,3 +4371,13 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 권장 CC-1=A~CC-5=A. 신규 spec 059 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/
   Firebase/Rules/config 0, 실제 network/Image/React/layout/font/Canvas/UI/deploy 0.
 - 상태 `FOUNDER_DECISION_REQUIRED`; CC-1~CC-5 결정 전 구현 0.
+
+## 2026-08-19 — 스펙 059 frame asset request projector 완료
+
+- Founder CC-1=A~CC-5=A 승인. pure projector/unit만 구현했다(`3c5b3ed`).
+- detached catalog snapshot + exact reference + proof trust + art placement/projection/trust를 all-or-nothing으로
+  고정했다. hostile getter 1회 snapshot과 safe failure/source 출력 0을 검증했다.
+- targeted 11/11, check PASS(unit 1602/1602), Chromium 143/143 PASS.
+- 고객 entry SHA-256 `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`
+  전후 동일. 실제 network/React/layout/font/Image/Canvas/UI/deploy는 NOT TESTED/NOT IMPLEMENTED.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.

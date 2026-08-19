@@ -1,12 +1,23 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-059-space-post-auth-view-composition-investigation`
-completed_unit: `spec-058-space-source-bound-readiness` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 058 조사 **`926ff1b`** · 구현 **`f30bc8a`** · 종료 **`60a1677`**
-next_transition: **`FOUNDER_SPEC_059_CC_1_CC_5_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-059-space-frame-asset-request-projector` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 059 조사 **`d15dfd6`** · 구현 **`3c5b3ed`** · 종료 문서 commit/push 예정
+next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 059 조사 · Founder 결정 대기
+## ★ 스펙 059 종료
+
+Founder CC-1=A~CC-5=A에 따라 pure frame asset request projector와 unit만 구현했다. detached catalog
+snapshot에서 exact reference, proof trust, art placement/projection/public-image trust를 모두 통과한 뒤에만
+proof/art source를 함께 반환한다. 실패는 source 없는 safe code이며 IO는 0이다.
+
+targeted 11/11, 전체 check unit 1602/1602, Chromium 143/143 PASS. 고객 entry/hash 동일. 실제 public catalog/
+proof/art network, React, ResizeObserver, fonts, Image decode, Canvas/UI/deploy는 NOT TESTED/NOT IMPLEMENTED다.
+
+다음 단위를 자동 시작하지 않는다.
+
+## 이전 — 스펙 059 조사와 Founder 결정
 
 정본: `docs/rebuild/specs/059-space-post-auth-view-composition-investigation.md`
 
@@ -19,7 +30,7 @@ source를 exact reference/placement/trust로 한 번에 결정하는 pure projec
 - CC-4=A 권장: nonempty text exact font gate + plan-ready Canvas만
 - CC-5=A 권장: 첫 구현은 projector + unit만
 
-결정 전 구현하지 않는다. 실제 network/Image/React/layout/font/Canvas/UI/deploy는 금지다.
+Founder는 CC-1=A~CC-5=A를 승인했다.
 
 ## ★ 스펙 058 종료
 

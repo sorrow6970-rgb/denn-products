@@ -1,6 +1,6 @@
 # 스펙 059 후보 — space post-auth view composition 경계 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / INVESTIGATION_ONLY / LOCAL_ONLY / NO_NETWORK**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
 
 ## 1. 목적
 
@@ -141,4 +141,15 @@ space replay 완료로 표시하지 않는다.
 
 ## 7. 결론
 
-실제 post-auth UI 전에 source 선택을 단일 pure projector로 고정해야 한다. CC-1~CC-5 결정 전 구현하지 않는다.
+실제 post-auth UI 전에 source 선택을 단일 pure projector로 고정해야 한다.
+
+## 8. Founder 결정과 DONE (Codex)
+
+- Founder 결정: **CC-1=A, CC-2=A, CC-3=A, CC-4=A, CC-5=A**.
+- 구현 `3c5b3ed`: `frame-asset-request.ts`와 unit만 추가했다.
+- catalog는 JSON-safe detached snapshot으로 고정하고 exact reference, proof trust, placement, art projection/
+  trust가 모두 성공한 뒤에만 source를 반환한다. 실패 source 출력과 IO는 0이다.
+- targeted 11/11, format/lint/typecheck, 전체 unit 1602/1602, build, Chromium 143/143 PASS.
+- 고객 entry `index-Det4NToI.js` SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB` 전후 동일.
+- 실제 catalog/proof/art network, React, layout/font, Image decode, Canvas/UI/deploy는 NOT TESTED/미구현이다.
