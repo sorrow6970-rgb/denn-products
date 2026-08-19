@@ -4219,3 +4219,13 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   downloaded 0으로 node_modules를 복구했다. build 승인·workspace 설정 변경은 0이다.
 - 구현·계약 커밋 `49f51fb`. 실제 Firebase/project/token/document/network/route UI/scene application/
   deploy는 NOT TESTED/금지. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
+
+## 2026-08-19 — 스펙 053 production space composition 조사 · Founder 결정 대기
+
+- 현재 App은 query 분기 없이 catalog를 즉시 load하고, space controller의 React UI/env/lazy factory는 없다.
+- decrypt scene ID/URL/opaque room 설정은 catalog/CORS/renderer와 아직 대조되지 않았다.
+- 권장: R-1=A space 독점, R-2=A submit lazy named app, R-3=A gate-only 첫 UI,
+  R-4=A 후속 catalog 검증 + view-only scene application 계약.
+- 신규 spec 053 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/Rules/config 변경 0,
+  실제 Firebase/network/token/document/deploy/scene 적용 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`; R-1~R-4 결정 전 구현 0.

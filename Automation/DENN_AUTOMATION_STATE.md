@@ -5,21 +5,29 @@ updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-052-space-link-open-controller   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 49f51fb   # spec 052 local link/open controller
-candidate_commit: 49f51fb   # CODEX_PASSED
-verified_commit: 49f51fb   # targeted 17, unit 1479, Chromium 141
-origin_relation: "HEAD=origin after completion documents fast-forward push; ahead/behind 0/0"
-working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
+active_unit: spec-053-space-production-composition-investigation
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: 6116a17   # spec 052 completion documents
+candidate_commit: pending   # investigation documents only
+verified_commit: 49f51fb   # latest verified product commit; targeted 17, unit 1479, Chromium 141
+origin_relation: "HEAD=origin at investigation start; ahead/behind 0/0"
+working_tree: "spec 053 investigation documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_SPEC_053_R1_R4_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 053 production space composition 조사 (2026-08-19)
+
+- 현재 App은 query 분기 없이 catalog를 즉시 load하며, space controller의 React UI/env/lazy factory는 없다.
+- decrypt scene의 ID/URL/opaque room 설정은 catalog/CORS/renderer와 아직 대조되지 않았다.
+- 권장 R-1=A space 독점 모드, R-2=A explicit-submit lazy Firebase, R-3=A gate-only 첫 UI,
+  R-4=A 후속 catalog 검증 + view-only scene application 계약.
+- 조사 문서만 변경. 실제 Firebase/network/config/scene 적용/제품 구현 0.
 
 ## 스펙 052 space link/open controller 완료 (2026-08-19)
 

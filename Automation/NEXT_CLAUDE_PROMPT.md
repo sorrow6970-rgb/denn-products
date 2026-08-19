@@ -1,12 +1,27 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-053-space-production-composition-investigation`
 completed_unit: `spec-052-space-link-open-controller` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 052 구현 커밋 **`49f51fb`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
-next_transition: **`NEXT_MANUAL_TASK`**
+기준: 스펙 052 종료 문서 **`6116a17`** · 스펙 053 조사 문서 commit/push 후 HEAD=origin, ahead/behind **0/0**
+next_transition: **`FOUNDER_SPEC_053_R1_R4_DECISION`**
 
-## ★ 스펙 052 종료 · 다음 수동 작업 대기
+## ★ 스펙 053 조사 완료 · Founder 결정 대기
+
+정본: `docs/rebuild/specs/053-space-production-composition-investigation.md`
+
+현재 App은 space query 분기 없이 catalog를 즉시 load한다. controller/read/open은 준비됐지만 React UI,
+env config, lazy production factory, scene application port는 없다. decrypt scene의 ID/URL/opaque room 설정도
+현재 catalog/CORS/renderer와 대조되지 않았다.
+
+- R-1=A 권장: space query가 있으면 gate 독점, invalid fail-closed, catalog/Firebase factory 0
+- R-2=A 권장: exact-true + complete 5-key config, 명시 submit에서 named app lazy init
+- R-3=A 권장: 첫 구현은 password gate/safe errors/ready snapshot까지만
+- R-4=A 권장: scene 적용은 후속 catalog 참조 검증 + view-only port 계약
+
+R-1~R-4 결정 전 구현하지 않는다. 실제 Firebase/network/config/deploy/scene 적용은 금지다.
+
+## 이전 — 스펙 052 종료
 
 순수 `?space=` parser와 injected Firestore reader + spaces open port controller를 구현했다. 비밀번호 오류
 재시도는 암호문을 메모리에서 재사용하며 network retry만 재조회한다. duplicate submit, detach/late result,

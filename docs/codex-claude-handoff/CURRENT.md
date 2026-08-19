@@ -9,7 +9,19 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 052 space link/open controller가 완료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 053 production space composition 조사가 완료됐다.**
+
+현재 App은 space query 분기 없이 catalog를 즉시 load한다. 스펙 052 controller와 read/open port는 준비됐지만
+React UI, env config, lazy production factory, scene application port는 없다. decrypt scene의 ID/URL/opaque
+room 설정은 catalog/CORS/renderer와 아직 대조되지 않았다.
+
+권장 결정은 R-1=A(space 독점/invalid fail-closed), R-2=A(exact-true complete config + submit lazy init),
+R-3=A(password gate와 ready snapshot까지만), R-4=A(후속 catalog 검증 + view-only scene port)다.
+정본은 `docs/rebuild/specs/053-space-production-composition-investigation.md`다.
+
+결정 전 제품 구현 0. 실제 Firebase/project/token/document/network/config/deploy/scene 적용은 금지다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 052 space link/open controller가 완료됐다.**
 
 순수 `?space=` parser와 injected Firestore reader + spaces open port controller를 구현했다. 비밀번호 오류
 재시도는 암호문을 메모리에서 재사용하고 network retry만 재조회한다. duplicate submit, detach/late result,
