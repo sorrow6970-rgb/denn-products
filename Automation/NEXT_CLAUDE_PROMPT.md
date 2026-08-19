@@ -1,12 +1,27 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-054-space-scene-application-boundary-investigation`
 completed_unit: `spec-053-space-production-composition` — **DONE / CODEX_PASSED / LOCAL_GATED / NO_NETWORK**
-기준: 스펙 053 구현 커밋 **`5e4be63`** · 종료 문서 commit/push 후 HEAD=origin, ahead/behind **0/0**
-next_transition: **`NEXT_MANUAL_TASK`**
+기준: 스펙 053 종료 문서 **`f0600a3`** · 스펙 054 조사 문서 commit/push 후 HEAD=origin, ahead/behind **0/0**
+next_transition: **`FOUNDER_SPEC_054_S1_S5_DECISION`**
 
-## ★ 스펙 053 종료 · 다음 수동 작업 대기
+## ★ 스펙 054 조사 완료 · Founder 결정 대기
+
+정본: `docs/rebuild/specs/054-space-scene-application-boundary-investigation.md`
+
+legacy imgT x/y는 Canvas px이고 현재 transform은 normalized 비율이다. capture 당시 크기가 payload에 없어
+정확 변환은 UNCONFIRMED다. scene은 frame-only이며 catalog 참조 검증과 room/gallery renderer도 없다.
+
+- S-1=A 권장: 다음은 V1 순수 catalog 참조 검증기만
+- S-2=A 권장: frame-only, tpl/size/color/photo 필수 exact 참조, fallback 0
+- S-3=A 권장: exact color ID/fill을 canonical solid로만, grain/모호성 거부
+- S-4=A 권장: transform validated-but-unapplied, clamp/복사 0
+- S-5=A 권장: room/gallery unsupported, 재현 완료로 간주하지 않음
+
+S-1~S-5 결정 전 구현하지 않는다. 실제 Firebase/network/image/UI/renderer/room/deploy는 금지다.
+
+## 이전 — 스펙 053 종료
 
 R-1=A/R-2=A/R-3=A/R-4=A에 따라 space 독점 mode, complete env config, explicit-submit lazy
 Firebase facade, password gate와 StrictMode lifecycle을 구현했다. no-space만 기존 browse를 mount하며

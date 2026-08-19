@@ -9,7 +9,20 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 053 production space composition이 완료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 054 space scene application 경계 조사가 완료됐다.**
+
+scene은 frame-only이며 tpl/size/color를 catalog와 대조하는 API가 없다. legacy imgT x/y는 Canvas px,
+현재 transform은 normalized maxPan 비율이고 capture 크기가 payload에 없어 정확 변환은 UNCONFIRMED다.
+proof URL은 `proofs/` 전용 trust가 필요하고 room/gallery renderer는 없다.
+
+권장 결정은 S-1=A(V1 순수 참조 검증기), S-2=A(frame-only 필수 exact 참조),
+S-3=A(exact ID/fill의 canonical solid만), S-4=A(transform 미적용),
+S-5=A(room/gallery unsupported)다. 정본은
+`docs/rebuild/specs/054-space-scene-application-boundary-investigation.md`다.
+
+결정 전 제품 구현 0. 실제 Firebase/network/image/UI/renderer/room/deploy는 금지다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 053 production space composition이 완료됐다.**
 
 Founder R-1=A/R-2=A/R-3=A/R-4=A에 따라 space 독점 mode, exact-true complete config,
 explicit-submit lazy named Firebase facade, password UI와 StrictMode lifecycle을 구현했다. no-space만 기존

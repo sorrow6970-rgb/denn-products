@@ -5,21 +5,30 @@ updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-053-space-production-composition   # DONE, CODEX_PASSED, LOCAL_GATED, NO_NETWORK
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 5e4be63   # spec 053 gated production composition
-candidate_commit: 5e4be63   # CODEX_PASSED
-verified_commit: 5e4be63   # targeted 32, unit 1495, Chromium 143
-origin_relation: "HEAD=origin after completion documents fast-forward push; ahead/behind 0/0"
-working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
+active_unit: spec-054-space-scene-application-boundary-investigation
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: f0600a3   # spec 053 completion documents
+candidate_commit: pending   # investigation documents only
+verified_commit: 5e4be63   # latest verified product commit; unit 1495, Chromium 143
+origin_relation: "HEAD=origin at investigation start; ahead/behind 0/0"
+working_tree: "spec 054 investigation documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_SPEC_054_S1_S5_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 054 space scene application 경계 조사 (2026-08-19)
+
+- scene은 frame-only이고 tpl/size/color는 catalog와 아직 대조되지 않았다.
+- legacy imgT x/y는 Canvas px, 현재는 normalized maxPan 비율이며 capture 크기가 없어 정확 변환은
+  UNCONFIRMED다. room/gallery renderer도 없다.
+- 권장 S-1=A V1 순수 참조 검증기, S-2=A 필수 exact 참조, S-3=A exact ID/fill solid만,
+  S-4=A transform 미적용, S-5=A room/gallery unsupported.
+- 조사 문서만 변경. 실제 network/image/UI/renderer/room 구현 0.
 
 ## 스펙 053 production space composition 완료 (2026-08-19)
 

@@ -4245,3 +4245,16 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
 - 구현 커밋 `5e4be63`. 실제 Firebase/project/config/token/document/network/deploy와 scene 적용 0.
 - 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
+
+## 2026-08-19 — 스펙 054 space scene application 경계 조사 · Founder 결정 대기
+
+- scene은 frame-only이며 catalog exact 참조 검증기가 없다.
+- legacy imgT x/y는 Canvas px, 현재는 normalized maxPan 비율이다. capture 크기가 없어 정확 변환은
+  UNCONFIRMED이며 clamp/직접 복사는 안전하지 않다.
+- proof URL은 `proofs/` 전용 trust가 필요하고 editable PreviewComposer는 view-only가 아니며
+  room/gallery renderer는 없다.
+- 권장 S-1=A V1 순수 검증기, S-2=A 필수 exact 참조, S-3=A canonical solid,
+  S-4=A transform 미적용, S-5=A room/gallery unsupported.
+- 신규 spec 054 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/Rules/config 0,
+  실제 Firebase/network/image/UI/renderer/room/deploy 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`; S-1~S-5 결정 전 구현 0.
