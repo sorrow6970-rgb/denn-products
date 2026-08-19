@@ -6,6 +6,9 @@ import { safeCatalogMessage } from "./catalog/messages";
 import { publicCatalogReader } from "./catalog/reader";
 import type { PublicCatalogUiState } from "./catalog/types";
 import { usePublicCatalog } from "./catalog/usePublicCatalog";
+import { createSpaceProductionController } from "./space/composition";
+import { readSpaceLink } from "./space/link";
+import { SpacePasswordGate } from "./space/SpacePasswordGate";
 
 // Public-catalog connection (spec 015) + mobile-first browse UI (spec 017). Loading / error /
 // manual-retry are unchanged; when ready, the success document is turned into a spec 016 browse
@@ -13,6 +16,36 @@ import { usePublicCatalog } from "./catalog/usePublicCatalog";
 // display-only template thumbnails (spec 018). No Canvas/save/order — ids-only selection with a
 // text summary at completion.
 export function App(): React.JSX.Element {
+  const search = typeof window === "undefined" ? "" : window.location.search;
+  return <MockupRoot search={search} env={import.meta.env} />;
+}
+
+export function MockupRoot({
+  search,
+  env,
+}: {
+  readonly search: string;
+  readonly env: ImportMetaEnv | Record<string, unknown> | undefined;
+}): React.JSX.Element {
+  const mode = readSpaceLink(search);
+  if (mode.kind !== "inactive") {
+    return <SpaceRoute search={search} env={env} />;
+  }
+  return <CatalogApp />;
+}
+
+function SpaceRoute({
+  search,
+  env,
+}: {
+  readonly search: string;
+  readonly env: ImportMetaEnv | Record<string, unknown> | undefined;
+}): React.JSX.Element {
+  const controller = useMemo(() => createSpaceProductionController(search, env), [env, search]);
+  return <SpacePasswordGate controller={controller} />;
+}
+
+function CatalogApp(): React.JSX.Element {
   const { state, retry } = usePublicCatalog(publicCatalogReader);
 
   // Build the browse index only in the ready state, once per document identity (spec 017 §2, §16).

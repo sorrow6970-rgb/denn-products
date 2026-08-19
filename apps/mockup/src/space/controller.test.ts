@@ -189,4 +189,25 @@ describe("space link open controller", () => {
     expect(JSON.stringify(controller.getState())).not.toContain("raw-token-password");
     for (const spy of spies) expect(spy).not.toHaveBeenCalled();
   });
+
+  it("reattaches after StrictMode cleanup and ignores the stale generation", async () => {
+    const stale = deferred<SpaceDocumentReadResult>();
+    const fresh = deferred<SpaceDocumentReadResult>();
+    const r = reader([stale.promise, fresh.promise]);
+    const o = opener([Promise.resolve({ ok: true, value: opened })]);
+    const controller = new SpaceLinkOpenController("?space=token", r.port, o.port);
+
+    controller.submitPassword("first");
+    controller.detach();
+    controller.attach();
+    expect(controller.getState()).toEqual({ status: "awaiting-password" });
+    stale.resolve(readOk({ enc: "stale" }));
+    await Promise.resolve();
+    expect(o.open).not.toHaveBeenCalled();
+
+    controller.submitPassword("second");
+    fresh.resolve(readOk({ enc: "fresh" }));
+    await vi.waitFor(() => expect(controller.getState().status).toBe("ready"));
+    expect(o.open).toHaveBeenCalledOnce();
+  });
 });

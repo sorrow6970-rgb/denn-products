@@ -79,7 +79,7 @@ for (const vp of VIEWPORTS) {
   });
 }
 
-test("the customer bundle contains no Firebase SDK and no admin-read code", () => {
+test("the customer bundle contains only the approved lazy space Firestore boundary", () => {
   const staging = process.env.DENN_E2E_STAGING;
   expect(staging, "DENN_E2E_STAGING").toBeTruthy();
   const assets = join(String(staging), "mockup", "assets");
@@ -87,14 +87,25 @@ test("the customer bundle contains no Firebase SDK and no admin-read code", () =
   expect(js.length).toBeGreaterThan(0);
 
   const bundle = js.map((f) => readFileSync(join(assets, f), "utf8")).join("\n");
+  // Spec 053 intentionally adds the lazy Firestore space reader. Generic Firebase app constants
+  // include strings such as `@firebase/auth` and `@firebase/storage` even when those products are
+  // not imported, so product APIs and private admin paths are the meaningful negative boundary.
+  expect(bundle.includes("denn-space-viewer")).toBe(true);
+  expect(bundle.includes("getFirestore")).toBe(true);
+  expect(bundle.includes("getDoc")).toBe(true);
   for (const marker of [
-    "firebase/auth",
-    "firebase/storage",
     "admin-read",
     "ADMIN_STATE_OBJECT_PATH",
     "admin/state.json",
     "onAuthStateChanged",
     "signInWithEmailAndPassword",
+    "getAuth",
+    "uploadBytes",
+    "uploadBytesResumable",
+    "uploadString",
+    "getStorage",
+    "getDownloadURL",
+    "listAll",
   ]) {
     expect(bundle.includes(marker), marker).toBe(false);
   }

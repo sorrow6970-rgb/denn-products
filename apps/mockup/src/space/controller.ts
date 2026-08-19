@@ -26,6 +26,7 @@ const CORRELATION_PREFIX = "mockup-space";
 
 export class SpaceLinkOpenController {
   private readonly token: string | null;
+  private readonly initialState: SpaceViewState;
   private state: SpaceViewState;
   private generation = 0;
   private active = true;
@@ -40,12 +41,13 @@ export class SpaceLinkOpenController {
   ) {
     const link = readSpaceLink(search);
     this.token = link.kind === "valid" ? link.token : null;
-    this.state =
+    this.initialState =
       link.kind === "inactive"
         ? { status: "inactive" }
         : link.kind === "invalid"
           ? { status: "invalid-link" }
           : { status: "awaiting-password" };
+    this.state = this.initialState;
   }
 
   readonly getState = (): SpaceViewState => this.state;
@@ -53,6 +55,15 @@ export class SpaceLinkOpenController {
   readonly subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  };
+
+  readonly attach = (): void => {
+    if (this.active) return;
+    this.active = true;
+    this.generation += 1;
+    this.inFlight = false;
+    this.cachedDocument = null;
+    this.setState(this.initialState);
   };
 
   readonly submitPassword = (password: unknown): void => {
