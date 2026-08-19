@@ -1,6 +1,8 @@
 # 스펙 055 후보 — space proof image와 view-only frame plan 경계 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / INVESTIGATION_ONLY / NO_NETWORK**
+상태: **CLAUDE_WORKING / IMPLEMENTATION_APPROVED / LOCAL_ONLY / NO_NETWORK**
+
+Founder 승인(2026-08-19): **T-1=A, T-2=A, T-3=A, T-4=A, T-5=A**.
 
 ## 1. 목적
 
@@ -148,3 +150,19 @@ Rules/config/deploy/write/delete/publish, external URL fallback, transform clamp
 ## 7. 결론
 
 현재 local 근거로 안전하게 여는 최소 단위는 V2-A다. T-1~T-5 결정 전 구현하지 않는다.
+
+## 8. 승인된 V2-A 구현 계약
+
+- `resolveSpaceProofImageUrl(unknown)`은 exact HTTPS REST host/bucket/object/query를 동기 검증한다.
+- `/o/` 뒤에는 slash 없는 단일 encoded segment만 허용하고 `decodeURIComponent`를 한 번 적용한 뒤
+  `encodeURIComponent` canonical roundtrip을 확인한다. decoded path는 `proofs/` + non-empty suffix여야 한다.
+- query key는 exact `alt`, `token`만 허용한다. `alt=media` 정확히 하나가 필수이고 token은 없거나 non-empty
+  하나다. duplicate/unknown query, fragment, userinfo, custom port는 거부한다.
+- 성공에만 원본 src를 반환한다. 실패 code에는 URL/object/token을 넣지 않는다. fetch/SDK/DOM은 0이다.
+- `resolveSpaceProofTransform(unknown)`은 plain finite object이며 `scale===1`, `x===0`, `y===0`,
+  `rot===undefined || rot===0`인 경우에만 current identity transform을 반환한다. null/malformed는 invalid,
+  valid non-neutral은 unsupported다. clamp/default/coercion은 0이다.
+- hostile getter/Proxy는 안전 실패하고 입력을 변경하지 않는다.
+
+허용 파일은 `apps/mockup/src/space/proof-image.ts`, 해당 unit, 이 스펙과 spec 055 handoff/상태 문서뿐이다.
+App/UI/image owner/Canvas/plan/Firebase SDK/Rules/config/E2E/package/lockfile 변경은 승인되지 않았다.
