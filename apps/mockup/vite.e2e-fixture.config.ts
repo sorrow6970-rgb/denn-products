@@ -32,6 +32,9 @@ if (!resolve(outDir).startsWith(temp.endsWith(sep) ? temp : temp + sep)) {
 export default defineConfig({
   root: import.meta.dirname,
   plugins: [react(), tailwindcss()],
+  // This non-production build deliberately uses development React so StrictMode performs its
+  // setup→cleanup→setup replay and the fixture can detect owner leaks that a production build hides.
+  define: { "process.env.NODE_ENV": JSON.stringify("development") },
   build: {
     outDir,
     emptyOutDir: false,

@@ -42,8 +42,8 @@ test("post-auth frame view is gated, source-bound and StrictMode-clean", async (
   expect(active.proofLoads).toBe(1);
   expect(active.artLoads).toBe(0);
   expect(active.fontChecks).toEqual(['33.6px "Fixture Sans", sans-serif']);
-  expect(active.readinessCreates).toBe(1);
-  expect(active.readinessDisposes).toBe(0);
+  expect(active.readinessCreates).toBe(2);
+  expect(active.readinessDisposes).toBe(1);
   expect(externalRequests).toEqual([]);
 
   await page.getByTestId("fixture-unmount").click();
@@ -57,8 +57,8 @@ test("post-auth frame view is gated, source-bound and StrictMode-clean", async (
   await page.getByTestId("fixture-remount").click();
   await expect(page.getByTestId("preview-canvas")).toBeVisible();
   const remounted = await page.evaluate(() => window.__DENN_SPACE_FRAME_FIXTURE__);
-  expect(remounted.readinessCreates).toBe(2);
-  expect(remounted.readinessDisposes).toBe(1);
+  expect(remounted.readinessCreates).toBe(4);
+  expect(remounted.readinessDisposes).toBe(3);
   expect(remounted.proofLoads).toBe(2);
 
   await page.getByTestId("fixture-unmount").click();

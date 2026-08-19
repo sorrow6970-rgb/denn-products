@@ -12,37 +12,36 @@ export interface UseSourceBoundReadinessResult {
   readonly snapshot: SourceBoundReadinessSnapshot;
 }
 
-interface OwnedController {
-  readonly controller: SourceBoundReadinessController;
-  disposed: boolean;
-}
-
-const createOwned = (factory: SourceBoundReadinessFactory): OwnedController => ({
-  controller: factory(),
-  disposed: false,
-});
+const INERT_CONTROLLER: SourceBoundReadinessController = {
+  getSnapshot: () => ({ status: "disposed" }),
+  subscribe: () => () => undefined,
+  loadProof: () => undefined,
+  clearProof: () => undefined,
+  loadTemplateArt: () => undefined,
+  clearTemplateArt: () => undefined,
+  dispose: () => undefined,
+  proofResolver: { resolve: () => ({ ok: false }) },
+  templateArtResolver: { resolve: () => ({ ok: false }) },
+  bindings: { get: () => undefined },
+};
 
 /**
- * React ownership for the source-bound proof/art controller. Cleanup permanently disposes the
- * current controller; a StrictMode effect replay publishes a new live owner from the next effect
- * body, never from cleanup.
+ * React ownership for the source-bound proof/art controller. The render initializer is inert, so
+ * StrictMode may call it twice without creating an owner. Each effect setup creates exactly the
+ * controller its matching cleanup disposes; the replay's second setup publishes a fresh live one.
  */
 export function useSourceBoundReadiness(
   factory: SourceBoundReadinessFactory = createSourceBoundReadinessController,
 ): UseSourceBoundReadinessResult {
-  const [owned, setOwned] = useState<OwnedController>(() => createOwned(factory));
-  const { controller } = owned;
+  const [controller, setController] = useState<SourceBoundReadinessController>(INERT_CONTROLLER);
 
   useEffect(() => {
-    if (owned.disposed) {
-      setOwned(createOwned(factory));
-      return;
-    }
+    const owned = factory();
+    setController(owned);
     return () => {
-      owned.controller.dispose();
-      owned.disposed = true;
+      owned.dispose();
     };
-  }, [factory, owned]);
+  }, [factory]);
 
   const snapshot = useSyncExternalStore(
     controller.subscribe,
