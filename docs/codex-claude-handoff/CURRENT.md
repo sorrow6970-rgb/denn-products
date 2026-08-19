@@ -9,7 +9,16 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 050 space local read pipeline이 완료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 051 space Firestore read adapter 조사가 완료됐다.**
+
+실제 Firebase/network 없이 현재 Rules, legacy, 설치 SDK 12.17.1과 Firebase 공식 문서를 확인했다.
+기술 구현은 가능하지만 custom token 호환, cache source, named app 소유를 먼저 결정해야 한다.
+권장값은 **Q-1=A/Q-2=A/Q-3=A**다. 조사 커밋 `cb97129`.
+
+결정 전 adapter 코드/package export/Rules/config를 변경하지 않는다. 실제 project/token/document/emulator/
+deploy는 NOT TESTED/금지다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 050 space local read pipeline이 완료됐다.**
 
 document 검증 → password 검증 → decrypt → scene 검증 순서의 local-only 순수 open port를 구현했다.
 단계별 실패 후 후속 호출 0과 safe error를 검증했다. targeted 54/54, `pnpm check` unit 1432/1432,

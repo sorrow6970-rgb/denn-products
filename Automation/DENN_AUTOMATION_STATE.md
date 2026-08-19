@@ -5,21 +5,28 @@ updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-050-space-local-read-pipeline   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: cee79c8   # spec 050 local read pipeline
-candidate_commit: cee79c8   # CODEX_PASSED
-verified_commit: cee79c8   # targeted 54, unit 1432, Chromium 141
+active_unit: spec-051-space-firestore-read-adapter-investigation
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: cb97129   # spec 051 investigation
+candidate_commit: cb97129   # document review candidate
+verified_commit: 202d0f1   # last product gate: spec 050, unit 1432, Chromium 141
 origin_relation: "HEAD=origin after completion documents fast-forward push; ahead/behind 0/0"
 working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_Q1_Q3_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 051 space Firestore read adapter 조사 (2026-08-19)
+
+- 실제 Firebase/network 없이 현재 Rules, legacy, SDK 12.17.1 타입과 Firebase 공식 문서를 조사했다.
+- read adapter는 가능하지만 custom token 호환, cache source, named app 소유가 제품 계약 결정이다.
+- 권장 Q-1=A/Q-2=A/Q-3=A. 결정 전 코드/package/Rules/config 변경 0.
+- 조사 커밋 `cb97129`. 실제 project/token/document/emulator/deploy는 NOT TESTED/금지.
 
 ## 스펙 050 space local read pipeline 완료 (2026-08-19)
 

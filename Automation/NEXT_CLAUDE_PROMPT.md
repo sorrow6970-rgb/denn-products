@@ -1,12 +1,24 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-051-space-firestore-read-adapter-investigation`
 completed_unit: `spec-050-space-local-read-pipeline` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
 기준: 스펙 050 구현 커밋 **`cee79c8`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
-next_transition: **`NEXT_MANUAL_TASK`**
+next_transition: **`FOUNDER_Q1_Q3_DECISION`**
 
-## ★ 스펙 050 종료 · 다음 수동 작업 대기
+## ★ 스펙 051 조사 · Founder 결정 필요
+
+정본: `docs/rebuild/specs/051-space-firestore-read-adapter-investigation.md`
+
+실제 Firebase/network 없이 Rules, legacy, SDK 12.17.1과 공식 문서를 조사했다. 권장값은 모두 A다.
+
+- Q-1=A: Firestore 공식 document ID 제약의 single segment token 허용
+- Q-2=A: `getDoc` + 기본 memory cache, persistent cache 0
+- Q-3=A: named `denn-space-viewer`, config mismatch fail-closed, Auth 0, local unit 범위
+
+결정 전 adapter 코드/package export를 작성하지 않는다.
+
+## 이전 — 스펙 050 종료
 
 document 검증 → password 검증 → decrypt → scene 검증 순서의 local-only 순수 open port를 구현했다.
 targeted 54/54, unit 1432/1432, Chromium 141/141, 고객 hash 동일이다.

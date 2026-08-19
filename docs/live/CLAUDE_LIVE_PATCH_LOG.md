@@ -4186,3 +4186,12 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   diff-check·포트/temp/debug 잔류 0.
 - 구현·계약 커밋 `cee79c8`. 실제 Firebase/Firestore/token/link/network/route/UI/deploy 변경 0.
 - 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
+
+## 2026-08-19 — 스펙 051 space Firestore read adapter 조사 · Founder 결정 대기
+
+- 현재 Rules, legacy, 설치 Firebase Web SDK 12.17.1과 Firebase 공식 문서만 읽었다.
+- legacy custom token 때문에 24-hex 전용 제한은 호환을 증명하지 못했다.
+- 권장: Q-1=A 공식 document ID single segment, Q-2=A `getDoc` memory cache,
+  Q-3=A named `denn-space-viewer`·Auth 0·local unit 범위.
+- 조사 커밋 `cb97129`. 제품 코드/package/Rules/config 변경 0, 실제 Firebase/network/token/document/emulator 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`; 결정 전 구현 0.
