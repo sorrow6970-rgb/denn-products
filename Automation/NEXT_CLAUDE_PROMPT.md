@@ -1,10 +1,25 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-058-space-source-bound-readiness-investigation`
 completed_unit: `spec-057-space-view-only-frame-plan` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 057 조사 **`6cb67df`** · 구현 **`ad0a647`** · 종료 문서 commit/push 예정
-next_transition: **`NEXT_MANUAL_TASK`**
+기준: 스펙 057 조사 **`6cb67df`** · 구현 **`ad0a647`** · 종료 **`1e8e1bb`**
+next_transition: **`FOUNDER_SPEC_058_BB_1_BB_5_DECISION`**
+
+## ★ 스펙 058 조사 · Founder 결정 대기
+
+정본: `docs/rebuild/specs/058-space-source-bound-readiness-investigation.md`
+
+기존 proof/art owner는 source를 public state에 노출하지 않아 stale source 여부를 단독으로 증명하지 못한다.
+adapter가 raw owner를 독점 소유하고 exact source + ready snapshot + binding 존재를 함께 확인해야 한다.
+
+- BB-1=A 권장: framework-free adapter + unit
+- BB-2=A 권장: raw owner 독점 소유
+- BB-3=A 권장: exact source + ready + binding 모두 요구
+- BB-4=A 권장: source-first lifecycle + combined subscribe/composite bindings
+- BB-5=A 권장: 기존 owner/hook/App/UI/E2E 변경 0
+
+결정 전 구현하지 않는다. 실제 Image/network/CORS/React/catalog/layout/font/Canvas/UI/deploy는 금지다.
 
 ## ★ 스펙 057 종료
 

@@ -4340,3 +4340,13 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
 - 구현 `ad0a647`. 실제 owner adapter/network/Image/font/Canvas/React/UI/clock/room/gallery/deploy는
   NOT TESTED/NOT IMPLEMENTED. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
+
+## 2026-08-19 — 스펙 058 source-bound readiness adapter 조사 · Founder 결정 대기
+
+- 기존 proof/art owner ready state만으로는 현재 source와의 동일성을 증명할 수 없음을 확인했다.
+- adapter가 raw owner를 독점 소유하고 exact source + ready + binding을 모두 검사해야 stale 연결을 막는다.
+- source-first replacement/clear/dispose, proof/art 독립 lifecycle, combined subscribe/composite bindings를
+  첫 local 계약 후보로 정했다.
+- 권장 BB-1=A~BB-5=A. 신규 spec 058 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/
+  Firebase/Rules/config 0, 실제 Image/network/CORS/React/catalog/layout/font/Canvas/UI/deploy 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`; BB-1~BB-5 결정 전 구현 0.

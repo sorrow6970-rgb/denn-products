@@ -9,7 +9,18 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 057 view-only frame plan composition이 완료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 058 source-bound readiness adapter 조사가 완료됐다.**
+
+기존 proof/template-art owner의 ready state는 source identity를 노출하지 않으므로 현재 scene과의 exact
+연계를 스스로 증명하지 못한다. 안전한 adapter는 owner를 독점 소유하고 exact source, current ready state,
+exact binding 존재를 모두 확인해야 한다. source-first replacement/clear/dispose와 combined subscription/
+bindings가 필요하다.
+
+권장 결정은 BB-1=A(framework-free adapter), BB-2=A(raw owner 독점), BB-3=A(source+ready+binding),
+BB-4=A(source-first lifecycle/composite), BB-5=A(local fake unit만)다. 정본은
+`docs/rebuild/specs/058-space-source-bound-readiness-investigation.md`다. 결정 전 구현하지 않는다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 057 view-only frame plan composition이 완료됐다.**
 
 Founder AA-1=A~AA-6=A에 따라 pure composer를 구현했다. exact proof URL trust, neutral transform,
 source-bound proof/art readiness, geometry, clock/layout/text 조건을 순서대로 검증하며 stale/untrusted/not-ready
