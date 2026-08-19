@@ -4,6 +4,7 @@
 - 정본: `docs/rebuild/specs/061-space-production-frame-route-connection-investigation.md`
 - 조사 기준: `851ed26` (스펙 060 종료)
 - 조사 커밋: `4a50004`
+- 구현 커밋: `cf13a2a`
 
 ## 확인 결과
 

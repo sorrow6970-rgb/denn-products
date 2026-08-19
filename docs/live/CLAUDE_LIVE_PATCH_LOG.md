@@ -4423,3 +4423,23 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 권장 **EE-1=A~EE-5=A**. 신규 spec 061 + handoff + STATE/NEXT/CURRENT/live log만 변경했다.
 - 제품 코드/test/package/lockfile/Firebase/Rules/config 변경 0, 실제 Firebase/network/CORS/운영 object/deploy 0.
 - 상태 `FOUNDER_DECISION_REQUIRED`; 결정 전 구현 0.
+
+## 2026-08-19 - 스펙 061 production frame route 연결 · CODEX_PASSED
+
+- Founder **EE-1=A~EE-5=A** 승인. production `SpaceRoute` ready seam에
+  `SpacePostAuthFrameView`와 production `publicCatalogReader`를 연결했다.
+- production default controller는 유지하고 root에는 합성 controller factory 하나만 추가했다. 일반 browse
+  route는 factory 생성 0이다.
+- non-production fixture는 production root/default reader/browser Image owner를 사용한다. 모든 HTTPS를
+  정규식 catch-all로 intercept하고 exact catalog/proof URL만 합성 응답해 외부 egress 0을 유지했다.
+- pre-auth 요청 0, ready Canvas 1, invalid catalog의 proof/Canvas 0, unmount 뒤 late proof 차단,
+  metadata/token/password/URL 비노출과 accessibility serious/critical 0을 검증했다.
+- 자체 검수에서 문자열 glob catch-all이 동작하지 않아 신규 E2E 3개가 실패한 사실을 확인했다. 제품 코드는
+  바꾸지 않고 정규식으로 교정했으며 최종 Chromium은 **148/148 PASS**다.
+- 전체 check PASS(unit **1609/1609**, 69 files), production build PASS, `git diff --check` PASS.
+- 고객 entry `index-CVr4hkHb.js`, **322,548 bytes**, SHA-256
+  **`E70626F22B181C3BC5DBCE4F5B6B644E3AC026B814ECFAE3AC8D1738D9384334`**.
+- 구현 커밋 **`cf13a2a`**. 실제 Firebase/project/config/network/CORS/운영 object, 실제 모바일·운영 폰트
+  시각 정확도, room/gallery/clock/non-neutral transform, 편집·인쇄·주문·발행·write/delete/deploy/cutover는
+  **NOT TESTED / NOT IMPLEMENTED / 금지**다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`. 다음 단위 자동 시작 0.

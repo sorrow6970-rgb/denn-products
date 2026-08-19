@@ -1,28 +1,32 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-061-space-production-frame-route-connection-investigation`
-completed_unit: `spec-060-space-post-auth-frame-view` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 060 종료 **`851ed26`**
-next_transition: **`FOUNDER_SPEC_061_EE_1_EE_5_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-061-space-production-frame-route-connection` — **DONE / CODEX_PASSED / LOCAL_SYNTHETIC / NO_EXTERNAL_EGRESS**
+기준: 스펙 061 구현 **`cf13a2a`**
+next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 현재 작업 - 스펙 061 production frame route 연결 조사
+## ★ 스펙 061 종료 - production frame route 연결
 
 정본: `docs/rebuild/specs/061-space-production-frame-route-connection-investigation.md`
 
-production `SpaceRoute`는 인증 성공 뒤에도 placeholder를 유지한다. 스펙 060 child를 기존 ready seam에
-연결하면 그때부터 fixed public catalog GET과 proof/optional art browser Image read가 열린다.
+Founder **EE-1=A~EE-5=A**에 따라 production ready seam에 `SpacePostAuthFrameView`와 production
+`publicCatalogReader`를 연결했다. root에는 controller factory 하나만 합성 seam으로 추가했고 일반 browse
+route는 이 factory를 만들지 않는다.
 
-권장 결정:
+non-production fixture는 production root/default reader/browser Image owner를 사용한다. Playwright가 모든
+HTTPS를 정규식 catch-all로 intercept하고 exact catalog/proof URL만 합성 응답해 실제 외부 egress를 0으로
+유지했다. pre-auth 요청 0, ready Canvas 1, invalid catalog fail-closed, unmount 뒤 late proof 차단과 비밀
+비노출을 검증했다.
 
-- **EE-1=A:** ready seam에 `SpacePostAuthFrameView` + production `publicCatalogReader` 연결
-- **EE-2=A:** production root에는 controller factory 하나만 좁게 주입
-- **EE-3=A:** catalog의 기존 명시 retry 외 자동 retry/fallback/stale Canvas 0
-- **EE-4=A:** 합성 controller + Playwright fixed URL intercept로 production root browser 검증
-- **EE-5=A:** App/unit/non-production fixture/E2E/문서 최소 범위만 구현
+자체 검수에서 문자열 glob catch-all이 의도대로 동작하지 않아 신규 E2E 3개가 실패한 사실을 발견했고,
+정규식으로 교정했다. 구현 **`cf13a2a`**. 전체 check PASS(unit **1609/1609**), Chromium **148/148**,
+고객 entry `index-CVr4hkHb.js` **322,548 bytes**, SHA-256
+**`E70626F22B181C3BC5DBCE4F5B6B644E3AC026B814ECFAE3AC8D1738D9384334`**.
 
-결정 전 구현하지 않는다. 실제 Firebase/project/network/CORS/운영 object/config/deploy와 room/gallery/clock/
-non-neutral transform, 편집·인쇄·주문·발행·write/delete는 계속 금지다.
+실제 Firebase/project/config/network/CORS/운영 object, 실제 모바일·운영 폰트 시각 정확도,
+room/gallery/clock/non-neutral transform, 편집·인쇄·주문·발행·write/delete/deploy/cutover는
+NOT TESTED/NOT IMPLEMENTED 또는 금지다. 다음 단위는 자동 시작하지 않는다.
 
 ## ★ 스펙 060 종료
 

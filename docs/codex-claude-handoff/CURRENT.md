@@ -9,18 +9,25 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` - 스펙 061 production frame route 연결 조사가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 061 production frame route 연결이 완료됐다.**
 
-production `SpaceRoute`는 `SpacePasswordGate`까지만 연결돼 있고 ready child는 placeholder다. 기존 ready seam에
-스펙 060 `SpacePostAuthFrameView`를 연결할 수 있지만, password 성공 뒤 fixed public catalog GET과
-proof/optional art browser Image read가 새로 활성화된다.
+Founder EE-1=A~EE-5=A에 따라 production `SpaceRoute`의 ready seam에 `SpacePostAuthFrameView`와
+production `publicCatalogReader`를 연결했다. production default controller를 유지하고 root에는 합성 검증용
+controller factory 하나만 추가했다.
 
-권장 구조는 production root에 controller factory 하나만 좁게 주입하는 것이다. 별도 fixture에서 합성 ready
-controller를 쓰고 fixed catalog/proof URL을 Playwright로 intercept하면 production root/default reader/Image
-결합을 실제 외부 egress 없이 검증할 수 있다. 실제 bucket CORS와 운영 object 성공 근거로는 사용하지 않는다.
+non-production fixture는 production root/default reader/browser Image owner를 사용한다. Playwright가 모든
+HTTPS를 정규식 catch-all로 intercept하고 exact catalog/proof만 합성 응답해 실제 외부 egress를 0으로
+유지했다. pre-auth 요청 0, ready Canvas 1, invalid catalog fail-closed, unmount 뒤 late proof 차단과 비밀
+비노출을 검증했다.
 
-Founder 결정 대기: **EE-1=A~EE-5=A 권장**. 정본은
-`docs/rebuild/specs/061-space-production-frame-route-connection-investigation.md`다. 결정 전 제품 구현은 0이다.
+자체 검수에서 문자열 glob catch-all이 의도대로 동작하지 않아 신규 E2E 3개가 실패한 사실을 발견했고
+정규식으로 교정했다. 구현 `cf13a2a`. 전체 check PASS(unit 1609/1609), Chromium 148/148. 고객 entry
+`index-CVr4hkHb.js` 322,548 bytes, SHA-256
+`E70626F22B181C3BC5DBCE4F5B6B644E3AC026B814ECFAE3AC8D1738D9384334`.
+
+실제 Firebase/project/config/network/CORS/운영 object, 실제 모바일·운영 폰트 시각 정확도,
+room/gallery/clock/non-neutral transform, 편집·인쇄·주문·발행·write/delete/deploy/cutover는
+NOT TESTED/NOT IMPLEMENTED 또는 금지다. 다음 단위는 자동 시작하지 않는다.
 
 > 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 060 post-auth frame view가 완료됐다.**
 

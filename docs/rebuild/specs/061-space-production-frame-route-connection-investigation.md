@@ -179,6 +179,8 @@ EE-1~EE-5 결정 전에는 구현하지 않는다.
 Founder는 **EE-1=A, EE-2=A, EE-3=A, EE-4=A, EE-5=A**를 승인했다. 승인 범위 안에서 다음을
 구현했다.
 
+구현 커밋: **`cf13a2a`**
+
 - production `MockupRoot -> SpaceRoute -> SpacePasswordGate`의 ready scene에
   `SpacePostAuthFrameView`를 연결하고 production singleton `publicCatalogReader`를 전달했다.
 - production default는 기존 `createSpaceProductionController`로 유지하고, 합성 검증용 optional

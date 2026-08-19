@@ -4,29 +4,34 @@
 updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-060-space-post-auth-frame-view   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: spec-061-space-production-frame-route-connection-investigation
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 851ed26   # spec 060 completion
+completed_unit: spec-061-space-production-frame-route-connection   # DONE, CODEX_PASSED, LOCAL_SYNTHETIC, NO_EXTERNAL_EGRESS
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: cf13a2a   # spec 061 implementation
 candidate_commit: none
-verified_commit: 98f4430   # unit 1608, Chromium 145
-origin_relation: "HEAD equals origin after spec 061 investigation push"
+verified_commit: cf13a2a   # unit 1609, Chromium 148
+origin_relation: "HEAD equals origin after spec 061 completion push"
 working_tree: "protected Founder/user changes only; protected paths remain unstaged"
-fix_round: 0
+fix_round: 1
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_061_EE_1_EE_5_DECISION
+next_transition: NEXT_MANUAL_TASK
 automation_loop: removed (no new automation or recurring task is created)
-commit_owner: Claude Code
+commit_owner: Codex
 push_policy: fast-forward-only
 deploy: forbidden
 ```
 
-## 스펙 061 production frame route 연결 조사 (2026-08-19)
+## 스펙 061 production frame route 연결 완료 (2026-08-19)
 
-- production `SpaceRoute`는 gate까지만 연결됐고 ready child는 아직 placeholder다.
-- 연결 뒤에는 password 성공 후 고정 public catalog GET과 proof/optional art Image read가 활성화된다.
-- controller factory만 합성으로 교체하고 fixed URL을 browser intercept하는 좁은 검증 seam을 권장한다.
-- 권장 EE-1=A~EE-5=A. 결정 전 제품 코드/test 변경과 실제 network는 0이다.
+- Founder EE-1=A~EE-5=A에 따라 production ready seam에 `SpacePostAuthFrameView`와
+  `publicCatalogReader`를 연결하고 controller factory 하나만 합성 seam으로 추가했다.
+- production root/default reader/browser Image owner를 쓰는 fixture에서 모든 HTTPS를 intercept·차단했다.
+  pre-auth 요청 0, ready Canvas 1, invalid catalog fail-closed와 unmount 뒤 late proof 차단을 검증했다.
+- 자체 검수에서 동작하지 않은 문자열 glob catch-all을 정규식으로 교정했다. 구현 `cf13a2a`.
+- 전체 check PASS(unit 1609/1609), Chromium 148/148, 고객 entry 322,548 bytes,
+  SHA-256 `E70626F22B181C3BC5DBCE4F5B6B644E3AC026B814ECFAE3AC8D1738D9384334`.
+- 실제 Firebase/network/CORS/운영 object, 실제 모바일·폰트 시각 정확도와 deploy/cutover는 NOT TESTED/금지다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 단위 자동 시작 0.
 
 ## 스펙 060 post-auth frame view 조사 (2026-08-19)
 
