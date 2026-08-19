@@ -5,21 +5,28 @@ updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-056-space-proof-image-owner   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: aba0b4e   # spec 056 investigation documents
-candidate_commit: 8d93f98   # validated product implementation
-verified_commit: 8d93f98   # unit 1565, Chromium 143
-origin_relation: "implementation commit pending push; completion documents follow"
-working_tree: "spec 056 completion documents plus protected Founder/user changes; protected paths remain unstaged"
+active_unit: spec-057-space-view-only-frame-plan-investigation
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: 04e07b5   # spec 056 completion
+candidate_commit: none
+verified_commit: 04e07b5   # unit 1565, Chromium 143
+origin_relation: "HEAD equals origin before spec 057 investigation documents"
+working_tree: "spec 057 investigation documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_SPEC_057_AA_1_AA_5_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 057 view-only frame plan composition 조사 (2026-08-19)
+
+- 기존 scene refs, neutral transform, proof owner, frame geometry와 product plan을 순수 합성할 수 있다.
+- logical width와 text measure는 주입해야 하며 template art는 none 또는 externally ready stretch만 가능하다.
+- clock는 plan 밖이므로 첫 단위는 `clockOn === false`만 허용하고 성공도 `replayComplete:false`다.
+- 권장 AA-1=A~AA-5=A. 결정 전 구현 0, 실제 network/Image/font/Canvas/React/UI/deploy 0.
 
 ## 스펙 054 space scene application 경계 조사 (2026-08-19)
 

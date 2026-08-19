@@ -9,7 +9,18 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 056 proof image owner가 완료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 057 view-only frame plan composition 조사가 완료됐다.**
+
+scene reference, neutral proof transform, proof owner, geometry와 product plan은 준비돼 있다. 첫 순수 합성은
+caller 제공 logical width와 nonempty text용 measure port, proof/art ready binding을 요구한다. template art는
+none 또는 externally ready stretch만 허용하고 unsupported/missing은 whole-plan fail-closed한다.
+
+clock는 frame plan 밖이므로 `clockOn === false`만 plan-ready로 본다. room/gallery도 미지원이므로 성공도
+`replayComplete:false`다. 권장 결정은 AA-1=A(pure composer), AA-2=A(trust 순서+whole-plan fail-closed),
+AA-3=A(width/measure 주입), AA-4=A(clock false만), AA-5=A(art none/ready stretch만)다. 정본은
+`docs/rebuild/specs/057-space-view-only-frame-plan-investigation.md`다. 결정 전 구현하지 않는다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 056 proof image owner가 완료됐다.**
 
 Founder V-1=A~V-5=A에 따라 dedicated framework-free owner를 구현했다. owner 내부 trust 재검증,
 CORS-before-src, one-active generation, safe ready intrinsic/binding, replacement/clear/dispose late-result 차단을

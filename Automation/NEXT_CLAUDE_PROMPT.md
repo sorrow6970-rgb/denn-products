@@ -1,10 +1,27 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-057-space-view-only-frame-plan-investigation`
 completed_unit: `spec-056-space-proof-image-owner` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 056 조사 **`aba0b4e`** · 구현 **`8d93f98`** · 종료 문서 commit/push 예정
-next_transition: **`NEXT_MANUAL_TASK`**
+기준: 스펙 056 조사 **`aba0b4e`** · 구현 **`8d93f98`** · 종료 **`04e07b5`**
+next_transition: **`FOUNDER_SPEC_057_AA_1_AA_5_DECISION`**
+
+## ★ 스펙 057 조사 · Founder 결정 대기
+
+정본: `docs/rebuild/specs/057-space-view-only-frame-plan-investigation.md`
+
+scene refs, neutral proof transform, proof owner, geometry와 product plan은 준비돼 있다. logical width와
+nonempty text measure는 주입해야 하고, template art는 none 또는 externally ready stretch만 안전하다.
+clock는 frame plan 밖이므로 첫 합성은 `clockOn === false`만 허용한다. 성공도 room/gallery 미지원 때문에
+`replayComplete:false`다.
+
+- AA-1=A 권장: pure composer + unit만
+- AA-2=A 권장: trust 순서 고정 + whole-plan fail-closed
+- AA-3=A 권장: logical width/measure port 주입, default 추측 0
+- AA-4=A 권장: clock false만, complete 주장 0
+- AA-5=A 권장: art none 또는 externally ready stretch만
+
+AA-1~AA-5 결정 전 구현하지 않는다. 실제 Firebase/network/Image/font/Canvas/React/UI/deploy는 금지다.
 
 ## ★ 스펙 056 종료
 

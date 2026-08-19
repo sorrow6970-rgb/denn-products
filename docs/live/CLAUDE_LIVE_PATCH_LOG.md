@@ -4315,3 +4315,15 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
 - 구현 `8d93f98`. 실제 Firebase/network/Image decode/CORS/hook/plan/UI/renderer/deploy는 NOT TESTED/
   NOT IMPLEMENTED. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
+
+## 2026-08-19 — 스펙 057 view-only frame plan composition 조사 · Founder 결정 대기
+
+- scene refs, neutral proof transform, proof owner, geometry와 product plan 준비 상태를 확인했다.
+- logical width와 nonempty text measure는 caller 주입이 필요하고 template art는 none 또는 externally ready
+  stretch만 안전하다.
+- clock는 frame plan 밖이므로 첫 단위는 `clockOn === false`만 허용하고 성공도 `replayComplete:false`다.
+- 권장 AA-1=A pure composer, AA-2=A whole-plan fail-closed, AA-3=A width/measure 주입,
+  AA-4=A clock false만, AA-5=A art none/ready stretch만.
+- 신규 spec 057 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/Firebase/Rules/config 0,
+  실제 network/Image/font/Canvas/React/UI/deploy 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`; AA-1~AA-5 결정 전 구현 0.
