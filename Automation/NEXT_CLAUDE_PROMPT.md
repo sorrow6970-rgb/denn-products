@@ -1,10 +1,33 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-062-space-v1-orientation-transform-replay-investigation`
 completed_unit: `spec-061-space-production-frame-route-connection` — **DONE / CODEX_PASSED / LOCAL_SYNTHETIC / NO_EXTERNAL_EGRESS**
-기준: 스펙 061 구현 **`cf13a2a`**
-next_transition: **`NEXT_MANUAL_TASK`**
+기준: 스펙 061 종료 **`ce7d819`**
+next_transition: **`FOUNDER_SPEC_062_FF_1_FF_5_DECISION`**
+
+## ★ 현재 작업 - 스펙 062 V1 방향·사진 transform 재현 조사
+
+정본: `docs/rebuild/specs/062-space-v1-orientation-transform-replay-investigation.md`
+
+V1 scene은 `frameImgT`는 저장하지만 portrait/landscape mode와 capture logical canvas/zone/image basis,
+catalog revision을 저장하지 않는다. legacy x/y는 absolute logical px이고 current x/y는 maxPan 기준
+normalized 값이다. `rot=0`도 portrait와 unrotated landscape를 구분하지 못한다.
+
+따라서 현재 identity-looking transform 성공은 전체 frame exact replay를 증명하지 않는다. 스펙 061은
+실제 운영에 배포되지 않았고 실제 Firebase/network/운영 데이터 접근은 0이다.
+
+Founder 결정 대기:
+
+- **FF-1=A 권장:** orientation evidence 없는 V1 exact replay fail-closed
+- **FF-2=A 권장:** centered zoom은 별도 evidence가 있을 때만 조건부, heuristic pan/rot 변환 0
+- **FF-3=A 권장:** explicit orientation + normalized transform + geometry evidence의 future version
+- **FF-4=A 권장:** V1 자동 migration/same-token rewrite 0
+- **FF-5=A 권장:** 첫 correction은 pure classifier/plan gate/unit만, UI/CSS/issuer/network 0
+
+FF-1~FF-5 결정 전 제품 구현은 0이다. pure correction 이후 V2 발급 화면·partial replay 안내·orientation
+표시는 실제 UI/UX 구현 단계다. Codex는 그 단계에 착수하지 않고 Founder에게 알린 뒤 Claude용 스펙으로
+인계한다.
 
 ## ★ 스펙 061 종료 - production frame route 연결
 

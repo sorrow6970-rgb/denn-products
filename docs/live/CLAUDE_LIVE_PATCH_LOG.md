@@ -4443,3 +4443,17 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   시각 정확도, room/gallery/clock/non-neutral transform, 편집·인쇄·주문·발행·write/delete/deploy/cutover는
   **NOT TESTED / NOT IMPLEMENTED / 금지**다.
 - 상태 `WAITING_FOR_NEXT_MANUAL_TASK`. 다음 단위 자동 시작 0.
+
+## 2026-08-19 - 스펙 062 V1 방향·사진 transform 재현 조사 · Founder 결정 대기
+
+- 다음 수동 단위로 legacy space frame transform을 읽기 전용 조사했다. UI/UX 구현은 0이다.
+- V1 scene은 `frameImgT`는 저장하지만 portrait/landscape mode, capture canvas/zone/image basis와 catalog
+  revision/geometry fingerprint를 저장하지 않는다.
+- legacy x/y는 absolute logical Canvas px이고 current x/y는 current maxPan 기준 normalized 값이다.
+- `rot=0`은 portrait와 unrotated landscape를 구분하지 못하므로 현재 identity-looking transform 성공도
+  전체 frame exact replay를 증명하지 않는다.
+- 권장 **FF-1=A~FF-5=A**: evidence 없는 V1 exact replay fail-closed, heuristic pan/rot 변환 0,
+  future version 분리, automatic migration/same-token rewrite 0, 첫 correction은 pure classifier/plan gate/unit만.
+- 제품 코드/UI/CSS/test/Rules/config/package/lockfile 변경 0. 실제 Firebase/network/운영 데이터·배포 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`. pure correction 이후 V2 발급·표시는 UI/UX 단계이므로 Codex가
+  구현하지 않고 Founder에게 알린 뒤 Claude로 인계한다.

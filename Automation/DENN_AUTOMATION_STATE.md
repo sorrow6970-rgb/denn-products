@@ -5,21 +5,33 @@ updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-061-space-production-frame-route-connection   # DONE, CODEX_PASSED, LOCAL_SYNTHETIC, NO_EXTERNAL_EGRESS
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: cf13a2a   # spec 061 implementation
+active_unit: spec-062-space-v1-orientation-transform-replay-investigation
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: ce7d819   # spec 061 completion
 candidate_commit: none
 verified_commit: cf13a2a   # unit 1609, Chromium 148
-origin_relation: "HEAD equals origin after spec 061 completion push"
+origin_relation: "HEAD equals origin after spec 062 investigation push"
 working_tree: "protected Founder/user changes only; protected paths remain unstaged"
-fix_round: 1
+fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_SPEC_062_FF_1_FF_5_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Codex
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 062 V1 방향·transform 재현 조사 (2026-08-19)
+
+- V1 scene은 `frameImgT`만 저장하고 portrait/landscape, capture canvas/zone/image basis와 catalog revision을
+  저장하지 않는다.
+- legacy x/y는 absolute logical px, current x/y는 current maxPan 기준 normalized 값이다.
+- `rot=0`은 portrait와 unrotated landscape를 구분하지 못해 현재 identity 성공도 exact frame replay를
+  증명하지 않는다.
+- 권장 FF-1=A~FF-5=A: V1 exact replay fail-closed, heuristic 0, future version 분리, migration 0,
+  첫 correction은 pure classifier/plan gate/unit만.
+- 제품 코드/UI/CSS/test/Rules/config/package/lockfile와 실제 network/data/deploy 변경 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`. V2 발급·표시는 UI/UX 단계이므로 이후 Claude 인계 대상이다.
 
 ## 스펙 061 production frame route 연결 완료 (2026-08-19)
 
