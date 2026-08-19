@@ -5,21 +5,27 @@ updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-058-space-source-bound-readiness   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 926ff1b   # spec 058 investigation documents
-candidate_commit: f30bc8a   # validated product implementation
-verified_commit: f30bc8a   # unit 1591, Chromium 143
-origin_relation: "implementation commit pushed; completion documents follow"
-working_tree: "spec 058 completion documents plus protected Founder/user changes; protected paths remain unstaged"
+active_unit: spec-059-space-post-auth-view-composition-investigation
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: 60a1677   # spec 058 completion
+candidate_commit: none
+verified_commit: 60a1677   # unit 1591, Chromium 143
+origin_relation: "HEAD equals origin before spec 059 investigation documents"
+working_tree: "spec 059 investigation documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_SPEC_059_CC_1_CC_5_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 059 post-auth view composition 조사 (2026-08-19)
+
+- space 인증 뒤 catalog가 없고 readiness adapter에 넣을 source를 단일 결정하는 projector도 없다.
+- post-auth catalog, measured width, exact font gate, plan-ready Canvas가 목표 경계다.
+- 권장 CC-1=A~CC-5=A. 첫 구현은 pure frame asset request projector/unit만, network/React/UI 0.
 
 ## 스펙 058 source-bound readiness adapter 조사 (2026-08-19)
 

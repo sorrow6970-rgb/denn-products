@@ -4362,3 +4362,12 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
 - 구현 `f30bc8a`. 실제 Image/network/CORS/React/post-auth catalog/layout/font/Canvas/UI/deploy는
   NOT TESTED/NOT IMPLEMENTED. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
+
+## 2026-08-19 — 스펙 059 post-auth view composition 조사 · Founder 결정 대기
+
+- space route는 password 성공 뒤에도 catalog를 load하지 않아 frame plan 입력이 없음을 확인했다.
+- proof/art source를 exact references/placement/projection/trust로 한 번에 결정하는 pure projector가 필요하다.
+- 목표 경계는 post-auth catalog만, measured width, exact font gate, plan-ready Canvas뿐이다.
+- 권장 CC-1=A~CC-5=A. 신규 spec 059 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/
+  Firebase/Rules/config 0, 실제 network/Image/React/layout/font/Canvas/UI/deploy 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`; CC-1~CC-5 결정 전 구현 0.

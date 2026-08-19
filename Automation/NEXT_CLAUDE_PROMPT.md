@@ -1,10 +1,25 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-059-space-post-auth-view-composition-investigation`
 completed_unit: `spec-058-space-source-bound-readiness` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 058 조사 **`926ff1b`** · 구현 **`f30bc8a`** · 종료 문서 commit/push 예정
-next_transition: **`NEXT_MANUAL_TASK`**
+기준: 스펙 058 조사 **`926ff1b`** · 구현 **`f30bc8a`** · 종료 **`60a1677`**
+next_transition: **`FOUNDER_SPEC_059_CC_1_CC_5_DECISION`**
+
+## ★ 스펙 059 조사 · Founder 결정 대기
+
+정본: `docs/rebuild/specs/059-space-post-auth-view-composition-investigation.md`
+
+space route는 password 성공 뒤에도 public catalog를 load하지 않는다. readiness adapter에 전달할 proof/art
+source를 exact reference/placement/trust로 한 번에 결정하는 pure projector도 없다.
+
+- CC-1=A 권장: catalog는 post-auth child mount 뒤만
+- CC-2=A 권장: pure asset-request projector, whole success 뒤 load
+- CC-3=A 권장: measured content box + 기존 width helper
+- CC-4=A 권장: nonempty text exact font gate + plan-ready Canvas만
+- CC-5=A 권장: 첫 구현은 projector + unit만
+
+결정 전 구현하지 않는다. 실제 network/Image/React/layout/font/Canvas/UI/deploy는 금지다.
 
 ## ★ 스펙 058 종료
 
