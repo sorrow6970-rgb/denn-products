@@ -74,6 +74,9 @@ importers:
       '@denn/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@denn/spaces':
+        specifier: workspace:*
+        version: link:../../packages/spaces
       '@denn/ui':
         specifier: workspace:*
         version: link:../../packages/ui
