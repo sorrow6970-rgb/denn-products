@@ -1,12 +1,24 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-057-space-view-only-frame-plan-investigation`
-completed_unit: `spec-056-space-proof-image-owner` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 056 조사 **`aba0b4e`** · 구현 **`8d93f98`** · 종료 **`04e07b5`**
-next_transition: **`FOUNDER_SPEC_057_AA_1_AA_5_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-057-space-view-only-frame-plan` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 057 조사 **`6cb67df`** · 구현 **`ad0a647`** · 종료 문서 commit/push 예정
+next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 057 조사 · Founder 결정 대기
+## ★ 스펙 057 종료
+
+Founder AA-1=A~AA-6=A에 따라 pure view-only frame plan composer를 구현했다. exact proof URL trust와
+source-bound readiness, neutral transform, geometry/template art, clock/layout/text 조건을 순서대로 검증하고
+모든 실패를 부분 plan 없이 닫는다. 성공도 `replayComplete:false`다.
+
+targeted 18/18, 전체 check unit 1583/1583, Chromium 143/143 PASS. 고객 entry/hash 동일. 실제 owner
+adapter/Firebase/network/Image/font/Canvas/React/UI/clock/room/gallery/deploy는 NOT TESTED/NOT IMPLEMENTED다.
+
+다음 후보는 source-bound readiness를 실제 proof/template-art owner lifecycle에 연결하기 전 adapter/hook
+composition 경계 조사다. 자동 시작하지 않는다.
+
+## 이전 — 스펙 057 조사와 Founder 결정
 
 정본: `docs/rebuild/specs/057-space-view-only-frame-plan-investigation.md`
 
@@ -21,7 +33,7 @@ clock는 frame plan 밖이므로 첫 합성은 `clockOn === false`만 허용한�
 - AA-4=A 권장: clock false만, complete 주장 0
 - AA-5=A 권장: art none 또는 externally ready stretch만
 
-AA-1~AA-5 결정 전 구현하지 않는다. 실제 Firebase/network/Image/font/Canvas/React/UI/deploy는 금지다.
+AA-1~AA-6은 모두 A로 승인되어 local pure composer 구현이 완료됐다.
 
 ## ★ 스펙 056 종료
 

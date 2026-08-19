@@ -4327,3 +4327,16 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 신규 spec 057 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/Firebase/Rules/config 0,
   실제 network/Image/font/Canvas/React/UI/deploy 0.
 - 상태 `FOUNDER_DECISION_REQUIRED`; AA-1~AA-5 결정 전 구현 0.
+
+## 2026-08-19 — 스펙 057 view-only frame plan composition · CODEX_PASSED
+
+- Founder AA-1=A~AA-6=A 승인. AA-6은 stale owner binding 방지를 위한 exact source-bound resolver다.
+- pure composer가 scene/catalog refs, proof URL trust, neutral transform, source readiness, geometry,
+  template-art trust/readiness, clock/layout/text를 순서대로 검증한다.
+- 자체 검수에서 일반 HTTPS만으로 proof resolver에 도달하던 누락을 발견해 스펙 055 proof URL trust
+  재검증과 untrusted resolver 호출 0 테스트를 추가했다.
+- targeted 18/18, 전체 check PASS(unit 1583/1583), Chromium 143/143, `git diff --check` PASS.
+- 고객 entry `index-Det4NToI.js`, 304,634 bytes, SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
+- 구현 `ad0a647`. 실제 owner adapter/network/Image/font/Canvas/React/UI/clock/room/gallery/deploy는
+  NOT TESTED/NOT IMPLEMENTED. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.

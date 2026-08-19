@@ -1,6 +1,6 @@
 # 스펙 057 후보 — space view-only frame plan composition 경계 조사
 
-상태: **CLAUDE_WORKING / IMPLEMENTATION_APPROVED / LOCAL_ONLY / NO_NETWORK**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
 
 Founder 승인(2026-08-19): **AA-1=A, AA-2=A, AA-3=A, AA-4=A, AA-5=A, AA-6=A**.
 
@@ -160,8 +160,7 @@ hook, owner 변경, Canvas executor, E2E, package/lockfile, Firebase/Rules/confi
 ## 9. 결론
 
 기존 local primitives만으로 frame plan 합성의 순서와 fail-closed 계약은 구현 가능하다. 하지만 clock가 켜진
-scene과 room/gallery를 완전 재현할 수 없고 실제 image/font/Canvas도 검증되지 않았다. AA-1~AA-5 결정 전
-제품 구현을 시작하지 않는다.
+scene과 room/gallery를 완전 재현할 수 없고 실제 image/font/Canvas도 검증되지 않았다.
 
 ## 10. AA-6 — source-bound readiness 보완
 
@@ -174,3 +173,17 @@ scene과 room/gallery를 완전 재현할 수 없고 실제 image/font/Canvas도
 - stale/mismatch/not-ready/throw는 whole-plan fail-closed다.
 - source는 결과·오류·plan에 포함하지 않는다.
 - 첫 단위는 resolver fake만 사용하고 기존 owner/App/UI/network는 수정하지 않는다.
+
+## 11. DONE (Codex)
+
+- 구현 커밋: `ad0a647`
+- `composeSpaceFramePlan`은 scene/catalog reference, proof URL trust, neutral transform, source-bound proof
+  readiness, geometry, template-art trust/readiness, clock/layout/text 조건을 순서대로 검증한다.
+- stale/mismatch/untrusted/not-ready는 부분 plan 없이 safe code로 닫는다. 성공도
+  `framePlanReady:true`, `replayComplete:false`다.
+- 자체 검수에서 일반 HTTPS만 통과시키던 누락을 찾아 스펙 055 proof URL trust 재검증을 추가했다.
+- targeted 18/18, 전체 check unit 1583/1583, Chromium E2E 143/143 PASS.
+- 고객 entry `index-Det4NToI.js` 304,634 bytes, SHA-256
+  `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`로 동일하다.
+- 실제 owner adapter, Firebase/network/Image/font/Canvas/React/UI/clock/room/gallery/deploy는
+  **NOT TESTED / NOT IMPLEMENTED**다.
