@@ -4176,3 +4176,13 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   diff-check·포트/temp 잔류 0.
 - 구현·계약 커밋 `3111837`. 실제 Firestore/token/link/network/scene UI/deploy 변경 0.
 - 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
+
+## 2026-08-19 — 스펙 050 space local read pipeline · CODEX_PASSED
+
+- document 검증 → password 검증 → decrypt → scene 검증 순서의 local-only 순수 open port를 구현했다.
+- 단계별 실패 후 후속 호출 0, safe error, 실제 Web Crypto local roundtrip을 검증했다.
+- targeted 54/54, `pnpm check` PASS(unit 1432/1432), Chromium 141/141,
+  고객 SHA-256 `FC7660E5730262888EA896A3BA5A9494C8ECB61E4D2E0A972849E72D0ABF0685`,
+  diff-check·포트/temp/debug 잔류 0.
+- 구현·계약 커밋 `cee79c8`. 실제 Firebase/Firestore/token/link/network/route/UI/deploy 변경 0.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.

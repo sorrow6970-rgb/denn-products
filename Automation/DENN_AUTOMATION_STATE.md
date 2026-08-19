@@ -4,12 +4,12 @@
 updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-049-space-document-scene-read   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
+completed_unit: spec-050-space-local-read-pipeline   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
 active_unit: none
 state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 3111837   # spec 049 document/scene reader
-candidate_commit: 3111837   # CODEX_PASSED
-verified_commit: 3111837   # targeted 44, unit 1422, Chromium 141
+baseline_commit: cee79c8   # spec 050 local read pipeline
+candidate_commit: cee79c8   # CODEX_PASSED
+verified_commit: cee79c8   # targeted 54, unit 1432, Chromium 141
 origin_relation: "HEAD=origin after completion documents fast-forward push; ahead/behind 0/0"
 working_tree: "completion state documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
@@ -20,6 +20,14 @@ commit_owner: Claude Code
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 050 space local read pipeline 완료 (2026-08-19)
+
+- document → password → decrypt → scene 검증 순서의 local-only 순수 open port를 구현했다.
+- 단계별 실패 후 후속 호출 0, safe error, 실제 Web Crypto local roundtrip을 검증했다.
+- targeted 54/54, `pnpm check` unit 1432/1432, Chromium 141/141 PASS, 고객 hash 동일,
+  포트/temp/debug 잔류 0. 구현 커밋 `cee79c8`.
+- 실제 Firebase/Firestore/token/link/network/route/UI는 NOT TESTED. 다음 자동 시작 0.
 
 ## 스펙 049 space document·scene read 완료 (2026-08-19)
 

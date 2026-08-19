@@ -2,11 +2,19 @@
 
 상태: `WAITING_FOR_NEXT_MANUAL_TASK`
 active_unit: `none`
-completed_unit: `spec-049-space-document-scene-read` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 049 구현 커밋 **`3111837`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
+completed_unit: `spec-050-space-local-read-pipeline` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+기준: 스펙 050 구현 커밋 **`cee79c8`** · 종료 문서 커밋 및 fast-forward push 후 HEAD=origin, ahead/behind **0/0**
 next_transition: **`NEXT_MANUAL_TASK`**
 
-## ★ 스펙 049 종료 · 다음 수동 작업 대기
+## ★ 스펙 050 종료 · 다음 수동 작업 대기
+
+document 검증 → password 검증 → decrypt → scene 검증 순서의 local-only 순수 open port를 구현했다.
+targeted 54/54, unit 1432/1432, Chromium 141/141, 고객 hash 동일이다.
+
+실제 Firebase/Firestore/token/link/network/route/UI는 NOT TESTED다. 다음 후보는 Firestore read adapter
+계약 조사이며 실제 network나 운영 데이터 접근 전 별도 승인이 필요하다.
+
+## 이전 — 스펙 049 종료
 
 `@denn/spaces`에 `space-v1` document와 `space-scene-v1` plaintext의 순수 reader를 구현했다.
 targeted 44/44, unit 1422/1422, Chromium 141/141, 고객 hash 동일이다.

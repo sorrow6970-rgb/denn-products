@@ -9,7 +9,16 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 049 space document·scene read가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 050 space local read pipeline이 완료됐다.**
+
+document 검증 → password 검증 → decrypt → scene 검증 순서의 local-only 순수 open port를 구현했다.
+단계별 실패 후 후속 호출 0과 safe error를 검증했다. targeted 54/54, `pnpm check` unit 1432/1432,
+Chromium 141/141, 고객 hash 동일, 포트/temp/debug 잔류 0. 구현 커밋 `cee79c8`.
+
+실제 Firebase/Firestore/token/link/network/route/UI는 NOT TESTED다. 다음 후보는 Firestore read adapter
+계약 조사이며 다음 스펙은 자동 시작하지 않는다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 049 space document·scene read가 완료됐다.**
 
 `@denn/spaces`에 `space-v1` document와 `space-scene-v1` plaintext의 순수 reader를 구현했다.
 known field만 detached snapshot으로 투영하며 malformed/hostile 입력은 안전 실패한다. targeted 44/44,
