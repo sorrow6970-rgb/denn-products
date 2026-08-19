@@ -7,8 +7,10 @@ import { publicCatalogReader } from "./catalog/reader";
 import type { PublicCatalogUiState } from "./catalog/types";
 import { usePublicCatalog } from "./catalog/usePublicCatalog";
 import { createSpaceProductionController } from "./space/composition";
+import type { SpaceLinkOpenController } from "./space/controller";
 import { readSpaceLink } from "./space/link";
 import { SpacePasswordGate } from "./space/SpacePasswordGate";
+import { SpacePostAuthFrameView } from "./space/SpacePostAuthFrameView";
 
 // Public-catalog connection (spec 015) + mobile-first browse UI (spec 017). Loading / error /
 // manual-retry are unchanged; when ready, the success document is turned into a spec 016 browse
@@ -20,16 +22,24 @@ export function App(): React.JSX.Element {
   return <MockupRoot search={search} env={import.meta.env} />;
 }
 
+export type SpaceControllerFactory = (
+  search: unknown,
+  env: ImportMetaEnv | Record<string, unknown> | undefined,
+) => SpaceLinkOpenController;
+
 export function MockupRoot({
   search,
   env,
+  createSpaceController = createSpaceProductionController,
 }: {
   readonly search: string;
   readonly env: ImportMetaEnv | Record<string, unknown> | undefined;
+  /** Narrow synthetic-test seam. Production App always uses the default factory above. */
+  readonly createSpaceController?: SpaceControllerFactory;
 }): React.JSX.Element {
   const mode = readSpaceLink(search);
   if (mode.kind !== "inactive") {
-    return <SpaceRoute search={search} env={env} />;
+    return <SpaceRoute search={search} env={env} createController={createSpaceController} />;
   }
   return <CatalogApp />;
 }
@@ -37,12 +47,21 @@ export function MockupRoot({
 function SpaceRoute({
   search,
   env,
+  createController,
 }: {
   readonly search: string;
   readonly env: ImportMetaEnv | Record<string, unknown> | undefined;
+  readonly createController: SpaceControllerFactory;
 }): React.JSX.Element {
-  const controller = useMemo(() => createSpaceProductionController(search, env), [env, search]);
-  return <SpacePasswordGate controller={controller} />;
+  const controller = useMemo(() => createController(search, env), [createController, env, search]);
+  return (
+    <SpacePasswordGate
+      controller={controller}
+      renderReady={(scene) => (
+        <SpacePostAuthFrameView scene={scene} catalogReader={publicCatalogReader} />
+      )}
+    />
+  );
 }
 
 function CatalogApp(): React.JSX.Element {

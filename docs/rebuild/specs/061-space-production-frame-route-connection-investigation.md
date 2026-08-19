@@ -1,6 +1,6 @@
 # 스펙 061 후보 - production space frame route 연결 조사
 
-상태: **FOUNDER_DECISION_REQUIRED / DOCUMENT_ONLY / NO_NETWORK**
+상태: **DONE / CODEX_PASSED / LOCAL_SYNTHETIC / NO_EXTERNAL_EGRESS / PRODUCTION_APP_CONNECTED**
 
 ## 1. 목적
 
@@ -173,3 +173,50 @@ App 계층에서 reader/owner/font/plan을 모두 교체하면 fixture는 쉬워
 현재 local 계약 안에서 production route의 ready seam 연결과 외부 egress 없는 합성 browser 검증은 가능하다.
 그러나 연결은 password 성공 뒤 public catalog와 image read를 실제로 활성화하는 제품 결정이다. 따라서
 EE-1~EE-5 결정 전에는 구현하지 않는다.
+
+## 9. Founder 승인과 구현 결과
+
+Founder는 **EE-1=A, EE-2=A, EE-3=A, EE-4=A, EE-5=A**를 승인했다. 승인 범위 안에서 다음을
+구현했다.
+
+- production `MockupRoot -> SpaceRoute -> SpacePasswordGate`의 ready scene에
+  `SpacePostAuthFrameView`를 연결하고 production singleton `publicCatalogReader`를 전달했다.
+- production default는 기존 `createSpaceProductionController`로 유지하고, 합성 검증용 optional
+  controller factory 하나만 root 경계에 추가했다. 일반 no-space route는 factory를 만들지 않는다.
+- App 단위 테스트에서 ready child가 exact validated scene과 production catalog reader만 받고
+  ownerLabel, createdAt, token, password, proof URL을 출력하지 않음을 고정했다.
+- non-production fixture는 production root와 기본 catalog reader/browser `Image` owner를 사용하고
+  controller factory만 합성으로 교체한다.
+- Playwright는 모든 HTTPS 요청을 정규식 catch-all로 가로채고 고정 catalog/proof URL만 합성 응답하며,
+  그 밖의 HTTPS 요청은 차단한다. 따라서 이 검증에서 실제 외부 egress는 0이다.
+- pre-auth 요청 0, ready 뒤 catalog/proof exact 요청, Canvas 1, invalid catalog의 proof 요청·Canvas 0,
+  route unmount 뒤 늦은 proof 완료가 Canvas를 복구하지 않음, 비밀 DOM/console 비노출과 serious/critical
+  accessibility violation 0을 검증했다.
+
+### 9.1 자체 검수 보완
+
+첫 catch-all 구현에서 Playwright 문자열 glob `https://**`가 의도한 모든 HTTPS 요청을 가로채지 못해 신규
+3개 E2E가 실패했고 전체 결과가 145/148이었다. 제품 코드를 바꾸지 않고 catch-all을 `/^https:\/\//`
+정규식으로 교정했다. 교정 뒤 신규 3개와 전체 Chromium E2E가 모두 통과했다.
+
+### 9.2 최종 게이트
+
+- targeted App unit: **3/3 PASS**
+- mockup typecheck 및 targeted format/lint: **PASS**
+- `node scripts/check.mjs`: **PASS**
+  - format/lint: **230 files**
+  - unit: **1609/1609**, **69 files**
+  - mockup/admin production build: **PASS**
+- Chromium E2E: **148/148 PASS**
+- customer entry: `apps/mockup/dist/assets/index-CVr4hkHb.js`, **322,548 bytes**,
+  SHA-256 **`E70626F22B181C3BC5DBCE4F5B6B644E3AC026B814ECFAE3AC8D1738D9384334`**
+- `git diff --check`: **PASS**
+- listen ports 4183/4184/4185/8080/9099/9199 및 `denn-e2e-*` temp 잔류: **0**
+
+### 9.3 완료 의미와 계속 닫힌 경계
+
+이 완료는 production app route가 local synthetic scene에서 기존 post-auth frame view를 선택하고, 고정
+catalog/proof 요청을 브라우저 interception으로 검증했다는 뜻이다. 실제 Firebase project/config/token/
+document, actual catalog/proof/art network, 운영 bucket/CORS/object, 실제 다양한 모바일 viewport·폰트의 시각
+정확도는 **NOT TESTED**다. clock/non-neutral transform/room/gallery의 완전한 scene replay, 편집·인쇄·주문·
+발행·write/delete, Rules/CORS/Hosting 변경과 deploy/cutover는 구현·승인하지 않았다.
