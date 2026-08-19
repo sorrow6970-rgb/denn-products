@@ -25,3 +25,14 @@ export {
   type SpaceCryptoResult,
   type SpaceEncryptedEnvelope,
 } from "./crypto";
+export {
+  readSpaceDocument,
+  readSpaceScene,
+  SPACE_DOCUMENT_VERSION,
+  type SpaceDocumentV1,
+  type SpaceImageTransform,
+  type SpacePoint,
+  type SpaceReadErrorCode,
+  type SpaceReadResult,
+  type SpaceSceneV1,
+} from "./read";
