@@ -1,12 +1,27 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-055-space-proof-image-view-plan-investigation`
 completed_unit: `spec-054-space-scene-reference-validator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 054 조사 **`789e5f4`** · 구현 **`62aa9d8`** · 종료 문서 commit/push 예정
-next_transition: **`NEXT_MANUAL_TASK`**
+기준: 스펙 054 종료 **`8c70a46`** · 스펙 055 조사 문서 commit/push 예정
+next_transition: **`FOUNDER_SPEC_055_T1_T5_DECISION`**
 
-## ★ 스펙 054 종료
+## ★ 스펙 055 조사 완료 · Founder 결정 대기
+
+정본: `docs/rebuild/specs/055-space-proof-image-view-plan-investigation.md`
+
+기존 image trust는 `proofs/` 전용이 아니며 plan은 URL이 아니라 loaded drawable의 synthetic ref와
+intrinsic size를 요구한다. neutral 외 legacy transform 변환은 UNCONFIRMED다.
+
+- T-1=A 권장: exact bucket + once-decoded `proofs/` prefix
+- T-2=A 권장: exact-one `alt=media`, optional single token, unknown/duplicate query·fragment 거부
+- T-3=A 권장: exact neutral transform만 identity 지원
+- T-4=A 권장: 다음은 V2-A pure resolver/eligibility + unit만
+- T-5=A 권장: future renderer는 editable PreviewComposer와 분리
+
+결정 전 구현하지 않는다. 실제 Firebase/network/image/UI/renderer/Rules/deploy는 금지다.
+
+## 이전 — 스펙 054 종료
 
 Founder S-1=A/S-2=A/S-3=A/S-4=A/S-5=A에 따라 exact catalog reference와 단일 solid color,
 HTTPS photo 후보만 검증하는 pure validator를 구현했다. transform은 validated-but-unapplied, room/gallery는

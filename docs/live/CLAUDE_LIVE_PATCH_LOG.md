@@ -4270,3 +4270,14 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `A336B17BDB3F6166AF218248793CA579A5374A3D32AA844076C61AADFF78EDAB`.
 - 구현 커밋 `62aa9d8`. 실제 Firebase/network/image fetch/proof prefix trust/UI/renderer/room/deploy는
   NOT TESTED/NOT IMPLEMENTED. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 자동 시작 0.
+
+## 2026-08-19 — 스펙 055 proof image·view-only plan 경계 조사 · Founder 결정 대기
+
+- 기존 Firebase image trust는 known bucket까지만 검사하고 decoded `proofs/` prefix/query는 보지 않는다.
+- current plan은 URL이 아닌 CORS-first owner의 synthetic imageRef/intrinsic size를 요구한다.
+- neutral legacy transform만 current identity와 대응하며 nonzero 변환은 UNCONFIRMED다.
+- 권장 T-1=A exact proof prefix, T-2=A constrained media query, T-3=A neutral-only,
+  T-4=A V2-A pure unit만, T-5=A editable composer와 분리된 future view-only composition.
+- 신규 spec 055 + handoff와 상태 문서만 변경. 제품 코드/test/package/lockfile/Rules/config 0,
+  실제 Firebase/network/image/UI/renderer/deploy 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`; T-1~T-5 결정 전 구현 0.

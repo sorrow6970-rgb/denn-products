@@ -9,7 +9,19 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 054 V1 scene reference validator가 완료됐다.**
+상태: **`FOUNDER_DECISION_REQUIRED` — 스펙 055 proof image·view-only plan 경계 조사가 완료됐다.**
+
+기존 image trust는 known bucket까지만 검사해 `proofs/` object prefix/query를 증명하지 않는다. current
+plan은 URL이 아니라 CORS-first load 뒤 synthetic imageRef/intrinsic size를 요구하며, neutral 외 legacy
+transform은 current normalized transform으로 변환할 근거가 없다.
+
+권장 결정은 T-1=A(exact proof prefix), T-2=A(constrained media query), T-3=A(neutral-only),
+T-4=A(V2-A pure unit만), T-5=A(별도 view-only composition)다. 정본은
+`docs/rebuild/specs/055-space-proof-image-view-plan-investigation.md`다.
+
+결정 전 구현 0. 실제 Firebase/network/image/UI/renderer/Rules/deploy는 금지다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 054 V1 scene reference validator가 완료됐다.**
 
 Founder S-1=A/S-2=A/S-3=A/S-4=A/S-5=A에 따라 `CatalogDocumentV1 + SpaceSceneV1`의 frame 참조를
 local-only로 재검증한다. exact template/visible size/compatibility, exact ID/fill 단일 solid color,

@@ -5,16 +5,16 @@ updated_at: 2026-08-19
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-054-space-scene-reference-validator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
+active_unit: spec-055-space-proof-image-view-plan-investigation
+state: FOUNDER_DECISION_REQUIRED
 baseline_commit: 789e5f4   # spec 054 investigation documents
 candidate_commit: 62aa9d8   # validated product implementation
 verified_commit: 62aa9d8   # unit 1514, Chromium 143
-origin_relation: "implementation commit pending push; completion documents follow"
-working_tree: "spec 054 completion documents plus protected Founder/user changes; protected paths remain unstaged"
+origin_relation: "HEAD=origin at investigation start; ahead/behind 0/0"
+working_tree: "spec 055 investigation documents plus protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_TASK
+next_transition: FOUNDER_SPEC_055_T1_T5_DECISION
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude Code
 push_policy: fast-forward-only
@@ -38,6 +38,14 @@ deploy: forbidden
 - targeted 19/19, 전체 check unit 1514/1514, Chromium 143/143 PASS.
 - 고객 entry/hash 동일. 구현 `62aa9d8`.
 - 실제 Firebase/network/image/proof trust/UI/renderer/room/deploy는 NOT TESTED/금지. 다음 자동 시작 0.
+
+## 스펙 055 proof image·view-only plan 경계 조사 (2026-08-19)
+
+- 기존 trust는 proof prefix/query 전용이 아니고 plan은 URL이 아닌 loaded drawable ref/intrinsic size를
+  요구한다. neutral 외 legacy transform 변환은 계속 UNCONFIRMED다.
+- 권장 T-1=A exact proof prefix, T-2=A constrained media query, T-3=A neutral-only,
+  T-4=A V2-A pure unit만, T-5=A 별도 view-only composition.
+- 조사 문서만 변경. 실제 network/image/UI/renderer/Rules/config 0.
 
 ## 스펙 053 production space composition 완료 (2026-08-19)
 
