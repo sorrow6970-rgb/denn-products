@@ -1,10 +1,42 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `READY_FOR_CODEX`
+active_unit: `spec-063-space-v1-safe-viewer-ui` — **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK**
 completed_unit: `spec-062-space-v1-orientation-transform-replay-block` — **DONE / CODEX_PASSED / LOCAL_UNIT_ONLY / UI_0**
-기준: 스펙 062 구현 **`a09278a`**
-next_transition: **`CLAUDE_UI_UX_HANDOFF_REQUIRED`**
+기준: 스펙 062 종료 **`e9dbb9e`**
+next_transition: **`FOUNDER_DECISION_REQUIRED`** (스펙 063 `QUESTIONS` Q1)
+
+## ★ 스펙 063 — V1 안전 차단 viewer UI/UX (구현 완료, 검수 대기)
+
+정본: `docs/rebuild/specs/063-space-v1-safe-viewer-ui.md`
+handoff: `docs/handoff/2026-08-20-spec-063-space-v1-safe-viewer-ui-handoff.md`
+
+`SpacePostAuthFrameView`가 catalog load·proof owner·Image decode·font load·Canvas plan보다 **먼저**
+V1 replay 자격을 판정한다. blocked면 그 뒤 단계가 하나도 시작되지 않는다 — 인증 전후 모두 catalog/
+proof/art 요청 0, Canvas 0, retry 0, 자동 fallback/merge/migration 0.
+
+구조는 wrapper/child 분리다. wrapper는 `useMemo` 하나만 무조건 호출하고 분기는 자식 컴포넌트 선택이므로
+조건부 hook 호출이 없다. `SpaceExactFrameComposition`은 module-private라 gate를 우회하는 seam이 없다.
+
+안전 안내는 Modern Studio 토큰만 쓴다. 오류코드·URL·token·비밀번호·ID·SDK 문구 0, Canvas·이미지
+placeholder 0, 재시도 버튼 0, 카카오/외부 링크 0. `role="alert"` + `aria-labelledby`, 320px 가로 overflow 0.
+
+검증: targeted unit 15/15, `node scripts/check.mjs` PASS(unit 1627/1627), 전체 Chromium E2E
+**149 passed / 2 failed**, console error/warning 0, axe serious/critical 0, 실제 외부 egress 0,
+포트 잔류 0. 고객 entry `index-6js4DafP.js` 322,018 bytes, SHA-256
+`A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
+
+### ★ STOP — Founder 결정 필요 (Q1)
+
+E2E 실패 2건은 `tests/e2e/space-frame-view.spec.ts`이며 **기준 커밋 `e9dbb9e`에서 이미 실패 상태**다
+(변경 전 baseline 실측 3 failed / 145 passed). 스펙 062가 `composeSpaceFramePlan()`을 fail-closed로
+바꾸면서 `preview-canvas`가 사라졌기 때문이고, 스펙 062는 FF-5=A 범위 밖이라 E2E를 실행하지도
+수정하지도 않았다.
+
+이 파일과 `apps/mockup/src/e2e/space-frame-fixture.tsx`는 스펙 063 허용 파일 목록 밖이라 손대지 않았다.
+선택지 A/B/C는 스펙 `### QUESTIONS`에 있다. 결정 전까지 두 파일은 변경하지 않는다.
+
+## 참고 — 이전 단위
 
 ## ★ 스펙 062 종료 - V1 방향·사진 transform 재현 차단
 

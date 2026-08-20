@@ -4477,3 +4477,39 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   NOT TESTED/NOT IMPLEMENTED 또는 금지다.
 - 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 transition은 `CLAUDE_UI_UX_HANDOFF_REQUIRED`다.
   Codex는 UI/UX 구현을 시작하지 않는다.
+
+## 2026-08-20 - 스펙 063 V1 안전 차단 viewer UI/UX · READY_FOR_CODEX
+
+- Founder **FF-5=A**("V1 안전 차단 이후 UI/UX는 Claude 담당")에 따라 Claude가 설계·구현했다.
+  정본 `docs/rebuild/specs/063-space-v1-safe-viewer-ui.md`, handoff
+  `docs/handoff/2026-08-20-spec-063-space-v1-safe-viewer-ui-handoff.md`.
+- `SpacePostAuthFrameView`가 catalog load·proof owner·Image decode·font load·Canvas plan보다 **먼저**
+  V1 replay 자격을 판정한다. blocked면 그 뒤 단계가 하나도 시작되지 않는다.
+- 인증 전 viewer UI·요청 0 유지. 인증 후 V1에서도 catalog/proof/art 요청 0, Canvas 0, retry 0,
+  자동 fallback/merge/migration 0, 이전 성공 plan 재사용 0.
+- 구조는 wrapper/child 분리다. wrapper는 `useMemo` 하나만 무조건 호출하므로 조건부 hook 호출이 없고,
+  `SpaceExactFrameComposition`은 module-private라 gate를 우회하는 seam이 없다. hostile `imgT`
+  accessor는 예외가 아니라 blocked로 떨어진다.
+- 안전 안내(한국어)는 Modern Studio 토큰만 쓴다. 오류코드·URL·token·비밀번호·ID·SDK 문구 0,
+  Canvas·이미지 placeholder 0, 재시도 버튼 0, 카카오/외부 링크 0.
+  `section[aria-labelledby]` + `h2` + 본문 `role="alert"`, 자동 포커스 이동 없음, 320px 가로 overflow 0.
+- 변경 파일은 허용 범위뿐이다: `SpacePostAuthFrameView.tsx`, 신규
+  `space-post-auth-frame-view.css`, 신규 `SpacePostAuthFrameView.test.tsx`,
+  `tests/e2e/space-production-route.spec.ts`, 신규 `docs/rebuild/results/spec-063/*.png`, 문서 5종.
+- 검증: targeted unit **15/15**, `node scripts/check.mjs` PASS(format/lint/typecheck/unit
+  **1627/1627**/build), 전체 Chromium E2E **149 passed / 2 failed**, console error/warning 0,
+  `pageerror` 0, axe serious/critical 0, 실제 외부 egress 0, `git diff --check` PASS,
+  package/lockfile/Rules/firebase config diff 0, 신규 의존성 0, 포트 잔류 0.
+- 고객 entry `index-6js4DafP.js`, **322,018 bytes**, SHA-256
+  **`A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`**.
+- **STOP - Founder 결정 필요.** 실패 2건은 `tests/e2e/space-frame-view.spec.ts`이며 기준 커밋
+  `e9dbb9e`에서 이미 실패 상태다(변경 전 baseline 실측 **3 failed / 145 passed**). 스펙 062가
+  `composeSpaceFramePlan()`을 fail-closed로 바꾼 결과이며, 해당 파일과
+  `apps/mockup/src/e2e/space-frame-fixture.tsx`는 스펙 063 허용 목록 밖이라 손대지 않았다.
+  선택지는 스펙 `### QUESTIONS` Q1.
+- 전체 E2E 실행이 보호 대상 `docs/rebuild/results/spec-018/*.png` 2개를 무조건 다시 쓴다.
+  stage/commit/restore하지 않고 working tree에 그대로 뒀다.
+- V2 schema/fingerprint/issuer, admin orientation UI, V1 migration/재발급/same-token rewrite, 실제
+  Firebase/network/운영 데이터/pixel parity/write/publish/deploy/cutover는 NOT TESTED/NOT IMPLEMENTED
+  또는 금지다.
+- 상태 `READY_FOR_CODEX`. Codex 독립 검수 전 최종 DONE 확정 안 함. 다음 V2/admin UI 스펙 자동 시작 0.

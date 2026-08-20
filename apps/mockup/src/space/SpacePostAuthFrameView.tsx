@@ -7,7 +7,9 @@ import { PreviewCanvasSurface } from "../canvas/PreviewCanvasSurface";
 import { usePublicCatalog } from "../catalog/usePublicCatalog";
 import { resolveSpaceFrameAssetRequests } from "./frame-asset-request";
 import { composeSpaceFramePlan } from "./frame-plan";
+import { classifySpaceV1FrameReplay } from "./proof-image";
 import type { SourceBoundReadinessSnapshot } from "./source-bound-readiness";
+import "./space-post-auth-frame-view.css";
 import { useContentLogicalWidth } from "./use-content-logical-width";
 import {
   resolveSpaceFrameFontRequest,
@@ -66,10 +68,86 @@ function resolveOwnerState(
 }
 
 /**
- * Local-only authenticated frame composition. The component has no production reader singleton of
- * its own: callers must inject a catalog reader and the production App does not mount it in spec 060.
+ * Spec 063 preflight. `blocked` means "this scene has not proven that it can be replayed exactly",
+ * which under spec 062 / FF-1=A is every `space-scene-v1` payload: V1 stores no capture orientation
+ * and no geometry basis, so no reading of it can establish the composition that was issued. The
+ * proven branch exists for the future explicit-orientation scene version and is unreachable today —
+ * that is the point of the gate, not an oversight.
  */
-export function SpacePostAuthFrameView({
+type SpaceV1ReplayPreflight =
+  | { readonly status: "blocked" }
+  | { readonly status: "exact-replay-proven" };
+
+function preflightSpaceV1Replay(scene: SpaceSceneV1): SpaceV1ReplayPreflight {
+  let transform: unknown;
+  try {
+    transform = scene.design.imgT;
+  } catch {
+    // A hostile or throwing accessor is a blocked scene, never an exception that reaches React.
+    return { status: "blocked" };
+  }
+  const eligibility = classifySpaceV1FrameReplay(transform);
+  return eligibility.ok ? { status: "exact-replay-proven" } : { status: "blocked" };
+}
+
+/**
+ * Local-only authenticated frame view. The component has no production reader singleton of its own:
+ * callers inject a catalog reader.
+ *
+ * The replay preflight runs BEFORE everything else — before the catalog read, before any proof or
+ * template-art source is derived, before the readiness owner, the measured width, the font gate and
+ * the Canvas plan. A blocked scene therefore does zero network, zero image decode and zero Canvas
+ * work: the composition child is never mounted, so none of its hooks or effects exist at all. There
+ * is no injectable seam that skips this gate (the composition is module-private on purpose) and no
+ * best-effort, cached-plan, auto-retry, auto-fallback or auto-migration path out of it.
+ */
+export function SpacePostAuthFrameView(props: SpacePostAuthFrameViewProps): React.JSX.Element {
+  const { scene } = props;
+  // Unconditional hook: the branch below picks a child component, it never skips a hook call.
+  const preflight = useMemo(() => preflightSpaceV1Replay(scene), [scene]);
+  if (preflight.status !== "exact-replay-proven") {
+    return <SpaceReplayBlockedNotice />;
+  }
+  return <SpaceExactFrameComposition {...props} />;
+}
+
+/**
+ * The safe stop. It says what the link is, what cannot be proven, and what to do — with no error
+ * code, URL, token, password, catalog id or SDK text, and with no Canvas or image placeholder that
+ * could be mistaken for the saved composition. There is deliberately no retry control: retrying
+ * cannot produce evidence that the payload never carried.
+ */
+function SpaceReplayBlockedNotice(): React.JSX.Element {
+  return (
+    <section
+      className="denn-space-blocked"
+      aria-labelledby="space-frame-blocked-title"
+      data-testid="space-frame-view"
+    >
+      <Badge>이전 버전 시안</Badge>
+      <h2 className="denn-space-blocked__title" id="space-frame-blocked-title">
+        이 시안은 지금 화면에 표시할 수 없습니다
+      </h2>
+      {/* role="alert": the state appears in response to the password being accepted, so it is
+          announced at the moment the reader is waiting for the result. */}
+      <div className="denn-space-blocked__body" role="alert" data-testid="space-frame-status">
+        <p>이 링크는 이전 버전에서 발급된 시안입니다.</p>
+        <p>현재 버전에서는 발급 당시의 액자 방향과 사진 구도를 정확히 증명할 수 없습니다.</p>
+        <p>구도를 임의로 바꿔 보여드리지 않기 위해 시안 표시를 안전하게 중단했습니다.</p>
+      </div>
+      <div className="denn-space-blocked__next" data-testid="space-frame-next">
+        <p>담당자에게 새 시안 링크를 요청해 주세요.</p>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Module-private on purpose: the only way to reach it is through the preflight above, so no test
+ * fixture and no future caller can mount the composition for a scene that has not proven exact
+ * replay.
+ */
+function SpaceExactFrameComposition({
   scene,
   catalogReader,
   createReadiness,

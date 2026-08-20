@@ -9,7 +9,51 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 062 V1 방향·사진 transform 재현 차단이 완료됐다.**
+상태: **`READY_FOR_CODEX` - 스펙 063 V1 안전 차단 viewer UI/UX 구현이 완료됐다.**
+
+정본 `docs/rebuild/specs/063-space-v1-safe-viewer-ui.md`, handoff
+`docs/handoff/2026-08-20-spec-063-space-v1-safe-viewer-ui-handoff.md`.
+
+스펙 062 이후 기존 `?space=` 링크는 비밀번호 통과 뒤 `시안을 표시할 수 없습니다.` 한 줄만 보여줬고,
+그것도 catalog·proof·font·Canvas plan을 모두 시도한 뒤였다. Founder FF-5=A에 따라 Claude가 UI/UX를
+담당해 두 가지를 고쳤다.
+
+`SpacePostAuthFrameView`가 catalog load·proof owner·Image decode·font load·Canvas plan보다 **먼저**
+V1 replay 자격을 판정한다. blocked면 그 뒤 단계가 하나도 시작되지 않는다. 인증 전에는 기존처럼
+viewer UI와 요청이 0이고, 인증 후 V1에서도 catalog/proof/art 요청 0·Canvas 0·retry 0·자동
+fallback/merge/migration 0이다.
+
+구조는 wrapper/child 분리다. wrapper는 `useMemo` 하나만 무조건 호출하고 분기는 자식 컴포넌트 선택이라
+조건부 hook 호출이 없다. `SpaceExactFrameComposition`은 module-private라 gate를 우회하는 seam이 없고,
+proven 경로의 owner/readiness/font lifecycle 계약은 그대로다. hostile `imgT` accessor는 예외가 아니라
+blocked로 떨어진다.
+
+안전 안내는 Modern Studio 토큰만 쓴다. 오류코드·URL·token·비밀번호·ID·SDK 문구 0, Canvas·이미지
+placeholder 0, 재시도 버튼 0, 카카오/외부 링크 0. `section[aria-labelledby]` + `h2` + 본문
+`role="alert"`, 자동 포커스 이동 없음, 320px 가로 overflow 0.
+
+targeted unit 15/15, 전체 `node scripts/check.mjs` PASS(unit 1627/1627), 전체 Chromium E2E
+**149 passed / 2 failed**, console error/warning 0, axe serious/critical 0, 실제 외부 egress 0,
+package/lockfile/Rules/firebase config diff 0, 포트 잔류 0. 고객 entry `index-6js4DafP.js`
+322,018 bytes, SHA-256 `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
+
+**STOP - Founder 결정 필요.** E2E 실패 2건은 `tests/e2e/space-frame-view.spec.ts`이며 기준 커밋
+`e9dbb9e`에서 **이미 실패 상태**다(변경 전 baseline 실측 3 failed / 145 passed). 스펙 062가
+`composeSpaceFramePlan()`을 fail-closed로 바꾸면서 `preview-canvas`가 사라졌기 때문이고, 스펙 062는
+FF-5=A 범위 밖이라 E2E를 실행하지도 수정하지도 않았다. 이 파일과
+`apps/mockup/src/e2e/space-frame-fixture.tsx`는 스펙 063 허용 파일 목록 밖이라 손대지 않았다.
+선택지 A/B/C는 스펙 `### QUESTIONS` Q1에 있다.
+
+전체 E2E 실행은 `tests/e2e/mockup-browse.spec.ts` 때문에 보호 대상
+`docs/rebuild/results/spec-018/*.png` 2개를 무조건 다시 쓴다. stage/commit/restore하지 않고 working
+tree에 그대로 뒀다.
+
+실제 V2 schema/fingerprint/issuer, admin orientation UI, V1 migration/재발급/same-token rewrite, 실제
+Firebase/network/운영 데이터/pixel parity/write/publish/deploy/cutover는 NOT TESTED/NOT IMPLEMENTED
+또는 금지다. Codex 독립 검수 전 스펙 063을 최종 DONE으로 확정하지 않으며 다음 V2/admin UI 스펙은
+자동 시작하지 않는다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 062 V1 방향·사진 transform 재현 차단이 완료됐다.**
 
 V1 scene은 `frameImgT`는 저장하지만 portrait/landscape mode와 capture logical canvas/zone/image basis,
 catalog revision을 저장하지 않는다. legacy x/y는 absolute logical px이고 current x/y는 maxPan 기준

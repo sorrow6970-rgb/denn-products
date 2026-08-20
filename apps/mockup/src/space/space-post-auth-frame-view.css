@@ -1,0 +1,73 @@
+/*
+ * Spec 063 — the V1 safe-block notice. Modern Studio tokens only (`@denn/ui/theme.css`); no new
+ * colour literal, no new token, and no change to the browse/preview stylesheets.
+ *
+ * Layout rules that matter here:
+ *   - every block is `min-width: 0` + `max-width: 100%` and wraps Korean text with
+ *     `word-break: keep-all` / `overflow-wrap: anywhere`, so a 320px viewport never scrolls
+ *     horizontally.
+ *   - paragraph rules are written as `.denn-space-blocked .denn-space-blocked__* p` (0,2,1) because
+ *     the notice renders inside `.denn-shell__inner`, whose `p` rule is (0,1,1) — matching
+ *     specificity would leave the winner up to stylesheet import order.
+ *   - there is deliberately NO canvas box, image placeholder or skeleton: a frame-shaped
+ *     placeholder would read as "this is your saved layout", which is exactly the claim this state
+ *     exists to refuse.
+ */
+
+.denn-space-blocked {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.denn-space-blocked__title {
+  margin: 0;
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.denn-space-blocked__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.denn-space-blocked .denn-space-blocked__body p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* The one thing the reader has to act on: accent-soft fill + ink text (white-on-accent fails AA
+   per the 2026-07-22 warm-taupe decision), not a button — there is nothing to retry here. */
+.denn-space-blocked__next {
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+
+.denn-space-blocked .denn-space-blocked__next p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}

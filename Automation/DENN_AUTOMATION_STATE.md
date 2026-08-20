@@ -5,21 +5,46 @@ updated_at: 2026-08-20
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-062-space-v1-orientation-transform-replay-block   # DONE, CODEX_PASSED, LOCAL_UNIT_ONLY, UI_0
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 1fb6a98   # spec 062 investigation
-candidate_commit: a09278a
-verified_commit: a09278a   # targeted 59, unit 1612, non-network check
-origin_relation: "HEAD equals origin after spec 062 closure push"
-working_tree: "protected Founder/user changes only; protected paths remain unstaged"
+active_unit: spec-063-space-v1-safe-viewer-ui   # IMPLEMENTED, READY_FOR_CODEX, LOCAL_ONLY, NO_NETWORK
+state: READY_FOR_CODEX
+baseline_commit: e9dbb9e   # spec 062 closure
+candidate_commit: working-tree   # allowed spec 063 files only; not committed pending Q1
+verified_commit: e9dbb9e+spec063-worktree   # targeted 15, unit 1627, full check, Chromium 149/2
+origin_relation: "HEAD equals origin; spec 063 changes are uncommitted"
+working_tree: "spec 063 allowed files + protected Founder/user changes; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_UI_UX_HANDOFF_REQUIRED
+next_transition: FOUNDER_DECISION_REQUIRED   # spec 063 QUESTIONS Q1 - tests/e2e/space-frame-view.spec.ts
 automation_loop: removed (no new automation or recurring task is created)
-commit_owner: Codex
+commit_owner: Claude (spec 063 allowed files only)
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 063 V1 안전 차단 viewer UI/UX 구현 (2026-08-20)
+
+- Founder FF-5=A에 따라 Claude가 UI/UX를 담당했다. 정본
+  `docs/rebuild/specs/063-space-v1-safe-viewer-ui.md`, handoff
+  `docs/handoff/2026-08-20-spec-063-space-v1-safe-viewer-ui-handoff.md`.
+- `SpacePostAuthFrameView`가 catalog load·proof owner·Image decode·font load·Canvas plan보다 먼저
+  V1 replay 자격을 판정한다. blocked면 그 뒤 단계가 하나도 시작되지 않는다.
+- wrapper/child 분리로 조건부 hook 호출 0. composition은 module-private라 gate 우회 seam이 없다.
+- 안전 안내는 Modern Studio 토큰만 쓴다. 오류코드·URL·token·비밀번호·ID·SDK 문구 0,
+  Canvas·이미지 placeholder 0, 재시도 버튼 0, 카카오/외부 링크 0.
+- targeted unit 15/15, 전체 `node scripts/check.mjs` PASS(unit 1627/1627), 전체 Chromium E2E
+  149 passed / 2 failed.
+- 실패 2건은 `tests/e2e/space-frame-view.spec.ts`이며 기준 커밋 `e9dbb9e`에서 이미 실패 상태다
+  (변경 전 baseline 실측 3 failed / 145 passed). 허용 파일 목록 밖이라 손대지 않았다.
+- safe-state Canvas 0, catalog/proof/art 요청 0(인증 전후), console error/warning 0,
+  axe serious/critical 0, 320px 가로 overflow 0, 실제 외부 egress 0.
+- 고객 entry `index-6js4DafP.js` 322,018 bytes, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
+- package/lockfile/Rules/firebase config diff 0, 신규 의존성 0, 포트 잔류 0.
+- 전체 E2E 실행이 `docs/rebuild/results/spec-018/*.png` 2개를 무조건 다시 쓴다. 보호 대상이므로
+  stage/commit/restore하지 않고 working tree에 그대로 둔다.
+- 실제 V2 schema/fingerprint/issuer, admin orientation UI, migration, Firebase/network/write/deploy는
+  NOT IMPLEMENTED 또는 금지다.
+- 상태 READY_FOR_CODEX. Codex 독립 검수 전 최종 DONE 확정 안 함. 다음 V2/admin UI 스펙 자동 시작 0.
 
 ## 스펙 062 V1 방향·transform 재현 차단 완료 (2026-08-20)
 
