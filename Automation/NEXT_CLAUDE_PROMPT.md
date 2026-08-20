@@ -1,12 +1,12 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-062-space-v1-orientation-transform-replay-investigation`
-completed_unit: `spec-061-space-production-frame-route-connection` — **DONE / CODEX_PASSED / LOCAL_SYNTHETIC / NO_EXTERNAL_EGRESS**
-기준: 스펙 061 종료 **`ce7d819`**
-next_transition: **`FOUNDER_SPEC_062_FF_1_FF_5_DECISION`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-062-space-v1-orientation-transform-replay-block` — **DONE / CODEX_PASSED / LOCAL_UNIT_ONLY / UI_0**
+기준: 스펙 062 구현 **`a09278a`**
+next_transition: **`CLAUDE_UI_UX_HANDOFF_REQUIRED`**
 
-## ★ 현재 작업 - 스펙 062 V1 방향·사진 transform 재현 조사
+## ★ 스펙 062 종료 - V1 방향·사진 transform 재현 차단
 
 정본: `docs/rebuild/specs/062-space-v1-orientation-transform-replay-investigation.md`
 
@@ -17,17 +17,34 @@ normalized 값이다. `rot=0`도 portrait와 unrotated landscape를 구분하지
 따라서 현재 identity-looking transform 성공은 전체 frame exact replay를 증명하지 않는다. 스펙 061은
 실제 운영에 배포되지 않았고 실제 Firebase/network/운영 데이터 접근은 0이다.
 
-Founder 결정 대기:
+Founder 결정:
 
-- **FF-1=A 권장:** orientation evidence 없는 V1 exact replay fail-closed
-- **FF-2=A 권장:** centered zoom은 별도 evidence가 있을 때만 조건부, heuristic pan/rot 변환 0
-- **FF-3=A 권장:** explicit orientation + normalized transform + geometry evidence의 future version
-- **FF-4=A 권장:** V1 자동 migration/same-token rewrite 0
-- **FF-5=A 권장:** 첫 correction은 pure classifier/plan gate/unit만, UI/CSS/issuer/network 0
+- **FF-1=A:** orientation evidence 없는 V1 exact replay fail-closed
+- **FF-2=A:** centered zoom은 별도 evidence가 있을 때만 조건부, heuristic pan/rot 변환 0
+- **FF-3=A:** explicit orientation + normalized transform + geometry evidence의 future version
+- **FF-4=A:** V1 자동 migration/same-token rewrite 0
+- **FF-5=A:** 첫 correction은 pure classifier/plan gate/unit만, UI/CSS/issuer/network 0
 
-FF-1~FF-5 결정 전 제품 구현은 0이다. pure correction 이후 V2 발급 화면·partial replay 안내·orientation
-표시는 실제 UI/UX 구현 단계다. Codex는 그 단계에 착수하지 않고 Founder에게 알린 뒤 Claude용 스펙으로
-인계한다.
+구현 `a09278a`. V1 classifier가 malformed/unsupported/orientation-unconfirmed를 분리하고 frame plan은
+proof owner·Image·Canvas plan 전에 fail-closed한다. targeted 59/59, 전체 non-network check PASS(unit
+1612/1612), 고객 entry `index-Df973d19.js` 320,713 bytes, SHA-256
+`4389D6D60367314FF80FC0793E1085C6646DAD946FA23CA2A3911013331A2453`.
+
+## ★ 다음 수동 작업 - Claude UI/UX 인계
+
+V2 발급 화면, partial replay 안내, orientation 선택·표시는 실제 UI/UX 구현 단계다. 사용자 지시에 따라
+Codex는 이 단계의 디자인·UI 구현을 시작하지 않는다. Claude가 먼저 다음 경계를 계약으로 고정해야 한다.
+
+- 새 immutable token을 쓰는 별도 scene version. V1 reader/migration/same-token rewrite 변경 0.
+- explicit orientation, normalized transform encoding, geometry/catalog evidence를 UI가 임의로 정의하지 않음.
+- V1 viewer는 안전 오류/재발급 안내만 제공하고 best-effort Canvas·자동 fallback·자동 migration 0.
+- admin issuer의 orientation 선택과 재현 가능성 안내, viewer의 partial/exact 상태 표현은 Modern Studio 디자인
+  정본을 따르되 기존 고객 browse/preview 디자인을 임의 변경하지 않음.
+- 스펙 061 production-route E2E의 V1 Canvas 성공 기대를 안전 오류 기대값으로 갱신하되 외부 egress 0 유지.
+- 실제 Firebase/project/token/network/write/deploy와 운영 데이터 접근 0. V2 schema/fingerprint가 별도
+  비시각 계약으로 확정되지 않으면 UI 구현도 STOP.
+
+Codex는 Claude 결과를 코드·계약·회귀 관점에서 검수할 수 있다. 다음 작업은 자동 시작하지 않는다.
 
 ## ★ 스펙 061 종료 - production frame route 연결
 

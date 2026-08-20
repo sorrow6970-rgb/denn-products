@@ -4457,3 +4457,23 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 제품 코드/UI/CSS/test/Rules/config/package/lockfile 변경 0. 실제 Firebase/network/운영 데이터·배포 0.
 - 상태 `FOUNDER_DECISION_REQUIRED`. pure correction 이후 V2 발급·표시는 UI/UX 단계이므로 Codex가
   구현하지 않고 Founder에게 알린 뒤 Claude로 인계한다.
+
+## 2026-08-20 - 스펙 062 V1 방향·사진 transform 재현 차단 · CODEX_PASSED
+
+- Founder **FF-1=A~FF-5=A** 승인. evidence 없는 V1 exact replay, heuristic transform,
+  automatic migration/same-token rewrite를 모두 차단했다.
+- `classifySpaceV1FrameReplay()`가 V1 transform을 one-read snapshot하고 malformed,
+  unsupported, orientation-unconfirmed를 safe code로 구분한다.
+- frame plan은 catalog/width/proof/template-art/text-measure/Canvas plan 접근 전에 V1을 fail-closed한다.
+  identity-looking transform과 centered zoom도 V1 payload만으로는 성공 plan이 아니다.
+- 구현 커밋 **`a09278a`**. 허용 제품 변경은 `proof-image.ts`/test와 `frame-plan.ts`/test 네 파일뿐이다.
+- 검증: targeted **59/59**, `node scripts/check.mjs` PASS(format/lint/typecheck/unit **1612/1612**/build),
+  `git diff --check` PASS.
+- 고객 entry `index-Df973d19.js`, 320,713 bytes, SHA-256
+  **`4389D6D60367314FF80FC0793E1085C6646DAD946FA23CA2A3911013331A2453`**.
+- FF-5에 따라 browser/E2E 실행·수정은 0이다. 스펙 061의 V1 Canvas 성공 E2E 기대는 현재 정책과
+  양립하지 않으며 Claude UI/UX 인계에서 안전 오류 기대값으로 갱신해야 한다.
+- UI/CSS/문구/V2 issuer/schema/migration, 실제 Firebase/network/운영 scene/pixel parity/write/deploy는
+  NOT TESTED/NOT IMPLEMENTED 또는 금지다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`; 다음 transition은 `CLAUDE_UI_UX_HANDOFF_REQUIRED`다.
+  Codex는 UI/UX 구현을 시작하지 않는다.

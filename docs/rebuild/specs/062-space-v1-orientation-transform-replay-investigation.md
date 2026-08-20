@@ -1,6 +1,6 @@
 # 스펙 062 - space V1 방향·사진 transform 재현 차단 계약
 
-상태: **FOUNDER_APPROVED / IMPLEMENTATION_IN_PROGRESS / LOCAL_UNIT_ONLY / NO_NETWORK / UI_IMPLEMENTATION_0**
+상태: **DONE / CODEX_PASSED / LOCAL_UNIT_ONLY / NO_NETWORK / UI_IMPLEMENTATION_0**
 
 기준 커밋: `ce7d819` (스펙 061 종료)
 
@@ -250,7 +250,8 @@ FF-5=A의 pure correction 이후 V2 발급 화면, partial replay 안내, orient
 - 실제 Firebase project/token/document, 운영 V1 scene의 orientation/transform 분포: **NOT TESTED**
 - 실제 published catalog history와 `orientationFree` 변경 이력: **UNCONFIRMED**
 - real legacy/current pixel parity, 모바일·폰트·CORS: **NOT TESTED**
-- 제품 코드/UI/CSS/test/Rules/config/package/lockfile 변경: **0**
+- 조사 단계의 제품 코드/UI/CSS/test/Rules/config/package/lockfile 변경: **0**. 승인 뒤 §11 correction은
+  허용된 제품 코드/test 네 파일만 변경했다.
 - 실제 network/write/migration/publish/deploy/cutover: **금지**
 
 ## 10. 조사 결론
@@ -259,5 +260,21 @@ V1 payload만으로 발급 당시 frame orientation과 absolute pan의 기준을
 client-only local code에서 V1 전체 frame exact replay는 **보장 불가능**하다. 특히 현재 identity 성공은
 transform 필드 중립만 확인할 뿐 landscape ambiguity를 제거하지 못한다.
 
-FF-1~FF-5는 모두 A로 승인됐다. 먼저 §7.1의 pure fail-closed correction만 구현·검증한다. V2 issuer/UI와
-기존 production-route E2E의 표시 기대값 변경 단계는 Claude 인계 대상이다.
+FF-1~FF-5는 모두 A로 승인됐고 §7.1의 pure fail-closed correction은 완료됐다. V2 issuer/UI와 기존
+production-route E2E의 표시 기대값 변경 단계는 Claude 인계 대상이다.
+
+## 11. DONE (Codex, 2026-08-20)
+
+- Founder FF-1=A~FF-5=A 승인 반영.
+- 구현 커밋: **`a09278a`** (`spec 062: block unproven v1 frame replay`).
+- `classifySpaceV1FrameReplay()`가 V1 input을 one-read snapshot하고 malformed, unsupported,
+  orientation-unconfirmed를 safe code로 분리한다.
+- frame plan은 V1 eligibility를 가장 먼저 검사해 catalog/width/proof/template-art/text-measure/Canvas plan
+  후속 접근 0으로 fail-closed한다. V1 success plan과 heuristic 변환은 0이다.
+- targeted unit **59/59**, 전체 `node scripts/check.mjs` PASS(format/lint/typecheck/unit **1612/1612**/build).
+- 고객 entry `index-Df973d19.js`, 320,713 bytes, SHA-256
+  `4389D6D60367314FF80FC0793E1085C6646DAD946FA23CA2A3911013331A2453`.
+- FF-5에 따라 browser/E2E 실행과 E2E 파일 수정은 0이다. 스펙 061의 V1 Canvas 성공 기대는 현재
+  fail-closed 정책과 양립하지 않으며 Claude UI/UX 인계에서 안전 오류 기대값으로 바꿔야 한다.
+- 실제 Firebase/network/운영 scene/pixel parity, V2 schema/issuer/UI, migration/deploy는 NOT TESTED/
+  NOT IMPLEMENTED 또는 금지다.

@@ -9,19 +9,26 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` - 스펙 062 V1 방향·사진 transform 재현 조사가 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 062 V1 방향·사진 transform 재현 차단이 완료됐다.**
 
 V1 scene은 `frameImgT`는 저장하지만 portrait/landscape mode와 capture logical canvas/zone/image basis,
 catalog revision을 저장하지 않는다. legacy x/y는 absolute logical px이고 current x/y는 maxPan 기준
 normalized 값이다. `rot=0`도 portrait와 unrotated landscape를 구분하지 못한다.
 
-따라서 현재 identity-looking transform 성공은 전체 frame exact replay를 증명하지 않는다. 권장 결정은
-**FF-1=A~FF-5=A**다: V1 exact replay fail-closed, heuristic 변환 0, future version 분리, 자동 migration 0,
-첫 correction은 pure classifier/plan gate/unit만 수행한다.
+따라서 현재 identity-looking transform 성공은 전체 frame exact replay를 증명하지 않는다. Founder는
+**FF-1=A~FF-5=A**를 승인했다: V1 exact replay fail-closed, heuristic 변환 0, future version 분리,
+자동 migration 0, 첫 correction은 pure classifier/plan gate/unit만 수행한다.
 
-정본은 `docs/rebuild/specs/062-space-v1-orientation-transform-replay-investigation.md`다. 결정 전 제품 구현은
-0이다. pure correction 이후 V2 발급·표시는 UI/UX 구현 단계이므로 Codex가 구현하지 않고 Founder에게 알린
-뒤 Claude로 인계한다. 실제 Firebase/network/운영 데이터 접근과 배포는 0이다.
+구현 `a09278a`. V1 classifier가 malformed/unsupported/orientation-unconfirmed를 분리하고 frame plan은
+catalog/width/proof/template-art/text-measure/Canvas plan 접근 전에 fail-closed한다. targeted 59/59, 전체
+non-network check PASS(unit 1612/1612), production build PASS. 고객 entry `index-Df973d19.js` 320,713 bytes,
+SHA-256 `4389D6D60367314FF80FC0793E1085C6646DAD946FA23CA2A3911013331A2453`.
+
+browser/E2E 실행·수정은 FF-5 범위 밖이라 0이다. 스펙 061의 V1 Canvas 성공 E2E 기대는 현재 정책과
+양립하지 않으며 다음 Claude UI/UX 인계에서 안전 오류 기대값으로 변경해야 한다. V2 발급 화면,
+partial replay 안내와 orientation 선택·표시는 실제 UI/UX 단계이므로 Codex는 구현하지 않는다. 실제
+V2 schema/fingerprint, Firebase/network/운영 scene/pixel parity/deploy는 NOT TESTED/NOT IMPLEMENTED다.
+다음 작업은 Claude 수동 인계이며 자동 시작하지 않는다.
 
 > 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 061 production frame route 연결이 완료됐다.**
 

@@ -1,25 +1,38 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-08-19
+updated_at: 2026-08-20
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-061-space-production-frame-route-connection   # DONE, CODEX_PASSED, LOCAL_SYNTHETIC, NO_EXTERNAL_EGRESS
-active_unit: spec-062-space-v1-orientation-transform-replay-investigation
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: ce7d819   # spec 061 completion
-candidate_commit: none
-verified_commit: cf13a2a   # unit 1609, Chromium 148
-origin_relation: "HEAD equals origin after spec 062 investigation push"
+completed_unit: spec-062-space-v1-orientation-transform-replay-block   # DONE, CODEX_PASSED, LOCAL_UNIT_ONLY, UI_0
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: 1fb6a98   # spec 062 investigation
+candidate_commit: a09278a
+verified_commit: a09278a   # targeted 59, unit 1612, non-network check
+origin_relation: "HEAD equals origin after spec 062 closure push"
 working_tree: "protected Founder/user changes only; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_062_FF_1_FF_5_DECISION
+next_transition: CLAUDE_UI_UX_HANDOFF_REQUIRED
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Codex
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 062 V1 방향·transform 재현 차단 완료 (2026-08-20)
+
+- Founder FF-1=A~FF-5=A 승인. evidence 없는 V1 exact replay, heuristic transform과 same-token migration은 0이다.
+- pure classifier가 malformed/unsupported/orientation-unconfirmed를 분리하고 frame plan이 proof owner·Image·
+  Canvas plan 전에 fail-closed한다. 구현 `a09278a`.
+- targeted 59/59, 전체 non-network check PASS(unit 1612/1612), production build PASS.
+- browser/E2E 실행·수정은 FF-5 범위 밖이라 0이다. 스펙 061 V1 Canvas 성공 기대는 현재 정책과 양립하지
+  않으며 다음 Claude UI/UX 인계에서 안전 오류 기대값으로 바꿔야 한다.
+- 고객 entry `index-Df973d19.js` 320,713 bytes, SHA-256
+  `4389D6D60367314FF80FC0793E1085C6646DAD946FA23CA2A3911013331A2453`.
+- 다음은 V2 issuer/partial-replay 안내/orientation 표시의 UI/UX 단계다. Codex는 구현하지 않고 Claude 인계를
+  기다린다. 실제 V2 schema/fingerprint, Firebase/network/운영 scene/pixel parity/deploy는 NOT TESTED다.
 
 ## 스펙 062 V1 방향·transform 재현 조사 (2026-08-19)
 
