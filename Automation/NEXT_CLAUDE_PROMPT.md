@@ -13,8 +13,8 @@ Founder 결정:
 `docs/codex-claude-handoff/decisions/2026-08-20-space-v2-replay-evidence-decisions.md`
 handoff: `docs/handoff/2026-08-20-spec-064-space-v2-replay-evidence-investigation-handoff.md`
 
-Founder **GG-1=A~GG-6=A**에 따른 첫 local-only 구현이 완료됐다. 구현 commit hash는 상태 기록
-commit에서 갱신한다. 아래 허용 diff를 정본의 exact shape/canonical tuple과 독립 대조한다.
+Founder **GG-1=A~GG-6=A**에 따른 첫 local-only 구현 commit은 **`0c5d6fa`**다. 아래 허용 diff를
+정본의 exact shape/canonical tuple과 독립 대조한다.
 
 제품 변경 파일은 정확히 다음 세 개여야 한다.
 

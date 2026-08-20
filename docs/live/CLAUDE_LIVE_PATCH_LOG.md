@@ -4587,4 +4587,5 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 포트 4183/4184/4185/8080/9099/9199와 `denn-e2e-*`/debug log 잔류 0.
 - 실제 Firebase/network/project/bucket/object/UID, Rules/config/emulator/deploy, issuer/viewer/UI,
   upload/document create, V1 migration/orphan cleanup은 NOT IMPLEMENTED / NOT TESTED / 금지다.
-- 상태 `READY_FOR_CODEX`; 구현 commit/push 뒤 독립 검수를 기다린다.
+- 구현·계약 commit **`0c5d6fa`**. 상태 `READY_FOR_CODEX`; 기록 commit의 fast-forward push 뒤 독립
+  검수를 기다린다.

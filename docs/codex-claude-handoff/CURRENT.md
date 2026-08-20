@@ -35,6 +35,8 @@ text/font/template-art/clock/room/gallery를 지원한 척하지 않는다. exac
 injected/local Web Crypto SHA-256 safe create/verify와 unit을 구현했다. 기존 V1 read/open/constants는
 무변경이다. structure read 자체는 crypto/network/viewer pipeline을 시작하지 않는다.
 
+구현·계약 commit은 **`0c5d6fa`**다.
+
 targeted **107/107**, 전체 check PASS(unit **1696/1696**), Chromium **151/151**이다. 자체 검수에서
 module-scope `TextEncoder`가 미사용 V2 코드를 고객 bundle에 남기는 12-byte drift를 발견해 호출 내부로
 옮겼다. 최종 고객 entry는 `index-6js4DafP.js`, 322,018 bytes, SHA-256

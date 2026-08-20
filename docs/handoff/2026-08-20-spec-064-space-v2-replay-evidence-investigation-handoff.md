@@ -55,6 +55,7 @@ C6/room/gallery 확장, 신규 dependency는 계속 금지다.
 
 ## 구현·검증 결과
 
+- 구현·계약 commit: `0c5d6fa`
 - 허용 제품 파일 3개만 변경했다: `packages/spaces/src/v2.ts`, `v2.test.ts`, `index.ts`.
 - V2 reader는 모든 nested exact key와 값 범위를 fail-closed하고, encoder는 detached one-read snapshot을
   fixed-position tuple의 UTF-8 bytes로 만든다.

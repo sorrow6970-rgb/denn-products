@@ -374,6 +374,7 @@ GG-4/GG-5는 목표 방향만 승인됐다. 실제 Rules 변경·UID 값·emulat
 
 ### DONE (Codex, 2026-08-20)
 
+- 구현·계약 commit: `0c5d6fa`
 - 신규 `packages/spaces/src/v2.ts`에 strict exact-key V2 document/scene reader, detached evidence
   snapshot, fixed-position tuple UTF-8 encoder, injected/default Web Crypto SHA-256 create/verify를 구현했다.
 - `packages/spaces/src/index.ts`에는 별도 V2 constants/types/functions만 명시 export했다. 기존

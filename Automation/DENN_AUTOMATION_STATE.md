@@ -8,10 +8,10 @@ completed_unit: spec-063-space-v1-safe-viewer-ui   # DONE, CODEX_PASSED, LOCAL_O
 active_unit: spec-064-space-v2-local-contract   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
 state: READY_FOR_CODEX
 baseline_commit: 2b8424e   # spec 063 closure
-candidate_commit: pending   # exact implementation commit is recorded after the allowed commit
+candidate_commit: 0c5d6fa   # spec 064 local V2 implementation + contract documents
 verified_commit: none   # independent Codex review pending
-origin_relation: "HEAD equals origin at baseline before the pending spec 064 fast-forward commit"
-working_tree: "spec 064 ten-file diff plus protected Founder/user changes; all unstaged before explicit staging"
+origin_relation: "HEAD equals origin after the spec 064 record commit is fast-forward pushed"
+working_tree: "protected Founder/user changes only after the two explicit spec 064 commits"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: CODEX_REVIEW
@@ -46,7 +46,7 @@ deploy: forbidden
   Web Crypto/.NET 교차 계산 일치, 포트/temp/debug 잔류 0이다.
 - 고객 entry `index-6js4DafP.js` **322,018 bytes**, SHA-256
   `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
-- 상태 `READY_FOR_CODEX`; 구현 commit/push 뒤 독립 검수를 기다린다.
+- 구현 commit `0c5d6fa`. 상태 `READY_FOR_CODEX`; 기록 commit의 fast-forward push 뒤 독립 검수를 기다린다.
 
 ## 스펙 063 V1 안전 차단 viewer UI/UX 완료 (2026-08-20)
 
