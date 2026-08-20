@@ -3,8 +3,8 @@
 
 export type SpaceToken = string & { readonly __spaceBrand: "space-token" };
 
-/** The only currently-defined space scene identifier (기존 근거: space-scene-v1).
- *  근거 없는 v2 계약을 스캐폴드에서 선행 생성하지 않는다. */
+/** Legacy V1 scene identifier. V2 uses separately named exports so this value and SpaceRef stay
+ * backward-compatible. */
 export const SPACE_SCENE_VERSION = "space-scene-v1" as const;
 
 export type SpaceSchemaVersion = typeof SPACE_SCENE_VERSION;
@@ -43,3 +43,23 @@ export {
   type SpaceOpenPort,
   type SpaceOpenResult,
 } from "./open";
+export {
+  createFrameReplayEvidenceDigestV1,
+  encodeFrameReplayEvidenceV1,
+  FRAME_EVIDENCE_ENCODING_V1,
+  FRAME_REPLAY_CONTRACT_V1,
+  readSpaceDocumentV2,
+  readSpaceSceneV2,
+  SPACE_DOCUMENT_V2_VERSION,
+  SPACE_SCENE_V2_VERSION,
+  verifyFrameReplayEvidenceDigestV1,
+  type EncodedFrameReplayEvidenceV1,
+  type FrameOrientationV1,
+  type FrameReplayEvidenceDigestV1,
+  type FrameReplayEvidenceV1,
+  type SpaceDocumentV2,
+  type SpaceSceneV2,
+  type SpaceSha256Port,
+  type SpaceV2ErrorCode,
+  type SpaceV2Result,
+} from "./v2";

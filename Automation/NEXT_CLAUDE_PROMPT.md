@@ -1,10 +1,72 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `READY_FOR_CODEX`
+active_unit: `spec-064-space-v2-local-contract` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-063-space-v1-safe-viewer-ui` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-검증 기준: 스펙 063 구현 HEAD **`a28e27a`**
-next_transition: **`WAITING_FOR_NEXT_MANUAL_TASK`**
+기준: 스펙 063 종료 HEAD **`2b8424e`**
+next_transition: **`CODEX_REVIEW`**
+
+## ★ 스펙 064 — 첫 local-only space V2 replay evidence 구현 검수
+
+정본: `docs/rebuild/specs/064-space-v2-replay-evidence-investigation.md`
+Founder 결정:
+`docs/codex-claude-handoff/decisions/2026-08-20-space-v2-replay-evidence-decisions.md`
+handoff: `docs/handoff/2026-08-20-spec-064-space-v2-replay-evidence-investigation-handoff.md`
+
+Founder **GG-1=A~GG-6=A**에 따른 첫 local-only 구현이 완료됐다. 구현 commit hash는 상태 기록
+commit에서 갱신한다. 아래 허용 diff를 정본의 exact shape/canonical tuple과 독립 대조한다.
+
+제품 변경 파일은 정확히 다음 세 개여야 한다.
+
+- 신규 `packages/spaces/src/v2.ts`
+- 신규 `packages/spaces/src/v2.test.ts`
+- `packages/spaces/src/index.ts` — V2 explicit export만
+
+검수 핵심:
+
+- V2 outer/scene/nested exact-key와 enum/range/orientation/color/path/base64/byte-cap 검증이 strict한가.
+- fixed-position tuple이 정본 순서와 정확히 같고 arbitrary key order, `-0`, hostile/drifting input을
+  deterministic detached snapshot으로 처리하는가.
+- digest port가 exact canonical bytes를 한 번만 받고 throw/reject/bad-length/mismatch를 safe code로
+  매핑하는가. raw path/token/password/customer text/bytes/error message가 실패에 없는가.
+- first capability 밖 text/art/clock/room을 accepted state로 넓히지 않았는가.
+- 기존 V1 `SPACE_SCENE_VERSION`, reader/open/types/results가 그대로인가.
+- 미사용 V2 export가 고객 bundle에 포함되지 않고 기준 entry byte/hash가 유지되는가.
+
+구현자가 보고한 결과:
+
+- targeted spaces **107/107**
+- `node scripts/check.mjs` PASS: format/lint/all typecheck/unit **1696/1696**/mockup+admin build
+- 전체 Chromium **151/151**
+- canonical vector Web Crypto/.NET SHA-256 일치:
+  `9TMqpMGuEgpsbOQW8QfNdh/MysY0dDRPbDl4ODX7/mI=`
+- 고객 entry `index-6js4DafP.js`, **322,018 bytes**, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`
+- 포트/temp/debug 잔류 0
+
+독립 재검증:
+
+- targeted spaces unit/typecheck와 `node scripts/check.mjs`
+- 전체 Chromium E2E 또는 변경 무관성을 증명할 동등한 회귀 게이트
+- `git diff --check`, exact changed paths, package/lockfile/Rules/config diff 0
+- 고객 entry name/bytes/SHA-256 기준 일치
+- 포트 4183/4184/4185/8080/9099/9199와 `denn-e2e-*`/debug 잔류 0
+
+전체 Chromium은 보호 대상 spec-018 PNG 두 개를 다시 쓴다. restore/checkout/stage/commit하지 않고
+기존 dirty 상태로 남긴다.
+
+계속 금지:
+
+- `storage.rules`, `firestore.rules`, `firebase.json`, env/config, 실제 UID
+- Firebase SDK adapter, Storage upload/read, Firestore document create/reconciliation
+- token 발급, issuer projector, admin/customer UI·CSS, viewer/open composition
+- V1 migration/rewrite, text/font/art/clock/room/gallery 확장
+- orphan delete/cleanup, published write, C6/backend, dependency/package/lockfile 변경
+- 실제 Firebase/project/bucket/object/network/data, emulator/live/deploy
+
+추가 결함이 없으면 `CODEX_PASSED`로 종료 문서만 갱신한다. 결함이 있으면 허용 3개 제품 파일과 spec 064
+문서 안에서만 `CORRECTION_REQUIRED`를 작성한다. Rules/Firebase/UI/issuer/viewer로 확장하지 않는다.
+보호 대상과 기존 Founder/user 변경은 stage/commit/restore하지 않는다.
 
 ## ★ 스펙 063 — V1 안전 차단 viewer UI/UX (종료)
 

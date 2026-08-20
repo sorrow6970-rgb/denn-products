@@ -5,21 +5,48 @@ updated_at: 2026-08-20
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-063-space-v1-safe-viewer-ui   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: e9dbb9e   # spec 062 closure
-candidate_commit: a3984a4 + a28e27a   # implementation + Founder Q1=A E2E follow-up
-verified_commit: a28e27a   # Codex independent review passed
-origin_relation: "HEAD equals origin after spec 063 closure fast-forward push"
-working_tree: "protected Founder/user changes only; protected paths remain unstaged"
+active_unit: spec-064-space-v2-local-contract   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CODEX
+baseline_commit: 2b8424e   # spec 063 closure
+candidate_commit: pending   # exact implementation commit is recorded after the allowed commit
+verified_commit: none   # independent Codex review pending
+origin_relation: "HEAD equals origin at baseline before the pending spec 064 fast-forward commit"
+working_tree: "spec 064 ten-file diff plus protected Founder/user changes; all unstaged before explicit staging"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: WAITING_FOR_NEXT_MANUAL_TASK
+next_transition: CODEX_REVIEW
 automation_loop: removed (no new automation or recurring task is created)
-commit_owner: Codex (spec 063 closure documents only)
+commit_owner: Codex (spec 064 approved local implementation and documents only)
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 064 space V2 local replay evidence 계약 (2026-08-20)
+
+- 정본 `docs/rebuild/specs/064-space-v2-replay-evidence-investigation.md`, Founder 결정
+  `docs/codex-claude-handoff/decisions/2026-08-20-space-v2-replay-evidence-decisions.md`, handoff
+  `docs/handoff/2026-08-20-spec-064-space-v2-replay-evidence-investigation-handoff.md`.
+- V2 exactness에는 explicit orientation뿐 아니라 canonical logical width, effective frame geometry,
+  renderer contract와 proof bytes identity가 필요하다.
+- whole catalog hash 대신 닫힌 `FrameReplayEvidenceV1` snapshot + versioned canonical SHA-256을 권장한다.
+  SHA-256은 운영자 서명/attestation이 아니다.
+- Founder가 **GG-1=A~GG-6=A**를 승인했다. V1과 분리된 `space-v2`/`space-scene-v2`, closed evidence,
+  image-only frame, 향후 immutable UUID PNG 경로와 V2 operator-only create 방향을 선택했다.
+- exact local shape와 fixed-position canonical tuple을 정본에 고정했다. 첫 구현은
+  `packages/spaces/src/v2.ts`, `v2.test.ts`, `index.ts` 명시 export만 허용한다.
+- strict reader, detached evidence encoder, injected/local Web Crypto SHA-256 safe create/verify만 구현한다.
+  기존 V1 의미와 결과는 바꾸지 않는다.
+- GG-4/GG-5는 목표 방향 승인이지 Rules/UID/Firebase adapter/upload/Firestore create/emulator/deploy
+  승인이 아니다. UI/issuer/viewer 연결, 실제 network와 운영 발급도 계속 0이다.
+- 구현 완료: strict exact-key reader, detached snapshot/fixed tuple encoder, injected/default Web Crypto
+  digest create/verify와 safe errors를 허용 3개 제품 파일에만 추가했다.
+- 자체 검수에서 module-scope encoder로 인한 고객 bundle 12-byte drift를 발견해 호출 내부 생성으로
+  교정했다. 최종 고객 entry는 기준과 byte/hash까지 동일하다.
+- targeted **107/107**, 전체 check PASS(unit **1696/1696**), Chromium **151/151**, canonical digest의
+  Web Crypto/.NET 교차 계산 일치, 포트/temp/debug 잔류 0이다.
+- 고객 entry `index-6js4DafP.js` **322,018 bytes**, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
+- 상태 `READY_FOR_CODEX`; 구현 commit/push 뒤 독립 검수를 기다린다.
 
 ## 스펙 063 V1 안전 차단 viewer UI/UX 완료 (2026-08-20)
 

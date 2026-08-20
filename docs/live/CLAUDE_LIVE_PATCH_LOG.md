@@ -4532,3 +4532,59 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 스펙 063은 **DONE / CODEX_PASSED**. 다음 작업은 자동 시작하지 않고
   `WAITING_FOR_NEXT_MANUAL_TASK`에서 멈춘다.
 - 종료 문서 커밋 `d55e41b`를 `rebuild/modern-studio`에 일반 fast-forward push했다.
+
+## 2026-08-20 - 스펙 064 space V2 frame replay evidence 조사 · Founder 결정 대기
+
+- 스펙 063 다음 수동 단위로 V2 schema/fingerprint/issuer 선행 경계를 읽기 전용 조사했다.
+- orientation만으로 exactness가 성립하지 않는다. current frame plan은 logical width, effective geometry,
+  proof intrinsic/bytes와 renderer contract에도 의존한다.
+- whole catalog hash가 아니라 closed `FrameReplayEvidenceV1` snapshot + versioned canonical SHA-256을
+  권장한다. SHA-256은 signature/operator attestation이 아니다.
+- 현재 `proofs/**`는 overwrite/delete 가능하고 current `/spaces` create는 V2 operator-only가 아니다.
+  새 create-only UUID PNG path와 V2 approved UID Rules는 후보일 뿐 승인·구현·배포되지 않았다.
+- 권장 **GG-1=A~GG-6=A**. 첫 구현 후보는 local `@denn/spaces` V2 reader/evidence encoder/hash fake
+  unit만이며 UI/Firebase/Rules/network 0이다.
+- 신규 spec 064 + handoff + STATE/NEXT/CURRENT/live log 6개 문서만 변경했다. 제품 코드/test/UI/CSS/
+  Rules/config/package/lockfile 변경 0. 실제 Firebase/network/data/UID/write/deploy 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`. 결정 전 구현 계약·제품 구현·Claude UI handoff를 시작하지 않는다.
+
+## 2026-08-20 - 스펙 064 GG-1~GG-6=A Founder 승인 · local-only 구현 준비
+
+- Founder가 **GG-1=A, GG-2=A, GG-3=A, GG-4=A, GG-5=A, GG-6=A**를 승인했다.
+- 결정 정본
+  `docs/codex-claude-handoff/decisions/2026-08-20-space-v2-replay-evidence-decisions.md`를 추가했다.
+- `space-v2`/`space-scene-v2` exact nested shape, image-only frame capability, lowercase UUID v4 PNG path,
+  strict ranges/base64/20 MiB 미만 계약을 고정했다.
+- arbitrary object key order 대신 fixed-position tuple의 exact UTF-8 bytes를
+  `denn-frame-evidence-v1`로 고정했다. SHA-256은 signature/backend attestation이 아니다.
+- 첫 제품 구현 허용 범위는 `packages/spaces/src/v2.ts`, `v2.test.ts`, `index.ts` V2 explicit export뿐이다.
+  strict reader, detached encoder, injected/local Web Crypto SHA-256 safe create/verify와 unit만 연다.
+- GG-4/GG-5는 향후 asset/issuer Rules 목표 방향 승인이다. Rules 변경, 실제 UID, Firebase adapter,
+  Storage upload, Firestore create, issuer/viewer/UI, migration, orphan cleanup, 실제 network/emulator/deploy는
+  계속 금지다.
+- 이번 단계는 spec 064 관련 문서 7개만 변경했다. 제품 코드/test/UI/CSS/Rules/config/package/lockfile
+  변경 0이며 모든 변경은 unstaged다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. 실제 구현 검증 전
+  `CODEX_PASSED`나 V2 replay 성공을 주장하지 않는다.
+
+## 2026-08-20 - 스펙 064 첫 local-only V2 replay evidence 구현 · READY_FOR_CODEX
+
+- Founder **GG-1=A~GG-6=A** 범위에서 `packages/spaces/src/v2.ts`, `v2.test.ts`, `index.ts`만
+  제품 변경했다.
+- strict exact-key V2 document/scene reader, detached one-read evidence snapshot, 정본 fixed-position tuple
+  UTF-8 encoder, injected/default Web Crypto SHA-256 create/verify와 safe error를 구현했다.
+- exact nested keys/ranges/orientation/uppercase colors/lowercase UUID v4 path/20 MiB 미만/base64 32 bytes,
+  hostile/drifting/proxy/circular/non-finite, canonical vector/key-order/`-0`, field mutation과 digest
+  throw/reject/bad-length/mismatch를 unit으로 고정했다.
+- 자체 검수에서 module-scope `new TextEncoder()` 때문에 미사용 V2 export가 고객 entry를 12 bytes
+  변경하는 문제를 발견했다. 호출 내부 생성으로 옮긴 뒤 고객 entry가 기준과 완전히 같아졌다.
+- targeted **107/107**, `node scripts/check.mjs` PASS(format/lint/all typecheck/unit **1696/1696**/
+  mockup+admin build), 전체 Chromium **151/151**, `git diff --check` PASS.
+- canonical vector digest는 Web Crypto와 별도 .NET SHA-256이
+  `9TMqpMGuEgpsbOQW8QfNdh/MysY0dDRPbDl4ODX7/mI=`로 일치했다.
+- 고객 entry `index-6js4DafP.js`, **322,018 bytes**, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
+- 포트 4183/4184/4185/8080/9099/9199와 `denn-e2e-*`/debug log 잔류 0.
+- 실제 Firebase/network/project/bucket/object/UID, Rules/config/emulator/deploy, issuer/viewer/UI,
+  upload/document create, V1 migration/orphan cleanup은 NOT IMPLEMENTED / NOT TESTED / 금지다.
+- 상태 `READY_FOR_CODEX`; 구현 commit/push 뒤 독립 검수를 기다린다.

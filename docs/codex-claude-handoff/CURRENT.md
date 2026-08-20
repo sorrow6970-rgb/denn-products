@@ -9,7 +9,41 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 063 V1 안전 차단 viewer UI/UX가 DONE / CODEX_PASSED로 종료됐다.**
+상태: **`READY_FOR_CODEX` - 스펙 064 첫 local-only V2 replay evidence 구현·검증이 완료됐다.**
+
+정본 `docs/rebuild/specs/064-space-v2-replay-evidence-investigation.md`, Founder 결정
+`docs/codex-claude-handoff/decisions/2026-08-20-space-v2-replay-evidence-decisions.md`, handoff
+`docs/handoff/2026-08-20-spec-064-space-v2-replay-evidence-investigation-handoff.md`.
+
+V2 exactness에는 orientation 외에 발급 시 canonical logical width, effective frame geometry, selected
+appearance, proof intrinsic/bytes identity와 renderer contract version이 필요하다. 전체 catalog hash는 실제
+plan 영향 범위보다 넓고 unrelated 변경으로 link를 깨므로 closed `FrameReplayEvidenceV1` snapshot +
+versioned canonical SHA-256이 권장 후보다. SHA-256은 운영자 서명이나 backend attestation이 아니다.
+
+현재 `proofs/**`는 overwrite/delete 가능하고 `/spaces/{token}` create는 V2 operator 제한이 없다.
+Founder는 향후 새 UUID PNG create-only/public-read asset path와 V2 approved-UID Firestore create 방향을
+승인했지만, 이는 Rules/UID/Firebase adapter 구현·검증·배포 승인이 아니다. upload와 document create 사이
+cross-service atomicity도 없으므로 upload-first 실패 시 orphan, document 결과 unknown reconciliation을
+별도 계약해야 한다.
+
+Founder가 **GG-1=A~GG-6=A**를 승인했다. 첫 V2 capability는 image-only single-rect frame으로 좁히고
+text/font/template-art/clock/room/gallery를 지원한 척하지 않는다. exact nested keys와 ranges,
+`rebuild-space-assets/objects/{lowercase UUID v4}.png`, fixed-position canonical evidence tuple을 정본에
+고정했다. SHA-256은 signature/attestation이 아니다.
+
+허용된 `packages/spaces/src/v2.ts`, `v2.test.ts`, `index.ts`에 strict V2 reader, detached evidence encoder,
+injected/local Web Crypto SHA-256 safe create/verify와 unit을 구현했다. 기존 V1 read/open/constants는
+무변경이다. structure read 자체는 crypto/network/viewer pipeline을 시작하지 않는다.
+
+targeted **107/107**, 전체 check PASS(unit **1696/1696**), Chromium **151/151**이다. 자체 검수에서
+module-scope `TextEncoder`가 미사용 V2 코드를 고객 bundle에 남기는 12-byte drift를 발견해 호출 내부로
+옮겼다. 최종 고객 entry는 `index-6js4DafP.js`, 322,018 bytes, SHA-256
+`A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`로 기준과 동일하다.
+
+실제 Firebase/network/UID/upload/write/deploy는 0이다. 다음 transition은 `CODEX_REVIEW`다. Rules,
+Firebase adapter, issuer/viewer/UI, V1 migration, orphan delete/cleanup은 계속 금지다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 063 V1 안전 차단 viewer UI/UX가 DONE / CODEX_PASSED로 종료됐다.**
 
 정본 `docs/rebuild/specs/063-space-v1-safe-viewer-ui.md`, handoff
 `docs/handoff/2026-08-20-spec-063-space-v1-safe-viewer-ui-handoff.md`.
