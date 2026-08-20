@@ -1,6 +1,6 @@
-# 스펙 062 후보 - space V1 방향·사진 transform 재현 조사
+# 스펙 062 - space V1 방향·사진 transform 재현 차단 계약
 
-상태: **FOUNDER_DECISION_REQUIRED / DOCUMENT_ONLY / NO_NETWORK / UI_IMPLEMENTATION_0**
+상태: **FOUNDER_APPROVED / IMPLEMENTATION_IN_PROGRESS / LOCAL_UNIT_ONLY / NO_NETWORK / UI_IMPLEMENTATION_0**
 
 기준 커밋: `ce7d819` (스펙 061 종료)
 
@@ -10,7 +10,8 @@ production space route가 local synthetic frame을 표시하게 된 뒤에도 `s
 발급 당시와 같은지는 별개의 문제다. 이 문서는 legacy 액자 방향, 사진 scale/pan/rotation 저장 단위와 현재
 normalized transform을 대조해 안전하게 재현 가능한 범위와 STOP 조건을 정한다.
 
-이번 단위는 읽기 전용 조사와 Founder 선택지만 기록한다. 제품 코드, UI/CSS, Rules/config, package/lockfile,
+조사 단계는 완료됐다. 2026-08-20 Founder가 FF-1=A~FF-5=A를 승인했으며, 아래 §7.1의 좁은
+비시각적 correction과 합성 단위 테스트만 후속 구현 범위다. UI/CSS, Rules/config, package/lockfile,
 실제 Firebase/network/운영 데이터와 배포는 변경하지 않는다.
 
 ## 2. 확인된 사실
@@ -182,6 +183,8 @@ visual parity는 증명하지 않는다.
 
 ## 7. Founder 결정 선택지
 
+2026-08-20 Founder 결정: **FF-1=A, FF-2=A, FF-3=A, FF-4=A, FF-5=A 승인**.
+
 ### FF-1 - 현재 V1 exact replay 판정
 
 - **A (권장):** orientation/capture evidence가 없는 V1 frame은 exact replay가 증명되지 않은 것으로
@@ -212,6 +215,31 @@ visual parity는 증명하지 않는다.
   V2 issuer, admin/customer composition, Firebase/network/E2E/deploy는 0이다.
 - B: V2 발급 UI와 viewer 표시까지 함께 구현한다. 실제 UI/UX 구현 단계이므로 이번 Codex 범위를 벗어난다.
 
+### 7.1 승인된 첫 correction 계약
+
+허용 제품 파일은 다음 네 파일뿐이다.
+
+- `apps/mockup/src/space/proof-image.ts`
+- `apps/mockup/src/space/proof-image.test.ts`
+- `apps/mockup/src/space/frame-plan.ts`
+- `apps/mockup/src/space/frame-plan.test.ts`
+
+계약:
+
+1. V1 transform을 한 번만 snapshot해 malformed input, 지원 불가능한 legacy transform,
+   orientation/capture evidence 부재를 서로 다른 safe code로 분류한다.
+2. `{scale:1,x:0,y:0,rot:0|undefined}`와 centered zoom도 V1 payload만으로는 exact replay 성공이 아니다.
+3. `scale<1`, `scale>5`, nonzero pan, nonzero/arbitrary rotation은 clamp/coerce하지 않고 unsupported다.
+4. frame plan은 V1 exact replay eligibility를 proof URL 해석·proof owner·template art·text measure·Canvas plan보다
+   먼저 검사하고 실패 시 후속 호출 0으로 끝낸다. 부분 plan과 이전 성공 plan 재사용은 없다.
+5. future explicit normalized scene은 별도 version 계약 전까지 V1 classifier 입력으로 성공 처리하지 않는다.
+6. hostile/drifting getter는 safe invalid failure이며 원문 URL·ID·오류 문자열을 결과에 넣지 않는다.
+
+검증은 targeted unit, typecheck와 기존 non-network check까지만 허용한다. 새 E2E fixture/시나리오 작성,
+실제 browser/network 실행은 이번 correction 범위가 아니다. 스펙 061의 V1 synthetic Canvas 성공 기대는 이
+fail-closed 정책과 더 이상 양립하지 않으므로 다음 UI/UX 인계에서 안전 오류 화면 기대값으로 갱신해야 한다.
+그 E2E/UI 변경은 이번 단위에서 하지 않는다.
+
 ## 8. UI/UX 인계 경계
 
 FF-5=A의 pure correction 이후 V2 발급 화면, partial replay 안내, orientation 선택·표시는 실제 UI/UX 구현이다.
@@ -231,5 +259,5 @@ V1 payload만으로 발급 당시 frame orientation과 absolute pan의 기준을
 client-only local code에서 V1 전체 frame exact replay는 **보장 불가능**하다. 특히 현재 identity 성공은
 transform 필드 중립만 확인할 뿐 landscape ambiguity를 제거하지 못한다.
 
-FF-1~FF-5 결정 전 제품 코드를 수정하지 않는다. 권장안은 모두 A이며, 먼저 pure fail-closed correction만
-검토한다. V2 issuer/UI 단계는 Claude 인계 대상이다.
+FF-1~FF-5는 모두 A로 승인됐다. 먼저 §7.1의 pure fail-closed correction만 구현·검증한다. V2 issuer/UI와
+기존 production-route E2E의 표시 기대값 변경 단계는 Claude 인계 대상이다.

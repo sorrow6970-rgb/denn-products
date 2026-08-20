@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveSpaceProofImageUrl, resolveSpaceProofTransform } from "./proof-image";
+import { classifySpaceV1FrameReplay, resolveSpaceProofImageUrl } from "./proof-image";
 
 const TOKEN = "PRIVATE_TOKEN_MARKER";
 const proofUrl = (
@@ -84,27 +84,28 @@ describe("resolveSpaceProofImageUrl", () => {
   });
 });
 
-describe("resolveSpaceProofTransform", () => {
+describe("classifySpaceV1FrameReplay", () => {
   it.each([
     { scale: 1, x: 0, y: 0 },
     { scale: 1, x: -0, y: 0, rot: 0 },
-  ])("maps only exact neutral legacy state to current identity", (input) => {
-    expect(resolveSpaceProofTransform(input)).toEqual({
-      ok: true,
-      value: {
-        status: "identity-supported",
-        transform: { scale: 1, x: 0, y: 0, rotationQuarterTurns: 0 },
-      },
+    { scale: 3.5, x: 0, y: 0, rot: 0 },
+  ])("does not treat centered V1 state as exact without orientation evidence", (input) => {
+    expect(classifySpaceV1FrameReplay(input)).toEqual({
+      ok: false,
+      code: "SPACE_PROOF_ORIENTATION_UNCONFIRMED",
     });
   });
 
   it.each([
-    { scale: 1.01, x: 0, y: 0 },
+    { scale: 0.99, x: 0, y: 0 },
+    { scale: 5.01, x: 0, y: 0 },
     { scale: 1, x: 1, y: 0 },
     { scale: 1, x: 0, y: -1 },
     { scale: 1, x: 0, y: 0, rot: 1 },
-  ])("rejects valid non-neutral state without clamp or coercion", (input) => {
-    expect(resolveSpaceProofTransform(input)).toEqual({
+    { scale: 1, x: 0, y: 0, rot: -90 },
+    { scale: 1, x: 0, y: 0, rot: 0.5 },
+  ])("rejects unsupported legacy state without clamp or coercion", (input) => {
+    expect(classifySpaceV1FrameReplay(input)).toEqual({
       ok: false,
       code: "SPACE_PROOF_TRANSFORM_UNSUPPORTED",
     });
@@ -118,26 +119,52 @@ describe("resolveSpaceProofTransform", () => {
     { scale: "1", x: 0, y: 0 },
     { scale: 1, x: Number.NaN, y: 0 },
     { scale: 1, x: 0, y: 0, rot: Number.POSITIVE_INFINITY },
+    { scale: 1, x: 0, y: 0, rotationQuarterTurns: 0 },
+    { scale: 1, x: 0, y: 0, frameOrientation: "portrait" },
   ])("rejects malformed state: %s", (input) => {
-    expect(resolveSpaceProofTransform(input)).toEqual({
+    expect(classifySpaceV1FrameReplay(input)).toEqual({
       ok: false,
       code: "SPACE_PROOF_TRANSFORM_INVALID",
     });
   });
 
-  it("does not mutate input and catches hostile getters", () => {
+  it("snapshots each field once without mutating input", () => {
+    const reads = { scale: 0, x: 0, y: 0, rot: 0 };
+    const input = {} as Record<string, unknown>;
+    for (const key of ["scale", "x", "y", "rot"] as const) {
+      Object.defineProperty(input, key, {
+        enumerable: true,
+        get() {
+          reads[key] += 1;
+          if (reads[key] > 1) throw new Error("PRIVATE_SECOND_READ");
+          return key === "scale" ? 1 : 0;
+        },
+      });
+    }
+    const result = classifySpaceV1FrameReplay(input);
+    expect(result).toEqual({ ok: false, code: "SPACE_PROOF_ORIENTATION_UNCONFIRMED" });
+    expect(reads).toEqual({ scale: 1, x: 1, y: 1, rot: 1 });
+    expect(JSON.stringify(result)).not.toContain("PRIVATE_SECOND_READ");
+  });
+
+  it("does not mutate plain input and catches hostile access without leaking details", () => {
     const input = { scale: 1, x: 0, y: 0 };
     const before = JSON.stringify(input);
-    expect(resolveSpaceProofTransform(input).ok).toBe(true);
+    expect(classifySpaceV1FrameReplay(input)).toEqual({
+      ok: false,
+      code: "SPACE_PROOF_ORIENTATION_UNCONFIRMED",
+    });
     expect(JSON.stringify(input)).toBe(before);
     const hostile = new Proxy(input, {
       get: () => {
         throw new Error("PRIVATE_ERROR");
       },
     });
-    expect(resolveSpaceProofTransform(hostile)).toEqual({
+    const result = classifySpaceV1FrameReplay(hostile);
+    expect(result).toEqual({
       ok: false,
       code: "SPACE_PROOF_TRANSFORM_INVALID",
     });
+    expect(JSON.stringify(result)).not.toContain("PRIVATE_ERROR");
   });
 });

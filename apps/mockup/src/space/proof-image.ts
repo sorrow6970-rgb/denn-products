@@ -12,24 +12,15 @@ export type SpaceProofImageResult =
     }
   | { readonly ok: false; readonly code: SpaceProofImageErrorCode };
 
-export type SpaceProofTransformErrorCode =
+export type SpaceV1FrameReplayErrorCode =
   | "SPACE_PROOF_TRANSFORM_INVALID"
-  | "SPACE_PROOF_TRANSFORM_UNSUPPORTED";
+  | "SPACE_PROOF_TRANSFORM_UNSUPPORTED"
+  | "SPACE_PROOF_ORIENTATION_UNCONFIRMED";
 
-export type SpaceProofTransformResult =
-  | {
-      readonly ok: true;
-      readonly value: {
-        readonly status: "identity-supported";
-        readonly transform: {
-          readonly scale: 1;
-          readonly x: 0;
-          readonly y: 0;
-          readonly rotationQuarterTurns: 0;
-        };
-      };
-    }
-  | { readonly ok: false; readonly code: SpaceProofTransformErrorCode };
+export type SpaceV1FrameReplayResult = {
+  readonly ok: false;
+  readonly code: SpaceV1FrameReplayErrorCode;
+};
 
 const FIREBASE_STORAGE_HOST = "firebasestorage.googleapis.com";
 const BUCKET_OBJECT_PREFIX = `/v0/b/${PUBLIC_CATALOG_LOCATION.bucket}/o/`;
@@ -105,18 +96,28 @@ export function resolveSpaceProofImageUrl(input: unknown): SpaceProofImageResult
   }
 }
 
-const transformFailure = (code: SpaceProofTransformErrorCode): SpaceProofTransformResult => ({
+const transformFailure = (code: SpaceV1FrameReplayErrorCode): SpaceV1FrameReplayResult => ({
   ok: false,
   code,
 });
 
-/** Map only the one legacy transform whose meaning is proven to match the current identity. */
-export function resolveSpaceProofTransform(input: unknown): SpaceProofTransformResult {
+const V1_TRANSFORM_KEYS = new Set(["scale", "x", "y", "rot"]);
+
+/**
+ * Classify V1 replay eligibility without mapping legacy coordinates into the current transform.
+ * V1 has no durable orientation/capture basis, so even a centered transform cannot be exact.
+ */
+export function classifySpaceV1FrameReplay(input: unknown): SpaceV1FrameReplayResult {
   try {
     if (input === null || typeof input !== "object" || Array.isArray(input)) {
       return transformFailure("SPACE_PROOF_TRANSFORM_INVALID");
     }
     const value = input as Record<string, unknown>;
+    if (Object.keys(value).some((key) => !V1_TRANSFORM_KEYS.has(key))) {
+      return transformFailure("SPACE_PROOF_TRANSFORM_INVALID");
+    }
+
+    // Snapshot each potentially hostile field exactly once.
     const scale = value.scale;
     const x = value.x;
     const y = value.y;
@@ -132,16 +133,10 @@ export function resolveSpaceProofTransform(input: unknown): SpaceProofTransformR
     ) {
       return transformFailure("SPACE_PROOF_TRANSFORM_INVALID");
     }
-    if (scale !== 1 || x !== 0 || y !== 0 || (rot !== undefined && rot !== 0)) {
+    if (scale < 1 || scale > 5 || x !== 0 || y !== 0 || (rot !== undefined && rot !== 0)) {
       return transformFailure("SPACE_PROOF_TRANSFORM_UNSUPPORTED");
     }
-    return {
-      ok: true,
-      value: {
-        status: "identity-supported",
-        transform: { scale: 1, x: 0, y: 0, rotationQuarterTurns: 0 },
-      },
-    };
+    return transformFailure("SPACE_PROOF_ORIENTATION_UNCONFIRMED");
   } catch {
     return transformFailure("SPACE_PROOF_TRANSFORM_INVALID");
   }
