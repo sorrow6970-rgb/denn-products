@@ -50,7 +50,7 @@ Canvas·이미지 placeholder·스켈레톤, 재시도 버튼, 카카오/외부 
 
 - targeted unit `SpacePostAuthFrameView.test.tsx` **15/15 PASS**
 - `node scripts/check.mjs` **PASS** — format/lint/typecheck ×7/unit **1627/1627**(70 files)/build ×2
-- 전체 Chromium E2E **149 passed / 2 failed** — 실패 2건은 기준 커밋에서 이미 실패(아래 STOP)
+- 전체 Chromium E2E **151 passed / 0 failed** (변경 전 baseline 실측 3 failed / 145 passed)
 - safe-state Canvas **0**, catalog/proof/art 요청 **0**(인증 전후), retry **0**
 - console error/warning **0**, pageerror **0**, axe serious/critical **0**
 - 320px `scrollWidth <= clientWidth` **PASS**
@@ -61,19 +61,18 @@ Canvas·이미지 placeholder·스켈레톤, 재시도 버튼, 카카오/외부 
   `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`
 - 시각 결과 `docs/rebuild/results/spec-063/space-v1-blocked-{mobile-390x844,desktop-1280x800}.png`
 
-## ★ STOP — Founder 결정 필요
+## Founder Q1 = A (해소됨)
 
-`tests/e2e/space-frame-view.spec.ts`(스펙 060 fixture E2E) **2건이 기준 커밋 `e9dbb9e`에서 이미
-실패 중**이다. 이번 세션 변경 전 baseline 실측은 **3 failed / 145 passed**였고, 세 번째(production
-route)는 이번 스펙에서 해소됐다.
+`tests/e2e/space-frame-view.spec.ts`(스펙 060 fixture E2E) 2건은 기준 커밋 `e9dbb9e`에서 **이미
+실패 중**이었다(변경 전 baseline 실측 3 failed / 145 passed). 스펙 062가 `composeSpaceFramePlan()`을
+fail-closed로 바꾸면서 `preview-canvas`가 사라졌는데, 스펙 062는 FF-5=A 범위 밖이라 E2E를 실행하지도
+수정하지도 않았다.
 
-원인은 스펙 062다. `composeSpaceFramePlan()`이 V1에 대해 fail-closed로 바뀌면서 `preview-canvas`가
-더 이상 나타나지 않는데, 스펙 062는 FF-5=A 범위 밖이라 E2E를 실행하지도 수정하지도 않았다.
-
-이 파일과 `apps/mockup/src/e2e/space-frame-fixture.tsx`는 이번 스펙의 **허용 파일 목록 밖**이라
-손대지 않았다. 선택지는 스펙 `### QUESTIONS` Q1에 정리했다(권장 A: 허용 목록에 spec 파일만 추가해
-안전 차단 기대값으로 갱신 / B: composition export — gate 우회 seam이 생기므로 비권장 / C: 방치 —
-E2E 게이트 영구 red).
+Founder가 **A**를 선택해 이 spec 파일만 허용 목록에 추가했다. fixture
+`apps/mockup/src/e2e/space-frame-fixture.tsx`는 **변경하지 않았다**. 그 계측 자산을 그대로 살려,
+production route가 할 수 없는 검증을 한다 — 주입된 catalog reader·readiness factory·font
+environment가 **호출되지조차 않았음**. 도달 불가해진 canvas 단계 단언은 스펙 §7.2에 대체 coverage를
+명시하고 제거했다. 결과: 전체 Chromium E2E **151 passed / 0 failed**.
 
 ## 보호 파일 부수효과
 

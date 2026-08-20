@@ -33,16 +33,17 @@ placeholder 0, 재시도 버튼 0, 카카오/외부 링크 0. `section[aria-labe
 `role="alert"`, 자동 포커스 이동 없음, 320px 가로 overflow 0.
 
 targeted unit 15/15, 전체 `node scripts/check.mjs` PASS(unit 1627/1627), 전체 Chromium E2E
-**149 passed / 2 failed**, console error/warning 0, axe serious/critical 0, 실제 외부 egress 0,
-package/lockfile/Rules/firebase config diff 0, 포트 잔류 0. 고객 entry `index-6js4DafP.js`
+**151 passed / 0 failed**(변경 전 baseline 실측 3 failed / 145 passed), console error/warning 0,
+axe serious/critical 0, 실제 외부 egress 0, package/lockfile/Rules/firebase config diff 0, 포트 잔류 0. 고객 entry `index-6js4DafP.js`
 322,018 bytes, SHA-256 `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
 
-**STOP - Founder 결정 필요.** E2E 실패 2건은 `tests/e2e/space-frame-view.spec.ts`이며 기준 커밋
-`e9dbb9e`에서 **이미 실패 상태**다(변경 전 baseline 실측 3 failed / 145 passed). 스펙 062가
-`composeSpaceFramePlan()`을 fail-closed로 바꾸면서 `preview-canvas`가 사라졌기 때문이고, 스펙 062는
-FF-5=A 범위 밖이라 E2E를 실행하지도 수정하지도 않았다. 이 파일과
-`apps/mockup/src/e2e/space-frame-fixture.tsx`는 스펙 063 허용 파일 목록 밖이라 손대지 않았다.
-선택지 A/B/C는 스펙 `### QUESTIONS` Q1에 있다.
+**Founder Q1 = A.** `tests/e2e/space-frame-view.spec.ts` 2건은 기준 커밋 `e9dbb9e`에서 이미 실패
+상태였다(스펙 062가 `composeSpaceFramePlan()`을 fail-closed로 바꾼 결과이며, 스펙 062는 FF-5=A 범위
+밖이라 E2E를 실행하지도 수정하지도 않았다). Founder가 이 spec 파일만 허용 추가하기로 결정해 안전
+차단 기대값으로 갱신했다. fixture `apps/mockup/src/e2e/space-frame-fixture.tsx`는 변경 0이며, 그
+계측으로 주입된 catalog reader·readiness factory·font environment 호출 0을 직접 검증한다 —
+production route가 할 수 없는 검증이다. 도달 불가해진 canvas 단계 단언의 대체 coverage는 스펙
+§7.2에 명시했다.
 
 전체 E2E 실행은 `tests/e2e/mockup-browse.spec.ts` 때문에 보호 대상
 `docs/rebuild/results/spec-018/*.png` 2개를 무조건 다시 쓴다. stage/commit/restore하지 않고 working

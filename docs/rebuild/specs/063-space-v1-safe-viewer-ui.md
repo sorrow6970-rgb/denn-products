@@ -32,7 +32,8 @@ fail-closed 를 승인했다. 구현 `a09278a`는 `composeSpaceFramePlan()`이 V
    font load / Canvas plan보다 **먼저** 판정.
 2. Modern Studio 기준 **안전 차단 UI**(한국어) + 전용 CSS.
 3. `SpacePostAuthFrameView` 단위 테스트 신규.
-4. `tests/e2e/space-production-route.spec.ts`를 새 계약(안전 오류 + 요청 0)으로 갱신.
+4. `tests/e2e/space-production-route.spec.ts`와 (Founder Q1=A 이후)
+   `tests/e2e/space-frame-view.spec.ts`를 새 계약(안전 오류 + 요청 0)으로 갱신.
 5. 시각 검증 결과(`docs/rebuild/results/spec-063/`) + handoff/STATE/NEXT/CURRENT/live log 갱신.
 
 ### 제외 (하지 않는다)
@@ -58,6 +59,7 @@ fail-closed 를 승인했다. 구현 `a09278a`는 `composeSpaceFramePlan()`이 V
 | `apps/mockup/src/space/space-post-auth-frame-view.css` | 신규 |
 | `apps/mockup/src/space/SpacePostAuthFrameView.test.tsx` | 신규 |
 | `tests/e2e/space-production-route.spec.ts` | 새 계약으로 갱신 |
+| `tests/e2e/space-frame-view.spec.ts` | 새 계약으로 갱신 (Founder Q1=A로 허용 추가) |
 | `docs/rebuild/results/spec-063/*.png` | 신규 시각 결과 |
 | `docs/handoff/2026-08-20-...-handoff.md`, `Automation/*`, `docs/codex-claude-handoff/CURRENT.md`, `docs/live/CLAUDE_LIVE_PATCH_LOG.md` | 상태 동기화 |
 
@@ -220,21 +222,46 @@ fail-closed 자체는 `apps/mockup/src/catalog/*` 단위 테스트와
 `tests/e2e/mockup-catalog.spec.ts`에서 계속 검증된다. 새 E2E는 그 대신 "catalog 엔드포인트가 정상
 응답 가능한 상태여도 요청이 0"이라는 더 강한 성질을 검증한다.
 
-## 7. 알려진 범위 밖 회귀 (STOP 대상)
+## 7. 스펙 060 fixture E2E (Founder Q1=A로 해소)
 
-`tests/e2e/space-frame-view.spec.ts`(스펙 060 fixture E2E) 2건은 **이번 작업 이전, 기준 커밋
-`e9dbb9e`에서 이미 실패 상태**다. 스펙 062가 `composeSpaceFramePlan()`을 fail-closed로 바꾸면서
-`preview-canvas`가 더 이상 나타나지 않기 때문이며, 스펙 062는 FF-5=A에 따라 E2E를 실행하지도
-수정하지도 않았다.
+`tests/e2e/space-frame-view.spec.ts` 2건은 이번 작업 이전, 기준 커밋 `e9dbb9e`에서 **이미 실패
+상태**였다. 스펙 062가 `composeSpaceFramePlan()`을 fail-closed로 바꾸면서 `preview-canvas`가 더 이상
+나타나지 않기 때문이며, 스펙 062는 FF-5=A에 따라 E2E를 실행하지도 수정하지도 않았다.
 
-- 기준 baseline 측정(이번 세션, 변경 전): **3 failed / 145 passed**
+- 변경 전 baseline 실측: **3 failed / 145 passed**
   - `space-frame-view.spec.ts:7` — `preview-canvas` toBeVisible 실패
   - `space-frame-view.spec.ts:72` — `preview-canvas` toBeVisible 실패
-  - `space-production-route.spec.ts:41` — `preview-canvas` toBeVisible 실패 (← 이번 스펙에서 해소)
+  - `space-production-route.spec.ts:41` — `preview-canvas` toBeVisible 실패
 
-`space-frame-view.spec.ts`와 그 fixture `apps/mockup/src/e2e/space-frame-fixture.tsx`는 이번 스펙의
-**허용 파일 목록 밖**이다. 따라서 수정하지 않았고, Founder 결정 없이는 수정하지 않는다. 자세한 선택지는
-`### QUESTIONS` 참조.
+Founder가 **Q1=A**를 선택해 `tests/e2e/space-frame-view.spec.ts`를 허용 목록에 추가했다.
+`apps/mockup/src/e2e/space-frame-fixture.tsx`는 **변경하지 않았다** — fixture의 계측 자산을 그대로 두면
+production route가 할 수 없는 검증이 가능해진다.
+
+### 7.1 새 계약
+
+production route는 "네트워크가 안 나갔다"만 볼 수 있지만, 이 fixture는 주입된 catalog reader·
+readiness factory·font environment가 **호출되지조차 않았음**을 직접 증명한다.
+
+| 테스트 | 검증 |
+|---|---|
+| `blocks an unproven V1 scene before any injected port is used` | 인증 전 전체 계측 0 · view 0 → 인증 후 안전 안내 표시, `gateReads 1`이지만 catalog/readiness/proof/art/font 계측은 **전부 0** · `fixture-expand`(실제 폭 부여)와 `fixture-release-fonts` 후에도 Canvas 0·계측 0 · unmount→remount 후에도 Canvas 0, `readinessDisposes === readinessCreates`(둘 다 0) · 외부 요청 0 · console error/warning·pageerror 0 |
+| `an image-only frame is blocked the same way, with no font environment built` | textless scene도 동일하게 차단, `fontFactories 0`·`fontChecks []`, 외부 요청 0 |
+
+### 7.2 도달 불가해진 단언과 대체 coverage
+
+V1 scene으로는 ready plan에 도달할 수 없으므로 아래 단언은 제거했다. 근거 없이 coverage를
+없애지 않기 위해 같은 성질이 어디서 유지되는지 명시한다.
+
+| 제거된 단언 | 대체 coverage |
+|---|---|
+| ready plan에서 Canvas 1개 mount + `저장된 액자 시안` img | `apps/mockup/src/canvas/*` 단위 + `tests/e2e/canvas-surface.spec.ts` |
+| `proofLoads 1` / `artLoads 0` 소스 바인딩 | `apps/mockup/src/space/source-bound-readiness.test.ts` — `passes detached exact sources once and resolves only current ready bindings`, `keeps proof and art lifecycle independent and clear affects only its owner` |
+| `fontChecks === ['33.6px "Fixture Sans", sans-serif']` exact shorthand gate | `apps/mockup/src/space/use-space-frame-fonts.test.ts` — `requires the executor-compatible exact shorthand for nonempty authored text` |
+| textless scene의 font gate bypass | 같은 파일 — `does not require the browser font API when all current text values are empty` |
+| StrictMode setup→cleanup→setup owner 수명(`readinessCreates 2/4`, `disposes 1/3`) | `apps/mockup/src/space/source-bound-readiness.test.ts` — `disposes both owners once and permanently disables loads, resolves and bindings`; `apps/mockup/src/space/proof-image-owner.test.ts` — `dispose drops bindings and later load fails without creating another image` |
+| 교체·dispose 뒤 늦은 결과 미수용 | `proof-image-owner.test.ts` — `clear drops pending and ready state without accepting late results`, `replacement detaches A and ignores its late events while B owns the only binding` |
+
+`readinessDisposes === readinessCreates` 불변식 자체는 새 테스트에서도 그대로 단언한다(둘 다 0).
 
 ## 8. NOT TESTED / 계속 금지
 
@@ -247,25 +274,24 @@ fail-closed 자체는 `apps/mockup/src/catalog/*` 단위 테스트와
 
 ### QUESTIONS
 
-**Q1. `tests/e2e/space-frame-view.spec.ts`(+ `apps/mockup/src/e2e/space-frame-fixture.tsx`) 처리.**
+**Q1. `tests/e2e/space-frame-view.spec.ts` 처리 — 2026-08-20 Founder `A` 결정 (해소됨).**
 
-이 두 파일은 허용 목록 밖이라 손대지 않았다. 하지만 §7대로 기준 커밋에서 이미 실패 중이고,
-"전체 Chromium E2E PASS" 게이트는 이 파일을 갱신하지 않는 한 달성할 수 없다. 두 테스트는
-`SpacePostAuthFrameView`가 V1 scene으로 `preview-canvas`를 그리기를 기대하는데, 이는 FF-1=A와
-정면으로 모순된다.
+이 파일은 §7대로 기준 커밋 `e9dbb9e`에서 이미 실패 중이었고, "전체 Chromium E2E PASS" 게이트는 이
+파일을 갱신하지 않는 한 달성할 수 없었다. 두 테스트는 `SpacePostAuthFrameView`가 V1 scene으로
+`preview-canvas`를 그리기를 기대했는데, 이는 FF-1=A와 정면으로 모순된다.
 
-선택지:
-
-- **A (권장):** 이번 스펙의 허용 파일 목록에 `tests/e2e/space-frame-view.spec.ts`를 추가하고, 스펙
-  061 production-route와 동일하게 **안전 차단 기대값**으로 갱신한다. fixture의 owner/font/dispose
-  계측 자산은 남기되, 도달 불가능해진 canvas 단계 단언은 §6.2 형식으로 대체 coverage를 명시하고
-  제거한다. `apps/mockup/src/e2e/space-frame-fixture.tsx`는 그대로 둔다.
+- **A (선택됨):** `tests/e2e/space-frame-view.spec.ts`를 허용 파일 목록에 추가하고 안전 차단
+  기대값으로 갱신했다. fixture(`apps/mockup/src/e2e/space-frame-fixture.tsx`)는 **변경하지 않았고**
+  그 계측 자산을 그대로 활용해, 주입된 catalog reader·readiness factory·font environment가
+  **호출되지조차 않았음**을 검증한다. 도달 불가해진 canvas 단계 단언은 §7.2에 대체 coverage를
+  명시하고 제거했다. 결과: 전체 Chromium E2E **151 passed / 0 failed**.
 - B: fixture를 composition child에 직접 붙일 수 있도록 `SpaceExactFrameComposition`을 export한다.
-  → **권장하지 않는다.** gate를 우회할 수 있는 seam이 생기고, "안전 gate를 건너뛰는 경로 0"이라는
-  이번 스펙의 핵심 성질이 무너진다.
-- C: 두 테스트를 그대로 실패 상태로 남긴다. → E2E 게이트가 영구히 red가 되어 회귀 감지 능력을 잃는다.
+  → 채택하지 않음. gate를 우회할 수 있는 seam이 생겨 "안전 gate를 건너뛰는 경로 0"이라는 이번
+  스펙의 핵심 성질이 무너진다.
+- C: 두 테스트를 실패 상태로 남긴다. → 채택하지 않음. E2E 게이트가 영구히 red가 되어 회귀 감지
+  능력을 잃는다.
 
-Founder 결정 전까지 이 두 파일은 변경하지 않는다.
+남은 열린 질문은 없다.
 
 ---
 
@@ -279,20 +305,20 @@ Founder 결정 전까지 이 두 파일은 변경하지 않는다.
 | `apps/mockup/src/space/space-post-auth-frame-view.css` | 신규. 기존 토큰만, 새 색 리터럴 0 |
 | `apps/mockup/src/space/SpacePostAuthFrameView.test.tsx` | 신규 15 케이스 |
 | `tests/e2e/space-production-route.spec.ts` | 안전 차단 계약으로 재작성 (6 테스트) |
+| `tests/e2e/space-frame-view.spec.ts` | Founder Q1=A 이후 안전 차단 계약으로 재작성 (2 테스트) |
 | `docs/rebuild/results/spec-063/*.png` | 390×844 / 1280×800 |
 
-`packages/spaces` 리더, `proof-image.ts`, `frame-plan.ts`, `@denn/ui`, browse/preview UI는 변경 0.
+`packages/spaces` 리더, `proof-image.ts`, `frame-plan.ts`, `@denn/ui`, browse/preview UI,
+`apps/mockup/src/e2e/space-frame-fixture.tsx`는 변경 **0**.
 
 ### 검증 결과
 
 - targeted unit `SpacePostAuthFrameView.test.tsx`: **15/15 PASS**
 - `node scripts/check.mjs`: **PASS** — format / lint / typecheck ×7 / unit **1627/1627** (70 files) / build ×2
-- 전체 Chromium E2E `node scripts/e2e-run.mjs`: **149 passed / 2 failed**
-  - 실패 2건은 전부 `tests/e2e/space-frame-view.spec.ts` — **기준 커밋 `e9dbb9e`에서 이미 실패**
-    (변경 전 baseline 실측 **3 failed / 145 passed**). 이번 스펙이 그중 production-route 1건을 해소했고,
-    남은 2건은 허용 파일 목록 밖이라 손대지 않았다 (§7, `QUESTIONS` Q1).
-  - 신규/갱신 production-route 6건은 **전부 PASS**
+- 전체 Chromium E2E `node scripts/e2e-run.mjs`: **151 passed / 0 failed**
+  - 변경 전 baseline 실측은 **3 failed / 145 passed**였다(§7). 세 실패 전부 해소했다.
 - safe-state Canvas **0**, catalog/proof/art 외부 요청 **0**(인증 전후 모두), retry **0**
+- fixture 계측 기준: 주입된 catalog reader·readiness factory·font environment 호출 **0**
 - console error/warning **0**, `pageerror` **0**
 - accessibility serious/critical **0** (axe)
 - 320px 가로 overflow **0** (`scrollWidth <= clientWidth`)
@@ -307,8 +333,8 @@ Founder 결정 전까지 이 두 파일은 변경하지 않는다.
 ### 주의 — 보호 파일 부수효과
 
 `tests/e2e/mockup-browse.spec.ts`는 전체 E2E 실행 시 `docs/rebuild/results/spec-018/*.png` 2개를
-**무조건 다시 쓴다**. 따라서 "전체 Chromium E2E 실행" 요구를 만족시키는 과정에서 두 PNG의 mtime이
-갱신됐다. 두 파일은 보호 대상이므로 **stage/commit/restore하지 않았고** working tree에 그대로 둔다.
+**무조건 다시 쓴다**. "전체 Chromium E2E 실행" 요구를 만족시키는 과정에서 두 PNG의 mtime이 갱신됐다.
+두 파일은 보호 대상이므로 **stage/commit/restore하지 않았고** working tree에 그대로 둔다.
 
 ### NOT TESTED / 금지 유지
 

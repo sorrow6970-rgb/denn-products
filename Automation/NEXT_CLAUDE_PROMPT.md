@@ -4,7 +4,7 @@
 active_unit: `spec-063-space-v1-safe-viewer-ui` — **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK**
 completed_unit: `spec-062-space-v1-orientation-transform-replay-block` — **DONE / CODEX_PASSED / LOCAL_UNIT_ONLY / UI_0**
 기준: 스펙 062 종료 **`e9dbb9e`**
-next_transition: **`FOUNDER_DECISION_REQUIRED`** (스펙 063 `QUESTIONS` Q1)
+next_transition: **`CODEX_INDEPENDENT_REVIEW`** (스펙 063 `QUESTIONS` Q1 = A 해소)
 
 ## ★ 스펙 063 — V1 안전 차단 viewer UI/UX (구현 완료, 검수 대기)
 
@@ -22,19 +22,22 @@ proof/art 요청 0, Canvas 0, retry 0, 자동 fallback/merge/migration 0.
 placeholder 0, 재시도 버튼 0, 카카오/외부 링크 0. `role="alert"` + `aria-labelledby`, 320px 가로 overflow 0.
 
 검증: targeted unit 15/15, `node scripts/check.mjs` PASS(unit 1627/1627), 전체 Chromium E2E
-**149 passed / 2 failed**, console error/warning 0, axe serious/critical 0, 실제 외부 egress 0,
-포트 잔류 0. 고객 entry `index-6js4DafP.js` 322,018 bytes, SHA-256
+**151 passed / 0 failed**(변경 전 baseline 실측 3 failed / 145 passed), console error/warning 0,
+axe serious/critical 0, 실제 외부 egress 0, 포트 잔류 0. 고객 entry `index-6js4DafP.js` 322,018 bytes, SHA-256
 `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
 
-### ★ STOP — Founder 결정 필요 (Q1)
+### Founder Q1 = A (해소됨)
 
-E2E 실패 2건은 `tests/e2e/space-frame-view.spec.ts`이며 **기준 커밋 `e9dbb9e`에서 이미 실패 상태**다
-(변경 전 baseline 실측 3 failed / 145 passed). 스펙 062가 `composeSpaceFramePlan()`을 fail-closed로
-바꾸면서 `preview-canvas`가 사라졌기 때문이고, 스펙 062는 FF-5=A 범위 밖이라 E2E를 실행하지도
-수정하지도 않았다.
+`tests/e2e/space-frame-view.spec.ts` 2건은 기준 커밋 `e9dbb9e`에서 이미 실패 상태였다. 스펙 062가
+`composeSpaceFramePlan()`을 fail-closed로 바꾼 결과이며, 스펙 062는 FF-5=A 범위 밖이라 E2E를
+실행하지도 수정하지도 않았다.
 
-이 파일과 `apps/mockup/src/e2e/space-frame-fixture.tsx`는 스펙 063 허용 파일 목록 밖이라 손대지 않았다.
-선택지 A/B/C는 스펙 `### QUESTIONS`에 있다. 결정 전까지 두 파일은 변경하지 않는다.
+Founder가 A를 선택해 이 spec 파일만 허용 추가했다. fixture
+`apps/mockup/src/e2e/space-frame-fixture.tsx`는 변경 0이고, 그 계측으로 주입된 catalog reader·
+readiness factory·font environment 호출 0을 직접 검증한다(production route가 할 수 없는 검증).
+도달 불가해진 canvas 단계 단언의 대체 coverage는 스펙 §7.2에 명시했다.
+
+다음은 Codex 독립 검수다. 자동 시작 0.
 
 ## 참고 — 이전 단위
 

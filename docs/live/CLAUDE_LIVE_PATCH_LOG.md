@@ -4495,18 +4495,20 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `section[aria-labelledby]` + `h2` + 본문 `role="alert"`, 자동 포커스 이동 없음, 320px 가로 overflow 0.
 - 변경 파일은 허용 범위뿐이다: `SpacePostAuthFrameView.tsx`, 신규
   `space-post-auth-frame-view.css`, 신규 `SpacePostAuthFrameView.test.tsx`,
-  `tests/e2e/space-production-route.spec.ts`, 신규 `docs/rebuild/results/spec-063/*.png`, 문서 5종.
+  `tests/e2e/space-production-route.spec.ts`, `tests/e2e/space-frame-view.spec.ts`(Founder Q1=A로
+  허용 추가), 신규 `docs/rebuild/results/spec-063/*.png`, 문서 5종.
 - 검증: targeted unit **15/15**, `node scripts/check.mjs` PASS(format/lint/typecheck/unit
-  **1627/1627**/build), 전체 Chromium E2E **149 passed / 2 failed**, console error/warning 0,
+  **1627/1627**/build), 전체 Chromium E2E **151 passed / 0 failed**, console error/warning 0,
   `pageerror` 0, axe serious/critical 0, 실제 외부 egress 0, `git diff --check` PASS,
   package/lockfile/Rules/firebase config diff 0, 신규 의존성 0, 포트 잔류 0.
 - 고객 entry `index-6js4DafP.js`, **322,018 bytes**, SHA-256
   **`A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`**.
-- **STOP - Founder 결정 필요.** 실패 2건은 `tests/e2e/space-frame-view.spec.ts`이며 기준 커밋
-  `e9dbb9e`에서 이미 실패 상태다(변경 전 baseline 실측 **3 failed / 145 passed**). 스펙 062가
-  `composeSpaceFramePlan()`을 fail-closed로 바꾼 결과이며, 해당 파일과
-  `apps/mockup/src/e2e/space-frame-fixture.tsx`는 스펙 063 허용 목록 밖이라 손대지 않았다.
-  선택지는 스펙 `### QUESTIONS` Q1.
+- **Founder Q1 = A.** `tests/e2e/space-frame-view.spec.ts` 2건은 기준 커밋 `e9dbb9e`에서 이미
+  실패 상태였다(변경 전 baseline 실측 **3 failed / 145 passed**, 스펙 062의 fail-closed 결과).
+  Founder가 이 spec 파일만 허용 추가하기로 결정해 안전 차단 기대값으로 갱신했다. fixture
+  `apps/mockup/src/e2e/space-frame-fixture.tsx`는 변경 0이며, 그 계측으로 주입된 catalog reader·
+  readiness factory·font environment 호출 0을 직접 검증한다. 도달 불가 단언의 대체 coverage는
+  스펙 §7.2.
 - 전체 E2E 실행이 보호 대상 `docs/rebuild/results/spec-018/*.png` 2개를 무조건 다시 쓴다.
   stage/commit/restore하지 않고 working tree에 그대로 뒀다.
 - V2 schema/fingerprint/issuer, admin orientation UI, V1 migration/재발급/same-token rewrite, 실제

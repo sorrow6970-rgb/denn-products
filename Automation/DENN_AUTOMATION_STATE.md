@@ -8,13 +8,13 @@ completed_unit: spec-062-space-v1-orientation-transform-replay-block   # DONE, C
 active_unit: spec-063-space-v1-safe-viewer-ui   # IMPLEMENTED, READY_FOR_CODEX, LOCAL_ONLY, NO_NETWORK
 state: READY_FOR_CODEX
 baseline_commit: e9dbb9e   # spec 062 closure
-candidate_commit: working-tree   # allowed spec 063 files only; not committed pending Q1
-verified_commit: e9dbb9e+spec063-worktree   # targeted 15, unit 1627, full check, Chromium 149/2
-origin_relation: "HEAD equals origin; spec 063 changes are uncommitted"
-working_tree: "spec 063 allowed files + protected Founder/user changes; protected paths remain unstaged"
+candidate_commit: a3984a4 + spec-063 Q1=A follow-up
+verified_commit: spec-063 head   # targeted 15, unit 1627, full check, Chromium 151/151
+origin_relation: "HEAD equals origin after spec 063 push"
+working_tree: "protected Founder/user changes only; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_DECISION_REQUIRED   # spec 063 QUESTIONS Q1 - tests/e2e/space-frame-view.spec.ts
+next_transition: CODEX_INDEPENDENT_REVIEW   # spec 063 QUESTIONS Q1 answered A
 automation_loop: removed (no new automation or recurring task is created)
 commit_owner: Claude (spec 063 allowed files only)
 push_policy: fast-forward-only
@@ -32,9 +32,11 @@ deploy: forbidden
 - 안전 안내는 Modern Studio 토큰만 쓴다. 오류코드·URL·token·비밀번호·ID·SDK 문구 0,
   Canvas·이미지 placeholder 0, 재시도 버튼 0, 카카오/외부 링크 0.
 - targeted unit 15/15, 전체 `node scripts/check.mjs` PASS(unit 1627/1627), 전체 Chromium E2E
-  149 passed / 2 failed.
-- 실패 2건은 `tests/e2e/space-frame-view.spec.ts`이며 기준 커밋 `e9dbb9e`에서 이미 실패 상태다
-  (변경 전 baseline 실측 3 failed / 145 passed). 허용 파일 목록 밖이라 손대지 않았다.
+  **151 passed / 0 failed** (변경 전 baseline 실측 3 failed / 145 passed).
+- Founder Q1=A로 `tests/e2e/space-frame-view.spec.ts`를 허용 추가해 안전 차단 기대값으로 갱신했다.
+  fixture `apps/mockup/src/e2e/space-frame-fixture.tsx`는 변경 0이며, 그 계측으로 주입된 catalog
+  reader·readiness factory·font environment 호출 0을 검증한다. 도달 불가 단언의 대체 coverage는
+  스펙 §7.2.
 - safe-state Canvas 0, catalog/proof/art 요청 0(인증 전후), console error/warning 0,
   axe serious/critical 0, 320px 가로 overflow 0, 실제 외부 egress 0.
 - 고객 entry `index-6js4DafP.js` 322,018 bytes, SHA-256
