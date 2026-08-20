@@ -10,7 +10,7 @@ state: WAITING_FOR_NEXT_MANUAL_TASK
 baseline_commit: e9dbb9e   # spec 062 closure
 candidate_commit: a3984a4 + a28e27a   # implementation + Founder Q1=A E2E follow-up
 verified_commit: a28e27a   # Codex independent review passed
-origin_relation: "HEAD equals origin at reviewed implementation head; closure docs pending fast-forward push"
+origin_relation: "HEAD equals origin after spec 063 closure fast-forward push"
 working_tree: "protected Founder/user changes only; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
