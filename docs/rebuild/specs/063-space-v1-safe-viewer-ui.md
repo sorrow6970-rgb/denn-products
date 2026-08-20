@@ -345,3 +345,27 @@ V1 scene으로는 ready plan에 도달할 수 없으므로 아래 단언은 제�
 
 **READY_FOR_CODEX.** Codex 독립 검수 전 최종 DONE으로 확정하지 않는다. 다음 V2/admin UI 스펙은 자동
 시작하지 않는다.
+
+---
+
+## CODEX REVIEW (2026-08-20)
+
+**CODEX_PASSED / DONE.** 구현 검증 기준 HEAD는 `a28e27a`다.
+
+- 코드·테스트·계약 diff 독립 검토: 추가 결함 0
+- targeted unit: **15/15 PASS**
+- `node scripts/check.mjs`: **PASS** — unit **1627/1627**, format/lint/typecheck/build 포함
+- 변경 범위 Chromium E2E: **8/8 PASS**
+  (`space-production-route.spec.ts` 6건 + `space-frame-view.spec.ts` 2건)
+- Claude 전체 Chromium 결과 **151/151** 및 기준 baseline **3 failed / 145 passed** 기록 대조 완료
+- 고객 entry `index-6js4DafP.js`, **322,018 bytes**, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159` 독립 재현
+- spec-063 모바일·데스크톱 PNG 직접 확인: 안전 차단 화면의 정보 계층·문구·wrapping 결함 0
+- `git diff --check` PASS, package/lockfile/Rules/Firebase config diff 0, 포트·검수 temp 잔류 0
+
+전체 E2E는 보호 spec-018 PNG를 무조건 다시 쓰므로 Codex는 보호 파일을 건드리지 않는 변경 범위 E2E만
+독립 재실행했다. Claude의 전체 151/151 실행 기록은 보존한다. 실제 Firebase/project/token/document,
+운영 V1 scene, 실제 catalog/proof/CORS, 실기기·실폰트, V2 schema/fingerprint/issuer, admin orientation UI,
+migration/재발급, write/publish/deploy/cutover는 계속 **NOT TESTED / NOT IMPLEMENTED / 금지**다.
+
+다음 스펙은 자동 시작하지 않는다.

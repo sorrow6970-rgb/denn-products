@@ -1,6 +1,6 @@
 # 스펙 063 space V1 안전 차단 viewer UI/UX handoff
 
-- 상태: `IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_DEPLOY`
+- 상태: `DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_DEPLOY`
 - 정본: `docs/rebuild/specs/063-space-v1-safe-viewer-ui.md`
 - 기준: `e9dbb9e` (스펙 062 종료)
 - 담당: Claude (Founder FF-5=A)
@@ -86,5 +86,13 @@ environment가 **호출되지조차 않았음**. 도달 불가해진 canvas 단�
 실기기·실폰트 렌더는 NOT TESTED. V2 schema/fingerprint/issuer, admin orientation UI, V1
 migration/재발급/same-token rewrite, write/publish/deploy/cutover는 NOT IMPLEMENTED 또는 금지.
 
-다음 V2/admin UI 스펙은 자동 시작하지 않는다. Codex 독립 검수 전 스펙 063을 최종 DONE으로 확정하지
-않는다.
+## Codex 독립 검수
+
+구현 기준 HEAD `a28e27a`를 검수해 추가 결함 없이 **CODEX_PASSED**로 판정했다. targeted unit
+15/15, `node scripts/check.mjs` PASS(unit 1627/1627), 변경 범위 Chromium E2E 8/8,
+`git diff --check`, 고객 entry 파일명·바이트·SHA-256을 독립 재현했다. 두 spec-063 PNG도 직접
+확인했다. 전체 Chromium 151/151은 Claude 실행 기록과 변경 범위를 대조했고, Codex 재실행은 보호
+spec-018 PNG를 쓰지 않는 두 변경 spec으로 제한했다.
+
+다음 V2/admin UI 스펙은 자동 시작하지 않는다. 스펙 063은 **DONE / CODEX_PASSED**이며
+`WAITING_FOR_NEXT_MANUAL_TASK`에서 멈춘다.

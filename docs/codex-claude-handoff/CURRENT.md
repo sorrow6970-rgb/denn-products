@@ -9,7 +9,7 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 063 V1 안전 차단 viewer UI/UX 구현이 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 063 V1 안전 차단 viewer UI/UX가 DONE / CODEX_PASSED로 종료됐다.**
 
 정본 `docs/rebuild/specs/063-space-v1-safe-viewer-ui.md`, handoff
 `docs/handoff/2026-08-20-spec-063-space-v1-safe-viewer-ui-handoff.md`.
@@ -49,10 +49,15 @@ production route가 할 수 없는 검증이다. 도달 불가해진 canvas 단�
 `docs/rebuild/results/spec-018/*.png` 2개를 무조건 다시 쓴다. stage/commit/restore하지 않고 working
 tree에 그대로 뒀다.
 
+Codex는 구현 HEAD `a28e27a`의 코드·테스트·계약 diff를 독립 검토했고 추가 결함을 찾지 못했다.
+targeted unit **15/15**, `node scripts/check.mjs` PASS(unit **1627/1627**), 변경 범위 Chromium E2E
+**8/8**, `git diff --check`를 독립 재현했다. Claude의 전체 Chromium **151/151** 결과와 고객 entry
+파일명·322,018 bytes·SHA-256도 대조 일치했다. 두 spec-063 시각 결과를 직접 확인했고 안전 차단 화면의
+계층·문구·모바일 wrapping에 결함을 찾지 못했다. 포트와 검수 temp 잔류는 0이다.
+
 실제 V2 schema/fingerprint/issuer, admin orientation UI, V1 migration/재발급/same-token rewrite, 실제
 Firebase/network/운영 데이터/pixel parity/write/publish/deploy/cutover는 NOT TESTED/NOT IMPLEMENTED
-또는 금지다. Codex 독립 검수 전 스펙 063을 최종 DONE으로 확정하지 않으며 다음 V2/admin UI 스펙은
-자동 시작하지 않는다.
+또는 금지다. 스펙 063은 **DONE / CODEX_PASSED**이며 다음 스펙은 자동 시작하지 않는다.
 
 > 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 062 V1 방향·사진 transform 재현 차단이 완료됐다.**
 

@@ -4,24 +4,24 @@
 updated_at: 2026-08-20
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-062-space-v1-orientation-transform-replay-block   # DONE, CODEX_PASSED, LOCAL_UNIT_ONLY, UI_0
-active_unit: spec-063-space-v1-safe-viewer-ui   # IMPLEMENTED, READY_FOR_CODEX, LOCAL_ONLY, NO_NETWORK
-state: READY_FOR_CODEX
+completed_unit: spec-063-space-v1-safe-viewer-ui   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK
 baseline_commit: e9dbb9e   # spec 062 closure
-candidate_commit: a3984a4 + spec-063 Q1=A follow-up
-verified_commit: spec-063 head   # targeted 15, unit 1627, full check, Chromium 151/151
-origin_relation: "HEAD equals origin after spec 063 push"
+candidate_commit: a3984a4 + a28e27a   # implementation + Founder Q1=A E2E follow-up
+verified_commit: a28e27a   # Codex independent review passed
+origin_relation: "HEAD equals origin at reviewed implementation head; closure docs pending fast-forward push"
 working_tree: "protected Founder/user changes only; protected paths remain unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_INDEPENDENT_REVIEW   # spec 063 QUESTIONS Q1 answered A
+next_transition: WAITING_FOR_NEXT_MANUAL_TASK
 automation_loop: removed (no new automation or recurring task is created)
-commit_owner: Claude (spec 063 allowed files only)
+commit_owner: Codex (spec 063 closure documents only)
 push_policy: fast-forward-only
 deploy: forbidden
 ```
 
-## 스펙 063 V1 안전 차단 viewer UI/UX 구현 (2026-08-20)
+## 스펙 063 V1 안전 차단 viewer UI/UX 완료 (2026-08-20)
 
 - Founder FF-5=A에 따라 Claude가 UI/UX를 담당했다. 정본
   `docs/rebuild/specs/063-space-v1-safe-viewer-ui.md`, handoff
@@ -46,7 +46,12 @@ deploy: forbidden
   stage/commit/restore하지 않고 working tree에 그대로 둔다.
 - 실제 V2 schema/fingerprint/issuer, admin orientation UI, migration, Firebase/network/write/deploy는
   NOT IMPLEMENTED 또는 금지다.
-- 상태 READY_FOR_CODEX. Codex 독립 검수 전 최종 DONE 확정 안 함. 다음 V2/admin UI 스펙 자동 시작 0.
+- Codex 독립 검수: 코드·테스트·계약 diff에서 추가 결함 0. targeted unit **15/15**,
+  `node scripts/check.mjs` PASS(unit **1627/1627**), 변경 범위 Chromium E2E **8/8**를 독립 재실행했다.
+  Claude의 전체 Chromium **151/151** 결과도 기록과 변경 범위로 대조했다.
+- 두 spec-063 시각 결과를 직접 확인했고 안전 차단 화면의 계층·문구·320px wrapping에 결함을 찾지 못했다.
+- 포트 4183/4184/4185/8080/9099/9199 및 검수 temp 잔류 0. 구현 HEAD `a28e27a`는 origin과 0/0이다.
+- 상태 **DONE / CODEX_PASSED**. 다음 단위는 자동 시작하지 않고 `WAITING_FOR_NEXT_MANUAL_TASK`에서 멈춘다.
 
 ## 스펙 062 V1 방향·transform 재현 차단 완료 (2026-08-20)
 

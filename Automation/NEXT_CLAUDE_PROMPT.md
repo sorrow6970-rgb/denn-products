@@ -1,12 +1,12 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-063-space-v1-safe-viewer-ui` — **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK**
-completed_unit: `spec-062-space-v1-orientation-transform-replay-block` — **DONE / CODEX_PASSED / LOCAL_UNIT_ONLY / UI_0**
-기준: 스펙 062 종료 **`e9dbb9e`**
-next_transition: **`CODEX_INDEPENDENT_REVIEW`** (스펙 063 `QUESTIONS` Q1 = A 해소)
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-063-space-v1-safe-viewer-ui` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
+검증 기준: 스펙 063 구현 HEAD **`a28e27a`**
+next_transition: **`WAITING_FOR_NEXT_MANUAL_TASK`**
 
-## ★ 스펙 063 — V1 안전 차단 viewer UI/UX (구현 완료, 검수 대기)
+## ★ 스펙 063 — V1 안전 차단 viewer UI/UX (종료)
 
 정본: `docs/rebuild/specs/063-space-v1-safe-viewer-ui.md`
 handoff: `docs/handoff/2026-08-20-spec-063-space-v1-safe-viewer-ui-handoff.md`
@@ -37,7 +37,17 @@ Founder가 A를 선택해 이 spec 파일만 허용 추가했다. fixture
 readiness factory·font environment 호출 0을 직접 검증한다(production route가 할 수 없는 검증).
 도달 불가해진 canvas 단계 단언의 대체 coverage는 스펙 §7.2에 명시했다.
 
-다음은 Codex 독립 검수다. 자동 시작 0.
+Codex 독립 검수에서 코드·테스트·계약상 추가 결함을 찾지 못했다. 독립 재현은 targeted unit
+**15/15**, `node scripts/check.mjs` PASS(unit **1627/1627**), 변경 범위 Chromium E2E **8/8**,
+`git diff --check` PASS다. Claude의 전체 Chromium **151/151** 결과와 고객 entry 해시도 대조 일치했다.
+두 spec-063 시각 결과를 직접 확인했고 안전 차단 화면의 계층·문구·모바일 wrapping에 결함을 찾지 못했다.
+
+실제 Firebase/project/token/document, 운영 V1 scene, 실제 catalog/proof/CORS, 실기기·실폰트,
+V2 schema/fingerprint/issuer, admin orientation UI, migration/재발급, write/publish/deploy/cutover는 여전히
+**NOT TESTED / NOT IMPLEMENTED / 금지**다.
+
+스펙 063은 **DONE / CODEX_PASSED**다. 다음 스펙이나 구현은 자동 시작하지 않는다. Founder의 다음 수동
+작업을 기다린다.
 
 ## 참고 — 이전 단위
 

@@ -4515,3 +4515,19 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   Firebase/network/운영 데이터/pixel parity/write/publish/deploy/cutover는 NOT TESTED/NOT IMPLEMENTED
   또는 금지다.
 - 상태 `READY_FOR_CODEX`. Codex 독립 검수 전 최종 DONE 확정 안 함. 다음 V2/admin UI 스펙 자동 시작 0.
+
+## 2026-08-20 - 스펙 063 V1 안전 차단 viewer UI/UX · CODEX_PASSED / DONE
+
+- 구현 검증 기준 HEAD `a28e27a`의 코드·테스트·계약 diff를 독립 검토했고 추가 결함을 찾지 못했다.
+- targeted unit **15/15**, `node scripts/check.mjs` PASS(unit **1627/1627**), 변경 범위 Chromium E2E
+  **8/8**, `git diff --check`를 독립 재현했다.
+- Claude의 전체 Chromium **151/151** 결과와 고객 entry `index-6js4DafP.js` **322,018 bytes**,
+  SHA-256 `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`를 대조했다.
+- spec-063 모바일·데스크톱 PNG를 직접 확인했고 안전 차단 화면의 정보 계층·문구·wrapping에 결함을
+  찾지 못했다. 보호 spec-018 PNG는 stage/commit/restore하지 않았다.
+- package/lockfile/Rules/Firebase config diff 0, 포트 4183/4184/4185/8080/9099/9199와 검수 temp 잔류 0.
+- 실제 Firebase/project/token/document, 운영 V1 scene, 실제 catalog/proof/CORS, 실기기·실폰트,
+  V2 schema/fingerprint/issuer, admin orientation UI, migration/재발급, write/publish/deploy/cutover는
+  계속 **NOT TESTED / NOT IMPLEMENTED / 금지**다.
+- 스펙 063은 **DONE / CODEX_PASSED**. 다음 작업은 자동 시작하지 않고
+  `WAITING_FOR_NEXT_MANUAL_TASK`에서 멈춘다.
