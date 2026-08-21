@@ -5,16 +5,16 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-065-space-v2-local-issuer-projector   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: dcd893c   # spec 064 closure
-candidate_commit: ec7610e   # spec 065 correction round 1 (C-1~C-3)
-verified_commit: ec7610e   # spec 065 correction round 1 independently passed
-origin_relation: "review baseline HEAD=origin 7255012; ahead/behind 0/0 before Codex closure documents"
-working_tree: "Codex closure documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
-fix_round: 1   # C-1~C-3 corrected
+active_unit: spec-066-space-v2-local-proof-asset-preparation   # CONTRACT READY, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CLAUDE
+baseline_commit: 3681cb9   # spec 065 closure/HOLD record
+candidate_commit: none
+verified_commit: none
+origin_relation: "HEAD=origin 3681cb9 before unstaged spec 066 contract documents; ahead/behind 0/0"
+working_tree: "spec 066 contract documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_NEXT_MANUAL_TASK
+next_transition: CLAUDE_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,17 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 70-75% complete; 25-30% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 066 local proof asset preparation 준비 (2026-08-21)
+
+- 정본 `docs/rebuild/specs/066-space-v2-local-proof-asset-preparation.md`, handoff
+  `docs/handoff/2026-08-21-spec-066-space-v2-local-proof-asset-preparation-handoff.md`.
+- PNG bytes를 await 전에 1회 복사하고 lowercase UUID v4 path, PNG signature/IHDR dimensions,
+  SHA-256 descriptor와 fresh upload-byte copies를 같은 snapshot에 묶는 admin local-only 경계다.
+- 허용 제품 파일은 신규 non-UI module/unit 2개뿐이다. App/UI/CSS/package/lockfile/Firebase/Rules/config
+  변경 0, 실제 network/upload/token/encryption/document create/viewer/deploy 0이다.
+- 전체 진행도는 **70~75% / 잔여 25~30% 유지**다. 계약 문서만 준비했으므로 제품 작업축 상태는 아직
+  바뀌지 않았다.
 
 ## Claude Code HOLD 확인 (2026-08-21)
 

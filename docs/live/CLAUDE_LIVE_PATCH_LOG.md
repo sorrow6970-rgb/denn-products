@@ -4793,3 +4793,18 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   spec-018 PNG 2개, render CRLF 표시)은 stage/commit/restore하지 않았다.
 - 상태는 계속 `WAITING_FOR_NEXT_MANUAL_TASK`다. 다음 단위는 사용자의 수동 지시와 Codex의 새
   `docs/rebuild/specs/NNN-*.md`가 나온 뒤에만 시작한다.
+
+## 2026-08-21(10) - 스펙 066 local proof asset preparation 계약 · READY_FOR_CLAUDE
+
+- 최신 Claude HOLD 기록과 HEAD=origin `3681cb9`, ahead/behind 0/0, staged 0을 확인했다.
+- 다음 최소 비-UI 단위로 `docs/rebuild/specs/066-space-v2-local-proof-asset-preparation.md`와 handoff를
+  작성했다. GG-4=A의 approved path/PNG/digest shape를 local immutable snapshot 경계로만 구체화한다.
+- caller PNG bytes 1회 copy → lowercase UUID v4 path → PNG signature/첫 IHDR dimensions → exact bytes
+  SHA-256 descriptor → fresh upload-byte copies를 한 경계로 묶는다. full PNG decode/CRC/IDAT/IEND 성공은
+  주장하지 않는다.
+- 허용 제품 파일은 신규 admin non-UI module/unit 2개뿐이다. App/UI/CSS/package/lockfile/Firebase/
+  Rules/config, 실제 network/upload/token/encryption/Firestore create/viewer/deploy는 계속 0이다.
+- **전체 리빌드 진행도 70~75% / 잔여 25~30%, 변동 없음.** 계약 문서만 준비해 제품 작업축은 아직
+  이동하지 않았다. Claude 구현 완료 후 검수 통과 시에만 변동 근거를 다시 평가한다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. NEXT 상단에 Claude Code에 그대로
+  전달할 완성된 실행 문구를 남겼다. 자동화·반복 작업 생성 0, 보호 대상 조작 0이다.

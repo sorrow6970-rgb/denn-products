@@ -20,7 +20,21 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 065는 DONE / CODEX_PASSED다.**
+상태: **`READY_FOR_CLAUDE` - 스펙 066 local proof asset preparation 계약이 준비됐다.**
+
+정본 `docs/rebuild/specs/066-space-v2-local-proof-asset-preparation.md`, handoff
+`docs/handoff/2026-08-21-spec-066-space-v2-local-proof-asset-preparation-handoff.md`. 기준 HEAD=origin
+`3681cb9`, ahead/behind 0/0이다.
+
+이번 단위는 PNG bytes를 한 번 복사해 approved UUID path, PNG signature/IHDR dimensions, SHA-256
+descriptor와 later-upload용 fresh copies를 같은 local snapshot에 묶는다. 신규 admin non-UI module/unit
+두 파일만 허용한다. App/UI/CSS/package/lockfile/Firebase/Rules/config와 실제 network/upload/token/
+encryption/document create/viewer/deploy는 금지다.
+
+전체 리빌드 진행도는 **70~75% / 잔여 25~30% 유지**다. 스펙 066은 아직 계약 준비만 완료됐으므로
+7개 제품 작업축 상태는 변하지 않았다. Claude 구현·검증 후 `READY_FOR_CODEX`에서 독립 검수를 받는다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 065는 DONE / CODEX_PASSED다.**
 
 Claude Code는 2026-08-21에 이 HOLD를 확인하고 **구현하지 않았다**(제품 diff 0, 자동화 생성 0).
 재확인 결과: HEAD=origin ahead/behind 0/0, targeted+spaces 179/179, `node scripts/check.mjs` PASS

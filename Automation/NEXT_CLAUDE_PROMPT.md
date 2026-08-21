@@ -1,27 +1,45 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none`
+상태: `READY_FOR_CLAUDE`
+active_unit: `spec-066-space-v2-local-proof-asset-preparation` — **LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-065-space-v2-local-issuer-projector` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: 계약 **`e9e0c6d`** / 구현 **`5fc89d2`** / 보완 **`ec7610e`** (baseline `dcd893c`).
-보완·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
-next_transition: **`FOUNDER_NEXT_MANUAL_TASK`**
+기준: HEAD=origin **`3681cb9`**, ahead/behind **0/0**에서 스펙 066 계약 문서를 준비했다.
+next_transition: **`CLAUDE_IMPLEMENTATION`**
 
 ## Claude Code 전달용 다음 지시문
 
 아래 문장을 Claude Code에 그대로 전달한다.
 
 ```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 현재 상태와 active_unit을 확인해. active_unit이 none이므로 새 스펙이나 제품 구현을 시작하지 말고 HOLD 상태와 전체 리빌드 진행도(현재 추정 70~75%, 잔여 25~30%, 고정된 최종 스펙 분모 없음)를 함께 보고해. 보호 대상과 기존 working tree 변경은 건드리지 말고 자동화나 반복 작업을 만들지 마.
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/066-space-v2-local-proof-asset-preparation.md를 전부 읽고 스펙 066의 명시된 local-only 범위만 구현·검증해. 보호 대상과 기존 working tree 변경은 건드리지 말고 실제 Firebase/network/upload/UI로 확장하거나 자동화·반복 작업을 만들지 마. 완료 후 STATE/NEXT/CURRENT/live log를 실제 상태에 맞추고 전체 리빌드 진행률·잔여율·변동 근거까지 보고해.
 ```
 
 앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
 Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
 
+## ★ 스펙 066 구현 지시
+
+정본과 handoff를 먼저 전부 읽는다. 허용 제품 파일은 정확히 다음 두 개뿐이다.
+
+- 신규 `apps/admin/src/space-v2/proof-asset-candidate.ts`
+- 신규 `apps/admin/src/space-v2/proof-asset-candidate.test.ts`
+
+caller PNG bytes를 await 전에 복사하고, lowercase UUID v4에서 approved object path를 만들며, PNG
+signature/첫 IHDR의 intrinsic dimensions와 exact snapshot SHA-256 descriptor를 생성한다. 성공 handle은
+같은 snapshot의 fresh upload-byte copy를 반환해야 한다. SHA-256 port는 필수 주입이며 random/Date/
+network/Firebase/DOM/Canvas를 사용하지 않는다.
+
+이번 성공은 full PNG decode/CRC/chunk validity를 증명하지 않는다. upload/token/encryption/Firestore
+create/viewer/UI/Rules/config는 계속 0이다. 다른 파일이 필요하면 STOP한다.
+
+targeted+spec065+spaces, admin typecheck, 전체 check, Chromium 151개 이상, 두 앱 bundle identity,
+admin CSS 9,146 bytes/unwanted utility 0, diff/forbidden/ports/temp를 검증한다. 구현·기록 commit을 각각
+fast-forward push하고 `READY_FOR_CODEX`에서 멈춘다.
+
 ## 전체 리빌드 진행도 — 매 보고 필수
 
 - **현재 추정: 70~75% 진행 / 25~30% 잔여**(production cutover까지 포함).
-- 최종 스펙 총개수는 고정돼 있지 않아 스펙 번호 `065`를 분모로 쓰지 않는다. 이는 아래 7개 로드맵
+- 최종 스펙 총개수는 고정돼 있지 않아 현재 스펙 번호를 분모로 쓰지 않는다. 이는 아래 7개 로드맵
   작업축의 상태를 바탕으로 한 관리 추정치다.
   1. 기술 스택·모노레포·공유 기반 — 완료
   2. catalog·legacy 데이터 읽기 호환 — 대부분 완료
