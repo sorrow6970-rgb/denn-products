@@ -4923,3 +4923,35 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   않는다.
 - 전체 리빌드 진행도는 **72~75% 완료 / 25~28% 잔여**를 유지한다. 최초 candidate의 74~77% 상승은
   CODEX_PASSED 뒤 다시 평가한다. 자동화·반복 작업 생성 0, 보호 대상 조작 0이다.
+
+## 2026-08-21(12) - 스펙 067 보완 라운드 1 (C-1) · READY_FOR_CODEX
+
+- 보완 commit `db61c7d`(지시 기록 commit `342e890`). 허용 제품 파일 2개만 바꿨고 호출 순서·오류 4개·
+  금지 경계는 그대로다. package/lockfile/CSS/Rules/config/`App.tsx`/UI diff 0.
+- **C-1 원인**: `sha256`을 검증 없이 `verifyFrameReplayEvidenceDigestV1`에 넘기면, 그 인자의 default
+  `webCryptoSha256Port` 때문에 `undefined` 주입이 거부되지 않고 `globalThis.crypto.subtle.digest`가
+  실행된다(필수 주입/global crypto 0 계약 위반). 기존 boundary 테스트는 유효 fake만 넘겨 이 경로를
+  밟지 않았다.
+- 보완: `sha256.digest`와 `crypto.encryptJson`을 각자 첫 await 전에 한 번씩만 읽어 callable 검증하고,
+  SHA는 **항상-defined adapter**로 감싸 verifier default를 닫았다. 두 호출 모두 `.call(port, …)`로
+  원 port의 `this`를 보존하므로 class 기반 method-style port도 그대로 동작한다. crypto도 snapshot한
+  callable만 정확히 1회 호출해 method getter drift를 차단했다.
+- 매핑: invalid SHA port → `EVIDENCE_NOT_VERIFIED`, invalid crypto port → `ENCRYPT_FAILED`,
+  raw message 0.
+- 회귀 17건 추가: malformed SHA port 7종에서 **global digest 0 + encryption 0**, malformed crypto port
+  7종, method getter one-read 2건, method-style port receiver 보존 1건.
+- 재검증: targeted **71/71**, space-v2 **180/180**, space-v2+spaces **305/305**, admin typecheck,
+  `node scripts/check.mjs` PASS(unit **1876/1876**), 전체 Chromium **151/151**, `git diff --check` PASS,
+  포트/temp 잔류 0. bundle identity(admin 226,201 / CSS 9,146 / 고객 322,018)와 bundle 내 spec 067
+  식별자 0건도 그대로다.
+- mutation 확인: adapter를 빼고 raw `sha256`을 넘기면 "undefined SHA port"와 "SHA method one-read"
+  회귀 2건이 실패한다(거짓 통과 아님).
+- ⚠ 관측 기록: 보완 직후 **첫** 단일 파일 실행 1회가 transform 31.8s/import 34.6s로 정체돼 테스트
+  1건이 5s timeout으로 실패했다. 코드 변경 없이 단일 3회·확대 2회 재실행 모두 PASS(0.77~3.6s)였고
+  전체 check/Chromium도 PASS다. 파일 기록 직후 로컬 I/O 정체로 판단하며 재발 시 flaky 게이트로
+  즉시 보고한다.
+- **전체 리빌드 진행도: 74~77% 진행 / 23~26% 잔여 — 변동 없음.** 근거: 이번 보완은 스펙 067의 기존
+  범위 안 결함 수정이고 새 제품 능력을 열지 않았다(작업축 5의 암호화 조립은 이미 067 구현에서 반영).
+  작업축 6·7도 불변이다.
+- 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
+  기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.

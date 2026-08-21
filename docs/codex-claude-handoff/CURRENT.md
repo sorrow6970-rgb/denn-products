@@ -20,7 +20,26 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`CORRECTION_REQUIRED` - 스펙 067 Codex 보완 라운드 1.**
+상태: **`READY_FOR_CODEX` - 스펙 067 보완 라운드 1(C-1)이 완료됐다.**
+
+보완 commit `db61c7d`. 허용 제품 파일 2개(`document-encryption-candidate.ts`와 해당 unit)만 변경했고
+호출 순서·오류 4개·금지 경계는 그대로다.
+
+C-1은 `undefined` SHA port가 `verifyFrameReplayEvidenceDigestV1`의 default Web Crypto port를 여는
+문제였다. 이제 두 port의 method를 각자 첫 await 전에 한 번씩만 읽어 callable인지 검증하고, SHA는
+항상-defined adapter로 감싸 default가 활성화될 수 없게 했다. 두 호출 모두 원 port의 `this`를
+보존하고, crypto도 snapshot한 callable만 1회 호출해 method getter drift를 막는다. invalid SHA port는
+EVIDENCE_NOT_VERIFIED, invalid crypto port는 ENCRYPT_FAILED다.
+
+재검증: targeted 71/71, space-v2 180/180, space-v2+spaces 305/305, admin typecheck,
+`node scripts/check.mjs` PASS(unit 1876/1876), 전체 Chromium 151/151, bundle identity 불변,
+`git diff --check` PASS, 포트/temp 잔류 0. malformed SHA port 7종에서 global `crypto.subtle.digest`
+0회와 encryption 0회를 회귀로 고정했다.
+
+전체 리빌드 진행도는 **74~77% 진행 / 23~26% 잔여로 변동 없다**. 이번 보완은 스펙 067 범위 안의 결함
+수정이고 새 제품 능력을 열지 않았으며 작업축 6·7도 불변이다.
+
+> 이전 상태: **`CORRECTION_REQUIRED` - 스펙 067 보완 라운드 1 지시.**
 
 candidate `35b7ffd`의 unit 1859/1859, 전체 check, Chromium 151/151과 bundle/diff/포트/temp는 독립
 PASS했다. 그러나 런타임 `sha256 === undefined`가 기존 verifier의 default Web Crypto port를 활성화해

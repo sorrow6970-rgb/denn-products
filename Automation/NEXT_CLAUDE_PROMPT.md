@@ -1,11 +1,11 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CORRECTION_REQUIRED`
-active_unit: `spec-067-space-v2-local-document-encryption-candidate` — **FIX_ROUND_1 / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-067-space-v2-local-document-encryption-candidate` — **CORRECTED ROUND 1 / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-066-space-v2-local-proof-asset-preparation` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: 계약 **`2107a72`** / 구현 **`35b7ffd`** (스펙 066 검수 baseline `e4bcce9`).
+기준: 계약 **`2107a72`** / 구현 **`35b7ffd`** / 보완 **`db61c7d`** (baseline `e4bcce9`).
 구현·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
-next_transition: **`CLAUDE_CORRECTION`**
+next_transition: **`CODEX_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
@@ -18,7 +18,35 @@ C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/spe
 앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
 Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
 
-## ★ 스펙 067 — CORRECTION_REQUIRED 라운드 1
+## ★ 스펙 067 보완 라운드 1 — 완료 / Codex 재검수 대기
+
+보완 commit `db61c7d`(지시 기록 `342e890`). C-1만 처리했고 허용 제품 파일 2개
+(`apps/admin/src/space-v2/document-encryption-candidate.ts`와 해당 unit) 밖으로 나가지 않았다.
+호출 순서·오류 4개·금지 경계는 그대로다.
+
+- `sha256.digest`와 `crypto.encryptJson`을 **각자 첫 await 전에 한 번씩만** 읽어 callable 검증한다.
+  null/undefined/primitive/method 부재/non-function/throwing getter/revoked proxy는 typed failure다.
+- SHA method snapshot을 **항상-defined adapter**로 감싸 verifier의 global Web Crypto default를 닫았다.
+  두 호출 모두 `.call(port, …)`로 원 port의 `this`를 보존한다(class method-style port 회귀 포함).
+- crypto도 snapshot한 callable만 정확히 1회 호출해 method getter drift를 막는다.
+- invalid SHA port → `EVIDENCE_NOT_VERIFIED`, invalid crypto port → `ENCRYPT_FAILED`, raw message 0.
+- 회귀 **17건** 추가: malformed SHA port 7종에서 global `crypto.subtle.digest` **0회** + encryption
+  **0회**, malformed crypto port 7종, method getter one-read 2건, method-style receiver 1건.
+
+재검증: targeted **71/71**, space-v2 **180/180**, space-v2+spaces **305/305**, admin typecheck,
+`node scripts/check.mjs` PASS(unit **1876/1876**), 전체 Chromium **151/151**, `git diff --check` PASS,
+포트/temp 잔류 0. bundle identity 불변(admin **226,201** / CSS **9,146** / 고객 **322,018**), 두
+bundle에 spec 067 식별자 0건.
+
+⚠ 관측 기록: 보완 직후 첫 단일 파일 실행 1회가 로컬 I/O 정체(transform 31.8s/import 34.6s)로 1건
+5s timeout 실패했으나, 코드 변경 없이 단일 3회·확대 2회 재실행과 전체 check/Chromium 모두 PASS다.
+재발하면 flaky 게이트로 즉시 보고한다.
+
+진행도 보고: **74~77% 진행 / 23~26% 잔여 — 변동 없음**(범위 내 결함 수정, 새 능력 없음).
+
+다음은 Codex 독립 재검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+
+## 스펙 067 보완 라운드 1 지시 (기록)
 
 독립 검증은 unit 1859/1859, Chromium 151/151, check/bundle/diff/포트/temp까지 PASS했지만 C-1이 있다.
 현재 `sha256 === undefined`이면 기존 verifier의 default Web Crypto port가 활성화되어 필수 주입/global

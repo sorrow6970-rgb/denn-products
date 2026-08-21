@@ -1,6 +1,6 @@
 # 스펙 067 — space V2 local document encryption candidate
 
-상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **CORRECTED ROUND 1 / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 ## 1. 목표 (WHY)
 
@@ -250,3 +250,49 @@ boundary test는 유효 fake만 전달해 이 경로를 검증하지 않는다.
 독립 검증 결과(보완 전 candidate `35b7ffd`): unit **1859/1859**, `node scripts/check.mjs` PASS,
 Chromium **151/151**, bundle identity/diff/포트/temp PASS. 이 결과는 C-1을 상쇄하지 않으므로 판정은
 **CORRECTION_REQUIRED**, fix round 1이다.
+
+### CORRECTION ROUND 1 (Claude) — 2026-08-21
+
+보완 commit `db61c7d`. C-1만 처리했고 허용 제품 파일 2개
+(`document-encryption-candidate.ts`와 해당 unit) 밖으로 나가지 않았다. 호출 순서, 오류 4개, 모든 금지
+경계는 그대로다.
+
+**원인 인정.** 기존 구현은 `sha256`을 런타임 검증 없이 `verifyFrameReplayEvidenceDigestV1`의 세 번째
+인자로 넘겼다. 그 인자는 default `webCryptoSha256Port`를 가지므로 JS/`any` caller가 `undefined`를
+주면 필수 주입이 거부되지 않고 `globalThis.crypto.subtle.digest`가 실행된다. 기존 boundary 테스트는
+유효 fake만 넘겨 이 경로를 전혀 밟지 않았다.
+
+보완 내용:
+
+1. `sha256.digest`와 `crypto.encryptJson`을 **각자 첫 await 전에, 한 번씩만** 읽어 로컬에 보존하고
+   callable인지 검사한다. null/undefined/primitive/method 부재/non-function/throwing getter/revoked
+   proxy는 typed failure다.
+2. SHA method snapshot을 감싼 **항상-defined adapter**를 verifier에 넘겨 default port가 활성화될 수
+   없게 했다. adapter는 `.call(sha256, bytes)`로 원 port의 `this`를 보존한다.
+3. crypto도 snapshot한 callable만 `.call(crypto, scene, password)`로 정확히 1회 호출한다. method
+   getter drift나 두 번 읽기가 불가능하다.
+4. invalid SHA port → `SPACE_V2_DOCUMENT_EVIDENCE_NOT_VERIFIED`, invalid crypto port →
+   `SPACE_V2_DOCUMENT_ENCRYPT_FAILED`. raw message 노출 0.
+5. 회귀 17건 추가: malformed SHA port 7종 각각에서 **global `crypto.subtle.digest` 0회 + encryption
+   0회**, malformed crypto port 7종, SHA/crypto method getter one-read 2건, method-style(class) port
+   receiver 보존 1건.
+
+재검증:
+
+- targeted unit **71/71**(신규 17건 포함), space-v2 전체 **180/180**,
+  space-v2 + `packages/spaces` **305/305**
+- admin typecheck PASS, `node scripts/check.mjs` **PASS**(unit **1876/1876**)
+- 전체 Chromium E2E **151/151**
+- bundle identity 불변: admin `index-D0XOQpRL.js` **226,201 bytes** / `B6E90475…B3A1F1DC`,
+  admin CSS `index-DJ_z3tK1.css` **9,146 bytes**(unwanted 0), 고객 `index-6js4DafP.js`
+  **322,018 bytes** / `A9360EFF…E55E8159`. 두 bundle에 spec 067 식별자 0건.
+- `git diff --check` PASS, 허용 2개 파일 밖 diff 0, package/lockfile/CSS/Rules/config diff 0
+- 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, temp/debug 잔류 0
+
+mutation 확인: adapter를 없애고 raw `sha256`을 verifier에 다시 넘기면 "undefined SHA port" 회귀와
+"SHA method one-read" 회귀가 실패한다. 즉 이 두 테스트가 C-1을 실제로 고정한다.
+
+관측 기록(투명성): 보완 직후 **첫** 단일 파일 실행 1회가 transform 31.8s / import 34.6s로 정체되며
+테스트 1건이 5s timeout으로 실패했다. 같은 파일을 곧바로 3회, 확대 범위를 2회 재실행했을 때는 모두
+PASS(단일 0.77~2.09s, 확대 3.0~3.6s)였고 이후 전체 check와 Chromium도 PASS다. 코드 변경 없이 재현되지
+않았으므로 원인은 파일 기록 직후의 로컬 I/O 정체로 판단한다. 재발하면 flaky 게이트로 보고한다.

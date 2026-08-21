@@ -5,16 +5,16 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-066-space-v2-local-proof-asset-preparation   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-067-space-v2-local-document-encryption-candidate   # CORRECTION_REQUIRED, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: CORRECTION_REQUIRED
+active_unit: spec-067-space-v2-local-document-encryption-candidate   # CORRECTED ROUND 1, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CODEX
 baseline_commit: e4bcce9   # spec 066 implementation record / Codex review baseline
-candidate_commit: 35b7ffd   # spec 067 local document encryption candidate
+candidate_commit: db61c7d   # spec 067 correction round 1 (C-1 required injection)
 verified_commit: 9fee315   # spec 066 implementation, independently passed at e4bcce9
-origin_relation: "HEAD=origin after the spec 067 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
+origin_relation: "HEAD=origin after the spec 067 correction and record commits were fast-forward pushed; ahead/behind 0/0"
 working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
-fix_round: 1
+fix_round: 1   # C-1 corrected
 max_fix_rounds: 3
-next_transition: CLAUDE_CORRECTION
+next_transition: CODEX_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,17 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 72-75% complete; 25-28% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 067 보완 라운드 1 완료 (2026-08-21)
+
+- 보완 commit `db61c7d`. 허용 제품 파일 2개만 변경했고 package/lockfile/CSS/Rules/config diff 0이다.
+- C-1: `sha256`/`crypto` method를 각자 첫 await 전에 1회만 읽어 callable 검증하고, SHA는 항상-defined
+  adapter로 감싸 `verifyFrameReplayEvidenceDigestV1`의 global Web Crypto default를 닫았다.
+  invalid SHA port → EVIDENCE_NOT_VERIFIED, invalid crypto port → ENCRYPT_FAILED.
+- 회귀 17건 추가(global digest 0 + encryption 0, method getter one-read, method-style receiver).
+- targeted 71/71, space-v2 180/180, space-v2+spaces 305/305, `node scripts/check.mjs` PASS
+  (unit 1876/1876), 전체 Chromium 151/151, bundle identity와 `git diff --check` PASS.
+- 진행도 74~77% / 잔여 23~26% — 변동 없음(범위 내 결함 수정, 새 능력 없음).
 
 ## 스펙 067 Codex 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-21)
 
