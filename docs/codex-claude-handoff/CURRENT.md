@@ -20,7 +20,20 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 067 local document encryption candidate 구현·검증이 완료됐다.**
+상태: **`CORRECTION_REQUIRED` - 스펙 067 Codex 보완 라운드 1.**
+
+candidate `35b7ffd`의 unit 1859/1859, 전체 check, Chromium 151/151과 bundle/diff/포트/temp는 독립
+PASS했다. 그러나 런타임 `sha256 === undefined`가 기존 verifier의 default Web Crypto port를 활성화해
+필수 주입/global crypto 0 계약을 우회한다.
+
+Claude는 허용 제품 파일 2개 안에서 SHA/crypto method를 첫 await 전에 각 1회 snapshot·검증하고,
+always-defined SHA adapter로 default fallback을 닫아야 한다. malformed port, revoked/throwing getter,
+method getter one-read와 global digest 0 회귀가 필요하다. 상세는 spec 067 CODEX REVIEW 절과 NEXT다.
+
+스펙 067은 아직 DONE / CODEX_PASSED가 아니다. 전체 진행도는 검수 통과 전 정본인
+**72~75% 완료 / 25~28% 잔여**를 유지한다.
+
+> 이전 상태: **`READY_FOR_CODEX` - 스펙 067 최초 구현 완료.**
 
 계약 commit `2107a72`, 구현 commit `35b7ffd`. 제품 변경은 허용 2개 신규 파일
 (`apps/admin/src/space-v2/document-encryption-candidate.ts`와 같은 디렉터리 unit)뿐이고

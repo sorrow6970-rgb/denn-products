@@ -4907,3 +4907,19 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   않았으므로 상단은 77%를 넘기지 않았다.
 - 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
   기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.
+
+## 2026-08-21(12) - 스펙 067 Codex 독립 검수 · CORRECTION_REQUIRED 라운드 1
+
+- HEAD=origin `ab465d5`, ahead/behind 0/0에서 candidate `35b7ffd`와 허용 제품 diff 2개를 검토했다.
+- 독립 게이트: unit **1859/1859**, `node scripts/check.mjs` PASS, Chromium **151/151**,
+  `git diff --check e4bcce9..HEAD`, bundle identity, 신규 식별자/unwanted CSS 0, 지정 포트/temp 0.
+- **C-1:** 런타임 `sha256 === undefined`가 `verifyFrameReplayEvidenceDigestV1`의 default
+  `webCryptoSha256Port`를 활성화한다. 필수 주입과 module global crypto 0 계약이 우회되며 현재 boundary
+  test는 valid fake만 전달해 이 경로를 잡지 못한다.
+- 보완은 허용 제품 파일 2개뿐이다. SHA/crypto method를 첫 await 전에 각 1회 snapshot·검증하고,
+  always-defined SHA adapter로 verifier default를 닫는다. malformed/revoked/throwing ports, getter
+  one-read와 global digest 0 회귀를 추가한다.
+- 상태 **CORRECTION_REQUIRED**, fix round 1, 다음 transition `CLAUDE_CORRECTION`. 다음 스펙은 시작하지
+  않는다.
+- 전체 리빌드 진행도는 **72~75% 완료 / 25~28% 잔여**를 유지한다. 최초 candidate의 74~77% 상승은
+  CODEX_PASSED 뒤 다시 평가한다. 자동화·반복 작업 생성 0, 보호 대상 조작 0이다.

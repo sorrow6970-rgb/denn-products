@@ -1,22 +1,35 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-067-space-v2-local-document-encryption-candidate` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: `CORRECTION_REQUIRED`
+active_unit: `spec-067-space-v2-local-document-encryption-candidate` — **FIX_ROUND_1 / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-066-space-v2-local-proof-asset-preparation` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 기준: 계약 **`2107a72`** / 구현 **`35b7ffd`** (스펙 066 검수 baseline `e4bcce9`).
 구현·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
-next_transition: **`CODEX_REVIEW`**
+next_transition: **`CLAUDE_CORRECTION`**
 
 ## Claude Code 전달용 다음 지시문
 
 아래 문장을 Claude Code에 그대로 전달한다.
 
 ```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/067-space-v2-local-document-encryption-candidate.md를 전부 읽고 스펙 067의 명시된 local-only 범위만 구현·검증해. 보호 대상과 기존 working tree 변경은 건드리지 말고 token/UUID 생성, upload, Firestore create, 실제 Firebase/network 또는 UI로 확장하거나 자동화·반복 작업을 만들지 마. 완료 후 제품 commit과 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를 실제 상태에 맞춘 뒤 전체 리빌드 진행률·잔여율·변동 근거까지 보고해.
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/067-space-v2-local-document-encryption-candidate.md의 CODEX REVIEW — CORRECTION_REQUIRED ROUND 1을 전부 읽고 C-1만 보완·검증해. 허용 제품 파일은 document-encryption-candidate.ts와 해당 test 두 개뿐이다. SHA/crypto method를 첫 await 전에 각각 한 번 snapshot·검증하고 always-defined SHA adapter로 verifier의 global Web Crypto fallback을 닫으며 malformed port와 method getter one-read 회귀를 추가해. 보호 대상과 기존 working tree 변경은 건드리지 말고 token/UUID, upload, Firestore create, 실제 Firebase/network/UI 또는 자동화로 확장하지 마. 보완 commit과 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를 READY_FOR_CODEX로 맞춘 뒤 전체 진행률·잔여율·변동 근거를 보고해.
 ```
 
 앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
 Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
+
+## ★ 스펙 067 — CORRECTION_REQUIRED 라운드 1
+
+독립 검증은 unit 1859/1859, Chromium 151/151, check/bundle/diff/포트/temp까지 PASS했지만 C-1이 있다.
+현재 `sha256 === undefined`이면 기존 verifier의 default Web Crypto port가 활성화되어 필수 주입/global
+crypto 0 계약을 우회한다.
+
+허용 제품 파일 2개 안에서 SHA/crypto method를 await 전 각 1회 snapshot·검증하고, always-defined SHA
+adapter를 verifier에 넘긴다. undefined/null/non-function/throwing getter/revoked proxy와 getter one-read,
+global digest 0을 테스트한다. 다른 범위는 변경하지 않는다.
+
+스펙 067은 아직 DONE이 아니다. 진행도 정본은 **72~75% 완료 / 25~28% 잔여**이며, 보완 통과 뒤
+상승 여부를 다시 평가한다.
 
 ## ★ 스펙 067 — 구현 완료 / Codex 독립 검수 대기
 

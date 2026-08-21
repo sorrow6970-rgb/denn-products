@@ -214,3 +214,39 @@ message·retry 문구 0을 테스트로 고정했다. 성공 outer에도 token/o
 계속 NOT IMPLEMENTED / 금지: token/UUID 생성과 link 발급, proof upload/read/delete, Firestore create/
 reconciliation, Firebase adapter/Rules/config/env, 실제 UID·network·emulator·deploy, viewer/open
 composition과 UI/route, V1 migration/rewrite.
+
+### CODEX REVIEW — CORRECTION_REQUIRED ROUND 1 (2026-08-21)
+
+독립 게이트는 PASS했지만 필수 주입 경계 1건이 계약을 위반한다.
+
+#### C-1 — `undefined` SHA port가 global Web Crypto fallback을 연다
+
+현재 구현은 `sha256`을 런타임 검증하지 않고 다음 호출에 그대로 넘긴다.
+
+```ts
+verifyFrameReplayEvidenceDigestV1(scene.frameEvidence, scene.frameEvidenceDigest, sha256)
+```
+
+이 verifier의 세 번째 인자는 default `webCryptoSha256Port`를 가진다. 따라서 JS/`any` caller가
+`undefined`를 전달하면 필수 주입이 거부되지 않고 `globalThis.crypto.subtle.digest`가 실행된다. 이는
+§2의 “SHA-256 port 필수 주입”과 §5-11의 “module 자체 global crypto/random 직접 사용 0”을 깨며, 현재
+boundary test는 유효 fake만 전달해 이 경로를 검증하지 않는다.
+
+보완 요구:
+
+1. `sha256.digest`와 `crypto.encryptJson`을 각자 첫 await 전에 안전하게 한 번만 읽어 callable인지
+   검증한다. null/undefined/primitive/non-function/throwing getter/revoked proxy는 typed failure다.
+2. SHA method snapshot을 감싼 항상-defined adapter를 verifier에 넘겨 verifier default가 활성화될 수 없게
+   한다. 원래 port의 `this`가 필요할 수 있으므로 안전하게 보존한다.
+3. crypto method도 snapshot한 callable만 정확히 1회 호출한다. method getter drift나 두 번 읽기를
+   허용하지 않는다.
+4. invalid SHA port는 `SPACE_V2_DOCUMENT_EVIDENCE_NOT_VERIFIED`, invalid crypto port는
+   `SPACE_V2_DOCUMENT_ENCRYPT_FAILED`로 매핑하고 raw message를 노출하지 않는다.
+5. undefined/null/non-function/throwing getter/revoked proxy SHA port 각각에서 global
+   `crypto.subtle.digest` 0, encryption 0을 unit으로 고정한다. crypto port에도 같은 malformed 사례와
+   method getter one-read를 고정한다.
+6. 기존 호출 순서, 오류 4개, 파일 범위와 모든 금지 경계는 유지한다.
+
+독립 검증 결과(보완 전 candidate `35b7ffd`): unit **1859/1859**, `node scripts/check.mjs` PASS,
+Chromium **151/151**, bundle identity/diff/포트/temp PASS. 이 결과는 C-1을 상쇄하지 않으므로 판정은
+**CORRECTION_REQUIRED**, fix round 1이다.

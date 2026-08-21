@@ -5,23 +5,36 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-066-space-v2-local-proof-asset-preparation   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-067-space-v2-local-document-encryption-candidate   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CODEX
+active_unit: spec-067-space-v2-local-document-encryption-candidate   # CORRECTION_REQUIRED, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: CORRECTION_REQUIRED
 baseline_commit: e4bcce9   # spec 066 implementation record / Codex review baseline
 candidate_commit: 35b7ffd   # spec 067 local document encryption candidate
 verified_commit: 9fee315   # spec 066 implementation, independently passed at e4bcce9
 origin_relation: "HEAD=origin after the spec 067 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
 working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
-fix_round: 0
+fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_REVIEW
+next_transition: CLAUDE_CORRECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 74-77% complete; 23-26% remaining to production cutover"
+overall_rebuild_progress: "estimated 72-75% complete; 25-28% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 067 Codex 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-21)
+
+- candidate `35b7ffd`의 제품 diff 2개는 정확하고 unit 1859/1859, 전체 check, Chromium 151/151,
+  bundle/diff/포트/temp 게이트는 독립 PASS했다.
+- C-1: 런타임 `sha256 === undefined`가 verifier default `webCryptoSha256Port`를 활성화해 필수 주입과
+  global crypto 0 계약을 우회한다. 현재 boundary test는 유효 fake만 전달해 이를 잡지 못한다.
+- 허용 2개 파일 안에서 SHA/crypto method를 await 전 1회 snapshot·검증하고 always-defined adapter로
+  verifier default를 닫으며 malformed port/global digest 0 회귀를 추가한다.
+- 상태 `CORRECTION_REQUIRED`, fix round 1, 다음 transition `CLAUDE_CORRECTION`. 스펙 067은 아직 DONE/
+  CODEX_PASSED가 아니다.
+- 진행도는 검수 통과 전 정본 **72~75% 완료 / 25~28% 잔여**를 유지한다. Claude의 74~77% 상승은
+  candidate 통과 뒤 다시 평가한다.
 
 ## 스펙 067 구현 완료 (2026-08-21)
 
