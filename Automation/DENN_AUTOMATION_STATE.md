@@ -10,7 +10,7 @@ state: READY_FOR_CODEX
 baseline_commit: dcd893c   # spec 064 closure
 candidate_commit: 5fc89d2   # spec 065 local issuer projector implementation
 verified_commit: dcd893c   # spec 064 closure at origin-equal HEAD
-origin_relation: "HEAD ahead of origin until the spec 065 commits are fast-forward pushed"
+origin_relation: "HEAD=origin after the spec 065 contract/implementation/record commits were fast-forward pushed; ahead/behind 0/0"
 working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
 fix_round: 0
 max_fix_rounds: 3

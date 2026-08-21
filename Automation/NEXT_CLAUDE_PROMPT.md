@@ -3,8 +3,8 @@
 상태: `READY_FOR_CODEX`
 active_unit: `spec-065-space-v2-local-issuer-projector` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-064-space-v2-local-contract` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: 계약 **`e9e0c6d`** / 구현 **`5fc89d2`** (baseline `dcd893c`). 기록 commit을 fast-forward push한 뒤
-HEAD=origin이 된다.
+기준: 계약 **`e9e0c6d`** / 구현 **`5fc89d2`** / 기록 **`e2e33a4`** (baseline `dcd893c`).
+fast-forward push 완료, HEAD=origin, ahead/behind **0/0**.
 next_transition: **`CODEX_REVIEW`**
 
 ## ★ 스펙 065 — 구현 완료 / Codex 독립 검수 대기
