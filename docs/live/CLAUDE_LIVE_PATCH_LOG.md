@@ -4872,3 +4872,38 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   작업축은 추가로 이동하지 않았다.
 - 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. NEXT 상단에 Claude Code 전달용
   완성 지시문을 남겼다. 자동화·반복 작업 생성 0, 보호 대상 조작 0이다.
+
+## 2026-08-21(11) - 스펙 067 local document encryption candidate 구현·검증 · READY_FOR_CODEX
+
+- 계약 문서 commit `2107a72`, 구현 commit `35b7ffd`. 기준 HEAD=origin `e4bcce9`.
+- 제품 변경은 §3 허용 2개 신규 파일뿐이다:
+  `apps/admin/src/space-v2/document-encryption-candidate.ts`와 같은 디렉터리 unit.
+  package/lockfile/CSS/Rules/firebase config/`App.tsx`/route/UI와 shared·spaces·firebase 제품 파일
+  diff **0**.
+- `createSpaceV2DocumentEncryptionCandidate(input, crypto, sha256)`는 exact key 2개 input을 받아
+  password를 await 전에 한 번 스냅샷하고, `readSpaceSceneV2`로 detached scene을 얻은 뒤
+  **암호화 전에** `verifyFrameReplayEvidenceDigestV1`로 evidence↔digest 실제 일치를 검증한다.
+  reader는 digest 형식만 보기 때문이다. 그 다음 `crypto.encryptJson(detachedScene, password)`를
+  정확히 1회 호출하고, `{schema:"space-v2", enc}`를 `readSpaceDocumentV2`로 다시 검증한 detached
+  값을 반환한다. SHA-256 1회 / encryptJson 1회 / decryptJson 0회 / 앱 수준 retry 0.
+- PBKDF2 120,000·SHA-256·AES-GCM-256·16B salt·12B IV 계약은 재구현하지 않고 `@denn/spaces`를 그대로
+  쓴다. password는 기존 non-empty string 계약만 재사용했고 trim/길이/문자 정책을 새로 만들지 않았다.
+- 오류 4개(`INVALID_INPUT`/`EVIDENCE_NOT_VERIFIED`/`ENCRYPT_FAILED`/`INVALID_OUTPUT`), 실패 결과는
+  `{ok, code}`뿐이다. password·scene·proof path·digest·ciphertext·token·UID/email·thrown message가
+  0임을 테스트로 고정했고, 성공 outer에도 token/owner/UID/createdAt/asset path가 없다.
+- 게이트: targeted **54/54**, space-v2+spaces **288/288**, admin typecheck,
+  `node scripts/check.mjs` PASS(unit **1859/1859**), 전체 Chromium **151/151**, `git diff --check` PASS,
+  포트 4183/4184/4185/8080/9099/9199 LISTENING 0, temp/debug 잔류 0.
+- bundle identity 유지: 고객 `index-6js4DafP.js` **322,018 bytes**/`A9360EFF…E55E8159`, admin
+  `index-D0XOQpRL.js` **226,201 bytes**/`B6E90475…B3A1F1DC`, admin CSS **9,146 bytes**(unwanted 0).
+  두 bundle에 spec 067 식별자 0건이다.
+- 로컬 roundtrip: 실제 `createSpaceCrypto()`로 암호화→복호화한 scene이 원 canonical scene과 동일하고,
+  틀린 password는 `SPACE_DECRYPT_FAILED`다. network/Firebase 호출 0.
+- mutation 확인: evidence 검증 제거 시 8건, raw caller scene 암호화 시 1건이 실패한다(거짓 통과 아님).
+- **전체 리빌드 진행도: 74~77% 진행 / 23~26% 잔여.** 직전 정본 72~75%에서 약 +2%p.
+  근거: 작업축 5(space 링크)의 잔여 중 'V2 문서 암호화 조립'이 local-only로 닫혀,
+  scene→evidence→proof descriptor→**암호화 outer 문서**까지 로컬 사슬이 이어졌다. 남은 것은 token
+  발급·Storage upload·Firestore create·viewer/UI 연결이다. 작업축 6·7은 이번에도 전혀 움직이지
+  않았으므로 상단은 77%를 넘기지 않았다.
+- 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
+  기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.

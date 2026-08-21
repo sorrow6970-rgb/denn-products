@@ -1,10 +1,11 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-067-space-v2-local-document-encryption-candidate` — **CONTRACT_READY / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-067-space-v2-local-document-encryption-candidate` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-066-space-v2-local-proof-asset-preparation` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: HEAD=origin **`e4bcce9`**, ahead/behind **0/0**에서 스펙 066을 독립 검수했다.
-next_transition: **`CLAUDE_IMPLEMENTATION`**
+기준: 계약 **`2107a72`** / 구현 **`35b7ffd`** (스펙 066 검수 baseline `e4bcce9`).
+구현·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
+next_transition: **`CODEX_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
@@ -17,7 +18,29 @@ C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/spe
 앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
 Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
 
-## ★ 스펙 067 — 구현 계약 준비 / Claude Code 착수 대기
+## ★ 스펙 067 — 구현 완료 / Codex 독립 검수 대기
+
+계약 commit `2107a72`, 구현 commit `35b7ffd`. 제품 변경은 허용 2개 신규 파일뿐이고 package/lockfile/
+CSS/Rules/config/`App.tsx`/route/UI와 shared·spaces·firebase 제품 파일 diff는 **0**이다.
+
+- input exact key 2개, password는 await 전에 1회 스냅샷(non-empty string 계약만 재사용).
+- `readSpaceSceneV2` 1회 → **암호화 전** `verifyFrameReplayEvidenceDigestV1`로 evidence↔digest 실제
+  일치 검증(mismatch·throw·reject·bad length/type → `EVIDENCE_NOT_VERIFIED`, encryption 0회).
+- detached scene만 `encryptJson`에 1회 → `{schema:"space-v2", enc}`를 `readSpaceDocumentV2`로 재검증한
+  detached 값 반환. SHA-256 1회 / encryptJson 1회 / decryptJson 0 / retry 0.
+- 오류 4개, 실패 결과는 `{ok, code}`뿐. password/path/digest/ciphertext/token/UID/thrown message 0.
+
+게이트: targeted **54/54**, space-v2+spaces **288/288**, admin typecheck, `node scripts/check.mjs`
+PASS(unit **1859/1859**), 전체 Chromium **151/151**, `git diff --check` PASS, 포트/temp 잔류 0.
+bundle identity 유지 — admin `index-D0XOQpRL.js` **226,201 bytes**, admin CSS **9,146 bytes**,
+고객 `index-6js4DafP.js` **322,018 bytes**, 두 bundle에 spec 067 식별자 0건. 실제 `createSpaceCrypto`
+로컬 roundtrip도 원 scene과 동일하게 복호화된다.
+
+진행도 보고: **74~77% 진행 / 23~26% 잔여**(직전 72~75%에서 약 +2%p). 근거는 위 §진행도 절과 같다.
+
+다음은 Codex 독립 검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+
+## 스펙 067 원래 구현 계약 (기록)
 
 정본 `docs/rebuild/specs/067-space-v2-local-document-encryption-candidate.md`, handoff
 `docs/handoff/2026-08-21-spec-067-space-v2-local-document-encryption-candidate-handoff.md`.
@@ -28,8 +51,8 @@ evidence digest 일치를 확인한 뒤 `SpaceCryptoPort.encryptJson`을 정확�
 2개만 허용한다. password는 기존 non-empty string 계약만 재사용하며 token/UUID, upload, Firestore
 create, Firebase adapter/Rules/config/network와 UI/viewer는 0이다.
 
-현재 전체 리빌드 진행도는 **72~75% 완료 / 25~28% 잔여**다. 스펙 066의 byte-identity 경계 완료로
-하단만 상승했고 상단은 75%를 유지한다. 스펙 067은 아직 계약만 준비돼 추가 상승은 없다.
+현재 전체 리빌드 진행도는 **74~77% 완료 / 23~26% 잔여**다. 스펙 067 구현으로 작업축 5의 V2 암호화
+문서 조립이 닫혀 약 +2%p 올랐고, 작업축 6·7이 불변이라 상단은 77%를 넘기지 않았다.
 
 ## ★ 스펙 066 — Codex 독립 검수 통과 / DONE
 

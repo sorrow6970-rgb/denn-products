@@ -1,6 +1,6 @@
 # 스펙 067 — space V2 local document encryption candidate
 
-상태: **READY_FOR_CLAUDE / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 ## 1. 목표 (WHY)
 
@@ -159,3 +159,58 @@ async function createSpaceV2DocumentEncryptionCandidate(
 
 없음. 이 스펙은 기존 strict reader와 crypto port를 조합하는 local candidate만 만든다. token 생성,
 upload/Firestore create와 UI는 후속 별도 계약이다.
+
+### DONE (Claude) — 2026-08-21
+
+구현 commit `35b7ffd` (계약 문서 commit `2107a72`). 제품 변경은 §3 허용 2개 신규 파일뿐이고
+package/lockfile/CSS/Rules/config diff는 **0**이다.
+
+- 신규 `apps/admin/src/space-v2/document-encryption-candidate.ts`
+  — `createSpaceV2DocumentEncryptionCandidate(input, crypto, sha256)`
+- 신규 `apps/admin/src/space-v2/document-encryption-candidate.test.ts` — 54 tests
+
+호출 순서(4.2)를 그대로 구현했다:
+
+1. input exact key `scene`/`password` 2개만 허용(extra/missing·non-enumerable·symbol·array/null·
+   revoked proxy는 안전 실패).
+2. password를 await 전에 한 번 읽어 로컬 string으로 보존하고 non-empty만 통과시킨다. trim/normalize/
+   log/반환/오류 포함 0이며 새 정책을 만들지 않았다(공백 문자열 password는 기존 계약대로 통과).
+3. `readSpaceSceneV2(scene)` 1회. 실패 시 SHA-256·crypto 호출 0.
+4. reader는 digest **형식**만 보므로 `verifyFrameReplayEvidenceDigestV1(evidence, digest, sha256)`로
+   암호화 전에 실제 일치까지 검증한다. mismatch·port throw/reject/bad length/bad type은 모두
+   `EVIDENCE_NOT_VERIFIED`이고 encryption 호출 0이다.
+5. `crypto.encryptJson(detachedScene, passwordSnapshot)` — raw caller scene은 넘기지 않는다.
+6. 성공 경로에서 SHA-256 1회, `encryptJson` 1회, `decryptJson` 0회, 앱 수준 retry/fallback 0.
+7. `{schema:"space-v2", enc}`를 `readSpaceDocumentV2`로 다시 검증한다. malformed envelope/
+   bad base64·length·hostile crypto result는 `INVALID_OUTPUT`이다.
+8. 최종 성공값은 reader가 돌려준 detached exact `SpaceDocumentV2`이며 입력·crypto result와 mutable
+   reference를 공유하지 않는다.
+
+오류는 4개(`INVALID_INPUT`/`EVIDENCE_NOT_VERIFIED`/`ENCRYPT_FAILED`/`INVALID_OUTPUT`)이고 실패
+결과는 `{ok, code}` 두 키뿐이다. password·scene·proof path·digest·ciphertext·token·UID/email·thrown
+message·retry 문구 0을 테스트로 고정했다. 성공 outer에도 token/owner/UID/createdAt/asset path가 없다
+(asset path는 암호문 안 plaintext scene에만 존재).
+
+검증:
+
+- 신규 targeted unit **54/54**, space-v2(065·066·067) + `packages/spaces` 합계 **288/288**
+- admin typecheck PASS, `node scripts/check.mjs` **PASS**(unit **1859/1859**, 두 앱 build)
+- 전체 Chromium E2E **151/151**
+- 고객 entry `index-6js4DafP.js` **322,018 bytes** / `A9360EFF…E55E8159` — 기준 일치
+- admin entry `index-D0XOQpRL.js` **226,201 bytes** / `B6E90475…B3A1F1DC` — 기준 일치
+- admin CSS `index-DJ_z3tK1.css` **9,146 bytes**, unwanted selector/property scaffold **0**
+- 두 production bundle에 `SPACE_V2_DOCUMENT`/`createSpaceV2DocumentEncryptionCandidate`/
+  `document-encryption` 문자열 **0건**
+- `git diff --check` PASS, 변경 경로는 허용 2개 신규 파일뿐, package/lockfile/Rules/config diff 0
+- 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`/temp/debug 잔류 0
+
+로컬 roundtrip(§5-10): 기존 `createSpaceCrypto()` 실제 Web Crypto로 암호화한 문서를 `decryptJson`으로
+복호화하면 `readSpaceSceneV2`가 원 canonical scene과 **동일한 값**을 수용한다. 틀린 password는
+`SPACE_DECRYPT_FAILED`다. network/Firebase 호출 0.
+
+테스트 신뢰성(mutation): evidence 검증을 제거하면 8건이, detached scene 대신 raw caller scene을
+암호화하면 1건이 실패한다. 거짓 통과가 아니다.
+
+계속 NOT IMPLEMENTED / 금지: token/UUID 생성과 link 발급, proof upload/read/delete, Firestore create/
+reconciliation, Firebase adapter/Rules/config/env, 실제 UID·network·emulator·deploy, viewer/open
+composition과 UI/route, V1 migration/rewrite.

@@ -20,7 +20,28 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CLAUDE` - 스펙 067 local V2 document encryption candidate 계약이 준비됐다.**
+상태: **`READY_FOR_CODEX` - 스펙 067 local document encryption candidate 구현·검증이 완료됐다.**
+
+계약 commit `2107a72`, 구현 commit `35b7ffd`. 제품 변경은 허용 2개 신규 파일
+(`apps/admin/src/space-v2/document-encryption-candidate.ts`와 같은 디렉터리 unit)뿐이고
+package/lockfile/CSS/Rules/config/`App.tsx`/UI 변경은 0이다.
+
+`readSpaceSceneV2`는 digest 형식만 보므로 암호화 전에 `verifyFrameReplayEvidenceDigestV1`로
+evidence↔digest 실제 일치를 검증하고, 통과한 detached scene만 `encryptJson`에 1회 넘긴다. 결과는
+`{schema:"space-v2", enc}`로 감싸 `readSpaceDocumentV2`로 재검증한 detached 값이다. SHA-256 1회,
+encryptJson 1회, decryptJson 0회, retry 0. PBKDF2/AES-GCM 계약과 password 정책은 기존 것을 그대로
+재사용했다.
+
+게이트: targeted 54/54, space-v2+spaces 288/288, admin typecheck, `node scripts/check.mjs` PASS
+(unit 1859/1859), 전체 Chromium 151/151, `git diff --check` PASS, 포트/temp 잔류 0. admin/고객 entry와
+admin CSS 9,146 bytes는 기준과 동일하고 두 bundle에 spec 067 식별자는 0건이다. 실제 `createSpaceCrypto`
+로컬 roundtrip도 원 scene과 동일하게 복호화된다(network/Firebase 0).
+
+전체 리빌드 진행도는 **74~77% 진행 / 23~26% 잔여**다(직전 72~75%에서 약 +2%p). 근거는 작업축 5의
+V2 암호화 문서 조립이 닫혀 scene→evidence→proof descriptor→암호화 outer까지 로컬 사슬이 이어진
+것이며, token 발급·upload·Firestore create·viewer와 작업축 6·7은 그대로라 상단은 77%를 넘기지 않았다.
+
+> 이전 상태: **`READY_FOR_CLAUDE` - 스펙 067 계약이 준비됐다.**
 
 스펙 066은 HEAD=origin `e4bcce9`에서 Codex 독립 검수를 통과해 **DONE / CODEX_PASSED**다. 독립 게이트는
 space-v2+spaces 234/234, unit 1805/1805, Chromium 151/151, admin typecheck/build/diff/bundle identity와

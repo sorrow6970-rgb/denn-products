@@ -5,23 +5,35 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-066-space-v2-local-proof-asset-preparation   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-067-space-v2-local-document-encryption-candidate   # CONTRACT_READY, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CLAUDE
+active_unit: spec-067-space-v2-local-document-encryption-candidate   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CODEX
 baseline_commit: e4bcce9   # spec 066 implementation record / Codex review baseline
-candidate_commit: none
+candidate_commit: 35b7ffd   # spec 067 local document encryption candidate
 verified_commit: 9fee315   # spec 066 implementation, independently passed at e4bcce9
-origin_relation: "HEAD=origin e4bcce9 before the local Codex review/spec 067 documentation diff; ahead/behind 0/0"
+origin_relation: "HEAD=origin after the spec 067 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
 working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_IMPLEMENTATION
+next_transition: CODEX_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 72-75% complete; 25-28% remaining to production cutover"
+overall_rebuild_progress: "estimated 74-77% complete; 23-26% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 067 구현 완료 (2026-08-21)
+
+- 계약 commit `2107a72`, 구현 commit `35b7ffd`. 허용 2개 신규 파일뿐이고 package/lockfile/CSS/Rules/
+  config diff 0이다.
+- 암호화 전에 `verifyFrameReplayEvidenceDigestV1`로 evidence↔digest 일치를 검증하고, detached scene만
+  `encryptJson`에 1회 넘긴 뒤 outer를 `readSpaceDocumentV2`로 재검증한다. decrypt/retry 0.
+- targeted 54/54, space-v2+spaces 288/288, admin typecheck, `node scripts/check.mjs` PASS
+  (unit 1859/1859), 전체 Chromium 151/151, `git diff --check` PASS.
+- bundle identity 유지(admin 226,201 / CSS 9,146 / 고객 322,018), 두 bundle에 spec 067 식별자 0건.
+- 진행도 74~77% / 잔여 23~26%(직전 72~75%에서 약 +2%p). 근거는 작업축 5의 암호화 문서 조립이 닫힌
+  것이며, 작업축 6·7 불변이라 상단은 77%를 넘기지 않았다.
 
 ## 스펙 066 Codex 통과 + 스펙 067 계약 준비 (2026-08-21)
 
