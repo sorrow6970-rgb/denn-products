@@ -401,6 +401,145 @@ describe("createSpaceV2DocumentEncryptionCandidate — rejected input", () => {
   });
 });
 
+// --- required injection ------------------------------------------------------
+//
+// `verifyFrameReplayEvidenceDigestV1` defaults to a global Web Crypto port, so a missing or
+// malformed SHA port must fail here rather than quietly reaching `globalThis.crypto.subtle`.
+
+describe("createSpaceV2DocumentEncryptionCandidate — required injection", () => {
+  const malformedPorts = (): [string, unknown][] => {
+    const revocable = Proxy.revocable({}, {});
+    revocable.revoke();
+    return [
+      ["undefined", undefined],
+      ["null", null],
+      ["a primitive", "port"],
+      ["an object without the method", {}],
+      ["a non-function method", { digest: 42, encryptJson: 42 }],
+      [
+        "a throwing method getter",
+        {
+          get digest(): unknown {
+            throw new Error("revoked");
+          },
+          get encryptJson(): unknown {
+            throw new Error("revoked");
+          },
+        },
+      ],
+      ["a revoked proxy", revocable.proxy],
+    ];
+  };
+
+  it.each(malformedPorts())(
+    "refuses %s as the SHA port, with no global digest and no encryption",
+    async (_label, sha256) => {
+      const crypto = recordingCrypto();
+      const subtleSpy = vi.spyOn(globalThis.crypto.subtle, "digest");
+
+      try {
+        const result = await createSpaceV2DocumentEncryptionCandidate(
+          input(),
+          crypto,
+          sha256 as unknown as SpaceSha256Port,
+        );
+        expect(result).toEqual({ ok: false, code: "SPACE_V2_DOCUMENT_EVIDENCE_NOT_VERIFIED" });
+      } finally {
+        subtleSpy.mockRestore();
+      }
+
+      expect(subtleSpy).not.toHaveBeenCalled();
+      expect(crypto.encryptJson).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(malformedPorts())("refuses %s as the crypto port", async (_label, crypto) => {
+    const sha256 = recordingSha256();
+
+    const result = await createSpaceV2DocumentEncryptionCandidate(
+      input(),
+      crypto as unknown as SpaceCryptoPort,
+      sha256,
+    );
+
+    expect(result).toEqual({ ok: false, code: "SPACE_V2_DOCUMENT_ENCRYPT_FAILED" });
+  });
+
+  it("reads the SHA method once, so a drifting getter cannot swap it", async () => {
+    let reads = 0;
+    const sha256 = {
+      get digest() {
+        reads += 1;
+        return reads === 1
+          ? webCryptoPort.digest
+          : () => {
+              throw new Error("swapped");
+            };
+      },
+    };
+    const crypto = recordingCrypto();
+
+    const result = await createSpaceV2DocumentEncryptionCandidate(
+      input(),
+      crypto,
+      sha256 as unknown as SpaceSha256Port,
+    );
+
+    expect(result.ok).toBe(true);
+    expect(reads).toBe(1);
+    expect(crypto.encryptJson).toHaveBeenCalledTimes(1);
+  });
+
+  it("reads the crypto method once, so a drifting getter cannot swap it", async () => {
+    let reads = 0;
+    const encryptJson = vi.fn(async () => ({ ok: true as const, value: ENVELOPE }));
+    const crypto = {
+      get encryptJson() {
+        reads += 1;
+        return reads === 1
+          ? encryptJson
+          : () => {
+              throw new Error("swapped");
+            };
+      },
+      decryptJson: vi.fn(),
+    };
+
+    const result = await createSpaceV2DocumentEncryptionCandidate(
+      input(),
+      crypto as unknown as SpaceCryptoPort,
+      recordingSha256(),
+    );
+
+    expect(result.ok).toBe(true);
+    expect(reads).toBe(1);
+    expect(encryptJson).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a method-style port working by preserving its receiver", async () => {
+    class MethodStylePort {
+      readonly seen: unknown[] = [];
+      async encryptJson(value: unknown, password: string) {
+        this.seen.push({ value, password });
+        return { ok: true as const, value: ENVELOPE };
+      }
+      async decryptJson() {
+        return { ok: false as const, code: "SPACE_DECRYPT_FAILED" as const };
+      }
+    }
+    const crypto = new MethodStylePort();
+
+    const result = await createSpaceV2DocumentEncryptionCandidate(
+      input(),
+      crypto,
+      recordingSha256(),
+    );
+
+    expect(result.ok).toBe(true);
+    expect(crypto.seen).toEqual([{ value: CANONICAL_SCENE, password: PASSWORD }]);
+  });
+});
+
 // --- crypto failures ---------------------------------------------------------
 
 describe("createSpaceV2DocumentEncryptionCandidate — crypto failures", () => {

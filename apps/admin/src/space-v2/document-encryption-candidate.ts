@@ -76,6 +76,10 @@ const fail = (
  * caller's object, and the resulting outer document is re-read through `readSpaceDocumentV2`, so
  * the returned value is detached from both the input and the crypto result.
  *
+ * Both ports are genuinely required: their methods are read once, before the first await, and must
+ * be callable. A missing or malformed SHA port fails instead of letting the verifier fall back to
+ * its default global Web Crypto port, so this module never reaches a global crypto of its own.
+ *
  * On the success path the SHA-256 port runs exactly once and `encryptJson` exactly once. There is
  * no decrypt call and no retry.
  *
@@ -105,11 +109,43 @@ export async function createSpaceV2DocumentEncryptionCandidate(
     return fail("SPACE_V2_DOCUMENT_INVALID_INPUT");
   }
 
+  // Both injected methods are read ONCE here, still before the first await, so a method getter
+  // cannot drift between the read and the call. `verifyFrameReplayEvidenceDigestV1` has a default
+  // Web Crypto port, so handing it anything but an always-defined adapter would silently turn a
+  // missing injection into a global `crypto.subtle` call — the adapter below closes that path.
+  let digestMethod: unknown;
+  try {
+    digestMethod = (sha256 as { readonly digest?: unknown } | null | undefined)?.digest;
+  } catch {
+    return fail("SPACE_V2_DOCUMENT_EVIDENCE_NOT_VERIFIED");
+  }
+  if (typeof digestMethod !== "function") {
+    return fail("SPACE_V2_DOCUMENT_EVIDENCE_NOT_VERIFIED");
+  }
+  const digestCall = digestMethod as (this: unknown, bytes: Uint8Array) => Promise<Uint8Array>;
+  // `.call(sha256, …)` keeps the port's own `this`, so a method-style port still works.
+  const injectedSha256: SpaceSha256Port = { digest: (bytes) => digestCall.call(sha256, bytes) };
+
+  let encryptMethod: unknown;
+  try {
+    encryptMethod = (crypto as { readonly encryptJson?: unknown } | null | undefined)?.encryptJson;
+  } catch {
+    return fail("SPACE_V2_DOCUMENT_ENCRYPT_FAILED");
+  }
+  if (typeof encryptMethod !== "function") {
+    return fail("SPACE_V2_DOCUMENT_ENCRYPT_FAILED");
+  }
+  const encryptCall = encryptMethod as (
+    this: unknown,
+    value: unknown,
+    password: string,
+  ) => Promise<unknown>;
+
   try {
     const verified = await verifyFrameReplayEvidenceDigestV1(
       scene.frameEvidence,
       scene.frameEvidenceDigest,
-      sha256,
+      injectedSha256,
     );
     if (!verified.ok) return fail("SPACE_V2_DOCUMENT_EVIDENCE_NOT_VERIFIED");
   } catch {
@@ -121,7 +157,7 @@ export async function createSpaceV2DocumentEncryptionCandidate(
   // unusable envelope is an output failure.
   let encrypted: unknown;
   try {
-    encrypted = await crypto.encryptJson(scene, password);
+    encrypted = await encryptCall.call(crypto, scene, password);
     if ((encrypted as { readonly ok?: unknown } | null)?.ok !== true) {
       return fail("SPACE_V2_DOCUMENT_ENCRYPT_FAILED");
     }
