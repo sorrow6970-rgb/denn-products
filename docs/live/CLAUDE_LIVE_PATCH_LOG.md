@@ -5192,3 +5192,27 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   이번에도 전혀 움직이지 않았다.
 - 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
   기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.
+
+## 2026-08-21(18) - 스펙 071 Codex 독립 검수 통과 · 오늘 세션 종료
+
+- HEAD=origin `0d4aac4`, ahead/behind 0/0에서 구현 `eb3df01`과 기록을 독립 검토했다. 기준
+  `3e0a91a` 이후 제품 diff는 허용 신규 2파일(`issue-identity-pair.ts`와 unit)뿐이고 기존 spec064~070,
+  package/lockfile/CSS/Rules/config/UI 제품 diff는 0이다.
+- method one-read·receiver 보존, assetId→token 순서, 0/1/2회 호출 예산, 하위 오류 비노출,
+  collision fail-closed와 자동 retry 0을 코드·테스트에서 대조했다. 추가 결함은 없다.
+- 독립 게이트: targeted **29/29**, space-v2+spaces **455/455**, `node scripts/check.mjs` PASS(unit
+  **2026/2026**), 전체 Chromium **151/151**, `git diff --check` PASS, 포트/temp/staged 잔류 0.
+- bundle identity: 고객 `index-6js4DafP.js` **322,018 bytes** /
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`, admin
+  `index-D0XOQpRL.js` **226,201 bytes** /
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`, admin CSS **9,146 bytes**.
+  production bundle 신규 식별자 0이다.
+- 첫 targeted 명령의 `pnpm exec` wrapper가 이 셸에서 `vitest`를 resolve하지 못했으나, 이미 설치된
+  `node_modules/.bin/vitest.CMD`로 같은 targeted gate를 재실행해 29/29 PASS했다. 설치·다운로드·파일
+  변경은 없었다.
+- 스펙 071 최종 **CODEX_PASSED / DONE**. 스펙 068 조합, upload, Firestore create, 실제 Firebase/
+  Rules/network/emulator/deploy와 viewer/UI는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다.
+- 전체 리빌드 진행도는 **77~80% 완료 / 20~23% 잔여, 변동 없음**이다. 독립 검수는 이미 구현된
+  identity 준비를 확인한 것이므로 추가 상승은 없다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`. 오늘 세션을 종료하며 다음 스펙·구현·자동화·반복 작업은
+  시작하지 않는다. 보호 대상 조작 0, staged 0이다.

@@ -1,21 +1,34 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-071-space-v2-local-issue-identity-pair` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-completed_unit: `spec-070-space-v2-local-web-crypto-uuid-adapter` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: 문서 **`92540b4`** / 구현 **`eb3df01`** (baseline `3e0a91a`).
-구현·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
-next_transition: **`CODEX_REVIEW`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none` — **TODAY SESSION CLOSED / NO NEXT SPEC**
+completed_unit: `spec-071-space-v2-local-issue-identity-pair` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
+기준: 구현 **`eb3df01`** / 기록 및 독립 검수 baseline **`0d4aac4`**.
+현재 HEAD=origin **`0d4aac4`**, ahead/behind **0/0**이며 Codex 종료 문서만 working tree에 있다.
+next_transition: **`WAITING_FOR_NEXT_MANUAL_TASK`**
 
 ## Claude Code 전달용 다음 지시문
 
 아래 문장을 Claude Code에 그대로 전달한다.
 
 ```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/071-space-v2-local-issue-identity-pair.md를 전부 읽고 스펙 071의 명시된 local-only 범위만 구현·검증해. 먼저 현재 Codex 문서 변경을 일반 fast-forward 문서 commit으로 push한 뒤, 보호 대상과 기존 Founder/user working tree 변경 및 기존 spec064~070 제품 파일은 건드리지 마. 허용 제품 파일은 신규 apps/admin/src/space-v2/issue-identity-pair.ts와 해당 unit 두 개뿐이다. 스펙 068 preparation 조합, upload, Firestore create, 실제 Firebase/network/Rules 또는 UI로 확장하거나 자동화·반복 작업을 만들지 마. 완료 후 제품 commit과 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를 실제 상태에 맞춘 뒤 전체 리빌드 진행률·잔여율·변동 근거까지 보고해.
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 전부 읽고, 현재 Codex가 남긴 스펙 071 종료 문서 6개만 정확히 stage해 일반 fast-forward 문서 commit으로 push해. 허용 문서는 docs/rebuild/specs/071-space-v2-local-issue-identity-pair.md, docs/handoff/2026-08-21-spec-071-space-v2-local-issue-identity-pair-handoff.md, Automation/DENN_AUTOMATION_STATE.md, Automation/NEXT_CLAUDE_PROMPT.md, docs/codex-claude-handoff/CURRENT.md, docs/live/CLAUDE_LIVE_PATCH_LOG.md뿐이다. 제품 코드·test·package/lockfile·Rules/config와 보호 대상 및 기존 Founder/user working tree 변경은 수정·restore·checkout·stage·commit하지 마. push 후 HEAD=origin, ahead/behind 0/0, staged 0, working tree가 기존 보호 대상뿐인지 확인하고 스펙 071 DONE/CODEX_PASSED, 전체 리빌드 77~80% 완료·20~23% 잔여, 오늘 세션 종료와 WAITING_FOR_NEXT_MANUAL_TASK를 보고해. 다음 스펙·구현·자동화·반복 작업은 시작하지 마.
 ```
 
-## ★ 스펙 071 — 구현 완료 / Codex 독립 검수 대기
+## ★ 스펙 071 — Codex 독립 검수 통과 / DONE
+
+- 구현 `eb3df01`, 기록 및 검수 baseline HEAD=origin `0d4aac4`, ahead/behind 0/0.
+- 제품 diff는 허용 신규 `issue-identity-pair.ts`와 unit 2개뿐이다. 기존 spec064~070과 package/
+  lockfile/CSS/Rules/config/UI diff는 0이다.
+- 독립 게이트: targeted **29/29**, space-v2+spaces **455/455**, check PASS(unit **2026/2026**),
+  Chromium **151/151**, bundle hash/size 일치, 신규 식별자 0, diff/포트/temp/staged 잔류 0.
+- 추가 결함 0, 최종 `CODEX_PASSED / DONE`이다.
+- 스펙 068 preparation 조합, upload, Firestore create/reconciliation, 실제 Firebase/network/Rules/
+  emulator/deploy와 UI는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다.
+- 전체 리빌드 진행도는 **77~80% 완료 / 20~23% 잔여**다. 오늘 세션은 여기서 종료하며 다음
+  스펙은 사용자 수동 지시 전까지 시작하지 않는다.
+
+## ★ 스펙 071 — 구현 완료 기록
 
 문서 commit `92540b4`(Codex 종료·HH-1 결정·계약 선반영), 구현 commit `eb3df01`. 제품 변경은 허용
 2개 신규 파일뿐이고 기존 064~070 제품 파일, package/lockfile/CSS/config/Firebase/Rules/UI diff는
@@ -39,7 +52,7 @@ mutation: collision 검사 제거 시 3건, 첫 값 early stop 제거 시 4건 �
 진행도 보고: **77~80% 진행 / 20~23% 잔여**(직전 76~79%에서 +1%p). 근거는 identity 준비가 닫힌
 것이며 조합·upload·create가 여전히 금지라 상승폭을 제한했고 작업축 6·7은 불변이다.
 
-다음은 Codex 독립 검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+이 구현은 위 독립 검수를 통과했다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
 
 ## ★ HH-1=A 승인 · 스펙 071 계약 (기록)
 

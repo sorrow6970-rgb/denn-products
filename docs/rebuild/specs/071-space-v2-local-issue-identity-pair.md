@@ -1,6 +1,6 @@
 # 스펙 071 — space V2 local issue identity pair
 
-상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 ## 1. 목표 (WHY)
 
@@ -175,3 +175,15 @@ mutation 확인: collision 검사를 제거하면 3건, 첫 값 실패의 early 
 계속 NOT IMPLEMENTED / 금지: 스펙 068 preparation과의 조합, 068~070 제품 변경, Storage upload/read/
 delete, Firestore create/reconciliation, URL/link 발급, Firebase adapter/Rules/config/env, 실제
 UID·network·emulator·deploy, viewer/UI/route.
+
+### CODEX REVIEW (2026-08-21)
+
+- HEAD=origin `0d4aac4`, ahead/behind 0/0에서 구현 `eb3df01`과 기록을 독립 검토했다.
+- 기준 `3e0a91a` 이후 제품 diff는 허용 신규 module/unit 2개뿐이고 기존 spec064~070,
+  package/lockfile/CSS/Rules/config/UI diff는 0이다.
+- source method one-read와 receiver 보존, assetId→token 순서, malformed/첫 실패/둘째 실패·collision의
+  0/1/2회 호출 예산, child 오류 비노출, collision fail-closed와 자동 retry 0을 대조했다. 추가 결함 0.
+- 독립 게이트: targeted **29/29**, space-v2+spaces **455/455**, `node scripts/check.mjs` PASS(unit
+  **2026/2026**), 전체 Chromium **151/151**, bundle identity, 신규 식별자 0, diff/포트/temp/staged 잔류 0.
+- 최종 판정은 **CODEX_PASSED / DONE**이다. 스펙 068 조합, upload, Firestore create, 실제 Firebase/
+  Rules/network/emulator/deploy와 UI는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다.

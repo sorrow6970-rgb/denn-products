@@ -1,7 +1,7 @@
 # 스펙 071 space V2 local issue identity pair handoff
 
-- 상태: `READY_FOR_CLAUDE / LOCAL_ONLY / NO_NETWORK / NO_UI`
-- 기준 HEAD=origin: `3e0a91a`, ahead/behind 0/0
+- 상태: `DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI`
+- 기준 HEAD=origin: `0d4aac4`, ahead/behind 0/0
 - 정본: `docs/rebuild/specs/071-space-v2-local-issue-identity-pair.md`
 - 결정: `docs/codex-claude-handoff/decisions/2026-08-21-space-v2-issue-identity-decisions.md`
 
@@ -15,3 +15,8 @@ collision으로 닫는다.
 스펙 068 preparation 조합, upload, Firestore create, URL 발급, 실제 Firebase/network/UID/emulator/
 deploy와 viewer/UI는 금지다. Claude Code는 정본과 NEXT의 exact 범위만 구현·검증하고 제품·기록
 commit을 일반 fast-forward push한 뒤 `READY_FOR_CODEX`에서 멈춘다.
+
+구현 `eb3df01`을 Codex가 독립 검수했다. targeted 29/29, 확대 455/455, check(unit 2026/2026),
+Chromium 151/151, bundle identity, diff/포트/temp/staged 게이트가 모두 PASS했고 추가 결함은 없다.
+최종 `CODEX_PASSED / DONE`이다. 다음 스펙은 시작하지 않고 `WAITING_FOR_NEXT_MANUAL_TASK`에서
+오늘 세션을 종료한다.

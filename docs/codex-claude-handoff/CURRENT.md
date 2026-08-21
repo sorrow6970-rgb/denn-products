@@ -20,7 +20,25 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 071 local issue identity pair 구현·검증이 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 071은 DONE / CODEX_PASSED이며 오늘 세션을 종료한다.**
+
+HEAD=origin `0d4aac4`, ahead/behind 0/0에서 구현 `eb3df01`을 독립 검토했다. 기준 `3e0a91a` 이후
+제품 diff는 허용 신규 `issue-identity-pair.ts`와 unit 2개뿐이다. method one-read와 receiver 보존,
+assetId→token 순서, 0/1/2회 호출 예산, child 오류 비노출, collision fail-closed와 retry 0을 대조했고
+추가 결함은 없다.
+
+독립 게이트: targeted 29/29, space-v2+spaces 455/455, `node scripts/check.mjs` PASS(unit 2026/2026),
+전체 Chromium 151/151, 고객 `A9360EFF…E55E8159` / admin `B6E90475…A1F1DC`, admin CSS 9,146 bytes,
+production bundle 신규 식별자 0, `git diff --check`, 포트/temp/staged 잔류 0. 최종 판정은
+**`CODEX_PASSED / DONE`**이다.
+
+스펙 068 preparation 조합, Storage upload, Firestore create/reconciliation, 실제 Firebase/Rules/
+network/emulator/deploy와 UI는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다. 전체 리빌드 진행도는
+**77~80% 완료 / 20~23% 잔여**를 유지한다. 오늘은 다음 스펙을 시작하지 않는다.
+
+> 이전 상태: **`READY_FOR_CODEX` - 스펙 071 구현·검증 완료, Codex 독립 검수 대기.**
+
+## 스펙 071 구현 기록
 
 계약·HH-1 결정 문서 commit `92540b4`, 구현 commit `eb3df01`. 제품 변경은 허용 2개 신규 파일
 (`apps/admin/src/space-v2/issue-identity-pair.ts`와 unit)뿐이고 기존 064~070 제품 파일,

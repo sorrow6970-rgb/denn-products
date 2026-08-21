@@ -4,17 +4,17 @@
 updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-070-space-v2-local-web-crypto-uuid-adapter   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-071-space-v2-local-issue-identity-pair   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CODEX
-baseline_commit: 3e0a91a   # spec 070 implementation record / Codex review baseline
-candidate_commit: eb3df01   # spec 071 local issue identity pair
-verified_commit: ff3c59a   # spec 070 local Web Crypto UUID adapter, independently passed at 3e0a91a
-origin_relation: "HEAD=origin after the spec 071 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
-working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
+completed_unit: spec-071-space-v2-local-issue-identity-pair   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
+active_unit: none   # today session closed; no next spec selected
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: 0d4aac4   # spec 071 implementation record / Codex review baseline
+candidate_commit: null
+verified_commit: eb3df01   # spec 071 local issue identity pair, independently passed at 0d4aac4
+origin_relation: "HEAD=origin at 0d4aac4 before the uncommitted Codex spec 071 closure documents; ahead/behind 0/0"
+working_tree: "Codex spec 071 closure documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_REVIEW
+next_transition: WAITING_FOR_NEXT_MANUAL_TASK
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,20 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 77-80% complete; 20-23% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 071 Codex 독립 검수 통과 · 오늘 세션 종료 (2026-08-21)
+
+- HEAD=origin `0d4aac4`에서 구현 `eb3df01`을 독립 검토했다. 기준 `3e0a91a` 이후 제품 diff는 허용
+  신규 module/unit 2개뿐이고 기존 spec064~070, package/lockfile/CSS/Rules/config/UI diff는 0이다.
+- 독립 게이트: targeted 29/29, space-v2+spaces 455/455, `node scripts/check.mjs` PASS(unit 2026/2026),
+  전체 Chromium 151/151, bundle identity, `git diff --check`, 포트/temp/staged 잔류 0.
+- method one-read와 receiver 보존, assetId→token 순서, 0/1/2회 호출 예산, child 오류 비노출,
+  collision fail-closed와 retry 0을 코드·테스트에서 대조했다. 추가 결함은 없다.
+- 스펙 071 최종 `CODEX_PASSED / DONE`. 스펙 068 조합, upload, Firestore create, 실제 Firebase/Rules/
+  network/emulator/deploy와 UI는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다.
+- 전체 리빌드 진행도는 **77~80% 완료 / 20~23% 잔여**를 유지한다. 검수는 구현 기록을 확인한
+  것이므로 추가 상승은 없다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`. 오늘 세션을 종료하고 다음 스펙은 자동 시작하지 않는다.
 
 ## 스펙 071 구현 완료 (2026-08-21)
 
