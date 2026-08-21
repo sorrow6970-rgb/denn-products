@@ -1,11 +1,30 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-065-space-v2-local-issuer-projector` — **CORRECTED ROUND 1 / LOCAL_ONLY / NO_NETWORK / NO_UI**
-completed_unit: `spec-064-space-v2-local-contract` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none`
+completed_unit: `spec-065-space-v2-local-issuer-projector` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 기준: 계약 **`e9e0c6d`** / 구현 **`5fc89d2`** / 보완 **`ec7610e`** (baseline `dcd893c`).
 보완·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
-next_transition: **`CODEX_REVIEW`**
+next_transition: **`FOUNDER_NEXT_MANUAL_TASK`**
+
+## ★ 스펙 065 Codex 독립 재검수 통과 / HOLD
+
+Codex가 HEAD=origin `7255012`에서 보완 commit `ec7610e`를 독립 재검수했다. 허용 제품 diff 3개가
+정확하고 C-1~C-3은 모두 충족됐다. targeted+spaces **179/179**, admin/ui typecheck,
+`node scripts/check.mjs` PASS(unit **1750/1750**), 전체 Chromium **151/151**,
+`git diff --check dcd893c..HEAD` PASS다. 추가 결함 0, 최종 판정 **CODEX_PASSED / DONE**이다.
+
+admin entry는 `index-D0XOQpRL.js` 226,201 bytes / SHA-256
+`B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`, customer entry는
+`index-6js4DafP.js` 322,018 bytes / SHA-256
+`A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`로 기준과 일치한다. admin CSS
+실측은 `index-DJ_z3tK1.css` **9,146 bytes**이며 `.transform`/`.italic`/rotate·skew property scaffold는
+0건이다. 이전 9,144 표기는 계수 오류로 정정한다.
+
+현재 Claude Code가 구현할 활성 스펙은 없다. 다음 수동 지시와 Codex 스펙 전에는 제품 코드·테스트·
+Rules/config/package/lockfile을 수정하지 않는다. 실제 Firebase/network/UID/emulator/deploy,
+token/encryption/upload/document create, issuer/viewer/UI 연결도 계속 금지다. 자동화·반복 작업을 만들지
+않고 보호 대상을 건드리지 않는다.
 
 ## ★ 스펙 065 보완 라운드 1 — 완료 / Codex 재검수 대기
 
@@ -20,7 +39,7 @@ next_transition: **`CODEX_REVIEW`**
 - **C-2** `theme.css`에 `@source not "../../../apps/admin/src/space-v2/**/*";` 1줄 + 근거 문장만.
   admin entry `index-D0XOQpRL.js` **226,201 bytes** / SHA-256
   `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC` **복원**, admin CSS
-  `index-DJ_z3tK1.css` 9,144 bytes 복귀, `.transform`/`.italic`/property scaffold 0건, mockup 불변.
+  `index-DJ_z3tK1.css` 9,146 bytes 복귀, `.transform`/`.italic`/property scaffold 0건, mockup 불변.
 - **C-3** handoff EOF blank line 제거 → `git diff --check dcd893c..기록 HEAD` PASS.
 
 재검증: targeted **54/54**, spaces **125/125**, `node scripts/check.mjs` PASS(unit **1750/1750**),
@@ -74,7 +93,7 @@ Firebase/Rules/config와 shared·spaces 제품 파일은 무변경이다. target
 ★ **DEVIATION 1건**: 정본 §5의 admin entry hash 불변만 충족하지 못했다. admin entry JS는
 byte-identical(226,201)이고 baseline과의 차이는 상호 파일명 참조 한 곳이며 admin JS에 이번 module
 코드·식별자·계약 문자열이 0건이다. 원인은 Tailwind v4 소스 스캔이 evidence 계약 필드명 `transform`
-(+spec 031 fixture가 요구하는 `italic`)을 utility로 만들어 admin CSS가 9,144 → 9,821 bytes가 된 것이다.
+(+spec 031 fixture가 요구하는 `italic`)을 utility로 만들어 admin CSS가 9,146 → 9,821 bytes가 된 것이다.
 회피 가능한 `!transform`/`uppercase`는 제거했고 남은 둘은 허용 파일 안에서 제거할 수 없다.
 Tailwind/vite config 변경은 허용 파일 밖이라 하지 않았다. 게이트 문구 정정 또는 별도 스펙 중 어느
 쪽을 택할지는 Codex 결정 사항으로 남긴다.

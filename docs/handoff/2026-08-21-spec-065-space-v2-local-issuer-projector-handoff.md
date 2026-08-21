@@ -1,6 +1,6 @@
 # 스펙 065 space V2 local issuer projector handoff
 
-- 상태: `CORRECTION_REQUIRED / ROUND 1 / LOCAL_ONLY / NO_NETWORK / NO_UI`
+- 상태: `DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI`
 - 기준 HEAD: `dcd893c`
 - 정본: `docs/rebuild/specs/065-space-v2-local-issuer-projector.md`
 
@@ -28,3 +28,13 @@ STATE/NEXT/CURRENT/live log를 실제 상태에 맞춘다. 완료 상태는 `REA
   identity를 복원한다.
 - handoff EOF whitespace를 정리하고 `git diff --check dcd893c..새 HEAD`를 통과시킨다.
 - 상세 허용 범위와 검증은 spec 065 CODEX REVIEW 절이 정본이다.
+
+## Codex 독립 재검수 통과
+
+- HEAD=origin `7255012`, 보완 commit `ec7610e`; 허용 제품 diff 3개와 C-1~C-3 모두 일치한다.
+- targeted+spaces **179/179**, admin/ui typecheck, 전체 check(unit **1750/1750**), Chromium
+  **151/151**, commit 범위 diff-check PASS다.
+- admin/customer entry는 기준 name/bytes/SHA-256과 일치한다. admin CSS 실측은 **9,146 bytes**이고
+  `.transform`/`.italic`/rotate·skew property scaffold는 0건이다. 이전 9,144 표기는 계수 오류다.
+- 최종 판정 **CODEX_PASSED / DONE**. 다음 활성 스펙은 없고 실제 Firebase/network/UID/Rules/emulator/
+  deploy 및 issuer/viewer/UI/upload/document create는 계속 금지다.

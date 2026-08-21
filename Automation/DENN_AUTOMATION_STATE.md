@@ -4,22 +4,38 @@
 updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-064-space-v2-local-contract   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-065-space-v2-local-issuer-projector   # CORRECTED ROUND 1, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CODEX
+completed_unit: spec-065-space-v2-local-issuer-projector   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
+active_unit: none
+state: WAITING_FOR_NEXT_MANUAL_TASK
 baseline_commit: dcd893c   # spec 064 closure
 candidate_commit: ec7610e   # spec 065 correction round 1 (C-1~C-3)
-verified_commit: none   # spec 065 has not passed Codex review
-origin_relation: "HEAD=origin after the spec 065 correction and record commits were fast-forward pushed; ahead/behind 0/0"
-working_tree: "Codex correction documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
+verified_commit: ec7610e   # spec 065 correction round 1 independently passed
+origin_relation: "review baseline HEAD=origin 7255012; ahead/behind 0/0 before Codex closure documents"
+working_tree: "Codex closure documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
 fix_round: 1   # C-1~C-3 corrected
 max_fix_rounds: 3
-next_transition: CODEX_REVIEW
+next_transition: FOUNDER_NEXT_MANUAL_TASK
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 065 Codex 독립 재검수 통과 (2026-08-21)
+
+- 검수 HEAD=origin `7255012`, 보완 commit `ec7610e`; 허용 제품 diff는 정확히 3개 파일이다.
+- catalog 1회 detach와 동일 snapshot projector 사용, narrow Tailwind source exclusion, handoff EOF
+  교정이 모두 계약과 일치한다. 추가 결함 0, 최종 판정 **CODEX_PASSED / DONE**.
+- 독립 게이트: targeted+spaces **179/179**, admin/ui typecheck, `node scripts/check.mjs` PASS(unit
+  **1750/1750**), 전체 Chromium **151/151**, `git diff --check dcd893c..HEAD` PASS.
+- admin entry `index-D0XOQpRL.js` **226,201 bytes**, SHA-256
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`; customer entry
+  `index-6js4DafP.js` **322,018 bytes**, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
+- admin CSS 실측은 `index-DJ_z3tK1.css` **9,146 bytes**다. 이전 완료 기록의 9,144 표기는 2-byte
+  계수 오류이며, `.transform`/`.italic`/rotate·skew property scaffold는 실제로 모두 0건이다.
+- 실제 Firebase/network/UID/Rules/emulator/deploy와 token/encryption/upload/document create,
+  issuer/viewer/UI 연결은 계속 NOT IMPLEMENTED / NOT TESTED / 금지다. 다음 스펙은 시작하지 않는다.
 
 ## 스펙 065 Codex 보완 라운드 1 (2026-08-21)
 
@@ -38,7 +54,7 @@ deploy: forbidden
   변경했고 package/lockfile 추가 diff 0이다.
 - C-1 `readLegacyCatalog` 1회 detach 후 두 projector가 같은 document 사용 + drifting art getter 회귀 2건.
 - C-2 theme.css에 admin `space-v2` exact source exclusion 1줄 → admin entry `index-D0XOQpRL.js`
-  226,201 bytes / SHA-256 `B6E90475…B3A1F1DC` baseline 복원, admin CSS 9,144 bytes 복귀.
+  226,201 bytes / SHA-256 `B6E90475…B3A1F1DC` baseline 복원, admin CSS 9,146 bytes 복귀.
 - C-3 handoff EOF blank line 제거 → `git diff --check dcd893c..기록 HEAD` PASS.
 - targeted 54/54, spaces 125/125, `node scripts/check.mjs` PASS(unit 1750/1750), 전체 Chromium 151/151.
 - 이전 DEVIATION은 해소됐다. 상태 `READY_FOR_CODEX`.
@@ -51,7 +67,7 @@ deploy: forbidden
 - 고객 entry `index-6js4DafP.js` 322,018 bytes / 기준 SHA-256 불변.
 - ★ DEVIATION: admin entry hash는 유지되지 않았다. JS는 byte-identical(226,201)이고 차이는 상호
   파일명 참조 한 곳뿐이며 module 코드는 bundle에 0건이다. 원인은 Tailwind v4 소스 스캔이 계약 필드명
-  `transform`(+fixture `italic`)을 utility로 만들어 admin CSS가 9,144 → 9,821 bytes가 된 것이다.
+  `transform`(+fixture `italic`)을 utility로 만들어 admin CSS가 9,146 → 9,821 bytes가 된 것이다.
   허용 파일 안에서 제거할 수 없어 Codex 판단으로 남긴다. 상세는 live log와 정본 DONE 절.
 - `pnpm install`이 넣은 `pnpm-workspace.yaml` allowBuilds stub은 허용 파일 밖이라 즉시 되돌렸다.
 

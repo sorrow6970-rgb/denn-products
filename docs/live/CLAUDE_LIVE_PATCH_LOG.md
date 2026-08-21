@@ -4729,3 +4729,23 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 실제
   Firebase/network/UID/Rules/emulator/deploy와 issuer 발급/viewer/UI/upload/document create는 계속
   NOT IMPLEMENTED / NOT TESTED / 금지다.
+
+## 2026-08-21(6) - 스펙 065 보완 라운드 1 Codex 독립 재검수 · CODEX_PASSED / DONE
+
+- HEAD=origin `7255012`, ahead/behind **0/0**에서 보완 commit `ec7610e`와 계약을 독립 검토했다.
+- 허용 제품 diff는 `issue-candidate.ts`, 해당 unit, `packages/ui/src/theme.css` 정확히 3개다. catalog
+  1회 detach/동일 snapshot, narrow Tailwind source exclusion, handoff EOF 교정이 모두 계약과 일치한다.
+- 독립 게이트: targeted+spaces **179/179**, admin/ui typecheck PASS, `node scripts/check.mjs` PASS
+  (unit **1750/1750**), 전체 Chromium **151/151**, `git diff --check dcd893c..HEAD` PASS.
+- admin entry `index-D0XOQpRL.js` **226,201 bytes**, SHA-256
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`; customer entry
+  `index-6js4DafP.js` **322,018 bytes**, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`로 기준과 일치한다.
+- 정정: 바로 앞 Claude 완료 항목의 admin CSS **9,144 bytes** 표기는 계수 오류다. 독립 build 실측은
+  `index-DJ_z3tK1.css` **9,146 bytes**이며 `.transform`/`.italic`/rotate·skew property scaffold는 모두
+  0건이다. 과거 항목은 삭제하지 않고 이 항목으로 정정한다.
+- 지정 포트와 `denn-e2e-*`/debug 잔류 0, staged 0. E2E가 다시 쓴 보호 spec-018 PNG와 기존 Founder/
+  user working-tree 변경은 restore/checkout/stage/commit하지 않았다.
+- 추가 결함 0, 최종 판정 **CODEX_PASSED / DONE**. 실제 Firebase/network/UID/Rules/emulator/deploy와
+  token/encryption/upload/document create, issuer/viewer/UI 연결은 계속 NOT IMPLEMENTED / NOT TESTED /
+  금지다. 다음 활성 스펙은 없으며 `WAITING_FOR_NEXT_MANUAL_TASK`에서 멈춘다.

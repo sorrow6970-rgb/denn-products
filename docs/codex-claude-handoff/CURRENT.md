@@ -16,7 +16,23 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 065 보완 라운드 1(C-1~C-3)이 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 065는 DONE / CODEX_PASSED다.**
+
+Codex는 HEAD=origin `7255012`에서 보완 commit `ec7610e`를 독립 검토했다. 허용 제품 diff 3개와
+C-1~C-3 구현은 계약에 정확히 일치하고 추가 결함은 없다. targeted+spaces **179/179**, admin/ui
+typecheck, `node scripts/check.mjs` PASS(unit **1750/1750**), 전체 Chromium **151/151**,
+`git diff --check dcd893c..HEAD` PASS를 재현했다.
+
+admin entry `index-D0XOQpRL.js` 226,201 bytes / SHA-256 `B6E90475…B3A1F1DC`, customer entry
+`index-6js4DafP.js` 322,018 bytes / SHA-256 `A9360EFF…E55E8159`는 기준과 같다. admin CSS 실측은
+`index-DJ_z3tK1.css` **9,146 bytes**이고 `.transform`/`.italic`/rotate·skew property scaffold는 0건이다.
+이전 9,144 표기는 계수 오류로 정정한다.
+
+실제 Firebase/network/UID/Rules/emulator/deploy와 token/encryption/upload/document create,
+issuer/viewer/UI 연결은 계속 NOT IMPLEMENTED / NOT TESTED / 금지다. 활성 구현 스펙은 없으며 다음
+수동 지시와 Codex 스펙 전에는 시작하지 않는다.
+
+> 이전 상태: **`READY_FOR_CODEX` - 스펙 065 보완 라운드 1(C-1~C-3)이 완료됐다.**
 
 보완 commit `ec7610e`. 허용 제품 파일 3개(`issue-candidate.ts`, 같은 디렉터리 unit,
 `packages/ui/src/theme.css`)만 변경했고 admin package/lockfile 추가 diff는 0이다.
@@ -24,7 +40,7 @@
 - C-1 `readLegacyCatalog`로 catalog를 1회 detach하고 geometry·art projector가 그 document만 쓴다.
   drifting art getter 회귀 2건을 추가했고 raw getter read는 1회다.
 - C-2 `theme.css`에 spec 021 선례와 같은 좁은 `@source not` 1줄을 추가해 admin entry
-  `index-D0XOQpRL.js` 226,201 bytes / SHA-256 `B6E90475…B3A1F1DC`와 admin CSS 9,144 bytes를 복원했다.
+  `index-D0XOQpRL.js` 226,201 bytes / SHA-256 `B6E90475…B3A1F1DC`와 admin CSS 9,146 bytes를 복원했다.
   `.transform`/`.italic`/transform property scaffold는 0건이고 mockup bundle은 불변이다.
 - C-3 handoff EOF blank line 제거로 `git diff --check dcd893c..기록 HEAD`가 PASS한다.
 
@@ -63,7 +79,7 @@ shared·spaces 제품 파일은 무변경이다.
 ★ DEVIATION: 정본 §5의 admin entry hash 불변 게이트만 충족하지 못했다. admin entry JS는
 byte-identical(226,201)이고 유일한 차이는 상호 파일명 참조이며 admin JS에 이번 module 코드는 0건이다.
 원인은 Tailwind v4 소스 스캔이 evidence 계약 필드명 `transform`(+fixture `italic`)을 utility로 만들어
-admin CSS가 9,144 → 9,821 bytes가 된 것이고, 허용 파일 안에서는 제거할 수 없다. 게이트 문구 정정
+admin CSS가 9,146 → 9,821 bytes가 된 것이고, 허용 파일 안에서는 제거할 수 없다. 게이트 문구 정정
 또는 별도 스펙 중 무엇을 택할지는 Codex 판단으로 남겼다. 상세는 live log와 정본 DONE 절.
 
 > 이전 상태: **`READY_FOR_CLAUDE` - 스펙 065 local issuer evidence projector 계약이 준비됐다.**

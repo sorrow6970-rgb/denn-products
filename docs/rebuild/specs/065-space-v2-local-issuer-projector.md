@@ -1,6 +1,6 @@
 # 스펙 065 — space V2 local issuer evidence projector
 
-상태: **CORRECTED ROUND 1 / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 기준 HEAD: `dcd893c` (스펙 064 종료, CODEX_PASSED)
 
@@ -308,7 +308,7 @@ broad exclusion, safelist/blocklist, 문자열 난독화, Vite/Tailwind config �
 
 - admin entry `index-D0XOQpRL.js`, **226,201 bytes**, SHA-256
   `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC` — baseline과 **완전 일치**
-- admin production CSS `index-DJ_z3tK1.css` **9,144 bytes**로 복귀. `.transform`/`.italic`/
+- admin production CSS `index-DJ_z3tK1.css` **9,146 bytes**로 복귀. `.transform`/`.italic`/
   `@property --tw-rotate|skew` scaffold **0건**
 - `admin-write-VpnNr13n.js` chunk 이름도 baseline과 동일
 - mockup entry `index-6js4DafP.js` 322,018 bytes / SHA-256 `A9360EFF…E55E8159` 및 mockup CSS
@@ -326,3 +326,26 @@ PASS한다.
 - 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, temp/debug 잔류 0
 
 이전 DONE 절의 DEVIATION(§5 admin entry hash)은 C-2로 **해소**됐다. 게이트 문구는 약화하지 않았다.
+
+### CODEX REVIEW — PASSED (2026-08-21)
+
+HEAD=origin `7255012`에서 보완 commit `ec7610e`를 독립 검토했다. 허용 제품 diff는
+`issue-candidate.ts`, 해당 unit, `packages/ui/src/theme.css` 정확히 3개이고 C-1~C-3을 모두 충족한다.
+추가 결함은 없다.
+
+- targeted issue candidate + spaces 전체 **179/179**
+- admin/ui typecheck PASS
+- `node scripts/check.mjs` PASS: format/lint/7 typecheck/unit **1750/1750**/두 앱 build
+- 전체 Chromium E2E **151/151**
+- admin entry `index-D0XOQpRL.js` 226,201 bytes / SHA-256
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`
+- customer entry `index-6js4DafP.js` 322,018 bytes / SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`
+- admin CSS `index-DJ_z3tK1.css` 실측 **9,146 bytes**;
+  `.transform`/`.italic`/`@property --tw-rotate|skew` 0건
+- `git diff --check dcd893c..HEAD` PASS, staged 0, 지정 포트/temp/debug 잔류 0
+
+Claude 완료 기록의 CSS **9,144 bytes**는 독립 실측과 2 bytes 차이나므로 9,146으로 정정한다. bundle
+identity 복원과 오염 selector 0건 판정에는 영향이 없다. 최종 판정은 **CODEX_PASSED / DONE**이다.
+실제 Firebase/network/UID/Rules/emulator/deploy, token/encryption/upload/document create,
+issuer/viewer/UI 연결은 계속 NOT IMPLEMENTED / NOT TESTED / 금지다.
