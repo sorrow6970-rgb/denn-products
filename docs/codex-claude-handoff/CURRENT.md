@@ -20,7 +20,29 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CLAUDE` - HH-1=A가 승인됐고 스펙 071 local issue identity pair 계약이 준비됐다.**
+상태: **`READY_FOR_CODEX` - 스펙 071 local issue identity pair 구현·검증이 완료됐다.**
+
+계약·HH-1 결정 문서 commit `92540b4`, 구현 commit `eb3df01`. 제품 변경은 허용 2개 신규 파일
+(`apps/admin/src/space-v2/issue-identity-pair.ts`와 unit)뿐이고 기존 064~070 제품 파일,
+package/lockfile/CSS/config/Rules/`App.tsx`/UI diff는 0이다.
+
+Founder HH-1=A에 따라 proof `assetId`와 public link token을 독립 UUID 두 개로 준비한다. original
+`randomUUID`를 첫 호출 전에 한 번만 읽어 callable 검증하고, receiver를 보존하는 adapter로 스펙 069
+candidate를 assetId→token 순서로 두 번 호출한다. malformed port면 source 호출 0, 첫 값 실패면 1회,
+둘째 값 실패나 collision이면 2회에서 멈추며 세 번째 호출과 자동 retry는 0이다. 두 값이 같으면
+`SPACE_V2_IDENTITY_COLLISION`으로 fail-closed하고, 하위 token 오류 code는 밖으로 전달하지 않는다.
+
+★ 범위 한계: UUID v4 형식과 두 값의 차이는 난수 품질·collision freedom의 증명이 아니다.
+
+게이트: targeted 29/29, space-v2+spaces 455/455, admin typecheck, `node scripts/check.mjs` PASS
+(unit 2026/2026), 전체 Chromium 151/151, `git diff --check` PASS, 포트/temp 잔류 0. admin/고객 entry와
+admin CSS 9,146 bytes는 기준과 동일하고 두 bundle에 spec 071 식별자는 0건이다.
+
+전체 리빌드 진행도는 **77~80% 진행 / 20~23% 잔여**다(직전 76~79%에서 +1%p). 근거는 작업축 5에서
+issue identity 준비가 닫힌 것이고, 스펙 068 준비 사슬과의 조합·upload·Firestore create·viewer는 여전히
+계약상 금지라 상승폭을 제한했으며 작업축 6·7은 불변이다.
+
+> 이전 상태: **`READY_FOR_CLAUDE` - 스펙 071 계약이 준비됐다.**
 
 Founder는 token과 proof `assetId`를 독립 UUID 두 개로 만드는 `HH-1=A`를 승인했다. 결정 정본은
 `docs/codex-claude-handoff/decisions/2026-08-21-space-v2-issue-identity-decisions.md`, 구현 계약은

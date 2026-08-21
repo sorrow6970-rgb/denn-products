@@ -5,23 +5,36 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-070-space-v2-local-web-crypto-uuid-adapter   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-071-space-v2-local-issue-identity-pair   # CONTRACT READY, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CLAUDE
+active_unit: spec-071-space-v2-local-issue-identity-pair   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CODEX
 baseline_commit: 3e0a91a   # spec 070 implementation record / Codex review baseline
-candidate_commit: null
+candidate_commit: eb3df01   # spec 071 local issue identity pair
 verified_commit: ff3c59a   # spec 070 local Web Crypto UUID adapter, independently passed at 3e0a91a
-origin_relation: "HEAD=origin at 3e0a91a before the uncommitted Codex spec 070 closure, HH-1 decision and spec 071 contract documents; ahead/behind 0/0"
-working_tree: "Codex review/decision/spec/handoff documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
+origin_relation: "HEAD=origin after the spec 071 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
+working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_IMPLEMENTATION
+next_transition: CODEX_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 76-79% complete; 21-24% remaining to production cutover"
+overall_rebuild_progress: "estimated 77-80% complete; 20-23% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 071 구현 완료 (2026-08-21)
+
+- 계약·결정 commit `92540b4`, 구현 commit `eb3df01`. 허용 2개 신규 파일뿐이고 기존 064~070 제품
+  파일과 package/lockfile/CSS/config/Rules diff 0이다.
+- HH-1=A: assetId·token은 독립 UUID 두 개. original method 1회 read + receiver 보존 adapter로
+  스펙 069 candidate를 assetId→token 순서로 두 번 호출한다.
+- 호출 예산 0/1/2회, 세 번째 호출·retry 0, 동일 값은 `SPACE_V2_IDENTITY_COLLISION`으로 fail-closed.
+- 하위 token 오류 code 비노출, 실패 결과는 `{ok, code}`뿐.
+- targeted 29/29, space-v2+spaces 455/455, admin typecheck, `node scripts/check.mjs` PASS
+  (unit 2026/2026), 전체 Chromium 151/151, bundle identity와 `git diff --check` PASS.
+- 진행도 77~80% / 잔여 20~23%(직전 76~79%에서 +1%p). 근거는 identity 준비가 닫힌 것이며, 조합·
+  upload·create는 여전히 금지라 상승폭을 제한했다. 작업축 6·7 불변.
 
 ## Founder HH-1=A 승인 + 스펙 071 계약 준비 (2026-08-21)
 

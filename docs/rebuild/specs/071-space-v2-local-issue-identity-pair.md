@@ -1,6 +1,6 @@
 # 스펙 071 — space V2 local issue identity pair
 
-상태: **READY_FOR_CLAUDE / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 ## 1. 목표 (WHY)
 
@@ -132,3 +132,46 @@ code를 외부에 전달하지 않고 pair 단계 code만 반환한다.
 ### QUESTIONS
 
 없음. Founder `HH-1=A`의 독립 identity pair만 local로 구현한다.
+
+### DONE (Claude) — 2026-08-21
+
+구현 commit `eb3df01` (계약·결정 문서 commit `92540b4`). 제품 변경은 §3 허용 2개 신규 파일뿐이고
+기존 064~070 제품 파일, package/lockfile/CSS/config/Firebase/Rules diff는 **0**이다.
+
+- 신규 `apps/admin/src/space-v2/issue-identity-pair.ts` — `createSpaceV2IssueIdentityPair(uuid)`
+- 신규 `apps/admin/src/space-v2/issue-identity-pair.test.ts` — 29 tests
+
+구현:
+
+- **4.2 port와 두 호출**: original `uuid.randomUUID`를 **첫 호출 전에 한 번만** 읽어 callable
+  검증하고, snapshot callable + original receiver를 가진 always-defined adapter로 스펙 069
+  `createSpaceV2IssueTokenCandidate`를 **assetId → token 순서로 두 번** 호출한다.
+- 호출 예산: malformed port는 source 호출 **0**(`INVALID_PORT`), 첫 값 실패는 **1회**에서 중단
+  (`ASSET_ID_FAILED`, token 호출 0), 둘째 값 실패·collision은 **2회**에서 중단
+  (`TOKEN_FAILED`/`COLLISION`). **세 번째 호출·자동 retry·repair는 0**이다.
+- 스펙 069 재사용으로 lowercase UUID v4 검증 정본을 한 곳에 유지했고, 하위 token 오류 code를 밖으로
+  전달하지 않고 pair 단계 code만 반환한다.
+- 성공은 exact key `assetId`/`token`만 가진 plain object이며 두 값은 서로 다르다. 실패는 `{ok, code}`
+  두 key뿐이고 candidate 원문·UUID 일부·UID/email·raw message/stack을 넣지 않는다.
+- ★ **범위 한계**: UUID v4 형식과 두 값의 차이는 난수 품질·collision freedom의 증명이 아니다.
+  module과 unit 상단 주석에 그대로 적었다.
+
+검증:
+
+- 신규 targeted **29/29**, space-v2(065~071) + `packages/spaces` **455/455**
+- admin typecheck PASS, `node scripts/check.mjs` **PASS**(unit **2026/2026**)
+- 전체 Chromium E2E **151/151**
+- 고객 entry `index-6js4DafP.js` **322,018 bytes** / `A9360EFF…E55E8159` — 기준 일치
+- admin entry `index-D0XOQpRL.js` **226,201 bytes** / `B6E90475…B3A1F1DC` — 기준 일치
+- admin CSS `index-DJ_z3tK1.css` **9,146 bytes**, unwanted utility **0**
+- 두 production bundle에 `SPACE_V2_IDENTITY`/`createSpaceV2IssueIdentityPair`/`issue-identity-pair`
+  문자열 **0건**
+- `git diff --check` PASS, 변경 경로는 허용 2개 신규 파일뿐, package/lockfile/Rules/config diff 0
+- 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`/temp/debug 잔류 0
+
+mutation 확인: collision 검사를 제거하면 3건, 첫 값 실패의 early stop을 없애면 4건 이상이 실패한다.
+거짓 통과가 아니다.
+
+계속 NOT IMPLEMENTED / 금지: 스펙 068 preparation과의 조합, 068~070 제품 변경, Storage upload/read/
+delete, Firestore create/reconciliation, URL/link 발급, Firebase adapter/Rules/config/env, 실제
+UID·network·emulator·deploy, viewer/UI/route.

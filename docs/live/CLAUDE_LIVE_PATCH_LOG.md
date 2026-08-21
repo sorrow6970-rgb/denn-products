@@ -5161,3 +5161,34 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   계약 문서화뿐이라 제품 작업축 완료량은 증가하지 않았다.
 - 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. 자동화·반복 작업 생성 0,
   보호 대상 조작 0, staged 0이다.
+
+## 2026-08-21(16) - 스펙 071 local issue identity pair 구현·검증 · READY_FOR_CODEX
+
+- Codex 종료·HH-1 결정·스펙 071 계약 문서를 먼저 fast-forward 문서 commit `92540b4`로 push한 뒤
+  착수했다. 구현 commit `eb3df01`. 기준 HEAD=origin `3e0a91a`.
+- 제품 변경은 §3 허용 2개 신규 파일뿐이다: `apps/admin/src/space-v2/issue-identity-pair.ts`와 unit.
+  기존 064~070 제품 파일, package/lockfile/CSS/config/Firebase/Rules/`App.tsx`/UI diff **0**.
+- Founder **HH-1=A**: 한 issue 작업의 proof `assetId`와 public link token은 **독립 UUID 두 개**다.
+  `createSpaceV2IssueIdentityPair(uuid)`는 original `randomUUID`를 첫 호출 전에 한 번만 읽어 callable
+  검증하고, receiver를 보존하는 always-defined adapter로 스펙 069 candidate를 **assetId → token**
+  순서로 두 번 호출한다.
+- 호출 예산: malformed port면 source 호출 **0**, 첫 값 실패면 **1회**에서 중단(token 호출 0), 둘째 값
+  실패나 collision이면 **2회**에서 중단. **세 번째 호출·자동 retry·repair 0**이다. 두 값이 같으면
+  성공으로 축소하지 않고 `SPACE_V2_IDENTITY_COLLISION`으로 fail-closed한다.
+- 스펙 069를 재사용해 lowercase UUID v4 정본을 한 곳에 유지했고, 하위 token 오류 code는 밖으로
+  전달하지 않는다(pair 단계 code 4개만). 실패 결과는 `{ok, code}`뿐이고 candidate 원문·UUID 일부·
+  UID/email·message/stack 0이다.
+- ★ **범위 한계(숨기지 않음)**: UUID v4 형식과 두 값의 차이는 난수 품질·collision freedom의 증명이
+  아니다. module·unit 주석에 동일하게 적었다.
+- 게이트: targeted **29/29**, space-v2+spaces **455/455**, admin typecheck,
+  `node scripts/check.mjs` PASS(unit **2026/2026**), 전체 Chromium **151/151**, `git diff --check` PASS,
+  포트 LISTENING 0, temp/debug 잔류 0. bundle identity 유지(admin **226,201** / CSS **9,146** /
+  고객 **322,018**), 두 bundle에 spec 071 식별자 0건.
+- mutation 확인: collision 검사를 제거하면 3건, 첫 값 실패 early stop을 없애면 4건 이상이 실패한다.
+- **전체 리빌드 진행도: 77~80% 진행 / 20~23% 잔여.** 직전 76~79%에서 하단·상단 각 +1%p.
+  근거: 작업축 5에서 Founder HH-1 결정이 코드로 확정돼 **issue identity(assetId·token) 준비가 닫혔다**.
+  이제 local 준비 사슬(스펙 068)과 identity(071)가 각각 완성돼, 남은 것은 둘의 조합과 upload·
+  Firestore create·viewer/UI다. 조합 자체는 아직 계약상 금지라 상승폭을 +1%p로 제한했고, 작업축 6·7은
+  이번에도 전혀 움직이지 않았다.
+- 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
+  기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.

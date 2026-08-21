@@ -1,11 +1,11 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-071-space-v2-local-issue-identity-pair` — **CONTRACT READY / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-071-space-v2-local-issue-identity-pair` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-070-space-v2-local-web-crypto-uuid-adapter` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: HEAD=origin **`3e0a91a`**, ahead/behind **0/0**. 스펙 070 구현 **`ff3c59a`**.
-Codex 종료·결정·스펙 071 계약 문서는 아직 working tree에 있고 staged 0이다.
-next_transition: **`CLAUDE_IMPLEMENTATION`**
+기준: 문서 **`92540b4`** / 구현 **`eb3df01`** (baseline `3e0a91a`).
+구현·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
+next_transition: **`CODEX_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
@@ -15,7 +15,33 @@ next_transition: **`CLAUDE_IMPLEMENTATION`**
 C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/071-space-v2-local-issue-identity-pair.md를 전부 읽고 스펙 071의 명시된 local-only 범위만 구현·검증해. 먼저 현재 Codex 문서 변경을 일반 fast-forward 문서 commit으로 push한 뒤, 보호 대상과 기존 Founder/user working tree 변경 및 기존 spec064~070 제품 파일은 건드리지 마. 허용 제품 파일은 신규 apps/admin/src/space-v2/issue-identity-pair.ts와 해당 unit 두 개뿐이다. 스펙 068 preparation 조합, upload, Firestore create, 실제 Firebase/network/Rules 또는 UI로 확장하거나 자동화·반복 작업을 만들지 마. 완료 후 제품 commit과 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를 실제 상태에 맞춘 뒤 전체 리빌드 진행률·잔여율·변동 근거까지 보고해.
 ```
 
-## ★ HH-1=A 승인 · 스펙 071 계약
+## ★ 스펙 071 — 구현 완료 / Codex 독립 검수 대기
+
+문서 commit `92540b4`(Codex 종료·HH-1 결정·계약 선반영), 구현 commit `eb3df01`. 제품 변경은 허용
+2개 신규 파일뿐이고 기존 064~070 제품 파일, package/lockfile/CSS/config/Firebase/Rules/UI diff는
+**0**이다.
+
+- HH-1=A: proof `assetId`와 public link token은 **독립 UUID 두 개**. original `randomUUID`를 첫 호출
+  전에 **1회 read** + callable 검증하고, receiver 보존 adapter로 스펙 069 candidate를
+  **assetId → token** 순서로 두 번 호출한다.
+- 호출 예산: malformed port **0회**, 첫 값 실패 **1회**(token 호출 0), 둘째 값 실패·collision
+  **2회**. 세 번째 호출·자동 retry·repair **0**.
+- 두 값이 같으면 성공으로 축소하지 않고 `SPACE_V2_IDENTITY_COLLISION`으로 fail-closed.
+- 하위 token 오류 code 비노출(pair code 4개만), 실패 결과는 `{ok, code}`뿐이고 candidate 원문·UUID
+  일부·UID/email·message/stack 0.
+- ★ 범위 한계: 형식 일치와 두 값의 차이는 **난수 품질·collision freedom의 증명이 아니다**.
+
+게이트: targeted **29/29**, space-v2+spaces **455/455**, admin typecheck, `node scripts/check.mjs`
+PASS(unit **2026/2026**), 전체 Chromium **151/151**, `git diff --check` PASS, 포트/temp 잔류 0.
+bundle identity 유지 — admin **226,201** / CSS **9,146** / 고객 **322,018**, spec 071 식별자 0건.
+mutation: collision 검사 제거 시 3건, 첫 값 early stop 제거 시 4건 이상 실패.
+
+진행도 보고: **77~80% 진행 / 20~23% 잔여**(직전 76~79%에서 +1%p). 근거는 identity 준비가 닫힌
+것이며 조합·upload·create가 여전히 금지라 상승폭을 제한했고 작업축 6·7은 불변이다.
+
+다음은 Codex 독립 검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+
+## ★ HH-1=A 승인 · 스펙 071 계약 (기록)
 
 - token과 proof `assetId`는 독립 UUID 두 개다. UUID source를 각각 한 번만 호출한다.
 - assetId 생성 실패면 token 생성 호출은 0, token 생성 실패면 총 2회에서 중단한다.
