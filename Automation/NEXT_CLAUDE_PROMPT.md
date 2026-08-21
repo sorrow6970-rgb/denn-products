@@ -1,12 +1,40 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none` — **다음 제품 단위 미선택 / 미승인**
+상태: `READY_FOR_CLAUDE`
+active_unit: `spec-065-space-v2-local-issuer-projector` — **CONTRACT READY / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-064-space-v2-local-contract` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-검수 기준: HEAD=origin **`1f60bc5`**, ahead/behind **0/0**
-next_transition: **`NEXT_MANUAL_SPEC_SELECTION`**
+기준: HEAD=origin **`dcd893c`**, ahead/behind **0/0**
+next_transition: **`CLAUDE_IMPLEMENTATION`**
 
-## ★ 현재 Claude Code 지시 — HOLD
+## ★ 현재 Claude Code 지시 — 스펙 065 구현
+
+정본 `docs/rebuild/specs/065-space-v2-local-issuer-projector.md`와 handoff
+`docs/handoff/2026-08-21-spec-065-space-v2-local-issuer-projector-handoff.md`를 먼저 전부 읽고, 정본의
+허용 범위만 구현·검증한다.
+
+허용 제품 파일:
+
+- 신규 `apps/admin/src/space-v2/issue-candidate.ts`
+- 신규 `apps/admin/src/space-v2/issue-candidate.test.ts`
+- `apps/admin/package.json`의 `@denn/spaces: workspace:*` 추가만
+- `pnpm-lock.yaml`의 admin importer 최소 변경만
+
+핵심은 existing catalog projector 결과와 explicit issue input을 strict `FrameReplayEvidenceV1` 및
+`SpaceSceneV2` candidate로 조립하는 local-only 비-UI 경계다. text/clock/template art와 invalid input은
+digest 호출 전에 fail-closed한다. `App.tsx`에서 import/call하지 않는다.
+
+targeted unit, spaces 전체 125개 이상 회귀, admin typecheck, `node scripts/check.mjs`, 전체 Chromium,
+두 앱 bundle 변경 전후 hash, `git diff --check`, exact diff와 포트/temp 잔류를 검증한다. 전체 Chromium이
+다시 쓰는 보호 spec-018 PNG는 restore/checkout/stage/commit하지 않는다.
+
+Firebase/Rules/config/실제 network·UID·emulator·deploy, UI/CSS, token/encryption/upload/Firestore create,
+viewer/open, shared/spaces 제품 파일 변경은 금지다. 허용 범위 밖 파일이나 새 제품 결정이 필요하면
+STOP하고 질문한다.
+
+완료 후 구현 commit과 문서 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를
+`READY_FOR_CODEX`로 맞춘다. 다음 스펙은 시작하지 않는다. 자동화·반복 작업을 만들지 않는다.
+
+## 이전 Claude Code 지시 — HOLD (스펙 065 계약으로 해소)
 
 스펙 064는 Codex 독립 검수를 통과했다. 다음 제품 단위와 허용 파일이 아직 정해지지 않았으므로 제품
 코드·테스트·Rules·config·package/lockfile를 수정하지 않는다. 새 스펙을 추측해 시작하거나 issuer,

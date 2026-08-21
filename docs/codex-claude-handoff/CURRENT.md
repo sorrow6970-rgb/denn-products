@@ -16,8 +16,25 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 064는 DONE / CODEX_PASSED이고 다음 제품 단위는
-아직 선택·승인되지 않았다.**
+상태: **`READY_FOR_CLAUDE` - 스펙 065 local issuer evidence projector 계약이 준비됐다.**
+
+정본 `docs/rebuild/specs/065-space-v2-local-issuer-projector.md`, handoff
+`docs/handoff/2026-08-21-spec-065-space-v2-local-issuer-projector-handoff.md`. 기준 HEAD=origin
+`dcd893c`, ahead/behind 0/0이다.
+
+이번 단위는 existing catalog frame projection과 explicit orientation/logical width/appearance/transform/
+proof descriptor를 스펙 064 strict evidence 및 V2 scene candidate로 조립하는 admin local-only 비-UI
+경계다. text/clock/template art와 malformed input은 digest 전에 fail-closed한다.
+
+허용 제품 변경은 신규 admin module/unit, admin의 기존 workspace `@denn/spaces` dependency와 lock
+importer 최소 변경뿐이다. `App.tsx`, UI/CSS, Firebase/Rules/config, shared/spaces 제품 파일, 실제
+network/UID/emulator/deploy, token/encryption/upload/Firestore create/viewer는 금지다.
+
+Claude Code가 구현·검증하고 live log/STATE/NEXT/CURRENT를 `READY_FOR_CODEX`로 맞춘 뒤 Codex가 독립
+검수한다. 다음 스펙은 자동 시작하지 않는다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 064는 DONE / CODEX_PASSED이고 다음 제품 단위는
+> 아직 선택·승인되지 않았다.**
 
 Codex는 HEAD=origin `1f60bc5`에서 구현 commit `0c5d6fa`의 허용 제품 diff를 독립 검토했다. targeted
 spaces **107/107**, spaces typecheck, `node scripts/check.mjs` PASS(unit **1696/1696**), 전체 Chromium

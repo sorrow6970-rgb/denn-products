@@ -5,21 +5,33 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-064-space-v2-local-contract   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: none   # next product unit has not been selected or approved
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 2b8424e   # spec 063 closure
-candidate_commit: 0c5d6fa   # spec 064 local V2 implementation + contract documents
-verified_commit: 1f60bc5   # independent Codex review completed at origin-equal HEAD
-origin_relation: "HEAD=origin=1f60bc5; ahead/behind 0/0 at Codex review completion"
-working_tree: "pre-existing protected Founder/user changes only after the Codex closure documents are committed; staged 0"
+active_unit: spec-065-space-v2-local-issuer-projector   # CONTRACT READY, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CLAUDE
+baseline_commit: dcd893c   # spec 064 closure
+candidate_commit: none   # Claude implementation not started
+verified_commit: dcd893c   # spec 064 closure at origin-equal HEAD
+origin_relation: "HEAD=origin=dcd893c; ahead/behind 0/0 before spec 065 implementation"
+working_tree: "spec 065 Codex contract/handoff documents plus pre-existing protected Founder/user changes; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_SPEC_SELECTION
+next_transition: CLAUDE_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 065 local issuer projector 준비 (2026-08-21)
+
+- 정본 `docs/rebuild/specs/065-space-v2-local-issuer-projector.md`, handoff
+  `docs/handoff/2026-08-21-spec-065-space-v2-local-issuer-projector-handoff.md`.
+- 스펙 064의 strict V2 evidence를 existing catalog projection + explicit issue input으로 조립하는 admin
+  local-only projector다.
+- 신규 비-UI module/unit, admin의 기존 workspace `@denn/spaces` dependency와 lock importer 최소 변경만
+  허용한다. `App.tsx`, UI/CSS, Firebase/Rules/config, shared/spaces 제품 파일은 금지다.
+- text/clock/template art, invalid input은 digest 전에 fail-closed한다. token/encryption/upload/Firestore
+  create/link/viewer는 범위 밖이다.
+- 상태 `READY_FOR_CLAUDE`; Claude 구현·검증 뒤 `READY_FOR_CODEX`에서 멈춘다.
 
 ## 수동 교대 루프 복원 (2026-08-21)
 

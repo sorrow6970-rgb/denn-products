@@ -4633,3 +4633,19 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `docs/rebuild/specs/038-page-design-prototype.md`)은 stage/commit/restore하지 않고 그대로 뒀다.
 - 상태는 계속 `WAITING_FOR_NEXT_MANUAL_TASK`다. 다음 제품 단위는 사용자의 수동 지시와 Codex의 새
   `docs/rebuild/specs/NNN-*.md`가 나온 뒤에만 시작한다.
+
+## 2026-08-21(3) - 스펙 065 local issuer projector 계약 · READY_FOR_CLAUDE
+
+- 사용자가 막힘·중요 결정이 없으면 수동 교대 루프의 다음 문서 단계를 자동 진행하도록 지시했다.
+- 스펙 064 다음 최소 단위로 `docs/rebuild/specs/065-space-v2-local-issuer-projector.md`와 handoff를
+  작성했다. 이는 기존 GG shape를 조립하는 local-only 비-UI 계약이며 새 운영 정책을 만들지 않는다.
+- existing catalog frame projection + explicit orientation/logical width/appearance/transform/proof descriptor를
+  strict V2 evidence/scene candidate로 조립한다. text/clock/template art와 invalid input은 digest 전에
+  fail-closed한다.
+- 허용 제품 변경은 신규 admin module/unit, admin의 기존 workspace `@denn/spaces` dependency와 lock
+  importer 최소 변경뿐이다. `App.tsx`, UI/CSS, Firebase/Rules/config, shared/spaces 제품 파일은 금지다.
+- token/encryption/upload/Firestore create/link/viewer, 실제 Firebase/network/UID/emulator/deploy는 계속
+  NOT IMPLEMENTED / NOT TESTED / 금지다.
+- 기준 HEAD=origin `dcd893c`, ahead/behind 0/0. 제품 코드 변경 0, 문서 변경은 unstaged다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. Claude 완료 뒤
+  `READY_FOR_CODEX`에서 멈추며 다음 스펙은 시작하지 않는다.
