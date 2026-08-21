@@ -4,17 +4,17 @@
 updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-068-space-v2-local-issue-preparation-orchestrator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-069-space-v2-local-issue-token-candidate   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CODEX
-baseline_commit: 215af5b   # spec 068 implementation record / Codex review baseline
-candidate_commit: e5261a2   # spec 069 local issue token candidate
-verified_commit: 31ee0d7   # spec 068 local issue preparation orchestrator, independently passed at 215af5b
-origin_relation: "HEAD=origin after the spec 069 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
-working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
+completed_unit: spec-069-space-v2-local-issue-token-candidate   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
+active_unit: spec-070-space-v2-local-web-crypto-uuid-adapter   # CONTRACT READY, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CLAUDE
+baseline_commit: 020402c   # spec 069 implementation record / Codex review baseline
+candidate_commit: null
+verified_commit: e5261a2   # spec 069 local issue token candidate, independently passed at 020402c
+origin_relation: "HEAD=origin at 020402c before the uncommitted Codex spec 069 closure and spec 070 handoff documents; ahead/behind 0/0"
+working_tree: "Codex review/handoff documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_REVIEW
+next_transition: CLAUDE_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,18 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 76-79% complete; 21-24% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 069 Codex 통과 + 스펙 070 계약 준비 (2026-08-21)
+
+- HEAD=origin `020402c`에서 구현 `e5261a2`을 독립 검토했다. 허용 제품 diff 2개가 정확하고 추가 결함 0,
+  최종 `CODEX_PASSED / DONE`이다.
+- 독립 게이트: targeted 41/41, space-v2+spaces 405/405, `node scripts/check.mjs` PASS(unit 1976/1976),
+  Chromium 151/151, bundle identity, diff/포트/temp PASS.
+- 스펙 070은 표준 `Crypto.randomUUID()` source를 spec 069 port에 맞추는 local-only adapter다. token↔
+  assetId 관계, issue 조합, upload, Firestore, Firebase와 UI는 열지 않는다.
+- 진행도는 **76~79% 완료 / 21~24% 잔여로 변동 없음**이다. 스펙 069는 최소 형식 경계이고 스펙 070은
+  문서만 준비됐으며 작업축 6·7은 불변이다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`.
 
 ## 스펙 069 구현 완료 (2026-08-21)
 

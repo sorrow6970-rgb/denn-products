@@ -20,9 +20,9 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 069 local issue token candidate 구현·검증이 완료됐다.**
+상태: **`READY_FOR_CLAUDE` - 스펙 069는 CODEX_PASSED, 스펙 070 Web Crypto UUID adapter 계약이 준비됐다.**
 
-계약 문서 commit `361b1d3`(Codex 종료·계약 문서 선반영), 구현 commit `e5261a2`. 제품 변경은 허용
+스펙 069 계약 문서 commit `361b1d3`, 구현 commit `e5261a2`, 검수 기준 HEAD=origin `020402c`다. 제품 변경은 허용
 2개 신규 파일(`apps/admin/src/space-v2/issue-token-candidate.ts`와 unit)뿐이고 기존 064~068 제품
 파일, package/lockfile/CSS/config/Rules/`App.tsx`/UI diff는 0이다.
 
@@ -31,13 +31,20 @@
 0이다. 오류는 `INVALID_PORT`/`GENERATION_FAILED`/`INVALID_OUTPUT` 3개이고 실패 결과는 `{ok, code}`
 뿐이다. ★ 범위 한계: 형식 검증일 뿐 난수 품질과 충돌 부재는 증명하지 않는다(후속 adapter 계약).
 
-게이트: targeted 41/41, space-v2+spaces 405/405, admin typecheck, `node scripts/check.mjs` PASS
+Codex 독립 게이트: targeted 41/41, space-v2+spaces 405/405, `node scripts/check.mjs` PASS
 (unit 1976/1976), 전체 Chromium 151/151, `git diff --check` PASS, 포트/temp 잔류 0. admin/고객 entry와
-admin CSS 9,146 bytes는 기준과 동일하고 두 bundle에 spec 069 식별자는 0건이다.
+admin CSS 9,146 bytes는 기준과 동일하고 두 bundle에 spec 069 식별자는 0건이다. 추가 결함 0,
+최종 판정은 **`CODEX_PASSED / DONE`**이다.
 
-전체 리빌드 진행도는 **76~79% 진행 / 21~24% 잔여로 변동 없다**. 이번 단위는 token 형식의 생성 결과
-경계 하나만 열었고 token↔assetId 관계·스펙 068 조합·upload·Firestore create는 계약상 닫혀 있어
-작업축 5의 잔여가 실질적으로 줄지 않았으며 작업축 6·7도 불변이다.
+다음 정본은 `docs/rebuild/specs/070-space-v2-local-web-crypto-uuid-adapter.md`, handoff는
+`docs/handoff/2026-08-21-spec-070-space-v2-local-web-crypto-uuid-adapter-handoff.md`다. 표준
+`Crypto.randomUUID()` source를 spec 069 port에 맞추는 local adapter만 만든다. 허용 제품 파일은 신규
+admin local module/unit 2개뿐이다. token↔assetId 관계, issue bundle, upload, Firestore create,
+Firebase/Rules/network와 UI는 계속 닫혀 있다.
+
+전체 리빌드 진행도는 **76~79% 진행 / 21~24% 잔여로 변동 없다**. 스펙 069 통과로 형식 경계를
+확정했고 스펙 070은 계약만 준비됐다. token↔assetId 관계·issue 조합·upload·Firestore create와
+작업축 6·7은 그대로다.
 
 > 이전 상태: **`READY_FOR_CLAUDE` - 스펙 069 계약이 준비됐다.**
 

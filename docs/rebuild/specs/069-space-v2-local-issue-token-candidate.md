@@ -1,6 +1,6 @@
 # 스펙 069 — space V2 local issue token candidate
 
-상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 ## 1. 목표 (WHY)
 
@@ -181,3 +181,18 @@ mutation 확인: 형식 정규식을 느슨한 UUID(대소문자·version 무관
 계속 NOT IMPLEMENTED / 금지: token↔assetId 관계 결정과 동시 생성, 스펙 068 orchestration 조합/변경,
 Storage upload/read/delete, Firestore create/reconciliation, URL/link 발급, Firebase adapter/Rules/
 config/env, 실제 UID·network·emulator·deploy, viewer/UI/route, V1 token/parser 변경.
+
+### CODEX REVIEW (2026-08-21)
+
+- HEAD=origin `020402c`에서 구현 `e5261a2`와 기록을 독립 검토했다. 기준 `215af5b` 이후 제품 diff는
+  허용 신규 module/unit 2개뿐이고 기존 064~068 제품 파일과 package/lockfile/Rules/config/UI diff는 0이다.
+- method getter one-read, callable 검증, receiver 보존, 최대 1회 호출, strict lowercase UUID v4와 safe
+  3-way failure mapping을 대조했다. 형식 검증이 난수 품질·충돌 부재를 증명하지 않는다는 한계도 코드와
+  테스트에 유지됐다. 추가 결함은 없다.
+- targeted **41/41**, space-v2+spaces **405/405**, `node scripts/check.mjs` PASS(unit **1976/1976**),
+  전체 Chromium **151/151**을 독립 재현했다.
+- 고객 entry **322,018 bytes** / `A9360EFF…E55E8159`, admin entry **226,201 bytes** /
+  `B6E90475…A1F1DC`, admin CSS **9,146 bytes**가 기준과 일치하고 production bundle 신규 식별자는 0이다.
+  `git diff --check`, exact product paths, 포트/temp 잔류 0, staged 0, ahead/behind 0/0을 확인했다.
+- 판정은 **CODEX_PASSED / DONE**이다. token↔assetId 관계, issue 조합, upload, Firestore create, 실제
+  Firebase/Rules/network/emulator/deploy와 viewer/UI는 계속 **NOT IMPLEMENTED / NOT TESTED / 금지**다.

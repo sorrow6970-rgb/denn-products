@@ -5068,3 +5068,27 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   viewer)가 실질적으로 줄지 않았고 작업축 6·7도 불변이라 범위를 올릴 근거가 없다.
 - 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
   기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.
+
+## 2026-08-21(15) - 스펙 069 Codex 독립 검수 통과 · 스펙 070 계약 준비
+
+- HEAD=origin `020402c`, ahead/behind 0/0에서 구현 `e5261a2`과 기록을 독립 검토했다. 기준
+  `215af5b` 이후 제품 diff는 허용 신규 2파일(`issue-token-candidate.ts`와 unit)뿐이고 기존
+  spec064~068, package/lockfile/CSS/Rules/config/UI 제품 diff는 0이다.
+- UUID method getter one-read, callable 검증, receiver 보존, 최대 1회 호출, strict lowercase v4 형식과
+  INVALID_PORT/GENERATION_FAILED/INVALID_OUTPUT 매핑을 대조했다. 난수 품질·충돌 부재 NOT PROVEN
+  한계도 유지됐다. 추가 결함은 없다.
+- 독립 게이트: targeted **41/41**, space-v2+spaces **405/405**, `node scripts/check.mjs` PASS(unit
+  **1976/1976**), 전체 Chromium **151/151**, `git diff --check` PASS, 포트/temp 잔류 0.
+- bundle identity: 고객 `index-6js4DafP.js` **322,018 bytes** /
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`, admin
+  `index-D0XOQpRL.js` **226,201 bytes** /
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`, admin CSS **9,146 bytes**.
+  production bundle 신규 식별자 0이다.
+- 스펙 069 최종 **CODEX_PASSED / DONE**. token↔assetId 관계, issue 조합, upload, Firestore create,
+  실제 Firebase/Rules/network/emulator/deploy와 viewer/UI는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다.
+- 다음 스펙 070 정본과 handoff를 작성했다. 표준 `Crypto.randomUUID()` source를 spec 069 port에 맞추는
+  local adapter이며 신규 admin module/unit 2개만 허용한다. 자체 UUID 조립과 Firebase 발급은 열지 않는다.
+- 전체 리빌드 진행도는 **76~79% 완료 / 21~24% 잔여, 변동 없음**이다. 스펙 070은 계약만 준비됐고
+  작업축 6·7은 움직이지 않았다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. NEXT 상단에 Claude Code 전달용
+  완성 지시문을 갱신했다. 자동화·반복 작업 생성 0, 보호 대상 조작 0, staged 0이다.
