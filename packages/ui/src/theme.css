@@ -11,10 +11,14 @@
    renders through ctx.* only, has no JSX and no className, and is not part of any UI. Its
    identifiers/comments were being read as class candidates, which generated utilities no UI asks
    for (`.block`, `.transform` + the transform @property scaffolding: +0.67 KB raw / +0.19 KB gzip).
-   Paths are relative to THIS file (packages/ui/src). Scope: exactly that one non-UI directory —
+   `apps/admin/src/space-v2/**` is the same case (spec 065): a local-only issue candidate projector
+   with no JSX and no className, whose evidence contract field names (`transform`, `italic`) were
+   generating utilities the admin UI never asks for.
+   Paths are relative to THIS file (packages/ui/src). Scope: exactly those two non-UI directories —
    every app JSX/tsx, browse component and @denn/ui source is still scanned, and no safelist,
    blocklist or `source(none)` is introduced. */
 @source not "../../../apps/mockup/src/canvas/**/*";
+@source not "../../../apps/admin/src/space-v2/**/*";
 
 @theme {
   --color-bg: #f4f4f5;

@@ -17,6 +17,7 @@ import {
   type FramePreviewSelection,
   projectCatalogTemplateImage,
   projectFramePreviewGeometry,
+  readLegacyCatalog,
 } from "@denn/shared";
 import {
   createFrameReplayEvidenceDigestV1,
@@ -57,8 +58,9 @@ export type SpaceV2IssueResult<T> =
   | { readonly ok: false; readonly code: SpaceV2IssueErrorCode };
 
 /**
- * The explicit issue input. `catalog` must be a validated spec 012 `CatalogDocumentV1`; geometry is
- * only ever taken from `projectFramePreviewGeometry`, never re-read from raw catalog fields, and is
+ * The explicit issue input. `catalog` is re-read through the spec 012 boundary here, so what the
+ * projections see is always a detached document rather than the caller's object; geometry is only
+ * ever taken from `projectFramePreviewGeometry`, never re-read from raw catalog fields, and is
  * never clamped, defaulted or repaired here. No proof bytes, token, password, email, UID, customer
  * text, raw URL/base64 or Firebase object is accepted.
  */
@@ -192,28 +194,32 @@ export async function createSpaceV2FrameIssueCandidate(
       return fail("SPACE_V2_ISSUE_INVALID_INPUT");
     }
 
-    // Both catalog reads use the SAME selection snapshot, so the geometry and the art verdict can
-    // never come from two different selections.
-    const catalog = issue.catalog as CatalogDocumentV1;
+    // Detach the catalog ONCE, before anything is projected from it. `readLegacyCatalog` returns a
+    // JSON-safe deep clone, so every raw getter is read exactly once and the geometry and the art
+    // verdict are guaranteed to describe the same instant. Sharing a selection snapshot is not
+    // enough on its own: a drifting template getter could otherwise answer the two projections
+    // differently and let an evidence claim `templateArt: none` for a template that has art.
+    let document: CatalogDocumentV1;
+    try {
+      const read = readLegacyCatalog(issue.catalog);
+      if (!read.ok) return fail("SPACE_V2_ISSUE_CATALOG_PROJECTION_FAILED");
+      document = read.document;
+    } catch {
+      return fail("SPACE_V2_ISSUE_CATALOG_PROJECTION_FAILED");
+    }
+
     const frameSelection: FramePreviewSelection = {
       frameSizeId: selection.frameSizeId,
       templateId: selection.templateId,
     };
-    const projected = projectFramePreviewGeometry(catalog, frameSelection);
+    const projected = projectFramePreviewGeometry(document, frameSelection);
     if (!projected.ok) return fail("SPACE_V2_ISSUE_CATALOG_PROJECTION_FAILED");
     const geometry = projected.value;
 
-    // `projectCatalogTemplateImage` has no exception boundary of its own, so a hostile document
-    // reaches us as a throw; that is a failed catalog projection, not a usable "no art" answer.
-    let templateImage: ReturnType<typeof projectCatalogTemplateImage>;
-    try {
-      templateImage = projectCatalogTemplateImage(catalog, {
-        templateKind: "frame",
-        templateId: frameSelection.templateId,
-      });
-    } catch {
-      return fail("SPACE_V2_ISSUE_CATALOG_PROJECTION_FAILED");
-    }
+    const templateImage = projectCatalogTemplateImage(document, {
+      templateKind: "frame",
+      templateId: frameSelection.templateId,
+    });
 
     // First capability: image-only, no operator text, no physical clock, and art that is provably
     // absent. `invalid-reference` means a source string existed but could not be classified, so

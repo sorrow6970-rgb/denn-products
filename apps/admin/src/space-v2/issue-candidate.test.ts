@@ -404,6 +404,55 @@ describe("createSpaceV2FrameIssueCandidate — hostile input", () => {
     expect(port.digest).not.toHaveBeenCalled();
   });
 
+  // The catalog is detached once, so both projections describe the same instant. A template whose
+  // art reference drifts between reads cannot be seen as "has art" by one projection and "no art"
+  // by the other.
+  it("refuses a template whose FIRST art read has art, however it drifts afterwards", async () => {
+    let reads = 0;
+    const template = {
+      id: "ft1",
+      name: "템플릿",
+      type: "uploaded",
+      clockEnabled: false,
+      get dataUrl() {
+        reads += 1;
+        return reads === 1 ? "https://example.invalid/art.png" : "";
+      },
+    };
+    const port = recordingPort();
+
+    const result = await createSpaceV2FrameIssueCandidate(
+      input({ catalog: frameDoc(template) }),
+      port,
+    );
+
+    expect(result).toEqual({ ok: false, code: "SPACE_V2_ISSUE_UNSUPPORTED_CAPABILITY" });
+    expect(port.digest).not.toHaveBeenCalled();
+    expect(reads).toBe(1);
+  });
+
+  it("decides from the FIRST art read when the template only grows art afterwards", async () => {
+    let reads = 0;
+    const template = {
+      id: "ft1",
+      name: "템플릿",
+      type: "uploaded",
+      clockEnabled: false,
+      get dataUrl() {
+        reads += 1;
+        return reads === 1 ? "" : "https://example.invalid/art.png";
+      },
+    };
+
+    const result = await createSpaceV2FrameIssueCandidate(
+      input({ catalog: frameDoc(template) }),
+      recordingPort(),
+    );
+
+    expect(result).toEqual({ ok: true, value: EXPECTED_CANDIDATE });
+    expect(reads).toBe(1);
+  });
+
   it("reads a drifting value once, so the second read cannot reach the result", async () => {
     let reads = 0;
     const drifting = {
