@@ -1,6 +1,6 @@
 # 스펙 068 — space V2 local issue preparation orchestrator
 
-상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 ## 1. 목표 (WHY)
 
@@ -232,3 +232,19 @@ mutation 확인: catalog detach를 raw caller catalog로 되돌리면 mid-flight
 계속 NOT IMPLEMENTED / 금지: token/UUID 생성과 token↔asset ID 관계, PNG browser decode, Storage
 upload/read/delete와 orphan 처리, Firestore create/reconciliation, Firebase adapter/Rules/config/env,
 실제 UID·network·emulator·deploy, viewer/open composition과 UI/route.
+
+### CODEX REVIEW (2026-08-21)
+
+- HEAD=origin `215af5b`에서 구현 `31ee0d7`과 기록 `215af5b`를 독립 검토했다. 기준 `c8f54cf` 이후
+  제품 diff는 허용 신규 module/unit 2개뿐이고 기존 065~067 제품 파일과 package/lockfile/Rules/config/
+  UI diff는 0이다.
+- 첫 await 전 catalog detach, top-level·nested snapshot, proof 호출에 의한 PNG 즉시 복사, SHA/crypto
+  method one-read와 receiver 보존 always-defined adapter를 대조했다. 세 단계 순서, failure short-circuit,
+  fresh-copy handle에 추가 결함이 없다.
+- targeted **59/59**, space-v2+spaces **364/364**, `node scripts/check.mjs` PASS(unit **1935/1935**),
+  전체 Chromium **151/151**을 독립 재현했다.
+- 고객 entry **322,018 bytes** / `A9360EFF…E55E8159`, admin entry **226,201 bytes** /
+  `B6E90475…A1F1DC`, admin CSS **9,146 bytes**가 기준과 일치하고 production bundle 신규 식별자는 0이다.
+  `git diff --check`, exact product paths, 포트/temp 잔류 0, staged 0, ahead/behind 0/0을 확인했다.
+- 판정은 **CODEX_PASSED / DONE**이다. token/UUID, upload, Firestore create, 실제 Firebase/Rules/network/
+  emulator/deploy와 viewer/UI는 계속 **NOT IMPLEMENTED / NOT TESTED / 금지**다.

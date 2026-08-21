@@ -20,9 +20,9 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 068 local issue preparation orchestrator 구현·검증이 완료됐다.**
+상태: **`READY_FOR_CLAUDE` - 스펙 068은 CODEX_PASSED, 스펙 069 local token 계약이 준비됐다.**
 
-계약 commit `160eca0`, 구현 commit `31ee0d7`. 제품 변경은 허용 2개 신규 파일
+스펙 068 계약 commit `160eca0`, 구현 commit `31ee0d7`, 검수 기준 HEAD=origin `215af5b`다. 제품 변경은 허용 2개 신규 파일
 (`apps/admin/src/space-v2/issue-preparation.ts`와 unit)뿐이고 기존 065·066·067 제품 파일,
 package/lockfile/CSS/config/Rules/`App.tsx`/UI diff는 0이다.
 
@@ -33,13 +33,20 @@ PNG bytes 복사)과 두 port method 읽기가 첫 await 전에 끝나고, recei
 성공 handle은 descriptor/upload bytes/document의 fresh copy 3종만 제공한다(plaintext scene·password·
 token 없음).
 
-게이트: targeted 59/59, space-v2+spaces 364/364, admin typecheck, `node scripts/check.mjs` PASS
+Codex 독립 게이트: targeted 59/59, space-v2+spaces 364/364, `node scripts/check.mjs` PASS
 (unit 1935/1935), 전체 Chromium 151/151, `git diff --check` PASS, 포트/temp 잔류 0. admin/고객 entry와
-admin CSS 9,146 bytes는 기준과 동일하고 두 bundle에 spec 068 식별자는 0건이다.
+admin CSS 9,146 bytes는 기준과 동일하고 두 bundle에 spec 068 식별자는 0건이다. 추가 결함 0,
+최종 판정은 **`CODEX_PASSED / DONE`**이다.
 
-전체 리빌드 진행도는 **76~79% 진행 / 21~24% 잔여**다(직전 74~77%에서 약 +2%p). 근거는 작업축 5의
-local 준비 사슬 완성(입력 snapshot → proof → scene → 암호화 document → immutable handle)이며, token
-발급·upload·Firestore create·viewer와 작업축 6·7은 그대로라 상단은 79%를 넘기지 않았다.
+다음 정본은 `docs/rebuild/specs/069-space-v2-local-issue-token-candidate.md`, handoff는
+`docs/handoff/2026-08-21-spec-069-space-v2-local-issue-token-candidate-handoff.md`다. Founder `GG-1=A`의
+새 UUID token을 필수 주입 port의 단일 호출과 lowercase UUID v4 검증으로만 분리한다. 허용 제품 파일은
+신규 admin local module/unit 2개뿐이다. token↔assetId 관계, 스펙 068 조합, upload, Firestore create,
+Firebase/Rules/network와 UI는 계속 닫혀 있다.
+
+전체 리빌드 진행도는 **76~79% 진행 / 21~24% 잔여로 변동 없다**. 스펙 068 통과로 local 준비 사슬을
+확정했고 스펙 069는 계약만 준비됐다. 실제 token 발급 조합·upload·Firestore create·viewer와 작업축
+6·7은 그대로다.
 
 > 이전 상태: **`READY_FOR_CLAUDE` - 스펙 068 계약이 준비됐다.**
 
