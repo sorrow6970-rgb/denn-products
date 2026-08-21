@@ -20,7 +20,30 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CLAUDE` - 스펙 069는 CODEX_PASSED, 스펙 070 Web Crypto UUID adapter 계약이 준비됐다.**
+상태: **`READY_FOR_CODEX` - 스펙 070 local Web Crypto UUID adapter 구현·검증이 완료됐다.**
+
+계약 문서 commit `53d115c`(Codex 종료·계약 선반영), 구현 commit `ff3c59a`. 제품 변경은 허용 2개 신규
+파일(`apps/admin/src/space-v2/issue-uuid-adapter.ts`와 unit)뿐이고 기존 064~069 제품 파일,
+package/lockfile/CSS/config/Rules/`App.tsx`/UI diff는 0이다.
+
+`createSpaceV2IssueUuidPort(source?)`는 표준 `Crypto.randomUUID()` capability 하나만 쓴다. method를
+factory 호출당 한 번만 읽어 callable 검증하고 원 source receiver로 호출하며, 생략 시
+`globalThis.crypto`를 쓰되 명시 source는 malformed여도 global로 대체하지 않는다. malformed source
+7종은 `SPACE_V2_UUID_SOURCE_UNAVAILABLE`이고 global randomness 호출 0이다. adapter는 형식 검증·throw
+매핑·호출 횟수·retry를 하지 않으며 그 책임은 스펙 069 candidate가 그대로 갖는다.
+
+★ 범위 한계: Web Crypto를 source로 고른 것은 난수 품질·충돌 부재의 증명이 아니다. 통합 테스트는 실제
+값 한 건이 strict 형식을 통과함만 확인하고 분포·entropy를 추정하지 않는다.
+
+게이트: targeted 21/21, space-v2+spaces 426/426, admin typecheck, `node scripts/check.mjs` PASS
+(unit 1997/1997), 전체 Chromium 151/151, `git diff --check` PASS, 포트/temp 잔류 0. admin/고객 entry와
+admin CSS 9,146 bytes는 기준과 동일하고 두 bundle에 spec 070 식별자는 0건이다.
+
+전체 리빌드 진행도는 **76~79% 진행 / 21~24% 잔여로 변동 없다**. 이번 단위는 이미 열린 token 형식
+경계에 source를 명시하는 얇은 adapter뿐이고 token↔assetId 관계·issue bundle·upload·Firestore create는
+계약상 닫혀 있어 작업축 5의 잔여가 줄지 않았으며 작업축 6·7도 불변이다.
+
+> 이전 상태: **`READY_FOR_CLAUDE` - 스펙 070 계약이 준비됐다.**
 
 스펙 069 계약 문서 commit `361b1d3`, 구현 commit `e5261a2`, 검수 기준 HEAD=origin `020402c`다. 제품 변경은 허용
 2개 신규 파일(`apps/admin/src/space-v2/issue-token-candidate.ts`와 unit)뿐이고 기존 064~068 제품

@@ -5092,3 +5092,33 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   작업축 6·7은 움직이지 않았다.
 - 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. NEXT 상단에 Claude Code 전달용
   완성 지시문을 갱신했다. 자동화·반복 작업 생성 0, 보호 대상 조작 0, staged 0이다.
+
+## 2026-08-21(15) - 스펙 070 local Web Crypto UUID adapter 구현·검증 · READY_FOR_CODEX
+
+- Codex 종료·계약 문서를 먼저 fast-forward 문서 commit `53d115c`으로 push한 뒤 착수했다.
+  구현 commit `ff3c59a`. 기준 HEAD=origin `020402c`.
+- 제품 변경은 §3 허용 2개 신규 파일뿐이다: `apps/admin/src/space-v2/issue-uuid-adapter.ts`와 unit.
+  기존 064~069 제품 파일, package/lockfile/CSS/config/Firebase/Rules/`App.tsx`/UI diff **0**.
+- `createSpaceV2IssueUuidPort(source?)`는 표준 `Crypto.randomUUID()` capability 하나만 쓴다.
+  `randomUUID`를 factory 호출당 **한 번만** 읽어 callable 검증하고, 성공 port는 그 snapshot을
+  **`.call(originalSource)`**로 호출한다. 생략 시 `globalThis.crypto`, 명시 source는 그대로 사용하며
+  malformed 명시 source를 global로 대체하지 않는다(`undefined`만 미지정으로 판정).
+- malformed source 7종(null/primitive/number/method 없음/non-function/throwing getter/revoked proxy)은
+  `SPACE_V2_UUID_SOURCE_UNAVAILABLE`이고 global `randomUUID`/`getRandomValues`/`Math.random` 호출 0이다.
+- ★ **adapter는 얇다**: output 형식 검증·throw 매핑·operation당 호출 횟수·retry·repair를 하지 않는다.
+  전부 스펙 069 candidate 소유이고 여기서 중복하면 규칙이 두 곳에서 drift한다. throwing source는
+  candidate의 `GENERATION_FAILED`, uppercase/v1/빈 문자열은 `INVALID_OUTPUT`으로 닫힌다.
+- ★ **범위 한계(숨기지 않음)**: Web Crypto를 source로 고른 것은 난수 품질이나 충돌 부재의 증명이
+  아니다. 통합 테스트는 실제 `globalThis.crypto.randomUUID()` **한 건**이 스펙 069 strict 형식을
+  통과함만 확인하고 반복 표본으로 분포·entropy를 추정하지 않는다. module·unit 주석에도 동일하게 적었다.
+- 게이트: targeted **21/21**, space-v2+spaces **426/426**, admin typecheck,
+  `node scripts/check.mjs` PASS(unit **1997/1997**), 전체 Chromium **151/151**, `git diff --check` PASS,
+  포트 LISTENING 0, temp/debug 잔류 0. bundle identity 유지(admin **226,201** / CSS **9,146** /
+  고객 **322,018**), 두 bundle에 spec 070 식별자 0건.
+- mutation 확인: 미지정 판정을 `source ?? global`로 바꾸면 2건, receiver 보존을 없애면 3건이 실패한다.
+- **전체 리빌드 진행도: 76~79% 진행 / 21~24% 잔여 — 변동 없음.** 근거: 이번 단위는 이미 열린 token
+  형식 경계에 **source를 명시**하는 얇은 adapter뿐이고 새 제품 능력을 열지 않았다. token↔assetId
+  관계·issue bundle 조합·upload·Firestore create·viewer는 계약상 그대로 닫혀 있어 작업축 5의 잔여가
+  줄지 않았고, 작업축 6·7도 불변이다.
+- 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
+  기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.

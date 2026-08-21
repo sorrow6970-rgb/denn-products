@@ -1,11 +1,11 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-070-space-v2-local-web-crypto-uuid-adapter` — **CONTRACT READY / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-070-space-v2-local-web-crypto-uuid-adapter` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-069-space-v2-local-issue-token-candidate` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: HEAD=origin **`020402c`**, ahead/behind **0/0**. 스펙 069 구현 **`e5261a2`**.
-Codex 종료·다음 계약 문서는 아직 working tree에 있고 staged 0이다.
-next_transition: **`CLAUDE_IMPLEMENTATION`**
+기준: 문서 **`53d115c`** / 구현 **`ff3c59a`** (baseline `020402c`).
+구현·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
+next_transition: **`CODEX_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
@@ -18,7 +18,32 @@ C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/spe
 앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
 Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
 
-## ★ 스펙 070 — local Web Crypto UUID adapter 계약 준비
+## ★ 스펙 070 — 구현 완료 / Codex 독립 검수 대기
+
+문서 commit `53d115c`(Codex 종료·계약 선반영), 구현 commit `ff3c59a`. 제품 변경은 허용 2개 신규
+파일뿐이고 기존 064~069 제품 파일, package/lockfile/CSS/config/Firebase/Rules/UI diff는 **0**이다.
+
+- 표준 `Crypto.randomUUID()` capability 하나만 사용. `randomUUID`를 factory 호출당 **1회 read** +
+  callable 검증하고, 성공 port는 그 snapshot을 **`.call(originalSource)`**로 호출한다.
+- source 생략 시 `globalThis.crypto`, 명시 source는 그대로 사용하며 malformed여도 global로 대체하지
+  않는다(`undefined`만 미지정 판정). malformed 7종은 `SPACE_V2_UUID_SOURCE_UNAVAILABLE`이고 global
+  `randomUUID`/`getRandomValues`/`Math.random` 호출 **0**.
+- adapter는 얇게 유지 — output 형식 검증·throw 매핑·operation당 호출 횟수·retry·repair 없음
+  (스펙 069 candidate 소유, 중복 시 규칙 drift).
+- ★ 범위 한계: Web Crypto 선택은 **난수 품질·충돌 부재의 증명이 아니다**. 실제 값 **1건**만 strict
+  형식 통과 확인, 분포·entropy 추정 0.
+
+게이트: targeted **21/21**, space-v2+spaces **426/426**, admin typecheck, `node scripts/check.mjs`
+PASS(unit **1997/1997**), 전체 Chromium **151/151**, `git diff --check` PASS, 포트/temp 잔류 0.
+bundle identity 유지 — admin **226,201** / CSS **9,146** / 고객 **322,018**, spec 070 식별자 0건.
+mutation: 미지정 판정을 `source ?? global`로 바꾸면 2건, receiver 보존을 없애면 3건이 실패한다.
+
+진행도 보고: **76~79% 진행 / 21~24% 잔여 — 변동 없음**(source 명시만, 발급 조합·upload·create는
+닫힘, 작업축 6·7 불변).
+
+다음은 Codex 독립 검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+
+## 스펙 070 원래 계약 요약 (기록)
 
 정본 `docs/rebuild/specs/070-space-v2-local-web-crypto-uuid-adapter.md`, handoff
 `docs/handoff/2026-08-21-spec-070-space-v2-local-web-crypto-uuid-adapter-handoff.md`.

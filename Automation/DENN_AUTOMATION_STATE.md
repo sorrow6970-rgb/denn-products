@@ -5,16 +5,16 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-069-space-v2-local-issue-token-candidate   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-070-space-v2-local-web-crypto-uuid-adapter   # CONTRACT READY, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CLAUDE
+active_unit: spec-070-space-v2-local-web-crypto-uuid-adapter   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CODEX
 baseline_commit: 020402c   # spec 069 implementation record / Codex review baseline
-candidate_commit: null
+candidate_commit: ff3c59a   # spec 070 local Web Crypto UUID adapter
 verified_commit: e5261a2   # spec 069 local issue token candidate, independently passed at 020402c
-origin_relation: "HEAD=origin at 020402c before the uncommitted Codex spec 069 closure and spec 070 handoff documents; ahead/behind 0/0"
-working_tree: "Codex review/handoff documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
+origin_relation: "HEAD=origin after the spec 070 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
+working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_IMPLEMENTATION
+next_transition: CODEX_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,18 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 76-79% complete; 21-24% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 070 구현 완료 (2026-08-21)
+
+- 계약 commit `53d115c`, 구현 commit `ff3c59a`. 허용 2개 신규 파일뿐이고 기존 064~069 제품 파일과
+  package/lockfile/CSS/config/Rules diff 0이다.
+- 표준 `Crypto.randomUUID()` source만 사용. method 1회 read + callable 검증, 원 receiver로 호출,
+  malformed source 7종은 `SOURCE_UNAVAILABLE`이며 global fallback 0.
+- adapter는 형식 검증·throw 매핑·호출 횟수·retry를 하지 않는다(스펙 069 candidate 소유).
+- 범위 한계: Web Crypto 선택은 난수 품질·충돌 부재의 증명이 아니다. 실제 값 1건만 형식 통과 확인.
+- targeted 21/21, space-v2+spaces 426/426, admin typecheck, `node scripts/check.mjs` PASS
+  (unit 1997/1997), 전체 Chromium 151/151, bundle identity와 `git diff --check` PASS.
+- 진행도 76~79% / 잔여 21~24% — 변동 없음(source 명시만, 새 능력 없음).
 
 ## 스펙 069 Codex 통과 + 스펙 070 계약 준비 (2026-08-21)
 

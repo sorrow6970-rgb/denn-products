@@ -1,6 +1,6 @@
 # 스펙 070 — space V2 local Web Crypto UUID adapter
 
-상태: **READY_FOR_CLAUDE / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 ## 1. 목표 (WHY)
 
@@ -127,3 +127,52 @@ function createSpaceV2IssueUuidPort(
 ### QUESTIONS
 
 없음. Web Crypto UUID source를 스펙 069 port에 맞추는 local adapter만 구현한다.
+
+### DONE (Claude) — 2026-08-21
+
+구현 commit `ff3c59a` (계약 문서 commit `53d115c`). 제품 변경은 §3 허용 2개 신규 파일뿐이고 기존
+064~069 제품 파일, package/lockfile/CSS/config/Firebase/Rules diff는 **0**이다.
+
+- 신규 `apps/admin/src/space-v2/issue-uuid-adapter.ts` — `createSpaceV2IssueUuidPort(source?)`
+- 신규 `apps/admin/src/space-v2/issue-uuid-adapter.test.ts` — 21 tests
+
+구현:
+
+- **4.2 source snapshot**: `source`를 생략하면 `globalThis.crypto`를 쓰고, 명시 source는 그대로 쓴다
+  (명시값이 malformed여도 global로 대체하지 않는다 — `undefined`만 '미지정'으로 본다).
+  `randomUUID` property는 factory 호출당 **정확히 한 번** 읽고 callable인지 확인한다.
+  null/primitive/method 없음/non-function/throwing getter/revoked proxy는
+  `SPACE_V2_UUID_SOURCE_UNAVAILABLE`이다.
+- 성공 port의 `randomUUID()`는 snapshot method를 **`.call(originalSource)`**로 호출한다. 실제 `Crypto`
+  인스턴스와 method-style class source 모두 동작하고, drifting getter가 이후에 바꿔치기할 수 없다.
+- **adapter는 얇게 유지했다**: output 형식 검증·throw 매핑·operation당 호출 횟수 제한·retry·repair를
+  하지 않는다. 전부 스펙 069 candidate 소유이며, 여기서 중복하면 같은 규칙이 두 곳에서 drift한다.
+  source가 throw하거나 이상한 값을 주면 그대로 통과시켜 candidate가
+  `GENERATION_FAILED`/`INVALID_OUTPUT`으로 닫는다.
+- `getRandomValues`/`Math.random`/timestamp/자체 UUID 조립/외부 UUID package 사용 **0**.
+- 실패 결과는 `{ok, code}` 두 key뿐이고 token·source object·UID/email·message·stack을 넣지 않는다.
+
+검증:
+
+- 신규 targeted **21/21**, space-v2(065~070) + `packages/spaces` **426/426**
+- admin typecheck PASS, `node scripts/check.mjs` **PASS**(unit **1997/1997**)
+- 전체 Chromium E2E **151/151**
+- 고객 entry `index-6js4DafP.js` **322,018 bytes** / `A9360EFF…E55E8159` — 기준 일치
+- admin entry `index-D0XOQpRL.js` **226,201 bytes** / `B6E90475…B3A1F1DC` — 기준 일치
+- admin CSS `index-DJ_z3tK1.css` **9,146 bytes**, unwanted utility **0**
+- 두 production bundle에 `SPACE_V2_UUID`/`createSpaceV2IssueUuidPort`/`issue-uuid-adapter` 문자열
+  **0건**
+- `git diff --check` PASS, 변경 경로는 허용 2개 신규 파일뿐, package/lockfile/Rules/config diff 0
+- 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`/temp/debug 잔류 0
+
+**§4.3 통합**: 합성 source로 만든 port는 스펙 069 candidate에서 성공하고, throwing source는
+`GENERATION_FAILED`, uppercase/v1/빈 문자열은 `INVALID_OUTPUT`으로 각각 underlying 1회 호출로 닫힌다.
+실제 `globalThis.crypto.randomUUID()`는 **한 건만** 뽑아 candidate의 strict UUID v4 형식을 통과함을
+확인했다. **반복 표본으로 충돌 부재·분포·entropy를 추정하지 않았고, 그런 주장도 하지 않는다.**
+
+mutation 확인: 미지정 판정을 `source ?? global`로 바꾸면 2건, receiver 보존을 없애면 3건이 실패한다.
+거짓 통과가 아니다.
+
+계속 NOT IMPLEMENTED / 금지: token↔assetId 관계와 asset UUID 생성, 스펙 068/069 제품 변경과 issue
+bundle orchestration, Storage upload/read/delete, Firestore create/reconciliation, URL/link 발급,
+Firebase adapter/Rules/config/env, 실제 UID·network·emulator·deploy, viewer/UI/route.
