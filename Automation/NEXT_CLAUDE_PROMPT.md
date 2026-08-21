@@ -1,11 +1,67 @@
 # NEXT CLAUDE PROMPT
 
 상태: `READY_FOR_CODEX`
-active_unit: `spec-065-space-v2-local-issuer-projector` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
+active_unit: `spec-065-space-v2-local-issuer-projector` — **CORRECTED ROUND 1 / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-064-space-v2-local-contract` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: 계약 **`e9e0c6d`** / 구현 **`5fc89d2`** / 기록 **`e2e33a4`** (baseline `dcd893c`).
-fast-forward push 완료, HEAD=origin, ahead/behind **0/0**.
+기준: 계약 **`e9e0c6d`** / 구현 **`5fc89d2`** / 보완 **`ec7610e`** (baseline `dcd893c`).
+보완·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
 next_transition: **`CODEX_REVIEW`**
+
+## ★ 스펙 065 보완 라운드 1 — 완료 / Codex 재검수 대기
+
+보완 commit `ec7610e`. C-1~C-3만 처리했고 허용 제품 파일 3개
+(`apps/admin/src/space-v2/issue-candidate.ts`, 같은 디렉터리 unit, `packages/ui/src/theme.css`) 밖으로
+나가지 않았다. admin package/lockfile 추가 diff 0.
+
+- **C-1** `readLegacyCatalog(issue.catalog)` 1회 → detached document 하나만 geometry·art projector가
+  사용한다. 실패/throw는 `SPACE_V2_ISSUE_CATALOG_PROJECTION_FAILED`. drifting art getter 회귀 2건
+  추가(첫 read art-present → digest 0 + unsupported / art-absent → 이후 drift 무관 성공, read 1회).
+  detached clone이라 도달 불가가 된 image projector try/catch는 제거했다.
+- **C-2** `theme.css`에 `@source not "../../../apps/admin/src/space-v2/**/*";` 1줄 + 근거 문장만.
+  admin entry `index-D0XOQpRL.js` **226,201 bytes** / SHA-256
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC` **복원**, admin CSS
+  `index-DJ_z3tK1.css` 9,144 bytes 복귀, `.transform`/`.italic`/property scaffold 0건, mockup 불변.
+- **C-3** handoff EOF blank line 제거 → `git diff --check dcd893c..기록 HEAD` PASS.
+
+재검증: targeted **54/54**, spaces **125/125**, `node scripts/check.mjs` PASS(unit **1750/1750**),
+전체 Chromium **151/151**, 포트/temp 잔류 0. 이전 DEVIATION은 해소됐고 게이트 문구는 약화하지 않았다.
+
+다음은 Codex 독립 재검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+
+## 스펙 065 보완 라운드 1 지시 (기록)
+
+정본 `docs/rebuild/specs/065-space-v2-local-issuer-projector.md`의 `CODEX REVIEW —
+CORRECTION_REQUIRED ROUND 1`을 먼저 전부 읽고 C-1~C-3만 보완한다.
+
+허용 제품 파일:
+
+- `apps/admin/src/space-v2/issue-candidate.ts`
+- `apps/admin/src/space-v2/issue-candidate.test.ts`
+- `packages/ui/src/theme.css` — exact
+  `@source not "../../../apps/admin/src/space-v2/**/*";`와 기존 설명 주석의 최소 정정만
+
+필수 보완:
+
+1. `readLegacyCatalog(issue.catalog)`를 1회 실행해 detached document를 만들고 geometry/art projector가
+   같은 document만 사용한다. 실패는 safe catalog-projection code로 매핑한다. drifting template art
+   getter의 first snapshot 일관성과 digest 0을 unit으로 고정한다.
+2. 기존 mockup Canvas source exclusion 선례 옆에 admin non-UI `space-v2` exact exclusion을 추가한다.
+   broad exclusion/config 변경/문자열 난독화 없이 admin entry baseline
+   `index-D0XOQpRL.js` / 226,201 bytes / SHA-256
+   `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`를 복원한다. admin production
+   CSS에서 이 디렉터리 때문에 생성된 `.transform`/`.italic`과 관련 property scaffold가 없어야 한다.
+3. spec 065 handoff EOF blank line을 정리해 `git diff --check dcd893c..새 HEAD`까지 PASS시킨다.
+
+문서는 spec 065, handoff, STATE/NEXT/CURRENT/live log만 수정한다. apps/admin package와 lockfile는 추가
+diff 0, `App.tsx`, UI/CSS 디자인, Vite/Tailwind config, Firebase/Rules/config, shared/spaces 제품 파일은
+수정하지 않는다.
+
+targeted + spaces 전체, admin/ui typecheck, `node scripts/check.mjs`, 전체 Chromium 151/151 이상, mockup과
+admin bundle identity, exact diff, ports/temp/debug 0을 검증한다. 보호 대상은 restore/checkout/stage/
+commit하지 않는다.
+
+보완 코드 commit과 기록 문서 commit을 일반 fast-forward push하고 `READY_FOR_CODEX`에서 멈춘다. 다음
+스펙은 시작하지 않고 자동화·반복 작업도 만들지 않는다.
 
 ## ★ 스펙 065 — 구현 완료 / Codex 독립 검수 대기
 

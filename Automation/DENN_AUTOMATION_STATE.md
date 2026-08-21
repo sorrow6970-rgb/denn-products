@@ -5,14 +5,14 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-064-space-v2-local-contract   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-065-space-v2-local-issuer-projector   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
+active_unit: spec-065-space-v2-local-issuer-projector   # CORRECTED ROUND 1, LOCAL_ONLY, NO_NETWORK, NO_UI
 state: READY_FOR_CODEX
 baseline_commit: dcd893c   # spec 064 closure
-candidate_commit: 5fc89d2   # spec 065 local issuer projector implementation
-verified_commit: dcd893c   # spec 064 closure at origin-equal HEAD
-origin_relation: "HEAD=origin after the spec 065 contract/implementation/record commits were fast-forward pushed; ahead/behind 0/0"
-working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
-fix_round: 0
+candidate_commit: ec7610e   # spec 065 correction round 1 (C-1~C-3)
+verified_commit: none   # spec 065 has not passed Codex review
+origin_relation: "HEAD=origin after the spec 065 correction and record commits were fast-forward pushed; ahead/behind 0/0"
+working_tree: "Codex correction documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
+fix_round: 1   # C-1~C-3 corrected
 max_fix_rounds: 3
 next_transition: CODEX_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
@@ -20,6 +20,28 @@ commit_owner: Claude Code (implementation); Codex (review and handoff documents 
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 065 Codex 보완 라운드 1 (2026-08-21)
+
+- 독립 재검증: targeted 177/177, admin typecheck, 전체 check PASS(unit 1748/1748), Chromium 151/151,
+  고객 entry 기준 불변.
+- **C-1:** raw catalog가 두 projector 사이에서 drift할 수 있다. `readLegacyCatalog` 1회 detached
+  document를 양쪽이 공유하고 drifting art getter 회귀를 추가한다.
+- **C-2:** admin CSS bundle drift는 게이트를 약화하지 않고 기존 spec 021 선례대로
+  `packages/ui/src/theme.css`에 admin non-UI `space-v2/**/*` exact source exclusion 1줄로 복원한다.
+- **C-3:** `git diff --check dcd893c..4c6ebf4`의 handoff EOF blank line을 정리한다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1, 다음 transition `CLAUDE_CORRECTION`.
+
+## 스펙 065 보완 라운드 1 완료 (2026-08-21)
+
+- 보완 commit `ec7610e`. 허용 제품 파일 3개(issue-candidate.ts/.test.ts, packages/ui/src/theme.css)만
+  변경했고 package/lockfile 추가 diff 0이다.
+- C-1 `readLegacyCatalog` 1회 detach 후 두 projector가 같은 document 사용 + drifting art getter 회귀 2건.
+- C-2 theme.css에 admin `space-v2` exact source exclusion 1줄 → admin entry `index-D0XOQpRL.js`
+  226,201 bytes / SHA-256 `B6E90475…B3A1F1DC` baseline 복원, admin CSS 9,144 bytes 복귀.
+- C-3 handoff EOF blank line 제거 → `git diff --check dcd893c..기록 HEAD` PASS.
+- targeted 54/54, spaces 125/125, `node scripts/check.mjs` PASS(unit 1750/1750), 전체 Chromium 151/151.
+- 이전 DEVIATION은 해소됐다. 상태 `READY_FOR_CODEX`.
 
 ## 스펙 065 구현 완료 (2026-08-21)
 

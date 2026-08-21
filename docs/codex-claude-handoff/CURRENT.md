@@ -16,7 +16,40 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 065 local issuer evidence projector 구현·검증이 완료됐다.**
+상태: **`READY_FOR_CODEX` - 스펙 065 보완 라운드 1(C-1~C-3)이 완료됐다.**
+
+보완 commit `ec7610e`. 허용 제품 파일 3개(`issue-candidate.ts`, 같은 디렉터리 unit,
+`packages/ui/src/theme.css`)만 변경했고 admin package/lockfile 추가 diff는 0이다.
+
+- C-1 `readLegacyCatalog`로 catalog를 1회 detach하고 geometry·art projector가 그 document만 쓴다.
+  drifting art getter 회귀 2건을 추가했고 raw getter read는 1회다.
+- C-2 `theme.css`에 spec 021 선례와 같은 좁은 `@source not` 1줄을 추가해 admin entry
+  `index-D0XOQpRL.js` 226,201 bytes / SHA-256 `B6E90475…B3A1F1DC`와 admin CSS 9,144 bytes를 복원했다.
+  `.transform`/`.italic`/transform property scaffold는 0건이고 mockup bundle은 불변이다.
+- C-3 handoff EOF blank line 제거로 `git diff --check dcd893c..기록 HEAD`가 PASS한다.
+
+재검증: targeted 54/54, `vitest run packages/spaces` 125/125, `node scripts/check.mjs` PASS
+(unit 1750/1750), 전체 Chromium 151/151, 포트/temp 잔류 0. 이전 라운드의 DEVIATION은 해소됐고 게이트
+문구는 약화하지 않았다. 다음은 Codex 독립 재검수다.
+
+> 이전 상태: **`CORRECTION_REQUIRED` - 스펙 065 보완 라운드 1 지시.**
+
+Codex는 HEAD=origin `4c6ebf4`에서 candidate `5fc89d2`를 독립 검토했다. 허용 제품 diff 4개는 정확했고
+targeted **177/177**, admin typecheck, `node scripts/check.mjs` PASS(unit **1748/1748**), 전체 Chromium
+**151/151**, 고객 entry 기준 불변을 재현했다. 그러나 다음 3건 때문에 아직 CODEX_PASSED가 아니다.
+
+1. raw catalog가 geometry와 art projector 사이에서 재독돼 drifting getter가 서로 다른 상태를 만들 수
+   있다. canonical `readLegacyCatalog` 1회 detached document를 양쪽이 공유해야 한다.
+2. Tailwind가 비-UI `apps/admin/src/space-v2`를 scan해 admin production CSS/hash를 변경했다. 저장소의
+   spec 021 선례대로 `packages/ui/src/theme.css`에 이 디렉터리만 exact `@source not` 처리해 bundle
+   identity를 복원한다. 게이트를 약화하거나 문자열을 난독화하지 않는다.
+3. `git diff --check dcd893c..4c6ebf4`가 spec 065 handoff의 EOF blank line 1건을 보고한다.
+
+허용 보완 제품 파일은 issue candidate 코드/unit과 `packages/ui/src/theme.css`의 narrow source exclusion
+뿐이다. 상세는 spec 065 CODEX REVIEW와 NEXT가 정본이다. 상태 `CORRECTION_REQUIRED`, fix round 1,
+다음 transition `CLAUDE_CORRECTION`이다.
+
+> 이전 상태: **`READY_FOR_CODEX` - 스펙 065 local issuer projector 구현·검증이 완료됐다.**
 
 계약 commit `e9e0c6d`, 구현 commit `5fc89d2`. 제품 변경은 정본 §3의 허용 4개 파일뿐이다: 신규
 `apps/admin/src/space-v2/issue-candidate.ts`, 신규 `issue-candidate.test.ts`, admin package.json의

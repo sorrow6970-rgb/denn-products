@@ -4683,3 +4683,49 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   (허용 파일 밖). lockfile 변경은 admin importer 3줄뿐이고 외부 dependency/다운로드는 0이다.
 - 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않는다. 실제 Firebase/network/UID/Rules/emulator/deploy,
   issuer 발급/viewer/UI, upload/document create는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다.
+
+## 2026-08-21(5) - 스펙 065 Codex 검수 · CORRECTION_REQUIRED 라운드 1
+
+- 검수 기준 HEAD=origin `4c6ebf4`, candidate `5fc89d2`, ahead/behind 0/0. 허용 제품 diff 4개는 정확하다.
+- 독립 재검증: targeted 신규+spaces **177/177**, admin typecheck, `node scripts/check.mjs` PASS(unit
+  **1748/1748**), 전체 Chromium **151/151**, 고객 entry
+  `index-6js4DafP.js` 322,018 bytes / 기준 SHA-256 불변.
+- C-1: top-level snapshot이 raw catalog 참조를 보존해 geometry와 art projector가 별도 시점에 읽는다.
+  canonical `readLegacyCatalog` 1회 detached document를 공유하고 drifting art getter 회귀가 필요하다.
+- C-2: admin bundle deviation은 acceptance 게이트를 약화하지 않는다. spec 021의 existing
+  `@source not` 선례대로 `packages/ui/src/theme.css`에 admin non-UI `space-v2/**/*`만 exact 제외한다.
+  독립 baseline build의 admin entry는 `index-D0XOQpRL.js`, 226,201 bytes, SHA-256
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`다.
+- C-3: `git diff --check dcd893c..4c6ebf4`에서 spec 065 handoff EOF blank line 1건을 확인했다.
+- 보완 허용 제품 파일은 issue-candidate 코드/unit과 `packages/ui/src/theme.css` narrow exclusion뿐이다.
+  package/lockfile 추가 diff, App/UI/config/Firebase/Rules/network는 금지다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1, 다음 transition `CLAUDE_CORRECTION`. 다음 스펙은 시작하지
+  않는다.
+
+## 2026-08-21(5) - 스펙 065 보완 라운드 1 (C-1~C-3) · READY_FOR_CODEX
+
+- 보완 commit `ec7610e`. 허용 제품 파일 3개만 바꿨다:
+  `apps/admin/src/space-v2/issue-candidate.ts`, 같은 디렉터리 unit, `packages/ui/src/theme.css`.
+  `apps/admin/package.json`·`pnpm-lock.yaml` 추가 diff 0, `App.tsx`/UI 디자인/Vite·Tailwind config/
+  Firebase/Rules/config/shared·spaces 제품 파일 무변경.
+- **C-1**: `readLegacyCatalog(issue.catalog)`를 1회 호출해 JSON-safe detached document를 만들고
+  geometry·template image projector가 그 document만 쓰게 했다. 실패/throw는
+  `SPACE_V2_ISSUE_CATALOG_PROJECTION_FAILED`로 매핑한다. detached clone이라 image projector가 throw할
+  수 없어 기존 방어 try/catch(도달 불가)는 제거했다. drifting art getter 회귀 2건을 추가했다 —
+  첫 read가 art-present면 digest 0 + unsupported, art-absent면 이후 drift와 무관하게 성공, 두 경우 모두
+  raw getter read는 1회다.
+- **C-2**: `packages/ui/src/theme.css`의 spec 021 mockup Canvas 선례 옆에
+  `@source not "../../../apps/admin/src/space-v2/**/*";` 한 줄 + 근거 문장만 추가했다.
+  `source(none)`/broad exclusion/safelist/문자열 난독화/config 변경 없음.
+  → admin entry `index-D0XOQpRL.js` **226,201 bytes** SHA-256
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC` **baseline 복원**,
+  admin CSS `index-DJ_z3tK1.css` 9,144 bytes로 복귀(`.transform`/`.italic`/transform property scaffold
+  0건), `admin-write-VpnNr13n.js`도 baseline 이름. mockup entry/CSS와 기존 Canvas exclusion 불변.
+- **C-3**: handoff EOF blank line 제거로 `git diff --check dcd893c..기록 HEAD` 전체 범위 PASS.
+- 재검증: targeted **54/54**, `vitest run packages/spaces` **125/125**, `node scripts/check.mjs` PASS
+  (unit **1750/1750**, ui·admin typecheck 포함), 전체 Chromium **151/151**, `git diff --check` PASS,
+  포트 4183/4184/4185/8080/9099/9199 LISTENING 0, temp/debug 잔류 0.
+- 이전 라운드의 DEVIATION(§5 admin entry hash)은 C-2로 해소됐다. 게이트 문구는 약화하지 않았다.
+- 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 실제
+  Firebase/network/UID/Rules/emulator/deploy와 issuer 발급/viewer/UI/upload/document create는 계속
+  NOT IMPLEMENTED / NOT TESTED / 금지다.
