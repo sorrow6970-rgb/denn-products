@@ -4749,3 +4749,10 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 추가 결함 0, 최종 판정 **CODEX_PASSED / DONE**. 실제 Firebase/network/UID/Rules/emulator/deploy와
   token/encryption/upload/document create, issuer/viewer/UI 연결은 계속 NOT IMPLEMENTED / NOT TESTED /
   금지다. 다음 활성 스펙은 없으며 `WAITING_FOR_NEXT_MANUAL_TASK`에서 멈춘다.
+
+## 2026-08-21(7) - Claude Code 다음 지시문 기록 규칙 추가
+
+- Founder 요청에 따라 앞으로 Codex는 독립 검수와 handoff 갱신을 끝낼 때마다
+  `Automation/NEXT_CLAUDE_PROMPT.md` 상단에 Claude Code에 그대로 전달할 완성된 실행 지시문을 남긴다.
+- 현재는 active_unit `none`이므로 새 스펙이나 제품 구현을 시작하지 않는 HOLD 지시문을 기록했다.
+- 제품 코드/test/Rules/config/package/lockfile 변경 0, 자동화·반복 작업 생성 0, 보호 대상 조작 0이다.

@@ -4,6 +4,8 @@
 > 복원했다.** Claude Code 구현·검증과 live log 기록 → Codex 독립 검수·재검증 → Codex 다음
 > 스펙/프롬프트 작성 → Claude Code가 읽고 작업하는 순서만 사용한다. Codex는 제품 코드를 직접
 > 수정하지 않으며 새 자동화나 반복 작업을 만들지 않는다.
+> Codex는 각 검수 종료 때 `Automation/NEXT_CLAUDE_PROMPT.md` 상단에 Claude Code에 그대로 전달할
+> 완성된 다음 실행 지시문도 함께 남긴다.
 >
 > 새 단위는 사용자의 수동 지시와 Codex 스펙이 있을 때만 시작한다.
 >

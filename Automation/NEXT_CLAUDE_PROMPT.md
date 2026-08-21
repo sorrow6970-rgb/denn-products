@@ -7,6 +7,17 @@ completed_unit: `spec-065-space-v2-local-issuer-projector` — **DONE / CODEX_PA
 보완·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
 next_transition: **`FOUNDER_NEXT_MANUAL_TASK`**
 
+## Claude Code 전달용 다음 지시문
+
+아래 문장을 Claude Code에 그대로 전달한다.
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 현재 상태와 active_unit을 확인해. active_unit이 none이므로 새 스펙이나 제품 구현을 시작하지 말고 HOLD 상태만 보고해. 보호 대상과 기존 working tree 변경은 건드리지 말고 자동화나 반복 작업을 만들지 마.
+```
+
+앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
+Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
+
 ## ★ 스펙 065 Codex 독립 재검수 통과 / HOLD
 
 Codex가 HEAD=origin `7255012`에서 보완 commit `ec7610e`를 독립 재검수했다. 허용 제품 diff 3개가
