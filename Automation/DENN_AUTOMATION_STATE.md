@@ -4,24 +4,39 @@
 updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-065-space-v2-local-issuer-projector   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-066-space-v2-local-proof-asset-preparation   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CODEX
-baseline_commit: 3681cb9   # spec 065 closure/HOLD record
-candidate_commit: 9fee315   # spec 066 local proof asset preparation
-verified_commit: none
-origin_relation: "HEAD=origin after the spec 066 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
+completed_unit: spec-066-space-v2-local-proof-asset-preparation   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
+active_unit: spec-067-space-v2-local-document-encryption-candidate   # CONTRACT_READY, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CLAUDE
+baseline_commit: e4bcce9   # spec 066 implementation record / Codex review baseline
+candidate_commit: none
+verified_commit: 9fee315   # spec 066 implementation, independently passed at e4bcce9
+origin_relation: "HEAD=origin e4bcce9 before the local Codex review/spec 067 documentation diff; ahead/behind 0/0"
 working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_REVIEW
+next_transition: CLAUDE_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 72-76% complete; 24-28% remaining to production cutover"
+overall_rebuild_progress: "estimated 72-75% complete; 25-28% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 066 Codex 통과 + 스펙 067 계약 준비 (2026-08-21)
+
+- 스펙 066 독립 검증: space-v2+spaces 234/234, admin typecheck, `node scripts/check.mjs` PASS(unit
+  1805/1805), 전체 Chromium 151/151, bundle identity, diff, 포트/temp 잔류 0. 최종
+  `CODEX_PASSED / DONE`.
+- full PNG decode/CRC/IDAT/IEND와 실제 upload/Firebase/token/document create/viewer/UI는 계속 NOT TESTED/
+  금지다.
+- 진행도는 **72~75% 완료 / 25~28% 잔여**로 정정한다. Claude의 72~76% 기록은 “상단 유지” 근거와
+  모순돼 기존 75% 상단을 유지했다.
+- 다음 local-only 단위는 스펙 067이다. strict scene snapshot의 evidence digest를 기존 verifier와 주입
+  SHA-256 port로 확인한 뒤 crypto port로 암호화하고 exact V2 outer candidate를 재검증한다. 신규 admin
+  module/unit 2개만 허용하며 token/upload/Firestore/Firebase/UI는 0이다.
+- 계약 문서만 준비했으므로 진행률은 추가 상승하지 않는다. 상태 `READY_FOR_CLAUDE`, 다음 transition
+  `CLAUDE_IMPLEMENTATION`.
 
 ## 스펙 066 구현 완료 (2026-08-21)
 

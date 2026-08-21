@@ -4843,3 +4843,32 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   발급/viewer는 그대로 열려 있고 작업축 6·7은 전혀 움직이지 않았으므로 상단 경계는 올리지 않았다.
 - 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
   기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.
+
+## 2026-08-21(11) - 스펙 066 Codex 독립 검수 · CODEX_PASSED / DONE
+
+- HEAD=origin `e4bcce9`, ahead/behind 0/0에서 계약 `1ede90c`, 구현 `9fee315`와 제품 diff를 독립 검토했다.
+  허용 제품 경로는 신규 proof candidate module/unit 정확히 2개다.
+- bytes first-await snapshot, digest 전용 복사본, fresh upload copies, UUID v4 path, PNG header/IHDR
+  dimension과 SHA-256 descriptor, safe error mapping은 계약과 일치한다. 추가 결함 0.
+- 독립 게이트: space-v2+spaces **234/234**, admin typecheck, `node scripts/check.mjs` PASS(unit
+  **1805/1805**), 전체 Chromium **151/151**, `git diff --check 3681cb9..HEAD` PASS.
+- bundle identity: admin `index-D0XOQpRL.js` 226,201 bytes / `B6E90475…B3A1F1DC`, customer
+  `index-6js4DafP.js` 322,018 bytes / `A9360EFF…E55E8159`, admin CSS `index-DJ_z3tK1.css` 9,146 bytes,
+  신규 식별자와 unwanted utility 0. 지정 포트/temp/debug 잔류 0.
+- full PNG CRC/chunk/IDAT/IEND/browser decode와 실제 upload/Firebase/token/document create/viewer/UI는
+  계속 NOT TESTED / NOT IMPLEMENTED다. 최종 판정 **CODEX_PASSED / DONE**.
+- 진행도 정정: 이전 항목의 **72~76% / 24~28%**는 “상단은 유지”라는 근거와 모순됐다. 기존 상단
+  75%를 유지한 **72~75% 완료 / 25~28% 잔여**가 정본이다.
+
+## 2026-08-21(11) - 스펙 067 local V2 document encryption candidate 계약 · READY_FOR_CLAUDE
+
+- 정본 `docs/rebuild/specs/067-space-v2-local-document-encryption-candidate.md`와 handoff를 작성했다.
+- strict `SpaceSceneV2` detached snapshot의 evidence digest를 기존 verifier와 주입 SHA-256 port로 확인한
+  뒤 `SpaceCryptoPort.encryptJson`으로 한 번 암호화하고 exact `SpaceDocumentV2` outer를 다시 fail-closed
+  검증하는 local-only 비-UI 경계다.
+- 허용 제품 파일은 신규 admin module/unit 2개뿐이다. package/lockfile/CSS/config/Firebase/Rules 변경과
+  token/UUID 생성, upload, Firestore create, 실제 network/UID/emulator/deploy, issuer/viewer/UI는 0이다.
+- 전체 리빌드 진행도는 **72~75% 완료 / 25~28% 잔여, 변동 없음**. 계약 문서만 준비했으므로 제품
+  작업축은 추가로 이동하지 않았다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. NEXT 상단에 Claude Code 전달용
+  완성 지시문을 남겼다. 자동화·반복 작업 생성 0, 보호 대상 조작 0이다.

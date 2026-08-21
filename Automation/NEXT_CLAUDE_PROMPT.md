@@ -1,21 +1,46 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-066-space-v2-local-proof-asset-preparation` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-completed_unit: `spec-065-space-v2-local-issuer-projector` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: HEAD=origin **`3681cb9`**, ahead/behind **0/0**에서 스펙 066 계약 문서를 준비했다.
-next_transition: **`CODEX_REVIEW`**
+상태: `READY_FOR_CLAUDE`
+active_unit: `spec-067-space-v2-local-document-encryption-candidate` — **CONTRACT_READY / LOCAL_ONLY / NO_NETWORK / NO_UI**
+completed_unit: `spec-066-space-v2-local-proof-asset-preparation` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
+기준: HEAD=origin **`e4bcce9`**, ahead/behind **0/0**에서 스펙 066을 독립 검수했다.
+next_transition: **`CLAUDE_IMPLEMENTATION`**
 
 ## Claude Code 전달용 다음 지시문
 
 아래 문장을 Claude Code에 그대로 전달한다.
 
 ```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/066-space-v2-local-proof-asset-preparation.md를 전부 읽고 스펙 066의 명시된 local-only 범위만 구현·검증해. 보호 대상과 기존 working tree 변경은 건드리지 말고 실제 Firebase/network/upload/UI로 확장하거나 자동화·반복 작업을 만들지 마. 완료 후 STATE/NEXT/CURRENT/live log를 실제 상태에 맞추고 전체 리빌드 진행률·잔여율·변동 근거까지 보고해.
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/067-space-v2-local-document-encryption-candidate.md를 전부 읽고 스펙 067의 명시된 local-only 범위만 구현·검증해. 보호 대상과 기존 working tree 변경은 건드리지 말고 token/UUID 생성, upload, Firestore create, 실제 Firebase/network 또는 UI로 확장하거나 자동화·반복 작업을 만들지 마. 완료 후 제품 commit과 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를 실제 상태에 맞춘 뒤 전체 리빌드 진행률·잔여율·변동 근거까지 보고해.
 ```
 
 앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
 Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
+
+## ★ 스펙 067 — 구현 계약 준비 / Claude Code 착수 대기
+
+정본 `docs/rebuild/specs/067-space-v2-local-document-encryption-candidate.md`, handoff
+`docs/handoff/2026-08-21-spec-067-space-v2-local-document-encryption-candidate-handoff.md`.
+
+strict `SpaceSceneV2`를 `readSpaceSceneV2`로 detached snapshot하고 기존 verifier+주입 SHA-256 port로
+evidence digest 일치를 확인한 뒤 `SpaceCryptoPort.encryptJson`을 정확히 한 번 호출한다. 결과는 exact
+`{schema:"space-v2", enc}`로 감싸 `readSpaceDocumentV2`로 다시 검증한다. 신규 admin non-UI module/unit
+2개만 허용한다. password는 기존 non-empty string 계약만 재사용하며 token/UUID, upload, Firestore
+create, Firebase adapter/Rules/config/network와 UI/viewer는 0이다.
+
+현재 전체 리빌드 진행도는 **72~75% 완료 / 25~28% 잔여**다. 스펙 066의 byte-identity 경계 완료로
+하단만 상승했고 상단은 75%를 유지한다. 스펙 067은 아직 계약만 준비돼 추가 상승은 없다.
+
+## ★ 스펙 066 — Codex 독립 검수 통과 / DONE
+
+HEAD=origin `e4bcce9`에서 구현 `9fee315`를 독립 검토했다. 허용 제품 diff 2개가 정확하고
+space-v2+spaces 234/234, admin typecheck, `node scripts/check.mjs` PASS(unit 1805/1805), Chromium
+151/151, bundle identity, `git diff --check`, 포트/temp 잔류 0을 재현했다. 최종 판정
+`CODEX_PASSED / DONE`이다. full PNG decode 및 실제 upload/Firebase/token/document create/viewer/UI는
+계속 NOT TESTED / 금지다.
+
+진행도 정정: 이전 `72~76% / 24~28%`는 “상단은 유지” 근거와 모순됐다. 정본은
+**72~75% 완료 / 25~28% 잔여**다.
 
 ## ★ 스펙 066 — 구현 완료 / Codex 독립 검수 대기
 

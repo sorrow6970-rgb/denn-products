@@ -20,6 +20,25 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
+상태: **`READY_FOR_CLAUDE` - 스펙 067 local V2 document encryption candidate 계약이 준비됐다.**
+
+스펙 066은 HEAD=origin `e4bcce9`에서 Codex 독립 검수를 통과해 **DONE / CODEX_PASSED**다. 독립 게이트는
+space-v2+spaces 234/234, unit 1805/1805, Chromium 151/151, admin typecheck/build/diff/bundle identity와
+포트/temp 잔류 0 모두 PASS다. full PNG decode와 실제 upload/Firebase/token/document create/viewer/UI는
+계속 NOT TESTED / 금지다.
+
+다음 정본은 `docs/rebuild/specs/067-space-v2-local-document-encryption-candidate.md`, handoff는
+`docs/handoff/2026-08-21-spec-067-space-v2-local-document-encryption-candidate-handoff.md`다. strict
+`SpaceSceneV2` detached snapshot의 evidence digest를 기존 verifier와 주입 SHA-256 port로 확인한 뒤
+`SpaceCryptoPort`로 한 번 암호화하고 exact `SpaceDocumentV2` outer를 다시 검증하는 local-only 비-UI
+단위다. 허용 제품 파일은 신규 admin module/unit 2개뿐이다. token/UUID, upload, Firestore create,
+Firebase/Rules/config/network와 UI/viewer는 열지 않는다.
+
+전체 리빌드 진행도는 **72~75% 완료 / 25~28% 잔여**다. 이전 Claude 기록의 72~76%는 상단 유지라는
+근거와 모순돼 75% 상단으로 정정했다. 스펙 067은 계약만 준비돼 추가 진척을 계산하지 않는다.
+
+> 이전 상태: **`DONE / CODEX_PASSED` - 스펙 066 local proof asset preparation.**
+
 상태: **`READY_FOR_CODEX` - 스펙 066 local proof asset preparation 구현·검증이 완료됐다.**
 
 계약 commit `1ede90c`, 구현 commit `9fee315`. 제품 변경은 허용 2개 신규 파일

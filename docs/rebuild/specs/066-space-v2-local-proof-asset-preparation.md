@@ -1,6 +1,6 @@
 # 스펙 066 — space V2 local proof asset preparation
 
-상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 기준 HEAD: `3681cb9` (스펙 065 종료 및 HOLD 확인)
 
@@ -257,3 +257,20 @@ SHA-256 fixed vector는 `node:crypto` createHash로 독립 계산한 값
 
 계속 NOT IMPLEMENTED / NOT TESTED / 금지: 실제 upload·Firebase·network·UID·emulator·deploy,
 token/UUID 생성, encryption, Firestore create, viewer/UI/route 연결, full PNG decode/CRC 검증.
+
+### CODEX REVIEW — 2026-08-21
+
+최종 판정: **CODEX_PASSED / DONE**.
+
+- HEAD=origin `e4bcce9`, ahead/behind 0/0에서 계약 commit `1ede90c`, 구현 commit `9fee315`와 기록
+  commit을 독립 검토했다. 제품 diff는 허용된 신규 module/unit 2개뿐이다.
+- caller bytes의 첫 await 전 snapshot, digest 전용 복사본, fresh upload copies, lowercase UUID v4 path,
+  PNG signature/첫 IHDR/dimension 범위, exact byte digest와 safe error mapping이 계약과 일치한다.
+- 독립 재검증: space-v2+spaces **234/234**, admin typecheck, `node scripts/check.mjs` PASS(unit
+  **1805/1805**), 전체 Chromium **151/151**, `git diff --check 3681cb9..HEAD` PASS.
+- admin/customer entry와 admin CSS는 기준과 byte/hash가 일치하고 두 bundle에 스펙 066 식별자가 0이다.
+  지정 포트와 temp/debug 잔류도 0이다.
+- full PNG CRC/chunk/IDAT/IEND/browser decode, 실제 upload/Firebase/token/document create/viewer/UI는
+  계속 **NOT TESTED / NOT IMPLEMENTED**다. 이번 통과가 그 범위를 승인하지 않는다.
+- 진행도 정정: Claude 기록의 `72~76% / 24~28%`는 “상단은 유지”라는 자체 근거와 모순됐다. 이전
+  상단 75%를 유지해 **72~75% 완료 / 25~28% 잔여**가 현재 정본이다.
