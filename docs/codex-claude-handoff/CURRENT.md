@@ -16,7 +16,24 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CLAUDE` - 스펙 065 local issuer evidence projector 계약이 준비됐다.**
+상태: **`READY_FOR_CODEX` - 스펙 065 local issuer evidence projector 구현·검증이 완료됐다.**
+
+계약 commit `e9e0c6d`, 구현 commit `5fc89d2`. 제품 변경은 정본 §3의 허용 4개 파일뿐이다: 신규
+`apps/admin/src/space-v2/issue-candidate.ts`, 신규 `issue-candidate.test.ts`, admin package.json의
+`@denn/spaces` 한 줄, lockfile의 admin importer 3줄. `App.tsx`/UI/CSS/Firebase/Rules/config와
+shared·spaces 제품 파일은 무변경이다.
+
+게이트: targeted unit 52/52, `vitest run packages/spaces` 125/125, admin typecheck,
+`node scripts/check.mjs` PASS(unit 1748/1748), 전체 Chromium 151/151, `git diff --check` PASS, 포트/temp
+잔류 0. 고객 entry `index-6js4DafP.js` 322,018 bytes와 기준 SHA-256은 불변이다.
+
+★ DEVIATION: 정본 §5의 admin entry hash 불변 게이트만 충족하지 못했다. admin entry JS는
+byte-identical(226,201)이고 유일한 차이는 상호 파일명 참조이며 admin JS에 이번 module 코드는 0건이다.
+원인은 Tailwind v4 소스 스캔이 evidence 계약 필드명 `transform`(+fixture `italic`)을 utility로 만들어
+admin CSS가 9,144 → 9,821 bytes가 된 것이고, 허용 파일 안에서는 제거할 수 없다. 게이트 문구 정정
+또는 별도 스펙 중 무엇을 택할지는 Codex 판단으로 남겼다. 상세는 live log와 정본 DONE 절.
+
+> 이전 상태: **`READY_FOR_CLAUDE` - 스펙 065 local issuer evidence projector 계약이 준비됐다.**
 
 정본 `docs/rebuild/specs/065-space-v2-local-issuer-projector.md`, handoff
 `docs/handoff/2026-08-21-spec-065-space-v2-local-issuer-projector-handoff.md`. 기준 HEAD=origin

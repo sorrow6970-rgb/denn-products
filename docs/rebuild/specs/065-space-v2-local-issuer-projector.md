@@ -1,6 +1,6 @@
 # 스펙 065 — space V2 local issuer evidence projector
 
-상태: **READY_FOR_CLAUDE / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 기준 HEAD: `dcd893c` (스펙 064 종료, CODEX_PASSED)
 
@@ -171,3 +171,62 @@ STOP이면 제품 코드를 더 수정하지 말고 근거, 재현 명령, 필�
 없음. 이번 단위는 승인된 GG shape를 local composition에서 조립하는 최소 경계이며 운영 권한·UI·실제
 발급 정책을 새로 결정하지 않는다.
 
+### DONE (Claude) — 2026-08-21
+
+구현 commit `5fc89d2` (계약 문서 commit `e9e0c6d`). 제품 변경은 정본 §3의 허용 4개 파일뿐이다.
+
+- 신규 `apps/admin/src/space-v2/issue-candidate.ts` — `createSpaceV2FrameIssueCandidate(input, sha256?)`
+- 신규 `apps/admin/src/space-v2/issue-candidate.test.ts` — 52 tests
+- `apps/admin/package.json` — `@denn/spaces: workspace:*` 한 줄
+- `pnpm-lock.yaml` — admin importer link 3줄
+
+구조:
+
+- H-1 admin composition에서만 join한다. `@denn/shared`와 `@denn/spaces`는 서로를 의존하지 않고 두
+  패키지 제품 파일은 무변경이다. `App.tsx`/route/CSS import 0.
+- H-2 입력은 exact-key detached snapshot으로 한 번만 읽는다(`exactSnapshot`). geometry는 오직
+  `projectFramePreviewGeometry` 결과만 쓰고 raw catalog를 재해석·clamp·default하지 않는다. 두 번의
+  catalog 읽기는 동일한 selection snapshot을 쓴다.
+- H-3 fail-closed: projection 실패, `textZones` 비어있지 않음, `clockPreview !== null`, template art
+  `available`, art `invalid-reference`가 모두 digest 호출 0으로 막힌다. `generated-preview`와 `none`만
+  art 부재로 인정한다.
+- H-4 evidence는 `frame-logical-plan-v1` + explicit orientation/logical width/appearance/transform/proof +
+  projected geometry + `templateArt:none`/`textMode:none`/`clockMode:off`로 조립하고
+  `createFrameReplayEvidenceDigestV1`를 정확히 한 번 호출한다. 결과는 `readSpaceSceneV2`로 재검증한
+  detached 값이며 `roomCapability`는 `unsupported`다. network/Firebase/DOM/Canvas/Date/random/전역
+  상태 사용 0.
+- H-5 오류는 `SPACE_V2_ISSUE_INVALID_INPUT` / `_CATALOG_PROJECTION_FAILED` / `_UNSUPPORTED_CAPABILITY` /
+  `_DIGEST_FAILED` 4개이며 `{ok, code}` 외 어떤 필드도 없다. 범위·형식·orientation↔aspect 판정은 스펙
+  064 validator에 위임해 규칙을 두 곳에 복제하지 않았다(그 실패는 `INVALID_INPUT`으로 매핑).
+
+검증:
+
+- targeted unit **52/52**, `vitest run packages/spaces` **125/125**, admin typecheck PASS
+- `node scripts/check.mjs` **PASS** (format/lint/7 typecheck/unit **1748/1748**/두 앱 build)
+- 전체 Chromium E2E **151/151**
+- `git diff --check` PASS, 허용 범위 밖 제품 diff 0, Rules/firebase config diff 0
+- 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`/temp/debug 잔류 0
+- 고객(mockup) entry **불변**: `index-6js4DafP.js`, 322,018 bytes, SHA-256 `A9360EFF…E55E8159`
+- mutation 확인: art gate를 비활성화하면 targeted unit 3건이 실패한다(거짓 통과 아님)
+
+### DEVIATION — admin entry hash (§5 게이트 1건 미충족)
+
+정본 §5의 "admin entry도 변경 전후 name/bytes/SHA-256 동일"은 **충족하지 못했다**. 원인과 증거:
+
+- admin entry JS는 **byte-identical**(226,201)이고, baseline `index-D0XOQpRL.js`와의 유일한 차이는
+  dynamic import 문자열 `./admin-write-*.js` 한 곳이다. `admin-write` chunk의 유일한 차이도 entry
+  파일명 한 곳이다(상호 파일명 참조).
+- admin JS 어느 asset에도 `SPACE_V2_ISSUE` / `createSpaceV2FrameIssueCandidate` /
+  `frame-logical-plan-v1` / `rebuild-space-assets` 문자열이 **0건**이다. 즉 미사용 module은 bundle에
+  들어가지 않았다(§5의 실질 요건은 충족).
+- 실제 변화의 시작점은 **Tailwind v4 source 스캔**이다. `apps/admin` 소스 텍스트에 등장하는 단어가
+  utility 후보가 되므로, evidence 계약이 강제하는 필드명 `transform`(및 fixture가 요구하는 `italic`)이
+  admin CSS를 9,144 → 9,821 bytes로 키운다(`.transform`, `.italic`, `@property` rotate/skew 블록).
+  CSS asset이 바뀌면 entry chunk hash가 바뀌고, 그 여파로 두 파일명이 함께 바뀐다.
+- 회피 가능한 후보(`!transform`, 주석의 `uppercase`)는 제거했다. 남은 `transform`은 스펙 064 evidence의
+  필드명이라 허용 파일 안에서 피할 수 없고, `italic`은 spec 031 text zone 저작 shape가 boolean으로
+  요구한다. Tailwind/vite config 변경은 허용 파일 밖이라 하지 않았다.
+
+판단이 필요하면 Codex가 (a) 이 deviation을 수용하고 게이트 문구를 "unused module이 JS bundle에
+포함되지 않음 + 고객 entry 불변"으로 정정하거나, (b) admin CSS 스캔 경계를 바꾸는 별도 스펙을
+여는 두 방향 중 하나를 선택하면 된다. 이 세션은 (a)/(b) 어느 쪽도 임의로 실행하지 않았다.

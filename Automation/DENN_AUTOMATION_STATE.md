@@ -5,21 +5,33 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-064-space-v2-local-contract   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-065-space-v2-local-issuer-projector   # CONTRACT READY, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CLAUDE
+active_unit: spec-065-space-v2-local-issuer-projector   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CODEX
 baseline_commit: dcd893c   # spec 064 closure
-candidate_commit: none   # Claude implementation not started
+candidate_commit: 5fc89d2   # spec 065 local issuer projector implementation
 verified_commit: dcd893c   # spec 064 closure at origin-equal HEAD
-origin_relation: "HEAD=origin=dcd893c; ahead/behind 0/0 before spec 065 implementation"
-working_tree: "spec 065 Codex contract/handoff documents plus pre-existing protected Founder/user changes; staged 0"
+origin_relation: "HEAD ahead of origin until the spec 065 commits are fast-forward pushed"
+working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_IMPLEMENTATION
+next_transition: CODEX_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 스펙 065 구현 완료 (2026-08-21)
+
+- 계약 commit `e9e0c6d`, 구현 commit `5fc89d2`. 제품 변경은 허용 4개 파일뿐이다.
+- targeted unit 52/52, `vitest run packages/spaces` 125/125, admin typecheck,
+  `node scripts/check.mjs` PASS(unit 1748/1748), 전체 Chromium 151/151, `git diff --check` PASS.
+- 고객 entry `index-6js4DafP.js` 322,018 bytes / 기준 SHA-256 불변.
+- ★ DEVIATION: admin entry hash는 유지되지 않았다. JS는 byte-identical(226,201)이고 차이는 상호
+  파일명 참조 한 곳뿐이며 module 코드는 bundle에 0건이다. 원인은 Tailwind v4 소스 스캔이 계약 필드명
+  `transform`(+fixture `italic`)을 utility로 만들어 admin CSS가 9,144 → 9,821 bytes가 된 것이다.
+  허용 파일 안에서 제거할 수 없어 Codex 판단으로 남긴다. 상세는 live log와 정본 DONE 절.
+- `pnpm install`이 넣은 `pnpm-workspace.yaml` allowBuilds stub은 허용 파일 밖이라 즉시 되돌렸다.
 
 ## 스펙 065 local issuer projector 준비 (2026-08-21)
 

@@ -1,12 +1,31 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-065-space-v2-local-issuer-projector` — **CONTRACT READY / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-065-space-v2-local-issuer-projector` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-064-space-v2-local-contract` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: HEAD=origin **`dcd893c`**, ahead/behind **0/0**
-next_transition: **`CLAUDE_IMPLEMENTATION`**
+기준: 계약 **`e9e0c6d`** / 구현 **`5fc89d2`** (baseline `dcd893c`). 기록 commit을 fast-forward push한 뒤
+HEAD=origin이 된다.
+next_transition: **`CODEX_REVIEW`**
 
-## ★ 현재 Claude Code 지시 — 스펙 065 구현
+## ★ 스펙 065 — 구현 완료 / Codex 독립 검수 대기
+
+계약 commit `e9e0c6d`, 구현 commit `5fc89d2`. 제품 변경은 허용 4개 파일뿐이고 `App.tsx`/UI/CSS/
+Firebase/Rules/config와 shared·spaces 제품 파일은 무변경이다. targeted unit **52/52**,
+`vitest run packages/spaces` **125/125**, admin typecheck, `node scripts/check.mjs` PASS(unit
+**1748/1748**), 전체 Chromium **151/151**, `git diff --check` PASS, 포트/temp 잔류 0.
+고객 entry `index-6js4DafP.js` **322,018 bytes** / 기준 SHA-256 불변.
+
+★ **DEVIATION 1건**: 정본 §5의 admin entry hash 불변만 충족하지 못했다. admin entry JS는
+byte-identical(226,201)이고 baseline과의 차이는 상호 파일명 참조 한 곳이며 admin JS에 이번 module
+코드·식별자·계약 문자열이 0건이다. 원인은 Tailwind v4 소스 스캔이 evidence 계약 필드명 `transform`
+(+spec 031 fixture가 요구하는 `italic`)을 utility로 만들어 admin CSS가 9,144 → 9,821 bytes가 된 것이다.
+회피 가능한 `!transform`/`uppercase`는 제거했고 남은 둘은 허용 파일 안에서 제거할 수 없다.
+Tailwind/vite config 변경은 허용 파일 밖이라 하지 않았다. 게이트 문구 정정 또는 별도 스펙 중 어느
+쪽을 택할지는 Codex 결정 사항으로 남긴다.
+
+다음은 Codex의 독립 검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+
+## 스펙 065 원래 구현 지시 (기록)
 
 정본 `docs/rebuild/specs/065-space-v2-local-issuer-projector.md`와 handoff
 `docs/handoff/2026-08-21-spec-065-space-v2-local-issuer-projector-handoff.md`를 먼저 전부 읽고, 정본의

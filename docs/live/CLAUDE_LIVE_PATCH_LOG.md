@@ -4649,3 +4649,37 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 기준 HEAD=origin `dcd893c`, ahead/behind 0/0. 제품 코드 변경 0, 문서 변경은 unstaged다.
 - 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. Claude 완료 뒤
   `READY_FOR_CODEX`에서 멈추며 다음 스펙은 시작하지 않는다.
+
+## 2026-08-21(4) - 스펙 065 local issuer projector 구현·검증 · READY_FOR_CODEX
+
+- 계약 문서 commit `e9e0c6d`, 구현 commit `5fc89d2`. 기준 HEAD `dcd893c`.
+- 제품 변경은 정본 §3 허용 4개뿐이다: 신규 `apps/admin/src/space-v2/issue-candidate.ts`, 신규
+  `issue-candidate.test.ts`, `apps/admin/package.json`의 `@denn/spaces: workspace:*` 한 줄,
+  `pnpm-lock.yaml`의 admin importer link 3줄. `App.tsx`/UI/CSS/Firebase/Rules/config와
+  shared·spaces 제품 파일은 무변경이다.
+- `createSpaceV2FrameIssueCandidate(input, sha256?)`는 exact-key detached snapshot으로 입력을 한 번만
+  읽고, geometry는 `projectFramePreviewGeometry` 결과만 사용하며, text zone·clock·available art·
+  invalid-reference art를 **digest 호출 0**으로 막는다. 성공 시
+  `createFrameReplayEvidenceDigestV1`를 정확히 1회 호출하고 결과를 `readSpaceSceneV2`로 재검증한
+  detached `SpaceSceneV2`를 돌려준다. 범위/형식/orientation↔aspect 판정은 스펙 064 validator에
+  위임했다(규칙 이중 정의 회피).
+- 오류는 `SPACE_V2_ISSUE_INVALID_INPUT`/`_CATALOG_PROJECTION_FAILED`/`_UNSUPPORTED_CAPABILITY`/
+  `_DIGEST_FAILED` 4개이고 `{ok, code}` 외 필드가 없다. path/id/색상/digest/token/password/UID/email/
+  raw thrown message 0을 테스트로 고정했다.
+- 게이트: targeted unit **52/52**, `vitest run packages/spaces` **125/125**, admin typecheck,
+  `node scripts/check.mjs` PASS(unit **1748/1748**), 전체 Chromium **151/151**, `git diff --check` PASS,
+  포트 4183/4184/4185/8080/9099/9199 LISTENING 0, temp/debug 잔류 0.
+- 고객(mockup) entry **불변**: `index-6js4DafP.js`, 322,018 bytes, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
+- ★ **DEVIATION**: 정본 §5의 "admin entry name/bytes/SHA-256 동일"은 충족하지 못했다. admin entry JS는
+  byte-identical(226,201)이고 baseline과의 차이는 dynamic import 문자열 `./admin-write-*.js` 한 곳뿐이며
+  admin JS에 이번 module 코드·식별자·계약 문자열이 0건이다(미사용 module 미포함은 증명됨). 바뀐 것은
+  Tailwind v4가 `apps/admin` 소스 텍스트를 스캔해 만든 CSS다 — evidence 계약 필드명 `transform`과
+  fixture가 요구하는 `italic` 때문에 admin CSS가 9,144 → 9,821 bytes로 커지고, CSS asset 변경이 entry
+  chunk hash를 바꾼다. 회피 가능한 `!transform`/`uppercase`는 제거했고, 남은 두 단어는 허용 파일
+  안에서 제거할 수 없다. Tailwind/vite config는 허용 파일 밖이라 건드리지 않았다. 게이트 문구 정정
+  또는 별도 스펙 중 어느 쪽을 택할지는 Codex 판단으로 남긴다.
+- 부수 확인: `pnpm install`이 `pnpm-workspace.yaml`에 `allowBuilds` stub을 자동 추가해 즉시 되돌렸다
+  (허용 파일 밖). lockfile 변경은 admin importer 3줄뿐이고 외부 dependency/다운로드는 0이다.
+- 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않는다. 실제 Firebase/network/UID/Rules/emulator/deploy,
+  issuer 발급/viewer/UI, upload/document create는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다.
