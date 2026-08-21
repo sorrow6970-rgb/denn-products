@@ -5,23 +5,36 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-065-space-v2-local-issuer-projector   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-066-space-v2-local-proof-asset-preparation   # CONTRACT READY, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CLAUDE
+active_unit: spec-066-space-v2-local-proof-asset-preparation   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CODEX
 baseline_commit: 3681cb9   # spec 065 closure/HOLD record
-candidate_commit: none
+candidate_commit: 9fee315   # spec 066 local proof asset preparation
 verified_commit: none
-origin_relation: "HEAD=origin 3681cb9 before unstaged spec 066 contract documents; ahead/behind 0/0"
-working_tree: "spec 066 contract documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
+origin_relation: "HEAD=origin after the spec 066 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
+working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_IMPLEMENTATION
+next_transition: CODEX_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 70-75% complete; 25-30% remaining to production cutover"
+overall_rebuild_progress: "estimated 72-76% complete; 24-28% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 066 구현 완료 (2026-08-21)
+
+- 계약 commit `1ede90c`, 구현 commit `9fee315`. 허용 2개 신규 파일뿐이고 package/lockfile/Rules/config
+  diff 0이다.
+- targeted 55/55, space-v2+spaces 234/234, admin typecheck, `node scripts/check.mjs` PASS
+  (unit 1805/1805), 전체 Chromium 151/151, `git diff --check` PASS.
+- bundle identity 유지: admin `index-D0XOQpRL.js` 226,201 bytes, admin CSS 9,146 bytes(unwanted 0),
+  고객 `index-6js4DafP.js` 322,018 bytes. 두 bundle에 spec 066 식별자 0건.
+- 범위 한계: full PNG decode/CRC/IDAT/IEND/browser decode는 NOT TESTED. upload/Firebase/token/
+  Firestore create/viewer/UI는 계속 금지다.
+- 진행도 72~76% / 잔여 24~28%(이전 70~75%에서 하단 상향). 근거는 작업축 5의 byte-identity 하위
+  작업이 닫힌 것이며, 작업축 6·7은 불변이라 상단은 유지했다.
 
 ## 스펙 066 local proof asset preparation 준비 (2026-08-21)
 

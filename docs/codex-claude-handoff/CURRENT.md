@@ -20,7 +20,26 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CLAUDE` - 스펙 066 local proof asset preparation 계약이 준비됐다.**
+상태: **`READY_FOR_CODEX` - 스펙 066 local proof asset preparation 구현·검증이 완료됐다.**
+
+계약 commit `1ede90c`, 구현 commit `9fee315`. 제품 변경은 허용 2개 신규 파일
+(`apps/admin/src/space-v2/proof-asset-candidate.ts`와 같은 디렉터리 unit)뿐이고 package/lockfile/
+Rules/config/`App.tsx`/UI 변경은 0이다.
+
+caller PNG bytes를 await 전에 한 번 복사해 UUID v4 경로·IHDR intrinsic dimensions·SHA-256 descriptor를
+같은 snapshot에서 만들고, digest port에는 별도 복사본을 넘기며 `copyUploadBytes()`는 매번 새 복사본을
+돌려준다. ★ 범위 한계: full PNG decode/CRC/IDAT/IEND/browser decode는 NOT TESTED이며 성공의 의미는
+PNG-header candidate다.
+
+게이트: targeted 55/55, space-v2+spaces 234/234, admin typecheck, `node scripts/check.mjs` PASS
+(unit 1805/1805), 전체 Chromium 151/151, `git diff --check` PASS, 포트/temp 잔류 0. admin/고객 entry와
+admin CSS 9,146 bytes는 기준과 동일하고 두 bundle에 spec 066 식별자는 0건이다.
+
+전체 리빌드 진행도는 **72~76% 진행 / 24~28% 잔여**로, 이전 70~75%에서 하단 경계만 올랐다. 근거는
+작업축 5의 byte-identity 하위 작업이 닫힌 것이고, upload/Firestore create/viewer와 작업축 6·7은
+그대로라 상단은 유지했다.
+
+> 이전 상태: **`READY_FOR_CLAUDE` - 스펙 066 계약이 준비됐다.**
 
 정본 `docs/rebuild/specs/066-space-v2-local-proof-asset-preparation.md`, handoff
 `docs/handoff/2026-08-21-spec-066-space-v2-local-proof-asset-preparation-handoff.md`. 기준 HEAD=origin

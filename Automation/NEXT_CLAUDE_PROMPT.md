@@ -1,10 +1,10 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-066-space-v2-local-proof-asset-preparation` — **LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-066-space-v2-local-proof-asset-preparation` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-065-space-v2-local-issuer-projector` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 기준: HEAD=origin **`3681cb9`**, ahead/behind **0/0**에서 스펙 066 계약 문서를 준비했다.
-next_transition: **`CLAUDE_IMPLEMENTATION`**
+next_transition: **`CODEX_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
@@ -17,7 +17,29 @@ C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/spe
 앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
 Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
 
-## ★ 스펙 066 구현 지시
+## ★ 스펙 066 — 구현 완료 / Codex 독립 검수 대기
+
+계약 commit `1ede90c`, 구현 commit `9fee315`. 제품 변경은 허용 2개 신규 파일뿐이고 package/lockfile/
+Rules/config/`App.tsx`/UI·CSS/shared·spaces·firebase 제품 파일 diff는 **0**이다.
+
+- caller `Uint8Array`를 **await 전에** 1회 복사, lowercase UUID v4 → 승인 경로, PNG signature·첫 chunk
+  length 13·`IHDR`·IHDR dimensions만 확인, 그 snapshot의 SHA-256으로 스펙 064 descriptor 생성.
+- digest port에는 별도 복사본을 넘기고 정확히 1회 호출한다. `copyUploadBytes()`는 매번 새 복사본이다.
+  UUID/random/Date/network/Firebase/DOM/Canvas 0, SHA-256 port는 필수 주입이다.
+- ★ 범위 한계: **full PNG decode/CRC/chunk sequence/IDAT/IEND/browser decode는 NOT TESTED**다. 성공의
+  의미는 PNG-header candidate이며 모듈·unit 주석과 문서에 그대로 적었다.
+
+게이트: targeted **55/55**, space-v2+spaces **234/234**, admin typecheck, `node scripts/check.mjs`
+PASS(unit **1805/1805**), 전체 Chromium **151/151**, `git diff --check` PASS, 포트/temp 잔류 0.
+bundle identity 유지 — admin `index-D0XOQpRL.js` **226,201 bytes**, admin CSS `index-DJ_z3tK1.css`
+**9,146 bytes**(unwanted utility 0), 고객 `index-6js4DafP.js` **322,018 bytes**, 두 bundle에 spec 066
+식별자 0건.
+
+진행도 보고: **72~76% 진행 / 24~28% 잔여**(이전 70~75%에서 하단 상향). 근거는 위와 같다.
+
+다음은 Codex 독립 검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+
+## 스펙 066 원래 구현 지시 (기록)
 
 정본과 handoff를 먼저 전부 읽는다. 허용 제품 파일은 정확히 다음 두 개뿐이다.
 
@@ -38,7 +60,8 @@ fast-forward push하고 `READY_FOR_CODEX`에서 멈춘다.
 
 ## 전체 리빌드 진행도 — 매 보고 필수
 
-- **현재 추정: 70~75% 진행 / 25~30% 잔여**(production cutover까지 포함).
+- **현재 추정: 72~76% 진행 / 24~28% 잔여**(production cutover까지 포함). 스펙 066으로 작업축 5의
+  byte-identity 하위 작업이 닫혀 하단 경계만 올렸고, 작업축 6·7이 불변이라 상단은 유지했다.
 - 최종 스펙 총개수는 고정돼 있지 않아 현재 스펙 번호를 분모로 쓰지 않는다. 이는 아래 7개 로드맵
   작업축의 상태를 바탕으로 한 관리 추정치다.
   1. 기술 스택·모노레포·공유 기반 — 완료

@@ -4808,3 +4808,38 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   이동하지 않았다. Claude 구현 완료 후 검수 통과 시에만 변동 근거를 다시 평가한다.
 - 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. NEXT 상단에 Claude Code에 그대로
   전달할 완성된 실행 문구를 남겼다. 자동화·반복 작업 생성 0, 보호 대상 조작 0이다.
+
+## 2026-08-21(10) - 스펙 066 local proof asset preparation 구현·검증 · READY_FOR_CODEX
+
+- 계약 문서 commit `1ede90c`, 구현 commit `9fee315`. 기준 HEAD `3681cb9`.
+- 제품 변경은 정본 §3 허용 2개 신규 파일뿐이다:
+  `apps/admin/src/space-v2/proof-asset-candidate.ts`와 같은 디렉터리 unit.
+  package/lockfile/Rules/firebase config/`App.tsx`/UI·CSS/shared·spaces·firebase 제품 파일 diff **0**.
+- `prepareSpaceV2ProofAssetCandidate(input, sha256)`는 caller의 `Uint8Array`를 **await 전에** 한 번
+  복사하고, lowercase UUID v4에서 `rebuild-space-assets/objects/{assetId}.png`를 만들며, PNG
+  signature·첫 chunk length(13)·`IHDR`·IHDR width/height만 확인한 뒤 그 snapshot의 SHA-256으로 스펙
+  064 `proofAsset` descriptor를 만든다. digest port에는 보존 snapshot이 아니라 별도 복사본을 넘기고,
+  `copyUploadBytes()`는 호출마다 새 복사본을 준다. UUID/random/Date/network/Firebase/DOM/Canvas 사용 0,
+  SHA-256 port는 필수 주입이다.
+- ★ **범위 한계(숨기지 않음)**: 이 단위는 PNG decoder가 아니다. CRC/chunk sequence/IDAT/IEND/browser
+  decode 성공은 **NOT TESTED**이며 성공의 의미는 "V2 descriptor를 만들 수 있는 PNG-header candidate"다.
+  실제 decode·pixel 검증은 후속 asset/viewer 단계에서 별도로 fail-closed해야 한다. 이 문장을 모듈과
+  unit 상단 주석에도 그대로 적었다.
+- 오류는 `SPACE_V2_PROOF_INVALID_INPUT`/`_INVALID_PNG`/`_TOO_LARGE`/`_DIGEST_FAILED` 4개이고 실패
+  결과는 `{ok, code}`만 가진다. bytes/UUID/path/digest/PNG header 값/token/password/UID/email/thrown
+  message 0을 테스트로 고정했다.
+- 게이트: 신규 targeted **55/55**, space-v2+spaces **234/234**, admin typecheck,
+  `node scripts/check.mjs` PASS(unit **1805/1805**), 전체 Chromium **151/151**, `git diff --check` PASS,
+  포트 4183/4184/4185/8080/9099/9199 LISTENING 0, temp/debug 잔류 0.
+- bundle identity 유지: 고객 `index-6js4DafP.js` **322,018 bytes**/`A9360EFF…E55E8159`, admin
+  `index-D0XOQpRL.js` **226,201 bytes**/`B6E90475…B3A1F1DC`, admin CSS `index-DJ_z3tK1.css`
+  **9,146 bytes**(unwanted utility 0건). 두 bundle에 spec 066 식별자·경로 문자열 0건이다.
+- mutation 확인: snapshot 복사 제거 시 "caller buffer 사후 변형" 테스트, digest 전용 복사본 제거 시
+  "port 인자 변형" 테스트가 각각 실패한다(거짓 통과 아님). SHA-256 fixed vector는 `node:crypto`로
+  독립 계산한 `qnSaWoyx47Xk9xTr2cXmRtN0swaEGgU6OmLPO5gnxIs=`이며 주입 Web Crypto port와 일치했다.
+- **전체 리빌드 진행도: 72~76% 진행 / 24~28% 잔여.** 이전 70~75%에서 하단 경계가 소폭 올랐다.
+  근거: 작업축 5(space 링크)의 잔여 중 'V2 발급'에 필요한 byte-identity 경계(proof descriptor ↔ upload
+  bytes)가 local-only로 확정돼 하위 작업 하나가 실제로 닫혔다. 다만 upload/Firestore create/token
+  발급/viewer는 그대로 열려 있고 작업축 6·7은 전혀 움직이지 않았으므로 상단 경계는 올리지 않았다.
+- 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
+  기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.

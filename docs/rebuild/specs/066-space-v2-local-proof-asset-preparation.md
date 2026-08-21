@@ -1,6 +1,6 @@
 # 스펙 066 — space V2 local proof asset preparation
 
-상태: **READY_FOR_CLAUDE / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 기준 HEAD: `3681cb9` (스펙 065 종료 및 HOLD 확인)
 
@@ -205,3 +205,55 @@ UID, SDK/thrown message를 오류·로그·UI에 넣지 않는다. 함수는 thr
 
 없음. 이번 단위는 GG-4=A의 승인된 경로·PNG·digest shape를 local immutable snapshot 경계로만
 구체화한다. full PNG decode, upload와 V2 발급은 후속 승인 대상이다.
+
+### DONE (Claude) — 2026-08-21
+
+구현 commit `9fee315` (계약 문서 commit `1ede90c`). 제품 변경은 정본 §3의 허용 2개 파일뿐이고
+package/lockfile/Rules/config diff는 **0**이다.
+
+- 신규 `apps/admin/src/space-v2/proof-asset-candidate.ts`
+  — `prepareSpaceV2ProofAssetCandidate(input, sha256)`
+- 신규 `apps/admin/src/space-v2/proof-asset-candidate.test.ts` — 55 tests
+
+구조:
+
+- I-1 admin local 모듈. `App.tsx`/route/barrel import 0, `@denn/spaces` 기존 dependency만 사용,
+  shared/spaces/firebase 제품 파일 무변경.
+- I-2 input은 enumerable own string key `assetId`/`pngBytes` 정확히 2개만 허용한다. `assetId`는
+  lowercase UUID v4만 받고 path 전체는 받지 않는다. `pngBytes`는 `Uint8Array`만 받고 **await 전에**
+  `new Uint8Array(pngBytes)`로 한 번 복사한다. SharedArrayBuffer view와 detached/empty view는 안전
+  실패다. UUID/random/Date 생성 0.
+- I-3 signature 8 bytes, 첫 chunk length 13, 첫 chunk type `IHDR`, IHDR width/height(1..2^31-1),
+  최소 33 bytes, 상한 20,971,519만 직접 확인한다. 외부 PNG parser dependency 0.
+  **이 성공은 full PNG decode를 증명하지 않는다** — CRC/chunk sequence/IDAT/IEND/browser decode는
+  NOT TESTED이고, 모듈 상단 주석과 unit 상단 주석에 그대로 적어 숨기지 않았다.
+- I-4 모든 검증 뒤에만 `sha256.digest()`를 정확히 1회 호출하고, port에는 보존 snapshot이 아니라
+  **별도 복사본**을 넘긴다. 결과가 `Uint8Array`가 아니거나 32 bytes가 아니면 안전 실패다. digest는
+  standard base64(URL-safe/hex 아님)다. `copyUploadBytes()`는 매번 새 `Uint8Array`를 반환한다.
+- I-5 오류는 `SPACE_V2_PROOF_INVALID_INPUT`/`_INVALID_PNG`/`_TOO_LARGE`/`_DIGEST_FAILED` 4개이고
+  실패 결과는 `{ok, code}`만 가진다. bytes/UUID/path/digest/PNG header 값/token/password/UID/email/
+  thrown message 0을 테스트로 고정했다. throw 0, 자동 retry/fallback 0.
+
+검증:
+
+- 신규 targeted unit **55/55**, space-v2(065+066) + `packages/spaces` 합계 **234/234**
+- admin typecheck PASS, `node scripts/check.mjs` **PASS**(unit **1805/1805**, 두 앱 build)
+- 전체 Chromium E2E **151/151**
+- 고객 entry `index-6js4DafP.js` **322,018 bytes** / SHA-256 `A9360EFF…E55E8159` — 기준 일치
+- admin entry `index-D0XOQpRL.js` **226,201 bytes** / SHA-256 `B6E90475…B3A1F1DC` — 기준 일치
+- admin CSS `index-DJ_z3tK1.css` **9,146 bytes**, `.transform`/`.italic`/rotate·skew scaffold **0건**
+- 두 앱 bundle 어디에도 `SPACE_V2_PROOF`/`prepareSpaceV2ProofAssetCandidate`/`rebuild-space-assets`
+  문자열 **0건**
+- `git diff --check` PASS, 변경 경로는 허용 2개 신규 파일뿐, package/lockfile/Rules/config diff 0
+- 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`/temp/debug 잔류 0
+
+테스트 신뢰성 확인(mutation): snapshot 복사를 없애면 "caller buffer 사후 변형" 테스트가, digest port
+전용 복사본을 없애면 "port가 인자를 변형" 테스트가 각각 실패한다. 거짓 통과가 아니다.
+
+SHA-256 fixed vector는 `node:crypto` createHash로 독립 계산한 값
+`qnSaWoyx47Xk9xTr2cXmRtN0swaEGgU6OmLPO5gnxIs=`이며, 주입한 Web Crypto port 결과와 일치한다.
+성공 descriptor가 스펙 065 issue projector의 proof input으로 실제 수용되는 것도 integration unit으로
+고정했다.
+
+계속 NOT IMPLEMENTED / NOT TESTED / 금지: 실제 upload·Firebase·network·UID·emulator·deploy,
+token/UUID 생성, encryption, Firestore create, viewer/UI/route 연결, full PNG decode/CRC 검증.
