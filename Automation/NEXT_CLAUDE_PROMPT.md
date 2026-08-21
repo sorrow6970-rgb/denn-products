@@ -1,22 +1,43 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-067-space-v2-local-document-encryption-candidate` — **CORRECTED ROUND 1 / LOCAL_ONLY / NO_NETWORK / NO_UI**
-completed_unit: `spec-066-space-v2-local-proof-asset-preparation` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: 계약 **`2107a72`** / 구현 **`35b7ffd`** / 보완 **`db61c7d`** (baseline `e4bcce9`).
-구현·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
-next_transition: **`CODEX_REVIEW`**
+상태: `READY_FOR_CLAUDE`
+active_unit: `spec-068-space-v2-local-issue-preparation-orchestrator` — **CONTRACT_READY / LOCAL_ONLY / NO_NETWORK / NO_UI**
+completed_unit: `spec-067-space-v2-local-document-encryption-candidate` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
+기준: HEAD=origin **`c8f54cf`**, ahead/behind **0/0**에서 스펙 067 보완을 독립 재검수했다.
+next_transition: **`CLAUDE_IMPLEMENTATION`**
 
 ## Claude Code 전달용 다음 지시문
 
 아래 문장을 Claude Code에 그대로 전달한다.
 
 ```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/067-space-v2-local-document-encryption-candidate.md의 CODEX REVIEW — CORRECTION_REQUIRED ROUND 1을 전부 읽고 C-1만 보완·검증해. 허용 제품 파일은 document-encryption-candidate.ts와 해당 test 두 개뿐이다. SHA/crypto method를 첫 await 전에 각각 한 번 snapshot·검증하고 always-defined SHA adapter로 verifier의 global Web Crypto fallback을 닫으며 malformed port와 method getter one-read 회귀를 추가해. 보호 대상과 기존 working tree 변경은 건드리지 말고 token/UUID, upload, Firestore create, 실제 Firebase/network/UI 또는 자동화로 확장하지 마. 보완 commit과 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를 READY_FOR_CODEX로 맞춘 뒤 전체 진행률·잔여율·변동 근거를 보고해.
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/068-space-v2-local-issue-preparation-orchestrator.md를 전부 읽고 스펙 068의 명시된 local-only 범위만 구현·검증해. 보호 대상과 기존 working tree 변경 및 기존 spec065~067 제품 파일은 건드리지 말고 token/UUID 생성, upload, Firestore create, 실제 Firebase/network 또는 UI로 확장하거나 자동화·반복 작업을 만들지 마. 완료 후 제품 commit과 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를 실제 상태에 맞춘 뒤 전체 리빌드 진행률·잔여율·변동 근거까지 보고해.
 ```
 
 앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
 Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
+
+## ★ 스펙 068 — 구현 계약 준비 / Claude Code 착수 대기
+
+정본 `docs/rebuild/specs/068-space-v2-local-issue-preparation-orchestrator.md`, handoff
+`docs/handoff/2026-08-21-spec-068-space-v2-local-issue-preparation-orchestrator-handoff.md`.
+
+기존 spec065 scene projector, 066 proof-byte candidate, 067 verified encryption candidate를 한 번의
+first-await snapshot-safe local 흐름으로 조합한다. 정상 순서는 proof SHA #1 → evidence SHA #2 → verify
+SHA #3 → encrypt #1이다. 성공 handle은 fresh descriptor/upload bytes/document copies만 제공한다.
+
+신규 admin non-UI module/unit 2개만 허용한다. token/UUID 생성, upload, Firestore create,
+Firebase/Rules/config/network, UI/viewer와 기존 065~067 제품 파일 변경은 0이다.
+
+현재 전체 리빌드 진행도는 **74~77% 완료 / 23~26% 잔여**다. 스펙 068은 계약만 준비돼 추가 상승은 없다.
+
+## ★ 스펙 067 — Codex 독립 재검수 통과 / DONE
+
+HEAD=origin `c8f54cf`에서 보완 `db61c7d`를 독립 재검토했다. 단일 71/71, 확대 305/305,
+unit 1876/1876, Chromium 151/151, check/bundle/diff/포트/temp 모두 PASS했고 일시 timeout은 재발하지
+않았다. C-1 해소, 추가 결함 0, 최종 `CODEX_PASSED / DONE`이다.
+
+token/UUID, upload, Firestore create, 실제 Firebase/network와 viewer/UI는 계속 금지다.
 
 ## ★ 스펙 067 보완 라운드 1 — 완료 / Codex 재검수 대기
 

@@ -20,7 +20,21 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 067 보완 라운드 1(C-1)이 완료됐다.**
+상태: **`READY_FOR_CLAUDE` - 스펙 068 local issue preparation orchestrator 계약이 준비됐다.**
+
+스펙 067 보완 `db61c7d`는 HEAD=origin `c8f54cf`에서 Codex 독립 재검수를 통과했다. 단일 71/71,
+확대 305/305, unit 1876/1876, Chromium 151/151과 check/bundle/diff/포트/temp가 모두 PASS했고 이전
+일시 timeout은 재발하지 않았다. C-1 해소, 추가 결함 0, 최종 **CODEX_PASSED / DONE**이다.
+
+다음 정본은 `docs/rebuild/specs/068-space-v2-local-issue-preparation-orchestrator.md`, handoff는
+`docs/handoff/2026-08-21-spec-068-space-v2-local-issue-preparation-orchestrator-handoff.md`다. 기존
+065 scene, 066 proof bytes, 067 encryption 경계를 한 first-await snapshot 흐름으로 조합한다. 허용 제품
+파일은 신규 admin module/unit 2개뿐이며 token/UUID, upload, Firestore create, Firebase/network/UI는 0이다.
+
+전체 리빌드 진행도는 **74~77% 완료 / 23~26% 잔여**다. 스펙 067 통과로 local encrypted-document
+chain이 닫힌 것을 반영했고, 스펙 068은 계약만 준비돼 추가 상승은 없다.
+
+> 이전 상태: **`DONE / CODEX_PASSED` - 스펙 067 local document encryption candidate.**
 
 보완 commit `db61c7d`. 허용 제품 파일 2개(`document-encryption-candidate.ts`와 해당 unit)만 변경했고
 호출 순서·오류 4개·금지 경계는 그대로다.

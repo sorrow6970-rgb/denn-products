@@ -4,24 +4,37 @@
 updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-066-space-v2-local-proof-asset-preparation   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-067-space-v2-local-document-encryption-candidate   # CORRECTED ROUND 1, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CODEX
-baseline_commit: e4bcce9   # spec 066 implementation record / Codex review baseline
-candidate_commit: db61c7d   # spec 067 correction round 1 (C-1 required injection)
-verified_commit: 9fee315   # spec 066 implementation, independently passed at e4bcce9
-origin_relation: "HEAD=origin after the spec 067 correction and record commits were fast-forward pushed; ahead/behind 0/0"
+completed_unit: spec-067-space-v2-local-document-encryption-candidate   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
+active_unit: spec-068-space-v2-local-issue-preparation-orchestrator   # CONTRACT_READY, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CLAUDE
+baseline_commit: c8f54cf   # spec 067 correction record / Codex review baseline
+candidate_commit: none
+verified_commit: db61c7d   # spec 067 correction, independently passed at c8f54cf
+origin_relation: "HEAD=origin c8f54cf before the local Codex closure/spec 068 documentation diff; ahead/behind 0/0"
 working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
-fix_round: 1   # C-1 corrected
+fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_REVIEW
+next_transition: CLAUDE_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 72-75% complete; 25-28% remaining to production cutover"
+overall_rebuild_progress: "estimated 74-77% complete; 23-26% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 067 Codex 통과 + 스펙 068 계약 준비 (2026-08-21)
+
+- 보완 `db61c7d` 독립 재검증: 단일 71/71, 확대 305/305, unit 1876/1876, Chromium 151/151,
+  check/bundle/diff/포트/temp PASS. 이전 일시 timeout은 재발하지 않았다.
+- C-1 required injection/global fallback 결함은 해소됐고 추가 결함 0. 스펙 067 최종
+  `CODEX_PASSED / DONE`.
+- 진행도는 local scene→proof→encrypted outer chain 완료를 반영해 **74~77% 완료 / 23~26% 잔여**로
+  확정한다.
+- 다음 스펙 068은 기존 065·066·067만 snapshot-safe하게 조합하는 local preparation orchestrator다.
+  신규 admin module/unit 2개만 허용하고 token/upload/Firestore/Firebase/UI는 0이다.
+- 계약 문서만 준비했으므로 추가 진행률 상승은 없다. 상태 `READY_FOR_CLAUDE`, 다음 transition
+  `CLAUDE_IMPLEMENTATION`.
 
 ## 스펙 067 보완 라운드 1 완료 (2026-08-21)
 

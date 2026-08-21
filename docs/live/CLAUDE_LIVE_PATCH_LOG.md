@@ -4955,3 +4955,27 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   작업축 6·7도 불변이다.
 - 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
   기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.
+
+## 2026-08-21(13) - 스펙 067 보완 라운드 1 Codex 독립 재검수 · CODEX_PASSED / DONE
+
+- HEAD=origin `c8f54cf`, ahead/behind 0/0에서 보완 `db61c7d`와 허용 제품 diff 2개를 독립 검토했다.
+- C-1 required injection 보완은 정확하다. SHA/crypto method one-read snapshot, callable 검증,
+  always-defined SHA adapter, receiver 보존으로 verifier global fallback이 닫혔다. 추가 결함 0.
+- 독립 게이트: 단일 **71/71**(288ms), 확대 **305/305**(363ms), `node scripts/check.mjs` PASS(unit
+  **1876/1876**), Chromium **151/151**, bundle identity/diff/포트/temp PASS. 이전 일시 timeout은 재발하지
+  않았다.
+- 스펙 067 최종 **CODEX_PASSED / DONE**. token/UUID, upload, Firestore create, Firebase/network와
+  viewer/UI는 계속 NOT IMPLEMENTED / 금지다.
+- 전체 리빌드 진행도는 **74~77% 완료 / 23~26% 잔여**로 확정한다. local encrypted-document chain
+  완료를 반영하며 작업축 6·7은 불변이다.
+
+## 2026-08-21(13) - 스펙 068 local issue preparation orchestrator 계약 · READY_FOR_CLAUDE
+
+- 정본 `docs/rebuild/specs/068-space-v2-local-issue-preparation-orchestrator.md`와 handoff를 작성했다.
+- 기존 065 scene, 066 proof bytes, 067 encrypted document 경계를 한 first-await snapshot-safe 흐름으로
+  조합한다. SHA 3회(proof/evidence/verify), encryption 1회이며 성공은 fresh copies만 반환한다.
+- 허용 제품 파일은 신규 admin module/unit 2개뿐이다. 기존 065~067 제품 파일, package/lockfile/CSS/
+  config/Firebase/Rules 변경과 token/UUID/upload/Firestore/network/UI는 0이다.
+- 진행도 **74~77% 완료 / 23~26% 잔여, 변동 없음**. 계약 문서만 준비했다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. NEXT 상단에 Claude 전달용 완성
+  지시문을 남겼다. 자동화·반복 작업 생성 0, 보호 대상 조작 0이다.

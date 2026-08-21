@@ -1,6 +1,6 @@
 # 스펙 067 — space V2 local document encryption candidate
 
-상태: **CORRECTED ROUND 1 / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 ## 1. 목표 (WHY)
 
@@ -296,3 +296,18 @@ mutation 확인: adapter를 없애고 raw `sha256`을 verifier에 다시 넘기�
 테스트 1건이 5s timeout으로 실패했다. 같은 파일을 곧바로 3회, 확대 범위를 2회 재실행했을 때는 모두
 PASS(단일 0.77~2.09s, 확대 3.0~3.6s)였고 이후 전체 check와 Chromium도 PASS다. 코드 변경 없이 재현되지
 않았으므로 원인은 파일 기록 직후의 로컬 I/O 정체로 판단한다. 재발하면 flaky 게이트로 보고한다.
+
+### CODEX RE-REVIEW — 2026-08-21
+
+최종 판정: **CODEX_PASSED / DONE**.
+
+- HEAD=origin `c8f54cf`, ahead/behind 0/0에서 보완 `db61c7d`를 독립 검토했다. 제품 diff는 허용된
+  `document-encryption-candidate.ts`와 해당 unit 두 파일뿐이다.
+- SHA/crypto method first-await 전 one-read snapshot, callable fail-closed, always-defined SHA adapter,
+  receiver 보존과 오류 매핑이 C-1 요구에 일치한다. verifier의 global fallback 경로는 닫혔다.
+- 독립 재검증: 단일 **71/71**(288ms), 확대 **305/305**(363ms), `node scripts/check.mjs` PASS(unit
+  **1876/1876**), 전체 Chromium **151/151**. 이전 일시 timeout은 독립 실행에서 재발하지 않았다.
+- bundle identity, `git diff --check ab465d5..HEAD`, 지정 포트/temp 잔류 0도 PASS다. 추가 결함 0.
+- token/UUID, upload, Firestore create, Firebase/Rules/network, viewer/UI는 계속 NOT IMPLEMENTED / 금지다.
+- 전체 리빌드 진행도는 스펙 067의 local encrypted-document chain 완료를 반영해 **74~77% 완료 /
+  23~26% 잔여**로 확정한다.

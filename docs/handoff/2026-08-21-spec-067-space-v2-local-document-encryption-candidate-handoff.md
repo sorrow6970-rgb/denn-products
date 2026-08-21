@@ -1,6 +1,6 @@
 # 스펙 067 space V2 local document encryption candidate handoff
 
-- 상태: `CORRECTION_REQUIRED / FIX_ROUND_1 / LOCAL_ONLY / NO_NETWORK / NO_UI`
+- 상태: `DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI`
 - 기준 HEAD=origin: `e4bcce9`, ahead/behind 0/0
 - 정본: `docs/rebuild/specs/067-space-v2-local-document-encryption-candidate.md`
 
@@ -31,3 +31,12 @@ candidate `35b7ffd`의 기능과 전체 게이트는 통과했지만, `sha256 ==
 허용 제품 파일 2개 안에서 SHA/crypto method를 첫 await 전에 각각 한 번 snapshot·검증하고,
 always-defined SHA adapter로 verifier default를 닫는다. malformed/throwing/revoked ports와 method getter
 one-read, global digest 0을 unit으로 고정한다. 상세 정본은 spec 067의 CODEX REVIEW 절이다.
+
+## 종료
+
+- 보완 `db61c7d`, 검수 HEAD=origin `c8f54cf`.
+- Codex 독립 재검증: 단일 71/71, 확대 305/305, unit 1876/1876, Chromium 151/151,
+  check/bundle/diff/포트/temp 모두 PASS. 일시 timeout은 재발하지 않았다.
+- C-1 해소, 추가 결함 0. 최종 `CODEX_PASSED / DONE`.
+- token/UUID, upload, Firestore create, Firebase/network와 viewer/UI는 계속 금지다.
+- 전체 진행도 **74~77% 완료 / 23~26% 잔여**.
