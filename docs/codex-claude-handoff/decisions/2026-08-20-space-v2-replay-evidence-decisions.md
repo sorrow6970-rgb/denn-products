@@ -3,7 +3,7 @@
 - 결정일: 2026-08-20
 - 기준 HEAD: `2b8424e` (스펙 063 종료)
 - 관련 스펙: `docs/rebuild/specs/064-space-v2-replay-evidence-investigation.md`
-- 상태: **APPROVED / FIRST LOCAL-ONLY CONTRACT IMPLEMENTED / READY_FOR_CODEX / NO NETWORK / NO UI**
+- 상태: **APPROVED / FIRST LOCAL-ONLY CONTRACT DONE / CODEX_PASSED / NO NETWORK / NO UI**
 
 ## 1. Founder 승인
 

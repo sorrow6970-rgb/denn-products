@@ -1,10 +1,54 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-064-space-v2-local-contract` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-completed_unit: `spec-063-space-v1-safe-viewer-ui` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK**
-기준: 스펙 063 종료 HEAD **`2b8424e`**
-next_transition: **`CODEX_REVIEW`**
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `none` — **다음 제품 단위 미선택 / 미승인**
+completed_unit: `spec-064-space-v2-local-contract` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
+검수 기준: HEAD=origin **`1f60bc5`**, ahead/behind **0/0**
+next_transition: **`NEXT_MANUAL_SPEC_SELECTION`**
+
+## ★ 현재 Claude Code 지시 — HOLD
+
+스펙 064는 Codex 독립 검수를 통과했다. 다음 제품 단위와 허용 파일이 아직 정해지지 않았으므로 제품
+코드·테스트·Rules·config·package/lockfile를 수정하지 않는다. 새 스펙을 추측해 시작하거나 issuer,
+Firebase adapter, Storage upload, Firestore create, viewer/UI 연결로 확장하지 않는다.
+
+사용자의 다음 수동 제품 지시와 Codex가 작성한 새 `docs/rebuild/specs/NNN-*.md`가 준비된 뒤에만 아래
+수동 시작 문구로 작업한다.
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 명시된 범위만 수행해. 보호 대상은 건드리지 말고 자동화는 만들지 마. 완료 후 STATE/NEXT/CURRENT/live log를 실제 상태와 맞추고 결과를 보고해.
+```
+
+복원된 순서:
+
+1. Claude Code가 승인된 스펙 범위만 구현·검증한다.
+2. Claude Code가 live log와 STATE/NEXT/CURRENT를 실제 상태에 맞춘다.
+3. Codex가 구현 diff와 게이트를 독립 검수한다.
+4. Codex가 판정 및 다음 Claude 프롬프트 문서를 남긴다.
+5. Claude Code는 그 문서를 읽고 다음 승인 단위만 수행한다.
+
+자동화·반복 작업은 만들지 않는다. Codex의 제품 코드 직접 수정도 중단됐다.
+
+### Claude Code 확인 기록 (2026-08-21)
+
+Claude Code가 이 문서를 읽고 HOLD를 준수했다. active_unit이 `none`이라 구현 범위가 없어 제품
+코드·테스트·Rules·config·package/lockfile을 변경하지 않았고, 새 스펙을 추측해 시작하지 않았다.
+기록 상태만 로컬 재확인했다 — HEAD=origin `1f60bc5`, ahead/behind 0/0, staged 0,
+`node scripts/check.mjs` PASS(unit 1696/1696), `vitest run packages/spaces` 125/125,
+고객 entry `index-6js4DafP.js` 322,018 bytes / 기준 SHA-256 일치, `git diff --check` PASS.
+전체 Chromium E2E는 이번 세션 제품 diff가 0이라 재실행하지 않았다. Codex 종료 문서만 commit·push
+했고 보호 대상 spec-018 PNG와 기존 Founder/user 변경은 그대로 뒀다.
+
+## ★ 스펙 064 — CODEX_PASSED / DONE
+
+- 구현 commit `0c5d6fa`, 기록·검수 기준 HEAD `1f60bc5`.
+- 허용 제품 diff 3개와 계약을 독립 대조했고 추가 결함 0.
+- targeted spaces **107/107**, spaces typecheck, 전체 check PASS(unit **1696/1696**), 전체 Chromium
+  **151/151**, `git diff --check` PASS.
+- 고객 entry `index-6js4DafP.js`, **322,018 bytes**, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
+- 실제 Firebase/network/UID/Rules/emulator/deploy, issuer/viewer/UI, upload/document create는 계속
+  **NOT IMPLEMENTED / NOT TESTED / 금지**다.
 
 ## ★ 스펙 064 — 첫 local-only space V2 replay evidence 구현 검수
 

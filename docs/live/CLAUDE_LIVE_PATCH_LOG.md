@@ -4589,3 +4589,47 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   upload/document create, V1 migration/orphan cleanup은 NOT IMPLEMENTED / NOT TESTED / 금지다.
 - 구현·계약 commit **`0c5d6fa`**. 상태 `READY_FOR_CODEX`; 기록 commit의 fast-forward push 뒤 독립
   검수를 기다린다.
+
+## 2026-08-21 - 스펙 064 독립 검수 통과 · 수동 Claude↔Codex 교대 루프 복원
+
+- HEAD=origin `1f60bc5`, ahead/behind 0/0에서 구현 commit `0c5d6fa`와 계약을 독립 검토했다.
+- 허용 제품 diff는 `packages/spaces/src/v2.ts`, `v2.test.ts`, `index.ts` 세 파일뿐이고 추가 결함 0이다.
+- targeted spaces **107/107**, spaces typecheck, `node scripts/check.mjs` PASS(unit **1696/1696**), 전체
+  Chromium **151/151**, `git diff --check` PASS를 독립 재현했다.
+- canonical vector의 별도 .NET SHA-256은
+  `9TMqpMGuEgpsbOQW8QfNdh/MysY0dDRPbDl4ODX7/mI=`로 구현·테스트와 일치했다.
+- 고객 entry `index-6js4DafP.js` **322,018 bytes**, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`; 스펙 063 기준과 동일하다.
+- 스펙 064 두 commit의 범위 밖 제품 diff 0, staged 0, 포트 4183/4184/4185/8080/9099/9199와 test
+  temp/debug 잔류 0이다. 기존 보호 대상 Founder/user working-tree 변경은 건드리지 않았다.
+- 최종 판정 **CODEX_PASSED / DONE**. 실제 Firebase/network/UID/Rules/emulator/deploy와
+  issuer/viewer/UI/upload/document create는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다.
+- 사용자의 최신 지시에 따라 임시 Codex 단독 구현 루프를 중단했다. 이후에는 **Claude Code 구현·검증
+  및 live log 기록 → Codex 독립 검수·재검증 → Codex 다음 스펙/프롬프트 작성 → Claude Code가 읽고
+  작업**하는 수동 교대 순서만 사용한다. 자동화·반복 작업은 만들지 않는다.
+- 다음 제품 단위는 아직 선택·승인되지 않았다. 상태는 `WAITING_FOR_NEXT_MANUAL_TASK`; 새 스펙을
+  추측해 시작하지 않는다.
+
+## 2026-08-21(2) - Claude Code 인계 확인 · 활성 단위 없음(HOLD) 재검증
+
+- `Automation/NEXT_CLAUDE_PROMPT.md`를 읽었다. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`,
+  active_unit `none`이므로 **구현 대상 스펙 범위가 없다**. 새 스펙을 추측해 시작하지 않았고 제품
+  코드·테스트·Rules·config·package/lockfile을 한 줄도 바꾸지 않았다.
+- 기록된 상태가 실제와 맞는지 로컬에서 독립 재확인했다.
+  - HEAD=origin `1f60bc5`, ahead/behind **0/0**, staged **0**.
+  - `node scripts/check.mjs` **PASS** (format, lint, 7개 프로젝트 typecheck, unit **1696/1696**,
+    mockup+admin build).
+  - `vitest run packages/spaces` **125/125** PASS (crypto 18 + index 2 + open 10 + read 26 +
+    v2 **69**). 기존 문서의 `107`은 crypto를 제외한 부분집합 수치이며, 전량 실행도 모두 통과했다.
+  - 고객 entry `apps/mockup/dist/assets/index-6js4DafP.js` **322,018 bytes**, SHA-256
+    `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159` - 기준과 일치.
+  - `git diff --check` PASS. working tree 제품 diff **0** (`packages/render/src/plan/index.ts`는
+    CRLF 표시만이고 내용 변경 0).
+- 전체 Chromium E2E는 재실행하지 않았다. 이번 세션의 제품 diff가 0이라 검수 통과 commit `1f60bc5`
+  대비 변경 무관성이 이미 증명되며, 재실행은 보호 대상 spec-018 PNG 두 개만 다시 쓴다.
+- Codex 종료 문서(STATE/NEXT/CURRENT/live log/스펙 064/decisions/handoff)만 commit·fast-forward
+  push 했다. 보호 대상 spec-018 PNG 두 개와 기존 Founder/user 변경(`AGENTS.md`,
+  `docs/rebuild/design/README.md`, `docs/rebuild/design/taste-v2/`,
+  `docs/rebuild/specs/038-page-design-prototype.md`)은 stage/commit/restore하지 않고 그대로 뒀다.
+- 상태는 계속 `WAITING_FOR_NEXT_MANUAL_TASK`다. 다음 제품 단위는 사용자의 수동 지시와 Codex의 새
+  `docs/rebuild/specs/NNN-*.md`가 나온 뒤에만 시작한다.

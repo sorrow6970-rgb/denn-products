@@ -1,6 +1,13 @@
 # 현재 상태
 
-> 작업 운영 규칙(2026-08-10 갱신): **자동 검수 루프는 삭제됐다. 앞으로는 수동 인수인계만 사용한다.**
+> 작업 운영 규칙(2026-08-21 갱신): **임시 Codex 단독 구현 루프를 중단하고 수동 교대 인수인계로
+> 복원했다.** Claude Code 구현·검증과 live log 기록 → Codex 독립 검수·재검증 → Codex 다음
+> 스펙/프롬프트 작성 → Claude Code가 읽고 작업하는 순서만 사용한다. Codex는 제품 코드를 직접
+> 수정하지 않으며 새 자동화나 반복 작업을 만들지 않는다.
+>
+> 새 단위는 사용자의 수동 지시와 Codex 스펙이 있을 때만 시작한다.
+>
+> 이전 규칙 요약: **자동 검수 루프는 삭제됐고 수동 인수인계만 사용한다.**
 > 새 자동화나 반복 작업을 만들지 않는다. 각 단위는 Founder의 명시적 지시로 시작하고,
 > 끝나면 `docs/live/CLAUDE_LIVE_PATCH_LOG.md` + `Automation/DENN_AUTOMATION_STATE.md` +
 > `Automation/NEXT_CLAUDE_PROMPT.md` + 이 문서를 실제 상태와 일치시킨다.
@@ -9,7 +16,27 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 064 첫 local-only V2 replay evidence 구현·검증이 완료됐다.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 064는 DONE / CODEX_PASSED이고 다음 제품 단위는
+아직 선택·승인되지 않았다.**
+
+Codex는 HEAD=origin `1f60bc5`에서 구현 commit `0c5d6fa`의 허용 제품 diff를 독립 검토했다. targeted
+spaces **107/107**, spaces typecheck, `node scripts/check.mjs` PASS(unit **1696/1696**), 전체 Chromium
+**151/151**, 고객 entry 기준 hash, `git diff --check`, 스펙 064 commit의 범위 밖 제품 diff 0,
+포트/temp 잔류 0을 확인했다. 기존 보호 대상 Founder/user working-tree 변경은 건드리지 않았다.
+추가 결함은 없어 스펙 064를 **CODEX_PASSED / DONE**으로 종료한다.
+
+실제 Firebase/network/UID/Rules/emulator/deploy, issuer/viewer/UI, upload/document create와 V1 migration은
+계속 **NOT IMPLEMENTED / NOT TESTED / 금지**다. GG-6은 첫 local-only 계약까지만 승인했으므로 다음
+구현은 별도 수동 지시와 새 스펙 전까지 시작하지 않는다.
+
+Claude Code는 2026-08-21에 `Automation/NEXT_CLAUDE_PROMPT.md`를 읽고 active_unit이 `none`임을
+확인해 **구현하지 않았다**(제품 diff 0). 기록된 상태만 로컬에서 재확인했다: HEAD=origin `1f60bc5`,
+ahead/behind 0/0, staged 0, `node scripts/check.mjs` PASS(unit 1696/1696),
+`vitest run packages/spaces` 125/125, 고객 entry `index-6js4DafP.js` 322,018 bytes 및 기준 SHA-256
+일치, `git diff --check` PASS. 전체 Chromium E2E는 제품 diff가 0이라 재실행하지 않았다.
+보호 대상 spec-018 PNG와 기존 Founder/user working-tree 변경은 건드리지 않았다.
+
+> 이전 상태: **`READY_FOR_CODEX` - 스펙 064 첫 local-only V2 replay evidence 구현·검증이 완료됐다.**
 
 정본 `docs/rebuild/specs/064-space-v2-replay-evidence-investigation.md`, Founder 결정
 `docs/codex-claude-handoff/decisions/2026-08-20-space-v2-replay-evidence-decisions.md`, handoff

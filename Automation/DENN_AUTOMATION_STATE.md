@@ -1,25 +1,47 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-08-20
+updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-063-space-v1-safe-viewer-ui   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK
-active_unit: spec-064-space-v2-local-contract   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CODEX
+completed_unit: spec-064-space-v2-local-contract   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
+active_unit: none   # next product unit has not been selected or approved
+state: WAITING_FOR_NEXT_MANUAL_TASK
 baseline_commit: 2b8424e   # spec 063 closure
 candidate_commit: 0c5d6fa   # spec 064 local V2 implementation + contract documents
-verified_commit: none   # independent Codex review pending
-origin_relation: "HEAD equals origin after the spec 064 record commit is fast-forward pushed"
-working_tree: "protected Founder/user changes only after the two explicit spec 064 commits"
+verified_commit: 1f60bc5   # independent Codex review completed at origin-equal HEAD
+origin_relation: "HEAD=origin=1f60bc5; ahead/behind 0/0 at Codex review completion"
+working_tree: "pre-existing protected Founder/user changes only after the Codex closure documents are committed; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_REVIEW
-automation_loop: removed (no new automation or recurring task is created)
-commit_owner: Codex (spec 064 approved local implementation and documents only)
+next_transition: NEXT_MANUAL_SPEC_SELECTION
+automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
+commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
 ```
+
+## 수동 교대 루프 복원 (2026-08-21)
+
+- 사용자의 최신 지시에 따라 임시 Codex 단독 구현·검증 루프를 중단했다.
+- 이후 순서는 **Claude Code 구현·검증 → Claude live log/STATE/NEXT/CURRENT 동기화 → Codex 독립
+  코드 검수·게이트 재검증 → Codex가 다음 스펙/프롬프트 문서 작성 → Claude Code가 읽고 작업**이다.
+- Codex는 제품 코드를 직접 수정하지 않는다. 새 자동화·반복 작업도 만들지 않는다.
+- 스펙 064는 독립 검수 결과 **CODEX_PASSED / DONE**이다. 다음 제품 단위는 아직 선택·승인되지
+  않았으므로 `WAITING_FOR_NEXT_MANUAL_TASK`에서 멈춘다.
+- GG-6은 첫 local-only 계약까지만 승인했다. issuer/Firebase/Rules/viewer/UI로의 후속 확장은 별도
+  수동 지시와 스펙 전까지 시작하지 않는다.
+
+## Claude Code 인계 확인 (2026-08-21)
+
+- Claude Code가 `Automation/NEXT_CLAUDE_PROMPT.md`를 읽었고 active_unit이 `none`이라 구현 대상
+  범위가 없음을 확인했다. 제품 코드/테스트/Rules/config/package/lockfile 변경 **0**.
+- 로컬 재검증: HEAD=origin `1f60bc5`, ahead/behind 0/0, staged 0, `node scripts/check.mjs` PASS
+  (unit 1696/1696), `vitest run packages/spaces` 125/125, 고객 entry `index-6js4DafP.js`
+  322,018 bytes / SHA-256 `A9360EFF...E55E8159` 일치, `git diff --check` PASS.
+- 전체 Chromium E2E는 이번 세션 제품 diff가 0이라 재실행하지 않았다(변경 무관성으로 대체).
+- 보호 대상 spec-018 PNG와 기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.
+- 상태는 `WAITING_FOR_NEXT_MANUAL_TASK` 유지. 다음 단위는 수동 지시 + 새 스펙 뒤에만 시작한다.
 
 ## 스펙 064 space V2 local replay evidence 계약 (2026-08-20)
 

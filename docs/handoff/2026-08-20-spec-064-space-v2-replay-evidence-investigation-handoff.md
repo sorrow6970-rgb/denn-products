@@ -1,6 +1,6 @@
 # 스펙 064 space V2 frame replay evidence 조사 handoff
 
-- 상태: `IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI`
+- 상태: `DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI`
 - 정본: `docs/rebuild/specs/064-space-v2-replay-evidence-investigation.md`
 - Founder 결정 정본:
   `docs/codex-claude-handoff/decisions/2026-08-20-space-v2-replay-evidence-decisions.md`
@@ -65,3 +65,12 @@ C6/room/gallery 확장, 신규 dependency는 계속 금지다.
 - 고객 entry `index-6js4DafP.js` **322,018 bytes**, SHA-256
   `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`로 기준과 동일하다.
 - Rules/Firebase/UID/issuer/viewer/UI/upload/emulator/deploy는 계속 미구현·미검증이다.
+
+## Codex 독립 검수 (2026-08-21)
+
+- 검수 기준 HEAD `1f60bc5`, 구현 commit `0c5d6fa`; 허용 제품 diff 3개와 계약을 독립 대조했고
+  추가 결함은 없었다.
+- targeted spaces unit **107/107**, spaces typecheck, 전체 check(unit **1696/1696**), 전체 Chromium
+  **151/151**, `git diff --check`, 고객 bundle 기준 hash, 포트/temp 잔류 0을 독립 확인했다.
+- 최종 판정은 **CODEX_PASSED / DONE**이다. 이는 Rules/Firebase/issuer/viewer/UI 또는 운영 연결 승인이
+  아니며, 다음 제품 단위는 별도 수동 지시와 스펙 전까지 시작하지 않는다.

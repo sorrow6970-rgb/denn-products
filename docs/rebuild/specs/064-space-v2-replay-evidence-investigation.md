@@ -1,6 +1,6 @@
 # 스펙 064 — space V2 frame replay evidence local 계약
 
-상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 기준 HEAD: `2b8424e` (스펙 063 종료)
 
@@ -394,3 +394,19 @@ GG-4/GG-5는 목표 방향만 승인됐다. 실제 Rules 변경·UID 값·emulat
 - 포트 4183/4184/4185/8080/9099/9199와 `denn-e2e-*` temp/debug log 잔류 0이다.
 - 실제 Firebase/network/project/bucket/object/UID, Rules/config/emulator/deploy, issuer/viewer/UI,
   upload/document create, V1 migration과 orphan cleanup은 **NOT IMPLEMENTED / NOT TESTED / 금지**다.
+
+### CODEX REVIEW (2026-08-21)
+
+- 검수 기준 HEAD `1f60bc5`에서 구현 commit `0c5d6fa`와 기록 commit을 독립 대조했다. 허용 제품 diff는
+  `packages/spaces/src/v2.ts`, `v2.test.ts`, `index.ts` 세 파일뿐이고 추가 결함은 없었다.
+- targeted spaces unit **107/107**, spaces typecheck, `node scripts/check.mjs` PASS(format/lint/all
+  typecheck/unit **1696/1696**/두 앱 build), 전체 Chromium E2E **151/151**을 독립 재현했다.
+- canonical vector를 별도 .NET SHA-256으로 계산한 값은
+  `9TMqpMGuEgpsbOQW8QfNdh/MysY0dDRPbDl4ODX7/mI=`로 구현·테스트와 일치했다.
+- 고객 entry는 `index-6js4DafP.js`, **322,018 bytes**, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`로 스펙 063 기준과 동일했다.
+- `git diff --check` PASS, staged diff 0, 스펙 064 두 commit의 범위 밖 제품 diff 0, 포트와 test
+  temp/debug 잔류 0, HEAD=origin 및 ahead/behind 0/0을 확인했다. 현재 working tree의 기존 보호 대상
+  Founder/user 변경은 검수·복원·stage하지 않았다.
+- 판정은 **CODEX_PASSED / DONE**이다. 실제 Firebase/network/UID/Rules/emulator/deploy와
+  issuer/viewer/UI/upload/document create는 계속 **NOT IMPLEMENTED / NOT TESTED / 금지**다.
