@@ -5,23 +5,35 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-067-space-v2-local-document-encryption-candidate   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-068-space-v2-local-issue-preparation-orchestrator   # CONTRACT_READY, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CLAUDE
+active_unit: spec-068-space-v2-local-issue-preparation-orchestrator   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CODEX
 baseline_commit: c8f54cf   # spec 067 correction record / Codex review baseline
-candidate_commit: none
+candidate_commit: 31ee0d7   # spec 068 local issue preparation orchestrator
 verified_commit: db61c7d   # spec 067 correction, independently passed at c8f54cf
-origin_relation: "HEAD=origin c8f54cf before the local Codex closure/spec 068 documentation diff; ahead/behind 0/0"
+origin_relation: "HEAD=origin after the spec 068 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
 working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_IMPLEMENTATION
+next_transition: CODEX_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 74-77% complete; 23-26% remaining to production cutover"
+overall_rebuild_progress: "estimated 76-79% complete; 21-24% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 068 구현 완료 (2026-08-21)
+
+- 계약 commit `160eca0`, 구현 commit `31ee0d7`. 허용 2개 신규 파일뿐이고 기존 065·066·067 제품 파일과
+  package/lockfile/CSS/config/Rules diff 0이다.
+- 순서 proof(SHA #1) → scene(SHA #2) → document(verify SHA #3 + encrypt #1). 모든 입력과 두 port
+  method를 첫 await 전에 snapshot하고 always-defined adapter를 세 단계가 공유한다.
+- 단계별 실패 code가 이후 호출을 0으로 막고, 성공 handle은 fresh copy 3종만 제공한다.
+- targeted 59/59, space-v2+spaces 364/364, admin typecheck, `node scripts/check.mjs` PASS
+  (unit 1935/1935), 전체 Chromium 151/151, bundle identity와 `git diff --check` PASS.
+- 진행도 76~79% / 잔여 21~24%(직전 74~77%에서 약 +2%p). 근거는 작업축 5의 local 준비 사슬 완성이며,
+  작업축 6·7 불변이라 상단은 79%를 넘기지 않았다.
 
 ## 스펙 067 Codex 통과 + 스펙 068 계약 준비 (2026-08-21)
 

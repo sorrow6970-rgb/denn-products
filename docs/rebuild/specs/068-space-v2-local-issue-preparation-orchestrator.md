@@ -1,6 +1,6 @@
 # 스펙 068 — space V2 local issue preparation orchestrator
 
-상태: **READY_FOR_CLAUDE / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 ## 1. 목표 (WHY)
 
@@ -179,3 +179,56 @@ snapshot + ports
 
 없음. 이 단위는 통과한 local 경계 세 개의 snapshot-safe 조합만 만든다. 실제 발급과 Firebase/UI는
 후속 별도 계약이다.
+
+### DONE (Claude) — 2026-08-21
+
+구현 commit `31ee0d7` (계약 문서 commit `160eca0`). 제품 변경은 §3 허용 2개 신규 파일뿐이고
+기존 065·066·067 제품 파일, package/lockfile/CSS/config/Firebase/Rules diff는 **0**이다.
+
+- 신규 `apps/admin/src/space-v2/issue-preparation.ts`
+  — `prepareSpaceV2LocalIssueCandidate(input, crypto, sha256)`
+- 신규 `apps/admin/src/space-v2/issue-preparation.test.ts` — 59 tests
+
+구현:
+
+- **4.2 first-await snapshot**: top-level 9개 exact key만 허용하고, selection/transform은 exact-key
+  plain snapshot, password는 이 시점에 non-empty string 검사, catalog는 `readLegacyCatalog`로 detached
+  canonical document를 만든다. 모두 첫 await 전이다.
+- SHA/crypto method를 첫 await 전에 각각 **한 번만** 읽어 callable 검증하고, receiver를 보존하는
+  **always-defined adapter**를 만들어 세 하위 단계 모두에 같은 adapter를 넘긴다. malformed port는
+  `INVALID_PORT`이고 global crypto 호출 0이다. crypto adapter의 `decryptJson`은 이 경계가 절대
+  복호화하지 않으므로 fail-closed stub이다.
+- `prepareSpaceV2ProofAssetCandidate`를 **첫 await 전에 호출**해 caller PNG bytes snapshot이 즉시
+  생기게 하고, 이후 raw `pngBytes`를 다시 읽지 않는다.
+- **4.3 단계 순서**: proof(SHA #1) → scene(SHA #2) → document(verify SHA #3 + encrypt #1).
+  proof 실패 → `PROOF_FAILED`(scene/document/encryption 0), scene 실패 → `SCENE_FAILED`
+  (document/encryption 0), document 실패 → `DOCUMENT_FAILED`. 하위 safe code·raw message·path를 밖으로
+  전달하지 않고 stage code만 반환한다. upload가 없으므로 어떤 실패도 Storage orphan을 만들 수 없다.
+- **4.4 성공 handle**: `copyProofDescriptor`/`copyUploadBytes`/`copyDocument` 세 method만 있고 매번
+  fresh detached 값을 준다(중첩 `enc`/descriptor 포함). token·plaintext scene·password·catalog·
+  selection·UID/email·timestamp는 없다.
+
+검증:
+
+- 신규 targeted **59/59**, space-v2(065·066·067·068) + `packages/spaces` **364/364**
+- admin typecheck PASS, `node scripts/check.mjs` **PASS**(unit **1935/1935**)
+- 전체 Chromium E2E **151/151**
+- 고객 entry `index-6js4DafP.js` **322,018 bytes** / `A9360EFF…E55E8159` — 기준 일치
+- admin entry `index-D0XOQpRL.js` **226,201 bytes** / `B6E90475…B3A1F1DC` — 기준 일치
+- admin CSS `index-DJ_z3tK1.css` **9,146 bytes**, unwanted utility **0**
+- 두 production bundle에 `SPACE_V2_PREPARATION`/`prepareSpaceV2LocalIssueCandidate`/
+  `issue-preparation` 문자열 **0건**
+- `git diff--check` PASS, 변경 경로는 허용 2개 신규 파일뿐, package/lockfile/Rules/config diff 0
+- 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`/temp/debug 잔류 0
+
+주요 회귀: SHA 3회/encrypt 1회 순서 고정, SHA #1은 exact PNG snapshot이고 #2·#3은 동일 canonical
+evidence bytes, 실제 `createSpaceCrypto` 복호화 scene의 `proofAsset`이 handle descriptor와 일치,
+deferred SHA gate로 Promise 반환 직후 catalog/selection/transform/password/assetId/pngBytes를 모두
+바꿔도 최초 snapshot만 사용, malformed port 7종 × 2 port에서 global digest 0, method getter one-read,
+class method-style port receiver 보존, 세 단계별 child failure가 이후 호출을 0으로 차단.
+
+mutation 확인: catalog detach를 raw caller catalog로 되돌리면 mid-flight 회귀가 실패한다.
+
+계속 NOT IMPLEMENTED / 금지: token/UUID 생성과 token↔asset ID 관계, PNG browser decode, Storage
+upload/read/delete와 orphan 처리, Firestore create/reconciliation, Firebase adapter/Rules/config/env,
+실제 UID·network·emulator·deploy, viewer/open composition과 UI/route.

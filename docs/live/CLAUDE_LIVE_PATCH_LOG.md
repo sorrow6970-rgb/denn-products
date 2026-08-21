@@ -4979,3 +4979,40 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 진행도 **74~77% 완료 / 23~26% 잔여, 변동 없음**. 계약 문서만 준비했다.
 - 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. NEXT 상단에 Claude 전달용 완성
   지시문을 남겼다. 자동화·반복 작업 생성 0, 보호 대상 조작 0이다.
+
+## 2026-08-21(13) - 스펙 068 local issue preparation orchestrator 구현·검증 · READY_FOR_CODEX
+
+- 계약 문서 commit `160eca0`, 구현 commit `31ee0d7`. 기준 HEAD=origin `c8f54cf`.
+- 제품 변경은 §3 허용 2개 신규 파일뿐이다: `apps/admin/src/space-v2/issue-preparation.ts`와 unit.
+  기존 065·066·067 제품 파일, package/lockfile/CSS/config/Firebase/Rules/`App.tsx`/UI diff **0**.
+- `prepareSpaceV2LocalIssueCandidate(input, crypto, sha256)`가 세 경계를 한 흐름으로 묶는다:
+  **proof(SHA #1) → scene(SHA #2) → document(verify SHA #3 + encrypt #1)**. 중복 evidence 검증은
+  의도적으로 유지했고 성능 이유로 생략하지 않았다.
+- 첫 await 전 snapshot: top-level 9개 exact key, selection/transform exact-key plain snapshot,
+  password non-empty 검사, catalog는 `readLegacyCatalog`로 detach, proof 단계도 첫 await 전에 호출해
+  PNG bytes 복사가 즉시 일어나게 했다. 이후 raw `pngBytes`를 다시 읽지 않는다.
+- SHA/crypto method는 각각 한 번만 읽어 callable 검증 후 receiver 보존 always-defined adapter로 감싸
+  세 하위 단계에 동일하게 전달한다 → 어떤 child도 global Web Crypto default로 떨어질 수 없다.
+  malformed port는 `INVALID_PORT`. crypto adapter의 `decryptJson`은 fail-closed stub이다(복호화 0).
+- 실패는 단계별 `PROOF_FAILED`/`SCENE_FAILED`/`DOCUMENT_FAILED`이고 이후 단계 호출이 정확히 0이다.
+  하위 code·raw message·path를 밖으로 전달하지 않는다. upload가 없어 어떤 실패도 Storage orphan을
+  만들지 않는다.
+- 성공 handle은 `copyProofDescriptor`/`copyUploadBytes`/`copyDocument` 세 method만 있고 매번 fresh
+  detached 값을 준다. token·plaintext scene·password·catalog·selection·UID·timestamp 없음.
+- 게이트: targeted **59/59**, space-v2+spaces **364/364**, admin typecheck,
+  `node scripts/check.mjs` PASS(unit **1935/1935**), 전체 Chromium **151/151**, `git diff --check` PASS,
+  포트 LISTENING 0, temp/debug 잔류 0.
+- bundle identity 유지: 고객 `index-6js4DafP.js` **322,018 bytes**, admin `index-D0XOQpRL.js`
+  **226,201 bytes**, admin CSS **9,146 bytes**(unwanted 0). 두 bundle에 spec 068 식별자 0건.
+- 회귀 핵심: SHA #1=exact PNG snapshot, #2=#3=canonical evidence bytes, 실제 `createSpaceCrypto`
+  복호화 scene의 `proofAsset`이 handle descriptor와 일치, deferred SHA gate로 Promise 반환 직후 모든
+  caller 입력을 바꿔도 최초 snapshot만 사용, malformed port 7종×2, method getter one-read,
+  class receiver 보존, 단계별 child failure 차단. mutation: catalog detach를 되돌리면 mid-flight
+  회귀가 실패한다.
+- **전체 리빌드 진행도: 76~79% 진행 / 21~24% 잔여.** 직전 74~77%에서 약 +2%p.
+  근거: 작업축 5(space 링크)에서 **local 준비 사슬이 완성**됐다 — catalog/PNG/입력 snapshot →
+  proof descriptor+bytes → strict scene → 검증된 암호화 document까지 한 호출로 이어지고, upload
+  adapter가 받을 immutable handle 형태까지 확정됐다. 남은 것은 token 발급·Storage upload·Firestore
+  create·viewer/UI 연결이며 작업축 6·7은 이번에도 전혀 움직이지 않아 상단은 79%를 넘기지 않았다.
+- 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
+  기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.

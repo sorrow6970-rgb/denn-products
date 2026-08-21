@@ -1,10 +1,11 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-068-space-v2-local-issue-preparation-orchestrator` — **CONTRACT_READY / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-068-space-v2-local-issue-preparation-orchestrator` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-067-space-v2-local-document-encryption-candidate` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: HEAD=origin **`c8f54cf`**, ahead/behind **0/0**에서 스펙 067 보완을 독립 재검수했다.
-next_transition: **`CLAUDE_IMPLEMENTATION`**
+기준: 계약 **`160eca0`** / 구현 **`31ee0d7`** (baseline `c8f54cf`).
+구현·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
+next_transition: **`CODEX_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
@@ -17,7 +18,32 @@ C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/spe
 앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
 Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
 
-## ★ 스펙 068 — 구현 계약 준비 / Claude Code 착수 대기
+## ★ 스펙 068 — 구현 완료 / Codex 독립 검수 대기
+
+계약 commit `160eca0`, 구현 commit `31ee0d7`. 제품 변경은 허용 2개 신규 파일뿐이고 기존 065·066·067
+제품 파일, package/lockfile/CSS/config/Firebase/Rules/`App.tsx`/UI diff는 **0**이다.
+
+- 순서 **proof(SHA #1) → scene(SHA #2) → document(verify SHA #3 + encrypt #1)**. 중복 evidence 검증은
+  의도적으로 유지했다.
+- 첫 await 전 snapshot: 9개 exact key, selection/transform exact-key snapshot, password non-empty,
+  catalog `readLegacyCatalog` detach, proof 단계 호출로 PNG bytes 즉시 복사(이후 raw bytes 재read 0).
+- SHA/crypto method 각 1회 read + callable 검증 → receiver 보존 always-defined adapter를 세 단계가
+  공유(global crypto fallback 0). malformed port는 `INVALID_PORT`, crypto adapter의 `decryptJson`은
+  fail-closed stub이다.
+- 단계별 `PROOF_FAILED`/`SCENE_FAILED`/`DOCUMENT_FAILED`가 이후 호출을 0으로 막고 하위 code·message·
+  path를 노출하지 않는다. upload가 없어 Storage orphan 가능성 0.
+- 성공 handle은 `copyProofDescriptor`/`copyUploadBytes`/`copyDocument` fresh copy 3종만 제공한다.
+
+게이트: targeted **59/59**, space-v2+spaces **364/364**, admin typecheck, `node scripts/check.mjs`
+PASS(unit **1935/1935**), 전체 Chromium **151/151**, `git diff --check` PASS, 포트/temp 잔류 0.
+bundle identity 유지 — admin **226,201** / CSS **9,146** / 고객 **322,018**, 두 bundle에 spec 068
+식별자 0건.
+
+진행도 보고: **76~79% 진행 / 21~24% 잔여**(직전 74~77%에서 약 +2%p).
+
+다음은 Codex 독립 검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+
+## 스펙 068 원래 구현 계약 (기록)
 
 정본 `docs/rebuild/specs/068-space-v2-local-issue-preparation-orchestrator.md`, handoff
 `docs/handoff/2026-08-21-spec-068-space-v2-local-issue-preparation-orchestrator-handoff.md`.
@@ -29,7 +55,8 @@ SHA #3 → encrypt #1이다. 성공 handle은 fresh descriptor/upload bytes/docu
 신규 admin non-UI module/unit 2개만 허용한다. token/UUID 생성, upload, Firestore create,
 Firebase/Rules/config/network, UI/viewer와 기존 065~067 제품 파일 변경은 0이다.
 
-현재 전체 리빌드 진행도는 **74~77% 완료 / 23~26% 잔여**다. 스펙 068은 계약만 준비돼 추가 상승은 없다.
+현재 전체 리빌드 진행도는 **76~79% 완료 / 21~24% 잔여**다. 스펙 068 구현으로 작업축 5의 local
+준비 사슬이 완성돼 약 +2%p 올랐고, 작업축 6·7이 불변이라 상단은 79%를 넘기지 않았다.
 
 ## ★ 스펙 067 — Codex 독립 재검수 통과 / DONE
 
