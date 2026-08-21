@@ -4,17 +4,17 @@
 updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-069-space-v2-local-issue-token-candidate   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-070-space-v2-local-web-crypto-uuid-adapter   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CODEX
-baseline_commit: 020402c   # spec 069 implementation record / Codex review baseline
-candidate_commit: ff3c59a   # spec 070 local Web Crypto UUID adapter
-verified_commit: e5261a2   # spec 069 local issue token candidate, independently passed at 020402c
-origin_relation: "HEAD=origin after the spec 070 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
-working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
+completed_unit: spec-070-space-v2-local-web-crypto-uuid-adapter   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
+active_unit: spec-071-space-v2-local-issue-identity-pair   # CONTRACT READY, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CLAUDE
+baseline_commit: 3e0a91a   # spec 070 implementation record / Codex review baseline
+candidate_commit: null
+verified_commit: ff3c59a   # spec 070 local Web Crypto UUID adapter, independently passed at 3e0a91a
+origin_relation: "HEAD=origin at 3e0a91a before the uncommitted Codex spec 070 closure, HH-1 decision and spec 071 contract documents; ahead/behind 0/0"
+working_tree: "Codex review/decision/spec/handoff documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_REVIEW
+next_transition: CLAUDE_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,31 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 76-79% complete; 21-24% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Founder HH-1=A 승인 + 스펙 071 계약 준비 (2026-08-21)
+
+- Founder가 public link token과 proof object `assetId`를 독립 UUID 두 개로 만드는 `HH-1=A`를 승인했다.
+  둘이 같으면 collision으로 fail-closed하고 자동 retry하지 않는다.
+- 결정 정본 `docs/codex-claude-handoff/decisions/2026-08-21-space-v2-issue-identity-decisions.md`,
+  스펙 `docs/rebuild/specs/071-space-v2-local-issue-identity-pair.md`, 관련 handoff를 작성했다.
+- 스펙 071은 기존 UUID port를 두 번 순차 사용해 local identity pair만 만든다. 신규 admin local module/unit
+  2개 외 제품 변경은 허용하지 않으며 스펙 068 preparation 조합, upload, Firestore create, 실제 Firebase/
+  Rules/network/emulator/deploy와 UI는 계속 금지다.
+- 전체 리빌드 진행도는 **76~79% 완료 / 21~24% 잔여로 변동 없음**이다. 이번 변경은 결정·계약
+  문서화이며 제품 작업축 완료량은 증가하지 않았다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`.
+
+## 스펙 070 Codex 통과 + Founder HH-1 결정 대기 (2026-08-21)
+
+- HEAD=origin `3e0a91a`에서 구현 `ff3c59a`를 독립 검토했다. 허용 제품 diff 2개가 정확하고 추가 결함 0,
+  최종 `CODEX_PASSED / DONE`이다.
+- 독립 게이트: targeted 21/21, space-v2+spaces 426/426, `node scripts/check.mjs` PASS(unit 1997/1997),
+  Chromium 151/151, bundle identity, diff/포트/temp PASS.
+- 다음 local issue 조합은 token과 proof asset UUID의 관계를 결정해야 한다. 기존 스펙이 의도적으로
+  보류한 구조 결정이므로 `HH-1` Founder 선택 전 새 제품 스펙을 열지 않는다.
+- 진행도는 **76~79% 완료 / 21~24% 잔여로 변동 없음**이다. source adapter만 확정됐고 실제 발급
+  조합·upload·create와 작업축 6·7은 불변이다.
+- 상태 `FOUNDER_DECISION_REQUIRED`, 다음 transition `FOUNDER_HH_1_DECISION`.
 
 ## 스펙 070 구현 완료 (2026-08-21)
 

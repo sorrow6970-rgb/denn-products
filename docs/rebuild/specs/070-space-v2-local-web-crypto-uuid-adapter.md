@@ -1,6 +1,6 @@
 # 스펙 070 — space V2 local Web Crypto UUID adapter
 
-상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 ## 1. 목표 (WHY)
 
@@ -176,3 +176,18 @@ mutation 확인: 미지정 판정을 `source ?? global`로 바꾸면 2건, recei
 계속 NOT IMPLEMENTED / 금지: token↔assetId 관계와 asset UUID 생성, 스펙 068/069 제품 변경과 issue
 bundle orchestration, Storage upload/read/delete, Firestore create/reconciliation, URL/link 발급,
 Firebase adapter/Rules/config/env, 실제 UID·network·emulator·deploy, viewer/UI/route.
+
+### CODEX REVIEW (2026-08-21)
+
+- HEAD=origin `3e0a91a`에서 구현 `ff3c59a`와 기록을 독립 검토했다. 기준 `020402c` 이후 제품 diff는
+  허용 신규 module/unit 2개뿐이고 기존 064~069 제품 파일과 package/lockfile/Rules/config/UI diff는 0이다.
+- source method one-read, callable 검증, 명시 malformed source의 global fallback 차단, receiver 보존과
+  spec 069 단일 소유 오류·형식 경계를 대조했다. Web Crypto 선택이 난수 품질·충돌 부재를 증명하지
+  않는다는 한계도 유지됐다. 추가 결함은 없다.
+- targeted **21/21**, space-v2+spaces **426/426**, `node scripts/check.mjs` PASS(unit **1997/1997**),
+  전체 Chromium **151/151**을 독립 재현했다.
+- 고객 entry **322,018 bytes** / `A9360EFF…E55E8159`, admin entry **226,201 bytes** /
+  `B6E90475…A1F1DC`, admin CSS **9,146 bytes**가 기준과 일치하고 production bundle 신규 식별자는 0이다.
+  `git diff --check`, exact product paths, 포트/temp 잔류 0, staged 0, ahead/behind 0/0을 확인했다.
+- 판정은 **CODEX_PASSED / DONE**이다. 이후 Founder가 `HH-1=A`(token과 assetId의 독립 UUID)를
+  승인했고 후속 구현은 별도 스펙 071 local-only 계약으로 분리했다.

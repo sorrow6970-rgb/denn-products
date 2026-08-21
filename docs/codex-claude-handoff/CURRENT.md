@@ -20,9 +20,27 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 070 local Web Crypto UUID adapter 구현·검증이 완료됐다.**
+상태: **`READY_FOR_CLAUDE` - HH-1=A가 승인됐고 스펙 071 local issue identity pair 계약이 준비됐다.**
 
-계약 문서 commit `53d115c`(Codex 종료·계약 선반영), 구현 commit `ff3c59a`. 제품 변경은 허용 2개 신규
+Founder는 token과 proof `assetId`를 독립 UUID 두 개로 만드는 `HH-1=A`를 승인했다. 결정 정본은
+`docs/codex-claude-handoff/decisions/2026-08-21-space-v2-issue-identity-decisions.md`, 구현 계약은
+`docs/rebuild/specs/071-space-v2-local-issue-identity-pair.md`, handoff는
+`docs/handoff/2026-08-21-spec-071-space-v2-local-issue-identity-pair-handoff.md`다.
+
+스펙 071은 기존 UUID port를 순서대로 두 번 사용해 assetId와 token을 각각 한 번 생성한다. 첫 실패는
+두 번째 호출 0, 두 번째 실패는 총 2회에서 중단하며, 두 값이 같으면 명시 collision으로 닫고 자동
+retry하지 않는다. 허용 제품 파일은 신규 `issue-identity-pair.ts`와 unit뿐이다. 기존 spec064~070
+제품 파일, 스펙 068 preparation 조합, upload, Firestore create, 실제 Firebase/Rules/network/emulator/
+deploy와 UI는 계약상 계속 닫혀 있다.
+
+전체 리빌드 진행도는 **76~79% 진행 / 21~24% 잔여로 변동 없다**. HH-1 결정과 계약만 준비됐고
+제품 작업축 완료량은 아직 증가하지 않았다. 다음 transition은 `CLAUDE_IMPLEMENTATION`이다.
+
+> 이전 상태: **`FOUNDER_DECISION_REQUIRED` - 스펙 070은 CODEX_PASSED, token↔assetId `HH-1` 결정을 기다렸다.**
+
+## 스펙 070 종료 기록
+
+스펙 070 계약 문서 commit `53d115c`, 구현 commit `ff3c59a`, 검수 기준 HEAD=origin `3e0a91a`다. 제품 변경은 허용 2개 신규
 파일(`apps/admin/src/space-v2/issue-uuid-adapter.ts`와 unit)뿐이고 기존 064~069 제품 파일,
 package/lockfile/CSS/config/Rules/`App.tsx`/UI diff는 0이다.
 
@@ -35,13 +53,16 @@ factory 호출당 한 번만 읽어 callable 검증하고 원 source receiver로
 ★ 범위 한계: Web Crypto를 source로 고른 것은 난수 품질·충돌 부재의 증명이 아니다. 통합 테스트는 실제
 값 한 건이 strict 형식을 통과함만 확인하고 분포·entropy를 추정하지 않는다.
 
-게이트: targeted 21/21, space-v2+spaces 426/426, admin typecheck, `node scripts/check.mjs` PASS
+Codex 독립 게이트: targeted 21/21, space-v2+spaces 426/426, `node scripts/check.mjs` PASS
 (unit 1997/1997), 전체 Chromium 151/151, `git diff --check` PASS, 포트/temp 잔류 0. admin/고객 entry와
-admin CSS 9,146 bytes는 기준과 동일하고 두 bundle에 spec 070 식별자는 0건이다.
+admin CSS 9,146 bytes는 기준과 동일하고 두 bundle에 spec 070 식별자는 0건이다. 추가 결함 0,
+최종 판정은 **`CODEX_PASSED / DONE`**이다.
 
-전체 리빌드 진행도는 **76~79% 진행 / 21~24% 잔여로 변동 없다**. 이번 단위는 이미 열린 token 형식
-경계에 source를 명시하는 얇은 adapter뿐이고 token↔assetId 관계·issue bundle·upload·Firestore create는
-계약상 닫혀 있어 작업축 5의 잔여가 줄지 않았으며 작업축 6·7도 불변이다.
+후속 `HH-1=A` 승인으로 public link token과 proof object `assetId`는 독립 UUID 두 개로 확정됐다.
+구현은 별도 스펙 071 범위에서만 진행한다.
+
+전체 리빌드 진행도는 **76~79% 진행 / 21~24% 잔여로 변동 없다**. source adapter는 확정됐지만
+token↔assetId 관계·issue bundle·upload·Firestore create는 그대로 닫혀 있고 작업축 6·7도 불변이다.
 
 > 이전 상태: **`READY_FOR_CLAUDE` - 스펙 070 계약이 준비됐다.**
 
