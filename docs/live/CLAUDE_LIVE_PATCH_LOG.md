@@ -5041,3 +5041,30 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   작업축 6·7은 움직이지 않았다.
 - 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. NEXT 상단에 Claude Code 전달용
   완성 지시문을 갱신했다. 자동화·반복 작업 생성 0, 보호 대상 조작 0, staged 0이다.
+
+## 2026-08-21(14) - 스펙 069 local issue token candidate 구현·검증 · READY_FOR_CODEX
+
+- Codex 종료·계약 문서를 먼저 fast-forward 문서 commit `361b1d3`으로 push한 뒤 착수했다.
+  구현 commit `e5261a2`. 기준 HEAD=origin `215af5b`.
+- 제품 변경은 §3 허용 2개 신규 파일뿐이다: `apps/admin/src/space-v2/issue-token-candidate.ts`와 unit.
+  기존 064~068 제품 파일, package/lockfile/CSS/config/Firebase/Rules/`App.tsx`/UI diff **0**.
+- `createSpaceV2IssueTokenCandidate(uuid)`는 주입 port의 `randomUUID`를 **한 번만 읽어** callable
+  검증하고 원 receiver로 **최대 한 번** 호출한다. 성공은 lowercase RFC 4122 UUID v4 형식만이며
+  trim/lowercase 변환·기본값·collision retry·global random fallback이 모두 0이다.
+- 오류 3개: `INVALID_PORT`(missing/null/primitive/non-function/throwing getter/revoked proxy,
+  method 호출 0) / `GENERATION_FAILED`(method throw, 재시도 0) / `INVALID_OUTPUT`(non-string 또는
+  형식 불일치). 실패 결과는 `{ok, code}`뿐이고 원문 후보·token·UID/email·message·stack 0이다.
+- ★ **범위 한계(숨기지 않음)**: UUID v4 형식 검증은 난수 품질이나 충돌 부재를 증명하지 않는다.
+  실제 generator의 신뢰 근원은 이후 adapter 계약에서 별도로 검토한다. module·unit 상단 주석에도
+  동일하게 적었다.
+- 게이트: targeted **41/41**, space-v2+spaces **405/405**, admin typecheck,
+  `node scripts/check.mjs` PASS(unit **1976/1976**), 전체 Chromium **151/151**, `git diff --check` PASS,
+  포트 LISTENING 0, temp/debug 잔류 0. bundle identity 유지(admin **226,201** / CSS **9,146** /
+  고객 **322,018**), 두 bundle에 spec 069 식별자 0건.
+- mutation 확인: 형식 정규식을 느슨한 UUID로 바꾸면 8건이 실패한다(거짓 통과 아님).
+- **전체 리빌드 진행도: 76~79% 진행 / 21~24% 잔여 — 변동 없음.** 근거: 이번 단위는 승인된 token
+  형식의 **생성 결과 검증 경계 하나**만 여는 최소 단위이고, token↔assetId 관계·스펙 068 조합·실제
+  발급/upload/Firestore create는 계약상 여전히 닫혀 있다. 작업축 5의 잔여(발급 조합·upload·create·
+  viewer)가 실질적으로 줄지 않았고 작업축 6·7도 불변이라 범위를 올릴 근거가 없다.
+- 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상과
+  기존 Founder/user working-tree 변경은 stage/commit/restore하지 않았다.

@@ -1,11 +1,11 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-069-space-v2-local-issue-token-candidate` — **CONTRACT READY / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-069-space-v2-local-issue-token-candidate` — **IMPLEMENTED / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-068-space-v2-local-issue-preparation-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: HEAD=origin **`215af5b`**, ahead/behind **0/0**. 스펙 068 구현 **`31ee0d7`**.
-Codex 종료·다음 계약 문서는 아직 working tree에 있고 staged 0이다.
-next_transition: **`CLAUDE_IMPLEMENTATION`**
+기준: 문서 **`361b1d3`** / 구현 **`e5261a2`** (baseline `215af5b`).
+구현·기록 commit을 fast-forward push했고 HEAD=origin, ahead/behind **0/0**이다.
+next_transition: **`CODEX_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
@@ -18,7 +18,30 @@ C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/spe
 앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
 Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
 
-## ★ 스펙 069 — local issue token candidate 계약 준비
+## ★ 스펙 069 — 구현 완료 / Codex 독립 검수 대기
+
+문서 commit `361b1d3`(Codex 종료·계약 선반영), 구현 commit `e5261a2`. 제품 변경은 허용 2개 신규
+파일뿐이고 기존 064~068 제품 파일, package/lockfile/CSS/config/Firebase/Rules/UI diff는 **0**이다.
+
+- 주입 UUID port의 `randomUUID`를 **1회 read + callable 검증**, 원 receiver로 **최대 1회 호출**.
+- 성공은 lowercase RFC 4122 UUID v4 형식만. trim/lowercase repair·기본값·collision retry·global
+  `crypto.randomUUID`/`getRandomValues`/`Math.random` fallback 모두 **0**.
+- 오류 3개: `INVALID_PORT`(method 호출 0) / `GENERATION_FAILED`(재시도 0) / `INVALID_OUTPUT`.
+  실패 결과는 `{ok, code}`뿐이고 원문 후보·token·UID/email·message·stack 0.
+- ★ 범위 한계: 형식 검증일 뿐 **난수 품질·충돌 부재는 증명하지 않는다**(후속 adapter 계약).
+- token↔assetId 관계, 스펙 068 조합, upload, Firestore create, URL 발급은 그대로 닫혀 있다.
+
+게이트: targeted **41/41**, space-v2+spaces **405/405**, admin typecheck, `node scripts/check.mjs`
+PASS(unit **1976/1976**), 전체 Chromium **151/151**, `git diff --check` PASS, 포트/temp 잔류 0.
+bundle identity 유지 — admin **226,201** / CSS **9,146** / 고객 **322,018**, 두 bundle에 spec 069
+식별자 0건. mutation: 형식 정규식을 느슨하게 바꾸면 8건이 실패한다.
+
+진행도 보고: **76~79% 진행 / 21~24% 잔여 — 변동 없음**(형식 경계 하나만 열렸고 발급 조합·upload·
+create는 닫힘, 작업축 6·7 불변).
+
+다음은 Codex 독립 검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+
+## 스펙 069 원래 계약 요약 (기록)
 
 정본 `docs/rebuild/specs/069-space-v2-local-issue-token-candidate.md`, handoff
 `docs/handoff/2026-08-21-spec-069-space-v2-local-issue-token-candidate-handoff.md`.

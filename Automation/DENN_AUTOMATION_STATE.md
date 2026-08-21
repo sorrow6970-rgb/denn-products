@@ -5,16 +5,16 @@ updated_at: 2026-08-21
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-068-space-v2-local-issue-preparation-orchestrator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-069-space-v2-local-issue-token-candidate   # CONTRACT READY, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CLAUDE
+active_unit: spec-069-space-v2-local-issue-token-candidate   # IMPLEMENTED, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CODEX
 baseline_commit: 215af5b   # spec 068 implementation record / Codex review baseline
-candidate_commit: null
+candidate_commit: e5261a2   # spec 069 local issue token candidate
 verified_commit: 31ee0d7   # spec 068 local issue preparation orchestrator, independently passed at 215af5b
-origin_relation: "HEAD=origin at 215af5b before the uncommitted Codex spec 068 closure and spec 069 handoff documents; ahead/behind 0/0"
-working_tree: "Codex review/handoff documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
+origin_relation: "HEAD=origin after the spec 069 contract, implementation and record commits were fast-forward pushed; ahead/behind 0/0"
+working_tree: "pre-existing protected Founder/user changes plus the spec-018 PNGs the E2E run rewrote; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_IMPLEMENTATION
+next_transition: CODEX_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,18 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 76-79% complete; 21-24% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 069 구현 완료 (2026-08-21)
+
+- 계약 commit `361b1d3`, 구현 commit `e5261a2`. 허용 2개 신규 파일뿐이고 기존 064~068 제품 파일과
+  package/lockfile/CSS/config/Rules diff 0이다.
+- 주입 UUID port의 method를 1회 read + callable 검증, 원 receiver로 최대 1회 호출. lowercase UUID v4
+  형식만 성공이며 trim/lowercase repair·retry·global random fallback 0.
+- 오류 3개(INVALID_PORT / GENERATION_FAILED / INVALID_OUTPUT), 실패 결과는 `{ok, code}`뿐.
+- 범위 한계: 형식 검증일 뿐 난수 품질·충돌 부재는 NOT PROVEN(후속 adapter 계약).
+- targeted 41/41, space-v2+spaces 405/405, admin typecheck, `node scripts/check.mjs` PASS
+  (unit 1976/1976), 전체 Chromium 151/151, bundle identity와 `git diff --check` PASS.
+- 진행도 76~79% / 잔여 21~24% — 변동 없음(형식 경계 하나만 열렸고 발급 조합·upload·create는 닫힘).
 
 ## 스펙 068 Codex 통과 + 스펙 069 계약 준비 (2026-08-21)
 

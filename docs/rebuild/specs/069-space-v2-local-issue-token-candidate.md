@@ -1,6 +1,6 @@
 # 스펙 069 — space V2 local issue token candidate
 
-상태: **READY_FOR_CLAUDE / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI**
 
 ## 1. 목표 (WHY)
 
@@ -136,3 +136,48 @@ function createSpaceV2IssueTokenCandidate(
 ### QUESTIONS
 
 없음. 승인된 새 UUID token의 local 생성 결과 검증만 분리하며 실제 발급 조합은 후속 계약이다.
+
+### DONE (Claude) — 2026-08-21
+
+구현 commit `e5261a2` (계약 문서 commit `361b1d3`). 제품 변경은 §3 허용 2개 신규 파일뿐이고 기존
+064~068 제품 파일, package/lockfile/CSS/config/Firebase/Rules diff는 **0**이다.
+
+- 신규 `apps/admin/src/space-v2/issue-token-candidate.ts`
+  — `createSpaceV2IssueTokenCandidate(uuid)` (동기 함수, 정본 §4.1 이름 그대로)
+- 신규 `apps/admin/src/space-v2/issue-token-candidate.test.ts` — 41 tests
+
+구현:
+
+- **4.2 port**: `uuid.randomUUID`를 정확히 한 번 읽어 callable 검증하고, 원 receiver로
+  (`.call(uuid)`) 최대 한 번 호출한다. missing/null/primitive/non-function/throwing getter/revoked
+  proxy는 `SPACE_V2_TOKEN_INVALID_PORT`이며 method 호출 0이다. method throw는
+  `SPACE_V2_TOKEN_GENERATION_FAILED`, string이 아니거나 형식이 틀린 string은
+  `SPACE_V2_TOKEN_INVALID_OUTPUT`이다. 재호출·fallback·console 출력 0.
+- **4.3 형식**: 성공은 `^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`만이다.
+  uppercase/공백 포함/다른 version·variant/slash/빈 문자열은 거부하고 trim·lowercase 변환·기본값·
+  collision retry를 하지 않는다.
+  **이 검증은 난수 품질이나 충돌 부재를 증명하지 않는다** — FORMAT 확인이며, 신뢰 근원은 이후 실제
+  adapter 계약에서 별도로 다룬다. 이 한계를 module과 unit 상단 주석에 그대로 적었다.
+- **4.4 안전 결과**: 실패는 `{ok, code}` 두 key뿐이고 원문 후보·token·UID/email·SDK message·stack을
+  넣지 않는다. token을 URL/Firestore path/React state/DOM/storage에 넣지 않는다.
+- global `crypto.randomUUID`/`getRandomValues`/`Math.random` 사용 0(회귀로 고정).
+
+검증:
+
+- 신규 targeted **41/41**, space-v2(065~069) + `packages/spaces` **405/405**
+- admin typecheck PASS, `node scripts/check.mjs` **PASS**(unit **1976/1976**)
+- 전체 Chromium E2E **151/151**
+- 고객 entry `index-6js4DafP.js` **322,018 bytes** / `A9360EFF…E55E8159` — 기준 일치
+- admin entry `index-D0XOQpRL.js` **226,201 bytes** / `B6E90475…B3A1F1DC` — 기준 일치
+- admin CSS `index-DJ_z3tK1.css` **9,146 bytes**, unwanted utility **0**
+- 두 production bundle에 `SPACE_V2_TOKEN`/`createSpaceV2IssueTokenCandidate`/`issue-token-candidate`
+  문자열 **0건**
+- `git diff --check` PASS, 변경 경로는 허용 2개 신규 파일뿐, package/lockfile/Rules/config diff 0
+- 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`/temp/debug 잔류 0
+
+mutation 확인: 형식 정규식을 느슨한 UUID(대소문자·version 무관)로 바꾸면 8건이 실패한다. 거짓 통과가
+아니다.
+
+계속 NOT IMPLEMENTED / 금지: token↔assetId 관계 결정과 동시 생성, 스펙 068 orchestration 조합/변경,
+Storage upload/read/delete, Firestore create/reconciliation, URL/link 발급, Firebase adapter/Rules/
+config/env, 실제 UID·network·emulator·deploy, viewer/UI/route, V1 token/parser 변경.
