@@ -19,7 +19,30 @@ automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
+overall_rebuild_progress: "estimated 70-75% complete; 25-30% remaining to production cutover"
+progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Claude Code HOLD 확인 (2026-08-21)
+
+- active_unit `none`을 확인하고 구현하지 않았다. 제품 코드/테스트/Rules/config/package/lockfile 변경 0,
+  자동화·반복 작업 생성 0, 보호 대상 조작 0.
+- 재확인: HEAD=origin ahead/behind 0/0, 제품 diff 0, targeted+spaces 179/179,
+  `node scripts/check.mjs` PASS(unit 1750/1750), admin/customer entry와 admin CSS 9,146 bytes 기준 일치.
+- 진행도 **70~75% / 잔여 25~30% — 변동 없음**. 근거: 제품 단위 미구현이라 7개 작업축 상태 불변.
+
+## 전체 리빌드 진행도 스냅샷 (2026-08-21)
+
+- **현재 추정: 70~75% 진행 / 25~30% 잔여.** 최종 스펙 총개수가 고정되지 않았으므로 정확한 산술
+  완료율이 아니라 production cutover까지 포함한 로드맵 관리 추정치다.
+- 완료·고도화 구간: 기술 스택/모노레포/공유 기반, catalog 호환 read, 고객 browse·preview·Canvas·
+  local PNG, admin auth/read와 C5 local/emulator, Hosting/Rules의 local synthetic gate.
+- 진행 중 구간: space V2는 strict local evidence와 issuer projector까지만 완료했다. proof asset 준비,
+  token/encryption, Firebase create, V2 viewer composition은 아직 열리지 않았다.
+- 큰 잔여 구간: Claude 담당 최종 UI/UX·시각/실기기 검증, 실제 UID와 운영 한도, 실제 Rules/Firebase/
+  preview 검증, 단계적 production cutover·모니터링·롤백 확인.
+- 앞으로 모든 live log 확인·검수·handoff 보고에는 이 진행도와 변동 근거를 반드시 포함한다. 근거가
+  바뀌지 않으면 수치를 임의로 올리지 않는다.
 
 ## 스펙 065 Codex 독립 재검수 통과 (2026-08-21)
 

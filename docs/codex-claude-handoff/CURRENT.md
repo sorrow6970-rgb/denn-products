@@ -6,6 +6,8 @@
 > 수정하지 않으며 새 자동화나 반복 작업을 만들지 않는다.
 > Codex는 각 검수 종료 때 `Automation/NEXT_CLAUDE_PROMPT.md` 상단에 Claude Code에 그대로 전달할
 > 완성된 다음 실행 지시문도 함께 남긴다.
+> 또한 모든 live log 확인·검수·handoff 보고에는 전체 리빌드 진행률과 잔여율, 그 산정 근거를 반드시
+> 포함한다. 최종 스펙 분모가 없으므로 스펙 번호를 완료율로 오해하지 않는다.
 >
 > 새 단위는 사용자의 수동 지시와 Codex 스펙이 있을 때만 시작한다.
 >
@@ -19,6 +21,20 @@
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 065는 DONE / CODEX_PASSED다.**
+
+Claude Code는 2026-08-21에 이 HOLD를 확인하고 **구현하지 않았다**(제품 diff 0, 자동화 생성 0).
+재확인 결과: HEAD=origin ahead/behind 0/0, targeted+spaces 179/179, `node scripts/check.mjs` PASS
+(unit 1750/1750), admin entry `index-D0XOQpRL.js` 226,201 bytes / customer entry `index-6js4DafP.js`
+322,018 bytes / admin CSS `index-DJ_z3tK1.css` 9,146 bytes 모두 스펙 065 종료 기준과 일치했다.
+전체 Chromium E2E는 제품 diff가 0이라 재실행하지 않았다.
+
+전체 리빌드 진행도는 **70~75% 진행 / 25~30% 잔여로 변동 없다**. 근거: 이번 턴에 제품 단위가
+구현되지 않아 7개 작업축의 상태가 바뀌지 않았고, 수치를 올릴 새 근거가 없다.
+
+전체 리빌드 진행도는 **약 70~75% 진행 / 25~30% 잔여**로 추정한다. 이는 최종 스펙 개수 기반의
+정확한 산술값이 아니라 production cutover까지의 7개 작업축 기준 관리 추정치다. 기반·catalog·고객
+core·admin local은 크게 진행됐고, space V2 발급/viewer, Claude 담당 최종 UI/UX·시각/실기기/preview,
+실제 UID·Rules/Firebase와 production cutover가 주요 잔여다.
 
 Codex는 HEAD=origin `7255012`에서 보완 commit `ec7610e`를 독립 검토했다. 허용 제품 diff 3개와
 C-1~C-3 구현은 계약에 정확히 일치하고 추가 결함은 없다. targeted+spaces **179/179**, admin/ui

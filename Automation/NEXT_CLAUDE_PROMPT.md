@@ -12,11 +12,39 @@ next_transition: **`FOUNDER_NEXT_MANUAL_TASK`**
 아래 문장을 Claude Code에 그대로 전달한다.
 
 ```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 현재 상태와 active_unit을 확인해. active_unit이 none이므로 새 스펙이나 제품 구현을 시작하지 말고 HOLD 상태만 보고해. 보호 대상과 기존 working tree 변경은 건드리지 말고 자동화나 반복 작업을 만들지 마.
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 현재 상태와 active_unit을 확인해. active_unit이 none이므로 새 스펙이나 제품 구현을 시작하지 말고 HOLD 상태와 전체 리빌드 진행도(현재 추정 70~75%, 잔여 25~30%, 고정된 최종 스펙 분모 없음)를 함께 보고해. 보호 대상과 기존 working tree 변경은 건드리지 말고 자동화나 반복 작업을 만들지 마.
 ```
 
 앞으로 Codex는 독립 검수와 handoff 문서 갱신을 끝낼 때마다 이 절을 현재 활성 단위에 맞는 **완성된
 Claude Code 실행 지시문**으로 교체한다. 사용자가 별도로 문장을 조합할 필요가 없게 한다.
+
+## 전체 리빌드 진행도 — 매 보고 필수
+
+- **현재 추정: 70~75% 진행 / 25~30% 잔여**(production cutover까지 포함).
+- 최종 스펙 총개수는 고정돼 있지 않아 스펙 번호 `065`를 분모로 쓰지 않는다. 이는 아래 7개 로드맵
+  작업축의 상태를 바탕으로 한 관리 추정치다.
+  1. 기술 스택·모노레포·공유 기반 — 완료
+  2. catalog·legacy 데이터 읽기 호환 — 대부분 완료
+  3. 고객 browse·preview·Canvas·편집·local PNG — 대부분 완료
+  4. admin auth/read/edit/C5 local·emulator — 대부분 완료, 운영 연결 보류
+  5. space 링크 — V1 안전 차단과 V2 local evidence/projector 완료, V2 발급·viewer 잔여
+  6. 최종 UI/UX·시각·실기기·preview 통합 검증 — 잔여
+  7. 실제 UID·Rules/Firebase·production cutover·모니터링/롤백 — 잔여
+- 앞으로 Claude 완료 보고와 Codex 검수 보고에는 진행/잔여 수치, 변동 여부, 수치가 변한 근거를 반드시
+  포함한다. 새 근거가 없으면 이전 범위를 유지한다.
+
+## Claude Code 확인 기록 (2026-08-21)
+
+Claude Code가 이 문서를 읽고 HOLD를 준수했다. active_unit이 `none`이라 구현 범위가 없어 제품 코드·
+테스트·Rules·config·package/lockfile을 변경하지 않았고, 새 스펙을 추측해 시작하지 않았으며 자동화·
+반복 작업도 만들지 않았다. 기록 상태만 재확인했다 — HEAD=origin ahead/behind 0/0, 제품 diff 0,
+targeted+spaces **179/179**, `node scripts/check.mjs` PASS(unit **1750/1750**), admin entry
+`index-D0XOQpRL.js` 226,201 bytes, customer entry `index-6js4DafP.js` 322,018 bytes, admin CSS
+`index-DJ_z3tK1.css` **9,146 bytes**(`.transform`/`.italic`/scaffold 0건). 전체 Chromium E2E는 제품
+diff가 0이라 재실행하지 않았다(보호 대상 spec-018 PNG 재기록 회피).
+
+진행도 보고: **70~75% 진행 / 25~30% 잔여, 변동 없음**. 근거는 제품 단위 미구현으로 7개 작업축 상태가
+바뀌지 않은 것이다. 보호 대상과 기존 Founder/user working-tree 변경은 건드리지 않았다.
 
 ## ★ 스펙 065 Codex 독립 재검수 통과 / HOLD
 

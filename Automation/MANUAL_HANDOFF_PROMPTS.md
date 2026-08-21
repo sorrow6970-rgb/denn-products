@@ -19,4 +19,6 @@ Claude 작업 완료. 최신 Git 상태와 live log를 읽기 전용으로 확�
 - 실제 작업 범위의 정본은 `Automation/NEXT_CLAUDE_PROMPT.md`다.
 - Claude Code는 완료 시 `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`, `docs/codex-claude-handoff/CURRENT.md`, `docs/live/CLAUDE_LIVE_PATCH_LOG.md`를 실제 상태와 일치시킨다.
 - Codex는 검수와 다음 지시 작성만 수행하며, 사용자의 별도 요청 없이는 commit/push하지 않는다.
+- Claude 완료 보고와 Codex live log 확인·검수·handoff 보고는 항상 **전체 리빌드 진행률·잔여율·변동
+  근거**를 포함한다. 최종 스펙 총개수가 고정되지 않았으므로 스펙 번호를 분모로 계산하지 않는다.
 - 자동화, 예약 작업, 반복 폴링은 만들지 않는다.

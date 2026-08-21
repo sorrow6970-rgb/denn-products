@@ -4756,3 +4756,40 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `Automation/NEXT_CLAUDE_PROMPT.md` 상단에 Claude Code에 그대로 전달할 완성된 실행 지시문을 남긴다.
 - 현재는 active_unit `none`이므로 새 스펙이나 제품 구현을 시작하지 않는 HOLD 지시문을 기록했다.
 - 제품 코드/test/Rules/config/package/lockfile 변경 0, 자동화·반복 작업 생성 0, 보호 대상 조작 0이다.
+
+## 2026-08-21(8) - 전체 리빌드 진행도 상시 보고 규칙 복원
+
+- Founder 지적대로 직전 live log 확인 보고에서 전체 리빌드 진행도를 누락했다.
+- 최종 스펙 총개수는 정본에 고정돼 있지 않으므로 `현재 스펙 번호/총 스펙`의 정확한 산술 진행률은
+  확인할 수 없다. 대신 production cutover까지의 7개 작업축을 기준으로 **현재 70~75% 진행,
+  25~30% 잔여**로 관리 추정한다.
+- 완료·고도화: stack/scaffold/shared 기반, catalog 호환, 고객 browse/preview/render/local PNG,
+  admin auth/read/edit/C5 local·emulator, local Hosting/Rules gate.
+- 주요 잔여: space V2 proof 준비·token/encryption·Firebase create·viewer, Claude 담당 최종 UI/UX와
+  시각/실기기/preview 검증, 실제 UID·운영 한도·Rules/Firebase·production cutover/monitoring/rollback.
+- 앞으로 Claude 완료 보고와 Codex의 모든 live log 확인·검수·handoff 보고에 진행률, 잔여율, 변동
+  근거를 반드시 포함한다. 새 근거 없이 수치를 올리지 않는다.
+- 이 기록은 운영 규칙 문서만 바꾸며 제품 코드/test/Rules/config/package/lockfile 변경 0,
+  자동화·반복 작업 생성 0, 보호 대상 조작 0이다.
+
+## 2026-08-21(9) - Claude Code HOLD 확인 · 진행도 재확인(변동 없음)
+
+- `Automation/NEXT_CLAUDE_PROMPT.md` 확인: 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, active_unit `none`.
+  구현 대상 스펙이 없어 제품 코드·테스트·Rules·config·package/lockfile을 한 줄도 바꾸지 않았고 새
+  스펙을 추측해 시작하지 않았다. 자동화·반복 작업 생성 0.
+- 기록 상태 재확인: HEAD=origin, ahead/behind **0/0**, working tree 제품 diff **0**.
+  targeted+spaces **179/179**, `node scripts/check.mjs` PASS(unit **1750/1750**).
+  admin entry `index-D0XOQpRL.js` **226,201 bytes** / SHA-256 `B6E90475…B3A1F1DC`,
+  customer entry `index-6js4DafP.js` **322,018 bytes** / SHA-256 `A9360EFF…E55E8159`,
+  admin CSS `index-DJ_z3tK1.css` **9,146 bytes**에 `.transform`/`.italic`/rotate·skew scaffold 0건 —
+  모두 스펙 065 종료 기준과 일치한다.
+- 전체 Chromium E2E는 재실행하지 않았다. 검수 통과 commit `ec7610e` 이후 제품 diff가 0이라 변경
+  무관성이 이미 성립하고, 재실행은 보호 대상 spec-018 PNG 두 개만 다시 쓴다.
+- **전체 리빌드 진행도: 70~75% 진행 / 25~30% 잔여 — 변동 없음.** 근거: 이번 턴에 제품 단위가
+  구현되지 않아 7개 작업축 중 어느 것도 상태가 바뀌지 않았다. 수치를 올릴 새 근거가 없으므로
+  이전 범위를 그대로 유지한다. 잔여의 주축은 (5) space V2 발급·viewer, (6) 최종 UI/UX·시각·실기기·
+  preview 통합 검증, (7) 실제 UID·Rules/Firebase·production cutover·모니터링/롤백이다.
+- 보호 대상과 기존 Founder/user working-tree 변경(`AGENTS.md`, design README, `taste-v2/`, 스펙 038,
+  spec-018 PNG 2개, render CRLF 표시)은 stage/commit/restore하지 않았다.
+- 상태는 계속 `WAITING_FOR_NEXT_MANUAL_TASK`다. 다음 단위는 사용자의 수동 지시와 Codex의 새
+  `docs/rebuild/specs/NNN-*.md`가 나온 뒤에만 시작한다.
