@@ -3,7 +3,7 @@
 - 스펙 정본: `docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md`
 - 상태: **DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI — 보완 라운드 1 반영**
 - 초판 조사 기록 commit: `f1f5d20` (그 뒤 hash-pin 문서 commit `534c26f`)
-- 보완 라운드 1 기준 HEAD=origin: `534c26f`, ahead/behind 0/0
+- 보완 라운드 1: 직전 기준 HEAD=origin `534c26f` → 반영 commit `63a1dec`, ahead/behind 0/0
 - 조사 수행: Claude Code, 2026-08-24 · 보완 라운드 1: 같은 날 Codex `CORRECTION_REQUIRED` 반영
 
 > **보완 라운드 1에서 바뀐 것 (초판 대비):**

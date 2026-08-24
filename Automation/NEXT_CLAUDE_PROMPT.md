@@ -3,7 +3,7 @@
 상태: `READY_FOR_CODEX`
 active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **CORRECTION ROUND 1 APPLIED / AWAITING CODEX RE-REVIEW / DOCUMENT ONLY / READ ONLY**
 completed_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO NETWORK / NO UI**
-기준: 보완 라운드 1 직전 HEAD=origin **`534c26f`**. 조사 기록 **`f1f5d20`**, hash-pin **`534c26f`**, 보완 라운드 1은 그 뒤 문서 commit이다.
+기준: HEAD=origin **`63a1dec`**, ahead/behind **0/0**. 조사 기록 **`f1f5d20`**, hash-pin **`534c26f`**, 보완 라운드 1 **`63a1dec`**.
 working tree에는 기존 Founder/user 보호 변경만 남고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
 fix_round: **1 / 3**
 next_transition: **`CODEX_RE_REVIEW`**
@@ -34,7 +34,8 @@ Rules 변경, emulator 실행, 새 스펙과 자동화·반복 작업을 시작�
 
 ## ★ 스펙 073 — 보완 라운드 1 수행 기록
 
-기준 HEAD=origin `534c26f`, ahead/behind 0/0. Codex `CORRECTION_REQUIRED` 세 묶음을 문서에 반영했다.
+보완 직전 기준 HEAD=origin `534c26f`, 반영 commit `63a1dec`, ahead/behind 0/0. Codex
+`CORRECTION_REQUIRED` 세 묶음을 문서에 반영했다.
 수정 파일은 허용 6개뿐 — 조사 보고서 · spec073 · STATE · NEXT · CURRENT · live log.
 제품 코드·test·`storage.rules`·`firestore.rules`·Firebase config·package/lockfile, `apps/**`,
 `packages/**`, 보호 대상 변경 **0**. 실제 Firebase/project/bucket/Firestore/network/live 접근 **0**,

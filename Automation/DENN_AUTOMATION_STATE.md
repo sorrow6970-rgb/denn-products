@@ -10,7 +10,7 @@ state: READY_FOR_CODEX
 baseline_commit: c5f8384   # spec 072 closure + spec 073 contract documents committed by Claude Code
 candidate_commit: null   # document-only unit; no product commit exists
 verified_commit: 34cca25   # spec 072 local issue bundle, independently passed at 452cc1a
-origin_relation: "HEAD=origin at 534c26f after the f1f5d20 investigation record and 534c26f hash-pin document commit; ahead/behind 0/0"
+origin_relation: "HEAD=origin at 63a1dec after the f1f5d20 investigation record, 534c26f hash-pin and 63a1dec correction round 1; ahead/behind 0/0"
 working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
 fix_round: 1
 max_fix_rounds: 3
@@ -25,7 +25,8 @@ progress_basis: "7 roadmap workstreams; management estimate, not spec-count arit
 
 ## 스펙 073 문서 보완 라운드 1 수행 (2026-08-24)
 
-- 기준 HEAD=origin `534c26f`, ahead/behind 0/0. 허용 문서 6개(조사 보고서 · spec073 · STATE · NEXT ·
+- 보완 직전 기준 HEAD=origin `534c26f`, 반영 commit `63a1dec`, ahead/behind 0/0.
+  허용 문서 6개(조사 보고서 · spec073 · STATE · NEXT ·
   CURRENT · live log)만 수정했다. 제품 코드/test/Rules/Firebase config/package/lockfile, `apps/**`,
   `packages/**`, 보호 대상 변경 0. 실제 Firebase/network/emulator/deploy/UID/URL/UI 0.
 - **보완 1**: V2-2 REC을 "평문이라 토큰 비밀성과 반드시 충돌"한다고 단정한 문구를 폐기하고, 보고서에

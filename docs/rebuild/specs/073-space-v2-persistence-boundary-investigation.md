@@ -95,7 +95,7 @@ fast-forward commit/push한다.
 (2026-08-24)
 
 - Codex 문서 8개 → 문서 commit `c5f8384`. 조사 보고서·상태 문서 → 문서 commit `f1f5d20`.
-  해시 고정 → `534c26f`. 보완 라운드 1 → 별도 문서 commit(§DONE 보완 라운드 1 참조). 전부 일반
+  해시 고정 → `534c26f`. 보완 라운드 1 → `63a1dec`. 전부 일반
   fast-forward push. **제품 commit 없음**(문서 전용 단위).
 - §5 허용 범위 준수: 신규 보고서
   `docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md` +
@@ -169,7 +169,8 @@ config/package/lockfile 변경은 없고, working tree는 기존 Founder/user �
 
 상태: **CORRECTION ROUND 1 APPLIED / READY_FOR_CODEX** (2026-08-24)
 
-- 기준 HEAD=origin `534c26f`, ahead/behind 0/0. 위 `CODEX REVIEW` 세 묶음을 전부 문서에 반영했다.
+- 보완 직전 기준 HEAD=origin `534c26f`, 반영 commit `63a1dec`, ahead/behind 0/0. 위 `CODEX REVIEW`
+  세 묶음을 전부 문서에 반영했다.
 - 수정한 파일은 허용 6개뿐이다: 조사 보고서, 이 spec, `Automation/DENN_AUTOMATION_STATE.md`,
   `Automation/NEXT_CLAUDE_PROMPT.md`, `docs/codex-claude-handoff/CURRENT.md`,
   `docs/live/CLAUDE_LIVE_PATCH_LOG.md`. 제품 코드/test/`storage.rules`/`firestore.rules`/Firebase
@@ -227,7 +228,7 @@ config/package/lockfile 변경은 없고, working tree는 기존 Founder/user �
 
 **보완 4 — 기록 기준 정정**
 
-- `f1f5d20` = 조사 기록 commit, `534c26f` = 해시 고정 후속 commit, 이번 보완 = 별도 문서 commit.
+- `f1f5d20` = 조사 기록 commit, `534c26f` = 해시 고정 후속 commit, `63a1dec` = 이번 보완 라운드 1.
 - 보고서 머리에 초판 대비 변경 4가지를 요약하고 기준 HEAD=origin을 `534c26f`로 고쳤다.
 - JJ-5 선택지를 과장 없이 고쳤다(B·C 모두 확정 orphan 미증명, 어느 선택도 삭제 승인 아님).
   §5의 다음 단위 권고도 §3.2 목표 후보 행은 fake로 검증할 수 없다는 점을 명시하도록 고쳤다.

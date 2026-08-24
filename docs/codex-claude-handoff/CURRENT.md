@@ -22,7 +22,7 @@
 
 상태: **`READY_FOR_CODEX` - 스펙 073 문서 보완 라운드 1을 수행했다.**
 
-기준 HEAD=origin `534c26f`, ahead/behind 0/0에서 Codex `CORRECTION_REQUIRED` 세 묶음을 문서에
+기준 HEAD=origin `534c26f`에서 Codex `CORRECTION_REQUIRED` 세 묶음을 문서에
 반영했다. 허용 문서 6개(조사 보고서 · spec073 · STATE · NEXT · CURRENT · live log)만 수정했고
 제품 코드/test/`storage.rules`/`firestore.rules`/Firebase config/package/lockfile, `apps/**`,
 `packages/**`, 보호 대상 변경은 **0**이다. 실제 Firebase/project/bucket/Firestore/network/live 접근,
@@ -51,8 +51,9 @@ create-only rule의 PASS로 기록하던 것을 고쳤고(현재는 규칙 부�
 read`가 get/list를 포함한다는 것은 `UNCONFIRMED`가 아니라 **Rules 문언에서 읽은 정적 사실 + 실행
 NOT TESTED**로 분리했다. 실행 칸은 전 행 예외 없이 `NOT TESTED`임을 명시했다.
 
-**보완 4 — 기록 기준.** `f1f5d20`은 조사 기록 commit, `534c26f`은 hash-pin 후속 commit이며 이번
-보완은 별도 문서 commit이다. 보고서 머리에 초판 대비 변경 4가지를 요약했다.
+**보완 4 — 기록 기준.** `f1f5d20`은 조사 기록 commit, `534c26f`은 hash-pin 후속 commit,
+`63a1dec`이 이번 보완 라운드 1 commit이다. 현재 HEAD=origin `63a1dec`, ahead/behind 0/0.
+보고서 머리에 초판 대비 변경 4가지를 요약했다.
 
 JJ-5 선택지도 과장 없이 고쳤다 — B(V2-2′)와 C(backend) **어느 쪽도 지금은 확정 orphan을 증명하지
 못하며 어떤 선택도 삭제 승인이 아니다**. 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여로 변동
