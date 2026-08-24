@@ -1,20 +1,22 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CORRECTION_REQUIRED`
-active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **FOUNDER-AUTHORIZED CORRECTION ROUND 4 / DOCUMENT ONLY / READ ONLY**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **CORRECTION ROUND 4 APPLIED (FOUNDER-AUTHORIZED EXCEPTION) / AWAITING CODEX RE-REVIEW / DOCUMENT ONLY / READ ONLY**
 completed_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO NETWORK / NO UI**
-기준: 보완 직전 관측 HEAD=origin **`6b3bcfc`**(라운드 2 내용 commit), ahead/behind **0/0**. 라운드 3도 **내용 commit 1개만** 추가하고 self-hash bookkeeping commit을 만들지 않았다 — push 후 `HEAD=origin`·ahead/behind 0/0을 검증했고 해시 정본은 git 이력·세션 보고다(**commit은 자기 해시를 내용에 담을 수 없다**).
-이력: `f1f5d20`(초판 내용) → `534c26f`(bookkeeping) → `63a1dec`(라운드 1 내용) → `2dd97c4`(bookkeeping) → `6b3bcfc`(라운드 2 내용) → 라운드 3 내용 commit.
+기준: 보완 직전 관측 HEAD=origin **`a6ad189`**(Founder 라운드 4 예외 승인 문서 commit), ahead/behind **0/0**. 승인문이 적은 `dc6fe11`은 그 **직전 commit**이고 그 위에 승인 commit `a6ad189`가 얹혀 있다 — 기준선은 정합하며 라운드 4는 `a6ad189`에서 출발했다. 라운드 4도 **내용 commit 1개만** 추가하고 self-hash bookkeeping commit을 만들지 않았다 — push 후 `HEAD=origin`·ahead/behind 0/0을 검증했고 해시 정본은 git 이력·세션 보고다(**commit은 자기 해시를 내용에 담을 수 없다**).
+이력: `f1f5d20`(초판 내용) → `534c26f`(bookkeeping) → `63a1dec`(라운드 1 내용) → `2dd97c4`(bookkeeping) → `6b3bcfc`(라운드 2 내용) → `9707233`(라운드 3 내용) → `dc6fe11`(Codex 재검수 STOP 기록) → `a6ad189`(Founder 라운드 4 예외 승인) → 라운드 4 내용 commit.
 working tree에는 기존 Founder/user 보호 변경만 남고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
-fix_round: **4 — Founder 예외 승인으로 이번 한 번만 허용**
-next_transition: **`CLAUDE_DOCUMENT_CORRECTION_ROUND_4`**
+fix_round: **4 — Founder 예외 승인 라운드, 수행 완료** (자동 한도 `max_fix_rounds`는 3 그대로)
+next_transition: **`CODEX_RE_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
-Founder가 이 대화에서 **`스펙 073 문서 보완 라운드 4 예외 승인`**을 명시했다. 아래 지시문을
-Claude Code에 그대로 전달한다.
+스펙 073 문서 보완 라운드 4(Founder 예외 승인)를 수행해 상태는 `READY_FOR_CODEX`다. 자동 보완 한도는
+여전히 **3/3**이고 라운드 4는 Founder가 명시적으로 승인한 **일회성 예외**였다. 다음 실행 지시문은
+**Codex 재검수 종료 시점에** 이 자리에 다시 작성된다. Claude Code는 그때까지 Founder JJ-1~JJ-7 선택,
+제품 구현, Rules 변경, emulator 실행, 새 스펙과 자동화·반복 작업을 시작하지 않는다.
 
-> Claude Code 전달용 실행 지시문:
+> 직전 지시문(스펙 073 보완 라운드 4, 수행 완료 — 기록):
 >
 > ```text
 > C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md의 최신 CODEX RE-REVIEW 및 Founder 라운드 4 예외 승인을 전부 읽고, 스펙 073 문서 보완 라운드 4의 한 가지 근거 정정만 수행해. 기준은 rebuild/modern-studio HEAD=origin dc6fe11, ahead/behind 0/0이다. 제품 구현과 Founder JJ-1~JJ-7 선택은 시작하지 마.
@@ -91,6 +93,51 @@ Claude Code에 그대로 전달한다.
 >
 > 문서 diff만 git diff --check와 forbidden diff로 확인하고 허용 문서만 별도 일반 fast-forward commit/push해. 완료 후 HEAD=origin, ahead/behind 0/0, 정확한 변경 파일과 수정 결론, UNCONFIRMED/NOT TESTED, 전체 리빌드 78~81% 완료·19~22% 잔여 변동 없음을 보고하고 READY_FOR_CODEX에서 멈춰. 다음 구현 스펙과 Founder 질문은 시작하지 마.
 > ```
+
+## ★ 스펙 073 — 보완 라운드 4 수행 기록 (Founder 예외 승인)
+
+보완 직전 관측 기준 HEAD=origin `a6ad189`, ahead/behind 0/0. Codex 최종 재검수의 **근거 정정 1건만**
+반영했고 **라운드 1·2·3 통과 내용은 하나도 되돌리지 않았다.** 수정 파일은 허용 6개뿐 — 조사 보고서 ·
+spec073 · STATE · NEXT · CURRENT · live log. 제품 코드·test·`storage.rules`·`firestore.rules`·Firebase
+config·package/lockfile, `apps/**`, `packages/**`, 보호 대상 변경 **0**. 실제 Firebase/project/bucket/
+Firestore/network/live 접근 **0**, **emulator 실행 0**, upload/write/read-back/delete/deploy **0**,
+UID 추측 **0**, URL 발급 **0**, UI 연결 **0**, 자동화·반복 작업 **0**, Founder JJ-1~JJ-7 선택 **0**,
+다음 구현 스펙 **0**. **내용 commit 1개**만 남기고 self-hash bookkeeping commit은 추가하지 않았다.
+
+- **보완 1 (유일한 정정) — Storage Rules object metadata 표면의 근거 등급.** 라운드 3까지 보고서
+  §Q7.1.1·§4·§7은 *"이 저장소에 metadata를 읽는 Rules 선례가 0건이므로
+  `request.resource.metadata`/`resource.metadata`의 공식 지원 여부도 `UNCONFIRMED`"* 라고 적었다.
+  **그 추론이 틀렸다 — 저장소 선례의 부재는 공식 지원 여부의 근거가 아니다.** Firebase 공식
+  **Use conditions in Firebase Cloud Storage Security Rules**의 *Resource Evaluation*이
+  `resource.metadata`를 **developer-specified custom metadata map**으로 명시하고 **write 평가에서
+  `request.resource`로 새 metadata를 검사**할 수 있다고 명시한다
+  (`https://firebase.google.com/docs/storage/security/rules-conditions`).
+  ⇒ **(c2) `customMetadata` pointer의 Rules metadata 표면 자체를 `OFFICIALLY SUPPORTED`(정적 근거
+  확인)** 로 재분류하고 보고서에 **§1.4 「공식 문서 인용」**을 신설해 근거를 고정했다.
+  **폐기한 것은 딱 둘** — ① *"저장소 선례 0건이므로 공식 지원도 `UNCONFIRMED`"*, ② *"(c1)만 Rules
+  표면 근거 등급을 확보했다"* 는 비교. ⇒ (c2)에 남는 실제 차이는 **목표 public-read 구현 시 recId가
+  공개 식별자**와 **GG-4 미승인 schema/Rules 확장** 둘이며, 여기에 **(c2)에만 붙는 설계 요건**
+  (허용 키 exact key/format 검증 · mapping ↔ assetId 교차검사)이 남는다.
+- **유지 — 되돌리지 않은 것.** V2 전용 Rules **미작성** · exact key/format·assetId 교차검사 **설계
+  필요** · **emulator/runtime `NOT TESTED`**(공식 지원은 정적 근거이지 실행 검증이 아니다) · 목표
+  public-read 구현 시 **recId가 관측되는 설계 귀결**(recId를 secret으로 설계하지 않고 token을
+  `customMetadata`에 넣지 않는다) · **GG-4 미승인 schema/Rules 확장** · 실제 Firebase/IAM/live
+  **`NOT TESTED`** · **(c1)·(c2) 모두 확정 orphan 미증명과 O-3 삭제 보류** · 라운드 2·3 통과 내용
+  전부(primitive 4층위 분류 · privileged plaintext surface · (c1) transform-0 성립 · access-call
+  산술과 연쇄 보간 `UNCONFIRMED` 전제 · metadata-only update 차단 · self-hash bookkeeping 중단).
+- **정정 위치.** 보고서 §1.4(신설) · §Q7.1.1 (c2) 「Rules 표면」 행과 마무리 문단 · §Q7.1 선택지
+  표(V2-2″ 행) · §Q7.1 UNCONFIRMED 목록 · §Q10 JJ-5 행 · §4(UNCONFIRMED → 「이미 검증된 것」 이동,
+  `NOT TESTED` 보강) · §7 진행도 · 머리말. spec073은 상태 헤더 · 라운드 2 기록 superseded 주석 ·
+  라운드 3 (c2) 재평가 ① 폐기 표시 · `DONE (Claude) — 보완 라운드 4` 신설.
+
+게이트: `git diff --check` PASS, 허용 6개 문서 외 diff **0**. 문서 전용 단위라 실행 게이트는 없으며
+unit/E2E/typecheck/build/emulator를 하나도 돌리지 않았고 돌렸다고 기록하지 않는다. 이 세션은 network
+접근이 금지되어 **공식 문서 URL을 직접 fetch하지 않았다** — 인용은 Codex 재검수가 제시한 것이며
+보고서 §1.4에 그 사실을 명시했다.
+
+진행도 보고: **78~81% 완료 / 19~22% 잔여 — 변동 없음.** 라운드 4는 **근거 등급 하나를 바로잡은 문서
+정정**이며, 라운드 2의 primitive 정정과 같은 성격으로 **새로 검증한 것이 아니라 잘못 낮춰 적었던 것을
+고친 것**이다. 규칙은 여전히 미작성이고 실행 검증은 0이므로 **작업축 6의 잔여 난이도는 줄지 않았다.**
 
 ## ★ 스펙 073 — 보완 라운드 3 수행 기록 (최종 보완)
 

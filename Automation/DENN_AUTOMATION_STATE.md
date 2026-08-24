@@ -5,16 +5,16 @@ updated_at: 2026-08-24
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-073-space-v2-persistence-boundary-investigation   # FOUNDER-AUTHORIZED CORRECTION ROUND 4, DOCUMENT ONLY, READ ONLY
-state: CORRECTION_REQUIRED
+active_unit: spec-073-space-v2-persistence-boundary-investigation   # CORRECTION ROUND 4 APPLIED (FOUNDER-AUTHORIZED EXCEPTION), AWAITING CODEX RE-REVIEW, DOCUMENT ONLY, READ ONLY
+state: READY_FOR_CODEX
 baseline_commit: c5f8384   # spec 072 closure + spec 073 contract documents committed by Claude Code
 candidate_commit: null   # document-only unit; no product commit exists
 verified_commit: 34cca25   # spec 072 local issue bundle, independently passed at 452cc1a
-origin_relation: "pre-round-3 observation: HEAD=origin at round-2 content commit 6b3bcfc, ahead/behind 0/0. Round 3 adds ONE content commit and no self-hash bookkeeping commit; HEAD=origin and ahead/behind 0/0 are re-verified after push and reported in the session, because a commit cannot contain its own hash"
+origin_relation: "pre-round-4 observation: HEAD=origin at Founder round-4 authorization commit a6ad189, ahead/behind 0/0. The authorization text cites dc6fe11, which is the commit immediately before it; the two are consistent and round 4 started from a6ad189. Round 4 adds ONE content commit and no self-hash bookkeeping commit; HEAD=origin and ahead/behind 0/0 are re-verified after push and reported in the session, because a commit cannot contain its own hash"
 working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
-fix_round: 4   # exceptional round explicitly authorized by Founder after 3/3 was consumed
+fix_round: 4   # exceptional round explicitly authorized by Founder after 3/3 was consumed; APPLIED
 max_fix_rounds: 3
-next_transition: CLAUDE_DOCUMENT_CORRECTION_ROUND_4
+next_transition: CODEX_RE_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,34 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 78-81% complete; 19-22% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 073 문서 보완 라운드 4 수행 — Founder 예외 승인 (2026-08-24)
+
+- 보완 직전 관측 기준 **HEAD=origin `a6ad189`**(아래 Founder 승인 기록 commit), ahead/behind **0/0**.
+  승인문이 적은 `dc6fe11`은 그 **직전 commit**이며 그 위에 승인 commit `a6ad189`가 얹혀 있다 —
+  기준선은 정합하고 라운드 4는 `a6ad189`에서 출발했다.
+- Codex 최종 재검수의 **근거 정정 1건만** 반영했다. 라운드 1·2·3 통과 내용은 되돌리지 않았다.
+  허용 문서 6개만 수정, **내용 commit 1개**만 남기고 self-hash bookkeeping commit은 추가하지 않았다.
+- **정정 내용:** Storage Rules의 object metadata 표면(`resource.metadata` / write 평가의
+  `request.resource` metadata 검사)을 `UNCONFIRMED` → **공식 지원(`OFFICIALLY SUPPORTED`, 정적 근거
+  확인)** 으로 재분류했다. 근거는 Firebase 공식 **Use conditions in Firebase Cloud Storage Security
+  Rules**의 *Resource Evaluation*이며 보고서에 **§1.4 「공식 문서 인용」**을 신설해 고정했다.
+  **폐기한 것은 딱 둘** — *"저장소 선례 0건이므로 공식 지원도 `UNCONFIRMED`"*, *"(c1)만 Rules 표면
+  근거 등급을 확보했다"* 는 비교.
+- **유지된 경계:** V2 전용 Rules 미작성, exact key/format·assetId 교차검사 설계 필요,
+  emulator/runtime `NOT TESTED`, 목표 public-read 구현 시 recId 관측이라는 설계 귀결, GG-4 미승인
+  schema/Rules 확장, 실제 Firebase/IAM/live `NOT TESTED`, **(c1)·(c2) 모두 확정 orphan 미증명과
+  O-3 삭제 보류**.
+- 제품 코드/test/Rules/Firebase config/package/lockfile, `apps/**`, `packages/**`, 보호 대상 변경 **0**.
+  실제 Firebase/network/**emulator**/deploy/UID/URL/UI **0**. 이 세션은 network 접근이 금지되어
+  **공식 문서 URL을 직접 fetch하지 않았다** — 인용은 Codex 재검수가 제시한 것이며 보고서 §1.4에
+  그 사실을 명시했다.
+- 게이트: `git diff --check` PASS, 허용 6개 문서 외 diff **0**. 문서 전용 단위라 실행 게이트는 없고
+  unit/E2E/typecheck/build/emulator를 하나도 돌리지 않았다.
+- 상태 `READY_FOR_CODEX`, 다음 transition `CODEX_RE_REVIEW`. Founder JJ-1~JJ-7 선택, 제품 구현,
+  Rules 변경, emulator 실행, 다음 스펙과 자동화·반복 작업은 시작하지 않았다.
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다. 라운드 4는 근거 등급 하나를
+  바로잡은 문서 정정이며 제품 작업축 완료량을 늘리지 않는다.
 
 ## Founder 승인 — 스펙 073 문서 보완 라운드 4 예외 (2026-08-24)
 

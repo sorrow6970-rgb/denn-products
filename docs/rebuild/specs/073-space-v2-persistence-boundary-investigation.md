@@ -1,6 +1,6 @@
 # 스펙 073 — space V2 persistence boundary 읽기 전용 조사
 
-상태: **CORRECTION ROUND 3 APPLIED / READY_FOR_CODEX / DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI**
+상태: **CORRECTION ROUND 4 APPLIED / READY_FOR_CODEX / DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI**
 
 ## 1. 목표
 
@@ -335,6 +335,15 @@ wildcard가 잡는 값은 bare UUID가 아니라 **세그먼트 전체 `"<uuid>.
   비싸고 위험하며 미작성 · `NOT TESTED`.**
 - 두 후보 모두 **확정 orphan을 증명하지 못한다** — 단조값 부재 문제는 REC ID 형태와 무관하다.
 
+> ★ **이 라운드 2 기록의 (c2) 판정은 이후 폐기됐다(기록 보존).** 라운드 3이 *"문서 접근 한도 초과"*
+> 와 *"`updateMetadata` 차단 누락"* 을 폐기했고, **라운드 4가 *"Rules의
+> `request.resource.metadata`/`resource.metadata` 지원은 저장소 선례 0건 · `UNCONFIRMED`"* 를
+> 폐기했다** — 그 표면은 **공식 지원**이다(보고서 §1.4). *"public-read라 누구나 관측 가능"* 도
+> 라운드 3에서 **목표 Rules가 구현되면 성립하는 설계 귀결**로 정정됐다. ⇒ *"(c1)보다 명백히 비싸고
+> 위험하다"* 는 결론은 **더 이상 유효하지 않다.** 유지되는 것은 **exact key/format·assetId 교차검사
+> 설계 요건**, **목표 public-read 시 recId 공개**, **GG-4 미승인 schema/Rules 확장**,
+> **미작성 · `NOT TESTED`**, 그리고 **두 후보 공통의 확정 orphan 미증명**이다.
+
 **보완 4 — commit 자기참조 추적 중단**
 
 - 라운드 1까지는 내용 commit 뒤 "해시를 적어 넣는" bookkeeping commit(`534c26f`, `2dd97c4`)을 추가로
@@ -445,7 +454,8 @@ unit/E2E/typecheck/build/emulator를 **하나도 돌리지 않았으며 돌렸�
 
 **(c2) 재평가 결과:** 라운드 2가 붙였던 "명백히 더 비싸다"의 근거 두 개(access-call 초과 · metadata
 update 계약 공백)가 **모두 폐기**됐다. **남는 실제 차이는 비용이 아니라 셋이다** —
-① Rules metadata 표면이 `UNCONFIRMED`(저장소 선례 0건)라 (c1)이 이미 확보한 근거 등급을 갖지 못함,
+① ~~Rules metadata 표면이 `UNCONFIRMED`(저장소 선례 0건)라 (c1)이 이미 확보한 근거 등급을 갖지 못함~~
+   → **라운드 4에서 폐기**(공식 지원 — 보고서 §1.4),
 ② 목표 public-read가 구현되면 **recId가 공개 식별자**가 되어 비밀 설계가 불가능,
 ③ **GG-4 미승인 schema/Rules 확장**이라 Founder 승인 범위를 넓힌다.
 **두 후보 모두 확정 orphan을 증명하지 못한다**는 결론은 그대로다.
@@ -493,3 +503,76 @@ Founder가 이 대화에서 **`스펙 073 문서 보완 라운드 4 예외 승�
 - 금지: 제품 코드/test/Rules/config/package/lockfile, emulator/live, UID/URL/UI, JJ-1~JJ-7 선택,
   다음 구현 스펙, 자동화·반복 작업.
 - 다음 transition: `CLAUDE_DOCUMENT_CORRECTION_ROUND_4`.
+
+### DONE (Claude) — 보완 라운드 4 (Founder 예외 승인)
+
+상태: **CORRECTION ROUND 4 APPLIED / READY_FOR_CODEX** (2026-08-24)
+
+- 보완 직전 관측 기준 **HEAD=origin `a6ad189`**(위 `FOUNDER APPROVAL` 문서 commit), ahead/behind
+  **0/0**. Founder 승인문이 적은 기준 `dc6fe11`은 **그 직전 commit**이고, 그 위에 라운드 4 예외 승인
+  commit `a6ad189`가 얹혀 있다 — 기준선은 정합하며 이 라운드는 `a6ad189`에서 출발했다.
+- 위 `CODEX RE-REVIEW — CORRECTION_REQUIRED / STOP`의 **근거 정정 1건만** 반영했다. 라운드 1·2·3에서
+  통과한 내용은 **하나도 되돌리지 않았다.**
+- 수정 파일은 허용 6개뿐이다: 조사 보고서, 이 spec, `Automation/DENN_AUTOMATION_STATE.md`,
+  `Automation/NEXT_CLAUDE_PROMPT.md`, `docs/codex-claude-handoff/CURRENT.md`,
+  `docs/live/CLAUDE_LIVE_PATCH_LOG.md`. 제품 코드/test/`storage.rules`/`firestore.rules`/Firebase
+  config/package/lockfile, `apps/**`, `packages/**`, 보호 대상 변경 **0**.
+- 실제 Firebase/project/bucket/Firestore/network/live 접근 **0**, **emulator 실행 0**,
+  upload/write/read-back/delete/deploy **0**, UID 추측 **0**, URL 발급 **0**, UI 연결 **0**,
+  자동화·반복 작업 **0**, Founder JJ-1~JJ-7 선택 **0**, 다음 구현 스펙 **0**.
+- **내용 commit 1개만** 남기고 self-hash bookkeeping commit을 추가하지 않았다(라운드 2 결정 유지).
+
+**보완 1 (유일한 정정) — Storage Rules object metadata 표면의 근거 등급 정정**
+
+라운드 3까지 조사 보고서 §Q7.1.1·§4·§7은 *"이 저장소에 metadata를 읽는 Rules 선례가 **0건**이므로
+`request.resource.metadata`/`resource.metadata`의 **공식 지원 여부도 `UNCONFIRMED`**"* 라고 적었다.
+**그 추론이 틀렸다 — 저장소 선례의 부재는 공식 지원 여부의 근거가 아니다.**
+
+Firebase 공식 **Use conditions in Firebase Cloud Storage Security Rules**의 *Resource Evaluation*은
+`resource.metadata`를 **developer-specified custom metadata map**으로 명시하고, **write 평가에서
+`request.resource`로 새 metadata를 검사**할 수 있다고 명시한다
+(`https://firebase.google.com/docs/storage/security/rules-conditions`).
+
+⇒ **(c2) `customMetadata` pointer의 Rules metadata 표면 자체는 `OFFICIALLY SUPPORTED`(정적 근거
+확인)** 로 재분류했다. 보고서에 **§1.4 「공식 문서 인용」** 을 신설해 근거를 고정했다.
+
+**함께 폐기한 것 (딱 둘):**
+
+1. *"저장소 선례 0건이므로 공식 지원도 `UNCONFIRMED`"* — 폐기.
+2. *"(c1)만 Rules 표면 근거 등급을 확보했고 (c2)는 갖지 못한다"* 는 **비교** — 폐기.
+   ⇒ (c2)에 남는 실제 차이는 이제 **둘**이다: 목표 public-read 구현 시 **recId가 공개 식별자**,
+   **GG-4 미승인 schema/Rules 확장**. 여기에 **(c2)에만 붙는 설계 요건**(허용 키 exact key/format
+   검증 · mapping ↔ assetId 교차검사)이 남는다.
+
+**그대로 유지한 것 (되돌리지 않음):**
+
+- **V2 전용 Rules 미작성** — asset/mapping 어느 쪽도 아직 쓰이지 않았다.
+- **exact key/format 고정과 assetId 교차검사 설계 필요** — `customMetadata` 값이 문자열뿐이므로
+  Rules 정규식과 mapping schema 요건이 그대로 남는다.
+- **emulator/runtime `NOT TESTED`** — 이 저장소에 metadata를 읽는 Rules 선례는 여전히 **0건**이고,
+  공식 지원은 **정적 근거**이지 실행 검증이 아니다.
+- **목표 public-read 시 recId가 관측되는 설계 귀결** — recId를 secret으로 설계하지 않고, token을
+  `customMetadata`에 넣지 않는다(라운드 3 결론 유지).
+- **GG-4가 승인하지 않은 schema/Rules 확장**이라는 승인 상태.
+- **실제 Firebase/IAM/live `NOT TESTED`**.
+- **(c1)·(c2) 모두 확정 orphan 미증명**과 **O-3 삭제 보류**.
+- 라운드 2·3에서 통과한 내용 전부 — primitive 4층위 분류, privileged plaintext surface(overlap
+  `UNCONFIRMED`), (c1) transform-0 성립, access-call 산술(create 1 / delete 2, 연쇄 보간 전제는 계속
+  `UNCONFIRMED`), metadata-only update 차단, self-hash bookkeeping 중단.
+
+**정정한 위치:** 보고서 §1.4(신설) · §Q7.1.1 (c2) 「Rules 표면」 행과 마무리 문단 · §Q7.1 선택지 표
+(V2-2″ 행) · §Q7.1 UNCONFIRMED 목록 · §Q10 JJ-5 행 · §4(UNCONFIRMED → 「이미 검증된 것」 이동,
+`NOT TESTED` 보강) · §7 진행도 · 문서 머리말(상태·commit 표·라운드 4 변경 요약). 이 spec에는 라운드 2
+기록의 superseded 주석과 라운드 3 (c2) 재평가 ①의 폐기 표시를 달았다.
+
+**게이트:** `git diff --check` PASS, 허용 6개 문서 외 diff **0**. 문서 전용 단위라 실행 게이트는 없고
+unit/E2E/typecheck/build/emulator를 **하나도 돌리지 않았으며 돌렸다고 기록하지 않는다.** 이 세션은
+network 접근이 금지되어 **위 공식 문서 URL을 직접 fetch하지 않았다** — 인용은 Codex 재검수가 제시한
+것이며 보고서 §1.4에 그 사실을 명시했다.
+
+**진행도: 78~81% 완료 / 19~22% 잔여 — 변동 없음.** 라운드 4는 **근거 등급 하나를 바로잡은 문서
+정정**이다. 라운드 2의 primitive 정정과 같은 성격으로 **이번에 새로 검증한 것이 아니라 잘못 낮춰
+적었던 것을 고친 것**이며, 규칙은 여전히 미작성·실행 검증 0이다. **작업축 6의 잔여 난이도는 줄지
+않았다.**
+
+**READY_FOR_CODEX에서 멈춘다.** 다음 구현 스펙과 Founder JJ-1~JJ-7 선택은 시작하지 않았다.

@@ -20,14 +20,39 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`CORRECTION_REQUIRED` - Founder가 스펙 073 문서 보완 라운드 4 예외를 승인했다.**
+상태: **`READY_FOR_CODEX` - 스펙 073 문서 보완 라운드 4(Founder 예외 승인)를 수행했다.**
 
-Founder는 이 대화에서 **`스펙 073 문서 보완 라운드 4 예외 승인`**을 명시했다. 실행 기준은 승인 기록
-직전 `HEAD=origin=dc6fe11`, ahead/behind 0/0이다. 이번 예외는 아래 Storage Rules metadata 근거 등급
-정정과 관련 문서 동기화 한 번만 허용한다. 다음 transition은 `CLAUDE_DOCUMENT_CORRECTION_ROUND_4`다.
+보완 직전 관측 기준 `HEAD=origin=a6ad189`(Founder 라운드 4 예외 승인 commit), ahead/behind 0/0.
+승인문이 적은 `dc6fe11`은 그 직전 commit이고 그 위에 승인 commit `a6ad189`가 얹혀 있다 — 기준선은
+정합하며 라운드 4는 `a6ad189`에서 출발했다.
 
-제품 코드/test/Rules/config/package/lockfile, emulator/live, JJ-1~JJ-7 선택과 다음 구현 스펙은 계속
-금지다. Claude Code 실행 지시문은 `Automation/NEXT_CLAUDE_PROMPT.md` 상단에 확정본으로 기록했다.
+Codex 최종 재검수의 **근거 정정 1건만** 반영했다. Storage Rules의 object metadata 표면
+(`resource.metadata` / write 평가의 `request.resource` metadata 검사)을 `UNCONFIRMED` → **공식
+지원(`OFFICIALLY SUPPORTED`, 정적 근거 확인)** 으로 재분류하고, 조사 보고서에 **§1.4 「공식 문서
+인용」**을 신설해 근거를 고정했다. **폐기한 것은 딱 둘** — *"저장소 선례 0건이므로 공식 지원도
+`UNCONFIRMED`"*, *"(c1)만 Rules 표면 근거 등급을 확보했다"* 는 비교다. ⇒ (c2)에 남는 차이는
+**목표 public-read 시 recId 공개**와 **GG-4 미승인 schema/Rules 확장** 둘, 그리고 **(c2)에만 붙는
+exact key/format·assetId 교차검사 설계 요건**이다.
+
+**유지된 경계:** V2 전용 Rules 미작성, emulator/runtime `NOT TESTED`, 실제 Firebase/IAM/live
+`NOT TESTED`, **(c1)·(c2) 모두 확정 orphan 미증명과 O-3 삭제 보류**. 허용 문서 6개만 수정했고 제품
+코드/test/Rules/config/package/lockfile, `apps/**`, `packages/**`, 보호 대상 변경은 **0**,
+실제 Firebase/network/emulator/deploy/UID/URL/UI도 **0**이다. 이 세션은 network 접근이 금지되어
+**공식 문서 URL을 직접 fetch하지 않았다** — 인용은 Codex 재검수가 제시한 것이며 보고서 §1.4에 그
+사실을 명시했다.
+
+**내용 commit 1개**만 남기고 self-hash bookkeeping commit은 추가하지 않았다. 다음 transition은
+`CODEX_RE_REVIEW`다. 제품 코드/test/Rules/config/package/lockfile, emulator/live, JJ-1~JJ-7 선택과
+다음 구현 스펙은 계속 금지이며 시작하지 않았다.
+
+전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다. 라운드 4는 근거 등급 하나를
+바로잡은 문서 정정이며 제품 작업축 완료량을 늘리지 않는다.
+
+> Founder 라운드 4 예외 승인 기록:
+
+Founder는 이 대화에서 **`스펙 073 문서 보완 라운드 4 예외 승인`**을 명시했다. 승인 기록 직전 기준은
+`HEAD=origin=dc6fe11`, ahead/behind 0/0이었다. 이번 예외는 아래 Storage Rules metadata 근거 등급
+정정과 관련 문서 동기화 한 번만 허용했다.
 
 > 예외 승인 전 Codex STOP 기록:
 
