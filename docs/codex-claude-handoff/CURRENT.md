@@ -20,7 +20,22 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 071은 DONE / CODEX_PASSED이며 오늘 세션을 종료한다.**
+상태: **`READY_FOR_CLAUDE` - 스펙 072 local issue bundle 계약이 준비됐다.**
+
+사용자의 수동 재개 지시에 따라 `docs/rebuild/specs/072-space-v2-local-issue-bundle-orchestrator.md`와
+`docs/handoff/2026-08-24-spec-072-space-v2-local-issue-bundle-orchestrator-handoff.md`를 작성했다.
+
+스펙 072는 spec071의 독립 assetId·token pair를 먼저 만들고 assetId를 spec068 snapshot-safe local
+preparation에 전달한다. 성공은 token과 fresh proof descriptor/upload bytes/encrypted document copies만
+제공한다. 신규 `issue-bundle.ts`와 unit 2개 외 제품 변경은 허용하지 않는다.
+
+Storage upload, Firestore create/reconciliation, 실제 Firebase/Rules/network/emulator/deploy와 UI는
+계속 NOT IMPLEMENTED / NOT TESTED / 금지다. 전체 리빌드 진행도는 **77~80% 완료 / 20~23% 잔여로
+변동 없다**. 계약만 준비됐으므로 제품 작업축 완료량은 아직 증가하지 않았다.
+
+> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 071 DONE / CODEX_PASSED.**
+
+## 스펙 071 종료 기록
 
 HEAD=origin `0d4aac4`, ahead/behind 0/0에서 구현 `eb3df01`을 독립 검토했다. 기준 `3e0a91a` 이후
 제품 diff는 허용 신규 `issue-identity-pair.ts`와 unit 2개뿐이다. method one-read와 receiver 보존,

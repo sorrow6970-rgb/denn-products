@@ -1,19 +1,31 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `none` — **TODAY SESSION CLOSED / NO NEXT SPEC**
+상태: `READY_FOR_CLAUDE`
+active_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **CONTRACT READY / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-071-space-v2-local-issue-identity-pair` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: 구현 **`eb3df01`** / 기록 및 독립 검수 baseline **`0d4aac4`**.
-현재 HEAD=origin **`0d4aac4`**, ahead/behind **0/0**이며 Codex 종료 문서만 working tree에 있다.
-next_transition: **`WAITING_FOR_NEXT_MANUAL_TASK`**
+기준: HEAD=origin **`9a63da6`**, ahead/behind **0/0**. 스펙 071 구현 **`eb3df01`**.
+Codex 스펙 072 계약 문서는 working tree에 있고 staged 0이다.
+next_transition: **`CLAUDE_IMPLEMENTATION`**
 
 ## Claude Code 전달용 다음 지시문
 
 아래 문장을 Claude Code에 그대로 전달한다.
 
 ```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 전부 읽고, 현재 Codex가 남긴 스펙 071 종료 문서 6개만 정확히 stage해 일반 fast-forward 문서 commit으로 push해. 허용 문서는 docs/rebuild/specs/071-space-v2-local-issue-identity-pair.md, docs/handoff/2026-08-21-spec-071-space-v2-local-issue-identity-pair-handoff.md, Automation/DENN_AUTOMATION_STATE.md, Automation/NEXT_CLAUDE_PROMPT.md, docs/codex-claude-handoff/CURRENT.md, docs/live/CLAUDE_LIVE_PATCH_LOG.md뿐이다. 제품 코드·test·package/lockfile·Rules/config와 보호 대상 및 기존 Founder/user working tree 변경은 수정·restore·checkout·stage·commit하지 마. push 후 HEAD=origin, ahead/behind 0/0, staged 0, working tree가 기존 보호 대상뿐인지 확인하고 스펙 071 DONE/CODEX_PASSED, 전체 리빌드 77~80% 완료·20~23% 잔여, 오늘 세션 종료와 WAITING_FOR_NEXT_MANUAL_TASK를 보고해. 다음 스펙·구현·자동화·반복 작업은 시작하지 마.
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/072-space-v2-local-issue-bundle-orchestrator.md를 전부 읽고 스펙 072의 명시된 local-only 범위만 구현·검증해. 먼저 현재 Codex 문서 변경 6개를 일반 fast-forward 문서 commit으로 push한 뒤, 보호 대상과 기존 Founder/user working tree 변경 및 기존 spec064~071 제품 파일은 건드리지 마. 허용 제품 파일은 신규 apps/admin/src/space-v2/issue-bundle.ts와 해당 unit 두 개뿐이다. Storage upload, Firestore create/reconciliation, 실제 Firebase/network/Rules/emulator/deploy 또는 UI로 확장하거나 자동화·반복 작업을 만들지 마. 완료 후 제품 commit과 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를 실제 상태에 맞춘 뒤 전체 리빌드 진행률·잔여율·변동 근거까지 보고해.
 ```
+
+## ★ 스펙 072 — local issue bundle 계약
+
+- spec071 identity pair를 한 번 생성하고 assetId를 spec068 preparation에 전달한다.
+- 정상 순서는 UUID 2회 → SHA 3회 → encrypt 1회다. identity 실패면 preparation 0, preparation 실패면
+  UUID 재생성·retry·upload/create 0이다.
+- 성공 handle은 token과 fresh proof descriptor/upload bytes/encrypted document copies만 제공한다.
+- 허용 제품 파일은 신규 local module/unit 2개뿐이다. 기존 spec064~071 제품 파일은 수정하지 않는다.
+- upload, Firestore, Firebase/Rules/network/emulator/deploy와 admin/customer UI는 계속 NOT IMPLEMENTED /
+  NOT TESTED / 금지다.
+
+진행도 보고: **77~80% 진행 / 20~23% 잔여 — 변동 없음**. 계약만 준비됐고 구현 전이다.
 
 ## ★ 스펙 071 — Codex 독립 검수 통과 / DONE
 

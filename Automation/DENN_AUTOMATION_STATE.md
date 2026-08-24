@@ -1,20 +1,20 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-08-21
+updated_at: 2026-08-24
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-071-space-v2-local-issue-identity-pair   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: none   # today session closed; no next spec selected
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 0d4aac4   # spec 071 implementation record / Codex review baseline
+active_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # CONTRACT READY, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CLAUDE
+baseline_commit: 9a63da6   # spec 071 closure / spec 072 contract baseline
 candidate_commit: null
 verified_commit: eb3df01   # spec 071 local issue identity pair, independently passed at 0d4aac4
-origin_relation: "HEAD=origin at 0d4aac4 before the uncommitted Codex spec 071 closure documents; ahead/behind 0/0"
-working_tree: "Codex spec 071 closure documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
+origin_relation: "HEAD=origin at 9a63da6 before the uncommitted Codex spec 072 contract documents; ahead/behind 0/0"
+working_tree: "Codex spec 072 contract/handoff/state documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: WAITING_FOR_NEXT_MANUAL_TASK
+next_transition: CLAUDE_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,16 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 77-80% complete; 20-23% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 072 local issue bundle 계약 준비 (2026-08-24)
+
+- 사용자 수동 재개 지시에 따라 다음 최소 단위로 스펙 072 계약과 handoff를 작성했다.
+- 스펙 071 identity pair를 먼저 만들고 그 assetId를 스펙 068 preparation에 전달하는 local-only 조합이다.
+- 허용 제품 파일은 신규 `issue-bundle.ts`와 unit 2개뿐이다. upload, Firestore create, Firebase/Rules/
+  network/emulator/deploy와 UI는 계속 닫혀 있다.
+- 전체 리빌드 진행도는 **77~80% 완료 / 20~23% 잔여로 변동 없음**이다. 계약 문서만 준비했으므로
+  제품 작업축 완료량은 아직 증가하지 않았다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`.
 
 ## 스펙 071 Codex 독립 검수 통과 · 오늘 세션 종료 (2026-08-21)
 

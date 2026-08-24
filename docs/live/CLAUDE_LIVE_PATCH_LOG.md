@@ -5216,3 +5216,18 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   identity 준비를 확인한 것이므로 추가 상승은 없다.
 - 상태 `WAITING_FOR_NEXT_MANUAL_TASK`. 오늘 세션을 종료하며 다음 스펙·구현·자동화·반복 작업은
   시작하지 않는다. 보호 대상 조작 0, staged 0이다.
+
+## 2026-08-24(1) - 수동 작업 재개 · 스펙 072 계약 준비
+
+- HEAD=origin `9a63da6`, ahead/behind 0/0에서 사용자 수동 재개 지시를 받았다. 스펙 071은
+  `DONE / CODEX_PASSED`로 유지한다.
+- 다음 최소 단위로 spec071 identity pair와 spec068 local preparation만 조합하는 스펙 072 정본과
+  handoff를 작성했다.
+- 허용 제품 범위는 신규 `apps/admin/src/space-v2/issue-bundle.ts`와 unit 2개뿐이다. 기존 spec064~071,
+  package/lockfile/CSS/Firebase/Rules/config/UI는 수정하지 않는다.
+- Storage upload, Firestore create/reconciliation, 실제 Firebase/network/Rules/emulator/deploy와 viewer/
+  admin UI는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다.
+- 전체 리빌드 진행도는 **77~80% 완료 / 20~23% 잔여, 변동 없음**이다. 계약 문서만 준비했으므로
+  제품 작업축 완료량은 아직 증가하지 않았다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. 자동화·반복 작업 생성 0,
+  보호 대상 조작 0, staged 0이다.
