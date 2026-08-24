@@ -1,20 +1,29 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **CORRECTION ROUND 4 APPLIED (FOUNDER-AUTHORIZED EXCEPTION) / AWAITING CODEX RE-REVIEW / DOCUMENT ONLY / READ ONLY**
-completed_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO NETWORK / NO UI**
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `none` — **TODAY SESSION ENDED / NO NEXT UNIT STARTED**
+completed_unit: `spec-073-space-v2-persistence-boundary-investigation` — **DONE / CODEX_PASSED / DOCUMENT_REVIEW_PASSED / DOCUMENT ONLY / READ ONLY**
 기준: 보완 직전 관측 HEAD=origin **`a6ad189`**(Founder 라운드 4 예외 승인 문서 commit), ahead/behind **0/0**. 승인문이 적은 `dc6fe11`은 그 **직전 commit**이고 그 위에 승인 commit `a6ad189`가 얹혀 있다 — 기준선은 정합하며 라운드 4는 `a6ad189`에서 출발했다. 라운드 4도 **내용 commit 1개만** 추가하고 self-hash bookkeeping commit을 만들지 않았다 — push 후 `HEAD=origin`·ahead/behind 0/0을 검증했고 해시 정본은 git 이력·세션 보고다(**commit은 자기 해시를 내용에 담을 수 없다**).
 이력: `f1f5d20`(초판 내용) → `534c26f`(bookkeeping) → `63a1dec`(라운드 1 내용) → `2dd97c4`(bookkeeping) → `6b3bcfc`(라운드 2 내용) → `9707233`(라운드 3 내용) → `dc6fe11`(Codex 재검수 STOP 기록) → `a6ad189`(Founder 라운드 4 예외 승인) → 라운드 4 내용 commit.
 working tree에는 기존 Founder/user 보호 변경만 남고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
-fix_round: **4 — Founder 예외 승인 라운드, 수행 완료** (자동 한도 `max_fix_rounds`는 3 그대로)
-next_transition: **`CODEX_RE_REVIEW`**
+fix_round: **4 — Founder 예외 승인 라운드, CODEX_PASSED** (자동 한도 `max_fix_rounds`는 3 그대로)
+next_transition: **`FOUNDER_JJ_1_JJ_7_DECISION`**
 
 ## Claude Code 전달용 다음 지시문
 
-스펙 073 문서 보완 라운드 4(Founder 예외 승인)를 수행해 상태는 `READY_FOR_CODEX`다. 자동 보완 한도는
-여전히 **3/3**이고 라운드 4는 Founder가 명시적으로 승인한 **일회성 예외**였다. 다음 실행 지시문은
-**Codex 재검수 종료 시점에** 이 자리에 다시 작성된다. Claude Code는 그때까지 Founder JJ-1~JJ-7 선택,
-제품 구현, Rules 변경, emulator 실행, 새 스펙과 자동화·반복 작업을 시작하지 않는다.
+스펙 073 라운드 4는 Codex 최종 문서 검수를 통과했다. 오늘 세션은 종료한다. **Claude Code에 전달할
+실행 지시문은 없다.** Founder JJ-1~JJ-7은 선택하지 않고 조사 보고서의 선택지 그대로 보존한다.
+다음 수동 세션에서 Founder 결정이 있기 전까지 제품 구현, Rules 변경, emulator 실행, 새 스펙과
+자동화·반복 작업을 시작하지 않는다.
+
+## Codex 최종 판정
+
+- 기준 `HEAD=origin=c8234a9`, ahead/behind 0/0.
+- 라운드 4 변경 경로는 허용 문서 6개뿐, `git diff --check` PASS.
+- 공식 metadata Rules 지원과 V2 runtime `NOT TESTED`가 정확히 분리됐다.
+- 판정: **`DOCUMENT_REVIEW_PASSED / CODEX_PASSED / DONE`**.
+- 다음 transition: **`FOUNDER_JJ_1_JJ_7_DECISION`**.
+- 진행도: **78~81% 완료 / 19~22% 잔여 — 변동 없음**.
 
 > 직전 지시문(스펙 073 보완 라운드 4, 수행 완료 — 기록):
 >

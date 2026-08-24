@@ -20,7 +20,24 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 073 문서 보완 라운드 4(Founder 예외 승인)를 수행했다.**
+상태: **`FOUNDER_DECISION_REQUIRED` - 스펙 073 DONE / CODEX_PASSED / 오늘 세션 종료.**
+
+Codex는 `HEAD=origin=c8234a9`, ahead/behind 0/0에서 라운드 4 문서를 최종 재검수했다. 변경은 허용 문서
+6개뿐이고 `git diff --check` PASS, staged 0이었다. Firebase 공식 *Use conditions in Firebase Cloud
+Storage Security Rules*의 Resource Evaluation과 보고서 §1.4·§Q7.1.1·§4·JJ-5가 일치한다.
+
+`resource.metadata`와 write 평가의 `request.resource` metadata 검사는 **공식 지원**으로, V2 전용
+Rules/runtime은 **미작성·NOT TESTED**로 분리됐다. 목표 public-read 시 recId 관측, GG-4 미승인 확장,
+exact-key/format·assetId 교차검사 설계 필요, 연쇄 경로 보간 `UNCONFIRMED`, 실제 IAM/live
+`NOT TESTED`, 확정 orphan 미증명과 O-3 삭제 보류도 유지된다.
+
+최종 판정은 **`DOCUMENT_REVIEW_PASSED / CODEX_PASSED / DONE`**이다. 제품 코드/test/Rules/config/
+package/lockfile 변경과 emulator/live 실행은 0이다. 오늘 세션은 종료하며 JJ-1~JJ-7은 선택하지 않는다.
+다음 작업 자동 시작 없음, 다음 transition은 `FOUNDER_JJ_1_JJ_7_DECISION`이다.
+
+전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다.
+
+> 라운드 4 제출 당시 기록:
 
 보완 직전 관측 기준 `HEAD=origin=a6ad189`(Founder 라운드 4 예외 승인 commit), ahead/behind 0/0.
 승인문이 적은 `dc6fe11`은 그 직전 commit이고 그 위에 승인 commit `a6ad189`가 얹혀 있다 — 기준선은

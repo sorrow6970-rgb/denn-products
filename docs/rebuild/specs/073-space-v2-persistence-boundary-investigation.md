@@ -575,4 +575,16 @@ network 접근이 금지되어 **위 공식 문서 URL을 직접 fetch하지 않
 적었던 것을 고친 것**이며, 규칙은 여전히 미작성·실행 검증 0이다. **작업축 6의 잔여 난이도는 줄지
 않았다.**
 
+### CODEX FINAL REVIEW — DOCUMENT_REVIEW_PASSED / DONE (2026-08-24)
+
+- 검수 기준 `HEAD=origin=c8234a9`, ahead/behind 0/0.
+- 라운드 4 변경은 허용 문서 6개뿐이며 `git diff --check` PASS, staged 0.
+- 공식 Storage Rules metadata 지원, V2 Rules/runtime `NOT TESTED`, 남은 설계·보안·orphan 경계가
+  조사 보고서 전체에서 일치한다.
+- 판정: **`DOCUMENT_REVIEW_PASSED / CODEX_PASSED / DONE`**.
+- 제품 코드/test/Rules/config/package/lockfile 변경과 emulator/live 실행 0.
+- JJ-1~JJ-7 선택 0. 오늘 세션 종료, 다음 작업 자동 시작 0. 다음 transition은
+  `FOUNDER_JJ_1_JJ_7_DECISION`.
+- 전체 리빌드 진행도 **78~81% 완료 / 19~22% 잔여 — 변동 없음**.
+
 **READY_FOR_CODEX에서 멈춘다.** 다음 구현 스펙과 Founder JJ-1~JJ-7 선택은 시작하지 않았다.

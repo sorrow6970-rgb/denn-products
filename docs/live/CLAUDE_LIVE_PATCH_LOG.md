@@ -5772,3 +5772,18 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `CODEX_RE_REVIEW`. Founder JJ-1~JJ-7 선택, 제품 구현, Rules 변경, emulator 실행, 다음 스펙과
   자동화·반복 작업은 시작하지 않았다. 보호 대상과 기존 Founder/user working-tree 변경은
   restore/checkout/stage/commit하지 않았다.
+
+## 2026-08-24(14) - 스펙 073 Codex 최종 문서 검수 통과 · 오늘 세션 종료
+
+- 검수 기준 `HEAD=origin=c8234a9`, ahead/behind 0/0. 라운드 4 변경은 허용 문서 6개뿐이고
+  `git diff --check` PASS, staged 0이었다.
+- 공식 Firebase Storage Rules metadata 지원과 보고서 §1.4·§Q7.1.1·§4·JJ-5를 대조했다.
+  `resource.metadata`와 write의 `request.resource` metadata 검사는 **공식 지원**, V2 Rules/runtime은
+  **미작성·NOT TESTED**로 정확히 분리됐다.
+- 목표 public-read 시 recId 관측, GG-4 미승인 확장, exact-key/format·assetId 교차검사 설계 필요,
+  연쇄 경로 보간 `UNCONFIRMED`, 실제 IAM/live `NOT TESTED`, 확정 orphan 미증명과 O-3 삭제 보류 유지.
+- 최종 판정 **`DOCUMENT_REVIEW_PASSED / CODEX_PASSED / DONE`**. 제품 코드/test/Rules/config/package/
+  lockfile 변경과 emulator/live 실행 0.
+- 상태 `FOUNDER_DECISION_REQUIRED`, 다음 transition `FOUNDER_JJ_1_JJ_7_DECISION`. JJ-1~JJ-7 선택 0,
+  오늘 세션 종료, 다음 작업 자동 시작 0.
+- 전체 리빌드 진행도 **78~81% 완료 / 19~22% 잔여 — 변동 없음**.

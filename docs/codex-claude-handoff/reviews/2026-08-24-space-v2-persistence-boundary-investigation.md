@@ -1,7 +1,7 @@
 # space V2 persistence boundary 읽기 전용 조사
 
 - 스펙 정본: `docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md`
-- 상태: **DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI — 보완 라운드 4 반영 (Founder 예외 승인)**
+- 상태: **DONE / CODEX_PASSED / DOCUMENT_REVIEW_PASSED / DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI**
 - 조사 수행: Claude Code, 2026-08-24 · 라운드 1·2·3·4 모두 같은 날 Codex `CORRECTION_REQUIRED` 반영
   (라운드 4는 자동 한도 3/3을 넘는 **Founder 예외 승인** 라운드다)
 
@@ -85,6 +85,10 @@
 > 실제 Firebase/project/bucket/object/Firestore/network/live 데이터 접근 **0**, emulator 실행 **0**,
 > upload/write/read-back/delete/deploy **0**, URL 발급 **0**, UI 연결 **0**.
 > 이 조사에서 실행한 것은 저장소 안 파일과 `node_modules` 안 **설치된 SDK 타입/소스 읽기**뿐이다.
+
+> **Codex 최종 문서 검수 (2026-08-24):** `HEAD=origin=c8234a9`, ahead/behind 0/0에서 라운드 4의
+> 공식 metadata 근거 정정과 유지 경계를 독립 대조해 **`DOCUMENT_REVIEW_PASSED / CODEX_PASSED`**로
+> 판정했다. JJ-1~JJ-7은 아직 선택되지 않았고, 이 통과는 Rules·emulator·adapter·UI·배포 승인이 아니다.
 
 ---
 
