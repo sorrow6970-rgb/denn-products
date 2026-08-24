@@ -5,16 +5,16 @@ updated_at: 2026-08-24
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-073-space-v2-persistence-boundary-investigation   # CORRECTION ROUND 3 APPLIED, AWAITING CODEX RE-REVIEW, DOCUMENT ONLY, READ ONLY
-state: READY_FOR_CODEX
+active_unit: spec-073-space-v2-persistence-boundary-investigation   # CODEX CORRECTION_REQUIRED AFTER ROUND 3, MAX FIX ROUNDS REACHED, DOCUMENT ONLY, READ ONLY
+state: BLOCKED
 baseline_commit: c5f8384   # spec 072 closure + spec 073 contract documents committed by Claude Code
 candidate_commit: null   # document-only unit; no product commit exists
 verified_commit: 34cca25   # spec 072 local issue bundle, independently passed at 452cc1a
 origin_relation: "pre-round-3 observation: HEAD=origin at round-2 content commit 6b3bcfc, ahead/behind 0/0. Round 3 adds ONE content commit and no self-hash bookkeeping commit; HEAD=origin and ahead/behind 0/0 are re-verified after push and reported in the session, because a commit cannot contain its own hash"
 working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
-fix_round: 3
+fix_round: 3   # 3/3 consumed; round 4 is not authorized
 max_fix_rounds: 3
-next_transition: CODEX_RE_REVIEW
+next_transition: FOUNDER_AUTHORIZE_SPEC073_CORRECTION_ROUND_4
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,25 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 78-81% complete; 19-22% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 073 Codex 최종 재검수 — CORRECTION_REQUIRED / 자동 보완 한도 도달 (2026-08-24)
+
+- 검수 기준 `HEAD=origin=9707233`, ahead/behind 0/0. 라운드 3 commit 범위는 허용 문서 6개뿐이고
+  `git diff --check`도 PASS했다. working tree에는 기존 보호/Founder 변경만 남고 staged 0이다.
+- 라운드 3의 access-call 산술, metadata-only update 차단, 현재 default-deny와 목표 public-read 구분은
+  수용한다.
+- 다만 조사 보고서가 `request.resource.metadata` / `resource.metadata`의 Storage Rules 지원을
+  `UNCONFIRMED`로 남긴 것은 공식 문서와 충돌한다. Firebase 공식 **Use conditions in Firebase Cloud
+  Storage Security Rules**의 Resource Evaluation은 `resource.metadata`를 developer-specified custom
+  metadata map으로 명시하고, write에서 `request.resource`로 새 metadata를 검사할 수 있다고 명시한다:
+  https://firebase.google.com/docs/storage/security/rules-conditions
+- 따라서 (c2)의 **Rules metadata 표면 자체는 공식 지원**으로 정정해야 한다. V2 전용 Rules 미작성,
+  exact-key/format 설계 필요, emulator/runtime `NOT TESTED`, 목표 public-read 시 recId 관측, GG-4 미승인
+  schema/Rules 확장, 확정 orphan 미증명은 그대로 유지한다.
+- `fix_round` 3/3을 모두 사용했으므로 자동 라운드 4는 시작하지 않는다. Founder가 예외 라운드 4를
+  명시적으로 승인하기 전까지 상태는 `BLOCKED`, JJ-1~JJ-7 선택과 다음 구현 스펙도 시작하지 않는다.
+- 제품 코드/test/Rules/config/package/lockfile 변경 및 emulator/live 실행은 0이다. 전체 리빌드 진행도는
+  **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다.
 
 ## 스펙 073 문서 보완 라운드 3 수행 — 최종 보완 (2026-08-24)
 

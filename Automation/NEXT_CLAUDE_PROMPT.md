@@ -1,20 +1,44 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **CORRECTION ROUND 3 APPLIED / AWAITING CODEX RE-REVIEW / DOCUMENT ONLY / READ ONLY**
+상태: `BLOCKED`
+active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **CODEX CORRECTION_REQUIRED AFTER ROUND 3 / MAX FIX ROUNDS REACHED / DOCUMENT ONLY / READ ONLY**
 completed_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO NETWORK / NO UI**
 기준: 보완 직전 관측 HEAD=origin **`6b3bcfc`**(라운드 2 내용 commit), ahead/behind **0/0**. 라운드 3도 **내용 commit 1개만** 추가하고 self-hash bookkeeping commit을 만들지 않았다 — push 후 `HEAD=origin`·ahead/behind 0/0을 검증했고 해시 정본은 git 이력·세션 보고다(**commit은 자기 해시를 내용에 담을 수 없다**).
 이력: `f1f5d20`(초판 내용) → `534c26f`(bookkeeping) → `63a1dec`(라운드 1 내용) → `2dd97c4`(bookkeeping) → `6b3bcfc`(라운드 2 내용) → 라운드 3 내용 commit.
 working tree에는 기존 Founder/user 보호 변경만 남고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
-fix_round: **3 / 3 — 최대 보완 횟수 도달**
-next_transition: **`CODEX_RE_REVIEW`**
+fix_round: **3 / 3 — 모두 사용, 라운드 4 미승인**
+next_transition: **`FOUNDER_AUTHORIZE_SPEC073_CORRECTION_ROUND_4`**
 
 ## Claude Code 전달용 다음 지시문
 
-스펙 073 문서 보완 라운드 3(최종 보완)을 수행해 상태는 `READY_FOR_CODEX`다. `fix_round`는 **3/3으로
-최대 보완 횟수에 도달**했다. 다음 실행 지시문은 **Codex 재검수 종료 시점에** 이 자리에 다시 작성된다.
-Claude Code는 그때까지 Founder JJ-1~JJ-7 선택, 제품 구현, Rules 변경, emulator 실행, 새 스펙과
-자동화·반복 작업을 시작하지 않는다.
+**지금은 아래 지시문을 Claude Code에 전달하지 않는다.** Codex 최종 재검수에서 공식 Firebase 문서와
+충돌하는 잔여 결함 1건을 확인했지만, `fix_round` 3/3을 모두 사용했다. Founder가 **스펙 073 문서 보완
+라운드 4 예외**를 명시적으로 승인한 뒤에만 아래 초안을 실행 지시문으로 사용한다. 승인 전에는
+JJ-1~JJ-7 선택, 제품 구현, Rules 변경, emulator 실행, 새 스펙과 자동화·반복 작업을 시작하지 않는다.
+
+> 라운드 4 예외 승인 후 전달할 지시문 초안:
+>
+> ```text
+> C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md의 최신 CODEX RE-REVIEW를 전부 읽고, Founder가 예외 승인한 스펙 073 문서 보완 라운드 4의 한 가지 근거 정정만 수행해. 기준은 rebuild/modern-studio HEAD=origin 9707233, ahead/behind 0/0이다. 제품 구현과 Founder JJ-1~JJ-7 선택은 시작하지 마.
+>
+> 조사 보고서가 Storage Rules의 request.resource.metadata/resource.metadata 지원을 UNCONFIRMED로 둔 주장을 폐기해. Firebase 공식 Use conditions in Firebase Cloud Storage Security Rules의 Resource Evaluation은 resource.metadata를 developer-specified custom metadata map으로 명시하고, write에서 request.resource로 새 metadata를 검사할 수 있다고 명시한다: https://firebase.google.com/docs/storage/security/rules-conditions . 따라서 (c2) customMetadata pointer의 Rules metadata 표면 자체는 OFFICIALLY SUPPORTED/정적 근거 확인으로 분류해.
+>
+> 이 정정으로 폐기할 것은 “저장소 선례 0건이므로 공식 지원도 UNCONFIRMED”, “(c1)만 Rules 표면 근거 등급을 확보했다”는 비교뿐이다. 그대로 유지할 것은 V2 전용 Rules 미작성, exact key/format 및 assetId 교차검사 설계 필요, emulator/runtime NOT TESTED, 목표 public-read 시 recId가 관측되는 설계 귀결, GG-4가 승인하지 않은 schema/Rules 확장, 실제 Firebase/IAM/live NOT TESTED, (c1)/(c2) 모두 확정 orphan 미증명과 삭제 보류다. JJ-5와 비교표, UNCONFIRMED/정적 근거 목록, 진행도 설명도 이 근거 등급에 맞춰 최소 정정해.
+>
+> 허용 파일은 조사 보고서, docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md, Automation/DENN_AUTOMATION_STATE.md, Automation/NEXT_CLAUDE_PROMPT.md, docs/codex-claude-handoff/CURRENT.md, docs/live/CLAUDE_LIVE_PATCH_LOG.md의 문서 6개뿐이다. 제품 코드/test/storage.rules/firestore.rules/Firebase config/package/lockfile, apps/**, packages/**와 보호 대상은 수정·restore·checkout·stage·commit하지 마. 실제 Firebase/project/bucket/Firestore/network/live 접근, emulator 실행, upload/write/read-back/delete/deploy, UID 추측, URL 발급, UI 연결, 자동화·반복 작업은 금지다.
+>
+> 문서 diff만 git diff --check와 forbidden diff로 확인하고 허용 문서만 일반 fast-forward 내용 commit 1개로 push해. self-hash bookkeeping commit은 추가하지 마. 완료 후 HEAD=origin, ahead/behind 0/0, 정확한 변경 파일, 공식 metadata Rules 근거, 유지되는 NOT TESTED/미승인 범위, 전체 리빌드 78~81% 완료·19~22% 잔여 변동 없음을 보고하고 READY_FOR_CODEX에서 멈춰. 다음 구현 스펙과 Founder JJ-1~JJ-7 질문은 시작하지 마.
+> ```
+
+## Codex 최종 재검수 결과 — CORRECTION_REQUIRED / STOP
+
+- 기준: `HEAD=origin=9707233`, ahead/behind 0/0.
+- 라운드 3 변경은 허용 문서 6개뿐이며 `git diff --check` PASS.
+- 잔여 결함: 보고서 §Q7.1.1·§4·§7의 Storage Rules metadata 표면 `UNCONFIRMED` 판정이 공식 Firebase
+  문서와 충돌한다. 공식 문서는 `resource.metadata`와 write의 `request.resource` metadata 검사를
+  명시한다.
+- 자동 보완 한도 3/3 도달. 라운드 4는 Founder 예외 승인 전 실행 금지.
+- 진행도: **78~81% 완료 / 19~22% 잔여 — 변동 없음**.
 
 > 직전 지시문(스펙 073 보완 라운드 3, 수행 완료 — 기록):
 >

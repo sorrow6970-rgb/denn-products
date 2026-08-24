@@ -5676,3 +5676,23 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   시작하지 않았다. 보호 대상과 기존 Founder/user working-tree 변경은 restore/checkout/stage/commit하지
   않았다.
 
+## 2026-08-24(11) - 스펙 073 Codex 최종 재검수 · CORRECTION_REQUIRED / STOP
+
+- 검수 기준 `HEAD=origin=9707233`, ahead/behind 0/0. 라운드 3 변경은 허용 문서 6개뿐이고
+  `git diff --check` PASS다. working tree에는 기존 보호/Founder 변경만 있으며 staged 0이다.
+- 라운드 3의 access-call 산술, metadata-only update 차단, 현재 default-deny와 목표 public-read 구분은
+  수용한다.
+- **잔여 결함 1건:** 보고서가 Storage Rules의 `request.resource.metadata` / `resource.metadata`
+  지원을 `UNCONFIRMED`로 남긴 것은 공식 Firebase 문서와 충돌한다. 공식 **Use conditions in Firebase
+  Cloud Storage Security Rules**의 Resource Evaluation은 `resource.metadata`를 custom metadata map으로
+  명시하고 write에서 `request.resource`로 새 metadata를 검사할 수 있다고 명시한다:
+  https://firebase.google.com/docs/storage/security/rules-conditions . (c2)의 Rules metadata 표면 자체는
+  **공식 지원**으로 정정해야 한다.
+- 유지되는 경계: V2 Rules 미작성, exact-key/format 설계 필요, emulator/runtime `NOT TESTED`, 목표
+  public-read 시 recId 관측, GG-4 미승인 schema/Rules 확장, 실제 IAM/live `NOT TESTED`, 확정 orphan
+  미증명과 삭제 보류.
+- `fix_round` 3/3을 모두 사용했으므로 자동 보완 라운드 4는 시작하지 않는다. 상태 `BLOCKED`, 다음
+  transition `FOUNDER_AUTHORIZE_SPEC073_CORRECTION_ROUND_4`. Founder JJ-1~JJ-7, 제품 구현,
+  Rules/emulator, 다음 스펙도 시작하지 않는다.
+- 제품 코드/test/Rules/config/package/lockfile 변경과 emulator/live 실행은 0. 전체 리빌드 진행도는
+  **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다.

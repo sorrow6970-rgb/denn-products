@@ -20,7 +20,27 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 073 문서 보완 라운드 3(최종 보완)을 수행했다.**
+상태: **`BLOCKED` - 스펙 073 Codex 최종 재검수에서 CORRECTION_REQUIRED, 보완 한도 3/3 도달.**
+
+검수 기준 `HEAD=origin=9707233`, ahead/behind 0/0이다. 라운드 3의 변경 범위(허용 문서 6개),
+access-call 산술, metadata-only update 차단, 현재 default-deny와 목표 public-read 구분은 수용한다.
+
+남은 결함은 한 가지다. 조사 보고서는 Storage Rules의 `request.resource.metadata` /
+`resource.metadata` 지원을 `UNCONFIRMED`로 남겼지만, Firebase 공식 **Use conditions in Firebase Cloud
+Storage Security Rules**의 Resource Evaluation은 `resource.metadata`를 developer-specified custom
+metadata map으로 명시하고 write에서 `request.resource`로 새 metadata를 검사할 수 있다고 명시한다:
+https://firebase.google.com/docs/storage/security/rules-conditions . 따라서 (c2)의 Rules metadata 표면
+자체는 **공식 지원**으로 정정해야 한다.
+
+V2 전용 Rules 미작성, exact-key/format 설계 필요, emulator/runtime `NOT TESTED`, 목표 public-read 시
+recId 관측, GG-4 미승인 schema/Rules 확장, 실제 IAM/live `NOT TESTED`, 확정 orphan 미증명과 삭제 보류는
+유지된다. `fix_round` 3/3을 모두 사용했으므로 Founder가 라운드 4 예외를 승인하기 전에는 Claude Code
+보완, JJ-1~JJ-7 선택, 제품 구현, Rules/emulator, 다음 스펙을 시작하지 않는다.
+
+전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다. 이번 검수는 문서 근거 등급을
+바로잡는 일이며 제품 작업축 완료량을 늘리지 않는다.
+
+> 라운드 3 제출 당시 기록:
 
 보완 직전 관측 HEAD=origin `6b3bcfc`(라운드 2 내용 commit), ahead/behind 0/0에서 Codex 라운드 3의
 **세 정정만 최소 반영**했다. 라운드 2에서 통과한 내용은 되돌리지 않았다. 허용 문서 6개(조사 보고서 ·

@@ -457,3 +457,27 @@ unit/E2E/typecheck/build/emulator를 **하나도 돌리지 않았으며 돌렸�
 어느 후보도 전진시키지 않았다. (c2)에 남는 제약과 **두 후보 공통의 확정 orphan 미증명**은 그대로이며
 **작업축 6의 잔여 난이도는 줄지 않았다.**
 
+### CODEX RE-REVIEW — CORRECTION_REQUIRED / STOP (2026-08-24)
+
+검수 기준: `HEAD=origin=9707233`, ahead/behind 0/0. 라운드 3 변경은 허용 문서 6개뿐이고
+`git diff --check` PASS다. access-call 산술, metadata-only update 차단, 현재 default-deny와 목표
+public-read 구분은 수용한다.
+
+잔여 결함은 한 가지다. 조사 보고서 §Q7.1.1·§4·§7은 Storage Rules의
+`request.resource.metadata` / `resource.metadata` 지원을 `UNCONFIRMED`로 분류한다. 그러나 Firebase
+공식 **Use conditions in Firebase Cloud Storage Security Rules**의 Resource Evaluation은
+`resource.metadata`를 developer-specified custom metadata map으로 명시하고, write에서
+`request.resource`로 새 metadata를 검사할 수 있다고 명시한다:
+https://firebase.google.com/docs/storage/security/rules-conditions . 따라서 (c2)의 Rules metadata
+표면 자체는 **공식 지원**으로 정정해야 한다.
+
+정정 범위는 좁다. “저장소 선례 0건이므로 공식 지원도 UNCONFIRMED”, “(c1)만 Rules 표면 근거 등급을
+확보했다”는 비교를 폐기한다. V2 전용 Rules 미작성, exact-key/format 및 assetId 교차검사 설계 필요,
+emulator/runtime `NOT TESTED`, 목표 public-read 시 recId 관측, GG-4 미승인 schema/Rules 확장, 실제
+Firebase/IAM/live `NOT TESTED`, (c1)/(c2) 모두 확정 orphan 미증명과 삭제 보류는 유지한다.
+
+`fix_round`가 **3/3**에 도달했으므로 자동 보완 라운드 4는 열지 않는다. Founder가 예외 라운드 4를
+명시적으로 승인하기 전까지 상태는 `BLOCKED`, 다음 transition은
+`FOUNDER_AUTHORIZE_SPEC073_CORRECTION_ROUND_4`다. 제품 코드/test/Rules/config/package/lockfile,
+emulator/live, JJ-1~JJ-7, 다음 구현 스펙은 계속 금지다. 진행도는 **78~81% 완료 / 19~22% 잔여 —
+변동 없음**이다.
