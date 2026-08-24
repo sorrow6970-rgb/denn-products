@@ -1,6 +1,6 @@
 # 스펙 073 — space V2 persistence boundary 읽기 전용 조사
 
-상태: **CORRECTION ROUND 2 APPLIED / READY_FOR_CODEX / DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI**
+상태: **CORRECTION ROUND 3 APPLIED / READY_FOR_CODEX / DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI**
 
 ## 1. 목표
 
@@ -354,4 +354,106 @@ unit/E2E/typecheck/build/emulator를 **하나도 돌리지 않았으며 돌렸�
 잘못 낮춰 적었던 것을 바로잡은 것**이지 새로 검증한 것이 아니다. 진행도를 올릴 근거가 되지 못한다.
 오히려 §Q7.1·§Q7.1.1이 선택지마다 붙는 조건을 더 분명히 했으므로 **작업축 6의 잔여 난이도는 줄지
 않았다.**
+
+### CODEX RE-REVIEW — CORRECTION_REQUIRED 라운드 3 (2026-08-24)
+
+현재 HEAD=origin `6b3bcfc`, ahead/behind 0/0에서 라운드 2 문서를 재검수했다. cross-service primitive
+근거 등급, privileged plaintext surface와 REC 후보 분리는 수용한다. 다음 세 정정만 남았다.
+
+1. **access-call 산술:** `get(mapping(recId))`로 읽은 같은 문서의 `data.assetId`와 `data.token`을
+   재사용하는 필드 비교는 추가 document access가 아니다. delete는 mapping get 1 + spaces exists 1,
+   총 2이며 assetId 교차 확인도 포함된다. 연쇄 경로 보간은 계속 `UNCONFIRMED`지만 "교차 확인 때문에
+   한도 초과"는 폐기한다. create/delete 평가별 call count를 다시 쓴다.
+2. **metadata update 의미:** `updateMetadata()`는 Storage update 요청이고 목표 `allow update:false`가
+   metadata-only update도 차단한다. GG-4 목표에 차단이 누락됐다는 주장을 폐기한다. V2 Rules는
+   미작성/NOT TESTED이며 향후 update false를 명시해야 한다는 사실은 유지한다.
+3. **public metadata 근거 수준:** 공개 타입은 권한 있는 `getMetadata()` 결과에 customMetadata가
+   포함됨을 증명한다. 현재 asset 경로는 default deny다. 목표 public-read Rules가 구현되면 경로를 아는
+   client가 metadata를 관측할 수 있다는 설계 귀결과 실제 V2 Rules/runtime `NOT TESTED`를 분리한다.
+
+보완은 보고서·이 spec·STATE/NEXT/CURRENT/live log 6개 문서만 허용한다. 라운드 3은 최대 보완 횟수의
+마지막이다. 제품 코드/test/Rules/config/package/lockfile, emulator/live, Founder JJ-1~JJ-7과 다음
+스펙은 재검수 통과 전까지 금지다.
+
+### DONE (Claude) — 보완 라운드 3 (최종 보완)
+
+상태: **CORRECTION ROUND 3 APPLIED / READY_FOR_CODEX** (2026-08-24)
+
+- 보완 직전 관측 기준 HEAD=origin `6b3bcfc`, ahead/behind 0/0. 위 `CODEX RE-REVIEW` 라운드 3의
+  **세 정정만 최소 반영**했다. 라운드 2에서 통과한 내용은 되돌리지 않았다.
+- 수정 파일은 허용 6개뿐이다: 조사 보고서, 이 spec, `Automation/DENN_AUTOMATION_STATE.md`,
+  `Automation/NEXT_CLAUDE_PROMPT.md`, `docs/codex-claude-handoff/CURRENT.md`,
+  `docs/live/CLAUDE_LIVE_PATCH_LOG.md`. 제품 코드/test/`storage.rules`/`firestore.rules`/Firebase
+  config/package/lockfile, `apps/**`, `packages/**`, 보호 대상 변경 **0**.
+- 실제 Firebase/project/bucket/Firestore/network/live 접근 0, **emulator 실행 0**,
+  upload/write/read-back/delete/deploy 0, UID 추측 0, URL 발급 0, UI 연결 0, 자동화·반복 작업 0,
+  Founder JJ-1~JJ-7 선택 0, 다음 구현 스펙 0.
+- **내용 commit 1개만** 남기고 self-hash bookkeeping commit을 추가하지 않았다(라운드 2 결정 유지).
+
+**보완 1 — Storage Rules access-call 산술 정정 (보고서 §Q7.1.1a 신설)**
+
+라운드 2는 *"(c2)에 assetId 교차 확인까지 넣으면 문서 접근 한도를 넘는다"* 고 썼다. **틀렸다.**
+`firestore.get()`이 반환한 **그 문서의 필드를 다시 읽는 것은 새로운 document access가 아니다** —
+`data.assetId`와 `data.token`은 **같은 결과 객체의 필드**다.
+
+| 평가 | (c1) transform-0 | (c2) customMetadata pointer |
+|---|---|---|
+| Storage create 게이팅 | `exists(mapping/$(assetId))` — **1** | `get(mapping/$(request.resource.metadata.recId))` — **1** (+ `.data.assetId == assetId` 비교는 **추가 access 0**) |
+| Storage delete 판정 | `get(mapping/$(assetId))` 1 + `exists(spaces/$(.data.token))` 1 = **2** | `get(mapping/$(resource.metadata.recId))` 1 + `exists(spaces/$(.data.token))` 1 = **2** (교차 확인 포함) |
+| 한도(평가당 2) 대비 | 2 / 2, 여유 0 | 2 / 2, 여유 0 |
+
+⇒ **두 후보의 call 수는 같다.** 라운드 2의 *"교차 확인 때문에 한도 초과"* 와
+*"(c2)가 access-call 면에서 더 비싸다"* 를 **폐기**했다.
+**전제는 유지한다** — delete 계산은 **연쇄 경로 보간** 지원을 가정하며 그 지원은 계속 `UNCONFIRMED`다.
+지원되지 않으면 **(c1)·(c2) 모두 delete 판정이 성립하지 않는다**(공통). create 게이팅은 연쇄 보간을
+쓰지 않으므로 이 전제와 무관하다.
+
+**보완 2 — metadata update 계약 공백 주장 폐기**
+
+`updateMetadata()`는 업로드와 별개인 Storage **update 요청**이고, Storage Rules의 `update`는
+**metadata-only update도 포함**한다. GG-4 목표는 이미 object `update`/`delete`를 `false`로 두므로
+**목표 `allow update: if false`가 `updateMetadata()`를 차단한다.**
+⇒ 라운드 2의 *"GG-4 목표에 metadata update 차단이 누락됐다 — 계약 공백"* 주장을 **폐기**했다.
+
+유지되는 것: V2 목표 Rules는 **아직 미작성 · `NOT TESTED`**이고, 향후 match에 `allow update: if false`를
+**명시해서 써야 한다**(§Q1 주의 1 — default deny와 명시 `false`는 결과가 같아도 근거가 다르다).
+또한 이 저장소의 emulator 게이트는 재업로드·`deleteObject` 거부만 검증했고 **`updateMetadata` 자체는
+검증하지 않았다** — 그 지점은 `NOT TESTED`로 §4에 기록했다.
+
+**보완 3 — public metadata 관측의 근거 수준 정밀화**
+
+라운드 2는 *"경로를 아는 누구나 `getMetadata()`로 읽을 수 있다"* 고 **현재형**으로 썼다. 부정확했다.
+
+- **현재는 관측할 수 없다** — `rebuild-space-assets` 경로는 match 부재로 **default deny**이고
+  read 권한 자체가 없다.
+- 설치 타입 `FullMetadata extends UploadMetadata`(`storage-public.d.ts:56`)가 증명하는 것은
+  **권한 있는 `getMetadata()` 결과에 `customMetadata`가 포함된다**는 사실이다.
+- ⇒ 정확한 진술은 **설계 귀결**이다: **GG-4=A 목표 public-read Rules가 구현되면, 경로를 아는 client가
+  `getMetadata()`로 `customMetadata`를 읽을 수 있다.** 실제 V2 Rules와 runtime 동작은
+  **미작성 · `NOT TESTED`**다. §4의 "정적 결론이지만 실행 검증이 없는 것"에 항목을 신설해 분리했다.
+- **안전 결론은 유지한다**: recId를 **secret으로 설계하지 않는다**, **token을 `customMetadata`에 넣지
+  않는다**.
+
+**보완 4 — 라운드 2 통과 내용 유지 (되돌리지 않음)**
+
+- §Q7.1.0의 cross-service primitive 4층위 분리(공식 지원 / admin-state local emulator VERIFIED /
+  V2 mapping 미작성·`NOT TESTED` / 실제 IAM·live `NOT TESTED`)와 "우회(bypass)" 표현 폐기 — **유지**.
+- private mapping = **새로운 privileged plaintext surface**, principal/role overlap `UNCONFIRMED`,
+  Founder 보안 tradeoff — **유지**.
+- (c1) transform-0 REC 후보가 **성립한다**는 결론 — **유지**.
+- self-hash bookkeeping commit 중단 — **유지**(라운드 3도 내용 commit 1개만).
+
+**(c2) 재평가 결과:** 라운드 2가 붙였던 "명백히 더 비싸다"의 근거 두 개(access-call 초과 · metadata
+update 계약 공백)가 **모두 폐기**됐다. **남는 실제 차이는 비용이 아니라 셋이다** —
+① Rules metadata 표면이 `UNCONFIRMED`(저장소 선례 0건)라 (c1)이 이미 확보한 근거 등급을 갖지 못함,
+② 목표 public-read가 구현되면 **recId가 공개 식별자**가 되어 비밀 설계가 불가능,
+③ **GG-4 미승인 schema/Rules 확장**이라 Founder 승인 범위를 넓힌다.
+**두 후보 모두 확정 orphan을 증명하지 못한다**는 결론은 그대로다.
+
+**게이트:** `git diff --check` PASS, 허용 6개 문서 외 diff **0**. 문서 전용 단위라 실행 게이트는 없고
+unit/E2E/typecheck/build/emulator를 **하나도 돌리지 않았으며 돌렸다고 기록하지 않는다.**
+
+**진행도: 78~81% 완료 / 19~22% 잔여 — 변동 없음.** 라운드 3은 후보 비교를 **정확하게** 만들었을 뿐
+어느 후보도 전진시키지 않았다. (c2)에 남는 제약과 **두 후보 공통의 확정 orphan 미증명**은 그대로이며
+**작업축 6의 잔여 난이도는 줄지 않았다.**
 

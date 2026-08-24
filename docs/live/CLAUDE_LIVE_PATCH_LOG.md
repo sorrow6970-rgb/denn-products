@@ -5565,3 +5565,114 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   제품 구현, Rules 변경, emulator 실행, 다음 스펙과 자동화·반복 작업은 시작하지 않았다. 보호 대상과
   기존 Founder/user working-tree 변경은 restore/checkout/stage/commit하지 않았다.
 
+## 2026-08-24(9) - 스펙 073 Codex 재검수 · CORRECTION_REQUIRED 라운드 3
+
+- HEAD=origin은 라운드 2 내용 commit `6b3bcfc`, ahead/behind 0/0이다. self-hash bookkeeping
+  commit은 없고 재검수 시작 시 working tree는 기존 보호 변경뿐이며 staged 0이었다.
+- 라운드 2의 cross-service primitive 근거 등급, privileged plaintext surface, transform-0과
+  customMetadata 후보 분리는 수용했다. 다음 세 문서 오류 때문에 아직 통과하지 않았다.
+- **보완 1 — call count:** `get(mapping(recId))`가 반환한 같은 문서의 assetId/token 필드를 비교하는
+  것은 추가 접근이 아니다. assetId 교차 확인을 포함해도 delete는 mapping get 1 + spaces exists 1 =
+  총 2다. 연쇄 경로 보간은 `UNCONFIRMED`지만 교차 확인 때문에 3개가 된다는 산술은 틀렸다.
+- **보완 2 — update 의미:** `updateMetadata()`는 Storage update 요청이며 목표 `allow update:false`가
+  metadata-only update도 차단한다. GG-4 목표에 metadata update 차단이 빠졌다는 계약 공백 주장을
+  폐기해야 한다. 실제 V2 Rules 미작성/NOT TESTED는 유지한다.
+- **보완 3 — 공개 관측 수준:** 현재 asset 경로는 default deny다. 목표 public-read Rules가 구현될
+  경우 customMetadata가 관측된다는 설계 귀결과 실제 V2 Rules/runtime `NOT TESTED`를 분리한다.
+- 상태 `CORRECTION_REQUIRED`, fix round 3/3, 다음 transition `CLAUDE_DOCUMENT_CORRECTION`이다.
+  Founder JJ-1~JJ-7과 제품 구현·Rules·emulator·다음 스펙은 계속 시작하지 않는다.
+- 전체 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다. 이번에도 문서 정확성 보완뿐이며
+  제품 작업축 완료량은 증가하지 않는다.
+
+## 2026-08-24(10) - 스펙 073 문서 보완 라운드 3 수행 (최종 보완)
+
+- 보완 직전 관측 기준 HEAD=origin `6b3bcfc`(라운드 2 내용 commit), ahead/behind 0/0.
+  Codex 라운드 3의 **세 정정만 최소 반영**했고 라운드 2 통과 내용은 되돌리지 않았다.
+- 허용 문서 6개만 수정: 조사 보고서,
+  `docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md`,
+  `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`,
+  `docs/codex-claude-handoff/CURRENT.md`, 이 live log.
+- 제품 코드/test/`storage.rules`/`firestore.rules`/Firebase config/package/lockfile, `apps/**`,
+  `packages/**` 변경 **0**. 실제 Firebase/project/bucket/Firestore/network/live 접근 0,
+  **emulator 실행 0**, upload/write/read-back/delete/deploy 0, UID 추측 0, URL 발급 0, UI 연결 0,
+  자동화·반복 작업 0, Founder JJ-1~JJ-7 선택 0, 다음 구현 스펙 0.
+- **내용 commit 1개**만 남기고 self-hash bookkeeping commit을 추가하지 않았다(라운드 2 결정 유지).
+
+**보완 1 — Storage Rules access-call 산술 정정 (보고서 §Q7.1.1a 신설)**
+
+- 라운드 2는 *"(c2)에 assetId 교차 확인까지 넣으면 문서 접근 한도(평가당 2)를 넘는다"* 고 썼다.
+  **틀렸다.** `firestore.get()`이 반환한 **그 문서의 필드를 다시 읽는 것은 새로운 document access가
+  아니다** — `data.assetId`와 `data.token`은 **같은 결과 객체의 필드**다.
+- 평가별 재계산:
+  - **Storage create 게이팅** — (c1) `exists(mapping/$(assetId))` **1회** ·
+    (c2) `get(mapping/$(request.resource.metadata.recId))` **1회**(+ `.data.assetId == assetId`
+    비교는 추가 access **0**).
+  - **Storage delete 판정** — (c1) `get(mapping/$(assetId))` 1 + `exists(spaces/$(.data.token))` 1 =
+    **2** · (c2) `get(mapping/$(resource.metadata.recId))` 1 + `exists(spaces/$(.data.token))` 1 =
+    **2**(assetId 교차 확인 **포함**).
+  - 한도 대비 **둘 다 2/2, 여유 0**.
+- ⇒ 라운드 2의 *"교차 확인 때문에 한도 초과"* 와 *"(c2)가 access-call 면에서 더 비싸다"* 를 **폐기**했다.
+- **전제 유지:** delete 계산은 **연쇄 경로 보간**(`exists(…/spaces/$(get(mapping).data.token))`)
+  지원을 가정하며 그 지원은 계속 **`UNCONFIRMED`**다. 미지원이면 **(c1)·(c2) 모두 delete 판정이
+  성립하지 않는다**(공통 제약). **create 게이팅(각 1회)은 연쇄 보간을 쓰지 않으므로 무관**하다.
+  같은 `get()` 결과의 필드 재접근은 연쇄 보간이 아니라 일반 필드 접근이라는 점도 §4에 명시했다.
+
+**보완 2 — metadata update 계약 공백 주장 폐기**
+
+- `updateMetadata()`는 업로드와 별개인 Storage **update 요청**이고, Storage Rules의 `update`는
+  **metadata-only update도 포함**한다. GG-4 목표는 이미 object `update`/`delete`를 `false`로 두므로
+  **목표 `allow update: if false`가 `updateMetadata()`를 차단한다.**
+- ⇒ 라운드 2의 *"GG-4 목표에 metadata update 차단이 누락됐다 — 계약 공백"* 주장을 **폐기**했다.
+- **유지되는 것:** V2 목표 Rules는 **아직 미작성 · `NOT TESTED`**이고 향후 match에
+  `allow update: if false`를 **명시해서 써야 한다**(§Q1 주의 1 — default deny와 명시 `false`는 결과가
+  같아도 근거가 다르다). 또한 이 저장소 emulator 게이트(`cutover-rules.emulator.test.ts:83-96`)는
+  **재업로드와 `deleteObject` 거부만 검증했고 `updateMetadata` 자체는 검증하지 않았다** — 그 지점은
+  §4의 "정적 결론이지만 실행 검증이 없는 것"에 `NOT TESTED`로 기록했다.
+- (c2)의 "create와 metadata 동일 upload 포함" 항목도 이에 맞춰 다듬었다 — 나중에 `updateMetadata`로
+  붙이려면 목표 `update: if false`를 열어야 하고 그러면 불변 계약이 깨지므로 **metadata는 create와
+  원자적으로 실려야 한다**.
+
+**보완 3 — public metadata 관측의 근거 수준 정밀화**
+
+- 라운드 2는 *"경로를 아는 누구나 `getMetadata()`로 읽을 수 있다"* 고 **현재형**으로 썼다. 부정확했다.
+- **현재는 관측할 수 없다** — `rebuild-space-assets` 경로는 match 부재로 **default deny**이고 read
+  권한 자체가 없다.
+- 설치 타입 `FullMetadata extends UploadMetadata`(`storage-public.d.ts:56`)가 증명하는 것은
+  **권한 있는 `getMetadata()` 결과에 `customMetadata`가 포함된다**는 사실이다.
+- ⇒ 정확한 진술은 **설계 귀결**이다: **GG-4=A 목표 public-read Rules가 구현되면, 경로를 아는 client가
+  `getMetadata()`로 `customMetadata`를 읽을 수 있다.** 실제 V2 Rules와 runtime 동작은
+  **미작성 · `NOT TESTED`**다. §4에 항목을 신설해 분리했다.
+- **안전 결론은 유지**했다 — recId를 **secret으로 설계하지 않는다**, **token을 `customMetadata`에
+  넣지 않는다**.
+
+**보완 4 — 라운드 2 통과 내용 유지 (되돌리지 않음)**
+
+- §Q7.1.0의 cross-service primitive 4층위 분리(공식 지원 / admin-state local emulator VERIFIED /
+  V2 mapping 미작성·`NOT TESTED` / 실제 IAM·live `NOT TESTED`)와 "우회(bypass)" 표현 폐기 — **유지**.
+- private mapping = **새로운 privileged plaintext surface**, principal/role overlap `UNCONFIRMED`,
+  Founder 보안 tradeoff — **유지**.
+- (c1) transform-0 REC 후보가 **성립한다**는 결론 — **유지**.
+- self-hash bookkeeping commit 중단 — **유지**(라운드 3도 내용 commit 1개만).
+
+**(c2) 재평가 결과**
+
+- 라운드 2가 붙였던 "(c1)보다 명백히 비싸다"의 근거 두 개(access-call 초과 · metadata update 계약
+  공백)가 **모두 폐기**됐다.
+- **남는 실제 차이는 비용이 아니라 셋이다** — ① Rules metadata 표면이 `UNCONFIRMED`(저장소 선례
+  0건)라 **(c1)이 이미 확보한 근거 등급을 (c2)는 갖지 못한다**, ② 목표 public-read가 구현되면
+  **recId가 공개 식별자**가 되어 비밀 설계가 불가능하다, ③ **GG-4 미승인 schema/Rules 확장**이라
+  Founder 승인 범위를 넓힌다.
+- **두 후보 모두 확정 orphan을 증명하지 못한다**는 결론은 그대로다. 선택지 표와 JJ-5도 이에 맞춰
+  다시 고쳤다(B′의 access-call 페널티 제거, 남는 세 조건 명시).
+
+- 게이트: `git diff --check` PASS, 허용 6개 문서 외 diff **0**(제품·Rules·config·lockfile·보호 대상
+  무변경 확인). 문서 전용 단위라 실행 게이트는 없으며 unit/E2E/typecheck/build/emulator를 **하나도
+  돌리지 않았고 돌렸다고 기록하지 않는다.**
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다. 라운드 3은 후보 비교를
+  **정확하게** 만들었을 뿐 어느 후보도 전진시키지 않았다. (c2)에 남는 제약과 **두 후보 공통의 확정
+  orphan 미증명**은 그대로이며 **작업축 6의 잔여 난이도는 줄지 않았다.**
+- 상태 `READY_FOR_CODEX`, **fix_round 3/3 — 최대 보완 횟수 도달**, 다음 transition `CODEX_RE_REVIEW`.
+  Founder JJ-1~JJ-7 선택, 제품 구현, Rules 변경, emulator 실행, 다음 스펙과 자동화·반복 작업은
+  시작하지 않았다. 보호 대상과 기존 Founder/user working-tree 변경은 restore/checkout/stage/commit하지
+  않았다.
+

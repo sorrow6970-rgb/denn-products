@@ -1,19 +1,38 @@
 # NEXT CLAUDE PROMPT
 
 상태: `READY_FOR_CODEX`
-active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **CORRECTION ROUND 2 APPLIED / AWAITING CODEX RE-REVIEW / DOCUMENT ONLY / READ ONLY**
+active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **CORRECTION ROUND 3 APPLIED / AWAITING CODEX RE-REVIEW / DOCUMENT ONLY / READ ONLY**
 completed_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO NETWORK / NO UI**
-기준: 보완 직전 관측 HEAD=origin **`2dd97c4`**, ahead/behind **0/0**. 라운드 2는 **내용 commit 1개만** 추가하고 자기 해시 bookkeeping commit을 만들지 않았다 — push 후 `HEAD=origin`·ahead/behind 0/0을 검증했고 해시 정본은 git 이력·세션 보고다(**commit은 자기 해시를 내용에 담을 수 없다**).
-이력: `f1f5d20`(초판 내용) → `534c26f`(bookkeeping) → `63a1dec`(라운드 1 내용) → `2dd97c4`(bookkeeping) → 라운드 2 내용 commit.
+기준: 보완 직전 관측 HEAD=origin **`6b3bcfc`**(라운드 2 내용 commit), ahead/behind **0/0**. 라운드 3도 **내용 commit 1개만** 추가하고 self-hash bookkeeping commit을 만들지 않았다 — push 후 `HEAD=origin`·ahead/behind 0/0을 검증했고 해시 정본은 git 이력·세션 보고다(**commit은 자기 해시를 내용에 담을 수 없다**).
+이력: `f1f5d20`(초판 내용) → `534c26f`(bookkeeping) → `63a1dec`(라운드 1 내용) → `2dd97c4`(bookkeeping) → `6b3bcfc`(라운드 2 내용) → 라운드 3 내용 commit.
 working tree에는 기존 Founder/user 보호 변경만 남고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
-fix_round: **2 / 3**
+fix_round: **3 / 3 — 최대 보완 횟수 도달**
 next_transition: **`CODEX_RE_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
-스펙 073 문서 보완 라운드 2를 수행해 상태는 `READY_FOR_CODEX`다. 다음 실행 지시문은 **Codex 재검수
-종료 시점에** 이 자리에 다시 작성된다. Claude Code는 그때까지 Founder JJ-1~JJ-7 선택, 제품 구현,
-Rules 변경, emulator 실행, 새 스펙과 자동화·반복 작업을 시작하지 않는다.
+스펙 073 문서 보완 라운드 3(최종 보완)을 수행해 상태는 `READY_FOR_CODEX`다. `fix_round`는 **3/3으로
+최대 보완 횟수에 도달**했다. 다음 실행 지시문은 **Codex 재검수 종료 시점에** 이 자리에 다시 작성된다.
+Claude Code는 그때까지 Founder JJ-1~JJ-7 선택, 제품 구현, Rules 변경, emulator 실행, 새 스펙과
+자동화·반복 작업을 시작하지 않는다.
+
+> 직전 지시문(스펙 073 보완 라운드 3, 수행 완료 — 기록):
+>
+> ```text
+> C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md의 CODEX REVIEW 라운드 3을 전부 읽고 스펙 073 문서 보완 라운드 3만 수행해. 기준은 rebuild/modern-studio HEAD=origin 6b3bcfc, ahead/behind 0/0이다. 제품 구현과 Founder JJ-1~JJ-7 선택은 시작하지 마.
+>
+> 첫째, (c2) customMetadata 후보의 Storage Rules 문서 접근 산술을 고쳐. 현재 보고서는 delete에서 get(mapping(recId)) 1회 + exists(spaces/{token}) 1회로 이미 2개를 쓰고, mapping↔assetId 교차 확인을 넣으면 세 번째 접근이 생긴다고 적었다. 하지만 첫 get()이 반환한 같은 mapping 문서의 data.assetId와 data.token을 모두 사용할 수 있으므로 `mapping.data.assetId == objectId` 비교는 추가 문서 접근이 아니다. 연쇄 경로 보간이 지원된다는 별도 UNCONFIRMED 전제 아래 delete는 get(mapping) 1 + exists(spaces/mapping.data.token) 1 = 총 2이며 assetId 교차 확인도 같은 2회 안에 포함된다. "assetId 교차 확인 때문에 한도 초과"와 그로부터 나온 "(c2)가 (c1)보다 access-call 면에서 더 비싸다"는 주장을 폐기해. create 게이팅도 mapping get/exists 한 번과 같은 결과 필드 비교로 계산하고, 각 평가별 정확한 call 수를 다시 써. 연쇄 보간 지원 자체는 계속 UNCONFIRMED다.
+>
+> 둘째, metadata update 계약 공백 주장을 고쳐. `updateMetadata()`는 업로드와 별개인 Storage metadata update 요청이고, GG-4 목표는 이미 object update/delete를 `false`로 둔다. Storage Rules의 update는 metadata-only update도 포함하므로 목표 `allow update: if false`가 `updateMetadata()`를 차단한다. 따라서 "GG-4 목표에 updateMetadata 차단이 누락됐다"는 주장을 폐기해. 다만 V2 목표 Rules는 아직 미작성/NOT TESTED이고, 향후 match에 `allow update: if false`를 명시해야 한다는 점은 유지해.
+>
+> 셋째, public metadata 관측의 근거 수준을 정밀화해. 설치 타입의 `FullMetadata extends UploadMetadata`는 권한 있는 `getMetadata()` 결과에 customMetadata가 포함됨을 증명한다. 그러나 현재 `rebuild-space-assets` 경로는 default deny이고 목표 public-read Rules는 미작성이다. 따라서 "현재 누구나 관측 가능"이라고 쓰지 말고, **GG-4 목표 public-read Rules가 구현되면 경로를 아는 client가 metadata를 읽을 수 있다는 설계상 보안 결과**와 **V2 Rules/runtime NOT TESTED**를 분리해. recId를 secret으로 취급하지 말고 token을 customMetadata에 넣지 않는다는 안전 결론은 유지해.
+>
+> 넷째, 라운드 2에서 통과한 내용은 되돌리지 마. cross-service primitive의 공식 지원/admin-state local emulator VERIFIED/V2 NOT TESTED/live NOT TESTED 분리, private mapping의 privileged plaintext surface, transform-0 REC 후보, self-hash bookkeeping 중단은 그대로 유지한다. 라운드 3은 위 세 정정만 최소 반영해.
+>
+> 허용 파일은 조사 보고서, docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md, Automation/DENN_AUTOMATION_STATE.md, Automation/NEXT_CLAUDE_PROMPT.md, docs/codex-claude-handoff/CURRENT.md, docs/live/CLAUDE_LIVE_PATCH_LOG.md의 문서 6개뿐이다. 제품 코드/test/storage.rules/firestore.rules/Firebase config/package/lockfile, apps/**, packages/**와 보호 대상은 수정·restore·checkout·stage·commit하지 마. 실제 Firebase/project/bucket/Firestore/network/live 접근, emulator 실행, upload/write/read-back/delete/deploy, UID 추측, URL 발급, UI 연결, 자동화·반복 작업은 금지다.
+>
+> 문서 diff만 git diff --check와 forbidden diff로 확인하고 허용 문서만 일반 fast-forward 내용 commit 1개로 push해. self-hash bookkeeping commit을 추가하지 마. 완료 후 HEAD=origin, ahead/behind 0/0, 정확한 변경 파일, call-count 정정, metadata update 의미, public metadata 근거 수준, UNCONFIRMED/NOT TESTED와 전체 리빌드 78~81% 완료·19~22% 잔여 변동 없음을 보고하고 READY_FOR_CODEX에서 멈춰. 다음 구현 스펙과 Founder 질문은 시작하지 마.
+> ```
 
 > 직전 지시문(스펙 073 보완 라운드 2, 수행 완료 — 기록):
 >
@@ -50,6 +69,57 @@ Rules 변경, emulator 실행, 새 스펙과 자동화·반복 작업을 시작�
 >
 > 문서 diff만 git diff --check와 forbidden diff로 확인하고 허용 문서만 별도 일반 fast-forward commit/push해. 완료 후 HEAD=origin, ahead/behind 0/0, 정확한 변경 파일과 수정 결론, UNCONFIRMED/NOT TESTED, 전체 리빌드 78~81% 완료·19~22% 잔여 변동 없음을 보고하고 READY_FOR_CODEX에서 멈춰. 다음 구현 스펙과 Founder 질문은 시작하지 마.
 > ```
+
+## ★ 스펙 073 — 보완 라운드 3 수행 기록 (최종 보완)
+
+보완 직전 관측 기준 HEAD=origin `6b3bcfc`, ahead/behind 0/0. Codex 라운드 3의 **세 정정만 최소
+반영**했고 **라운드 2 통과 내용은 되돌리지 않았다.** 수정 파일은 허용 6개뿐 — 조사 보고서 · spec073 ·
+STATE · NEXT · CURRENT · live log. 제품 코드·test·`storage.rules`·`firestore.rules`·Firebase config·
+package/lockfile, `apps/**`, `packages/**`, 보호 대상 변경 **0**. 실제 Firebase/project/bucket/
+Firestore/network/live 접근 **0**, **emulator 실행 0**, upload/write/read-back/delete/deploy **0**,
+UID 추측 **0**, URL 발급 **0**, UI 연결 **0**, 자동화·반복 작업 **0**, Founder JJ-1~JJ-7 선택 **0**,
+다음 구현 스펙 **0**. **내용 commit 1개**만 남기고 self-hash bookkeeping commit은 추가하지 않았다.
+
+- **보완 1 — access-call 산술 정정(보고서 §Q7.1.1a 신설).** `firestore.get()`이 반환한 **같은 문서의
+  필드를 다시 읽는 것은 새로운 document access가 아니다** — `data.assetId`와 `data.token`은 같은 결과
+  객체의 필드다. 평가별 재계산: **create 게이팅 (c1) 1회 / (c2) 1회**(+ `.data.assetId == assetId`
+  비교는 추가 access **0**), **delete 판정 (c1) 2회 / (c2) 2회**(교차 확인 **포함**), 한도 대비
+  **둘 다 2/2 여유 0**. ⇒ 라운드 2의 *"교차 확인 때문에 한도 초과"* 와 *"(c2)가 access-call 면에서 더
+  비싸다"* 를 **폐기**했다.
+  **전제 유지** — delete 계산은 **연쇄 경로 보간** 지원 가정 위에 성립하고 그 지원은 계속
+  **`UNCONFIRMED`**다. 미지원이면 **(c1)·(c2) 모두 delete 판정 불성립**(공통), **create 게이팅은
+  연쇄를 쓰지 않아 무관**하다.
+- **보완 2 — metadata update 계약 공백 주장 폐기.** `updateMetadata()`는 업로드와 별개인 Storage
+  **update 요청**이고 Storage Rules의 `update`는 **metadata-only update도 포함**하므로, GG-4 목표가
+  이미 `update`/`delete`를 `false`로 두는 이상 **목표 `allow update: if false`가 `updateMetadata()`를
+  차단한다.** 유지: V2 목표 Rules는 **미작성 · `NOT TESTED`**이고 향후 match에 `update: if false`를
+  **명시해서 써야 한다**. 이 저장소 emulator 게이트는 재업로드·`deleteObject` 거부만 검증했고
+  **`updateMetadata` 자체는 검증하지 않았다** — `NOT TESTED`로 기록했다.
+- **보완 3 — public metadata 근거 수준 정밀화.** *"경로를 아는 누구나 읽을 수 있다"* 는 **현재형
+  진술을 폐기**했다. **현재는 관측 불가** — 해당 경로가 **default deny**다. 설치 타입
+  `FullMetadata extends UploadMetadata`(`storage-public.d.ts:56`)가 증명하는 것은 **권한 있는
+  `getMetadata()` 결과에 `customMetadata`가 포함된다**는 사실이고, 정확한 진술은 **목표 public-read
+  Rules가 구현되면 경로를 아는 client가 metadata를 읽을 수 있다는 설계 귀결**이다. 실제 V2
+  Rules/runtime은 **`NOT TESTED`**. **안전 결론은 유지** — recId를 secret으로 설계하지 않고 token을
+  `customMetadata`에 넣지 않는다.
+- **보완 4 — 라운드 2 통과 내용 유지.** primitive 4층위 분류 · "우회(bypass)" 표현 폐기 ·
+  privileged plaintext surface(overlap `UNCONFIRMED`) · (c1) transform-0 성립 · self-hash bookkeeping
+  중단 — **전부 그대로 유지**했다.
+
+**(c2) 재평가:** 라운드 2가 붙였던 "명백히 더 비싸다"의 근거 둘이 **모두 폐기**됐다. **남는 실제
+차이는 비용이 아니라 셋** — ① Rules metadata 표면 `UNCONFIRMED`(저장소 선례 0건)라 (c1)의 근거 등급을
+갖지 못함 · ② 목표 public-read 구현 시 **recId가 공개 식별자** · ③ **GG-4 미승인 schema/Rules 확장**.
+**두 후보 모두 확정 orphan을 증명하지 못한다**는 결론은 그대로다. 선택지 표와 JJ-5도 이에 맞춰 고쳤다.
+
+게이트: `git diff --check` PASS, 허용 6개 문서 외 diff **0**. 문서 전용 단위라 실행 게이트는 없으며
+unit/E2E/typecheck/build/emulator를 하나도 돌리지 않았고 돌렸다고 기록하지 않는다.
+
+진행도 보고: **78~81% 진행 / 19~22% 잔여 — 변동 없음.** 라운드 3은 후보 비교를 **정확하게** 만들었을
+뿐 어느 후보도 전진시키지 않았다. (c2)에 남는 세 제약과 **두 후보 공통의 확정 orphan 미증명**은
+그대로이며 **작업축 6의 잔여 난이도는 줄지 않았다.**
+
+다음은 Codex 재검수다. `fix_round` **3/3으로 최대 보완 횟수에 도달**했다. 보호 대상과 기존
+Founder/user working-tree 변경은 restore/checkout/stage/commit하지 않았다.
 
 ## ★ 스펙 073 — 보완 라운드 2 수행 기록
 

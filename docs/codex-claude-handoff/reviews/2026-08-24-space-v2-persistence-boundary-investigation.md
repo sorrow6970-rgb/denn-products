@@ -1,8 +1,8 @@
 # space V2 persistence boundary 읽기 전용 조사
 
 - 스펙 정본: `docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md`
-- 상태: **DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI — 보완 라운드 2 반영**
-- 조사 수행: Claude Code, 2026-08-24 · 라운드 1·2 모두 같은 날 Codex `CORRECTION_REQUIRED` 반영
+- 상태: **DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI — 보완 라운드 3 반영**
+- 조사 수행: Claude Code, 2026-08-24 · 라운드 1·2·3 모두 같은 날 Codex `CORRECTION_REQUIRED` 반영
 
 **commit 이력 (라운드 2에서 자기참조 추적을 중단했다):**
 
@@ -12,14 +12,33 @@
 | 해시 고정 | `534c26f` | bookkeeping |
 | 보완 라운드 1 | `63a1dec` | 내용 |
 | 해시 고정 | `2dd97c4` | bookkeeping |
-| **보완 라운드 2** | **이 문서를 담은 내용 commit** | 내용 |
+| 보완 라운드 2 | `6b3bcfc` | 내용 (self-hash bookkeeping commit 없음) |
+| **보완 라운드 3** | **이 문서를 담은 내용 commit 1개** | 내용 (self-hash bookkeeping commit 없음) |
 
 > **★ 자기참조 한계를 숨기지 않는다.** commit은 **자기 자신의 해시를 내용에 담을 수 없다.** 라운드
 > 1까지는 내용 commit 뒤에 "해시를 적어 넣는" bookkeeping commit을 한 번 더 만들어 이 한계를 메웠지만,
-> 그 방식은 라운드마다 commit이 두 배로 늘고 기록이 자기참조로 꼬인다. **라운드 2부터는 그 추가
-> commit을 만들지 않는다.** 대신 상태 문서에는 ① **push 후 `HEAD=origin`과 `ahead/behind 0/0`을 실제로
+> 그 방식은 라운드마다 commit이 두 배로 늘고 기록이 자기참조로 꼬인다. **라운드 2부터 그 추가
+> commit을 만들지 않으며 라운드 3도 내용 commit 1개만 남긴다.** 대신 상태 문서에는 ① **push 후 `HEAD=origin`과 `ahead/behind 0/0`을 실제로
 > 검증했다는 사실**과 ② **라운드 2 내용 commit이 무엇인지**를 나눠 적고, 해시 자체는 이 세션 보고와
 > git 이력이 정본이다.
+
+> **보완 라운드 3에서 바뀐 것 (라운드 2 대비) — 최소 3건만 반영:**
+> ① **access-call 산술을 바로잡았다.** `firestore.get()`이 돌려준 **같은 문서의 필드를 다시 읽는 것은
+> 새 document access가 아니다.** 따라서 (c1)·(c2) 모두 **create 1회 / delete 2회**이고
+> **(c2)의 assetId 교차 확인은 무료**다 — 라운드 2의 *"교차 확인 때문에 한도 초과"* 와
+> *"(c2)가 access-call 면에서 더 비싸다"* 를 **폐기**했다(§Q7.1.1a 신설). 연쇄 경로 보간 지원은
+> **계속 `UNCONFIRMED`**이며 그 전제는 (c1)·(c2) 공통이다.
+> ② **metadata update 계약 공백 주장을 폐기**했다. `updateMetadata()`는 Storage **update 요청**이고
+> Storage Rules의 `update`는 metadata-only update도 포함하므로 **GG-4 목표의 `allow update: if false`가
+> 이미 차단한다.** 유지: V2 목표 Rules는 미작성·`NOT TESTED`이고 향후 match에 `update: if false`를
+> **명시해 써야 한다**.
+> ③ **public metadata 관측의 근거 수준을 정밀화**했다. *"누구나 관측 가능"* 이 아니라 —
+> **현재 경로는 default deny**이고, **목표 public-read Rules가 구현되면** 경로를 아는 client가
+> `getMetadata()`로 `customMetadata`를 읽을 수 있다는 **설계 귀결**이다. 실제 V2 Rules/runtime은
+> **`NOT TESTED`**. 안전 결론(recId를 secret으로 설계하지 않는다 · token을 `customMetadata`에 넣지
+> 않는다)은 그대로 유지한다.
+> ④ 라운드 2에서 통과한 내용(primitive 4층위 분류 · privileged plaintext surface · transform-0 ·
+> self-hash bookkeeping 중단)은 **되돌리지 않았다.**
 
 > **보완 라운드 2에서 바뀐 것 (라운드 1 대비):**
 > ① **cross-service read primitive의 근거 등급을 올렸다.** 라운드 1은 이를 `UNCONFIRMED`로 남겼으나,
@@ -30,7 +49,7 @@
 > **새 privileged plaintext surface**이며 principal/role overlap은 `UNCONFIRMED`다.
 > ③ **REC ID 후보를 정밀화했다.** 라운드 1의 *"opaque recId는 성립하지 않는다"* 확정을 폐기하고
 > §Q7.1.1에서 **(c1) transform-0**(성립 · admin-state 선례)과 **(c2) `customMetadata` pointer**
-> (논리상 가능하나 비싸고 위험 · GG-4 미승인 확장)로 나눴다.
+> (논리상 가능 · GG-4 미승인 확장)로 나눴다.
 > ④ commit 자기참조 추적을 중단했다(위 표).
 
 > **보완 라운드 1에서 바뀐 것 (초판 대비):**
@@ -458,7 +477,7 @@ Founder D-2=O-3(삭제 보류)이 현재 정본이고, delete 권한도 자동 �
 | **Storage create 게이팅** | 기존 asset create 규칙에 `firestore.exists(mapping)`을 걸면 매핑 없는 stray 업로드를 서버가 막는다. 이때 **문서 접근 1개**를 소비한다 |
 | **`spaces` create와의 결합 — 순차** | 매핑을 먼저 commit → upload → `spaces` create. crash 시 **매핑만 남는다**(해당 경로는 소각되고 asset은 있을 수도/없을 수도). G-4 §6의 구조 A와 같은 성질이다 |
 | **`spaces` create와의 결합 — 원자(`getAfter`)** | 매핑 create와 `spaces` create를 **같은 Firestore transaction/batch**에 넣고 `spaces` 규칙이 `getAfter(mapping)`으로 동반 쓰기를 강제하는 형태. G-4 §6이 `getAfter()` 공식 근거를 이미 기록했다. 대가도 동일하다 — **upload 시점에 매핑이 아직 없으므로 Storage create 게이팅이 불가능**하다 |
-| **Storage Rules 문서 접근 한도** | G-4 결정 §4가 인용한 공식 제약: **단일 Rules 평가에서 Firestore 문서 최대 2개**. delete 규칙이 `get(mapping)` + `exists(spaces/{token})`를 하면 **정확히 2개, 여유 0**이다. 여기에 create 게이팅용 접근은 **다른 평가**라 따로 계산된다 |
+| **Storage Rules 문서 접근 한도** | G-4 결정 §4가 인용한 공식 제약: **단일 Rules 평가에서 Firestore 문서 최대 2개**. delete 규칙이 `get(mapping)` + `exists(spaces/{token})`를 하면 **정확히 2개, 여유 0**이다. create 게이팅용 접근은 **다른 평가**라 따로 계산된다(1개). 후보별 정확한 call 수는 **§Q7.1.1a**(라운드 3 재계산) 참조 — **(c1)과 (c2)가 같다** |
 | **비용** | 같은 §4: Storage Rules의 Firestore 읽기는 **프로젝트 Firestore quota·과금에 포함**된다. 발급 1건당 Firestore 쓰기 1회가 추가되고, delete 평가마다 읽기 2회가 추가된다 |
 | **기본 DB 제약** | 같은 §4: Storage Rules는 **default Firestore database**만 읽는다 |
 | **IAM** | 같은 §4: 두 제품 연결에 IAM 권한 활성화가 필요하고 role 제거로 비활성화된다 |
@@ -507,19 +526,45 @@ node_modules/.pnpm/@firebase+storage@0.14.4_@firebase+app@0.16.0/node_modules/
 
 | 항목 | 분석 |
 |---|---|
-| create와 metadata의 동일 upload 포함 | **가능하다.** `uploadBytes`의 세 번째 인자로 `contentType`과 `customMetadata`를 **같은 호출**에 넣는다. 별도 `updateMetadata` 호출이 필요 없다 — 이는 중요하다. `updateMetadata`로 나중에 붙이면 그 사이 창이 생기고, 애초에 update를 열면 불변 계약이 깨진다 |
+| create와 metadata의 동일 upload 포함 | **가능하다.** `uploadBytes`의 세 번째 인자로 `contentType`과 `customMetadata`를 **같은 호출**에 넣는다(`:500`). 별도 `updateMetadata` 호출이 필요 없다 — 이는 중요하다. 나중에 붙이려면 목표 `allow update: if false`를 열어야 하는데 그러면 불변 계약이 깨진다. 즉 **metadata는 create와 원자적으로 실려야 한다** |
 | Rules 표면 | create 시 `request.resource.metadata.<key>`, 이후 평가 시 `resource.metadata.<key>`로 읽는 형태가 필요하다. **이 저장소에는 metadata를 읽는 Rules가 하나도 없다**(`storage.rules`·`storage.emulator.rules` grep 0건). 공식 지원 여부·정확한 접근자 이름을 이번 세션에서 확인하지 못했다 — **`UNCONFIRMED`** |
 | exact key/format | `customMetadata`는 `Record<string, string>`이므로 값은 **문자열뿐**이다. recId 형식 강제는 Rules 정규식으로 해야 하고, 허용 키를 정확히 고정하지 않으면 임의 키가 실린다 — **exact-keys 검증 설계 필요** |
-| mapping ↔ assetId 일치 | recId가 assetId와 독립이면 **"이 object의 recId가 진짜 이 object의 것인가"** 를 서버가 확인해야 한다. mapping 문서에 assetId를 되담아 교차 확인하는 형태가 필요하고, 그러면 조회가 늘어난다 |
-| access-call 예산 | delete 규칙에서 `get(mapping(recId))` + `exists(spaces/{token})` = **2개, 여유 0**(§Q7.1.0 ① 제약). 여기에 assetId 교차 확인까지 넣으면 **한도를 넘는다**. (c1)은 metadata 조회가 없어 같은 2개 안에서 끝난다 |
-| **★ public-read 관측 가능성** | GG-4=A는 이 object를 **public-read**로 만든다. `FullMetadata extends UploadMetadata`(`:56`)이므로 **경로를 아는 누구나 `getMetadata()`로 `customMetadata`를 읽을 수 있다.** 따라서 **recId를 비밀로 취급할 수 없고, token을 customMetadata에 넣는 것은 명백히 금지**다. opaque recId를 넣더라도 그것은 **공개 식별자**다 |
-| update/delete | 불변 계약을 지키려면 `updateMetadata`도 서버에서 막아야 한다. 현행 목표 문구는 object update/delete만 말하고 **metadata update는 언급하지 않는다** — 계약 공백 |
+| mapping ↔ assetId 일치 | recId가 assetId와 독립이면 **"이 object의 recId가 진짜 이 object의 것인가"** 를 서버가 확인해야 한다. mapping 문서에 `assetId`를 되담아 교차 확인하는 **schema 요건**이 생긴다. **다만 이는 조회를 늘리지 않는다** — 아래 access-call 항목 참조 |
+| access-call 예산 | **§Q7.1.1a에서 다시 계산했다. (c1)과 (c2)는 평가별 call 수가 같다** — create 1회, delete 2회. 라운드 2의 *"assetId 교차 확인 때문에 한도 초과"* 와 *"(c2)가 access-call 면에서 더 비싸다"* 는 **폐기한다** |
+| **★ public metadata 관측 (라운드 3에서 근거 수준 정밀화)** | **현재는 관측할 수 없다** — `rebuild-space-assets` 경로는 match 부재로 **default deny**이고 read 권한이 없다. 정확한 진술은 **설계 귀결**이다: **GG-4=A 목표 public-read Rules가 구현되면**, `FullMetadata extends UploadMetadata`(`:56`)이므로 **경로를 아는 client가 `getMetadata()`로 `customMetadata`를 읽을 수 있다.** 따라서 **recId를 비밀로 설계해서는 안 되고 token을 `customMetadata`에 넣는 것은 금지**다. 실제 V2 Rules와 runtime 동작은 **미작성 · `NOT TESTED`** |
+| update/delete | **라운드 3 정정.** `updateMetadata()`는 업로드와 별개인 Storage **update 요청**이고, Storage Rules의 `update`는 **metadata-only update도 포함**한다. GG-4 목표가 이미 `update`/`delete`를 `false`로 두므로 **목표 `allow update: if false`가 `updateMetadata()`를 차단한다.** 라운드 2의 *"GG-4 목표에 metadata update 차단이 누락됐다 — 계약 공백"* 주장을 **폐기한다.** 유지되는 것: V2 목표 Rules는 **아직 미작성 · `NOT TESTED`**이고, 향후 match에 `allow update: if false`를 **명시해서 써야 한다**(§Q1 주의 1 — default deny와 명시 `false`는 근거가 다르다) |
 | 승인 상태 | **GG-4=A는 metadata schema를 승인한 적이 없다.** 이 후보는 **미승인 schema/Rules 확장**이며 **미작성 · `NOT TESTED`** |
 
-⇒ **(c2)는 논리상 가능하지만 (c1)보다 명백히 비싸고 위험하다** — Rules metadata 표면이
-`UNCONFIRMED`, access-call 예산 초과 위험, public-read 관측으로 recId가 비밀이 될 수 없음, metadata
-불변성 계약 공백, 그리고 GG-4 미승인 schema 확장. **path만 보고 "불가능"이라고 단정하지 않되,
-"가능하다"가 "권장" 또는 "안전 PASS"를 뜻하지도 않는다.**
+⇒ **(c2)는 논리상 가능하다.** 라운드 2가 적은 "(c1)보다 **명백히 비싸다**"는 근거 두 개
+(access-call 초과 · metadata update 계약 공백)는 **라운드 3에서 폐기했다.**
+**남는 실제 차이는 비용이 아니라 다음 셋이다** — ① Rules metadata 표면이 `UNCONFIRMED`(저장소 선례
+0건)이라 **(c1)이 이미 확보한 근거 등급을 (c2)는 갖지 못한다**, ② 목표 public-read가 구현되면
+**recId가 공개 식별자가 되므로 비밀 설계가 불가능**하다, ③ **GG-4 미승인 schema/Rules 확장**이라
+Founder 승인 범위를 넓힌다. **"가능하다"가 "권장" 또는 "안전 PASS"를 뜻하지는 않는다.**
+
+##### Q7.1.1a ★ Storage Rules access-call 재계산 (라운드 3 정정)
+
+라운드 2는 *"assetId 교차 확인까지 넣으면 한도를 넘는다"* 고 썼다. **틀렸다.**
+`firestore.get()`이 반환한 **그 문서의 필드를 다시 읽는 것은 새로운 document access가 아니다** —
+문서 하나를 이미 가져왔고, `data.assetId`와 `data.token`은 **같은 결과 객체의 필드**다.
+
+**평가별 call 수 (§Q7.1.0 ① 제약 = 단일 Rules 평가에서 Firestore 문서 최대 2개):**
+
+| 평가 | (c1) transform-0 | (c2) customMetadata pointer |
+|---|---|---|
+| **Storage create 게이팅** | `firestore.exists(mapping/$(assetId))` — **1** | `firestore.get(mapping/$(request.resource.metadata.recId))` — **1**. 같은 결과의 `.data.assetId == assetId` 비교는 **추가 access 0** |
+| **Storage delete 판정** | `firestore.get(mapping/$(assetId))` — 1, `firestore.exists(spaces/$(그 결과의 .data.token))` — 1 ⇒ **총 2** | `firestore.get(mapping/$(resource.metadata.recId))` — 1, `firestore.exists(spaces/$(그 결과의 .data.token))` — 1 ⇒ **총 2**. `.data.assetId == assetId` 교차 확인은 **같은 2회 안에 포함** |
+| **한도 대비** | 2 / 2 — 여유 0 | 2 / 2 — 여유 0 |
+
+⇒ **두 후보의 access-call 예산은 같다.** create는 각 1회, delete는 각 2회이며 **(c2)의 assetId 교차
+확인은 무료다.** 라운드 2의 *"(c2)가 access-call 면에서 더 비싸다"* 는 결론을 **폐기한다.**
+
+> **전제를 그대로 유지한다:** 위 delete 계산은 **연쇄 경로 보간**
+> (`exists(… /spaces/$(firestore.get(mapping).data.token))`)이 Storage Rules에서 지원된다는 가정 위에
+> 성립한다. 그 지원 여부는 **여전히 `UNCONFIRMED`**이며(§4), admin-state SDC′는 고정 경로와 path
+> 변수만 써서 연쇄를 한 번도 쓰지 않았으므로 §Q7.1.0 ②의 VERIFIED 증거가 이 부분을 덮지 않는다.
+> **지원되지 않으면 (c1)·(c2) 모두 delete 판정이 성립하지 않는다** — 이것도 두 후보에 공통이다.
+> 반면 **create 게이팅(각 1회)은 연쇄 보간을 쓰지 않으므로 이 전제와 무관하다.**
 
 **★ 두 후보 모두에 남는 것:** (c1)이든 (c2)든 **확정 orphan을 증명하지 못한다.** REC ID를 어떻게
 정하든 아래 §의 단조값 부재 문제는 그대로다.
@@ -586,7 +631,7 @@ client-denied 매핑은 **일반 클라이언트에게 token이나 관계를 노
 |---|---|---|---|
 | **V2-1 삭제 보류 유지 (현재 기본값·D-2=O-3)** | 없음 | 오삭제 위험 0 | 비용 단조 증가(상한 `UNCONFIRMED`) |
 | **V2-2′ client-denied write-once mapping** (REC ID는 §Q7.1.1 (c1) transform-0 권장 형태) | 매핑 컬렉션 + `firestore.rules`·`storage.rules` 양쪽 + 발급당 Firestore 쓰기 1회 + IAM 연결 | 서버가 asset↔document **관계를 물을 수 있게 된다**. stray upload 서버 차단도 가능. 조회 primitive 자체는 **공식 지원 + 이 저장소 local emulator VERIFIED**(§Q7.1.0) | **확정 orphan 증명은 못 한다**(늦은 create를 무효화하는 단조 조건 부재). 연쇄 보간 지원 `UNCONFIRMED`, 문서 접근 한도 2 여유 0, **없던 privileged plaintext surface가 새로 생기고 bucket 접근 주체와의 overlap은 `UNCONFIRMED`** |
-| **V2-2″ (c2) 독립 opaque recId + `customMetadata` pointer** | 위 + object metadata schema + Rules metadata 검증 | assetId와 독립인 식별자 | (c1)보다 비싸고 위험: Rules metadata 표면 `UNCONFIRMED`, access-call 예산 초과 위험, **public-read라 recId가 공개 관측됨**, metadata 불변성 계약 공백, **GG-4 미승인 schema 확장** |
+| **V2-2″ (c2) 독립 opaque recId + `customMetadata` pointer** | 위 + object metadata schema + Rules metadata 검증 | assetId와 독립인 식별자 | **access-call은 (c1)과 같다**(create 1 / delete 2, §Q7.1.1a — 라운드 3 정정). 남는 차이: Rules metadata 표면 `UNCONFIRMED`(저장소 선례 0건)라 (c1)의 근거 등급을 못 가짐 · **목표 public-read가 구현되면 recId가 공개 식별자**(비밀 설계 불가) · **GG-4 미승인 schema 확장** |
 | **V2-3 backend/Admin SDK 판정** | C6/G-3 재개, 서비스 계정, 함수 배포·과금 | 임의 판정 로직 가능 | 규칙이 틀리면 자동으로 손해. 여전히 "늦은 성공" 문제를 스스로 풀어야 한다 |
 
 > **가능한 후보라는 사실은 삭제 승인도, Rules/schema/backend 구현 승인도, 안전성 PASS도 아니다.**
@@ -692,7 +737,7 @@ SPACE_V2_ISSUE_ASSET_MISMATCH       // read-back size/hash 불일치 — fail-cl
 | **JJ-2** | `spaces/{token}` create를 GG-5대로 분기하는가 | A) `schema=='space-v2'`만 승인 UID + exact keys, V1은 현행 유지 · B) 현행 유지 | Rules 변경 = G-1 재개 |
 | **JJ-3** | **`spaces` 컬렉션 `list`를 닫는가** | A) `get`만 허용하고 `list` 거부 · B) 현행 유지 | 현행 `read: if true`가 **문언상 열거를 허용**한다(Q2 위험 2, 정적 결론 · 실행 `NOT TESTED`). V1 소비자 영향 검토 필요 |
 | **JJ-4** | 실제 운영자 UID 정본 제공 | A) 제공 · B) 보류 | placeholder로는 **어떤 Rules도 배포 불가** |
-| **JJ-5** | V2 orphan **식별** 정책 | A) V2-1 삭제 보류 유지(D-2=O-3 연장) · B) V2-2′ client-denied write-once mapping((c1) transform-0) · B′) V2-2″ 독립 recId + `customMetadata` · C) V2-3 backend | **어느 선택도 지금은 확정 orphan을 증명하지 못한다**(§Q7.1: 늦은 create를 무효화하는 단조 조건 부재). B의 조회 primitive는 공식 지원 + local emulator VERIFIED지만 연쇄 보간은 `UNCONFIRMED`이고, **없던 privileged plaintext surface가 새로 생긴다**(bucket 접근 주체와의 overlap `UNCONFIRMED`) — 이는 **Founder 보안 tradeoff**다. B′는 GG-4 미승인 schema 확장이고 public-read라 recId가 공개 관측된다. **어느 선택도 삭제 승인이 아니다** |
+| **JJ-5** | V2 orphan **식별** 정책 | A) V2-1 삭제 보류 유지(D-2=O-3 연장) · B) V2-2′ client-denied write-once mapping((c1) transform-0) · B′) V2-2″ 독립 recId + `customMetadata` · C) V2-3 backend | **어느 선택도 지금은 확정 orphan을 증명하지 못한다**(§Q7.1: 늦은 create를 무효화하는 단조 조건 부재). B의 조회 primitive는 공식 지원 + local emulator VERIFIED지만 연쇄 보간은 `UNCONFIRMED`이고, **없던 privileged plaintext surface가 새로 생긴다**(bucket 접근 주체와의 overlap `UNCONFIRMED`) — 이는 **Founder 보안 tradeoff**다. B′는 **access-call은 B와 같지만**(§Q7.1.1a) GG-4 미승인 schema 확장이고, 목표 public-read가 구현되면 recId가 공개 식별자가 된다. **어느 선택도 삭제 승인이 아니다** |
 | **JJ-6** | 미확정 시 사용자 경험 | A) 미판정으로 표시하고 사람이 결정 · B) 자동 재시도 | **B는 안전 근거가 없다**(Q6) |
 | **JJ-7** | 다음 단위 크기 | A) local `space-write` port + fake만(네트워크 0) · B) Rules + emulator까지 · C) adapter까지 | A는 UID·Rules 결정 없이도 진행 가능한 **유일한 선택지** |
 
@@ -769,11 +814,15 @@ SPACE_V2_ISSUE_ASSET_MISMATCH       // read-back size/hash 불일치 — fail-cl
 - 실제 운영자 **UID 정본** — 두 Rules 파일에서 여전히 placeholder.
 - Rules의 문자열 연결/분해 지원 — G-4 결정 §12에서 이미 `UNCONFIRMED`, 이번에도 확인하지 않았다.
 - **한 `firestore.get()` 결과를 다른 조회 경로에 연쇄 보간**하는 것이 Storage Rules에서 지원되는지
-  (§Q7.1). admin-state SDC′는 고정 경로와 path 변수만 써서 연쇄를 한 번도 쓰지 않았으므로
+  (§Q7.1, §Q7.1.1a). admin-state SDC′는 고정 경로와 path 변수만 써서 연쇄를 한 번도 쓰지 않았으므로
   **§Q7.1.0 ②의 VERIFIED 증거가 이 부분은 덮지 않는다.** 지원되지 않으면 "asset → token → spaces"
-  2단 조회가 성립하지 않는다.
+  2단 조회, 즉 **delete 판정이 (c1)·(c2) 모두 성립하지 않는다.** create 게이팅(각 1회)은 연쇄 보간을
+  쓰지 않으므로 이 전제와 무관하다.
+  ※ 같은 `get()` 결과의 **필드를 다시 읽는 것**(`.data.assetId` / `.data.token`)은 연쇄 보간이 아니라
+  일반 필드 접근이며 **추가 document access가 아니다**(라운드 3 정정, §Q7.1.1a).
 - **Storage Rules의 object metadata 접근**(`request.resource.metadata` / `resource.metadata`)의 공식
-  지원 여부와 정확한 접근자 — 이 저장소에 선례 **0건**(§Q7.1.1 (c2)).
+  지원 여부와 정확한 접근자 — 이 저장소에 선례 **0건**(§Q7.1.1 (c2)). ★ 라운드 3 이후 **(c2)에 남는
+  주된 미확인 항목**이다(비용은 (c1)과 같다는 것이 밝혀졌으므로).
 - **private mapping이 만드는 privileged plaintext surface와 기존 bucket 접근 표면의 principal/role
   overlap** — 프로젝트 IAM 구성을 읽지 않았고 읽을 수도 없다(§Q7.1 보안 항목).
 
@@ -789,6 +838,15 @@ SPACE_V2_ISSUE_ASSET_MISMATCH       // read-back size/hash 불일치 — fail-cl
   **실제 Firebase/IAM/live(`NOT TESTED`)**뿐이다.
 
 **정적 결론이지만 실행 검증이 없는 것 — `UNCONFIRMED`와 구분한다:**
+
+- **목표 public-read Rules가 구현되면 경로를 아는 client가 `customMetadata`를 관측한다**(라운드 3
+  신설): 설치 타입 `FullMetadata extends UploadMetadata`(`storage-public.d.ts:56`)에서 나오는
+  **설계 귀결**이다. **현재는 관측할 수 없다** — 해당 경로가 default deny다. 목표 Rules는 미작성이고
+  실제 동작은 **`NOT TESTED`**.
+- **목표 `allow update: if false`가 `updateMetadata()`를 차단한다**(라운드 3 신설): Storage Rules의
+  `update`가 metadata-only update를 포함한다는 전제에서 나오는 **설계 귀결**이다. 이 저장소의
+  emulator 게이트는 재업로드와 `deleteObject` 거부만 검증했고 **`updateMetadata` 자체는 검증하지
+  않았다** — 그 지점은 **`NOT TESTED`**.
 
 - **`spaces` 컬렉션 `list` 개방**: Rules 문언에서 직접 읽은 **정적 사실**(근거 불충분이 아니다).
   실제 열거 동작은 **`NOT TESTED`**.
@@ -866,5 +924,10 @@ stage/commit/restore하지 않았다.
 새로 검증한 것이 아니다. 진행도를 올릴 근거가 되지 못한다.
 
 오히려 §Q7.1이 *"매핑을 도입해도 확정 orphan은 여전히 증명되지 않는다"* 를, §Q7.1.1이 *"(c2)는
-GG-4 미승인 schema 확장이고 public-read라 recId가 공개 관측된다"* 를 밝혔으므로 **작업축 6의 잔여
-난이도는 줄지 않았고, 오히려 선택지마다 붙는 조건이 더 분명해졌다.**
+GG-4 미승인 schema 확장이며 목표 public-read가 구현되면 recId가 공개 식별자가 된다"* 를 밝혔으므로
+**작업축 6의 잔여 난이도는 줄지 않았고, 오히려 선택지마다 붙는 조건이 더 분명해졌다.**
+
+**라운드 3도 마찬가지다.** access-call 산술을 바로잡아 (c2)에 잘못 붙어 있던 비용 페널티를 걷어냈지만,
+그것은 **후보 비교를 정확하게 만든 것**이지 어느 후보도 전진시키지 않았다. (c2)에 남는 실제 제약
+(Rules metadata 표면 `UNCONFIRMED` · 목표 public-read 시 recId 공개 · GG-4 미승인 확장)과 **두 후보
+공통의 확정 orphan 미증명**은 그대로다.

@@ -5,14 +5,14 @@ updated_at: 2026-08-24
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-073-space-v2-persistence-boundary-investigation   # CORRECTION ROUND 2 APPLIED, AWAITING CODEX RE-REVIEW, DOCUMENT ONLY, READ ONLY
+active_unit: spec-073-space-v2-persistence-boundary-investigation   # CORRECTION ROUND 3 APPLIED, AWAITING CODEX RE-REVIEW, DOCUMENT ONLY, READ ONLY
 state: READY_FOR_CODEX
 baseline_commit: c5f8384   # spec 072 closure + spec 073 contract documents committed by Claude Code
 candidate_commit: null   # document-only unit; no product commit exists
 verified_commit: 34cca25   # spec 072 local issue bundle, independently passed at 452cc1a
-origin_relation: "pre-round-2 observation: HEAD=origin at 2dd97c4, ahead/behind 0/0. Round 2 adds ONE content commit and no self-hash bookkeeping commit; HEAD=origin and ahead/behind 0/0 are re-verified after push and reported in the session, because a commit cannot contain its own hash"
+origin_relation: "pre-round-3 observation: HEAD=origin at round-2 content commit 6b3bcfc, ahead/behind 0/0. Round 3 adds ONE content commit and no self-hash bookkeeping commit; HEAD=origin and ahead/behind 0/0 are re-verified after push and reported in the session, because a commit cannot contain its own hash"
 working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
-fix_round: 2
+fix_round: 3
 max_fix_rounds: 3
 next_transition: CODEX_RE_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
@@ -22,6 +22,55 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 78-81% complete; 19-22% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 073 문서 보완 라운드 3 수행 — 최종 보완 (2026-08-24)
+
+- 보완 직전 관측 기준 HEAD=origin `6b3bcfc`, ahead/behind 0/0. Codex 라운드 3의 **세 정정만 최소
+  반영**했고 라운드 2 통과 내용은 되돌리지 않았다. 허용 문서 6개만 수정, **내용 commit 1개**만 남기고
+  self-hash bookkeeping commit은 추가하지 않았다.
+- 제품 코드/test/Rules/Firebase config/package/lockfile, `apps/**`, `packages/**`, 보호 대상 변경 0.
+  실제 Firebase/network/**emulator**/deploy/UID/URL/UI 0.
+- **보완 1 — access-call 산술.** `firestore.get()`이 반환한 **같은 문서의 필드 재사용은 추가 document
+  access가 아니다.** 보고서 §Q7.1.1a를 신설해 평가별로 다시 계산했다 — **(c1)·(c2) 모두 create 1회 /
+  delete 2회**이고 **(c2)의 `assetId` 교차 확인은 무료**다. 라운드 2의 "교차 확인 때문에 한도 초과"와
+  "(c2)가 access-call 면에서 더 비싸다"를 **폐기**했다. 연쇄 경로 보간 지원은 계속 `UNCONFIRMED`이며
+  그 전제는 두 후보 공통(미지원 시 delete 판정이 둘 다 불성립, create 게이팅은 무관)이다.
+- **보완 2 — metadata update.** `updateMetadata()`는 Storage **update 요청**이고 Rules의 `update`는
+  metadata-only update를 포함하므로 **목표 `allow update: if false`가 이미 차단한다.** "GG-4 목표에
+  차단이 누락됐다 — 계약 공백" 주장을 **폐기**했다. 유지: V2 Rules는 미작성·`NOT TESTED`이고 향후
+  match에 `update: if false`를 **명시**해야 한다. 이 저장소 emulator 게이트는 `updateMetadata` 자체를
+  검증하지 않았으므로 그 지점은 `NOT TESTED`로 기록했다.
+- **보완 3 — public metadata 근거 수준.** "누구나 관측 가능"이라는 **현재형 진술을 폐기**했다.
+  현재 경로는 **default deny**라 관측 불가이며, 정확한 진술은 **목표 public-read Rules가 구현되면
+  경로를 아는 client가 `getMetadata()`로 `customMetadata`를 읽을 수 있다는 설계 귀결**이다. 실제
+  V2 Rules/runtime은 `NOT TESTED`. 안전 결론(recId를 secret으로 설계하지 않음, token을
+  `customMetadata`에 넣지 않음)은 유지했다.
+- **(c2) 재평가:** 라운드 2가 붙였던 "명백히 더 비싸다"의 근거 둘이 모두 폐기됐다. 남는 실제 차이는
+  ① Rules metadata 표면 `UNCONFIRMED`(선례 0건) ② 목표 public-read 시 recId가 공개 식별자
+  ③ GG-4 미승인 schema 확장. **두 후보 모두 확정 orphan 미증명**은 그대로다.
+- 게이트: `git diff --check` PASS, 허용 6개 문서 외 diff 0. 문서 전용 단위라 실행 게이트 없음.
+- 전체 진행도 **78~81% 완료 / 19~22% 잔여 — 변동 없음**. 라운드 3은 후보 비교를 정확하게 만들었을 뿐
+  어느 후보도 전진시키지 않았다. 상태 `READY_FOR_CODEX`, 다음 transition `CODEX_RE_REVIEW`.
+  fix_round 3/3으로 **최대 보완 횟수에 도달**했다. Founder JJ-1~JJ-7과 다음 스펙은 시작하지 않았다.
+
+## 스펙 073 Codex 재검수 — CORRECTION_REQUIRED 라운드 3 (2026-08-24)
+
+- 실제 HEAD=origin은 라운드 2 내용 commit `6b3bcfc`, ahead/behind 0/0이다. 별도 self-hash
+  bookkeeping commit은 만들지 않았고 working tree는 재검수 시작 전 기존 보호 변경뿐이었다.
+- 라운드 2의 cross-service primitive 근거 등급, privileged plaintext surface, transform-0/customMetadata
+  후보 분리는 수용한다. 다만 (c2) access-call 산술과 metadata update 의미가 틀렸다.
+- `get(mapping(recId))` 한 번으로 반환된 같은 문서의 `assetId`와 `token` 필드를 모두 비교할 수 있다.
+  `mapping.data.assetId == objectId`는 문서 접근을 추가하지 않는다. 따라서 delete의
+  `get(mapping)` 1 + `exists(spaces/token)` 1은 assetId 교차 확인을 포함해도 총 2이며, 연쇄 경로 보간이
+  지원된다는 전제 아래 한도 안이다. "교차 확인을 넣으면 3개라 초과" 주장을 폐기한다.
+- `updateMetadata()`는 별도 Storage update 요청이며 목표 Rules의 `allow update:false`가 차단한다.
+  GG-4 목표가 update/delete false를 이미 포함하므로 "metadata update 차단 계약 공백"이라는 주장도
+  폐기한다. 실제 V2 Rules는 미작성/NOT TESTED임은 유지한다.
+- public metadata는 현재 경로의 사실이 아니라 **목표 public-read Rules가 작성될 경우의 설계 귀결**로
+  표시한다. 공개 타입은 권한이 있을 때 `getMetadata()` 결과에 customMetadata가 포함됨을 증명하지만,
+  V2 목표 Rules 실행은 NOT TESTED다.
+- 제품 코드/test/Rules/config/package/lockfile과 emulator/live 변경 0. Founder JJ-1~JJ-7은 라운드 3
+  재검수 전 묻지 않는다. 전체 진행도 **78~81% 완료 / 19~22% 잔여 — 변동 없음**.
 
 ## 스펙 073 문서 보완 라운드 2 수행 (2026-08-24)
 
