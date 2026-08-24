@@ -1,21 +1,83 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **DOCUMENT ONLY / READ ONLY / NO LIVE NETWORK / NO UI**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **INVESTIGATION DONE / AWAITING CODEX REVIEW / DOCUMENT ONLY / READ ONLY**
 completed_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO NETWORK / NO UI**
-기준: HEAD=origin **`452cc1a`**, ahead/behind **0/0**. 스펙 072 구현 **`34cca25`**.
-Codex 종료·스펙 073 조사 문서는 working tree에 있고 staged 0이다.
-next_transition: **`CLAUDE_DOCUMENT_INVESTIGATION`**
+기준: HEAD=origin **스펙 073 기록 commit**, ahead/behind **0/0**. Codex 문서 **`c5f8384`**, 조사 보고서는 그 다음 문서 commit이다.
+working tree에는 기존 Founder/user 변경과 보호 spec-018 PNG만 남아 있고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
+next_transition: **`CODEX_INDEPENDENT_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
-아래 문장을 Claude Code에 그대로 전달한다.
+스펙 073 조사가 끝나 상태는 `READY_FOR_CODEX`다. 다음 실행 지시문은 **Codex 독립 검수 종료 시점에**
+이 자리에 다시 작성된다. Claude Code는 그때까지 새 스펙·구현·자동화·반복 작업을 시작하지 않는다.
 
-```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md를 전부 읽고 스펙 073의 문서 전용 읽기 전용 조사 범위만 수행해. 먼저 현재 Codex 문서 변경 8개를 일반 fast-forward 문서 commit으로 push한 뒤, 보호 대상과 기존 Founder/user working tree 변경은 건드리지 마. 제품 코드·test·storage.rules·firestore.rules·Firebase config·package/lockfile은 수정하지 말고, 실제 Firebase/project/bucket/Firestore/network/live 데이터 접근·emulator 실행·upload/write/read-back/delete/deploy·UI 연결을 하지 마. 조사 보고서 docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md를 작성하고 현재 Rules·설치 SDK·기존 adapter 근거, 실패표, UNCONFIRMED, Founder 결정 질문과 다음 최소 허용 범위를 분리해. 완료 후 조사·상태 문서만 일반 fast-forward push하고 READY_FOR_CODEX에서 멈추며 전체 리빌드 진행률·잔여율·변동 근거를 보고해. 자동화·반복 작업과 다음 구현 스펙은 시작하지 마.
-```
+> 직전 지시문(스펙 073 조사, 수행 완료 — 기록):
+>
+> ```text
+> C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md를 전부 읽고 스펙 073의 문서 전용 읽기 전용 조사 범위만 수행해. 먼저 현재 Codex 문서 변경 8개를 일반 fast-forward 문서 commit으로 push한 뒤, 보호 대상과 기존 Founder/user working tree 변경은 건드리지 마. 제품 코드·test·storage.rules·firestore.rules·Firebase config·package/lockfile은 수정하지 말고, 실제 Firebase/project/bucket/Firestore/network/live 데이터 접근·emulator 실행·upload/write/read-back/delete/deploy·UI 연결을 하지 마. 조사 보고서 docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md를 작성하고 현재 Rules·설치 SDK·기존 adapter 근거, 실패표, UNCONFIRMED, Founder 결정 질문과 다음 최소 허용 범위를 분리해. 완료 후 조사·상태 문서만 일반 fast-forward push하고 READY_FOR_CODEX에서 멈추며 전체 리빌드 진행률·잔여율·변동 근거를 보고해. 자동화·반복 작업과 다음 구현 스펙은 시작하지 마.
+> ```
 
-## ★ 스펙 073 — persistence boundary 읽기 전용 조사
+## ★ 스펙 073 — 조사 완료 기록
+
+Codex 문서 8개는 문서 commit `c5f8384`, 조사 보고서와 상태 문서는 그 다음 문서 commit이다. 제품
+코드·test·`storage.rules`·`firestore.rules`·Firebase config·package/lockfile 변경 **0**, 실제
+Firebase/project/bucket/Firestore/network/live 접근 **0**, emulator 실행 **0**,
+upload/write/read-back/delete/deploy **0**, URL 발급 **0**, UI 연결 **0**이다.
+
+산출물: `docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md`.
+
+- **Q1** `rebuild-space-assets/objects/**`는 `storage.rules`에 **match 자체가 없다** → CRUD 전부 기본
+  거부. GG-4 목표 중 update/delete만 우연히 일치하고 create(승인 UID·create-only·`image/png`·<20 MiB)와
+  read(public)는 신설이 필요하다. `rebuild-admin-state`의 create 조건은 REC `firestore.exists()`를
+  요구하므로 복사하면 항상 거부된다.
+- **Q2** `spaces/{token}`은 `create: if true`로 조건·payload 검증 0 → GG-5의 approved operator UID와
+  exact outer keys **둘 다 FAIL**, 불변성만 PASS. 레거시가 항상 `schema:'space-v1'`을 쓰므로
+  (`denn-mockup-tool.html:15573`) V1을 깨지 않고 V2만 분기하는 것은 근거상 가능하다. 다만 현행
+  `read: if true`는 `get`뿐 아니라 **`list`도 연다**(문언상, 실행 검증 0).
+- **Q3** 필요한 공개 API는 설치본에 전부 있다(`uploadBytes`/`getMetadata`/`setDoc`/`getDocFromServer`).
+  ★ **`getDoc`은 latency compensation 때문에 로컬 pending write를 `exists()`로 돌려줄 수 있어 write
+  outcome 판정에 쓰면 거짓 성공이 난다** — `getDocFromServer`가 필요하고, 기존 `space-read` facade를
+  그대로 재사용하면 안 된다. `storage/unauthorized`는 "권한 없음"과 "이미 존재"를 구분하지 못한다.
+- **Q4/Q6** upload-first 순서의 5개 종착 상태를 정리했다. 미확정에서 자동 retry·같은 경로 재업로드·
+  같은 token 재create·새 token 발급은 **모두 안전하지 않거나 판정을 모호하게 만든다**. 안전한 것은
+  읽기 전용 판정 1회와, 미판정이면 사람에게 넘기는 것뿐이다.
+- **Q5** 고유 create-only 경로 + size/`md5Hash` 대조로 upload outcome을, exact outer 대조로 create
+  outcome을 판정할 수 있다는 논거는 강하지만 **UNCONFIRMED**다(read 권한 미개방, `md5Hash` optional,
+  Storage read 캐시 미확인, 늦은 도착 배제 불가).
+- **★ Q7** 승인된 V2 outer는 `schema`/`enc` 2키뿐이고 `proofAsset.objectPath`는 **암호문 안**이라
+  Rules가 `firestore.get()`으로도 참조 관계를 물을 수 없다. ⇒ **admin-state의 G-4 구조 A SDC′
+  orphan 식별을 이식할 수 없고, orphan과 미판정 object는 현재 계약에서 구분 불가(FAIL)**다. 삭제
+  보류가 유일하게 성립하는 기본값이며, asset↔token 매핑을 평문 REC으로 두는 우회는 **토큰 비밀성과
+  충돌**한다.
+- **Q8** 재사용 가능: 오류 매핑 규율(미확정은 `retryable:false`), 안전 오류 envelope, facade 주입,
+  `demo-` prefix 가드, emulator 하네스·Rules 사본, 단일 비행, root barrel 재수출 금지.
+  재사용 불가: head/REC 일체, `AdminState*` 타입, `loadBaseline`/`expectedBase`, admin-state 경로/
+  contentType 상수, `space-read`의 `getDoc` facade, app 소유권 규칙의 무비판 복사.
+- **Q9** 파일 후보(Rules 단위와 adapter 단위 분리), error code 후보 8개, fake 검증표 10행, emulator
+  검증표 13행(V1 호환 회귀 가드와 기존 admin-state 13종 무회귀 포함)을 제시했다. **구현하지 않았다.**
+- **Q10** Founder 결정 질문 **JJ-1~JJ-7** 분리. 결정 없이 진행 가능한 유일한 단위는 **JJ-7=A**
+  (local `space-write` port + synthetic fake만, 네트워크 0)다. JJ-4(실제 UID) 전에 Rules 단위를 먼저
+  하면 검증만 되고 배포되지 않는 코드가 쌓인다.
+
+필수 실패표 20행을 PASS/FAIL/UNCONFIRMED/NOT TESTED로 분류했다. **시간 경과만으로 미판정이 안전한
+orphan이 된다고 단정하지 않았다.** UNCONFIRMED로 남긴 것: 늦은 성공 가능성과 호출 전체 벽시계 상한,
+`md5Hash` 상시 존재, Storage read 캐시, `spaces` 컬렉션 list 개방, PNG 크기·발급량·orphan 비용,
+bucket CORS, 실제 운영자 UID.
+
+설치 SDK 실측: `firebase` **12.17.1**(`@firebase/storage` **0.14.4**, `@firebase/firestore` **4.17.0**,
+`@firebase/app` 0.16.0, `@firebase/auth` 1.13.4). `DEFAULT_MAX_UPLOAD_RETRY_TIME` **10분**,
+`DEFAULT_MAX_OPERATION_RETRY_TIME` 2분, `TransactionOptions.maxAttempts` 기본 **5**,
+`FullMetadata.md5Hash` **optional**, `StorageErrorCode` 25종, `FirestoreErrorCode` 16종.
+
+진행도 보고: **78~81% 진행 / 19~22% 잔여 — 변동 없음**. 스펙 073 §7대로 조사만으로는 올리지 않는다.
+제품 파일 변경 0이고 작업축 5·6·7 완료량은 그대로다. 오히려 이번 조사는 **작업축 6(발급/저장)의
+남은 일이 Rules·Founder 결정에 막혀 있다는 사실을 더 분명히 했다**.
+
+다음은 Codex 독립 검수다. 다음 구현 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다. 보호
+대상과 기존 Founder/user working-tree 변경은 restore/checkout/stage/commit하지 않았다.
+
+## ★ 스펙 073 — 원래 조사 계약 (기록)
 
 - spec072 bundle 이후 immutable asset upload와 immutable `spaces/{token}` create 순서·실패 상태를 조사한다.
 - 현재 Rules가 GG-4/GG-5 목표를 충족하는지, 공개 SDK·기존 adapter로 결과 미확정 상태를 판정할 수

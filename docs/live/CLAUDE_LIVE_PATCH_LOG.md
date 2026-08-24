@@ -5294,3 +5294,44 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   수행했으므로 추가 상승은 없다.
 - 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_DOCUMENT_INVESTIGATION`. 자동화·반복 작업 생성 0,
   보호 대상 조작 0, staged 0이다.
+
+## 2026-08-24(4) - 스펙 073 persistence boundary 읽기 전용 조사
+
+- 기준 HEAD=origin `452cc1a`, ahead/behind 0/0. Codex 문서 8개를 문서 commit `c5f8384`로 먼저
+  fast-forward push한 뒤 조사만 수행했다.
+- 제품 코드/test/`storage.rules`/`firestore.rules`/Firebase config/package/lockfile 변경 **0**.
+  실제 Firebase/project/bucket/Firestore/network/live 접근 **0**, emulator 실행 **0**,
+  upload/write/read-back/delete/deploy **0**, URL 발급 **0**, UI 연결 **0**.
+  실행한 것은 저장소 파일과 `node_modules` 안 설치 SDK 타입/소스 읽기뿐이다.
+- 산출물: `docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md`.
+- ★ 핵심 1 — `rebuild-space-assets/objects/**`는 `storage.rules`에 **match 자체가 없다**.
+  create/read/update/delete가 전부 기본 거부라 GG-4 목표(승인 UID create-only + public-read +
+  update/delete false) 중 update/delete만 우연히 일치하고 create/read는 신설이 필요하다.
+- ★ 핵심 2 — `spaces/{token}`은 `create: if true`로 **조건·payload 검증이 0**이다. GG-5의 approved
+  operator UID와 exact outer keys를 둘 다 충족하지 못한다. 불변성(`update, delete: if false`)만 PASS다.
+  레거시가 항상 `schema:'space-v1'`을 쓰므로(`denn-mockup-tool.html:15573`) V1을 깨지 않고 V2만
+  분기하는 것은 근거상 가능하다.
+- ★ 핵심 3 — **V2에서는 asset↔document 연결이 암호문 안에 있다.** 승인된 outer는 `schema`/`enc`
+  2키뿐이고 `proofAsset.objectPath`는 encrypted scene 안이라 Rules가 `firestore.get()`으로도 참조
+  관계를 물을 수 없다. 따라서 admin-state의 G-4 구조 A SDC′ orphan 식별 논거를 **그대로 옮길 수 없다**.
+  orphan과 미판정 object는 현재 계약에서 구분 불가(실패표 14번 FAIL)이고, 삭제 보류가 유일하게
+  성립하는 기본값이다. asset↔token 매핑을 평문 REC으로 두는 우회는 **토큰 비밀성과 충돌**한다.
+- ★ 핵심 4 — 읽기 전용 판정 함정: Firestore Web SDK의 latency compensation 때문에 `getDoc`은 로컬
+  pending write를 `exists()`로 돌려줄 수 있다. write outcome 판정에는 **`getDocFromServer`**가 필요하며
+  기존 `space-read`의 `getDoc` facade를 그대로 재사용하면 거짓 성공이 난다.
+- 설치 SDK 실측: `firebase` **12.17.1**(`@firebase/storage` 0.14.4, `@firebase/firestore` 4.17.0).
+  `DEFAULT_MAX_UPLOAD_RETRY_TIME` **10분**, `DEFAULT_MAX_OPERATION_RETRY_TIME` 2분,
+  `TransactionOptions.maxAttempts` 기본 5, `FullMetadata.md5Hash`는 **optional**,
+  `StorageErrorCode` 25종·`FirestoreErrorCode` 16종을 원문에서 확인했다.
+- 실패표 20행을 PASS/FAIL/UNCONFIRMED/NOT TESTED로 분류했다. 미확정 상태의 늦은 성공 가능성,
+  `md5Hash` 상시 존재, Storage read 캐시, `spaces` 컬렉션 `list` 개방 여부, PNG 크기·발급량·orphan
+  비용, bucket CORS, 실제 운영자 UID는 전부 **UNCONFIRMED**로 남겼다. 시간 경과만으로 미판정이 안전한
+  orphan이 된다고 단정하지 않았다.
+- Founder 결정 질문 **JJ-1~JJ-7**을 분리했다. 결정 없이 진행 가능한 다음 최소 단위는 **JJ-7=A**
+  (local `space-write` port + synthetic fake만, 네트워크 0)뿐이다. JJ-4(실제 UID) 전에 Rules 단위를
+  먼저 하면 검증만 되고 배포되지 않는 코드가 쌓인다.
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다. 스펙 073 §7대로 조사만으로는
+  올리지 않는다. 제품 파일 변경 0, 작업축 5·6·7 완료량 변동 0이다.
+- 상태 `READY_FOR_CODEX`. 다음 구현 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다. 보호
+  대상 spec-018 PNG와 기존 Founder/user working-tree 변경은 restore/checkout/stage/commit하지 않았다.
+

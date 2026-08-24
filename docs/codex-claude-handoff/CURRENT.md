@@ -20,21 +20,34 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CLAUDE` - 스펙 072는 DONE / CODEX_PASSED이고 스펙 073 문서 조사가 준비됐다.**
+상태: **`READY_FOR_CODEX` - 스펙 073 persistence boundary 읽기 전용 조사가 끝났다.**
 
-HEAD=origin `452cc1a`, ahead/behind 0/0에서 구현 `34cca25`을 독립 검토했다. 허용 신규 제품 파일
-`issue-bundle.ts`와 unit 2개만 존재하며 targeted 58/58, 확대 513/513, check(unit 2084/2084),
-Chromium 151/151, bundle identity와 diff/포트/temp/staged 게이트가 모두 PASS했다. 추가 결함 0,
-스펙 072 최종 `CODEX_PASSED / DONE`이다.
+Codex 문서 8개를 문서 commit `c5f8384`로 fast-forward push한 뒤 스펙 073의 문서 전용 범위만
+수행했다. 산출물은
+`docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md`다.
+제품 코드/test/`storage.rules`/`firestore.rules`/Firebase config/package/lockfile 변경 0, 실제
+Firebase/project/bucket/Firestore/network/live 접근 0, emulator 실행 0, upload/write/read-back/
+delete/deploy 0, URL 발급 0, UI 연결 0이다.
 
-다음 정본은 `docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md`다. spec072 bundle
-이후 asset upload·`spaces/{token}` create·outcome unknown·reconciliation·orphan과 현재 Rules/SDK 경계를
-문서로만 조사한다. 제품 코드/test/Rules/config 변경과 실제 Firebase/network/emulator/deploy/UI는 0이다.
+조사 결과 네 가지가 핵심이다. ① `rebuild-space-assets/objects/**`는 `storage.rules`에 match 자체가
+없어 create/read/update/delete가 전부 기본 거부이고, GG-4 목표 중 update/delete만 우연히 일치한다.
+② `spaces/{token}`은 `create: if true`라 GG-5의 approved operator UID와 exact outer keys를 둘 다
+충족하지 못하며 불변성만 PASS다. 레거시가 항상 `schema:'space-v1'`을 쓰므로 V1을 깨지 않고 V2만
+분기하는 것은 근거상 가능하다. ③ **V2는 asset↔document 연결이 암호문 안에 있어 Rules가 참조 관계를
+물을 수 없다** — admin-state의 G-4 구조 A SDC′ orphan 식별 논거를 이식할 수 없고, orphan과 미판정
+object는 현재 계약에서 구분 불가다. ④ write outcome 판정에는 `getDoc`이 아니라 `getDocFromServer`가
+필요하다(latency compensation으로 pending write가 거짓 성공을 만든다).
 
-전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여로 변동 없다**. 독립 검수와 조사 계약 문서만
-추가됐으므로 제품 작업축 완료량은 증가하지 않았다.
+실패표 20행을 PASS/FAIL/UNCONFIRMED/NOT TESTED로 분류했고, Founder 결정 질문 **JJ-1~JJ-7**을 분리했다.
+결정 없이 진행 가능한 다음 최소 단위는 **JJ-7=A**(local `space-write` port + synthetic fake만,
+네트워크 0)뿐이다.
 
-> 이전 상태: **`READY_FOR_CODEX` - 스펙 072 구현·검증 완료, Codex 독립 검수 대기.**
+전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여로 변동 없다**. 스펙 073 §7대로 조사만으로는 올리지
+않으며 제품 파일 변경 0, 작업축 5·6·7 완료량 변동 0이다.
+
+다음은 Codex 독립 검수다. 다음 구현 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+
+> 이전 상태: **`READY_FOR_CLAUDE` - 스펙 072 DONE / CODEX_PASSED, 스펙 073 조사 계약 준비 완료.**
 
 ## 스펙 072 구현 기록
 

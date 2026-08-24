@@ -5,16 +5,16 @@ updated_at: 2026-08-24
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-073-space-v2-persistence-boundary-investigation   # CONTRACT READY, DOCUMENT ONLY, READ ONLY
-state: READY_FOR_CLAUDE
-baseline_commit: 452cc1a   # spec 072 implementation record / spec 073 investigation baseline
-candidate_commit: null
+active_unit: spec-073-space-v2-persistence-boundary-investigation   # INVESTIGATION DONE, AWAITING CODEX REVIEW, DOCUMENT ONLY, READ ONLY
+state: READY_FOR_CODEX
+baseline_commit: c5f8384   # spec 072 closure + spec 073 contract documents committed by Claude Code
+candidate_commit: null   # document-only unit; no product commit exists
 verified_commit: 34cca25   # spec 072 local issue bundle, independently passed at 452cc1a
-origin_relation: "HEAD=origin at 452cc1a before uncommitted Codex spec 072 closure and spec 073 investigation documents; ahead/behind 0/0"
-working_tree: "Codex closure/investigation documents plus pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs; staged 0"
+origin_relation: "HEAD=origin after two fast-forward document pushes (c5f8384 Codex documents, investigation report commit); ahead/behind 0/0"
+working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_DOCUMENT_INVESTIGATION
+next_transition: CODEX_INDEPENDENT_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,24 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 78-81% complete; 19-22% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 073 persistence boundary 조사 완료 (2026-08-24)
+
+- Codex 문서 8개를 문서 commit `c5f8384`로 fast-forward push한 뒤 읽기 전용 조사만 수행했다.
+  제품 코드/test/Rules/Firebase config/package/lockfile 변경 0, 실제 Firebase/network/emulator/deploy/
+  UI 0. 실행한 것은 저장소 파일과 설치 SDK 타입/소스 읽기뿐이다.
+- 산출물: `docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md`.
+- 핵심: ① `rebuild-space-assets/objects/**`는 `storage.rules` match 부재로 CRUD 전부 기본 거부다.
+  ② `spaces/{token}`은 `create: if true`라 GG-5의 UID·exact keys를 둘 다 미충족이며 불변성만 PASS다.
+  ③ V2는 asset↔document 연결이 암호문 안이라 G-4 구조 A의 SDC′ orphan 식별을 이식할 수 없다.
+  ④ write outcome 판정에는 `getDoc`이 아니라 `getDocFromServer`가 필요하다(pending write 거짓 성공).
+- 실패표 20행을 PASS/FAIL/UNCONFIRMED/NOT TESTED로 분류하고, 늦은 성공 가능성·`md5Hash` 상시 존재·
+  Storage read 캐시·`spaces` list 개방·PNG 크기/발급량/orphan 비용·bucket CORS·실제 운영자 UID를
+  UNCONFIRMED로 남겼다. 시간 경과만으로 미판정이 orphan이 된다고 단정하지 않았다.
+- Founder 결정 질문 JJ-1~JJ-7 분리. 결정 없이 가능한 다음 최소 단위는 JJ-7=A(local `space-write`
+  port + synthetic fake만, 네트워크 0)뿐이다.
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다(스펙 073 §7: 조사만으로 올리지
+  않는다). 상태 `READY_FOR_CODEX`, 다음 transition `CODEX_INDEPENDENT_REVIEW`.
 
 ## 스펙 072 Codex 통과 + 스펙 073 조사 준비 (2026-08-24)
 
