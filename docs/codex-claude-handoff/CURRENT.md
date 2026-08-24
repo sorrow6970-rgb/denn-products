@@ -20,7 +20,23 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 072 local issue bundle이 구현·검증됐다.**
+상태: **`READY_FOR_CLAUDE` - 스펙 072는 DONE / CODEX_PASSED이고 스펙 073 문서 조사가 준비됐다.**
+
+HEAD=origin `452cc1a`, ahead/behind 0/0에서 구현 `34cca25`을 독립 검토했다. 허용 신규 제품 파일
+`issue-bundle.ts`와 unit 2개만 존재하며 targeted 58/58, 확대 513/513, check(unit 2084/2084),
+Chromium 151/151, bundle identity와 diff/포트/temp/staged 게이트가 모두 PASS했다. 추가 결함 0,
+스펙 072 최종 `CODEX_PASSED / DONE`이다.
+
+다음 정본은 `docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md`다. spec072 bundle
+이후 asset upload·`spaces/{token}` create·outcome unknown·reconciliation·orphan과 현재 Rules/SDK 경계를
+문서로만 조사한다. 제품 코드/test/Rules/config 변경과 실제 Firebase/network/emulator/deploy/UI는 0이다.
+
+전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여로 변동 없다**. 독립 검수와 조사 계약 문서만
+추가됐으므로 제품 작업축 완료량은 증가하지 않았다.
+
+> 이전 상태: **`READY_FOR_CODEX` - 스펙 072 구현·검증 완료, Codex 독립 검수 대기.**
+
+## 스펙 072 구현 기록
 
 Codex 계약 문서 6개를 문서 commit `96422f8`로, 구현을 `34cca25`로 각각 일반 fast-forward push했다.
 HEAD=origin `34cca25`, ahead/behind 0/0이다.

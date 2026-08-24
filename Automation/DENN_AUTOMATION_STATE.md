@@ -4,17 +4,17 @@
 updated_at: 2026-08-24
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-071-space-v2-local-issue-identity-pair   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # IMPLEMENTED, AWAITING CODEX REVIEW, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CODEX
-baseline_commit: 96422f8   # spec 072 contract documents committed by Claude Code
-candidate_commit: 34cca25   # spec 072 local issue bundle orchestrator
-verified_commit: eb3df01   # spec 071 local issue identity pair, independently passed at 0d4aac4
-origin_relation: "HEAD=origin at 34cca25 after two fast-forward pushes (96422f8 docs, 34cca25 product); ahead/behind 0/0"
-working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
+completed_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
+active_unit: spec-073-space-v2-persistence-boundary-investigation   # CONTRACT READY, DOCUMENT ONLY, READ ONLY
+state: READY_FOR_CLAUDE
+baseline_commit: 452cc1a   # spec 072 implementation record / spec 073 investigation baseline
+candidate_commit: null
+verified_commit: 34cca25   # spec 072 local issue bundle, independently passed at 452cc1a
+origin_relation: "HEAD=origin at 452cc1a before uncommitted Codex spec 072 closure and spec 073 investigation documents; ahead/behind 0/0"
+working_tree: "Codex closure/investigation documents plus pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_INDEPENDENT_REVIEW
+next_transition: CLAUDE_DOCUMENT_INVESTIGATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,17 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 78-81% complete; 19-22% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 072 Codex 통과 + 스펙 073 조사 준비 (2026-08-24)
+
+- HEAD=origin `452cc1a`에서 구현 `34cca25`을 독립 검토해 추가 결함 0, 최종 `CODEX_PASSED / DONE`이다.
+- 독립 게이트: targeted 58/58, 확대 513/513, check PASS(unit 2084/2084), Chromium 151/151,
+  bundle identity, diff/포트/temp/staged 잔류 0.
+- 다음은 실제 쓰기를 열지 않는 스펙 073 persistence boundary 문서 조사다. 현재 Rules·설치 SDK·기존
+  adapter를 읽어 asset upload, Firestore create, outcome unknown, reconciliation과 orphan 경계를 정리한다.
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여로 변동 없음**이다. 독립 검수와 조사 계약
+  문서화만 했으므로 추가 제품 능력은 없다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_DOCUMENT_INVESTIGATION`.
 
 ## 스펙 072 local issue bundle 구현 완료 (2026-08-24)
 

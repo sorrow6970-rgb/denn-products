@@ -1,22 +1,36 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **IMPLEMENTED / AWAITING CODEX REVIEW / LOCAL_ONLY / NO_NETWORK / NO_UI**
-completed_unit: `spec-071-space-v2-local-issue-identity-pair` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: HEAD=origin **`34cca25`**, ahead/behind **0/0**. 스펙 072 문서 **`96422f8`**, 구현 **`34cca25`**.
-working tree에는 기존 Founder/user 변경과 E2E가 다시 쓴 보호 spec-018 PNG만 남아 있고 staged 0이다.
-next_transition: **`CODEX_INDEPENDENT_REVIEW`**
+상태: `READY_FOR_CLAUDE`
+active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **DOCUMENT ONLY / READ ONLY / NO LIVE NETWORK / NO UI**
+completed_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO NETWORK / NO UI**
+기준: HEAD=origin **`452cc1a`**, ahead/behind **0/0**. 스펙 072 구현 **`34cca25`**.
+Codex 종료·스펙 073 조사 문서는 working tree에 있고 staged 0이다.
+next_transition: **`CLAUDE_DOCUMENT_INVESTIGATION`**
 
 ## Claude Code 전달용 다음 지시문
 
-스펙 072 구현이 끝나 상태는 `READY_FOR_CODEX`다. 다음 실행 지시문은 **Codex 독립 검수 종료 시점에**
-이 자리에 다시 작성된다. Claude Code는 그때까지 새 스펙·구현·자동화·반복 작업을 시작하지 않는다.
+아래 문장을 Claude Code에 그대로 전달한다.
 
-> 직전 지시문(스펙 072 구현, 수행 완료 — 기록):
->
-> ```text
-> C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/072-space-v2-local-issue-bundle-orchestrator.md를 전부 읽고 스펙 072의 명시된 local-only 범위만 구현·검증해. 먼저 현재 Codex 문서 변경 6개를 일반 fast-forward 문서 commit으로 push한 뒤, 보호 대상과 기존 Founder/user working tree 변경 및 기존 spec064~071 제품 파일은 건드리지 마. 허용 제품 파일은 신규 apps/admin/src/space-v2/issue-bundle.ts와 해당 unit 두 개뿐이다. Storage upload, Firestore create/reconciliation, 실제 Firebase/network/Rules/emulator/deploy 또는 UI로 확장하거나 자동화·반복 작업을 만들지 마. 완료 후 제품 commit과 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를 실제 상태에 맞춘 뒤 전체 리빌드 진행률·잔여율·변동 근거까지 보고해.
-> ```
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md를 전부 읽고 스펙 073의 문서 전용 읽기 전용 조사 범위만 수행해. 먼저 현재 Codex 문서 변경 8개를 일반 fast-forward 문서 commit으로 push한 뒤, 보호 대상과 기존 Founder/user working tree 변경은 건드리지 마. 제품 코드·test·storage.rules·firestore.rules·Firebase config·package/lockfile은 수정하지 말고, 실제 Firebase/project/bucket/Firestore/network/live 데이터 접근·emulator 실행·upload/write/read-back/delete/deploy·UI 연결을 하지 마. 조사 보고서 docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md를 작성하고 현재 Rules·설치 SDK·기존 adapter 근거, 실패표, UNCONFIRMED, Founder 결정 질문과 다음 최소 허용 범위를 분리해. 완료 후 조사·상태 문서만 일반 fast-forward push하고 READY_FOR_CODEX에서 멈추며 전체 리빌드 진행률·잔여율·변동 근거를 보고해. 자동화·반복 작업과 다음 구현 스펙은 시작하지 마.
+```
+
+## ★ 스펙 073 — persistence boundary 읽기 전용 조사
+
+- spec072 bundle 이후 immutable asset upload와 immutable `spaces/{token}` create 순서·실패 상태를 조사한다.
+- 현재 Rules가 GG-4/GG-5 목표를 충족하는지, 공개 SDK·기존 adapter로 결과 미확정 상태를 판정할 수
+  있는지 구분한다.
+- upload/create/reconciliation/orphan 실패표와 Rules·emulator·제품 변경 후보를 작성하되 구현하지 않는다.
+- 실제 Firebase/network/emulator/deploy/UI와 제품 코드·Rules/config/test 변경은 0이다.
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다.
+
+## ★ 스펙 072 — Codex 독립 검수 통과 / DONE
+
+- 구현 `34cca25`, 검수 baseline HEAD=origin `452cc1a`, ahead/behind 0/0.
+- 허용 제품 diff 2개만 존재하며 targeted 58/58, 확대 513/513, check(unit 2084/2084), Chromium
+  151/151, bundle identity와 diff/포트/temp/staged 게이트가 모두 PASS했다.
+- 추가 결함 0, 최종 `CODEX_PASSED / DONE`이다.
+- upload/create/reconciliation, 실제 Firebase/Rules/network/emulator/deploy와 UI는 계속 금지다.
 
 ## ★ 스펙 072 — 구현 완료 기록
 

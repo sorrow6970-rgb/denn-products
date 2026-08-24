@@ -5271,3 +5271,26 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   Firebase 경로는 아직 한 줄도 검증되지 않았기 때문이다.
 - 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상
   spec-018 PNG와 기존 Founder/user working-tree 변경은 restore/checkout/stage/commit하지 않았다.
+
+## 2026-08-24(3) - 스펙 072 Codex 독립 검수 통과 · 스펙 073 조사 준비
+
+- HEAD=origin `452cc1a`, ahead/behind 0/0에서 구현 `34cca25`과 기록을 독립 검토했다. 기준
+  `9a63da6` 이후 제품 diff는 허용 신규 2파일(`issue-bundle.ts`와 unit)뿐이고 기존 spec064~071,
+  package/lockfile/CSS/Firebase/Rules/config/UI 제품 diff는 0이다.
+- top-level one-read snapshot, identity→preparation, UUID 2→SHA 3→encrypt 1 순서, 단계별 short-circuit,
+  child 오류 비노출과 fresh-copy handle을 대조했다. 추가 결함은 없다.
+- 독립 게이트: targeted **58/58**, space-v2+spaces **513/513**, `node scripts/check.mjs` PASS(unit
+  **2084/2084**), 전체 Chromium **151/151**, `git diff --check` PASS, 포트/temp/staged 잔류 0.
+- bundle identity: 고객 `index-6js4DafP.js` **322,018 bytes** /
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`, admin
+  `index-D0XOQpRL.js` **226,201 bytes** /
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`, admin CSS **9,146 bytes**.
+  production bundle 신규 식별자 0이다.
+- 스펙 072 최종 **CODEX_PASSED / DONE**. upload/create/reconciliation과 실제 Firebase 경로는 계속
+  NOT IMPLEMENTED / NOT TESTED / 금지다.
+- 다음 스펙 073은 현재 Rules·설치 SDK·기존 adapter를 읽어 V2 persistence 실패·미판정·orphan 경계를
+  문서 전용으로 조사한다. 제품/Rules/config/test 변경과 실제 network/emulator는 0이다.
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여, 변동 없음**이다. 검수·조사 계약 문서화만
+  수행했으므로 추가 상승은 없다.
+- 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_DOCUMENT_INVESTIGATION`. 자동화·반복 작업 생성 0,
+  보호 대상 조작 0, staged 0이다.
