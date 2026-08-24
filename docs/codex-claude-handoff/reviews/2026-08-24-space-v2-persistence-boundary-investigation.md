@@ -1,9 +1,19 @@
 # space V2 persistence boundary 읽기 전용 조사
 
 - 스펙 정본: `docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md`
-- 상태: **DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI**
-- 기준 HEAD=origin: `c5f8384` (스펙 072 종료 · 스펙 073 계약 반영), ahead/behind 0/0
-- 조사 수행: Claude Code, 2026-08-24
+- 상태: **DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI — 보완 라운드 1 반영**
+- 초판 조사 기록 commit: `f1f5d20` (그 뒤 hash-pin 문서 commit `534c26f`)
+- 보완 라운드 1 기준 HEAD=origin: `534c26f`, ahead/behind 0/0
+- 조사 수행: Claude Code, 2026-08-24 · 보완 라운드 1: 같은 날 Codex `CORRECTION_REQUIRED` 반영
+
+> **보완 라운드 1에서 바뀐 것 (초판 대비):**
+> ① Q7의 *"asset↔token 매핑을 평문으로 두면 토큰 비밀성 모델이 반드시 깨진다"* 단정을 **폐기**하고,
+> 클라이언트 `read`/`list`를 모두 거부한 **private write-once mapping/REC 후보(V2-2′)**를 §Q7.1에서
+> 따로 분석했다. 승인된 outer 암호문만으로 관계를 볼 수 없다는 결론과 O-3 삭제 보류는 유지한다.
+> ② `getDoc` 결론의 **근거를 설치 SDK 원문 행으로 고정**하고, *"SDK가 로컬 timeout으로 실패 처리"*
+> 라는 틀린 표현을 **"앱이 bounded timeout으로 포기해도 원 Promise·pending write가 남는다"**로 정정했다.
+> ③ 실패표를 **[현재 Rules] / [목표 후보 Rules]** 와 **정적 / 설계 / 실행** 축으로 분리했다.
+> ④ commit 기준을 실제 기록에 맞췄다.
 
 > **이 문서는 조사 기록이다. 구현 계약도 승인도 아니다.**
 > 제품 코드 · test · `storage.rules` · `firestore.rules` · Firebase config · package/lockfile 변경 **0**.
@@ -18,9 +28,13 @@
 **스펙 072 bundle을 실제로 저장할 수 있는 서버 경로는 지금 하나도 열려 있지 않다.**
 `rebuild-space-assets/objects/**`는 `storage.rules`에 **match 자체가 없어 create/read/update/delete가
 전부 기본 거부**이고, `spaces/{token}`은 반대로 **아무 조건 없이 create가 열려 있어** GG-5의 approved
-operator UID·exact outer keys 목표를 하나도 충족하지 않는다. 그리고 **V2에서는 asset↔document 연결이
-암호문 안에 있어 서버(Rules)가 그 관계를 볼 수 없으므로, admin-state에서 쓴 G-4 구조 A의 SDC′
-orphan 식별 논거를 그대로 옮길 수 없다.**
+operator UID·exact outer keys 목표를 하나도 충족하지 않는다.
+
+그리고 **승인된 V2 outer document의 암호문만으로는 서버(Rules)가 asset↔document 관계를 볼 수 없어**,
+admin-state에서 쓴 G-4 구조 A의 SDC′ orphan 식별 논거를 그대로 옮길 수 없다. 클라이언트 read/list를
+거부한 별도 mapping 문서를 두면 **관계 자체는 서버가 볼 수 있게 되지만**(§Q7.1), 그것만으로
+**확정 orphan이 증명되지는 않는다** — V2에는 늦게 도착한 `spaces` create를 무효화하는 단조 조건이
+없기 때문이다. 따라서 O-3 삭제 보류가 계속 기본값이다.
 
 ---
 
@@ -46,6 +60,19 @@ orphan 식별 논거를 그대로 옮길 수 없다.**
 | `@firebase/app` | 0.16.0 | `initializeApp`/`getApp`/`getApps` |
 | `@firebase/auth` | 1.13.4 | 기존 adapter가 쓰는 표면 |
 
+**정확한 설치 소스 경로 (보완 라운드 1에서 명시):**
+
+```text
+node_modules/.pnpm/@firebase+firestore@4.17.0_@firebase+app@0.16.0/node_modules/
+  @firebase/firestore/dist/index.d.ts
+node_modules/.pnpm/@firebase+storage@0.14.4_@firebase+app@0.16.0/node_modules/
+  @firebase/storage/dist/storage-public.d.ts
+node_modules/.pnpm/@firebase+storage@0.14.4_@firebase+app@0.16.0/node_modules/
+  @firebase/storage/dist/index.esm.js
+```
+
+아래 행 번호는 전부 위 파일 기준이다.
+
 측정한 상수·타입:
 
 - `StorageErrorCode` 실제 enum 값 (`index.esm.js`): `unknown`, `object-not-found`, `bucket-not-found`,
@@ -65,8 +92,16 @@ orphan 식별 논거를 그대로 옮길 수 없다.**
   already-exists | permission-denied | resource-exhausted | failed-precondition | aborted |
   out-of-range | unimplemented | internal | unavailable | data-loss | unauthenticated`.
 - `TransactionOptions.maxAttempts` 기본 **5**.
-- `SnapshotMetadata`는 **`hasPendingWrites`**와 **`fromCache`**를 노출한다. `getDoc`은 캐시를 볼 수
-  있고, `getDocFromServer`가 서버 강제 읽기다.
+- `SnapshotMetadata`는 **`hasPendingWrites`**와 **`fromCache`**를 노출한다.
+- **`@firebase/firestore/dist/index.d.ts:2582-2595`** — `setDoc`의 Promise는 서버가 성공/오류를 알릴
+  때까지 settle하지 않으며(**SDK 자체 timeout 없음**), 데이터는 local cache에 즉시 저장돼 future
+  "get"에 포함되고 **eventually** 서버에 기록된다(latency compensation). 선언은 `:2603`.
+  원문 인용은 §Q3에 있다.
+- **`@firebase/firestore/dist/index.d.ts:1386-1413`** — `getDoc`은 **캐시를 돌려줄 수 있고**
+  (`:1389`, 선언 `:1397`), `getDocFromCache`는 캐시 전용(`:1405`),
+  **`getDocFromServer`가 server read**(`:1413`)다.
+- `@firebase/storage/dist/index.esm.js:37`(`DEFAULT_MAX_OPERATION_RETRY_TIME`) ·
+  `:43`(`DEFAULT_MAX_UPLOAD_RETRY_TIME`) · `StorageErrorCode` enum 블록.
 
 ### 1.3 기존 adapter
 
@@ -146,10 +181,13 @@ allow create: if request.resource.data.schema == 'space-v2'
 
 1. **V2 사칭을 막을 수 있어도 V1 사칭은 못 막는다.** 공격자가 `schema:'space-v1'`로 임의 문서를
    만드는 길은 계속 열려 있다(현행과 동일). V2 제한은 **V2 provenance만** 준다.
-2. **`allow read: if true`는 `get`과 `list`를 모두 연다.** Firestore에서 `read` = `get` + `list`이므로
-   현행 규칙 문언상 `spaces` 컬렉션 **열거가 허용된다**. 토큰 비밀성에 의존하는 모델과 어긋난다.
-   내용은 암호화돼 있으므로 즉시 평문 노출은 아니지만, **토큰 전량 수집 → 오프라인 사전공격 표면**이
-   된다. 실제 동작은 **NOT TESTED**(live 접근 금지). GG-5 계약을 여는 단위에서 함께 결정할 항목이다.
+2. **`allow read: if true`는 `get`과 `list`를 모두 연다 — 정적 결론.** Firestore Rules에서
+   `read` = `get` + `list`이므로 **현행 규칙 문언상 `spaces` 컬렉션 열거가 허용된다.** 이는 근거가
+   불충분한 추정(`UNCONFIRMED`)이 아니라 Rules 문언에서 직접 읽은 **정적 사실**이다.
+   **다만 실제로 열거가 되는지는 실행하지 않았다 — `NOT TESTED`**(live/emulator 금지). 두 진술을
+   한 단어로 섞지 않는다.
+   내용은 암호화돼 있으므로 즉시 평문 노출은 아니지만, 토큰 비밀성에 의존하는 모델과 어긋나며
+   **토큰 전량 수집 → 오프라인 사전공격 표면**이 된다. GG-5 계약을 여는 단위에서 함께 결정할 항목이다.
 3. **실제 운영자 UID가 여전히 `UNCONFIRMED`다.** `storage.rules:35` · `firestore.rules:30,75`의
    placeholder가 그대로다. UID 정본 없이는 Rules를 배포할 수 없다(스펙 037 §9 / Founder G-1).
 
@@ -185,13 +223,41 @@ Firestore 쪽은 `permission-denied` / `unauthenticated` / `invalid-argument` / 
 `unknown` / 미매핑을 미확정으로 두는 기존 `classifyTransactionError` 분류가 그대로 유효하다.
 다만 V2 create는 **transaction이 아니라 단발 `setDoc`**이라 `aborted`(경합 소진) 항목은 의미가 다르다.
 
-**★ `getDoc` 대신 `getDocFromServer`가 필요한 이유 — 이번 조사에서 새로 확인한 함정.**
-Firestore Web SDK는 latency compensation을 한다. `setDoc`이 로컬 타임아웃으로 실패 처리돼도
-**로컬 캐시에는 pending write가 이미 반영돼 있을 수 있다.** 그 상태에서 `getDoc`을 호출하면
-`snapshot.exists() === true`가 나오는데, 이는 **서버가 받았다는 증거가 아니다**.
-`SnapshotMetadata.hasPendingWrites` / `fromCache`가 이를 구분하며, `getDocFromServer`가 서버 강제
-읽기다. **기존 `space-read/sdk-facade.ts`는 `getDoc`을 쓰고 `metadata`를 보지 않는다** — 읽기 전용
-viewer 용도로는 문제가 없지만, **write outcome 판정에 그대로 재사용하면 거짓 성공 판정이 난다.**
+**★ `getDoc` 대신 `getDocFromServer`가 필요한 이유 (보완 라운드 1에서 근거·용어 정정).**
+
+**근거 — 설치된 `@firebase/firestore` 4.17.0 공개 타입 원문:**
+
+- `dist/index.d.ts:2582-2595` (`setDoc` 문서 주석):
+  반환 `Promise`는 *"does **not** resolve until the data is successfully written to the remote
+  Firestore backend"* 이고 *"is not rejected until the remote Firestore backend reports an error"*
+  이다. 오프라인이면 *"the returned `Promise` will not resolve for a potentially-long time"*.
+  그리고 *"the given data **will** be immediately saved to the local cache and will be incorporated
+  into future “get” operations as if it had been successfully written to the remote Firestore
+  server, a feature of Firestore called “latency compensation”"*, 데이터는
+  *"**eventually** be written to the remote Firestore backend once a connection can be established"*.
+- `dist/index.d.ts:1386-1413` (`getDoc` / `getDocFromCache` / `getDocFromServer`):
+  `getDoc`은 *"attempts to provide up-to-date data when possible by waiting for data from the server,
+  but **it may return cached data** or fail if you are offline"*, `getDocFromServer`는
+  *"Reads the document referred to by this `DocumentReference` **from the server**"*.
+
+**따라서 server-only write outcome reconciliation에는 `getDocFromServer`가 필요하다** — 이 결론은
+유지된다. `getDoc`은 캐시를 돌려줄 수 있고, 미commit pending write가 future get에 포함되므로
+`snapshot.exists() === true`가 **서버가 받았다는 증거가 되지 못한다**.
+`SnapshotMetadata.hasPendingWrites` / `fromCache`가 그 구분을 노출한다.
+
+**★ 용어 정정 — "SDK가 로컬 timeout으로 실패 처리한다"는 표현을 폐기한다.**
+위 원문대로 `setDoc`의 Promise에는 **SDK 자체의 timeout이 없다**: 서버가 성공/오류를 알려줄 때까지
+resolve도 reject도 하지 않는다. 정확한 경계는 이것이다 — **앱이 자기 bounded timeout으로 기다림을
+포기해도, 원 `Promise`와 local cache의 pending write는 그대로 남고 연결이 회복되면 서버에 기록된다.**
+즉 "앱이 포기했다"와 "서버가 거부했다"는 전혀 다른 사건이며, 이것이 Q5·Q6의 미판정 규율과
+스펙 037 §6.6의 *"timeout은 취소가 아니다"* 전제가 V2에도 그대로 적용되는 이유다.
+
+**근거 수준 분리:** 위는 전부 **설치 SDK 공개 타입 문서의 API 동작 근거**다. 실제 앱 timeout /
+오프라인 / 재연결 시나리오에서 `getDoc`이 pending write를 돌려주는지, `getDocFromServer`가 그때 어떤
+오류를 내는지는 **emulator·runtime에서 실행하지 않았다 — `NOT TESTED`**.
+
+**기존 `space-read/sdk-facade.ts`는 `getDoc`을 쓰고 `metadata`를 보지 않는다** — 읽기 전용 viewer
+용도로는 문제가 없지만, **write outcome 판정에 그대로 재사용하면 안 된다.**
 
 ### Q4. 각 실패 지점에서 asset과 document가 남는 상태
 
@@ -266,8 +332,9 @@ token이 이번 operation의 새 UUID이고 `spaces/{token}`은 `update: if fals
 | read 실패·timeout | 미판정 |
 
 **조건: 반드시 `getDocFromServer`여야 하고, `getDoc` + `hasPendingWrites` 무시는 거짓 성공을 만든다**(Q3).
-그리고 **부재 관측은 확정 실패가 아니다** — 로컬 timeout이 SDK의 write를 취소하지 않는다는 스펙 037
-§6.6의 전제가 여기에도 그대로 적용된다.
+그리고 **부재 관측은 확정 실패가 아니다** — 앱이 bounded timeout으로 기다림을 포기해도 원 `Promise`와
+pending write가 남아 연결 회복 시 서버에 기록된다(`index.d.ts:2582-2595`). 스펙 037 §6.6의
+*"timeout은 취소가 아니다"* 전제가 여기에도 그대로 적용된다.
 
 ### Q6. 결과 미확정에서 자동 retry / 같은 경로 재업로드 / 새 token 발급
 
@@ -304,7 +371,7 @@ V2는 구조가 다르다. 2026-08-20 결정 §2.1이 확정한 outer document�
 | `head.revision > REC.claimedBase + 1`이 P2(과거 정상본)를 확정한다 | **대응되는 단조 증가 값이 없다** |
 | P3(미판정)가 조건 불성립으로 자동 보호된다 | 보호할 조건 자체를 쓸 수 없다 |
 
-**따라서 현재 승인된 V2 계약 아래에서는 asset orphan과 미판정 object를 서버에서 구분할 수 없다.**
+**따라서 승인된 outer document만으로는 asset orphan과 미판정 object를 서버에서 구분할 수 없다.**
 클라이언트도 마찬가지다 — 자기가 방금 만든 token/assetId 쌍은 알지만, **과거 issue의 쌍을 되찾을
 경로가 없다**(운영자가 링크를 따로 보관하지 않는 한).
 
@@ -313,18 +380,82 @@ Founder D-2=O-3(삭제 보류)이 현재 정본이고, delete 권한도 자동 �
 식별 근거가 더 약하므로 **삭제 보류가 유일하게 성립하는 기본값**이다. 다만 **비용은 단조 증가**하며
 그 상한은 `UNCONFIRMED`다(실제 PNG 크기·발급량 미확정, 스펙 064 §10).
 
-식별을 열려면 추가 결정이 필요하다 — **이 조사는 어느 쪽도 권고하지 않고 선택지만 기록한다**:
+#### Q7.1 ★ 정정 — private write-once mapping/REC 후보 (보완 라운드 1)
 
-| 선택지 | 필요한 것 | 대가 |
-|---|---|---|
-| **V2-1 삭제 보류 유지 (현재 기본값)** | 없음 | 오삭제 위험 0. 비용 단조 증가(상한 미확정) |
-| **V2-2 asset에 평문 REC 도입** | `rebuildSpaceAssets/{assetId}` 류의 write-once 문서 + Rules 2곳 | Firestore 쓰기 1회 추가. **그러나 REC이 있어도 "참조 document가 있는가"는 여전히 못 푼다** — token을 REC에 넣으면 **asset↔token 연결이 평문으로 노출**되어 토큰 비밀성 모델이 깨진다 |
-| **V2-3 backend/Admin SDK 판정** | C6/G-3 재개, 서비스 계정, 함수 배포·과금 | 규칙이 틀리면 자동으로 손해 |
+**이 조사의 초판은 "asset↔token 매핑을 두면 토큰 비밀성이 반드시 깨진다"고 단정했다. 그 단정을
+폐기한다.** 그 문장은 매핑이 **클라이언트에게 읽히는 경우**에만 참이고, 매핑 문서의 클라이언트
+`read`(= `get` + `list`)를 **모두 거부**하면 성립하지 않는다. Rules 안의 `firestore.get()/exists()`는
+**클라이언트 read 권한이 아니라 서버 측 규칙 평가**이므로, 토큰을 클라이언트에게 노출하지 않고도
+서버가 매핑을 볼 수 있는 후보가 존재한다.
 
-> **★ V2-2의 함정을 분명히 기록한다.** admin-state의 REC이 통했던 것은 `recId`가 **비밀이 아니었기**
-> 때문이다. V2 token은 **URL 비밀**이다. orphan 식별을 위해 asset↔token 매핑을 평문으로 두면
-> **`spaces` 열거 가능성(Q2 위험 2)과 결합해 시안 접근 경로가 만들어진다.** 이건 최적화 문제가 아니라
-> 보안 모델 충돌이다.
+위에서 유지되는 결론은 **좁혀진 형태**다: *승인된 V2 outer document(`schema`/`enc` 2키)의 암호문만
+가지고는 Rules가 asset↔document 관계를 볼 수 없다.* 별도 매핑 문서를 도입하면 그 관계 자체는 서버가
+볼 수 있게 된다. **아래는 그 후보의 분석이지, 안전성 PASS도 구현·Rules·schema·backend 승인도 아니다.**
+
+**후보 V2-2′ — client-denied write-once mapping**
+
+| 항목 | 분석 |
+|---|---|
+| **키 후보 (a) doc id = `assetId`, field = `token`** | Storage Rules는 object path에서 `assetId`만 안다. 그래서 매핑은 **assetId로 조회 가능**해야 한다. 단점: 두 번째 조회를 하려면 첫 조회 결과의 `token`을 경로에 **연쇄 보간**해야 한다(아래 참조) |
+| **키 후보 (b) doc id = `assetId`, field = opaque `linkId`** | token을 문서에 담지 않아도 된다. 대신 `spaces` 생성과 별개인 제3의 문서가 필요해 원자성 경계가 하나 더 늘어난다 |
+| **키 후보 (c) doc id = opaque `recId`(admin-state 방식)** | **성립하지 않는다.** GG-4=A가 object path를 `rebuild-space-assets/objects/{assetId}.png`로 고정했으므로 Storage segment가 곧 `assetId`다. `recId ≠ assetId`면 Storage Rules가 매핑 문서를 지목할 수 없다 |
+| **create 권한** | 기존 `rebuildAdminStateObjects`와 같은 형태로 `approvedOperator() && create-only && exact keys` 가능. 근거: 현행 `firestore.rules`의 REC 블록이 이미 그 형태다 |
+| **클라이언트 get/list 거부** | `allow read, update, delete: if false` — 현행 REC 블록이 **이미 그렇게 되어 있다**(`firestore.rules`). 즉 "private mapping"은 이 저장소에 **선례가 있는 형태**다 |
+| **Storage create 게이팅** | 기존 asset create 규칙에 `firestore.exists(mapping)`을 걸면 매핑 없는 stray 업로드를 서버가 막는다. 이때 **문서 접근 1개**를 소비한다 |
+| **`spaces` create와의 결합 — 순차** | 매핑을 먼저 commit → upload → `spaces` create. crash 시 **매핑만 남는다**(해당 경로는 소각되고 asset은 있을 수도/없을 수도). G-4 §6의 구조 A와 같은 성질이다 |
+| **`spaces` create와의 결합 — 원자(`getAfter`)** | 매핑 create와 `spaces` create를 **같은 Firestore transaction/batch**에 넣고 `spaces` 규칙이 `getAfter(mapping)`으로 동반 쓰기를 강제하는 형태. G-4 §6이 `getAfter()` 공식 근거를 이미 기록했다. 대가도 동일하다 — **upload 시점에 매핑이 아직 없으므로 Storage create 게이팅이 불가능**하다 |
+| **Storage Rules 문서 접근 한도** | G-4 결정 §4가 인용한 공식 제약: **단일 Rules 평가에서 Firestore 문서 최대 2개**. delete 규칙이 `get(mapping)` + `exists(spaces/{token})`를 하면 **정확히 2개, 여유 0**이다. 여기에 create 게이팅용 접근은 **다른 평가**라 따로 계산된다 |
+| **비용** | 같은 §4: Storage Rules의 Firestore 읽기는 **프로젝트 Firestore quota·과금에 포함**된다. 발급 1건당 Firestore 쓰기 1회가 추가되고, delete 평가마다 읽기 2회가 추가된다 |
+| **기본 DB 제약** | 같은 §4: Storage Rules는 **default Firestore database**만 읽는다 |
+| **IAM** | 같은 §4: 두 제품 연결에 IAM 권한 활성화가 필요하고 role 제거로 비활성화된다 |
+
+**★ 결정적 한계 — 이 후보만으로는 "확정 orphan"을 증명하지 못한다.**
+
+매핑이 있으면 서버가 *"이 asset의 token에 해당하는 `spaces` 문서가 지금 존재하는가"* 를 **물을 수는
+있다**. 그러나 그 답이 "없다"일 때 **"영원히 없을 것"이 따라 나오지 않는다.**
+
+- 설치 `@firebase/firestore` 4.17.0 `dist/index.d.ts:2582-2595`가 명시한다 — `setDoc`의 데이터는
+  로컬 캐시에 즉시 저장되고 *"will **eventually** be written to the remote Firestore backend once a
+  connection can be established."* 즉 **늦은 성공이 API 계약상 정상 경로**다.
+- admin-state에서 SDC′가 통했던 이유는 **`head.revision`이라는 단조 증가값**이 있어
+  `head.revision > claimedBase + 1`이 되는 순간 **그 transaction이 CAS에서 이길 수 없음이 확정**됐기
+  때문이다(G-4 결정 §5 증명 ③④⑤).
+- **V2에는 대응되는 단조값이 없다.** `spaces/{token}` create는 token이 고유한 한 **언제 도착해도
+  성공한다.** 늦은 성공을 무효화하는 조건이 구조상 존재하지 않는다.
+
+⇒ **매핑은 "관계를 볼 수 없다"는 장벽은 치우지만, "미판정과 orphan을 가르는" 장벽은 그대로 남긴다.**
+이를 닫으려면 늦은 create를 서버가 거부하게 만드는 **추가 설계**(예: 발급 epoch/seal 문서와
+`spaces` create 규칙의 결합)가 필요하며, **그 설계는 이 조사 범위 밖이고 분석되지 않았다**.
+
+**UNCONFIRMED (이 후보와 관련해 근거를 확보하지 못한 것):**
+
+- **Rules 안의 `get()/exists()`가 대상 문서의 `allow read` 거부를 우회한다는 공식 인용을 이 세션에서
+  취득하지 못했다.** 현행 `storage.rules`가 `read, update, delete: if false`인 `rebuildAdminStateObjects`를
+  `firestore.exists()`로 조회하도록 이미 작성돼 있다는 **저장소 내부 정황**이 근거의 전부다.
+  live network 접근이 금지돼 공식 문서를 확인하지 않았다 — **UNCONFIRMED**.
+- **연쇄 경로 보간** — `firestore.exists(/databases/(default)/documents/spaces/$(firestore.get(mappingPath).data.token))`
+  처럼 **한 조회 결과를 다른 조회 경로에 보간**하는 것이 Storage Rules에서 지원되는지 확인하지 못했다.
+  현행 규칙들은 `request.resource.data.recId`나 path 변수(`$(objectId)`)만 보간한다 — **UNCONFIRMED**.
+  지원되지 않으면 후보 (a)는 성립하지 않고 매핑 설계를 다시 해야 한다.
+- 매핑 도입 시 **Firestore 쓰기·읽기 증가분의 실제 비용** — **UNCONFIRMED**(발급량 미확정).
+- 위 후보의 어떤 규칙도 **작성·실행되지 않았다** — **NOT TESTED**.
+
+**보안 측면의 정확한 진술:** client-denied 매핑은 **다른 클라이언트에게 token을 노출하지 않는다.**
+다만 프로젝트 콘솔·Admin SDK 접근자에게는 asset↔token 관계가 평문으로 보인다. 이는 버킷 객체 자체와
+같은 신뢰 수준이므로 **새로운 노출 경로는 아니지만, "token은 어디에도 평문으로 저장되지 않는다"는
+성질은 잃는다.** Q2 위험 2(`spaces` list 개방)와는 **독립적인 문제**이며, 초판이 두 사안을 결합해
+"보안 모델 충돌"이라고 단정한 것은 과장이었다.
+
+**선택지 (수정) — 이 조사는 어느 쪽도 권고하지 않는다:**
+
+| 선택지 | 필요한 것 | 무엇을 주는가 | 무엇을 주지 못하는가 |
+|---|---|---|---|
+| **V2-1 삭제 보류 유지 (현재 기본값·D-2=O-3)** | 없음 | 오삭제 위험 0 | 비용 단조 증가(상한 `UNCONFIRMED`) |
+| **V2-2′ client-denied write-once mapping** | 매핑 컬렉션 + `firestore.rules`·`storage.rules` 양쪽 + 발급당 Firestore 쓰기 1회 + IAM 연결 | 서버가 asset↔document **관계를 물을 수 있게 된다**. stray upload 서버 차단도 가능 | **확정 orphan 증명은 못 한다**(늦은 create를 무효화하는 조건 부재). 연쇄 보간 지원 `UNCONFIRMED`, 문서 접근 한도 2 여유 0, token이 평문으로 저장됨 |
+| **V2-3 backend/Admin SDK 판정** | C6/G-3 재개, 서비스 계정, 함수 배포·과금 | 임의 판정 로직 가능 | 규칙이 틀리면 자동으로 손해. 여전히 "늦은 성공" 문제를 스스로 풀어야 한다 |
+
+> **가능한 후보라는 사실은 삭제 승인도, Rules/schema/backend 구현 승인도, 안전성 PASS도 아니다.**
+> V2-2′는 **`NOT TESTED`이고 핵심 한계가 미해결**이다.
 
 ### Q8. admin-write C5 port 재사용 가능 범위
 
@@ -396,7 +527,7 @@ SPACE_V2_ISSUE_ASSET_MISMATCH       // read-back size/hash 불일치 — fail-cl
 | F-7 | 미매핑 SDK 코드 | 항상 `*_OUTCOME_UNKNOWN` |
 | F-8 | 동시 호출 2회 | 단일 비행 — 두 번째가 upload를 다시 시작하지 않음 |
 | F-9 | 실패 결과 표면 | `correlationId` 외 token/assetId/path/bytes/password/raw message 0 |
-| F-10 | `getDoc` 캐시 함정 | **pending write 스냅샷을 성공으로 읽지 않음** |
+| F-10 | `getDoc` 캐시/pending write 함정 | **캐시 스냅샷을 서버 성공으로 읽지 않음**(fake가 `hasPendingWrites`/`fromCache`를 흉내) |
 
 **emulator 검증표 후보 (`demo-denn-emulator`에서만, 별도 승인 필요):**
 
@@ -422,9 +553,9 @@ SPACE_V2_ISSUE_ASSET_MISMATCH       // read-back size/hash 불일치 — fail-cl
 |---|---|---|---|
 | **JJ-1** | V2 asset Rules를 여는가 | A) `rebuild-space-assets` match 신설(create=승인 UID, read=public, update/delete=false) · B) 보류 | **B면 이후 단위가 전부 local fake로만 남는다** |
 | **JJ-2** | `spaces/{token}` create를 GG-5대로 분기하는가 | A) `schema=='space-v2'`만 승인 UID + exact keys, V1은 현행 유지 · B) 현행 유지 | Rules 변경 = G-1 재개 |
-| **JJ-3** | **`spaces` 컬렉션 `list`를 닫는가** | A) `get`만 허용하고 `list` 거부 · B) 현행 유지 | 현행 `read: if true`가 **열거를 허용**한다(Q2 위험 2). V1 소비자 영향 검토 필요 |
+| **JJ-3** | **`spaces` 컬렉션 `list`를 닫는가** | A) `get`만 허용하고 `list` 거부 · B) 현행 유지 | 현행 `read: if true`가 **문언상 열거를 허용**한다(Q2 위험 2, 정적 결론 · 실행 `NOT TESTED`). V1 소비자 영향 검토 필요 |
 | **JJ-4** | 실제 운영자 UID 정본 제공 | A) 제공 · B) 보류 | placeholder로는 **어떤 Rules도 배포 불가** |
-| **JJ-5** | V2 orphan 정책 | A) V2-1 삭제 보류 유지(D-2=O-3 연장) · B) V2-2 평문 REC · C) V2-3 backend | **B는 토큰 비밀성과 충돌한다**(Q7) |
+| **JJ-5** | V2 orphan **식별** 정책 | A) V2-1 삭제 보류 유지(D-2=O-3 연장) · B) V2-2′ client-denied write-once mapping · C) V2-3 backend | **B·C 어느 쪽도 지금은 확정 orphan을 증명하지 못한다**(Q7.1: 늦은 create를 무효화하는 단조 조건 부재). B는 관계 조회를 가능하게 하지만 연쇄 경로 보간 지원이 `UNCONFIRMED`이고 token이 평문 저장된다. **어느 선택도 삭제 승인이 아니다** |
 | **JJ-6** | 미확정 시 사용자 경험 | A) 미판정으로 표시하고 사람이 결정 · B) 자동 재시도 | **B는 안전 근거가 없다**(Q6) |
 | **JJ-7** | 다음 단위 크기 | A) local `space-write` port + fake만(네트워크 0) · B) Rules + emulator까지 · C) adapter까지 | A는 UID·Rules 결정 없이도 진행 가능한 **유일한 선택지** |
 
@@ -432,31 +563,59 @@ SPACE_V2_ISSUE_ASSET_MISMATCH       // read-back size/hash 불일치 — fail-cl
 
 ## 3. 필수 실패표 (스펙 073 §4)
 
-판정 기준: **PASS** = 근거로 확정 · **FAIL** = 현재 구조에서 성립하지 않음 · **UNCONFIRMED** = 근거
-불충분 · **NOT TESTED** = 실행하지 않음(이번 단위 금지).
+**보완 라운드 1에서 판정 축을 분리했다.** 초판은 "현재 Rules에서 성립하는 것"과 "목표 후보 Rules에서
+성립할 것"을, 그리고 "정적/API 근거"와 "실행 검증"을 한 칸에 섞어 적었다. 아래는 그 둘을 나눈다.
 
-| # | 상황 | 판정 | 근거 |
-|---|---|---|---|
-| 1 | upload 명확 성공 → Firestore create 성공 | **NOT TESTED** | Rules 미개방 + live/emulator 금지. 필요한 SDK API는 전부 존재(Q3) |
-| 2 | upload 명확 실패 | **PASS**(설계 근거) | `mapUploadError`의 확정 실패 코드 집합이 이미 검증돼 있다. create 호출 0이 자명(순서상 뒤) |
-| 3 | upload 결과 미확정 — object **부재** 관측 | **UNCONFIRMED** | "지금 없다" ≠ "영원히 없다". 재시도 10분 창(§1.2)과 늦은 도착 배제 근거 없음 |
-| 4 | upload 결과 미확정 — **exact object 존재** 관측 | **UNCONFIRMED** | 논거는 강하다(고유 create-only 경로 + size/md5 대조). 그러나 ① read 권한이 아직 없다 ② `md5Hash` 항상 존재 미확인 ③ Storage read 캐시 미확인 |
-| 5 | upload 성공 → Firestore create **명확 거부/실패** | **PASS**(설계 근거) | `permission-denied`/`unauthenticated`/`invalid-argument` 등은 확정. 이때 asset은 참조되지 않는다 |
-| 6 | upload 성공 → create 미확정 — 문서 **부재** 관측 | **UNCONFIRMED** | 로컬 timeout은 취소가 아니다(스펙 037 §6.6과 동일 전제) |
-| 7 | upload 성공 → create 미확정 — 문서 **일치** 관측 | **UNCONFIRMED** | `getDocFromServer` + exact outer 대조라면 성립. **`getDoc`이면 pending write로 거짓 성공**(Q3) |
-| 8 | upload 성공 → create 미확정 — 문서 **불일치** 관측 | **PASS**(설계 근거) | token 충돌 또는 계약 위반. fail-closed가 유일한 안전 동작 |
-| 9 | 브라우저 종료 | **UNCONFIRMED** | 진행 중 요청의 서버 도달 여부 판정 불가 |
-| 10 | 인증 만료 | **UNCONFIRMED** | `unauthenticated`는 확정 실패지만 **직전 요청의 결과는 별개** |
-| 11 | 중복 탭 | **PASS**(설계 근거) | 탭마다 독립 UUID 쌍 → 경로/token 충돌 0. 대신 중복 asset·중복 link 발생 |
-| 12 | 같은 **assetId** 재사용 | **PASS**(설계 근거) | create-only가 서버에서 거부. **단 `storage/unauthorized`가 "이미 존재"와 "권한 없음"을 구분하지 못한다** |
-| 13 | 같은 **token** 재사용 | **PASS**(설계 근거) | `update: if false`가 거부. **단 `permission-denied`가 정반대 두 사실을 모두 뜻할 수 있다** |
-| 14 | asset만 존재하는 orphan | **FAIL** — 구분 불가 | **Q7.** 참조가 암호문 안이라 서버가 볼 수 없다. SDC′ 이식 불가 |
-| 15 | document만 존재하는 broken reference | **FAIL** — 사전 차단은 되나 사후 탐지 불가 | upload-first 순서가 **발생을 막는다**. 그러나 asset이 나중에 사라지는 경우(현재 delete 금지라 미발생) 탐지 수단은 없다 |
-| 16 | **`rebuild-space-assets/**` 현재 CRUD** | **FAIL** — 전부 거부 | `storage.rules` match 부재 |
-| 17 | **`spaces/{token}` create의 GG-5 충족** | **FAIL** | `create: if true`, payload 검증 0, UID 검증 0 |
-| 18 | `spaces/{token}` 불변성 | **PASS** | `update, delete: if false` |
-| 19 | V1 create 호환 유지 가능성 | **PASS**(근거상 가능) | 레거시가 `schema:'space-v1'`을 항상 쓴다(`denn-mockup-tool.html:15573`) |
-| 20 | 기존 emulator 하네스 재사용 | **PASS**(구조상 가능) | `emulator-env.ts` + Rules 사본 패턴. **실행은 NOT TESTED**(이번 금지) |
+**판정 축 A — 어떤 Rules 기준인가**
+
+- **[현재]** = 오늘 저장소에 있는 `storage.rules` / `firestore.rules` 그대로.
+- **[목표후보]** = GG-4/GG-5 목표로 신설·수정해야 할 규칙. **작성되지 않았고 승인되지도 않았다.**
+
+**판정 축 B — 근거의 종류**
+
+- **정적** = Rules 문언 또는 설치 SDK 공개 타입/소스에서 직접 읽은 사실.
+- **설계** = 위 사실들로부터 따라 나오는 논리적 귀결(코드도 규칙도 실행하지 않았다).
+- **실행** = emulator 또는 live 실행 결과. **이번 단위에서 전부 `NOT TESTED`다** — 하나도 실행하지
+  않았으므로 아래 표의 실행 칸은 예외 없이 `NOT TESTED`이며, 그 사실을 `UNCONFIRMED`(근거 불충분)와
+  섞지 않는다.
+
+### 3.1 현재 Rules 상태 (정적 판정)
+
+| # | 상황 | 정적 판정 | 실행 | 근거 |
+|---|---|---|---|---|
+| 16 | `rebuild-space-assets/**`의 create/read/update/delete | **[현재] 전부 default deny** — match 자체가 없다 | NOT TESTED | `storage.rules`에 해당 경로 match 부재(grep 0건) |
+| 17 | `spaces/{token}` create의 GG-5 충족 | **[현재] FAIL** — `create: if true`, payload·UID 검증 0 | NOT TESTED | `firestore.rules` |
+| 18 | `spaces/{token}` 불변성 | **[현재] PASS** — `update, delete: if false` | NOT TESTED | `firestore.rules` |
+| 21 | `spaces/{token}`의 `allow read`가 `get`과 `list`를 함께 연다 | **[현재] 정적 결론: 그렇다** — Firestore Rules에서 `read` = `get` + `list`이고 현행은 `if true` | NOT TESTED | `firestore.rules`. **실제 열거가 되는지는 실행하지 않았다** — 정적 결론과 실행 미검증을 분리한다 |
+| 19 | V1 create 호환 유지 가능성 | **[현재→목표후보] 설계상 가능** | NOT TESTED | 레거시가 항상 `schema:'space-v1'`을 쓴다(`denn-mockup-tool.html:15573`) → 분기 키 성립 |
+
+### 3.2 목표 후보 Rules에서의 상태 (설계 판정 · 전부 미작성)
+
+| # | 상황 | 설계 판정 | 실행 | 근거 |
+|---|---|---|---|---|
+| 12 | 같은 **assetId** 재업로드 | **[목표후보] create-only가 거부할 것** | NOT TESTED | `resource == null` 패턴(admin-state 선례). ★ **[현재]는 규칙 부재로 그냥 default deny이며 이것을 목표 rule의 PASS로 읽으면 안 된다.** 또한 `storage/unauthorized`가 "이미 존재"와 "권한 없음"을 구분하지 못한다 |
+| 22 | 승인 UID의 asset create / 익명 read | **[목표후보] 허용될 것** | NOT TESTED | 규칙 미작성. GG-4=A 목표 문구뿐 |
+| 23 | asset update / delete 거부 | **[현재] default deny · [목표후보] 명시 `false`** | NOT TESTED | 결과는 같으나 **근거가 다르다**(Q1 주의 1). 목표 블록에 명시 `false`를 적지 않으면 불변 계약이 아니다 |
+
+### 3.3 실패 순서별 판정
+
+| # | 상황 | 판정 | 실행 | 근거 |
+|---|---|---|---|---|
+| 1 | upload 명확 성공 → Firestore create 성공 | 판정 없음 | **NOT TESTED** | Rules 미개방 + live/emulator 금지. 필요한 SDK API는 전부 존재(Q3) |
+| 2 | upload 명확 실패 | **설계 PASS** | NOT TESTED | `mapUploadError`의 확정 실패 코드 집합. create 호출 0은 순서상 자명 |
+| 3 | upload 결과 미확정 — object **부재** 관측 | **UNCONFIRMED** | NOT TESTED | "지금 없다" ≠ "영원히 없다". 재시도 10분 창(§1.2)과 늦은 도착 배제 근거 없음 |
+| 4 | upload 결과 미확정 — **exact object 존재** 관측 | **UNCONFIRMED** | NOT TESTED | 논거는 강하다(고유 create-only 경로 + size/md5 대조). 그러나 ① 그 경로 read가 [현재] default deny ② `md5Hash` optional ③ Storage read 캐시 미확인 |
+| 5 | upload 성공 → create **명확 거부/실패** | **설계 PASS** | NOT TESTED | `permission-denied`/`unauthenticated`/`invalid-argument` 등은 확정. 이때 asset은 참조되지 않는다 |
+| 6 | upload 성공 → create 미확정 — 문서 **부재** 관측 | **UNCONFIRMED** | NOT TESTED | 앱이 포기해도 pending write가 남아 늦게 기록될 수 있다(`index.d.ts:2582-2595`) |
+| 7 | upload 성공 → create 미확정 — 문서 **일치** 관측 | **정적/설계 근거로는 성립 · 실행 NOT TESTED** | NOT TESTED | `getDocFromServer`(`:1413`)가 server read임은 **정적 근거**이고, exact outer 대조로 이번 create를 특정할 수 있다는 것은 **설계 근거**다. **`getDoc`(`:1389`)이면 캐시/pending write로 거짓 성공.** 실제 timeout·오프라인 시나리오는 실행하지 않았다 |
+| 8 | upload 성공 → create 미확정 — 문서 **불일치** 관측 | **설계 PASS** | NOT TESTED | token 충돌 또는 계약 위반. fail-closed가 유일한 안전 동작 |
+| 9 | 브라우저 종료 | **UNCONFIRMED** | NOT TESTED | 진행 중 요청의 서버 도달 여부 판정 불가 |
+| 10 | 인증 만료 | **UNCONFIRMED** | NOT TESTED | `unauthenticated`는 확정 실패지만 **직전 요청의 결과는 별개** |
+| 11 | 중복 탭 | **설계 PASS** | NOT TESTED | 탭마다 독립 UUID 쌍 → 경로/token 충돌 0. 대신 중복 asset·중복 link 발생 |
+| 13 | 같은 **token** 재create | **[현재] 정적 PASS** | NOT TESTED | `update: if false`가 **이미 존재하는 규칙**이다(12번과 달리 목표 후보가 아니다). 단 `permission-denied`가 정반대 두 사실을 모두 뜻할 수 있다 |
+| 14 | asset만 존재하는 orphan | **[현재] FAIL — 구분 불가** | NOT TESTED | **Q7.** 승인된 outer의 암호문만으로는 참조 관계를 볼 수 없다. **[목표후보] V2-2′ 매핑을 도입해도 확정 orphan은 증명되지 않는다**(Q7.1: 늦은 create를 무효화하는 조건 부재) |
+| 15 | document만 존재하는 broken reference | **설계상 발생 차단 · 사후 탐지 FAIL** | NOT TESTED | upload-first 순서가 **발생을 막는다**. asset이 나중에 사라지는 경우(현재 delete 금지라 미발생)의 탐지 수단은 없다 |
+| 20 | 기존 emulator 하네스 재사용 | **설계상 가능** | NOT TESTED | `emulator-env.ts` + Rules 사본 패턴. 이번 단위는 emulator 실행 금지 |
 
 ---
 
@@ -468,20 +627,40 @@ SPACE_V2_ISSUE_ASSET_MISMATCH       // read-back size/hash 불일치 — fail-cl
   (upload 재시도 10분, transaction 20s lock/270s max/maxAttempts 5) **호출 전체 벽시계 상한은 미확정**.
 - `FullMetadata.md5Hash`가 실제 GCS 응답에 **항상** 존재하는지.
 - Storage read 경로(`getMetadata`/`getBytes`)의 **클라이언트 캐시 동작**.
-- `spaces` 컬렉션 `list`가 실제로 열려 있는지 — **Rules 문언상 열려 있으나 실행 검증 0**.
 - V2 proof PNG의 실제 평균/최대 bytes, 발급 빈도, 그에 따른 **orphan 비용 상한**.
 - Storage bucket **CORS** 설정 — CORS-clean canvas가 아니면 인쇄/replay가 깨진다(CLAUDE.md §4.7).
 - 실제 운영자 **UID 정본** — 두 Rules 파일에서 여전히 placeholder.
 - Rules의 문자열 연결/분해 지원 — G-4 결정 §12에서 이미 `UNCONFIRMED`, 이번에도 확인하지 않았다.
+- **Rules 안의 `get()/exists()`가 대상 문서의 `allow read` 거부를 우회하는지** — 공식 인용을 이 세션에서
+  취득하지 못했다(§Q7.1). 저장소 내부 정황(현행 `storage.rules`가 client-denied REC을 조회하도록
+  작성돼 있음)이 근거의 전부다.
+- **한 `firestore.get()` 결과를 다른 조회 경로에 연쇄 보간**하는 것이 Storage Rules에서 지원되는지
+  (§Q7.1). 지원되지 않으면 V2-2′ 후보 (a)가 성립하지 않는다.
+
+**정적 결론이지만 실행 검증이 없는 것 — `UNCONFIRMED`와 구분한다:**
+
+- **`spaces` 컬렉션 `list` 개방**: Rules 문언에서 직접 읽은 **정적 사실**(근거 불충분이 아니다).
+  실제 열거 동작은 **`NOT TESTED`**.
+- **`getDocFromServer`가 server read이고 `getDoc`이 캐시를 돌려줄 수 있다는 것**: 설치 SDK 공개 타입
+  원문(`index.d.ts:1386-1413`)에서 읽은 **정적 사실**. 실제 timeout/오프라인 시나리오는 **`NOT TESTED`**.
+- **`setDoc` Promise가 서버 응답 전까지 settle하지 않고 pending write가 남는다는 것**: 원문
+  (`index.d.ts:2582-2595`)에서 읽은 **정적 사실**. 실제 재연결·늦은 기록은 **`NOT TESTED`**.
+- **현재 `rebuild-space-assets/**` default deny**: `storage.rules` 문언(match 부재)에서 읽은 **정적
+  사실**. 목표 create-only rule의 동작은 **미작성 · `NOT TESTED`**.
 
 **NOT TESTED (이번 단위에서 금지 — 실행하지 않았다):**
 
 - 실제 Firebase project/bucket/Firestore/network/live 데이터 접근
 - emulator 실행, upload/write/read-back/delete
 - Rules 배포, Hosting 배포
-- V2 asset 경로의 실제 create/read 동작
-- `getDocFromServer` 기반 read-back 판정의 실제 동작
+- V2 asset 경로의 실제 create/read 동작 (목표 후보 rule 자체가 **미작성**)
+- `getDocFromServer` 기반 read-back 판정의 실제 동작, 앱 timeout·오프라인·재연결 시나리오
+- `spaces` 컬렉션 실제 열거 동작
+- §Q7.1의 V2-2′ mapping 후보 — 규칙 **미작성 · 미실행**
 - viewer가 실제 PNG를 CORS-clean으로 읽어 replay하는 전체 경로
+
+**이번 단위에서 실행한 게이트는 없다.** 문서 전용 단위이므로 unit/E2E/typecheck/build/emulator를
+하나도 돌리지 않았고, 돌렸다고 기록하지도 않는다.
 
 ---
 
@@ -493,8 +672,11 @@ SPACE_V2_ISSUE_ASSET_MISMATCH       // read-back size/hash 불일치 — fail-cl
 - 실제 SDK adapter는 **포함하되 호출하지 않거나**(dynamic import factory, unit 미사용),
   더 보수적으로는 **다음 단위로 미룬다**.
 - Rules·config·UID·emulator·UI·deploy는 **전부 제외**.
-- 이 단위는 §3 표의 2·5·8·11·12·13번(설계 근거 PASS)을 fake로 고정하고,
-  3·4·6·7·9·10번은 **미확정을 미확정으로 표현하는 것 자체를 계약으로** 검증한다.
+- 이 단위는 §3.3의 **설계 PASS 행**(2·5·8·11)과 §3.1의 **현재 정적 PASS 행**(13·18)을 fake로
+  고정하고, `UNCONFIRMED` 행(3·4·6·9·10)은 **미확정을 미확정으로 표현하는 것 자체를 계약으로**
+  검증한다. 7번은 `getDocFromServer` 사용을 계약으로 고정하되 **실행 검증은 하지 않는다**.
+- **§3.2의 목표 후보 행(12·22·23)은 이 단위에서 검증할 수 없다** — 규칙이 없으므로 fake로 흉내 내면
+  "검증했다"는 착시만 만든다. JJ-1 승인 후 emulator 단위로 넘긴다.
 
 **JJ-1/JJ-2/JJ-4가 승인되기 전에는 Rules 파일과 emulator 게이트를 열지 않는다.**
 JJ-4(실제 UID)가 없으면 어떤 Rules도 배포할 수 없으므로, Rules 단위를 먼저 하면 **검증은 되지만
@@ -523,3 +705,8 @@ stage/commit/restore하지 않았다.
 
 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다.
 조사만으로는 올리지 않는다(스펙 073 §7). 제품 파일 변경 0, 작업축 5·6·7 완료량 변동 0이다.
+
+**보완 라운드 1도 진행도를 바꾸지 않는다.** 이번 라운드는 초판의 과장 한 건을 폐기하고 근거 수준과
+판정 축을 분리한 **문서 정정**이며, 제품·Rules·검증 어느 쪽도 전진시키지 않았다. 오히려 §Q7.1이
+"매핑을 도입해도 확정 orphan은 여전히 증명되지 않는다"를 밝혔으므로 **작업축 6의 잔여 난이도는
+줄지 않았다.**

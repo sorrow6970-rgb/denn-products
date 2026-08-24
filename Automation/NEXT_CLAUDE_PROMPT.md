@@ -1,24 +1,94 @@
 # NEXT CLAUDE PROMPT
 
 상태: `READY_FOR_CODEX`
-active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **INVESTIGATION DONE / AWAITING CODEX REVIEW / DOCUMENT ONLY / READ ONLY**
+active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **CORRECTION ROUND 1 APPLIED / AWAITING CODEX RE-REVIEW / DOCUMENT ONLY / READ ONLY**
 completed_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO NETWORK / NO UI**
-기준: HEAD=origin **`f1f5d20`**, ahead/behind **0/0**. Codex 문서 **`c5f8384`**, 조사 보고서·기록 **`f1f5d20`**.
-working tree에는 기존 Founder/user 변경과 보호 spec-018 PNG만 남아 있고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
-next_transition: **`CODEX_INDEPENDENT_REVIEW`**
+기준: 보완 라운드 1 직전 HEAD=origin **`534c26f`**. 조사 기록 **`f1f5d20`**, hash-pin **`534c26f`**, 보완 라운드 1은 그 뒤 문서 commit이다.
+working tree에는 기존 Founder/user 보호 변경만 남고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
+fix_round: **1 / 3**
+next_transition: **`CODEX_RE_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
-스펙 073 조사가 끝나 상태는 `READY_FOR_CODEX`다. 다음 실행 지시문은 **Codex 독립 검수 종료 시점에**
-이 자리에 다시 작성된다. Claude Code는 그때까지 새 스펙·구현·자동화·반복 작업을 시작하지 않는다.
+스펙 073 문서 보완 라운드 1을 수행해 상태는 `READY_FOR_CODEX`다. 다음 실행 지시문은 **Codex 재검수
+종료 시점에** 이 자리에 다시 작성된다. Claude Code는 그때까지 Founder JJ-1~JJ-7 선택, 제품 구현,
+Rules 변경, emulator 실행, 새 스펙과 자동화·반복 작업을 시작하지 않는다.
 
-> 직전 지시문(스펙 073 조사, 수행 완료 — 기록):
+> 직전 지시문(스펙 073 보완 라운드 1, 수행 완료 — 기록):
 >
 > ```text
-> C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md를 전부 읽고 스펙 073의 문서 전용 읽기 전용 조사 범위만 수행해. 먼저 현재 Codex 문서 변경 8개를 일반 fast-forward 문서 commit으로 push한 뒤, 보호 대상과 기존 Founder/user working tree 변경은 건드리지 마. 제품 코드·test·storage.rules·firestore.rules·Firebase config·package/lockfile은 수정하지 말고, 실제 Firebase/project/bucket/Firestore/network/live 데이터 접근·emulator 실행·upload/write/read-back/delete/deploy·UI 연결을 하지 마. 조사 보고서 docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md를 작성하고 현재 Rules·설치 SDK·기존 adapter 근거, 실패표, UNCONFIRMED, Founder 결정 질문과 다음 최소 허용 범위를 분리해. 완료 후 조사·상태 문서만 일반 fast-forward push하고 READY_FOR_CODEX에서 멈추며 전체 리빌드 진행률·잔여율·변동 근거를 보고해. 자동화·반복 작업과 다음 구현 스펙은 시작하지 마.
+> C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md의 CODEX REVIEW를 전부 읽고 스펙 073 문서 보완 라운드 1만 수행해. 기준은 rebuild/modern-studio HEAD=origin 534c26f, ahead/behind 0/0이다. 제품 구현과 Founder JJ-1~JJ-7 선택은 시작하지 마.
+>
+> 첫째, docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md에서 V2-2 REC을 "평문이라 토큰 비밀성과 반드시 충돌"한다고 단정한 문구를 폐기해. 현재 outer의 암호문만으로 Rules가 asset↔document 관계를 볼 수 없다는 결론과 O-3 삭제 보류는 유지하되, 클라이언트 read/list를 모두 거부한 private write-once Firestore mapping/REC을 Storage Rules가 firestore.get()/exists()로 서버 측 조회하는 후보를 별도로 분석해. 이 문서가 token/assetId 또는 opaque recId 중 무엇을 키·필드로 갖는지, 승인 UID create-only, 클라이언트 get/list 거부, mapping과 spaces create의 같은 transaction/getAfter 가능성 또는 순차 commit, crash·결과 미확정·늦은 성공, Storage Rules document-access 비용/한도, 이 정보만으로 확정 orphan을 증명할 수 있는지까지 구분해. 가능한 후보라는 사실은 삭제·Rules·schema/backend 구현 승인이나 안전성 PASS가 아니다. 근거가 부족하면 UNCONFIRMED/NOT TESTED로 남기고 JJ-5 선택지를 과장 없이 고쳐.
+>
+> 둘째, getDoc 관련 결론의 근거 수준과 용어를 정정해. 설치 @firebase/firestore 4.17.0 공개 타입 dist/index.d.ts:2582-2595는 setDoc 데이터가 즉시 local cache에 반영돼 future get에 들어갈 수 있다고 하고, :1386-1413은 getDoc이 cache를 반환할 수 있으며 getDocFromServer가 server read라고 명시한다. 따라서 server-only write outcome reconciliation에는 getDocFromServer가 필요하다는 결론은 유지한다. 다만 "setDoc SDK가 로컬 timeout으로 실패 처리"라고 쓰지 말고, 앱의 bounded timeout/호출 포기 뒤에도 원 Promise·pending write가 남을 수 있는 경우로 표현해. API 동작 근거와 실제 emulator/runtime timeout 시나리오 NOT TESTED를 분리하고 정확한 설치 소스 경로·행을 근거 목록에 남겨.
+>
+> 셋째, 실패표와 상태 분류를 현재 Rules와 목표 후보 Rules로 분리해. 현재 rebuild-space-assets 경로는 match 부재로 create 포함 전부 default deny다. 같은 assetId 거부를 목표 create-only rule의 PASS로 혼합하지 말고 "현재 default deny"와 "목표 rule 후보에서 create-only, NOT TESTED"를 나눠. Firestore allow read가 get/list를 포함한다는 Rules 정적 결론과 실제 emulator/live 실행 NOT TESTED도 UNCONFIRMED 한 단어로 섞지 마. getDocFromServer exact match의 API/논리 근거와 실행 NOT TESTED도 같은 방식으로 분리해.
+>
+> 넷째, 실제 기록 기준을 맞춰. f1f5d20은 조사 기록 commit이고 현재 HEAD=origin은 후속 문서 commit 534c26f다. 보고서·spec073·STATE/NEXT/CURRENT/live log를 CORRECTION_REQUIRED 보완 라운드 1 결과와 실제 최종 commit에 맞춰라.
+>
+> 허용 파일은 조사 보고서, docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md, Automation/DENN_AUTOMATION_STATE.md, Automation/NEXT_CLAUDE_PROMPT.md, docs/codex-claude-handoff/CURRENT.md, docs/live/CLAUDE_LIVE_PATCH_LOG.md의 문서 6개뿐이다. 제품 코드/test/storage.rules/firestore.rules/Firebase config/package/lockfile, apps/**, packages/**와 보호 대상은 수정·restore·checkout·stage·commit하지 마. 실제 Firebase/project/bucket/Firestore/network/live 접근, emulator 실행, upload/write/read-back/delete/deploy, UID 추측, URL 발급, UI 연결, 자동화·반복 작업은 금지다.
+>
+> 문서 diff만 git diff --check와 forbidden diff로 확인하고 허용 문서만 별도 일반 fast-forward commit/push해. 완료 후 HEAD=origin, ahead/behind 0/0, 정확한 변경 파일과 수정 결론, UNCONFIRMED/NOT TESTED, 전체 리빌드 78~81% 완료·19~22% 잔여 변동 없음을 보고하고 READY_FOR_CODEX에서 멈춰. 다음 구현 스펙과 Founder 질문은 시작하지 마.
 > ```
 
-## ★ 스펙 073 — 조사 완료 기록
+## ★ 스펙 073 — 보완 라운드 1 수행 기록
+
+기준 HEAD=origin `534c26f`, ahead/behind 0/0. Codex `CORRECTION_REQUIRED` 세 묶음을 문서에 반영했다.
+수정 파일은 허용 6개뿐 — 조사 보고서 · spec073 · STATE · NEXT · CURRENT · live log.
+제품 코드·test·`storage.rules`·`firestore.rules`·Firebase config·package/lockfile, `apps/**`,
+`packages/**`, 보호 대상 변경 **0**. 실제 Firebase/project/bucket/Firestore/network/live 접근 **0**,
+emulator 실행 **0**, upload/write/read-back/delete/deploy **0**, UID 추측 **0**, URL 발급 **0**,
+UI 연결 **0**, 자동화·반복 작업 **0**, Founder JJ-1~JJ-7 선택 **0**, 다음 구현 스펙 **0**.
+
+- **보완 1 — private mapping 후보(보고서 §Q7.1 신설).** 초판의 *"asset↔token 매핑을 평문으로 두면
+  토큰 비밀성 모델이 반드시 깨진다"* 단정을 **폐기**했다. 그 문장은 매핑이 **클라이언트에게 읽히는
+  경우**에만 참이다. 유지되는 결론은 좁힌 형태 — *승인된 outer(`schema`/`enc` 2키)의 암호문만으로는
+  Rules가 asset↔document 관계를 볼 수 없다*, O-3 삭제 보류도 기본값 그대로다.
+  후보 **V2-2′**를 키·필드 3종(assetId→token / assetId→opaque linkId / opaque recId), 승인 UID
+  create-only, 클라이언트 get/list 거부, 순차 commit vs 같은 transaction+`getAfter()`,
+  crash·미확정·늦은 성공, Storage Rules 문서 접근 한도(**2, 여유 0**)·quota/과금·default DB·IAM으로
+  나눠 분석했다. 키 후보 **(c) opaque recId는 성립하지 않는다**(GG-4=A가 path를 `{assetId}.png`로 고정).
+  ★ **결정적 한계 — 이 후보만으로 확정 orphan을 증명하지 못한다.** admin-state SDC′는 `head.revision`
+  단조 증가가 늦은 commit의 CAS 승리를 불가능하게 만들어 성립했는데 **V2에는 대응 값이 없어
+  `spaces/{token}` create는 언제 도착해도 성공한다.** 신규 `UNCONFIRMED` 2건: Rules `get()/exists()`의
+  read 거부 우회 공식 인용 미취득, 연쇄 경로 보간 지원 미확인.
+  보안 진술도 정확히 고쳤다 — client-denied 매핑은 다른 클라이언트에게 token을 노출하지 않지만
+  *"token이 어디에도 평문으로 저장되지 않는다"* 성질은 잃는다. Q2 위험 2와는 **독립 사안**이고,
+  둘을 결합해 "보안 모델 충돌"이라 단정한 초판은 **과장이었다**.
+- **보완 2 — `getDoc` 근거·용어.** 설치 `@firebase/firestore` 4.17.0 `dist/index.d.ts:2582-2595`와
+  `:1386-1413` **원문 인용**으로 근거를 고정했다. 유지: server-only reconciliation에는
+  **`getDocFromServer`가 필요하다**(`getDoc`은 캐시 반환 가능 `:1389`, server read `:1413`).
+  ★ 폐기: *"`setDoc`이 로컬 timeout으로 실패 처리돼도"* — 원문상 **`setDoc`의 Promise에는 SDK 자체
+  timeout이 없다.** 정확한 경계는 **앱이 bounded timeout으로 포기해도 원 Promise·pending write가 남아
+  연결 회복 시 기록된다**이며, 이것이 스펙 037 §6.6의 *"timeout은 취소가 아니다"* 가 V2에도 적용되는
+  이유다. **API 근거와 실제 emulator/runtime `NOT TESTED`를 분리**하고 정확한 설치 소스 경로 3개를
+  근거 목록(§1.2)에 명시했다.
+- **보완 3 — 판정 축 분리(보고서 §3 재구성).** 축 A **[현재 Rules]/[목표 후보 Rules]**, 축 B
+  **정적/설계/실행**으로 나눠 §3.1·§3.2·§3.3으로 재구성했다. **같은 assetId 재업로드**를 아직 없는
+  목표 create-only rule의 PASS로 적던 것을 고쳤다(현재는 규칙 부재 default deny, 목표는 미작성·
+  `NOT TESTED`). 반면 같은 token 재create는 `update: if false`가 **이미 존재하는 규칙**이라 [현재]
+  정적 PASS다. `spaces`의 `allow read`가 get/list를 포함한다는 것은 **정적 사실**이지 `UNCONFIRMED`가
+  아니며 실제 열거 동작만 `NOT TESTED`다 — §4에 "정적 결론이지만 실행 검증이 없는 것" 항목을 신설했다.
+  실행 칸은 **전 행 예외 없이 `NOT TESTED`**임을 표 머리에 명시했다.
+- **보완 4 — 기록 기준.** `f1f5d20` = 조사 기록, `534c26f` = hash-pin, 이번 보완 = 별도 문서 commit.
+  보고서 머리에 초판 대비 변경 4가지를 요약했다. JJ-5 선택지도 과장 없이 고쳤다 — **B(V2-2′)와
+  C(backend) 어느 쪽도 지금은 확정 orphan을 증명하지 못하며 어떤 선택도 삭제 승인이 아니다.**
+  §5의 다음 단위 권고도 §3.2 목표 후보 행은 fake로 검증할 수 없다는 점(흉내 내면 "검증했다"는 착시)을
+  명시하도록 고쳤다.
+
+게이트: `git diff --check` PASS, 허용 6개 문서 외 diff **0**. 문서 전용 단위라 실행 게이트는 없으며,
+unit/E2E/typecheck/build/emulator를 하나도 돌리지 않았고 돌렸다고 기록하지 않는다.
+
+진행도 보고: **78~81% 진행 / 19~22% 잔여 — 변동 없음.** 이번 라운드는 초판의 과장 한 건을 폐기하고
+근거 수준·판정 축을 분리한 **문서 정정**이며 제품·Rules·검증 어느 쪽도 전진시키지 않았다. 오히려
+§Q7.1이 *"매핑을 도입해도 확정 orphan은 여전히 증명되지 않는다"* 를 밝혔으므로 **작업축 6의 잔여
+난이도는 줄지 않았다.**
+
+다음은 Codex 재검수다. 보호 대상과 기존 Founder/user working-tree 변경은 restore/checkout/stage/
+commit하지 않았다.
+
+## ★ 스펙 073 — 조사 완료 기록 (보완 전 기록)
 
 Codex 문서 8개는 문서 commit `c5f8384`, 조사 보고서와 상태 문서는 문서 commit `f1f5d20`이다. 제품
 코드·test·`storage.rules`·`firestore.rules`·Firebase config·package/lockfile 변경 **0**, 실제

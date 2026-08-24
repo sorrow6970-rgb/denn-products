@@ -5,16 +5,16 @@ updated_at: 2026-08-24
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-073-space-v2-persistence-boundary-investigation   # INVESTIGATION DONE, AWAITING CODEX REVIEW, DOCUMENT ONLY, READ ONLY
+active_unit: spec-073-space-v2-persistence-boundary-investigation   # CORRECTION ROUND 1 APPLIED, AWAITING CODEX RE-REVIEW, DOCUMENT ONLY, READ ONLY
 state: READY_FOR_CODEX
 baseline_commit: c5f8384   # spec 072 closure + spec 073 contract documents committed by Claude Code
 candidate_commit: null   # document-only unit; no product commit exists
 verified_commit: 34cca25   # spec 072 local issue bundle, independently passed at 452cc1a
-origin_relation: "HEAD=origin at f1f5d20 after two fast-forward document pushes (c5f8384 Codex documents, f1f5d20 investigation report); ahead/behind 0/0"
+origin_relation: "HEAD=origin at 534c26f after the f1f5d20 investigation record and 534c26f hash-pin document commit; ahead/behind 0/0"
 working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
-fix_round: 0
+fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_INDEPENDENT_REVIEW
+next_transition: CODEX_RE_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,53 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 78-81% complete; 19-22% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 073 문서 보완 라운드 1 수행 (2026-08-24)
+
+- 기준 HEAD=origin `534c26f`, ahead/behind 0/0. 허용 문서 6개(조사 보고서 · spec073 · STATE · NEXT ·
+  CURRENT · live log)만 수정했다. 제품 코드/test/Rules/Firebase config/package/lockfile, `apps/**`,
+  `packages/**`, 보호 대상 변경 0. 실제 Firebase/network/emulator/deploy/UID/URL/UI 0.
+- **보완 1**: V2-2 REC을 "평문이라 토큰 비밀성과 반드시 충돌"한다고 단정한 문구를 폐기하고, 보고서에
+  §Q7.1(client-denied write-once mapping 후보 V2-2′)을 신설했다. 키·필드 후보 3종, 승인 UID
+  create-only, get/list 거부, 순차 commit vs 같은 transaction+`getAfter()`, crash·미확정·늦은 성공,
+  Storage Rules 문서 접근 한도 2·quota·default DB·IAM을 분리 분석했다.
+  ★ **이 후보만으로는 확정 orphan을 증명하지 못한다** — V2에는 늦은 create를 무효화하는 단조값이
+  없다. UNCONFIRMED 2건(Rules `get()/exists()`의 read 거부 우회 공식 인용 미취득, 연쇄 경로 보간
+  지원 미확인)을 남겼다. 암호문 결론과 O-3 삭제 보류는 유지된다.
+- **보완 2**: `getDoc` 결론의 근거를 설치 SDK 원문 행(`index.d.ts:2582-2595`, `:1386-1413`)으로
+  고정하고, "SDK가 로컬 timeout으로 실패 처리"라는 표현을 폐기했다. `setDoc`의 Promise에는 SDK 자체
+  timeout이 없으며, 정확한 경계는 **앱이 bounded timeout으로 포기해도 원 Promise·pending write가 남아
+  연결 회복 시 기록된다**는 것이다. API 근거와 runtime `NOT TESTED`를 분리하고 정확한 설치 소스 경로를
+  명시했다.
+- **보완 3**: 실패표를 판정 축 A([현재 Rules] / [목표 후보 Rules])와 축 B(정적 / 설계 / 실행)로
+  나눠 §3.1·§3.2·§3.3으로 재구성했다. 같은 assetId 거부를 목표 rule의 PASS로 기록하던 것을 고쳤고,
+  `spaces` list 개방은 `UNCONFIRMED`가 아니라 **정적 사실 + 실행 NOT TESTED**로 분리했다.
+- **보완 4**: 보고서·spec073·STATE/NEXT/CURRENT의 commit 기준을 실제 기록(`f1f5d20` 조사 기록,
+  `534c26f` hash-pin, 이번 보완 commit)에 맞췄다.
+- JJ-5 선택지를 과장 없이 고쳤다(B·C 모두 확정 orphan 미증명, 어느 선택도 삭제 승인 아님).
+- 게이트: `git diff --check` PASS, 허용 6개 문서 외 diff 0. 문서 전용 단위라 실행 게이트는 없다.
+- 전체 진행도 **78~81% 완료 / 19~22% 잔여 — 변동 없음**. 상태 `READY_FOR_CODEX`,
+  다음 transition `CODEX_RE_REVIEW`. Founder JJ-1~JJ-7과 다음 스펙은 시작하지 않았다.
+
+## 스펙 073 Codex 문서 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-24)
+
+- 실제 HEAD=origin은 `534c26f`, ahead/behind 0/0이다. `f1f5d20`은 조사 보고서 기록 commit이고
+  `534c26f`은 그 해시를 상태 문서에 고정한 후속 문서 commit이다.
+- 핵심 Rules·SDK 조사 방향은 유지한다. 다만 V2-2 REC을 "평문이므로 토큰 비밀성과 반드시 충돌"한다고
+  단정한 것은 근거가 부족하다. 클라이언트 `get/list`를 모두 거부한 private write-once Firestore
+  증명 문서는 Storage Rules의 `firestore.get()/exists()`가 서버 측에서 조회할 수 있는 별도 후보다.
+  이 후보의 쓰기 원자성·결과 미확정·orphan 판정 가능성과 비용을 분석한 뒤에만 선택지로 분류해야 한다.
+- 설치 `@firebase/firestore` 4.17.0 공개 타입은 `setDoc` 데이터가 즉시 local cache에 들어가 future
+  `get`에 반영될 수 있고(`dist/index.d.ts:2582-2595`), `getDoc`은 cache를 반환할 수 있으며
+  `getDocFromServer`는 server read라고 명시한다(`:1386-1413`). 따라서 server-only reconciliation에
+  `getDocFromServer`가 필요하다는 방향은 유지하되, "SDK가 timeout으로 실패했다"가 아니라 app-level
+  timeout/호출 포기 뒤 원 Promise와 pending write가 남을 수 있는 경계로 정확히 써야 한다. 실제
+  emulator/runtime 시나리오는 계속 `NOT TESTED`다.
+- 현재 Rules 사실과 목표 Rules 후보를 실패표에서 분리한다. 특히 같은 assetId 거부는 현재
+  `rebuild-space-assets` 전체 default deny와 목표 create-only rule을 혼합해 PASS로 부르지 않는다.
+  `allow read`의 `get/list` 의미도 Rules 분석 결과와 실행 `NOT TESTED`를 분리한다.
+- 제품 코드/test/Rules/config/package/lockfile 변경과 emulator/live 접근은 계속 0이다. JJ-1~JJ-7은
+  보완 재검수 통과 전 Founder에게 묻지 않는다. 전체 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**.
 
 ## 스펙 073 persistence boundary 조사 완료 (2026-08-24)
 

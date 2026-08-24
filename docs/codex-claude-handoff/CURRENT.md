@@ -20,34 +20,49 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 073 persistence boundary 읽기 전용 조사가 끝났다.**
+상태: **`READY_FOR_CODEX` - 스펙 073 문서 보완 라운드 1을 수행했다.**
 
-Codex 문서 8개를 문서 commit `c5f8384`로, 조사 보고서·기록을 `f1f5d20`으로 각각 fast-forward
-push했다. 스펙 073의 문서 전용 범위만 수행했고 산출물은
-`docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md`다.
-제품 코드/test/`storage.rules`/`firestore.rules`/Firebase config/package/lockfile 변경 0, 실제
-Firebase/project/bucket/Firestore/network/live 접근 0, emulator 실행 0, upload/write/read-back/
-delete/deploy 0, URL 발급 0, UI 연결 0이다.
+기준 HEAD=origin `534c26f`, ahead/behind 0/0에서 Codex `CORRECTION_REQUIRED` 세 묶음을 문서에
+반영했다. 허용 문서 6개(조사 보고서 · spec073 · STATE · NEXT · CURRENT · live log)만 수정했고
+제품 코드/test/`storage.rules`/`firestore.rules`/Firebase config/package/lockfile, `apps/**`,
+`packages/**`, 보호 대상 변경은 **0**이다. 실제 Firebase/project/bucket/Firestore/network/live 접근,
+emulator 실행, upload/write/read-back/delete/deploy, UID 추측, URL 발급, UI 연결도 모두 0이다.
 
-조사 결과 네 가지가 핵심이다. ① `rebuild-space-assets/objects/**`는 `storage.rules`에 match 자체가
-없어 create/read/update/delete가 전부 기본 거부이고, GG-4 목표 중 update/delete만 우연히 일치한다.
-② `spaces/{token}`은 `create: if true`라 GG-5의 approved operator UID와 exact outer keys를 둘 다
-충족하지 못하며 불변성만 PASS다. 레거시가 항상 `schema:'space-v1'`을 쓰므로 V1을 깨지 않고 V2만
-분기하는 것은 근거상 가능하다. ③ **V2는 asset↔document 연결이 암호문 안에 있어 Rules가 참조 관계를
-물을 수 없다** — admin-state의 G-4 구조 A SDC′ orphan 식별 논거를 이식할 수 없고, orphan과 미판정
-object는 현재 계약에서 구분 불가다. ④ write outcome 판정에는 `getDoc`이 아니라 `getDocFromServer`가
-필요하다(latency compensation으로 pending write가 거짓 성공을 만든다).
+**보완 1 — private mapping 후보.** 초판의 *"asset↔token 매핑을 평문으로 두면 토큰 비밀성 모델이
+반드시 깨진다"* 단정을 **폐기**했다. 그 문장은 매핑이 클라이언트에게 읽히는 경우에만 참이다.
+보고서에 §Q7.1을 신설해 client-denied write-once mapping 후보(V2-2′)를 키·필드 후보 3종, 승인 UID
+create-only, get/list 거부, 순차 commit vs 같은 transaction+`getAfter()`, crash·미확정·늦은 성공,
+Storage Rules 문서 접근 한도 2·quota·default DB·IAM으로 나눠 분석했다. ★ **결정적 한계: 이 후보만으로는
+확정 orphan을 증명하지 못한다** — admin-state SDC′를 성립시킨 `head.revision` 같은 단조값이 V2에는
+없어 `spaces/{token}` create는 언제 도착해도 성공한다. 승인된 outer 암호문 결론과 O-3 삭제 보류는
+그대로 유지된다. UNCONFIRMED 2건(Rules `get()/exists()`의 read 거부 우회 공식 인용 미취득, 연쇄 경로
+보간 지원 미확인)을 남겼다.
 
-실패표 20행을 PASS/FAIL/UNCONFIRMED/NOT TESTED로 분류했고, Founder 결정 질문 **JJ-1~JJ-7**을 분리했다.
-결정 없이 진행 가능한 다음 최소 단위는 **JJ-7=A**(local `space-write` port + synthetic fake만,
-네트워크 0)뿐이다.
+**보완 2 — `getDoc` 근거·용어.** 설치 `@firebase/firestore` 4.17.0 `dist/index.d.ts:2582-2595` ·
+`:1386-1413` 원문을 인용해 근거를 고정했다. server-only reconciliation에 `getDocFromServer`가
+필요하다는 결론은 유지하되, *"SDK가 로컬 timeout으로 실패 처리"* 라는 표현은 폐기했다 — 원문상
+`setDoc`의 Promise에는 **SDK 자체 timeout이 없고**, 정확한 경계는 **앱이 bounded timeout으로 포기해도
+원 Promise와 pending write가 남아 연결 회복 시 서버에 기록된다**는 것이다. API 근거와 실제
+emulator/runtime 시나리오 `NOT TESTED`를 분리하고 정확한 설치 소스 경로를 근거 목록에 명시했다.
 
-전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여로 변동 없다**. 스펙 073 §7대로 조사만으로는 올리지
-않으며 제품 파일 변경 0, 작업축 5·6·7 완료량 변동 0이다.
+**보완 3 — 판정 축 분리.** 실패표를 판정 축 A(**[현재 Rules]** / **[목표 후보 Rules]**)와 축
+B(**정적 / 설계 / 실행**)로 나눠 §3.1·§3.2·§3.3으로 재구성했다. 같은 assetId 거부를 아직 없는 목표
+create-only rule의 PASS로 기록하던 것을 고쳤고(현재는 규칙 부재로 default deny), `spaces`의 `allow
+read`가 get/list를 포함한다는 것은 `UNCONFIRMED`가 아니라 **Rules 문언에서 읽은 정적 사실 + 실행
+NOT TESTED**로 분리했다. 실행 칸은 전 행 예외 없이 `NOT TESTED`임을 명시했다.
 
-다음은 Codex 독립 검수다. 다음 구현 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+**보완 4 — 기록 기준.** `f1f5d20`은 조사 기록 commit, `534c26f`은 hash-pin 후속 commit이며 이번
+보완은 별도 문서 commit이다. 보고서 머리에 초판 대비 변경 4가지를 요약했다.
 
-> 이전 상태: **`READY_FOR_CLAUDE` - 스펙 072 DONE / CODEX_PASSED, 스펙 073 조사 계약 준비 완료.**
+JJ-5 선택지도 과장 없이 고쳤다 — B(V2-2′)와 C(backend) **어느 쪽도 지금은 확정 orphan을 증명하지
+못하며 어떤 선택도 삭제 승인이 아니다**. 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여로 변동
+없다**. 이번 라운드는 문서 정정이라 제품 작업축 완료량을 늘리지 않으며, 오히려 §Q7.1이 매핑을
+도입해도 확정 orphan은 여전히 증명되지 않음을 밝혔으므로 **작업축 6의 잔여 난이도는 줄지 않았다.**
+
+다음은 Codex 재검수다. Founder JJ-1~JJ-7 선택, 제품 구현, Rules 변경, emulator 실행, 다음 스펙과
+자동화·반복 작업은 시작하지 않았다.
+
+> 이전 상태: **`CORRECTION_REQUIRED` - 스펙 073 문서 보완 라운드 1 대기.**
 
 ## 스펙 072 구현 기록
 

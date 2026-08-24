@@ -5335,3 +5335,97 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CODEX`. 다음 구현 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다. 보호
   대상 spec-018 PNG와 기존 Founder/user working-tree 변경은 restore/checkout/stage/commit하지 않았다.
 
+## 2026-08-24(5) - 스펙 073 Codex 문서 검수 · CORRECTION_REQUIRED 라운드 1
+
+- 실제 HEAD=origin은 `534c26f`, ahead/behind 0/0이다. 조사 기록 commit은 `f1f5d20`, 그 해시를
+  STATE/NEXT/CURRENT/spec에 고정한 후속 문서 commit이 `534c26f`이다. 검수 종료 시 working tree는
+  Codex 검수·handoff 문서 5개와 기존 Founder/user 보호 변경이 있고 staged 0이다.
+- 현재 Rules 분석(`rebuild-space-assets` default deny, `spaces/{token}` 무조건 create)과
+  `getDocFromServer`를 server-only reconciliation에 써야 한다는 방향은 유지한다.
+- **보완 1:** V2 outer 암호문만으로 Rules가 참조 관계를 볼 수 없다는 사실은 맞지만, private
+  write-once Firestore mapping/REC까지 "평문이므로 token 비밀성과 반드시 충돌"한다고 단정한 것은
+  근거가 부족하다. 클라이언트 get/list 거부 + Storage Rules server-side get/exists 후보의 원자성,
+  결과 미확정, orphan 증명 가능성과 비용·한도를 다시 분석한다. 삭제·Rules 구현 승인은 아니다.
+- **보완 2:** 설치 `@firebase/firestore` 4.17.0 공개 타입은 `setDoc`의 즉시 local cache 반영
+  (`dist/index.d.ts:2582-2595`), `getDoc`의 cache 반환 가능성과 `getDocFromServer` server read
+  (`:1386-1413`)를 명시한다. 결론은 유지하되 SDK 자체 timeout 실패가 아니라 앱 timeout/호출 포기
+  뒤 pending write가 남는 경계로 정정하고 실제 runtime은 `NOT TESTED`로 분리한다.
+- **보완 3:** 실패표에서 현재 default deny와 목표 create-only Rules 후보, Rules 정적 의미와
+  emulator/live 실행 `NOT TESTED`를 분리한다. 같은 assetId 거부를 아직 존재하지 않는 목표 rule의
+  PASS로 기록하지 않는다.
+- 상태 `CORRECTION_REQUIRED`, fix round 1, 다음 transition `CLAUDE_DOCUMENT_CORRECTION`이다.
+  JJ-1~JJ-7은 재검수 통과 전 Founder에게 묻지 않고 제품 구현·Rules 변경·emulator를 시작하지 않는다.
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다. 이번 검수와 handoff는
+  문서 정확성 보완만 요구하며 제품 작업축 완료량을 늘리지 않는다.
+
+## 2026-08-24(6) - 스펙 073 문서 보완 라운드 1 수행
+
+- 기준 HEAD=origin `534c26f`, ahead/behind 0/0. 허용 문서 6개만 수정했다: 조사 보고서,
+  `docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md`,
+  `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`,
+  `docs/codex-claude-handoff/CURRENT.md`, 이 live log.
+- 제품 코드/test/`storage.rules`/`firestore.rules`/Firebase config/package/lockfile, `apps/**`,
+  `packages/**` 변경 **0**. 실제 Firebase/project/bucket/Firestore/network/live 접근 0, emulator
+  실행 0, upload/write/read-back/delete/deploy 0, UID 추측 0, URL 발급 0, UI 연결 0,
+  자동화·반복 작업 0. 이번 라운드도 **문서 읽기와 설치 SDK 타입/소스 읽기만** 했다.
+- **보완 1 — private mapping 후보 재분석(보고서 §Q7.1 신설).** 초판의 *"asset↔token 매핑을 평문으로
+  두면 토큰 비밀성 모델이 반드시 깨진다"* 단정을 **폐기**했다. 그 문장은 매핑이 **클라이언트에게
+  읽히는 경우**에만 참이다. 유지되는 결론은 좁혀진 형태다 — *승인된 V2 outer(`schema`/`enc` 2키)의
+  암호문만으로는 Rules가 asset↔document 관계를 볼 수 없다.* O-3 삭제 보류도 그대로 기본값이다.
+  - 후보 **V2-2′**(client-denied write-once mapping)를 키·필드 후보 3종(assetId→token /
+    assetId→opaque linkId / opaque recId), 승인 UID create-only, 클라이언트 get/list 거부,
+    `spaces` create와의 순차 commit vs 같은 transaction+`getAfter()`, crash·결과 미확정·늦은 성공,
+    Storage Rules 문서 접근 한도(**2개, 여유 0**)·quota/과금·default DB 제약·IAM으로 나눠 분석했다.
+  - **키 후보 (c) opaque recId는 성립하지 않는다** — GG-4=A가 object path를 `{assetId}.png`로
+    고정했으므로 Storage segment가 곧 assetId다.
+  - ★ **결정적 한계: 이 후보만으로는 확정 orphan을 증명하지 못한다.** admin-state SDC′가 통한 이유는
+    `head.revision`이라는 **단조 증가값**이 늦은 commit의 CAS 승리를 불가능하게 만들었기 때문인데,
+    V2에는 대응 값이 없어 **`spaces/{token}` create는 언제 도착해도 성공**한다. 매핑은 "관계를 볼 수
+    없다"는 장벽만 치우고 "미판정과 orphan을 가르는" 장벽은 그대로 남긴다.
+  - UNCONFIRMED 신규 2건: ① Rules 안의 `get()/exists()`가 대상 문서의 `allow read` 거부를 우회한다는
+    **공식 인용을 이 세션에서 취득하지 못했다**(저장소 내부 정황이 근거의 전부, live 접근 금지).
+    ② 한 `firestore.get()` 결과를 다른 조회 경로에 **연쇄 보간**하는 것이 Storage Rules에서
+    지원되는지 미확인 — 지원되지 않으면 후보 (a)가 성립하지 않는다.
+  - 보안 진술도 정확히 고쳤다: client-denied 매핑은 **다른 클라이언트에게 token을 노출하지 않는다.**
+    다만 콘솔/Admin SDK 접근자에게는 보이므로 *"token이 어디에도 평문으로 저장되지 않는다"* 는 성질은
+    잃는다. Q2 위험 2(`spaces` list)와는 **독립 사안**이며, 두 사안을 결합해 "보안 모델 충돌"이라고
+    단정한 초판은 **과장이었다**.
+- **보완 2 — `getDoc` 근거·용어 정정.** 설치 `@firebase/firestore` 4.17.0
+  `dist/index.d.ts:2582-2595`와 `:1386-1413` **원문을 인용**해 근거를 고정했다.
+  - 유지: server-only write outcome reconciliation에는 **`getDocFromServer`가 필요하다**
+    (`getDoc`은 캐시 반환 가능 `:1389`, `getDocFromServer`가 server read `:1413`).
+  - ★ 폐기: *"`setDoc`이 로컬 timeout으로 실패 처리돼도"* 라는 표현. 원문상 **`setDoc`의 Promise에는
+    SDK 자체 timeout이 없다** — 서버가 성공/오류를 알릴 때까지 settle하지 않는다. 정확한 경계는
+    **"앱이 자기 bounded timeout으로 기다림을 포기해도 원 Promise와 pending write가 남고 연결 회복 시
+    서버에 기록된다"**(*"will eventually be written…"*)이며, 이것이 스펙 037 §6.6의 *"timeout은 취소가
+    아니다"* 가 V2에도 적용되는 이유다.
+  - **API 동작 근거와 실제 emulator/runtime timeout 시나리오 `NOT TESTED`를 분리**했고, 정확한 설치
+    소스 경로 3개(firestore `index.d.ts`, storage `storage-public.d.ts`·`index.esm.js`)를 근거 목록에
+    명시했다.
+- **보완 3 — 실패표 축 분리.** 판정 축 A(**[현재 Rules]** vs **[목표 후보 Rules]**)와 판정 축
+  B(**정적 / 설계 / 실행**)를 도입하고 표를 §3.1 현재 Rules 정적 판정 / §3.2 목표 후보 설계 판정 /
+  §3.3 실패 순서별 판정으로 나눴다.
+  - **같은 assetId 재업로드(12번)**를 목표 create-only rule의 PASS로 기록하던 것을 고쳤다 —
+    **[현재]는 규칙 부재로 그냥 default deny**이고 목표 rule의 거부는 **미작성·NOT TESTED**다.
+    반면 같은 token 재create(13번)는 `update: if false`가 **이미 존재하는 규칙**이라 [현재] 정적 PASS다.
+  - **`spaces`의 `allow read`가 get/list를 포함한다**는 것은 Rules 문언에서 읽은 **정적 사실**이며
+    `UNCONFIRMED`(근거 불충분)가 아니다. 실제 열거 동작만 `NOT TESTED`다 — §4에
+    "정적 결론이지만 실행 검증이 없는 것" 항목을 따로 만들어 분리했다.
+  - `getDocFromServer` exact match도 **API/논리 근거(정적·설계)** 와 **실행 NOT TESTED**로 나눴다.
+  - 실행 칸은 **전 행 예외 없이 `NOT TESTED`**임을 표 머리에 명시했다. 이번 단위에서 unit/E2E/
+    typecheck/build/emulator 게이트를 **하나도 실행하지 않았고 실행했다고 기록하지 않는다.**
+- **보완 4 — 기록 기준 정정.** 보고서 머리를 초판 기록 commit `f1f5d20` / 보완 기준 HEAD=origin
+  `534c26f`로 고쳤고, 초판 대비 변경 4가지를 문서 상단에 요약했다. spec073·STATE·NEXT·CURRENT도
+  실제 최종 commit에 맞췄다.
+- JJ-5 선택지도 과장 없이 고쳤다: B(V2-2′)와 C(backend) **어느 쪽도 지금은 확정 orphan을 증명하지
+  못하며**, 어떤 선택도 삭제 승인이 아니다. §5의 다음 단위 권고도 §3.2 목표 후보 행은 fake로 검증할
+  수 없다는 점(흉내 내면 "검증했다"는 착시)을 명시하도록 고쳤다.
+- 게이트: `git diff --check` PASS, 허용 6개 문서 외 diff **0**(제품·Rules·config·lockfile·보호 대상
+  전부 무변경 확인). 문서 전용 단위라 실행 게이트는 없다.
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다. 이번 라운드는 초판의 과장 한
+  건을 폐기하고 근거 수준·판정 축을 분리한 **문서 정정**이며 제품·Rules·검증 어느 쪽도 전진시키지
+  않았다. 오히려 §Q7.1이 *"매핑을 도입해도 확정 orphan은 여전히 증명되지 않는다"* 를 밝혔으므로
+  **작업축 6의 잔여 난이도는 줄지 않았다.**
+- 상태 `READY_FOR_CODEX`. Founder JJ-1~JJ-7 선택, 제품 구현, 다음 스펙, 자동화·반복 작업은 시작하지
+  않았다. 보호 대상과 기존 Founder/user working-tree 변경은 restore/checkout/stage/commit하지 않았다.
+
