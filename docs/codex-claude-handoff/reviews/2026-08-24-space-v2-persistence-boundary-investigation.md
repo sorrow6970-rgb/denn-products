@@ -1,10 +1,37 @@
 # space V2 persistence boundary 읽기 전용 조사
 
 - 스펙 정본: `docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md`
-- 상태: **DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI — 보완 라운드 1 반영**
-- 초판 조사 기록 commit: `f1f5d20` (그 뒤 hash-pin 문서 commit `534c26f`)
-- 보완 라운드 1: 직전 기준 HEAD=origin `534c26f` → 반영 commit `63a1dec`, ahead/behind 0/0
-- 조사 수행: Claude Code, 2026-08-24 · 보완 라운드 1: 같은 날 Codex `CORRECTION_REQUIRED` 반영
+- 상태: **DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI — 보완 라운드 2 반영**
+- 조사 수행: Claude Code, 2026-08-24 · 라운드 1·2 모두 같은 날 Codex `CORRECTION_REQUIRED` 반영
+
+**commit 이력 (라운드 2에서 자기참조 추적을 중단했다):**
+
+| 단계 | commit | 성격 |
+|---|---|---|
+| 초판 조사 기록 | `f1f5d20` | 내용 |
+| 해시 고정 | `534c26f` | bookkeeping |
+| 보완 라운드 1 | `63a1dec` | 내용 |
+| 해시 고정 | `2dd97c4` | bookkeeping |
+| **보완 라운드 2** | **이 문서를 담은 내용 commit** | 내용 |
+
+> **★ 자기참조 한계를 숨기지 않는다.** commit은 **자기 자신의 해시를 내용에 담을 수 없다.** 라운드
+> 1까지는 내용 commit 뒤에 "해시를 적어 넣는" bookkeeping commit을 한 번 더 만들어 이 한계를 메웠지만,
+> 그 방식은 라운드마다 commit이 두 배로 늘고 기록이 자기참조로 꼬인다. **라운드 2부터는 그 추가
+> commit을 만들지 않는다.** 대신 상태 문서에는 ① **push 후 `HEAD=origin`과 `ahead/behind 0/0`을 실제로
+> 검증했다는 사실**과 ② **라운드 2 내용 commit이 무엇인지**를 나눠 적고, 해시 자체는 이 세션 보고와
+> git 이력이 정본이다.
+
+> **보완 라운드 2에서 바뀐 것 (라운드 1 대비):**
+> ① **cross-service read primitive의 근거 등급을 올렸다.** 라운드 1은 이를 `UNCONFIRMED`로 남겼으나,
+> 이 저장소에 **local emulator 실행 증거**가 이미 있다 — §Q7.1.0에서 공식 지원 / admin-state
+> primitive VERIFIED / V2 mapping 미작성 / 실제 IAM·live 미검증의 **네 층위로 분리**했다.
+> "우회(bypass)" 표현도 폐기했다.
+> ② **"버킷과 같은 신뢰 수준이라 새로운 노출 경로는 아니다"** 단정을 **폐기**했다. private mapping은
+> **새 privileged plaintext surface**이며 principal/role overlap은 `UNCONFIRMED`다.
+> ③ **REC ID 후보를 정밀화했다.** 라운드 1의 *"opaque recId는 성립하지 않는다"* 확정을 폐기하고
+> §Q7.1.1에서 **(c1) transform-0**(성립 · admin-state 선례)과 **(c2) `customMetadata` pointer**
+> (논리상 가능하나 비싸고 위험 · GG-4 미승인 확장)로 나눴다.
+> ④ commit 자기참조 추적을 중단했다(위 표).
 
 > **보완 라운드 1에서 바뀐 것 (초판 대비):**
 > ① Q7의 *"asset↔token 매핑을 평문으로 두면 토큰 비밀성 모델이 반드시 깨진다"* 단정을 **폐기**하고,
@@ -49,6 +76,8 @@ admin-state에서 쓴 G-4 구조 A의 SDC′ orphan 식별 논거를 그대로 �
 | `firebase.json` | `storage.rules` · `firestore.rules` 참조. hosting `public: "."` (레거시 운영본 그대로) |
 | `firebase.emulator.json` | 별도 config. `storage.emulator.rules` / `firestore.emulator.rules`, auth 9099 / firestore 8080 / storage 9199, `demo-` project 강제 |
 | `storage.emulator.rules` · `firestore.emulator.rules` | 운영본과 **UID 문자열 한 줄만 다른 사본** (`UNCONFIRMED_OPERATOR_UID_REPLACE_BEFORE_DEPLOY` → `emulator-operator-DO-NOT-DEPLOY`). diff 확인함 |
+| **`storage.emulator.rules:40-45`** (라운드 2) | `rebuild-admin-state/objects/{objectId}` create가 `resource == null` + **`firestore.exists(/databases/(default)/documents/rebuildAdminStateObjects/$(objectId))`** + `okSize()` + `contentType == 'application/json'`을 요구한다 |
+| **`firestore.emulator.rules:71-86`** (라운드 2) | 같은 `rebuildAdminStateObjects/{recId}`가 승인 UID create-only · `claimedBase` exact-keys · **`allow read, update, delete: if false`**(클라이언트 read 완전 차단) |
 
 ### 1.2 설치된 SDK (읽기 전용, `node_modules/.pnpm`)
 
@@ -112,6 +141,8 @@ node_modules/.pnpm/@firebase+storage@0.14.4_@firebase+app@0.16.0/node_modules/
 | `packages/firebase/src/index.ts` (root barrel) | admin-write/space-read를 **재수출하지 않는다**(고객 번들에 SDK 유입 방지) |
 | `apps/admin/src/space-v2/**` | 스펙 065~072의 local 준비 체인. **upload/Firestore/네트워크 호출 0**, `App.tsx`/`main.tsx` 미연결 (grep 0건) |
 | `apps/admin/src/admin-composition/**` | admin-state 전용 조립만 존재. **V2 issuer composition 없음** |
+| **`packages/firebase/src/admin-write/cutover-rules.emulator.test.ts:83-96`** (라운드 2) | `rebuildAdminStateObjects/{REC_ID}`를 `setDoc`한 **뒤 Storage upload가 성공**하고, 같은 경로 재업로드·`deleteObject`·비승인 UID 업로드가 거부됨을 `demo-denn-emulator`에서 검증한다. → **client `read:false` 문서를 Storage Rules가 조회하는 primitive의 local 실행 증거**(§Q7.1.0 ②). 이번 세션에서 **재실행하지 않았다**(emulator 금지) |
+| **G-4 결정 정본 §12** (라운드 2) | 구조 A + REC + `firestore.get()`/Storage `firestore.exists()` 규칙이 2026-08-14 local `demo-denn-emulator`에서 **13/13 PASS**. 실제 Firebase·IAM·배포는 **NOT TESTED**로 기록 |
 | `denn-mockup-tool.html:15550-15576` (레거시 운영본, 참조만) | V1 실제 write = `setDoc(doc(db,'spaces',token), { enc, ownerMeta, createdAt, schema:'space-v1' })`, token = 12 random bytes의 24-hex, PNG는 `proofs/` + `uploadString(...,'data_url')` |
 
 ---
@@ -383,14 +414,37 @@ Founder D-2=O-3(삭제 보류)이 현재 정본이고, delete 권한도 자동 �
 #### Q7.1 ★ 정정 — private write-once mapping/REC 후보 (보완 라운드 1)
 
 **이 조사의 초판은 "asset↔token 매핑을 두면 토큰 비밀성이 반드시 깨진다"고 단정했다. 그 단정을
-폐기한다.** 그 문장은 매핑이 **클라이언트에게 읽히는 경우**에만 참이고, 매핑 문서의 클라이언트
-`read`(= `get` + `list`)를 **모두 거부**하면 성립하지 않는다. Rules 안의 `firestore.get()/exists()`는
-**클라이언트 read 권한이 아니라 서버 측 규칙 평가**이므로, 토큰을 클라이언트에게 노출하지 않고도
-서버가 매핑을 볼 수 있는 후보가 존재한다.
+폐기한다(라운드 1).** 그 문장은 매핑이 **클라이언트에게 읽히는 경우**에만 참이고, 매핑 문서의
+클라이언트 `read`(= `get` + `list`)를 **모두 거부**하면 성립하지 않는다.
 
 위에서 유지되는 결론은 **좁혀진 형태**다: *승인된 V2 outer document(`schema`/`enc` 2키)의 암호문만
 가지고는 Rules가 asset↔document 관계를 볼 수 없다.* 별도 매핑 문서를 도입하면 그 관계 자체는 서버가
 볼 수 있게 된다. **아래는 그 후보의 분석이지, 안전성 PASS도 구현·Rules·schema·backend 승인도 아니다.**
+
+##### Q7.1.0 ★ cross-service read primitive — 근거 등급 (라운드 2 정정)
+
+라운드 1은 이 primitive 자체를 `UNCONFIRMED`로 남겼다. **그 분류는 틀렸다.** 이 저장소에는 공식 문서
+인용보다 **강한 local 실행 증거**가 이미 있다. 네 층위를 분리해 기록한다.
+
+| 층위 | 상태 | 근거 |
+|---|---|---|
+| **① Firebase 공식 API 지원** — Storage Rules에서 `firestore.get()` / `firestore.exists()` 사용 | **지원됨(공식)** | G-4 결정 정본 §4가 `firebase.google.com/docs/storage/security/rules-conditions`를 직접 인용: *"Using the `firestore.get()` and `firestore.exists()` functions, your security rules can evaluate incoming requests against documents in Cloud Firestore."* 같은 §4가 제약 4개(default DB 한정 · **단일 평가 문서 2개** · Firestore quota/과금 포함 · IAM 활성화/해제)도 인용한다 |
+| **② 이 저장소의 admin-state primitive** — client `read:false`인 Firestore 문서를 Storage Rules가 조회해 create를 게이팅 | **local emulator VERIFIED** | `storage.emulator.rules:40-45`가 `firestore.exists(/databases/(default)/documents/rebuildAdminStateObjects/$(objectId))`로 create를 게이팅하고, `firestore.emulator.rules:71-86`이 같은 REC 컬렉션에 `allow read, update, delete: if false`를 건다. `packages/firebase/src/admin-write/cutover-rules.emulator.test.ts:83-96`이 **REC을 먼저 `setDoc`한 뒤 Storage upload가 성공**하고, 같은 경로 재업로드·`deleteObject`·비승인 UID가 거부됨을 `demo-denn-emulator`에서 검증한다. G-4 결정 정본 §12가 2026-08-14 **13/13 PASS**를 기록한다 |
+| **③ V2 전용 mapping Rules** | **미작성 · `NOT TESTED`** | V2용 mapping 컬렉션도, `rebuild-space-assets` match도 존재하지 않는다 |
+| **④ 실제 Firebase / IAM / live** | **`NOT TESTED`** | G-4 §12가 "실제 Firebase·IAM·배포는 NOT TESTED"로 이미 기록. 이번 단위도 live 접근 금지 |
+
+**②가 말해 주는 것을 정확히 쓴다.** 그 emulator 시나리오에서 Storage create 규칙은 REC의 존재를
+요구했고 **upload는 성공했다.** REC의 Firestore 규칙은 client `read`를 `false`로 닫아 두었다. 따라서
+**Storage Rules의 service-side cross-product 평가는 대상 문서의 Firestore *클라이언트* read 권한에
+좌우되지 않는다** — 이것이 실행으로 확인된 사실이다.
+
+> **용어 주의:** 이것은 권한 "우회(bypass)"가 아니다. **Firestore client read 권한**은 클라이언트
+> 요청이 그 문서를 읽을 수 있는지를 정하고, **Storage Rules의 `firestore.get()/exists()`** 는 규칙
+> 평가 과정에서 서비스가 수행하는 별개의 조회다. 두 축은 서로 다른 주체·다른 평가 경로이며,
+> 라운드 1이 쓴 "read 거부를 우회한다"는 표현은 오해를 부르므로 폐기한다.
+
+**단, ②는 `.json` admin-state 경로에 대한 검증이고 이번 세션에서 재실행하지 않았다**(emulator 실행
+금지). 기록된 PASS와 테스트 소스를 근거로 삼는다. V2 mapping은 ③대로 여전히 미작성·`NOT TESTED`다.
 
 **후보 V2-2′ — client-denied write-once mapping**
 
@@ -398,7 +452,7 @@ Founder D-2=O-3(삭제 보류)이 현재 정본이고, delete 권한도 자동 �
 |---|---|
 | **키 후보 (a) doc id = `assetId`, field = `token`** | Storage Rules는 object path에서 `assetId`만 안다. 그래서 매핑은 **assetId로 조회 가능**해야 한다. 단점: 두 번째 조회를 하려면 첫 조회 결과의 `token`을 경로에 **연쇄 보간**해야 한다(아래 참조) |
 | **키 후보 (b) doc id = `assetId`, field = opaque `linkId`** | token을 문서에 담지 않아도 된다. 대신 `spaces` 생성과 별개인 제3의 문서가 필요해 원자성 경계가 하나 더 늘어난다 |
-| **키 후보 (c) doc id = opaque `recId`(admin-state 방식)** | **성립하지 않는다.** GG-4=A가 object path를 `rebuild-space-assets/objects/{assetId}.png`로 고정했으므로 Storage segment가 곧 `assetId`다. `recId ≠ assetId`면 Storage Rules가 매핑 문서를 지목할 수 없다 |
+| **키 후보 (c) doc id = opaque `recId`** | 라운드 1은 "성립하지 않는다"고 확정했다. **그 확정을 폐기하고 §Q7.1.1에서 (c1) transform-0 · (c2) customMetadata pointer로 나눠 다시 분석한다.** |
 | **create 권한** | 기존 `rebuildAdminStateObjects`와 같은 형태로 `approvedOperator() && create-only && exact keys` 가능. 근거: 현행 `firestore.rules`의 REC 블록이 이미 그 형태다 |
 | **클라이언트 get/list 거부** | `allow read, update, delete: if false` — 현행 REC 블록이 **이미 그렇게 되어 있다**(`firestore.rules`). 즉 "private mapping"은 이 저장소에 **선례가 있는 형태**다 |
 | **Storage create 게이팅** | 기존 asset create 규칙에 `firestore.exists(mapping)`을 걸면 매핑 없는 stray 업로드를 서버가 막는다. 이때 **문서 접근 1개**를 소비한다 |
@@ -408,6 +462,67 @@ Founder D-2=O-3(삭제 보류)이 현재 정본이고, delete 권한도 자동 �
 | **비용** | 같은 §4: Storage Rules의 Firestore 읽기는 **프로젝트 Firestore quota·과금에 포함**된다. 발급 1건당 Firestore 쓰기 1회가 추가되고, delete 평가마다 읽기 2회가 추가된다 |
 | **기본 DB 제약** | 같은 §4: Storage Rules는 **default Firestore database**만 읽는다 |
 | **IAM** | 같은 §4: 두 제품 연결에 IAM 권한 활성화가 필요하고 role 제거로 비활성화된다 |
+
+##### Q7.1.1 ★ REC ID 후보 — 라운드 2 정밀화
+
+라운드 1은 *"opaque recId는 성립하지 않는다 — GG-4=A가 path를 `{assetId}.png`로 고정했으므로 Storage
+segment가 곧 assetId다"* 라고 썼다. **두 가지가 부정확했다.**
+
+첫째, Storage Rules `match /rebuild-space-assets/objects/{assetId}`에서 wildcard가 잡는 값은 **bare
+UUID가 아니라 마지막 세그먼트 전체, 즉 `"<uuid>.png"`** 다. admin-state에서 `objectId`가
+`"<uuid>.json"`이었던 것과 정확히 같은 구조이며, G-4 결정 §8.1이 바로 이 혼동을 **라운드 2 교정
+3**으로 이미 한 번 바로잡은 지점이다. 둘째, "추가 metadata가 없다면"이라는 전제를 빠뜨렸다.
+
+**(c1) transform-0 — object segment 자체를 REC document ID로 사용**
+
+| 항목 | 분석 |
+|---|---|
+| 형태 | REC doc id = Storage segment 그대로 = **`"<uuid>.png"`**. Storage Rules는 `$(assetId)` 변수를 **변환 없이** 보간해 `firestore.get/exists(/databases/(default)/documents/<mappingCollection>/$(assetId))` |
+| 선례 | **admin-state G-4 §8.2가 확정한 바로 그 패턴**이다(`"<uuid>.json"`). 문자열 파싱·분해·연결 **0** — G-4 §8.4가 "공식 지원을 확인하지 못한 문자열 함수는 설계에 넣지 않는다"고 정한 원칙을 그대로 지킨다 |
+| 근거 등급 | 이 조회 패턴 자체는 **§Q7.1.0 ②로 local emulator VERIFIED**(`.json` 경로에서). V2 mapping은 **미작성 · `NOT TESTED`** |
+| 형식 검증 | `recId.matches('^[0-9a-f]{8}-…-[0-9a-f]{12}[.]png$')` 형태로 Firestore 쪽에서 강제 가능. 현행 `firestore.rules:76-79`가 `.json` 버전을 이미 그렇게 한다 |
+| 한계 | doc id가 곧 assetId이므로 **opaque하지 않다.** assetId는 public-read object path에 이미 들어 있어 비밀이 아니므로 **식별 목적에는 문제가 없다.** 다만 "assetId와 독립인 recId"를 원한 목적은 달성하지 못한다 |
+
+⇒ **(c1)은 성립한다.** 라운드 1의 "성립하지 않는다"는 **틀렸다.**
+
+**(c2) assetId와 독립인 opaque recId — Storage `customMetadata` pointer**
+
+Storage Rules가 assetId만으로는 독립 recId를 알 수 없으므로, **object 자신이 pointer를 들고 있어야**
+한다. 설치 SDK가 그 자리를 제공한다.
+
+**근거 (정확한 설치 소스 경로·행):**
+
+```text
+node_modules/.pnpm/@firebase+storage@0.14.4_@firebase+app@0.16.0/node_modules/
+  @firebase/storage/dist/storage-public.d.ts
+```
+
+- `:500` — `uploadBytes(ref, data, metadata?: UploadMetadata): Promise<UploadResult>` — **업로드
+  호출이 metadata를 함께 받는다.**
+- `:515` — `UploadMetadata extends SettableMetadata`
+- `:277`, `:301-303` — `SettableMetadata.customMetadata?: { [key: string]: string } | undefined`
+  (*"Additional user-defined custom metadata."*)
+- `:56` — `FullMetadata extends UploadMetadata` — 즉 **`getMetadata()`가 돌려주는 값에
+  `customMetadata`가 포함된다.**
+
+| 항목 | 분석 |
+|---|---|
+| create와 metadata의 동일 upload 포함 | **가능하다.** `uploadBytes`의 세 번째 인자로 `contentType`과 `customMetadata`를 **같은 호출**에 넣는다. 별도 `updateMetadata` 호출이 필요 없다 — 이는 중요하다. `updateMetadata`로 나중에 붙이면 그 사이 창이 생기고, 애초에 update를 열면 불변 계약이 깨진다 |
+| Rules 표면 | create 시 `request.resource.metadata.<key>`, 이후 평가 시 `resource.metadata.<key>`로 읽는 형태가 필요하다. **이 저장소에는 metadata를 읽는 Rules가 하나도 없다**(`storage.rules`·`storage.emulator.rules` grep 0건). 공식 지원 여부·정확한 접근자 이름을 이번 세션에서 확인하지 못했다 — **`UNCONFIRMED`** |
+| exact key/format | `customMetadata`는 `Record<string, string>`이므로 값은 **문자열뿐**이다. recId 형식 강제는 Rules 정규식으로 해야 하고, 허용 키를 정확히 고정하지 않으면 임의 키가 실린다 — **exact-keys 검증 설계 필요** |
+| mapping ↔ assetId 일치 | recId가 assetId와 독립이면 **"이 object의 recId가 진짜 이 object의 것인가"** 를 서버가 확인해야 한다. mapping 문서에 assetId를 되담아 교차 확인하는 형태가 필요하고, 그러면 조회가 늘어난다 |
+| access-call 예산 | delete 규칙에서 `get(mapping(recId))` + `exists(spaces/{token})` = **2개, 여유 0**(§Q7.1.0 ① 제약). 여기에 assetId 교차 확인까지 넣으면 **한도를 넘는다**. (c1)은 metadata 조회가 없어 같은 2개 안에서 끝난다 |
+| **★ public-read 관측 가능성** | GG-4=A는 이 object를 **public-read**로 만든다. `FullMetadata extends UploadMetadata`(`:56`)이므로 **경로를 아는 누구나 `getMetadata()`로 `customMetadata`를 읽을 수 있다.** 따라서 **recId를 비밀로 취급할 수 없고, token을 customMetadata에 넣는 것은 명백히 금지**다. opaque recId를 넣더라도 그것은 **공개 식별자**다 |
+| update/delete | 불변 계약을 지키려면 `updateMetadata`도 서버에서 막아야 한다. 현행 목표 문구는 object update/delete만 말하고 **metadata update는 언급하지 않는다** — 계약 공백 |
+| 승인 상태 | **GG-4=A는 metadata schema를 승인한 적이 없다.** 이 후보는 **미승인 schema/Rules 확장**이며 **미작성 · `NOT TESTED`** |
+
+⇒ **(c2)는 논리상 가능하지만 (c1)보다 명백히 비싸고 위험하다** — Rules metadata 표면이
+`UNCONFIRMED`, access-call 예산 초과 위험, public-read 관측으로 recId가 비밀이 될 수 없음, metadata
+불변성 계약 공백, 그리고 GG-4 미승인 schema 확장. **path만 보고 "불가능"이라고 단정하지 않되,
+"가능하다"가 "권장" 또는 "안전 PASS"를 뜻하지도 않는다.**
+
+**★ 두 후보 모두에 남는 것:** (c1)이든 (c2)든 **확정 orphan을 증명하지 못한다.** REC ID를 어떻게
+정하든 아래 §의 단조값 부재 문제는 그대로다.
 
 **★ 결정적 한계 — 이 후보만으로는 "확정 orphan"을 증명하지 못한다.**
 
@@ -429,33 +544,55 @@ Founder D-2=O-3(삭제 보류)이 현재 정본이고, delete 권한도 자동 �
 
 **UNCONFIRMED (이 후보와 관련해 근거를 확보하지 못한 것):**
 
-- **Rules 안의 `get()/exists()`가 대상 문서의 `allow read` 거부를 우회한다는 공식 인용을 이 세션에서
-  취득하지 못했다.** 현행 `storage.rules`가 `read, update, delete: if false`인 `rebuildAdminStateObjects`를
-  `firestore.exists()`로 조회하도록 이미 작성돼 있다는 **저장소 내부 정황**이 근거의 전부다.
-  live network 접근이 금지돼 공식 문서를 확인하지 않았다 — **UNCONFIRMED**.
+- ~~Rules 안의 `get()/exists()`가 대상 문서의 `allow read` 거부를 우회하는지~~ — **라운드 2에서
+  분류를 고쳤다.** primitive 자체는 `UNCONFIRMED`가 아니라 **공식 지원 + 이 저장소 local emulator
+  VERIFIED**다(§Q7.1.0). 남는 미확인은 **V2 전용 mapping Rules(미작성·`NOT TESTED`)**와
+  **실제 Firebase/IAM/live(`NOT TESTED`)**뿐이다.
 - **연쇄 경로 보간** — `firestore.exists(/databases/(default)/documents/spaces/$(firestore.get(mappingPath).data.token))`
   처럼 **한 조회 결과를 다른 조회 경로에 보간**하는 것이 Storage Rules에서 지원되는지 확인하지 못했다.
-  현행 규칙들은 `request.resource.data.recId`나 path 변수(`$(objectId)`)만 보간한다 — **UNCONFIRMED**.
-  지원되지 않으면 후보 (a)는 성립하지 않고 매핑 설계를 다시 해야 한다.
+  현행 규칙들은 `request.resource.data.recId`나 path 변수(`$(objectId)`)만 보간하며,
+  admin-state SDC′도 **고정 경로(HEAD)와 path 변수(`$(objectId)`)만** 써서 연쇄를 한 번도 쓰지
+  않았다 — 즉 §Q7.1.0 ②의 VERIFIED 증거는 **연쇄 보간까지 덮지 않는다** — **UNCONFIRMED**.
+  지원되지 않으면 "asset → token → spaces" 2단 조회가 성립하지 않고 매핑 설계를 다시 해야 한다.
+- **Storage Rules의 object metadata 접근**(`request.resource.metadata` / `resource.metadata`)의
+  공식 지원 여부와 정확한 접근자 — 이 저장소에 선례가 **0건**이다(§Q7.1.1 (c2)) — **UNCONFIRMED**.
 - 매핑 도입 시 **Firestore 쓰기·읽기 증가분의 실제 비용** — **UNCONFIRMED**(발급량 미확정).
 - 위 후보의 어떤 규칙도 **작성·실행되지 않았다** — **NOT TESTED**.
 
-**보안 측면의 정확한 진술:** client-denied 매핑은 **다른 클라이언트에게 token을 노출하지 않는다.**
-다만 프로젝트 콘솔·Admin SDK 접근자에게는 asset↔token 관계가 평문으로 보인다. 이는 버킷 객체 자체와
-같은 신뢰 수준이므로 **새로운 노출 경로는 아니지만, "token은 어디에도 평문으로 저장되지 않는다"는
-성질은 잃는다.** Q2 위험 2(`spaces` list 개방)와는 **독립적인 문제**이며, 초판이 두 사안을 결합해
-"보안 모델 충돌"이라고 단정한 것은 과장이었다.
+**보안 측면의 정확한 진술 (라운드 2에서 재정정):**
+
+client-denied 매핑은 **일반 클라이언트에게 token이나 관계를 노출하지 않는다** — 이 부분은 유지된다.
+초판이 두 사안을 결합해 "보안 모델 충돌"이라고 단정한 것도 여전히 과장이었다.
+
+**그러나 라운드 1이 덧붙인 *"버킷 객체 자체와 같은 신뢰 수준이므로 새로운 노출 경로는 아니다"* 는
+단정도 폐기한다.** 근거가 없다.
+
+- private mapping은 **token 또는 asset↔document 관계를 평문으로 담는 별도 Firestore persistence**다.
+  지금 V2 설계에서 그 관계는 **어디에도 평문으로 존재하지 않는다**(암호문 안에만 있다). 매핑을 두는
+  순간 **없던 평문 사본이 생긴다.**
+- 그 사본에는 **Firebase console · Admin SDK · service account · IAM**이라는 **별도 접근 표면**이
+  따라붙는다. Storage bucket 접근 주체와 Firestore 접근 주체가 **정확히 같은 principal/role 집합인지
+  이 조사에서 확인하지 않았다** — 프로젝트 IAM 구성을 읽지 않았고 읽을 수도 없다(live 접근 금지).
+- ⇒ 정확한 진술은 이것이다: **private mapping은 새로운 privileged plaintext surface를 만든다.
+  그 표면이 기존 bucket 접근 표면과 겹치는 정도는 `UNCONFIRMED`다.**
+
+**이 사실만으로 후보를 금지하지도, 승인하지도 않는다.** 이는 Founder가 판단할 **보안 tradeoff**다 —
+얻는 것은 서버 측 관계 조회(그리고 stray upload 차단), 내주는 것은 관계의 평문 사본과 그에 딸린
+접근 표면이다. JJ-5에 그대로 반영했다.
 
 **선택지 (수정) — 이 조사는 어느 쪽도 권고하지 않는다:**
 
 | 선택지 | 필요한 것 | 무엇을 주는가 | 무엇을 주지 못하는가 |
 |---|---|---|---|
 | **V2-1 삭제 보류 유지 (현재 기본값·D-2=O-3)** | 없음 | 오삭제 위험 0 | 비용 단조 증가(상한 `UNCONFIRMED`) |
-| **V2-2′ client-denied write-once mapping** | 매핑 컬렉션 + `firestore.rules`·`storage.rules` 양쪽 + 발급당 Firestore 쓰기 1회 + IAM 연결 | 서버가 asset↔document **관계를 물을 수 있게 된다**. stray upload 서버 차단도 가능 | **확정 orphan 증명은 못 한다**(늦은 create를 무효화하는 조건 부재). 연쇄 보간 지원 `UNCONFIRMED`, 문서 접근 한도 2 여유 0, token이 평문으로 저장됨 |
+| **V2-2′ client-denied write-once mapping** (REC ID는 §Q7.1.1 (c1) transform-0 권장 형태) | 매핑 컬렉션 + `firestore.rules`·`storage.rules` 양쪽 + 발급당 Firestore 쓰기 1회 + IAM 연결 | 서버가 asset↔document **관계를 물을 수 있게 된다**. stray upload 서버 차단도 가능. 조회 primitive 자체는 **공식 지원 + 이 저장소 local emulator VERIFIED**(§Q7.1.0) | **확정 orphan 증명은 못 한다**(늦은 create를 무효화하는 단조 조건 부재). 연쇄 보간 지원 `UNCONFIRMED`, 문서 접근 한도 2 여유 0, **없던 privileged plaintext surface가 새로 생기고 bucket 접근 주체와의 overlap은 `UNCONFIRMED`** |
+| **V2-2″ (c2) 독립 opaque recId + `customMetadata` pointer** | 위 + object metadata schema + Rules metadata 검증 | assetId와 독립인 식별자 | (c1)보다 비싸고 위험: Rules metadata 표면 `UNCONFIRMED`, access-call 예산 초과 위험, **public-read라 recId가 공개 관측됨**, metadata 불변성 계약 공백, **GG-4 미승인 schema 확장** |
 | **V2-3 backend/Admin SDK 판정** | C6/G-3 재개, 서비스 계정, 함수 배포·과금 | 임의 판정 로직 가능 | 규칙이 틀리면 자동으로 손해. 여전히 "늦은 성공" 문제를 스스로 풀어야 한다 |
 
 > **가능한 후보라는 사실은 삭제 승인도, Rules/schema/backend 구현 승인도, 안전성 PASS도 아니다.**
-> V2-2′는 **`NOT TESTED`이고 핵심 한계가 미해결**이다.
+> V2 mapping Rules는 어느 형태든 **미작성 · `NOT TESTED`이고 핵심 한계(확정 orphan 미증명)가
+> 미해결**이다. §Q7.1.0 ②가 VERIFIED로 올라간 것은 **admin-state의 `.json` primitive**이지 V2
+> mapping이 아니다 — 둘을 같은 칸에 적지 않는다.
 
 ### Q8. admin-write C5 port 재사용 가능 범위
 
@@ -555,7 +692,7 @@ SPACE_V2_ISSUE_ASSET_MISMATCH       // read-back size/hash 불일치 — fail-cl
 | **JJ-2** | `spaces/{token}` create를 GG-5대로 분기하는가 | A) `schema=='space-v2'`만 승인 UID + exact keys, V1은 현행 유지 · B) 현행 유지 | Rules 변경 = G-1 재개 |
 | **JJ-3** | **`spaces` 컬렉션 `list`를 닫는가** | A) `get`만 허용하고 `list` 거부 · B) 현행 유지 | 현행 `read: if true`가 **문언상 열거를 허용**한다(Q2 위험 2, 정적 결론 · 실행 `NOT TESTED`). V1 소비자 영향 검토 필요 |
 | **JJ-4** | 실제 운영자 UID 정본 제공 | A) 제공 · B) 보류 | placeholder로는 **어떤 Rules도 배포 불가** |
-| **JJ-5** | V2 orphan **식별** 정책 | A) V2-1 삭제 보류 유지(D-2=O-3 연장) · B) V2-2′ client-denied write-once mapping · C) V2-3 backend | **B·C 어느 쪽도 지금은 확정 orphan을 증명하지 못한다**(Q7.1: 늦은 create를 무효화하는 단조 조건 부재). B는 관계 조회를 가능하게 하지만 연쇄 경로 보간 지원이 `UNCONFIRMED`이고 token이 평문 저장된다. **어느 선택도 삭제 승인이 아니다** |
+| **JJ-5** | V2 orphan **식별** 정책 | A) V2-1 삭제 보류 유지(D-2=O-3 연장) · B) V2-2′ client-denied write-once mapping((c1) transform-0) · B′) V2-2″ 독립 recId + `customMetadata` · C) V2-3 backend | **어느 선택도 지금은 확정 orphan을 증명하지 못한다**(§Q7.1: 늦은 create를 무효화하는 단조 조건 부재). B의 조회 primitive는 공식 지원 + local emulator VERIFIED지만 연쇄 보간은 `UNCONFIRMED`이고, **없던 privileged plaintext surface가 새로 생긴다**(bucket 접근 주체와의 overlap `UNCONFIRMED`) — 이는 **Founder 보안 tradeoff**다. B′는 GG-4 미승인 schema 확장이고 public-read라 recId가 공개 관측된다. **어느 선택도 삭제 승인이 아니다** |
 | **JJ-6** | 미확정 시 사용자 경험 | A) 미판정으로 표시하고 사람이 결정 · B) 자동 재시도 | **B는 안전 근거가 없다**(Q6) |
 | **JJ-7** | 다음 단위 크기 | A) local `space-write` port + fake만(네트워크 0) · B) Rules + emulator까지 · C) adapter까지 | A는 UID·Rules 결정 없이도 진행 가능한 **유일한 선택지** |
 
@@ -631,11 +768,25 @@ SPACE_V2_ISSUE_ASSET_MISMATCH       // read-back size/hash 불일치 — fail-cl
 - Storage bucket **CORS** 설정 — CORS-clean canvas가 아니면 인쇄/replay가 깨진다(CLAUDE.md §4.7).
 - 실제 운영자 **UID 정본** — 두 Rules 파일에서 여전히 placeholder.
 - Rules의 문자열 연결/분해 지원 — G-4 결정 §12에서 이미 `UNCONFIRMED`, 이번에도 확인하지 않았다.
-- **Rules 안의 `get()/exists()`가 대상 문서의 `allow read` 거부를 우회하는지** — 공식 인용을 이 세션에서
-  취득하지 못했다(§Q7.1). 저장소 내부 정황(현행 `storage.rules`가 client-denied REC을 조회하도록
-  작성돼 있음)이 근거의 전부다.
 - **한 `firestore.get()` 결과를 다른 조회 경로에 연쇄 보간**하는 것이 Storage Rules에서 지원되는지
-  (§Q7.1). 지원되지 않으면 V2-2′ 후보 (a)가 성립하지 않는다.
+  (§Q7.1). admin-state SDC′는 고정 경로와 path 변수만 써서 연쇄를 한 번도 쓰지 않았으므로
+  **§Q7.1.0 ②의 VERIFIED 증거가 이 부분은 덮지 않는다.** 지원되지 않으면 "asset → token → spaces"
+  2단 조회가 성립하지 않는다.
+- **Storage Rules의 object metadata 접근**(`request.resource.metadata` / `resource.metadata`)의 공식
+  지원 여부와 정확한 접근자 — 이 저장소에 선례 **0건**(§Q7.1.1 (c2)).
+- **private mapping이 만드는 privileged plaintext surface와 기존 bucket 접근 표면의 principal/role
+  overlap** — 프로젝트 IAM 구성을 읽지 않았고 읽을 수도 없다(§Q7.1 보안 항목).
+
+**이미 검증된 것 — `UNCONFIRMED`로 낮춰 적지 않는다 (라운드 2 신설):**
+
+- **Storage Rules의 `firestore.get()`/`firestore.exists()` 지원**: G-4 결정 정본 §4가 공식 문서를
+  직접 인용한다. **공식 지원.**
+- **client `read:false`인 Firestore 문서를 Storage Rules가 조회해 create를 게이팅하는 primitive**:
+  `storage.emulator.rules:40-45` + `firestore.emulator.rules:71-86` +
+  `cutover-rules.emulator.test.ts:83-96` + G-4 §12의 **13/13 PASS**로 **local emulator VERIFIED**
+  (2026-08-14 기록, 이번 세션 재실행 없음).
+  → 여전히 열려 있는 것은 **V2 전용 mapping Rules(미작성·`NOT TESTED`)**와
+  **실제 Firebase/IAM/live(`NOT TESTED`)**뿐이다.
 
 **정적 결론이지만 실행 검증이 없는 것 — `UNCONFIRMED`와 구분한다:**
 
@@ -656,7 +807,8 @@ SPACE_V2_ISSUE_ASSET_MISMATCH       // read-back size/hash 불일치 — fail-cl
 - V2 asset 경로의 실제 create/read 동작 (목표 후보 rule 자체가 **미작성**)
 - `getDocFromServer` 기반 read-back 판정의 실제 동작, 앱 timeout·오프라인·재연결 시나리오
 - `spaces` 컬렉션 실제 열거 동작
-- §Q7.1의 V2-2′ mapping 후보 — 규칙 **미작성 · 미실행**
+- §Q7.1의 V2 mapping 후보 전부((c1) transform-0 · (c2) `customMetadata`) — 규칙 **미작성 · 미실행**
+- 실제 Firebase IAM(두 제품 연결 권한) 활성화 상태와 Firestore/Storage principal overlap
 - viewer가 실제 PNG를 CORS-clean으로 읽어 replay하는 전체 경로
 
 **이번 단위에서 실행한 게이트는 없다.** 문서 전용 단위이므로 unit/E2E/typecheck/build/emulator를
@@ -706,7 +858,13 @@ stage/commit/restore하지 않았다.
 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다.
 조사만으로는 올리지 않는다(스펙 073 §7). 제품 파일 변경 0, 작업축 5·6·7 완료량 변동 0이다.
 
-**보완 라운드 1도 진행도를 바꾸지 않는다.** 이번 라운드는 초판의 과장 한 건을 폐기하고 근거 수준과
-판정 축을 분리한 **문서 정정**이며, 제품·Rules·검증 어느 쪽도 전진시키지 않았다. 오히려 §Q7.1이
-"매핑을 도입해도 확정 orphan은 여전히 증명되지 않는다"를 밝혔으므로 **작업축 6의 잔여 난이도는
-줄지 않았다.**
+**보완 라운드 1·2 모두 진행도를 바꾸지 않는다.** 두 라운드는 초판·라운드 1의 과장을 폐기하고 근거
+등급과 판정 축을 분리한 **문서 정정**이며, 제품·Rules·검증 어느 쪽도 전진시키지 않았다.
+
+라운드 2에서 primitive 하나가 `UNCONFIRMED` → **local emulator VERIFIED**로 올라갔지만, 이는
+**admin-state에서 이미 검증돼 있던 사실을 이 문서가 잘못 낮춰 적었던 것을 바로잡은 것**이지 이번에
+새로 검증한 것이 아니다. 진행도를 올릴 근거가 되지 못한다.
+
+오히려 §Q7.1이 *"매핑을 도입해도 확정 orphan은 여전히 증명되지 않는다"* 를, §Q7.1.1이 *"(c2)는
+GG-4 미승인 schema 확장이고 public-read라 recId가 공개 관측된다"* 를 밝혔으므로 **작업축 6의 잔여
+난이도는 줄지 않았고, 오히려 선택지마다 붙는 조건이 더 분명해졌다.**

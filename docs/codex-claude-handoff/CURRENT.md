@@ -20,7 +20,51 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 073 문서 보완 라운드 1을 수행했다.**
+상태: **`READY_FOR_CODEX` - 스펙 073 문서 보완 라운드 2를 수행했다.**
+
+보완 직전 관측 HEAD=origin `2dd97c4`, ahead/behind 0/0에서 Codex 재검수 세 묶음을 문서에 반영했다.
+허용 문서 6개(조사 보고서 · spec073 · STATE · NEXT · CURRENT · live log)만 수정했고 제품 코드/test/
+`storage.rules`/`firestore.rules`/Firebase config/package/lockfile, `apps/**`, `packages/**`, 보호
+대상 변경은 **0**이다. 실제 Firebase/network/**emulator**/deploy/UID/URL/UI도 모두 0이다.
+
+**보완 1 — cross-service read primitive 근거 등급.** 라운드 1이 이 primitive를 `UNCONFIRMED`로 남긴
+분류가 **틀렸다.** 보고서 §Q7.1.0에서 네 층위로 분리했다 — ① Storage Rules `firestore.get()/exists()`
+**공식 지원**(G-4 §4 공식 문서 인용) · ② client `read:false` 문서를 조회해 create를 게이팅하는
+primitive **local emulator VERIFIED**(`storage.emulator.rules:40-45` · `firestore.emulator.rules:71-86`
+· `cutover-rules.emulator.test.ts:83-96` · G-4 §12 **13/13 PASS**) · ③ V2 전용 mapping Rules
+**미작성 · NOT TESTED** · ④ 실제 Firebase/IAM/live **NOT TESTED**. "우회(bypass)" 표현도 폐기하고
+**Firestore client read 권한**과 **Storage Rules service-side cross-product 평가**가 주체도 평가
+경로도 다른 별개 축임을 명시했다. ②는 `.json` admin-state 경로 검증이고 이번 세션에서 재실행하지
+않았다.
+
+**보완 2 — privileged plaintext surface.** 라운드 1의 *"버킷 객체 자체와 같은 신뢰 수준이므로 새로운
+노출 경로는 아니다"* 단정을 **폐기**했다. private mapping은 **현재 어디에도 평문으로 존재하지 않는
+관계의 사본**을 만들고, 거기에 **Firebase console · Admin SDK · service account · IAM**이라는 별도
+접근 표면이 따라붙는다. bucket 접근 주체와 같은 principal/role 집합인지는 **`UNCONFIRMED`**(IAM 구성
+미열람). 이것만으로 후보를 금지하지도 승인하지도 않고 **Founder 보안 tradeoff**로 남겼다.
+
+**보완 3 — REC ID 후보 완결성.** 라운드 1의 *"opaque recId는 성립하지 않는다"* 확정을 **폐기**했다.
+Storage Rules wildcard가 잡는 값은 bare UUID가 아니라 **세그먼트 전체 `"<uuid>.png"`**다. §Q7.1.1에서
+**(c1) transform-0**(REC doc id = 세그먼트 그대로, admin-state G-4 §8.2와 같은 패턴, 문자열 변환 0,
+조회 패턴 자체는 VERIFIED → **성립한다**)과 **(c2) 독립 opaque recId + `customMetadata` pointer**
+(설치 SDK 근거로 같은 `uploadBytes` 호출에 포함 가능하나 Rules metadata 표면 `UNCONFIRMED`,
+access-call 예산 초과 위험, **public-read라 `getMetadata()`로 공개 관측** → recId를 비밀로 둘 수 없고
+token 삽입 금지, `updateMetadata` 차단 계약 공백, **GG-4 미승인 schema 확장**)로 나눴다.
+두 후보 모두 **확정 orphan을 증명하지 못한다.**
+
+**보완 4 — commit 자기참조 추적 중단.** 라운드 1까지 만들던 "자기 해시 pin" bookkeeping
+commit(`534c26f`, `2dd97c4`)을 **더 만들지 않는다. commit은 자기 자신의 해시를 내용에 담을 수 없다** —
+그 한계를 숨기지 않고, 상태 문서에는 **push 후 HEAD=origin·ahead/behind 0/0 검증 사실**과 **라운드 2
+내용 commit**을 구분해 적으며 해시 정본은 git 이력과 세션 보고에 둔다.
+
+전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여로 변동 없다**. 라운드 2에서 primitive 하나가
+`UNCONFIRMED` → **VERIFIED**로 올라갔지만 이는 **이미 검증돼 있던 사실의 오분류를 바로잡은 것**이지
+새 검증이 아니므로 진행도 근거가 되지 않는다.
+
+다음은 Codex 재검수다. Founder JJ-1~JJ-7 선택, 제품 구현, Rules 변경, emulator 실행, 다음 스펙과
+자동화·반복 작업은 시작하지 않았다.
+
+> 라운드 1 제출 당시 기록:
 
 기준 HEAD=origin `534c26f`에서 Codex `CORRECTION_REQUIRED` 세 묶음을 문서에
 반영했다. 허용 문서 6개(조사 보고서 · spec073 · STATE · NEXT · CURRENT · live log)만 수정했고
@@ -60,8 +104,8 @@ JJ-5 선택지도 과장 없이 고쳤다 — B(V2-2′)와 C(backend) **어느 
 없다**. 이번 라운드는 문서 정정이라 제품 작업축 완료량을 늘리지 않으며, 오히려 §Q7.1이 매핑을
 도입해도 확정 orphan은 여전히 증명되지 않음을 밝혔으므로 **작업축 6의 잔여 난이도는 줄지 않았다.**
 
-다음은 Codex 재검수다. Founder JJ-1~JJ-7 선택, 제품 구현, Rules 변경, emulator 실행, 다음 스펙과
-자동화·반복 작업은 시작하지 않았다.
+위 내용은 라운드 1 제출 당시 기록이다. 그 뒤 Codex 재검수가 세 가지 문서 결함을 지적했고,
+상단의 **라운드 2 수행 결과**가 현재 상태다. Founder 선택과 제품 구현은 여전히 시작하지 않았다.
 
 > 이전 상태: **`CORRECTION_REQUIRED` - 스펙 073 문서 보완 라운드 1 대기.**
 

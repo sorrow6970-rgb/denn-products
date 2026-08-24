@@ -5,14 +5,14 @@ updated_at: 2026-08-24
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-073-space-v2-persistence-boundary-investigation   # CORRECTION ROUND 1 APPLIED, AWAITING CODEX RE-REVIEW, DOCUMENT ONLY, READ ONLY
+active_unit: spec-073-space-v2-persistence-boundary-investigation   # CORRECTION ROUND 2 APPLIED, AWAITING CODEX RE-REVIEW, DOCUMENT ONLY, READ ONLY
 state: READY_FOR_CODEX
 baseline_commit: c5f8384   # spec 072 closure + spec 073 contract documents committed by Claude Code
 candidate_commit: null   # document-only unit; no product commit exists
 verified_commit: 34cca25   # spec 072 local issue bundle, independently passed at 452cc1a
-origin_relation: "HEAD=origin at 63a1dec after the f1f5d20 investigation record, 534c26f hash-pin and 63a1dec correction round 1; ahead/behind 0/0"
+origin_relation: "pre-round-2 observation: HEAD=origin at 2dd97c4, ahead/behind 0/0. Round 2 adds ONE content commit and no self-hash bookkeeping commit; HEAD=origin and ahead/behind 0/0 are re-verified after push and reported in the session, because a commit cannot contain its own hash"
 working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
-fix_round: 1
+fix_round: 2
 max_fix_rounds: 3
 next_transition: CODEX_RE_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
@@ -22,6 +22,62 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 78-81% complete; 19-22% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 073 문서 보완 라운드 2 수행 (2026-08-24)
+
+- 보완 직전 관측 기준 HEAD=origin `2dd97c4`, ahead/behind 0/0. 허용 문서 6개(조사 보고서 · spec073 ·
+  STATE · NEXT · CURRENT · live log)만 수정했다. 제품 코드/test/Rules/Firebase config/package/lockfile,
+  `apps/**`, `packages/**`, 보호 대상 변경 0. 실제 Firebase/network/**emulator**/deploy/UID/URL/UI 0.
+- **보완 1 — cross-service primitive 근거 등급.** 라운드 1이 `UNCONFIRMED`로 남긴 분류가 틀렸다.
+  보고서 §Q7.1.0에서 네 층위로 분리했다 — ① Storage Rules `firestore.get()/exists()` **공식 지원**
+  (G-4 §4 인용) · ② client `read:false` 문서 조회로 create를 게이팅하는 primitive **local emulator
+  VERIFIED**(`storage.emulator.rules:40-45` · `firestore.emulator.rules:71-86` ·
+  `cutover-rules.emulator.test.ts:83-96` · G-4 §12 **13/13 PASS**) · ③ V2 mapping Rules
+  **미작성·NOT TESTED** · ④ 실제 Firebase/IAM/live **NOT TESTED**.
+  "우회(bypass)" 표현도 폐기하고 **Firestore client read 권한**과 **Storage Rules service-side
+  cross-product 평가**를 구분했다. ②는 `.json` 경로 검증이며 이번 세션 재실행 없음.
+- **보완 2 — privileged plaintext surface.** *"버킷과 같은 신뢰 수준이라 새 노출 경로가 아니다"*
+  단정을 폐기했다. private mapping은 **현재 어디에도 없는 관계의 평문 사본**을 만들고
+  console/Admin SDK/service account/IAM이라는 **별도 접근 표면**을 추가한다. bucket 접근 주체와의
+  principal/role overlap은 **`UNCONFIRMED`**(IAM 미열람). 금지도 승인도 하지 않고 **Founder 보안
+  tradeoff**로 남겼다.
+- **보완 3 — REC ID 후보 완결성.** *"opaque recId는 성립하지 않는다"* 확정을 폐기했다. wildcard가 잡는
+  값은 bare UUID가 아니라 **세그먼트 전체 `"<uuid>.png"`**다. §Q7.1.1에서 **(c1) transform-0**
+  (admin-state G-4 §8.2와 같은 패턴, 문자열 변환 0, 조회 패턴 자체는 VERIFIED → **성립**)과
+  **(c2) 독립 recId + `customMetadata` pointer**(설치 SDK `storage-public.d.ts:500·515·277·301-303·56`
+  근거로 **같은 `uploadBytes` 호출에 포함 가능**하나 Rules metadata 표면 `UNCONFIRMED`, access-call
+  예산 초과 위험, **public-read라 `getMetadata()`로 공개 관측** → recId를 비밀로 둘 수 없고 token
+  삽입 금지, `updateMetadata` 차단 계약 공백, **GG-4 미승인 schema 확장**)로 나눴다.
+  두 후보 모두 **확정 orphan을 증명하지 못한다.**
+- **보완 4 — commit 자기참조 추적 중단.** 라운드 1까지 만들던 "자기 해시 pin" bookkeeping commit
+  (`534c26f`, `2dd97c4`)을 **더 만들지 않는다.** **commit은 자기 해시를 내용에 담을 수 없다**는 한계를
+  숨기지 않고, 상태 문서에는 **push 후 HEAD=origin·ahead/behind 0/0 검증 사실**과 **라운드 2 내용
+  commit**을 구분해 적고 해시 정본은 git 이력·세션 보고에 둔다.
+- 게이트: `git diff --check` PASS, 허용 6개 문서 외 diff 0. 문서 전용 단위라 실행 게이트 없음.
+- 전체 진행도 **78~81% 완료 / 19~22% 잔여 — 변동 없음**. primitive 하나가 VERIFIED로 올라간 것은
+  **이미 검증돼 있던 사실의 오분류를 바로잡은 것**이지 새 검증이 아니다. 상태 `READY_FOR_CODEX`,
+  다음 transition `CODEX_RE_REVIEW`. Founder JJ-1~JJ-7과 다음 스펙은 시작하지 않았다.
+
+## 스펙 073 Codex 재검수 — CORRECTION_REQUIRED 라운드 2 (2026-08-24)
+
+- 실제 HEAD=origin `2dd97c4`, ahead/behind 0/0이다. `63a1dec`은 라운드 1 내용 commit이고
+  `2dd97c4`는 그 해시를 문서에 기록한 후속 bookkeeping commit이다.
+- 라운드 1의 핵심 정정은 수용한다. 다만 기존 증거를 누락해 cross-service primitive를
+  `UNCONFIRMED`로 잘못 낮춘 부분이 있다. `storage.emulator.rules:40-45`는 client-denied REC에
+  `firestore.exists()`를 사용하고, `firestore.emulator.rules:71-86`은 그 REC의 client read를
+  `false`로 둔다. `cutover-rules.emulator.test.ts:83-96`은 REC 생성 후 Storage upload 성공을 실제
+  local emulator에서 검증했으며 G-4 정본도 13/13 PASS를 기록한다. 따라서 **primitive는 local
+  emulator VERIFIED**, V2 전용 mapping은 **미작성/NOT TESTED**, 실제 IAM/live는 **NOT TESTED**로
+  분리해야 한다.
+- private mapping을 "bucket 객체와 같은 신뢰 수준이라 새로운 노출 경로가 아니다"라고 단정하지
+  않는다. Firestore 평문 저장은 별도 persistence·IAM·console/Admin SDK 접근 표면이고, bucket과
+  접근 주체가 정확히 같은지는 `UNCONFIRMED`다.
+- opaque recId 후보를 path만 보고 불가능으로 확정한 분석도 불완전하다. no-extra-metadata 조건에서는
+  object segment 자체(`<uuid>.png`)를 REC ID로 쓰는 transform-0 후보가 있고, 별도 opaque recId는
+  upload에 포함되는 Storage custom metadata pointer 후보가 있다. 후자는 schema/Rules/security
+  변경 후보일 뿐 승인되지 않았고 public-read object의 metadata 노출까지 분석해야 한다.
+- 제품 코드/test/Rules/config/package/lockfile 변경과 emulator/live 실행은 계속 0이다. Founder
+  JJ-1~JJ-7은 라운드 2 재검수 전 묻지 않는다. 전체 진행도 **78~81% 완료 / 19~22% 잔여 — 변동 없음**.
 
 ## 스펙 073 문서 보완 라운드 1 수행 (2026-08-24)
 

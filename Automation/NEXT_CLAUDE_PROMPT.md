@@ -1,18 +1,37 @@
 # NEXT CLAUDE PROMPT
 
 상태: `READY_FOR_CODEX`
-active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **CORRECTION ROUND 1 APPLIED / AWAITING CODEX RE-REVIEW / DOCUMENT ONLY / READ ONLY**
+active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **CORRECTION ROUND 2 APPLIED / AWAITING CODEX RE-REVIEW / DOCUMENT ONLY / READ ONLY**
 completed_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO NETWORK / NO UI**
-기준: HEAD=origin **`63a1dec`**, ahead/behind **0/0**. 조사 기록 **`f1f5d20`**, hash-pin **`534c26f`**, 보완 라운드 1 **`63a1dec`**.
+기준: 보완 직전 관측 HEAD=origin **`2dd97c4`**, ahead/behind **0/0**. 라운드 2는 **내용 commit 1개만** 추가하고 자기 해시 bookkeeping commit을 만들지 않았다 — push 후 `HEAD=origin`·ahead/behind 0/0을 검증했고 해시 정본은 git 이력·세션 보고다(**commit은 자기 해시를 내용에 담을 수 없다**).
+이력: `f1f5d20`(초판 내용) → `534c26f`(bookkeeping) → `63a1dec`(라운드 1 내용) → `2dd97c4`(bookkeeping) → 라운드 2 내용 commit.
 working tree에는 기존 Founder/user 보호 변경만 남고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
-fix_round: **1 / 3**
+fix_round: **2 / 3**
 next_transition: **`CODEX_RE_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
-스펙 073 문서 보완 라운드 1을 수행해 상태는 `READY_FOR_CODEX`다. 다음 실행 지시문은 **Codex 재검수
+스펙 073 문서 보완 라운드 2를 수행해 상태는 `READY_FOR_CODEX`다. 다음 실행 지시문은 **Codex 재검수
 종료 시점에** 이 자리에 다시 작성된다. Claude Code는 그때까지 Founder JJ-1~JJ-7 선택, 제품 구현,
 Rules 변경, emulator 실행, 새 스펙과 자동화·반복 작업을 시작하지 않는다.
+
+> 직전 지시문(스펙 073 보완 라운드 2, 수행 완료 — 기록):
+>
+> ```text
+> C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md의 CODEX REVIEW 라운드 2를 전부 읽고 스펙 073 문서 보완 라운드 2만 수행해. 기준은 rebuild/modern-studio HEAD=origin 2dd97c4, ahead/behind 0/0이다. 제품 구현과 Founder JJ-1~JJ-7 선택은 시작하지 마.
+>
+> 첫째, private mapping의 cross-service read 근거 분류를 고쳐. 보고서는 "client read=false인 Firestore 문서를 Storage Rules firestore.get()/exists()가 읽을 수 있는지 공식 인용 미취득"을 이유로 primitive 자체를 UNCONFIRMED로 남겼지만, 저장소에는 더 강한 local 실행 증거가 있다. storage.emulator.rules:40-45는 rebuildAdminStateObjects REC에 firestore.exists()를 사용하고, firestore.emulator.rules:71-86은 그 REC의 client read/update/delete를 false로 둔다. packages/firebase/src/admin-write/cutover-rules.emulator.test.ts:83-96은 REC 생성 후 Storage upload가 성공하고 overwrite/delete/비승인 UID가 거부됨을 local demo emulator에서 검증했으며 G-4 결정 정본 §12도 구조 A+REC cross-service 규칙 13/13 PASS를 기록한다. 따라서 ① Firebase 공식 문서상 get/exists 지원, ② 이 저장소의 admin-state primitive local emulator VERIFIED, ③ V2 전용 mapping Rules는 미작성/NOT TESTED, ④ 실제 Firebase IAM/live는 NOT TESTED로 정확히 분리해. "bypass"처럼 권한 우회로 오해될 표현은 피하고, Storage Rules service-side cross-product 평가와 Firestore client read 권한을 구분해.
+>
+> 둘째, 보안 서술의 "버킷 객체 자체와 같은 신뢰 수준이므로 새로운 노출 경로는 아니다" 단정을 폐기해. private mapping은 일반 클라이언트 read/list를 막을 수 있지만 token 또는 관계를 평문으로 저장하는 별도 Firestore persistence다. Firebase console, Admin SDK, 서비스 계정/IAM 접근 표면이 추가되며 Storage bucket 접근자와 Firestore 접근자가 정확히 같은지는 확인되지 않았다. 따라서 새로운 privileged plaintext surface이고 정확한 principal/role overlap은 UNCONFIRMED라고 기록해. 이것만으로 후보를 금지하거나 승인하지 말고 Founder 보안 tradeoff로 남겨.
+>
+> 셋째, opaque recId 후보를 "path가 assetId이므로 성립하지 않는다"고 확정한 분석을 정밀화해. 추가 metadata가 없으면 Storage segment 자체인 `<uuid>.png`를 REC document ID로 그대로 사용하는 transform-0 후보가 있다(admin-state G-4 §8.2와 같은 패턴). assetId와 독립인 opaque recId를 쓰려면 uploadBytes의 metadata 인자에 customMetadata pointer를 포함하고 Storage Rules가 request.resource/resource metadata를 검증·조회하는 후보도 논리상 가능하다. 설치 @firebase/storage 0.14.4 공개 타입의 UploadMetadata.customMetadata 근거를 정확한 경로·행으로 기록하고, public-read object에서 metadata/recId가 클라이언트에 관측될 가능성, exact key/format, mapping assetId 일치, create와 metadata의 동일 upload 포함, update/delete 금지, Rules access-call 예산을 분석해. 이 후보는 현재 GG-4 계약에 승인되지 않은 metadata schema/Rules 확장이며 미작성/NOT TESTED다. 지원 근거가 부족한 부분은 UNCONFIRMED로 남겨. 어느 후보도 확정 orphan을 증명한다거나 삭제를 승인한다고 쓰지 마.
+>
+> 넷째, 기록 해시를 자기참조식으로 계속 추적하지 마. 현재 관측 HEAD=origin은 2dd97c4이고 63a1dec은 라운드 1 내용 commit, 2dd97c4는 bookkeeping commit이다. 라운드 2 내용 commit 후 별도의 "자기 해시 pin" commit을 반복하지 말고, 상태 문서에는 최종적으로 HEAD=origin/ahead-behind 검증 사실과 라운드 2 내용 commit을 구분해 기록해. commit 자체가 자기 해시를 포함할 수 없다는 한계를 숨기지 마.
+>
+> 허용 파일은 조사 보고서, docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md, Automation/DENN_AUTOMATION_STATE.md, Automation/NEXT_CLAUDE_PROMPT.md, docs/codex-claude-handoff/CURRENT.md, docs/live/CLAUDE_LIVE_PATCH_LOG.md의 문서 6개뿐이다. 제품 코드/test/storage.rules/firestore.rules/Firebase config/package/lockfile, apps/**, packages/**와 보호 대상은 수정·restore·checkout·stage·commit하지 마. 실제 Firebase/project/bucket/Firestore/network/live 접근, emulator 실행, upload/write/read-back/delete/deploy, UID 추측, URL 발급, UI 연결, 자동화·반복 작업은 금지다.
+>
+> 문서 diff만 git diff --check와 forbidden diff로 확인하고 허용 문서만 별도 일반 fast-forward commit/push해. 완료 후 HEAD=origin, ahead/behind 0/0, 정확한 변경 파일, primitive evidence 분류, private plaintext surface, recId 후보별 한계, UNCONFIRMED/NOT TESTED와 전체 리빌드 78~81% 완료·19~22% 잔여 변동 없음을 보고하고 READY_FOR_CODEX에서 멈춰. 다음 구현 스펙과 Founder 질문은 시작하지 마.
+> ```
 
 > 직전 지시문(스펙 073 보완 라운드 1, 수행 완료 — 기록):
 >
@@ -31,6 +50,63 @@ Rules 변경, emulator 실행, 새 스펙과 자동화·반복 작업을 시작�
 >
 > 문서 diff만 git diff --check와 forbidden diff로 확인하고 허용 문서만 별도 일반 fast-forward commit/push해. 완료 후 HEAD=origin, ahead/behind 0/0, 정확한 변경 파일과 수정 결론, UNCONFIRMED/NOT TESTED, 전체 리빌드 78~81% 완료·19~22% 잔여 변동 없음을 보고하고 READY_FOR_CODEX에서 멈춰. 다음 구현 스펙과 Founder 질문은 시작하지 마.
 > ```
+
+## ★ 스펙 073 — 보완 라운드 2 수행 기록
+
+보완 직전 관측 기준 HEAD=origin `2dd97c4`, ahead/behind 0/0. Codex 재검수 세 묶음을 문서에 반영했다.
+수정 파일은 허용 6개뿐 — 조사 보고서 · spec073 · STATE · NEXT · CURRENT · live log.
+제품 코드·test·`storage.rules`·`firestore.rules`·Firebase config·package/lockfile, `apps/**`,
+`packages/**`, 보호 대상 변경 **0**. 실제 Firebase/project/bucket/Firestore/network/live 접근 **0**,
+**emulator 실행 0**, upload/write/read-back/delete/deploy **0**, UID 추측 **0**, URL 발급 **0**,
+UI 연결 **0**, 자동화·반복 작업 **0**, Founder JJ-1~JJ-7 선택 **0**, 다음 구현 스펙 **0**.
+
+- **보완 1 — cross-service read primitive 근거 등급(보고서 §Q7.1.0 신설).** 라운드 1이 이를
+  `UNCONFIRMED`로 남긴 분류가 **틀렸다.** 네 층위로 분리했다 —
+  **① 공식 지원**(G-4 정본 §4의 공식 문서 직접 인용; 제약 4개 — default DB · **문서 2개** ·
+  quota/과금 · IAM) · **② local emulator VERIFIED**(`storage.emulator.rules:40-45`가
+  `firestore.exists(REC)`로 create 게이팅, `firestore.emulator.rules:71-86`이 같은 REC에
+  `read, update, delete: if false`, `cutover-rules.emulator.test.ts:83-96`이 REC `setDoc` 뒤
+  **upload 성공**·재업로드/삭제/비승인 UID 거부를 검증, G-4 §12 **13/13 PASS**) ·
+  **③ V2 mapping Rules 미작성·`NOT TESTED`** · **④ 실제 Firebase/IAM/live `NOT TESTED`**.
+  ⇒ **Storage Rules의 service-side cross-product 평가는 대상 문서의 Firestore *클라이언트* read
+  권한에 좌우되지 않는다**는 것이 실행으로 확인된 사실이다.
+  ★ **"우회(bypass)" 표현은 폐기**했다 — 두 축은 주체도 평가 경로도 다르다. ②는 `.json` 경로
+  검증이고 이번 세션에서 재실행하지 않았다.
+- **보완 2 — privileged plaintext surface.** *"버킷 객체 자체와 같은 신뢰 수준이므로 새로운 노출
+  경로는 아니다"* 단정을 **폐기**했다. private mapping은 **현재 어디에도 평문으로 없는 관계의 사본**을
+  만들고 **console · Admin SDK · service account · IAM**이라는 별도 접근 표면을 추가한다. bucket
+  접근 주체와의 principal/role overlap은 **`UNCONFIRMED`**(IAM 미열람·live 금지). 금지도 승인도 하지
+  않고 **Founder 보안 tradeoff**로 남겼다.
+- **보완 3 — REC ID 후보 완결성(보고서 §Q7.1.1 신설).** *"opaque recId는 성립하지 않는다"* 확정을
+  **폐기**했다. wildcard가 잡는 값은 bare UUID가 아니라 **세그먼트 전체 `"<uuid>.png"`**다.
+  **(c1) transform-0** = REC doc id를 세그먼트 그대로 사용 — admin-state G-4 §8.2와 같은 패턴,
+  문자열 변환 0, 조회 패턴 자체는 VERIFIED ⇒ **성립한다**(다만 opaque하지 않음; assetId는 public path에
+  이미 있어 식별 목적엔 무해).
+  **(c2) 독립 recId + `customMetadata` pointer** = 설치 SDK `storage-public.d.ts:500`·`:515`·`:277`·
+  `:301-303`·`:56` 근거로 **같은 `uploadBytes` 호출에 포함 가능**하나, Rules metadata 표면
+  `UNCONFIRMED`(저장소 선례 0건), 일치 교차 확인 시 **문서 접근 한도 2 초과**, ★ **public-read라
+  `getMetadata()`로 공개 관측** ⇒ recId를 비밀로 둘 수 없고 **token 삽입 금지**,
+  `updateMetadata` 차단 **계약 공백**, **GG-4 미승인 schema 확장** ⇒ 논리상 가능하나 (c1)보다 비싸고
+  위험하며 미작성·`NOT TESTED`.
+  **두 후보 모두 확정 orphan을 증명하지 못한다.** 연쇄 경로 보간은 여전히 `UNCONFIRMED`이며
+  **§Q7.1.0 ②의 VERIFIED 증거가 그 부분은 덮지 않는다**(admin-state는 고정 경로·path 변수만 사용).
+- **보완 4 — commit 자기참조 추적 중단.** 라운드 1까지 만들던 "자기 해시 pin" bookkeeping
+  commit(`534c26f`, `2dd97c4`)을 **더 만들지 않는다.** **commit은 자기 해시를 내용에 담을 수 없다** —
+  그 한계를 숨기지 않고, 상태 문서에는 **push 후 HEAD=origin·ahead/behind 0/0 검증 사실**과
+  **라운드 2 내용 commit**을 구분해 적으며 해시 정본은 git 이력·세션 보고에 둔다.
+- JJ-5도 다시 고쳤다 — A(삭제 보류) · B((c1) mapping) · B′((c2) customMetadata) · C(backend)
+  **어느 선택도 확정 orphan을 증명하지 못하며 어느 것도 삭제 승인이 아니다.**
+
+게이트: `git diff --check` PASS, 허용 6개 문서 외 diff **0**. 문서 전용 단위라 실행 게이트는 없으며
+unit/E2E/typecheck/build/emulator를 하나도 돌리지 않았고 돌렸다고 기록하지 않는다.
+
+진행도 보고: **78~81% 진행 / 19~22% 잔여 — 변동 없음.** primitive 하나가 `UNCONFIRMED` →
+**VERIFIED**로 올라갔지만 이는 **admin-state에서 이미 검증돼 있던 사실의 오분류를 바로잡은 것**이지
+새 검증이 아니므로 진행도 근거가 되지 않는다. 오히려 §Q7.1·§Q7.1.1이 선택지마다 붙는 조건을 더
+분명히 했으므로 **작업축 6의 잔여 난이도는 줄지 않았다.**
+
+다음은 Codex 재검수다. 보호 대상과 기존 Founder/user working-tree 변경은 restore/checkout/stage/
+commit하지 않았다.
 
 ## ★ 스펙 073 — 보완 라운드 1 수행 기록
 
