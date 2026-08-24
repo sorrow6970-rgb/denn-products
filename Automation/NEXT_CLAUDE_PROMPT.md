@@ -3,7 +3,7 @@
 상태: `READY_FOR_CODEX`
 active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **INVESTIGATION DONE / AWAITING CODEX REVIEW / DOCUMENT ONLY / READ ONLY**
 completed_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO NETWORK / NO UI**
-기준: HEAD=origin **스펙 073 기록 commit**, ahead/behind **0/0**. Codex 문서 **`c5f8384`**, 조사 보고서는 그 다음 문서 commit이다.
+기준: HEAD=origin **`f1f5d20`**, ahead/behind **0/0**. Codex 문서 **`c5f8384`**, 조사 보고서·기록 **`f1f5d20`**.
 working tree에는 기존 Founder/user 변경과 보호 spec-018 PNG만 남아 있고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
 next_transition: **`CODEX_INDEPENDENT_REVIEW`**
 
@@ -20,7 +20,7 @@ next_transition: **`CODEX_INDEPENDENT_REVIEW`**
 
 ## ★ 스펙 073 — 조사 완료 기록
 
-Codex 문서 8개는 문서 commit `c5f8384`, 조사 보고서와 상태 문서는 그 다음 문서 commit이다. 제품
+Codex 문서 8개는 문서 commit `c5f8384`, 조사 보고서와 상태 문서는 문서 commit `f1f5d20`이다. 제품
 코드·test·`storage.rules`·`firestore.rules`·Firebase config·package/lockfile 변경 **0**, 실제
 Firebase/project/bucket/Firestore/network/live 접근 **0**, emulator 실행 **0**,
 upload/write/read-back/delete/deploy **0**, URL 발급 **0**, UI 연결 **0**이다.

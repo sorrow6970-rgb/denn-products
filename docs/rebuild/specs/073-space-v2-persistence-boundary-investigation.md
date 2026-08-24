@@ -94,7 +94,7 @@ fast-forward commit/push한다.
 상태: **INVESTIGATION DONE / READY_FOR_CODEX / DOCUMENT_ONLY / READ_ONLY / NO_LIVE_NETWORK / NO_UI**
 (2026-08-24)
 
-- Codex 문서 8개 → 문서 commit `c5f8384`. 조사 보고서·상태 문서는 그 다음 문서 commit. 둘 다 일반
+- Codex 문서 8개 → 문서 commit `c5f8384`. 조사 보고서·상태 문서 → 문서 commit `f1f5d20`. 둘 다 일반
   fast-forward push. **제품 commit 없음**(문서 전용 단위).
 - §5 허용 범위 준수: 신규 보고서
   `docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md` +

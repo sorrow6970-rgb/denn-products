@@ -22,8 +22,8 @@
 
 상태: **`READY_FOR_CODEX` - 스펙 073 persistence boundary 읽기 전용 조사가 끝났다.**
 
-Codex 문서 8개를 문서 commit `c5f8384`로 fast-forward push한 뒤 스펙 073의 문서 전용 범위만
-수행했다. 산출물은
+Codex 문서 8개를 문서 commit `c5f8384`로, 조사 보고서·기록을 `f1f5d20`으로 각각 fast-forward
+push했다. 스펙 073의 문서 전용 범위만 수행했고 산출물은
 `docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md`다.
 제품 코드/test/`storage.rules`/`firestore.rules`/Firebase config/package/lockfile 변경 0, 실제
 Firebase/project/bucket/Firestore/network/live 접근 0, emulator 실행 0, upload/write/read-back/

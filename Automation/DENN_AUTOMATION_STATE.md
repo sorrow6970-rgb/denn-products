@@ -10,7 +10,7 @@ state: READY_FOR_CODEX
 baseline_commit: c5f8384   # spec 072 closure + spec 073 contract documents committed by Claude Code
 candidate_commit: null   # document-only unit; no product commit exists
 verified_commit: 34cca25   # spec 072 local issue bundle, independently passed at 452cc1a
-origin_relation: "HEAD=origin after two fast-forward document pushes (c5f8384 Codex documents, investigation report commit); ahead/behind 0/0"
+origin_relation: "HEAD=origin at f1f5d20 after two fast-forward document pushes (c5f8384 Codex documents, f1f5d20 investigation report); ahead/behind 0/0"
 working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
 fix_round: 0
 max_fix_rounds: 3
@@ -25,7 +25,7 @@ progress_basis: "7 roadmap workstreams; management estimate, not spec-count arit
 
 ## 스펙 073 persistence boundary 조사 완료 (2026-08-24)
 
-- Codex 문서 8개를 문서 commit `c5f8384`로 fast-forward push한 뒤 읽기 전용 조사만 수행했다.
+- Codex 문서 8개를 문서 commit `c5f8384`로, 조사 보고서·기록을 `f1f5d20`으로 각각 fast-forward push했다.
   제품 코드/test/Rules/Firebase config/package/lockfile 변경 0, 실제 Firebase/network/emulator/deploy/
   UI 0. 실행한 것은 저장소 파일과 설치 SDK 타입/소스 읽기뿐이다.
 - 산출물: `docs/codex-claude-handoff/reviews/2026-08-24-space-v2-persistence-boundary-investigation.md`.
