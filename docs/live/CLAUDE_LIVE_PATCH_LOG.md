@@ -5231,3 +5231,43 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   제품 작업축 완료량은 아직 증가하지 않았다.
 - 상태 `READY_FOR_CLAUDE`, 다음 transition `CLAUDE_IMPLEMENTATION`. 자동화·반복 작업 생성 0,
   보호 대상 조작 0, staged 0이다.
+## 2026-08-24(2) - 스펙 072 local issue bundle orchestrator 구현
+
+- 기준 HEAD=origin `9a63da6`, ahead/behind 0/0. 먼저 Codex 문서 6개를 일반 fast-forward 문서 commit
+  `96422f8`로 push했고, 구현 commit은 `34cca25`다.
+- 제품 변경은 허용 신규 2파일뿐이다: `apps/admin/src/space-v2/issue-bundle.ts`와 같은 이름의 unit.
+  기존 spec064~071 제품 파일, package/lockfile/CSS/Firebase/Rules/config/UI 제품 diff는 **0**이다.
+- 계약대로 top-level snapshot(정확히 8 key, 각 property 1회 read) -> `createSpaceV2IssueIdentityPair`
+  1회 -> 성공 assetId를 더해 `prepareSpaceV2LocalIssueCandidate` 1회 순서다. 성공 경로 호출은
+  UUID assetId #1 -> UUID token #2 -> SHA #1/#2/#3 -> encrypt #1로 실측했다.
+- identity 실패는 `SPACE_V2_BUNDLE_IDENTITY_FAILED`이고 SHA/encryption/preparation 호출 0이다.
+  invalid port/첫 값/둘째 값/collision의 UUID 호출 예산 0/1/2회와 세 번째 호출 0을 유지한다.
+- preparation 실패는 `SPACE_V2_BUNDLE_PREPARATION_FAILED`이고 UUID 재생성·retry·fallback·
+  upload/create 0이다(호출은 정확히 2회에서 멈춘다). malformed top-level input은
+  `SPACE_V2_BUNDLE_INVALID_INPUT`이며 UUID/SHA/encryption 호출 0이다.
+- 성공 handle key는 `token`과 세 copy method 4개뿐이다. copy는 스펙 068 handle에 위임해 호출마다
+  fresh detached 값을 주고, 한 copy를 변경해도 다음 copy와 token은 변하지 않는다. token과 proof
+  objectPath의 assetId는 서로 다르며, 실제 Web Crypto 왕복으로 encrypted scene의 proof descriptor가
+  handle descriptor와 같음을 확인했다. 실패 결과는 exact `{ok, code}`뿐이고 child code·UUID·
+  password·path·bytes·message/stack 비노출을 assert했다.
+- 게이트: targeted **58/58**, space-v2+spaces **513/513**, admin typecheck PASS,
+  `node scripts/check.mjs` PASS(unit **2084/2084**), 전체 Chromium **151/151**,
+  `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`/debug 잔류 0.
+- bundle identity 유지: 고객 `index-6js4DafP.js` **322,018 bytes** /
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`, admin
+  `index-D0XOQpRL.js` **226,201 bytes** /
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`, admin CSS
+  `index-DJ_z3tK1.css` **9,146 bytes**. 두 production bundle에 스펙 072 식별자 **0건**이고
+  `App.tsx`/`main.tsx` import·call 0이다.
+- mutation 5종 전부 검출: assetId를 token으로 바꾸면 5건, top-level snapshot을 raw input pass-through로
+  바꾸면 1건, preparation 시작 전에 await를 넣으면 1건, exact-key 검사를 느슨하게 하면 2건,
+  세 copy를 캐시하면 3건이 실패한다.
+- ★ 범위 한계: 이 조합은 **local 준비만** 증명한다. Storage upload, Firestore create/reconciliation,
+  URL 발급, 실제 Firebase/Rules/network/UID/emulator/deploy와 viewer/admin UI는 계속
+  NOT IMPLEMENTED / NOT TESTED / 금지다. 난수 품질·collision freedom도 여전히 증명 대상이 아니다.
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여**(직전 77~80%에서 **+1%p**). 근거는 작업축 5에서
+  local 발급 준비 사슬이 identity까지 포함해 **하나의 handle로 닫힌 것**이다. 상승폭을 1%p로 제한한
+  이유는 upload/create/URL 발급과 viewer/UI(작업축 6·7)가 이번에도 전혀 움직이지 않았고, 실제
+  Firebase 경로는 아직 한 줄도 검증되지 않았기 때문이다.
+- 상태 `READY_FOR_CODEX`. 다음 스펙은 시작하지 않고 자동화·반복 작업도 만들지 않았다. 보호 대상
+  spec-018 PNG와 기존 Founder/user working-tree 변경은 restore/checkout/stage/commit하지 않았다.

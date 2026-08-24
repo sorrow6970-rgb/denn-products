@@ -146,3 +146,69 @@ wrapper는 catalog·selection·transform의 하위 검증, PNG 복사, password 
 ### QUESTIONS
 
 없음. 승인된 local preparation과 독립 identity pair만 조합하며 외부 효과는 계속 0이다.
+
+### DONE (Claude)
+
+상태: **IMPLEMENTED / READY_FOR_CODEX / LOCAL_ONLY / NO_NETWORK / NO_UI** (2026-08-24)
+
+- Codex 계약 문서 6개 → 문서 commit `96422f8`, 구현 → commit `34cca25`. 둘 다 일반 fast-forward push.
+  HEAD=origin `34cca25`, ahead/behind 0/0.
+- 제품 변경은 §3 허용 신규 2파일뿐: `apps/admin/src/space-v2/issue-bundle.ts`,
+  `apps/admin/src/space-v2/issue-bundle.test.ts`. 기존 spec064~071 제품 파일, package/lockfile/CSS/
+  Firebase/Rules/config/UI diff는 **0**이다.
+
+구현 요약 (§4):
+
+- top-level `exactSnapshot` 8 key(각 property 1회 read) → `createSpaceV2IssueIdentityPair(uuid)` 1회
+  → 성공 assetId를 snapshot에 더해 `prepareSpaceV2LocalIssueCandidate` 1회. preparation은 이 함수의
+  첫 await **이전에** 시작되므로 caller의 mid-flight 변경은 관측되지 않는다.
+- catalog/selection/transform 하위 검증, PNG 복사, password 규칙, SHA/crypto method snapshot은
+  전부 스펙 068에 위임했다. 재구현 0.
+- 성공 handle key는 `token` + copy 3개. copy는 068 handle 위임이라 호출마다 fresh detached 값이다.
+
+필수 테스트 (§5) — targeted **58/58**:
+
+1. 합성 UUID 2개 + deterministic SHA/crypto로 exact 순서 성공, token·copy 3개 제공 — PASS
+2. UUID method 1회 read / 2회 call, SHA 3, encrypt 1, receiver 보존(method-style source/crypto) — PASS
+3. malformed top-level input(extra·missing·null·undefined·primitive·array·non-enumerable·symbol·
+   throwing getter·revoked proxy·caller assetId) → `INVALID_INPUT`, UUID/SHA/encryption 0 — PASS
+4. identity invalid port 7종 / 첫 값 / 둘째 값 / collision → `IDENTITY_FAILED`, preparation 0,
+   UUID 예산 0/1/2회, 세 번째 호출 0 — PASS
+5. preparation input/port/proof/scene/document 실패 → `PREPARATION_FAILED`, UUID 정확히 2회
+   (재생성·retry 0), upload/create 0 — PASS
+6. 반환 Promise 직후 catalog/selection/transform/password/pngBytes 변경 → 최초 snapshot만 사용 — PASS
+7. token ≠ proof objectPath UUID, 실제 Web Crypto 왕복으로 encrypted scene proof descriptor =
+   handle descriptor, 암호문에 token 없음 — PASS
+8. 각 copy 변경 후에도 다음 copy와 token 불변 — PASS
+9. 실패 결과 exact `{ok, code}`, child code·UUID·password·path·message/stack 비노출 — PASS
+10. fetch/Firebase/Storage/Firestore/DOM/Canvas/Date/global random/global crypto/console 호출 0 — PASS
+11. `App.tsx`/`main.tsx` import·call 0, production bundle identity 불변 — PASS
+
+검증 게이트 (§6):
+
+- targeted **58/58**, 신규+spec068~071+기존 V2 unit+`packages/spaces` **513/513**
+- admin typecheck PASS, `node scripts/check.mjs` PASS(unit **2084/2084**)
+- 전체 Chromium E2E **151/151**
+- 고객 `index-6js4DafP.js` **322,018 bytes** /
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159` — 일치
+- admin `index-D0XOQpRL.js` **226,201 bytes** /
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC` — 일치
+- admin CSS `index-DJ_z3tK1.css` **9,146 bytes** — 일치
+- 두 production bundle에 스펙 072 module/API/error 식별자 **0건**
+- `git diff --check` PASS, exact paths, package/lockfile/Rules/config diff 0
+- 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`/debug 잔류 0
+- 보호 spec-018 PNG는 E2E가 다시 썼고 restore/checkout/stage/commit **하지 않았다**
+
+mutation(전부 검출): assetId를 token으로 교체 **5건**, top-level snapshot을 raw input pass-through로
+교체 **1건**, preparation 시작 전 await 삽입 **1건**, exact-key 검사 완화 **2건**, 세 copy 캐시 **3건**.
+
+계속 금지 (§7) 확인: Storage upload/read/delete, Firestore create/read-back/reconciliation, URL 발급,
+Firebase adapter/Rules/config/env, 실제 UID/project/bucket/network/emulator/deploy, `App.tsx`/route/
+admin·customer UI/CSS, 기존 spec064~071 변경, package/lockfile/dependency, retry/merge/fallback —
+전부 **0**이다. §8 STOP 조건에 해당한 항목은 없었다.
+
+★ 범위 한계: 이 조합은 local 준비만 증명한다. upload/create/URL 발급과 실제 Firebase 경로는 한 줄도
+검증되지 않았고, 난수 품질·collision freedom도 여전히 증명 대상이 아니다.
+
+전체 리빌드 진행도: **78~81% 완료 / 19~22% 잔여**(직전 77~80%에서 +1%p).
+

@@ -20,20 +20,30 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CLAUDE` - 스펙 072 local issue bundle 계약이 준비됐다.**
+상태: **`READY_FOR_CODEX` - 스펙 072 local issue bundle이 구현·검증됐다.**
 
-사용자의 수동 재개 지시에 따라 `docs/rebuild/specs/072-space-v2-local-issue-bundle-orchestrator.md`와
-`docs/handoff/2026-08-24-spec-072-space-v2-local-issue-bundle-orchestrator-handoff.md`를 작성했다.
+Codex 계약 문서 6개를 문서 commit `96422f8`로, 구현을 `34cca25`로 각각 일반 fast-forward push했다.
+HEAD=origin `34cca25`, ahead/behind 0/0이다.
 
-스펙 072는 spec071의 독립 assetId·token pair를 먼저 만들고 assetId를 spec068 snapshot-safe local
-preparation에 전달한다. 성공은 token과 fresh proof descriptor/upload bytes/encrypted document copies만
-제공한다. 신규 `issue-bundle.ts`와 unit 2개 외 제품 변경은 허용하지 않는다.
+제품 변경은 허용 신규 2파일(`apps/admin/src/space-v2/issue-bundle.ts`와 같은 이름의 unit)뿐이고
+기존 spec064~071 제품 파일, package/lockfile/CSS/Firebase/Rules/config/UI diff는 0이다. 실측 순서는
+top-level snapshot -> UUID assetId #1 -> UUID token #2 -> SHA #1/#2/#3 -> encrypt #1이며, identity
+실패는 `SPACE_V2_BUNDLE_IDENTITY_FAILED`로 preparation/SHA/encryption 0, preparation 실패는
+`SPACE_V2_BUNDLE_PREPARATION_FAILED`로 UUID 재생성·retry·upload/create 0이다.
 
-Storage upload, Firestore create/reconciliation, 실제 Firebase/Rules/network/emulator/deploy와 UI는
-계속 NOT IMPLEMENTED / NOT TESTED / 금지다. 전체 리빌드 진행도는 **77~80% 완료 / 20~23% 잔여로
-변동 없다**. 계약만 준비됐으므로 제품 작업축 완료량은 아직 증가하지 않았다.
+게이트: targeted 58/58, space-v2+spaces 513/513, admin typecheck, `node scripts/check.mjs`
+PASS(unit 2084/2084), 전체 Chromium 151/151, 고객 `A9360EFF…E55E8159` 322,018 bytes /
+admin `B6E90475…A1F1DC` 226,201 bytes / admin CSS 9,146 bytes, production bundle 신규 식별자 0,
+`git diff --check` PASS, 포트/temp/staged 잔류 0. mutation 5종 전부 검출됐다.
 
-> 이전 상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 071 DONE / CODEX_PASSED.**
+Storage upload, Firestore create/reconciliation, URL 발급, 실제 Firebase/Rules/network/emulator/deploy와
+viewer/admin UI는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다. 전체 리빌드 진행도는
+**78~81% 완료 / 19~22% 잔여**(직전 77~80%에서 +1%p)다. 근거는 local 발급 준비 사슬이 identity까지
+포함해 하나의 handle로 닫힌 것이며, 작업축 6·7이 불변이라 상승폭을 1%p로 제한했다.
+
+다음은 Codex 독립 검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다.
+
+> 이전 상태: **`READY_FOR_CLAUDE` - 스펙 072 계약 준비 완료.**
 
 ## 스펙 071 종료 기록
 

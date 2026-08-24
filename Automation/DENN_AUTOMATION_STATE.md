@@ -5,23 +5,41 @@ updated_at: 2026-08-24
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-071-space-v2-local-issue-identity-pair   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # CONTRACT READY, LOCAL_ONLY, NO_NETWORK, NO_UI
-state: READY_FOR_CLAUDE
-baseline_commit: 9a63da6   # spec 071 closure / spec 072 contract baseline
-candidate_commit: null
+active_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # IMPLEMENTED, AWAITING CODEX REVIEW, LOCAL_ONLY, NO_NETWORK, NO_UI
+state: READY_FOR_CODEX
+baseline_commit: 96422f8   # spec 072 contract documents committed by Claude Code
+candidate_commit: 34cca25   # spec 072 local issue bundle orchestrator
 verified_commit: eb3df01   # spec 071 local issue identity pair, independently passed at 0d4aac4
-origin_relation: "HEAD=origin at 9a63da6 before the uncommitted Codex spec 072 contract documents; ahead/behind 0/0"
-working_tree: "Codex spec 072 contract/handoff/state documents plus pre-existing protected Founder/user changes and spec-018 PNGs; staged 0"
+origin_relation: "HEAD=origin at 34cca25 after two fast-forward pushes (96422f8 docs, 34cca25 product); ahead/behind 0/0"
+working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_IMPLEMENTATION
+next_transition: CODEX_INDEPENDENT_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 77-80% complete; 20-23% remaining to production cutover"
+overall_rebuild_progress: "estimated 78-81% complete; 19-22% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 072 local issue bundle 구현 완료 (2026-08-24)
+
+- Codex 계약 문서 6개를 문서 commit `96422f8`로, 구현을 `34cca25`로 각각 일반 fast-forward push했다.
+- 제품 변경은 허용 신규 2파일(`apps/admin/src/space-v2/issue-bundle.ts`와 unit)뿐이고 기존
+  spec064~071 제품 파일, package/lockfile/CSS/Firebase/Rules/config/UI diff는 0이다.
+- 순서 실측: top-level snapshot -> UUID assetId #1 -> UUID token #2 -> SHA #1/#2/#3 -> encrypt #1.
+  identity 실패는 `IDENTITY_FAILED`로 preparation/SHA/encryption 0, preparation 실패는
+  `PREPARATION_FAILED`로 UUID 재생성·retry·upload/create 0이다.
+- 게이트: targeted 58/58, space-v2+spaces 513/513, admin typecheck, `node scripts/check.mjs`
+  PASS(unit 2084/2084), 전체 Chromium 151/151, bundle identity 유지(고객 322,018 / admin 226,201 /
+  CSS 9,146), 신규 식별자 0, `git diff --check` PASS, 포트/temp/staged 잔류 0. mutation 5종 전부 검출.
+- upload, Firestore create/reconciliation, URL 발급, 실제 Firebase/Rules/network/emulator/deploy와
+  viewer/admin UI는 계속 NOT IMPLEMENTED / NOT TESTED / 금지다.
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여**(직전 77~80%에서 +1%p). 근거는 local 발급 준비
+  사슬이 identity까지 포함해 하나의 handle로 닫힌 것이고, 작업축 6·7은 이번에도 불변이라 상승폭을
+  1%p로 제한했다.
+- 상태 `READY_FOR_CODEX`, 다음 transition `CODEX_INDEPENDENT_REVIEW`. 다음 스펙은 시작하지 않았다.
 
 ## 스펙 072 local issue bundle 계약 준비 (2026-08-24)
 

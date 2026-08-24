@@ -1,21 +1,61 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **CONTRACT READY / LOCAL_ONLY / NO_NETWORK / NO_UI**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **IMPLEMENTED / AWAITING CODEX REVIEW / LOCAL_ONLY / NO_NETWORK / NO_UI**
 completed_unit: `spec-071-space-v2-local-issue-identity-pair` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO_NETWORK / NO_UI**
-기준: HEAD=origin **`9a63da6`**, ahead/behind **0/0**. 스펙 071 구현 **`eb3df01`**.
-Codex 스펙 072 계약 문서는 working tree에 있고 staged 0이다.
-next_transition: **`CLAUDE_IMPLEMENTATION`**
+기준: HEAD=origin **`34cca25`**, ahead/behind **0/0**. 스펙 072 문서 **`96422f8`**, 구현 **`34cca25`**.
+working tree에는 기존 Founder/user 변경과 E2E가 다시 쓴 보호 spec-018 PNG만 남아 있고 staged 0이다.
+next_transition: **`CODEX_INDEPENDENT_REVIEW`**
 
 ## Claude Code 전달용 다음 지시문
 
-아래 문장을 Claude Code에 그대로 전달한다.
+스펙 072 구현이 끝나 상태는 `READY_FOR_CODEX`다. 다음 실행 지시문은 **Codex 독립 검수 종료 시점에**
+이 자리에 다시 작성된다. Claude Code는 그때까지 새 스펙·구현·자동화·반복 작업을 시작하지 않는다.
 
-```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/072-space-v2-local-issue-bundle-orchestrator.md를 전부 읽고 스펙 072의 명시된 local-only 범위만 구현·검증해. 먼저 현재 Codex 문서 변경 6개를 일반 fast-forward 문서 commit으로 push한 뒤, 보호 대상과 기존 Founder/user working tree 변경 및 기존 spec064~071 제품 파일은 건드리지 마. 허용 제품 파일은 신규 apps/admin/src/space-v2/issue-bundle.ts와 해당 unit 두 개뿐이다. Storage upload, Firestore create/reconciliation, 실제 Firebase/network/Rules/emulator/deploy 또는 UI로 확장하거나 자동화·반복 작업을 만들지 마. 완료 후 제품 commit과 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를 실제 상태에 맞춘 뒤 전체 리빌드 진행률·잔여율·변동 근거까지 보고해.
-```
+> 직전 지시문(스펙 072 구현, 수행 완료 — 기록):
+>
+> ```text
+> C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/072-space-v2-local-issue-bundle-orchestrator.md를 전부 읽고 스펙 072의 명시된 local-only 범위만 구현·검증해. 먼저 현재 Codex 문서 변경 6개를 일반 fast-forward 문서 commit으로 push한 뒤, 보호 대상과 기존 Founder/user working tree 변경 및 기존 spec064~071 제품 파일은 건드리지 마. 허용 제품 파일은 신규 apps/admin/src/space-v2/issue-bundle.ts와 해당 unit 두 개뿐이다. Storage upload, Firestore create/reconciliation, 실제 Firebase/network/Rules/emulator/deploy 또는 UI로 확장하거나 자동화·반복 작업을 만들지 마. 완료 후 제품 commit과 기록 commit을 일반 fast-forward push하고 STATE/NEXT/CURRENT/live log를 실제 상태에 맞춘 뒤 전체 리빌드 진행률·잔여율·변동 근거까지 보고해.
+> ```
 
-## ★ 스펙 072 — local issue bundle 계약
+## ★ 스펙 072 — 구현 완료 기록
+
+문서 commit `96422f8`(Codex 계약·handoff·STATE/NEXT/CURRENT/live log), 구현 commit `34cca25`. 제품
+변경은 허용 신규 2파일(`apps/admin/src/space-v2/issue-bundle.ts`와 같은 이름의 unit)뿐이고 기존
+spec064~071 제품 파일, package/lockfile/CSS/Firebase/Rules/config/UI diff는 **0**이다.
+
+- 순서: top-level snapshot(정확히 8 key, 각 property 1회 read) → `createSpaceV2IssueIdentityPair` 1회
+  → 성공 assetId를 더해 `prepareSpaceV2LocalIssueCandidate` 1회. 성공 경로 실측 호출은
+  UUID assetId **#1** → UUID token **#2** → SHA **#1/#2/#3** → encrypt **#1**이다.
+- malformed top-level input은 `SPACE_V2_BUNDLE_INVALID_INPUT`이고 UUID/SHA/encryption **0**.
+  identity 실패(invalid port·첫 값·둘째 값·collision)는 모두 `SPACE_V2_BUNDLE_IDENTITY_FAILED`이고
+  preparation/SHA/encryption **0**, UUID 예산 **0/1/2회**·세 번째 호출 **0**을 유지한다.
+- preparation 실패(input·port·proof·scene·document)는 모두 `SPACE_V2_BUNDLE_PREPARATION_FAILED`이고
+  UUID는 정확히 2회에서 멈춘다(재생성·retry·fallback·upload/create **0**).
+- 성공 handle key는 `token` + copy 3개뿐. copy는 스펙 068 handle에 위임해 호출마다 fresh detached
+  값을 주고, 한 copy를 변경해도 다음 copy와 token은 불변이다. token ≠ proof objectPath의 assetId이며
+  실제 Web Crypto 왕복으로 encrypted scene의 proof descriptor = handle descriptor를 확인했다.
+- 실패 결과는 exact `{ok, code}`뿐이고 child code·UUID 값/일부·password·path·bytes·ciphertext·
+  message/stack **0**이다.
+- ★ 범위 한계: 이 조합은 **local 준비만** 증명한다. upload/create/URL 발급과 실제 Firebase 경로는
+  한 줄도 검증되지 않았고, 난수 품질·collision freedom도 여전히 증명 대상이 아니다.
+
+게이트: targeted **58/58**, space-v2+spaces **513/513**, admin typecheck, `node scripts/check.mjs`
+PASS(unit **2084/2084**), 전체 Chromium **151/151**, `git diff --check` PASS, 포트 4183/4184/4185/
+8080/9099/9199 LISTENING 0, `denn-e2e-*`/debug 잔류 0. bundle identity 유지 — 고객
+`index-6js4DafP.js` **322,018** / admin `index-D0XOQpRL.js` **226,201** / admin CSS
+`index-DJ_z3tK1.css` **9,146**, 두 bundle에 스펙 072 식별자 **0건**, `App.tsx`/`main.tsx` import·call 0.
+mutation: assetId↔token 교체 **5건**, top-level snapshot을 raw pass-through로 바꾸면 **1건**,
+preparation 시작 전 await 삽입 **1건**, exact-key 검사 완화 **2건**, 세 copy 캐시 **3건** 실패.
+
+진행도 보고: **78~81% 진행 / 19~22% 잔여**(직전 77~80%에서 **+1%p**). 근거는 작업축 5의 local 발급
+준비 사슬이 identity까지 포함해 하나의 handle로 닫힌 것이다. upload/create/URL 발급과 viewer/UI
+(작업축 6·7)가 전혀 움직이지 않아 상승폭을 1%p로 제한했다.
+
+다음은 Codex 독립 검수다. 새 스펙은 시작하지 않았고 자동화·반복 작업도 만들지 않았다. 보호 대상
+spec-018 PNG와 기존 Founder/user working-tree 변경은 restore/checkout/stage/commit하지 않았다.
+
+## ★ 스펙 072 — local issue bundle 원래 계약 (기록)
 
 - spec071 identity pair를 한 번 생성하고 assetId를 spec068 preparation에 전달한다.
 - 정상 순서는 UUID 2회 → SHA 3회 → encrypt 1회다. identity 실패면 preparation 0, preparation 실패면
