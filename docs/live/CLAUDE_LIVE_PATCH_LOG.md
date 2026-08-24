@@ -5696,3 +5696,14 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   Rules/emulator, 다음 스펙도 시작하지 않는다.
 - 제품 코드/test/Rules/config/package/lockfile 변경과 emulator/live 실행은 0. 전체 리빌드 진행도는
   **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다.
+
+## 2026-08-24(12) - Founder 승인 · 스펙 073 문서 보완 라운드 4 예외
+
+- Founder가 이 대화에서 **`스펙 073 문서 보완 라운드 4 예외 승인`**을 명시했다.
+- 승인 기록 직전 기준 `HEAD=origin=dc6fe11`, ahead/behind 0/0.
+- 보완 한도 3/3을 넘는 이번 한 번의 문서 보완만 예외로 허용한다. 범위는 Codex 최종 재검수의
+  Storage Rules metadata 근거 등급 정정과 관련 6개 문서 동기화뿐이다.
+- 상태 `CORRECTION_REQUIRED`, fix round 4(Founder exception), 다음 transition
+  `CLAUDE_DOCUMENT_CORRECTION_ROUND_4`.
+- 제품 코드/test/Rules/config/package/lockfile, emulator/live, JJ-1~JJ-7 선택, 다음 구현 스펙은 계속
+  금지다. 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다.

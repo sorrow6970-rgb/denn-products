@@ -20,7 +20,16 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`BLOCKED` - 스펙 073 Codex 최종 재검수에서 CORRECTION_REQUIRED, 보완 한도 3/3 도달.**
+상태: **`CORRECTION_REQUIRED` - Founder가 스펙 073 문서 보완 라운드 4 예외를 승인했다.**
+
+Founder는 이 대화에서 **`스펙 073 문서 보완 라운드 4 예외 승인`**을 명시했다. 실행 기준은 승인 기록
+직전 `HEAD=origin=dc6fe11`, ahead/behind 0/0이다. 이번 예외는 아래 Storage Rules metadata 근거 등급
+정정과 관련 문서 동기화 한 번만 허용한다. 다음 transition은 `CLAUDE_DOCUMENT_CORRECTION_ROUND_4`다.
+
+제품 코드/test/Rules/config/package/lockfile, emulator/live, JJ-1~JJ-7 선택과 다음 구현 스펙은 계속
+금지다. Claude Code 실행 지시문은 `Automation/NEXT_CLAUDE_PROMPT.md` 상단에 확정본으로 기록했다.
+
+> 예외 승인 전 Codex STOP 기록:
 
 검수 기준 `HEAD=origin=9707233`, ahead/behind 0/0이다. 라운드 3의 변경 범위(허용 문서 6개),
 access-call 산술, metadata-only update 차단, 현재 default-deny와 목표 public-read 구분은 수용한다.

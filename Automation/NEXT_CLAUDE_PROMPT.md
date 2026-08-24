@@ -1,25 +1,23 @@
 # NEXT CLAUDE PROMPT
 
-상태: `BLOCKED`
-active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **CODEX CORRECTION_REQUIRED AFTER ROUND 3 / MAX FIX ROUNDS REACHED / DOCUMENT ONLY / READ ONLY**
+상태: `CORRECTION_REQUIRED`
+active_unit: `spec-073-space-v2-persistence-boundary-investigation` — **FOUNDER-AUTHORIZED CORRECTION ROUND 4 / DOCUMENT ONLY / READ ONLY**
 completed_unit: `spec-072-space-v2-local-issue-bundle-orchestrator` — **DONE / CODEX_PASSED / LOCAL_ONLY / NO NETWORK / NO UI**
 기준: 보완 직전 관측 HEAD=origin **`6b3bcfc`**(라운드 2 내용 commit), ahead/behind **0/0**. 라운드 3도 **내용 commit 1개만** 추가하고 self-hash bookkeeping commit을 만들지 않았다 — push 후 `HEAD=origin`·ahead/behind 0/0을 검증했고 해시 정본은 git 이력·세션 보고다(**commit은 자기 해시를 내용에 담을 수 없다**).
 이력: `f1f5d20`(초판 내용) → `534c26f`(bookkeeping) → `63a1dec`(라운드 1 내용) → `2dd97c4`(bookkeeping) → `6b3bcfc`(라운드 2 내용) → 라운드 3 내용 commit.
 working tree에는 기존 Founder/user 보호 변경만 남고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
-fix_round: **3 / 3 — 모두 사용, 라운드 4 미승인**
-next_transition: **`FOUNDER_AUTHORIZE_SPEC073_CORRECTION_ROUND_4`**
+fix_round: **4 — Founder 예외 승인으로 이번 한 번만 허용**
+next_transition: **`CLAUDE_DOCUMENT_CORRECTION_ROUND_4`**
 
 ## Claude Code 전달용 다음 지시문
 
-**지금은 아래 지시문을 Claude Code에 전달하지 않는다.** Codex 최종 재검수에서 공식 Firebase 문서와
-충돌하는 잔여 결함 1건을 확인했지만, `fix_round` 3/3을 모두 사용했다. Founder가 **스펙 073 문서 보완
-라운드 4 예외**를 명시적으로 승인한 뒤에만 아래 초안을 실행 지시문으로 사용한다. 승인 전에는
-JJ-1~JJ-7 선택, 제품 구현, Rules 변경, emulator 실행, 새 스펙과 자동화·반복 작업을 시작하지 않는다.
+Founder가 이 대화에서 **`스펙 073 문서 보완 라운드 4 예외 승인`**을 명시했다. 아래 지시문을
+Claude Code에 그대로 전달한다.
 
-> 라운드 4 예외 승인 후 전달할 지시문 초안:
+> Claude Code 전달용 실행 지시문:
 >
 > ```text
-> C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md의 최신 CODEX RE-REVIEW를 전부 읽고, Founder가 예외 승인한 스펙 073 문서 보완 라운드 4의 한 가지 근거 정정만 수행해. 기준은 rebuild/modern-studio HEAD=origin 9707233, ahead/behind 0/0이다. 제품 구현과 Founder JJ-1~JJ-7 선택은 시작하지 마.
+> C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 docs/rebuild/specs/073-space-v2-persistence-boundary-investigation.md의 최신 CODEX RE-REVIEW 및 Founder 라운드 4 예외 승인을 전부 읽고, 스펙 073 문서 보완 라운드 4의 한 가지 근거 정정만 수행해. 기준은 rebuild/modern-studio HEAD=origin dc6fe11, ahead/behind 0/0이다. 제품 구현과 Founder JJ-1~JJ-7 선택은 시작하지 마.
 >
 > 조사 보고서가 Storage Rules의 request.resource.metadata/resource.metadata 지원을 UNCONFIRMED로 둔 주장을 폐기해. Firebase 공식 Use conditions in Firebase Cloud Storage Security Rules의 Resource Evaluation은 resource.metadata를 developer-specified custom metadata map으로 명시하고, write에서 request.resource로 새 metadata를 검사할 수 있다고 명시한다: https://firebase.google.com/docs/storage/security/rules-conditions . 따라서 (c2) customMetadata pointer의 Rules metadata 표면 자체는 OFFICIALLY SUPPORTED/정적 근거 확인으로 분류해.
 >

@@ -481,3 +481,15 @@ Firebase/IAM/live `NOT TESTED`, (c1)/(c2) 모두 확정 orphan 미증명과 삭�
 `FOUNDER_AUTHORIZE_SPEC073_CORRECTION_ROUND_4`다. 제품 코드/test/Rules/config/package/lockfile,
 emulator/live, JJ-1~JJ-7, 다음 구현 스펙은 계속 금지다. 진행도는 **78~81% 완료 / 19~22% 잔여 —
 변동 없음**이다.
+
+### FOUNDER APPROVAL — 문서 보완 라운드 4 예외 (2026-08-24)
+
+Founder가 이 대화에서 **`스펙 073 문서 보완 라운드 4 예외 승인`**을 명시했다. 자동 보완 한도 3/3을
+넘는 이번 한 번의 **문서 전용** 보완만 예외로 허용한다.
+
+- 기준: `HEAD=origin=dc6fe11`, ahead/behind 0/0.
+- 허용: 위 Codex 재검수의 Storage Rules metadata 근거 등급 정정, 조사 보고서·이 spec·STATE·NEXT·
+  CURRENT·live log 6개 동기화, 문서 diff 검증, 일반 fast-forward commit/push.
+- 금지: 제품 코드/test/Rules/config/package/lockfile, emulator/live, UID/URL/UI, JJ-1~JJ-7 선택,
+  다음 구현 스펙, 자동화·반복 작업.
+- 다음 transition: `CLAUDE_DOCUMENT_CORRECTION_ROUND_4`.

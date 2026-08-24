@@ -5,16 +5,16 @@ updated_at: 2026-08-24
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-072-space-v2-local-issue-bundle-orchestrator   # DONE, CODEX_PASSED, LOCAL_ONLY, NO_NETWORK, NO_UI
-active_unit: spec-073-space-v2-persistence-boundary-investigation   # CODEX CORRECTION_REQUIRED AFTER ROUND 3, MAX FIX ROUNDS REACHED, DOCUMENT ONLY, READ ONLY
-state: BLOCKED
+active_unit: spec-073-space-v2-persistence-boundary-investigation   # FOUNDER-AUTHORIZED CORRECTION ROUND 4, DOCUMENT ONLY, READ ONLY
+state: CORRECTION_REQUIRED
 baseline_commit: c5f8384   # spec 072 closure + spec 073 contract documents committed by Claude Code
 candidate_commit: null   # document-only unit; no product commit exists
 verified_commit: 34cca25   # spec 072 local issue bundle, independently passed at 452cc1a
 origin_relation: "pre-round-3 observation: HEAD=origin at round-2 content commit 6b3bcfc, ahead/behind 0/0. Round 3 adds ONE content commit and no self-hash bookkeeping commit; HEAD=origin and ahead/behind 0/0 are re-verified after push and reported in the session, because a commit cannot contain its own hash"
 working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
-fix_round: 3   # 3/3 consumed; round 4 is not authorized
+fix_round: 4   # exceptional round explicitly authorized by Founder after 3/3 was consumed
 max_fix_rounds: 3
-next_transition: FOUNDER_AUTHORIZE_SPEC073_CORRECTION_ROUND_4
+next_transition: CLAUDE_DOCUMENT_CORRECTION_ROUND_4
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
 push_policy: fast-forward-only
@@ -22,6 +22,15 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 78-81% complete; 19-22% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Founder 승인 — 스펙 073 문서 보완 라운드 4 예외 (2026-08-24)
+
+- Founder가 이 대화에서 **`스펙 073 문서 보완 라운드 4 예외 승인`**을 명시했다.
+- 자동 보완 한도 3/3을 넘는 이번 한 번의 문서 보완만 예외로 허용한다. 허용 범위는 Codex 최종
+  재검수에서 확인한 Storage Rules metadata 근거 등급 정정과 관련 6개 문서 동기화뿐이다.
+- 제품 코드/test/Rules/config/package/lockfile, emulator/live, JJ-1~JJ-7 선택, 다음 구현 스펙은 계속
+  금지한다. 다음 transition은 `CLAUDE_DOCUMENT_CORRECTION_ROUND_4`다.
+- 실행 기준은 승인 기록 직전 `HEAD=origin=dc6fe11`, ahead/behind 0/0이다.
 
 ## 스펙 073 Codex 최종 재검수 — CORRECTION_REQUIRED / 자동 보완 한도 도달 (2026-08-24)
 
