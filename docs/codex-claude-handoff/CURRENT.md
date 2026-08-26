@@ -24,7 +24,24 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` - 스펙 077 composition readiness 문서 조사 완료, LL-1~LL-6 대기.**
+상태: **`READY_FOR_CLAUDE` - LL-1~LL-6 승인, 스펙 078 local V2 viewer replay 구현 대기.**
+
+Founder가 2026-08-26 이 대화에서
+**`LL-1=A, LL-2=A, LL-3=A, LL-4=A, LL-5=A, LL-6=A`**를 승인했다. 결정 정본은
+`docs/codex-claude-handoff/decisions/2026-08-26-space-v2-composition-readiness-decisions.md`다.
+
+다음 Claude Code 단위는 `docs/rebuild/specs/078-space-v2-local-viewer-replay-pipeline.md`다. V1과 분리된
+V2 opener가 decrypt/strict scene/evidence digest를 검증하고, production에 import하지 않는 mockup V2
+replay controller가 injected proof reader/PNG decoder로 byteLength/SHA-256/intrinsic dimensions를 확인한
+뒤 closed evidence frame plan을 만든다.
+
+`App.tsx`, 기존 V1 controller/password gate, React/UI/CSS, Firebase asset SDK/network, admin issuer는
+범위 밖이다. 실제 UI/UX는 사용자 지시에 따라 후속 Claude Code 스펙에서 수행한다. 제품 구현은 아직
+시작하지 않았으며 next transition은 `CLAUDE_SPEC_078_IMPLEMENTATION`이다.
+
+전체 진행도는 **80~83% 완료 / 17~20% 잔여**로 유지한다.
+
+> 스펙 077 readiness 조사 상태:
 
 기준 `HEAD=origin=4ef385b`, ahead/behind 0/0에서 스펙 077 문서 조사를 시작했다. local source audit로
 다음을 확인했다.
@@ -35,8 +52,8 @@
 - 따라서 admin issue UI 선행 활성화는 저장되지만 customer가 열 수 없는 link를 만들 수 있다.
 
 권장 순서는 customer V2 non-UI open/integrity/replay → customer UI → admin frozen issue session → admin
-UI다. 실제 UI/UX는 사용자 지시에 따라 Claude Code가 담당한다. Founder LL-1~LL-6 결정 전 제품 구현과
-Claude 실행 지시는 시작하지 않는다. 조사 정본은
+UI다. 실제 UI/UX는 사용자 지시에 따라 Claude Code가 담당한다. LL-1~LL-6 결정 전에는 제품 구현을
+시작하지 않는 상태였으며 현재는 위 승인과 스펙 078로 해소됐다. 조사 정본은
 `docs/codex-claude-handoff/reviews/2026-08-26-space-v2-end-to-end-composition-readiness.md`다.
 
 이번 단위는 문서 전용이다. unit/E2E/emulator/network 실행 0, 제품·Rules·config/package/lockfile 변경

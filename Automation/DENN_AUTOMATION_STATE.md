@@ -5,23 +5,34 @@ updated_at: 2026-08-26
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-076-space-v2-sdk-adapter-emulator   # DONE, LOCAL_VERIFIED, FOUNDER_E2E_EXCEPTION
-active_unit: spec-077-space-v2-end-to-end-composition-readiness
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 4ef385b   # HEAD=origin before spec 077 document investigation
-candidate_commit: pending   # document-only readiness commit; no self-hash bookkeeping commit
-verified_commit: null   # LL-1~LL-6 are not decided and product implementation has not started
-origin_relation: "investigation starts from HEAD=origin=4ef385b, ahead/behind 0/0"
-working_tree: "three new spec 077 documents plus pre-existing protected Founder/user changes; product code/Rules/config diff 0"
+active_unit: spec-078-space-v2-local-viewer-replay-pipeline
+state: READY_FOR_CLAUDE
+baseline_commit: ed41170   # HEAD=origin at LL-1~LL-6 approval and spec 078 drafting start
+candidate_commit: pending   # decision/spec/handoff content commit; no self-hash bookkeeping commit
+verified_commit: null   # product implementation has not started
+origin_relation: "spec 078 drafting starts from HEAD=origin=ed41170, ahead/behind 0/0"
+working_tree: "spec 078 decision/spec/handoff plus four state documents and pre-existing protected Founder/user changes; product diff 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_LL_1_LL_6_DECISION
+next_transition: CLAUDE_SPEC_078_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-commit_owner: Codex document-only readiness review; no product implementation
+commit_owner: Codex spec authoring; Claude Code implements spec 078
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 80-83% complete; 17-20% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Founder LL-1~LL-6 승인 · 스펙 078 실행 계약 (2026-08-26)
+
+- Founder가 `LL-1=A` ~ `LL-6=A`를 승인했다. customer V2 viewer 선행, frozen proof source, C5 catalog
+  snapshot, 기존 admin app/Auth, confirmed link/password 분리와 첫 non-UI viewer 단위가 확정됐다.
+- 다음 Claude Code 단위는 별도 V2 opener와 local replay controller다. decrypt/strict scene/evidence digest,
+  proof byteLength/SHA-256/intrinsic size, closed evidence frame plan을 injected fake로 검증한다.
+- `App.tsx`, V1 controller, React/UI/CSS, Firebase asset SDK/network, admin issuer는 변경하지 않는다.
+- 실제 UI/UX 단계는 후속 스펙에서 Claude Code가 담당한다. 이번 스펙은 그 전에 viewer core를 닫는다.
+- 제품 구현은 아직 시작하지 않았다. 다음 transition `CLAUDE_SPEC_078_IMPLEMENTATION`.
+- 진행도는 **80~83% 완료 / 17~20% 잔여**로 유지한다.
 
 ## 스펙 077 Space V2 end-to-end composition readiness (2026-08-26)
 

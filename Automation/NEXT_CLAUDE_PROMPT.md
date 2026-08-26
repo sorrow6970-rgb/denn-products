@@ -1,33 +1,56 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `spec-077-space-v2-end-to-end-composition-readiness`
+상태: `READY_FOR_CLAUDE`
+active_unit: `spec-078-space-v2-local-viewer-replay-pipeline`
 completed_unit: `spec-076-space-v2-sdk-adapter-emulator` — **DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION**
-기준: `HEAD=origin=4ef385b`, ahead/behind **0/0**에서 스펙 077 문서 조사를 시작했다. 기존
+기준: `HEAD=origin=ed41170`, ahead/behind **0/0**에서 LL-1~LL-6 승인과 스펙 078 작성을 시작했다. 기존
 Founder/user 보호 변경은 건드리지 않았다.
-검증: local source와 spec 043·064~076 대조. 문서 전용이라 unit/E2E/emulator는 **NOT RUN**.
+검증: 결정·계약 문서 전용. 제품 구현과 unit/E2E/emulator는 아직 **NOT STARTED**.
 fix_round: **0**
-next_transition: **`FOUNDER_LL_1_LL_6_DECISION`**
+next_transition: **`CLAUDE_SPEC_078_IMPLEMENTATION`**
 
 ## 현재 결과·다음 지시문
 
-스펙 077 readiness 조사 결과 customer production viewer는 V1 opener만 사용하고 V2를 열지 않으며,
-admin production UI에는 V2 bundle 입력을 하나의 frozen draft로 소유하는 session이 없다. admin issue
-UI를 먼저 활성화하면 열리지 않는 link를 만들 수 있으므로 customer V2 open/replay 선행이 권장된다.
-
-Founder LL-1~LL-6이 아직 선택되지 않았으므로 **Claude Code 실행 지시문은 아직 없다.** 사용자는 다음
-결정만 회신한다:
+Founder가 **`LL-1=A, LL-2=A, LL-3=A, LL-4=A, LL-5=A, LL-6=A`**를 승인했다. 아래 지시문을
+Claude Code에 그대로 전달한다.
 
 ```text
-LL-1=A, LL-2=A, LL-3=A, LL-4=A, LL-5=A, LL-6=A 승인
+C:\repo\denn-products에서 docs/rebuild/specs/078-space-v2-local-viewer-replay-pipeline.md를 정본으로 읽고
+스펙 078만 구현해. 시작 전에 Automation/DENN_AUTOMATION_STATE.md,
+docs/codex-claude-handoff/CURRENT.md,
+docs/codex-claude-handoff/decisions/2026-08-26-space-v2-composition-readiness-decisions.md와
+docs/handoff/2026-08-26-spec-078-space-v2-local-viewer-replay-handoff.md를 읽고, 현재
+rebuild/modern-studio가 HEAD=origin 및 ahead/behind 0/0인지 확인해.
+
+허용 범위는 신규 packages/spaces/src/open-v2.ts와 test, packages/spaces/src/index.ts의 V2 opener 명시
+export, 신규 apps/mockup/src/space-v2/replay-controller.ts와 test다. 필요한 경우 같은 space-v2 아래
+proof-byte 순수 module/test 한 쌍만 추가할 수 있다.
+
+V1을 변경하지 않는 별도 V2 opener에서 exact document validation → password validation → decrypt 1회 →
+strict scene read → evidence digest verify 1회를 구현해. local replay controller는 injected proof-byte reader,
+SHA-256 port, PNG decoder와 buildFrameProductPlan을 사용해 content type, byteLength, proof digest, intrinsic
+dimensions를 순서대로 검증하고 closed evidence만으로 image-only frame plan을 만들어. short-circuit,
+single-flight 두 번째 호출 거부, detached byte copy, safe error와 raw password/token/path/digest/bytes/SDK
+message 비노출을 unit으로 고정해.
+
+apps/mockup/src/App.tsx, 기존 apps/mockup/src/space/** V1 controller/password gate, React/UI/CSS/DOM/Canvas
+executor, apps/admin/**, packages/firebase/**, Rules/config/package/lockfile/pnpm-workspace.yaml은 수정하지 마.
+실제 Firebase/project/bucket/object/network/live, emulator, deploy, URL/clipboard, admin issuer, orphan
+delete/cleanup, publish, 자동 retry와 신규 dependency/download/install은 금지한다.
+
+targeted V2 unit, spaces/mockup typecheck, node scripts/check.mjs, 고객 production entry exact
+filename/322,018 bytes/SHA-256
+A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159, git diff --check, forbidden diff와
+검사 포트 잔류 0을 확인해. 전체 Chromium E2E와 emulator는 실행하지 말고 PASS라고 기록하지 마.
+보호 대상과 기존 Founder/user working-tree 변경은 restore/checkout/stage/commit하지 마.
+
+완료 결과를 spec 078의 DONE, 관련 handoff, STATE/NEXT/CURRENT/live log에 기록하고 허용 변경만 일반
+fast-forward commit/push해. 완료 후 READY_FOR_CODEX에서 멈추고 production route/UI/다음 스펙을 자동
+시작하지 마.
 ```
 
-권장값 A의 의미는 customer V2 viewer 선행, 동일 frozen draft/render plan의 proof PNG, C5 catalog snapshot
-고정, 기존 admin default app/Auth + lazy writer, confirmed link와 password 분리, 첫 구현을 non-UI V2
-open/integrity/replay 계약으로 제한하는 것이다. 결정 후 Codex가 별도 구현 스펙과 Claude Code 실행
-프롬프트를 작성한다. 실제 UI/UX는 사용자 지시에 따라 Claude Code가 담당한다.
-
-실제 UID, live Firebase/network/deploy, Rules/config 변경, orphan 삭제·정리는 계속 금지한다.
+실제 UI/UX는 이번 단위가 아니라 다음 Claude Code UI 스펙이다. 실제 UID, live Firebase/network/deploy,
+Rules/config 변경과 orphan 삭제·정리는 계속 금지한다.
 
 ## 이전 Claude Code 전달 지시문 — 스펙 073 종료 이력
 

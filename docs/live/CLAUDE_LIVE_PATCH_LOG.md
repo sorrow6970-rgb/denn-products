@@ -5890,3 +5890,19 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `FOUNDER_DECISION_REQUIRED`, next transition `FOUNDER_LL_1_LL_6_DECISION`.
 - 전체 리빌드 진행도 **80~83% 완료 / 17~20% 잔여 — 변동 없음**. 최종 스펙 분모가 아닌 roadmap
   작업축 기반 추정이며 문서 조사로 완료율을 올리지 않았다.
+
+## 2026-08-26 - Founder LL-1~LL-6 승인 · 스펙 078 Claude 실행 계약
+
+- Founder가 `LL-1=A` ~ `LL-6=A`를 승인했다. customer V2 viewer 선행, 동일 frozen draft/render plan의
+  proof PNG, C5 baseline catalog snapshot 고정, 기존 admin default app/Auth + lazy writer, confirmed
+  link/password 분리와 첫 non-UI viewer 단위가 확정됐다.
+- 결정 정본과 스펙 078, handoff를 작성했다. 다음 Claude Code 단위는 별도 V2 opener와 local mockup V2
+  replay controller다.
+- exact 순서는 decrypt → strict V2 scene → evidence digest → proof content/length/SHA-256 → injected PNG
+  decode/dimensions → closed evidence frame plan이다.
+- `App.tsx`, V1 controller/password gate, React/UI/CSS, Firebase SDK/network, admin issuer, Rules/config는
+  범위 밖이다. 실제 UI/UX는 후속 Claude Code 스펙에서 담당한다.
+- 이번 기록은 문서 전용이며 제품 구현과 unit/E2E/emulator 실행은 아직 0이다. 실제 UID/live/deploy,
+  orphan delete/cleanup도 계속 금지다.
+- 상태 `READY_FOR_CLAUDE`, next transition `CLAUDE_SPEC_078_IMPLEMENTATION`.
+- 전체 리빌드 진행도 **80~83% 완료 / 17~20% 잔여 — 변동 없음**.
