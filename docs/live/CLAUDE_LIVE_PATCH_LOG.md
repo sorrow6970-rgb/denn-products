@@ -5851,3 +5851,26 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 종료 내용 commit 하나만 fast-forward push하고 self-hash bookkeeping commit은 만들지 않는다.
   다음 transition `NEXT_MANUAL_SPEC_SELECTION`; 다음 스펙 자동 시작 0.
 - 전체 리빌드 진행도 **79~82% 완료 / 18~21% 잔여 — 변동 없음**.
+
+## 2026-08-26 - 스펙 076 SDK adapter·local emulator 통합 완료
+
+- Founder **`KK-1=A, KK-2=A, KK-3=A, KK-4=A, KK-5=A, KK-6=A`** 범위만 구현했다.
+- `@denn/firebase/space-write`에 factory 내부 dynamic import SDK facade를 추가했다. default admin
+  Firebase app/Auth 재사용, 5개 config mismatch fail-closed, named app 0, non-demo emulator 선거부다.
+- SDK mapping은 `uploadBytes` receipt size, exact V2 `setDoc`, `getDocFromServer`만 사용한다. `getDoc`
+  fallback, retry, delete, raw metadata/error 노출 0.
+- PASS: targeted **40/40**, Firebase typecheck, 전체 check(unit **2124/2124** 포함), default
+  `demo-denn-emulator` **22/22**.
+- cutover 회귀는 최초 잘못된 일반 emulator config로 실행해 legacy write 1건이 거부되어 1/4 실패했다.
+  코드·Rules를 바꾸지 않고 정확한 `firebase.cutover.emulator.json`으로 재실행해 **4/4 PASS**했다.
+  제품 결함이나 flaky가 아니라 명령 config 선택 오류이며 이력을 보존한다.
+- `git diff --check`, Rules/config/package/lockfile/apps forbidden diff, 보호 대상 시작/종료 hash, 검사 포트
+  잔류 0 PASS. 고객 entry 322,018 bytes, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
+- 전체 Chromium E2E는 Founder `KK-6=A`에 따라 **NOT RUN**. full-E2E PASS가 아니다. 실제
+  UID·Firebase/network/live·deploy·UI/URL·orphan delete/cleanup은 미구현·NOT TESTED·금지다.
+- 상태 `DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION`; 다음 transition
+  `CLAUDE_ADMIN_UI_COMPOSITION_CONTRACT_REVIEW`. 다음 UI/UX는 사용자 지침에 따라 Claude Code가 담당하며
+  자동 시작하지 않는다.
+- 전체 리빌드 진행도 **80~83% 완료 / 17~20% 잔여**. persistence adapter+local Rules seam은 닫혔지만
+  UI composition, actual UID, production validation/deploy/cutover가 남아 있다.

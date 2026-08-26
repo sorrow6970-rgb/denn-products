@@ -2,22 +2,24 @@
 
 상태: `READY_FOR_NEXT_SPEC`
 active_unit: `none`
-completed_unit: `spec-075-space-v2-rules-emulator` — **DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION**
-기준: `HEAD=origin=b2dc2ca`, ahead/behind **0/0**. 스펙 075 변경은 uncommitted, staged 0이며 기존
+completed_unit: `spec-076-space-v2-sdk-adapter-emulator` — **DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION**
+기준: `HEAD=origin=530c7bc`, ahead/behind **0/0**에서 스펙 076을 시작했다. 종료 변경은 commit 전이며 기존
 Founder/user 보호 변경은 건드리지 않았다.
-검증: targeted **75/75**, 전체 check(unit **2114/2114** 포함), default emulator **20/20**, cutover
+검증: targeted **40/40**, 전체 check(unit **2124/2124** 포함), default emulator **22/22**, cutover
 emulator **4/4** PASS. 전체 Chromium E2E는 보호 PNG 재작성 부수효과 때문에 **NOT RUN**.
 fix_round: **0**
-next_transition: **`NEXT_MANUAL_SPEC_SELECTION`**
+next_transition: **`CLAUDE_ADMIN_UI_COMPOSITION_CONTRACT_REVIEW`**
 
 ## 현재 결과·다음 지시문
 
-스펙 075 local Rules와 emulator 구현은 완료됐다. Founder가 **`스펙 075 E2E 예외 종료 승인`**을
-별도로 명시했다. 전체 Chromium E2E가 보호 PNG 재작성 때문에 NOT RUN이라는 사실을 유지한 채
-`DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION`으로 종료한다.
+스펙 076 SDK facade와 local emulator integration이 완료됐다. Founder `KK-1=A` ~ `KK-6=A`에 따라
+default app/Auth ownership, non-demo 선거부, upload/setDoc/server-read를 구현했고 전체 Chromium E2E는
+NOT RUN 예외로 종료한다.
 
-다음 실행 지시문은 아직 없다. closure commit/push 후 별도 수동 지시 전에는 다음 스펙을 시작하지
-않는다. 실제 UID, orphan 삭제·mapping, SDK adapter, UI, 실제 Firebase/network/deploy는 계속 금지한다.
+다음 제품 단위는 admin UI composition 후보다. 사용자는 실제 UI/UX 디자인 구현을 Claude Code가
+담당하도록 지시했다. 따라서 Codex가 UI를 직접 구현하지 말고, 기존 Modern Studio 디자인 정본과
+space V2 issue bundle/write port를 연결하는 별도 계약·Claude 실행 프롬프트를 먼저 작성·검토한다.
+실제 UID, live Firebase/network/deploy, orphan 삭제·정리는 계속 금지한다.
 
 ## 이전 Claude Code 전달 지시문 — 스펙 073 종료 이력
 

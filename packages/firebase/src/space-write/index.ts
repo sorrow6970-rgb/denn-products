@@ -36,5 +36,11 @@ export type {
   SpaceV2IssueWritePort,
   SpaceV2PreparedIssueBundle,
 } from "./types";
+export {
+  createFirebaseSpaceV2WriteFacade,
+  type SpaceV2WriteFacadeOptions,
+  type SpaceV2WriteFirebaseConfig,
+  type SpaceV2WriteEmulatorHosts,
+} from "./sdk-facade";
 export { createSpaceV2IssueWritePort } from "./write-port";
 export type { SpaceV2IssueWritePortOptions } from "./write-port";

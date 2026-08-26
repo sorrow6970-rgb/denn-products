@@ -1,7 +1,7 @@
 # 현재 상태
 
-> 작업 운영 규칙(2026-08-26 최신 사용자 지시): Founder 승인 범위의 스펙 074와 075는 Codex가 직접
-> 구현하고 검증했다. 이 승인은 실제 UID·SDK adapter·UI·network/live·deploy·delete로 확장하지 않는다.
+> 작업 운영 규칙(2026-08-26 최신 사용자 지시): Founder 승인 범위의 스펙 074~076은 Codex가 직접
+> 구현하고 검증했다. 이 승인은 실제 UID·UI·network/live·deploy·delete로 확장하지 않는다.
 > 이후 단위는 별도 지시 전까지 수동 교대 규칙을 유지한다.
 >
 > 이전 운영 규칙(2026-08-21): **임시 Codex 단독 구현 루프를 중단하고 수동 교대 인수인계로
@@ -24,7 +24,25 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_NEXT_SPEC` - 스펙 075 DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION.**
+상태: **`READY_FOR_NEXT_SPEC` - 스펙 076 DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION.**
+
+기준 `HEAD=origin=530c7bc`, ahead/behind 0/0에서 스펙 076을 시작했다. default Firebase app/Auth를
+재사용하는 dynamic-import V2 SDK facade를 구현했고 non-demo emulator 선거부, config mismatch
+fail-closed, uploadBytes/setDoc/getDocFromServer mapping을 단위와 local emulator에서 검증했다.
+
+PASS: targeted **40/40**, Firebase typecheck, 전체 check(unit **2124/2124** 포함), default emulator
+**22/22**, cutover 전용 config **4/4**, `git diff --check`, forbidden diff, 보호 hash, 포트 잔류 0.
+최초 cutover 일반 config 오실행 1회는 1/4 실패했고 전용 config 재실행으로 4/4 PASS했다. 제품
+코드·Rules 수정 없이 원인을 확정했다.
+
+전체 Chromium E2E는 Founder `KK-6=A`에 따라 **NOT RUN**이며 full-E2E PASS가 아니다. 실제 UID,
+Firebase/network/live/deploy, UI/URL, orphan delete/cleanup은 미구현·NOT TESTED·금지다. 다음 transition은
+`CLAUDE_ADMIN_UI_COMPOSITION_CONTRACT_REVIEW`다. 실제 UI/UX는 사용자 지침에 따라 Claude Code가 담당한다.
+
+전체 리빌드 진행도는 **80~83% 완료 / 17~20% 잔여**로 추정한다. 이는 roadmap 작업축 기반 관리
+추정이며 최종 스펙 번호를 분모로 계산한 값이 아니다.
+
+> 스펙 075 종료 상태:
 
 기준 `HEAD=origin=b2dc2ca`, ahead/behind 0/0. 스펙 075는 V2 PNG create-only/public-read Storage
 Rules, V2 exact envelope 승인 UID create와 spaces list 거부 Firestore Rules, 합성 UID 전용 emulator
