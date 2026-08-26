@@ -1,15 +1,26 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
-active_unit: `none` — **TODAY SESSION ENDED / NO NEXT UNIT STARTED**
-completed_unit: `spec-073-space-v2-persistence-boundary-investigation` — **DONE / CODEX_PASSED / DOCUMENT_REVIEW_PASSED / DOCUMENT ONLY / READ ONLY**
-기준: 보완 직전 관측 HEAD=origin **`a6ad189`**(Founder 라운드 4 예외 승인 문서 commit), ahead/behind **0/0**. 승인문이 적은 `dc6fe11`은 그 **직전 commit**이고 그 위에 승인 commit `a6ad189`가 얹혀 있다 — 기준선은 정합하며 라운드 4는 `a6ad189`에서 출발했다. 라운드 4도 **내용 commit 1개만** 추가하고 self-hash bookkeeping commit을 만들지 않았다 — push 후 `HEAD=origin`·ahead/behind 0/0을 검증했고 해시 정본은 git 이력·세션 보고다(**commit은 자기 해시를 내용에 담을 수 없다**).
-이력: `f1f5d20`(초판 내용) → `534c26f`(bookkeeping) → `63a1dec`(라운드 1 내용) → `2dd97c4`(bookkeeping) → `6b3bcfc`(라운드 2 내용) → `9707233`(라운드 3 내용) → `dc6fe11`(Codex 재검수 STOP 기록) → `a6ad189`(Founder 라운드 4 예외 승인) → 라운드 4 내용 commit.
-working tree에는 기존 Founder/user 보호 변경만 남고 staged 0이다. 제품 commit은 없다(문서 전용 단위).
-fix_round: **4 — Founder 예외 승인 라운드, CODEX_PASSED** (자동 한도 `max_fix_rounds`는 3 그대로)
-next_transition: **`FOUNDER_JJ_1_JJ_7_DECISION`**
+상태: `READY_FOR_NEXT_SPEC`
+active_unit: `none` — **스펙 074 closure push 후 스펙 075 시작**
+completed_unit: `spec-074-space-v2-local-write-port` — **DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION**
+기준: 구현 시작 시 `HEAD=origin=507eeb0`, ahead/behind **0/0**. 스펙 074 변경은 아직 uncommitted이고
+staged 0이다. 기존 Founder/user 보호 변경은 건드리지 않았다.
+검증: targeted **30/30**, 전체 check(unit **2114/2114** 포함) PASS. 전체 Chromium E2E는 보호 대상
+PNG 재작성 부수효과 때문에 **NOT RUN**.
+fix_round: **0**
+next_transition: **`SPEC_075_SPACE_V2_RULES_EMULATOR_CONTRACT`**
 
-## Claude Code 전달용 다음 지시문
+## 현재 결정·다음 지시문
+
+Founder가 스펙 074의 전체 Chromium E2E 예외 종료를 승인했다. targeted 30/30과 전체 check(unit
+2114/2114 포함) PASS를 근거로 `DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION`으로 닫는다.
+
+다음 결정은 `JJ-1=A, JJ-2=A, JJ-3=A, JJ-4=B, JJ-5=A, JJ-6=A`다. 스펙 075는 V2 asset create-only
+Rules, V2 document create 분기, spaces list 거부와 `demo-denn-emulator` 회귀만 다룬다. 실제 운영자
+UID는 보류하므로 live deploy는 금지하며 합성 UID만 쓴다. orphan 삭제·mapping, SDK adapter, UI,
+실제 Firebase/network는 포함하지 않는다.
+
+## 이전 Claude Code 전달 지시문 — 스펙 073 종료 이력
 
 스펙 073 라운드 4는 Codex 최종 문서 검수를 통과했다. 오늘 세션은 종료한다. **Claude Code에 전달할
 실행 지시문은 없다.** Founder JJ-1~JJ-7은 선택하지 않고 조사 보고서의 선택지 그대로 보존한다.

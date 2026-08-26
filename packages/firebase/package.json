@@ -16,12 +16,17 @@
     "./space-read": {
       "types": "./src/space-read/index.ts",
       "default": "./src/space-read/index.ts"
+    },
+    "./space-write": {
+      "types": "./src/space-write/index.ts",
+      "default": "./src/space-write/index.ts"
     }
   },
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
     "@denn/shared": "workspace:*",
+    "@denn/spaces": "workspace:*",
     "firebase": "12.17.1"
   }
 }

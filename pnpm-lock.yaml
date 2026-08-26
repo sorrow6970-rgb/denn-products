@@ -95,6 +95,9 @@ importers:
       '@denn/shared':
         specifier: workspace:*
         version: link:../shared
+      '@denn/spaces':
+        specifier: workspace:*
+        version: link:../spaces
       firebase:
         specifier: 12.17.1
         version: 12.17.1

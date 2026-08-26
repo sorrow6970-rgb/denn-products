@@ -1,27 +1,55 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-08-24
+updated_at: 2026-08-26
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-073-space-v2-persistence-boundary-investigation   # DONE, CODEX_PASSED, DOCUMENT_REVIEW_PASSED, DOCUMENT_ONLY, READ_ONLY
-active_unit: null   # waiting for Founder JJ-1~JJ-7; no next unit started
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: c5f8384   # spec 072 closure + spec 073 contract documents committed by Claude Code
-candidate_commit: null   # document-only unit; no product commit exists
-verified_commit: c8234a9   # spec 073 round-4 content independently document-reviewed and passed by Codex
-origin_relation: "Codex final-review baseline: HEAD=origin at round-4 content commit c8234a9, ahead/behind 0/0. Closure is a separate documentation-only fast-forward commit; its hash is reported by git/session because a commit cannot contain its own hash"
-working_tree: "pre-existing protected Founder/user changes and E2E-rewritten spec-018 PNGs only, untouched; staged 0"
-fix_round: 4   # Founder-authorized exceptional round; PASSED
+completed_unit: spec-074-space-v2-local-write-port   # DONE, LOCAL_VERIFIED, FOUNDER_E2E_EXCEPTION
+active_unit: null   # spec 075 may start only after spec 074 closure push
+state: READY_FOR_NEXT_SPEC
+baseline_commit: 507eeb0   # HEAD=origin before the direct spec 074 implementation
+candidate_commit: pending   # spec 074 closure commit hash is reported after push; no self-hash bookkeeping commit
+verified_commit: pending   # same closure commit; verification is Codex local, not an independent second-agent review
+origin_relation: "implementation baseline HEAD=origin=507eeb0, ahead/behind 0/0; closure is being prepared as one fast-forward commit"
+working_tree: "spec 074 closure files plus pre-existing protected Founder/user changes; staged 0 before explicit staging"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_JJ_1_JJ_7_DECISION
+next_transition: SPEC_075_SPACE_V2_RULES_EMULATOR_CONTRACT
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-commit_owner: Claude Code (implementation); Codex (review and handoff documents only)
+commit_owner: Codex (spec 074 one-off direct implementation); no commit yet
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 78-81% complete; 19-22% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 074 직접 구현·로컬 검증 (2026-08-26)
+
+- Founder가 **`스펙 074 E2E 예외 종료 승인`**을 명시했다. 보호 대상 PNG를 다시 쓰는 전체 Chromium
+  E2E를 실행하지 않은 상태를 숨기지 않는 조건으로 스펙 074를
+  **`DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION`**으로 종료한다.
+- 같은 승인에서 `JJ-1=A, JJ-2=A, JJ-3=A, JJ-4=B, JJ-5=A, JJ-6=A`를 확정했다. 이는 다음
+  local Rules/emulator 계약 착수 승인이지 실제 UID 제공, live Rules 배포, UI, orphan 삭제 승인이
+  아니다.
+
+- Founder의 최신 지시 “니가 직접 구현하고 검증후 보고”를 스펙 073에서 결정 없이 진행 가능하다고
+  분리한 **JJ-7=A**로 제한해 적용했다. JJ-1~JJ-6, Rules, SDK adapter, emulator, UI, URL 발급,
+  delete/orphan 정리, 실제 network/live는 열지 않았다.
+- 신규 `@denn/firebase/space-write` subpath에 local facade·auth port·안전 오류 계약·upload-first
+  orchestration·server-only reconciliation·single-flight를 구현하고 synthetic fake 30건으로 고정했다.
+  루트 `@denn/firebase` barrel과 `apps/**`는 변경하지 않았다.
+- `@denn/spaces`는 이미 존재하는 workspace 패키지이며 신규 외부 의존성이 아니다. 직접 import를
+  정확히 선언하기 위해 `packages/firebase/package.json`과 lockfile importer만 갱신했다.
+- PASS: targeted 30/30, Firebase typecheck, 전체 format/lint/typecheck/unit **2114/2114**/mockup+admin
+  build, `git diff --check`, 고객 entry `index-6js4DafP.js` 322,018 bytes / SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`, 검사 포트 잔류 0.
+- **전체 Chromium E2E는 NOT RUN.** 기존 `mockup-browse`가 보호 대상 spec-018 PNG 두 개를 다시 쓰는
+  경로라 실행 승인이 거부됐고, 보호 경계를 우회하지 않았다. 따라서 spec 074를 DONE/CODEX_PASSED로
+  과장하지 않고 `READY_FOR_CODEX`로 둔다.
+- 실제 Firebase/project/bucket/Firestore/network, emulator, Rules, deploy, UI 연결은 모두 0 / NOT
+  TESTED다. 자동화·반복 작업도 만들지 않았다.
+- 전체 진행도 추정은 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다. 이번 포트는 작업축 6의
+  local seam 하나를 채웠지만 배포·Rules·UI 축은 그대로라 기존 범위를 바꿀 근거가 부족하다.
 
 ## 스펙 073 Codex 최종 문서 검수 통과 · 오늘 세션 종료 (2026-08-24)
 

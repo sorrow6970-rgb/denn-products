@@ -1,6 +1,10 @@
 # 현재 상태
 
-> 작업 운영 규칙(2026-08-21 갱신): **임시 Codex 단독 구현 루프를 중단하고 수동 교대 인수인계로
+> 작업 운영 규칙(2026-08-26 최신 사용자 지시): 이번 스펙 074의 **JJ-7=A local-only 단위는 Codex가
+> 직접 구현하고 검증**한다. 이 1회 지시는 Rules·SDK adapter·emulator·UI·network·delete로 확장하지
+> 않는다. 이전 수동 교대 규칙은 그 밖의 단위에 유지한다.
+>
+> 이전 운영 규칙(2026-08-21): **임시 Codex 단독 구현 루프를 중단하고 수동 교대 인수인계로
 > 복원했다.** Claude Code 구현·검증과 live log 기록 → Codex 독립 검수·재검증 → Codex 다음
 > 스펙/프롬프트 작성 → Claude Code가 읽고 작업하는 순서만 사용한다. Codex는 제품 코드를 직접
 > 수정하지 않으며 새 자동화나 반복 작업을 만들지 않는다.
@@ -20,7 +24,30 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`FOUNDER_DECISION_REQUIRED` - 스펙 073 DONE / CODEX_PASSED / 오늘 세션 종료.**
+상태: **`READY_FOR_NEXT_SPEC` - 스펙 074 DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION.**
+
+Founder가 2026-08-26 이 대화에서 **`스펙 074 E2E 예외 종료 승인`**을 명시했다. 따라서 보호 PNG
+재작성 부수효과로 전체 Chromium E2E를 실행하지 않았다는 사실을 유지하면서 스펙 074를 종료한다.
+동시에 `JJ-1=A, JJ-2=A, JJ-3=A, JJ-4=B, JJ-5=A, JJ-6=A`를 승인했다. 다음 단위는 local Rules와
+`demo-denn-emulator` 검증이며 실제 UID·live deploy·UI·orphan 삭제는 여전히 금지다.
+
+기준 `HEAD=origin=507eeb0`, ahead/behind 0/0에서 새 스펙
+`docs/rebuild/specs/074-space-v2-local-write-port.md`를 작성하고 `@denn/firebase/space-write` local port와
+synthetic fake를 구현했다. 범위는 upload → document create 순서, upload/create 결과 미확정의 안전
+오류와 server-only read 1회 reconciliation, cache/pending snapshot 거부, single-flight, 안전 오류
+envelope다. 실제 Firebase SDK adapter, Rules, emulator, UI, URL, delete/retry는 없다.
+
+PASS: targeted **30/30**, Firebase typecheck, 전체 format/lint/typecheck/unit **2114/2114**/build,
+`git diff --check`, 고객 entry SHA-256
+`A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`, 검사 포트 잔류 0.
+전체 Chromium E2E는 기존 suite가 보호 대상 spec-018 PNG를 다시 쓰는 부수효과 때문에 **NOT RUN**이며
+우회하지 않았다. Founder가 이 예외 종료를 승인했다. 다음 transition은
+`SPEC_075_SPACE_V2_RULES_EMULATOR_CONTRACT`이고 UI는 시작하지 않는다.
+
+전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**이다. local persistence seam은 한
+단계 전진했으나 Rules·adapter·UI·production 축이 남아 있어 추정 범위를 바꿀 근거가 없다.
+
+> 스펙 073 종료 상태:
 
 Codex는 `HEAD=origin=c8234a9`, ahead/behind 0/0에서 라운드 4 문서를 최종 재검수했다. 변경은 허용 문서
 6개뿐이고 `git diff --check` PASS, staged 0이었다. Firebase 공식 *Use conditions in Firebase Cloud

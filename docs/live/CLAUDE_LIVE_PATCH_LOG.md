@@ -5787,3 +5787,36 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `FOUNDER_DECISION_REQUIRED`, 다음 transition `FOUNDER_JJ_1_JJ_7_DECISION`. JJ-1~JJ-7 선택 0,
   오늘 세션 종료, 다음 작업 자동 시작 0.
 - 전체 리빌드 진행도 **78~81% 완료 / 19~22% 잔여 — 변동 없음**.
+
+## 2026-08-26 - 스펙 074 JJ-7=A 직접 구현 · 로컬 게이트 PASS / 전체 E2E NOT RUN
+
+- 사용자 최신 지시 “니가 직접 구현하고 검증후 보고”를 스펙 073의 유일한 결정 불필요 최소 단위인
+  **JJ-7=A**로 제한해 실행했다. Rules·SDK adapter·emulator·UI·network·delete로 확대하지 않았다.
+- `@denn/firebase/space-write` local port/facade/auth/error contract와 synthetic fake를 구현했다. upload
+  → create 순서, definite/unknown 분리, server-only reconciliation 1회, cache/pending 거부,
+  single-flight, 민감정보 비노출을 고정했다. root barrel과 `apps/**` 변경은 0이다.
+- 검증 PASS: targeted **30/30**, Firebase typecheck, 전체 check(format/lint/typecheck/unit
+  **2114/2114**/build), `git diff --check`, 고객 entry `index-6js4DafP.js` 322,018 bytes / SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`, 검사 포트 잔류 0.
+- pnpm은 기존 전역 store를 사용한 offline frozen install만 수행했고 다운로드 0이었다. 최초 잘못
+  선택된 프로젝트-local store 재시도 프로세스 2개만 식별 종료하고 임시 `.pnpm-store`를 제거했다.
+- 전체 Chromium E2E는 기존 `mockup-browse`가 보호 대상 spec-018 PNG를 재작성하는 부수효과 때문에
+  실행 승인이 거부돼 **NOT RUN**이다. 보호 경계를 우회하지 않았고 PASS라고 기록하지 않는다.
+- 실제 Firebase/project/bucket/Firestore/network/live, emulator, Rules, deploy, UI, URL, delete/orphan
+  정리는 0 / NOT TESTED. commit/push/stage 0. 상태 `READY_FOR_CODEX`, 다음 transition
+  `CODEX_REVIEW_OR_FOUNDER_FULL_E2E_DECISION`.
+- 전체 리빌드 진행도는 **78~81% 완료 / 19~22% 잔여 — 변동 없음**. local seam 하나는 완료했지만
+  Rules·adapter·UI·production 축이 남아 기존 추정 구간을 바꿀 충분한 근거가 없다.
+
+## 2026-08-26 - 스펙 074 E2E 예외 종료 · JJ-1~JJ-6 Founder 결정
+
+- Founder가 **`스펙 074 E2E 예외 종료 승인`**을 명시했다. 전체 Chromium E2E가 보호 PNG 재작성
+  부수효과로 NOT RUN이라는 사실은 유지하고, targeted 30/30·전체 check 2114/2114 PASS를 근거로
+  **`DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION`**으로 종료한다. full-E2E PASS나 독립
+  CODEX_PASSED는 주장하지 않는다.
+- 결정: **`JJ-1=A, JJ-2=A, JJ-3=A, JJ-4=B, JJ-5=A, JJ-6=A`**.
+  - V2 asset create-only/public-read 목표 Rules와 V2 document 승인 UID create 분기, spaces list 거부.
+  - 실제 UID는 보류. 합성 UID local emulator만 허용하고 live deploy는 계속 금지.
+  - orphan 삭제 보류 유지, 미확정은 사람 판정, 자동 재시도 0.
+- 다음 transition은 `SPEC_075_SPACE_V2_RULES_EMULATOR_CONTRACT`. SDK adapter·UI·실제 network는 아직
+  시작하지 않는다.
