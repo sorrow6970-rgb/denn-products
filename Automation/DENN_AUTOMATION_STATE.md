@@ -6,22 +6,33 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-076-space-v2-sdk-adapter-emulator   # DONE, LOCAL_VERIFIED, FOUNDER_E2E_EXCEPTION
 active_unit: spec-078-space-v2-local-viewer-replay-pipeline
-state: READY_FOR_CLAUDE
+state: READY_FOR_CODEX
 baseline_commit: ed41170   # HEAD=origin at LL-1~LL-6 approval and spec 078 drafting start
-candidate_commit: pending   # decision/spec/handoff content commit; no self-hash bookkeeping commit
-verified_commit: null   # product implementation has not started
-origin_relation: "spec 078 drafting starts from HEAD=origin=ed41170, ahead/behind 0/0"
-working_tree: "spec 078 decision/spec/handoff plus four state documents and pre-existing protected Founder/user changes; product diff 0"
+candidate_commit: pending   # spec 078 implementation/content commit is recorded after push; no self-hash commit
+verified_commit: pending   # local gates passed; independent Codex review pending
+origin_relation: "implementation starts from HEAD=origin=6cc39eb, ahead/behind 0/0"
+working_tree: "exact spec 078 code/tests/docs plus pre-existing protected Founder/user changes; only spec 078 files may be staged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_SPEC_078_IMPLEMENTATION
+next_transition: CODEX_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-commit_owner: Codex spec authoring; Claude Code implements spec 078
+commit_owner: Codex implementation under user execution instruction; independent review pending
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 80-83% complete; 17-20% remaining to production cutover"
+overall_rebuild_progress: "estimated 81-84% complete; 16-19% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 078 local V2 viewer replay 구현 완료 (2026-08-26)
+
+- 별도 V2 opener와 production에 미연결인 mockup V2 replay controller를 구현했다.
+- proof content/length/SHA-256/intrinsic dimensions와 closed evidence frame plan, short-circuit, detached
+  bytes, single-flight 거부, safe errors를 합성 fake로 고정했다.
+- PASS: targeted **28/28**, spaces/mockup typecheck, 전체 check(unit **2152/2152** 포함), 고객 entry exact
+  hash, `git diff --check`, forbidden diff, 검사 포트 잔류 0.
+- 전체 Chromium E2E·emulator는 계약대로 NOT RUN. actual Firebase/network/live/deploy와 UI 연결 0.
+- 상태 `READY_FOR_CODEX`, 다음 transition `CODEX_REVIEW`. 다음 스펙 자동 시작 0.
+- 전체 진행도 추정 **81~84% 완료 / 16~19% 잔여**.
 
 ## Founder LL-1~LL-6 승인 · 스펙 078 실행 계약 (2026-08-26)
 

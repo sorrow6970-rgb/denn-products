@@ -44,6 +44,13 @@ export {
   type SpaceOpenResult,
 } from "./open";
 export {
+  createSpaceV2OpenPort,
+  type OpenedSpaceV2,
+  type SpaceV2OpenErrorCode,
+  type SpaceV2OpenPort,
+  type SpaceV2OpenResult,
+} from "./open-v2";
+export {
   createFrameReplayEvidenceDigestV1,
   encodeFrameReplayEvidenceV1,
   FRAME_EVIDENCE_ENCODING_V1,

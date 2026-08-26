@@ -238,3 +238,21 @@ module이며, E2E suite는 보호 대상 spec-018 PNG를 다시 쓰므로 금지
 ### QUESTIONS
 
 없음. LL-1~LL-6은 모두 A로 승인됐고 첫 local-only 범위는 위와 같이 고정됐다.
+
+### DONE (Codex) — 2026-08-26
+
+- `packages/spaces/src/open-v2.ts`에 V1과 분리된 `createSpaceV2OpenPort`를 추가했다. exact V2 document,
+  non-empty password, decrypt 1회, strict scene, evidence digest 순서를 지키고 detached scene만 반환한다.
+- `apps/mockup/src/space-v2/replay-controller.ts`에 exact options/request, single-flight 거부와 proof read →
+  content/length → SHA-256 → injected decode/dimensions → closed evidence frame plan pipeline을 추가했다.
+- targeted 신규 unit **28/28 PASS**, spaces·mockup typecheck PASS.
+- `node scripts/check.mjs` PASS: format/lint/전체 typecheck/unit **2152/2152**/mockup+admin build.
+- 고객 entry는 `index-6js4DafP.js`, **322,018 bytes**, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`로 스펙 076 기준과 exact 동일하다.
+- `git diff --check` PASS, production `App.tsx`/기존 `space/**`/admin/Firebase/Rules/config/package/lockfile
+  spec diff 0, 검사 포트 4183/4184/4185/8080/9099/9199 잔류 0.
+- 전체 Chromium E2E와 emulator는 계약대로 **NOT RUN**이며 PASS라고 주장하지 않는다. actual
+  Firebase/network/live/deploy, React/UI/CSS, asset SDK adapter, admin issuer, URL/clipboard, orphan cleanup은
+  구현·실행 0이다.
+- 보호 대상과 기존 Founder/user working-tree 변경은 restore/checkout/stage하지 않았다. 상태
+  `READY_FOR_CODEX`; 다음 스펙은 자동 시작하지 않는다.

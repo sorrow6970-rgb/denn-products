@@ -5906,3 +5906,23 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   orphan delete/cleanup도 계속 금지다.
 - 상태 `READY_FOR_CLAUDE`, next transition `CLAUDE_SPEC_078_IMPLEMENTATION`.
 - 전체 리빌드 진행도 **80~83% 완료 / 17~20% 잔여 — 변동 없음**.
+
+## 2026-08-26 - 스펙 078 local V2 viewer replay 구현·검증 완료
+
+- 기준 `HEAD=origin=6cc39eb`, ahead/behind 0/0에서 스펙 078 허용 범위만 구현했다.
+- `@denn/spaces` 별도 V2 opener가 exact document → password → decrypt → strict scene → evidence digest를
+  검증한다. V1 opener/type/result는 변경하지 않았다.
+- production에 import되지 않는 mockup V2 replay controller가 proof content/length/SHA-256/intrinsic
+  dimensions를 확인하고 closed evidence만으로 image-only frame plan을 만든다. 자동 retry 0,
+  single-flight 두 번째 호출 거부, bytes detached copy와 raw 민감정보 비노출을 고정했다.
+- targeted 신규 unit **28/28**, spaces/mockup typecheck PASS.
+- 전체 `node scripts/check.mjs` PASS: format/lint/전체 typecheck/unit **2152/2152**/두 앱 build.
+- 고객 entry `index-6js4DafP.js`, **322,018 bytes**, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159` exact 유지.
+- `git diff --check`, forbidden diff, 검사 포트 4183/4184/4185/8080/9099/9199 잔류 0 PASS.
+- 전체 Chromium E2E와 emulator는 계약대로 **NOT RUN**이며 PASS라고 기록하지 않는다. actual
+  Firebase/network/live/deploy, UI/CSS, Firebase asset reader, admin issuer, URL/clipboard, orphan cleanup 0.
+- 보호 대상과 기존 Founder/user working-tree 변경은 restore/checkout/stage하지 않았다.
+- 상태 `READY_FOR_CODEX`, next transition `CODEX_REVIEW`; 다음 스펙 자동 시작 0.
+- 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여**. local viewer core는 닫혔지만 production
+  composition/UI·asset adapter·실제 UID·배포/cutover가 남아 있다.

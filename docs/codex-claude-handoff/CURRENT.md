@@ -24,7 +24,25 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CLAUDE` - LL-1~LL-6 승인, 스펙 078 local V2 viewer replay 구현 대기.**
+상태: **`READY_FOR_CODEX` - 스펙 078 local V2 viewer replay 구현·로컬 검증 완료.**
+
+기준 `HEAD=origin=6cc39eb`, ahead/behind 0/0에서 스펙 078을 구현했다. `@denn/spaces` 별도 V2 opener는
+exact document → password → decrypt → strict scene → evidence digest 순서를 지킨다. production에 아직
+import되지 않는 mockup V2 replay controller는 injected proof reader/SHA/decoder로 content type,
+byteLength, proof SHA-256와 intrinsic dimensions를 확인한 뒤 closed evidence frame plan을 만든다.
+
+PASS: targeted **28/28**, spaces/mockup typecheck, 전체 check(format/lint/전체 typecheck/unit
+**2152/2152**/두 앱 build), 고객 entry 322,018 bytes 및 SHA-256
+`A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`, `git diff --check`, forbidden diff,
+검사 포트 잔류 0.
+
+전체 Chromium E2E와 emulator는 계약대로 NOT RUN이며 PASS가 아니다. actual Firebase/network/live/deploy,
+production route, React/UI/CSS, Firebase asset adapter, admin issuer와 orphan cleanup은 0이다. 상태
+`READY_FOR_CODEX`, next transition `CODEX_REVIEW`; 다음 스펙 자동 시작 0.
+
+전체 진행도는 **81~84% 완료 / 16~19% 잔여**로 추정한다.
+
+> 스펙 078 승인·착수 전 상태:
 
 Founder가 2026-08-26 이 대화에서
 **`LL-1=A, LL-2=A, LL-3=A, LL-4=A, LL-5=A, LL-6=A`**를 승인했다. 결정 정본은
