@@ -5874,3 +5874,19 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   자동 시작하지 않는다.
 - 전체 리빌드 진행도 **80~83% 완료 / 17~20% 잔여**. persistence adapter+local Rules seam은 닫혔지만
   UI composition, actual UID, production validation/deploy/cutover가 남아 있다.
+
+## 2026-08-26 - 스펙 077 Space V2 end-to-end composition readiness 문서 조사
+
+- 기준 `HEAD=origin=4ef385b`, ahead/behind 0/0에서 local source와 spec 043·064~076을 대조했다.
+- customer production viewer는 V1 `createSpaceOpenPort()`만 사용하며 V2 document/scene을 열지 않는다.
+- admin production UI에는 V2 bundle 입력 8개를 하나의 frozen draft로 소유하는 session/composition이
+  없고, 현재 Space V2 연결은 합성 unit fixture뿐이다.
+- 따라서 admin issue UI를 먼저 활성화하면 저장은 성공하지만 customer가 열 수 없는 link를 만들 수
+  있다. customer V2 open/integrity/replay 선행을 권장한다.
+- 조사 보고서, spec 077, handoff를 작성했다. Founder LL-1~LL-6은 미결정이며 결정 전 제품 구현과
+  Claude Code 실행 지시는 없다. 실제 UI/UX는 사용자 지시에 따라 Claude Code가 담당한다.
+- 문서 전용: unit/E2E/emulator/network 실행 0, 제품 코드/test/Rules/config/package/lockfile 변경 0.
+  실제 UID·Firebase/live/deploy·orphan delete/cleanup은 계속 금지다.
+- 상태 `FOUNDER_DECISION_REQUIRED`, next transition `FOUNDER_LL_1_LL_6_DECISION`.
+- 전체 리빌드 진행도 **80~83% 완료 / 17~20% 잔여 — 변동 없음**. 최종 스펙 분모가 아닌 roadmap
+  작업축 기반 추정이며 문서 조사로 완료율을 올리지 않았다.

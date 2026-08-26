@@ -1,25 +1,33 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_NEXT_SPEC`
-active_unit: `none`
+상태: `FOUNDER_DECISION_REQUIRED`
+active_unit: `spec-077-space-v2-end-to-end-composition-readiness`
 completed_unit: `spec-076-space-v2-sdk-adapter-emulator` — **DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION**
-기준: `HEAD=origin=530c7bc`, ahead/behind **0/0**에서 스펙 076을 시작했다. 종료 변경은 commit 전이며 기존
+기준: `HEAD=origin=4ef385b`, ahead/behind **0/0**에서 스펙 077 문서 조사를 시작했다. 기존
 Founder/user 보호 변경은 건드리지 않았다.
-검증: targeted **40/40**, 전체 check(unit **2124/2124** 포함), default emulator **22/22**, cutover
-emulator **4/4** PASS. 전체 Chromium E2E는 보호 PNG 재작성 부수효과 때문에 **NOT RUN**.
+검증: local source와 spec 043·064~076 대조. 문서 전용이라 unit/E2E/emulator는 **NOT RUN**.
 fix_round: **0**
-next_transition: **`CLAUDE_ADMIN_UI_COMPOSITION_CONTRACT_REVIEW`**
+next_transition: **`FOUNDER_LL_1_LL_6_DECISION`**
 
 ## 현재 결과·다음 지시문
 
-스펙 076 SDK facade와 local emulator integration이 완료됐다. Founder `KK-1=A` ~ `KK-6=A`에 따라
-default app/Auth ownership, non-demo 선거부, upload/setDoc/server-read를 구현했고 전체 Chromium E2E는
-NOT RUN 예외로 종료한다.
+스펙 077 readiness 조사 결과 customer production viewer는 V1 opener만 사용하고 V2를 열지 않으며,
+admin production UI에는 V2 bundle 입력을 하나의 frozen draft로 소유하는 session이 없다. admin issue
+UI를 먼저 활성화하면 열리지 않는 link를 만들 수 있으므로 customer V2 open/replay 선행이 권장된다.
 
-다음 제품 단위는 admin UI composition 후보다. 사용자는 실제 UI/UX 디자인 구현을 Claude Code가
-담당하도록 지시했다. 따라서 Codex가 UI를 직접 구현하지 말고, 기존 Modern Studio 디자인 정본과
-space V2 issue bundle/write port를 연결하는 별도 계약·Claude 실행 프롬프트를 먼저 작성·검토한다.
-실제 UID, live Firebase/network/deploy, orphan 삭제·정리는 계속 금지한다.
+Founder LL-1~LL-6이 아직 선택되지 않았으므로 **Claude Code 실행 지시문은 아직 없다.** 사용자는 다음
+결정만 회신한다:
+
+```text
+LL-1=A, LL-2=A, LL-3=A, LL-4=A, LL-5=A, LL-6=A 승인
+```
+
+권장값 A의 의미는 customer V2 viewer 선행, 동일 frozen draft/render plan의 proof PNG, C5 catalog snapshot
+고정, 기존 admin default app/Auth + lazy writer, confirmed link와 password 분리, 첫 구현을 non-UI V2
+open/integrity/replay 계약으로 제한하는 것이다. 결정 후 Codex가 별도 구현 스펙과 Claude Code 실행
+프롬프트를 작성한다. 실제 UI/UX는 사용자 지시에 따라 Claude Code가 담당한다.
+
+실제 UID, live Firebase/network/deploy, Rules/config 변경, orphan 삭제·정리는 계속 금지한다.
 
 ## 이전 Claude Code 전달 지시문 — 스펙 073 종료 이력
 

@@ -5,23 +5,35 @@ updated_at: 2026-08-26
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-076-space-v2-sdk-adapter-emulator   # DONE, LOCAL_VERIFIED, FOUNDER_E2E_EXCEPTION
-active_unit: null
-state: READY_FOR_NEXT_SPEC
-baseline_commit: 530c7bc   # HEAD=origin before spec 076 implementation
-candidate_commit: pending   # closure commit hash is reported after push; no self-hash bookkeeping commit
-verified_commit: pending   # local verification plus Founder E2E exception; no independent second-agent review
-origin_relation: "closure starts from HEAD=origin=530c7bc, ahead/behind 0/0; one fast-forward content commit is prepared"
-working_tree: "before closure commit: exact spec 076 files plus pre-existing protected Founder/user changes; only spec 076 files may be staged"
+active_unit: spec-077-space-v2-end-to-end-composition-readiness
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: 4ef385b   # HEAD=origin before spec 077 document investigation
+candidate_commit: pending   # document-only readiness commit; no self-hash bookkeeping commit
+verified_commit: null   # LL-1~LL-6 are not decided and product implementation has not started
+origin_relation: "investigation starts from HEAD=origin=4ef385b, ahead/behind 0/0"
+working_tree: "three new spec 077 documents plus pre-existing protected Founder/user changes; product code/Rules/config diff 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_ADMIN_UI_COMPOSITION_CONTRACT_REVIEW
+next_transition: FOUNDER_LL_1_LL_6_DECISION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-commit_owner: Codex direct implementation; spec 076 one-content-commit closure
+commit_owner: Codex document-only readiness review; no product implementation
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 80-83% complete; 17-20% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 077 Space V2 end-to-end composition readiness (2026-08-26)
+
+- local source audit 결과 customer production viewer는 V1 opener만 사용하며 V2 document/scene을 열지 않는다.
+- admin production UI에는 catalog·selection·transform·proof PNG·password를 하나의 frozen issue draft로
+  소유하는 session/composition이 없다.
+- 따라서 admin 발급 UI를 먼저 활성화하면 저장은 성공하지만 customer가 열 수 없는 link를 만들 수 있다.
+  customer V2 viewer 선행을 권장한다.
+- Founder LL-1~LL-6은 미결정이다. 실제 UI/UX는 사용자 지시에 따라 Claude Code가 담당하지만, 결정 전
+  Claude 실행 지시와 제품 구현은 시작하지 않는다.
+- 이번 단위는 문서 조사만 수행했다. unit/E2E/emulator/network 실행과 제품·Rules·config 변경은 0이다.
+- 진행도는 **80~83% 완료 / 17~20% 잔여**로 유지한다. 문서 조사만으로 완료율을 올리지 않는다.
 
 ## 스펙 076 SDK adapter·local emulator 통합 (2026-08-26)
 

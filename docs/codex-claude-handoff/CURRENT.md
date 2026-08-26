@@ -24,7 +24,25 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_NEXT_SPEC` - 스펙 076 DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION.**
+상태: **`FOUNDER_DECISION_REQUIRED` - 스펙 077 composition readiness 문서 조사 완료, LL-1~LL-6 대기.**
+
+기준 `HEAD=origin=4ef385b`, ahead/behind 0/0에서 스펙 077 문서 조사를 시작했다. local source audit로
+다음을 확인했다.
+
+- customer production `SpaceRoute`는 V1 `createSpaceOpenPort()`만 사용하며 V2 document/scene을 열지 않는다.
+- admin production UI에는 V2 issue bundle의 catalog·selection·orientation·logical width·color·transform·
+  proof PNG·password를 하나의 frozen draft로 소유하는 composition이 없다.
+- 따라서 admin issue UI 선행 활성화는 저장되지만 customer가 열 수 없는 link를 만들 수 있다.
+
+권장 순서는 customer V2 non-UI open/integrity/replay → customer UI → admin frozen issue session → admin
+UI다. 실제 UI/UX는 사용자 지시에 따라 Claude Code가 담당한다. Founder LL-1~LL-6 결정 전 제품 구현과
+Claude 실행 지시는 시작하지 않는다. 조사 정본은
+`docs/codex-claude-handoff/reviews/2026-08-26-space-v2-end-to-end-composition-readiness.md`다.
+
+이번 단위는 문서 전용이다. unit/E2E/emulator/network 실행 0, 제품·Rules·config/package/lockfile 변경
+0이다. 전체 진행도는 **80~83% 완료 / 17~20% 잔여**로 유지한다.
+
+> 스펙 076 종료 상태:
 
 기준 `HEAD=origin=530c7bc`, ahead/behind 0/0에서 스펙 076을 시작했다. default Firebase app/Auth를
 재사용하는 dynamic-import V2 SDK facade를 구현했고 non-demo emulator 선거부, config mismatch
