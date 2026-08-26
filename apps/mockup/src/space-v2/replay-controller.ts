@@ -1,6 +1,12 @@
-import type { PreviewRenderPlan } from "@denn/render";
-import type { SpaceSha256Port, SpaceV2OpenErrorCode, SpaceV2OpenPort } from "@denn/spaces";
+import type { PreviewDrawCommand, PreviewRenderPlan } from "@denn/render";
+import type {
+  FrameReplayEvidenceV1,
+  SpaceSha256Port,
+  SpaceV2OpenErrorCode,
+  SpaceV2OpenPort,
+} from "@denn/spaces";
 import { buildFrameProductPlan } from "../canvas/productPlan";
+import { maxPanFromRects, toLogicalTransform } from "../preview/imageTransform";
 
 export const SPACE_V2_PROOF_MAX_BYTES = 20_971_519;
 
@@ -240,34 +246,58 @@ export function createSpaceV2FrameReplayController(
       ) {
         return fail("SPACE_V2_REPLAY_PROOF_MISMATCH", correlationId);
       }
+      const decodedProof = {
+        imageRef: decoded.imageRef,
+        intrinsicWidth: decoded.intrinsicWidth,
+        intrinsicHeight: decoded.intrinsicHeight,
+      };
 
-      const plan = buildFrameProductPlan({
-        geometry: {
-          aspect: evidence.geometry.aspect,
-          borderPercentOfWidth: evidence.geometry.borderPercentOfWidth,
-          matColor: evidence.geometry.matColor,
-          contentInsetPx: evidence.geometry.contentInsetPx,
-          textZones: [],
-          clockPreview: null,
-        },
-        frameColor: evidence.frameColor,
-        logicalWidth: evidence.logicalWidth,
-        userImage: {
-          imageRef: decoded.imageRef,
-          intrinsicSize: {
-            width: decoded.intrinsicWidth,
-            height: decoded.intrinsicHeight,
+      const buildPlan = (transform: FrameReplayEvidenceV1["transform"]) =>
+        buildFrameProductPlan({
+          geometry: {
+            aspect: evidence.geometry.aspect,
+            borderPercentOfWidth: evidence.geometry.borderPercentOfWidth,
+            matColor: evidence.geometry.matColor,
+            contentInsetPx: evidence.geometry.contentInsetPx,
+            textZones: [],
+            clockPreview: null,
           },
-          transform: {
-            scale: evidence.transform.scale,
-            x: evidence.transform.x,
-            y: evidence.transform.y,
-            rotationQuarterTurns: evidence.transform.rotationQuarterTurns,
+          frameColor: evidence.frameColor,
+          logicalWidth: evidence.logicalWidth,
+          userImage: {
+            imageRef: decodedProof.imageRef,
+            intrinsicSize: {
+              width: decodedProof.intrinsicWidth,
+              height: decodedProof.intrinsicHeight,
+            },
+            transform,
           },
-        },
+        });
+
+      // The encrypted evidence stores normalized max-pan fractions, while productPlan expects
+      // logical pixels. Mirror the established spec 029/030 composition contract: a zero-pan probe
+      // includes the final scale and quarter-turn, its emitted rects are the sole max-pan source,
+      // and only then is the normalized pan converted for the final plan.
+      const probe = buildPlan({
+        scale: evidence.transform.scale,
+        x: 0,
+        y: 0,
+        rotationQuarterTurns: evidence.transform.rotationQuarterTurns,
       });
+      if (!probe.ok) return fail("SPACE_V2_REPLAY_PLAN_FAILED", correlationId);
+      const probeImage = probe.plan.commands.find(
+        (command): command is Extract<PreviewDrawCommand, { readonly type: "draw-image-cover" }> =>
+          command.type === "draw-image-cover" && command.layerId === "frame:user-image",
+      );
+      if (probeImage === undefined) return fail("SPACE_V2_REPLAY_PLAN_FAILED", correlationId);
+      const maxPan = maxPanFromRects(probeImage.clipRect, probeImage.drawRect);
+      if (maxPan === null) return fail("SPACE_V2_REPLAY_PLAN_FAILED", correlationId);
+      const logicalTransform = toLogicalTransform(evidence.transform, maxPan);
+      if (logicalTransform === null) return fail("SPACE_V2_REPLAY_PLAN_FAILED", correlationId);
+
+      const plan = buildPlan(logicalTransform);
       if (!plan.ok) return fail("SPACE_V2_REPLAY_PLAN_FAILED", correlationId);
-      return { ok: true, value: { plan: plan.plan, imageRef: decoded.imageRef } };
+      return { ok: true, value: { plan: plan.plan, imageRef: decodedProof.imageRef } };
     } catch {
       return fail("SPACE_V2_REPLAY_INVALID_CONTENT", correlationId);
     }

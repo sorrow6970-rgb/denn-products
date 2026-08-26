@@ -119,19 +119,60 @@ describe("createSpaceV2FrameReplayController", () => {
     expect(h.decoder.decode).toHaveBeenCalledTimes(1);
     if (!result.ok) throw new Error("expected success");
     expect(result.value.imageRef).toBe("space-v2-proof-1");
-    expect(result.value.plan).toMatchObject({
+    expect(result.value.plan).toEqual({
       kind: "frame",
       logicalCanvas: { width: 800, height: 1200 },
+      commands: [
+        {
+          type: "fill-rect",
+          layerId: "frame:body",
+          rect: { x: 0, y: 0, width: 800, height: 1200 },
+          color: "#9F887A",
+        },
+        {
+          type: "fill-rect",
+          layerId: "frame:mat",
+          rect: { x: 32, y: 32, width: 736, height: 1136 },
+          color: "#FFFFFF",
+        },
+        {
+          type: "draw-image-cover",
+          layerId: "frame:user-image",
+          imageRef: "space-v2-proof-1",
+          clipRect: { x: 40, y: 40, width: 720, height: 1120 },
+          drawRect: { x: -995, y: -65, width: 2100, height: 1400 },
+          rotationQuarterTurns: 1,
+        },
+      ],
     });
-    expect(result.value.plan.commands.map((command) => command.layerId)).toEqual([
-      "frame:body",
-      "frame:mat",
-      "frame:user-image",
-    ]);
-    expect(result.value.plan.commands.at(-1)).toMatchObject({
-      layerId: "frame:user-image",
+  });
+
+  it("returns a plan detached from later evidence and decoder-result mutation", async () => {
+    const sourceEvidence = evidence();
+    const decoded = {
       imageRef: "space-v2-proof-1",
+      intrinsicWidth: 1600,
+      intrinsicHeight: 2400,
+    };
+    const h = harness({
+      opener: {
+        open: vi.fn(async () => ({ ok: true as const, value: opened(sourceEvidence) })),
+      },
+      decoder: { decode: vi.fn(async () => decoded) },
     });
+    const result = await h.controller.prepare(request());
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected success");
+    const snapshot = JSON.stringify(result.value);
+
+    (sourceEvidence.geometry as { aspect: number }).aspect = 2;
+    (sourceEvidence.transform as { x: number; rotationQuarterTurns: number }).x = 1;
+    (sourceEvidence.transform as { x: number; rotationQuarterTurns: number }).rotationQuarterTurns =
+      3;
+    (decoded as { imageRef: string; intrinsicWidth: number }).imageRef = "mutated-ref";
+    (decoded as { imageRef: string; intrinsicWidth: number }).intrinsicWidth = 1;
+
+    expect(JSON.stringify(result.value)).toBe(snapshot);
   });
 
   it("passes detached byte copies to digest and decoder", async () => {
