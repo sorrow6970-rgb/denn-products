@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CLAUDE / LOCAL_ONLY / NO_UI / NO_NETWORK`
+`DONE / CODEX_PASSED / LOCAL_VERIFIED / LOCAL_ONLY / NO_UI / NO_NETWORK`
 
 Founder 결정 정본:
 `docs/codex-claude-handoff/decisions/2026-08-26-space-v2-composition-readiness-decisions.md`.
@@ -284,3 +284,14 @@ module이며, E2E suite는 보호 대상 spec-018 PNG를 다시 쓰므로 금지
 - 첫 전체 check는 formatter 1건에서 중단됐고 형식 정정 후 전체를 재실행해 PASS했다.
 - 전체 Chromium E2E·emulator는 NOT RUN. 상태 `READY_FOR_CODEX`, fix_round 1/3, 다음 transition
   `CODEX_RE_REVIEW`; 다음 스펙은 시작하지 않는다.
+
+### CODEX RE-REVIEW — PASSED / DONE (2026-08-26)
+
+- 기준 `HEAD=origin=6742f3f`, ahead/behind 0/0에서 correction commit `bed9106`을 독립 재검수했다.
+- zero-pan probe와 final plan의 geometry/scale/quarter-turn 일치, builder-derived rotated maxPan,
+  `toLogicalTransform()` 단일 환산 경계를 확인했다. 추가 결함 0.
+- targeted **29/29**, 전체 check(unit **2153/2153**), 고객 entry exact filename/size/SHA-256,
+  correction diff·허용 경로·포트 게이트 PASS.
+- 최종 판정 `CODEX_PASSED / DONE / LOCAL_VERIFIED / NO_UI / NO_NETWORK`.
+- 전체 Chromium E2E·emulator는 계약대로 NOT RUN이다. actual Firebase/network/live/deploy와 production
+  route/UI/asset adapter 연결은 0이며 후속 스펙 없이는 시작하지 않는다.

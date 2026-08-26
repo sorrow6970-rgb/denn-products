@@ -5962,3 +5962,19 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 전체 Chromium E2E·emulator는 계약대로 NOT RUN. actual Firebase/network/live/deploy와 UI 연결 0.
 - 상태 `READY_FOR_CODEX`, fix_round 1/3, next transition `CODEX_RE_REVIEW`; 다음 스펙·자동화 시작 0.
 - 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**.
+
+## 2026-08-26 - 스펙 078 Codex 재검수 통과 · DONE
+
+- 재검수 기준 `HEAD=origin=6742f3f`, ahead/behind 0/0. correction code/test commit `bed9106`과 결과 문서를
+  스펙 029·030·064·078 계약에 대조했다.
+- 추가 결함 0. probe/final plan의 geometry·scale·quarter-turn 동일, builder-derived rotated maxPan,
+  `toLogicalTransform()`을 통한 normalized→logical 단일 환산을 확인했다.
+- 독립 PASS: targeted **29/29**, 전체 check(unit **2153/2153** 포함), 고객 entry
+  `index-6js4DafP.js` / 322,018 bytes / SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`, correction `git diff --check`,
+  허용 8개 경로, 검사 포트 잔류 0.
+- 판정 `CODEX_PASSED / DONE / LOCAL_VERIFIED / NO_UI / NO_NETWORK`. 전체 Chromium E2E·emulator는
+  계약대로 NOT RUN이며 실제 Firebase/network/live/deploy·production UI/asset adapter 연결은 0.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, active unit 없음, next transition `NEXT_MANUAL_SPEC_SELECTION`.
+  다음 스펙·자동화·반복 작업 시작 0.
+- 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**.

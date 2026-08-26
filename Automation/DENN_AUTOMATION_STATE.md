@@ -4,24 +4,41 @@
 updated_at: 2026-08-26
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-076-space-v2-sdk-adapter-emulator   # DONE, LOCAL_VERIFIED, FOUNDER_E2E_EXCEPTION
-active_unit: spec-078-space-v2-local-viewer-replay-pipeline
-state: READY_FOR_CODEX
+completed_unit: spec-078-space-v2-local-viewer-replay-pipeline   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_UI
+active_unit: null
+state: WAITING_FOR_NEXT_MANUAL_TASK
 baseline_commit: ed41170   # HEAD=origin at LL-1~LL-6 approval and spec 078 drafting start
 candidate_commit: bed9106   # spec 078 correction round 1 code/test commit
-verified_commit: pending   # local correction gates pass; independent Codex re-review pending
-origin_relation: "correction started from HEAD=origin=85e92da, ahead/behind 0/0; bed9106 is local content commit before documentation push"
-working_tree: "spec 078 correction docs plus pre-existing protected Founder/user changes; only exact correction docs may be staged"
+verified_commit: bed9106   # independently re-reviewed correction code/test commit
+origin_relation: "Codex re-review started from HEAD=origin=6742f3f, ahead/behind 0/0"
+working_tree: "pre-existing protected Founder/user changes only before closure docs; no product correction diff remains"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_RE_REVIEW
+next_transition: NEXT_MANUAL_SPEC_SELECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-commit_owner: Codex implementation under user execution instruction; independent review pending
+commit_owner: Codex implementation under user execution instruction; independent review complete
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 81-84% complete; 16-19% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 078 Codex 재검수 통과 · 종료 (2026-08-26)
+
+- 검수 기준 `HEAD=origin=6742f3f`, ahead/behind 0/0. correction code/test commit `bed9106`과 결과 기록을
+  스펙 029·030·064·078 계약에 다시 대조했다.
+- 추가 결함 0. zero-pan probe와 final plan은 같은 geometry/scale/quarter-turn을 사용하고, maxPan은
+  builder의 rotated clip/draw rect에서만 유도되며 normalized x/y는 기존 `toLogicalTransform()`으로만
+  logical px가 된다.
+- 독립 재실행 PASS: targeted **29/29**, 전체 check(unit **2153/2153** 포함), 고객 entry exact
+  filename/size/SHA-256, correction 범위 `git diff --check`, 허용 8개 경로, 검사 포트 잔류 0.
+- 판정 `CODEX_PASSED / DONE / LOCAL_VERIFIED / NO_UI / NO_NETWORK`. 전체 Chromium E2E·emulator는
+  계약대로 NOT RUN이며 PASS라고 주장하지 않는다.
+- actual Firebase/network/live/deploy, production route, React/UI/CSS, Firebase proof reader adapter,
+  admin issuer와 URL/clipboard 연결은 0 / 후속 범위다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, active unit 없음, next transition `NEXT_MANUAL_SPEC_SELECTION`.
+  다음 스펙과 자동화·반복 작업은 시작하지 않는다.
+- 전체 진행도는 **81~84% 완료 / 16~19% 잔여**로 유지한다.
 
 ## 스펙 078 보완 라운드 1 완료 — normalized pan exact replay (2026-08-26)
 

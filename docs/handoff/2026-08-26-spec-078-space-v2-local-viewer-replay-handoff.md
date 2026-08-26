@@ -1,6 +1,6 @@
 # 스펙 078 Space V2 local viewer replay handoff
 
-- 상태: `READY_FOR_CODEX / FIX_ROUND_1_COMPLETE / LOCAL_VERIFIED / NO_UI / NO_NETWORK`
+- 상태: `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI / NO_NETWORK`
 - 계약 작성 기준: `HEAD=origin=ed41170`, ahead/behind 0/0
 - Codex 검수 대상: `HEAD=origin=0f63af4`, ahead/behind 0/0
 - 결정: `LL-1=A` ~ `LL-6=A`
@@ -53,3 +53,10 @@ fast-forward commit/push한다. 상태를 `READY_FOR_CODEX`로 두고 다음 스
 - 코드/test commit `bed9106`.
 - targeted **29/29**, 전체 check(unit **2153/2153**), 고객 entry exact hash, diff·포트 게이트 PASS.
 - E2E·emulator는 NOT RUN. 상태 `READY_FOR_CODEX`, next transition `CODEX_RE_REVIEW`.
+
+## Codex 최종 재검수
+
+- 기준 `HEAD=origin=6742f3f`, ahead/behind 0/0에서 `bed9106`을 독립 대조·재실행했다.
+- 추가 결함 0. targeted **29/29**, 전체 check unit **2153/2153**, 고객 entry exact hash, diff·port PASS.
+- 최종 판정 `CODEX_PASSED / DONE / LOCAL_VERIFIED / NO_UI / NO_NETWORK`.
+- 전체 Chromium E2E·emulator는 NOT RUN. 다음 스펙은 자동 시작하지 않는다.

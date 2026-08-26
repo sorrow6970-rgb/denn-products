@@ -24,7 +24,24 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 078 보완 라운드 1 구현·로컬 검증 완료.**
+상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 078 `DONE / CODEX_PASSED`.**
+
+Codex 재검수 기준 `HEAD=origin=6742f3f`, ahead/behind 0/0이다. correction code/test commit `bed9106`을
+스펙 029·030 normalized-pan 계약과 스펙 078 exact replay 계약에 대조했고 추가 결함은 0이다. probe와
+final plan의 geometry/scale/rotation이 같고, rotated maxPan은 builder가 낸 clip/draw rect에서 유도되며
+normalized x/y는 기존 검증 함수로만 logical px로 환산된다.
+
+독립 재실행 PASS: targeted **29/29**, 전체 check(unit **2153/2153** 포함), 고객 entry exact
+filename/size/SHA-256, correction 범위 diff, 허용 8개 경로, 검사 포트 잔류 0. 전체 Chromium E2E와
+emulator는 계약대로 NOT RUN이다.
+
+최종 판정 `CODEX_PASSED / DONE / LOCAL_VERIFIED / NO_UI / NO_NETWORK`. 실제 Firebase/network/live/deploy,
+production route, React/UI/CSS, Firebase proof reader adapter, admin issuer와 URL/clipboard 연결은 0이다.
+active unit은 없고 next transition은 `NEXT_MANUAL_SPEC_SELECTION`; 다음 스펙과 자동화를 시작하지 않는다.
+
+전체 진행도는 **81~84% 완료 / 16~19% 잔여**다.
+
+> 스펙 078 보완 라운드 1 제출 상태:
 
 Founder가 exact replay test에서 확인된 구현 결함에 대해 `replay-controller.ts` 한 파일의 최소 범위
 확장을 승인했다. 보완 시작 기준은 `HEAD=origin=85e92da`, ahead/behind 0/0이고 코드/test commit은

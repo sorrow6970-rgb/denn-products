@@ -1,24 +1,23 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-078-space-v2-local-viewer-replay-pipeline`
-completed_unit: `spec-076-space-v2-sdk-adapter-emulator` — **DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION**
-보완 시작 기준: `HEAD=origin=85e92da`, ahead/behind **0/0**.
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+active_unit: `null`
+completed_unit: `spec-078-space-v2-local-viewer-replay-pipeline` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI**
+재검수 기준: `HEAD=origin=6742f3f`, ahead/behind **0/0**.
 보완 코드/test commit: `bed9106`.
 검증: targeted **29/29**, 전체 check(unit **2153/2153** 포함), 고객 entry exact hash PASS. 전체 Chromium
 E2E와 emulator는 **NOT RUN**.
 fix_round: **1 / 3**
-next_transition: **`CODEX_RE_REVIEW`**
+next_transition: **`NEXT_MANUAL_SPEC_SELECTION`**
 
 ## 현재 결과·다음 지시문
 
-스펙 078 보완 라운드 1 구현과 local 검증이 완료됐다. exact vector test가
-`normalized-max-pan-v1` x/y를 logical px처럼 직접 사용한 결함을 재현했고, Founder의 최소 범위 확장 승인
-후 기존 `maxPanFromRects()`와 `toLogicalTransform()`을 사용한 zero-pan probe → normalized conversion →
-final plan으로 고쳤다.
+스펙 078 보완 라운드 1은 Codex 독립 재검수를 통과했다. correction commit `bed9106`의 normalized pan
+환산과 exact full-plan/detachment test에 추가 결함이 없었고 최종 판정은
+`CODEX_PASSED / DONE / LOCAL_VERIFIED / NO_UI / NO_NETWORK`다.
 
-**Claude Code에 전달할 실행 지시문은 없다.** Codex가 `bed9106`과 이 기록을 독립 재검수할 때까지
-production route, Firebase asset adapter, React/UI/CSS와 다음 스펙을 시작하지 않는다.
+**Claude Code에 전달할 실행 지시문은 없다.** 다음 수동 스펙이 선택·작성되기 전에는 production route,
+Firebase asset adapter, React/UI/CSS 또는 다른 구현을 시작하지 않는다.
 
 - targeted **29/29**, 전체 check unit **2153/2153** PASS.
 - 고객 entry `index-6js4DafP.js`, 322,018 bytes, SHA-256
