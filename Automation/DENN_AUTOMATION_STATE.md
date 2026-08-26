@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-076-space-v2-sdk-adapter-emulator   # DONE, LOCAL_VERIFIED, FOUNDER_E2E_EXCEPTION
 active_unit: spec-078-space-v2-local-viewer-replay-pipeline
-state: READY_FOR_CODEX
+state: CORRECTION_REQUIRED
 baseline_commit: ed41170   # HEAD=origin at LL-1~LL-6 approval and spec 078 drafting start
-candidate_commit: pending   # spec 078 implementation/content commit is recorded after push; no self-hash commit
-verified_commit: pending   # local gates passed; independent Codex review pending
-origin_relation: "implementation starts from HEAD=origin=6cc39eb, ahead/behind 0/0"
-working_tree: "exact spec 078 code/tests/docs plus pre-existing protected Founder/user changes; only spec 078 files may be staged"
-fix_round: 0
+candidate_commit: 0f63af4   # spec 078 implementation/content commit under independent review
+verified_commit: pending   # execution gates pass, but exact replay-vector integration coverage is incomplete
+origin_relation: "reviewed HEAD=origin=0f63af4, ahead/behind 0/0"
+working_tree: "pre-existing protected Founder/user changes only before this review record; correction is limited to one spec 078 test plus handoff docs"
+fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_REVIEW
+next_transition: CLAUDE_CORRECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Codex implementation under user execution instruction; independent review pending
 push_policy: fast-forward-only
@@ -22,6 +22,22 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 81-84% complete; 16-19% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 078 Codex 독립 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-26)
+
+- 기준 `HEAD=origin=0f63af4`, ahead/behind 0/0에서 구현 범위와 계약을 대조했다.
+- 독립 재실행 PASS: targeted **28/28**, 전체 check(unit **2152/2152** 포함), 고객 entry exact
+  filename/size/SHA-256, `git diff --check`, 허용 commit 경로, 검사 포트 잔류 0.
+- 결함은 검증 공백 1건이다. `replay-controller.test.ts`의 success test는 canvas 크기·layer 순서·
+  `imageRef`만 확인해 스펙 §VERIFY 8이 요구한 rect/color/transform/quarter-turn **exact vector**를 증명하지
+  못한다. evidence field wiring이 바뀌어도 이 테스트 일부가 계속 통과할 수 있다.
+- 보완 범위는 `apps/mockup/src/space-v2/replay-controller.test.ts`와 spec078 상태/handoff 문서뿐이다.
+  production 구현은 변경하지 않는다. exact full plan vector와 success plan detachment를 고정한 뒤 같은
+  targeted/전체 check/hash/diff/port 게이트를 재실행한다.
+- 전체 Chromium E2E·emulator는 계속 NOT RUN이다. actual Firebase/network/live/deploy와 UI 연결은 0.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1/3, 다음 transition `CLAUDE_CORRECTION`. 다음 스펙 시작 0.
+- 전체 진행도는 **81~84% 완료 / 16~19% 잔여**로 유지한다. 검증 공백 정정은 roadmap 완료율을
+  올리지 않는다.
 
 ## 스펙 078 local V2 viewer replay 구현 완료 (2026-08-26)
 

@@ -5926,3 +5926,20 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CODEX`, next transition `CODEX_REVIEW`; 다음 스펙 자동 시작 0.
 - 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여**. local viewer core는 닫혔지만 production
   composition/UI·asset adapter·실제 UID·배포/cutover가 남아 있다.
+
+## 2026-08-26 - 스펙 078 Codex 독립 검수 · CORRECTION_REQUIRED 라운드 1
+
+- 검수 기준 `HEAD=origin=0f63af4`, ahead/behind 0/0. 구현 commit의 허용 경로와 production import 0을
+  대조했다.
+- 독립 재실행 PASS: targeted **28/28**, 전체 check(unit **2152/2152** 포함), 고객 entry
+  `index-6js4DafP.js` / 322,018 bytes / SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`, `git diff --check`, 검사 포트
+  4183/4184/4185/8080/9099/9199 잔류 0.
+- 결함 1건: controller success test가 canvas 크기·layer 순서·imageRef만 확인해 스펙 078 §VERIFY 8의
+  rect/color/transform/quarter-turn exact vector를 증명하지 못한다. success plan detachment 단언도 없다.
+- 보완 범위는 `apps/mockup/src/space-v2/replay-controller.test.ts`와 spec078 상태/handoff 문서뿐이다.
+  테스트가 실제 wiring 결함을 드러내지 않으면 production 코드는 수정하지 않는다.
+- 전체 Chromium E2E·emulator는 계약대로 NOT RUN. actual Firebase/network/live/deploy와 UI 연결 0.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1/3, next transition `CLAUDE_CORRECTION`. 다음 스펙 자동 시작 0,
+  자동화·반복 작업 0.
+- 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**.

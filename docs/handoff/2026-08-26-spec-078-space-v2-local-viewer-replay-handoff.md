@@ -1,7 +1,8 @@
 # 스펙 078 Space V2 local viewer replay handoff
 
-- 상태: `READY_FOR_CODEX / LOCAL_VERIFIED / NO_UI / NO_NETWORK`
-- 기준: `HEAD=origin=ed41170`, ahead/behind 0/0
+- 상태: `CORRECTION_REQUIRED / FIX_ROUND_1 / LOCAL_GATES_PASS / NO_UI / NO_NETWORK`
+- 계약 작성 기준: `HEAD=origin=ed41170`, ahead/behind 0/0
+- Codex 검수 대상: `HEAD=origin=0f63af4`, ahead/behind 0/0
 - 결정: `LL-1=A` ~ `LL-6=A`
 - spec: `docs/rebuild/specs/078-space-v2-local-viewer-replay-pipeline.md`
 
@@ -33,3 +34,13 @@ fast-forward commit/push한다. 상태를 `READY_FOR_CODEX`로 두고 다음 스
 - 전체 Chromium E2E·emulator는 NOT RUN. production route/UI/Firebase network 연결은 0.
 - 구현 후 전체 리빌드 진행도 추정 **81~84% 완료 / 16~19% 잔여**. viewer local core가 닫혔지만 asset
   SDK adapter, production composition/UI, 실제 UID·deploy/cutover가 남아 있다.
+
+## Codex 독립 검수 — 라운드 1
+
+- 검수 기준 `HEAD=origin=0f63af4`, ahead/behind 0/0.
+- targeted **28/28**, 전체 check(unit **2152/2152**), 고객 entry exact hash, diff와 포트 게이트 PASS.
+- `replay-controller.test.ts`의 success test가 rect/color/transform/quarter-turn exact vector를 검증하지
+  않아 스펙 §VERIFY 8이 미충족이다. success plan detachment 단언도 보완한다.
+- 허용 보완은 해당 test 1개와 spec078 상태/handoff 문서뿐이다. 실제 결함이 드러나지 않으면 production
+  코드는 변경하지 않는다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1/3. E2E·emulator는 NOT RUN, 다음 스펙 시작 0.

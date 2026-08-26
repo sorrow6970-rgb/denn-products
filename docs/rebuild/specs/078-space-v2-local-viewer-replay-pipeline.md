@@ -256,3 +256,16 @@ module이며, E2E suite는 보호 대상 spec-018 PNG를 다시 쓰므로 금지
   구현·실행 0이다.
 - 보호 대상과 기존 Founder/user working-tree 변경은 restore/checkout/stage하지 않았다. 상태
   `READY_FOR_CODEX`; 다음 스펙은 자동 시작하지 않는다.
+
+### CODEX REVIEW — CORRECTION_REQUIRED 라운드 1 (2026-08-26)
+
+- 검수 기준 `HEAD=origin=0f63af4`, ahead/behind 0/0.
+- 독립 targeted **28/28**, 전체 check(unit **2152/2152** 포함), 고객 entry exact hash,
+  `git diff --check`, 허용 commit 경로와 검사 포트 잔류 0은 PASS했다.
+- 보완 결함 1건: `replay-controller.test.ts` success test가 logical canvas, layer 순서와 imageRef만
+  확인한다. §VERIFY 8의 rect/color/transform/quarter-turn exact vector와 success plan detachment를
+  증명하지 못한다.
+- 보완은 해당 test 1개와 spec078 상태/handoff 문서로 제한한다. 테스트가 실제 wiring 결함을 드러내지
+  않으면 production 코드는 수정하지 않는다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1/3, 다음 transition `CLAUDE_CORRECTION`. 전체 Chromium E2E와
+  emulator는 계속 NOT RUN이며 다음 스펙은 시작하지 않는다.

@@ -24,7 +24,23 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 078 local V2 viewer replay 구현·로컬 검증 완료.**
+상태: **`CORRECTION_REQUIRED` - 스펙 078 Codex 독립 검수 라운드 1.**
+
+검수 기준 `HEAD=origin=0f63af4`, ahead/behind 0/0이다. 독립 targeted **28/28**, 전체 check(unit
+**2152/2152** 포함), 고객 entry exact hash, `git diff --check`, commit 허용 경로와 검사 포트 잔류 0은
+PASS했다.
+
+남은 결함은 검증 공백 1건이다. `apps/mockup/src/space-v2/replay-controller.test.ts`의 success test가
+canvas 크기·layer 순서·imageRef만 단언해 스펙 078 §VERIFY 8의 rect/color/transform/quarter-turn exact
+vector를 증명하지 못한다. 해당 테스트 하나와 spec078 handoff 문서만 보완하며, 실제 결함이 드러나지
+않으면 production 코드는 수정하지 않는다. success plan detachment도 같은 보완에서 고정한다.
+
+상태 `CORRECTION_REQUIRED`, fix_round 1/3, next transition `CLAUDE_CORRECTION`. 전체 Chromium E2E와
+emulator는 NOT RUN이고 실제 Firebase/network/live/deploy/UI 연결 0이다. 다음 스펙 자동 시작 0.
+
+전체 진행도는 **81~84% 완료 / 16~19% 잔여**로 유지한다.
+
+> 스펙 078 최초 구현 제출 상태:
 
 기준 `HEAD=origin=6cc39eb`, ahead/behind 0/0에서 스펙 078을 구현했다. `@denn/spaces` 별도 V2 opener는
 exact document → password → decrypt → strict scene → evidence digest 순서를 지킨다. production에 아직
