@@ -10,7 +10,10 @@ import { defineConfig } from "vitest/config";
 // request escape to a real project.
 export default defineConfig({
   test: {
-    include: ["packages/**/src/**/*.emulator.test.ts"],
+    include: [
+      "packages/firebase/src/admin-write/rules.emulator.test.ts",
+      "packages/firebase/src/space-write/rules.emulator.test.ts",
+    ],
     environment: "node",
     // Rules and CAS behaviour are shared server state; parallel files would race each other.
     fileParallelism: false,

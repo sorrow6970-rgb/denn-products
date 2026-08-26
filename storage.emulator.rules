@@ -9,6 +9,7 @@ rules_version = '2';
 // 정책:
 //   - admin/            : 로그인 운영자(non-anon)만 read. ★write는 거부(스펙 037 G-1: 읽기 전용 고정).
 //   - rebuild-admin-state/: 승인된 운영자 UID만. ★create만 허용하고 update/delete 거부(불변 객체).
+//   - rebuild-space-assets/: 공개 read. 승인된 운영자 UID만 PNG create, update/delete 거부.
 //   - temp-share/·proofs/: 공개 read + 익명 write(소비자 공유/시안).
 //   - published/·templates/·placeholders/·guides/·mockups/·editor-overlays/: 공개 read + 운영자만 write.
 //   - 그 외             : 거부.
@@ -45,6 +46,20 @@ service firebase.storage {
                             /databases/(default)/documents/rebuildAdminStateObjects/$(objectId))
                        && okSize()
                        && request.resource.contentType == 'application/json';
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // space V2 proof asset — public viewer가 읽을 수 있지만 쓰기는 승인 UID의 최초 PNG create뿐이다.
+    // objectId는 경로 조작·고객 식별자 노출을 피한 lowercase UUID v4 + .png만 허용한다.
+    match /rebuild-space-assets/objects/{objectId} {
+      allow read: if true;
+      allow create: if approvedOperator()
+                       && resource == null
+                       && objectId.matches(
+                            '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.]png$')
+                       && okSize()
+                       && request.resource.contentType == 'image/png';
       allow update: if false;
       allow delete: if false;
     }

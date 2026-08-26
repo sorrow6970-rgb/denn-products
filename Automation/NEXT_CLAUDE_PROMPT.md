@@ -1,24 +1,23 @@
 # NEXT CLAUDE PROMPT
 
 상태: `READY_FOR_NEXT_SPEC`
-active_unit: `none` — **스펙 074 closure push 후 스펙 075 시작**
-completed_unit: `spec-074-space-v2-local-write-port` — **DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION**
-기준: 구현 시작 시 `HEAD=origin=507eeb0`, ahead/behind **0/0**. 스펙 074 변경은 아직 uncommitted이고
-staged 0이다. 기존 Founder/user 보호 변경은 건드리지 않았다.
-검증: targeted **30/30**, 전체 check(unit **2114/2114** 포함) PASS. 전체 Chromium E2E는 보호 대상
-PNG 재작성 부수효과 때문에 **NOT RUN**.
+active_unit: `none`
+completed_unit: `spec-075-space-v2-rules-emulator` — **DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION**
+기준: `HEAD=origin=b2dc2ca`, ahead/behind **0/0**. 스펙 075 변경은 uncommitted, staged 0이며 기존
+Founder/user 보호 변경은 건드리지 않았다.
+검증: targeted **75/75**, 전체 check(unit **2114/2114** 포함), default emulator **20/20**, cutover
+emulator **4/4** PASS. 전체 Chromium E2E는 보호 PNG 재작성 부수효과 때문에 **NOT RUN**.
 fix_round: **0**
-next_transition: **`SPEC_075_SPACE_V2_RULES_EMULATOR_CONTRACT`**
+next_transition: **`NEXT_MANUAL_SPEC_SELECTION`**
 
-## 현재 결정·다음 지시문
+## 현재 결과·다음 지시문
 
-Founder가 스펙 074의 전체 Chromium E2E 예외 종료를 승인했다. targeted 30/30과 전체 check(unit
-2114/2114 포함) PASS를 근거로 `DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION`으로 닫는다.
+스펙 075 local Rules와 emulator 구현은 완료됐다. Founder가 **`스펙 075 E2E 예외 종료 승인`**을
+별도로 명시했다. 전체 Chromium E2E가 보호 PNG 재작성 때문에 NOT RUN이라는 사실을 유지한 채
+`DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION`으로 종료한다.
 
-다음 결정은 `JJ-1=A, JJ-2=A, JJ-3=A, JJ-4=B, JJ-5=A, JJ-6=A`다. 스펙 075는 V2 asset create-only
-Rules, V2 document create 분기, spaces list 거부와 `demo-denn-emulator` 회귀만 다룬다. 실제 운영자
-UID는 보류하므로 live deploy는 금지하며 합성 UID만 쓴다. orphan 삭제·mapping, SDK adapter, UI,
-실제 Firebase/network는 포함하지 않는다.
+다음 실행 지시문은 아직 없다. closure commit/push 후 별도 수동 지시 전에는 다음 스펙을 시작하지
+않는다. 실제 UID, orphan 삭제·mapping, SDK adapter, UI, 실제 Firebase/network/deploy는 계속 금지한다.
 
 ## 이전 Claude Code 전달 지시문 — 스펙 073 종료 이력
 

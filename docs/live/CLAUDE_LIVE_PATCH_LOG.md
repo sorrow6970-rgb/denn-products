@@ -5820,3 +5820,34 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   - orphan 삭제 보류 유지, 미확정은 사람 판정, 자동 재시도 0.
 - 다음 transition은 `SPEC_075_SPACE_V2_RULES_EMULATOR_CONTRACT`. SDK adapter·UI·실제 network는 아직
   시작하지 않는다.
+
+## 2026-08-26 - 스펙 075 local Rules·emulator 구현 및 검증
+
+- 기준 `HEAD=origin=b2dc2ca`, ahead/behind 0/0. Founder
+  `JJ-1=A, JJ-2=A, JJ-3=A, JJ-4=B, JJ-5=A, JJ-6=A` 범위만 직접 구현했다.
+- V2 PNG public-read/create-only Storage Rules, V2 exact envelope 승인 UID create와 spaces list 거부
+  Firestore Rules, 합성 UID emulator 사본과 opt-in Rules test를 추가했다. 실제 UID placeholder는
+  유지했고 live deploy는 하지 않았다.
+- PASS: targeted **75/75**, 전체 check(unit **2114/2114** 포함), default emulator **20/20**, cutover
+  emulator **4/4**, `git diff --check`, Rules UID-only 동등성, forbidden diff, 검사 포트 잔류 0.
+- 고객 entry `index-6js4DafP.js`, 322,018 bytes, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
+- Java 21.0.11, firebase-tools 15.22.4와 캐시된 runtime만 사용했다. 설치·다운로드·실제
+  Firebase/network/live/deploy 0.
+- 전체 Chromium E2E는 보호 대상 spec-018 PNG 재작성 때문에 **NOT RUN**이다. 스펙 074에 한정된
+  예외를 자동 승계하지 않는다. 상태 `READY_FOR_CODEX`, commit/push/stage 0, 다음 transition
+  `CODEX_REVIEW_OR_FOUNDER_SPEC_075_E2E_DECISION`.
+- 실제 UID, SDK adapter, apps/UI, URL, orphan delete/cleanup은 미구현·NOT TESTED·금지다.
+- 전체 리빌드 진행도 추정 **79~82% 완료 / 18~21% 잔여**. local Rules/emulator 축은 전진했지만
+  production adapter·UI·실제 UID·deploy/cutover가 남아 있고 최종 스펙 분모는 고정되지 않았다.
+
+## 2026-08-26 - 스펙 075 E2E 예외 종료 승인
+
+- Founder가 **`스펙 075 E2E 예외 종료 승인`**을 별도로 명시했다. 스펙 074 예외의 자동 승계가 아니다.
+- 전체 Chromium E2E는 보호 대상 spec-018 PNG 재작성 때문에 **NOT RUN**이며 full-E2E PASS라고
+  기록하지 않는다. local Rules/emulator 게이트는 default **20/20**, cutover **4/4** PASS 상태다.
+- 판정: `DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION`. 실제 UID·Firebase/network/live·deploy,
+  SDK adapter, apps/UI, URL, orphan delete/cleanup은 계속 미구현·NOT TESTED·금지다.
+- 종료 내용 commit 하나만 fast-forward push하고 self-hash bookkeeping commit은 만들지 않는다.
+  다음 transition `NEXT_MANUAL_SPEC_SELECTION`; 다음 스펙 자동 시작 0.
+- 전체 리빌드 진행도 **79~82% 완료 / 18~21% 잔여 — 변동 없음**.

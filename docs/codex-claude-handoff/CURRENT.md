@@ -1,8 +1,8 @@
 # 현재 상태
 
-> 작업 운영 규칙(2026-08-26 최신 사용자 지시): 이번 스펙 074의 **JJ-7=A local-only 단위는 Codex가
-> 직접 구현하고 검증**한다. 이 1회 지시는 Rules·SDK adapter·emulator·UI·network·delete로 확장하지
-> 않는다. 이전 수동 교대 규칙은 그 밖의 단위에 유지한다.
+> 작업 운영 규칙(2026-08-26 최신 사용자 지시): Founder 승인 범위의 스펙 074와 075는 Codex가 직접
+> 구현하고 검증했다. 이 승인은 실제 UID·SDK adapter·UI·network/live·deploy·delete로 확장하지 않는다.
+> 이후 단위는 별도 지시 전까지 수동 교대 규칙을 유지한다.
 >
 > 이전 운영 규칙(2026-08-21): **임시 Codex 단독 구현 루프를 중단하고 수동 교대 인수인계로
 > 복원했다.** Claude Code 구현·검증과 live log 기록 → Codex 독립 검수·재검증 → Codex 다음
@@ -24,7 +24,23 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_NEXT_SPEC` - 스펙 074 DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION.**
+상태: **`READY_FOR_NEXT_SPEC` - 스펙 075 DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION.**
+
+기준 `HEAD=origin=b2dc2ca`, ahead/behind 0/0. 스펙 075는 V2 PNG create-only/public-read Storage
+Rules, V2 exact envelope 승인 UID create와 spaces list 거부 Firestore Rules, 합성 UID 전용 emulator
+사본과 opt-in test를 구현했다. 배포 대상 Rules의 UID placeholder는 유지했다.
+
+PASS: targeted **75/75**, 전체 check(unit **2114/2114** 포함), default `demo-denn-emulator`
+**20/20**, 별도 cutover **4/4**, `git diff --check`, UID-only Rules 동등성, forbidden diff, 검사 포트
+잔류 0. 전체 Chromium E2E는 보호 대상 PNG 재작성 때문에 **NOT RUN**이다. 스펙 074 예외를 자동
+재사용하지 않았고 Founder가 2026-08-26 스펙 075 별도 예외 종료를 승인했다. 다음 transition은
+`NEXT_MANUAL_SPEC_SELECTION`이다.
+
+실제 UID·Firebase/network/live·deploy, SDK adapter, apps/UI, URL, orphan 삭제/정리는 미구현·NOT
+TESTED·금지다. 전체 리빌드 진행도는 **79~82% 완료 / 18~21% 잔여**로 추정한다. 이는 roadmap
+작업축 기반 관리 추정이며 최종 스펙 수를 분모로 계산한 값이 아니다.
+
+> 스펙 074 종료 상태:
 
 Founder가 2026-08-26 이 대화에서 **`스펙 074 E2E 예외 종료 승인`**을 명시했다. 따라서 보호 PNG
 재작성 부수효과로 전체 Chromium E2E를 실행하지 않았다는 사실을 유지하면서 스펙 074를 종료한다.

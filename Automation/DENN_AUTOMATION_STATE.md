@@ -4,24 +4,40 @@
 updated_at: 2026-08-26
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-074-space-v2-local-write-port   # DONE, LOCAL_VERIFIED, FOUNDER_E2E_EXCEPTION
-active_unit: null   # spec 075 may start only after spec 074 closure push
+completed_unit: spec-075-space-v2-rules-emulator   # DONE, LOCAL_VERIFIED, FOUNDER_E2E_EXCEPTION
+active_unit: null
 state: READY_FOR_NEXT_SPEC
-baseline_commit: 507eeb0   # HEAD=origin before the direct spec 074 implementation
-candidate_commit: pending   # spec 074 closure commit hash is reported after push; no self-hash bookkeeping commit
-verified_commit: pending   # same closure commit; verification is Codex local, not an independent second-agent review
-origin_relation: "implementation baseline HEAD=origin=507eeb0, ahead/behind 0/0; closure is being prepared as one fast-forward commit"
-working_tree: "spec 074 closure files plus pre-existing protected Founder/user changes; staged 0 before explicit staging"
+baseline_commit: b2dc2ca   # HEAD=origin before spec 075 implementation
+candidate_commit: pending   # closure commit hash is reported after push; no self-hash bookkeeping commit
+verified_commit: pending   # local verification plus Founder E2E exception; no independent second-agent review
+origin_relation: "closure starts from HEAD=origin=b2dc2ca, ahead/behind 0/0; one fast-forward content commit is prepared"
+working_tree: "before closure commit: spec 075 files plus pre-existing protected Founder/user changes; only exact spec 075 files may be staged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC_075_SPACE_V2_RULES_EMULATOR_CONTRACT
+next_transition: NEXT_MANUAL_SPEC_SELECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-commit_owner: Codex (spec 074 one-off direct implementation); no commit yet
+commit_owner: Codex direct implementation; spec 075 one-content-commit closure
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 78-81% complete; 19-22% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 075 직접 구현·로컬 Rules 검증 (2026-08-26)
+
+- Founder가 **`스펙 075 E2E 예외 종료 승인`**을 별도로 명시했다. 전체 Chromium E2E가 보호 PNG를
+  재작성해 NOT RUN이라는 사실을 유지하면서 `DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION`으로
+  종료한다. full-E2E PASS나 독립 CODEX_PASSED는 주장하지 않는다.
+- Founder `JJ-1=A, JJ-2=A, JJ-3=A, JJ-4=B, JJ-5=A, JJ-6=A` 범위만 구현했다. V2 asset
+  create-only/public-read, V2 document 승인 UID create, spaces list 거부와 local emulator 회귀다.
+- PASS: targeted unit **75/75**, 전체 check(unit **2114/2114** 포함), default emulator **20/20**,
+  cutover emulator **4/4**, `git diff --check`, UID-only Rules 동등성, forbidden diff, 검사 포트 잔류 0.
+- 전체 Chromium E2E는 **NOT RUN**이다. 스펙 074 예외를 자동 승계하지 않고 스펙 075 별도 Founder
+  승인을 받았다. 종료 내용 commit 하나로 push하며 self-hash bookkeeping commit은 만들지 않는다.
+- 실제 UID, 실제 Firebase/network/live, deploy, SDK adapter, UI, URL, orphan delete/cleanup은 모두
+  미구현·NOT TESTED·금지다.
+- 전체 진행도 추정은 **79~82% 완료 / 18~21% 잔여**다. local Rules와 emulator 작업축이 검증됐지만
+  production adapter·UI·실제 UID·배포/cutover가 남아 있으며 최종 스펙 분모는 고정되지 않았다.
 
 ## 스펙 074 직접 구현·로컬 검증 (2026-08-26)
 

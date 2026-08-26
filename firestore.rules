@@ -17,8 +17,28 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     match /spaces/{token} {
-      allow read: if true;                 // 토큰(문서ID)을 알아야 접근 가능 + 내용은 암호화됨
-      allow create: if true;               // 시안 스페이스 생성(운영자/고객)
+      function approvedSpaceOperator() {
+        return request.auth != null
+          && request.auth.token.firebase.sign_in_provider != 'anonymous'
+          && request.auth.uid == 'UNCONFIRMED_OPERATOR_UID_REPLACE_BEFORE_DEPLOY';
+      }
+      function validV2Document() {
+        return request.resource.data.keys().hasOnly(['schema', 'enc'])
+          && request.resource.data.keys().hasAll(['schema', 'enc'])
+          && request.resource.data.schema == 'space-v2'
+          && request.resource.data.enc is map
+          && request.resource.data.enc.keys().hasOnly(['salt', 'iv', 'ct'])
+          && request.resource.data.enc.keys().hasAll(['salt', 'iv', 'ct'])
+          && request.resource.data.enc.salt is string
+          && request.resource.data.enc.iv is string
+          && request.resource.data.enc.ct is string;
+      }
+      allow get: if true;                  // 토큰(문서ID)을 알아야 접근 가능 + 내용은 암호화됨
+      allow list: if false;                // JJ-3=A: 컬렉션 열거 금지
+      // 기존 non-V2/schema-less create는 현행 호환을 유지하고 space-v2만 새 권한·shape로 좁힌다.
+      allow create: if !('schema' in request.resource.data)
+                      || request.resource.data.schema != 'space-v2'
+                      || (approvedSpaceOperator() && validV2Document());
       allow update, delete: if false;      // 생성 후 변경/삭제 금지(무결성)
     }
 

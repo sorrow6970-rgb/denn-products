@@ -83,9 +83,18 @@ export async function createEmulatorAccount(
       body: JSON.stringify({ localId: uid, email, password, emailVerified: true }),
     },
   );
-  if (!response.ok && response.status !== 409) {
-    throw new Error(`emulator account creation failed: ${response.status}`);
+  if (response.ok || response.status === 409) return;
+  if (response.status === 400) {
+    try {
+      const body = (await response.json()) as { readonly error?: { readonly message?: unknown } };
+      if (body.error?.message === "EMAIL_EXISTS" || body.error?.message === "DUPLICATE_LOCAL_ID") {
+        return;
+      }
+    } catch {
+      // Fall through to the safe status-only error below.
+    }
   }
+  throw new Error(`emulator account creation failed: ${response.status}`);
 }
 
 /** Wipes emulator state between scenarios so each one starts from "no head, no objects". */
