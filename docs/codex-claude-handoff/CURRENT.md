@@ -24,7 +24,27 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`CORRECTION_REQUIRED` - 스펙 078 Codex 독립 검수 라운드 1.**
+상태: **`READY_FOR_CODEX` - 스펙 078 보완 라운드 1 구현·로컬 검증 완료.**
+
+Founder가 exact replay test에서 확인된 구현 결함에 대해 `replay-controller.ts` 한 파일의 최소 범위
+확장을 승인했다. 보완 시작 기준은 `HEAD=origin=85e92da`, ahead/behind 0/0이고 코드/test commit은
+`bed9106`이다.
+
+V2 evidence의 `x/y`는 `normalized-max-pan-v1`인데 기존 controller가 logical px처럼 직접 전달해 exact
+fixture에서 기대 draw origin `(-995,-65)` 대신 `(-650.5,-99.75)`가 나왔다. 수정은 기존 스펙 029/030
+primitive를 재사용한 zero-pan probe plan → rotated maxPan → `toLogicalTransform()` → final plan이다.
+geometry 공식 복제, 새 API·의존성·production import는 0이다.
+
+PASS: exact plan/detachment 포함 targeted **29/29**, spaces/mockup typecheck, 전체 check(unit
+**2153/2153** 포함), 고객 entry exact filename/size/SHA-256, `git diff --check`, 허용 diff, 검사 포트 잔류
+0. 첫 전체 check는 formatter 1건에서 중단됐고 형식만 고친 뒤 재실행해 PASS했다.
+
+전체 Chromium E2E·emulator는 NOT RUN이며 실제 Firebase/network/live/deploy/UI 연결 0이다. 상태
+`READY_FOR_CODEX`, fix_round 1/3, next transition `CODEX_RE_REVIEW`; 다음 스펙 자동 시작 0.
+
+전체 진행도는 **81~84% 완료 / 16~19% 잔여**로 유지한다.
+
+> 스펙 078 Codex 최초 검수 상태:
 
 검수 기준 `HEAD=origin=0f63af4`, ahead/behind 0/0이다. 독립 targeted **28/28**, 전체 check(unit
 **2152/2152** 포함), 고객 entry exact hash, `git diff --check`, commit 허용 경로와 검사 포트 잔류 0은

@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-076-space-v2-sdk-adapter-emulator   # DONE, LOCAL_VERIFIED, FOUNDER_E2E_EXCEPTION
 active_unit: spec-078-space-v2-local-viewer-replay-pipeline
-state: CORRECTION_REQUIRED
+state: READY_FOR_CODEX
 baseline_commit: ed41170   # HEAD=origin at LL-1~LL-6 approval and spec 078 drafting start
-candidate_commit: 0f63af4   # spec 078 implementation/content commit under independent review
-verified_commit: pending   # execution gates pass, but exact replay-vector integration coverage is incomplete
-origin_relation: "reviewed HEAD=origin=0f63af4, ahead/behind 0/0"
-working_tree: "pre-existing protected Founder/user changes only before this review record; correction is limited to one spec 078 test plus handoff docs"
+candidate_commit: bed9106   # spec 078 correction round 1 code/test commit
+verified_commit: pending   # local correction gates pass; independent Codex re-review pending
+origin_relation: "correction started from HEAD=origin=85e92da, ahead/behind 0/0; bed9106 is local content commit before documentation push"
+working_tree: "spec 078 correction docs plus pre-existing protected Founder/user changes; only exact correction docs may be staged"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CLAUDE_CORRECTION
+next_transition: CODEX_RE_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Codex implementation under user execution instruction; independent review pending
 push_policy: fast-forward-only
@@ -22,6 +22,25 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 81-84% complete; 16-19% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 078 보완 라운드 1 완료 — normalized pan exact replay (2026-08-26)
+
+- Founder가 Codex 검수에서 드러난 구현 결함의 최소 범위 확장을 승인했다. 허용 추가는
+  `replay-controller.ts` 한 파일이며 다른 제품 범위는 열지 않았다.
+- exact vector test가 V2 `normalized-max-pan-v1`의 x/y를 logical px로 환산하지 않은 결함을 재현했다:
+  기대 draw origin `(-995,-65)`, 기존 실제 `(-650.5,-99.75)`.
+- controller는 기존 스펙 029/030 primitive만 재사용해 zero-pan probe plan → rotated `maxPan` →
+  `toLogicalTransform()` → final plan 순서로 수정했다. geometry 공식을 복제하거나 새 API/의존성을 만들지
+  않았다.
+- 코드/test commit `bed9106`. exact full plan vector와 source evidence/decoder result 후속 mutation에 대한
+  success plan detachment를 고정했다.
+- PASS: targeted **29/29**, spaces/mockup typecheck, 전체 check(unit **2153/2153** 포함), 고객 entry exact
+  filename/size/SHA-256, `git diff --check`, 허용 diff, 검사 포트 잔류 0.
+- 첫 전체 check는 formatter 1건에서 중단됐고 형식만 고친 뒤 처음부터 재실행해 PASS했다. 기능·type
+  실패나 flaky로 기록하지 않는다.
+- 전체 Chromium E2E·emulator는 계약대로 NOT RUN. actual Firebase/network/live/deploy와 UI 연결 0.
+- 상태 `READY_FOR_CODEX`, fix_round 1/3, next transition `CODEX_RE_REVIEW`; 다음 스펙 시작 0.
+- 전체 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**.
 
 ## 스펙 078 Codex 독립 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-26)
 

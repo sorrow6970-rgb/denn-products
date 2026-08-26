@@ -1,45 +1,30 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CORRECTION_REQUIRED`
+상태: `READY_FOR_CODEX`
 active_unit: `spec-078-space-v2-local-viewer-replay-pipeline`
 completed_unit: `spec-076-space-v2-sdk-adapter-emulator` — **DONE / LOCAL_VERIFIED / FOUNDER_E2E_EXCEPTION**
-검수 기준: `HEAD=origin=0f63af4`, ahead/behind **0/0**.
-독립 검증: targeted **28/28**, 전체 check(unit **2152/2152** 포함), 고객 entry exact hash PASS. 전체
-Chromium E2E와 emulator는 **NOT RUN**.
+보완 시작 기준: `HEAD=origin=85e92da`, ahead/behind **0/0**.
+보완 코드/test commit: `bed9106`.
+검증: targeted **29/29**, 전체 check(unit **2153/2153** 포함), 고객 entry exact hash PASS. 전체 Chromium
+E2E와 emulator는 **NOT RUN**.
 fix_round: **1 / 3**
-next_transition: **`CLAUDE_CORRECTION`**
+next_transition: **`CODEX_RE_REVIEW`**
 
 ## 현재 결과·다음 지시문
 
-`C:\repo\denn-products`에서 `Automation/NEXT_CLAUDE_PROMPT.md`를 읽고 스펙 078
-`CORRECTION_REQUIRED` 라운드 1만 수행해.
+스펙 078 보완 라운드 1 구현과 local 검증이 완료됐다. exact vector test가
+`normalized-max-pan-v1` x/y를 logical px처럼 직접 사용한 결함을 재현했고, Founder의 최소 범위 확장 승인
+후 기존 `maxPanFromRects()`와 `toLogicalTransform()`을 사용한 zero-pan probe → normalized conversion →
+final plan으로 고쳤다.
 
-Codex 독립 검수에서 기능 게이트는 모두 통과했지만 검증 공백 1건을 확인했다.
-`apps/mockup/src/space-v2/replay-controller.test.ts`의 success test는 현재 logical canvas, layer 순서와
-imageRef만 검사한다. 스펙 078 §VERIFY 8이 요구한 closed evidence frame plan의 rect, fill color,
-clip rect, source image size, normalized transform과 `rotationQuarterTurns` exact vector를 고정하지 못한다.
+**Claude Code에 전달할 실행 지시문은 없다.** Codex가 `bed9106`과 이 기록을 독립 재검수할 때까지
+production route, Firebase asset adapter, React/UI/CSS와 다음 스펙을 시작하지 않는다.
 
-다음만 보완해.
-
-1. 기존 success fixture가 반환하는 `PreviewRenderPlan` 전체를 exact equality로 검증해. 최소한
-   `logicalCanvas`, 세 command의 type/layerId/rect 또는 clipRect/color, user-image의 imageRef/image size,
-   scale/x/y와 quarter-turn 결과가 모두 evidence와 정확히 연결됨을 한 벡터에서 증명해야 한다.
-2. success 결과 plan이 source evidence와 decoder result의 후속 mutation에서 detached임을 단언해.
-   구현 결함이 실제로 드러나지 않으면 production `replay-controller.ts`와 `open-v2.ts`는 수정하지 마.
-3. 기존 28개 테스트의 short-circuit/safe-error 의미를 약화하거나 삭제하지 마.
-
-허용 제품 파일은 `apps/mockup/src/space-v2/replay-controller.test.ts` 하나뿐이다. 관련 허용 문서는
-spec078 계약, spec078 handoff, STATE/NEXT/CURRENT/live log뿐이다. `apps/mockup/src/App.tsx`, 기존
-`space/**`, 다른 apps/packages 제품 코드, Firebase/Rules/config, package/lockfile와 보호 대상은 수정·
-restore·checkout·stage하지 마.
-
-targeted 신규 unit, spaces/mockup typecheck, `node scripts/check.mjs`, 고객 entry exact filename/size/hash,
-`git diff --check`, 허용 diff와 검사 포트 잔류 0을 재검증해. 전체 Chromium E2E와 emulator는 계약대로
-실행하지 말고 NOT RUN으로 유지해. actual Firebase/network/live/deploy/UI 연결도 금지다.
-
-보완 코드와 문서만 일반 fast-forward commit/push하고 `READY_FOR_CODEX`, fix_round 1에서 멈춰. 다음
-스펙을 시작하거나 자동화·반복 작업을 만들지 마. 전체 리빌드 진행도는 **81~84% 완료 / 16~19% 잔여**로
-유지해.
+- targeted **29/29**, 전체 check unit **2153/2153** PASS.
+- 고객 entry `index-6js4DafP.js`, 322,018 bytes, SHA-256
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
+- 전체 Chromium E2E·emulator는 NOT RUN. actual network/live/deploy/UI 연결 0.
+- 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**.
 
 ## 이전 Claude Code 전달 지시문 — 스펙 073 종료 이력
 

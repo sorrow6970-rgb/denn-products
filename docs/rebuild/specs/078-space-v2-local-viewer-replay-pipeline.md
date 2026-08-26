@@ -269,3 +269,18 @@ module이며, E2E suite는 보호 대상 spec-018 PNG를 다시 쓰므로 금지
   않으면 production 코드는 수정하지 않는다.
 - 상태 `CORRECTION_REQUIRED`, fix_round 1/3, 다음 transition `CLAUDE_CORRECTION`. 전체 Chromium E2E와
   emulator는 계속 NOT RUN이며 다음 스펙은 시작하지 않는다.
+
+### DONE (Codex) — 보완 라운드 1 (2026-08-26)
+
+- exact full-plan vector를 추가하자 V2 `normalized-max-pan-v1`의 x/y가 logical px로 직접 전달되는 구현
+  결함이 재현됐다. fixture 기대 draw origin은 `(-995,-65)`, 기존 결과는 `(-650.5,-99.75)`였다.
+- Founder가 `replay-controller.ts` 한 파일의 최소 범위 확장을 승인했다.
+- controller는 스펙 029/030 정본대로 pan 0 probe plan에서 회전 footprint의 maxPan을 얻고 기존
+  `toLogicalTransform()`으로 x/y를 logical px로 환산한 뒤 final plan을 만든다. geometry 공식 복제와
+  신규 API/의존성은 0이다.
+- exact plan 전체와 source evidence/decoder result 후속 mutation에 대한 success detachment를 고정했다.
+- 코드/test commit `bed9106`. targeted **29/29**, spaces/mockup typecheck, 전체 check(unit **2153/2153**),
+  고객 entry exact hash, diff·port 게이트 PASS.
+- 첫 전체 check는 formatter 1건에서 중단됐고 형식 정정 후 전체를 재실행해 PASS했다.
+- 전체 Chromium E2E·emulator는 NOT RUN. 상태 `READY_FOR_CODEX`, fix_round 1/3, 다음 transition
+  `CODEX_RE_REVIEW`; 다음 스펙은 시작하지 않는다.

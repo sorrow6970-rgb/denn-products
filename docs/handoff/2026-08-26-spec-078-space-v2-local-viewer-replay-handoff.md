@@ -1,6 +1,6 @@
 # 스펙 078 Space V2 local viewer replay handoff
 
-- 상태: `CORRECTION_REQUIRED / FIX_ROUND_1 / LOCAL_GATES_PASS / NO_UI / NO_NETWORK`
+- 상태: `READY_FOR_CODEX / FIX_ROUND_1_COMPLETE / LOCAL_VERIFIED / NO_UI / NO_NETWORK`
 - 계약 작성 기준: `HEAD=origin=ed41170`, ahead/behind 0/0
 - Codex 검수 대상: `HEAD=origin=0f63af4`, ahead/behind 0/0
 - 결정: `LL-1=A` ~ `LL-6=A`
@@ -44,3 +44,12 @@ fast-forward commit/push한다. 상태를 `READY_FOR_CODEX`로 두고 다음 스
 - 허용 보완은 해당 test 1개와 spec078 상태/handoff 문서뿐이다. 실제 결함이 드러나지 않으면 production
   코드는 변경하지 않는다.
 - 상태 `CORRECTION_REQUIRED`, fix_round 1/3. E2E·emulator는 NOT RUN, 다음 스펙 시작 0.
+
+## 보완 라운드 1 결과
+
+- Founder가 실제 구현 결함에 한해 `replay-controller.ts` 최소 범위 확장을 승인했다.
+- exact vector가 normalized x/y를 logical px로 직접 전달한 결함을 재현했고, 기존 스펙 029/030의
+  zero-pan probe → rotated maxPan → normalized-to-logical conversion → final plan으로 수정했다.
+- 코드/test commit `bed9106`.
+- targeted **29/29**, 전체 check(unit **2153/2153**), 고객 entry exact hash, diff·포트 게이트 PASS.
+- E2E·emulator는 NOT RUN. 상태 `READY_FOR_CODEX`, next transition `CODEX_RE_REVIEW`.
