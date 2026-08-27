@@ -1,14 +1,36 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **UI IMPLEMENTATION NOT STARTED**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **IMPLEMENTED / LOCAL_VERIFIED / UI CONNECTED / NO_LIVE_NETWORK**
 completed_unit: `spec-079-space-v2-proof-reader-adapter` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI**
-기준: 문서 작성 시 `HEAD=origin=c9c0c3d`, ahead/behind `0/0`.
+기준: `HEAD=origin=c9c0c3d`에서 시작. 계약 문서 commit `971c5fa`, 구현 commit `2319d1a`.
 Founder 정본: **LL-1=A ~ LL-6=A, MM-1=A ~ MM-6=A**.
 fix_round: **0 / 3**
-next_transition: **`CLAUDE_SPEC_080_IMPLEMENTATION`**
+next_transition: **`CODEX_SPEC_080_REVIEW`**
 
-## Claude Code에 전달할 실행 지시문
+## 현재 결과
+
+스펙 080 고객 V2 production viewer composition/UI를 계약 범위대로 구현하고 검증했다. 신규 제품 파일은
+`apps/mockup/src/space-v2/`의 `browser-png-decoder.ts` · `production-controller.ts` ·
+`SpaceV2ProofView.tsx`와 각 test 3개이며, 기존 파일 수정은 `space/composition.ts` ·
+`space/SpacePasswordGate.tsx` · `App.tsx`와 그 test, e2e fixture, targeted E2E spec뿐이다. V2 전용 CSS
+파일은 필요하지 않아 만들지 않았다.
+
+exact `space-v2` marker만 V2 pipeline으로 dispatch하고 malformed V2는 V1으로 fallback하지 않는다.
+decoder와 drawable binding은 기존 스펙 026 owner를 감싼 하나의 owner가 소유하며, password rejection과
+proof unavailable만 명시 재시도 가능이다. 자동 retry·catalog/template/font fallback은 0이다.
+
+게이트 실측은 전체 `node scripts/check.mjs` PASS(unit **2278/2278**), targeted Chromium
+`tests/e2e/space-production-route.spec.ts` **14/14 PASS**(axe·console·overflow·keyboard submit·외부
+request 0 포함), 신규 desktop/mobile screenshot 육안 확인, `git diff --check` PASS, 허용 외 diff 0,
+검사 포트 잔류 0이다. 고객 bundle은 계약대로 변경됐고 admin bundle/CSS와 고객 CSS는 무변경이다.
+
+**전체 Chromium suite는 보호 spec-018 PNG를 다시 쓰므로 NOT RUN**이며 full-E2E PASS라고 기록하지
+않는다.
+
+**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 검수다.
+
+> 직전 지시문(스펙 080 구현, 수행 완료 — 기록):
 
 ```text
 C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와
@@ -41,6 +63,58 @@ spec-080 결과·문서만 일반 fast-forward commit/push하고 STATE/NEXT/CURR
 - spec: `docs/rebuild/specs/080-space-v2-production-customer-viewer-ui.md`
 - handoff: `docs/handoff/2026-08-27-spec-080-space-v2-production-customer-viewer-ui-handoff.md`
 - 전체 진행도: **81~84% 완료 / 16~19% 잔여**. 문서 준비만으로 변동 없음.
+
+## ★ 스펙 080 — 수행 기록 (2026-08-27)
+
+기준 `HEAD=origin=c9c0c3d`, ahead/behind 0/0에서 시작해 계약 문서 commit `971c5fa`와 구현 commit
+`2319d1a`를 남겼다. 허용 목록 밖 제품 파일은 만들지 않았다.
+
+- **변경 파일.** 신규 `apps/mockup/src/space-v2/browser-png-decoder.ts(.test.ts)` ·
+  `production-controller.ts(.test.ts)` · `SpaceV2ProofView.tsx(.test.tsx)`. 수정
+  `space/composition.ts(.test.ts)` · `space/SpacePasswordGate.tsx(.test.tsx)` · `App.tsx(.test.tsx)` ·
+  `e2e/space-production-route-fixture.tsx` · `tests/e2e/space-production-route.spec.ts`. 신규 결과
+  `docs/rebuild/results/spec-080/space-v2-viewer-{desktop-1280x800,mobile-390x844}.png`.
+  **V2 전용 CSS는 만들지 않았다** — 기존 `surface.css` 래퍼의 `overflow-x:auto`가 320px 계약을 이미
+  만족한다.
+- **N-1 dispatch.** document 1회 read → top-level `schema`를 hostile-getter 안전하게 1회 snapshot →
+  exact `space-v2`만 V2. malformed V2의 V1 fallback **0**, 그 밖의 document는 기존 V1 opener와 스펙
+  063 안전 차단 UI 그대로. password는 submit 즉시 비우고 state/DOM/URL/log에 남기지 않는다.
+- **N-2 decoder.** 기존 `createLocalImageBindingController`를 감싼 단일 owner가 Blob·object URL·
+  `HTMLImageElement`·generation·`imageRef` binding을 모두 소유한다. module import/factory 시점 browser
+  API 호출 **0**(ports 기록과 `Image` 부재 환경 양쪽으로 고정), bytes는 전달 전 fresh copy, MIME은
+  항상 `image/png` 상수, 성공 `imageRef`는 기존 safe identifier 문법을 만족하고 URL/경로/MIME을 담지
+  않는다. 모든 종료 경로에서 URL **정확히 1회 revoke**, superseded/late 결과는 state·binding·Promise를
+  바꾸지 않는다.
+- **N-3 composition.** V2 dependency(proof facade → 스펙 079 reader → decoder owner → replay
+  controller)는 lazy·최대 1회 생성이고 document reader와 **같은 `resolveSpaceFirebaseConfig()` 결과와
+  같은 `denn-space-viewer` named app**을 쓴다. V1 document면 Storage/Blob/Image/Canvas 준비 **0**임을
+  unit이 고정한다.
+- **N-4 상태/retry.** submit 1건만 in-flight(중복 클릭·StrictMode 재마운트로 두 read가 생기지 않음).
+  password rejection과 proof unavailable만 retryable이고 그 둘만 cached document를 유지한다.
+  mismatch/decode/dimension/plan 실패는 non-retryable. 자동 retry·Promise 공유·silent fallback **0**.
+- **N-5 UI.** 기존 gate의 password/loading/error 흐름과 V1 copy/layout을 보존하고 V2 ready만 새
+  `SpaceV2ProofView`로 보낸다. badge `저장된 시안 · 열람 전용`, heading `내 공간 시안`, body
+  `저장된 액자 구성을 확인할 수 있습니다.`, canvas accessible name `저장된 액자 시안`. 다운로드·저장·
+  주문·공유·admin control·placeholder 이미지 **0**.
+- **게이트 실측.** 전체 `node scripts/check.mjs` PASS(unit **2278/2278**), targeted Chromium
+  `space-production-route.spec.ts` **14/14 PASS**(V1 안전 차단 회귀 4건 + spec063 screenshot 2건 +
+  V2 신규 8건). axe serious/critical 0, console error/warning 0, pageerror 0, 320px overflow 0,
+  keyboard submit, 외부 request 0(`blob:` 제외 시 빈 배열).
+- **고객 bundle(계약상 변경 허용).** 전 `index-6js4DafP.js` / `322,018 bytes` / `A9360EFF…E8159` →
+  후 `index-nLbiXJi7.js` / `340,481 bytes` /
+  `99A707FA3AF518933F848CF52948ADCBD95BE44D1544616FA93C49E486805879`. 증가 **+18,463 bytes**는 V2
+  viewer/controller/decoder이고 신규 lazy `firebase/storage` chunk `index.esm-DtyxGWvl.js`
+  **34,890 bytes**가 추가됐다. **admin entry(226,201) · admin CSS(9,146) · 고객 CSS(19,381)는
+  파일명·크기 무변경**이라 STOP 조건에 해당하지 않는다.
+- **금지 준수.** actual Firebase/project/bucket/network/live/운영 데이터·실제 token/password/UID **0**,
+  Rules/CORS/Hosting deploy·emulator 변경 **0**, admin issue UI·URL/clipboard·publish·orphan cleanup
+  **0**, V1 migration/proof·catalog fallback·auto retry **0**, package/lockfile/`pnpm-workspace.yaml`·
+  신규 의존성 **0**, 보호 대상 수정·복원·checkout·stage·commit **0**, 자동화·반복 작업과 다음 스펙
+  **0**. spec-063 결과 PNG는 재생성 후 byte-identical이라 diff 0이고, Playwright가 만든
+  `test-results/`는 제거했다.
+- **full Chromium suite는 NOT RUN**(보호 spec-018 PNG 재기록). full-E2E PASS라고 주장하지 않는다.
+- 진행도: **83~86% 완료 / 14~17% 잔여.** 고객 V2 열람 경로가 production route에서 실제 Canvas까지
+  처음 연결됐다. admin 발급 UI와 실제 Firebase/Rules 배포·live 검증은 그대로 남는다.
 
 ## 스펙 079 Codex 검수 결과
 

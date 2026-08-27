@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CLAUDE / IMPLEMENTATION NOT STARTED / UI STAGE`
+`READY_FOR_CODEX / IMPLEMENTED / LOCAL_VERIFIED / UI CONNECTED / NO_LIVE_NETWORK`
 
 기준:
 
@@ -251,3 +251,143 @@ type SpaceReadyView =
 ### QUESTIONS
 
 없음. 기존 LL/MM 결정과 이번 사용자의 수동 다음 작업 지시 범위 안에서 고객 V2 viewer UI만 연결한다.
+
+### DONE (Claude) — 2026-08-27
+
+기준 `HEAD=origin=c9c0c3d`, ahead/behind 0/0에서 시작했다. 계약 문서 commit `971c5fa`, 구현 commit
+`2319d1a`. 이 계약 범위만 구현했고 허용 목록 밖 제품 파일은 만들지 않았다.
+
+**§4 허용 파일 대비 실제 변경**
+
+| 파일 | 상태 |
+|---|---|
+| `apps/mockup/src/space-v2/browser-png-decoder.ts` / `.test.ts` | 신규 |
+| `apps/mockup/src/space-v2/production-controller.ts` / `.test.ts` | 신규 (versioned controller) |
+| `apps/mockup/src/space-v2/SpaceV2ProofView.tsx` / `.test.tsx` | 신규 |
+| `apps/mockup/src/space-v2/space-v2-proof-view.css` | **만들지 않음** — 아래 설명 |
+| `apps/mockup/src/space/composition.ts` / `.test.ts` | 수정 |
+| `apps/mockup/src/space/SpacePasswordGate.tsx` / `.test.tsx` | 수정 |
+| `apps/mockup/src/App.tsx` / `.test.tsx` | 수정 |
+| `apps/mockup/src/e2e/space-production-route-fixture.tsx` | 수정 |
+| `tests/e2e/space-production-route.spec.ts` | 수정 |
+| `docs/rebuild/results/spec-080/space-v2-viewer-{desktop-1280x800,mobile-390x844}.png` | 신규 |
+
+**V2 전용 CSS를 만들지 않은 이유.** §3 N-5는 "CSS가 필요하면" 파일 하나를 허용한다. 필요하지 않았다 —
+`PreviewCanvasSurface`가 이미 `surface.css`에서 `max-width:100%` + `overflow-x:auto` 래퍼를 쓰므로
+320px 계약이 새 규칙 없이 만족되고, 나머지 레이아웃은 기존 `denn-stack`과 `@denn/ui` 토큰뿐이다. 새
+전역 selector와 기존 browse/preview 디자인 변경은 0이다.
+
+**§3 N-1 dispatch.** `readSpaceLink`와 기존 `SpaceDocumentReadPort`를 그대로 재사용한다. document를 한
+번 읽은 뒤 top-level `schema`를 **정확히 한 번** snapshot하며 throwing getter·primitive·null은 모두
+"V2 아님"으로 닫는다. exact `schema === "space-v2"`만 V2 경로로 가고, `readSpaceDocumentV2()`가 거부한
+malformed V2는 **V1으로 fallback하지 않는다**(unit이 V1 opener 호출 0으로 고정). V2 marker가 아니면
+기존 V1 opener 계약으로 보내며 V1 성공 결과와 스펙 063 safe-block UI 의미는 바뀌지 않았다. password는
+submit 즉시 입력 state를 비우고 state/DOM/URL/log/storage 어디에도 남지 않는다.
+
+**§3 N-2 decoder와 drawable ownership.** 기존 `createLocalImageBindingController()`를 감싼 작은 V2
+adapter가 copied bytes의 private Blob(`image/png`), private object URL과 `HTMLImageElement`,
+generation과 late-completion 무효화, 합성 `imageRef`와 `PreviewImageBindings`, clear/dispose 정리를
+모두 소유한다. geometry/plan 공식과 두 번째 이미지 loader는 복제하지 않았다. 고정한 사실:
+module import/factory 시점 DOM·`Image`·`Blob`·URL 호출 **0**(port 기록과, `Image`가 없는 환경에서
+factory가 throw하지 않는다는 두 가지로 검증) · `decode(bytes)` 이후에만 browser API 사용 · bytes는
+await/browser 전달 전 fresh copy(입력을 나중에 바꿔도 전달본 불변) · MIME은 항상 `image/png` 상수이고
+objectPath/token/password/digest는 Blob URL이나 `imageRef`에 들어가지 않는다 · 성공 `imageRef`는 기존
+safe identifier 문법을 만족 · 성공 시 natural width/height를 반환하고 binding이 **같은 drawable
+identity**를 돌려준다 · stale success/error는 state·binding·Promise를 바꾸지 않는다 · 모든 종료
+경로(성공/실패/supersede/clear/dispose)에서 private URL을 **정확히 1회** revoke한다 · decoder 자동
+retry **0**.
+
+**§3 N-3 production composition.** `createSpaceProductionController()`는 기존 lazy document reader를
+유지하고 `createSpaceV2OpenPort()` → `createFirebaseSpaceV2ProofReadFacade(config)` →
+`createSpaceV2ProofBytesReader(facade)` → Web Crypto `SpaceSha256Port` → N-2 decoder owner →
+`createSpaceV2FrameReplayController({opener,proof,sha256,decoder})`를 **lazy·최대 1회** 조합한다.
+V2 모듈 import만으로는 Firebase app/service/network도 browser decode도 시작되지 않고, V1 document면
+proof facade/Storage/Blob/Image/Canvas 준비가 **0**이다(unit이 factory 호출 0으로 고정). document
+reader와 proof reader는 **같은 `resolveSpaceFirebaseConfig()` 결과와 같은 `denn-space-viewer` named
+app**을 쓰며(스펙 079 facade가 5개 config exact match일 때만 재사용하고 불일치는 `getStorage` 전
+fail-closed), default/두 번째 named app·Auth·anonymous sign-in·추가 Firestore instance는 0이다.
+
+**§3 N-4 controller state와 retry.** ready 결과는 N-4의 union을 **두 개의 `status:"ready"` variant**로
+표현했다 — V1은 기존 스펙 063 ready 모양(`value: OpenedSpaceV1`) 그대로, V2는
+`v2: {plan, imageBindings}`. 그래서 public 의미는 계약 union보다 넓지 않고, 기존 gate와 V1 전용
+fixture(허용 목록 밖)가 계약 변경 없이 그대로 동작한다. 한 controller에서 submit은 한 번만
+in-flight이고 중복 클릭·Enter·StrictMode remount가 두 read를 만들지 않는다. password rejection과
+proof load unavailable만 명시 재시도 가능하며 **그 둘만 cached document를 유지**한다. malformed V2,
+evidence/proof mismatch, decode/dimension/plan 실패는 non-retryable이다. 자동 retry·Promise 공유·
+silent fallback **0**. detach/reattach는 late result를 무효화하고 binding을 비우며 기존 StrictMode
+계약을 유지한다. state·UI·log 어디에도 raw SDK code/message, path, token, password, digest, bytes,
+UID/config가 없다.
+
+**§3 N-5 React UI.** 기존 `SpacePasswordGate`의 password/loading/error 흐름과 V1 copy/layout을
+보존했고, ready V1은 여전히 `SpacePostAuthFrameView`로 가서 스펙 063 safe-block notice를 그대로
+렌더한다. ready V2만 새 `SpaceV2ProofView` 자식으로 가며 badge `저장된 시안 · 열람 전용`, heading
+`내 공간 시안`, body `저장된 액자 구성을 확인할 수 있습니다.`, `PreviewCanvasSurface` accessible name
+`저장된 액자 시안`만 렌더한다. V2 success에 catalog read·template-art/font load·V1 readiness owner·
+placeholder Canvas는 **0**이다. loading은 `시안을 확인하는 중입니다…`, retryable proof 실패는
+민감정보 없는 `시안을 불러오지 못했습니다. 잠시 후 다시 시도하세요.`, non-retryable은
+`시안을 표시할 수 없습니다.`로 닫고 코드 문자열은 보이지 않는다. retryable 상태는 password를 다시
+입력하고 `시안 보기`를 눌러야 하며 password 기억/자동 재전송은 0이다. 외부 링크·다운로드·저장·주문·
+공유·admin control은 없다.
+
+**§5 unit/component 12항목** — 전부 덮었다. ①V1 exact document는 opener로만 가고 V2 facade/decoder 0
+②exact V2 marker는 V2만 ③malformed `space-v2`는 V1 fallback 0·proof/decode/Canvas 0 ④success exact
+순서 document read → v2-open → proof-read → digest → decode → plan(실제 replay controller와 실제
+decoder를 붙인 통합 harness로 단언) ⑤wrong password는 cached document 재사용·proof/decode 0 ⑥proof
+unavailable은 명시 재시도만·자동 retry 0 ⑦mismatch/decode/dimension/plan은 non-retryable·raw 0
+⑧duplicate submit·StrictMode remount·detach 중 late 결과 ⑨decoder import/factory inert·fresh bytes·
+exact dimensions·binding identity·stale completion·URL exact-once revoke·clear/reattach ⑩success
+Canvas가 plan logical dimensions와 image binding 사용·placeholder 0 ⑪UI visible copy 전수 단언과
+code/path/token/password/digest/URL/SDK message 0 ⑫기존 V1 gate·spec 063 block UI·inactive catalog
+route 회귀 통과.
+
+**§6 브라우저 검증.** 기존 `space-production-route` fixture를 확장했다. 실제 Firebase는 없고 fixture가
+**자기 캔버스에 합성 PNG를 직접 그려** 그 bytes를 in-memory로 넘기며, 그 위에서 **실제** 스펙 078
+replay controller · 실제 N-2 browser decoder · 실제 Web Crypto digest · 실제 `PreviewCanvasSurface`가
+돈다. targeted Chromium은 `tests/e2e/space-production-route.spec.ts`만 실행했고 **14/14 PASS**다 —
+V1 safe-block 회귀 4건, spec063 screenshot 2건, V2 신규 8건(success · wrong-password 재시도 · proof
+unavailable 무자동재시도 · digest mismatch 비재시도 · 320px overflow · unmount · desktop/mobile
+screenshot). password form keyboard submit(입력 후 버튼에서 Enter), loading, wrong-password 재시도,
+V2 Canvas success, non-retryable safe failure를 모두 검증했다. 320px horizontal overflow 0, console
+error/warning 0, pageerror 0, axe serious/critical 0, `blob:` 제외 외부 request **0**이다. V2 성공은
+`canvas-status`가 `미리보기가 준비되었습니다.`가 되는 것으로 확인했다 — 이는 executor가 plan의
+`imageRef` 뒤 drawable을 실제로 찾았을 때만 나오므로 binding이 pipeline 끝까지 살아남았다는 증거다.
+**full Chromium suite는 보호 spec-018 PNG를 다시 쓰므로 NOT RUN**이며 full-E2E PASS라고 기록하지
+않는다.
+
+**§7 repository gate 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| 신규/관련 targeted unit + mockup typecheck | PASS |
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2278/2278**, build 2개 |
+| targeted Chromium `space-production-route.spec.ts` | **14/14 PASS** |
+| 신규 desktop/mobile screenshot | 생성·육안 확인 완료 |
+| 고객 bundle 변경 전 | `index-6js4DafP.js` / `322,018 B` / `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159` |
+| 고객 bundle 변경 후 | `index-nLbiXJi7.js` / `340,481 B` / `99A707FA3AF518933F848CF52948ADCBD95BE44D1544616FA93C49E486805879` |
+| 증가분 설명 | +18,463 B = V2 viewer/controller/decoder. 추가로 신규 lazy `firebase/storage` chunk `index.esm-DtyxGWvl.js` 34,890 B |
+| admin bundle / CSS | `index-D0XOQpRL.js` 226,201 B · `index-DJ_z3tK1.css` 9,146 B · 고객 CSS `index-BjqjBda8.css` 19,381 B — 파일명·크기 **무변경**(STOP 조건 미해당) |
+| `git diff --check` | PASS |
+| 허용 경로 외 diff | **0** — Rules/config/package/lockfile/admin/firebase package/spaces/render 무변경 |
+| 검사 포트 4183/4184/4185/8080/9099/9199 | 실행 전후 잔류 **0**, 기존 프로세스 강제 종료 0 |
+
+targeted E2E는 `scripts/e2e-run.mjs`와 같은 staging 계약(OS temp `mkdtemp`, 저장소 안에 아무것도
+쓰지 않음)을 그대로 쓰되 Playwright에 spec 파일 하나만 넘기는 임시 runner로 실행했다. 그 runner는
+scratchpad에만 있고 저장소에 커밋하지 않았다. spec-063 결과 PNG는 재생성 후 byte-identical이라 diff
+0이고, Playwright가 만든 `test-results/`는 제거했다.
+
+**§8·§9 금지·보호 준수.** actual Firebase/project/bucket/network/live/운영 데이터·실제
+token/password/UID 접근 **0**, Rules/CORS/Hosting deploy·emulator Rules/config 변경·production
+env/secret **0**, admin V2 issue session/UI·URL 생성/clipboard·운영 쓰기·publish **0**, V1
+migration/rewrite·proof fallback·catalog fallback·auto retry/merge **0**, 다운로드/저장/주문/공유 UI
+**0**, orphan delete/cleanup·C6/backend·L-4/tombstone **0**, package/lockfile/`pnpm-workspace.yaml`·
+신규 dependency/install/download **0**, 자동화·반복 작업과 다음 스펙 자동 시작 **0**. §9 보호 목록
+8개는 읽기만 했고 수정·삭제·restore·checkout·stage·commit **0**이다.
+
+**§10 완료 정의 대비.** V1 route 의미와 안전 차단 회귀 유지 ✅ · V2 synthetic document/proof가
+production composition을 거쳐 실제 Canvas로 표시 ✅ · browser decoder lifecycle, retry/late result,
+safe error, mobile/a11y gate 통과 ✅ · actual Firebase/live/deploy/admin issue는 **0 / NOT TESTED**
+✅ · 허용 코드·test·결과·문서만 일반 fast-forward commit/push하고 `READY_FOR_CODEX`에서 정지 ✅.
+
+**진행도.** 전체 리빌드 **83~86% 완료 / 14~17% 잔여**. 고객 V2 열람 경로가 production route에서 실제
+Canvas까지 처음으로 연결된 만큼만 올렸다. admin 발급 UI, 실제 Firebase/Rules 배포와 live/CORS 검증은
+그대로 남아 있다.

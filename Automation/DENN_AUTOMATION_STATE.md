@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-079-space-v2-proof-reader-adapter   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_UI, NO_LIVE_NETWORK
 active_unit: spec-080-space-v2-production-customer-viewer-ui
-state: READY_FOR_CLAUDE
-baseline_commit: c9c0c3d   # HEAD=origin at spec 080 contract preparation
-candidate_commit: null
+state: READY_FOR_CODEX
+baseline_commit: c9c0c3d   # HEAD=origin at spec 080 implementation start
+candidate_commit: 2319d1a  # spec 080 customer V2 viewer implementation (contract docs commit 971c5fa)
 verified_commit: 0887047   # spec 079 implementation independently reviewed
-origin_relation: "HEAD=origin=c9c0c3d, ahead/behind 0/0 before uncommitted spec 080 handoff documents"
-working_tree: "spec 080 contract/handoff and current-state documents are unstaged; pre-existing protected Founder/user changes remain untouched and unstaged"
+origin_relation: "spec 080 implemented from HEAD=origin=c9c0c3d, ahead/behind 0/0; pushed fast-forward"
+working_tree: "spec 080 implementation, results and allowed documents committed; pre-existing protected Founder/user changes remain untouched and unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_SPEC_080_IMPLEMENTATION
+next_transition: CODEX_SPEC_080_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,45 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 81-84% complete; 16-19% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 080 customer V2 viewer 구현 완료 (2026-08-27)
+
+- 기준 `HEAD=origin=c9c0c3d`, ahead/behind 0/0에서 시작했다. 계약 문서 commit `971c5fa`, 구현 commit
+  `2319d1a`. 허용 목록 밖 제품 파일은 하나도 만들지 않았다.
+- 신규 `apps/mockup/src/space-v2/`의 `browser-png-decoder.ts` · `production-controller.ts` ·
+  `SpaceV2ProofView.tsx`와 각 test 3개. 기존 파일은 `space/composition.ts` ·
+  `space/SpacePasswordGate.tsx` · `App.tsx`와 그 test, e2e fixture,
+  `tests/e2e/space-production-route.spec.ts`만 수정했다. **V2 전용 CSS 파일은 필요하지 않아 만들지
+  않았다**(기존 `surface.css`의 `overflow-x:auto` 래퍼가 320px 요구를 이미 만족한다).
+- dispatch: document를 한 번 읽고 top-level `schema`를 hostile-getter 안전하게 한 번만 snapshot한다.
+  exact `space-v2`만 V2 pipeline으로 가고, malformed V2는 V1으로 **fallback하지 않는다**. 그 밖의
+  document는 기존 V1 opener와 스펙 063 안전 차단 UI 그대로다.
+- decoder: 기존 스펙 026 `createLocalImageBindingController`를 감싸 decoder와 `imageRef → drawable`
+  binding을 **한 owner**가 소유한다. module/factory 시점 DOM·`Image`·`Blob`·URL 호출 **0**, bytes는
+  browser 전달 전에 fresh copy, private URL은 모든 종료 경로에서 **정확히 1회 revoke**한다.
+- retry: password rejection과 proof unavailable만 명시 재시도 가능이고 그 둘만 cached document를
+  유지한다. proof mismatch/decode/dimension/plan 실패는 non-retryable이며 자동 retry·fallback **0**이다.
+- 실측: 전체 `node scripts/check.mjs` PASS(format/lint/typecheck 7개/unit **2278/2278**/build 2개),
+  targeted Chromium `space-production-route.spec.ts` **14/14 PASS**(axe serious/critical 0, console
+  error/warning 0, pageerror 0, 320px overflow 0, keyboard submit, 외부 request 0).
+- 고객 bundle은 production import 때문에 계약대로 변경됐다. 변경 전 `index-6js4DafP.js` /
+  `322,018 bytes` / `A9360EFF…E8159` → 변경 후 `index-nLbiXJi7.js` / `340,481 bytes` /
+  `99A707FA3AF518933F848CF52948ADCBD95BE44D1544616FA93C49E486805879`. 증가분 **+18,463 bytes**는 V2
+  viewer/controller/decoder이고, 별도 lazy `firebase/storage` chunk `index.esm-DtyxGWvl.js`
+  **34,890 bytes**가 새로 생겼다. **admin entry `index-D0XOQpRL.js`(226,201) · admin CSS
+  `index-DJ_z3tK1.css`(9,146) · 고객 CSS `index-BjqjBda8.css`(19,381)는 파일명·크기 모두 무변경**이다.
+- `git diff --check` PASS, 허용 외 diff **0**. 보호 대상(`AGENTS.md`, `docs/rebuild/design/**`,
+  spec 038, spec-018 PNG 2개, `packages/render/src/plan/index.ts`, `pnpm-workspace.yaml`)은 읽기만 했고
+  수정·복원·stage·commit **0**이다. spec-063 결과 PNG는 재생성 후 byte-identical이라 diff **0**이다.
+- 검사 포트 4183/4184/4185/8080/9099/9199 실행 전후 잔류 **0**, 강제 종료 0. Playwright가 만든
+  `test-results/`는 제거했다.
+- **full Chromium suite는 보호 spec-018 PNG를 다시 쓰므로 NOT RUN**이며 full-E2E PASS라고 기록하지
+  않는다. actual Firebase/project/bucket/network/live/CORS/deploy/actual UID/admin issue UI/URL·
+  clipboard/publish/orphan cleanup은 **0 / NOT TESTED**다.
+- 상태 `READY_FOR_CODEX`, next transition `CODEX_SPEC_080_REVIEW`. 다음 스펙과 자동화·반복 작업은
+  시작하지 않았다.
+- 전체 진행도는 **83~86% 완료 / 14~17% 잔여**다. 고객 V2 열람 경로가 production route에서 실제
+  Canvas까지 처음으로 연결됐지만, admin 발급 UI와 실제 Firebase/Rules 배포·live 검증은 그대로 남는다.
 
 ## 스펙 079 Codex 검수 통과 · 스펙 080 Claude Code UI handoff (2026-08-27)
 

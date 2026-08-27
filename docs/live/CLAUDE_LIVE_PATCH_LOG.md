@@ -6068,3 +6068,55 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CLAUDE`, next transition `CLAUDE_SPEC_080_IMPLEMENTATION`. 자동화·반복 작업과 제품
   구현은 시작하지 않았다.
 - 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 문서 준비로 변동 없음**.
+
+## 2026-08-27 - 스펙 080 고객 V2 production viewer UI
+
+- 기준 `HEAD=origin=c9c0c3d`, ahead/behind 0/0. 계약 문서 commit `971c5fa`, 구현 commit `2319d1a`.
+- 신규 제품 파일: `apps/mockup/src/space-v2/browser-png-decoder.ts` · `production-controller.ts` ·
+  `SpaceV2ProofView.tsx`와 각 test 3개. 수정: `space/composition.ts` · `space/SpacePasswordGate.tsx` ·
+  `App.tsx`와 그 test, `e2e/space-production-route-fixture.tsx`,
+  `tests/e2e/space-production-route.spec.ts`. 신규 결과 PNG 2개(`docs/rebuild/results/spec-080/`).
+  **V2 전용 CSS 파일은 만들지 않았다** — 기존 `surface.css` 래퍼의 `overflow-x:auto`가 320px 계약을
+  이미 만족해 새 파일이 불필요했다.
+- **dispatch(N-1).** document 1회 read → top-level `schema` 1회 snapshot(throwing getter 안전) →
+  exact `space-v2`만 V2. malformed V2의 V1 fallback **0**이고, 그 밖의 document는 기존 V1 opener와
+  스펙 063 안전 차단 UI를 그대로 쓴다. password는 submit 즉시 비우고 state/DOM/URL/log에 남기지 않는다.
+- **decoder(N-2).** 기존 스펙 026 `createLocalImageBindingController`를 감싸 decoder와
+  `imageRef → drawable` binding을 한 owner가 소유한다. module import/factory 시점 DOM·`Image`·`Blob`·
+  URL 호출 **0**, bytes는 browser 전달 전 fresh copy, MIME은 `image/png` 상수, private URL은 성공·
+  실패·supersede·clear·dispose 전 경로에서 **정확히 1회 revoke**된다. late/superseded 완료는 state·
+  binding·Promise를 바꾸지 않고, decoder 자동 retry는 0이다.
+- **composition(N-3).** V2 dependency는 lazy·최대 1회 생성이고 document reader와 **같은
+  `resolveSpaceFirebaseConfig()` 결과·같은 `denn-space-viewer` named app**을 쓴다. V1 document면
+  proof facade/Storage/Blob/Image/Canvas 준비가 **0**임을 unit이 고정한다.
+- **retry(N-4).** submit 1건만 in-flight. password rejection과 proof unavailable만 명시 재시도
+  가능하고 그 둘만 cached document를 유지한다. mismatch/decode/dimension/plan 실패는 non-retryable이며
+  자동 retry·Promise 공유·silent fallback **0**이다.
+- **UI(N-5).** 기존 gate 흐름/문구를 보존하고 V2 ready만 새 `SpaceV2ProofView`로 보낸다. badge
+  `저장된 시안 · 열람 전용`, heading `내 공간 시안`, body `저장된 액자 구성을 확인할 수 있습니다.`,
+  canvas accessible name `저장된 액자 시안`. 다운로드·저장·주문·공유·admin control·placeholder 이미지
+  **0**이고 실패 문구에 code/path/token/password/digest/URL/SDK message가 없다.
+- **실측.** 전체 `node scripts/check.mjs` PASS — format, lint, typecheck 7개, unit **2278/2278**,
+  build 2개. targeted Chromium `tests/e2e/space-production-route.spec.ts` **14/14 PASS**(V1 안전 차단
+  회귀 4 + spec063 screenshot 2 + V2 신규 8). axe serious/critical 0, console error/warning 0,
+  pageerror 0, 320px horizontal overflow 0, keyboard submit, 외부 request 0.
+- **고객 bundle(계약상 변경 허용).** 전 `index-6js4DafP.js` / `322,018 bytes` / `A9360EFF…E8159` →
+  후 `index-nLbiXJi7.js` / `340,481 bytes` /
+  `99A707FA3AF518933F848CF52948ADCBD95BE44D1544616FA93C49E486805879`. 증가 **+18,463 bytes**는 V2
+  viewer/controller/decoder이고 신규 lazy `firebase/storage` chunk `index.esm-DtyxGWvl.js`
+  **34,890 bytes**가 생겼다. **admin entry `index-D0XOQpRL.js`(226,201) · admin CSS
+  `index-DJ_z3tK1.css`(9,146) · 고객 CSS `index-BjqjBda8.css`(19,381)는 파일명·크기 무변경**이라 STOP
+  조건에 해당하지 않는다.
+- `git diff --check` PASS, 허용 외 diff **0**. 보호 대상(`AGENTS.md`, `docs/rebuild/design/**`,
+  spec 038, spec-018 PNG 2개, `packages/render/src/plan/index.ts`, `pnpm-workspace.yaml`)은 읽기만
+  했고 수정·복원·checkout·stage·commit **0**이다. spec-063 결과 PNG는 재생성 후 byte-identical이라
+  diff 0이며, Playwright가 만든 `test-results/`는 제거했다.
+- 검사 포트 4183/4184/4185/8080/9099/9199 실행 전후 잔류 **0**, 강제 종료 0.
+- **full Chromium suite는 보호 spec-018 PNG 재기록 때문에 NOT RUN**이며 full-E2E PASS라고 기록하지
+  않는다. actual Firebase/project/bucket/network/live/CORS/deploy/actual UID/admin issue UI/URL·
+  clipboard/publish/orphan cleanup **0 / NOT TESTED**.
+- 상태 `READY_FOR_CODEX`, next transition `CODEX_SPEC_080_REVIEW`. 다음 스펙과 자동화·반복 작업은
+  시작하지 않았다.
+- 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여**. 고객 V2 열람 경로가 production route에서 실제
+  Canvas까지 처음 연결된 만큼만 올렸고, admin 발급 UI와 실제 Firebase/Rules 배포·live 검증은 그대로
+  남는다.
