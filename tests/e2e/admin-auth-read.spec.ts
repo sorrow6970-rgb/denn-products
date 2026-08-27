@@ -1,5 +1,6 @@
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
 import { type ConsoleMessage, expect, test } from "@playwright/test";
 import { ADMIN_PORT } from "../../playwright.config";
@@ -87,9 +88,14 @@ test("the customer bundle contains only the approved lazy space Firestore bounda
   expect(js.length).toBeGreaterThan(0);
 
   const bundle = js.map((f) => readFileSync(join(assets, f), "utf8")).join("\n");
-  // Spec 053 intentionally adds the lazy Firestore space reader. Generic Firebase app constants
-  // include strings such as `@firebase/auth` and `@firebase/storage` even when those products are
-  // not imported, so product APIs and private admin paths are the meaningful negative boundary.
+  // Spec 053 intentionally adds the lazy Firestore space reader, and specs 079/080 add a lazy
+  // READ-ONLY Storage reader. A bundled Firebase product ships its whole module, so its export map
+  // and its internal error labels carry every API name that product owns whether or not this app
+  // imports them — `bundle.includes("uploadBytes")` therefore measures "the Storage SDK is present",
+  // which specs 079/080 approved, not "this app writes". What stays meaningful at bundle level is
+  // app-level strings: private admin paths and Auth product APIs no customer code may reach. The
+  // Storage read-only boundary is asserted in the next test against the app's own CALL surface,
+  // where a vendor export map cannot masquerade as a call site.
   expect(bundle.includes("denn-space-viewer")).toBe(true);
   expect(bundle.includes("getFirestore")).toBe(true);
   expect(bundle.includes("getDoc")).toBe(true);
@@ -99,12 +105,6 @@ test("the customer bundle contains only the approved lazy space Firestore bounda
     "admin/state.json",
     "onAuthStateChanged",
     "signInWithEmailAndPassword",
-    "uploadBytes",
-    "uploadBytesResumable",
-    "uploadString",
-    "getStorage",
-    "getDownloadURL",
-    "listAll",
   ]) {
     expect(bundle.includes(marker), marker).toBe(false);
   }
@@ -117,4 +117,67 @@ test("the customer bundle contains only the approved lazy space Firestore bounda
   // bundle, which does use Auth, matches this pattern) while `_getAuthToken` and `getAuthToken` no
   // longer trip it. This narrows the false positives only; it does not narrow the boundary.
   expect(bundle, "getAuth").not.toMatch(/(?<![A-Za-z0-9_$])getAuth(?![A-Za-z0-9_$])/);
+});
+
+/** Remove line and block comments so a source scan measures real calls, not prose about them. */
+function stripComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+}
+
+/** Production `.ts`/`.tsx` under a directory: no unit tests, no E2E fixtures. */
+function productionSources(dir: string, out: string[] = []): string[] {
+  for (const name of readdirSync(dir)) {
+    const entry = join(dir, name);
+    if (statSync(entry).isDirectory()) {
+      if (name !== "e2e") productionSources(entry, out);
+      continue;
+    }
+    if (/\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name)) out.push(entry);
+  }
+  return out;
+}
+
+test("the customer app's own Storage call surface stays read-only", () => {
+  const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+
+  // The customer's production surface: its own sources plus the ONE `@denn/firebase` subpath it
+  // imports. Limiting the package half to `space-read` is justified by the import assertion below —
+  // if the app ever reaches for the write or admin subpath, that assertion fails first.
+  const files = [
+    ...productionSources(join(repoRoot, "apps", "mockup", "src")),
+    ...productionSources(join(repoRoot, "packages", "firebase", "src", "space-read")),
+  ];
+  expect(files.length).toBeGreaterThan(0);
+  const source = files.map((file) => stripComments(readFileSync(file, "utf8"))).join("\n");
+
+  for (const subpath of [
+    "@denn/firebase/space-write",
+    "@denn/firebase/admin-read",
+    "@denn/firebase/admin-write",
+  ]) {
+    expect(source.includes(subpath), subpath).toBe(false);
+  }
+
+  // Specs 079/080 (Founder MM-1=A) approved exactly one Storage capability for the customer: read.
+  // Every mutating and enumerating API stays forbidden as a CALL — which a vendor export map is not.
+  for (const api of [
+    "uploadBytes",
+    "uploadBytesResumable",
+    "uploadString",
+    "updateMetadata",
+    "deleteObject",
+    "list",
+    "listAll",
+    "getDownloadURL",
+    "getBlob",
+    "getStream",
+  ]) {
+    expect(source, api).not.toMatch(new RegExp(`\\b${api}\\s*\\(`));
+  }
+
+  // And the approved read boundary must still actually be here: without this the test would keep
+  // passing if the Storage calls moved somewhere this scan no longer looks.
+  for (const api of ["getStorage", "ref", "getMetadata", "getBytes"]) {
+    expect(source, api).toMatch(new RegExp(`\\b${api}\\s*\\(`));
+  }
 });
