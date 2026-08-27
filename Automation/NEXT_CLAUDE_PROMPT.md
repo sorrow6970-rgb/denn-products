@@ -1,5 +1,72 @@
 # NEXT CLAUDE PROMPT
 
+상태: `READY_FOR_CLAUDE`
+active_unit: `spec-081-space-v2-admin-frozen-issue-session`
+completed_unit: `spec-080-space-v2-production-customer-viewer-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / UI_CONNECTED / NO_LIVE_NETWORK**
+기준: `HEAD=origin=4765502`, ahead/behind `0/0`
+Founder 정본: **LL-1=A ~ LL-6=A**
+fix_round: **0 / 3**
+next_transition: **`CLAUDE_SPEC_081_IMPLEMENTATION`**
+
+## Claude Code 실행 지시문
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와
+docs/rebuild/specs/081-space-v2-admin-frozen-issue-session.md를 읽고, 명시된 스펙 081 non-UI frozen issue
+session 범위만 구현·검증해.
+
+허용 제품 파일은 신규 apps/admin/src/space-v2/issue-session.ts와 issue-session.test.ts뿐이다. 하나의
+frozen source handle이 검증된 C5 catalog snapshot, selection, orientation, logical width, color, transform과
+proof exporter를 함께 소유하게 하고, issue caller가 arbitrary PNG를 metadata와 별도로 주입하는 seam을
+만들지 마. 순서는 password exact validation → frozen exporter 1회 → 기존
+prepareSpaceV2LocalIssueBundle() 1회 → 기존 injected SpaceV2IssueWritePort.issue() 1회다.
+
+confirmed writer success만 token을 session에 보존하고 URL/clipboard/objectPath 노출은 0으로 둬. password,
+raw bytes, UUID/token fragment, digest, UID/email, raw SDK message는 오류·snapshot·log에 넣지 마. outcome
+unknown은 성공/실패로 추측하지 말고 자동 retry·merge·새 token 자동 발급은 0이다. duplicate issue,
+draft replace/clear/dispose와 late completion이 second write나 stale state overwrite를 만들지 않게 unit으로
+고정해.
+
+이번 단위는 App.tsx, React/UI/CSS/DOM/Canvas production exporter, admin composition, packages/**,
+Firebase SDK wiring, Rules/config/emulator, package/lockfile, pnpm-workspace.yaml을 수정하지 않는다. actual
+Firebase/project/bucket/data/network/live/UID/deploy, URL/clipboard, 운영 발급, publish, delete/orphan cleanup도
+금지다. 실제 admin UI/UX는 후속 Claude Code 스펙이다.
+
+targeted 신규 session + 기존 issue-bundle/write-port unit, admin/firebase typecheck, 전체
+node scripts/check.mjs, admin/customer production bundle exact hash, git diff --check, exact allowed paths,
+forbidden diff, 포트 4183/4184/4185/8080/9099/9199 잔류를 검증해. Chromium E2E와 emulator는 NOT RUN이며
+PASS라고 주장하지 마.
+
+보호 대상과 기존 user working-tree 변경은 수정·복원·checkout·stage·commit하지 마. 구현과 spec081
+문서만 일반 fast-forward commit/push하고 STATE/NEXT/CURRENT/live log/handoff를 실제 결과와 맞춘 뒤
+READY_FOR_CODEX에서 멈춰. 다음 UI 스펙과 자동화·반복 작업은 시작하지 마.
+```
+
+## Codex 스펙 080 최종 검수 근거
+
+- `HEAD=origin=4765502`, ahead/behind 0/0.
+- exact 세 경로 LF policy와 `i/lf w/lf attr/text eol=lf` 3/3.
+- semantic source/test 및 spec-080 PNG diff 0.
+- targeted unit **11/11**, 전체 check(unit **2281/2281**), OS temp targeted Chromium **14/14** PASS.
+- customer entry `index-BUT7Bmak.js`, 340,604 bytes,
+  SHA-256 `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1` exact.
+- 추가 결함 0. full Chromium suite는 보호 spec-018 PNG 때문에 NOT RUN.
+- actual Firebase/network/live/deploy/UID/admin issuer는 0 / NOT TESTED.
+
+## 다음 단위 경계
+
+스펙 081은 고객 V2 viewer 뒤의 **admin frozen issue session 비-UI core**다. 실제 admin UI/UX, production
+Canvas exporter와 SDK composition은 완료 후 별도 스펙으로 분리한다. 계약 준비만으로 진행률은 올리지
+않는다.
+
+전체 리빌드 진행도: **83~86% 완료 / 14~17% 잔여**.
+
+---
+
+## 과거 NEXT 이력 (스펙 080 보완 라운드 2 종료 시점)
+
+# NEXT CLAUDE PROMPT
+
 상태: `READY_FOR_CODEX`
 active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **CORRECTION ROUND 2 DONE / LOCAL_VERIFIED / NO_LIVE_NETWORK**
 completed_unit: `spec-079-space-v2-proof-reader-adapter` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI**

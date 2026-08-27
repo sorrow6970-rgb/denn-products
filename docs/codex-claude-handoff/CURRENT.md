@@ -24,7 +24,23 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 080 보완 라운드 2 완료, Codex 재검수 대기.**
+상태: **`READY_FOR_CLAUDE` - 스펙 080 CODEX_PASSED, 스펙 081 non-UI frozen issue session 계약 준비.**
+
+최종 검수 기준 `HEAD=origin=4765502`, ahead/behind `0/0`. 스펙 080 보완 라운드 2는 exact 3-path
+LF 정책, semantic diff 0, targeted unit **11/11**, 전체 check(unit **2281/2281**), OS temp targeted
+Chromium **14/14**, customer bundle exact hash, diff/port gate를 모두 통과했다. 추가 결함은 0이며
+스펙 080은 `DONE / CODEX_PASSED / LOCAL_VERIFIED / UI_CONNECTED / NO_LIVE_NETWORK`다.
+
+다음 정본은 `docs/rebuild/specs/081-space-v2-admin-frozen-issue-session.md`다. Founder LL 순서의 고객
+viewer 다음 단위로, 하나의 frozen source가 catalog/selection/orientation/logical width/color/transform과
+proof exporter를 함께 소유하고 기존 issue bundle/write port로 넘기는 **비-UI session**만 구현한다.
+`App.tsx`, React/UI/CSS/Canvas production exporter, admin production composition, Firebase SDK wiring,
+Rules/config/emulator, URL/clipboard와 actual network/live는 열지 않는다. 실제 admin UI/UX는 후속 Claude
+Code 단위다.
+
+전체 진행도는 **83~86% 완료 / 14~17% 잔여 — 문서 준비로 변동 없음**이다.
+
+> 아래 스펙 080 보완 라운드 2 설명은 완료 이력이다.
 
 Codex 라운드 2가 지적한 **clean checkout EOL 재현성 한 가지만** 고쳤다. 기준
 `HEAD=origin=3b7c72c`, 재검수 문서 commit `1ae514a`, 보완 commit `85ac204`.

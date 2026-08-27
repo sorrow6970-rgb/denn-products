@@ -6231,3 +6231,23 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   자동화·반복 작업은 시작하지 않았다.
 - 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**. config 재현성 보완이라 새 제품
   능력으로 계산하지 않았다.
+
+## 2026-08-27 - 스펙 080 Codex 최종 검수 PASS · 스펙 081 수동 handoff
+
+- 최종 검수 기준 `HEAD=origin=4765502`, ahead/behind `0/0`. 보완 `85ac204`, 기록 `4765502`.
+- `.gitattributes`는 정확한 세 경로만 `text eol=lf`이고, 세 파일은 모두
+  `i/lf w/lf attr/text eol=lf`; semantic source/test와 spec-080 PNG diff는 0이다.
+- 독립 targeted gate unit **11/11**, 전체 `node scripts/check.mjs` PASS(unit **2281/2281**), OS temp
+  staging targeted Chromium **14/14 PASS**, customer entry SHA-256
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`, `git diff --check`, 검사 포트
+  잔류 0을 확인했다. Playwright 임시 `test-results/`는 exact repo child 경로를 확인해 제거했다.
+- 추가 결함 0. 스펙 080 최종 판정은 `DONE / CODEX_PASSED / LOCAL_VERIFIED / UI_CONNECTED /
+  NO_LIVE_NETWORK`다. full Chromium suite는 보호 spec-018 PNG 때문에 NOT RUN이며 actual Firebase/
+  network/live/CORS/deploy/actual UID/admin issuer는 0 / NOT TESTED다.
+- Founder LL 순서에 따라 다음 수동 단위 `081-space-v2-admin-frozen-issue-session` 계약과 handoff를
+  작성했다. frozen source가 metadata와 proof exporter를 함께 소유하는 non-UI session만 허용한다.
+- `App.tsx`, 실제 admin UI/UX·CSS·Canvas production exporter, Firebase SDK wiring, Rules/config,
+  emulator/E2E, URL/clipboard, 운영 발급·publish·delete/orphan cleanup은 계속 닫힌다.
+- 상태 `READY_FOR_CLAUDE`, next transition `CLAUDE_SPEC_081_IMPLEMENTATION`. 자동화·반복 작업은 만들지
+  않았고 Codex는 제품 구현·commit·push를 하지 않았다.
+- 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여 — 문서 준비로 변동 없음**.

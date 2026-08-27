@@ -4,17 +4,17 @@
 updated_at: 2026-08-27
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-079-space-v2-proof-reader-adapter   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_UI, NO_LIVE_NETWORK
-active_unit: spec-080-space-v2-production-customer-viewer-ui
-state: READY_FOR_CODEX
-baseline_commit: 3b7c72c   # HEAD=origin at Codex spec 080 correction round 1 re-review
-candidate_commit: 85ac204  # spec 080 correction round 2 (round 1 280a6dc, implementation 2319d1a)
-verified_commit: 0887047   # spec 079 implementation independently reviewed
-origin_relation: "correction round 2 applied on HEAD=origin=3b7c72c, ahead/behind 0/0; pushed fast-forward"
-working_tree: "spec 080 correction round 2 config and status documents committed; pre-existing protected Founder/user changes remain untouched and unstaged"
-fix_round: 2
+completed_unit: spec-080-space-v2-production-customer-viewer-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, UI_CONNECTED, NO_LIVE_NETWORK
+active_unit: spec-081-space-v2-admin-frozen-issue-session
+state: READY_FOR_CLAUDE
+baseline_commit: 4765502   # HEAD=origin at Codex spec 080 final review
+candidate_commit: null     # spec 081 implementation not started
+verified_commit: 4765502   # spec 080 correction round 2 record independently reviewed
+origin_relation: "HEAD=origin=4765502, ahead/behind 0/0 before uncommitted Codex spec 081 handoff documents"
+working_tree: "Codex spec 081 contract/handoff documents are uncommitted; only pre-existing protected Founder/user changes exist outside this document handoff"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_080_REVIEW
+next_transition: CLAUDE_SPEC_081_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,26 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 83-86% complete; 14-17% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 080 Codex 최종 검수 PASS · 스펙 081 계약 준비 (2026-08-27)
+
+- 최종 검수 기준 `HEAD=origin=4765502`, ahead/behind `0/0`. 보완 commit `85ac204`, 기록 commit
+  `4765502`.
+- `.gitattributes`는 정확한 세 파일만 `text eol=lf`로 고정하며 세 파일 모두
+  `i/lf w/lf attr/text eol=lf`다. semantic source/test와 spec-080 PNG diff는 0이다.
+- 독립 targeted gate unit **11/11**, 전체 `node scripts/check.mjs` PASS(unit **2281/2281**), OS temp
+  targeted Chromium **14/14**, customer entry SHA-256
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`, diff/port gate가 PASS했다.
+- 추가 결함 0. 스펙 080은 `DONE / CODEX_PASSED / LOCAL_VERIFIED / UI_CONNECTED /
+  NO_LIVE_NETWORK`다. full Chromium suite는 보호 spec-018 PNG 때문에 NOT RUN이고 actual Firebase/
+  network/live/deploy/actual UID는 0 / NOT TESTED다.
+- Founder LL 순서에 따라 다음 수동 단위 `081-space-v2-admin-frozen-issue-session` 계약과 handoff를
+  작성했다. 하나의 frozen source가 issue metadata와 proof exporter를 함께 소유하는 non-UI session만
+  허용한다.
+- actual admin UI/UX, App composition, Firebase SDK wiring, Rules/config, emulator/E2E, URL/clipboard,
+  운영 발급·publish·delete/orphan cleanup은 스펙 081에서 계속 금지다.
+- 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여 — 문서 준비로 변동 없음**.
+
 
 ## 스펙 080 보완 라운드 2 수행 — clean checkout EOL 재현성 (2026-08-27)
 

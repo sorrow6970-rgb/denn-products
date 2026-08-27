@@ -1,6 +1,6 @@
 # 스펙 080 Space V2 production customer viewer UI handoff
 
-- 상태: `CORRECTION_REQUIRED / ROUND 2 / UI CONNECTED / NO_LIVE_NETWORK` (Codex 재검수 2026-08-27)
+- 상태: `DONE / CODEX_PASSED / LOCAL_VERIFIED / UI CONNECTED / NO_LIVE_NETWORK` (2026-08-27)
 - 기준: `HEAD=origin=c9c0c3d`, ahead/behind `0/0`
 - 구현: 계약 문서 commit `971c5fa`, 제품 commit `2319d1a`
 - spec: `docs/rebuild/specs/080-space-v2-production-customer-viewer-ui.md`
@@ -121,3 +121,13 @@ commit `85ac204`.
   0 / NOT TESTED다.
 - 상태 `READY_FOR_CODEX`, fix_round 2/3, next transition `CODEX_SPEC_080_REVIEW`.
 - 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**.
+
+## Codex 최종 검수 — PASSED (2026-08-27)
+
+- 최종 기준 `HEAD=origin=4765502`, ahead/behind 0/0.
+- exact 3-path LF policy, semantic diff 0, targeted unit **11/11**, 전체 check(unit **2281/2281**),
+  OS temp targeted Chromium **14/14**, customer entry exact SHA-256, diff/port gate가 모두 PASS했다.
+- 추가 결함 0. full Chromium suite는 계약대로 NOT RUN이고 actual Firebase/network/live/deploy는 0 /
+  NOT TESTED다.
+- 다음 순서는 비-UI 스펙 081 admin frozen issue session이다. 실제 admin UI/UX는 그 다음 Claude Code
+  단위이며 이 handoff에서 시작하지 않는다.

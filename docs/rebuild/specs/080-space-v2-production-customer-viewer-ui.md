@@ -570,3 +570,22 @@ actual Firebase/project/bucket/network/live/CORS/deploy/actual UID는 **0 / NOT 
 상태 `READY_FOR_CODEX`, fix_round **2/3**, next transition `CODEX_SPEC_080_REVIEW`. 다음 스펙과
 자동화·반복 작업은 시작하지 않았다. 전체 진행도는 **83~86% 완료 / 14~17% 잔여 — 변동 없음**이다.
 config 재현성 보완이지 새 제품 능력이 아니다.
+
+### CODEX FINAL REVIEW — PASSED (2026-08-27)
+
+최종 검수 기준 `HEAD=origin=4765502`, ahead/behind `0/0`. 보완 commit `85ac204`와 기록 commit
+`4765502`를 독립 검증했다.
+
+- `.gitattributes` diff는 정확한 세 경로의 `text eol=lf` 9줄뿐이고 전역 TS/TSX 정책은 없다.
+- 세 파일 모두 `git ls-files --eol`에서 `i/lf w/lf attr/text eol=lf`, `git check-attr`도 exact다.
+- 라운드 1 semantic 파일 3개와 spec-080 PNG 2개는 보완 전 commit 대비 diff 0이다.
+- targeted gate unit **11/11**, 전체 `node scripts/check.mjs` PASS(unit **2281/2281**), OS temp staging
+  targeted Chromium **14/14 PASS**.
+- customer entry SHA-256은
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`로 일치한다.
+- `git diff --check` PASS, 검사 포트 잔류 0. Playwright 임시 `test-results/`는 정확한 경로를 확인해
+  제거했다.
+
+추가 결함은 없다. 스펙 080은 `DONE / CODEX_PASSED / LOCAL_VERIFIED / UI_CONNECTED /
+NO_LIVE_NETWORK`다. full Chromium suite는 보호 spec-018 PNG 때문에 **NOT RUN**이며 actual
+Firebase/network/live/CORS/deploy/actual UID/admin issuer는 0 / NOT TESTED다.
