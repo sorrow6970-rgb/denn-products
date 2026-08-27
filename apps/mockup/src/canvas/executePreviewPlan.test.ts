@@ -10,6 +10,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   buildPreviewRenderPlan,
+  executePreviewRenderPlan as executeFromSharedPackage,
   type PreviewDrawCommand,
   type PreviewRenderPlan,
 } from "@denn/render";
@@ -1152,9 +1153,12 @@ describe("executePreviewRenderPlan — forbidden behaviour", () => {
   });
 
   it("executor source references no DOM/network/image/transform API (comments stripped)", () => {
+    // spec 082: the implementation lives in `@denn/render` now, so the scan follows it there. The
+    // local files are compatibility re-exports and scanning them would prove nothing.
     const here = dirname(fileURLToPath(import.meta.url));
-    const sources = ["executePreviewPlan.ts", "types.ts"].map((file) =>
-      stripComments(readFileSync(join(here, file), "utf8")),
+    const shared = join(here, "..", "..", "..", "..", "packages", "render", "src", "canvas");
+    const sources = ["execute-preview-plan.ts", "types.ts"].map((file) =>
+      stripComments(readFileSync(join(shared, file), "utf8")),
     );
     const forbidden = [
       /\bfetch\s*\(/,
@@ -1184,6 +1188,21 @@ describe("executePreviewRenderPlan — forbidden behaviour", () => {
         expect(source).not.toMatch(pattern);
       }
     }
+  });
+
+  it("is the very function @denn/render exports, not a second copy (spec 082)", () => {
+    // Identity, not equivalence: a re-export shares the reference, a duplicated implementation
+    // would not — and two copies are exactly how the same plan starts drawing two ways.
+    expect(executePreviewRenderPlan).toBe(executeFromSharedPackage);
+
+    // And the shared export really executes: same plan, same commands, same result.
+    const context = new RecordingContext();
+    const result = executeFromSharedPackage({
+      context,
+      plan: plan([FILL]),
+      imageBindings: new Map<string, CanvasImageSource>(),
+    });
+    expect(result).toEqual({ ok: true, executedCommands: 1 });
   });
 });
 

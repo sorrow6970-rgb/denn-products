@@ -1,0 +1,140 @@
+// Canvas plan-executor boundary types (spec 021 §2, §3, §7). React-free.
+//
+// Responsibility split: `@denn/render` owns the pure geometry (spec 019) and the deterministic
+// preview render PLAN (spec 020); this app layer owns the Canvas 2D execution of that plan. The
+// executor NEVER creates a <canvas>, calls getContext, loads an image, or resolves a URL — the
+// caller injects both the context and the already-decoded drawables.
+
+import type { PreviewRenderPlan } from "../plan";
+
+/**
+ * Minimal Canvas 2D surface the executor needs (spec 021 §2). Declared structurally so unit tests
+ * can drive a recording fake with no DOM library, while a real `CanvasRenderingContext2D` still
+ * satisfies it (asserted at compile time in the unit test).
+ *
+ * Deliberately absent: `getContext`, `setTransform`/`scale` (the DPR transform is the caller's job —
+ * this executor draws in logical coordinates only), the 9-argument `drawImage` source-crop overload,
+ * smoothing flags, `globalCompositeOperation`, and any URL-string drawable.
+ *
+ * ROTATION CAPABILITY (spec 030). `translate`/`rotate` are OPTIONAL members, and that optionality is
+ * the contract — not an oversight:
+ *
+ *  - a context WITHOUT them executes every unrotated plan exactly as before. Nothing that satisfied
+ *    this interface before spec 030 has to change,
+ *  - a plan containing a `draw-image-cover` with a non-zero `rotationQuarterTurns` requires BOTH.
+ *    When either is missing, the executor fails CLOSED in preflight with `INVALID_EXECUTOR_INPUT`
+ *    and performs ZERO Canvas operations — an unrotated photo would be a wrong product, so it is
+ *    never drawn as a fallback,
+ *  - they are the only transform calls the executor may make, they run INSIDE a single
+ *    `draw-image-cover` command, and they are always paired with that command's own save/restore.
+ *    No transform ever survives a command or reaches the caller.
+ *
+ * A real `CanvasRenderingContext2D` supplies both (asserted at compile time in the unit test).
+ */
+export interface PreviewCanvasContext {
+  fillStyle: string | CanvasGradient | CanvasPattern;
+  strokeStyle: string | CanvasGradient | CanvasPattern;
+  lineWidth: number;
+
+  save(): void;
+  restore(): void;
+  clearRect(x: number, y: number, width: number, height: number): void;
+  fillRect(x: number, y: number, width: number, height: number): void;
+  beginPath(): void;
+  rect(x: number, y: number, width: number, height: number): void;
+  clip(): void;
+  drawImage(image: CanvasImageSource, dx: number, dy: number, dw: number, dh: number): void;
+  strokeRect(x: number, y: number, width: number, height: number): void;
+
+  /** spec 030 rotation capability — required ONLY for a plan that carries a rotation. */
+  translate?(x: number, y: number): void;
+  /** spec 030 rotation capability — required ONLY for a plan that carries a rotation. */
+  rotate?(angle: number): void;
+
+  /**
+   * TEXT CAPABILITY (spec 031). Optional for the same reason rotation is: a context without these
+   * executes every text-free plan exactly as before, and a plan that carries a `draw-text` command
+   * fails CLOSED in preflight with `INVALID_EXECUTOR_INPUT` and zero Canvas operations rather than
+   * drawing a frame with the customer's words missing.
+   *
+   * `measureText` is present because letter spacing is drawn glyph by glyph; `ctx.letterSpacing` is
+   * deliberately NOT used, since its support varies and it would change the widths the builder
+   * already measured.
+   */
+  font?: string;
+  textAlign?: CanvasTextAlign;
+  textBaseline?: CanvasTextBaseline;
+  fillText?(text: string, x: number, y: number): void;
+  measureText?(text: string): TextMetrics;
+}
+
+/**
+ * A context that actually provides the spec 030 rotation capability. DERIVED from the public type,
+ * so there is exactly one declaration of the two methods and the executor cannot drift from the
+ * published contract.
+ */
+export type RotationCapableCanvasContext = PreviewCanvasContext &
+  Required<Pick<PreviewCanvasContext, "translate" | "rotate">>;
+
+/**
+ * A context that provides the spec 031 text capability. DERIVED from the public type, so the
+ * members are declared exactly once and the executor cannot drift from the published contract.
+ * `translate`/`rotate` are included because a text command always translates to its origin.
+ */
+export type TextCapableCanvasContext = PreviewCanvasContext &
+  Required<
+    Pick<
+      PreviewCanvasContext,
+      "font" | "textAlign" | "textBaseline" | "fillText" | "measureText" | "translate" | "rotate"
+    >
+  >;
+
+/**
+ * Read-only lookup from a spec 020 synthetic `imageRef` to an already-decoded, ready-to-draw
+ * Canvas drawable held in memory (spec 021 §3).
+ *
+ * The `imageRef` is ONLY a key: the executor never parses it as a URL, never fetches or decodes it,
+ * and never assigns it to `Image.src`. A `ReadonlyMap<string, CanvasImageSource>` structurally
+ * satisfies this port. Binding the real image source (and its CORS-clean policy) is a later spec.
+ */
+export interface PreviewImageBindings {
+  get(imageRef: string): CanvasImageSource | undefined;
+}
+
+export interface ExecutePreviewRenderPlanArgs {
+  /** The caller-owned Canvas 2D execution target (never created or queried by the executor). */
+  readonly context: PreviewCanvasContext;
+  /** A spec 020 `PreviewRenderPlan`; still re-checked defensively before any draw. */
+  readonly plan: PreviewRenderPlan;
+  /** In-memory `imageRef` → drawable lookup. */
+  readonly imageBindings: PreviewImageBindings;
+}
+
+/**
+ * Identity-free failure codes (spec 021 §7). A failure never carries a layerId, imageRef, URL,
+ * token, or the original exception message/stack.
+ */
+export type CanvasExecutionErrorCode =
+  // context / bindings are unusable (missing methods, non-object, throwing lookup).
+  | "INVALID_EXECUTOR_INPUT"
+  // the plan is structurally invalid (kind, logicalCanvas, commands, rect/color/width).
+  | "INVALID_PLAN"
+  // a `draw-image-cover` imageRef has no in-memory binding (or the binding value is nullish).
+  | "MISSING_IMAGE_BINDING"
+  // a Canvas method or style assignment threw during execution.
+  | "CANVAS_OPERATION_FAILED"
+  // a `restore()` threw — Canvas state may be polluted, so this is never reported as success.
+  | "CANVAS_RESTORE_FAILED";
+
+export type CanvasExecutionResult =
+  | {
+      readonly ok: true;
+      /** Exactly `plan.commands.length`; the leading `clearRect` is not a command. */
+      readonly executedCommands: number;
+    }
+  | {
+      readonly ok: false;
+      readonly code: CanvasExecutionErrorCode;
+      /** Safe 0-based index of the offending command; omitted when there is no such index. */
+      readonly commandIndex?: number;
+    };
