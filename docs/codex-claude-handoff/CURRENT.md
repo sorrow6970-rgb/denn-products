@@ -24,7 +24,42 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`CORRECTION_REQUIRED` - 스펙 081 Codex 검수 라운드 1, fail-closed 결함 3건 재현.**
+상태: **`READY_FOR_CODEX` - 스펙 081 보완 라운드 1 완료, Codex 재검수 대기.**
+
+Codex 라운드 1이 지적한 **fail-closed 3건만** 고쳤다. 세 지적 모두 맞았다. 기준
+`HEAD=origin=d7b84b0`, 검수 문서 commit `46b4754`, 보완 commit `096e65e`.
+
+**1. semantic preflight.** `beginDraft`가 기존 경계를 재사용해 exporter·UUID·hash·crypto **이전에**
+검증한다 — `readLegacyCatalog`(catalog) → `projectFramePreviewGeometry`(selection reference·geometry)
+→ `projectCatalogTemplateImage`(첫 capability) → 순수 `encodeFrameReplayEvidenceV1`(orientation vs
+projected aspect·logicalWidth·color·transform). 저장값은 그 경계들이 돌려준 detached 값뿐이라
+`structuredClone`은 제거했다. range/format 규칙을 재기술하지 않았고 기존 preparation/bundle/identity
+파일은 수정하지 않았다.
+
+**2. writer failure envelope.** 임의 문자열 code를 cast하지 않는다. top-level/error exact keys,
+스펙 074의 알려진 code·category, boolean `retryable`, **이번 시도가 보낸 correlation id** 일치를 모두
+확인하고, 어긋나면 `outcome-unknown/errorCode:null`로 닫는다. port의 문자열은 snapshot에 들어가지
+않는다.
+
+**3. writer success envelope.** exact `{ok,value}`의 `token`·`objectPath`가 prepared bundle이 확정한
+값과 **둘 다 일치**할 때만 승인하고 `confirmedToken`은 로컬 token을 쓴다. non-UUID·다른 값·extra/
+missing/hostile은 `outcome-unknown/errorCode:null`이고 token은 null이다.
+
+추가로 correlation id가 port 형식을 만족하지 않으면 writer 호출 전에 로컬에서 닫고,
+`.gitattributes`에 신규 두 경로만 `text eol=lf`로 고정했다(전역 정책 아님).
+
+실측: 회귀 **43건 추가**(파일 101건), session+bundle+write-port **199/199**, 전체
+`node scripts/check.mjs` PASS(unit **2382/2382**), **production bundle 두 개 모두 exact 유지**
+(admin `index-D0XOQpRL.js` / 226,201 B, customer `index-BUT7Bmak.js` / 340,604 B, CSS 2개 포함),
+`git ls-files --eol` **2/2**, `git diff --check` PASS, 허용 외 diff 0, 포트 잔류 0.
+
+Chromium E2E와 emulator는 계속 **NOT RUN**이고 actual Firebase/network/live/UID/deploy·URL/clipboard·
+운영 발급·publish/orphan cleanup은 **0 / NOT TESTED**다. fix_round 1/3, next transition
+`CODEX_SPEC_081_REVIEW`이며 다음 UI 스펙과 자동화는 시작하지 않았다.
+
+전체 진행도는 **84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
+
+> 스펙 081 Codex 검수 라운드 1 판정(보완 전 기록):
 
 검수 기준 `HEAD=origin=d7b84b0`, ahead/behind `0/0`. 기존 targeted **146/146**, 전체 check(unit
 **2339/2339**), production bundle exact, diff/port gate는 PASS했다. 그러나 임시 Codex 회귀 테스트에서

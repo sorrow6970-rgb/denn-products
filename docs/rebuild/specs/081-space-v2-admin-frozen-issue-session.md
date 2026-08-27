@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CODEX / IMPLEMENTED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK`
+`READY_FOR_CODEX / CORRECTION ROUND 1 DONE / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK`
 
 Founder 결정 정본:
 `docs/codex-claude-handoff/decisions/2026-08-26-space-v2-composition-readiness-decisions.md`.
@@ -408,3 +408,95 @@ exact 두 경로 LF policy를 이번 보완에 포함한다. 전역 TS/TSX EOL �
 
 상태 `CORRECTION_REQUIRED`, fix_round **1/3**, next `CLAUDE_CORRECTION`. App/UI/CSS/Canvas production
 exporter, SDK composition, Rules/config/emulator/actual Firebase/live는 계속 금지다.
+
+### DONE (Claude) — 보완 라운드 1 (2026-08-27)
+
+기준 `HEAD=origin=d7b84b0`, ahead/behind 0/0. Codex 검수 문서 commit `46b4754`, 보완 commit
+`096e65e`. Codex 라운드 1이 지적한 **세 결함만** 반영했고 위 `### DONE (Claude) — 2026-08-27`의 순서·
+lifecycle·정보 경계 결론은 하나도 되돌리지 않았다. **세 지적 모두 맞았다.**
+
+**보완 1 — semantic frozen fields 검증 (§VERIFY 2).**
+기존 `freezeFields()`는 exact 6키와 `structuredClone` 성공만 확인했다. 그래서 `catalog:null`처럼
+clone은 되지만 기존 catalog/issue 계약상 invalid한 조합이 `draft-ready/canIssue:true`가 됐고, 실패는
+exporter·UUID×2·hash×3·encrypt를 모두 쓴 뒤에야 났다. 이제 `beginDraft`가 **기존 경계를 재사용해**
+그 전에 검증한다.
+
+| 단계 | 재사용한 기존 경계 | 검증 대상 |
+|---|---|---|
+| 1 | `readLegacyCatalog` | catalog 자체. 반환값은 deep clone이라 detach도 여기서 끝난다 |
+| 2 | `projectFramePreviewGeometry` | selection reference(frameSizeId/templateId)와 geometry |
+| 3 | `projectCatalogTemplateImage` | 첫 capability — 텍스트 존 0, 물리 시계 없음, art 부재 **증명**(`invalid-reference`는 증명이 아니다) |
+| 4 | `encodeFrameReplayEvidenceV1` (순수, SHA 미사용) | orientation vs projected aspect, logicalWidth, frameColor, geometry, transform |
+
+4단계는 실제 proof가 아직 없으므로 **고정된 known-valid placeholder proofAsset**을 넣는다. 그 validator는
+`proofAsset`을 다른 필드와 독립적으로 검사하므로 치환해도 검증 대상(orientation/width/color/geometry/
+transform)은 그대로다. 저장하는 값은 이 경계들이 돌려준 **detached 값**뿐이며 — catalog는
+`readLegacyCatalog`의 clone, selection/transform은 validated evidence에서 새로 만든 literal, 나머지는
+primitive — 따라서 `structuredClone`은 **제거**했다(중복이고 이미 detach되어 있다). range/format/aspect
+규칙을 이 파일에서 재기술하지 않았다: 재기술은 곧 drift다. **기존 issue preparation/bundle/identity
+파일은 수정하지 않았다.**
+
+invalid일 때 `SPACE_V2_SESSION_INVALID_DRAFT`이고 exporter·UUID·hash·crypto·writer는 **0**이다.
+
+**보완 2 — unknown writer code 유출 (§3 10).**
+기존 코드는 failure에서 `typeof code === "string"`이면 임의 문자열을 `SpaceV2IssueErrorCode`로 cast해
+public `errorCode`에 그대로 실었다. 이제 result 전체를 exact-key로 검사한다 — top-level `{ok,error}`,
+error `{category,code,retryable,correlationId}`, `code`·`category`는 스펙 074의 **알려진 vocabulary**,
+`retryable`은 boolean, `correlationId`는 **이번 시도가 실제로 보낸 값**과 일치. 하나라도 어긋나면
+`outcome-unknown/errorCode:null`이고 port가 준 문자열은 snapshot에 들어가지 않는다. code→category 표는
+port의 소관이라 **재도출하지 않는다** — 여기서 복제하면 port와 drift할 뿐이다.
+
+**보완 3 — malformed success 승인 (§3 8).**
+기존엔 success token을 non-empty만 검사했다. 이제 exact `{ok,value}` envelope의 `token`과 `objectPath`가
+**prepared bundle이 이미 확정한 값과 둘 다 일치**할 때만 승인한다(추가로 lowercase UUID v4 shape도
+확인 — 동등성 검사가 더 강하지만 계약이 명시한 case라 방어적으로 둔다). `confirmedToken`은 port의
+echo가 아니라 **로컬에서 준비한 token**을 쓴다. non-UUID·다른 UUID·다른 path·extra/missing/hostile
+value·top-level extra key는 모두 `outcome-unknown/errorCode:null`이고 `confirmedToken`은 null이다.
+
+**추가 보완 두 가지.** ① `createCorrelationId()`가 port의 형식(`^[0-9a-f]{8,64}$`)을 만족하지 않으면
+writer를 부르기 **전에** 로컬에서 닫는다 — 아무것도 persist되지 않으므로 `PREPARATION_FAILED`이고,
+port가 어차피 거부할 시도를 낭비하지 않는다(port는 여전히 authority이며 로컬 복사본은 주석으로 명시).
+② `.gitattributes`에 **정확히 두 경로만** `text eol=lf`로 추가했다 — 스펙 080 보완 라운드 2와 같은
+clean-checkout 재현성 사유이며 전역 `*.ts`/`*.tsx` 정책으로 넓히지 않았다.
+
+**회귀 테스트 43건 추가 (파일 총 101건, 기존 58건 전부 유지)**
+
+- **preflight 0-call 24건** — `catalog:null` · 빈 catalog · legacy가 아닌 문서 · 없는 frameSizeId ·
+  없는 templateId · non-string selection id · extra-key selection · portrait aspect에 landscape ·
+  V2가 아닌 orientation · logicalWidth `0`/음수/소수 · 이름 색 · 잘못된 hex · 비문자열 색 · scale 범위
+  아래/위 · pan 범위 밖 · quarter turn이 아닌 rotation · transform 키 누락 · art 존재 · art 분류 불가 ·
+  텍스트 존 · 물리 시계. 각각 `INVALID_DRAFT` + exporter/UUID/hash/crypto/writer **0**을 단언한다.
+  추가로 begin 뒤 caller가 catalog를 망가뜨려도 frozen read로 성공하는 detach 회귀 1건.
+- **writer failure envelope 9건** — 임의 code marker · unknown category · 비boolean retryable ·
+  다른 correlationId · error extra key · error missing key · top-level extra key · non-object error ·
+  정상 failure는 여전히 exact code 보존.
+- **writer success envelope 9건** — non-UUID token · 다른 token · 다른 objectPath · value extra key ·
+  objectPath 누락 · non-object value · top-level extra key · hostile getter · 로컬 correlation id 거부.
+
+marker 문자열(`PRIVATE_WRITER_ERROR_MARKER`, `PRIVATE_NON_UUID_TOKEN`, `PRIVATE_CATEGORY_MARKER`,
+`PRIVATE_DETAIL_MARKER`, `PRIVATE_HOSTILE_VALUE_MARKER`, 다른 UUID/URL)이 snapshot 직렬화에 나타나지
+않음을 모두 단언한다.
+
+**보완 라운드 1 게이트 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| targeted session unit | **101/101 PASS** (기존 58 + 신규 43) |
+| session + issue-bundle + space-write targeted | **199/199 PASS** |
+| admin / firebase typecheck | PASS |
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2382/2382**, build 2개 |
+| admin entry | `index-D0XOQpRL.js` / `226,201 B` / `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC` — **exact 유지** |
+| customer entry | `index-BUT7Bmak.js` / `340,604 B` / `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1` — **exact 유지** |
+| CSS | admin 9,146 B · customer 19,381 B — SHA-256까지 무변경 |
+| `git ls-files --eol` 신규 2파일 | **2/2 `i/lf w/lf attr/text eol=lf`** |
+| `git diff --check` | PASS |
+| exact allowed / forbidden diff | **0** — `issue-session.ts(.test.ts)` · `.gitattributes` 2줄 · spec 081 문서뿐 |
+| 검사 포트 4183/4184/4185/8080/9099/9199 | 실행 전후 잔류 **0**, 강제 종료 0 |
+
+**Chromium E2E와 emulator는 계속 NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/project/
+bucket/network/live/UID/deploy, URL/clipboard, 운영 발급, publish/delete/orphan cleanup은
+**0 / NOT TESTED**다. 보호 대상과 기존 user working-tree 변경은 읽기만 했다.
+
+상태 `READY_FOR_CODEX`, fix_round **1/3**, next transition `CODEX_SPEC_081_REVIEW`. 다음 UI 스펙과
+자동화·반복 작업은 시작하지 않았다. 전체 진행도는 **84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
+fail-closed 결함 보완이지 새 제품 능력이 아니다.

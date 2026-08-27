@@ -6321,3 +6321,55 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   문서만 허용한다. App/UI/CSS/Canvas exporter/SDK composition/Rules/config/emulator/live는 열지 않는다.
 - 상태 `CORRECTION_REQUIRED`, fix_round **1/3**, next `CLAUDE_CORRECTION`. 자동화·반복 작업 시작 0.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-27 - 스펙 081 보완 라운드 1 (fail-closed 3건)
+
+- 기준 `HEAD=origin=d7b84b0`, ahead/behind 0/0. Codex 검수 문서 commit `46b4754`, 보완 commit
+  `096e65e`. Codex가 지적한 **세 결함만** 고쳤고 기존 58건의 순서·lifecycle 계약은 되돌리지 않았다.
+  **세 지적 모두 맞았다.**
+- **결함 1 — semantic preflight 부재.** 기존 `freezeFields()`는 exact 6키와 `structuredClone` 성공만
+  봐서 `catalog:null` 같은 조합이 `draft-ready`가 됐고, 실패는 exporter·UUID×2·hash×3·encrypt를 모두
+  쓴 뒤에야 났다. 이제 `beginDraft`가 **기존 경계를 재사용**한다 — `readLegacyCatalog`(catalog detach)
+  → `projectFramePreviewGeometry`(selection reference·geometry) → `projectCatalogTemplateImage`(첫
+  capability: 텍스트 0·시계 없음·art 부재 증명) → 순수 `encodeFrameReplayEvidenceV1`(orientation vs
+  projected aspect·logicalWidth·color·transform). 4단계는 실제 proof가 없으므로 고정된 known-valid
+  placeholder proofAsset을 쓰는데, validator가 `proofAsset`을 다른 필드와 독립 검사하므로 검증 대상은
+  그대로다. 저장값은 그 경계들이 돌려준 **detached 값**뿐이라 `structuredClone`은 제거했다.
+  range/format/aspect 규칙을 이 파일에서 재기술하지 않았다(재기술=drift). 기존 issue preparation/
+  bundle/identity 파일은 **수정하지 않았다**.
+- **결함 2 — unknown writer code 유출.** `typeof code === "string"`이면 임의 문자열을
+  `SpaceV2IssueErrorCode`로 cast하던 것을 없앴다. 이제 top-level `{ok,error}`와 error
+  `{category,code,retryable,correlationId}`를 exact-key로 보고, code·category는 스펙 074의 알려진
+  vocabulary, `retryable`은 boolean, `correlationId`는 **이번 시도가 실제로 보낸 값**과 일치해야
+  한다. 어긋나면 `outcome-unknown/errorCode:null`이며 port 문자열은 snapshot에 들어가지 않는다.
+  code→category 표는 port 소관이라 재도출하지 않는다.
+- **결함 3 — malformed success 승인.** non-empty token만 보던 것을, exact `{ok,value}` envelope의
+  `token`·`objectPath`가 **prepared bundle이 확정한 값과 둘 다 일치**할 때만 승인하도록 바꿨다
+  (lowercase UUID v4 shape도 방어적으로 확인). `confirmedToken`은 port의 echo가 아니라 로컬 token을
+  쓴다. non-UUID·다른 UUID·다른 path·extra/missing/hostile value는 `outcome-unknown/errorCode:null`,
+  token null이다.
+- **추가 보완.** correlation id가 port 형식(`^[0-9a-f]{8,64}$`)을 만족하지 않으면 writer 호출 **전에**
+  로컬에서 닫는다(아무것도 persist되지 않으므로 `PREPARATION_FAILED`). `.gitattributes`에 신규 두
+  경로만 `text eol=lf`로 추가했다 — 스펙 080 라운드 2와 같은 clean-checkout 사유이며 전역 TS/TSX
+  정책은 열지 않았다.
+- **회귀 43건 추가(파일 총 101건).** preflight 0-call 24건(`catalog:null`·빈 catalog·비-legacy 문서·
+  없는 size/template id·non-string/extra-key selection·portrait aspect에 landscape·잘못된 orientation·
+  logicalWidth 0/음수/소수·이름 색/잘못된 hex/비문자열 색·scale 범위 아래·위·pan 범위 밖·잘못된
+  rotation·transform 키 누락·art 존재·art 분류 불가·텍스트 존·물리 시계) + detach 회귀 1건, writer
+  failure envelope 9건, writer success envelope 9건. marker 문자열이 snapshot 직렬화에 나타나지 않음을
+  모두 단언한다.
+- **실측.** targeted session **101/101**, session+bundle+write-port **199/199**, admin/firebase
+  typecheck PASS, 전체 `node scripts/check.mjs` **PASS**(unit **2382/2382**, 이전 2339 + 43).
+- **production bundle exact 유지.** admin entry `index-D0XOQpRL.js` / `226,201 B` /
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`, customer entry
+  `index-BUT7Bmak.js` / `340,604 B` /
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`. CSS 2개도 SHA-256까지 무변경.
+- `git ls-files --eol` 신규 두 파일 **2/2 `i/lf w/lf attr/text eol=lf`**. `git diff --check` PASS,
+  변경 경로는 `issue-session.ts(.test.ts)` · `.gitattributes` 2줄 · spec 081 문서뿐이며 허용 외 diff
+  **0**. 검사 포트 4183/4184/4185/8080/9099/9199 잔류 **0**, 강제 종료 0.
+- **Chromium E2E와 emulator는 계속 NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/network/
+  live/UID/deploy, URL/clipboard, 운영 발급, publish/delete/orphan cleanup은 **0 / NOT TESTED**다.
+- 상태 `READY_FOR_CODEX`, fix_round **1/3**, next transition `CODEX_SPEC_081_REVIEW`. 다음 UI 스펙과
+  자동화·반복 작업은 시작하지 않았다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. fail-closed 결함 보완이라 새 제품
+  능력으로 계산하지 않았다.

@@ -63,3 +63,27 @@ admin/customer bundle exact hash, diff/forbidden/port gate를 실행한다. Chro
   error code 노출, non-UUID malformed success token 승인.
 - 보완은 `issue-session.ts/test`, `.gitattributes` exact 두 경로 LF와 이 spec081 문서군만 허용한다.
 - 상태 `CORRECTION_REQUIRED`, fix_round 1/3. 실제 UI/SDK/network/live 범위는 계속 닫는다.
+
+## 보완 라운드 1 (2026-08-27, Claude Code)
+
+Codex 라운드 1이 지적한 fail-closed 3건만 고쳤다. 세 지적 모두 맞았다. 상세 근거와 실측표는 스펙
+081의 `### DONE (Claude) — 보완 라운드 1 (2026-08-27)`이 정본이다. 검수 문서 commit `46b4754`,
+보완 commit `096e65e`.
+
+- **semantic preflight**: `beginDraft`가 `readLegacyCatalog` · `projectFramePreviewGeometry` ·
+  `projectCatalogTemplateImage` · 순수 `encodeFrameReplayEvidenceV1`을 재사용해 exporter·UUID·hash·
+  crypto 이전에 검증하고 detached 값만 저장한다. `structuredClone`은 제거했고 기존 preparation/
+  bundle/identity 파일은 수정하지 않았다.
+- **writer failure envelope**: 임의 문자열 code cast 제거. exact keys · 알려진 code/category ·
+  boolean retryable · 이번 시도의 correlation id 일치를 확인하고 어긋나면 outcome-unknown/null.
+- **writer success envelope**: prepared bundle의 token·objectPath와 둘 다 일치할 때만 승인하고
+  confirmedToken은 로컬 token. 그 밖은 outcome-unknown/null, token null.
+- 추가로 correlation id 형식 위반은 writer 호출 전 로컬 종료, `.gitattributes`에 신규 두 경로만
+  `text eol=lf` 고정.
+- 회귀 **43건 추가**(파일 101건), session+bundle+write-port **199/199**, 전체 `node scripts/check.mjs`
+  PASS(unit **2382/2382**), **production bundle 두 개 exact 유지**, EOL **2/2**, `git diff --check`
+  PASS, 허용 외 diff 0, 포트 잔류 0.
+- **Chromium E2E와 emulator는 계속 NOT RUN**이며 actual Firebase/network/live/UID/deploy 등은
+  **0 / NOT TESTED**다.
+- 상태 `READY_FOR_CODEX`, fix_round 1/3, next transition `CODEX_SPEC_081_REVIEW`.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-080-space-v2-production-customer-viewer-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, UI_CONNECTED, NO_LIVE_NETWORK
 active_unit: spec-081-space-v2-admin-frozen-issue-session
-state: CORRECTION_REQUIRED
-baseline_commit: 4765502   # HEAD=origin at spec 081 implementation start
-candidate_commit: 7dc148f  # spec 081 admin frozen issue session (contract docs commit 7608977)
-verified_commit: 4765502   # spec 080; spec 081 candidate has three reproduced review failures
-origin_relation: "spec 081 implemented from HEAD=origin=4765502, ahead/behind 0/0; pushed fast-forward"
-working_tree: "Codex spec 081 correction round 1 documents are uncommitted; pre-existing protected Founder/user changes remain untouched and unstaged"
+state: READY_FOR_CODEX
+baseline_commit: d7b84b0   # HEAD=origin at Codex spec 081 review round 1
+candidate_commit: 096e65e  # spec 081 correction round 1 (implementation 7dc148f, contract docs 7608977)
+verified_commit: 4765502   # spec 080; spec 081 awaits Codex re-review
+origin_relation: "correction round 1 applied on HEAD=origin=d7b84b0, ahead/behind 0/0; pushed fast-forward"
+working_tree: "spec 081 correction code/test/config and status documents committed; pre-existing protected Founder/user changes remain untouched and unstaged"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CLAUDE_CORRECTION
+next_transition: CODEX_SPEC_081_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,61 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 081 보완 라운드 1 수행 — fail-closed 3건 (2026-08-27)
+
+- 기준 `HEAD=origin=d7b84b0`, ahead/behind 0/0. Codex 검수 문서 commit `46b4754`, 보완 commit
+  `096e65e`. Codex가 지적한 **세 결함만** 고쳤고 기존 58건의 순서·lifecycle 계약은 하나도 되돌리지
+  않았다. 세 지적 모두 **맞았다**.
+- **결함 1 — semantic preflight 부재.** 기존 `freezeFields()`는 exact 6키와 `structuredClone` 성공만
+  봐서 `catalog:null`처럼 clone은 되지만 계약상 invalid한 조합이 `draft-ready/canIssue:true`가 됐다.
+  이제 `beginDraft`가 **기존 경계를 재사용해** exporter·UUID·hash·crypto **이전에** 검증한다 —
+  `readLegacyCatalog`(catalog detach) → `projectFramePreviewGeometry`(selection reference·geometry) →
+  `projectCatalogTemplateImage`(첫 capability: 텍스트 0·시계 없음·art 부재 증명) → 순수
+  `encodeFrameReplayEvidenceV1`(orientation vs projected aspect·logicalWidth·color·transform).
+  저장하는 값은 그 경계들이 돌려준 **detached 값**뿐이라 `structuredClone`은 제거했다(이미 detach됨).
+  range/format/aspect 규칙을 이 파일에서 재기술하지 않아 drift 여지가 없다. 기존 issue
+  preparation/bundle/identity 파일은 **수정하지 않았다**.
+- **결함 2 — unknown writer code 유출.** 기존 코드는 `typeof code === "string"`이면 임의 문자열을
+  `SpaceV2IssueErrorCode`로 cast했다. 이제 result 전체를 exact-key로 검사한다 — top-level `{ok,error}`,
+  error `{category,code,retryable,correlationId}`, code·category는 스펙 074 **알려진 vocabulary**,
+  `retryable`은 boolean, `correlationId`는 **이번 시도가 실제로 보낸 값**과 일치해야 한다. code→category
+  표는 port의 소관이라 재도출하지 않는다(중복은 drift를 만든다). 하나라도 어긋나면
+  `outcome-unknown/errorCode:null`이고 port의 문자열은 snapshot에 들어가지 않는다.
+- **결함 3 — malformed success 승인.** 기존엔 non-empty token만 봤다. 이제 exact `{ok,value}` envelope의
+  `token`·`objectPath`가 **prepared bundle이 이미 확정한 값과 둘 다 일치**할 때만 승인하고(추가로
+  lowercase UUID v4 shape도 확인), `confirmedToken`은 port의 echo가 아니라 **로컬에서 준비한 token**을
+  쓴다. non-UUID·다른 UUID·다른 path·extra/missing/hostile value는 `outcome-unknown/errorCode:null`이며
+  `confirmedToken`은 null이다.
+- **추가 보완.** correlation id가 port의 형식을 만족하지 않으면 writer를 부르기 전에 로컬에서 닫는다
+  (아무것도 persist되지 않으므로 `PREPARATION_FAILED`). `.gitattributes`에 **정확히 두 경로만**
+  `text eol=lf`로 추가했다(스펙 080 라운드 2와 같은 clean-checkout 사유, 전역 TS/TSX 정책 아님).
+- **회귀 테스트 43건 추가(파일 총 101건).** preflight 0-call 24건 — `catalog:null` · 빈 catalog ·
+  legacy가 아닌 문서 · 없는 frameSizeId/templateId · non-string/extra-key selection · portrait aspect에
+  landscape · 잘못된 orientation · logicalWidth 0/음수/소수 · 이름 색·잘못된 hex·비문자열 색 ·
+  scale 범위 밖 · pan 범위 밖 · 잘못된 rotation · transform 키 누락 · art 존재 · art 분류 불가 ·
+  텍스트 존 · 물리 시계. writer failure envelope 9건(임의 code marker·unknown category·비boolean
+  retryable·다른 correlationId·extra/missing key·top-level extra·non-object error·정상 failure 유지).
+  writer success envelope 9건(non-UUID token·다른 token·다른 path·extra/missing key·non-object value·
+  top-level extra·hostile getter·로컬 correlation id 거부). marker 문자열이 snapshot에 없음을 모두
+  단언한다.
+- **실측.** targeted session **101/101**, session+bundle+write-port **199/199**, admin/firebase
+  typecheck PASS, 전체 `node scripts/check.mjs` **PASS**(unit **2382/2382**, 이전 2339 + 43).
+- **production bundle exact unchanged.** admin entry `index-D0XOQpRL.js` / `226,201 B` /
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`, customer entry
+  `index-BUT7Bmak.js` / `340,604 B` /
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1` — 스펙 081 명시값과 **여전히
+  완전 일치**. CSS 2개도 SHA-256까지 무변경이다.
+- `git ls-files --eol` 신규 두 파일 **2/2 `i/lf w/lf attr/text eol=lf`**. `git diff --check` PASS,
+  변경 경로는 `issue-session.ts(.test.ts)` · `.gitattributes` 2줄 · spec 081 문서뿐이고 허용 외 diff
+  **0**(App/UI/CSS/Canvas exporter·admin composition·`packages/**`·Rules/firebase config/emulator·
+  package/lockfile·`pnpm-workspace.yaml` 무변경). 검사 포트 4183/4184/4185/8080/9099/9199 잔류 **0**.
+- **Chromium E2E와 emulator는 계속 NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/network/
+  live/UID/deploy, URL/clipboard, 운영 발급, publish/delete/orphan cleanup은 **0 / NOT TESTED**다.
+- 상태 `READY_FOR_CODEX`, fix_round **1/3**, next transition `CODEX_SPEC_081_REVIEW`. 다음 UI 스펙과
+  자동화·반복 작업은 시작하지 않았다.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**(fail-closed 결함 보완이지 새 제품 능력이
+  아니다).
 
 ## 스펙 081 Codex 독립 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-27)
 

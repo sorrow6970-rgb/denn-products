@@ -1,14 +1,44 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CORRECTION_REQUIRED`
-active_unit: `spec-081-space-v2-admin-frozen-issue-session` — **CODEX REVIEW ROUND 1 / NON_UI / NO_LIVE_NETWORK**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-081-space-v2-admin-frozen-issue-session` — **CORRECTION ROUND 1 DONE / NON_UI / NO_LIVE_NETWORK**
 completed_unit: `spec-080-space-v2-production-customer-viewer-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / UI_CONNECTED / NO_LIVE_NETWORK**
-검수 기준: `HEAD=origin=d7b84b0`, ahead/behind `0/0`. 계약 `7608977`, 구현 `7dc148f`.
+검수 기준: `HEAD=origin=d7b84b0`, ahead/behind `0/0`. 계약 `7608977`, 구현 `7dc148f`, 보완 `096e65e`.
 Founder 정본: **LL-1=A ~ LL-6=A**
 fix_round: **1 / 3**
-next_transition: **`CLAUDE_CORRECTION`**
+next_transition: **`CODEX_SPEC_081_REVIEW`**
 
-## Claude Code 보완 라운드 1 실행 지시문
+## 현재 결과 — 보완 라운드 1 완료
+
+Codex가 지적한 **fail-closed 3건만** 고쳤고 기존 58건의 순서·lifecycle 계약은 하나도 되돌리지 않았다.
+세 지적 모두 맞았다.
+
+**1. semantic preflight.** `beginDraft`가 `readLegacyCatalog` → `projectFramePreviewGeometry` →
+`projectCatalogTemplateImage` → 순수 `encodeFrameReplayEvidenceV1`을 재사용해 exporter·UUID·hash·crypto
+**이전에** catalog·selection reference·orientation·logicalWidth·color·transform·첫 capability를
+검증하고, 그 경계들이 돌려준 **detached 값만** 저장한다(`structuredClone` 제거). invalid면
+`SPACE_V2_SESSION_INVALID_DRAFT`이고 이후 호출 **0**이다. 기존 preparation/bundle/identity 파일은
+수정하지 않았다.
+
+**2. writer failure envelope.** 임의 문자열 code cast를 없앴다. top-level/error exact keys, 알려진
+code·category, boolean `retryable`, 이번 시도의 correlation id 일치를 모두 확인하고 어긋나면
+`outcome-unknown/errorCode:null`로 닫는다.
+
+**3. writer success envelope.** exact envelope의 `token`·`objectPath`가 prepared bundle 값과 둘 다
+일치할 때만 승인하며 `confirmedToken`은 로컬 token이다. 그 밖은 `outcome-unknown/errorCode:null`,
+token null이다.
+
+추가로 correlation id 형식 위반은 writer 호출 전에 로컬에서 닫고, `.gitattributes`에 신규 두 경로만
+`text eol=lf`로 고정했다(전역 TS/TSX 정책 아님).
+
+**실측.** 회귀 **43건 추가**(파일 **101/101**), session+bundle+write-port **199/199**, admin/firebase
+typecheck PASS, 전체 `node scripts/check.mjs` PASS(unit **2382/2382**), **production bundle 두 개 모두
+스펙 명시값 exact 유지**, `git ls-files --eol` **2/2**, `git diff --check` PASS, 허용 외 diff 0,
+검사 포트 잔류 0. **Chromium E2E와 emulator는 계속 NOT RUN**이다.
+
+**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 재검수다.
+
+> 직전 지시문(스펙 081 보완 라운드 1, 수행 완료 — 기록):
 
 ```text
 C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와
