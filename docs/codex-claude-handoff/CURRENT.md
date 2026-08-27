@@ -1,5 +1,14 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-27): spec 082 correction round 5 Codex 재검수 = CORRECTION_REQUIRED / EXCEPTIONS CONSUMED.**
+> 검수 기준 `HEAD=origin=c7199f0`, ahead/behind 0/0. scanner/destructuring 보완은 적합하지만
+> `sdkUsage()`가 `ExportKeyword`를 처리하지 않아 `export * from "firebase/storage"`를 무시하고,
+> dot 없이 반환되는 `return import("firebase/storage")`도 변수 선언 순회에 들어가지 않아
+> `unaccounted` 0으로 통과한다. 기존 facade가 승인 집합을 이미 채우므로 aggregate equality도 유지된다.
+> closed allowlist는 NOT PROVEN. Founder NN-5=A(권장: test 한 파일에서 full AST/exact facade occurrence
+> allowlist) / B(공백 수용) 전 코드·test·다음 스펙 시작 0. 전체 진행도 **84~87% / 잔여 13~16% —
+> 변동 없음**.
+
 > **최신 포인터 (2026-08-27): Founder NN-4=A 예외 / spec 082 correction round 5 완료 = READY_FOR_CODEX.**
 > `HEAD=origin=87923e6`에서 시작, Codex/NN-4 문서 `a1d3aaa`, 보완 commit `7627bc6`. 허용 제품 파일은
 > `tests/e2e/admin-auth-read.spec.ts` 하나뿐이고 제품 코드·승인된 read-only Storage 연결·**신규

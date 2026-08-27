@@ -1,13 +1,49 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `FOUNDER_DECISION_REQUIRED`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **READY_FOR_CODEX / CORRECTION ROUND 5 DONE (NN-4=A 예외) / NON_UI / NO_LIVE_NETWORK / E2E 161-0**
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED / NN-3+NN-4 EXCEPTIONS CONSUMED / NON_UI / NO_LIVE_NETWORK**
 - 기준: `HEAD=origin=87923e6`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`, 5 `7627bc6`.
-- next_transition: `CODEX_SPEC_082_REVIEW`
-- fix_round: `5` (자동 한도 3/3 + NN-3=A · NN-4=A 예외 각 1회)
+- next_transition: `FOUNDER_SPEC_082_NN_5_DECISION`
+- fix_round: `5` (자동 한도 3/3 + NN-3=A · NN-4=A 예외 소진, 추가 승인 전 수정 금지)
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## Codex 재검수 — CORRECTION_REQUIRED / 예외 소진
+
+compiler scanner는 destructuring을 닫았지만 SDK module occurrence를 전부 설명하지 못한다.
+
+```ts
+export * from "firebase/storage";
+
+function leak() {
+  return import("firebase/storage");
+}
+```
+
+`sdkUsage()`는 `ImportKeyword`와 변수 선언만 처리한다. 첫 코드는 `ExportKeyword`라 무시되고, 둘째는
+dot 없는 dynamic import를 첫 순회에서 건너뛴 뒤 변수 선언 순회에도 들어가지 않는다. 두 코드 모두
+`reached`와 `unaccounted`를 바꾸지 않으며 금지 API 이름도 직접 포함하지 않는다. 기존 facade가 승인
+집합을 이미 채우므로 aggregate equality 검사는 통과한다.
+
+따라서 closed allowlist와 "설명 못 한 형태는 모두 실패"는 **NOT PROVEN**이다. NN-3/NN-4 예외를 모두
+사용했으므로 Claude Code는 Founder 결정 전에 코드·test·문서·commit·push를 시작하지 않는다.
+
+### Founder NN-5
+
+- **A (권장):** correction round 6 예외를 한 번 승인한다. 허용 제품 파일은
+  `tests/e2e/admin-auth-read.spec.ts` 하나뿐이다. full TypeScript AST 또는 exact facade allowlist로
+  scanned package의 모든 `firebase/*` import declaration, export declaration, import type, dynamic import를
+  먼저 열거한다. `export *`, 직접 re-export, unbound/returned dynamic import와 namespace escape는 전부
+  fail-closed여야 한다. 위 두 우회와 `export { getBytes } from "firebase/storage"` self-check를 추가한다.
+  제품 코드·read-only Storage 연결·package/lockfile은 변경하지 않는다.
+- **B:** 알려진 SDK re-export/escape 검출 공백을 수용한다. 비권장이다.
+
+> NN-5=A 승인 후 Claude Code에 전달할 지시문:
+
+```text
+NN-5=A 승인. C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된 스펙 082 CORRECTION_REQUIRED 라운드 6 예외만 수행해.
+```
 
 ## 현재 결과 — 보완 라운드 5 완료(NN-4=A 예외), regex를 버리고 compiler scanner로
 

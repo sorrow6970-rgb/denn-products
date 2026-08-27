@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CODEX / CORRECTION ROUND 5 DONE (Founder NN-4=A exception) / NON_UI / NO_LIVE_NETWORK`
+`FOUNDER_DECISION_REQUIRED / CORRECTION_REQUIRED / NN-3+NN-4 EXCEPTIONS CONSUMED / NON_UI / NO_LIVE_NETWORK`
 
 선행 게이트:
 
@@ -790,3 +790,37 @@ stage/commit/restore하지 않았다.
 
 **진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
 능력이 아니다.
+
+### CODEX REVIEW — CORRECTION_REQUIRED / EXCEPTIONS CONSUMED (2026-08-27)
+
+검수 기준 `HEAD=origin=c7199f0`, ahead/behind 0/0. compiler scanner 전환과 destructuring 검출은
+적합하지만 SDK occurrence closed allowlist에는 두 우회가 남아 있다.
+
+```ts
+export * from "firebase/storage";
+
+function leak() {
+  return import("firebase/storage");
+}
+```
+
+`sdkUsage()` 첫 순회는 `ImportKeyword`만 처리해 첫 `ExportKeyword`를 무시한다. dynamic import는 뒤에
+dot이 없으면 "bound below"라며 건너뛰지만, 둘째 코드는 변수 선언이 아니어서 아래 선언 순회에도
+들어가지 않는다. 두 코드는 `reached`·`unaccounted`를 바꾸지 않고 금지 API 이름도 직접 포함하지 않는다.
+기존 facade가 승인 app/firestore/storage 멤버를 이미 채우므로 aggregate equality는 그대로 통과한다.
+
+따라서 "각 SDK 모듈이 surface에 건네는 집합이 정확히 allowlist와 같다"와 "설명 못 한 형태는 모두
+실패한다"는 **NOT PROVEN**이다. Claude의 Chromium 161/161, check 2409/2409 실측은 보존하지만 위 두
+self-check가 없어 스펙 082는 `CODEX_PASSED`가 아니다. NN-3/NN-4 예외를 모두 사용했으므로 추가 수정은
+자동 진행하지 않는다.
+
+Founder **NN-5** 결정:
+
+- **A (권장):** test 한 파일의 correction round 6 예외. full AST 또는 exact facade allowlist로 모든
+  `firebase/*` import/export/type-query/dynamic-import occurrence를 먼저 열거하고 `export *`, 직접
+  re-export, unbound/returned dynamic import, namespace escape를 fail-closed로 고정한다. 위 두 우회와
+  `export { getBytes } from "firebase/storage"` self-check를 추가한다.
+- **B:** 알려진 SDK re-export/escape 공백을 수용한다(비권장).
+
+NN-5 전에는 코드·test 수정, commit/push, spec 082 종료, 실제 admin issue UI 및 다음 스펙 착수를 하지
+않는다.

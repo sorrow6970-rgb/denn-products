@@ -6889,3 +6889,23 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CODEX`, fix_round **5 (NN-4=A 예외 1회)**, next transition `CODEX_SPEC_082_REVIEW`.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품 능력이
   아니다.
+
+## 2026-08-27 - Codex 스펙 082 보완 라운드 5 재검수 — CORRECTION_REQUIRED / EXCEPTIONS CONSUMED
+
+- `HEAD=origin=c7199f0`, ahead/behind 0/0. 라운드 5 제품 diff는 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이고 compiler scanner/destructuring 보완은 적합하다.
+- 잔여 결함 1: `sdkUsage()`는 `ImportKeyword`와 변수 선언만 순회해
+  `export * from "firebase/storage"`의 `ExportKeyword`를 무시한다.
+- 잔여 결함 2: dot 없는 dynamic import를 첫 순회에서 "bound below"로 건너뛰지만
+  `return import("firebase/storage")`는 변수 선언 순회 대상이 아니어서 namespace escape가
+  `unaccounted`에 기록되지 않는다.
+- 두 우회는 `reached`·`unaccounted`·금지 이름을 바꾸지 않고, 기존 facade가 승인 집합을 채우므로
+  aggregate equality도 통과한다. closed allowlist와 "모든 미설명 형태 fail"은 **NOT PROVEN**이다.
+- Claude 실측 Chromium 161/161 · check 2409/2409는 보존하지만 해당 self-check가 없어 스펙 082는
+  `CODEX_PASSED`가 아니다. NN-3/NN-4 예외 소진으로 Codex는 코드·test를 수정하거나 게이트를 반복하지
+  않았다.
+- Founder **NN-5** 결정 대기: A(권장 — test 한 파일 round 6 예외, full AST/exact facade occurrence
+  allowlist로 export/re-export/unbound dynamic import/namespace escape fail-closed) / B(공백 수용,
+  비권장).
+- 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_5_DECISION`. 실제 admin issue UI·다음
+  스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

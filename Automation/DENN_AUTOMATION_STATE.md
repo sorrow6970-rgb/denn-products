@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: READY_FOR_CODEX
+state: FOUNDER_DECISION_REQUIRED
 baseline_commit: 87923e6   # HEAD=origin at spec 082 correction round 5 start (Codex round 4 review + NN-4=A)
 candidate_commit: 7627bc6  # spec 082 correction round 5, NN-4=A exception (round 4 b1ae8b4, round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "Claude pushed spec 082 correction round 5; HEAD=origin, ahead/behind 0/0"
+origin_relation: "Codex review at HEAD=origin=c7199f0, ahead/behind 0/0"
 working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
-fix_round: 5   # NN-3=A and NN-4=A exceptions consumed; regex reader replaced by the TypeScript scanner
+fix_round: 5   # NN-3=A and NN-4=A exceptions consumed; SDK export/escape shapes remain unaccounted
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_082_REVIEW
+next_transition: FOUNDER_SPEC_082_NN_5_DECISION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,29 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Codex 스펙 082 보완 라운드 5 재검수 — CORRECTION_REQUIRED / EXCEPTIONS CONSUMED (2026-08-27)
+
+- 검수 기준 `HEAD=origin=c7199f0`, ahead/behind 0/0. 라운드 5 제품 commit `7627bc6`의 변경은 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이다.
+- TypeScript scanner 전환, destructuring self-check, SDK member allowlist 방향은 적합하다. 그러나
+  `sdkUsage()`는 `ImportKeyword`와 변수 선언만 순회하며 `ExportKeyword`를 처리하지 않는다.
+- 따라서 package surface에 `export * from "firebase/storage"`를 추가해도 `reached`·`unaccounted`·금지
+  이름이 모두 변하지 않는다. 현재 승인 멤버는 기존 facade에서 이미 채워지므로 aggregate equality도
+  그대로 통과한다. 이는 Storage SDK 전체를 허용 루트가 re-export할 수 있는 실제 우회다.
+- 동적 import도 `import("firebase/storage")` 뒤에 dot이 없으면 "bound below"라며 건너뛰지만, 아래
+  변수 선언이 아닌 `return import("firebase/storage")`는 두 번째 순회 대상이 아니어서 namespace escape가
+  `unaccounted`에 남지 않는다.
+- 그러므로 "각 SDK 모듈이 surface에 건네는 집합이 정확히 allowlist와 같다", "설명 못 한 형태는 모두
+  실패한다"는 완료 조건은 **NOT PROVEN**이다. Chromium 161/161과 check 2409/2409에는 두 합성 회귀가
+  없어 이 결함을 드러내지 않는다. 스펙 082는 `CODEX_PASSED`가 아니다.
+- NN-3/NN-4 예외를 모두 사용했으므로 추가 코드를 자동 수정하지 않았고 실행 게이트도 반복하지 않았다.
+- Founder **NN-5** 결정 대기: **A(권장)** — test 한 파일의 correction round 6 예외. full AST 또는 exact
+  facade allowlist로 모든 `firebase/*` import/export/dynamic-import occurrence를 먼저 열거하고,
+  `export *`, re-export, unbound/returned dynamic import, namespace escape를 fail-closed로 고정한다.
+  **B** — 알려진 SDK re-export/escape 공백을 수용한다(비권장).
+- 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_5_DECISION`. 실제 admin issue UI·다음
+  스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## 스펙 082 보완 라운드 5 완료 — Founder NN-4=A 예외, compiler scanner 전환 (2026-08-27)
 

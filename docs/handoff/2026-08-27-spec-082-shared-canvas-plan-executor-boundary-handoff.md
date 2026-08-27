@@ -1,10 +1,22 @@
 # 스펙 082 shared Canvas plan executor boundary handoff
 
-- 상태: `FOUNDER_DECISION_REQUIRED / CORRECTION_REQUIRED / NN-3 EXCEPTION CONSUMED / NON_UI / NO_LIVE_NETWORK`
-- 구현: 계약 `aa7e048`, 제품 `307521f`, 보완 `8d4458d` / `65c5b46` / `68bd25c` / `b1ae8b4`
+- 상태: `FOUNDER_DECISION_REQUIRED / CORRECTION_REQUIRED / NN-3+NN-4 EXCEPTIONS CONSUMED / NON_UI / NO_LIVE_NETWORK`
+- 구현: 계약 `aa7e048`, 제품 `307521f`, 보완 `8d4458d` / `65c5b46` / `68bd25c` / `b1ae8b4` / `7627bc6`
 - 선행: spec 081 `DONE / CODEX_PASSED`
 - spec: `docs/rebuild/specs/082-shared-canvas-plan-executor-boundary.md`
-- 다음 transition: `FOUNDER_SPEC_082_NN_4_DECISION`
+- 다음 transition: `FOUNDER_SPEC_082_NN_5_DECISION`
+
+## Codex 라운드 5 재검수 — CORRECTION_REQUIRED / 예외 소진
+
+- 기준 `HEAD=origin=c7199f0`, ahead/behind 0/0. compiler scanner/destructuring 보완은 적합하다.
+- `sdkUsage()`가 `ExportKeyword`를 처리하지 않아 `export * from "firebase/storage"`를 무시하고,
+  변수 선언 밖의 `return import("firebase/storage")`도 `unaccounted`에 남기지 않는다.
+- 기존 facade가 승인 멤버 집합을 채우므로 두 우회가 추가돼도 aggregate equality와 금지 이름 검사가
+  통과한다. closed allowlist는 **NOT PROVEN**, spec 082는 `CODEX_PASSED`가 아니다.
+- Founder **NN-5** 대기: A(권장, test 한 파일의 round 6 예외로 full AST/exact facade occurrence
+  allowlist) / B(공백 수용, 비권장).
+- 결정 전 제품 코드·test·commit/push·admin issue UI·다음 스펙 시작 0. 진행도 **84~87% / 잔여
+  13~16% — 변동 없음**.
 
 ## 목적
 
