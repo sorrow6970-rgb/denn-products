@@ -6048,3 +6048,23 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   않았고 자동화·반복 작업도 만들지 않았다.
 - 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**. package seam 하나를 닫았을 뿐
   production 연결과 live 검증은 그대로 남아 있다.
+
+## 2026-08-27 - 스펙 079 Codex 검수 통과 · 스펙 080 Claude Code UI 프롬프트 준비
+
+- 검수 기준 `HEAD=origin=c9c0c3d`, ahead/behind `0/0`. 구현 commit `0887047`과 허용 8개 제품/test
+  경로를 계약에 대조했고 추가 코드 결함은 0이다.
+- 독립 targeted **105/105**, Firebase typecheck, 전체 `node scripts/check.mjs` PASS(unit
+  **2228/2228**), 고객 bundle exact, `git diff --check`, forbidden range diff, 검사 포트 잔류 0을
+  확인했다.
+- Codex 환경에서 full emulator 재실행은 Firestore emulator Java loopback 연결 실패로 tests 전에
+  중단되어 독립 **27/27 재현은 NOT COMPLETED**다. 신규 Auth+Storage proof integration은 동일 local
+  config에서 분리 실행 **5/5 PASS**했다. Claude Code가 기록한 full suite **27/27 PASS**와 구분한다.
+- 스펙 079 최종 판정은 `CODEX_PASSED / DONE / LOCAL_VERIFIED / NO_UI / NO_LIVE_NETWORK`다. actual
+  Firebase/network/live/CORS/deploy/actual UID는 0 / NOT TESTED다.
+- 다음 수동 단위 `080-space-v2-production-customer-viewer-ui`의 계약과 handoff를 작성했다. 실제
+  UI/UX 구현은 Claude Code가 수행한다.
+- 범위는 V1 safe-block 호환 dispatch, V2 proof reader, browser PNG decoder/drawable owner, replay
+  controller와 React Canvas UI다. actual Firebase, admin issue UI, Rules/deploy, 운영 쓰기는 계속 닫는다.
+- 상태 `READY_FOR_CLAUDE`, next transition `CLAUDE_SPEC_080_IMPLEMENTATION`. 자동화·반복 작업과 제품
+  구현은 시작하지 않았다.
+- 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 문서 준비로 변동 없음**.

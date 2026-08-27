@@ -24,33 +24,30 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 079 proof reader adapter 구현·검증 완료, Codex 검수 대기.**
+상태: **`READY_FOR_CLAUDE` - 스펙 080 customer V2 production viewer UI 실행 계약 준비 완료.**
 
-스펙 079 package-only Firebase V2 proof reader adapter를 Founder MM-1=A~MM-6=A 승인 범위대로 구현하고
-검증했다. 기준 `HEAD=origin=b28b9c1`, 문서 commit `1d46b33`, 구현 commit `0887047`.
+스펙 079은 구현 commit `0887047`, 결과 문서 `c9c0c3d` 기준 Codex 독립 검수를 통과했다. 추가 코드
+결함은 0이며 targeted **105/105**, Firebase typecheck, 전체 check(unit **2228/2228**), 고객 bundle
+exact, diff·forbidden·port gate가 PASS했다.
 
-신규 제품 파일은 `packages/firebase/src/space-read/`의 `proof-facade.ts`, `proof-reader.ts`,
-`proof-sdk-facade.ts`와 unit/emulator test 3개이며, 기존 파일 수정은 `space-read/index.ts` 명시
-export와 `vitest.emulator.config.ts` include 1건뿐이다. `space-read/sdk-facade.ts`와 기존 V1 test는
-무변경이다.
+Codex 환경의 full emulator 재실행은 Firestore Java loopback 실패로 tests 전에 중단되어 독립 27/27
+재현은 완료하지 못했다. 신규 Auth+Storage proof integration은 분리 실행 **5/5 PASS**다. 이 결과와
+Claude Code가 기록한 full emulator **27/27 PASS**를 구분해 보존한다. 스펙 079 최종 상태는
+`DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI / NO_LIVE_NETWORK`다.
 
-exact V2 path → `getMetadata` fullPath/contentType/size → `getBytes(ref,maxBytes)` → metadata size와
-copied byte length 일치 순서, metadata+bytes 전체 단일 20초 budget, 제품 retry 0, 기존
-`denn-space-viewer` named app exact config match 재사용을 계약대로 구현했다. Auth/Firestore/
-default·추가 app/download URL은 0이다.
+다음 수동 단위는 `docs/rebuild/specs/080-space-v2-production-customer-viewer-ui.md`다. 실제 UI/UX 구현은
+사용자 지침대로 Claude Code가 담당한다. 기존 V1 safe-block route를 유지하면서 exact V2 document,
+proof reader, browser PNG decoder/drawable owner, replay controller와 `PreviewCanvasSurface`를 production
+고객 route에 연결한다.
 
-실측 게이트: targeted unit **105/105**, Firebase typecheck PASS, 전체 `node scripts/check.mjs` PASS
-(unit **2228/2228**), `pnpm test:emulator` **27/27** PASS(기존 `firebase.emulator.json`·
-`storage.emulator.rules`·`demo-denn-emulator` 무변경), 고객 entry `index-6js4DafP.js` /
-`322,018 bytes` / `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159` exact,
-`git diff --check` PASS, 허용 외 diff 0, 검사 포트 4183/4184/4185/8080/9099/9199 잔류 0.
+검증은 injected fake와 합성 PNG만 사용하는 unit/component 및 targeted `space-production-route`
+Chromium이다. actual Firebase/network/live/UID/data, Rules/CORS/Hosting deploy, admin issue UI, 운영 쓰기,
+publish, orphan cleanup은 계속 0 / 금지다. full Chromium suite는 보호 spec-018 PNG 때문에 NOT RUN이다.
 
-전체 Chromium E2E는 MM-6=A에 따라 **NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/
-network/live/CORS/deploy/actual UID/publish/orphan cleanup은 **0 / NOT TESTED**, UI 연결 0이다.
-next transition은 `CODEX_SPEC_079_REVIEW`. browser PNG decoder와 production V2 composition/UI는
-별도 스펙이며 자동 시작하지 않는다.
+문서 작성 시 기준은 `HEAD=origin=c9c0c3d`, ahead/behind `0/0`이다. 제품 구현은 아직 시작하지 않았다.
+next transition은 `CLAUDE_SPEC_080_IMPLEMENTATION`이다.
 
-전체 진행도는 **81~84% 완료 / 16~19% 잔여 — 변동 없음**이다.
+전체 진행도는 **81~84% 완료 / 16~19% 잔여 — 문서 준비로 변동 없음**이다.
 
 > 스펙 079 실행 계약 (Founder MM-1=A ~ MM-6=A 승인):
 

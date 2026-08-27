@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CODEX / IMPLEMENTED / LOCAL_VERIFIED / NO_UI / NO_NETWORK`
+`DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI / NO_LIVE_NETWORK`
 
 Founder 결정 정본:
 `docs/codex-claude-handoff/decisions/2026-08-26-space-v2-proof-reader-adapter-decisions.md`.
@@ -319,3 +319,19 @@ production 연결과 live 검증은 그대로 남는다.
 
 상태 `READY_FOR_CODEX`. 다음 스펙(browser PNG decoder, production V2 customer composition/UI)은
 시작하지 않았다.
+
+### CODEX REVIEW — PASSED / DONE (2026-08-27)
+
+- 검수 기준 `HEAD=origin=c9c0c3d`, ahead/behind `0/0`. 구현 commit `0887047`과 결과 문서 commit
+  `c9c0c3d`를 계약·허용 경로에 대조했고 추가 코드 결함은 0이다.
+- 독립 targeted unit **105/105**, Firebase typecheck, 전체 `node scripts/check.mjs` PASS(unit
+  **2228/2228** 포함), 고객 entry filename/size/SHA-256 exact, `git diff --check`, forbidden range diff,
+  검사 포트 잔류 0을 확인했다.
+- Codex 환경에서 full emulator suite 재실행은 Firestore emulator의 Java loopback 연결 실패로 tests 전
+  중단되어 **독립 27/27 재현은 NOT COMPLETED**다. 제품 실패로 분류하지 않는다. 신규 Auth+Storage
+  proof integration만 동일 emulator config로 분리 재실행해 **5/5 PASS**했고, Claude Code의 full
+  emulator **27/27 PASS** 기록은 그대로 보존한다.
+- 실제 Firebase/project/bucket/network/live/CORS/deploy/actual UID와 production UI 연결은 여전히
+  **0 / NOT TESTED**다.
+- 최종 판정 `CODEX_PASSED / DONE / LOCAL_VERIFIED / NO_UI / NO_LIVE_NETWORK`. 후속 스펙 080에서
+  browser decoder와 production customer V2 UI를 Claude Code가 구현한다.

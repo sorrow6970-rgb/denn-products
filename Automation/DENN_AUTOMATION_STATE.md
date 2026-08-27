@@ -4,24 +4,41 @@
 updated_at: 2026-08-27
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-078-space-v2-local-viewer-replay-pipeline   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_UI
-active_unit: spec-079-space-v2-proof-reader-adapter
-state: READY_FOR_CODEX
-baseline_commit: b28b9c1   # HEAD=origin at spec 079 implementation start
-candidate_commit: 0887047  # spec 079 proof reader adapter implementation (docs commit 1d46b33)
-verified_commit: bed9106   # spec 078 independently re-reviewed correction code/test commit
-origin_relation: "spec 079 implemented from HEAD=origin=b28b9c1, ahead/behind 0/0; pushed fast-forward"
-working_tree: "spec 079 implementation and allowed documents committed; pre-existing protected Founder/user changes left untouched and unstaged"
+completed_unit: spec-079-space-v2-proof-reader-adapter   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_UI, NO_LIVE_NETWORK
+active_unit: spec-080-space-v2-production-customer-viewer-ui
+state: READY_FOR_CLAUDE
+baseline_commit: c9c0c3d   # HEAD=origin at spec 080 contract preparation
+candidate_commit: null
+verified_commit: 0887047   # spec 079 implementation independently reviewed
+origin_relation: "HEAD=origin=c9c0c3d, ahead/behind 0/0 before uncommitted spec 080 handoff documents"
+working_tree: "spec 080 contract/handoff and current-state documents are unstaged; pre-existing protected Founder/user changes remain untouched and unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_079_REVIEW
+next_transition: CLAUDE_SPEC_080_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-commit_owner: Codex implementation under user execution instruction; independent review complete
+commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 81-84% complete; 16-19% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 079 Codex 검수 통과 · 스펙 080 Claude Code UI handoff (2026-08-27)
+
+- 스펙 079은 구현 commit `0887047`, 결과 문서 `c9c0c3d` 기준 추가 코드 결함 0으로
+  `CODEX_PASSED / DONE` 처리했다.
+- 독립 targeted **105/105**, Firebase typecheck, 전체 check(unit **2228/2228**), 고객 bundle exact,
+  diff·forbidden·port gate가 PASS했다.
+- Codex 환경의 full emulator 재실행은 Firestore Java loopback 실패로 tests 전에 중단됐다. 신규
+  Auth+Storage proof integration은 분리 실행 **5/5 PASS**이며 Claude Code가 기록한 full suite
+  **27/27 PASS**와 구분한다.
+- 다음 수동 단위는 스펙 080 customer V2 production viewer UI다. Claude Code가 V1 호환 dispatch,
+  browser PNG decoder/drawable owner, V2 replay controller와 React Canvas 화면을 연결한다.
+- actual Firebase/network/live/deploy/admin issue UI는 계속 0 / NOT TESTED다. targeted production-route
+  E2E만 허용하며 full Chromium suite는 보호 PNG 때문에 NOT RUN이다.
+- 제품 구현은 아직 시작하지 않았다. 상태 `READY_FOR_CLAUDE`, 다음 transition
+  `CLAUDE_SPEC_080_IMPLEMENTATION`이다.
+- 전체 진행도는 **81~84% 완료 / 16~19% 잔여 — 문서 준비로 변동 없음**이다.
 
 ## 스펙 079 proof reader adapter 구현 완료 (2026-08-27)
 

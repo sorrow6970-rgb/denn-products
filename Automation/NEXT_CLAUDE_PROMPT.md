@@ -1,34 +1,56 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-079-space-v2-proof-reader-adapter` — **IMPLEMENTED / LOCAL_VERIFIED / NO_UI / NO_NETWORK**
-completed_unit: `spec-078-space-v2-local-viewer-replay-pipeline` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI**
-구현 기준: `HEAD=origin=b28b9c1`에서 시작. 문서 commit `1d46b33`, 구현 commit `0887047`.
-Founder 결정: **MM-1=A ~ MM-6=A 승인**.
-제품 구현: **DONE — 승인 범위만**. 검증: targeted unit 105/105, 전체 check PASS(unit 2228/2228),
-`pnpm test:emulator` 27/27, 고객 bundle hash exact. 전체 Chromium E2E **NOT RUN**(MM-6=A).
+상태: `READY_FOR_CLAUDE`
+active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **UI IMPLEMENTATION NOT STARTED**
+completed_unit: `spec-079-space-v2-proof-reader-adapter` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI**
+기준: 문서 작성 시 `HEAD=origin=c9c0c3d`, ahead/behind `0/0`.
+Founder 정본: **LL-1=A ~ LL-6=A, MM-1=A ~ MM-6=A**.
 fix_round: **0 / 3**
-next_transition: **`CODEX_SPEC_079_REVIEW`**
+next_transition: **`CLAUDE_SPEC_080_IMPLEMENTATION`**
 
-## 현재 결과
+## Claude Code에 전달할 실행 지시문
 
-스펙 079 package-only Firebase V2 proof reader adapter를 승인 범위대로 구현하고 검증했다. 신규 제품
-파일은 `packages/firebase/src/space-read/`의 `proof-facade.ts`, `proof-reader.ts`,
-`proof-sdk-facade.ts`와 unit/emulator test 3개이며, 기존 파일 수정은 `space-read/index.ts` 명시
-export와 `vitest.emulator.config.ts` include 1건뿐이다.
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와
+docs/rebuild/specs/080-space-v2-production-customer-viewer-ui.md를 읽고, 명시된 스펙 080 고객 V2
+production viewer composition/UI 범위만 구현·검증해.
 
-exact V2 path → `getMetadata` fullPath/contentType/size → `getBytes(ref,maxBytes)` → metadata size와
-copied byte length 일치 순서를 지켰고, metadata+bytes 전체에 단일 20초 budget을 적용했다. 기존
-`denn-space-viewer` named app을 5개 config exact match로만 재사용하며 제품 retry, Auth,
-default/추가 app, download URL은 0이다.
+기존 ?space= route의 V1 의미와 스펙 063 safe-block UI를 그대로 보존하면서, exact space-v2 document만
+V2 opener → 스펙 079 proof reader → SHA-256/intrinsic 검증 → browser PNG decoder/drawable binding →
+PreviewCanvasSurface로 연결해. malformed V2는 V1으로 fallback하지 말고 fail-closed해.
 
-게이트 실측은 targeted unit **105/105**, Firebase typecheck PASS, 전체 `node scripts/check.mjs` PASS
-(unit **2228/2228**), `pnpm test:emulator` **27/27** PASS, 고객 entry `index-6js4DafP.js` /
-`322,018 bytes` / `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159` exact,
-`git diff --check` PASS, 허용 외 diff 0, 검사 포트 잔류 0이다.
+UI는 기존 Modern Studio light theme와 @denn/ui 토큰만 사용하고 proof PNG를 유일한 주 시각 요소로 둬.
+새 이미지·색·폰트·아이콘·의존성·장식 motion은 만들지 마. password는 submit 즉시 비우고 저장·로그·
+URL에 남기지 않으며, 자동 retry/fallback 0, safe Korean copy, 320px overflow 0, keyboard/alert/status/axe를
+검증해.
 
-**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 검수이며, browser PNG decoder와
-production V2 customer composition/UI는 별도 스펙과 Founder 지시 이후에 시작한다.
+실제 Firebase/project/bucket/network/live/운영 데이터·실제 token/password/UID에는 접근하지 말고,
+Rules/CORS/Hosting deploy, admin issue UI, URL/clipboard, 운영 쓰기, publish, orphan cleanup,
+package/lockfile/config 변경은 금지해. tests는 injected fakes와 합성 PNG만 사용해.
+
+targeted unit/typecheck, node scripts/check.mjs, targeted Chromium
+tests/e2e/space-production-route.spec.ts, desktop 1280x800·mobile 390x844 신규 시각 결과, 고객 bundle
+변경 전후 exact hash/size, git diff --check, forbidden diff, 포트 잔류를 검증해. full Chromium suite는
+보호 spec-018 PNG 때문에 NOT RUN이며 full-E2E PASS라고 기록하지 마.
+
+보호 대상과 현재 user working-tree 변경은 수정·복원·checkout·stage·commit하지 마. 허용 코드/test/
+spec-080 결과·문서만 일반 fast-forward commit/push하고 STATE/NEXT/CURRENT/live log/handoff를 실제
+결과와 맞춘 뒤 READY_FOR_CODEX에서 멈춰. 다음 스펙과 자동화·반복 작업은 시작하지 마.
+```
+
+- spec: `docs/rebuild/specs/080-space-v2-production-customer-viewer-ui.md`
+- handoff: `docs/handoff/2026-08-27-spec-080-space-v2-production-customer-viewer-ui-handoff.md`
+- 전체 진행도: **81~84% 완료 / 16~19% 잔여**. 문서 준비만으로 변동 없음.
+
+## 스펙 079 Codex 검수 결과
+
+스펙 079은 구현 commit `0887047`, 결과 문서 `c9c0c3d` 기준 추가 코드 결함 0으로
+`CODEX_PASSED / DONE`이다. 독립 targeted **105/105**, Firebase typecheck, 전체 check(unit
+**2228/2228**), 고객 bundle exact, diff·forbidden·port gate가 PASS했다.
+
+Codex 환경의 full emulator 재실행은 Firestore Java loopback 실패로 tests 전에 중단되어 독립
+**27/27 재현은 NOT COMPLETED**다. 신규 Auth+Storage proof integration은 분리 실행 **5/5 PASS**이며,
+Claude Code의 full suite **27/27 PASS** 기록과 구분한다. 실제 Firebase/live/UI는 스펙 079에서 0이다.
 
 > 직전 지시문(스펙 079 구현, 수행 완료 — 기록):
 
