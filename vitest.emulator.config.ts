@@ -14,6 +14,7 @@ export default defineConfig({
       "packages/firebase/src/admin-write/rules.emulator.test.ts",
       "packages/firebase/src/space-write/rules.emulator.test.ts",
       "packages/firebase/src/space-write/sdk-facade.emulator.test.ts",
+      "packages/firebase/src/space-read/proof-sdk-facade.emulator.test.ts",
     ],
     environment: "node",
     // Rules and CAS behaviour are shared server state; parallel files would race each other.
