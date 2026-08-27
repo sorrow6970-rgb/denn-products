@@ -167,10 +167,10 @@ const FORBIDDEN_STORAGE_API = [
  * all reach the same API without ever writing `uploadBytes(`.
  *
  * `list` is the one name that also occurs as ordinary English in app code (a local `list` variable,
- * a `template-list` test id), so the bare-identifier form is skipped for it. Nothing is lost: the
- * customer app imports no `firebase/*` module at all (asserted below), so the Storage `list` can
- * only ever arrive as a property of the namespace object — which the property and bracket forms
- * cover, for every name including this one.
+ * a `template-list` test id), so the bare-identifier form is skipped for it — and only for it. That
+ * exemption is exactly why `importedNames` exists below: a Storage `list` cannot enter this surface
+ * except as a property of a namespace object or as a named binding from a module, and both are
+ * checked. An ordinary local stays legal; `import { list as l } from "@denn/firebase"` does not.
  */
 function storageReferenceForms(api: string): RegExp[] {
   const forms = [
@@ -186,11 +186,43 @@ function importSpecifiers(source: string): string[] {
   return [...source.matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)].map((m) => m[1] ?? "");
 }
 
-test("the forbidden-Storage detector catches aliases and property access, not comments", () => {
+/**
+ * The names a module hands to this source: the exported name in `import {...} from` and
+ * `export {...} from`, taken from the LEFT of any `as`. That side is what comes out of the module,
+ * so `import { list as l }` is the Storage `list` while `import { templateList as list }` is not.
+ * This is the check that closes the `list` bare-identifier exemption at the module boundary, for
+ * the SDK and for the allowed `@denn/firebase` root alike.
+ */
+function importedNames(source: string): string[] {
+  const names: string[] = [];
+  for (const clause of source.matchAll(
+    /\b(?:import|export)\s+(?:type\s+)?\{([^}]*)\}\s*from\s*["'][^"']+["']/g,
+  )) {
+    for (const part of (clause[1] ?? "").split(",")) {
+      const name = part
+        .trim()
+        .replace(/^type\s+/, "")
+        .split(/\s+as\s+/)[0]
+        ?.trim();
+      if (name) names.push(name);
+    }
+  }
+  return names;
+}
+
+/** How `api` is reached in `source`, or null when it is genuinely absent. */
+function forbiddenStorageUse(source: string, api: string): string | null {
+  const clean = stripComments(source);
+  if (importedNames(clean).includes(api)) return "named binding from a module";
+  const form = storageReferenceForms(api).find((candidate) => candidate.test(clean));
+  return form ? `reference ${form.source}` : null;
+}
+
+test("the forbidden-Storage detector catches aliases, bindings and property access, not comments", () => {
   // A self-check: without it the surface test below could keep passing because the detector is
   // blind, not because the app is clean.
   const caught = (snippet: string, api = "uploadBytes"): boolean =>
-    storageReferenceForms(api).some((form) => form.test(stripComments(snippet)));
+    forbiddenStorageUse(snippet, api) !== null;
 
   expect(caught('import { uploadBytes as u } from "firebase/storage";\nu();'), "alias import").toBe(
     true,
@@ -199,9 +231,29 @@ test("the forbidden-Storage detector catches aliases and property access, not co
   expect(caught('storage["uploadBytes"](ref, bytes);'), "bracket property").toBe(true);
   expect(caught("await storage.uploadBytes(objectRef, bytes);"), "direct call").toBe(true);
 
-  // The same three shapes for the one name whose bare identifier is deliberately not banned.
+  // The one name whose bare identifier is deliberately not banned. Every way a Storage `list` could
+  // actually arrive is still caught — as a namespace property, and as a named binding from a module,
+  // whether that module is the SDK or the allowed `@denn/firebase` root that may one day re-export
+  // it. An ordinary local variable of the same name stays legal, which is the point of the
+  // exemption.
   expect(caught("const u = storage.list;", "list"), "list property extraction").toBe(true);
   expect(caught('storage["list"](objectRef);', "list"), "list bracket property").toBe(true);
+  expect(
+    caught('import { list as l } from "@denn/firebase";\nl(objectRef);', "list"),
+    "list alias import from the allowed root",
+  ).toBe(true);
+  expect(
+    caught('import { list } from "firebase/storage";', "list"),
+    "list named import from the SDK",
+  ).toBe(true);
+  expect(
+    caught('export { list as l } from "@denn/firebase";', "list"),
+    "list re-export alias",
+  ).toBe(true);
+  expect(
+    caught('import { templateList as list } from "./catalog";', "list"),
+    "ordinary local named list",
+  ).toBe(false);
   expect(caught("const list = categories;\nreturn list.some(Boolean);", "list"), "plain list").toBe(
     false,
   );
@@ -243,11 +295,10 @@ test("the customer app's own Storage surface stays read-only", () => {
     expect(specifier.startsWith("firebase/"), specifier).toBe(false);
   }
 
-  // 2. No forbidden Storage symbol is referenced anywhere in that surface, in any shape.
+  // 2. No forbidden Storage symbol is reachable anywhere in that surface, in any shape: bare
+  // identifier, property, bracket property, or a named binding from any module.
   for (const api of FORBIDDEN_STORAGE_API) {
-    for (const form of storageReferenceForms(api)) {
-      expect(source, `${api} ${form.source}`).not.toMatch(form);
-    }
+    expect(forbiddenStorageUse(source, api), api).toBeNull();
   }
 
   // 3. The approved read boundary is still exactly where specs 079/080 put it. Pinning the calls to
