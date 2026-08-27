@@ -1,5 +1,6 @@
 import { Badge, Button, Card, TextField } from "@denn/ui";
 import {
+  type FormEvent,
   type ReactNode,
   useCallback,
   useEffect,
@@ -61,6 +62,15 @@ export function SpacePasswordGate({
     controller.submitPassword(attempt);
   }, [controller, password]);
 
+  const onSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      // No navigation, no query string: the password must never reach the URL.
+      event.preventDefault();
+      submit();
+    },
+    [submit],
+  );
+
   const renderReadyBody = (ready: Extract<SpaceGateSnapshot, { status: "ready" }>): ReactNode => {
     if ("v2" in ready) {
       return renderReadyV2 === undefined ? pendingNotice : renderReadyV2(ready.v2);
@@ -82,7 +92,10 @@ export function SpacePasswordGate({
             <p>담당자에게 전달받은 비밀번호를 입력하세요.</p>
 
             {canSubmit ? (
-              <>
+              // A real form: Enter in the password field submits it, exactly as a browser user
+              // expects. `denn-stack` keeps the same 12px rhythm the two controls had as direct
+              // children of the card stack, so the layout is unchanged.
+              <form className="denn-stack" onSubmit={onSubmit} data-testid="space-password-form">
                 <TextField
                   label="비밀번호"
                   type="password"
@@ -91,10 +104,11 @@ export function SpacePasswordGate({
                   data-testid="space-password"
                   onChange={(event) => setPassword(event.target.value)}
                 />
-                <Button variant="primary" onClick={submit} data-testid="space-submit">
+                {/* type="submit" only — an onClick here would run the submit twice. */}
+                <Button variant="primary" type="submit" data-testid="space-submit">
                   시안 보기
                 </Button>
-              </>
+              </form>
             ) : null}
 
             {snapshot.status === "loading" ? (

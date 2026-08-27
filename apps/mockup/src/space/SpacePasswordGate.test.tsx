@@ -218,4 +218,45 @@ describe("SpacePasswordGate", () => {
     expect(html).toContain('type="password"');
     expect(html).toContain("시안 보기");
   });
+
+  it("submits through a real form whose button is the submit control", () => {
+    const html = renderToStaticMarkup(
+      <SpacePasswordGate
+        controller={new SpaceLinkOpenController("?space=private-token", reader, opener)}
+      />,
+    );
+    expect(html).toContain('data-testid="space-password-form"');
+    expect(html).toMatch(/<form[^>]*data-testid="space-password-form"/);
+    // Enter in the field must submit the form, so the only button inside it is type="submit".
+    expect(html).toMatch(/<button type="submit"[^>]*data-testid="space-submit"/);
+    expect(html).not.toMatch(/<button type="button"[^>]*data-testid="space-submit"/);
+    // The password input lives INSIDE that form; otherwise implicit submission cannot work.
+    const form = html.slice(html.indexOf("<form"), html.indexOf("</form>"));
+    expect(form).toContain('type="password"');
+    expect(form).toContain('data-testid="space-submit"');
+  });
+
+  it("renders no form at all when there is nothing to submit", () => {
+    const html = renderToStaticMarkup(
+      <SpacePasswordGate
+        controller={pinned({
+          status: "error",
+          requestId: 1,
+          code: "SPACE_V2_VIEW_UNAVAILABLE",
+          retryable: false,
+        })}
+      />,
+    );
+    expect(html).not.toContain("<form");
+    expect(html).not.toContain('data-testid="space-submit"');
+  });
+
+  it("keeps the card layout rhythm when the controls move into the form", () => {
+    const html = renderToStaticMarkup(
+      <SpacePasswordGate
+        controller={new SpaceLinkOpenController("?space=private-token", reader, opener)}
+      />,
+    );
+    expect(html).toMatch(/<form class="denn-stack"/);
+  });
 });

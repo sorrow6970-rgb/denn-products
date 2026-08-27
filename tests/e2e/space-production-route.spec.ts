@@ -292,10 +292,14 @@ const external = (probe: RouteProbe): string[] =>
 
 const v2Url = (mode: string): string => `${FIXTURE_URL}?mode=${mode}`;
 
+/**
+ * A real keyboard form submit: Enter is pressed IN the password field, so it is the browser's
+ * implicit submission that runs — not a click, and not Enter on an already-focused button.
+ */
 async function authenticateWith(page: Page, password: string): Promise<void> {
-  await page.getByTestId("space-password").fill(password);
-  // A real keyboard submit, not a synthetic click.
-  await page.getByTestId("space-submit").press("Enter");
+  const field = page.getByTestId("space-password");
+  await field.fill(password);
+  await field.press("Enter");
 }
 
 test("the V2 route renders the saved proof on a real canvas with zero external traffic", async ({
@@ -312,6 +316,12 @@ test("the V2 route renders the saved proof on a real canvas with zero external t
     proofReads: 0,
     decodes: 0,
   });
+
+  // The password field really is inside the form, and the button really is its submit control.
+  const form = page.getByTestId("space-password-form");
+  await expect(form).toBeVisible();
+  await expect(form.getByTestId("space-password")).toHaveCount(1);
+  await expect(form.getByTestId("space-submit")).toHaveAttribute("type", "submit");
 
   await authenticateWith(page, "SYNTHETIC_PASSWORD");
   const view = page.getByTestId("space-v2-proof-view");
@@ -335,6 +345,11 @@ test("the V2 route renders the saved proof on a real canvas with zero external t
   await expect(page.getByTestId("space-frame-view")).toHaveCount(0);
 
   expect(external(probe)).toEqual([]);
+  // preventDefault held: the form neither navigated nor put the password in the query string.
+  expect(page.url()).toBe(v2Url("v2"));
+  // One keyboard submit means exactly one read and exactly one byte download — not two.
+  // (`controllerFactories` is deliberately not asserted: StrictMode's development double-render
+  // calls the memoised factory twice, which is a harness artefact, not a product request.)
   expect(await page.evaluate(() => window.__DENN_SPACE_PRODUCTION_ROUTE_FIXTURE__)).toMatchObject({
     documentReads: 1,
     sceneOpens: 0,
@@ -467,6 +482,10 @@ test("unmounting the V2 route leaves no canvas and starts no deferred work", asy
 });
 
 // --- spec 080 representative screenshots (synthetic fixture only) -----------
+//
+// The fixture's own "화면 해제" control is harness scaffolding, not product UI. It is hidden in the
+// page (never in the fixture source) immediately before the capture, so the recorded design
+// evidence shows the customer surface and nothing else.
 for (const shot of SHOTS) {
   test(`spec080 screenshot ${shot.name}`, async ({ page }) => {
     await installProbe(page);
@@ -476,6 +495,14 @@ for (const shot of SHOTS) {
     await expect(page.getByTestId("preview-canvas")).toBeVisible();
     await settle(page);
     await expect(page.getByTestId("canvas-status")).toHaveText("미리보기가 준비되었습니다.");
+
+    await page.evaluate(() => {
+      const control = document.querySelector('[data-testid="fixture-unmount"]');
+      if (control instanceof HTMLElement) control.style.display = "none";
+    });
+    await expect(page.getByTestId("fixture-unmount")).toBeHidden();
+    await settle(page);
+
     await page.screenshot({
       path: `docs/rebuild/results/spec-080/space-v2-viewer-${shot.name}.png`,
       fullPage: true,
