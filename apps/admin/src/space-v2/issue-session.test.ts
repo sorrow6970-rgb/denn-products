@@ -27,6 +27,7 @@ vi.mock("firebase/storage", () => {
 
 import type {
   SafeSpaceV2IssueError,
+  SpaceV2IssueErrorCategory,
   SpaceV2IssueErrorCode,
   SpaceV2IssueRequest,
   SpaceV2IssueResult,
@@ -120,10 +121,38 @@ const ENVELOPE = {
   ct: b64(new Array(48).fill(0x33)),
 };
 
-const issueError = (code: SpaceV2IssueErrorCode, retryable = false): SafeSpaceV2IssueError => ({
-  category: "UNKNOWN",
+/**
+ * The canonical metadata the spec 074 port issues each code with. Stated here as a fixture, so a
+ * test can build an envelope that is genuinely well formed — and, by flipping one field, one that
+ * is not.
+ */
+const CANONICAL_ISSUE_METADATA = {
+  SPACE_V2_ISSUE_INVALID_INPUT: { category: "VALIDATION", retryable: false },
+  SPACE_V2_ISSUE_AUTH_REQUIRED: { category: "AUTH", retryable: true },
+  SPACE_V2_ISSUE_FORBIDDEN: { category: "AUTH", retryable: false },
+  SPACE_V2_ISSUE_UPLOAD_FAILED: { category: "NETWORK", retryable: true },
+  SPACE_V2_ISSUE_UPLOAD_OUTCOME_UNKNOWN: { category: "NETWORK", retryable: false },
+  SPACE_V2_ISSUE_DOCUMENT_FAILED: { category: "VALIDATION", retryable: false },
+  SPACE_V2_ISSUE_DOCUMENT_OUTCOME_UNKNOWN: { category: "UNKNOWN", retryable: false },
+  SPACE_V2_ISSUE_ASSET_MISMATCH: { category: "VALIDATION", retryable: false },
+} as const satisfies Record<
+  SpaceV2IssueErrorCode,
+  { readonly category: SpaceV2IssueErrorCategory; readonly retryable: boolean }
+>;
+
+const ALL_ISSUE_CODES = Object.keys(CANONICAL_ISSUE_METADATA) as SpaceV2IssueErrorCode[];
+
+/** The two codes whose meaning is "the remote outcome is not known", not "it failed". */
+const OUTCOME_UNKNOWN_TEST_CODES: ReadonlySet<SpaceV2IssueErrorCode> = new Set([
+  "SPACE_V2_ISSUE_UPLOAD_OUTCOME_UNKNOWN",
+  "SPACE_V2_ISSUE_DOCUMENT_OUTCOME_UNKNOWN",
+]);
+
+/** A well-formed failure for this attempt: the code with the metadata it is really issued with. */
+const issueError = (code: SpaceV2IssueErrorCode): SafeSpaceV2IssueError => ({
+  category: CANONICAL_ISSUE_METADATA[code].category,
   code,
-  retryable,
+  retryable: CANONICAL_ISSUE_METADATA[code].retryable,
   correlationId: CORRELATION_ID,
 });
 
@@ -630,7 +659,7 @@ describe("space V2 issue session — writer outcomes", () => {
   for (const code of definiteFailures) {
     it(`preserves the exact safe code ${code}`, async () => {
       const h = harness({
-        writerResult: async () => ({ ok: false, error: issueError(code, true) }),
+        writerResult: async () => ({ ok: false, error: issueError(code) }),
       });
       h.session.beginDraft(h.source);
       await h.session.issue(good());
@@ -641,7 +670,7 @@ describe("space V2 issue session — writer outcomes", () => {
         errorCode: code,
         confirmedToken: null,
       });
-      // `retryable: true` from the port is not a licence to retry here.
+      // Whatever `retryable` the port reports, it is not a licence to retry here.
       await h.session.issue(good());
       expect(h.writerCalls).toHaveLength(1);
       expect(h.exports).toEqual([1]);
@@ -656,7 +685,7 @@ describe("space V2 issue session — writer outcomes", () => {
   for (const code of unknownCodes) {
     it(`reports ${code} as its own status and never guesses`, async () => {
       const h = harness({
-        writerResult: async () => ({ ok: false, error: issueError(code, true) }),
+        writerResult: async () => ({ ok: false, error: issueError(code) }),
       });
       h.session.beginDraft(h.source);
       await h.session.issue(good());
@@ -1227,5 +1256,104 @@ describe("space V2 issue session — writer success envelope", () => {
       confirmedToken: null,
     });
     expect(h.writerCalls).toEqual([]);
+  });
+});
+
+// --- correction round 2: failure metadata must be the combination the port issues ---
+//
+// A code alone is not an envelope. `SPACE_V2_ISSUE_AUTH_REQUIRED` is only ever issued as
+// `AUTH` / `retryable: true`; the same code carrying `VALIDATION` / `false` is a combination no
+// real write attempt produces, so believing it would mean surfacing a definite auth failure the
+// port never reported.
+
+describe("space V2 issue session — failure metadata table", () => {
+  const OTHER_CATEGORY: Record<SpaceV2IssueErrorCategory, SpaceV2IssueErrorCategory> = {
+    VALIDATION: "AUTH",
+    AUTH: "VALIDATION",
+    NETWORK: "UNKNOWN",
+    UNKNOWN: "NETWORK",
+  };
+
+  it("covers every code in the spec 074 vocabulary", () => {
+    expect(ALL_ISSUE_CODES).toHaveLength(8);
+  });
+
+  for (const code of ALL_ISSUE_CODES) {
+    const canonical = CANONICAL_ISSUE_METADATA[code];
+    const unknownOutcome = OUTCOME_UNKNOWN_TEST_CODES.has(code);
+
+    it(`accepts ${code} with its canonical ${canonical.category}/${canonical.retryable}`, async () => {
+      const h = harness({ writerResult: async () => ({ ok: false, error: issueError(code) }) });
+      h.session.beginDraft(h.source);
+      await h.session.issue(good());
+
+      expect(h.session.getSnapshot()).toEqual({
+        status: unknownOutcome ? "outcome-unknown" : "error",
+        canIssue: false,
+        errorCode: code,
+        confirmedToken: null,
+      });
+    });
+
+    it(`refuses ${code} carrying another category`, async () => {
+      const h = harness({
+        writerResult: async () => ({
+          ok: false,
+          error: { ...issueError(code), category: OTHER_CATEGORY[canonical.category] },
+        }),
+      });
+      h.session.beginDraft(h.source);
+      await h.session.issue(good());
+
+      expect(h.session.getSnapshot()).toEqual({
+        status: "outcome-unknown",
+        canIssue: false,
+        errorCode: null,
+        confirmedToken: null,
+      });
+      expect(JSON.stringify(h.snapshots)).not.toContain(code);
+    });
+
+    it(`refuses ${code} carrying the wrong retryable`, async () => {
+      const h = harness({
+        writerResult: async () => ({
+          ok: false,
+          error: { ...issueError(code), retryable: !canonical.retryable },
+        }),
+      });
+      h.session.beginDraft(h.source);
+      await h.session.issue(good());
+
+      expect(h.session.getSnapshot()).toEqual({
+        status: "outcome-unknown",
+        canIssue: false,
+        errorCode: null,
+        confirmedToken: null,
+      });
+      expect(JSON.stringify(h.snapshots)).not.toContain(code);
+    });
+  }
+
+  it("refuses a code that resolves only through the prototype chain", async () => {
+    const h = harness({
+      writerResult: async () =>
+        ({
+          ok: false,
+          error: {
+            category: "UNKNOWN",
+            code: "toString",
+            retryable: false,
+            correlationId: CORRELATION_ID,
+          },
+        }) as unknown as SpaceV2IssueResult,
+    });
+    h.session.beginDraft(h.source);
+    await h.session.issue(good());
+    expect(h.session.getSnapshot()).toEqual({
+      status: "outcome-unknown",
+      canIssue: false,
+      errorCode: null,
+      confirmedToken: null,
+    });
   });
 });

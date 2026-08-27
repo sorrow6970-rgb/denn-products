@@ -135,23 +135,41 @@ const OUTCOME_UNKNOWN_CODES: ReadonlySet<SpaceV2IssueErrorCode> = new Set([
   "SPACE_V2_ISSUE_DOCUMENT_OUTCOME_UNKNOWN",
 ]);
 
-/** The complete spec 074 code and category vocabulary. Anything else is not a result we understand. */
-const KNOWN_ISSUE_CODES: ReadonlySet<string> = new Set<SpaceV2IssueErrorCode>([
-  "SPACE_V2_ISSUE_INVALID_INPUT",
-  "SPACE_V2_ISSUE_AUTH_REQUIRED",
-  "SPACE_V2_ISSUE_FORBIDDEN",
-  "SPACE_V2_ISSUE_UPLOAD_FAILED",
-  "SPACE_V2_ISSUE_UPLOAD_OUTCOME_UNKNOWN",
-  "SPACE_V2_ISSUE_DOCUMENT_FAILED",
-  "SPACE_V2_ISSUE_DOCUMENT_OUTCOME_UNKNOWN",
-  "SPACE_V2_ISSUE_ASSET_MISMATCH",
-]);
-const KNOWN_ISSUE_CATEGORIES: ReadonlySet<string> = new Set<SpaceV2IssueErrorCategory>([
-  "VALIDATION",
-  "AUTH",
-  "NETWORK",
-  "UNKNOWN",
-]);
+/**
+ * The spec 074 failure vocabulary AND the exact metadata each code is issued with. Checking the
+ * three fields independently is not enough: `AUTH_REQUIRED` carrying `category: "VALIDATION"` and
+ * `retryable: false` is a combination the port never produces, so believing it would mean accepting
+ * an envelope no real write attempt could have returned.
+ *
+ * `satisfies Record<SpaceV2IssueErrorCode, ...>` is the exhaustiveness guarantee: adding a code to
+ * the union without adding it here is a compile error, so this table cannot silently fall behind.
+ */
+const ISSUE_ERROR_METADATA = {
+  SPACE_V2_ISSUE_INVALID_INPUT: { category: "VALIDATION", retryable: false },
+  SPACE_V2_ISSUE_AUTH_REQUIRED: { category: "AUTH", retryable: true },
+  SPACE_V2_ISSUE_FORBIDDEN: { category: "AUTH", retryable: false },
+  SPACE_V2_ISSUE_UPLOAD_FAILED: { category: "NETWORK", retryable: true },
+  SPACE_V2_ISSUE_UPLOAD_OUTCOME_UNKNOWN: { category: "NETWORK", retryable: false },
+  SPACE_V2_ISSUE_DOCUMENT_FAILED: { category: "VALIDATION", retryable: false },
+  SPACE_V2_ISSUE_DOCUMENT_OUTCOME_UNKNOWN: { category: "UNKNOWN", retryable: false },
+  SPACE_V2_ISSUE_ASSET_MISMATCH: { category: "VALIDATION", retryable: false },
+} as const satisfies Record<
+  SpaceV2IssueErrorCode,
+  { readonly category: SpaceV2IssueErrorCategory; readonly retryable: boolean }
+>;
+
+/** Own-key lookup only: a code like `toString` must not resolve through the prototype. */
+function issueErrorMetadata(
+  code: string,
+): { readonly category: SpaceV2IssueErrorCategory; readonly retryable: boolean } | null {
+  if (!Object.hasOwn(ISSUE_ERROR_METADATA, code)) return null;
+  return (
+    ISSUE_ERROR_METADATA as Record<
+      string,
+      { readonly category: SpaceV2IssueErrorCategory; readonly retryable: boolean }
+    >
+  )[code];
+}
 
 /**
  * Re-stated locally on purpose: this module may take only types and the injected port from
@@ -350,12 +368,12 @@ function classifyWriterResult(
       const error = exactSnapshot(failure.error, ISSUE_ERROR_KEYS);
       if (error === null) return { kind: "unknown" };
       const { category, code, retryable, correlationId } = error;
-      if (typeof code !== "string" || !KNOWN_ISSUE_CODES.has(code)) return { kind: "unknown" };
-      if (typeof category !== "string" || !KNOWN_ISSUE_CATEGORIES.has(category)) {
-        return { kind: "unknown" };
-      }
-      // The code -> category table is the port's business; re-deriving it here would only drift.
-      if (typeof retryable !== "boolean") return { kind: "unknown" };
+      if (typeof code !== "string") return { kind: "unknown" };
+      const meta = issueErrorMetadata(code);
+      if (meta === null) return { kind: "unknown" };
+      // The whole triple has to be the one this code is actually issued with. The strict compare
+      // against a boolean also rejects a non-boolean `retryable` without a separate check.
+      if (category !== meta.category || retryable !== meta.retryable) return { kind: "unknown" };
       if (correlationId !== expected.correlationId) return { kind: "unknown" };
       return { kind: "error", code: code as SpaceV2IssueErrorCode };
     }
