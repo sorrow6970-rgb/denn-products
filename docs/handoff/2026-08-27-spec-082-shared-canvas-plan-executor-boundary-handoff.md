@@ -125,3 +125,44 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
   포트·temp 잔류 0.
 - 다음은 Codex 재검수(`CODEX_SPEC_082_REVIEW`)다. 실제 admin issue UI와 다음 스펙은 시작하지 않았다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 보완 라운드 3 — 최종 3/3 (2026-08-27, Claude Code)
+
+- 기준 `HEAD=origin=298c224`, ahead/behind 0/0. Codex 재검수 문서 commit `298c224`, 보완 commit
+  `68bd25c`. 허용된 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품 코드와
+  승인된 read-only Storage 연결은 한 줄도 바꾸지 않았다.
+- **전체 Chromium E2E 161 passed / 0 failed** — 라운드 2의 160 + 신규 detector self-check 1.
+- **결함.** 라운드 2 guard는 `\bname\s*\(` 직접 호출만 잡아 같은 API에 도달하는 세 경로를 통과시켰다:
+  `import { uploadBytes as u } from "firebase/storage"; u()` / `const u = storage.uploadBytes; u()` /
+  `storage["uploadBytes"]`.
+- **보완.** 주석 제거된 app-owned production source에서 금지 10종(`uploadBytes`·
+  `uploadBytesResumable`·`uploadString`·`updateMetadata`·`deleteObject`·`list`·`listAll`·
+  `getDownloadURL`·`getBlob`·`getStream`)의 **reference 자체**를 ① bare whole identifier ②
+  `.name` property ③ `["name"]` bracket 세 형태로 금지한다. 실측: 금지 10종 property 0 · bracket 0,
+  bare identifier는 `list` 외 9종 0.
+- **`list` 면제.** 지역 변수 `list`와 `data-testid="template-list"`가 일반 영어로 충돌해 `list`에만
+  bare 형태를 적용하지 않고, 이유를 검사 지점 주석에 적었다. 고객 앱이 `firebase/*`를 직접 import하지
+  않음을 같은 테스트가 단언하므로 Storage `list`는 namespace property로만 도달 가능하고 property·
+  bracket 형태가 커버한다 — **잃는 커버리지는 없다**.
+- **detector self-check(신규 테스트).** alias import·property extraction·bracket property·직접 호출은
+  **잡히고**, `storage.list`/`storage["list"]`는 잡히되 `const list = categories; list.some(...)`는
+  **안 잡히며**, 줄/블록 주석 속 이름은 **무시**됨을 같은 파일에서 증명한다.
+- **검사 source·import 경계.** `apps/mockup/src`(unit test·`e2e/` 제외) + `packages/firebase/src/index.ts`
+  + `public-catalog` + `public-images` + `space-read` production = **66파일**. `apps/mockup` production
+  import specifier는 `@denn/firebase` 루트와 `@denn/firebase/space-read`만 허용하고 `firebase/*` 직접
+  import는 실패한다.
+- **승인 positive 고정.** read 경계 확인을 `packages/firebase/src/space-read/proof-sdk-facade.ts`의 exact
+  call(`storage.getStorage(`·`storage.ref(`·`storage.getMetadata(`·`storage.getBytes(`)로 못박아, 동명
+  함수가 대신 만족시켜 실제 Storage 호출이 감시 밖으로 나가는 일을 막는다.
+- **문구 정정.** bundle 테스트 제목을 `the customer bundle carries no Auth product API and no private
+  admin path`로 바꾸고 파일 상단 설명도 승인 현실(Firestore read + Storage read, Auth 0, admin private
+  path 0, 쓰기·삭제·열거·download URL 0)로 맞췄다. Auth whole-identifier·admin private path·runtime
+  external request 0 단언은 유지했고 테스트 삭제·skip·E2E 예외는 없다.
+- **실측.** targeted `admin-auth-read` Chromium **5/5**, **전체 Chromium 161/161**, 전체
+  `node scripts/check.mjs` **PASS**(format·lint·typecheck 7개·unit **2409/2409**·build 2개),
+  **build 산출물 14개 byte+SHA-256 동일**, `git diff --check` PASS, 변경 경로 한 파일뿐, EOL
+  `i/lf w/lf`, 포트 4183/4184/4185/8080/9099/9199 · `test-results`/temp 잔류 0.
+- 보호 spec-018 PNG 2개는 dirty 그대로 두고 stage/commit/restore하지 않았다.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_082_REVIEW`. 실제 admin issue UI와 다음 스펙, 자동화는
+  시작하지 않았다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

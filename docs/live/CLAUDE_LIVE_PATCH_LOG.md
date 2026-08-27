@@ -6707,3 +6707,56 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CLAUDE`, next `CLAUDE_CORRECTION`. admin UI/다음 스펙/자동화 시작 0.
 - E2E가 만든 exact `test-results`는 확인 후 삭제했고 보호 dirty는 restore/stage하지 않았다. 전체 진행도
   **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-27 - 스펙 082 보완 라운드 3 (최종 3/3) — 전체 E2E 161/161
+
+- 기준 `HEAD=origin=298c224`, ahead/behind 0/0. Codex 재검수 문서 commit `298c224`, 보완 commit
+  `68bd25c`. 허용된 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 **제품 코드와
+  승인된 read-only Storage 연결은 한 줄도 바꾸지 않았다**.
+- **전체 Chromium E2E는 161 passed / 0 failed다** — 라운드 2의 160 + 이번 detector self-check 1.
+- **결함 — guard가 호출만 봤다.** 라운드 2의 `\bname\s*\(` 검사는 직접 호출만 잡아 같은 API에 도달하는
+  세 경로를 통과시켰다: `import { uploadBytes as u } from "firebase/storage"; u()` /
+  `const u = storage.uploadBytes; u()` / `storage["uploadBytes"]`. Codex가 같은 정규식으로 측정한
+  false/false/false와 일치한다.
+- **보완 — reference 자체를 금지한다.** 주석 제거된 app-owned production source에서 금지 10종
+  (`uploadBytes`·`uploadBytesResumable`·`uploadString`·`updateMetadata`·`deleteObject`·`list`·
+  `listAll`·`getDownloadURL`·`getBlob`·`getStream`)을 ① bare whole identifier `\bname\b`(alias import
+  specifier까지) ② property `\.\s*name\b` ③ bracket `["name"]` **세 형태 전부**로 금지한다. 실측으로
+  금지 10종 property 0 · bracket 0이고 bare identifier는 `list` 외 9종이 0이다.
+- **`list` 면제와 그 근거.** `list`는 앱 코드에 일반 영어로도 나온다(지역 변수 `list`,
+  `data-testid="template-list"` — 실측 3곳 전부 무해). 그래서 `list`에만 bare 형태를 적용하지 않고 이유를
+  검사 지점 주석에 적었다. **잃는 것은 없다** — 아래 import 단언대로 고객 앱은 `firebase/*`를 직접
+  import하지 않으므로 Storage의 `list`는 namespace property로만 도달할 수 있고, 그건 property·bracket
+  형태가 다른 이름과 똑같이 커버한다.
+- **detector가 눈멀지 않았음을 같은 파일에서 증명한다(신규 self-check 테스트).** alias import /
+  `const u = storage.uploadBytes` / `storage["uploadBytes"]` / 직접 호출은 **잡히고**,
+  `storage.list`·`storage["list"]`는 잡히되 `const list = categories; list.some(...)`는 **안 잡히며**,
+  줄 주석·블록 주석 속 이름은 **무시**된다. 이게 없으면 "앱이 깨끗해서"가 아니라 "detector가 눈이
+  멀어서" 통과해도 알 수 없다.
+- **검사 source와 import 경계.** 고객이 실제로 쓰는 루트 boundary를 포함했다 —
+  `packages/firebase/src/index.ts`와 그 barrel이 export하는 `public-catalog`·`public-images`, 그리고
+  `space-read` production source에 `apps/mockup/src`(unit test·`e2e/` 제외)를 더해 **66파일**. 그리고
+  `apps/mockup` production의 모든 import specifier를 검사해 `@denn/firebase`로 시작하는 것은 **루트와
+  `@denn/firebase/space-read`만** 허용하고 `firebase/`로 시작하는 **직접 SDK import는 전부 실패**시킨다.
+  이 단언이 검사 범위를 네 곳으로 한정한 근거이자, 고객이 다른 경계에 손대면 먼저 깨지는 가드다.
+- **승인 positive를 facade에 고정.** read 경계 확인을 `packages/firebase/src/space-read/proof-sdk-facade.ts`의
+  exact call(`storage.getStorage(`·`storage.ref(`·`storage.getMetadata(`·`storage.getBytes(`)로 못박아,
+  동명의 다른 함수가 대신 만족시켜 실제 Storage 호출이 감시 밖으로 나가는 일을 막는다.
+- **문구 정정.** bundle 테스트 제목을 `the customer bundle carries no Auth product API and no private
+  admin path`로 바꾸고 파일 상단 설명도 승인 현실에 맞췄다 — 079/080이 Storage **read**를 승인했으므로
+  "SDK trace 0"은 계약이 아니고, 계약은 "Firestore read + Storage read, Auth 0, admin private path 0,
+  쓰기·삭제·열거·download URL 0"이다.
+- **유지·약화 없음.** 라운드 1의 `getAuth` whole-identifier 검사, admin private path marker
+  (`admin-read`·`ADMIN_STATE_OBJECT_PATH`·`admin/state.json`·`onAuthStateChanged`·
+  `signInWithEmailAndPassword`), positive marker, runtime external request 0 단언 그대로. 테스트
+  삭제·skip·E2E 예외는 **없다**.
+- **실측.** targeted `admin-auth-read.spec.ts` Chromium **5/5 PASS**, **전체 Chromium E2E 161 passed /
+  0 failed**, 전체 `node scripts/check.mjs` **PASS**(format·lint·typecheck 7개·unit **2409/2409**·
+  build 2개), **build 산출물 14개가 모두 보완 전과 byte+SHA-256 동일**(제품 코드 무변경의 직접 증거),
+  `git diff --check` PASS, 변경 경로는 허용 **한 파일뿐**, EOL `i/lf w/lf`, 검사 포트
+  4183/4184/4185/8080/9099/9199 잔류 **0**, `test-results`/temp 잔류 0.
+- E2E가 다시 쓴 보호 spec-018 PNG 2개는 **stage/commit/restore하지 않고 dirty 그대로** 뒀고 기존 user
+  dirty 파일도 그대로다. 실제 admin issue UI와 다음 스펙, 자동화는 시작하지 않았다.
+- 상태 `READY_FOR_CODEX`, fix_round **3/3(최종)**, next transition `CODEX_SPEC_082_REVIEW`.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품 능력이
+  아니다.

@@ -1,5 +1,16 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-27): spec 082 correction round 3/3 완료 = READY_FOR_CODEX.**
+> `HEAD=origin=298c224`에서 시작, 보완 commit `68bd25c`. 허용 제품 파일은
+> `tests/e2e/admin-auth-read.spec.ts` 하나뿐이고 제품 코드·승인된 read-only Storage 연결 변경 0.
+> forbidden Storage guard가 호출이 아니라 **reference 자체**(bare identifier·property·bracket)를
+> 금지하도록 바뀌어 alias import/property extraction/bracket access를 차단하고, 신규 self-check
+> 테스트가 그 세 우회와 주석 무시를 같은 파일에서 증명한다. `apps/mockup` import specifier는
+> `@denn/firebase` 루트와 `space-read`만 허용하고 `firebase/*` 직접 import는 실패한다. 승인 positive는
+> `proof-sdk-facade.ts` exact call로 고정했고 test 제목·상단 설명은 Firestore read + Storage read 현실로
+> 정정했다. **전체 Chromium E2E 161/161**, check unit **2409/2409**, build 산출물 14개 byte 동일.
+> 다음은 Codex 재검수. 전체 진행도 **84~87% / 잔여 13~16%**.
+
 > **최신 포인터 (2026-08-27): spec 082 correction round 2 Codex 재검수 = CORRECTION_REQUIRED 3/3.**
 > `HEAD=origin=25cbe0f`, ahead/behind 0/0. 독립 check **2409/2409**, Chromium **160/160**은 PASS.
 > 그러나 forbidden source guard가 direct `name(`만 잡아 alias import/property extraction/bracket access를

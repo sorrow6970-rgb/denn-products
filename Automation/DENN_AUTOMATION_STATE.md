@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: READY_FOR_CLAUDE
-baseline_commit: 60507b3   # HEAD=origin at spec 082 correction round 2 start (Codex review + NN-2=A)
-candidate_commit: 65c5b46  # spec 082 correction round 2 (round 1 8d4458d, implementation 307521f)
+state: READY_FOR_CODEX
+baseline_commit: 298c224   # HEAD=origin at spec 082 correction round 3 start (Codex round 2 review)
+candidate_commit: 68bd25c  # spec 082 correction round 3 (round 2 65c5b46, round 1 8d4458d, implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "Codex reviewed HEAD=origin=25cbe0f, ahead/behind 0/0; no Codex commit or push"
-working_tree: "Codex review documents are uncommitted; protected spec-018 PNGs and pre-existing Founder/user changes remain untouched and unstaged"
-fix_round: 3   # final in-scope correction round; not yet implemented
+origin_relation: "Claude pushed spec 082 correction round 3; HEAD=origin, ahead/behind 0/0"
+working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
+fix_round: 3   # final in-scope correction round; implemented and verified
 max_fix_rounds: 3
-next_transition: CLAUDE_CORRECTION
+next_transition: CODEX_SPEC_082_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,36 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 082 보완 라운드 3 완료 — 전체 Chromium E2E 161/161 (2026-08-27)
+
+- `HEAD=origin=298c224`에서 시작, ahead/behind 0/0. Codex 재검수 문서 commit `298c224`, 보완 commit
+  `68bd25c`. 허용된 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품 코드와
+  승인된 read-only Storage 연결은 한 줄도 바꾸지 않았다.
+- **전체 Chromium E2E 161 passed / 0 failed** (라운드 2의 160 + 신규 detector self-check 1).
+- 라운드 2의 `\bname\s*\(` 검사는 직접 호출만 잡아 `import { uploadBytes as u }` / `const u =
+  storage.uploadBytes` / `storage["uploadBytes"]`를 통과시켰다. 이제 호출이 아니라 **reference 자체**를
+  bare identifier · property · bracket **세 형태**로 금지한다.
+- `list`만 bare-identifier 형태를 면제했다 — 앱 코드의 지역 변수와 `template-list` test id와 충돌하기
+  때문이며, 고객 앱이 `firebase/*`를 직접 import하지 않음을 같은 테스트가 단언하므로 Storage의 `list`는
+  namespace property로만 도달 가능하고 property·bracket 형태가 그대로 커버한다. 면제 이유는 검사 지점
+  주석에 적었다.
+- 신규 self-check 테스트가 **detector가 눈뜬 채로 통과함을 증명**한다 — alias import / property
+  extraction / bracket property / 직접 호출은 잡히고, `const list = categories`와 주석 속 이름은 잡히지
+  않는다.
+- 검사 source에 고객이 실제 쓰는 루트 boundary(`packages/firebase/src/index.ts` + `public-catalog` +
+  `public-images`)를 포함하고, `apps/mockup` production import specifier가 `@denn/firebase` 루트와
+  `@denn/firebase/space-read`만이며 `firebase/*` 직접 import가 0임을 단언한다. 승인된 read positive는
+  `proof-sdk-facade.ts`의 `storage.getStorage/ref/getMetadata/getBytes` exact call로 고정했다.
+- bundle test 제목과 파일 상단 설명을 승인 현실(Firestore read + Storage **read**, Auth 0, admin private
+  path 0)에 맞게 정정했다. Auth whole-identifier·admin private path·runtime external request 0 단언은
+  유지했고 테스트 삭제·skip·E2E 예외는 없다.
+- 실측: targeted `admin-auth-read` **5/5**, 전체 Chromium **161/161**, 전체 `node scripts/check.mjs`
+  **PASS**(unit **2409/2409**), **build 산출물 14개 모두 보완 전과 byte+SHA-256 동일**,
+  `git diff --check` PASS, 변경 경로 한 파일뿐, EOL `i/lf w/lf`, 포트 4183/4184/4185/8080/9099/9199 ·
+  `test-results`/temp 잔류 **0**.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_082_REVIEW`. admin issue UI·다음 스펙·자동화 시작 0.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## 스펙 082 보완 라운드 2 Codex 재검수 · CORRECTION_REQUIRED 라운드 3 (2026-08-27)
 

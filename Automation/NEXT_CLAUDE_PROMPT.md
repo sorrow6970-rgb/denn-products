@@ -1,13 +1,56 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
+상태: `READY_FOR_CODEX`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED ROUND 3/3 / NON_UI / NO_LIVE_NETWORK / CURRENT E2E 160-0**
-- 기준: `HEAD=origin=60507b3`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 라운드 2 `65c5b46`.
-- 현재 검수 기준: `HEAD=origin=25cbe0f`, ahead/behind `0/0`
-- next_transition: `CLAUDE_CORRECTION`
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **READY_FOR_CODEX / CORRECTION ROUND 3/3 DONE / NON_UI / NO_LIVE_NETWORK / E2E 161-0**
+- 기준: `HEAD=origin=298c224`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 라운드 2 `65c5b46`, 라운드 3 `68bd25c`.
+- next_transition: `CODEX_SPEC_082_REVIEW`
+- fix_round: `3 / 3` (최종 in-scope 보완 라운드)
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## 현재 결과 — 보완 라운드 3 완료(최종 3/3), 전체 E2E 161/161
+
+허용된 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품 코드와 승인된 read-only
+Storage 연결은 한 줄도 바꾸지 않았다. **전체 Chromium E2E는 161 passed / 0 failed**(라운드 2의 160 +
+신규 detector self-check 1)다.
+
+**결함.** 라운드 2의 `\bname\s*\(` 검사는 직접 호출만 잡아 `import { uploadBytes as u }` /
+`const u = storage.uploadBytes; u()` / `storage["uploadBytes"]` 세 우회를 모두 통과시켰다.
+
+**보완.** 이제 호출이 아니라 **reference 자체**를 금지한다 — 금지 10종을 bare whole identifier ·
+`.name` property · `["name"]` bracket **세 형태 전부**로 차단한다. `list`만 bare 형태를 면제했는데,
+앱 코드의 지역 변수와 `template-list` test id와 충돌하기 때문이며(실측 3곳 전부 무해) 고객 앱이
+`firebase/*`를 직접 import하지 않음을 같은 테스트가 단언하므로 Storage의 `list`는 namespace property로만
+도달 가능해 property·bracket 형태가 그대로 커버한다. 면제 이유는 검사 지점 주석에 있다.
+
+**detector 자체를 증명한다.** 신규 self-check 테스트가 alias import·property extraction·bracket
+property·직접 호출은 잡히고, `const list = categories`와 줄/블록 주석 속 이름은 잡히지 않음을 같은
+파일에서 보인다. 이게 없으면 "앱이 깨끗해서"가 아니라 "detector가 눈이 멀어서" 통과해도 알 수 없다.
+
+**경계.** 검사 source에 고객이 실제 쓰는 루트 boundary(`packages/firebase/src/index.ts` +
+`public-catalog` + `public-images`)와 `space-read`, `apps/mockup/src`를 합쳐 **66파일**을 본다.
+`apps/mockup` production import specifier는 `@denn/firebase` 루트와 `@denn/firebase/space-read`만
+허용하고 `firebase/*` 직접 import는 실패한다. 승인된 read positive는 `proof-sdk-facade.ts`의
+`storage.getStorage/ref/getMetadata/getBytes` exact call로 고정했다. bundle test 제목과 파일 상단 설명은
+Firestore read + Storage **read**가 승인된 현재 상태로 정정했고, Auth whole-identifier·admin private
+path·runtime external request 0 단언은 유지했다. 테스트 삭제·skip·E2E 예외는 없다.
+
+**실측.** targeted `admin-auth-read` **5/5**, **전체 Chromium E2E 161/161**, 전체
+`node scripts/check.mjs` PASS(unit **2409/2409**), **build 산출물 14개 모두 보완 전과 byte+SHA-256
+동일**, `git diff --check` PASS, 변경 경로 한 파일뿐, EOL clean, 포트·temp 잔류 0.
+
+## 다음 단계 — Codex 재검수 대기
+
+스펙 082는 보완 라운드 3/3까지 끝났고 `READY_FOR_CODEX`에서 멈춘다. 다음 단위는 Codex 재검수 결과와
+사용자 지시가 정한다. 실제 admin issue UI, 다음 스펙, 자동화는 시작하지 않았다.
+
+> 직전 지시문(스펙 082 보완 라운드 3, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 082 CORRECTION_REQUIRED 라운드 3만 수행해.
+```
+
 
 ## 현재 결과 — 보완 라운드 2 완료, 전체 E2E 160/160
 

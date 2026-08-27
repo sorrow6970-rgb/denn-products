@@ -483,3 +483,95 @@ API의 direct call spelling(`name(`)만 막아 alias import/property extraction/
 동일 test 파일 안에서 reference-level forbidden detector, import allowlist, exact proof adapter positive
 calls, stale prose를 보완하는 correction round 3/3을 요구한다. 제품 코드·adapter·승인된 read-only 경계는
 변경하지 않는다.
+
+### DONE (Claude) — 보완 라운드 3 (2026-08-27)
+
+기준 `HEAD=origin=298c224`, ahead/behind 0/0. Codex 재검수 문서 commit `298c224`, 보완 commit
+`68bd25c`. 허용된 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품 코드와
+승인된 read-only Storage 연결은 한 줄도 바꾸지 않았다.
+
+**전체 Chromium E2E는 161 passed / 0 failed다**(라운드 2의 160 + 이번 detector self-check 1).
+
+**결함 — guard가 별칭·property extraction을 놓쳤다.**
+
+라운드 2의 `\bname\s*\(` 검사는 **직접 호출만** 잡았다. 같은 API에 도달하는 다음 세 경로가 그대로
+통과했다 — Codex 지적이 맞다.
+
+| 우회 경로 | 라운드 2 | 라운드 3 |
+|---|---|---|
+| `import { uploadBytes as u } from "firebase/storage"; u()` | 통과 | **차단** |
+| `const u = storage.uploadBytes; u()` | 통과 | **차단** |
+| `storage["uploadBytes"]` | 통과 | **차단** |
+
+**보완 — 호출이 아니라 reference 자체를 금지한다.**
+
+주석 제거된 app-owned production source에서 금지 10종
+(`uploadBytes`·`uploadBytesResumable`·`uploadString`·`updateMetadata`·`deleteObject`·`list`·
+`listAll`·`getDownloadURL`·`getBlob`·`getStream`)을 **세 가지 형태 전부**로 금지한다.
+
+1. bare whole identifier `\bname\b` — alias import의 specifier까지 잡는다
+2. property `\.\s*name\b` — `storage.uploadBytes`와 `.uploadBytes(` 모두
+3. bracket `\[\s*["'\`]name["'\`]\s*\]` — `storage["uploadBytes"]`
+
+**`list` 예외와 그 근거.** `list`는 앱 코드에 일반 영어로도 등장한다(지역 변수 `list`,
+`data-testid="template-list"`). 실측으로 이 세 곳이 전부 무해함을 확인했고, 그래서 `list`에만
+bare-identifier 형태를 적용하지 않으며 그 이유를 검사 지점 주석에 적었다. **잃는 것은 없다** — 아래
+2번 단언대로 고객 앱은 `firebase/*` 모듈을 **직접 import하지 않으므로**, Storage의 `list`는 namespace
+객체의 property로만 도달할 수 있고 그건 property·bracket 형태가 다른 이름과 똑같이 커버한다.
+실측: 금지 10종 모두 property 0 · bracket 0이고, bare identifier는 `list` 외 9종이 0이다.
+
+**detector가 눈뜬 채로 통과하는지 같은 파일에서 증명한다(신규 self-check 테스트).**
+
+| 합성 입력 | 기대 | 결과 |
+|---|---|---|
+| `import { uploadBytes as u } from "firebase/storage"; u();` | 잡힘 | ✅ |
+| `const u = storage.uploadBytes; u();` | 잡힘 | ✅ |
+| `storage["uploadBytes"](ref, bytes);` | 잡힘 | ✅ |
+| `await storage.uploadBytes(objectRef, bytes);` | 잡힘 | ✅ |
+| `const u = storage.list;` / `storage["list"](objectRef);` | 잡힘 | ✅ |
+| `const list = categories; return list.some(Boolean);` | **안 잡힘** | ✅ |
+| `// uploadBytes is deliberately never called here` | **안 잡힘** | ✅ |
+| `/* uploadBytes, uploadString and listAll stay out */` | **안 잡힘** | ✅ |
+
+이게 없으면 "앱이 깨끗해서"가 아니라 "detector가 눈이 멀어서" 통과해도 알 수 없다.
+
+**검사 source와 import 경계.**
+
+- 검사 대상에 고객이 실제로 쓰는 **루트 boundary**를 포함했다 — `packages/firebase/src/index.ts`와
+  그 barrel이 export하는 `public-catalog` · `public-images` production source, 그리고 `space-read`
+  production source. 여기에 `apps/mockup/src`(unit test·`e2e/` 제외)를 더한다.
+- `apps/mockup` production의 모든 import specifier를 검사한다 — `@denn/firebase`로 시작하는 것은
+  **루트와 `@denn/firebase/space-read`만** 허용하고, `firebase/`로 시작하는 **직접 SDK import는 전부
+  실패**시킨다. 이 단언이 검사 범위를 위 네 곳으로 한정한 근거이자, 고객이 다른 경계에 손대면 먼저
+  깨지는 가드다.
+
+**승인된 positive를 facade에 고정.** read 경계 확인을 `packages/firebase/src/space-read/proof-sdk-facade.ts`의
+**exact call**(`storage.getStorage(` · `storage.ref(` · `storage.getMetadata(` · `storage.getBytes(`)로
+못박았다. 동명의 다른 함수가 대신 만족시켜 실제 Storage 호출이 감시 밖으로 나가는 일을 막는다.
+
+**문구 정정.** bundle 테스트 제목을
+`the customer bundle carries no Auth product API and no private admin path`로 바꾸고, 파일 상단 설명도
+현재 승인 상태에 맞췄다 — Firestore read + Storage **read**가 승인됐으므로 "SDK trace 0"은 더 이상
+계약이 아니며, 계약은 "Firestore read + Storage read, Auth 0, admin private path 0, 쓰기·삭제·열거·
+download URL 0"이다.
+
+**유지한 것.** 라운드 1의 `getAuth` whole-identifier 검사, admin private path marker
+(`admin-read`·`ADMIN_STATE_OBJECT_PATH`·`admin/state.json`·`onAuthStateChanged`·
+`signInWithEmailAndPassword`), positive marker, runtime external request 0 단언. 테스트 삭제·skip·
+E2E 예외는 **없다**.
+
+**보완 라운드 3 게이트 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| targeted `admin-auth-read.spec.ts` Chromium | **5/5 PASS** |
+| **전체 Chromium E2E** | **161 passed / 0 failed** |
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2409/2409**, build 2개 |
+| build 산출물 14개 byte+SHA-256 | **전부 보완 전과 동일** — 제품 코드 무변경 |
+| `git diff --check` | PASS |
+| exact diff | `tests/e2e/admin-auth-read.spec.ts` **한 파일뿐** |
+| EOL | `i/lf w/lf` |
+| 포트 4183/4184/4185/8080/9099/9199 · `test-results`/temp | 잔류 **0** |
+
+**진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
+능력이 아니다.
