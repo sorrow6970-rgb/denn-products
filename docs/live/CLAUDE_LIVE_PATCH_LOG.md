@@ -6012,3 +6012,39 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CLAUDE`, next transition `CLAUDE_SPEC_079_IMPLEMENTATION`. 다음 UI 스펙은 자동
   시작하지 않는다.
 - 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**.
+
+## 2026-08-27 - 스펙 079 V2 proof reader adapter 구현
+
+- 기준 `HEAD=origin=b28b9c1`, ahead/behind 0/0에서 시작했다. 문서 commit `1d46b33`, 구현 commit
+  `0887047`.
+- 신규 제품 파일은 `packages/firebase/src/space-read/`의 `proof-facade.ts`, `proof-reader.ts`,
+  `proof-sdk-facade.ts`와 `proof-reader.test.ts`, `proof-sdk-facade.test.ts`,
+  `proof-sdk-facade.emulator.test.ts` 6개다. 기존 파일 수정은 `space-read/index.ts` export 20줄과
+  `vitest.emulator.config.ts` include 1줄뿐이다.
+- reader 계약: exact `{objectPath,maxBytes}` → exact V2 path 정규식 → `readMetadata` 1회 →
+  `fullPath`/`contentType`/`size` 검사 → `readBytes(objectPath,maxBytes)` 1회 → fresh `Uint8Array`
+  복사 → `byteLength === metadata.size` → exact `{bytes,contentType:'image/png'}`. metadata 검사가
+  실패하면 byte read 0이다.
+- timeout: `SPACE_V2_PROOF_READ_TIMEOUT_MS = 20_000` 하나만 metadata 직전에 시작해 bytes 검증까지
+  덮는다. 단계별 20초를 두 번 주지 않으며 late resolve/reject는 버리고 unhandled rejection을 만들지
+  않는다. reader retry/cache/coalescing/fallback/`getDownloadURL`은 0이다.
+- facade: `demo-` 검사를 dynamic import 전에 수행하고, 기존 `denn-space-viewer` named app을 5개 config
+  exact match일 때만 재사용하며 불일치는 `getStorage` 전에 fail-closed다. `[DEFAULT]`/추가 app,
+  Auth/Firestore import, anonymous sign-in, download URL은 0이다.
+- 실측 게이트: targeted unit **105/105**, Firebase typecheck PASS, 전체 `node scripts/check.mjs` PASS
+  (format/lint/typecheck 7개/unit **2228/2228**/build 2개), `pnpm test:emulator` **27/27** PASS
+  (`demo-denn-emulator`, 기존 `firebase.emulator.json`·`storage.emulator.rules` 무변경, 설치·download 0).
+- 고객 entry exact 동일: `index-6js4DafP.js`, `322,018 bytes`,
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`. index export를 V1 줄 뒤에
+  append해 module order를 보존했다(중간 삽입 시 minifier symbol 재배치로 hash가 바뀌는 것을 실측했다).
+- `git diff --check` PASS. `apps/**`, production route/UI/CSS/decoder, 기존 `space-read/sdk-facade.ts`,
+  Rules/emulator JSON, package/lockfile/`pnpm-workspace.yaml`/root barrel diff **0**.
+- 검사 포트 4183/4184/4185/8080/9099/9199 실행 전후 잔류 **0**. emulator가 만든 `firestore-debug.log`는
+  제거했고 강제 종료한 프로세스는 없다.
+- 전체 Chromium E2E는 MM-6=A에 따라 **NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/
+  project/bucket/network/live/CORS/deploy/actual UID/publish/orphan cleanup **0 / NOT TESTED**,
+  UI 연결 **0**.
+- 상태 `READY_FOR_CODEX`. 다음 스펙(browser PNG decoder, production V2 composition/UI)은 시작하지
+  않았고 자동화·반복 작업도 만들지 않았다.
+- 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**. package seam 하나를 닫았을 뿐
+  production 연결과 live 검증은 그대로 남아 있다.

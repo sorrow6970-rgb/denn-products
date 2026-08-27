@@ -1,22 +1,36 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-079-space-v2-proof-reader-adapter`
+상태: `READY_FOR_CODEX`
+active_unit: `spec-079-space-v2-proof-reader-adapter` — **IMPLEMENTED / LOCAL_VERIFIED / NO_UI / NO_NETWORK**
 completed_unit: `spec-078-space-v2-local-viewer-replay-pipeline` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI**
-조사 기준: `HEAD=origin=b28b9c1`, ahead/behind **0/0**.
+구현 기준: `HEAD=origin=b28b9c1`에서 시작. 문서 commit `1d46b33`, 구현 commit `0887047`.
 Founder 결정: **MM-1=A ~ MM-6=A 승인**.
-제품 구현: **NOT STARTED — 아래 수동 지시 후 시작**.
-검증: 문서 조사만 수행. unit/E2E/emulator **NOT RUN**.
+제품 구현: **DONE — 승인 범위만**. 검증: targeted unit 105/105, 전체 check PASS(unit 2228/2228),
+`pnpm test:emulator` 27/27, 고객 bundle hash exact. 전체 Chromium E2E **NOT RUN**(MM-6=A).
 fix_round: **0 / 3**
-next_transition: **`CLAUDE_SPEC_079_IMPLEMENTATION`**
+next_transition: **`CODEX_SPEC_079_REVIEW`**
 
-## 현재 결과·다음 지시문
+## 현재 결과
 
-Founder가 **MM-1=A ~ MM-6=A**를 승인했다. 스펙 079 실행 계약은 기존 `denn-space-viewer` named app과
-`@denn/firebase/space-read`를 재사용하는 package-only V2 proof reader다. exact path → metadata
-fullPath/contentType/size → bounded bytes → metadata/bytes length 일치, 단일 20초 budget, 제품 retry 0이다.
+스펙 079 package-only Firebase V2 proof reader adapter를 승인 범위대로 구현하고 검증했다. 신규 제품
+파일은 `packages/firebase/src/space-read/`의 `proof-facade.ts`, `proof-reader.ts`,
+`proof-sdk-facade.ts`와 unit/emulator test 3개이며, 기존 파일 수정은 `space-read/index.ts` 명시
+export와 `vitest.emulator.config.ts` include 1건뿐이다.
 
-## Claude Code에 그대로 전달할 실행 지시문
+exact V2 path → `getMetadata` fullPath/contentType/size → `getBytes(ref,maxBytes)` → metadata size와
+copied byte length 일치 순서를 지켰고, metadata+bytes 전체에 단일 20초 budget을 적용했다. 기존
+`denn-space-viewer` named app을 5개 config exact match로만 재사용하며 제품 retry, Auth,
+default/추가 app, download URL은 0이다.
+
+게이트 실측은 targeted unit **105/105**, Firebase typecheck PASS, 전체 `node scripts/check.mjs` PASS
+(unit **2228/2228**), `pnpm test:emulator` **27/27** PASS, 고객 entry `index-6js4DafP.js` /
+`322,018 bytes` / `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159` exact,
+`git diff --check` PASS, 허용 외 diff 0, 검사 포트 잔류 0이다.
+
+**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 검수이며, browser PNG decoder와
+production V2 customer composition/UI는 별도 스펙과 Founder 지시 이후에 시작한다.
+
+> 직전 지시문(스펙 079 구현, 수행 완료 — 기록):
 
 ```text
 C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와
@@ -48,6 +62,41 @@ STATE/NEXT/CURRENT/live log/handoff를 실제 결과와 맞춘 뒤 READY_FOR_COD
 - 전체 Chromium E2E는 MM-6=A로 NOT RUN; full-E2E PASS 주장 금지.
 - actual Firebase/network/live/CORS/deploy/UI 연결 0 / NOT TESTED.
 - 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**.
+
+## ★ 스펙 079 — 수행 기록 (2026-08-27)
+
+기준 `HEAD=origin=b28b9c1`, ahead/behind 0/0에서 시작해 문서 commit `1d46b33`와 구현 commit `0887047`
+둘만 남겼다. 승인 범위 밖으로 넓히지 않았다.
+
+- **변경 파일 8개 (허용 범위 전부).** 신규 `packages/firebase/src/space-read/proof-facade.ts` ·
+  `proof-reader.ts` · `proof-sdk-facade.ts` · `proof-reader.test.ts` · `proof-sdk-facade.test.ts` ·
+  `proof-sdk-facade.emulator.test.ts`, 기존 `space-read/index.ts` 명시 export append,
+  `vitest.emulator.config.ts` include 1건. `space-read/sdk-facade.ts`와 기존 V1 test는 무변경.
+- **read 계약.** exact `{objectPath,maxBytes}` → anchored V2 path 정규식 → `readMetadata` 1회 →
+  `fullPath`/`contentType`/`size`/`size<=maxBytes` → 실패 시 bytes 0 → `readBytes(objectPath,maxBytes)`
+  1회 → `instanceof ArrayBuffer` → fresh `Uint8Array` 복사 → `byteLength === metadata.size` → exact
+  `{bytes,contentType:'image/png'}`. 오류는 내부 safe code만 갖고 path/bucket/config/raw SDK 정보를
+  담지 않는다.
+- **timeout.** `SPACE_V2_PROOF_READ_TIMEOUT_MS = 20_000` 단일 budget이 metadata 직전부터 bytes 검증까지
+  덮는다. metadata 15초 + bytes 5초 = 20초 timeout unit이 단계별 20초가 아님을 고정하고, late
+  resolve/reject는 버리며 unhandled rejection을 만들지 않는다.
+- **app ownership.** module import inert(스냅샷 unit), `demo-` 검사는 dynamic import 전, 기존
+  `denn-space-viewer` 재사용은 5개 config exact match일 때만, 불일치는 `getStorage` 전 fail-closed.
+  `[DEFAULT]`/추가 app, Auth/Firestore import, anonymous sign-in, `getDownloadURL` 모두 **0**.
+- **게이트 실측.** targeted unit **105/105**, Firebase typecheck PASS, 전체 `node scripts/check.mjs`
+  PASS(unit **2228/2228**), `pnpm test:emulator` **27/27** PASS(기존 emulator JSON/Rules/
+  `demo-denn-emulator` 무변경, 설치·download 0), 고객 entry `index-6js4DafP.js` / `322,018 bytes` /
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159` exact, `git diff --check` PASS,
+  허용 외 diff **0**, 검사 포트 4183/4184/4185/8080/9099/9199 잔류 **0**(강제 종료 0).
+- **확인한 사실 1건.** V2 export를 `index.ts` 중간에 삽입하면 고객 entry hash가 바뀐다(길이는 같고
+  diff는 React vendor의 minified identifier 재배치뿐). V1 줄을 그대로 두고 끝에 append하면 기준
+  해시와 정확히 일치해 append를 채택했다.
+- **금지 준수.** `apps/**`·production import·UI/CSS/decoder **0**, actual Firebase/project/bucket/
+  network/live/CORS/deploy/actual UID/publish/orphan cleanup **0 / NOT TESTED**, package/lockfile/
+  `pnpm-workspace.yaml`/root barrel/Rules/emulator JSON **0**, 보호 대상 변경·복원·stage·commit **0**,
+  자동화·반복 작업 **0**, 다음 스펙 시작 **0**. 전체 Chromium E2E는 MM-6=A에 따라 **NOT RUN**이며
+  PASS라고 기록하지 않았다.
+- 진행도: **81~84% 완료 / 16~19% 잔여 — 변동 없음.**
 
 ## 이전 Claude Code 전달 지시문 — 스펙 073 종료 이력
 

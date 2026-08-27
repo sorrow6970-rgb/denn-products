@@ -1,20 +1,20 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-08-26
+updated_at: 2026-08-27
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-078-space-v2-local-viewer-replay-pipeline   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_UI
 active_unit: spec-079-space-v2-proof-reader-adapter
-state: READY_FOR_CLAUDE
-baseline_commit: b28b9c1   # HEAD=origin at spec 079 document investigation start
-candidate_commit: null
+state: READY_FOR_CODEX
+baseline_commit: b28b9c1   # HEAD=origin at spec 079 implementation start
+candidate_commit: 0887047  # spec 079 proof reader adapter implementation (docs commit 1d46b33)
 verified_commit: bed9106   # spec 078 independently re-reviewed correction code/test commit
-origin_relation: "spec 079 investigation started from HEAD=origin=b28b9c1, ahead/behind 0/0"
-working_tree: "spec 079 decision/contract/handoff/state documents plus pre-existing protected Founder/user changes; product implementation diff 0"
+origin_relation: "spec 079 implemented from HEAD=origin=b28b9c1, ahead/behind 0/0; pushed fast-forward"
+working_tree: "spec 079 implementation and allowed documents committed; pre-existing protected Founder/user changes left untouched and unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_SPEC_079_IMPLEMENTATION
+next_transition: CODEX_SPEC_079_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Codex implementation under user execution instruction; independent review complete
 push_policy: fast-forward-only
@@ -22,6 +22,35 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 81-84% complete; 16-19% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 079 proof reader adapter 구현 완료 (2026-08-27)
+
+- 기준 `HEAD=origin=b28b9c1`, ahead/behind 0/0에서 시작했다. 문서 commit `1d46b33`, 구현 commit
+  `0887047`. 승인 범위 밖으로 확장하지 않았다.
+- 제품 파일은 `packages/firebase/src/space-read/`의 신규 `proof-facade.ts`, `proof-reader.ts`,
+  `proof-sdk-facade.ts`와 unit/emulator test 3개다. 기존 파일 수정은 `space-read/index.ts` 명시
+  export와 `vitest.emulator.config.ts` include 1건뿐이다.
+- 계약대로 exact V2 path → `getMetadata` fullPath/contentType/size → `getBytes(ref,maxBytes)` →
+  metadata size와 copied byte length 일치 순서를 지켰고, metadata+bytes 전체에 단일 20초 budget을
+  적용했다. 제품 retry, Auth, default/추가 app, download URL은 **0**이다.
+- 기존 `denn-space-viewer` named app을 5개 config exact match로만 재사용하고 불일치는 `getStorage`
+  전에 fail-closed다. `demo-` 검사는 dynamic import 전에 수행한다.
+- 실측: targeted unit **105/105**, Firebase typecheck PASS, 전체 `node scripts/check.mjs` PASS
+  (unit **2228/2228**), `pnpm test:emulator` **27/27** PASS(기존 `firebase.emulator.json`·
+  `storage.emulator.rules`·`demo-denn-emulator` 무변경, 설치·download 0).
+- 고객 entry exact 동일: `index-6js4DafP.js` / `322,018 bytes` /
+  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`. V2 export를 index 중간에 넣으면
+  minifier symbol 재배치로 hash가 바뀌는 것을 실측하고 파일 끝 append로 확정했다.
+- `git diff --check` PASS, 허용 외 diff **0** — `apps/**`, `space-read/sdk-facade.ts`, Rules, firebase
+  JSON, package/lockfile, `pnpm-workspace.yaml`, root barrel 무변경. 작업 트리에 미리 있던 보호 대상
+  변경은 손대지 않고 stage/commit하지 않았다.
+- 검사 포트 4183/4184/4185/8080/9099/9199 실행 전후 잔류 **0**, 강제 종료 0. emulator가 생성한
+  `firestore-debug.log`는 제거했다.
+- 전체 Chromium E2E는 MM-6=A에 따라 **NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/
+  project/bucket/network/live/CORS/deploy/actual UID/publish/orphan cleanup **0 / NOT TESTED**,
+  UI 연결 **0**, 자동화·반복 작업 **0**, 다음 스펙 시작 **0**.
+- 상태 `READY_FOR_CODEX`, next transition `CODEX_SPEC_079_REVIEW`.
+- 전체 진행도는 **81~84% 완료 / 16~19% 잔여 — 변동 없음**이다.
 
 ## Founder MM-1~MM-6 승인 · 스펙 079 실행 계약 (2026-08-26)
 

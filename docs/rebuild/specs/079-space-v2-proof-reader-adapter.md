@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CLAUDE / APPROVED / PRODUCT IMPLEMENTATION NOT STARTED`
+`READY_FOR_CODEX / IMPLEMENTED / LOCAL_VERIFIED / NO_UI / NO_NETWORK`
 
 Founder 결정 정본:
 `docs/codex-claude-handoff/decisions/2026-08-26-space-v2-proof-reader-adapter-decisions.md`.
@@ -205,3 +205,117 @@ opt-in emulator:
 ### QUESTIONS
 
 없음. Claude Code는 이 계약 범위만 구현하고 `READY_FOR_CODEX`에서 멈춘다.
+
+### DONE (Claude) — 2026-08-27
+
+기준 `HEAD=origin=b28b9c1`, ahead/behind 0/0에서 시작했다. 문서 commit `1d46b33`, 구현 commit
+`0887047`. 이 계약 범위만 구현했고 스코프를 넓히지 않았다.
+
+**변경 파일 (허용 범위 전부, 그 밖 0)**
+
+| 파일 | 내용 |
+|---|---|
+| `packages/firebase/src/space-read/proof-facade.ts` (신규) | `SpaceV2ProofReadFirebaseFacade`, `SpaceV2ProofObjectMetadata` |
+| `packages/firebase/src/space-read/proof-reader.ts` (신규) | `createSpaceV2ProofBytesReader`, `SPACE_V2_PROOF_READ_TIMEOUT_MS`, `SPACE_V2_PROOF_READ_MAX_BYTES` |
+| `packages/firebase/src/space-read/proof-sdk-facade.ts` (신규) | `createFirebaseSpaceV2ProofReadFacade` |
+| `packages/firebase/src/space-read/proof-reader.test.ts` (신규) | reader unit 61건 |
+| `packages/firebase/src/space-read/proof-sdk-facade.test.ts` (신규) | facade unit 14건 |
+| `packages/firebase/src/space-read/proof-sdk-facade.emulator.test.ts` (신규) | opt-in emulator 5건 |
+| `packages/firebase/src/space-read/index.ts` | V2 명시 export 20줄 append |
+| `vitest.emulator.config.ts` | include 1줄 |
+
+파일 분리는 계약이 제시한 6개 신규 파일 그대로 유지했다.
+
+**§1 공개 타입.** `SpaceV2ProofBytesReader.read`는 계약대로 exact
+`{bytes:Uint8Array, contentType:'image/png'}`를 반환한다. 스펙 078
+`apps/mockup/src/space-v2/replay-controller.ts`의 `SpaceV2ProofBytesPort`와 structural typing으로
+주입 가능하며 `apps/**` import는 0이다. factory 이름은 고정된 `createSpaceV2ProofBytesReader`,
+`createFirebaseSpaceV2ProofReadFacade`다.
+
+**§2 request와 path 검증.** own enumerable key가 정확히 `objectPath`, `maxBytes` 두 개일 때만
+통과한다(누락·추가·non-enumerable·symbol·배열·primitive 거부). path는
+`^rebuild-space-assets/objects/{lowercase uuid v4}\.png$` anchored 정규식만 통과하며 uppercase UUID,
+다른 public prefix(`published/`·`admin/`·`rebuild-admin-state/`), `gs://`, `https://`, `..` traversal,
+선행 `/`, `?query`, `#fragment`, 다른 확장자는 SDK 호출 전에 거부한다. `maxBytes`는 positive safe
+integer이고 `20_971_519` 이하만 허용한다. request 필드는 각각 한 번만 읽으므로 hostile getter가
+검사값과 호출값을 다르게 만들 수 없고, throwing getter/Proxy는 안전 rejection이다. 모든 rejection은
+`SPACE_V2_PROOF_READ_*` 내부 code만 갖고 objectPath/bucket/config/token/UID/metadata/bytes/raw SDK
+code·message를 담지 않는다. 외부 UI 오류 계약은 스펙 078의 `SPACE_V2_REPLAY_PROOF_LOAD_FAILED`
+그대로이며 새 UI 오류 코드는 만들지 않았다.
+
+**§3 exact read 순서.** request/facade snapshot → `readMetadata` 1회 → `fullPath === objectPath` ·
+`contentType === 'image/png'` · `size` positive safe integer · `size <= maxBytes` → 실패 시 `readBytes`
+0 → `readBytes(objectPath,maxBytes)` 1회 → `instanceof ArrayBuffer`만 허용 → fresh `Uint8Array` 복사 →
+`byteLength === metadata.size` → exact 2키 반환. raw FullMetadata, generation/metageneration, download
+URL, Storage reference는 결과에 없다. 반환 bytes를 caller가 변경해도 facade의 buffer와 다음 read
+결과는 바뀌지 않는다(unit·emulator 양쪽에서 확인). metadata와 bytes 사이 object 교체를 막는 것은 목표
+Rules의 update/delete 거부이며, emulator에서 immutable target을 읽는 것까지만 검증했고 live
+Rules/CORS는 `NOT TESTED`다.
+
+**§4 timeout과 retry.** `SPACE_V2_PROOF_READ_TIMEOUT_MS = 20_000`을 export했다. timer는 metadata
+직전 하나만 시작해 bytes 검증 완료까지 사용한다 — metadata 15초 + bytes 5초 = 20초에서 timeout되는
+unit이 단계별 20초가 아님을 고정한다. timeout이 먼저 결정되면 이후 resolve/reject는 무시되고, 두
+handler를 항상 붙이므로 unhandled rejection이 생기지 않는다(unit에서 `unhandledRejection` 수집으로
+확인). SDK abort 계약은 사용하지 않고, read-only라 late success는 state를 바꾸지 않으며 결과도
+복원하지 않는다. reader retry/coalescing/cache/fallback/`getDownloadURL`/XHR/fetch는 **0**이다.
+물리 network call 1회는 주장하지 않으며 facade method 호출 횟수만 검증한다.
+
+**§5 Firebase app ownership.** module-level side effect 0 — 모듈 import 시점 스냅샷으로
+initializeApp/getApps/getStorage/ref 호출이 모두 0임을 unit이 고정한다. emulator 옵션이면
+`config.projectId.startsWith('demo-')`를 dynamic import 전에 검사하고, 실패 시 `getApps` 조차 호출하지
+않는다. `denn-space-viewer` app이 없으면 그 이름으로 정확히 1개 초기화하고, 있으면 `apiKey`,
+`authDomain`, `projectId`, `storageBucket`, `appId` 5개를 exact 비교해 불일치 시 `getStorage` 전에
+throw한다(5개 키 각각 unit). `[DEFAULT]` app은 조회·재사용·초기화 0이고 다른 named app도 만들지
+않는다. `firebase/auth`·`firebase/firestore`는 import조차 하지 않으며(unit이 mock import 여부로 확인)
+anonymous sign-in도 하지 않는다. `getStorage(app)` 1개를 얻고 emulator 옵션일 때만
+`connectStorageEmulator`를 1회 호출한다. `readMetadata`는 FullMetadata에서 3개 필드만 복사하고,
+`readBytes`는 exact path ref와 `getBytes(ref,maxBytes)`만 쓴다. `getDownloadURL`/Blob/delete/list/
+update/upload는 0이다.
+
+**§6 unit과 local emulator.** 계약의 unit 12항목을 모두 덮었다 — ①module import inert ②named app
+신규/재사용/default·추가 0 ③5개 config key 개별 불일치 ④non-demo 옵션 조기 거부 ⑤Storage만 emulator
+연결·Auth/Firestore 0 ⑥exact metadata mapping과 exact ref/maxBytes ⑦malformed request/path/maxBytes/
+hostile getter의 facade 호출 0 ⑧metadata mismatch·oversize의 bytes 0 ⑨non-ArrayBuffer와 length
+mismatch 거부 ⑩fresh copy·exact result keys·raw 비노출 ⑪metadata→bytes 순서와 각 1회·retry 0
+⑫단일 20초 budget·metadata timeout 시 bytes 0·late resolve/reject 안전성. opt-in emulator는 기존
+`demo-denn-emulator`·`firebase.emulator.json`·`storage.emulator.rules`를 본문 변경 없이 사용하고,
+기존 space-write adapter와 synthetic 승인 UID로 immutable PNG 1개를 seed한 뒤 **operator를 sign-out한
+상태에서** `denn-space-viewer` named app으로 metadata와 bounded bytes를 읽어 public-read 경로임을
+고정한다. 기존 create-only/update/delete/public-read Rules regression은 기존 suite가 계속 소유한다.
+non-demo/live fallback 0이고 종료 시 모든 app을 delete해 잔류 0이다.
+
+**repository gate 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| targeted proof unit + 기존 `space-read` unit | **105/105 PASS** (4 files) |
+| Firebase package typecheck | PASS |
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2228/2228**, build 2개 |
+| `pnpm test:emulator` default suite 전체 | **27/27 PASS** (4 files), cached tools만 사용, 설치·download **0** |
+| 고객 entry exact | `index-6js4DafP.js` / `322,018 bytes` / `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159` — 스펙 078 기준과 **동일** |
+| `git diff --check` | PASS |
+| 허용 외 diff | **0** — `apps/**`, `sdk-facade.ts`, Rules, firebase JSON, package/lockfile, `pnpm-workspace.yaml`, root barrel 무변경 |
+| 포트 4183/4184/4185/8080/9099/9199 | 실행 전후 잔류 **0**, 강제 종료 0 |
+
+전체 Chromium E2E는 Founder MM-6=A에 따라 **NOT RUN**이며 PASS라고 기록하지 않는다.
+
+**구현 중 확인한 사실 1건 — index export 위치.** V2 export를 `index.ts` 중간(알파벳 순)에 넣으면
+고객 entry가 `index-Cx0amPbR.js` / SHA-256 `5C7EFB…`로 바뀐다. byte 길이는 `322,018`로 같고 diff는
+React vendor 코드의 minified identifier 재배치(`po` → `R`)뿐이다 — 추가된 코드는 없고 module graph
+변화가 minifier symbol 할당을 밀어낸 것이다. V1 줄을 byte-identical로 두고 V2 export를 파일 끝에
+append하면 hash가 기준값과 정확히 일치한다. 그래서 append 형태를 채택했고 그 이유를 `index.ts`
+주석에 남겼다.
+
+**계속 금지 준수.** `apps/**`·production import·React/UI/CSS/DOM/Image/Canvas decoder **0**, actual
+Firebase/project/bucket/network/live·CORS 확인·변경·Rules/Hosting deploy·actual UID **0**, admin
+issuer·URL/clipboard·publish·orphan delete/cleanup·retry **0**, package/lockfile·
+`pnpm-workspace.yaml`·신규 dependency **0**, 보호 대상 변경·복원·stage·commit **0**.
+작업 트리에 미리 있던 보호 대상 변경(`packages/render/src/plan/index.ts`, `pnpm-workspace.yaml`,
+`docs/rebuild/design/**`, spec 018 PNG 2개, `AGENTS.md`, spec 038)은 손대지 않았고 stage/commit하지
+않았다.
+
+**진행도.** 전체 리빌드 **81~84% 완료 / 16~19% 잔여 — 변동 없음.** package seam 하나가 닫혔지만
+production 연결과 live 검증은 그대로 남는다.
+
+상태 `READY_FOR_CODEX`. 다음 스펙(browser PNG decoder, production V2 customer composition/UI)은
+시작하지 않았다.
