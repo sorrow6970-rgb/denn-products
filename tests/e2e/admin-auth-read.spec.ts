@@ -283,39 +283,55 @@ function record(usage: SdkUsage, module: string, member: string): void {
 }
 
 /**
- * Every member each `firebase/*` module hands to one file, however it is written: a named import, a
- * type query, a destructured dynamic import, or a namespace binding whose properties are read. Any
- * other shape — a computed member, a namespace passed around as a value, a binding this reader
- * cannot line up with its module — lands in `unaccounted`, which the caller treats as a failure.
+ * Every member each `firebase/*` module hands to one file.
+ *
+ * The walk starts from the modules, not from the syntax: every `firebase/*` specifier in the file
+ * is collected first, and each one must then be CLAIMED by a form this reader understands and the
+ * boundary allows — a named import, a type query, or a dynamic import bound to a name whose members
+ * are read. A specifier nothing claims lands in `unaccounted`, which the caller treats as a
+ * failure. That is what makes this closed: `export * from "firebase/storage"`, a re-export, a
+ * namespace import, a side-effect import and a dynamic import that is returned rather than bound
+ * are not allowed forms, so they fail by not being claimed — nobody has to have thought of them
+ * first. A legitimate new shape fails the same way, and the fix is to decide it is allowed here.
+ *
+ * Uses of an allowed binding are held to the same rule: a computed member or a namespace passed
+ * around as a value is reported, never passed over.
  */
 function sdkUsage(tokens: Token[]): SdkUsage {
   const usage: SdkUsage = { reached: new Map(), unaccounted: [] };
 
+  const specifiers = new Map<number, string>();
+  for (let i = 0; i < tokens.length; i++) {
+    const value = literalValue(tokens[i]);
+    if (value?.startsWith("firebase/")) specifiers.set(i, value);
+  }
+  if (specifiers.size === 0) return usage;
+  const claimed = new Set<number>();
+
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i]?.kind !== SyntaxKind.ImportKeyword) continue;
 
-    // `import("m")` as an expression, or the type query `import("m").Member`.
+    // `import("m")` as an expression: a type query here, or a binding claimed further down.
     if (tokens[i + 1]?.kind === SyntaxKind.OpenParenToken) {
-      const module = literalValue(tokens[i + 2]);
-      if (!module?.startsWith("firebase/")) continue;
+      if (!specifiers.has(i + 2)) continue;
+      const module = specifiers.get(i + 2) as string;
       const close = matching(tokens, i + 1);
-      if (tokens[close + 1]?.kind !== SyntaxKind.DotToken) continue; // bound below
+      if (tokens[close + 1]?.kind !== SyntaxKind.DotToken) continue;
+      claimed.add(i + 2);
       const member = tokens[close + 2];
       if (member?.kind !== SyntaxKind.Identifier) usage.unaccounted.push(`type query on ${module}`);
       else record(usage, module, member.text);
       continue;
     }
 
-    // `import ... from "m"`.
-    let at = i + 1;
-    while (at < tokens.length && tokens[at]?.kind !== SyntaxKind.StringLiteral) at++;
-    const module = literalValue(tokens[at]);
-    if (!module?.startsWith("firebase/")) continue;
-    if (tokens[i + 1]?.kind !== SyntaxKind.OpenBraceToken) {
-      usage.unaccounted.push(`static import shape for ${module}`);
-      continue;
-    }
-    const names = clauseNames(tokens, i + 1);
+    // `import { ... } from "m"` and `import type { ... } from "m"` — the only static form allowed.
+    const clause = tokens[i + 1]?.text === "type" ? i + 2 : i + 1;
+    if (tokens[clause]?.kind !== SyntaxKind.OpenBraceToken) continue;
+    const from = matching(tokens, clause) + 2;
+    if (!specifiers.has(from)) continue;
+    const module = specifiers.get(from) as string;
+    claimed.add(from);
+    const names = clauseNames(tokens, clause);
     if (!names) usage.unaccounted.push(`named import from ${module}`);
     else for (const name of names) record(usage, module, name);
   }
@@ -334,21 +350,22 @@ function sdkUsage(tokens: Token[]): SdkUsage {
     if (tokens[equals]?.kind !== SyntaxKind.EqualsToken) continue;
     const end = scanTo(tokens, equals + 1, [SyntaxKind.SemicolonToken]);
 
-    const modules: string[] = [];
+    const modules: { at: number; module: string }[] = [];
     for (let m = equals; m < end; m++) {
       if (tokens[m]?.kind !== SyntaxKind.ImportKeyword) continue;
       if (tokens[m + 1]?.kind !== SyntaxKind.OpenParenToken) continue;
-      const module = literalValue(tokens[m + 2]);
-      if (module?.startsWith("firebase/")) modules.push(module);
+      if (!specifiers.has(m + 2) || claimed.has(m + 2)) continue;
+      modules.push({ at: m + 2, module: specifiers.get(m + 2) as string });
     }
     if (modules.length === 0) continue;
+    for (const { at } of modules) claimed.add(at);
 
     const elements = bindingElements(tokens, i + 1, equals);
     if (elements.length !== modules.length) {
       usage.unaccounted.push(`${elements.length} bindings for ${modules.length} SDK modules`);
       continue;
     }
-    modules.forEach((module, index) => {
+    modules.forEach(({ module }, index) => {
       const element = elements[index];
       if (!element) return;
       const [from, to] = element;
@@ -364,6 +381,10 @@ function sdkUsage(tokens: Token[]): SdkUsage {
       }
       namespaceMembers(tokens, tokens[from]?.text ?? "", from, module, usage);
     });
+  }
+
+  for (const [at, module] of specifiers) {
+    if (!claimed.has(at)) usage.unaccounted.push(`unclaimed \`${module}\` specifier`);
   }
   return usage;
 }
@@ -546,11 +567,51 @@ test("the forbidden-Storage reader sees syntax, not text", () => {
   );
   expect(caught('const label = "uploadBytes";'), "string content").toBe(false);
 
-  // The SDK reader reports what it cannot account for instead of passing it over.
-  const opaque = tokenize('const storage = await import("firebase/storage");\nstorage[name]();');
-  expect(sdkUsage(opaque).unaccounted, "computed member").not.toEqual([]);
-  const escaping = tokenize('const storage = await import("firebase/storage");\nhandOff(storage);');
-  expect(sdkUsage(escaping).unaccounted, "namespace passed as a value").not.toEqual([]);
+  // Every `firebase/*` specifier has to be claimed by an allowed form, so a way of reaching the SDK
+  // fails by not being one — nobody has to have thought of it first. These are ways in that carry
+  // no forbidden name and would leave the approved member set untouched.
+  const unexplained = (source: string): string[] => sdkUsage(tokenize(source)).unaccounted;
+
+  expect(unexplained('export * from "firebase/storage";'), "star re-export").not.toEqual([]);
+  expect(
+    unexplained('export { getBytes } from "firebase/storage";'),
+    "named re-export",
+  ).not.toEqual([]);
+  expect(
+    unexplained('function leak() {\n  return import("firebase/storage");\n}'),
+    "dynamic import returned rather than bound",
+  ).not.toEqual([]);
+  expect(
+    unexplained('import * as storage from "firebase/storage";'),
+    "namespace import",
+  ).not.toEqual([]);
+  expect(unexplained('import "firebase/storage";'), "side-effect import").not.toEqual([]);
+  expect(
+    unexplained('const storage = await import("firebase/storage");\nstorage[name]();'),
+    "computed member",
+  ).not.toEqual([]);
+  expect(
+    unexplained('const storage = await import("firebase/storage");\nhandOff(storage);'),
+    "namespace passed as a value",
+  ).not.toEqual([]);
+
+  // And the forms the boundary does allow are read, not merely tolerated.
+  const bound = sdkUsage(
+    tokenize(
+      "const [{ getApp }, storage] = await Promise.all([\n" +
+        '  import("firebase/app"),\n' +
+        '  import("firebase/storage"),\n' +
+        "]);\n" +
+        "const instance = storage.getStorage(getApp());\n" +
+        "await storage.getBytes(storage.ref(instance, path));",
+    ),
+  );
+  expect(bound.unaccounted, "the approved shape is explained").toEqual([]);
+  expect([...(bound.reached.get("firebase/storage") ?? [])].sort(), "members read").toEqual([
+    "getBytes",
+    "getStorage",
+    "ref",
+  ]);
 });
 
 test("the customer app's own Storage surface stays read-only", () => {
