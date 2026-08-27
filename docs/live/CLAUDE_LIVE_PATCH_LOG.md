@@ -6388,3 +6388,48 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   않는다.
 - 상태 `CORRECTION_REQUIRED`, fix_round **2/3**, next `CLAUDE_CORRECTION`. 자동화 시작 0.
 - 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-27 - 스펙 081 보완 라운드 2 (failure metadata 조합)
+
+- 기준 `HEAD=origin=c6ea3bf`, ahead/behind 0/0. Codex 재검수 문서 commit `829bf37`, 보완 commit
+  `f36cf54`. Codex가 지적한 **한 결함만** 고쳤고 라운드 1의 preflight·success envelope·EOL과 기존
+  lifecycle 동작은 하나도 바꾸지 않았다. **지적은 맞았다.**
+- **결함.** failure envelope의 code·category·retryable을 각각 "알려진 값인가"로만 봐서
+  `SPACE_V2_ISSUE_AUTH_REQUIRED` + `VALIDATION` + `false`처럼 **port가 결코 발행하지 않는 조합**도
+  definite auth error로 승인됐다. 라운드 1에서 "code→category 표는 port 소관이라 재도출하지 않는다"고
+  적은 판단이 틀렸다 — drift를 피하려던 이유는 타당했지만 대가가 "일관성 없는 envelope을 믿는 것"이었다.
+- **보완.** 스펙 074의 8개 code를 **빠짐없이** key로 갖는 metadata table을
+  `as const satisfies Record<SpaceV2IssueErrorCode, {category, retryable}>`로 고정했다 — union에 code가
+  추가되면 **compile error**가 나므로 drift는 구조적으로 불가능하다. failure는 ① code가 own-key로
+  알려짐(`Object.hasOwn`, prototype 해석 차단) ② category가 정본과 일치 ③ retryable이 정본 boolean과
+  일치(strict 비교라 non-boolean도 함께 거부) ④ correlationId가 이번 시도 값일 때만 믿는다. 어긋나면
+  `outcome-unknown/errorCode:null`이며 port metadata·marker는 snapshot에 들어가지 않는다.
+- **정본 mapping.** `INVALID_INPUT` VALIDATION/false · `AUTH_REQUIRED` AUTH/true · `FORBIDDEN`
+  AUTH/false · `UPLOAD_FAILED` NETWORK/true · `UPLOAD_OUTCOME_UNKNOWN` NETWORK/false ·
+  `DOCUMENT_FAILED` VALIDATION/false · `DOCUMENT_OUTCOME_UNKNOWN` UNKNOWN/false · `ASSET_MISMATCH`
+  VALIDATION/false.
+- **fixture 정정.** 기존 `issueError` helper가 모든 code에 `UNKNOWN`/`true`를 붙이던 것 자체가 부정확한
+  fixture였고, 그래서 라운드 1 테스트가 이 결함을 못 잡았다. 같은 정본 mapping으로 고쳤다.
+- **회귀 26건 추가(파일 총 127건).** vocabulary 전수 1건 + 8개 code × (canonical 승인 / wrong category
+  거부 / wrong retryable 거부) 24건 + prototype-chain code 거부 1건. 거부 case는 code 문자열이 snapshot
+  직렬화에 없음도 단언한다.
+- **실측(파일 집합 명시).** targeted `issue-session` + `issue-bundle` + `space-write/write-port`
+  → **215/215**(session **127** · bundle **58** · write-port **30**). 같은 3개에 `space-write` 디렉터리
+  전체를 쓰면 **225/225**다. admin/firebase typecheck PASS, 전체 `node scripts/check.mjs` **PASS**
+  (unit **2408/2408**, 이전 2382 + 26).
+- **직전 기록 정정.** 라운드 1의 **199/199**는 틀린 수가 아니라 **다른 파일 집합**이었다 —
+  `space-write` 디렉터리 전체를 넣어 `sdk-facade.test.ts` 10건이 더해진 값(101+58+40)이고, Codex의
+  **189/189**는 같은 시점 `write-port.test.ts`만 쓴 집합(101+58+30)이다. 집합을 적지 않아 비교가
+  불가능했으므로 앞으로는 명시해 기록한다.
+- **production bundle exact 유지.** admin entry `index-D0XOQpRL.js` / `226,201 B` /
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`, customer entry
+  `index-BUT7Bmak.js` / `340,604 B` /
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`. CSS 2개도 SHA-256까지 무변경.
+- `git ls-files --eol` **2/2**, `git diff --check` PASS, 변경 경로는 `issue-session.ts`와
+  `issue-session.test.ts` 둘뿐이고 허용 외 diff **0**이다. `.gitattributes`는 이번 라운드 허용 밖이라
+  손대지 않았다. 검사 포트 4183/4184/4185/8080/9099/9199 잔류 **0**, 강제 종료 0.
+- **Chromium E2E와 emulator는 계속 NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/network/
+  live/UID/deploy, URL/clipboard, 운영 발급, publish/delete/orphan cleanup은 **0 / NOT TESTED**다.
+- 상태 `READY_FOR_CODEX`, fix_round **2/3**, next transition `CODEX_SPEC_081_REVIEW`. 다음 UI 스펙과
+  자동화·반복 작업은 시작하지 않았다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

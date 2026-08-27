@@ -1,14 +1,45 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CORRECTION_REQUIRED`
-active_unit: `spec-081-space-v2-admin-frozen-issue-session` — **CODEX RE-REVIEW ROUND 2 / NON_UI / NO_LIVE_NETWORK**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-081-space-v2-admin-frozen-issue-session` — **CORRECTION ROUND 2 DONE / NON_UI / NO_LIVE_NETWORK**
 completed_unit: `spec-080-space-v2-production-customer-viewer-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / UI_CONNECTED / NO_LIVE_NETWORK**
-검수 기준: `HEAD=origin=c6ea3bf`, ahead/behind `0/0`. 구현 `7dc148f`, 보완 `096e65e`.
+검수 기준: `HEAD=origin=c6ea3bf`, ahead/behind `0/0`. 구현 `7dc148f`, 라운드 1 `096e65e`, 라운드 2 `f36cf54`.
 Founder 정본: **LL-1=A ~ LL-6=A**
 fix_round: **2 / 3**
-next_transition: **`CLAUDE_CORRECTION`**
+next_transition: **`CODEX_SPEC_081_REVIEW`**
 
-## Claude Code 보완 라운드 2 실행 지시문
+## 현재 결과 — 보완 라운드 2 완료
+
+Codex가 지적한 **failure metadata 조합 검사 한 건만** 고쳤고 라운드 1의 preflight·success envelope·
+EOL과 기존 lifecycle 동작은 하나도 바꾸지 않았다. **지적은 맞았다.**
+
+라운드 1은 code·category·retryable을 각각 "알려진 값인가"로만 봐서
+`SPACE_V2_ISSUE_AUTH_REQUIRED` + `VALIDATION` + `false`처럼 **port가 결코 발행하지 않는 조합**도
+definite auth error로 승인했다. 그때 "code→category 표는 port 소관이라 재도출하지 않는다"고 적은 판단이
+틀렸다 — drift 우려는 타당했지만 대가가 "일관성 없는 envelope을 믿는 것"이었다.
+
+이제 스펙 074의 **8개 code를 빠짐없이** key로 갖는 metadata table을
+`as const satisfies Record<SpaceV2IssueErrorCode, {category, retryable}>`로 고정한다. union에 code가
+추가되면 **compile error**가 나므로 drift는 구조적으로 불가능하다. failure는 ① code가 own-key로 알려짐
+(`Object.hasOwn`, prototype 해석 차단) ② category가 정본과 일치 ③ retryable이 정본 boolean과 일치
+(strict 비교라 non-boolean도 거부) ④ correlationId가 이번 시도 값일 때만 믿고, 어긋나면
+`outcome-unknown/errorCode:null`이다. 모든 code에 `UNKNOWN`/`true`를 붙이던 test fixture도 같은 정본
+mapping으로 고쳤다.
+
+**실측(파일 집합 명시).** targeted `issue-session`+`issue-bundle`+`space-write/write-port`
+→ **215/215**(session **127** · bundle **58** · write-port **30**), 같은 3개에 `space-write` 디렉터리
+전체를 쓰면 **225/225**. admin/firebase typecheck PASS, 전체 `node scripts/check.mjs` PASS
+(unit **2408/2408**), **production bundle 두 개 exact 유지**, EOL **2/2**, `git diff --check` PASS,
+허용 외 diff 0(변경은 `issue-session.ts`·`issue-session.test.ts` 둘뿐), 검사 포트 잔류 0.
+**Chromium E2E와 emulator는 계속 NOT RUN**이다.
+
+**직전 수치 정정.** 라운드 1의 199/199는 틀린 수가 아니라 `space-write` **디렉터리 전체**를 넣은 다른
+파일 집합(101+58+40)이었고, Codex의 189/189는 `write-port.test.ts`만 쓴 집합(101+58+30)이다. 집합을
+적지 않아 비교가 불가능했으므로 앞으로는 명시해 기록한다.
+
+**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 재검수다.
+
+> 직전 지시문(스펙 081 보완 라운드 2, 수행 완료 — 기록):
 
 ```text
 C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와

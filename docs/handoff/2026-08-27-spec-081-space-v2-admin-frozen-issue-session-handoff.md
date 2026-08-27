@@ -1,6 +1,6 @@
 # 스펙 081 Space V2 admin frozen issue session handoff
 
-- 상태: `CORRECTION_REQUIRED / ROUND 2 / NON_UI / NO_LIVE_NETWORK` (Codex 재검수 2026-08-27)
+- 상태: `READY_FOR_CODEX / CORRECTION ROUND 2 DONE / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK` (보완 2026-08-27)
 - Codex 재검수 기준: `HEAD=origin=c6ea3bf`, ahead/behind `0/0`
 - 구현: 계약 문서 commit `7608977`, 제품 commit `7dc148f`
 - 선행: spec 080 `DONE / CODEX_PASSED`
@@ -96,3 +96,27 @@ Codex 라운드 1이 지적한 fail-closed 3건만 고쳤다. 세 지적 모두 
   임시 test FAIL로 재현했다.
 - 라운드 2는 `issue-session.ts/test`의 exhaustive code metadata mapping과 spec081 문서만 허용한다.
 - 상태 `CORRECTION_REQUIRED`, fix_round 2/3. 실제 UI/SDK/network/live는 계속 닫는다.
+
+## 보완 라운드 2 (2026-08-27, Claude Code)
+
+Codex 라운드 2가 지적한 failure metadata 조합 검사 한 건만 고쳤다. 지적은 맞았다. 상세 근거와
+실측표는 스펙 081의 `### DONE (Claude) — 보완 라운드 2 (2026-08-27)`이 정본이다. 재검수 문서 commit
+`829bf37`, 보완 commit `f36cf54`.
+
+- 라운드 1은 code·category·retryable을 각각 알려진 값인지만 봐서 `AUTH_REQUIRED` + `VALIDATION` +
+  `false`처럼 port가 발행하지 않는 조합도 definite error로 승인했다.
+- 스펙 074의 8개 code를 빠짐없이 key로 갖는 metadata table을
+  `as const satisfies Record<SpaceV2IssueErrorCode, ...>`로 고정했다 — 새 code가 union에 생기면
+  compile error다. failure는 own-key로 알려진 code + 정본 category/retryable + 이번 시도의
+  correlationId일 때만 믿고, 어긋나면 `outcome-unknown/errorCode:null`이다.
+- 모든 code에 `UNKNOWN`/`true`를 붙이던 test fixture도 정본 mapping으로 고쳤고, 회귀 **26건**
+  (vocabulary 전수 1 + 8 code × 3 + prototype-chain 1)을 추가했다(파일 127건).
+- 실측: targeted `issue-session`+`issue-bundle`+`space-write/write-port` **215/215**(127·58·30),
+  디렉터리 집합은 **225/225**, 전체 `node scripts/check.mjs` PASS(unit **2408/2408**),
+  **production bundle 두 개 exact 유지**, EOL **2/2**, `git diff --check` PASS, 허용 외 diff 0,
+  포트 잔류 0.
+- 라운드 1의 199/199는 오류가 아니라 다른 파일 집합(디렉터리 전체)이었다. 앞으로 집합을 명시한다.
+- **Chromium E2E와 emulator는 계속 NOT RUN**이며 actual Firebase/network/live/UID/deploy 등은
+  **0 / NOT TESTED**다.
+- 상태 `READY_FOR_CODEX`, fix_round 2/3, next transition `CODEX_SPEC_081_REVIEW`.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

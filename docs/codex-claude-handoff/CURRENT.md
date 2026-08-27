@@ -24,7 +24,39 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`CORRECTION_REQUIRED` - 스펙 081 Codex 재검수 라운드 2, writer metadata 조합 검증 미완료.**
+상태: **`READY_FOR_CODEX` - 스펙 081 보완 라운드 2 완료, Codex 재검수 대기.**
+
+Codex 라운드 2가 지적한 **failure metadata 조합 검사 한 건만** 고쳤다. 지적은 맞았다. 기준
+`HEAD=origin=c6ea3bf`, 재검수 문서 commit `829bf37`, 보완 commit `f36cf54`.
+
+라운드 1은 code·category·retryable을 각각 "알려진 값인가"로만 봐서
+`SPACE_V2_ISSUE_AUTH_REQUIRED` + `VALIDATION` + `false`처럼 **port가 결코 발행하지 않는 조합**도
+definite error로 승인했다. 이제 스펙 074의 8개 code를 빠짐없이 key로 갖는 metadata table을
+`as const satisfies Record<SpaceV2IssueErrorCode, ...>`로 고정하고(새 code가 생기면 compile error),
+failure는 code가 own-key로 알려지고 category·retryable이 그 code의 **정본과 정확히 같고**
+correlationId가 이번 시도 값일 때만 믿는다. 어긋나면 `outcome-unknown/errorCode:null`이며 port
+metadata·marker는 snapshot에 들어가지 않는다. 모든 code에 `UNKNOWN`/`true`를 붙이던 test fixture도
+같은 정본 mapping으로 고쳤다.
+
+회귀 **26건 추가**(파일 127건 — vocabulary 전수 1 + 8개 code × canonical/wrong-category/wrong-retryable
+24 + prototype-chain code 1).
+
+실측(파일 집합 명시): targeted `issue-session`+`issue-bundle`+`space-write/write-port`
+→ **215/215**(session 127 · bundle 58 · write-port 30), 같은 3개에 `space-write` 디렉터리 전체를 쓰면
+**225/225**. 전체 `node scripts/check.mjs` PASS(unit **2408/2408**), **production bundle 두 개 모두
+exact 유지**, EOL **2/2**, `git diff --check` PASS, 허용 외 diff 0, 포트 잔류 0.
+
+**직전 수치 정정.** 라운드 1의 199/199는 틀린 수가 아니라 `space-write` **디렉터리 전체**를 넣은 다른
+파일 집합(101+58+40)이었고, Codex의 189/189는 `write-port.test.ts`만 쓴 집합(101+58+30)이다. 집합을
+적지 않아 비교가 불가능했으므로 앞으로는 명시해 기록한다.
+
+Chromium E2E와 emulator는 계속 **NOT RUN**이고 actual Firebase/network/live/UID/deploy·URL/clipboard·
+운영 발급·publish/orphan cleanup은 **0 / NOT TESTED**다. fix_round 2/3, next transition
+`CODEX_SPEC_081_REVIEW`이며 다음 UI 스펙과 자동화는 시작하지 않았다.
+
+전체 진행도는 **84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
+
+> 스펙 081 Codex 재검수 라운드 2 판정(보완 전 기록):
 
 기준 `HEAD=origin=c6ea3bf`, ahead/behind `0/0`. 라운드 1의 세 결함과 exact EOL 2/2는 해결됐다.
 targeted 실제 수치는 **189/189**이며 live의 199/199 기록은 정정 대상이다. 전체 check(unit

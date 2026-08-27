@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-080-space-v2-production-customer-viewer-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, UI_CONNECTED, NO_LIVE_NETWORK
 active_unit: spec-081-space-v2-admin-frozen-issue-session
-state: CORRECTION_REQUIRED
-baseline_commit: d7b84b0   # HEAD=origin at Codex spec 081 review round 1
-candidate_commit: 096e65e  # spec 081 correction round 1 (implementation 7dc148f, contract docs 7608977)
-verified_commit: 4765502   # spec 080; spec 081 correction 1 has one reproduced metadata mismatch
-origin_relation: "correction round 1 applied on HEAD=origin=d7b84b0, ahead/behind 0/0; pushed fast-forward"
-working_tree: "Codex spec 081 correction round 2 documents are uncommitted; pre-existing protected Founder/user changes remain untouched and unstaged"
+state: READY_FOR_CODEX
+baseline_commit: c6ea3bf   # HEAD=origin at Codex spec 081 re-review round 2
+candidate_commit: f36cf54  # spec 081 correction round 2 (round 1 096e65e, implementation 7dc148f)
+verified_commit: 4765502   # spec 080; spec 081 awaits Codex re-review
+origin_relation: "correction round 2 applied on HEAD=origin=c6ea3bf, ahead/behind 0/0; pushed fast-forward"
+working_tree: "spec 081 correction round 2 code/test and status documents committed; pre-existing protected Founder/user changes remain untouched and unstaged"
 fix_round: 2
 max_fix_rounds: 3
-next_transition: CLAUDE_CORRECTION
+next_transition: CODEX_SPEC_081_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,58 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 081 보완 라운드 2 수행 — failure metadata 조합 검사 (2026-08-27)
+
+- 기준 `HEAD=origin=c6ea3bf`, ahead/behind 0/0. Codex 재검수 문서 commit `829bf37`, 보완 commit
+  `f36cf54`. Codex가 지적한 **한 결함만** 고쳤고 라운드 1의 semantic preflight · success envelope ·
+  EOL 결과와 기존 lifecycle 동작은 하나도 바꾸지 않았다. **지적은 맞았다.**
+- **결함 — code/category/retryable 조합 미검사.** 라운드 1은 세 필드를 각각 "알려진 값인가"로만 봤다.
+  그래서 `SPACE_V2_ISSUE_AUTH_REQUIRED` + `category: VALIDATION` + `retryable: false`처럼 **port가 결코
+  발행하지 않는 조합**도 definite auth error로 승인됐다. 코드 하나가 envelope 전체를 뜻하지 않는다는
+  지적이 정확하다.
+- **보완.** `issue-session.ts`에 스펙 074의 8개 code를 **빠짐없이** key로 갖는 metadata table을 두고
+  `as const satisfies Record<SpaceV2IssueErrorCode, {category, retryable}>`로 고정했다 — union에 code가
+  추가되면 이 표가 비어 **compile error**가 나므로 표가 조용히 뒤처질 수 없다. failure는 이제
+  ① code가 **own-key**로 알려져 있고(`Object.hasOwn` — `toString` 같은 prototype 해석 차단)
+  ② `category`가 그 code의 정본과 정확히 같고 ③ `retryable`이 정본 boolean과 정확히 같고
+  ④ `correlationId`가 이번 시도가 보낸 값일 때만 믿는다. 정본 boolean과의 strict 비교가 non-boolean
+  `retryable`도 함께 걸러내므로 별도 검사는 두지 않았다. 하나라도 어긋나면
+  `outcome-unknown/errorCode:null`이고 port의 metadata·marker는 snapshot에 들어가지 않는다.
+- **정본 mapping(재확인).** `INVALID_INPUT` VALIDATION/false · `AUTH_REQUIRED` AUTH/true ·
+  `FORBIDDEN` AUTH/false · `UPLOAD_FAILED` NETWORK/true · `UPLOAD_OUTCOME_UNKNOWN` NETWORK/false ·
+  `DOCUMENT_FAILED` VALIDATION/false · `DOCUMENT_OUTCOME_UNKNOWN` UNKNOWN/false ·
+  `ASSET_MISMATCH` VALIDATION/false.
+- **test fixture 정정.** 기존 `issueError` helper가 모든 code에 `UNKNOWN`/`true`를 붙이던 것도
+  부정확한 fixture였다. 같은 정본 mapping을 쓰도록 고쳤고, 그 helper를 쓰던 두 loop의 `retryable`
+  override도 제거했다.
+- **회귀 26건 추가(파일 총 127건).** vocabulary 8개 전수 확인 1건 + 8개 code 각각의 ① canonical
+  category/retryable 승인 ② wrong category 거부 ③ wrong retryable 거부 = 24건 + prototype-chain code
+  거부 1건. 거부 case는 code 문자열이 snapshot 직렬화에 나타나지 않음도 단언한다.
+- **실측(명령과 함께 기록).**
+  - targeted `issue-session.test.ts` + `issue-bundle.test.ts` + `space-write/write-port.test.ts`
+    → **215/215**(session **127**, bundle **58**, write-port **30**).
+  - **직전 라운드에 기록한 "199/199"는 틀린 수가 아니라 다른 파일 집합이었다** — 그때는
+    `packages/firebase/src/space-write` **디렉터리 전체**를 넣어 `sdk-facade.test.ts` 10건이 더해진
+    값(101+58+40=199)이다. Codex의 189는 같은 시점 write-port만 쓴 집합(101+58+30)이다. 혼동을
+    없애기 위해 앞으로는 파일 집합을 명시해 기록한다. 참고로 디렉터리 집합은 이번에 **225/225**다.
+  - admin/firebase typecheck PASS, 전체 `node scripts/check.mjs` **PASS**(unit **2408/2408**,
+    이전 2382 + 26).
+- **production bundle exact 유지.** admin entry `index-D0XOQpRL.js` / `226,201 B` /
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`, customer entry
+  `index-BUT7Bmak.js` / `340,604 B` /
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`. CSS 2개도 SHA-256까지 무변경.
+- `git ls-files --eol` 신규 두 파일 **2/2 `i/lf w/lf attr/text eol=lf`**. `git diff --check` PASS,
+  변경 경로는 `issue-session.ts`와 `issue-session.test.ts` 둘뿐이며 허용 외 diff **0**
+  (`.gitattributes`는 이번 라운드 허용 밖이라 **손대지 않았다**. App/UI/CSS/Canvas·admin composition·
+  `packages/**`·Rules/config/emulator·package/lockfile·`pnpm-workspace.yaml` 무변경). 검사 포트
+  4183/4184/4185/8080/9099/9199 잔류 **0**.
+- **Chromium E2E와 emulator는 계속 NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/network/
+  live/UID/deploy, URL/clipboard, 운영 발급, publish/delete/orphan cleanup은 **0 / NOT TESTED**다.
+- 상태 `READY_FOR_CODEX`, fix_round **2/3**, next transition `CODEX_SPEC_081_REVIEW`. 다음 UI 스펙과
+  자동화·반복 작업은 시작하지 않았다.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**(fail-closed 결함 보완이지 새 제품 능력이
+  아니다).
 
 ## 스펙 081 Codex 재검수 — CORRECTION_REQUIRED 라운드 2 (2026-08-27)
 

@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CODEX / CORRECTION ROUND 1 DONE / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK`
+`READY_FOR_CODEX / CORRECTION ROUND 2 DONE / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK`
 
 Founder 결정 정본:
 `docs/codex-claude-handoff/decisions/2026-08-26-space-v2-composition-readiness-decisions.md`.
@@ -533,3 +533,87 @@ table-driven으로 고정한다. 기존 test helper가 모든 code를 `category:
 
 상태 `CORRECTION_REQUIRED`, fix_round **2/3**, next `CLAUDE_CORRECTION`. `.gitattributes`, preflight,
 success envelope와 기존 제품 경계는 수정하지 않는다. App/UI/CSS/SDK/network/live는 계속 금지다.
+
+### DONE (Claude) — 보완 라운드 2 (2026-08-27)
+
+기준 `HEAD=origin=c6ea3bf`, ahead/behind 0/0. Codex 재검수 문서 commit `829bf37`, 보완 commit
+`f36cf54`. Codex 라운드 2가 지적한 **한 결함만** 반영했고, 라운드 1의 semantic preflight · success
+envelope · EOL 결과와 기존 lifecycle 계약은 하나도 되돌리지 않았다. **지적은 맞았다.**
+
+**결함 — failure envelope의 code/category/retryable 조합 미검사.**
+라운드 1의 검사는 세 필드를 각각 "알려진 값인가"로만 봤다. 그래서
+`SPACE_V2_ISSUE_AUTH_REQUIRED` + `category: "VALIDATION"` + `retryable: false`처럼 **write port가 결코
+발행하지 않는 조합**도 definite auth error로 승인됐다. code 하나가 envelope 전체를 뜻하지 않는다 —
+그 조합을 믿는다는 건 실제 write 시도가 낼 수 없는 결과를 사용자에게 확정 실패로 보여준다는 뜻이다.
+
+라운드 1에서 나는 "code→category 표는 port 소관이라 재도출하지 않는다"고 적었다. **그 판단이
+틀렸다.** 표를 복제하지 않으려던 이유(drift)는 타당했지만, 대가가 "일관성 없는 envelope을 그대로
+믿는 것"이었다. drift는 아래의 exhaustiveness로 막고, 조합 검사는 하는 쪽이 옳다.
+
+**보완 내용.**
+
+- `issue-session.ts`에 스펙 074의 **8개 code를 빠짐없이** key로 갖는 metadata table을 두고
+  `as const satisfies Record<SpaceV2IssueErrorCode, {category, retryable}>`로 고정했다. union에 새
+  code가 생기면 이 표에 없는 key가 되어 **compile error**가 나므로, 표가 조용히 뒤처지는 drift는
+  구조적으로 불가능하다.
+- failure는 이제 네 조건을 모두 만족할 때만 믿는다 — ① code가 **own-key**로 알려짐
+  (`Object.hasOwn`, `toString` 같은 prototype 해석 차단) ② `category`가 그 code의 정본과 정확히 같음
+  ③ `retryable`이 정본 boolean과 정확히 같음 ④ `correlationId`가 이번 시도가 보낸 값. 정본 boolean과의
+  strict 비교가 non-boolean `retryable`도 함께 걸러내므로 별도 `typeof` 검사는 두지 않았다.
+- 하나라도 어긋나면 `outcome-unknown` / `errorCode: null`이고, port가 준 metadata·marker는 snapshot에
+  들어가지 않는다.
+
+**정본 mapping (`packages/firebase/src/space-write/errors.ts` 대조)**
+
+| code | category | retryable |
+|---|---|---|
+| `SPACE_V2_ISSUE_INVALID_INPUT` | `VALIDATION` | `false` |
+| `SPACE_V2_ISSUE_AUTH_REQUIRED` | `AUTH` | `true` |
+| `SPACE_V2_ISSUE_FORBIDDEN` | `AUTH` | `false` |
+| `SPACE_V2_ISSUE_UPLOAD_FAILED` | `NETWORK` | `true` |
+| `SPACE_V2_ISSUE_UPLOAD_OUTCOME_UNKNOWN` | `NETWORK` | `false` |
+| `SPACE_V2_ISSUE_DOCUMENT_FAILED` | `VALIDATION` | `false` |
+| `SPACE_V2_ISSUE_DOCUMENT_OUTCOME_UNKNOWN` | `UNKNOWN` | `false` |
+| `SPACE_V2_ISSUE_ASSET_MISMATCH` | `VALIDATION` | `false` |
+
+**test fixture 정정.** 기존 `issueError` helper가 모든 code에 `UNKNOWN`/`true`를 붙이던 것 자체가
+부정확한 fixture였다(그래서 라운드 1 테스트가 조합 결함을 못 잡았다). 같은 정본 mapping을 쓰도록
+고쳤고, helper를 쓰던 두 loop의 `retryable` override도 제거했다.
+
+**회귀 26건 추가 (파일 총 127건, 라운드 1의 101건 전부 유지).** vocabulary 8개 전수 확인 1건 +
+8개 code 각각의 ① canonical category/retryable 승인 ② wrong category 거부 ③ wrong retryable 거부
+= 24건 + prototype-chain code(`toString`) 거부 1건. 거부 case는 code 문자열이 snapshot 직렬화에
+나타나지 않는 것도 단언한다.
+
+**보완 라운드 2 게이트 실측 (파일 집합을 명시해 기록)**
+
+| 게이트 | 결과 |
+|---|---|
+| targeted `issue-session` + `issue-bundle` + `space-write/write-port` | **215/215 PASS** (session **127**, bundle **58**, write-port **30**) |
+| 같은 3개 + `space-write` 디렉터리 전체(`sdk-facade.test.ts` 포함) | **225/225 PASS** |
+| admin / firebase typecheck | PASS |
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2408/2408**, build 2개 |
+| admin entry | `index-D0XOQpRL.js` / `226,201 B` / `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC` — **exact 유지** |
+| customer entry | `index-BUT7Bmak.js` / `340,604 B` / `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1` — **exact 유지** |
+| CSS | admin 9,146 B · customer 19,381 B — SHA-256까지 무변경 |
+| `git ls-files --eol` 신규 2파일 | **2/2 `i/lf w/lf attr/text eol=lf`** |
+| `git diff --check` | PASS |
+| exact allowed / forbidden diff | **0** — `issue-session.ts`와 `issue-session.test.ts` 둘뿐 |
+| 검사 포트 4183/4184/4185/8080/9099/9199 | 실행 전후 잔류 **0**, 강제 종료 0 |
+
+**직전 라운드 targeted 수치 정정.** 라운드 1에 기록한 **199/199**는 틀린 수가 아니라 **다른 파일
+집합**이었다 — `packages/firebase/src/space-write` **디렉터리 전체**를 넣어 `sdk-facade.test.ts`
+10건이 더해진 값(101+58+40)이다. Codex의 **189/189**는 같은 시점에 `write-port.test.ts`만 쓴
+집합(101+58+30)이다. 어느 쪽도 오류가 아니지만 파일 집합을 적지 않아 비교가 불가능했으므로, 위 표처럼
+집합을 명시해 기록한다.
+
+`.gitattributes`는 이번 라운드의 허용 파일이 아니라 **손대지 않았다**(라운드 1에서 이미 두 경로가
+`text eol=lf`로 고정돼 있고 EOL 게이트는 2/2로 유지된다). App/UI/CSS/Canvas·admin composition·
+`packages/**`·Rules/config/emulator·package/lockfile·`pnpm-workspace.yaml` 변경 **0**이다.
+
+**Chromium E2E와 emulator는 계속 NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/project/
+bucket/network/live/UID/deploy, URL/clipboard, 운영 발급, publish/delete/orphan cleanup은
+**0 / NOT TESTED**다. 보호 대상과 기존 user working-tree 변경은 읽기만 했다.
+
+상태 `READY_FOR_CODEX`, fix_round **2/3**, next transition `CODEX_SPEC_081_REVIEW`. 다음 UI 스펙과
+자동화·반복 작업은 시작하지 않았다. 전체 진행도는 **84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
