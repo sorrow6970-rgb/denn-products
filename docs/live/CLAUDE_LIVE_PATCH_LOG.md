@@ -6120,3 +6120,21 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여**. 고객 V2 열람 경로가 production route에서 실제
   Canvas까지 처음 연결된 만큼만 올렸고, admin 발급 UI와 실제 Firebase/Rules 배포·live 검증은 그대로
   남는다.
+
+## 2026-08-27 - 스펙 080 Codex 독립 검수 · CORRECTION_REQUIRED 라운드 1
+
+- 검수 기준 `HEAD=origin=c63fe1b`, ahead/behind `0/0`. 구현 `2319d1a`, 기록 `c63fe1b`을 계약에
+  대조했다.
+- 독립 PASS: targeted unit **62/62**, 전체 `node scripts/check.mjs`(unit **2278/2278**), OS temp
+  staging targeted Chromium **14/14**, 고객 entry SHA-256
+  `99A707FA3AF518933F848CF52948ADCBD95BE44D1544616FA93C49E486805879`, `git diff --check`, 검사
+  포트 잔류 0. full Chromium suite는 계약대로 NOT RUN이다.
+- 결함 1: 현재 gate는 실제 `<form>`이 아니고 E2E는 password input이 아니라 submit button에 Enter를
+  보낸다. 기록된 "password form keyboard submit"은 미증명이다.
+- 결함 2: spec-080 desktop/mobile PNG에 합성 fixture 전용 `화면 해제` control이 포함되어 production
+  customer surface 시각 증거로 부적합하다.
+- 라운드 1은 semantic form submit, password input Enter exact-once 검증, screenshot 직전 fixture
+  control 숨김과 PNG 재생성만 허용한다. 다른 production UI/logic/CSS는 열지 않는다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1/3, next transition `CLAUDE_CORRECTION`. actual Firebase/
+  network/live/deploy는 계속 0 / NOT TESTED, 다음 스펙과 자동화·반복 작업 시작 0.
+- 전체 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**.

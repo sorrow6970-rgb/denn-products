@@ -6,22 +6,42 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-079-space-v2-proof-reader-adapter   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_UI, NO_LIVE_NETWORK
 active_unit: spec-080-space-v2-production-customer-viewer-ui
-state: READY_FOR_CODEX
-baseline_commit: c9c0c3d   # HEAD=origin at spec 080 implementation start
+state: CORRECTION_REQUIRED
+baseline_commit: c63fe1b   # HEAD=origin at Codex spec 080 review
 candidate_commit: 2319d1a  # spec 080 customer V2 viewer implementation (contract docs commit 971c5fa)
 verified_commit: 0887047   # spec 079 implementation independently reviewed
-origin_relation: "spec 080 implemented from HEAD=origin=c9c0c3d, ahead/behind 0/0; pushed fast-forward"
-working_tree: "spec 080 implementation, results and allowed documents committed; pre-existing protected Founder/user changes remain untouched and unstaged"
-fix_round: 0
+origin_relation: "Codex review baseline HEAD=origin=c63fe1b, ahead/behind 0/0"
+working_tree: "Codex correction documents only plus pre-existing protected Founder/user changes; no product correction yet"
+fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_080_REVIEW
+next_transition: CLAUDE_CORRECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 81-84% complete; 16-19% remaining to production cutover"
+overall_rebuild_progress: "estimated 83-86% complete; 14-17% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 080 Codex 독립 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-27)
+
+- 검수 기준 `HEAD=origin=c63fe1b`, ahead/behind `0/0`. 구현 commit `2319d1a`, 결과 문서 commit
+  `c63fe1b`을 스펙 080에 대조했다.
+- 독립 재실행은 targeted unit **62/62**, 전체 `node scripts/check.mjs` PASS(unit **2278/2278**), 임시
+  스테이징 targeted Chromium **14/14 PASS**, 고객 entry SHA-256
+  `99A707FA3AF518933F848CF52948ADCBD95BE44D1544616FA93C49E486805879`, `git diff --check`, 검사 포트
+  잔류 0이다. full Chromium suite는 계약대로 NOT RUN이다.
+- 보완 1: 현재 gate에는 `<form>`/`onSubmit`이 없고 E2E는 password input이 아니라 submit button에
+  Enter를 보낸다. 따라서 기록한 "password form keyboard submit"은 증명되지 않았다. 실제 form submit
+  semantics와 password input Enter 경로, submit exact-once를 고정한다.
+- 보완 2: spec-080 desktop/mobile PNG에 합성 fixture 전용 `화면 해제` control이 보인다. screenshot
+  직전에 그 fixture control만 숨기고 production customer surface만 다시 캡처한다.
+- 허용 보완은 `SpacePasswordGate.tsx`와 test, targeted E2E spec, spec-080 PNG 2개 및 spec-080 상태
+  문서뿐이다. production viewer/controller/decoder/composition/App/fixture/CSS는 수정하지 않는다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1/3, next transition `CLAUDE_CORRECTION`. 다음 스펙과 자동화·
+  반복 작업은 시작하지 않는다.
+- 전체 진행도는 **83~86% 완료 / 14~17% 잔여 — 변동 없음**이다. 이번 판정은 범위 내 접근성·시각
+  증거 보완이며 새 제품 능력을 추가하지 않는다.
 
 ## 스펙 080 customer V2 viewer 구현 완료 (2026-08-27)
 

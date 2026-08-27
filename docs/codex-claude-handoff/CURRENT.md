@@ -24,7 +24,27 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 080 customer V2 production viewer UI 구현·검증 완료, Codex 검수 대기.**
+상태: **`CORRECTION_REQUIRED` - 스펙 080 Codex 독립 검수 라운드 1, 키보드 form 제출·시각 증거 보완 필요.**
+
+검수 기준 `HEAD=origin=c63fe1b`, ahead/behind `0/0`. 독립 targeted unit **62/62**, 전체
+`node scripts/check.mjs` PASS(unit **2278/2278**), 임시 스테이징 targeted Chromium **14/14 PASS**,
+고객 entry SHA-256 `99A707FA3AF518933F848CF52948ADCBD95BE44D1544616FA93C49E486805879`,
+`git diff --check`, 검사 포트 잔류 0을 확인했다.
+
+판정은 보완 필요다. `SpacePasswordGate`에 실제 `<form>`/`onSubmit`이 없고 E2E는 password input이 아닌
+submit button에 Enter를 보내므로 계약의 password form keyboard submit을 증명하지 못한다. 또한 두
+spec-080 PNG에 합성 fixture 전용 `화면 해제` control이 포함되어 production customer surface의 시각
+증거로 부적합하다.
+
+라운드 1은 gate의 semantic form submit, password input Enter exact-once 검증, screenshot 직전 fixture
+control 숨김과 PNG 2개 재생성만 허용한다. viewer/controller/decoder/composition/App/fixture/CSS와
+실제 Firebase/network/live/deploy는 닫힌다. next transition은 `CLAUDE_CORRECTION`, fix_round 1/3이며
+다음 스펙은 시작하지 않는다.
+
+전체 진행도는 **83~86% 완료 / 14~17% 잔여 — 변동 없음**이다. 범위 내 접근성·시각 증거 보완이므로
+새 제품 능력으로 계산하지 않는다.
+
+> 스펙 080 구현 완료 기록(보완 전):
 
 스펙 080 고객 V2 production viewer composition/UI를 계약 범위대로 구현하고 검증했다. 기준
 `HEAD=origin=c9c0c3d`, 계약 문서 commit `971c5fa`, 구현 commit `2319d1a`.

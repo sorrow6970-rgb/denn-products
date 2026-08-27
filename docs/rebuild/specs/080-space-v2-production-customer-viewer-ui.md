@@ -391,3 +391,30 @@ safe error, mobile/a11y gate 통과 ✅ · actual Firebase/live/deploy/admin iss
 **진행도.** 전체 리빌드 **83~86% 완료 / 14~17% 잔여**. 고객 V2 열람 경로가 production route에서 실제
 Canvas까지 처음으로 연결된 만큼만 올렸다. admin 발급 UI, 실제 Firebase/Rules 배포와 live/CORS 검증은
 그대로 남아 있다.
+
+### CODEX REVIEW — CORRECTION_REQUIRED 라운드 1 (2026-08-27)
+
+검수 기준은 `HEAD=origin=c63fe1b`, ahead/behind `0/0`이다. 독립 targeted unit **62/62**, 전체
+`node scripts/check.mjs` PASS(unit **2278/2278**), OS temp staging targeted Chromium **14/14 PASS**,
+고객 entry SHA-256 `99A707FA3AF518933F848CF52948ADCBD95BE44D1544616FA93C49E486805879`,
+`git diff --check`, 검사 포트 4183/4184/4185/8080/9099/9199 잔류 0을 확인했다. full Chromium suite는
+계약대로 NOT RUN이다.
+
+다음 두 결함 때문에 아직 DONE/CODEX_PASSED가 아니다.
+
+1. `SpacePasswordGate`는 비밀번호 input과 button을 `<form>`으로 묶지 않았고 button도 submit type이
+   아니다. E2E helper는 input이 아니라 `space-submit` button에 Enter를 보내므로 §3 N-5·§6의
+   "password form keyboard submit"을 증명하지 못한다. semantic `<form onSubmit>` + 명시적
+   `type="submit"`으로 고치고, password input에서 Enter를 눌렀을 때 기존 submit이 정확히 한 번만
+   호출되는 것을 unit/E2E로 고정한다. password 즉시 삭제와 single-flight는 유지한다.
+2. 두 spec-080 결과 PNG에 합성 fixture 전용 `화면 해제` control이 노출됐다. 이 control은 production
+   UI가 아니므로 시각 증거를 오염한다. fixture 제품 파일은 수정하지 않고 screenshot case에서 캡처
+   직전에 `[data-testid="fixture-unmount"]`만 숨긴 뒤 같은 두 PNG를 다시 생성·육안 확인한다.
+
+허용 correction 파일은 `apps/mockup/src/space/SpacePasswordGate.tsx`, 해당 test,
+`tests/e2e/space-production-route.spec.ts`, 기존 spec-080 PNG 2개와 spec-080 상태 문서뿐이다.
+viewer/controller/decoder/composition/App/fixture/CSS, admin/packages/Rules/config/package/lockfile는
+수정하지 않는다. actual Firebase/network/live/deploy와 full Chromium은 계속 금지/NOT RUN이다.
+
+상태는 `CORRECTION_REQUIRED`, fix_round 1/3, next transition `CLAUDE_CORRECTION`. 전체 진행도는
+**83~86% 완료 / 14~17% 잔여 — 변동 없음**이다.

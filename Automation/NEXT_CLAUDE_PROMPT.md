@@ -1,68 +1,53 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **IMPLEMENTED / LOCAL_VERIFIED / UI CONNECTED / NO_LIVE_NETWORK**
+상태: `CORRECTION_REQUIRED`
+active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **CORRECTION ROUND 1 / NO_LIVE_NETWORK**
 completed_unit: `spec-079-space-v2-proof-reader-adapter` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI**
-기준: `HEAD=origin=c9c0c3d`에서 시작. 계약 문서 commit `971c5fa`, 구현 commit `2319d1a`.
+검수 기준: `HEAD=origin=c63fe1b`, ahead/behind `0/0`. 구현 commit `2319d1a`.
 Founder 정본: **LL-1=A ~ LL-6=A, MM-1=A ~ MM-6=A**.
-fix_round: **0 / 3**
-next_transition: **`CODEX_SPEC_080_REVIEW`**
+fix_round: **1 / 3**
+next_transition: **`CLAUDE_CORRECTION`**
 
-## 현재 결과
-
-스펙 080 고객 V2 production viewer composition/UI를 계약 범위대로 구현하고 검증했다. 신규 제품 파일은
-`apps/mockup/src/space-v2/`의 `browser-png-decoder.ts` · `production-controller.ts` ·
-`SpaceV2ProofView.tsx`와 각 test 3개이며, 기존 파일 수정은 `space/composition.ts` ·
-`space/SpacePasswordGate.tsx` · `App.tsx`와 그 test, e2e fixture, targeted E2E spec뿐이다. V2 전용 CSS
-파일은 필요하지 않아 만들지 않았다.
-
-exact `space-v2` marker만 V2 pipeline으로 dispatch하고 malformed V2는 V1으로 fallback하지 않는다.
-decoder와 drawable binding은 기존 스펙 026 owner를 감싼 하나의 owner가 소유하며, password rejection과
-proof unavailable만 명시 재시도 가능이다. 자동 retry·catalog/template/font fallback은 0이다.
-
-게이트 실측은 전체 `node scripts/check.mjs` PASS(unit **2278/2278**), targeted Chromium
-`tests/e2e/space-production-route.spec.ts` **14/14 PASS**(axe·console·overflow·keyboard submit·외부
-request 0 포함), 신규 desktop/mobile screenshot 육안 확인, `git diff --check` PASS, 허용 외 diff 0,
-검사 포트 잔류 0이다. 고객 bundle은 계약대로 변경됐고 admin bundle/CSS와 고객 CSS는 무변경이다.
-
-**전체 Chromium suite는 보호 spec-018 PNG를 다시 쓰므로 NOT RUN**이며 full-E2E PASS라고 기록하지
-않는다.
-
-**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 검수다.
-
-> 직전 지시문(스펙 080 구현, 수행 완료 — 기록):
+## Claude Code 실행 지시 — 스펙 080 CORRECTION_REQUIRED 라운드 1
 
 ```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와
-docs/rebuild/specs/080-space-v2-production-customer-viewer-ui.md를 읽고, 명시된 스펙 080 고객 V2
-production viewer composition/UI 범위만 구현·검증해.
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 080
+CORRECTION_REQUIRED 라운드 1만 수행해.
 
-기존 ?space= route의 V1 의미와 스펙 063 safe-block UI를 그대로 보존하면서, exact space-v2 document만
-V2 opener → 스펙 079 proof reader → SHA-256/intrinsic 검증 → browser PNG decoder/drawable binding →
-PreviewCanvasSurface로 연결해. malformed V2는 V1으로 fallback하지 말고 fail-closed해.
+결함 1: SpacePasswordGate는 현재 실제 form이 아니고 E2E도 password input이 아니라 submit button에
+Enter를 보낸다. 비밀번호 입력과 버튼을 semantic <form onSubmit>으로 묶고, Button은 type="submit"으로
+명시해. onSubmit은 preventDefault 후 기존 submit을 정확히 한 번만 호출해야 한다. 기존 레이아웃·문구·
+password 즉시 삭제·single-flight 계약은 유지해. unit은 form/type=submit semantics를 고정하고, targeted
+E2E는 password input을 fill한 뒤 그 input에서 Enter를 눌러 실제 제출·document read exact 1·proof read
+exact 1·성공 Canvas를 검증해. 버튼 Enter를 keyboard-form 증거로 사용하지 마.
 
-UI는 기존 Modern Studio light theme와 @denn/ui 토큰만 사용하고 proof PNG를 유일한 주 시각 요소로 둬.
-새 이미지·색·폰트·아이콘·의존성·장식 motion은 만들지 마. password는 submit 즉시 비우고 저장·로그·
-URL에 남기지 않으며, 자동 retry/fallback 0, safe Korean copy, 320px overflow 0, keyboard/alert/status/axe를
-검증해.
+결함 2: 현재 spec-080 desktop/mobile PNG에는 합성 fixture 전용 `화면 해제` control이 보인다. fixture
+제품 코드는 바꾸지 말고 screenshot case에서 캡처 직전에 `[data-testid="fixture-unmount"]`만 숨긴 뒤
+production customer surface만 다시 캡처해. 두 PNG를 육안 확인하고 `화면 해제`가 보이지 않음을 기록해.
 
-실제 Firebase/project/bucket/network/live/운영 데이터·실제 token/password/UID에는 접근하지 말고,
-Rules/CORS/Hosting deploy, admin issue UI, URL/clipboard, 운영 쓰기, publish, orphan cleanup,
-package/lockfile/config 변경은 금지해. tests는 injected fakes와 합성 PNG만 사용해.
+허용 제품/test 파일은 apps/mockup/src/space/SpacePasswordGate.tsx,
+apps/mockup/src/space/SpacePasswordGate.test.tsx, tests/e2e/space-production-route.spec.ts뿐이다. 결과는
+docs/rebuild/results/spec-080의 기존 PNG 2개만 갱신할 수 있다. 나머지 viewer/controller/decoder/
+composition/App/fixture/CSS, apps/admin, packages, Rules/config/package/lockfile는 수정하지 마.
 
-targeted unit/typecheck, node scripts/check.mjs, targeted Chromium
-tests/e2e/space-production-route.spec.ts, desktop 1280x800·mobile 390x844 신규 시각 결과, 고객 bundle
-변경 전후 exact hash/size, git diff --check, forbidden diff, 포트 잔류를 검증해. full Chromium suite는
-보호 spec-018 PNG 때문에 NOT RUN이며 full-E2E PASS라고 기록하지 마.
+targeted unit/typecheck, node scripts/check.mjs, 임시 OS staging의 targeted Chromium
+space-production-route.spec.ts, 고객/admin bundle exact 비교, git diff --check, forbidden diff, 포트 잔류를
+검증해. full Chromium suite는 보호 spec-018 PNG 때문에 NOT RUN이며 PASS라고 주장하지 마. actual
+Firebase/network/live/deploy는 계속 금지다.
 
-보호 대상과 현재 user working-tree 변경은 수정·복원·checkout·stage·commit하지 마. 허용 코드/test/
-spec-080 결과·문서만 일반 fast-forward commit/push하고 STATE/NEXT/CURRENT/live log/handoff를 실제
-결과와 맞춘 뒤 READY_FOR_CODEX에서 멈춰. 다음 스펙과 자동화·반복 작업은 시작하지 마.
+보호 대상과 기존 user working-tree 변경은 수정·복원·checkout·stage·commit하지 마. 허용 correction
+code/test/results와 spec-080 상태 문서만 일반 fast-forward commit/push하고 READY_FOR_CODEX에서 멈춰.
+다음 스펙과 자동화·반복 작업은 시작하지 마.
 ```
 
-- spec: `docs/rebuild/specs/080-space-v2-production-customer-viewer-ui.md`
-- handoff: `docs/handoff/2026-08-27-spec-080-space-v2-production-customer-viewer-ui-handoff.md`
-- 전체 진행도: **81~84% 완료 / 16~19% 잔여**. 문서 준비만으로 변동 없음.
+## Codex 검수 근거
+
+- 독립 targeted unit **62/62**, 전체 check(unit **2278/2278**), targeted Chromium **14/14**는 PASS했다.
+- 그러나 `<form>`이 없고 E2E가 `space-submit.press("Enter")`를 사용하므로 "password form keyboard
+  submit"은 미증명이다.
+- 두 committed screenshot 모두 합성 fixture 전용 `화면 해제` control을 포함해 production UI 시각
+  증거로 부적합하다.
+- 전체 진행도: **83~86% 완료 / 14~17% 잔여 — 변동 없음**.
 
 ## ★ 스펙 080 — 수행 기록 (2026-08-27)
 

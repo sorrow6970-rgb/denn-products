@@ -1,6 +1,6 @@
 # 스펙 080 Space V2 production customer viewer UI handoff
 
-- 상태: `READY_FOR_CODEX / IMPLEMENTED / LOCAL_VERIFIED / UI CONNECTED / NO_LIVE_NETWORK` (구현 2026-08-27)
+- 상태: `CORRECTION_REQUIRED / ROUND 1 / UI CONNECTED / NO_LIVE_NETWORK` (Codex 검수 2026-08-27)
 - 기준: `HEAD=origin=c9c0c3d`, ahead/behind `0/0`
 - 구현: 계약 문서 commit `971c5fa`, 제품 commit `2319d1a`
 - spec: `docs/rebuild/specs/080-space-v2-production-customer-viewer-ui.md`
@@ -50,3 +50,19 @@ NOT RUN이며 targeted production-route E2E만 실행한다.
   **0 / NOT TESTED**다.
 - 다음은 Codex 검수(`CODEX_SPEC_080_REVIEW`)다. 다음 스펙과 자동화·반복 작업은 시작하지 않았다.
 - 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여**.
+
+## Codex 독립 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-27)
+
+- 기준 `HEAD=origin=c63fe1b`, ahead/behind `0/0`.
+- 독립 PASS: targeted unit **62/62**, 전체 check(unit **2278/2278**), 임시 스테이징 targeted Chromium
+  **14/14**, 고객 entry exact SHA-256, `git diff --check`, 검사 포트 잔류 0. full Chromium은 계약대로
+  NOT RUN이다.
+- 결함 1: gate에 실제 form submit 경계가 없고 E2E는 password input이 아닌 submit button에 Enter를
+  보낸다. 따라서 "password form keyboard submit" 기록은 폐기하고 semantic form + input Enter +
+  exact-once 증거로 교체해야 한다.
+- 결함 2: desktop/mobile 결과 PNG에 합성 fixture 전용 `화면 해제` control이 포함됐다. fixture 자체는
+  수정하지 않고 screenshot 직전에 control만 숨겨 production customer surface를 다시 캡처한다.
+- 허용 범위는 `SpacePasswordGate.tsx`와 test, targeted E2E spec, PNG 2개와 이 spec-080 문서군뿐이다.
+  나머지 제품 코드/UI/CSS는 수정하지 않는다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1/3, next `CLAUDE_CORRECTION`. 진행도 **83~86% / 14~17% —
+  변동 없음**.
