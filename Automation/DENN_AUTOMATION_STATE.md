@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: READY_FOR_CODEX
+state: READY_FOR_CLAUDE
 baseline_commit: ecc9720   # HEAD=origin at spec 082 correction round 1 start (Codex review + NN-1=A)
 candidate_commit: 8d4458d  # spec 082 correction round 1 (implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "correction round 1 applied on HEAD=origin=ecc9720, ahead/behind 0/0; pushed fast-forward"
-working_tree: "spec 082 correction round 1 code and status documents committed; protected spec-018 PNGs left dirty after the full E2E, and pre-existing Founder/user changes remain untouched and unstaged"
-fix_round: 1
+origin_relation: "Codex reviewed HEAD=origin=3600198, ahead/behind 0/0; no Codex commit or push"
+working_tree: "Codex review documents are uncommitted; protected spec-018 PNGs and pre-existing Founder/user changes remain untouched and unstaged"
+fix_round: 2   # Founder NN-2=A approved; correction round 2 not yet implemented
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_082_REVIEW
+next_transition: CLAUDE_CORRECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,34 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Founder NN-2=A 승인 · 스펙 082 보완 라운드 2 준비 (2026-08-27)
+
+- Founder가 **NN-2=A**를 승인했다.
+- 허용 제품 파일은 `tests/e2e/admin-auth-read.spec.ts` 하나뿐이다. 제품 adapter와 고객 Storage 연결은
+  변경하지 않는다.
+- 번들 전체 vendor 문자열 부재가 아니라 app-owned production source/call surface의 read-only
+  allowlist를 검사한다. `getStorage`, `ref`, `getMetadata`, `getBytes`는 승인된 읽기 경계이고,
+  upload/update/delete/list/download 호출은 계속 금지한다.
+- 기존 Auth whole-identifier, admin private path, default route external request 0 계약은 유지한다.
+- 상태 `READY_FOR_CLAUDE`, fix round `2/3`, next `CLAUDE_CORRECTION`. 전체 진행도
+  **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 스펙 082 보완 라운드 1 Codex 재검수 · Founder NN-2 필요 (2026-08-27)
+
+- `HEAD=origin=3600198`, ahead/behind 0/0. 보완 diff는 NN-1=A가 허용한
+  `tests/e2e/admin-auth-read.spec.ts`와 `packages/render/src/index.ts` 두 파일뿐이다.
+- `getAuth` whole-identifier 정밀화는 `_getAuthToken` 오탐만 제거하면서 실제 식별자는 계속 차단한다.
+  stale `RENDER_NOT_IMPLEMENTED` 문구도 현재 package 상태와 일치한다.
+- 독립 `node scripts/check.mjs` **PASS**(unit **2409/2409**, build 2개). 전체 Chromium은 보고와 같은
+  **158 passed / 1 failed**이며 실패는 이제 `uploadBytes`다.
+- 원인은 스펙 079/080이 승인한 lazy read-only Storage SDK의 vendor chunk가 write/list/download API
+  이름과 오류 라벨을 포함하는데, 스펙 036 시절 테스트가 번들 전체 raw substring 부재를 요구하기
+  때문이다. `getStorage`는 승인된 production 호출이므로 기존 금지 목록과 직접 충돌한다.
+- Founder **NN-2** 선택 대기: **A(권장)** app-owned read-only 호출 경계를 검사하도록 test-only 계약을
+  정정, B vendor symbol 자체가 번들에서 사라지도록 제품 adapter/bundling 재설계, C E2E 예외 승인.
+- 상태 `FOUNDER_DECISION_REQUIRED`; correction round 2와 admin UI/다음 스펙은 시작하지 않는다.
+  전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## 스펙 082 보완 라운드 1 수행 — NN-1=A 두 파일 (2026-08-27)
 

@@ -46,6 +46,20 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
 - 실제 admin issue UI가 구현됐다고 기록하지 않는다. 다음은 Codex 검수(`CODEX_SPEC_082_REVIEW`)다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
+## Codex 보완 라운드 1 재검수 · NN-2 대기 (2026-08-27)
+
+- `HEAD=origin=3600198`, ahead/behind 0/0. NN-1 두 파일 diff 적합, 전체 check unit **2409/2409** PASS.
+- 전체 Chromium **158/159**, 실패 `uploadBytes` 동일 재현. Storage vendor dead export/오류 라벨과
+  승인된 production `getStorage` 호출이 스펙 036-era raw bundle 금지 검사에 걸린다.
+- Founder NN-2: A(권장: app-owned read-only 호출 경계로 test-only 정정), B 제품 bundling 재설계,
+  C E2E 예외. 상태 `FOUNDER_DECISION_REQUIRED`; 다음 UI/스펙은 시작하지 않는다.
+
+## Founder NN-2=A 승인 (2026-08-27)
+
+- correction round 2 허용 제품 파일은 `tests/e2e/admin-auth-read.spec.ts` 하나뿐이다.
+- 승인된 read-only Storage 제품 연결은 유지하고 app-owned 호출 표면을 검사하도록 test-only 정정한다.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_CORRECTION`. admin UI와 다음 스펙은 시작하지 않는다.
+
 ## Codex 독립 검수 (2026-08-27)
 
 - `HEAD=origin=f8bb8e3`, ahead/behind 0/0. targeted executor **87/87**, 전체 check unit

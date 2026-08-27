@@ -6615,3 +6615,30 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CODEX`, fix_round **1/3**, next transition `CODEX_SPEC_082_REVIEW`.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 마커 정밀화와 문구 정정이며 새 제품
   능력이 아니다.
+
+## 2026-08-27 - 스펙 082 보완 라운드 1 Codex 재검수 · Founder NN-2 대기
+
+- `HEAD=origin=3600198`, ahead/behind 0/0. NN-1=A 보완 diff는 허용 두 파일뿐이고 `getAuth`
+  whole-identifier 정밀화와 stale constant 정정은 적합하다.
+- Codex 독립 `node scripts/check.mjs` **PASS**(unit **2409/2409**, build 2개).
+- 전체 Chromium은 **158 passed / 1 failed**로 동일 재현했다. `getAuth`는 통과하며 실패 marker는
+  `uploadBytes`다. lazy Storage vendor chunk의 dead write/list/download export·오류 라벨과, 스펙
+  079/080에서 승인한 production `getStorage` 호출이 과거 bundle-wide raw marker 검사와 충돌한다.
+- 제품 회귀는 아니지만 full E2E PASS도 아니다. Founder **NN-2** 선택: A(권장: app-owned read-only
+  call surface를 검사하도록 test-only 정정), B vendor symbol 제거 제품 재설계, C E2E 예외.
+- 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_2_DECISION`. correction round 2,
+  admin UI, 다음 스펙, 자동화 시작 0. Codex 제품 코드 변경·commit/push 0.
+- E2E가 만든 `test-results`와 Chromium `debug.log`는 확인 후 exact generated 경로만 삭제했다. 보호 dirty는
+  restore/stage하지 않았다. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-27 - Founder NN-2=A 승인 · 스펙 082 보완 라운드 2 READY_FOR_CLAUDE
+
+- Founder가 **NN-2=A**를 승인했다.
+- 허용 제품 파일은 `tests/e2e/admin-auth-read.spec.ts` 하나뿐이다. 제품 adapter와 승인된 고객 read-only
+  Storage 연결은 변경하지 않는다.
+- test contract는 번들 전체 vendor 문자열이 아니라 app-owned production source/call surface의
+  `getStorage/ref/getMetadata/getBytes` allowlist와 upload/update/delete/list/download 금지를 검사한다.
+  기존 Auth whole-identifier, admin private path, default route external request 0은 유지한다.
+- 상태 `READY_FOR_CLAUDE`, fix round **2/3**, next `CLAUDE_CORRECTION`. admin UI, 다음 스펙, 자동화
+  시작 0. Codex 제품 코드 변경·commit/push 0.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

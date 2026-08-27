@@ -1,11 +1,12 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `READY_FOR_CLAUDE`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION ROUND 1 DONE / NN-1=A / NON_UI / NO_LIVE_NETWORK / E2E 158-1**
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED ROUND 2 / NN-2=A APPROVED / NON_UI / NO_LIVE_NETWORK / E2E 158-1**
 - 기준: `HEAD=origin=ecc9720`에서 시작. 구현 commit `307521f`, 보완 commit `8d4458d`.
-- next_transition: `CODEX_SPEC_082_REVIEW`
+- 현재 검수 기준: `HEAD=origin=3600198`, ahead/behind `0/0`
+- next_transition: `CLAUDE_CORRECTION`
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
 
 ## 현재 결과 — 보완 라운드 1 완료
@@ -34,7 +35,40 @@ lazy storage vendor chunk의 오류 라벨/export 이름 맵이라 같은 계열
 **필요한 결정.** ① 마커 5건을 vendor dead export와 고객 호출을 구분하도록 정밀화 ② `getStorage`를
 079/080 승인에 맞춰 허용으로 이동 ③ 그 수정을 어느 단위에 넣을지.
 
-**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 재검수다.
+## Codex 재검수와 Founder NN-2 선택지
+
+Codex 독립 검증도 전체 check **2409/2409 PASS**, Chromium **158/159**이며 실패 marker는
+`uploadBytes`로 동일하다. `getAuth` 정밀화와 stale constant 정정 자체는 적합하다.
+
+- **NN-2=A (권장):** 기존 스펙 079/080의 read-only Storage 승인을 보존한다. 번들 전체 vendor 문자열
+  부재 검사를 폐기하고, app-owned production source/call surface가 `getStorage`, `ref`, `getMetadata`,
+  `getBytes`의 read-only 경계만 사용하는지 검사한다. upload/update/delete/list/download 호출은 계속
+  금지하고, 기존 Auth·admin private-path 금지 및 default route external request 0 검사는 유지한다.
+  correction round 2는 `tests/e2e/admin-auth-read.spec.ts` 한 제품 파일만 수정한다.
+- **NN-2=B:** write API symbol 자체가 vendor chunk에서 사라지도록 Firebase Storage adapter/import 및
+  bundling을 재설계한다. 제품 코드와 bundle이 바뀌는 별도 단위가 필요하다.
+- **NN-2=C:** 현재 158/159를 Founder E2E 예외로 승인한다. 권장하지 않는다.
+
+Founder가 **NN-2=A**를 승인했다. 실제 admin issue UI와 다음 스펙은 시작하지 않는다.
+
+> Claude Code에 전달할 실행 지시문:
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 082 CORRECTION_REQUIRED 라운드 2만 수행해.
+
+Founder NN-2=A에 따라 허용 제품 파일은 tests/e2e/admin-auth-read.spec.ts 하나뿐이다. 스펙 079/080에서
+승인된 고객 read-only Storage 연결을 보존하고 제품 코드는 수정하지 마. 번들 전체 vendor chunk의 raw API
+이름 부재를 고객 호출 부재로 간주하는 오래된 검사를, app-owned production source/call surface가
+getStorage/ref/getMetadata/getBytes의 승인된 read-only 경계만 사용함을 검사하도록 정정해. uploadBytes,
+uploadBytesResumable, uploadString, updateMetadata, deleteObject, list, listAll, getDownloadURL 호출은 계속
+금지해. 기존 Auth whole-identifier, admin private path, default route Firebase/external request 0 검사는
+유지하고 테스트를 삭제하거나 E2E 예외로 처리하지 마.
+
+targeted admin-auth-read Chromium과 전체 Chromium 159/159, node scripts/check.mjs, bundle/CSS hash,
+git diff --check, exact one-product-file diff, EOL, 포트/temp를 검증해. package/lockfile, Rules/config,
+apps/packages 제품 코드, 보호 대상, 실제 Firebase/network/live/deploy/UI는 건드리지 마. 허용 test와
+spec082 상태 문서만 일반 fast-forward commit/push하고 READY_FOR_CODEX에서 멈춰. 자동화는 만들지 마.
+```
 
 > 직전 지시문(스펙 082 보완 라운드 1, 수행 완료 — 기록):
 

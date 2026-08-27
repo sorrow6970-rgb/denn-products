@@ -1,5 +1,18 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-27): Founder NN-2=A 승인 / spec 082 correction round 2 READY_FOR_CLAUDE.**
+> 허용 제품 파일은 `tests/e2e/admin-auth-read.spec.ts` 하나뿐이다. 승인된 read-only Storage 연결은
+> 유지하고 app-owned production source/call surface가 `getStorage/ref/getMetadata/getBytes`만 사용하는지
+> 검사한다. upload/update/delete/list/download 금지와 Auth/admin-path/runtime egress 0은 유지한다.
+> 제품 adapter/UI/Firebase/network/live/deploy 변경 0. 전체 진행도 **84~87% / 잔여 13~16%**.
+
+> **최신 포인터 (2026-08-27): spec 082 correction round 1 Codex 재검수 / Founder NN-2 필요.**
+> `HEAD=origin=3600198`, ahead/behind 0/0. NN-1 두 파일 보완은 적합하고 전체 check unit
+> **2409/2409 PASS**다. 전체 Chromium은 **158/159**, 실패는 `uploadBytes`: 승인된 lazy read-only
+> Storage vendor의 dead API 이름과 실제 승인 `getStorage` 호출을 과거 raw bundle 검사식이 금지한다.
+> NN-2=A(권장: app-owned read-only call surface test), B vendor symbol 제거 제품 재설계, C E2E 예외.
+> 결정 전 correction round 2와 admin UI/다음 스펙 시작 0. 전체 진행도 **84~87% / 잔여 13~16%**.
+
 > **최신 포인터 (2026-08-27): Founder NN-1=A 승인 / spec 082 correction round 1 READY_FOR_CLAUDE.**
 > 허용 제품 파일은 `tests/e2e/admin-auth-read.spec.ts`와 `packages/render/src/index.ts` 두 개뿐이다.
 > `_getAuthToken` 부분 문자열 오탐 정밀화와 stale `RENDER_NOT_IMPLEMENTED` 문구 정정만 수행한다.

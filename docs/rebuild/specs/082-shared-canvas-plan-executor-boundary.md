@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CODEX / CORRECTION ROUND 1 DONE / NN-1=A / NON_UI / NO_LIVE_NETWORK`
+`READY_FOR_CLAUDE / CORRECTION_REQUIRED ROUND 2 / NN-2=A APPROVED / NON_UI / NO_LIVE_NETWORK`
 
 선행 게이트:
 
@@ -382,3 +382,25 @@ Storage 쓰기 API의 dead vendor 코드를 포함해도 되는가"라는 제품
 
 **진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 마커 정밀화와 문구 정정이며 새
 제품 능력이 아니다.
+
+### CODEX REVIEW — 보완 라운드 1 (2026-08-27)
+
+`HEAD=origin=3600198`, ahead/behind 0/0에서 독립 재검증했다. 두 파일 diff는 NN-1=A 범위에 정확히
+맞고, `getAuth` 식별자 검사는 실제 Auth 이름을 계속 막으면서 `_getAuthToken`만 제외한다. stale
+constant도 실제 generic facade 미구현만 말한다. 전체 check **2409/2409 PASS**다.
+
+전체 Chromium은 **158/159**로 동일 재현했으며 실패는 `uploadBytes`다. 스펙 079/080이 승인한 lazy
+Storage vendor chunk는 사용하지 않는 write/list/download export 이름과 오류 라벨도 포함한다. 반면
+`getStorage`는 read-only proof adapter의 실제 승인 호출이다. 따라서 “고객 번들 전체에 Storage API
+문자열 0”이라는 스펙 036-era 검사는 현재 승인 구조와 양립하지 않는다.
+
+제품 회귀로 판정하지 않지만 full E2E PASS도 아니다. test contract 변경은 NN-1 범위를 넘으므로 Founder
+NN-2 선택을 기다린다: A(권장: app-owned read-only call surface 검사), B(vendor symbol 제거 제품 재설계),
+C(E2E 예외). 결정 전 correction round 2와 다음 UI 스펙은 시작하지 않는다.
+
+### FOUNDER NN-2 — 2026-08-27
+
+Founder가 **NN-2=A**를 승인했다. 보완 라운드 2는
+`tests/e2e/admin-auth-read.spec.ts` 한 제품 파일만 추가 수정한다. 승인된 read-only Storage 연결과
+제품 코드는 유지하고, app-owned production 호출 표면의 allowlist와 write/update/delete/list/download
+금지를 검사하도록 test contract만 정정한다. 상태 `READY_FOR_CLAUDE`, next `CLAUDE_CORRECTION`이다.
