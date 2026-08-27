@@ -1,35 +1,49 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **CORRECTION ROUND 1 DONE / LOCAL_VERIFIED / NO_LIVE_NETWORK**
+상태: `CORRECTION_REQUIRED`
+active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **CORRECTION ROUND 2 / NO_LIVE_NETWORK**
 completed_unit: `spec-079-space-v2-proof-reader-adapter` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI**
-검수 기준: `HEAD=origin=c63fe1b`, ahead/behind `0/0`. 구현 commit `2319d1a`, 보완 commit `280a6dc`.
+재검수 기준: `HEAD=origin=3b7c72c`, ahead/behind `0/0`. 보완 commit `280a6dc`.
 Founder 정본: **LL-1=A ~ LL-6=A, MM-1=A ~ MM-6=A**.
-fix_round: **1 / 3**
-next_transition: **`CODEX_SPEC_080_REVIEW`**
+fix_round: **2 / 3**
+next_transition: **`CLAUDE_CORRECTION`**
 
-## 현재 결과 — 보완 라운드 1 완료
+## Claude Code 실행 지시 — 스펙 080 CORRECTION_REQUIRED 라운드 2
 
-Codex가 지적한 **두 결함만** 고쳤고 다른 계약 결론은 되돌리지 않았다.
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 080
+CORRECTION_REQUIRED 라운드 2만 수행해.
 
-**보완 1.** `SpacePasswordGate`의 비밀번호 input과 버튼을 semantic `<form onSubmit>`으로 묶고
-`Button`에 `type="submit"`을 명시했다. 버튼 `onClick`은 제거해 제출 경로가 하나뿐이며 `onSubmit`은
-`preventDefault()` 뒤 기존 `submit()`을 정확히 한 번 호출한다. 레이아웃·문구·password 즉시 삭제·
-single-flight 계약은 그대로다. unit 3건이 form/`type="submit"` 구조를 고정하고, targeted E2E는
-**password input에서 Enter**를 눌러 실제 제출·`documentReads` 1·`proofReads` 1·`decodes` 1·URL
-무변경·성공 Canvas를 검증한다. 버튼 Enter는 더 이상 사용하지 않는다.
+Codex 재검수에서 기능은 targeted unit 11/11, targeted Chromium 14/14, 시각 결과로 통과했지만
+현재 clean Windows checkout의 node scripts/check.mjs가 format 단계에서 실패했다.
+git ls-files --eol 실측은 다음 세 파일이 i/lf w/crlf다:
+- apps/mockup/src/space/SpacePasswordGate.tsx
+- apps/mockup/src/space/SpacePasswordGate.test.tsx
+- tests/e2e/space-production-route.spec.ts
 
-**보완 2.** fixture 제품 코드는 수정하지 않고 screenshot case에서 캡처 직전
-`[data-testid="fixture-unmount"]`만 숨긴 뒤 두 PNG를 재생성했다. desktop/mobile 육안 확인 결과
-**`화면 해제`가 보이지 않고** production customer surface만 남았다.
+system core.autocrlf=true이고 현재 .gitattributes는 *.bat/*.cmd/*.ps1만 CRLF로 고정한다. commit blob은
+이미 LF이므로 semantic code/test를 바꾸지 마. `.gitattributes`에 위 정확한 세 경로만 각각
+`text eol=lf`로 고정해. 전역 `*.ts`/`*.tsx` 규칙이나 다른 경로 정책으로 확장하지 마. 그 뒤 세 파일을
+LF로 materialize하고 `git ls-files --eol`이 세 파일 모두 `i/lf w/lf attr/text eol=lf`인지 확인해.
 
-**실측.** 전체 `node scripts/check.mjs` PASS(unit **2281/2281**), targeted Chromium
-`space-production-route.spec.ts` **14/14 PASS**, `git diff --check` PASS, 허용 외 diff 0, 검사 포트
-잔류 0. 고객 entry `index-nLbiXJi7.js`/`340,481 B` → `index-BUT7Bmak.js`/`340,604 B`(+123 B, form
-wrapper와 `onSubmit`만)이고 **고객 CSS·admin entry·admin CSS는 SHA-256까지 무변경**이다.
-**full Chromium suite는 보호 spec-018 PNG 때문에 계속 NOT RUN**이며 PASS라고 기록하지 않는다.
+보완 diff는 `.gitattributes`와 spec-080 상태 문서뿐이어야 한다. 제품 semantic diff, PNG 재생성,
+Rules/firebase/package/lockfile 변경은 0이어야 한다. targeted gate unit, node scripts/check.mjs 전체,
+targeted Chromium space-production-route.spec.ts, bundle exact hash, git diff --check, forbidden diff,
+포트 잔류를 다시 검증해. full Chromium suite는 보호 spec-018 PNG 때문에 NOT RUN이다.
 
-**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 재검수다.
+보호 대상과 기존 user working-tree 변경은 수정·복원·checkout·stage·commit하지 마. 허용 보완과
+spec-080 문서만 일반 fast-forward commit/push하고 READY_FOR_CODEX에서 멈춰. 다음 스펙과 자동화·반복
+작업은 시작하지 마.
+```
+
+## Codex 라운드 2 근거
+
+- targeted gate unit **11/11**, targeted Chromium **14/14**, 두 screenshot 육안 검수는 PASS했다.
+- customer entry SHA-256은
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`로 일치한다.
+- 전체 check는 format 단계에서 위 3개 CRLF 때문에 FAIL했다. 따라서 라운드 1의 전체 PASS 기록은 현재
+  checkout에서 독립 재현되지 않았다.
+- 전체 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**.
 
 > 직전 지시문(스펙 080 보완 라운드 1, 수행 완료 — 기록):
 

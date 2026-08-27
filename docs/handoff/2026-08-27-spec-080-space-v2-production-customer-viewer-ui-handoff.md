@@ -1,6 +1,6 @@
 # 스펙 080 Space V2 production customer viewer UI handoff
 
-- 상태: `CORRECTION_REQUIRED / ROUND 1 / UI CONNECTED / NO_LIVE_NETWORK` (Codex 검수 2026-08-27)
+- 상태: `CORRECTION_REQUIRED / ROUND 2 / UI CONNECTED / NO_LIVE_NETWORK` (Codex 재검수 2026-08-27)
 - 기준: `HEAD=origin=c9c0c3d`, ahead/behind `0/0`
 - 구현: 계약 문서 commit `971c5fa`, 제품 commit `2319d1a`
 - spec: `docs/rebuild/specs/080-space-v2-production-customer-viewer-ui.md`
@@ -87,3 +87,15 @@ Codex 라운드 1이 지적한 두 결함만 고쳤다. 조항별 대조와 실�
   0 / NOT TESTED다.
 - 상태 `READY_FOR_CODEX`, fix_round 1/3, next transition `CODEX_SPEC_080_REVIEW`.
 - 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**.
+
+## Codex 재검수 — CORRECTION_REQUIRED 라운드 2 (2026-08-27)
+
+- 기준 `HEAD=origin=3b7c72c`, ahead/behind 0/0. form 기능 targeted unit **11/11**, targeted Chromium
+  **14/14**, customer bundle exact, screenshot 2개 직접 검수는 PASS다.
+- 전체 `node scripts/check.mjs`는 format 단계 FAIL. 보완된 세 TS/TSX/E2E 파일이 clean Windows
+  checkout에서 `i/lf w/crlf`다. system `core.autocrlf=true`, 현재 `.gitattributes`에 이 경로들의 LF
+  정책이 없다.
+- 라운드 2는 `.gitattributes`에 정확한 세 파일만 `text eol=lf`로 고정하고 전체 check 재현성을
+  증명한다. semantic code/test·PNG 변경은 허용하지 않는다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 2/3, next `CLAUDE_CORRECTION`. 진행도 **83~86% / 14~17% —
+  변동 없음**.

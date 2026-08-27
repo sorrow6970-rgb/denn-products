@@ -6180,3 +6180,18 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   자동화·반복 작업은 시작하지 않았다.
 - 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**. 범위 내 결함 보완이라 새 제품 능력으로
   계산하지 않았다.
+
+## 2026-08-27 - 스펙 080 Codex 재검수 · CORRECTION_REQUIRED 라운드 2
+
+- 기준 `HEAD=origin=3b7c72c`, ahead/behind 0/0. 보완 `280a6dc`과 기록 `3b7c72c`을 독립 검증했다.
+- PASS: targeted gate unit **11/11**, OS temp staging targeted Chromium **14/14**, customer entry
+  SHA-256 `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`, screenshot desktop/mobile
+  직접 확인, 검사 포트 잔류 0. fixture `화면 해제`는 제거됐고 input Enter 제출도 통과했다.
+- FAIL: 전체 `node scripts/check.mjs` format 단계. `SpacePasswordGate.tsx`, 해당 test,
+  `space-production-route.spec.ts`가 `git ls-files --eol`상 `i/lf w/crlf`다. system
+  `core.autocrlf=true`, 현 `.gitattributes`에 세 경로 LF 정책이 없다.
+- 라운드 2는 `.gitattributes`에 정확한 세 경로만 `text eol=lf`로 고정한다. semantic code/test·PNG·
+  제품 UI 변경은 0이어야 한다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 2/3, next `CLAUDE_CORRECTION`. actual Firebase/network/live/
+  deploy 0, 다음 스펙과 자동화·반복 작업 시작 0.
+- 전체 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**.

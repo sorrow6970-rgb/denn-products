@@ -24,7 +24,24 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 080 보완 라운드 1 완료, Codex 재검수 대기.**
+상태: **`CORRECTION_REQUIRED` - 스펙 080 Codex 재검수 라운드 2, clean checkout EOL 재현성 보완 필요.**
+
+재검수 기준 `HEAD=origin=3b7c72c`, ahead/behind `0/0`. form 기능은 targeted unit **11/11**, OS temp
+staging targeted Chromium **14/14 PASS**했고, customer entry SHA-256도
+`1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`로 일치했다. 두 PNG를 직접
+확인해 fixture `화면 해제` 제거와 mobile 390px 구성을 확인했다.
+
+그러나 전체 `node scripts/check.mjs`는 format 단계에서 FAIL했다. 보완된 TS/TSX/E2E 3개 파일이
+`git ls-files --eol`상 `i/lf w/crlf`이고, system `core.autocrlf=true`와 현재 `.gitattributes`의 LF
+정책 부재 때문에 clean Windows checkout에서 라운드 1 PASS가 재현되지 않는다.
+
+라운드 2는 `.gitattributes`에 정확한 세 경로만 `text eol=lf`로 고정하는 최소 config 보완이다.
+semantic code/test·PNG·제품 UI는 변경하지 않는다. next transition `CLAUDE_CORRECTION`, fix_round
+2/3이며 다음 스펙은 시작하지 않는다.
+
+전체 진행도는 **83~86% 완료 / 14~17% 잔여 — 변동 없음**이다.
+
+> 스펙 080 보완 라운드 1 완료 기록(재검수 전):
 
 Codex 라운드 1이 지적한 두 결함만 고쳤다. 기준 `HEAD=origin=c63fe1b`, 검수 문서 commit `7c5fccb`,
 보완 commit `280a6dc`.

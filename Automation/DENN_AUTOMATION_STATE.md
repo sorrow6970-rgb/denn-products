@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-079-space-v2-proof-reader-adapter   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_UI, NO_LIVE_NETWORK
 active_unit: spec-080-space-v2-production-customer-viewer-ui
-state: READY_FOR_CODEX
-baseline_commit: c63fe1b   # HEAD=origin at Codex spec 080 review
+state: CORRECTION_REQUIRED
+baseline_commit: 3b7c72c   # HEAD=origin at Codex spec 080 correction round 1 re-review
 candidate_commit: 280a6dc  # spec 080 correction round 1 (implementation 2319d1a, contract docs 971c5fa)
 verified_commit: 0887047   # spec 079 implementation independently reviewed
-origin_relation: "correction round 1 applied on HEAD=origin=c63fe1b, ahead/behind 0/0; pushed fast-forward"
-working_tree: "spec 080 correction code/test/results and status documents committed; pre-existing protected Founder/user changes remain untouched and unstaged"
-fix_round: 1
+origin_relation: "Codex re-review baseline HEAD=origin=3b7c72c, ahead/behind 0/0"
+working_tree: "Codex correction round 2 documents plus pre-existing protected Founder/user changes; no product/config correction yet"
+fix_round: 2
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_080_REVIEW
+next_transition: CLAUDE_CORRECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,25 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 83-86% complete; 14-17% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 080 Codex 재검수 — CORRECTION_REQUIRED 라운드 2 (2026-08-27)
+
+- 재검수 기준 `HEAD=origin=3b7c72c`, ahead/behind `0/0`. 보완 commit `280a6dc`과 결과 기록을
+  독립 검증했다.
+- 기능·시각 보완은 통과했다. targeted gate unit **11/11**, OS temp staging targeted Chromium
+  **14/14 PASS**, customer entry SHA-256
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`. desktop/mobile PNG에서
+  fixture `화면 해제`가 제거됐고 390px overflow도 보이지 않는다.
+- 전체 `node scripts/check.mjs`는 **FAIL**이다. format 단계가
+  `SpacePasswordGate.tsx`, `SpacePasswordGate.test.tsx`, `space-production-route.spec.ts` 3개를
+  CRLF로 판정했다. `git ls-files --eol`은 세 파일 모두 `i/lf w/crlf`, system Git은
+  `core.autocrlf=true`, 현재 `.gitattributes`에는 Windows script 규칙만 있음을 확인했다.
+- commit blob은 이미 LF이므로 semantic code를 다시 바꾸지 않는다. 최소 durable 보완은
+  `.gitattributes`에 위 정확한 3개 경로만 `text eol=lf`로 고정하고 exact 파일을 LF로 materialize한 뒤
+  clean checkout 전체 check를 재현하는 것이다. 전역 `*.ts`/`*.tsx` 정책 확장은 금지한다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 2/3, next transition `CLAUDE_CORRECTION`. 다음 스펙과
+  자동화·반복 작업은 시작하지 않는다.
+- 전체 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**.
 
 ## 스펙 080 보완 라운드 1 수행 (2026-08-27)
 

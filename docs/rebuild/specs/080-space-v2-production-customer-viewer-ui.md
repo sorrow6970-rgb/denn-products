@@ -483,3 +483,29 @@ actual Firebase/project/bucket/network/live/CORS/deploy/actual UID는 **0 / NOT 
 상태 `READY_FOR_CODEX`, fix_round **1/3**, next transition `CODEX_SPEC_080_REVIEW`. 다음 스펙과
 자동화·반복 작업은 시작하지 않았다. 전체 진행도는 **83~86% 완료 / 14~17% 잔여 — 변동 없음**이다.
 범위 내 결함 보완이지 새 제품 능력이 아니다.
+
+### CODEX RE-REVIEW — CORRECTION_REQUIRED 라운드 2 (2026-08-27)
+
+재검수 기준 `HEAD=origin=3b7c72c`, ahead/behind `0/0`. 라운드 1의 semantic form과 input Enter는
+targeted unit **11/11**, OS temp staging targeted Chromium **14/14 PASS**로 확인했다. customer entry
+SHA-256은 `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`로 일치한다. desktop/mobile
+PNG에서 fixture `화면 해제`가 제거됐고 mobile 390px 구성도 잘림 없이 유지된다.
+
+다만 전체 `node scripts/check.mjs`는 format 단계에서 실패했다. 다음 세 파일의 working-tree EOL이
+CRLF다.
+
+- `apps/mockup/src/space/SpacePasswordGate.tsx`
+- `apps/mockup/src/space/SpacePasswordGate.test.tsx`
+- `tests/e2e/space-production-route.spec.ts`
+
+`git ls-files --eol`은 모두 `i/lf w/crlf`, system Git은 `core.autocrlf=true`다. 현재 `.gitattributes`는
+`*.bat`, `*.cmd`, `*.ps1`의 CRLF만 지정하고 TS/TSX LF 정책은 없다. 따라서 commit blob이 LF여도 새
+Windows checkout에서 formatter PASS가 재현되지 않는다.
+
+라운드 2는 `.gitattributes`에 위 정확한 세 경로만 `text eol=lf`로 고정하는 최소 durable 보완이다.
+전역 TS/TSX 정책, semantic code/test, PNG와 다른 제품/config 변경은 금지한다. 세 파일이
+`i/lf w/lf attr/text eol=lf`인 상태에서 targeted unit, 전체 check, targeted Chromium을 다시 통과해야
+한다.
+
+상태 `CORRECTION_REQUIRED`, fix_round 2/3, next transition `CLAUDE_CORRECTION`. 전체 진행도
+**83~86% 완료 / 14~17% 잔여 — 변동 없음**.
