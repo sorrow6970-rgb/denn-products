@@ -12,3 +12,7 @@
 apps/mockup/src/space/SpacePasswordGate.tsx       text eol=lf
 apps/mockup/src/space/SpacePasswordGate.test.tsx  text eol=lf
 tests/e2e/space-production-route.spec.ts          text eol=lf
+
+# Same reason, spec 081. Still per-path, still not a global *.ts/*.tsx rule.
+apps/admin/src/space-v2/issue-session.ts          text eol=lf
+apps/admin/src/space-v2/issue-session.test.ts     text eol=lf

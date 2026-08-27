@@ -393,7 +393,7 @@ describe("space V2 issue session — draft source", () => {
     ["a missing key", { catalog: catalogSource(), selection: {} }],
     ["an extra key", { ...fields(), assetId: ASSET_ID }],
     ["a non-object", "fields"],
-    ["an unclonable value", { ...fields(), frameColor: () => "#191A1D" }],
+    ["a value the evidence contract rejects", { ...fields(), frameColor: () => "#191A1D" }],
   ];
 
   for (const [label, value] of badFields) {
@@ -910,5 +910,322 @@ describe("space V2 issue session — inert boundary", () => {
       confirmedToken: null,
     });
     expectNothingSpent(h);
+  });
+});
+
+// --- correction round 1: semantic preflight ------------------------------------
+//
+// Exact keys are not enough. A structurally fine but semantically invalid composition must be
+// refused at `beginDraft`, BEFORE the exporter, the two UUIDs, the three hashes and the encryption
+// are spent — otherwise the operator pays for a draft that could never have been issued.
+
+describe("space V2 issue session — semantic preflight", () => {
+  const ART_TEMPLATE = {
+    id: "ft1",
+    name: "템플릿",
+    type: "uploaded",
+    clockEnabled: false,
+    dataUrl: "https://example.test/art.png",
+  };
+  const BROKEN_ART_TEMPLATE = {
+    id: "ft1",
+    name: "템플릿",
+    type: "uploaded",
+    clockEnabled: false,
+    dataUrl: "not-an-image-reference",
+  };
+  const TEXT_TEMPLATE = {
+    ...TEMPLATE,
+    textZones: [{ key: "main", xPercent: 50, yPercent: 80, fontSizePercent: 6, color: "#191A1D" }],
+  };
+  /** No explicit opt-out: the projection then reports a physical clock. */
+  const CLOCK_TEMPLATE = { id: "ft1", name: "템플릿", type: "uploaded" };
+
+  const withTemplate = (template: Record<string, unknown>) =>
+    fields({ catalog: doc({ frameSizes: [SIZE], frameTemplates: [template] }) });
+
+  const invalidDrafts: [string, SpaceV2FrozenIssueFields][] = [
+    ["a null catalog", fields({ catalog: null as unknown as CatalogDocumentV1 })],
+    ["an empty catalog", fields({ catalog: {} as unknown as CatalogDocumentV1 })],
+    ["a catalog that is not a legacy document", fields({ catalog: doc({}) })],
+    [
+      "a frame size the catalog does not have",
+      fields({ selection: { frameSizeId: "nope", templateId: "ft1" } }),
+    ],
+    [
+      "a template the catalog does not have",
+      fields({ selection: { frameSizeId: "s1", templateId: "nope" } }),
+    ],
+    [
+      "a non-string selection id",
+      fields({ selection: { frameSizeId: 1, templateId: "ft1" } as never }),
+    ],
+    [
+      "a selection with an extra key",
+      fields({ selection: { frameSizeId: "s1", templateId: "ft1", extra: 1 } as never }),
+    ],
+    ["landscape on a portrait aspect", fields({ frameOrientation: "landscape" })],
+    [
+      "an orientation that is not a V2 orientation",
+      fields({ frameOrientation: "diagonal" as never }),
+    ],
+    ["a zero logical width", fields({ logicalWidth: 0 })],
+    ["a negative logical width", fields({ logicalWidth: -1000 })],
+    ["a fractional logical width", fields({ logicalWidth: 1000.5 })],
+    ["a named colour", fields({ frameColor: "red" })],
+    ["a malformed hex colour", fields({ frameColor: "#GGGGGG" })],
+    ["a colour that is not a string", fields({ frameColor: 0x191a1d as never })],
+    [
+      "a scale below the contract range",
+      fields({ transform: { scale: 0.5, x: 0, y: 0, rotationQuarterTurns: 0 } }),
+    ],
+    [
+      "a scale above the contract range",
+      fields({ transform: { scale: 6, x: 0, y: 0, rotationQuarterTurns: 0 } }),
+    ],
+    [
+      "a pan outside the normalised range",
+      fields({ transform: { scale: 1, x: 2, y: 0, rotationQuarterTurns: 0 } }),
+    ],
+    [
+      "a rotation that is not a quarter turn",
+      fields({ transform: { scale: 1, x: 0, y: 0, rotationQuarterTurns: 4 } as never }),
+    ],
+    ["a transform with a missing key", fields({ transform: { scale: 1, x: 0, y: 0 } as never })],
+    ["a template whose art is present", withTemplate(ART_TEMPLATE)],
+    ["a template whose art cannot be classified", withTemplate(BROKEN_ART_TEMPLATE)],
+    ["a template that authors operator text", withTemplate(TEXT_TEMPLATE)],
+    ["a template that carries a physical clock", withTemplate(CLOCK_TEMPLATE)],
+  ];
+
+  for (const [label, value] of invalidDrafts) {
+    it(`refuses ${label} before anything is spent`, async () => {
+      const h = harness();
+      h.session.beginDraft({
+        copyFields: () => value,
+        exportProofPng: async () => pngHeader(),
+      });
+
+      expect(h.session.getSnapshot()).toEqual({
+        status: "error",
+        canIssue: false,
+        errorCode: "SPACE_V2_SESSION_INVALID_DRAFT",
+        confirmedToken: null,
+      });
+      await h.session.issue(good());
+      expectNothingSpent(h);
+    });
+  }
+
+  it("stores the detached catalog the read boundary returned, not the caller's object", async () => {
+    const source = fields();
+    const h = harness();
+    h.session.beginDraft({
+      copyFields: () => source,
+      exportProofPng: async () => pngHeader(),
+    });
+    // The caller's catalog is wrecked after the freeze; the frozen read stays usable.
+    (source.catalog.data as { frameSizes: unknown }).frameSizes = [];
+    await h.session.issue(good());
+    expect(h.session.getSnapshot().status).toBe("success");
+  });
+});
+
+// --- correction round 1: writer failure envelope --------------------------------
+
+describe("space V2 issue session — writer failure envelope", () => {
+  const rejected: [string, unknown][] = [
+    [
+      "an unknown error code",
+      {
+        ok: false,
+        error: {
+          category: "UNKNOWN",
+          code: "PRIVATE_WRITER_ERROR_MARKER",
+          retryable: false,
+          correlationId: CORRELATION_ID,
+        },
+      },
+    ],
+    [
+      "an unknown category",
+      {
+        ok: false,
+        error: {
+          category: "PRIVATE_CATEGORY_MARKER",
+          code: "SPACE_V2_ISSUE_FORBIDDEN",
+          retryable: false,
+          correlationId: CORRELATION_ID,
+        },
+      },
+    ],
+    [
+      "a non-boolean retryable",
+      {
+        ok: false,
+        error: {
+          category: "AUTH",
+          code: "SPACE_V2_ISSUE_FORBIDDEN",
+          retryable: "no",
+          correlationId: CORRELATION_ID,
+        },
+      },
+    ],
+    [
+      "a correlation id from another attempt",
+      {
+        ok: false,
+        error: {
+          category: "AUTH",
+          code: "SPACE_V2_ISSUE_FORBIDDEN",
+          retryable: false,
+          correlationId: "deadbeef",
+        },
+      },
+    ],
+    [
+      "an extra key in the error",
+      {
+        ok: false,
+        error: {
+          category: "AUTH",
+          code: "SPACE_V2_ISSUE_FORBIDDEN",
+          retryable: false,
+          correlationId: CORRELATION_ID,
+          detail: "PRIVATE_DETAIL_MARKER",
+        },
+      },
+    ],
+    [
+      "a missing key in the error",
+      { ok: false, error: { code: "SPACE_V2_ISSUE_FORBIDDEN", correlationId: CORRELATION_ID } },
+    ],
+    [
+      "an extra key at the top level",
+      { ok: false, error: issueError("SPACE_V2_ISSUE_FORBIDDEN"), note: 1 },
+    ],
+    ["a non-object error", { ok: false, error: "SPACE_V2_ISSUE_FORBIDDEN" }],
+  ];
+
+  for (const [label, result] of rejected) {
+    it(`closes ${label} as outcome-unknown with no code`, async () => {
+      const h = harness({ writerResult: async () => result as SpaceV2IssueResult });
+      h.session.beginDraft(h.source);
+      await h.session.issue(good());
+
+      expect(h.session.getSnapshot()).toEqual({
+        status: "outcome-unknown",
+        canIssue: false,
+        errorCode: null,
+        confirmedToken: null,
+      });
+      const serialized = JSON.stringify(h.snapshots);
+      for (const marker of [
+        "PRIVATE_WRITER_ERROR_MARKER",
+        "PRIVATE_CATEGORY_MARKER",
+        "PRIVATE_DETAIL_MARKER",
+        "deadbeef",
+      ]) {
+        expect(serialized).not.toContain(marker);
+      }
+    });
+  }
+
+  it("still accepts a well-formed failure from this attempt", async () => {
+    const h = harness({
+      writerResult: async () => ({
+        ok: false,
+        error: {
+          category: "AUTH",
+          code: "SPACE_V2_ISSUE_FORBIDDEN",
+          retryable: false,
+          correlationId: CORRELATION_ID,
+        },
+      }),
+    });
+    h.session.beginDraft(h.source);
+    await h.session.issue(good());
+    expect(h.session.getSnapshot().errorCode).toBe("SPACE_V2_ISSUE_FORBIDDEN");
+    expect(h.session.getSnapshot().status).toBe("error");
+  });
+});
+
+// --- correction round 1: writer success envelope --------------------------------
+
+describe("space V2 issue session — writer success envelope", () => {
+  const OTHER_UUID = "2b3c4d5e-6f70-4a8b-9c0d-1e2f3a4b5c6d";
+
+  const rejected: [string, unknown][] = [
+    [
+      "a token that is not a UUID",
+      { ok: true, value: { token: "PRIVATE_NON_UUID_TOKEN", objectPath: OBJECT_PATH } },
+    ],
+    ["a different token", { ok: true, value: { token: OTHER_UUID, objectPath: OBJECT_PATH } }],
+    [
+      "a different object path",
+      {
+        ok: true,
+        value: { token: TOKEN, objectPath: `rebuild-space-assets/objects/${OTHER_UUID}.png` },
+      },
+    ],
+    [
+      "an extra key in the value",
+      { ok: true, value: { token: TOKEN, objectPath: OBJECT_PATH, url: "https://example.test/x" } },
+    ],
+    ["a missing object path", { ok: true, value: { token: TOKEN } }],
+    ["a non-object value", { ok: true, value: TOKEN }],
+    [
+      "an extra key at the top level",
+      { ok: true, value: { token: TOKEN, objectPath: OBJECT_PATH }, note: 1 },
+    ],
+  ];
+
+  for (const [label, result] of rejected) {
+    it(`refuses ${label} and confirms no token`, async () => {
+      const h = harness({ writerResult: async () => result as SpaceV2IssueResult });
+      h.session.beginDraft(h.source);
+      await h.session.issue(good());
+
+      expect(h.session.getSnapshot()).toEqual({
+        status: "outcome-unknown",
+        canIssue: false,
+        errorCode: null,
+        confirmedToken: null,
+      });
+      const serialized = JSON.stringify(h.snapshots);
+      expect(serialized).not.toContain("PRIVATE_NON_UUID_TOKEN");
+      expect(serialized).not.toContain("https://example.test/x");
+      expect(serialized).not.toContain(OTHER_UUID);
+    });
+  }
+
+  it("refuses a hostile success value without throwing", async () => {
+    const h = harness({
+      writerResult: async () =>
+        ({
+          ok: true,
+          get value(): never {
+            throw new Error("PRIVATE_HOSTILE_VALUE_MARKER");
+          },
+        }) as unknown as SpaceV2IssueResult,
+    });
+    h.session.beginDraft(h.source);
+    await h.session.issue(good());
+    expect(h.session.getSnapshot().status).toBe("outcome-unknown");
+    expect(JSON.stringify(h.snapshots)).not.toContain("PRIVATE_HOSTILE_VALUE_MARKER");
+  });
+
+  it("refuses a correlation id the session could never have sent", async () => {
+    const h = harness({ createCorrelationId: () => "NOT A CORRELATION ID" });
+    h.session.beginDraft(h.source);
+    await h.session.issue(good());
+    // Refused locally: the writer is never called, so nothing was persisted.
+    expect(h.session.getSnapshot()).toEqual({
+      status: "error",
+      canIssue: false,
+      errorCode: "SPACE_V2_SESSION_PREPARATION_FAILED",
+      confirmedToken: null,
+    });
+    expect(h.writerCalls).toEqual([]);
   });
 });
