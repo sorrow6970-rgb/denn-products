@@ -6305,3 +6305,19 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여**. admin 발급의 비-UI core가 닫힌 만큼만 올렸고 실제
   admin UI/UX·production Canvas exporter 연결·SDK composition·실제 Firebase/Rules 배포와 live 검증은
   그대로 남는다.
+
+## 2026-08-27 - 스펙 081 Codex 독립 검수 · CORRECTION_REQUIRED 라운드 1
+
+- 검수 기준 `HEAD=origin=d7b84b0`, ahead/behind `0/0`. 계약 `7608977`, 구현 `7dc148f`, 기록
+  `d7b84b0`.
+- 기존 게이트 PASS: session+bundle+write-port targeted **146/146**, 전체 check(unit **2339/2339**),
+  admin/customer entry와 CSS exact SHA-256, `git diff --check`, 검사 포트 잔류 0.
+- 임시 Codex 회귀 테스트 **3/3 FAIL**로 결함을 재현했다: (1) `catalog:null` frozen fields가
+  `draft-ready`, (2) arbitrary writer code marker가 public errorCode로 노출, (3) non-UUID token marker가
+  confirmed success로 승인. 임시 test는 즉시 삭제했고 제품 diff는 0이다.
+- 현재 신규 두 파일은 `i/lf w/lf attr/`, system `core.autocrlf=true`라 clean checkout EOL 재현성도
+  미고정이다.
+- 라운드 1은 semantic preflight, exact writer result validation, exact 두 파일 `text eol=lf`와 spec081
+  문서만 허용한다. App/UI/CSS/Canvas exporter/SDK composition/Rules/config/emulator/live는 열지 않는다.
+- 상태 `CORRECTION_REQUIRED`, fix_round **1/3**, next `CLAUDE_CORRECTION`. 자동화·반복 작업 시작 0.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

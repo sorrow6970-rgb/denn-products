@@ -24,7 +24,26 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 081 admin frozen issue session 구현·검증 완료, Codex 검수 대기.**
+상태: **`CORRECTION_REQUIRED` - 스펙 081 Codex 검수 라운드 1, fail-closed 결함 3건 재현.**
+
+검수 기준 `HEAD=origin=d7b84b0`, ahead/behind `0/0`. 기존 targeted **146/146**, 전체 check(unit
+**2339/2339**), production bundle exact, diff/port gate는 PASS했다. 그러나 임시 Codex 회귀 테스트에서
+다음 3건이 **3/3 FAIL**로 재현됐다.
+
+1. clone 가능한 semantic-invalid frozen fields(`catalog:null`)가 `draft-ready`로 열린다.
+2. malformed writer의 임의 string error code가 safe error처럼 public snapshot에 노출된다.
+3. malformed writer의 non-UUID token이 confirmed success token으로 승인된다.
+
+라운드 1은 `issue-session.ts`, 해당 test, `.gitattributes`의 exact 신규 두 경로 LF 고정과 spec081
+문서만 허용한다. beginDraft semantic preflight는 proof export·UUID·hash·crypto 전 fail-closed해야 하고,
+writer success/failure envelope는 exact known shape/code 및 prepared token/objectPath 일치를 검증해야 한다.
+그 밖의 App/UI/CSS/Canvas production exporter, SDK composition, Rules/config/emulator/live 범위는 열지
+않는다.
+
+상태 `CORRECTION_REQUIRED`, fix_round **1/3**, next transition `CLAUDE_CORRECTION`. 전체 진행도는
+**84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
+
+> 아래 구현 완료 설명은 보완 전 이력이다.
 
 스펙 081 비-UI frozen issue session을 계약 범위대로 구현하고 검증했다. 기준 `HEAD=origin=4765502`,
 계약 문서 commit `7608977`, 구현 commit `7dc148f`.

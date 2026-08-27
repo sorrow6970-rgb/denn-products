@@ -6,22 +6,43 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-080-space-v2-production-customer-viewer-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, UI_CONNECTED, NO_LIVE_NETWORK
 active_unit: spec-081-space-v2-admin-frozen-issue-session
-state: READY_FOR_CODEX
+state: CORRECTION_REQUIRED
 baseline_commit: 4765502   # HEAD=origin at spec 081 implementation start
 candidate_commit: 7dc148f  # spec 081 admin frozen issue session (contract docs commit 7608977)
-verified_commit: 4765502   # spec 080 correction round 2 record independently reviewed
+verified_commit: 4765502   # spec 080; spec 081 candidate has three reproduced review failures
 origin_relation: "spec 081 implemented from HEAD=origin=4765502, ahead/behind 0/0; pushed fast-forward"
-working_tree: "spec 081 implementation and allowed documents committed; pre-existing protected Founder/user changes remain untouched and unstaged"
-fix_round: 0
+working_tree: "Codex spec 081 correction round 1 documents are uncommitted; pre-existing protected Founder/user changes remain untouched and unstaged"
+fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_081_REVIEW
+next_transition: CLAUDE_CORRECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 83-86% complete; 14-17% remaining to production cutover"
+overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 081 Codex 독립 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-27)
+
+- 검수 기준 `HEAD=origin=d7b84b0`, ahead/behind `0/0`. 계약 `7608977`, 구현 `7dc148f`, 기록
+  `d7b84b0`을 대조했다.
+- 기존 게이트는 PASS했다: session+bundle+write-port targeted **146/146**, 전체
+  `node scripts/check.mjs` PASS(unit **2339/2339**), admin/customer bundle exact, `git diff --check`,
+  검사 포트 잔류 0.
+- 결함 1: `freezeFields()`는 exact keys와 `structuredClone`만 검사한다. `catalog:null`처럼 clone 가능한
+  semantic-invalid fields를 `draft-ready/canIssue:true`로 허용한다.
+- 결함 2: writer failure의 `error.code`가 어떤 string이든 `SpaceV2IssueErrorCode`로 cast돼 public
+  snapshot에 노출된다. 임시 marker가 그대로 `errorCode`에 나타났다.
+- 결함 3: writer success token은 non-empty string만 검사한다. malformed writer의 non-UUID marker가
+  `success/confirmedToken`으로 승인됐다.
+- 임시 Codex 회귀 테스트 3건은 **3/3 FAIL로 결함을 재현**했고 즉시 삭제했다. 제품 diff는 0이다.
+- 신규 두 파일은 현재 `i/lf w/lf`지만 attr가 unspecified이고 system `core.autocrlf=true`다. clean
+  checkout 재현성을 위해 라운드 1에 exact 두 경로 `text eol=lf`를 허용한다.
+- 상태 `CORRECTION_REQUIRED`, fix_round **1/3**, next `CLAUDE_CORRECTION`. UI/SDK composition/actual
+  Firebase/live는 계속 닫는다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
 
 ## 스펙 081 admin frozen issue session 구현 완료 (2026-08-27)
 

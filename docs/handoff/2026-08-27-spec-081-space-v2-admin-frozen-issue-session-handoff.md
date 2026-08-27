@@ -1,7 +1,7 @@
 # 스펙 081 Space V2 admin frozen issue session handoff
 
-- 상태: `READY_FOR_CODEX / IMPLEMENTED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK` (구현 2026-08-27)
-- 기준: `HEAD=origin=4765502`, ahead/behind `0/0`
+- 상태: `CORRECTION_REQUIRED / ROUND 1 / NON_UI / NO_LIVE_NETWORK` (Codex 검수 2026-08-27)
+- Codex 검수 기준: `HEAD=origin=d7b84b0`, ahead/behind `0/0`
 - 구현: 계약 문서 commit `7608977`, 제품 commit `7dc148f`
 - 선행: spec 080 `DONE / CODEX_PASSED`
 - Founder 정본: `LL-1=A` ~ `LL-6=A`
@@ -54,3 +54,12 @@ admin/customer bundle exact hash, diff/forbidden/port gate를 실행한다. Chro
 - 다음은 Codex 검수(`CODEX_SPEC_081_REVIEW`)다. 실제 admin UI/UX와 production Canvas exporter 연결은
   후속 스펙이며 시작하지 않았다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여**.
+
+## Codex 독립 검수 — CORRECTION_REQUIRED 라운드 1
+
+- 기준 `HEAD=origin=d7b84b0`, ahead/behind 0/0. 기존 targeted **146/146**, 전체 check(unit
+  **2339/2339**), bundle/diff/port gate는 PASS했다.
+- 임시 회귀 테스트 3건이 모두 실패했다: semantic-invalid frozen fields 사전 차단 누락, arbitrary writer
+  error code 노출, non-UUID malformed success token 승인.
+- 보완은 `issue-session.ts/test`, `.gitattributes` exact 두 경로 LF와 이 spec081 문서군만 허용한다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1/3. 실제 UI/SDK/network/live 범위는 계속 닫는다.

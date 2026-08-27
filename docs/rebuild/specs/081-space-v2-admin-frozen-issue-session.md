@@ -364,3 +364,47 @@ Rules/deploy/delete/publish 0 ✅ · 일반 fast-forward commit/push 후 `READY_
 **진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여**. admin 발급의 비-UI core가 닫힌 만큼만 올렸고,
 실제 admin UI/UX와 production Canvas exporter 연결, SDK composition, 실제 Firebase/Rules 배포·live
 검증은 그대로 남아 있다.
+
+### CODEX REVIEW — CORRECTION_REQUIRED 라운드 1 (2026-08-27)
+
+검수 기준 `HEAD=origin=d7b84b0`, ahead/behind `0/0`. 기존 session+bundle+write-port targeted
+**146/146**, 전체 `node scripts/check.mjs` PASS(unit **2339/2339**), production bundle exact,
+`git diff --check`, 포트 게이트는 PASS했다. Chromium E2E와 emulator는 계약대로 NOT RUN이다.
+
+그러나 계약상 fail-closed 경계 3건이 독립 임시 회귀 테스트에서 **3/3 FAIL**로 재현됐다. 임시 test는
+실행 직후 삭제했고 제품 working-tree diff는 0이다.
+
+1. **semantic frozen fields 미검증.** `freezeFields()`는 exact 6 keys와 `structuredClone` 성공만 본다.
+   따라서 `catalog:null`처럼 clone 가능하지만 기존 catalog/issue 계약상 invalid인 값도
+   `draft-ready/canIssue:true`가 된다. §VERIFY 2의 invalid frozen fields → export/UUID/hash/crypto/writer
+   0을 충족하지 못한다.
+2. **unknown writer code 유출.** failure에서 `typeof code === "string"`이면 임의 문자열을
+   `SpaceV2IssueErrorCode`로 cast한다. 합성 `PRIVATE_WRITER_ERROR_MARKER`가 public `errorCode`에 그대로
+   나타났다. known safe code와 exact envelope가 아니면 `outcome-unknown/errorCode:null`이어야 한다.
+3. **malformed success 승인.** success token은 non-empty만 검사한다. 합성
+   `PRIVATE_NON_UUID_TOKEN`이 `success/confirmedToken`으로 승인됐다. exact success envelope와 prepared
+   bundle의 token/objectPath 일치를 검증해야 한다.
+
+라운드 1 보완 범위:
+
+- `apps/admin/src/space-v2/issue-session.ts`
+- `apps/admin/src/space-v2/issue-session.test.ts`
+- `.gitattributes`에 위 두 경로만 `text eol=lf`
+- spec 081 상태/handoff 문서
+
+semantic preflight는 existing `readLegacyCatalog`, shared catalog projections와 pure V2 evidence validator를
+재사용해 frozen fields를 exporter·identity·hash·crypto 전에 검증하고 detached validated fields만
+보존한다. invalid catalog, selection reference, orientation, logical width, color, transform, unsupported
+capability 각각에서 exporter와 이후 호출이 0이어야 한다. 기존 issue preparation/identity API는 수정하지
+않는다.
+
+writer result는 top-level/value/error exact keys, known code, safe metadata와 current correlation id를
+검사한다. success는 prepared bundle에서 이미 확정된 token/objectPath와 exact 일치할 때만 승인한다.
+unknown/extra/hostile/mismatched result는 identifying 값을 snapshot에 넣지 않고
+`outcome-unknown/errorCode:null`로 닫는다.
+
+현재 신규 두 파일은 `i/lf w/lf attr/`이고 system `core.autocrlf=true`다. clean checkout 재현성을 위해
+exact 두 경로 LF policy를 이번 보완에 포함한다. 전역 TS/TSX EOL 정책은 열지 않는다.
+
+상태 `CORRECTION_REQUIRED`, fix_round **1/3**, next `CLAUDE_CORRECTION`. App/UI/CSS/Canvas production
+exporter, SDK composition, Rules/config/emulator/actual Firebase/live는 계속 금지다.

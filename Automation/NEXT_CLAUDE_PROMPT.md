@@ -1,14 +1,72 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-081-space-v2-admin-frozen-issue-session` — **IMPLEMENTED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
+상태: `CORRECTION_REQUIRED`
+active_unit: `spec-081-space-v2-admin-frozen-issue-session` — **CODEX REVIEW ROUND 1 / NON_UI / NO_LIVE_NETWORK**
 completed_unit: `spec-080-space-v2-production-customer-viewer-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / UI_CONNECTED / NO_LIVE_NETWORK**
-기준: `HEAD=origin=4765502`에서 시작. 계약 문서 commit `7608977`, 구현 commit `7dc148f`.
+검수 기준: `HEAD=origin=d7b84b0`, ahead/behind `0/0`. 계약 `7608977`, 구현 `7dc148f`.
 Founder 정본: **LL-1=A ~ LL-6=A**
-fix_round: **0 / 3**
-next_transition: **`CODEX_SPEC_081_REVIEW`**
+fix_round: **1 / 3**
+next_transition: **`CLAUDE_CORRECTION`**
 
-## 현재 결과
+## Claude Code 보완 라운드 1 실행 지시문
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와
+docs/rebuild/specs/081-space-v2-admin-frozen-issue-session.md의 CODEX REVIEW 라운드 1을 읽고, 스펙 081
+CORRECTION_REQUIRED 라운드 1만 수행해.
+
+Codex 독립 검수에서 기존 targeted 146/146, 전체 check(unit 2339/2339), production bundle exact,
+diff/port gate는 PASS했지만 fail-closed 결함 3건이 임시 회귀 테스트 3/3 FAIL로 재현됐다.
+
+1. freezeFields는 exact keys와 structuredClone만 확인해 catalog:null처럼 clone 가능한 semantic-invalid
+fields를 draft-ready로 연다. beginDraft에서 existing readLegacyCatalog, shared catalog projections와 pure V2
+evidence validator를 재사용해 catalog/selection reference/orientation/logicalWidth/frameColor/transform 및 첫
+capability를 proof export·UUID·hash·crypto 전에 검증해. detached validated fields만 저장하고 invalid면
+SPACE_V2_SESSION_INVALID_DRAFT, exporter·UUID·hash·crypto·writer 0이어야 한다. 기존 issue preparation,
+bundle, identity 파일은 수정하지 마.
+
+2. writer failure의 임의 string code를 SpaceV2IssueErrorCode로 cast하지 마. result top-level과 success
+value/failure error를 exact-key snapshot하고, known safe code·category·retryable·현재 correlationId의 일관성을
+검사해. unknown/extra/hostile/mismatched envelope는 outcome-unknown/errorCode:null이며 marker가 snapshot에
+노출되면 실패다.
+
+3. writer success는 non-empty token만 보지 말고 exact success envelope가 prepared bundle의 token과
+objectPath에 모두 일치할 때만 승인해. non-UUID, 다른 UUID/path, extra/missing/hostile value는
+outcome-unknown/errorCode:null이고 confirmedToken은 null이어야 한다.
+
+회귀 테스트에는 최소 catalog:null 및 invalid selection/orientation/logicalWidth/color/transform/unsupported
+capability의 preflight 0-call, arbitrary writer error marker 비노출, non-UUID/different token/path/extra key
+success 거부를 추가해. 기존 58건의 순서·lifecycle 계약은 유지해.
+
+추가로 .gitattributes에 정확히 다음 두 경로만 text eol=lf로 고정하고 git ls-files --eol이
+i/lf w/lf attr/text eol=lf인지 확인해:
+- apps/admin/src/space-v2/issue-session.ts
+- apps/admin/src/space-v2/issue-session.test.ts
+전역 TS/TSX EOL 정책으로 넓히지 마.
+
+허용 제품/config 파일은 위 issue-session.ts/test와 .gitattributes exact 2-path 추가뿐이다. App/UI/CSS/
+Canvas production exporter, admin composition, packages/**, Rules/firebase config/emulator, package/lockfile,
+pnpm-workspace.yaml은 수정하지 마. actual Firebase/network/live/UID/deploy, URL/clipboard, 운영 발급,
+publish/delete/orphan cleanup은 계속 금지다.
+
+targeted session+bundle+write-port unit, admin/firebase typecheck, 전체 node scripts/check.mjs, admin/customer
+bundle exact hash, git diff --check, exact allowed/forbidden diff, EOL 2/2, 포트 잔류를 재검증해. Chromium
+E2E와 emulator는 NOT RUN이다.
+
+보호 대상과 기존 user working-tree 변경은 수정·복원·checkout·stage·commit하지 마. 허용 보완과 spec081
+문서만 일반 fast-forward commit/push하고 READY_FOR_CODEX에서 멈춰. 다음 UI 스펙과 자동화·반복 작업은
+시작하지 마.
+```
+
+## Codex 라운드 1 근거
+
+- 기준 `HEAD=origin=d7b84b0`, ahead/behind 0/0.
+- 임시 회귀 test 결과: semantic-invalid draft, arbitrary writer code, malformed success token **3/3 FAIL**.
+- 임시 test는 삭제했고 제품 working-tree diff 0.
+- 신규 두 파일은 현재 `i/lf w/lf attr/`; clean checkout EOL 정책은 미고정.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 보완 전 구현 결과
 
 스펙 081 비-UI frozen issue session을 계약 범위대로 구현하고 검증했다. 신규 제품 파일은
 `apps/admin/src/space-v2/issue-session.ts`와 `issue-session.test.ts` **2개뿐**이며 기존 제품 파일은
