@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: READY_FOR_CODEX
+state: READY_FOR_CLAUDE
 baseline_commit: aa7e048   # HEAD=origin at spec 082 implementation start (Codex contract docs)
 candidate_commit: 307521f  # spec 082 shared Canvas executor boundary
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "spec 082 implemented from HEAD=origin=aa7e048, ahead/behind 0/0; pushed fast-forward"
-working_tree: "spec 082 implementation and allowed documents committed; protected spec-018 PNGs left dirty after the full E2E, and pre-existing Founder/user changes remain untouched and unstaged"
-fix_round: 0
+origin_relation: "Codex reviewed HEAD=origin=f8bb8e3, ahead/behind 0/0; no Codex commit or push"
+working_tree: "Codex review documents are uncommitted; protected spec-018 PNGs and pre-existing Founder/user changes remain untouched and unstaged"
+fix_round: 1   # Founder NN-1=A approved; correction round 1 not yet implemented
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_082_REVIEW
+next_transition: CLAUDE_CORRECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,35 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Founder NN-1=A 승인 · 스펙 082 보완 라운드 1 준비 (2026-08-27)
+
+- Founder가 **NN-1=A**를 승인했다.
+- 보완 허용 제품 파일은 `tests/e2e/admin-auth-read.spec.ts`와 `packages/render/src/index.ts` 두 개뿐이다.
+- raw substring `getAuth`의 Storage `_getAuthToken` 오탐을 제거하되 실제 Auth `getAuth()` 금지 경계는
+  유지한다. `RENDER_NOT_IMPLEMENTED`는 generic `RenderInput -> RenderOutput` facade의 실제 미구현만
+  말하도록 정정한다.
+- 고객 Storage 연결·executor 의미·그 밖의 제품 코드·UI·Firebase/network/live/deploy는 열지 않는다.
+- 상태 `READY_FOR_CLAUDE`, fix round `1/3`, next `CLAUDE_CORRECTION`. 전체 진행도
+  **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 스펙 082 Codex 독립 검수 · Founder 결정 필요 (2026-08-27)
+
+- `HEAD=origin=f8bb8e3`, ahead/behind `0/0`에서 독립 재검증했다. 구현 diff는 계약에 허용된 제품 파일
+  7개뿐이고 executor 단일 소스·thin re-export·public export identity를 확인했다.
+- targeted executor **87/87 PASS**, `node scripts/check.mjs` **PASS**(unit **2409/2409**, build 2개),
+  `git diff --check` PASS, 검사 포트 6개 잔류 0이다.
+- 전체 Chromium은 Claude 기록과 같은 **158 passed / 1 failed**다. 유일한 실패는
+  `tests/e2e/admin-auth-read.spec.ts:82`가 부분 문자열 `getAuth`로 Firebase Storage vendor의
+  `_getAuthToken` 3곳을 오인한 것이다. 실제 Auth `getAuth()` 호출 증거가 아니며 스펙 082 제품 diff와
+  무관하지만, 필수 전체 E2E는 PASS가 아니다.
+- 추가 결함: 이번에 수정한 `packages/render/src/index.ts`의 public constant
+  `RENDER_NOT_IMPLEMENTED`는 여전히 “Canvas executor는 이후 구현”이라고 적어, 같은 파일이 export하는
+  실제 executor와 모순된다.
+- 최소 보완에는 원래 허용 밖인 `tests/e2e/admin-auth-read.spec.ts`가 필요하므로 자동 보완을 시작하지
+  않는다. Founder **NN-1** 선택 대기: **A(권장)** exact test-marker 정밀화 + stale constant 문구 정정,
+  B E2E 예외 승인, C 고객 Storage 연결 재검토.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 실제 admin issue UI는 아직 시작하지 않는다.
 
 ## 스펙 082 공유 Canvas executor 경계 추출 완료 (2026-08-27)
 

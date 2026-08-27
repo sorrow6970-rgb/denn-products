@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CODEX / IMPLEMENTED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK`
+`READY_FOR_CLAUDE / CORRECTION_REQUIRED_ROUND_1 / NN-1=A_APPROVED / NON_UI / NO_LIVE_NETWORK`
 
 선행 게이트:
 
@@ -277,3 +277,28 @@ deploy 변경 **0** ✅ · 실제 admin issue UI가 구현됐다고 기록하지
 
 **진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 다음 admin UI의 구조적 선행
 작업이며 실제 사용자 기능은 아직 열리지 않았다.
+
+### CODEX REVIEW — 2026-08-27
+
+판정은 **FOUNDER_DECISION_REQUIRED**다. 구현 범위 자체의 회귀는 발견하지 않았다. 독립 targeted
+executor **87/87**, 전체 check **2409/2409**, build 2개, diff/port gate는 PASS했다. 전체 Chromium은
+Claude 기록과 동일한 **158 passed / 1 failed**로 재현됐다.
+
+실패는 `tests/e2e/admin-auth-read.spec.ts:82`의 raw substring `getAuth`가 Firebase Storage vendor
+chunk의 `_getAuthToken` 세 곳과 일치한 오탐이다. 이는 Auth 제품 API `getAuth()` 호출 증거가 아니고
+스펙 082 제품 변경 원인도 아니지만, 전체 E2E PASS라고 승인할 수는 없다. 테스트 파일은 원래 스펙 082
+허용 범위 밖이므로 Founder NN-1 범위 결정 전 자동 보완하지 않는다.
+
+별도 결함으로, 허용 파일 `packages/render/src/index.ts`의 `RENDER_NOT_IMPLEMENTED` 문자열은 같은 파일이
+이제 실제 Canvas executor를 export함에도 “Canvas executor는 이후 구현”이라고 말한다. 보완 시 generic
+`RenderInput -> RenderOutput` facade의 실제 미구현만 표현해야 한다.
+
+Founder NN-1 선택지는 A(권장: 정확한 두 파일 보완), B(E2E 예외), C(고객 Storage 연결 재검토)다.
+결정 전 correction round는 시작하지 않으며 실제 admin UI와 다음 스펙도 열지 않는다.
+
+### FOUNDER NN-1 — 2026-08-27
+
+Founder가 **NN-1=A**를 승인했다. 보완 라운드 1은
+`tests/e2e/admin-auth-read.spec.ts`와 `packages/render/src/index.ts` 두 제품 파일만 추가 허용한다.
+test marker 정밀화와 stale constant 정정 외 제품 동작 변경은 승인하지 않는다. 상태는
+`READY_FOR_CLAUDE`, 다음 transition은 `CLAUDE_CORRECTION`이다.

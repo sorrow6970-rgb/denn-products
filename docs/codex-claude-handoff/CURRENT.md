@@ -1,5 +1,21 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-27): Founder NN-1=A 승인 / spec 082 correction round 1 READY_FOR_CLAUDE.**
+> 허용 제품 파일은 `tests/e2e/admin-auth-read.spec.ts`와 `packages/render/src/index.ts` 두 개뿐이다.
+> `_getAuthToken` 부분 문자열 오탐 정밀화와 stale `RENDER_NOT_IMPLEMENTED` 문구 정정만 수행한다.
+> 고객 Storage 연결·executor 의미·UI·Firebase/network/live/deploy는 열지 않는다. 다음 transition은
+> `CLAUDE_CORRECTION`; 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+> **최신 포인터 (2026-08-27): spec 082 Codex 독립 검수 = FOUNDER_DECISION_REQUIRED.**
+> `HEAD=origin=f8bb8e3`, ahead/behind 0/0. 구현 diff 7개는 허용 범위 안이고 executor 단일 소스와
+> thin re-export를 확인했다. 독립 targeted **87/87**, 전체 check unit **2409/2409**, build 2개,
+> diff/port gate PASS. 전체 Chromium은 **158 passed / 1 failed**: raw marker `getAuth`가 Storage SDK
+> 내부 `_getAuthToken`을 오인한 기존 검사 결함이며 spec 082 제품 회귀는 아니지만 full PASS도 아니다.
+> 또한 `packages/render/src/index.ts`의 `RENDER_NOT_IMPLEMENTED`가 이미 export되는 Canvas executor를
+> 여전히 미구현이라고 말한다. 원래 허용 밖 test 파일이 필요하므로 Founder **NN-1** 선택 대기:
+> A(권장: exact test-marker + stale constant 두 파일 최소 보완), B E2E 예외, C Storage 연결 재검토.
+> correction/admin UI/다음 스펙 자동 시작 0. 전체 진행도 **84~87% / 잔여 13~16%**.
+
 > 작업 운영 규칙(2026-08-26 최신 사용자 지시): Founder 승인 범위의 스펙 074~076은 Codex가 직접
 > 구현하고 검증했다. 이 승인은 실제 UID·UI·network/live·deploy·delete로 확장하지 않는다.
 > 이후 단위는 별도 지시 전까지 수동 교대 규칙을 유지한다.

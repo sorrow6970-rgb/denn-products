@@ -1,14 +1,15 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `READY_FOR_CLAUDE`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **IMPLEMENTED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK / E2E 158-1**
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED ROUND 1 / NN-1=A APPROVED / NON_UI / NO_LIVE_NETWORK / E2E 158-1**
 - 기준: `HEAD=origin=aa7e048`에서 시작. 계약 문서 commit `aa7e048`, 구현 commit `307521f`.
-- next_transition: `CODEX_SPEC_082_REVIEW`
+- 현재 검수 기준: `HEAD=origin=f8bb8e3`, ahead/behind `0/0`
+- next_transition: `CLAUDE_CORRECTION`
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
 
-## 현재 결과
+## Codex 독립 검수 결과
 
 React 비의존 Canvas plan executor와 타입을 `@denn/render`의 단일 구현으로 옮겼고
 (`packages/render/src/canvas/**`), `apps/mockup/src/canvas`의 두 파일은 thin re-export만 남는다.
@@ -22,7 +23,7 @@ mockup entry 하나뿐 — `index-BUT7Bmak.js`(340,604) → `index-CRHkWFoL.js`(
 식별자 재배치**뿐이고 추가 코드·중복 사본이 없음을 확인했다. admin 전체와 mockup sibling chunk 4개는
 byte-identical이다.
 
-**실측.** targeted executor **87/87**, render/mockup/admin typecheck PASS, 전체
+**Codex 독립 실측.** targeted executor **87/87**, render/mockup/admin typecheck PASS, 전체
 `node scripts/check.mjs` **PASS**(unit **2409/2409**), `git diff --check` PASS, forbidden diff 0,
 신규 파일 EOL **3/3**, 검사 포트 잔류 0, temp 잔류 0.
 
@@ -33,8 +34,37 @@ HEAD로 되돌려도 동일하게 실패하며, 문자열은 firebase/storage ve
 `tests/e2e/admin-auth-read.spec.ts` 또는 고객 앱 storage 연결을 건드려야 해 **스펙 082 허용 범위
 밖**이라 고치지 않고 기록만 했다.
 
-**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 검수이며, 실제 admin issue UI는
-별도 스펙과 지시 이후에 시작한다.
+추가로 `packages/render/src/index.ts`의 public constant `RENDER_NOT_IMPLEMENTED`가 여전히
+“Canvas executor는 이후 구현”이라고 적어, 같은 파일이 실제 executor를 export하는 현재 상태와 모순된다.
+
+## Founder NN-1 선택지
+
+- **A (권장):** 스펙 082 보완 라운드 1의 최소 범위를 `tests/e2e/admin-auth-read.spec.ts`와
+  `packages/render/src/index.ts`로 확장한다. 테스트는 실제 Auth `getAuth()` 경계를 계속 금지하되
+  Storage 내부 `_getAuthToken` 부분 일치는 오탐하지 않도록 정밀화하고, stale constant는 generic
+  `RenderInput -> RenderOutput` facade만 미구현이라는 사실로 바로잡는다. 고객 Storage 연결·제품 동작은
+  바꾸지 않는다.
+- **B:** 158/1을 Founder E2E 예외로 승인하고 stale constant만 정정한다.
+- **C:** 고객 앱의 승인된 Storage 연결 자체를 재검토한다. 기존 스펙 079/080 결정과 충돌한다.
+
+Founder가 **NN-1=A**를 승인했다. 실제 admin issue UI와 다음 스펙은 시작하지 않는다.
+
+> Claude Code에 전달할 실행 지시문:
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 082 CORRECTION_REQUIRED 라운드 1만 수행해.
+
+허용 제품 파일은 tests/e2e/admin-auth-read.spec.ts와 packages/render/src/index.ts 두 개뿐이다.
+admin-auth-read의 고객 bundle 검사는 실제 Auth getAuth() 경계를 계속 차단하면서 Firebase Storage SDK 내부
+_getAuthToken을 부분 문자열로 오인하지 않도록 최소 정밀화해. 테스트를 삭제하거나 해당 경계를 약화하지 마.
+packages/render/src/index.ts의 RENDER_NOT_IMPLEMENTED 문구는 실제로 남아 있는 generic RenderInput ->
+RenderOutput facade의 미구현만 정확히 말하도록 고쳐, 이미 export되는 Canvas executor를 미구현이라고 하지 마.
+
+그 밖의 제품 코드, package/lockfile, Rules/config, 보호 대상은 수정하지 마. targeted test, node
+scripts/check.mjs, 전체 Chromium E2E 159/159, git diff --check, exact diff, bundle/CSS hash, 포트/temp를 검증해.
+실제 Firebase/network/live/deploy와 admin UI 구현은 금지다. 허용 코드와 spec082 상태 문서만 일반
+fast-forward commit/push하고 READY_FOR_CODEX에서 멈춰. 자동화는 만들지 마.
+```
 
 > 직전 지시문(스펙 082 구현, 수행 완료 — 기록):
 

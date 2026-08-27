@@ -45,3 +45,20 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
   스펙 082 허용 범위 밖이라 기록만 했고 **"전체 E2E PASS"라고 기록하지 않는다.**
 - 실제 admin issue UI가 구현됐다고 기록하지 않는다. 다음은 Codex 검수(`CODEX_SPEC_082_REVIEW`)다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## Codex 독립 검수 (2026-08-27)
+
+- `HEAD=origin=f8bb8e3`, ahead/behind 0/0. targeted executor **87/87**, 전체 check unit
+  **2409/2409**, build 2개, diff/port gate PASS.
+- 전체 Chromium은 **158/159**로 동일 재현. `getAuth` raw substring이 Storage vendor의
+  `_getAuthToken`을 오인했으며 스펙 082 제품 회귀는 아니다. 다만 전체 E2E PASS도 아니다.
+- `packages/render/src/index.ts`의 `RENDER_NOT_IMPLEMENTED`가 실제 Canvas executor export와 모순되는
+  stale 문구도 확인했다.
+- 최소 보완은 원래 허용 밖 test 파일을 필요로 해 Founder **NN-1** 범위 선택 대기다. 상태
+  `FOUNDER_DECISION_REQUIRED`; correction과 admin UI/다음 스펙은 시작하지 않는다.
+
+## Founder NN-1=A 승인 (2026-08-27)
+
+- exact scope 확장 승인: `tests/e2e/admin-auth-read.spec.ts`, `packages/render/src/index.ts` 두 파일뿐이다.
+- correction round 1에서 Storage `_getAuthToken` 오탐과 stale constant만 정정한다.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_CORRECTION`. UI와 다음 스펙은 시작하지 않는다.

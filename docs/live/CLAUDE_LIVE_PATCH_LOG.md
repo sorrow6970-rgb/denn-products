@@ -6536,3 +6536,30 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `CODEX_SPEC_082_REVIEW`. 다음 admin UI 스펙과 자동화·반복 작업은 시작하지 않았다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 구조적 선행 작업이며 실제 사용자
   기능은 아직 열리지 않았다.
+
+## 2026-08-27 - 스펙 082 Codex 독립 검수 · Founder NN-1 결정 대기
+
+- `HEAD=origin=f8bb8e3`, ahead/behind `0/0`. 구현 diff는 계약에 허용된 제품 파일 7개뿐이며
+  `@denn/render` 단일 구현, mockup thin re-export, public export identity를 확인했다.
+- Codex 독립 실측: executor **87/87 PASS**, `node scripts/check.mjs` **PASS**(unit **2409/2409**,
+  build 2개), `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199 잔류 0.
+- 전체 Chromium은 **158 passed / 1 failed**로 동일 재현했다. 유일한 실패는
+  `tests/e2e/admin-auth-read.spec.ts:82`의 raw substring `getAuth`가 Firebase Storage vendor chunk의
+  `_getAuthToken` 세 곳을 오인한 것이다. Auth `getAuth()` 호출 증거도 spec 082 제품 회귀도 아니지만,
+  필수 full E2E는 PASS가 아니다.
+- 추가 결함: `packages/render/src/index.ts`의 public `RENDER_NOT_IMPLEMENTED` 문자열이 실제로 export되는
+  Canvas executor를 여전히 “이후 구현”이라고 말한다.
+- 정확한 최소 보완에는 원래 허용 밖인 `tests/e2e/admin-auth-read.spec.ts`가 필요하다. Founder
+  **NN-1**: A(권장: test marker 정밀화 + stale constant 정정), B E2E 예외, C Storage 연결 재검토.
+  결정 전 보완·admin UI·다음 스펙은 시작하지 않는다. 자동화 생성, Codex commit/push 0.
+- 보호 dirty는 restore/stage하지 않았다. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-27 - Founder NN-1=A 승인 · 스펙 082 보완 라운드 1 READY_FOR_CLAUDE
+
+- Founder가 **NN-1=A**를 승인했다.
+- 보완 허용 제품 파일은 `tests/e2e/admin-auth-read.spec.ts`와 `packages/render/src/index.ts` 두 개뿐이다.
+- Storage SDK 내부 `_getAuthToken`을 raw `getAuth`가 오인하는 검사식을 정밀화하되 실제 Auth 경계는
+  유지하고, `RENDER_NOT_IMPLEMENTED`의 stale Canvas executor 문구만 실제 상태에 맞춘다.
+- 고객 Storage 연결·executor 동작·UI·Firebase/network/live/deploy·다음 스펙은 열지 않는다.
+- 상태 `READY_FOR_CLAUDE`, fix round **1/3**, next `CLAUDE_CORRECTION`. Codex 제품 코드 변경·commit/push
+  0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
