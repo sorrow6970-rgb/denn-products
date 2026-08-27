@@ -6,8 +6,14 @@ import { type ConsoleMessage, expect, test } from "@playwright/test";
 import { ADMIN_PORT } from "../../playwright.config";
 
 // Operator remote-read card in a real browser (spec 036 §8). The default build is UNCONFIGURED, so
-// the whole point of this suite is proving that nothing Firebase-shaped happens: no request, no
-// controls, and no trace of the SDK in the customer bundle.
+// the first point of this suite is proving that nothing Firebase-shaped happens at runtime: no
+// request and no controls.
+//
+// The second point is the CUSTOMER boundary, and what that means has moved. Spec 053 approved a
+// lazy Firestore space-document read, and specs 079/080 (Founder MM-1=A) approved a lazy READ-ONLY
+// Storage reader for the proof asset. So "no trace of the SDK" is no longer the contract — the
+// contract is: Firestore read plus Storage READ, no Auth, no admin private paths, and nothing that
+// writes, deletes, enumerates or hands out a download URL.
 
 const URL = `http://localhost:${ADMIN_PORT}/`;
 
@@ -80,7 +86,7 @@ for (const vp of VIEWPORTS) {
   });
 }
 
-test("the customer bundle contains only the approved lazy space Firestore boundary", () => {
+test("the customer bundle carries no Auth product API and no private admin path", () => {
   const staging = process.env.DENN_E2E_STAGING;
   expect(staging, "DENN_E2E_STAGING").toBeTruthy();
   const assets = join(String(staging), "mockup", "assets");
@@ -137,47 +143,120 @@ function productionSources(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-test("the customer app's own Storage call surface stays read-only", () => {
-  const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+/**
+ * Every Storage API the customer must never reach. Read-only is the whole approved capability
+ * (specs 079/080, Founder MM-1=A), so writing, deleting, enumerating and handing out a download URL
+ * are all out.
+ */
+const FORBIDDEN_STORAGE_API = [
+  "uploadBytes",
+  "uploadBytesResumable",
+  "uploadString",
+  "updateMetadata",
+  "deleteObject",
+  "list",
+  "listAll",
+  "getDownloadURL",
+  "getBlob",
+  "getStream",
+] as const;
 
-  // The customer's production surface: its own sources plus the ONE `@denn/firebase` subpath it
-  // imports. Limiting the package half to `space-read` is justified by the import assertion below —
-  // if the app ever reaches for the write or admin subpath, that assertion fails first.
+/**
+ * Where a forbidden Storage symbol can appear once comments are gone. Matching a CALL alone is not
+ * enough — `import { uploadBytes as u }`, `const u = storage.uploadBytes` and `storage["uploadBytes"]`
+ * all reach the same API without ever writing `uploadBytes(`.
+ *
+ * `list` is the one name that also occurs as ordinary English in app code (a local `list` variable,
+ * a `template-list` test id), so the bare-identifier form is skipped for it. Nothing is lost: the
+ * customer app imports no `firebase/*` module at all (asserted below), so the Storage `list` can
+ * only ever arrive as a property of the namespace object — which the property and bracket forms
+ * cover, for every name including this one.
+ */
+function storageReferenceForms(api: string): RegExp[] {
+  const forms = [
+    new RegExp(`\\.\\s*${api}\\b`), // storage.uploadBytes / .uploadBytes(
+    new RegExp(`\\[\\s*["'\`]${api}["'\`]\\s*\\]`), // storage["uploadBytes"]
+  ];
+  if (api !== "list") forms.push(new RegExp(`\\b${api}\\b`)); // import { uploadBytes as u }
+  return forms;
+}
+
+/** Every module specifier a source imports, static or dynamic. */
+function importSpecifiers(source: string): string[] {
+  return [...source.matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)].map((m) => m[1] ?? "");
+}
+
+test("the forbidden-Storage detector catches aliases and property access, not comments", () => {
+  // A self-check: without it the surface test below could keep passing because the detector is
+  // blind, not because the app is clean.
+  const caught = (snippet: string, api = "uploadBytes"): boolean =>
+    storageReferenceForms(api).some((form) => form.test(stripComments(snippet)));
+
+  expect(caught('import { uploadBytes as u } from "firebase/storage";\nu();'), "alias import").toBe(
+    true,
+  );
+  expect(caught("const u = storage.uploadBytes;\nu();"), "property extraction").toBe(true);
+  expect(caught('storage["uploadBytes"](ref, bytes);'), "bracket property").toBe(true);
+  expect(caught("await storage.uploadBytes(objectRef, bytes);"), "direct call").toBe(true);
+
+  // The same three shapes for the one name whose bare identifier is deliberately not banned.
+  expect(caught("const u = storage.list;", "list"), "list property extraction").toBe(true);
+  expect(caught('storage["list"](objectRef);', "list"), "list bracket property").toBe(true);
+  expect(caught("const list = categories;\nreturn list.some(Boolean);", "list"), "plain list").toBe(
+    false,
+  );
+
+  // Prose about an API is not a use of it.
+  expect(caught("// uploadBytes is deliberately never called here"), "line comment").toBe(false);
+  expect(caught("/* uploadBytes, uploadString and listAll stay out */"), "block comment").toBe(
+    false,
+  );
+});
+
+test("the customer app's own Storage surface stays read-only", () => {
+  const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+  const firebaseSrc = join(repoRoot, "packages", "firebase", "src");
+
+  // The customer's production surface: its own sources, plus exactly the `@denn/firebase` surface it
+  // imports — the root barrel with its public-catalog / public-images boundary, and `space-read`.
+  // Nothing else is in scope, and the import assertion below is what keeps that honest: if the app
+  // ever reaches for the write or admin subpath, it fails there first.
+  const mockupFiles = productionSources(join(repoRoot, "apps", "mockup", "src"));
   const files = [
-    ...productionSources(join(repoRoot, "apps", "mockup", "src")),
-    ...productionSources(join(repoRoot, "packages", "firebase", "src", "space-read")),
+    ...mockupFiles,
+    join(firebaseSrc, "index.ts"),
+    ...productionSources(join(firebaseSrc, "public-catalog")),
+    ...productionSources(join(firebaseSrc, "public-images")),
+    ...productionSources(join(firebaseSrc, "space-read")),
   ];
   expect(files.length).toBeGreaterThan(0);
   const source = files.map((file) => stripComments(readFileSync(file, "utf8"))).join("\n");
 
-  for (const subpath of [
-    "@denn/firebase/space-write",
-    "@denn/firebase/admin-read",
-    "@denn/firebase/admin-write",
-  ]) {
-    expect(source.includes(subpath), subpath).toBe(false);
+  // 1. The app imports one Firebase-shaped surface and only one, and never the SDK directly.
+  const mockupSpecifiers = new Set(
+    mockupFiles.flatMap((file) => importSpecifiers(stripComments(readFileSync(file, "utf8")))),
+  );
+  for (const specifier of mockupSpecifiers) {
+    if (specifier.startsWith("@denn/firebase")) {
+      expect(["@denn/firebase", "@denn/firebase/space-read"], specifier).toContain(specifier);
+    }
+    expect(specifier.startsWith("firebase/"), specifier).toBe(false);
   }
 
-  // Specs 079/080 (Founder MM-1=A) approved exactly one Storage capability for the customer: read.
-  // Every mutating and enumerating API stays forbidden as a CALL — which a vendor export map is not.
-  for (const api of [
-    "uploadBytes",
-    "uploadBytesResumable",
-    "uploadString",
-    "updateMetadata",
-    "deleteObject",
-    "list",
-    "listAll",
-    "getDownloadURL",
-    "getBlob",
-    "getStream",
-  ]) {
-    expect(source, api).not.toMatch(new RegExp(`\\b${api}\\s*\\(`));
+  // 2. No forbidden Storage symbol is referenced anywhere in that surface, in any shape.
+  for (const api of FORBIDDEN_STORAGE_API) {
+    for (const form of storageReferenceForms(api)) {
+      expect(source, `${api} ${form.source}`).not.toMatch(form);
+    }
   }
 
-  // And the approved read boundary must still actually be here: without this the test would keep
-  // passing if the Storage calls moved somewhere this scan no longer looks.
+  // 3. The approved read boundary is still exactly where specs 079/080 put it. Pinning the calls to
+  // the facade — namespace and all — stops a same-named helper elsewhere from satisfying this and
+  // leaving the real Storage calls unwatched.
+  const facade = stripComments(
+    readFileSync(join(firebaseSrc, "space-read", "proof-sdk-facade.ts"), "utf8"),
+  );
   for (const api of ["getStorage", "ref", "getMetadata", "getBytes"]) {
-    expect(source, api).toMatch(new RegExp(`\\b${api}\\s*\\(`));
+    expect(facade, api).toMatch(new RegExp(`\\bstorage\\.${api}\\s*\\(`));
   }
 });
