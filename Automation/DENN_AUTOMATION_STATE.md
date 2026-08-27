@@ -4,17 +4,17 @@
 updated_at: 2026-08-27
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-080-space-v2-production-customer-viewer-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, UI_CONNECTED, NO_LIVE_NETWORK
-active_unit: spec-081-space-v2-admin-frozen-issue-session
-state: READY_FOR_CODEX
-baseline_commit: c6ea3bf   # HEAD=origin at Codex spec 081 re-review round 2
-candidate_commit: f36cf54  # spec 081 correction round 2 (round 1 096e65e, implementation 7dc148f)
-verified_commit: 4765502   # spec 080; spec 081 awaits Codex re-review
-origin_relation: "correction round 2 applied on HEAD=origin=c6ea3bf, ahead/behind 0/0; pushed fast-forward"
-working_tree: "spec 081 correction round 2 code/test and status documents committed; pre-existing protected Founder/user changes remain untouched and unstaged"
-fix_round: 2
+completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
+active_unit: spec-082-shared-canvas-plan-executor-boundary
+state: READY_FOR_CLAUDE
+baseline_commit: df75655   # HEAD=origin at Codex final spec 081 review
+candidate_commit: null
+verified_commit: df75655   # spec 081 correction round 2 record included
+origin_relation: "HEAD=origin=df75655, ahead/behind 0/0 before Codex contract docs; docs are intentionally uncommitted for Claude handoff"
+working_tree: "Codex spec 081 closure + spec 082 contract/handoff/status docs are uncommitted; pre-existing protected Founder/user changes remain untouched and unstaged"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_081_REVIEW
+next_transition: CLAUDE_SPEC_082_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,21 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 081 Codex 최종 통과 · 스펙 082 계약 준비 (2026-08-27)
+
+- 기준 `HEAD=origin=df75655`, ahead/behind 0/0. 스펙 081 라운드 2 diff는
+  `issue-session.ts`·`issue-session.test.ts` 두 파일뿐이며 exhaustive code/category/retryable mapping과
+  prototype own-key 차단을 확인했다.
+- 독립 실측: targeted **215/215**, `node scripts/check.mjs` PASS(unit **2408/2408**, build 2개),
+  admin/customer entry와 CSS exact hash, EOL 2/2, `git diff --check`, 포트 6개·temp 잔류 0.
+- 스펙 081은 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK`다. Chromium E2E와
+  emulator는 이 스펙에서 NOT RUN이며 actual Firebase/network/live/UID/deploy·운영 발급은 계속 0이다.
+- 다음 실제 admin UI 전에 cross-app import/복제를 막기 위해 스펙 082
+  `shared Canvas plan executor boundary` 계약을 작성했다. 기존 mockup executor를 동작 변화 없이
+  `@denn/render` 단일 소스로 옮기는 non-UI 단위다.
+- UI/UX 구현은 Claude Code가 담당한다. 스펙 082 자체에는 admin UI, proof exporter, SDK wiring이 없다.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## 스펙 081 보완 라운드 2 수행 — failure metadata 조합 검사 (2026-08-27)
 

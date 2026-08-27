@@ -88,6 +88,17 @@ Codex 라운드 1이 지적한 fail-closed 3건만 고쳤다. 세 지적 모두 
 - 상태 `READY_FOR_CODEX`, fix_round 1/3, next transition `CODEX_SPEC_081_REVIEW`.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
+## Codex 최종 검수 — CODEX_PASSED (2026-08-27)
+
+- 기준 `HEAD=origin=df75655`, ahead/behind 0/0.
+- 라운드 2 허용 diff 2파일과 exhaustive metadata mapping을 확인했다.
+- targeted **215/215**, 전체 check unit **2408/2408**, build 2개, bundle/CSS exact hash, EOL 2/2,
+  diff/port/temp gate가 모두 PASS했다.
+- 스펙 081은 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK`로 종료한다.
+- actual Firebase/network/live/UID/deploy, admin UI/Canvas exporter, URL/clipboard, 운영 발급·publish·
+  orphan cleanup은 계속 `0 / NOT TESTED`다.
+- 다음은 스펙 082 shared Canvas executor boundary이며 실제 UI 구현은 아직 시작하지 않는다.
+
 ## Codex 재검수 — CORRECTION_REQUIRED 라운드 2
 
 - 라운드 1의 기존 3개 결함과 EOL은 해결됐고 전체 check(unit 2382/2382), bundle/diff/port gate는
@@ -120,3 +131,10 @@ Codex 라운드 2가 지적한 failure metadata 조합 검사 한 건만 고쳤�
   **0 / NOT TESTED**다.
 - 상태 `READY_FOR_CODEX`, fix_round 2/3, next transition `CODEX_SPEC_081_REVIEW`.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 최종 상태
+
+- Codex final review: `CODEX_PASSED` (`HEAD=origin=df75655`).
+- 스펙 081: `DONE / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK`.
+- 독립 게이트: targeted 215/215, 전체 unit 2408/2408, build 2개, bundle/CSS exact, EOL/diff/port/temp PASS.
+- 다음: spec 082 shared Canvas executor boundary, `READY_FOR_CLAUDE`.

@@ -617,3 +617,23 @@ bucket/network/live/UID/deploy, URL/clipboard, 운영 발급, publish/delete/orp
 
 상태 `READY_FOR_CODEX`, fix_round **2/3**, next transition `CODEX_SPEC_081_REVIEW`. 다음 UI 스펙과
 자동화·반복 작업은 시작하지 않았다. 전체 진행도는 **84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
+
+### CODEX FINAL REVIEW — CODEX_PASSED (2026-08-27)
+
+검수 기준 `HEAD=origin=df75655`, ahead/behind `0/0`. 구현 `7dc148f`, 보완 `096e65e`·`f36cf54`,
+기록 `df75655`를 독립 대조했다.
+
+- 라운드 2 diff는 `issue-session.ts`와 `issue-session.test.ts` 두 파일뿐이다.
+- 8개 `SpaceV2IssueErrorCode` 전부가 정본 `category/retryable`과 exhaustively 결합되고,
+  `Object.hasOwn`으로 prototype 경유 code를 거부한다.
+- targeted `issue-session` + `issue-bundle` + `write-port` **215/215 PASS**.
+- `node scripts/check.mjs` **PASS**: format, lint, typecheck 7개, unit **2408/2408**, build 2개.
+- admin/customer entry와 CSS 2개 byte·SHA-256이 완료 기록과 exact 일치했다.
+- EOL **2/2**, `git diff --check` PASS, 포트 6개 잔류 0, `test-results` 없음.
+
+따라서 스펙 081은 **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**다.
+Chromium E2E와 emulator는 이 스펙에서 **NOT RUN**이다. actual Firebase/project/bucket/network/live/UID/
+deploy, URL/clipboard, 운영 발급, publish/delete/orphan cleanup은 계속 **0 / NOT TESTED**다.
+
+다음 스펙은 실제 UI 전에 공용 Canvas executor 단일 소스 경계를 만드는 스펙 082다. 전체 리빌드 진행도는
+**84~87% 완료 / 13~16% 잔여**로 유지한다.

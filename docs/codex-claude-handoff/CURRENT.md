@@ -24,7 +24,23 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 081 보완 라운드 2 완료, Codex 재검수 대기.**
+상태: **`READY_FOR_CLAUDE` - 스펙 081 CODEX_PASSED, 스펙 082 shared Canvas executor 계약 준비.**
+
+스펙 081 최종 검수 기준은 `HEAD=origin=df75655`, ahead/behind `0/0`이다. 라운드 2 diff 두 파일,
+8개 error code의 exact metadata mapping, prototype own-key 차단을 확인했다. 독립 실측은 targeted
+**215/215**, 전체 check unit **2408/2408**, build 2개, production bundle/CSS exact hash, EOL 2/2,
+diff/port/temp gate PASS다. 따라서 스펙 081은
+`DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK`다.
+
+다음은 `docs/rebuild/specs/082-shared-canvas-plan-executor-boundary.md`다. 실제 admin Space V2 issue UI
+전에 고객 앱 내부 executor를 `@denn/render`의 단일 구현으로 옮기고 mockup에는 thin re-export만 남긴다.
+이 단위는 non-UI이며 admin 앱, proof exporter, Firebase SDK wiring, URL/clipboard를 수정하지 않는다.
+실제 UI/UX 구현은 이후 Claude Code 스펙에서만 수행한다.
+
+actual Firebase/project/bucket/network/live/UID/deploy, 운영 발급·publish·delete/orphan cleanup은 계속
+금지/NOT TESTED다. 전체 진행도는 **84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
+
+> 아래 스펙 081 보완 라운드 2 설명은 최종 통과 전 이력이다.
 
 Codex 라운드 2가 지적한 **failure metadata 조합 검사 한 건만** 고쳤다. 지적은 맞았다. 기준
 `HEAD=origin=c6ea3bf`, 재검수 문서 commit `829bf37`, 보완 commit `f36cf54`.

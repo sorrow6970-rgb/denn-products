@@ -6389,6 +6389,36 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `CORRECTION_REQUIRED`, fix_round **2/3**, next `CLAUDE_CORRECTION`. 자동화 시작 0.
 - 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
+## 2026-08-27 - 스펙 081 Codex 최종 검수 통과 · 스펙 082 다음 지시 준비
+
+- 기준 `HEAD=origin=df75655`, ahead/behind `0/0`. 구현 `7dc148f`, 보완 `096e65e`·`f36cf54`, 기록
+  `df75655`를 독립 검수했다.
+- 라운드 2 제품 diff는 `apps/admin/src/space-v2/issue-session.ts`와 `.test.ts` 두 파일뿐이다. 정본
+  `packages/firebase/src/space-write/errors.ts`와 대조해 8개 code의 exact category/retryable mapping,
+  exhaustiveness, `Object.hasOwn` prototype 차단을 확인했다.
+- 독립 실측:
+  - targeted `issue-session` + `issue-bundle` + `write-port`: **215/215 PASS**.
+  - `node scripts/check.mjs`: format/lint/typecheck 7개/unit **2408/2408**/build 2개 PASS.
+  - admin entry `index-D0XOQpRL.js` 226,201 B,
+    `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`.
+  - customer entry `index-BUT7Bmak.js` 340,604 B,
+    `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`.
+  - admin CSS 9,146 B / `6A6804798B0EDB86915ED19FD0E2CA309E34AC3C3FAE2C88EBC773A479BD29FD`.
+  - customer CSS 19,381 B / `A68DCF41E374F1705D82141668CCDB18B2BC7DDA601A9A47BCCA0936257BBD12`.
+  - EOL 2/2, `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199 FREE,
+    `test-results` ABSENT.
+- 판정: 스펙 081 **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**.
+- Chromium E2E와 emulator는 스펙 081에서 **NOT RUN**이다. actual Firebase/project/bucket/network/live/
+  UID/deploy, URL/clipboard, 운영 발급, publish/delete/orphan cleanup은 계속 **0 / NOT TESTED**다.
+- 다음 실제 admin UI 전에 cross-app import·executor 복제를 막기 위한 스펙 082
+  `shared Canvas plan executor boundary` 계약과 handoff를 작성했다. 기존 mockup executor를 동작 변화 없이
+  `@denn/render`의 단일 구현으로 옮기는 non-UI 구조 단위다.
+- 실제 UI/UX 구현은 사용자 지시대로 Claude Code가 담당한다. 스펙 082에는 admin UI·proof exporter·SDK
+  composition이 없다.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_082_IMPLEMENTATION`. 자동화 생성 0, Codex commit/push 0.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 고정 spec 분모가 아니라 7개 roadmap
+  작업축 기반 관리 추정이며, 이번 구조 계약만으로 완료율을 올리지 않았다.
+
 ## 2026-08-27 - 스펙 081 보완 라운드 2 (failure metadata 조합)
 
 - 기준 `HEAD=origin=c6ea3bf`, ahead/behind 0/0. Codex 재검수 문서 commit `829bf37`, 보완 commit
@@ -6433,3 +6463,15 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CODEX`, fix_round **2/3**, next transition `CODEX_SPEC_081_REVIEW`. 다음 UI 스펙과
   자동화·반복 작업은 시작하지 않았다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-27 - 최신 포인터 · 스펙 081 CODEX_PASSED / 스펙 082 READY_FOR_CLAUDE
+
+- 위 보완 기록 뒤 Codex가 `HEAD=origin=df75655`에서 독립 재검증했다.
+- targeted **215/215**, 전체 check unit **2408/2408**, build 2개, bundle/CSS exact SHA-256,
+  EOL 2/2, diff/port/temp gate PASS다.
+- 스펙 081 최종 상태는 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK`다.
+- 다음 실행 문서는 `docs/rebuild/specs/082-shared-canvas-plan-executor-boundary.md`와
+  `Automation/NEXT_CLAUDE_PROMPT.md`다. 상태는 `READY_FOR_CLAUDE`다.
+- actual Firebase/network/live/UID/deploy, admin UI, 운영 발급·publish·delete/orphan cleanup은 계속
+  금지/NOT TESTED다. 자동화 생성·Codex commit/push는 0이다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여**다.
