@@ -99,7 +99,6 @@ test("the customer bundle contains only the approved lazy space Firestore bounda
     "admin/state.json",
     "onAuthStateChanged",
     "signInWithEmailAndPassword",
-    "getAuth",
     "uploadBytes",
     "uploadBytesResumable",
     "uploadString",
@@ -109,4 +108,13 @@ test("the customer bundle contains only the approved lazy space Firestore bounda
   ]) {
     expect(bundle.includes(marker), marker).toBe(false);
   }
+
+  // `getAuth` stays forbidden, but as a WHOLE identifier rather than a raw substring. Since the
+  // customer app gained its approved lazy `firebase/storage` import (specs 079/080), the Storage
+  // SDK's own internal `_getAuthToken` sits in a vendor chunk and matched `bundle.includes("getAuth")`
+  // — a false positive, not evidence that the Auth product API is reachable. Requiring identifier
+  // boundaries on both sides keeps every real `getAuth(` / exported `getAuth` name blocked (the admin
+  // bundle, which does use Auth, matches this pattern) while `_getAuthToken` and `getAuthToken` no
+  // longer trip it. This narrows the false positives only; it does not narrow the boundary.
+  expect(bundle, "getAuth").not.toMatch(/(?<![A-Za-z0-9_$])getAuth(?![A-Za-z0-9_$])/);
 });

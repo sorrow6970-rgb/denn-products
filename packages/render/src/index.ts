@@ -29,5 +29,11 @@ export interface RenderOutput {
 
 export type RenderResult = Result<RenderOutput, "not-implemented">;
 
+/**
+ * What is STILL missing from this package: only the generic `RenderInput -> RenderOutput` facade
+ * above. The geometry contract, the preview render plan and — since spec 082 — the Canvas 2D
+ * executor for that plan are all implemented and exported here; image loading and print/PNG export
+ * belong to the apps, not to this package.
+ */
 export const RENDER_NOT_IMPLEMENTED =
-  "the Canvas executor (ctx draw) + print/PNG export are implemented in a later spec (geometry + preview render plan are done)" as const;
+  "the generic RenderInput -> RenderOutput facade is implemented in a later spec (geometry, preview render plan and the Canvas plan executor are done)" as const;
