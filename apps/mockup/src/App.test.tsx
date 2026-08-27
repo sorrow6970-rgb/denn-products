@@ -4,6 +4,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MockupRoot } from "./App";
 import { publicCatalogReader } from "./catalog/reader";
+import type { PreviewImageBindings } from "./canvas/types";
+import type { SpaceGateController } from "./space-v2/production-controller";
 import { SpaceLinkOpenController } from "./space/controller";
 
 const postAuthView = vi.hoisted(() => vi.fn());
@@ -11,6 +13,14 @@ vi.mock("./space/SpacePostAuthFrameView", () => ({
   SpacePostAuthFrameView: (props: unknown) => {
     postAuthView(props);
     return "POST_AUTH_FRAME_MARKER";
+  },
+}));
+
+const proofView = vi.hoisted(() => vi.fn());
+vi.mock("./space-v2/SpaceV2ProofView", () => ({
+  SpaceV2ProofView: (props: unknown) => {
+    proofView(props);
+    return "V2_PROOF_VIEW_MARKER";
   },
 }));
 
@@ -65,6 +75,7 @@ async function readyController(): Promise<SpaceLinkOpenController> {
 describe("MockupRoot space mode", () => {
   beforeEach(() => {
     postAuthView.mockClear();
+    proofView.mockClear();
   });
 
   it.each([
@@ -106,5 +117,40 @@ describe("MockupRoot space mode", () => {
     ]) {
       expect(html).not.toContain(secret);
     }
+  });
+
+  it("mounts the V2 proof screen with only the plan and the bindings", () => {
+    const plan = { kind: "frame", logicalCanvas: { width: 320, height: 480 }, commands: [] };
+    const imageBindings: PreviewImageBindings = { get: () => undefined };
+    const controller: SpaceGateController = {
+      getState: () => ({
+        status: "ready",
+        requestId: 1,
+        v2: { plan: plan as never, imageBindings },
+      }),
+      subscribe: () => () => undefined,
+      attach: () => undefined,
+      detach: () => undefined,
+      submitPassword: () => undefined,
+    };
+
+    const html = renderToStaticMarkup(
+      <MockupRoot
+        search="?space=PRIVATE_TOKEN_MARKER"
+        env={{}}
+        createSpaceController={() => controller}
+      />,
+    );
+
+    expect(html).toContain("V2_PROOF_VIEW_MARKER");
+    expect(html).not.toContain("POST_AUTH_FRAME_MARKER");
+    expect(postAuthView).not.toHaveBeenCalled();
+    expect(proofView).toHaveBeenCalledOnce();
+    const childProps = proofView.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(Object.keys(childProps).sort()).toEqual(["imageBindings", "plan"]);
+    expect(childProps.plan).toBe(plan);
+    expect(childProps.imageBindings).toBe(imageBindings);
+    expect(html).not.toContain("catalog-status");
+    expect(html).not.toContain("PRIVATE_TOKEN_MARKER");
   });
 });

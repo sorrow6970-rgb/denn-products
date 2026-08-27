@@ -1,5 +1,4 @@
 import { Badge, Button, Card, TextField } from "@denn/ui";
-import type { SpaceSceneV1 } from "@denn/spaces";
 import {
   type ReactNode,
   useCallback,
@@ -8,16 +7,36 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import type { SpaceLinkOpenController } from "./controller";
-import { safeSpaceViewMessage } from "./messages";
+import type { SpaceSceneV1 } from "@denn/spaces";
+import {
+  safeSpaceVersionedViewMessage,
+  type SpaceGateController,
+  type SpaceV2ReadyView,
+} from "../space-v2/production-controller";
+
+type SpaceGateSnapshot = ReturnType<SpaceGateController["getState"]>;
+
+/** Kept from spec 061: a ready state with no injected child still says so, and shows nothing else. */
+const pendingNotice = (
+  <div role="status" aria-live="polite" data-testid="space-status">
+    <p>시안 인증이 완료되었습니다.</p>
+    <p>시안 화면 연결은 다음 안전 검증 단계에서 제공됩니다.</p>
+  </div>
+);
 
 export function SpacePasswordGate({
   controller,
   renderReady,
+  renderReadyV2,
 }: {
-  readonly controller: SpaceLinkOpenController;
+  readonly controller: SpaceGateController;
   /** Injectable post-auth seam. Only the validated scene crosses this view boundary. */
   readonly renderReady?: (scene: SpaceSceneV1) => ReactNode;
+  /**
+   * Injectable V2 post-auth seam (spec 080). Only the verified plan and its drawable lookup cross
+   * this boundary — never the document, the evidence, the bytes or the password.
+   */
+  readonly renderReadyV2?: (view: SpaceV2ReadyView) => ReactNode;
 }): React.JSX.Element {
   const snapshot = useSyncExternalStore(
     controller.subscribe,
@@ -41,6 +60,13 @@ export function SpacePasswordGate({
     setPassword("");
     controller.submitPassword(attempt);
   }, [controller, password]);
+
+  const renderReadyBody = (ready: Extract<SpaceGateSnapshot, { status: "ready" }>): ReactNode => {
+    if ("v2" in ready) {
+      return renderReadyV2 === undefined ? pendingNotice : renderReadyV2(ready.v2);
+    }
+    return renderReady === undefined ? pendingNotice : renderReady(ready.value.scene);
+  };
 
   const awaiting = snapshot.status === "awaiting-password";
   const retryableError = snapshot.status === "error" && snapshot.retryable;
@@ -78,23 +104,15 @@ export function SpacePasswordGate({
             ) : null}
             {snapshot.status === "invalid-link" ? (
               <p role="alert" data-testid="space-status">
-                {safeSpaceViewMessage("SPACE_VIEW_INVALID_LINK")}
+                {safeSpaceVersionedViewMessage("SPACE_VIEW_INVALID_LINK")}
               </p>
             ) : null}
             {snapshot.status === "error" ? (
               <p role="alert" data-testid="space-status">
-                {safeSpaceViewMessage(snapshot.code)}
+                {safeSpaceVersionedViewMessage(snapshot.code)}
               </p>
             ) : null}
-            {snapshot.status === "ready" && renderReady !== undefined
-              ? renderReady(snapshot.value.scene)
-              : null}
-            {snapshot.status === "ready" && renderReady === undefined ? (
-              <div role="status" aria-live="polite" data-testid="space-status">
-                <p>시안 인증이 완료되었습니다.</p>
-                <p>시안 화면 연결은 다음 안전 검증 단계에서 제공됩니다.</p>
-              </div>
-            ) : null}
+            {snapshot.status === "ready" ? renderReadyBody(snapshot) : null}
           </div>
         </Card>
       </div>

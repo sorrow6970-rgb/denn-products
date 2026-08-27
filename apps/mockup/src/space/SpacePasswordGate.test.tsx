@@ -3,8 +3,21 @@ import type { SpaceOpenPort } from "@denn/spaces";
 import type { SpaceSceneV1 } from "@denn/spaces";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import type { PreviewImageBindings } from "../canvas/types";
+import type { SpaceGateController } from "../space-v2/production-controller";
 import { SpaceLinkOpenController } from "./controller";
 import { SpacePasswordGate } from "./SpacePasswordGate";
+
+/** A controller pinned to one state: the gate is a pure projection of whatever it reports. */
+function pinned(state: ReturnType<SpaceGateController["getState"]>): SpaceGateController {
+  return {
+    getState: () => state,
+    subscribe: () => () => undefined,
+    attach: () => undefined,
+    detach: () => undefined,
+    submitPassword: () => undefined,
+  };
+}
 
 const reader: SpaceDocumentReadPort = {
   load: async () => ({
@@ -121,5 +134,88 @@ describe("SpacePasswordGate", () => {
     expect(html).not.toContain("private-owner");
     expect(html).not.toContain("private-created-at");
     expect(html).not.toContain("private-token");
+  });
+
+  it("routes a V2 ready state to the V2 seam with only the plan and the bindings", () => {
+    const plan = { kind: "frame", logicalCanvas: { width: 320, height: 480 }, commands: [] };
+    const imageBindings: PreviewImageBindings = { get: () => undefined };
+    const renderReady = vi.fn(() => <p>V1_CHILD_MARKER</p>);
+    const renderReadyV2 = vi.fn(() => <p>V2_CHILD_MARKER</p>);
+
+    const html = renderToStaticMarkup(
+      <SpacePasswordGate
+        controller={pinned({
+          status: "ready",
+          requestId: 1,
+          v2: { plan: plan as never, imageBindings },
+        })}
+        renderReady={renderReady}
+        renderReadyV2={renderReadyV2}
+      />,
+    );
+
+    expect(html).toContain("V2_CHILD_MARKER");
+    expect(html).not.toContain("V1_CHILD_MARKER");
+    expect(renderReady).not.toHaveBeenCalled();
+    expect(renderReadyV2).toHaveBeenCalledOnce();
+    expect(renderReadyV2).toHaveBeenCalledWith({ plan, imageBindings });
+  });
+
+  it("routes a V1 ready state to the V1 seam even when both are supplied", () => {
+    const renderReady = vi.fn(() => <p>V1_CHILD_MARKER</p>);
+    const renderReadyV2 = vi.fn(() => <p>V2_CHILD_MARKER</p>);
+
+    const html = renderToStaticMarkup(
+      <SpacePasswordGate
+        controller={pinned({
+          status: "ready",
+          requestId: 1,
+          value: {
+            ownerLabel: "PRIVATE_OWNER_MARKER",
+            createdAt: "PRIVATE_CREATED_AT_MARKER",
+            scene: readyScene,
+          },
+        })}
+        renderReady={renderReady}
+        renderReadyV2={renderReadyV2}
+      />,
+    );
+
+    expect(html).toContain("V1_CHILD_MARKER");
+    expect(renderReadyV2).not.toHaveBeenCalled();
+    expect(renderReady).toHaveBeenCalledWith(readyScene);
+    expect(html).not.toContain("PRIVATE_OWNER_MARKER");
+  });
+
+  it("shows the safe V2 failure wording without a code", () => {
+    const html = renderToStaticMarkup(
+      <SpacePasswordGate
+        controller={pinned({
+          status: "error",
+          requestId: 1,
+          code: "SPACE_V2_VIEW_UNAVAILABLE",
+          retryable: false,
+        })}
+      />,
+    );
+    expect(html).toContain("시안을 표시할 수 없습니다.");
+    expect(html).not.toContain("SPACE_V2_VIEW_UNAVAILABLE");
+    expect(html).not.toContain('type="password"');
+  });
+
+  it("asks for the password again for a retryable V2 proof failure", () => {
+    const html = renderToStaticMarkup(
+      <SpacePasswordGate
+        controller={pinned({
+          status: "error",
+          requestId: 1,
+          code: "SPACE_V2_VIEW_PROOF_UNAVAILABLE",
+          retryable: true,
+        })}
+      />,
+    );
+    expect(html).toContain("시안을 불러오지 못했습니다. 잠시 후 다시 시도하세요.");
+    expect(html).toContain('type="password"');
+    expect(html).toContain("시안 보기");
   });
 });

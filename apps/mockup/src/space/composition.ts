@@ -1,18 +1,36 @@
 import {
   createFirebaseSpaceReadFacade,
+  createFirebaseSpaceV2ProofReadFacade,
   createSpaceDocumentReadPort,
+  createSpaceV2ProofBytesReader,
   type SpaceDocumentReadPort,
   type SpaceDocumentReadResult,
   type SpaceReadFirebaseConfig,
   type SpaceReadFirebaseFacade,
+  type SpaceV2ProofReadFirebaseFacade,
 } from "@denn/firebase/space-read";
-import { createSpaceOpenPort, type SpaceOpenPort } from "@denn/spaces";
+import {
+  createSpaceOpenPort,
+  createSpaceV2OpenPort,
+  type SpaceOpenPort,
+  type SpaceSha256Port,
+} from "@denn/spaces";
+import { createSpaceV2ProofDecoderOwner } from "../space-v2/browser-png-decoder";
+import {
+  type SpaceV2ReplayBundle,
+  type SpaceV2ReplayFactory,
+  SpaceVersionedViewController,
+} from "../space-v2/production-controller";
+import { createSpaceV2FrameReplayController } from "../space-v2/replay-controller";
 import { resolveSpaceFirebaseConfig } from "./config";
-import { SpaceLinkOpenController } from "./controller";
 
 export interface SpaceCompositionDependencies {
   readonly createFacade?: (config: SpaceReadFirebaseConfig) => Promise<SpaceReadFirebaseFacade>;
   readonly opener?: SpaceOpenPort;
+  readonly createProofFacade?: (
+    config: SpaceReadFirebaseConfig,
+  ) => Promise<SpaceV2ProofReadFirebaseFacade>;
+  readonly createV2Replay?: SpaceV2ReplayFactory;
 }
 
 function unavailable(correlationId: string): SpaceDocumentReadResult {
@@ -21,6 +39,17 @@ function unavailable(correlationId: string): SpaceDocumentReadResult {
     error: { code: "SPACE_READ_FORBIDDEN", retryable: false, correlationId },
   };
 }
+
+/**
+ * Building this object touches no browser API; `crypto.subtle` is read only when a V2 payload
+ * actually reaches the digest step.
+ */
+const webCryptoSha256: SpaceSha256Port = {
+  async digest(bytes) {
+    const digest = await globalThis.crypto.subtle.digest("SHA-256", Uint8Array.from(bytes).buffer);
+    return new Uint8Array(digest);
+  },
+};
 
 export function createLazySpaceDocumentReader(
   env: ImportMetaEnv | Record<string, unknown> | undefined,
@@ -49,14 +78,55 @@ export function createLazySpaceDocumentReader(
   };
 }
 
+/**
+ * The V2 side, built at most once and ONLY when a `space-v2` document has already been read. Until
+ * then nothing here runs: no Storage service, no Blob, no Image, no Canvas binding. The proof
+ * reader reuses the same resolved config as the document reader, so both share the one
+ * `denn-space-viewer` named app rather than owning two Firebase apps with drifting options.
+ */
+export function createLazySpaceV2Replay(
+  env: ImportMetaEnv | Record<string, unknown> | undefined,
+  createProofFacade: (
+    config: SpaceReadFirebaseConfig,
+  ) => Promise<SpaceV2ProofReadFirebaseFacade> = createFirebaseSpaceV2ProofReadFacade,
+): SpaceV2ReplayFactory {
+  const resolution = resolveSpaceFirebaseConfig(env);
+  let bundlePromise: Promise<SpaceV2ReplayBundle> | null = null;
+
+  return async () => {
+    if (resolution.status !== "configured") return null;
+    bundlePromise ??= (async () => {
+      const facade = await createProofFacade(resolution.config);
+      const owner = createSpaceV2ProofDecoderOwner();
+      return {
+        controller: createSpaceV2FrameReplayController({
+          opener: createSpaceV2OpenPort(),
+          proof: createSpaceV2ProofBytesReader(facade),
+          sha256: webCryptoSha256,
+          decoder: owner.decoder,
+        }),
+        imageBindings: owner.bindings,
+        clear: owner.clear,
+      };
+    })();
+    try {
+      return await bundlePromise;
+    } catch {
+      // Fails closed as "cannot display", never as a silent V1 fallback.
+      return null;
+    }
+  };
+}
+
 export function createSpaceProductionController(
   search: unknown,
   env: ImportMetaEnv | Record<string, unknown> | undefined,
   dependencies: SpaceCompositionDependencies = {},
-): SpaceLinkOpenController {
-  return new SpaceLinkOpenController(
+): SpaceVersionedViewController {
+  return new SpaceVersionedViewController(
     search,
     createLazySpaceDocumentReader(env, dependencies.createFacade),
     dependencies.opener ?? createSpaceOpenPort(),
+    dependencies.createV2Replay ?? createLazySpaceV2Replay(env, dependencies.createProofFacade),
   );
 }

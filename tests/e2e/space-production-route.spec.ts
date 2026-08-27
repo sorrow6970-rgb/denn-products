@@ -270,3 +270,215 @@ for (const shot of SHOTS) {
     });
   });
 }
+
+// --- spec 080: the V2 customer viewer --------------------------------------
+//
+// Every V2 mode below is driven by the fixture's in-memory synthetic PNG through the REAL replay
+// controller, browser decoder and Canvas surface. The only requests a V2 run may make are the
+// fixture's own `blob:` object URLs, which never leave the browser.
+
+const V2_SECRETS = [
+  "SPEC_061_PRIVATE_TOKEN",
+  "SYNTHETIC_PASSWORD",
+  "PRIVATE_STORAGE_MARKER",
+  "rebuild-space-assets",
+  "SPACE_V2_",
+  "space-scene-v2",
+  "123e4567-e89b-42d3-a456-426614174000",
+];
+
+const external = (probe: RouteProbe): string[] =>
+  probe.requests.filter((url) => !url.startsWith("blob:"));
+
+const v2Url = (mode: string): string => `${FIXTURE_URL}?mode=${mode}`;
+
+async function authenticateWith(page: Page, password: string): Promise<void> {
+  await page.getByTestId("space-password").fill(password);
+  // A real keyboard submit, not a synthetic click.
+  await page.getByTestId("space-submit").press("Enter");
+}
+
+test("the V2 route renders the saved proof on a real canvas with zero external traffic", async ({
+  page,
+}) => {
+  const probe = await installProbe(page);
+  await page.goto(v2Url("v2"));
+
+  await expect(page.getByTestId("space-password")).toBeVisible();
+  await expect(page.getByTestId("space-v2-proof-view")).toHaveCount(0);
+  expect(await page.evaluate(() => window.__DENN_SPACE_PRODUCTION_ROUTE_FIXTURE__)).toMatchObject({
+    documentReads: 0,
+    v2Bundles: 0,
+    proofReads: 0,
+    decodes: 0,
+  });
+
+  await authenticateWith(page, "SYNTHETIC_PASSWORD");
+  const view = page.getByTestId("space-v2-proof-view");
+  await expect(view).toBeVisible();
+  await expect(view.getByRole("heading", { name: "내 공간 시안" })).toBeVisible();
+  await expect(view).toContainText("저장된 시안 · 열람 전용");
+  await expect(view).toContainText("저장된 액자 구성을 확인할 수 있습니다.");
+
+  const canvas = page.getByTestId("preview-canvas");
+  await expect(canvas).toBeVisible();
+  await expect(canvas).toHaveAttribute("aria-label", "저장된 액자 시안");
+  await settle(page);
+  // "ready" is only reported when the executor found the decoded drawable behind the plan's
+  // imageRef, so this is the end-to-end proof that the binding survived the whole pipeline.
+  await expect(page.getByTestId("canvas-status")).toHaveText("미리보기가 준비되었습니다.");
+
+  // No download / save / order / share affordance, and no fallback <img>.
+  await expect(view.locator("img")).toHaveCount(0);
+  await expect(view.getByRole("button")).toHaveCount(0);
+  await expect(view.getByRole("link")).toHaveCount(0);
+  await expect(page.getByTestId("space-frame-view")).toHaveCount(0);
+
+  expect(external(probe)).toEqual([]);
+  expect(await page.evaluate(() => window.__DENN_SPACE_PRODUCTION_ROUTE_FIXTURE__)).toMatchObject({
+    documentReads: 1,
+    sceneOpens: 0,
+    v2Bundles: 1,
+    v2Opens: 1,
+    proofReads: 1,
+    decodes: 1,
+  });
+
+  const body = await page.locator("body").innerText();
+  const output = [body, ...probe.consoleMessages].join("\n");
+  for (const secret of V2_SECRETS) {
+    expect(output).not.toContain(secret);
+  }
+  expect(probe.consoleProblems).toEqual([]);
+
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(
+    accessibility.violations.filter((item) => ["serious", "critical"].includes(item.impact ?? "")),
+  ).toEqual([]);
+});
+
+test("a wrong V2 password asks again and reuses the already read document", async ({ page }) => {
+  const probe = await installProbe(page);
+  await page.goto(v2Url("v2-wrong-password"));
+
+  await authenticateWith(page, "WRONG_PASSWORD");
+  await expect(page.getByTestId("space-status")).toHaveText("비밀번호가 올바르지 않습니다.");
+  await expect(page.getByTestId("space-password")).toBeVisible();
+  await expect(page.getByTestId("preview-canvas")).toHaveCount(0);
+  // The gate cleared the field on submit; nothing is remembered or auto-resent.
+  await expect(page.getByTestId("space-password")).toHaveValue("");
+  expect(await page.evaluate(() => window.__DENN_SPACE_PRODUCTION_ROUTE_FIXTURE__)).toMatchObject({
+    documentReads: 1,
+    proofReads: 0,
+    decodes: 0,
+  });
+
+  await authenticateWith(page, "SYNTHETIC_PASSWORD");
+  await expect(page.getByTestId("space-v2-proof-view")).toBeVisible();
+  await settle(page);
+  await expect(page.getByTestId("canvas-status")).toHaveText("미리보기가 준비되었습니다.");
+  expect(await page.evaluate(() => window.__DENN_SPACE_PRODUCTION_ROUTE_FIXTURE__)).toMatchObject({
+    documentReads: 1,
+    v2Bundles: 1,
+    v2Opens: 2,
+    proofReads: 1,
+  });
+  expect(external(probe)).toEqual([]);
+  expect(probe.consoleProblems).toEqual([]);
+});
+
+test("an unavailable proof stays retryable and never retries on its own", async ({ page }) => {
+  const probe = await installProbe(page);
+  await page.goto(v2Url("v2-proof-unavailable"));
+
+  await authenticateWith(page, "SYNTHETIC_PASSWORD");
+  await expect(page.getByTestId("space-status")).toHaveText(
+    "시안을 불러오지 못했습니다. 잠시 후 다시 시도하세요.",
+  );
+  await expect(page.getByTestId("space-password")).toBeVisible();
+  await expect(page.getByTestId("preview-canvas")).toHaveCount(0);
+
+  await settle(page);
+  await page.waitForTimeout(1500);
+  expect(await page.evaluate(() => window.__DENN_SPACE_PRODUCTION_ROUTE_FIXTURE__)).toMatchObject({
+    proofReads: 1,
+    decodes: 0,
+  });
+  expect(external(probe)).toEqual([]);
+
+  const body = await page.locator("body").innerText();
+  expect(body).not.toContain("PRIVATE_STORAGE_MARKER");
+  expect(probe.consoleProblems).toEqual([]);
+});
+
+test("a proof that fails its digest closes without a retry control", async ({ page }) => {
+  const probe = await installProbe(page);
+  await page.goto(v2Url("v2-mismatch"));
+
+  await authenticateWith(page, "SYNTHETIC_PASSWORD");
+  await expect(page.getByTestId("space-status")).toHaveText("시안을 표시할 수 없습니다.");
+  await expect(page.getByTestId("space-status")).toHaveAttribute("role", "alert");
+  // Non-retryable: the password field is withdrawn, so there is nothing to resubmit.
+  await expect(page.getByTestId("space-password")).toHaveCount(0);
+  await expect(page.getByTestId("space-submit")).toHaveCount(0);
+  await settle(page);
+  await expect(page.locator("canvas")).toHaveCount(0);
+  await expect(page.getByTestId("space-v2-proof-view")).toHaveCount(0);
+  expect(await page.evaluate(() => window.__DENN_SPACE_PRODUCTION_ROUTE_FIXTURE__)).toMatchObject({
+    proofReads: 1,
+    decodes: 0,
+  });
+  expect(external(probe)).toEqual([]);
+  expect(probe.consoleProblems).toEqual([]);
+});
+
+test("the V2 viewer fits a 320px viewport without horizontal overflow", async ({ page }) => {
+  await installProbe(page);
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto(v2Url("v2"));
+  await authenticateWith(page, "SYNTHETIC_PASSWORD");
+  await expect(page.getByTestId("preview-canvas")).toBeVisible();
+  await settle(page);
+
+  const overflow = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }));
+  expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
+
+  const box = await page.getByTestId("space-v2-proof-view").boundingBox();
+  expect(box).not.toBeNull();
+  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(overflow.clientWidth);
+});
+
+test("unmounting the V2 route leaves no canvas and starts no deferred work", async ({ page }) => {
+  const probe = await installProbe(page);
+  await page.goto(v2Url("v2"));
+  await authenticateWith(page, "SYNTHETIC_PASSWORD");
+  await expect(page.getByTestId("preview-canvas")).toBeVisible();
+
+  await page.getByTestId("fixture-unmount").click();
+  await expect(page.getByTestId("space-view-mode")).toHaveCount(0);
+  await expect(page.locator("canvas")).toHaveCount(0);
+  await settle(page);
+  await page.waitForTimeout(500);
+  expect(external(probe)).toEqual([]);
+  expect(probe.consoleProblems).toEqual([]);
+});
+
+// --- spec 080 representative screenshots (synthetic fixture only) -----------
+for (const shot of SHOTS) {
+  test(`spec080 screenshot ${shot.name}`, async ({ page }) => {
+    await installProbe(page);
+    await page.setViewportSize({ width: shot.width, height: shot.height });
+    await page.goto(v2Url("v2"));
+    await authenticateWith(page, "SYNTHETIC_PASSWORD");
+    await expect(page.getByTestId("preview-canvas")).toBeVisible();
+    await settle(page);
+    await expect(page.getByTestId("canvas-status")).toHaveText("미리보기가 준비되었습니다.");
+    await page.screenshot({
+      path: `docs/rebuild/results/spec-080/space-v2-viewer-${shot.name}.png`,
+      fullPage: true,
+    });
+  });
+}

@@ -6,8 +6,9 @@ import { safeCatalogMessage } from "./catalog/messages";
 import { publicCatalogReader } from "./catalog/reader";
 import type { PublicCatalogUiState } from "./catalog/types";
 import { usePublicCatalog } from "./catalog/usePublicCatalog";
+import type { SpaceGateController } from "./space-v2/production-controller";
+import { SpaceV2ProofView } from "./space-v2/SpaceV2ProofView";
 import { createSpaceProductionController } from "./space/composition";
-import type { SpaceLinkOpenController } from "./space/controller";
 import { readSpaceLink } from "./space/link";
 import { SpacePasswordGate } from "./space/SpacePasswordGate";
 import { SpacePostAuthFrameView } from "./space/SpacePostAuthFrameView";
@@ -25,7 +26,7 @@ export function App(): React.JSX.Element {
 export type SpaceControllerFactory = (
   search: unknown,
   env: ImportMetaEnv | Record<string, unknown> | undefined,
-) => SpaceLinkOpenController;
+) => SpaceGateController;
 
 export function MockupRoot({
   search,
@@ -59,6 +60,9 @@ function SpaceRoute({
       controller={controller}
       renderReady={(scene) => (
         <SpacePostAuthFrameView scene={scene} catalogReader={publicCatalogReader} />
+      )}
+      renderReadyV2={(view) => (
+        <SpaceV2ProofView plan={view.plan} imageBindings={view.imageBindings} />
       )}
     />
   );
