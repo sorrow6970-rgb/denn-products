@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ScriptTarget, SyntaxKind, createScanner } from "typescript/unstable/ast";
 import AxeBuilder from "@axe-core/playwright";
 import { type ConsoleMessage, expect, test } from "@playwright/test";
 import { ADMIN_PORT } from "../../playwright.config";
@@ -125,11 +126,6 @@ test("the customer bundle carries no Auth product API and no private admin path"
   expect(bundle, "getAuth").not.toMatch(/(?<![A-Za-z0-9_$])getAuth(?![A-Za-z0-9_$])/);
 });
 
-/** Remove line and block comments so a source scan measures real calls, not prose about them. */
-function stripComments(source: string): string {
-  return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
-}
-
 /** Production `.ts`/`.tsx` under a directory: no unit tests, no E2E fixtures. */
 function productionSources(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
@@ -141,6 +137,294 @@ function productionSources(dir: string, out: string[] = []): string[] {
     if (/\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name)) out.push(entry);
   }
   return out;
+}
+
+// Reading this boundary with regexes cost four correction rounds, each one closing the shape the
+// last one missed: a call, then an alias, then a property, then a named import. The shapes were
+// never the point — regex cannot see syntax, so every fix was a guess about what someone might
+// write next. So this reads the source the way the compiler does, with the TypeScript scanner that
+// already ships in this repo, and asks two questions that do not depend on guessing a shape:
+//
+//   1. What does each Firebase SDK module actually hand to this surface? That set must equal an
+//      explicit per-module allowlist — nothing missing, nothing extra. A capability nobody thought
+//      to forbid still fails, because it was never on the list.
+//   2. Is any forbidden name reachable at all, in any syntactic position?
+//
+// And a shape the reader cannot account for is reported as a failure, never passed over in silence.
+
+type Token = { kind: SyntaxKind; text: string; value: string };
+
+/** Token kinds after which a `/` is division rather than the start of a regular expression. */
+const DIVISION_FOLLOWS: ReadonlySet<SyntaxKind> = new Set([
+  SyntaxKind.Identifier,
+  SyntaxKind.NumericLiteral,
+  SyntaxKind.StringLiteral,
+  SyntaxKind.NoSubstitutionTemplateLiteral,
+  SyntaxKind.CloseParenToken,
+  SyntaxKind.CloseBracketToken,
+  SyntaxKind.CloseBraceToken,
+  SyntaxKind.ThisKeyword,
+]);
+
+/**
+ * The real TypeScript scanner, so comments, strings, template literals and regular expressions are
+ * lexed rather than pattern-matched. Two tokens need the parser's context to disambiguate, so they
+ * are re-scanned here the way a parser would: `/` (division vs. regex) and the `}` that closes a
+ * template substitution (block close vs. template middle/tail). Without the second one the scanner
+ * swallows the rest of the file as template text — silent blindness, which is the failure mode this
+ * whole check exists to avoid, so a scanner that stops advancing throws instead.
+ */
+function tokenize(source: string): Token[] {
+  const scanner = createScanner(ScriptTarget.Latest, true);
+  scanner.setText(source);
+  const tokens: Token[] = [];
+  const templates: number[] = [];
+  let braces = 0;
+  let end = -1;
+  for (let kind = scanner.scan(); kind !== SyntaxKind.EndOfFile; kind = scanner.scan()) {
+    if (kind === SyntaxKind.SlashToken || kind === SyntaxKind.SlashEqualsToken) {
+      const previous = tokens[tokens.length - 1];
+      if (!previous || !DIVISION_FOLLOWS.has(previous.kind)) kind = scanner.reScanSlashToken();
+    }
+    if (kind === SyntaxKind.OpenBraceToken) braces++;
+    else if (kind === SyntaxKind.CloseBraceToken) {
+      if (templates[templates.length - 1] === braces) {
+        kind = scanner.reScanTemplateToken(false);
+        templates.pop();
+      } else braces--;
+    }
+    if (kind === SyntaxKind.TemplateHead || kind === SyntaxKind.TemplateMiddle)
+      templates.push(braces);
+    if (scanner.getTokenEnd() <= end) throw new Error("the scanner stopped advancing");
+    end = scanner.getTokenEnd();
+    tokens.push({ kind, text: scanner.getTokenText(), value: scanner.getTokenValue() });
+  }
+  return tokens;
+}
+
+const OPENING: ReadonlySet<SyntaxKind> = new Set([
+  SyntaxKind.OpenParenToken,
+  SyntaxKind.OpenBracketToken,
+  SyntaxKind.OpenBraceToken,
+]);
+const CLOSING: ReadonlySet<SyntaxKind> = new Set([
+  SyntaxKind.CloseParenToken,
+  SyntaxKind.CloseBracketToken,
+  SyntaxKind.CloseBraceToken,
+]);
+
+/** Index of the token closing the bracket opened at `open`. */
+function matching(tokens: Token[], open: number): number {
+  let depth = 0;
+  for (let i = open; i < tokens.length; i++) {
+    if (OPENING.has(tokens[i]?.kind as SyntaxKind)) depth++;
+    else if (CLOSING.has(tokens[i]?.kind as SyntaxKind)) {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return tokens.length - 1;
+}
+
+/** The value of a plain string or untagged template literal, or null for anything computed. */
+function literalValue(token: Token | undefined): string | null {
+  if (!token) return null;
+  const plain =
+    token.kind === SyntaxKind.StringLiteral ||
+    token.kind === SyntaxKind.NoSubstitutionTemplateLiteral;
+  return plain ? token.value : null;
+}
+
+/**
+ * The module-side names in a braced clause — `{ a, b: c }`, `{ a as b }` — taken from the LEFT of
+ * `:` or `as`. That side is what the module hands over, so `{ list: l }` is a Storage `list` while
+ * `{ templateList: list }` is an ordinary local. Null means a shape this reader does not model.
+ */
+function clauseNames(tokens: Token[], open: number): string[] | null {
+  const close = matching(tokens, open);
+  const names: string[] = [];
+  let expectName = true;
+  for (let i = open + 1; i < close; i++) {
+    const token = tokens[i];
+    if (!token) return null;
+    if (token.kind === SyntaxKind.CommaToken) {
+      expectName = true;
+      continue;
+    }
+    if (!expectName) continue;
+    if (token.kind !== SyntaxKind.Identifier) return null;
+    names.push(token.text);
+    expectName = false;
+    const next = tokens[i + 1]?.kind;
+    if (next === SyntaxKind.ColonToken || next === SyntaxKind.AsKeyword) i += 1;
+  }
+  return names;
+}
+
+/**
+ * Exactly what each Firebase SDK product may hand to the customer surface. Specs 053 and 079/080
+ * (Founder MM-1=A) approved a lazy Firestore read and a lazy READ-ONLY Storage read, and this is
+ * that decision written out member by member. The check below asserts equality, so an unapproved
+ * capability fails on arrival and a deleted read path fails too.
+ */
+const APPROVED_SDK_MEMBERS: Record<string, readonly string[]> = {
+  "firebase/app": ["FirebaseApp", "getApp", "getApps", "initializeApp"],
+  "firebase/firestore": ["doc", "getDoc", "getFirestore"],
+  "firebase/storage": ["connectStorageEmulator", "getBytes", "getMetadata", "getStorage", "ref"],
+};
+
+type SdkUsage = { reached: Map<string, Set<string>>; unaccounted: string[] };
+
+/** Record `member` as reached on `module`. */
+function record(usage: SdkUsage, module: string, member: string): void {
+  const members = usage.reached.get(module) ?? new Set<string>();
+  members.add(member);
+  usage.reached.set(module, members);
+}
+
+/**
+ * Every member each `firebase/*` module hands to one file, however it is written: a named import, a
+ * type query, a destructured dynamic import, or a namespace binding whose properties are read. Any
+ * other shape — a computed member, a namespace passed around as a value, a binding this reader
+ * cannot line up with its module — lands in `unaccounted`, which the caller treats as a failure.
+ */
+function sdkUsage(tokens: Token[]): SdkUsage {
+  const usage: SdkUsage = { reached: new Map(), unaccounted: [] };
+
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i]?.kind !== SyntaxKind.ImportKeyword) continue;
+
+    // `import("m")` as an expression, or the type query `import("m").Member`.
+    if (tokens[i + 1]?.kind === SyntaxKind.OpenParenToken) {
+      const module = literalValue(tokens[i + 2]);
+      if (!module?.startsWith("firebase/")) continue;
+      const close = matching(tokens, i + 1);
+      if (tokens[close + 1]?.kind !== SyntaxKind.DotToken) continue; // bound below
+      const member = tokens[close + 2];
+      if (member?.kind !== SyntaxKind.Identifier) usage.unaccounted.push(`type query on ${module}`);
+      else record(usage, module, member.text);
+      continue;
+    }
+
+    // `import ... from "m"`.
+    let at = i + 1;
+    while (at < tokens.length && tokens[at]?.kind !== SyntaxKind.StringLiteral) at++;
+    const module = literalValue(tokens[at]);
+    if (!module?.startsWith("firebase/")) continue;
+    if (tokens[i + 1]?.kind !== SyntaxKind.OpenBraceToken) {
+      usage.unaccounted.push(`static import shape for ${module}`);
+      continue;
+    }
+    const names = clauseNames(tokens, i + 1);
+    if (!names) usage.unaccounted.push(`named import from ${module}`);
+    else for (const name of names) record(usage, module, name);
+  }
+
+  // A declaration whose initialiser pulls in SDK modules: line its binding elements up with those
+  // modules in source order, then read what each binding yields.
+  for (let i = 0; i < tokens.length; i++) {
+    const keyword = tokens[i]?.kind;
+    const declaration =
+      keyword === SyntaxKind.ConstKeyword ||
+      keyword === SyntaxKind.LetKeyword ||
+      keyword === SyntaxKind.VarKeyword;
+    if (!declaration) continue;
+
+    const equals = scanTo(tokens, i + 1, [SyntaxKind.EqualsToken, SyntaxKind.SemicolonToken]);
+    if (tokens[equals]?.kind !== SyntaxKind.EqualsToken) continue;
+    const end = scanTo(tokens, equals + 1, [SyntaxKind.SemicolonToken]);
+
+    const modules: string[] = [];
+    for (let m = equals; m < end; m++) {
+      if (tokens[m]?.kind !== SyntaxKind.ImportKeyword) continue;
+      if (tokens[m + 1]?.kind !== SyntaxKind.OpenParenToken) continue;
+      const module = literalValue(tokens[m + 2]);
+      if (module?.startsWith("firebase/")) modules.push(module);
+    }
+    if (modules.length === 0) continue;
+
+    const elements = bindingElements(tokens, i + 1, equals);
+    if (elements.length !== modules.length) {
+      usage.unaccounted.push(`${elements.length} bindings for ${modules.length} SDK modules`);
+      continue;
+    }
+    modules.forEach((module, index) => {
+      const element = elements[index];
+      if (!element) return;
+      const [from, to] = element;
+      if (tokens[from]?.kind === SyntaxKind.OpenBraceToken) {
+        const names = clauseNames(tokens, from);
+        if (!names) usage.unaccounted.push(`destructured binding for ${module}`);
+        else for (const name of names) record(usage, module, name);
+        return;
+      }
+      if (tokens[from]?.kind !== SyntaxKind.Identifier || to !== from) {
+        usage.unaccounted.push(`binding shape for ${module}`);
+        return;
+      }
+      namespaceMembers(tokens, tokens[from]?.text ?? "", from, module, usage);
+    });
+  }
+  return usage;
+}
+
+/** First index at or after `start` where one of `kinds` appears outside any bracket. */
+function scanTo(tokens: Token[], start: number, kinds: SyntaxKind[]): number {
+  let depth = 0;
+  for (let i = start; i < tokens.length; i++) {
+    const kind = tokens[i]?.kind as SyntaxKind;
+    if (OPENING.has(kind)) depth++;
+    else if (CLOSING.has(kind)) depth--;
+    else if (depth === 0 && kinds.includes(kind)) return i;
+  }
+  return tokens.length;
+}
+
+/** Token ranges of a declaration's binding elements: `[a, b]` gives two, a plain name gives one. */
+function bindingElements(tokens: Token[], start: number, equals: number): [number, number][] {
+  if (tokens[start]?.kind !== SyntaxKind.OpenBracketToken) return [[start, equals - 1]];
+  const close = matching(tokens, start);
+  const elements: [number, number][] = [];
+  let from = start + 1;
+  let depth = 0;
+  for (let i = start + 1; i <= close; i++) {
+    const kind = tokens[i]?.kind as SyntaxKind;
+    if (OPENING.has(kind)) depth++;
+    else if (CLOSING.has(kind)) depth--;
+    if ((depth === 0 && kind === SyntaxKind.CommaToken) || i === close) {
+      elements.push([from, i - 1]);
+      from = i + 1;
+    }
+  }
+  return elements;
+}
+
+/** Every member read off a namespace binding, and a failure for any use that is not a member read. */
+function namespaceMembers(
+  tokens: Token[],
+  name: string,
+  binding: number,
+  module: string,
+  usage: SdkUsage,
+): void {
+  for (let i = 0; i < tokens.length; i++) {
+    if (i === binding) continue;
+    const token = tokens[i];
+    if (token?.kind !== SyntaxKind.Identifier || token.text !== name) continue;
+    if (tokens[i - 1]?.kind === SyntaxKind.DotToken) continue; // someone else's property
+    const next = tokens[i + 1];
+    if (next?.kind === SyntaxKind.DotToken && tokens[i + 2]?.kind === SyntaxKind.Identifier) {
+      record(usage, module, tokens[i + 2]?.text ?? "");
+      continue;
+    }
+    if (next?.kind === SyntaxKind.OpenBracketToken) {
+      const member = literalValue(tokens[i + 2]);
+      if (member === null) usage.unaccounted.push(`computed member on the ${module} namespace`);
+      else record(usage, module, member);
+      continue;
+    }
+    usage.unaccounted.push(`the ${module} namespace used as a value`);
+  }
 }
 
 /**
@@ -162,94 +446,91 @@ const FORBIDDEN_STORAGE_API = [
 ] as const;
 
 /**
- * Where a forbidden Storage symbol can appear once comments are gone. Matching a CALL alone is not
- * enough — `import { uploadBytes as u }`, `const u = storage.uploadBytes` and `storage["uploadBytes"]`
- * all reach the same API without ever writing `uploadBytes(`.
+ * Every syntactic position that reaches `api`, named. A property read, a string member, and a
+ * braced clause — which covers `const { list: l } = storage`, `import { list as l }` and
+ * `export { list as l } from` alike, since all three take the name from the left of `:` or `as`.
  *
- * `list` is the one name that also occurs as ordinary English in app code (a local `list` variable,
- * a `template-list` test id), so the bare-identifier form is skipped for it — and only for it. That
- * exemption is exactly why `importedNames` exists below: a Storage `list` cannot enter this surface
- * except as a property of a namespace object or as a named binding from a module, and both are
- * checked. An ordinary local stays legal; `import { list as l } from "@denn/firebase"` does not.
+ * `list` is the one forbidden name that is also ordinary English here (a local `list`, a
+ * `template-list` test id), so the bare-identifier position is skipped for it and only for it. The
+ * exemption costs nothing: a Storage `list` still has to arrive as a member or through a clause,
+ * and the SDK allowlist above independently caps what `firebase/storage` may hand over at all.
  */
-function storageReferenceForms(api: string): RegExp[] {
-  const forms = [
-    new RegExp(`\\.\\s*${api}\\b`), // storage.uploadBytes / .uploadBytes(
-    new RegExp(`\\[\\s*["'\`]${api}["'\`]\\s*\\]`), // storage["uploadBytes"]
-  ];
-  if (api !== "list") forms.push(new RegExp(`\\b${api}\\b`)); // import { uploadBytes as u }
-  return forms;
+function forbiddenPositions(tokens: Token[], api: string): string[] {
+  const found: string[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (!token) continue;
+    if (token.kind === SyntaxKind.DotToken && tokens[i + 1]?.text === api) {
+      if (tokens[i + 1]?.kind === SyntaxKind.Identifier) found.push("property");
+      continue;
+    }
+    if (token.kind === SyntaxKind.OpenBracketToken && literalValue(tokens[i + 1]) === api) {
+      found.push("string member");
+      continue;
+    }
+    if (token.kind !== SyntaxKind.Identifier || token.text !== api) continue;
+    const before = tokens[i - 1]?.kind;
+    const after = tokens[i + 1]?.kind;
+    const inClause =
+      (before === SyntaxKind.OpenBraceToken || before === SyntaxKind.CommaToken) &&
+      (after === SyntaxKind.ColonToken ||
+        after === SyntaxKind.AsKeyword ||
+        after === SyntaxKind.CommaToken ||
+        after === SyntaxKind.CloseBraceToken);
+    if (inClause) found.push("braced clause");
+    else if (before !== SyntaxKind.DotToken && api !== "list") found.push("identifier");
+  }
+  return found;
 }
 
 /** Every module specifier a source imports, static or dynamic. */
-function importSpecifiers(source: string): string[] {
-  return [...source.matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)].map((m) => m[1] ?? "");
-}
-
-/**
- * The names a module hands to this source: the exported name in `import {...} from` and
- * `export {...} from`, taken from the LEFT of any `as`. That side is what comes out of the module,
- * so `import { list as l }` is the Storage `list` while `import { templateList as list }` is not.
- * This is the check that closes the `list` bare-identifier exemption at the module boundary, for
- * the SDK and for the allowed `@denn/firebase` root alike.
- */
-function importedNames(source: string): string[] {
-  const names: string[] = [];
-  for (const clause of source.matchAll(
-    /\b(?:import|export)\s+(?:type\s+)?\{([^}]*)\}\s*from\s*["'][^"']+["']/g,
-  )) {
-    for (const part of (clause[1] ?? "").split(",")) {
-      const name = part
-        .trim()
-        .replace(/^type\s+/, "")
-        .split(/\s+as\s+/)[0]
-        ?.trim();
-      if (name) names.push(name);
-    }
+function importSpecifiers(tokens: Token[]): string[] {
+  const specifiers: string[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const before = tokens[i - 1]?.kind;
+    if (before !== SyntaxKind.FromKeyword && before !== SyntaxKind.OpenParenToken) continue;
+    const value = literalValue(tokens[i]);
+    if (value !== null) specifiers.push(value);
   }
-  return names;
+  return specifiers;
 }
 
-/** How `api` is reached in `source`, or null when it is genuinely absent. */
-function forbiddenStorageUse(source: string, api: string): string | null {
-  const clean = stripComments(source);
-  if (importedNames(clean).includes(api)) return "named binding from a module";
-  const form = storageReferenceForms(api).find((candidate) => candidate.test(clean));
-  return form ? `reference ${form.source}` : null;
-}
-
-test("the forbidden-Storage detector catches aliases, bindings and property access, not comments", () => {
-  // A self-check: without it the surface test below could keep passing because the detector is
-  // blind, not because the app is clean.
+test("the forbidden-Storage reader sees syntax, not text", () => {
+  // A self-check: without it the surface test below could keep passing because the reader is blind,
+  // not because the app is clean. Every line here is a way someone has actually reached, or could
+  // reach, a Storage API without typing `uploadBytes(`.
   const caught = (snippet: string, api = "uploadBytes"): boolean =>
-    forbiddenStorageUse(snippet, api) !== null;
+    forbiddenPositions(tokenize(snippet), api).length > 0;
 
+  expect(caught("await storage.uploadBytes(objectRef, bytes);"), "direct call").toBe(true);
+  expect(caught("const u = storage.uploadBytes;\nu();"), "property extraction").toBe(true);
+  expect(caught('storage["uploadBytes"](ref, bytes);'), "string member").toBe(true);
   expect(caught('import { uploadBytes as u } from "firebase/storage";\nu();'), "alias import").toBe(
     true,
   );
-  expect(caught("const u = storage.uploadBytes;\nu();"), "property extraction").toBe(true);
-  expect(caught('storage["uploadBytes"](ref, bytes);'), "bracket property").toBe(true);
-  expect(caught("await storage.uploadBytes(objectRef, bytes);"), "direct call").toBe(true);
 
   // The one name whose bare identifier is deliberately not banned. Every way a Storage `list` could
-  // actually arrive is still caught — as a namespace property, and as a named binding from a module,
-  // whether that module is the SDK or the allowed `@denn/firebase` root that may one day re-export
-  // it. An ordinary local variable of the same name stays legal, which is the point of the
-  // exemption.
-  expect(caught("const u = storage.list;", "list"), "list property extraction").toBe(true);
-  expect(caught('storage["list"](objectRef);', "list"), "list bracket property").toBe(true);
+  // actually arrive is still caught: as a member, as a destructured namespace property, and as a
+  // named binding from any module — the SDK or the allowed `@denn/firebase` root that may one day
+  // re-export it. An ordinary local of the same name stays legal, which is the point.
+  expect(caught("const u = storage.list;", "list"), "list property").toBe(true);
+  expect(caught('storage["list"](objectRef);', "list"), "list string member").toBe(true);
+  expect(caught("const { list: l } = storage;\nl(objectRef);", "list"), "list destructured").toBe(
+    true,
+  );
+  expect(caught("const { list } = storage;\nlist(objectRef);", "list"), "list shorthand").toBe(
+    true,
+  );
   expect(
     caught('import { list as l } from "@denn/firebase";\nl(objectRef);', "list"),
     "list alias import from the allowed root",
   ).toBe(true);
-  expect(
-    caught('import { list } from "firebase/storage";', "list"),
-    "list named import from the SDK",
-  ).toBe(true);
-  expect(
-    caught('export { list as l } from "@denn/firebase";', "list"),
-    "list re-export alias",
-  ).toBe(true);
+  expect(caught('import { list } from "firebase/storage";', "list"), "list named import").toBe(
+    true,
+  );
+  expect(caught('export { list as l } from "@denn/firebase";', "list"), "list re-export").toBe(
+    true,
+  );
   expect(
     caught('import { templateList as list } from "./catalog";', "list"),
     "ordinary local named list",
@@ -258,11 +539,18 @@ test("the forbidden-Storage detector catches aliases, bindings and property acce
     false,
   );
 
-  // Prose about an API is not a use of it.
+  // Prose and data are not uses, and the scanner — not a regex — is what tells them apart.
   expect(caught("// uploadBytes is deliberately never called here"), "line comment").toBe(false);
   expect(caught("/* uploadBytes, uploadString and listAll stay out */"), "block comment").toBe(
     false,
   );
+  expect(caught('const label = "uploadBytes";'), "string content").toBe(false);
+
+  // The SDK reader reports what it cannot account for instead of passing it over.
+  const opaque = tokenize('const storage = await import("firebase/storage");\nstorage[name]();');
+  expect(sdkUsage(opaque).unaccounted, "computed member").not.toEqual([]);
+  const escaping = tokenize('const storage = await import("firebase/storage");\nhandOff(storage);');
+  expect(sdkUsage(escaping).unaccounted, "namespace passed as a value").not.toEqual([]);
 });
 
 test("the customer app's own Storage surface stays read-only", () => {
@@ -282,32 +570,41 @@ test("the customer app's own Storage surface stays read-only", () => {
     ...productionSources(join(firebaseSrc, "space-read")),
   ];
   expect(files.length).toBeGreaterThan(0);
-  const source = files.map((file) => stripComments(readFileSync(file, "utf8"))).join("\n");
+  const scanned = files.map((file) => tokenize(readFileSync(file, "utf8")));
 
   // 1. The app imports one Firebase-shaped surface and only one, and never the SDK directly.
-  const mockupSpecifiers = new Set(
-    mockupFiles.flatMap((file) => importSpecifiers(stripComments(readFileSync(file, "utf8")))),
-  );
-  for (const specifier of mockupSpecifiers) {
-    if (specifier.startsWith("@denn/firebase")) {
-      expect(["@denn/firebase", "@denn/firebase/space-read"], specifier).toContain(specifier);
+  for (const tokens of mockupFiles.map((file) => tokenize(readFileSync(file, "utf8")))) {
+    for (const specifier of importSpecifiers(tokens)) {
+      if (specifier.startsWith("@denn/firebase")) {
+        expect(["@denn/firebase", "@denn/firebase/space-read"], specifier).toContain(specifier);
+      }
+      expect(specifier.startsWith("firebase/"), specifier).toBe(false);
     }
-    expect(specifier.startsWith("firebase/"), specifier).toBe(false);
   }
 
-  // 2. No forbidden Storage symbol is reachable anywhere in that surface, in any shape: bare
-  // identifier, property, bracket property, or a named binding from any module.
-  for (const api of FORBIDDEN_STORAGE_API) {
-    expect(forbiddenStorageUse(source, api), api).toBeNull();
+  // 2. What every Firebase SDK product hands to this surface, member by member, equals the approved
+  // set — nothing extra and nothing missing. This is the whole boundary in one statement: it holds
+  // whatever syntax is used, and it holds for capabilities nobody thought to forbid.
+  const usage: SdkUsage = { reached: new Map(), unaccounted: [] };
+  for (const tokens of scanned) {
+    const file = sdkUsage(tokens);
+    for (const [module, members] of file.reached)
+      for (const member of members) record(usage, module, member);
+    usage.unaccounted.push(...file.unaccounted);
   }
-
-  // 3. The approved read boundary is still exactly where specs 079/080 put it. Pinning the calls to
-  // the facade — namespace and all — stops a same-named helper elsewhere from satisfying this and
-  // leaving the real Storage calls unwatched.
-  const facade = stripComments(
-    readFileSync(join(firebaseSrc, "space-read", "proof-sdk-facade.ts"), "utf8"),
+  expect(usage.unaccounted, "SDK uses the reader could not account for").toEqual([]);
+  expect([...usage.reached.keys()].sort(), "SDK products reached").toEqual(
+    Object.keys(APPROVED_SDK_MEMBERS).sort(),
   );
-  for (const api of ["getStorage", "ref", "getMetadata", "getBytes"]) {
-    expect(facade, api).toMatch(new RegExp(`\\bstorage\\.${api}\\s*\\(`));
+  for (const [module, approved] of Object.entries(APPROVED_SDK_MEMBERS)) {
+    expect([...(usage.reached.get(module) ?? [])].sort(), module).toEqual([...approved].sort());
+  }
+
+  // 3. And no forbidden name is reachable anywhere on the surface, in any syntactic position —
+  // defence in depth for the `@denn/firebase` re-export path, which never touches `firebase/*`.
+  for (const [index, tokens] of scanned.entries()) {
+    for (const api of FORBIDDEN_STORAGE_API) {
+      expect(forbiddenPositions(tokens, api), `${api} in ${files[index]}`).toEqual([]);
+    }
   }
 });
