@@ -6373,3 +6373,18 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   자동화·반복 작업은 시작하지 않았다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. fail-closed 결함 보완이라 새 제품
   능력으로 계산하지 않았다.
+
+## 2026-08-27 - 스펙 081 Codex 재검수 · CORRECTION_REQUIRED 라운드 2
+
+- 기준 `HEAD=origin=c6ea3bf`, ahead/behind `0/0`. 보완 `096e65e`, 기록 `c6ea3bf`.
+- 라운드 1의 semantic preflight, arbitrary code 차단, exact success token/path와 EOL 2/2는 확인됐다.
+- 기존 게이트 PASS: session+bundle+write-port 독립 실측 **189/189**(완료 기록 199/199는 오기), 전체
+  check(unit **2382/2382**), admin/customer bundle exact, `git diff --check`, 포트 잔류 0.
+- 잔여 결함: known code와 category/retryable의 **조합 일치**를 검사하지 않는다. 합성
+  `AUTH_REQUIRED + VALIDATION + false`가 definite auth error로 승인돼 임시 회귀 test **1/1 FAIL**.
+  임시 test는 즉시 삭제했고 제품 diff는 0이다.
+- 라운드 2는 exhaustive code→category/retryable 정본 mapping과 mismatch 회귀를
+  `issue-session.ts/test`에만 추가한다. 그 밖의 라운드 1 코드/EOL과 App/UI/SDK/network/live는 열지
+  않는다.
+- 상태 `CORRECTION_REQUIRED`, fix_round **2/3**, next `CLAUDE_CORRECTION`. 자동화 시작 0.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

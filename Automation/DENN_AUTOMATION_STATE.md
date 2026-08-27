@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-080-space-v2-production-customer-viewer-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, UI_CONNECTED, NO_LIVE_NETWORK
 active_unit: spec-081-space-v2-admin-frozen-issue-session
-state: READY_FOR_CODEX
+state: CORRECTION_REQUIRED
 baseline_commit: d7b84b0   # HEAD=origin at Codex spec 081 review round 1
 candidate_commit: 096e65e  # spec 081 correction round 1 (implementation 7dc148f, contract docs 7608977)
-verified_commit: 4765502   # spec 080; spec 081 awaits Codex re-review
+verified_commit: 4765502   # spec 080; spec 081 correction 1 has one reproduced metadata mismatch
 origin_relation: "correction round 1 applied on HEAD=origin=d7b84b0, ahead/behind 0/0; pushed fast-forward"
-working_tree: "spec 081 correction code/test/config and status documents committed; pre-existing protected Founder/user changes remain untouched and unstaged"
-fix_round: 1
+working_tree: "Codex spec 081 correction round 2 documents are uncommitted; pre-existing protected Founder/user changes remain untouched and unstaged"
+fix_round: 2
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_081_REVIEW
+next_transition: CLAUDE_CORRECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,20 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 081 Codex 재검수 — CORRECTION_REQUIRED 라운드 2 (2026-08-27)
+
+- 기준 `HEAD=origin=c6ea3bf`, ahead/behind `0/0`. 보완 `096e65e`, 기록 `c6ea3bf`.
+- 라운드 1의 semantic preflight, arbitrary code 차단, success token/path exact match, EOL 2/2는 확인됐다.
+- 기존 게이트 PASS: session+bundle+write-port targeted 실측 **189/189**(live의 199/199는 부정확), 전체
+  check(unit **2382/2382**), bundle exact, diff/port gate.
+- 잔여 결함: failure envelope는 code와 category가 각각 알려진 값이고 retryable이 boolean인지만 본다.
+  `AUTH_REQUIRED + VALIDATION + false`처럼 code의 정본 metadata와 불일치한 조합도 definite error로
+  승인된다. 라운드 1 지시의 code/category/retryable **일관성 검사**가 미완료다.
+- 임시 Codex 회귀 테스트 1건은 **FAIL**로 재현됐고 즉시 삭제했다. 제품 diff는 0이다.
+- 상태 `CORRECTION_REQUIRED`, fix_round **2/3**, next `CLAUDE_CORRECTION`. 전체 진행도
+  **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
 
 ## 스펙 081 보완 라운드 1 수행 — fail-closed 3건 (2026-08-27)
 

@@ -1,7 +1,7 @@
 # 스펙 081 Space V2 admin frozen issue session handoff
 
-- 상태: `CORRECTION_REQUIRED / ROUND 1 / NON_UI / NO_LIVE_NETWORK` (Codex 검수 2026-08-27)
-- Codex 검수 기준: `HEAD=origin=d7b84b0`, ahead/behind `0/0`
+- 상태: `CORRECTION_REQUIRED / ROUND 2 / NON_UI / NO_LIVE_NETWORK` (Codex 재검수 2026-08-27)
+- Codex 재검수 기준: `HEAD=origin=c6ea3bf`, ahead/behind `0/0`
 - 구현: 계약 문서 commit `7608977`, 제품 commit `7dc148f`
 - 선행: spec 080 `DONE / CODEX_PASSED`
 - Founder 정본: `LL-1=A` ~ `LL-6=A`
@@ -87,3 +87,12 @@ Codex 라운드 1이 지적한 fail-closed 3건만 고쳤다. 세 지적 모두 
   **0 / NOT TESTED**다.
 - 상태 `READY_FOR_CODEX`, fix_round 1/3, next transition `CODEX_SPEC_081_REVIEW`.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## Codex 재검수 — CORRECTION_REQUIRED 라운드 2
+
+- 라운드 1의 기존 3개 결함과 EOL은 해결됐고 전체 check(unit 2382/2382), bundle/diff/port gate는
+  PASS했다. targeted 독립 실측은 **189/189**이며 199/199 기록은 정정한다.
+- known code와 잘못된 known category/retryable 조합이 definite failure로 승인되는 잔여 결함 1건을
+  임시 test FAIL로 재현했다.
+- 라운드 2는 `issue-session.ts/test`의 exhaustive code metadata mapping과 spec081 문서만 허용한다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 2/3. 실제 UI/SDK/network/live는 계속 닫는다.

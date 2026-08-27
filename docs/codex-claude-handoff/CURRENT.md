@@ -24,7 +24,25 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 081 보완 라운드 1 완료, Codex 재검수 대기.**
+상태: **`CORRECTION_REQUIRED` - 스펙 081 Codex 재검수 라운드 2, writer metadata 조합 검증 미완료.**
+
+기준 `HEAD=origin=c6ea3bf`, ahead/behind `0/0`. 라운드 1의 세 결함과 exact EOL 2/2는 해결됐다.
+targeted 실제 수치는 **189/189**이며 live의 199/199 기록은 정정 대상이다. 전체 check(unit
+**2382/2382**), production bundle exact, diff/port gate는 PASS했다.
+
+잔여 결함은 failure envelope의 code/category/retryable 조합이다. 현재 구현은 각 값이 알려진
+vocabulary/boolean인지 확인하지만, code 정본 metadata와 서로 일치하는지는 확인하지 않는다. 합성
+`SPACE_V2_ISSUE_AUTH_REQUIRED + VALIDATION + retryable:false`가 definite auth error로 승인되는 것을 임시
+회귀 테스트가 FAIL로 재현했다.
+
+라운드 2는 `issue-session.ts/test`와 spec081 문서만 허용한다. complete code→category/retryable 정본
+mapping을 exhaustively 고정하고 mismatch는 `outcome-unknown/errorCode:null`로 닫는다. App/UI/CSS/Canvas,
+SDK composition, Rules/config/emulator/live 범위는 열지 않는다.
+
+상태 `CORRECTION_REQUIRED`, fix_round **2/3**, next `CLAUDE_CORRECTION`. 전체 진행도
+**84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
+
+> 아래 보완 라운드 1 완료 설명은 재검수 전 이력이다.
 
 Codex 라운드 1이 지적한 **fail-closed 3건만** 고쳤다. 세 지적 모두 맞았다. 기준
 `HEAD=origin=d7b84b0`, 검수 문서 commit `46b4754`, 보완 commit `096e65e`.

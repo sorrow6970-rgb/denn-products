@@ -1,14 +1,59 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
-active_unit: `spec-081-space-v2-admin-frozen-issue-session` — **CORRECTION ROUND 1 DONE / NON_UI / NO_LIVE_NETWORK**
+상태: `CORRECTION_REQUIRED`
+active_unit: `spec-081-space-v2-admin-frozen-issue-session` — **CODEX RE-REVIEW ROUND 2 / NON_UI / NO_LIVE_NETWORK**
 completed_unit: `spec-080-space-v2-production-customer-viewer-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / UI_CONNECTED / NO_LIVE_NETWORK**
-검수 기준: `HEAD=origin=d7b84b0`, ahead/behind `0/0`. 계약 `7608977`, 구현 `7dc148f`, 보완 `096e65e`.
+검수 기준: `HEAD=origin=c6ea3bf`, ahead/behind `0/0`. 구현 `7dc148f`, 보완 `096e65e`.
 Founder 정본: **LL-1=A ~ LL-6=A**
-fix_round: **1 / 3**
-next_transition: **`CODEX_SPEC_081_REVIEW`**
+fix_round: **2 / 3**
+next_transition: **`CLAUDE_CORRECTION`**
 
-## 현재 결과 — 보완 라운드 1 완료
+## Claude Code 보완 라운드 2 실행 지시문
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와
+docs/rebuild/specs/081-space-v2-admin-frozen-issue-session.md의 CODEX RE-REVIEW 라운드 2를 읽고, 스펙
+081 CORRECTION_REQUIRED 라운드 2만 수행해.
+
+라운드 1의 semantic preflight, arbitrary writer code 차단, exact success token/objectPath, EOL 2/2는
+통과했다. 잔여 결함은 failure envelope의 code/category/retryable 조합 일치다. 현재는 각각 known
+vocabulary/boolean인지만 검사해 SPACE_V2_ISSUE_AUTH_REQUIRED + category VALIDATION + retryable false도
+definite auth error로 승인된다. Codex 임시 회귀 테스트 1/1 FAIL로 재현됐다.
+
+issue-session.ts에 모든 SpaceV2IssueErrorCode를 빠짐없이 key로 갖는 exhaustive metadata table을 두고,
+각 code의 exact category와 retryable을 검사해. satisfies Record<SpaceV2IssueErrorCode, ...> 또는 동등한
+exhaustiveness를 사용해 새 code가 추가되면 compile failure가 나야 한다. code가 알려져 있어도 category나
+retryable이 정본과 다르면 outcome-unknown/errorCode:null이고 port metadata/marker는 snapshot에 들어가면
+안 된다.
+
+issue-session.test.ts는 8개 code의 canonical category/retryable acceptance와 각 code의 wrong category,
+wrong retryable rejection을 table-driven으로 고정해. 기존 issueError helper가 모든 code에 UNKNOWN/true를
+붙이는 부정확한 fixture도 같은 정본 mapping으로 고쳐. 라운드 1 preflight/success/EOL과 기존 lifecycle
+동작은 바꾸지 마.
+
+허용 제품 파일은 issue-session.ts와 issue-session.test.ts뿐이다. .gitattributes, App/UI/CSS/Canvas,
+admin composition, packages/**, Rules/config/emulator, package/lockfile/pnpm-workspace.yaml은 수정하지 마.
+actual Firebase/network/live/UID/deploy, URL/clipboard, 운영 발급, publish/delete/orphan cleanup은 계속
+금지다.
+
+targeted session+bundle+write-port unit, admin/firebase typecheck, 전체 node scripts/check.mjs,
+admin/customer bundle exact hash, EOL 2/2, git diff --check, exact allowed/forbidden diff, 포트 잔류를
+재검증해. targeted 합계는 실제 출력대로 기록해(현재 독립 실측은 189/189이며 199/199가 아니다).
+Chromium E2E와 emulator는 NOT RUN이다.
+
+보호 대상과 기존 user working-tree 변경은 수정·복원·checkout·stage·commit하지 마. 허용 보완과
+spec081 문서만 일반 fast-forward commit/push하고 READY_FOR_CODEX에서 멈춰. 다음 UI 스펙과 자동화·반복
+작업은 시작하지 마.
+```
+
+## Codex 라운드 2 근거
+
+- `HEAD=origin=c6ea3bf`, ahead/behind 0/0.
+- malformed known-code metadata 조합 임시 test **1/1 FAIL**, 임시 파일 삭제 완료.
+- 기존 targeted **189/189**, 전체 check unit **2382/2382**, bundle/diff/port PASS.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 보완 라운드 1 완료 이력
 
 Codex가 지적한 **fail-closed 3건만** 고쳤고 기존 58건의 순서·lifecycle 계약은 하나도 되돌리지 않았다.
 세 지적 모두 맞았다.

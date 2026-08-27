@@ -500,3 +500,36 @@ bucket/network/live/UID/deploy, URL/clipboard, 운영 발급, publish/delete/orp
 상태 `READY_FOR_CODEX`, fix_round **1/3**, next transition `CODEX_SPEC_081_REVIEW`. 다음 UI 스펙과
 자동화·반복 작업은 시작하지 않았다. 전체 진행도는 **84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
 fail-closed 결함 보완이지 새 제품 능력이 아니다.
+
+### CODEX RE-REVIEW — CORRECTION_REQUIRED 라운드 2 (2026-08-27)
+
+재검수 기준 `HEAD=origin=c6ea3bf`, ahead/behind `0/0`. semantic preflight 24건, arbitrary writer code
+차단, success token/objectPath exact match와 EOL 2/2는 확인됐다. 기존 게이트도 PASS했다:
+session+bundle+write-port 독립 실측 **189/189**(완료 기록의 199/199는 오기), 전체 check unit
+**2382/2382**, production bundle exact, diff/port gate.
+
+잔여 결함 1건이 임시 회귀 테스트 **1/1 FAIL**로 재현됐다. `classifyWriterResult()`는 failure의
+`code`와 `category`가 각각 알려진 vocabulary인지, `retryable`이 boolean인지만 확인한다. 따라서
+`SPACE_V2_ISSUE_AUTH_REQUIRED`에 `category:"VALIDATION"`, `retryable:false`를 결합한 malformed envelope도
+definite `AUTH_REQUIRED` error로 승인한다. 라운드 1 지시의 code/category/retryable **일관성** 검사가
+완료되지 않았다.
+
+라운드 2 허용 범위는 다음뿐이다.
+
+- `apps/admin/src/space-v2/issue-session.ts`
+- `apps/admin/src/space-v2/issue-session.test.ts`
+- spec 081 상태/handoff 문서
+
+모든 `SpaceV2IssueErrorCode`를 빠짐없이 key로 갖는 exhaustive metadata table을 두고 각 code의 exact
+`category`와 `retryable`을 검사한다. TypeScript `satisfies Record<SpaceV2IssueErrorCode, ...>` 또는 동등한
+exhaustiveness로 새 code 추가 시 compile failure가 나야 한다. unknown code뿐 아니라 known code + wrong
+category, known code + wrong retryable도 `outcome-unknown/errorCode:null`이고 port metadata는 snapshot에
+없어야 한다.
+
+테스트는 8개 code 각각의 canonical metadata acceptance와 category/retryable mismatch rejection을
+table-driven으로 고정한다. 기존 test helper가 모든 code를 `category:"UNKNOWN", retryable:true`로 만드는
+부정확한 fixture도 정본 mapping에 맞춘다. targeted 합계는 실행 결과를 그대로 기록하고 199라고
+추정하지 않는다.
+
+상태 `CORRECTION_REQUIRED`, fix_round **2/3**, next `CLAUDE_CORRECTION`. `.gitattributes`, preflight,
+success envelope와 기존 제품 경계는 수정하지 않는다. App/UI/CSS/SDK/network/live는 계속 금지다.
