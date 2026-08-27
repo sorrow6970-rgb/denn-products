@@ -1,5 +1,18 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-27): Founder NN-3=A 예외 / spec 082 correction round 4 완료 = READY_FOR_CODEX.**
+> `HEAD=origin=f6f3940`에서 시작, Codex/NN-3 문서 `54fda04`, 보완 commit `b1ae8b4`. 허용 제품 파일은
+> `tests/e2e/admin-auth-read.spec.ts` 하나뿐이고 제품 코드·승인된 read-only Storage 연결 변경 0.
+> 라운드 3의 `list` bare-identifier 면제 근거("앱이 `firebase/*`를 직접 import하지 않는다")가 허용된
+> `@denn/firebase` 루트의 re-export 경로를 닫지 못했다 — Codex 케이스 재현 결과 round 3 false /
+> round 4 true. 면제는 유지하되 **모듈 경계**에서 따로 막는다: 신규 `importedNames()`가
+> `import/export {...} from` 절의 `as` **왼쪽** 이름만 모아 금지 10종·모든 모듈에 적용하므로
+> `import { list as l }`은 차단되고 `import { templateList as list }`와 지역 `list`는 통과한다.
+> self-check와 surface 스캔이 같은 predicate를 쓰도록 묶어 detector 드리프트를 구조적으로 막았고,
+> 실제 66파일 surface의 named binding 412개 중 금지 10종은 0건이다.
+> **전체 Chromium E2E 161/161**, check unit **2409/2409**, 통제 빌드 대조 산출물 16개 byte 동일.
+> 다음은 Codex 재검수. 전체 진행도 **84~87% / 잔여 13~16%**.
+
 > **최신 포인터 (2026-08-27): spec 082 correction round 3 Codex 재검수 = CORRECTION_REQUIRED / LOOP STOP.**
 > 검수 기준 `HEAD=origin=f6f3940`, ahead/behind 0/0. `storageReferenceForms()`가 `list`에만 bare
 > identifier 검사를 생략해 `import { list as l } from "@denn/firebase"; l(ref)`를 놓친다. 현 regex와

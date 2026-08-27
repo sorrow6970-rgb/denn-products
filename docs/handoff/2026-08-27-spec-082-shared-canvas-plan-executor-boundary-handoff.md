@@ -180,3 +180,40 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
 - 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_082_REVIEW`. 실제 admin issue UI와 다음 스펙, 자동화는
   시작하지 않았다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 보완 라운드 4 — Founder NN-3=A 예외 (2026-08-27, Claude Code)
+
+- 기준 `HEAD=origin=f6f3940`, ahead/behind 0/0. Codex 재검수·NN-3 문서 commit `54fda04`, 보완 commit
+  `b1ae8b4`. 승인된 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품 코드와
+  승인된 read-only Storage 연결은 한 줄도 바꾸지 않았다.
+- **Codex 지적은 옳다.** 라운드 3의 `list` bare-identifier 면제 근거는 "앱이 `firebase/*`를 직접
+  import하지 않으므로 Storage `list`는 namespace property로만 도달한다"였는데, 허용된
+  `@denn/firebase` 루트가 `list`를 re-export하는 경로를 닫지 못한다.
+  `import { list as l } from "@denn/firebase"`는 property·bracket 어느 형태에도 맞지 않는다.
+  라운드 3 regex 재현: **round 3 = false, round 4 = true**.
+- **보완.** 면제는 유지한다(지역 변수 `list`, `data-testid="template-list"`는 정당한 앱 코드). 대신
+  **모듈 경계에서 따로 막는다** — 신규 `importedNames()`가 `import {...} from`·`export {...} from`
+  절에서 `as` **왼쪽** 이름만 모은다. 왼쪽이 모듈에서 나오는 이름이므로 `import { list as l }`은
+  Storage `list`, `import { templateList as list }`는 지역 `list`다. 금지 **10종 전부**·**모든
+  모듈**(SDK와 허용 루트 공통)에 적용되므로 향후 re-export는 **생기는 날** 잡힌다.
+- **드리프트 차단.** `forbiddenStorageUse(source, api)` 단일 predicate가 named binding 검사와 reference
+  세 형태를 함께 판정하고, self-check와 surface 스캔이 **같은 함수**를 쓴다. 라운드 3처럼 self-check가
+  실제 검사와 어긋나는 일이 구조적으로 불가능하다.
+- **self-check 추가.** `import { list as l } from "@denn/firebase"` / `import { list } from
+  "firebase/storage"` / `export { list as l } from "@denn/firebase"`는 **잡히고**,
+  `import { templateList as list } from "./catalog"`와 `const list = categories`는 **안 잡힌다**. 기존
+  alias/property/bracket/직접 호출·주석 무시 케이스는 그대로다.
+- **면제·억제 없음의 측정.** 실제 66파일 surface에서 named binding 412개(고유 228개)를 추출해 대조한
+  결과 금지 **10종 모두 0건**이다. 통과시키려 넣은 예외가 아니라 실제로 비어 있는 경계를 지키는
+  검사다.
+- **실측.** `admin-auth-read` Chromium **5/5**, **전체 Chromium 161/161**, 전체
+  `node scripts/check.mjs` **PASS**(format·lint·typecheck 7개·unit **2409/2409**(89 파일)·build 2개),
+  **통제 빌드 대조 산출물 16개 byte+SHA-256 동일**(이 파일을 HEAD 버전으로 되돌려 재빌드한 결과와
+  대조), `git diff --check` PASS, 변경 경로 한 파일뿐, EOL `i/lf w/lf`, 포트
+  4183/4184/4185/8080/9099/9199 · `test-results`/temp 잔류 0.
+- 테스트 삭제·skip·E2E 예외는 없다. Auth whole-identifier, admin private path marker, positive marker,
+  runtime external request 0 단언은 그대로다. 보호 spec-018 PNG 2개는 dirty 그대로 두고
+  stage/commit/restore하지 않았다.
+- 상태 `READY_FOR_CODEX`, fix_round **4 (NN-3=A 예외 1회)**, next `CODEX_SPEC_082_REVIEW`. 실제 admin
+  issue UI와 다음 스펙, 자동화는 시작하지 않았다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

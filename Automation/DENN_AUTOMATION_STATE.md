@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 298c224   # HEAD=origin at spec 082 correction round 3 start (Codex round 2 review)
-candidate_commit: 68bd25c  # spec 082 correction round 3 (round 2 65c5b46, round 1 8d4458d, implementation 307521f)
+state: READY_FOR_CODEX
+baseline_commit: f6f3940   # HEAD=origin at spec 082 correction round 4 start (Codex round 3 review + NN-3=A)
+candidate_commit: b1ae8b4  # spec 082 correction round 4, NN-3=A exception (round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "Codex review at HEAD=origin=f6f3940, ahead/behind 0/0"
+origin_relation: "Claude pushed spec 082 correction round 4; HEAD=origin, ahead/behind 0/0"
 working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
-fix_round: 3   # exhausted; round 3 still has a reproducible list-alias detector hole
+fix_round: 4   # one Founder NN-3=A exception past the 3/3 limit; implemented and verified
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_082_NN_3_DECISION
+next_transition: CODEX_SPEC_082_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,33 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 082 보완 라운드 4 완료 — Founder NN-3=A 예외, 전체 E2E 161/161 (2026-08-27)
+
+- `HEAD=origin=f6f3940`에서 시작, ahead/behind 0/0. Codex 재검수·NN-3 문서 commit `54fda04`, 보완
+  commit `b1ae8b4`. NN-3=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고
+  제품 코드와 승인된 read-only Storage 연결은 한 줄도 바꾸지 않았다.
+- **Codex 지적은 옳다.** 라운드 3의 `list` bare-identifier 면제 근거("앱이 `firebase/*`를 직접
+  import하지 않으므로 namespace property로만 도달")는 허용된 `@denn/firebase` 루트가 `list`를
+  re-export하는 경로를 닫지 못한다. 라운드 3 regex 재현 측정: `import { list as l } from
+  "@denn/firebase"` → **round 3 false / round 4 true**.
+- **보완.** 면제 자체는 유지하되(지역 변수 `list`, `template-list` test id는 정당한 앱 코드) **모듈
+  경계에서 따로 막는다** — 신규 `importedNames()`가 `import {...} from`·`export {...} from` 절의 `as`
+  **왼쪽** 이름만 모아 금지 10종 전부와 모든 모듈(SDK·허용 루트 공통)에 적용한다. 따라서
+  `import { list as l }`은 차단되고 `import { templateList as list }`·지역 `list`는 통과한다.
+- **드리프트 차단.** `forbiddenStorageUse()` 단일 predicate가 named binding과 reference 세 형태를 함께
+  판정하고 self-check와 surface 스캔이 같은 함수를 쓴다. 라운드 3처럼 self-check가 실제 검사와 어긋나는
+  일이 구조적으로 불가능하다.
+- **self-check 추가 케이스.** 허용 루트 alias import / `firebase/storage` named import / re-export
+  alias는 잡히고, `import { templateList as list }`와 `const list = categories`는 안 잡힌다.
+- **면제·억제 없음의 측정.** 실제 66파일 surface의 named binding 412개(고유 228개) 중 금지 10종은
+  **0건**이다.
+- 실측: `admin-auth-read` **5/5**, 전체 Chromium **161/161**, 전체 `node scripts/check.mjs` **PASS**
+  (unit **2409/2409**, 89 파일), **통제 빌드 대조 산출물 16개 byte+SHA-256 동일**,
+  `git diff --check` PASS, 변경 경로 한 파일뿐, EOL `i/lf w/lf`, 포트 4183/4184/4185/8080/9099/9199 ·
+  `test-results`/temp 잔류 **0**. 테스트 삭제·skip·E2E 예외 0.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_082_REVIEW`. admin issue UI·다음 스펙·자동화 시작 0.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## Codex 스펙 082 보완 라운드 3 재검수 — CORRECTION_REQUIRED / LOOP STOP (2026-08-27)
 

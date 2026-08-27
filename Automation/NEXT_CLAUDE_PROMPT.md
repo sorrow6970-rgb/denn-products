@@ -1,13 +1,55 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
+상태: `READY_FOR_CODEX`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED / LOOP STOPPED AT 3/3 / NON_UI / NO_LIVE_NETWORK**
-- 기준: `HEAD=origin=298c224`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 라운드 2 `65c5b46`, 라운드 3 `68bd25c`.
-- next_transition: `FOUNDER_SPEC_082_NN_3_DECISION`
-- fix_round: `3 / 3` (소진 — 예외 승인 없이 라운드 4 금지)
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **READY_FOR_CODEX / CORRECTION ROUND 4 DONE (NN-3=A 예외) / NON_UI / NO_LIVE_NETWORK / E2E 161-0**
+- 기준: `HEAD=origin=f6f3940`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 라운드 2 `65c5b46`, 라운드 3 `68bd25c`, 라운드 4 `b1ae8b4`.
+- next_transition: `CODEX_SPEC_082_REVIEW`
+- fix_round: `4` (자동 한도 3/3 소진 후 Founder NN-3=A가 승인한 1회 예외)
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## 현재 결과 — 보완 라운드 4 완료(NN-3=A 예외), 전체 E2E 161/161
+
+NN-3=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품 코드와 승인된
+read-only Storage 연결은 한 줄도 바꾸지 않았다.
+
+**Codex 지적은 옳다.** 라운드 3은 `list`의 bare-identifier 검사를 생략하면서 근거를 "앱이
+`firebase/*`를 직접 import하지 않으므로 Storage `list`는 namespace property로만 도달한다"로 댔다. 그
+논증에 구멍이 있었다 — 허용된 `@denn/firebase` 루트가 `list`를 re-export하면 named alias로 도달하고,
+`import { list as l } from "@denn/firebase"`는 property·bracket 어느 형태에도 맞지 않는다. 라운드 3
+regex 재현 측정: **round 3 = false, round 4 = true**.
+
+**보완.** 면제 자체는 유지한다 — 지역 변수 `list`와 `template-list` test id는 정당한 앱 코드다. 대신
+**모듈 경계에서 따로 막는다**: 신규 `importedNames()`가 `import {...} from`·`export {...} from` 절에서
+`as` **왼쪽** 이름만 모은다. 왼쪽이 모듈에서 나오는 이름이므로 `import { list as l }`은 Storage
+`list`이고 `import { templateList as list }`는 그냥 지역 `list`다. 금지 **10종 전부**와 **모든
+모듈**(SDK·허용 루트 공통)에 적용되므로 향후 re-export는 생기는 날 잡힌다.
+
+**드리프트 차단.** `forbiddenStorageUse()` 단일 predicate가 named binding과 reference 세 형태를 함께
+판정하고 self-check와 surface 스캔이 같은 함수를 쓴다. 라운드 3처럼 self-check가 실제 검사와 어긋나는
+일이 구조적으로 불가능하다. self-check에는 허용 루트 alias import, `firebase/storage` named import,
+re-export alias가 잡히고 `import { templateList as list }`와 지역 `list`는 안 잡히는 케이스를 넣었다.
+
+**면제·억제 없음의 측정.** 실제 66파일 surface의 named binding 412개(고유 228개) 중 금지 10종은
+**0건**이다.
+
+**실측.** `admin-auth-read` **5/5**, **전체 Chromium E2E 161/161**, 전체 `node scripts/check.mjs`
+PASS(unit **2409/2409**, 89 파일), **통제 빌드 대조 산출물 16개 byte+SHA-256 동일**(이 파일을 HEAD
+버전으로 되돌려 재빌드한 결과와 대조), `git diff --check` PASS, 변경 경로 한 파일뿐, EOL clean,
+포트·temp 잔류 0. 테스트 삭제·skip·E2E 예외 0.
+
+## 다음 단계 — Codex 재검수 대기
+
+스펙 082는 NN-3=A 예외 라운드까지 끝났고 `READY_FOR_CODEX`에서 멈춘다. 다음 단위는 Codex 재검수
+결과와 사용자 지시가 정한다. 실제 admin issue UI, 다음 스펙, 자동화는 시작하지 않았다.
+
+> 직전 지시문(스펙 082 보완 라운드 4, 수행 완료 — 기록):
+
+```text
+NN-3=A 승인. C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된 스펙 082 CORRECTION_REQUIRED 라운드 4 예외만 수행해.
+```
+
 
 ## Codex 재검수 — CORRECTION_REQUIRED / 자동 루프 중지
 

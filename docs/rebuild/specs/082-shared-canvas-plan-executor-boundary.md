@@ -2,7 +2,7 @@
 
 ## 상태
 
-`FOUNDER_DECISION_REQUIRED / CORRECTION_REQUIRED / LOOP STOPPED AT 3 OF 3 / NON_UI / NO_LIVE_NETWORK`
+`READY_FOR_CODEX / CORRECTION ROUND 4 DONE (Founder NN-3=A exception) / NON_UI / NO_LIVE_NETWORK`
 
 선행 게이트:
 
@@ -602,3 +602,67 @@ Founder **NN-3** 결정:
 
 NN-3 전에는 코드·test 수정, commit/push, spec 082 종료, 실제 admin issue UI 및 다음 스펙 착수를 하지
 않는다.
+
+### DONE (Claude) — 보완 라운드 4 (Founder NN-3=A 예외, 2026-08-27)
+
+기준 `HEAD=origin=f6f3940`, ahead/behind 0/0. Codex 재검수·NN-3 문서 commit `54fda04`, 보완 commit
+`b1ae8b4`. NN-3=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품
+코드와 승인된 read-only Storage 연결은 한 줄도 바꾸지 않았다.
+
+**Codex 지적은 옳다.** 라운드 3은 `list`의 bare-identifier 검사를 생략하면서 그 근거를 "앱이
+`firebase/*`를 직접 import하지 않으므로 Storage `list`는 namespace property로만 도달한다"로 댔다. 그
+논증에 구멍이 있었다 — **허용된 `@denn/firebase` 루트가 `list`를 re-export하면** named alias로 도달할
+수 있고, `import { list as l } from "@denn/firebase"`는 property·bracket 어느 형태에도 맞지 않는다.
+라운드 3의 두 regex를 그대로 적용한 재현 측정이 Codex 결과와 일치한다.
+
+| Codex 케이스 | 라운드 3 | 라운드 4 |
+|---|---|---|
+| `import { list as l } from "@denn/firebase"; l(ref);` | **false**(미검출) | **true** |
+
+**보완 — 면제는 유지하되 더 이상 논증을 떠받치지 않게 한다.**
+
+`list` 면제 자체는 옳다. 지역 변수 `list`와 `data-testid="template-list"`는 정당한 앱 코드이고 이를
+금지하면 detector가 거짓 경보를 낸다. 대신 **모듈 경계에서 따로 막는다** — 신규 `importedNames()`가
+`import {...} from`과 `export {...} from` 절에서 **`as` 왼쪽 이름**만 모은다. 왼쪽이 모듈에서 나오는
+이름이므로 `import { list as l }`은 Storage `list`이고 `import { templateList as list }`는 그냥 지역
+`list`다. 이 검사는 금지 10종 **전부**와 **모든 모듈**(SDK든 허용된 루트든)에 적용되므로, 향후
+re-export가 생기면 누가 눈치채는 날이 아니라 **생기는 날** 잡힌다.
+
+**detector 두 갈래를 한 predicate로 묶었다.** `forbiddenStorageUse(source, api)`가 named binding 검사와
+reference 세 형태를 함께 판정하고, self-check와 surface 스캔이 **같은 함수**를 쓴다. 라운드 3처럼
+self-check가 실제 검사와 어긋나는 일이 구조적으로 불가능해진다.
+
+**빠져 있던 케이스를 self-check에 넣었다.**
+
+| 합성 입력 | 기대 | 결과 |
+|---|---|---|
+| `import { list as l } from "@denn/firebase"; l(objectRef);` | 잡힘 | ✅ |
+| `import { list } from "firebase/storage";` | 잡힘 | ✅ |
+| `export { list as l } from "@denn/firebase";` | 잡힘 | ✅ |
+| `import { templateList as list } from "./catalog";` | **안 잡힘** | ✅ |
+| `const list = categories; return list.some(Boolean);` | **안 잡힘** | ✅ |
+| 기존 alias/property/bracket/직접 호출·주석 케이스 | 그대로 | ✅ |
+
+**면제·억제를 추가하지 않았다는 측정.** 실제 66파일 surface에서 named binding 412개(고유 228개)를
+추출해 금지 10종을 대조한 결과 **10종 모두 0건**이다. 즉 이 검사는 통과시키려고 넣은 예외가 아니라
+비어 있는 경계를 실제로 지키는 검사다.
+
+**보완 라운드 4 게이트 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| `admin-auth-read.spec.ts` Chromium | **5/5 PASS** |
+| **전체 Chromium E2E** | **161 passed / 0 failed** |
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2409/2409**(89 파일), build 2개 |
+| 통제 빌드 대조 | 이 파일을 HEAD 버전으로 되돌려 재빌드한 산출물과 **16개 전부 byte+SHA-256 동일** — 제품 코드 무변경의 직접 증거 |
+| `git diff --check` | PASS |
+| exact diff | `tests/e2e/admin-auth-read.spec.ts` **한 파일뿐** |
+| EOL | `i/lf w/lf` |
+| 포트 4183/4184/4185/8080/9099/9199 · `test-results`/temp | 잔류 **0** |
+
+테스트 삭제·skip·E2E 예외는 **없다**. Auth whole-identifier, admin private path marker, positive
+marker, runtime external request 0 단언은 그대로다. 보호 spec-018 PNG 2개는 dirty 그대로 두고
+stage/commit/restore하지 않았다.
+
+**진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
+능력이 아니다.
