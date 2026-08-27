@@ -1,14 +1,41 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CORRECTION_REQUIRED`
-active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **CORRECTION ROUND 2 / NO_LIVE_NETWORK**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **CORRECTION ROUND 2 DONE / LOCAL_VERIFIED / NO_LIVE_NETWORK**
 completed_unit: `spec-079-space-v2-proof-reader-adapter` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI**
-재검수 기준: `HEAD=origin=3b7c72c`, ahead/behind `0/0`. 보완 commit `280a6dc`.
+재검수 기준: `HEAD=origin=3b7c72c`, ahead/behind `0/0`. 라운드 1 commit `280a6dc`, 라운드 2 commit `85ac204`.
 Founder 정본: **LL-1=A ~ LL-6=A, MM-1=A ~ MM-6=A**.
 fix_round: **2 / 3**
-next_transition: **`CLAUDE_CORRECTION`**
+next_transition: **`CODEX_SPEC_080_REVIEW`**
 
-## Claude Code 실행 지시 — 스펙 080 CORRECTION_REQUIRED 라운드 2
+## 현재 결과 — 보완 라운드 2 완료
+
+Codex가 지적한 **clean checkout EOL 재현성 한 가지만** 고쳤고 라운드 1의 form/screenshot 결론은
+하나도 되돌리지 않았다.
+
+**재현.** `biome format`을 세 파일에 직접 돌려 확인했다 — 보고된 diff는 전부 `␍`(CR)뿐이고 코드
+내용 차이는 0이었다. 원인은 system `core.autocrlf=true` + 기존 `.gitattributes`의 LF 정책 부재이며,
+commit blob이 LF여도 Windows checkout의 worktree 사본이 CRLF가 되어 전체 check가 format에서 실패한다.
+
+**보완.** `.gitattributes`에 **정확히 세 경로만** `text eol=lf`로 고정했다 —
+`apps/mockup/src/space/SpacePasswordGate.tsx` · `apps/mockup/src/space/SpacePasswordGate.test.tsx` ·
+`tests/e2e/space-production-route.spec.ts`. 전역 `*.ts`/`*.tsx` 규칙이나 다른 경로 정책으로 넓히지
+않았다(저장소 전체 line-ending 정책은 별도 결정). 이어서 세 파일을 LF로 변환했고
+`git ls-files --eol`이 세 파일 모두 **`i/lf w/lf attr/text eol=lf`**를 보고한다.
+
+**semantic diff 0.** 보완 commit의 staged diff는 `.gitattributes` **한 파일뿐**이고 세 파일은
+`git diff --exit-code` clean이다. 고객 entry 해시도 Codex 기록값과 **동일**하다 —
+`index-BUT7Bmak.js` / `340,604 B` / `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`.
+
+**실측.** 전체 `node scripts/check.mjs` **PASS**(format 포함, unit **2281/2281**), targeted Chromium
+`space-production-route.spec.ts` **14/14 PASS**, `git diff --check` PASS, 허용 외 diff 0, 검사 포트
+잔류 0. spec-080 PNG는 재생성 후 byte-identical이고 고객 CSS·admin entry·admin CSS도 SHA-256까지
+무변경이다. **full Chromium suite는 보호 spec-018 PNG 때문에 계속 NOT RUN**이며 PASS라고 기록하지
+않는다.
+
+**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 재검수다.
+
+> 직전 지시문(스펙 080 보완 라운드 2, 수행 완료 — 기록):
 
 ```text
 C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 080

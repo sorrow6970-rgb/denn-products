@@ -24,7 +24,35 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`CORRECTION_REQUIRED` - 스펙 080 Codex 재검수 라운드 2, clean checkout EOL 재현성 보완 필요.**
+상태: **`READY_FOR_CODEX` - 스펙 080 보완 라운드 2 완료, Codex 재검수 대기.**
+
+Codex 라운드 2가 지적한 **clean checkout EOL 재현성 한 가지만** 고쳤다. 기준
+`HEAD=origin=3b7c72c`, 재검수 문서 commit `1ae514a`, 보완 commit `85ac204`.
+
+`biome format`을 세 파일에 직접 돌려 결함을 재현했다 — diff는 전부 `␍`(CR)뿐이고 코드 내용 차이는
+0이었다. system `core.autocrlf=true`이고 기존 `.gitattributes`가 `*.bat`/`*.cmd`/`*.ps1`만 CRLF로
+고정하므로, commit blob이 LF여도 Windows checkout의 worktree 사본이 CRLF가 되어 전체 check가 format
+단계에서 실패한다.
+
+`.gitattributes`에 **정확히 세 경로만** `text eol=lf`로 고정하고 worktree 사본을 LF로 변환했다.
+전역 `*.ts`/`*.tsx` 규칙이나 다른 경로 정책으로 넓히지 않았다 — 저장소 전체 line-ending 정책은 별도
+결정이다. `git ls-files --eol`이 세 파일 모두 `i/lf w/lf attr/text eol=lf`를 보고한다.
+
+제품 semantic diff는 0이다: 보완 commit의 staged diff는 `.gitattributes` 한 파일뿐이고, 세 파일은
+`git diff --exit-code` clean이며, 고객 entry 해시가 Codex 기록값과 동일하다 — `index-BUT7Bmak.js` /
+`340,604 B` / `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`.
+
+실측: 전체 `node scripts/check.mjs` PASS(format 포함, unit **2281/2281**), targeted Chromium
+**14/14 PASS**, `git diff --check` PASS, 허용 외 diff 0, 검사 포트 잔류 0. spec-080 PNG는 재생성
+후 byte-identical이고 고객 CSS·admin entry·admin CSS도 SHA-256까지 무변경이다.
+
+full Chromium suite는 보호 spec-018 PNG 때문에 계속 NOT RUN이며 actual Firebase/network/live/deploy는
+0 / NOT TESTED다. fix_round 2/3, next transition `CODEX_SPEC_080_REVIEW`이고 다음 스펙과 자동화는
+시작하지 않았다.
+
+전체 진행도는 **83~86% 완료 / 14~17% 잔여 — 변동 없음**이다.
+
+> 스펙 080 Codex 재검수 라운드 2 판정(보완 전 기록):
 
 재검수 기준 `HEAD=origin=3b7c72c`, ahead/behind `0/0`. form 기능은 targeted unit **11/11**, OS temp
 staging targeted Chromium **14/14 PASS**했고, customer entry SHA-256도

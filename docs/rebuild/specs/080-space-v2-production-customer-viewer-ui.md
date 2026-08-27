@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CODEX / CORRECTION ROUND 1 DONE / LOCAL_VERIFIED / UI CONNECTED / NO_LIVE_NETWORK`
+`READY_FOR_CODEX / CORRECTION ROUND 2 DONE / LOCAL_VERIFIED / UI CONNECTED / NO_LIVE_NETWORK`
 
 기준:
 
@@ -509,3 +509,64 @@ Windows checkout에서 formatter PASS가 재현되지 않는다.
 
 상태 `CORRECTION_REQUIRED`, fix_round 2/3, next transition `CLAUDE_CORRECTION`. 전체 진행도
 **83~86% 완료 / 14~17% 잔여 — 변동 없음**.
+
+### DONE (Claude) — 보완 라운드 2 (2026-08-27)
+
+기준 `HEAD=origin=3b7c72c`, ahead/behind 0/0. Codex 재검수 문서 commit `1ae514a`, 보완 commit
+`85ac204`. Codex 라운드 2가 지적한 **한 가지(clean checkout EOL 재현성)만** 고쳤고, 위
+`### DONE (Claude) — 2026-08-27`과 `### DONE (Claude) — 보완 라운드 1`의 결론은 하나도 되돌리지
+않았다.
+
+**결함 재현.** 지적이 맞다. `biome format`을 세 파일에 직접 실행해 확인했고, 보고된 diff는 전부
+`␍`(CR)뿐이며 코드 내용 차이는 0이었다. 라운드 1에서 내가 기록한 전체 check PASS는 내 worktree
+사본이 LF였을 때의 결과이고(그 뒤 `git stash` 왕복이 사본을 CRLF로 되돌렸다), clean Windows
+checkout에서는 재현되지 않았다.
+
+**원인.** system `core.autocrlf=true`이고 기존 `.gitattributes`는 `*.bat`/`*.cmd`/`*.ps1`만 CRLF로
+고정한다. commit blob은 이미 LF(`i/lf`)지만 Windows checkout이 worktree 사본을 CRLF로 만들고,
+Biome은 LF로 포맷하므로 `node scripts/check.mjs`가 format 단계에서 FAIL한다.
+
+**보완 내용.** `.gitattributes`에 **정확히 세 경로만** `text eol=lf`로 추가했다.
+
+| 경로 | 보완 전 | 보완 후 |
+|---|---|---|
+| `apps/mockup/src/space/SpacePasswordGate.tsx` | `i/lf w/crlf attr/` | `i/lf w/lf attr/text eol=lf` |
+| `apps/mockup/src/space/SpacePasswordGate.test.tsx` | `i/lf w/crlf attr/` | `i/lf w/lf attr/text eol=lf` |
+| `tests/e2e/space-production-route.spec.ts` | `i/lf w/crlf attr/` | `i/lf w/lf attr/text eol=lf` |
+
+전역 `*.ts`/`*.tsx` 규칙이나 다른 경로 정책으로 넓히지 **않았다** — 저장소 전체 line-ending 정책은
+별도 결정이고 스펙 080 보완이 대신 정할 일이 아니다. 그 이유를 `.gitattributes` 주석에 남겼다.
+이어서 세 파일의 worktree 사본을 CRLF→LF로 변환했다.
+
+**제품 semantic diff가 0이라는 증거.**
+
+- 보완 commit의 staged diff는 `.gitattributes | 9 +++++++++` **한 파일뿐**이다.
+- 세 파일은 `git diff --exit-code` clean이다(내용 변경 0, git status의 `M`은 stat 캐시 갱신일 뿐).
+- 고객 entry 해시가 Codex가 재검수에서 기록한 값과 **동일**하다 — `index-BUT7Bmak.js` /
+  `340,604 B` / `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`. 빌드 산출물이
+  비트 단위로 같다는 것이 semantic 무변경의 가장 직접적인 증거다.
+- spec-080 PNG 2개는 E2E 재실행으로 다시 생성됐지만 **byte-identical**이라 diff 0이다. spec-063
+  PNG도 diff 0이다.
+
+**보완 라운드 2 게이트 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| `git ls-files --eol` 세 파일 | **`i/lf w/lf attr/text eol=lf`** 3/3 |
+| `biome format` 세 파일 | clean(보완 전에는 `␍` 전용 diff 3건) |
+| targeted unit + mockup typecheck | PASS |
+| `node scripts/check.mjs` 전체 | **PASS** — format 포함, unit **2281/2281**, build 2개 |
+| targeted Chromium `space-production-route.spec.ts` | **14/14 PASS** |
+| 고객 entry | `index-BUT7Bmak.js` / `340,604 B` / `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1` — 라운드 1과 **동일** |
+| 무변경 확인 | 고객 CSS 19,381 B · admin entry 226,201 B · admin CSS 9,146 B — SHA-256까지 동일 |
+| `git diff --check` | PASS |
+| 허용 외 diff | **0** — 제품 semantic·PNG·Rules/firebase/package/lockfile 변경 0 |
+| 검사 포트 4183/4184/4185/8080/9099/9199 | 실행 전후 잔류 **0**, 강제 종료 0 |
+
+**full Chromium suite는 보호 spec-018 PNG를 다시 쓰므로 계속 NOT RUN**이며 PASS라고 기록하지 않는다.
+actual Firebase/project/bucket/network/live/CORS/deploy/actual UID는 **0 / NOT TESTED**다. 보호
+대상과 기존 user working-tree 변경은 읽기만 했고 수정·복원·checkout·stage·commit **0**이다.
+
+상태 `READY_FOR_CODEX`, fix_round **2/3**, next transition `CODEX_SPEC_080_REVIEW`. 다음 스펙과
+자동화·반복 작업은 시작하지 않았다. 전체 진행도는 **83~86% 완료 / 14~17% 잔여 — 변동 없음**이다.
+config 재현성 보완이지 새 제품 능력이 아니다.

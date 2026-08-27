@@ -6195,3 +6195,39 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `CORRECTION_REQUIRED`, fix_round 2/3, next `CLAUDE_CORRECTION`. actual Firebase/network/live/
   deploy 0, 다음 스펙과 자동화·반복 작업 시작 0.
 - 전체 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**.
+
+## 2026-08-27 - 스펙 080 보완 라운드 2 (clean checkout EOL 재현성)
+
+- 기준 `HEAD=origin=3b7c72c`, ahead/behind 0/0. Codex 재검수 문서 commit `1ae514a`, 보완 commit
+  `85ac204`. Codex가 지적한 **EOL 재현성 한 가지만** 고쳤고 라운드 1의 form/screenshot 결론은 하나도
+  되돌리지 않았다.
+- **결함 재현.** `biome format`을 세 파일에 직접 돌려 확인했다 — 보고된 diff는 전부 `␍`(CR)뿐이고
+  코드 내용 차이는 0이었다. 실패 원인은 line ending 하나이며 Codex 판정이 정확하다.
+- **원인.** system `core.autocrlf=true`이고 기존 `.gitattributes`는 `*.bat`/`*.cmd`/`*.ps1`만 CRLF로
+  고정한다. commit blob은 이미 LF지만 Windows checkout이 worktree 사본을 CRLF로 만들고 Biome은 LF로
+  포맷하므로, 라운드 1의 전체 check PASS가 clean checkout에서 재현되지 않았다.
+- **보완.** `.gitattributes`에 **정확히 세 경로만** `text eol=lf`로 고정했다 —
+  `apps/mockup/src/space/SpacePasswordGate.tsx` · `apps/mockup/src/space/SpacePasswordGate.test.tsx` ·
+  `tests/e2e/space-production-route.spec.ts`. 전역 `*.ts`/`*.tsx` 규칙이나 다른 경로 정책으로 넓히지
+  않았다 — 저장소 전체 line-ending 정책은 별도 결정이고 스펙 080 보완이 대신 정할 일이 아니다.
+  이유는 파일 주석으로 남겼다. 이어서 세 파일의 worktree 사본을 CRLF→LF로 변환했다.
+- **검증.** `git ls-files --eol`이 세 파일 모두 **`i/lf w/lf attr/text eol=lf`**를 보고하고
+  `biome format`도 세 파일 clean이다.
+- **semantic diff 0.** 보완 commit의 staged diff는 `.gitattributes | 9 +++++++++` **한 파일뿐**이고
+  세 파일은 `git diff --exit-code` clean이다. 고객 entry 해시가 Codex 기록값과 **동일**하다 —
+  `index-BUT7Bmak.js` / `340,604 B` /
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`.
+- **실측.** 전체 `node scripts/check.mjs` **PASS**(format 포함, unit **2281/2281**), targeted Chromium
+  `space-production-route.spec.ts` **14/14 PASS**, `git diff --check` PASS, 검사 포트
+  4183/4184/4185/8080/9099/9199 잔류 **0**, 강제 종료 0. Playwright `test-results/`는 제거했다.
+- **무변경 확인.** 고객 CSS `index-BjqjBda8.css`(19,381) · admin entry `index-D0XOQpRL.js`(226,201) ·
+  admin CSS `index-DJ_z3tK1.css`(9,146) 모두 SHA-256까지 동일. spec-080 PNG 2개는 E2E 재실행으로 다시
+  생성됐으나 **byte-identical**이라 diff 0, spec-063 PNG도 diff 0이다.
+- 변경 파일은 `.gitattributes`와 spec-080 상태 문서뿐이다. 제품 semantic diff·PNG 재생성 diff·
+  Rules/firebase/package/lockfile 변경 **0**이고 보호 대상과 기존 user working-tree 변경은 읽기만 했다.
+- **full Chromium suite는 보호 spec-018 PNG 때문에 계속 NOT RUN**이며 PASS라고 기록하지 않는다.
+  actual Firebase/network/live/CORS/deploy/UID는 **0 / NOT TESTED**다.
+- 상태 `READY_FOR_CODEX`, fix_round **2/3**, next transition `CODEX_SPEC_080_REVIEW`. 다음 스펙과
+  자동화·반복 작업은 시작하지 않았다.
+- 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**. config 재현성 보완이라 새 제품
+  능력으로 계산하지 않았다.

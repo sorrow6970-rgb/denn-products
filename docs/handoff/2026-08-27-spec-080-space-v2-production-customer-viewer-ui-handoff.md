@@ -99,3 +99,25 @@ Codex 라운드 1이 지적한 두 결함만 고쳤다. 조항별 대조와 실�
   증명한다. semantic code/test·PNG 변경은 허용하지 않는다.
 - 상태 `CORRECTION_REQUIRED`, fix_round 2/3, next `CLAUDE_CORRECTION`. 진행도 **83~86% / 14~17% —
   변동 없음**.
+
+## 보완 라운드 2 (2026-08-27, Claude Code)
+
+Codex 라운드 2가 지적한 clean checkout EOL 재현성 한 가지만 고쳤다. 상세 근거와 실측표는 스펙 080의
+`### DONE (Claude) — 보완 라운드 2 (2026-08-27)`가 정본이다. 재검수 문서 commit `1ae514a`, 보완
+commit `85ac204`.
+
+- `biome format`으로 결함을 재현했다 — diff는 전부 `␍`(CR)뿐이고 코드 내용 차이는 0이었다.
+- `.gitattributes`에 정확히 세 경로(`SpacePasswordGate.tsx` · `SpacePasswordGate.test.tsx` ·
+  `tests/e2e/space-production-route.spec.ts`)만 `text eol=lf`로 고정하고 worktree 사본을 LF로
+  변환했다. 전역 `*.ts`/`*.tsx` 규칙으로 넓히지 않았다.
+- `git ls-files --eol`이 세 파일 모두 `i/lf w/lf attr/text eol=lf`를 보고한다.
+- 제품 semantic diff 0: staged diff는 `.gitattributes` 한 파일뿐, 세 파일은 `git diff --exit-code`
+  clean, 고객 entry 해시는 Codex 기록값과 동일(`index-BUT7Bmak.js` / 340,604 B /
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`).
+- 전체 `node scripts/check.mjs` PASS(format 포함, unit **2281/2281**), targeted Chromium
+  **14/14 PASS**, `git diff --check` PASS, 허용 외 diff 0, 검사 포트 잔류 0. spec-080 PNG는 재생성
+  후 byte-identical이다.
+- full Chromium suite는 보호 spec-018 PNG 때문에 계속 NOT RUN이며 actual Firebase/network/live/deploy는
+  0 / NOT TESTED다.
+- 상태 `READY_FOR_CODEX`, fix_round 2/3, next transition `CODEX_SPEC_080_REVIEW`.
+- 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**.
