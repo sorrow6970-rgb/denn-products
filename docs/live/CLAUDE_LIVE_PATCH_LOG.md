@@ -6691,3 +6691,19 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CODEX`, fix_round **2/3**, next transition `CODEX_SPEC_082_REVIEW`.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품 능력이
   아니다.
+
+## 2026-08-27 - 스펙 082 보완 라운드 2 Codex 재검수 · CORRECTION_REQUIRED 3/3
+
+- `HEAD=origin=25cbe0f`, ahead/behind 0/0. 라운드 2 제품 diff는 승인된 test 한 파일뿐이다.
+- Codex 독립 `node scripts/check.mjs` **PASS**(unit **2409/2409**, build 2개), 전체 Chromium
+  **160/160 PASS**를 재현했다.
+- 잔여 결함: forbidden API detector `\bname\s*\(`는 alias import, property extraction, bracket access를
+  놓친다. 합성 `import { uploadBytes as u }`, `const u=storage.uploadBytes;u()`,
+  `storage["uploadBytes"]` 세 입력 모두 detector **false**로 실측했다.
+- test 제목 “Firestore boundary”와 상단 “customer bundle SDK trace 0” 설명도 승인된 read-only Storage와
+  모순된다.
+- 같은 허용 test 파일 안에서 reference-level guard, app import allowlist, exact proof adapter positive,
+  stale prose를 닫는 최종 correction round **3/3**으로 보낸다. Founder 추가 결정과 제품 코드 변경은 0.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_CORRECTION`. admin UI/다음 스펙/자동화 시작 0.
+- E2E가 만든 exact `test-results`는 확인 후 삭제했고 보호 dirty는 restore/stage하지 않았다. 전체 진행도
+  **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

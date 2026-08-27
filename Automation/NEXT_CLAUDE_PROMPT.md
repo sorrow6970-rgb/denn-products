@@ -1,11 +1,12 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `READY_FOR_CLAUDE`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION ROUND 2 DONE / NN-2=A / NON_UI / NO_LIVE_NETWORK / E2E 160-0**
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED ROUND 3/3 / NON_UI / NO_LIVE_NETWORK / CURRENT E2E 160-0**
 - 기준: `HEAD=origin=60507b3`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 라운드 2 `65c5b46`.
-- next_transition: `CODEX_SPEC_082_REVIEW`
+- 현재 검수 기준: `HEAD=origin=25cbe0f`, ahead/behind `0/0`
+- next_transition: `CLAUDE_CORRECTION`
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
 
 ## 현재 결과 — 보완 라운드 2 완료, 전체 E2E 160/160
@@ -30,7 +31,48 @@ write surface에 겨누면 `uploadBytes`가 FAIL로 잡혀 **이빨이 있음을
 `node scripts/check.mjs` PASS(unit **2409/2409**), **build 산출물 14개 모두 보완 전과 byte+SHA-256
 동일**, `git diff --check` PASS, 변경 경로 한 파일뿐, EOL clean, 포트·temp 잔류 0.
 
-**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 재검수다.
+## Codex 재검수 — CORRECTION_REQUIRED 라운드 3/3
+
+현재 전체 E2E **160/160**은 독립 재현했지만 source guard가 별칭·property extraction을 놓친다. 현재
+`\bapi\s*\(` 검사는 다음 세 금지 사용을 모두 통과시킨다:
+
+- `import { uploadBytes as u } from "firebase/storage"; u()`
+- `const u = storage.uploadBytes; u()`
+- `storage["uploadBytes"]`
+
+또한 test 제목과 파일 상단 설명이 여전히 Firestore-only/SDK trace 0이라고 적어 승인된 Storage read와
+모순된다. 같은 허용 test 파일 안에서 닫는 최종 in-scope 보완이며 Founder 추가 결정은 필요 없다.
+
+> Claude Code에 전달할 실행 지시문:
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 082 CORRECTION_REQUIRED 라운드 3만 수행해.
+
+허용 제품 파일은 tests/e2e/admin-auth-read.spec.ts 하나뿐이다. 제품 코드와 승인된 read-only Storage
+연결은 바꾸지 마.
+
+현재 forbidden API 검사가 `\bname\s*\(` 직접 호출만 잡아 alias import, property extraction, bracket
+property를 놓친다. 주석 제거된 app-owned production source에서는 uploadBytes,
+uploadBytesResumable, uploadString, updateMetadata, deleteObject, list, listAll, getDownloadURL, getBlob,
+getStream의 whole identifier/reference 자체를 금지해 alias와 property extraction도 차단해. 합성 문자열
+회귀로 최소 `import { uploadBytes as u }`, `const u = storage.uploadBytes; u()`,
+`storage["uploadBytes"]`가 detector에 잡히고 주석 속 이름은 무시됨을 같은 파일에서 증명해.
+
+apps/mockup production import specifier는 @denn/firebase 루트와 @denn/firebase/space-read만 허용하고,
+apps/mockup이 firebase/app|auth|firestore|storage를 직접 import하면 실패하게 해. 검사 source에는 고객이
+실제 쓰는 루트 public-catalog/public-images 경계와 space-read production source를 포함해. 승인된 Storage
+positive는 packages/firebase/src/space-read/proof-sdk-facade.ts의 storage.getStorage/ref/getMetadata/getBytes
+exact call로 고정해 다른 동명 함수가 대신 만족하지 못하게 해.
+
+bundle test 제목과 파일 상단 설명도 Firestore+read-only Storage가 승인된 현재 상태에 맞춰 정정해.
+기존 Auth whole-identifier, admin private path, runtime external request 0 단언은 유지해. 테스트 삭제·skip·
+E2E 예외는 금지다.
+
+targeted admin-auth-read와 전체 Chromium 전부 PASS, node scripts/check.mjs, bundle/CSS hash,
+git diff --check, exact one-product-file diff, EOL, 포트/temp를 검증해. package/lockfile, Rules/config,
+apps/packages 제품 코드, 보호 대상, 실제 Firebase/network/live/deploy/UI는 건드리지 마. 허용 test와
+spec082 상태 문서만 일반 fast-forward commit/push하고 READY_FOR_CODEX에서 멈춰. 자동화는 만들지 마.
+```
 
 > 직전 지시문(스펙 082 보완 라운드 2, 수행 완료 — 기록):
 

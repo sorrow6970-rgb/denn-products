@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CODEX / CORRECTION ROUND 2 DONE / NN-2=A / NON_UI / NO_LIVE_NETWORK / E2E 160-0`
+`READY_FOR_CLAUDE / CORRECTION_REQUIRED ROUND 3 OF 3 / NON_UI / NO_LIVE_NETWORK`
 
 선행 게이트:
 
@@ -472,3 +472,14 @@ Auth·admin private path·external request 0 검사는 그대로다. 스펙 079/
 
 **진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
 능력이 아니다.
+
+### CODEX REVIEW — 보완 라운드 2 (2026-08-27)
+
+독립 check **2409/2409**와 전체 Chromium **160/160**은 재현했다. 하지만 source guard가 forbidden
+API의 direct call spelling(`name(`)만 막아 alias import/property extraction/bracket access를 놓친다.
+실측 합성 입력 세 개 모두 detector 결과 false였다. 또한 test title과 상단 설명은 승인된 Storage read가
+존재함에도 Firestore-only/SDK trace 0이라고 적는다.
+
+동일 test 파일 안에서 reference-level forbidden detector, import allowlist, exact proof adapter positive
+calls, stale prose를 보완하는 correction round 3/3을 요구한다. 제품 코드·adapter·승인된 read-only 경계는
+변경하지 않는다.

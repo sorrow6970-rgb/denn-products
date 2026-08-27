@@ -1,5 +1,12 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-27): spec 082 correction round 2 Codex 재검수 = CORRECTION_REQUIRED 3/3.**
+> `HEAD=origin=25cbe0f`, ahead/behind 0/0. 독립 check **2409/2409**, Chromium **160/160**은 PASS.
+> 그러나 forbidden source guard가 direct `name(`만 잡아 alias import/property extraction/bracket access를
+> 놓치고, test title/상단 설명도 승인된 Storage read와 모순된다. 동일 test 한 파일에서 reference-level
+> guard와 import allowlist, exact proof adapter positives, stale prose만 보완한다. 제품 코드/UI/network/
+> live/deploy 변경 0. 전체 진행도 **84~87% / 잔여 13~16%**.
+
 > **최신 포인터 (2026-08-27): Founder NN-2=A 승인 / spec 082 correction round 2 READY_FOR_CLAUDE.**
 > 허용 제품 파일은 `tests/e2e/admin-auth-read.spec.ts` 하나뿐이다. 승인된 read-only Storage 연결은
 > 유지하고 app-owned production source/call surface가 `getStorage/ref/getMetadata/getBytes`만 사용하는지

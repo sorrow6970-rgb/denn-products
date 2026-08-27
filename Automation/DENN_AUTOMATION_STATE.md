@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: READY_FOR_CODEX
+state: READY_FOR_CLAUDE
 baseline_commit: 60507b3   # HEAD=origin at spec 082 correction round 2 start (Codex review + NN-2=A)
 candidate_commit: 65c5b46  # spec 082 correction round 2 (round 1 8d4458d, implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "correction round 2 applied on HEAD=origin=60507b3, ahead/behind 0/0; pushed fast-forward"
-working_tree: "spec 082 correction round 2 test and status documents committed; protected spec-018 PNGs left dirty after the full E2E, and pre-existing Founder/user changes remain untouched and unstaged"
-fix_round: 2
+origin_relation: "Codex reviewed HEAD=origin=25cbe0f, ahead/behind 0/0; no Codex commit or push"
+working_tree: "Codex review documents are uncommitted; protected spec-018 PNGs and pre-existing Founder/user changes remain untouched and unstaged"
+fix_round: 3   # final in-scope correction round; not yet implemented
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_082_REVIEW
+next_transition: CLAUDE_CORRECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,22 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 082 보완 라운드 2 Codex 재검수 · CORRECTION_REQUIRED 라운드 3 (2026-08-27)
+
+- `HEAD=origin=25cbe0f`, ahead/behind 0/0. 라운드 2 제품 diff는 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이다.
+- 독립 `node scripts/check.mjs` **PASS**(unit **2409/2409**, build 2개), 전체 Chromium
+  **160/160 PASS**를 재현했다.
+- 그러나 forbidden API 검사는 `\bname\s*\(` 직접 호출만 찾으므로
+  `import { uploadBytes as u }`, `const u = storage.uploadBytes; u()`, `storage["uploadBytes"]`를 모두
+  놓친다. Codex가 같은 정규식으로 세 입력을 측정한 결과 **false / false / false**였다.
+- 또한 bundle test 제목은 여전히 “Firestore boundary만”이라고 하고 파일 상단은 “customer bundle SDK
+  흔적 0”이라고 적어, 스펙 079/080의 승인된 read-only Storage와 모순된다.
+- 같은 test 파일 안에서 닫을 수 있는 in-scope 결함이므로 Founder 추가 결정 없이 최종 correction round
+  **3/3**으로 보낸다. 제품 코드·Storage adapter·승인 경계는 변경하지 않는다.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_CORRECTION`. 전체 진행도 **84~87% 완료 / 13~16% 잔여 —
+  변동 없음**.
 
 ## 스펙 082 보완 라운드 2 수행 — NN-2=A, 전체 E2E 160/160 (2026-08-27)
 
