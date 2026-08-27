@@ -24,7 +24,46 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`WAITING_FOR_NEXT_MANUAL_TASK` - 스펙 078 `DONE / CODEX_PASSED`.**
+상태: **`READY_FOR_CLAUDE` - Founder MM-1=A ~ MM-6=A 승인, 스펙 079 실행 계약 준비 완료.**
+
+Founder가 이 대화에서 MM-1=A ~ MM-6=A를 승인했다. 결정 정본은
+`docs/codex-claude-handoff/decisions/2026-08-26-space-v2-proof-reader-adapter-decisions.md`다.
+
+다음 Claude Code 단위는 `docs/rebuild/specs/079-space-v2-proof-reader-adapter.md`다. 기존
+`denn-space-viewer` named app과 `@denn/firebase/space-read`를 재사용하는 package-only proof reader를
+구현한다. exact V2 path → metadata fullPath/contentType/size → bounded bytes → metadata/bytes length
+일치와 단일 20초 budget을 unit 및 `demo-denn-emulator`에서 검증한다.
+
+`apps/**`, production route/UI/CSS/browser decoder, Rules/emulator JSON, package/lockfile/root barrel은 범위
+밖이다. 전체 Chromium E2E는 MM-6=A에 따라 NOT RUN이며 PASS라고 주장하지 않는다. actual Firebase/
+network/live/CORS/deploy/actual UID/orphan cleanup도 계속 금지다.
+
+제품 구현은 아직 시작하지 않았다. next transition은 `CLAUDE_SPEC_079_IMPLEMENTATION`. 실제 UI/UX는
+proof reader 통과 후 별도 Claude Code composition 스펙에서 시작한다.
+
+전체 진행도는 **81~84% 완료 / 16~19% 잔여 — 변동 없음**이다.
+
+> 스펙 079 조사 상태:
+
+`HEAD=origin=b28b9c1`, ahead/behind 0/0에서 설치 Firebase Web SDK 12.17.1의 공개 타입과 공식 문서,
+기존 `denn-space-viewer` named app ownership, 스펙 075 Rules와 스펙 078 proof port를 대조했다.
+
+공개 `getBytes(ref,maxDownloadSizeBytes?)`는 ArrayBuffer만 반환하며 object의 실제 `contentType`/`size`는
+별도 `getMetadata(ref)`로 읽어야 한다. 따라서 권장 protocol은 exact V2 asset path 검사 → metadata
+fullPath/MIME/size 선검사 → bounded bytes → metadata size와 bytes length 일치다. 목표 Rules는 같은
+경로의 update/delete를 금지하지만 live 배포 상태는 NOT TESTED다.
+
+조사 당시 Founder **MM-1~MM-6**은 미결정이었고 권장값은 모두 A였다. 기존 `@denn/firebase/space-read`와
+`denn-space-viewer` app 재사용, metadata-first read, 20초 전체 budget, `demo-denn-emulator` opt-in,
+package-only 범위와 full-E2E NOT RUN 예외다. 결정 전 Claude Code 실행 지시와 제품 구현은 없다.
+
+현재 단위는 UI 단계가 아니다. proof reader adapter 통과 뒤 browser PNG decoder와 production customer
+V2 composition/UI를 별도 스펙으로 열며, 실제 UI/UX 구현은 사용자 지침대로 Claude Code가 담당한다.
+actual Firebase/network/live/CORS/deploy, actual UID, admin issue UI, orphan cleanup은 계속 금지다.
+
+위 결정으로 현재 해소됐으며 전체 진행도는 **81~84% 완료 / 16~19% 잔여 — 변동 없음**이다.
+
+> 스펙 078 종료 상태:
 
 Codex 재검수 기준 `HEAD=origin=6742f3f`, ahead/behind 0/0이다. correction code/test commit `bed9106`을
 스펙 029·030 normalized-pan 계약과 스펙 078 exact replay 계약에 대조했고 추가 결함은 0이다. probe와

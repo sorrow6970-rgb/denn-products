@@ -5978,3 +5978,37 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, active unit 없음, next transition `NEXT_MANUAL_SPEC_SELECTION`.
   다음 스펙·자동화·반복 작업 시작 0.
 - 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**.
+
+## 2026-08-26 - 스펙 079 V2 proof reader adapter 문서 조사
+
+- 기준 `HEAD=origin=b28b9c1`, ahead/behind 0/0. 설치 Firebase Web SDK 12.17.1의 공개 Storage 타입,
+  기존 `space-read` app ownership, 목표 Rules/emulator와 스펙 078 proof port를 읽기 전용으로 대조했다.
+- 공식/설치 타입상 `getBytes(ref,maxDownloadSizeBytes?)`는 ArrayBuffer만 반환하고 `getMetadata(ref)`가
+  별도로 full metadata를 반환한다. 권장 순서는 exact path → metadata fullPath/contentType/size → bounded
+  bytes → metadata size와 bytes length 일치다.
+- 기존 `denn-space-viewer` named app을 exact config match로 재사용하고 Auth/default/추가 app을 만들지
+  않는 package-only adapter가 최소 다음 단위다. target Rules의 immutable path는 local 목표이며 live
+  배포·CORS는 NOT TESTED다.
+- 조사/spec/handoff와 STATE/NEXT/CURRENT/live log 문서 7개만 변경했다. 제품 코드/test/Rules/config/
+  package/lockfile 변경 0, unit/E2E/emulator 실행 0, actual Firebase/network/live/deploy/UI 연결 0.
+- Founder **MM-1~MM-6** 결정 대기. 권장값은 모두 A이며 결정 전 Claude Code 실행 지시문은 없다.
+  상태 `FOUNDER_DECISION_REQUIRED`, next transition `FOUNDER_MM_1_MM_6_DECISION`.
+- 이 단위는 UI가 아니다. adapter 통과 뒤 browser decoder와 production V2 customer composition/UI가
+  별도 Claude Code 단계다.
+- 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**. 문서 조사만으로 올리지 않았다.
+
+## 2026-08-26 - Founder MM-1~MM-6 승인 · 스펙 079 Claude 실행 계약
+
+- Founder가 **MM-1=A, MM-2=A, MM-3=A, MM-4=A, MM-5=A, MM-6=A**를 승인했다.
+- 기존 `denn-space-viewer` named app과 `@denn/firebase/space-read` 재사용, exact path → metadata
+  fullPath/contentType/size → bounded bytes → length 일치, 단일 20초 budget, 제품 retry 0을 확정했다.
+- 허용 제품 범위는 `packages/firebase/src/space-read/` 신규 proof adapter/test, index export와
+  `vitest.emulator.config.ts` include 1건이다. 기존 Rules/emulator JSON과 `demo-denn-emulator`만 재사용한다.
+- `apps/**`, production route/UI/CSS/browser decoder, 기존 V1 facade, package/lockfile/root barrel, actual
+  Firebase/network/live/CORS/deploy/UID/orphan cleanup은 열지 않는다.
+- 전체 Chromium E2E는 MM-6=A에 따라 NOT RUN이며 PASS라고 주장하지 않는다.
+- 결정 정본, 스펙 079 계약, handoff와 STATE/NEXT/CURRENT/live log를 동기화했다. 제품 구현과 실행
+  게이트는 아직 0이다.
+- 상태 `READY_FOR_CLAUDE`, next transition `CLAUDE_SPEC_079_IMPLEMENTATION`. 다음 UI 스펙은 자동
+  시작하지 않는다.
+- 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**.

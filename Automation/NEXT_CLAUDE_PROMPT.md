@@ -1,28 +1,52 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
-active_unit: `null`
+상태: `READY_FOR_CLAUDE`
+active_unit: `spec-079-space-v2-proof-reader-adapter`
 completed_unit: `spec-078-space-v2-local-viewer-replay-pipeline` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI**
-재검수 기준: `HEAD=origin=6742f3f`, ahead/behind **0/0**.
-보완 코드/test commit: `bed9106`.
-검증: targeted **29/29**, 전체 check(unit **2153/2153** 포함), 고객 entry exact hash PASS. 전체 Chromium
-E2E와 emulator는 **NOT RUN**.
-fix_round: **1 / 3**
-next_transition: **`NEXT_MANUAL_SPEC_SELECTION`**
+조사 기준: `HEAD=origin=b28b9c1`, ahead/behind **0/0**.
+Founder 결정: **MM-1=A ~ MM-6=A 승인**.
+제품 구현: **NOT STARTED — 아래 수동 지시 후 시작**.
+검증: 문서 조사만 수행. unit/E2E/emulator **NOT RUN**.
+fix_round: **0 / 3**
+next_transition: **`CLAUDE_SPEC_079_IMPLEMENTATION`**
 
 ## 현재 결과·다음 지시문
 
-스펙 078 보완 라운드 1은 Codex 독립 재검수를 통과했다. correction commit `bed9106`의 normalized pan
-환산과 exact full-plan/detachment test에 추가 결함이 없었고 최종 판정은
-`CODEX_PASSED / DONE / LOCAL_VERIFIED / NO_UI / NO_NETWORK`다.
+Founder가 **MM-1=A ~ MM-6=A**를 승인했다. 스펙 079 실행 계약은 기존 `denn-space-viewer` named app과
+`@denn/firebase/space-read`를 재사용하는 package-only V2 proof reader다. exact path → metadata
+fullPath/contentType/size → bounded bytes → metadata/bytes length 일치, 단일 20초 budget, 제품 retry 0이다.
 
-**Claude Code에 전달할 실행 지시문은 없다.** 다음 수동 스펙이 선택·작성되기 전에는 production route,
-Firebase asset adapter, React/UI/CSS 또는 다른 구현을 시작하지 않는다.
+## Claude Code에 그대로 전달할 실행 지시문
 
-- targeted **29/29**, 전체 check unit **2153/2153** PASS.
-- 고객 entry `index-6js4DafP.js`, 322,018 bytes, SHA-256
-  `A9360EFFBC204A2291AF66088840F7C7E58E97E8A29BE36B0669FC42E55E8159`.
-- 전체 Chromium E2E·emulator는 NOT RUN. actual network/live/deploy/UI 연결 0.
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와
+docs/rebuild/specs/079-space-v2-proof-reader-adapter.md를 읽고, Founder MM-1=A~MM-6=A 승인 범위의
+스펙 079 package-only Firebase V2 proof reader adapter만 구현·검증해.
+
+허용 제품 범위는 packages/firebase/src/space-read/의 신규 proof facade/reader/SDK adapter와 unit·opt-in
+emulator test, space-read/index.ts 명시 export, vitest.emulator.config.ts include 1건뿐이다. 기존
+denn-space-viewer named app을 exact config match로 재사용하고, exact V2 path → getMetadata의
+fullPath/contentType/size → getBytes(ref,maxBytes) → metadata size와 byte length 일치 순서를 지켜.
+metadata+bytes 전체에 단일 20초 budget을 적용하고 제품 retry, Auth, default/추가 app, download URL은 0이다.
+
+기존 firebase.emulator.json·storage.emulator.rules와 demo-denn-emulator만 사용한다. 설치·download가
+필요하면 STOP하고, non-demo/actual Firebase/project/bucket/network/live에는 접근하지 마.
+
+apps/**, production route/UI/CSS/browser decoder, 기존 space-read/sdk-facade.ts, Rules/emulator JSON,
+package/lockfile/pnpm-workspace.yaml/root barrel, actual UID/CORS/deploy/publish/orphan cleanup과 보호 대상은
+수정·복원·stage·commit하지 마. 전체 Chromium E2E는 MM-6=A에 따라 NOT RUN이며 PASS라고 기록하지 마.
+
+targeted unit, Firebase typecheck, node scripts/check.mjs, pnpm test:emulator, 고객 bundle exact hash,
+git diff --check, forbidden diff, 포트 잔류를 검증해. 구현과 허용 문서만 일반 fast-forward commit/push하고
+STATE/NEXT/CURRENT/live log/handoff를 실제 결과와 맞춘 뒤 READY_FOR_CODEX에서 멈춰. 다음 스펙과 UI를
+자동 시작하지 말고 자동화나 반복 작업을 만들지 마.
+```
+
+- spec: `docs/rebuild/specs/079-space-v2-proof-reader-adapter.md`
+- review: `docs/codex-claude-handoff/reviews/2026-08-26-space-v2-proof-reader-adapter-investigation.md`
+- 결정 정본: `docs/codex-claude-handoff/decisions/2026-08-26-space-v2-proof-reader-adapter-decisions.md`
+- 전체 Chromium E2E는 MM-6=A로 NOT RUN; full-E2E PASS 주장 금지.
+- actual Firebase/network/live/CORS/deploy/UI 연결 0 / NOT TESTED.
 - 전체 리빌드 진행도 **81~84% 완료 / 16~19% 잔여 — 변동 없음**.
 
 ## 이전 Claude Code 전달 지시문 — 스펙 073 종료 이력

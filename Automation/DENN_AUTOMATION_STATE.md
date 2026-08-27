@@ -5,16 +5,16 @@ updated_at: 2026-08-26
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-078-space-v2-local-viewer-replay-pipeline   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_UI
-active_unit: null
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: ed41170   # HEAD=origin at LL-1~LL-6 approval and spec 078 drafting start
-candidate_commit: bed9106   # spec 078 correction round 1 code/test commit
-verified_commit: bed9106   # independently re-reviewed correction code/test commit
-origin_relation: "Codex re-review started from HEAD=origin=6742f3f, ahead/behind 0/0"
-working_tree: "pre-existing protected Founder/user changes only before closure docs; no product correction diff remains"
-fix_round: 1
+active_unit: spec-079-space-v2-proof-reader-adapter
+state: READY_FOR_CLAUDE
+baseline_commit: b28b9c1   # HEAD=origin at spec 079 document investigation start
+candidate_commit: null
+verified_commit: bed9106   # spec 078 independently re-reviewed correction code/test commit
+origin_relation: "spec 079 investigation started from HEAD=origin=b28b9c1, ahead/behind 0/0"
+working_tree: "spec 079 decision/contract/handoff/state documents plus pre-existing protected Founder/user changes; product implementation diff 0"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: NEXT_MANUAL_SPEC_SELECTION
+next_transition: CLAUDE_SPEC_079_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Codex implementation under user execution instruction; independent review complete
 push_policy: fast-forward-only
@@ -22,6 +22,38 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 81-84% complete; 16-19% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Founder MM-1~MM-6 승인 · 스펙 079 실행 계약 (2026-08-26)
+
+- Founder가 **MM-1=A ~ MM-6=A**를 승인했다. 기존 `denn-space-viewer` named app과
+  `@denn/firebase/space-read`를 재사용하고, metadata-first bounded read, 단일 20초 budget,
+  `demo-denn-emulator` opt-in 검증, package-only/full-E2E NOT RUN 범위를 확정했다.
+- Claude Code 허용 제품 범위는 `packages/firebase/src/space-read/`의 신규 proof facade/reader/SDK
+  adapter/test, `space-read/index.ts` export와 `vitest.emulator.config.ts` include 1건뿐이다.
+- `apps/**`, production route/UI/CSS/browser decoder, Rules/emulator JSON, package/lockfile/root barrel은
+  변경하지 않는다. actual Firebase/network/live/CORS/deploy/UID와 orphan cleanup도 계속 금지다.
+- 상태 `READY_FOR_CLAUDE`, next transition `CLAUDE_SPEC_079_IMPLEMENTATION`. 실제 UI/UX는 이 단위가
+  아니라 후속 Claude Code composition 스펙이다.
+- 제품 구현과 unit/E2E/emulator는 아직 시작하지 않았다. 전체 진행도는 **81~84% 완료 / 16~19% 잔여 —
+  변동 없음**이다.
+
+## 스펙 079 proof reader adapter 조사 · Founder 결정 대기 (2026-08-26)
+
+- `HEAD=origin=b28b9c1`, ahead/behind 0/0에서 Firebase Web SDK 12.17.1 설치 타입, 기존
+  `@denn/firebase/space-read` app ownership, 목표 Storage Rules와 스펙 078 proof port를 읽기 전용으로
+  대조했다.
+- 공개 `getBytes(ref,maxDownloadSizeBytes?)`는 ArrayBuffer만 반환하고, `contentType`과 `size`는 별도
+  `getMetadata(ref)`에서 확인한다. 권장 프로토콜은 exact V2 path → metadata fullPath/MIME/size → bounded
+  bytes → metadata size와 bytes length 일치다.
+- 기존 `denn-space-viewer` named app을 exact config match로 재사용하고 Auth/default/추가 app을 만들지
+  않는 package-only adapter가 최소 다음 경계다. `demo-` emulator opt-in 후보도 실제 project 없이
+  검증 가능하다.
+- Founder **MM-1~MM-6**은 미결정이며 권장값은 모두 A다. 결정 전 Claude Code 실행 지시와 제품 구현은
+  없다. 상태 `FOUNDER_DECISION_REQUIRED`, next transition `FOUNDER_MM_1_MM_6_DECISION`.
+- 이번 변경은 spec/review/handoff/STATE/NEXT/CURRENT/live log 문서 7개뿐이다. unit/E2E/emulator는 실행하지
+  않았고 actual Firebase/network/live/deploy/UI 연결은 0이다.
+- 전체 진행도는 **81~84% 완료 / 16~19% 잔여 — 변동 없음**이다. 문서 조사만으로 완료율을 올리지
+  않았다.
 
 ## 스펙 078 Codex 재검수 통과 · 종료 (2026-08-26)
 
