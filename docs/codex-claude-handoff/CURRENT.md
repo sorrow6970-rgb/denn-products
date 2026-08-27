@@ -24,7 +24,40 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CLAUDE` - 스펙 080 CODEX_PASSED, 스펙 081 non-UI frozen issue session 계약 준비.**
+상태: **`READY_FOR_CODEX` - 스펙 081 admin frozen issue session 구현·검증 완료, Codex 검수 대기.**
+
+스펙 081 비-UI frozen issue session을 계약 범위대로 구현하고 검증했다. 기준 `HEAD=origin=4765502`,
+계약 문서 commit `7608977`, 구현 commit `7dc148f`.
+
+신규 제품 파일은 `apps/admin/src/space-v2/issue-session.ts`와 `issue-session.test.ts` **2개뿐**이고
+기존 제품 파일은 하나도 수정하지 않았다. `issue()`는 password 쌍만 받으며 arbitrary PNG를 metadata와
+함께 주입하는 seam이 없다. `beginDraft(source)`가 두 method를 각각 한 번 읽어 bind하고 `copyFields()`를
+정확히 한 번 호출한 뒤 deep clone으로 고정하므로, 이후 caller가 catalog/selection/transform을
+바꾸거나 exporter를 교체해도 최초 frozen 값만 발급된다.
+
+순서는 password exact match → `exportProofPng()` 1회 → fresh copy → `prepareSpaceV2LocalIssueBundle()`
+1회 → writer `issue()` 1회이며 각 단계 실패는 뒤 단계 호출 0이다. writer confirmed success만 token을
+보존하고 objectPath는 snapshot에 없으며 URL/clipboard는 없다. outcome unknown은 별도 status로 두고
+추측하지 않으며, writer가 throw하거나 malformed 결과를 줘도 요청이 이미 떠났으므로 같은 처리다. 자동
+retry·merge·새 token 자동 발급은 0이고 정의된 결과 뒤에는 새 frozen draft가 필요하다.
+
+실측: 신규 unit **58/58**, 기존 issue-bundle·space-write regression PASS, admin/firebase typecheck,
+전체 `node scripts/check.mjs` PASS(unit **2339/2339**). **production bundle은 스펙 명시값과 exact
+일치** — admin `index-D0XOQpRL.js` / 226,201 B / `B6E90475…F1DC`, customer `index-BUT7Bmak.js` /
+340,604 B / `1AA1BD0B…B4F1`. CSS 2개도 SHA-256까지 무변경. `git diff --check` PASS, 허용 외 diff 0,
+검사 포트 잔류 0.
+
+Chromium E2E와 emulator는 **NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/network/live/UID/
+deploy, URL/clipboard, 운영 발급, publish, delete/orphan cleanup은 **0 / NOT TESTED**이고 LL-4
+production composition을 완료했다고 기록하지 않는다. 실제 admin UI/UX와 production Canvas exporter
+연결은 후속 Claude Code 단위다.
+
+보고: 신규 두 파일을 LF로 커밋했지만 `.gitattributes`에 고정하지 않았다 — 스펙 081 허용 경로가
+아니기 때문이며, 저장소 전체 line-ending 정책 결정 대상으로 남긴다.
+
+전체 진행도는 **84~87% 완료 / 13~16% 잔여**다.
+
+> 스펙 081 실행 계약 · 스펙 080 최종 검수 (준비 시점 기록):
 
 최종 검수 기준 `HEAD=origin=4765502`, ahead/behind `0/0`. 스펙 080 보완 라운드 2는 exact 3-path
 LF 정책, semantic diff 0, targeted unit **11/11**, 전체 check(unit **2281/2281**), OS temp targeted

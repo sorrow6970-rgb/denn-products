@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CLAUDE / CONTRACT_ONLY / NON_UI / NO_LIVE_NETWORK`
+`READY_FOR_CODEX / IMPLEMENTED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK`
 
 Founder 결정 정본:
 `docs/codex-claude-handoff/decisions/2026-08-26-space-v2-composition-readiness-decisions.md`.
@@ -236,3 +236,131 @@ Chromium E2E와 emulator는 실행하지 않는다. 이 module은 production imp
 없음. LL-1~LL-6=A와 스펙 080 customer viewer PASS에 따라 다음 순서가 열렸다. 실제 admin UI/UX와
 production Canvas exporter 연결은 이 스펙이 아니라 후속 Claude Code UI 단위다.
 
+### DONE (Claude) — 2026-08-27
+
+기준 `HEAD=origin=4765502`, ahead/behind 0/0. 계약 문서 commit `7608977`, 구현 commit `7dc148f`.
+이 계약 범위만 구현했고 **기존 제품 파일은 하나도 수정하지 않았다.**
+
+**§범위 — 실제 변경**
+
+| 파일 | 상태 |
+|---|---|
+| `apps/admin/src/space-v2/issue-session.ts` | 신규 |
+| `apps/admin/src/space-v2/issue-session.test.ts` | 신규 (unit 58건) |
+| 추가 helper/test 쌍 | **만들지 않음** — 한 module/test 쌍으로 완결됐다 |
+
+**§1 frozen draft source.** `issue()`는 `{password, confirmation}`만 받는다. arbitrary `pngBytes`를
+metadata와 함께 주입하는 seam은 존재하지 않는다. `beginDraft(source)`는 exact `copyFields` ·
+`exportProofPng` 두 키만 허용하고(extra/missing/symbol/non-enumerable/hostile getter fail-closed),
+두 method를 각각 **한 번** 읽어 원 receiver에 bind하며 `copyFields()`를 **정확히 한 번** 호출한다.
+반환값은 exact 6키 top-level snapshot 뒤 `structuredClone`으로 **deep detach**한다 — "frozen"을
+이름이 아니라 실제 보장으로 만들기 위해서다. clone할 수 없는 payload(함수·symbol·hostile proxy)는
+부분 복사 대신 fail-closed다. catalog는 그 시점의 validated C5 baseline snapshot이며 저장 직전
+reload/adopt/merge는 **0**이다. proof method는 같은 handle에서만 오고 `issue()` caller가 PNG나 object
+path를 덮어쓸 인자는 없다. 이 module은 exporter가 실제 Canvas/render owner와 연결됐다고 주장하지
+않는다 — injected fake로 **동일 handle 소유권과 호출 순서만** 증명한다.
+
+**§2 public contract.** status는 계약의 8개 그대로이고 snapshot은 exact
+`{status, canIssue, errorCode, confirmedToken}` 4키다. factory dependency는 exact
+`{uuid, crypto, sha256, writer, createCorrelationId}`이며 `writer`는 기존 `SpaceV2IssueWritePort`다.
+session local error는 계약이 요구한 4개(`SPACE_V2_SESSION_INVALID_DRAFT` ·
+`SPACE_V2_SESSION_PASSWORD_MISMATCH` · `SPACE_V2_SESSION_PROOF_FAILED` ·
+`SPACE_V2_SESSION_PREPARATION_FAILED`)만 쓰고 **새 코드를 늘리지 않았다** — 사용 불가능한 request
+객체도 "쓸 수 있는 password 쌍을 얻지 못했다"는 뜻에서 `PASSWORD_MISMATCH`로 닫는다.
+`confirmedToken`은 writer success 이후에만 생기고 objectPath는 snapshot에 없으며 URL/clipboard는
+이번 단위에 없다.
+
+**§3 exact issue 순서.** 구현과 unit이 고정한 실제 호출열은
+`fields → export → uuid#1 → uuid#2 → sha → sha → sha → encrypt → write`다.
+
+1. disposed / draft 존재 / idle / exact request를 검사한다.
+2. password·confirmation을 각각 한 번 snapshot하고 non-empty exact equality를 본다. trim/정규화/저장
+   **0**. 실패 시 exporter·UUID·hash·crypto·writer **0**.
+3. `preparing`으로 전환하고 frozen handle의 `exportProofPng()`를 **정확히 한 번** 호출한다.
+4. `Uint8Array`인지 확인하고 도착 즉시 fresh copy한다. throw/reject/malformed는 proof failure이며
+   이후 단계 **0**.
+5. frozen fields + copied PNG + password로 `prepareSpaceV2LocalIssueBundle()`을 **정확히 한 번**
+   호출한다.
+6. preparation 실패면 writer **0**이고 child code/identity는 노출하지 않는다.
+7. 성공 뒤에만 correlation id를 만들고 writer `issue({correlationId, bundle})`을 **정확히 한 번**
+   호출한다. `createCorrelationId()`가 throw하면 writer는 호출되지 않으므로(=아무것도 persist되지
+   않음) local `PREPARATION_FAILED`로 닫는다.
+8. writer confirmed success만 `success` + token이다. URL은 만들지 않는다.
+9. `SPACE_V2_ISSUE_UPLOAD_OUTCOME_UNKNOWN` · `SPACE_V2_ISSUE_DOCUMENT_OUTCOME_UNKNOWN`은
+   `outcome-unknown`이며 성공/실패로 추측하지 않는다. **writer가 throw하거나 malformed 결과를 주는
+   경우도 요청이 이미 떠났으므로 같은 `outcome-unknown`으로 닫는다**(실패로 보고해 재시도를 유도하지
+   않는다).
+10. 그 밖의 writer failure는 safe code를 그대로 보존한 `error`다. `retryable: true`는 자동 retry
+    권한이 아니며 unit이 재호출 시 writer 호출이 늘지 않음을 고정한다.
+
+password는 preparation 호출 직후 session local reference에서 비운다. test에도 원문을 snapshot으로
+남기지 않으며 직렬화 문자열 단언으로 확인한다.
+
+**§4 concurrency·mutation·재시도.** 한 session에서 issue는 하나만 in-flight이고 중복 호출은
+exporter/bundle/writer를 추가 호출하지 않는다(세 번 동시 호출 unit). generation으로 late completion이
+현재 snapshot을 덮지 못하게 한다. writer 호출 **전** 의 draft 교체/clear는 아무것도 persist되지
+않았으므로 안전하게 late 결과만 버리고, writer 호출 **뒤** 의 교체/clear는 취소됐다고 추측하지 않고
+session을 `outcome-unknown`으로 닫는다(그 뒤 늦게 도착한 remote success도 token을 되살리지 못한다).
+source/caller의 begin 이후 mutation은 frozen copy를 바꾸지 못한다. 자동 retry, 자동 새 token 발급,
+previous bundle 재사용, silent merge/reload는 **0**이다. **정의된 결과가 난 뒤에는 — password 거절
+포함 — 다음 시도 전에 새 frozen draft가 필요하다**(`canIssue`는 `draft-ready`에서만 true). 계약의
+"매번 새 frozen draft/새 identity가 필요하다"를 예외 없이 좁게 해석했고, `beginDraft`는 export·
+identity·network를 전혀 쓰지 않으므로 비용이 없다.
+
+**§5 Firebase/lazy composition 경계.** 이 파일은 `@denn/firebase/space-write`의 **type과 injected
+port만** 사용한다(`import type`만 있어 런타임 import 0). SDK facade factory import, default app/Auth
+생성은 없다. module import·factory·`beginDraft`·전체 issue 어디에서도 Firebase import/service/network는
+**0**이며, mock한 `firebase/app`·`auth`·`firestore`·`storage`가 한 번도 로드되지 않음을 unit이
+고정한다. 이 단위가 LL-4 production composition을 완료했다고 기록하지 않는다 — 후속 admin UI
+composition이 같은 `resolveAdminFirebaseConfig()`와 기존 operator auth로 스펙 076 adapter를
+lazy-create해야 한다.
+
+**§6 export/import 경계.** 앱 barrel을 만들지 않았고 `App.tsx`/`main.tsx`/admin composition에서 도달
+불가다. 기존 issue bundle/write port API와 오류 의미는 변경하지 않았다.
+
+**§검증 절차 — targeted unit 13항목 전부 커버 (58건)**
+
+① exact 순서 `fields → export → uuid×2 → sha×3 → encrypt → write` ② invalid/missing/extra/hostile
+source와 invalid frozen fields는 safe error·export/UUID/hash/crypto/writer 0 ③ password
+empty/mismatch/공백차이/non-string/missing/extra/non-object는 export 이후 0이고 password가
+snapshot에 없음 ④ begin 뒤 catalog·selection·transform·logicalWidth·frameColor mutation과 exporter
+교체를 무시하고 최초 frozen 값만 사용 ⑤ export bytes fresh copy(진행 중 mutation과 완료 후 mutation
+둘 다) ⑥ proof throw/reject/non-Uint8Array/ArrayBuffer는 preparation·writer 0 ⑦ preparation 실패는
+writer 0이고 UUID/token/path/child code 유출 0 ⑧ writer success만 confirmed token, objectPath는 public
+snapshot 0 ⑨ auth/forbidden/upload definite/asset mismatch/document failure/invalid input 6종 exact
+safe code 보존 ⑩ upload·document outcome unknown은 별도 status·자동 retry 0 ⑪ duplicate issue,
+draft replace/clear, dispose, late completion에서 second export/write와 stale overwrite 0
+⑫ import/factory/begin/issue 전 구간에서 Firebase SDK·network·DOM·Canvas·URL·clipboard·`Date.now`·
+`Math.random` 호출 0 ⑬ 기존 `issue-bundle`·`space-write` targeted regression PASS.
+
+**§repository gate 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| 신규 session unit | **58/58 PASS** |
+| 기존 issue-bundle + space-write targeted regression | **PASS** (합계 156/156) |
+| admin / firebase typecheck | PASS |
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2339/2339**, build 2개 |
+| admin entry | `index-D0XOQpRL.js` / `226,201 B` / `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC` — 스펙 명시값과 **exact 일치** |
+| customer entry | `index-BUT7Bmak.js` / `340,604 B` / `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1` — 스펙 명시값과 **exact 일치** |
+| CSS | admin `index-DJ_z3tK1.css` 9,146 B · customer `index-BjqjBda8.css` 19,381 B — SHA-256까지 무변경 |
+| `git diff --check` | PASS |
+| exact allowed paths / forbidden diff | **0** — 기존 제품 파일·`packages/**`·Rules/config·package/lockfile·`pnpm-workspace.yaml` 무변경 |
+| 검사 포트 4183/4184/4185/8080/9099/9199 | 실행 전후 잔류 **0**, 강제 종료 0 |
+
+**Chromium E2E와 emulator는 실행하지 않았다**(이 module은 production import/UI/SDK wiring이 없고 전체
+E2E는 보호 spec-018 PNG를 다시 쓴다). E2E/emulator PASS라고 기록하지 않는다.
+
+**보고 사항 — 범위 밖이라 하지 않은 것.** 신규 두 파일은 worktree에 LF로 커밋했지만
+`.gitattributes`에 `text eol=lf`로 고정하지 **않았다**. 스펙 081의 허용 경로가 아니기 때문이다.
+`core.autocrlf=true` 환경에서 이 두 파일이 다시 checkout되면 스펙 080 보완 라운드 2와 동일한 format
+단계 실패가 재발할 수 있으므로, 저장소 전체 line-ending 정책 결정 대상으로 남겨 보고한다.
+
+**§완료 정의 대비.** 허용 신규 non-UI module/test와 문서만 변경 ✅ · frozen source만 proof PNG를
+제공하고 arbitrary PNG issue seam 0 ✅ · 호출 순서·short-circuit·late completion·safe error가 unit으로
+증명됨 ✅ · admin/customer production bundle exact unchanged ✅ · actual Firebase/network/live/UI/
+Rules/deploy/delete/publish 0 ✅ · 일반 fast-forward commit/push 후 `READY_FOR_CODEX` 정지 ✅.
+
+**진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여**. admin 발급의 비-UI core가 닫힌 만큼만 올렸고,
+실제 admin UI/UX와 production Canvas exporter 연결, SDK composition, 실제 Firebase/Rules 배포·live
+검증은 그대로 남아 있다.

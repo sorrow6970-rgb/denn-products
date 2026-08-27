@@ -1,14 +1,45 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
-active_unit: `spec-081-space-v2-admin-frozen-issue-session`
+상태: `READY_FOR_CODEX`
+active_unit: `spec-081-space-v2-admin-frozen-issue-session` — **IMPLEMENTED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
 completed_unit: `spec-080-space-v2-production-customer-viewer-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / UI_CONNECTED / NO_LIVE_NETWORK**
-기준: `HEAD=origin=4765502`, ahead/behind `0/0`
+기준: `HEAD=origin=4765502`에서 시작. 계약 문서 commit `7608977`, 구현 commit `7dc148f`.
 Founder 정본: **LL-1=A ~ LL-6=A**
 fix_round: **0 / 3**
-next_transition: **`CLAUDE_SPEC_081_IMPLEMENTATION`**
+next_transition: **`CODEX_SPEC_081_REVIEW`**
 
-## Claude Code 실행 지시문
+## 현재 결과
+
+스펙 081 비-UI frozen issue session을 계약 범위대로 구현하고 검증했다. 신규 제품 파일은
+`apps/admin/src/space-v2/issue-session.ts`와 `issue-session.test.ts` **2개뿐**이며 기존 제품 파일은
+하나도 수정하지 않았다.
+
+`issue()`는 password 쌍만 받는다 — arbitrary PNG를 metadata와 함께 주입하는 seam이 없다.
+`beginDraft(source)`가 두 method를 각각 한 번 읽어 원 receiver에 bind하고 `copyFields()`를 정확히 한 번
+호출한 뒤 deep clone으로 고정하므로, 이후 caller가 catalog·selection·transform을 바꾸거나 exporter를
+교체해도 최초 frozen 값만 발급된다. 순서는 password exact match → `exportProofPng()` 1회 → fresh copy
+→ `prepareSpaceV2LocalIssueBundle()` 1회 → writer `issue()` 1회이고 각 실패는 뒤 단계 호출 0이다.
+
+confirmed writer success만 token을 보존하고 objectPath는 snapshot에 없으며 URL/clipboard는 없다.
+outcome unknown은 별도 status로 두고 성공/실패로 추측하지 않으며(writer throw·malformed 결과도 동일),
+자동 retry·merge·새 token 자동 발급은 0이고 정의된 결과 뒤에는 새 frozen draft가 필요하다.
+
+게이트 실측은 신규 unit **58/58**, 기존 issue-bundle·space-write regression PASS, admin/firebase
+typecheck, 전체 `node scripts/check.mjs` PASS(unit **2339/2339**), **production bundle 스펙 명시값과
+exact 일치**(admin `index-D0XOQpRL.js` / 226,201 B / `B6E90475…F1DC`, customer `index-BUT7Bmak.js` /
+340,604 B / `1AA1BD0B…B4F1`, CSS 2개도 SHA-256 무변경), `git diff --check` PASS, 허용 외 diff 0,
+검사 포트 잔류 0이다.
+
+**Chromium E2E와 emulator는 NOT RUN**이며 PASS라고 기록하지 않는다. LL-4 production composition을
+완료했다고도 기록하지 않는다.
+
+보고: 신규 두 파일을 LF로 커밋했지만 `.gitattributes`에 고정하지 않았다 — 스펙 081 허용 경로가
+아니기 때문이며, 저장소 전체 line-ending 정책 결정 대상으로 남긴다.
+
+**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 검수이며, 실제 admin UI/UX와
+production Canvas exporter 연결은 별도 스펙과 지시 이후에 시작한다.
+
+> 직전 지시문(스펙 081 구현, 수행 완료 — 기록):
 
 ```text
 C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와

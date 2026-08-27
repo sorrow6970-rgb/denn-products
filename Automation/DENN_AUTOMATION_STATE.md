@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-080-space-v2-production-customer-viewer-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, UI_CONNECTED, NO_LIVE_NETWORK
 active_unit: spec-081-space-v2-admin-frozen-issue-session
-state: READY_FOR_CLAUDE
-baseline_commit: 4765502   # HEAD=origin at Codex spec 080 final review
-candidate_commit: null     # spec 081 implementation not started
+state: READY_FOR_CODEX
+baseline_commit: 4765502   # HEAD=origin at spec 081 implementation start
+candidate_commit: 7dc148f  # spec 081 admin frozen issue session (contract docs commit 7608977)
 verified_commit: 4765502   # spec 080 correction round 2 record independently reviewed
-origin_relation: "HEAD=origin=4765502, ahead/behind 0/0 before uncommitted Codex spec 081 handoff documents"
-working_tree: "Codex spec 081 contract/handoff documents are uncommitted; only pre-existing protected Founder/user changes exist outside this document handoff"
+origin_relation: "spec 081 implemented from HEAD=origin=4765502, ahead/behind 0/0; pushed fast-forward"
+working_tree: "spec 081 implementation and allowed documents committed; pre-existing protected Founder/user changes remain untouched and unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_SPEC_081_IMPLEMENTATION
+next_transition: CODEX_SPEC_081_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,61 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 83-86% complete; 14-17% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 081 admin frozen issue session 구현 완료 (2026-08-27)
+
+- 기준 `HEAD=origin=4765502`, ahead/behind 0/0. 계약 문서 commit `7608977`, 구현 commit `7dc148f`.
+  허용 목록 밖 제품 파일은 만들지 않았고 기존 제품 파일은 하나도 수정하지 않았다.
+- **변경 파일 2개.** 신규 `apps/admin/src/space-v2/issue-session.ts` ·
+  `apps/admin/src/space-v2/issue-session.test.ts`. 같은 폴더의 추가 helper 쌍은 필요하지 않아 만들지
+  않았다.
+- **frozen source.** `issue()`는 password 쌍만 받는다. arbitrary PNG를 metadata와 함께 주입하는 seam은
+  없다. `beginDraft(source)`가 exact 2-key handle에서 두 method를 각각 한 번 읽어 원 receiver에
+  bind하고 `copyFields()`를 **정확히 한 번** 호출한 뒤 결과를 **deep clone**해 고정한다. 그래서
+  begin 이후 caller가 catalog/selection/transform을 mutation하거나 exporter를 바꿔치기해도 발급되는
+  값은 최초 frozen 값뿐이다. clone 불가 payload는 fail-closed다.
+- **exact 순서.** password exact match(실패 시 exporter·UUID·hash·crypto·writer **0**) → frozen
+  `exportProofPng()` **1회** → `Uint8Array` 확인 + fresh copy → `prepareSpaceV2LocalIssueBundle()`
+  **1회** → `createCorrelationId()` → writer `issue()` **1회**. unit이 실제 호출 순서를
+  `fields → export → uuid#1 → uuid#2 → sha×3 → encrypt → write`로 고정한다.
+- **결과 처리.** writer confirmed success만 `success` + token이고 objectPath는 public snapshot에 없으며
+  URL은 만들지 않는다. `UPLOAD/DOCUMENT_OUTCOME_UNKNOWN`은 별도 `outcome-unknown` status로 두고
+  성공/실패로 추측하지 않는다. writer가 throw하거나 malformed 결과를 주면 요청이 이미 떠났으므로
+  같은 `outcome-unknown`으로 닫는다. writer의 `retryable: true`는 자동 retry 권한이 아니다.
+- **중단 안전성.** writer 호출 전 draft 교체/clear는 안전하므로 late completion만 버린다. writer 호출
+  **뒤**의 교체/clear는 취소됐다고 추측하지 않고 session을 `outcome-unknown`으로 닫는다. 중복
+  `issue()`, StrictMode성 재호출, dispose 뒤 호출은 두 번째 export/write를 만들지 않고 late 결과가
+  최신 상태를 덮지 않는다(generation).
+- **정보 경계.** password는 preparation 호출 직후 session local reference에서 비운다. 오류 snapshot은
+  safe code만 가지며 password, UUID/token 값·조각, object path, digest, bytes, UID/email, child code,
+  raw SDK message가 없다. unit이 직렬화 문자열로 이를 단언한다.
+- **경계 준수.** 이 module은 `@denn/firebase/space-write`의 **type과 injected port만** 사용한다. SDK
+  facade factory import, default app/Auth 생성, network, DOM, Canvas, URL, clipboard, clock, 전역
+  randomness는 **0**이다. unit이 mock된 firebase entry point가 한 번도 로드되지 않고 `Date.now`·
+  `Math.random`·`fetch`가 호출되지 않음을 고정한다. `App.tsx`/`main.tsx`/barrel에서 도달 불가라
+  production bundle이 바뀌지 않는다.
+- **실측.** 신규 session unit **58건** PASS(계약 13항목 전부 커버), 기존 `issue-bundle` ·
+  `space-write` targeted regression PASS, admin/firebase typecheck PASS, 전체
+  `node scripts/check.mjs` **PASS**(unit **2339/2339**, 이전 2281 + 58).
+- **production bundle exact unchanged 확인.** admin entry `index-D0XOQpRL.js` / `226,201 B` /
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`, customer entry
+  `index-BUT7Bmak.js` / `340,604 B` /
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1` — 스펙 081이 명시한 값과 **완전
+  일치**. admin CSS `index-DJ_z3tK1.css`(9,146) · 고객 CSS `index-BjqjBda8.css`(19,381)도 SHA-256까지
+  무변경이다.
+- `git diff --check` PASS, 변경 경로는 허용된 신규 2개와 spec 081 문서뿐이며 허용 외 diff **0**.
+  검사 포트 4183/4184/4185/8080/9099/9199 잔류 **0**, 강제 종료 0.
+- **Chromium E2E와 emulator는 NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/project/bucket/
+  data/network/live/UID/deploy, URL/clipboard, 운영 발급, publish, delete/orphan cleanup은
+  **0 / NOT TESTED**다. LL-4 production composition을 완료했다고 기록하지 않는다.
+- **보고 사항(범위 밖이라 하지 않은 것).** 신규 두 파일은 worktree에 LF로 커밋했지만
+  `.gitattributes`에 고정하지 않았다 — 스펙 081 허용 경로가 아니기 때문이다. `core.autocrlf=true`
+  환경에서 재-checkout되면 스펙 080 라운드 2와 같은 format 실패가 재발할 수 있으므로, 저장소 전체
+  line-ending 정책 결정 대상으로 남긴다.
+- 상태 `READY_FOR_CODEX`, next transition `CODEX_SPEC_081_REVIEW`. 다음 admin UI 스펙과 자동화·반복
+  작업은 시작하지 않았다.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여**. admin 발급의 비-UI core가 닫혔지만 실제 admin UI/UX,
+  production Canvas exporter 연결, SDK composition, 실제 Firebase/Rules 배포·live 검증은 그대로 남는다.
 
 ## 스펙 080 Codex 최종 검수 PASS · 스펙 081 계약 준비 (2026-08-27)
 

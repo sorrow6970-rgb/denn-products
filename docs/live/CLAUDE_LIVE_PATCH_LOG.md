@@ -6251,3 +6251,57 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CLAUDE`, next transition `CLAUDE_SPEC_081_IMPLEMENTATION`. 자동화·반복 작업은 만들지
   않았고 Codex는 제품 구현·commit·push를 하지 않았다.
 - 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여 — 문서 준비로 변동 없음**.
+
+## 2026-08-27 - 스펙 081 admin frozen issue session (비-UI core)
+
+- 기준 `HEAD=origin=4765502`, ahead/behind 0/0. 계약 문서 commit `7608977`, 구현 commit `7dc148f`.
+- 신규 제품 파일은 `apps/admin/src/space-v2/issue-session.ts`와 `issue-session.test.ts` **2개뿐**이고
+  기존 제품 파일은 하나도 수정하지 않았다. 추가 helper 쌍은 필요하지 않아 만들지 않았다.
+- **frozen source.** `issue()`는 password 쌍만 받는다 — arbitrary PNG를 metadata와 함께 주입하는
+  seam이 없다. `beginDraft(source)`가 exact 2-key handle에서 두 method를 각각 한 번 읽어 원 receiver에
+  bind하고 `copyFields()`를 **정확히 한 번** 호출한 뒤 결과를 exact 6키 snapshot + `structuredClone`으로
+  **deep detach**한다. clone 불가 payload는 fail-closed다. 그래서 begin 이후 caller가 catalog·
+  selection·transform·color·width를 바꾸거나 exporter를 교체해도 발급되는 값은 최초 frozen 값뿐이다.
+- **exact 순서.** password exact match → `exportProofPng()` 1회 → `Uint8Array` 확인 + fresh copy →
+  `prepareSpaceV2LocalIssueBundle()` 1회 → `createCorrelationId()` → writer `issue()` 1회. unit이 실제
+  호출열 `fields → export → uuid#1 → uuid#2 → sha×3 → encrypt → write`를 고정한다. password 실패 시
+  exporter·UUID·hash·crypto·writer **0**이고, proof 실패 시 preparation·writer **0**, preparation
+  실패 시 writer **0**이다.
+- **결과 처리.** writer confirmed success만 `success` + token이고 objectPath는 public snapshot에 없으며
+  URL/clipboard는 만들지 않는다. `UPLOAD/DOCUMENT_OUTCOME_UNKNOWN`은 별도 `outcome-unknown`이며
+  성공/실패로 추측하지 않는다. writer가 throw하거나 malformed 결과를 주는 경우도 요청이 이미
+  떠났으므로 같은 `outcome-unknown`으로 닫는다. writer의 `retryable: true`는 자동 retry 권한이 아니다.
+- **중단 안전성.** writer 호출 전 draft 교체/clear는 안전하므로 late completion만 버리고, writer 호출
+  뒤의 교체/clear는 취소됐다고 추측하지 않고 session을 `outcome-unknown`으로 닫는다(늦게 온 remote
+  success도 token을 되살리지 못한다). 중복 `issue()`·dispose 후 호출은 second export/write를 만들지
+  않고 generation이 stale overwrite를 막는다. 정의된 결과 뒤에는 password 거절 포함 **새 frozen
+  draft**가 필요하다.
+- **정보 경계.** password는 preparation 호출 직후 local reference에서 비운다. 오류 snapshot은 safe
+  code만 갖고 password·UUID/token 값·조각·object path·digest·bytes·UID/email·child code·raw SDK
+  message가 없음을 직렬화 단언으로 고정한다.
+- **Firebase 경계.** `@denn/firebase/space-write`의 **type과 injected port만** 사용한다(`import type`만
+  있어 런타임 import 0). module import·factory·`beginDraft`·issue 전 구간에서 Firebase import/service/
+  network·DOM·Canvas·URL·clipboard·`Date.now`·`Math.random` 호출 **0**이며, mock한 firebase entry
+  point가 한 번도 로드되지 않음을 unit이 고정한다. LL-4 production composition을 완료했다고 기록하지
+  않는다.
+- **실측.** 신규 session unit **58/58** PASS(계약 13항목 전부), 기존 `issue-bundle`·`space-write`
+  targeted regression PASS, admin/firebase typecheck PASS, 전체 `node scripts/check.mjs` **PASS**
+  (unit **2339/2339**, 이전 2281 + 58).
+- **production bundle exact unchanged.** admin entry `index-D0XOQpRL.js` / `226,201 B` /
+  `B6E90475E6AEF42AB717A04E0014DF9996D8502FD5E926AC3D5B124EB3A1F1DC`, customer entry
+  `index-BUT7Bmak.js` / `340,604 B` /
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1` — 스펙 081 명시값과 **완전
+  일치**. admin CSS(9,146)·고객 CSS(19,381)도 SHA-256까지 무변경이다.
+- `git diff --check` PASS, 변경 경로는 허용된 신규 2개와 spec 081 문서뿐, 허용 외 diff **0**. 검사 포트
+  4183/4184/4185/8080/9099/9199 잔류 **0**, 강제 종료 0.
+- **Chromium E2E와 emulator는 NOT RUN**이며 PASS라고 기록하지 않는다. actual Firebase/project/bucket/
+  data/network/live/UID/deploy, URL/clipboard, 운영 발급, publish, delete/orphan cleanup은
+  **0 / NOT TESTED**다.
+- **보고(범위 밖이라 하지 않은 것).** 신규 두 파일을 LF로 커밋했지만 `.gitattributes`에 고정하지
+  않았다 — 스펙 081 허용 경로가 아니다. `core.autocrlf=true`에서 재-checkout되면 스펙 080 라운드 2와
+  같은 format 실패가 재발할 수 있어 저장소 전체 line-ending 정책 결정 대상으로 남긴다.
+- 상태 `READY_FOR_CODEX`, next transition `CODEX_SPEC_081_REVIEW`. 다음 admin UI 스펙과 자동화·반복
+  작업은 시작하지 않았다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여**. admin 발급의 비-UI core가 닫힌 만큼만 올렸고 실제
+  admin UI/UX·production Canvas exporter 연결·SDK composition·실제 Firebase/Rules 배포와 live 검증은
+  그대로 남는다.
