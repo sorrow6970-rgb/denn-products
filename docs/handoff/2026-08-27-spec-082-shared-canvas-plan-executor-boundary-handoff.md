@@ -1,6 +1,6 @@
 # 스펙 082 shared Canvas plan executor boundary handoff
 
-- 상태: `READY_FOR_CODEX / IMPLEMENTED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK` (구현 2026-08-27)
+- 상태: `READY_FOR_CODEX / CORRECTION ROUND 1 DONE / NN-1=A / NON_UI / NO_LIVE_NETWORK` (보완 2026-08-27)
 - 구현: 계약 문서 commit `aa7e048`, 제품 commit `307521f`
 - 선행: spec 081 `DONE / CODEX_PASSED`
 - spec: `docs/rebuild/specs/082-shared-canvas-plan-executor-boundary.md`
@@ -62,3 +62,25 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
 - exact scope 확장 승인: `tests/e2e/admin-auth-read.spec.ts`, `packages/render/src/index.ts` 두 파일뿐이다.
 - correction round 1에서 Storage `_getAuthToken` 오탐과 stale constant만 정정한다.
 - 상태 `READY_FOR_CLAUDE`, next `CLAUDE_CORRECTION`. UI와 다음 스펙은 시작하지 않는다.
+
+## 보완 라운드 1 — Founder NN-1=A (2026-08-27, Claude Code)
+
+허용된 정확히 두 파일만 고쳤다. 상세 근거와 실측표는 스펙 082의
+`### DONE (Claude) — 보완 라운드 1 (2026-08-27)`이 정본이다. 검수·NN-1 문서 commit `ecc9720`,
+보완 commit `8d4458d`.
+
+- **`tests/e2e/admin-auth-read.spec.ts`** — `getAuth`를 raw substring이 아니라 전체 식별자로 본다.
+  079/080이 승인한 lazy `firebase/storage` 때문에 Storage SDK 내부 `_getAuthToken`이 걸린 오탐이었다.
+  고객 staging 자산 raw 3 → 식별자 매치 **0**, 실제로 Auth를 쓰는 admin 번들 raw 9 → 매치 **6**으로
+  실제 사용은 계속 전부 차단된다. 테스트 삭제·경계 약화 없음.
+- **`packages/render/src/index.ts`** — `RENDER_NOT_IMPLEMENTED`가 같은 파일이 export하는 Canvas
+  executor를 "이후 구현"이라 말하던 모순을 고쳐, 남은 미구현인 generic `RenderInput -> RenderOutput`
+  facade만 가리키게 했다.
+- 전체 `node scripts/check.mjs` PASS(unit **2409/2409**), **build 산출물 14개 모두 보완 전과
+  byte+SHA-256 동일**, `git diff --check` PASS, 허용 외 diff 0, EOL clean, 포트·temp 잔류 0.
+- **전체 Chromium E2E는 158 passed / 1 failed로 159/159가 아니다.** `getAuth`는 통과하고, 가려져 있던
+  `uploadBytes` 등 6개 마커가 드러났다 — 5건은 storage vendor chunk의 dead export/오류 라벨 오탐,
+  1건 `getStorage`는 스펙 079(MM-1=A)가 승인한 고객 자신의 호출이다. NN-1=A 범위 밖이라 고치지 않고
+  기록만 했다.
+- 다음은 Codex 재검수(`CODEX_SPEC_082_REVIEW`)다. 실제 admin issue UI와 다음 스펙은 시작하지 않았다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

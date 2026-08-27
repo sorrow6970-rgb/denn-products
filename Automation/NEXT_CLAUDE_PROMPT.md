@@ -1,15 +1,42 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
+상태: `READY_FOR_CODEX`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED ROUND 1 / NN-1=A APPROVED / NON_UI / NO_LIVE_NETWORK / E2E 158-1**
-- 기준: `HEAD=origin=aa7e048`에서 시작. 계약 문서 commit `aa7e048`, 구현 commit `307521f`.
-- 현재 검수 기준: `HEAD=origin=f8bb8e3`, ahead/behind `0/0`
-- next_transition: `CLAUDE_CORRECTION`
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION ROUND 1 DONE / NN-1=A / NON_UI / NO_LIVE_NETWORK / E2E 158-1**
+- 기준: `HEAD=origin=ecc9720`에서 시작. 구현 commit `307521f`, 보완 commit `8d4458d`.
+- next_transition: `CODEX_SPEC_082_REVIEW`
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
 
-## Codex 독립 검수 결과
+## 현재 결과 — 보완 라운드 1 완료
+
+Founder **NN-1=A**가 허용한 **정확히 두 파일만** 고쳤고 스펙 082 본 구현은 건드리지 않았다.
+
+**① `getAuth` 마커 정밀화.** raw substring → 전체 식별자. 079/080이 승인한 lazy `firebase/storage`
+때문에 Storage SDK 내부 `_getAuthToken`이 걸린 오탐이었다. 실측: 고객 staging 자산 raw **3** → 식별자
+매치 **0**, 실제로 Auth를 쓰는 admin 번들 raw 9 → 매치 **6**(실제 사용은 계속 전부 차단). 테스트
+삭제·경계 약화 없이 오탐만 줄였다.
+
+**② stale constant.** `RENDER_NOT_IMPLEMENTED`가 같은 파일이 export하는 Canvas executor를 "이후
+구현"이라 말하던 모순을 고쳐, 남은 미구현인 generic `RenderInput -> RenderOutput` facade만 가리키게
+했다.
+
+**실측.** 전체 `node scripts/check.mjs` PASS(unit **2409/2409**), **build 산출물 14개 모두 보완 전과
+byte+SHA-256 동일**, `git diff --check` PASS, 변경 경로 허용 두 파일뿐, EOL clean, 포트·temp 잔류 0.
+
+**전체 Chromium E2E는 158 passed / 1 failed이며 159/159가 아니다.** `getAuth` 단언은 통과하지만 마커
+루프가 첫 실패에서 멈추던 탓에 가려졌던 `uploadBytes`가 드러났다. staging 자산 전체 스캔 결과 ok 5건,
+**FAIL 6건** — 5건(`uploadBytes`·`uploadBytesResumable`·`uploadString`·`getDownloadURL`·`listAll`)은
+lazy storage vendor chunk의 오류 라벨/export 이름 맵이라 같은 계열 오탐이고, `getStorage`는 vendor
+2건 + **고객 entry의 승인된 `getStorage(app)` 호출 1건**이다. NN-1=A가 승인한 범위 밖이라 고치지 않고
+기록만 했으며 **"전체 E2E PASS"라고 기록하지 않는다.**
+
+**필요한 결정.** ① 마커 5건을 vendor dead export와 고객 호출을 구분하도록 정밀화 ② `getStorage`를
+079/080 승인에 맞춰 허용으로 이동 ③ 그 수정을 어느 단위에 넣을지.
+
+**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 재검수다.
+
+> 직전 지시문(스펙 082 보완 라운드 1, 수행 완료 — 기록):
 
 React 비의존 Canvas plan executor와 타입을 `@denn/render`의 단일 구현으로 옮겼고
 (`packages/render/src/canvas/**`), `apps/mockup/src/canvas`의 두 파일은 thin re-export만 남는다.

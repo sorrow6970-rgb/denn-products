@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: READY_FOR_CLAUDE
-baseline_commit: aa7e048   # HEAD=origin at spec 082 implementation start (Codex contract docs)
-candidate_commit: 307521f  # spec 082 shared Canvas executor boundary
+state: READY_FOR_CODEX
+baseline_commit: ecc9720   # HEAD=origin at spec 082 correction round 1 start (Codex review + NN-1=A)
+candidate_commit: 8d4458d  # spec 082 correction round 1 (implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "Codex reviewed HEAD=origin=f8bb8e3, ahead/behind 0/0; no Codex commit or push"
-working_tree: "Codex review documents are uncommitted; protected spec-018 PNGs and pre-existing Founder/user changes remain untouched and unstaged"
-fix_round: 1   # Founder NN-1=A approved; correction round 1 not yet implemented
+origin_relation: "correction round 1 applied on HEAD=origin=ecc9720, ahead/behind 0/0; pushed fast-forward"
+working_tree: "spec 082 correction round 1 code and status documents committed; protected spec-018 PNGs left dirty after the full E2E, and pre-existing Founder/user changes remain untouched and unstaged"
+fix_round: 1
 max_fix_rounds: 3
-next_transition: CLAUDE_CORRECTION
+next_transition: CODEX_SPEC_082_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,49 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 082 보완 라운드 1 수행 — NN-1=A 두 파일 (2026-08-27)
+
+- 기준 `HEAD=origin=ecc9720`, ahead/behind 0/0. Codex 검수·NN-1 문서 commit `ecc9720`, 보완 commit
+  `8d4458d`. Founder **NN-1=A**가 허용한 **정확히 두 파일만** 고쳤고 스펙 082 본 구현(executor 이동)은
+  건드리지 않았다.
+- **보완 1 — `getAuth` 마커 정밀화.** raw substring 대신 **전체 식별자**로 본다. 고객 앱이 스펙
+  079/080에서 승인된 lazy `firebase/storage`를 갖게 되며 Storage SDK 내부 `_getAuthToken`이 걸린
+  오탐이었다. 실측: 고객 staging 자산 전체는 raw **3**건(전부 `_getAuthToken`) → 식별자 경계 매치
+  **0**, 반면 실제로 Auth를 쓰는 admin 번들은 raw 9 → 식별자 매치 **6**으로 **실제 사용은 계속 전부
+  차단**된다. 테스트 삭제·경계 약화 없이 오탐만 줄였다.
+- **보완 2 — stale constant.** `packages/render/src/index.ts`의 `RENDER_NOT_IMPLEMENTED`가 같은 파일이
+  export하는 Canvas executor를 "이후 구현"이라 말하던 자기모순을 고쳐, 실제로 남은 미구현인 generic
+  `RenderInput -> RenderOutput` facade만 가리키게 했다. 이 상수는 저장소 어디서도 읽지 않는다.
+- **실측.** 전체 `node scripts/check.mjs` **PASS**(unit **2409/2409**), build 산출물 **14개 모두
+  보완 전과 byte+SHA-256 동일**(상수는 tree-shaken), `git diff --check` PASS, 변경 경로는 허용 두
+  파일뿐, EOL `i/lf w/lf`, 검사 포트 6개와 `test-results`/temp 잔류 **0**.
+- **전체 Chromium E2E는 158 passed / 1 failed이며 159/159가 되지 않았다.** `getAuth` 단언은 이제
+  **통과한다**. 다만 같은 테스트가 `uploadBytes`에서 실패하는데, 마커 검사가 `for` 루프라 첫 실패에서
+  멈추므로 `getAuth`가 앞에 있던 동안 뒤쪽 마커 상태가 가려져 있었다. staging 자산 전체를 그대로
+  스캔해 전 마커를 한 번에 확인했다:
+  - **ok 5건** — `admin-read` · `ADMIN_STATE_OBJECT_PATH` · `admin/state.json` ·
+    `onAuthStateChanged` · `signInWithEmailAndPassword`.
+  - **FAIL 5건(같은 계열 오탐)** — `uploadBytes`(4) · `uploadBytesResumable`(2) · `uploadString`(2) ·
+    `getDownloadURL`(2) · `listAll`(1). 전부 lazy storage vendor chunk의 `_throwIfRoot("…")` 오류
+    라벨과 chunk export 이름 맵(`Jt as uploadBytes`, `en as listAll` …)이며 고객 호출부가 아니다.
+  - **FAIL 1건(설계 충돌)** — `getStorage`(3). 2건은 vendor chunk export 맵이고 **1건은 고객 entry의
+    `a.getStorage(s)`**, 즉 스펙 079(MM-1=A)가 **승인한 고객 자신의 호출**이다. 스캔을 고객 코드로
+    좁혀도 이 건은 계속 실패한다.
+- NN-1=A는 `getAuth` 오탐 정밀화와 stale constant 정정만 승인했고 **"테스트를 삭제하거나 해당 경계를
+  약화하지 마"** 라고 명시했다. upload/list/download 경계 수정은 "고객 번들이 Storage 쓰기 API의 dead
+  vendor 코드를 포함해도 되는가"라는 제품·보안 판단이고 `getStorage`는 079/080 결정과의 충돌
+  해소라 **둘 다 이번 라운드 범위 밖**이다. 그래서 고치지 않고 기록만 했으며 **"전체 E2E PASS"라고
+  기록하지 않는다.**
+- 관측 사실(판단 아님): 이 dead 코드가 있어도 익명 고객 쓰기는 `storage.rules`가 서버에서 막는다
+  (`rebuild-space-assets` create는 approved UID 전용). 따라서 인증 우회가 아니라 번들 위생 + 마커
+  정확도 문제로 보이지만 결론은 Founder/Codex가 정한다.
+- **필요한 결정.** ① vendor chunk dead export를 고객 호출로 세지 않도록 마커 5건 정밀화 ②
+  `getStorage`를 079/080 승인에 맞춰 허용으로 이동 ③ 그 수정을 어느 단위에 넣을지.
+- E2E가 다시 쓴 보호 spec-018 PNG 2개는 stage/commit/restore하지 않고 dirty 그대로 뒀고 기존 user
+  dirty 파일도 그대로다. 실제 admin issue UI와 다음 스펙은 시작하지 않았다.
+- 상태 `READY_FOR_CODEX`, next transition `CODEX_SPEC_082_REVIEW`.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## Founder NN-1=A 승인 · 스펙 082 보완 라운드 1 준비 (2026-08-27)
 

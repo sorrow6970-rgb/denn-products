@@ -40,7 +40,45 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 082 shared Canvas executor 경계 추출 완료, Codex 검수 대기.**
+상태: **`READY_FOR_CODEX` - 스펙 082 보완 라운드 1(NN-1=A) 완료, Codex 재검수 대기.**
+
+Founder **NN-1=A**가 허용한 **정확히 두 파일만** 고쳤다. 기준 `HEAD=origin=ecc9720`, 검수·NN-1 문서
+commit `ecc9720`, 보완 commit `8d4458d`. 스펙 082 본 구현(executor 이동)은 건드리지 않았다.
+
+**① `getAuth` 마커 정밀화.** raw substring 대신 전체 식별자로 본다. 고객 앱이 079/080에서 승인된 lazy
+`firebase/storage`를 갖게 되며 Storage SDK 내부 `_getAuthToken`이 걸린 오탐이었다. 실측으로 고객
+staging 자산은 raw 3건(전부 `_getAuthToken`) → 식별자 매치 **0**, 실제로 Auth를 쓰는 admin 번들은
+raw 9 → 매치 **6**으로 **실제 사용은 계속 전부 차단**된다. 테스트 삭제·경계 약화 없이 오탐만 줄였다.
+
+**② stale constant 정정.** `packages/render/src/index.ts`의 `RENDER_NOT_IMPLEMENTED`가 같은 파일이
+export하는 Canvas executor를 "이후 구현"이라 말하던 모순을 고쳐 generic `RenderInput -> RenderOutput`
+facade만 가리키게 했다. 이 상수는 저장소 어디서도 읽지 않는다.
+
+실측: 전체 `node scripts/check.mjs` PASS(unit **2409/2409**), **build 산출물 14개 모두 보완 전과
+byte+SHA-256 동일**(상수는 tree-shaken), `git diff --check` PASS, 변경 경로는 허용 두 파일뿐,
+EOL clean, 포트·temp 잔류 0.
+
+**전체 Chromium E2E는 158 passed / 1 failed이며 159/159가 되지 않았다.** `getAuth` 단언은 이제
+통과하지만, 마커 루프가 첫 실패에서 멈추는 탓에 가려져 있던 `uploadBytes`가 드러났다. staging 자산
+전체를 스캔해 전 마커를 한 번에 확인한 결과 — ok 5건, **FAIL 6건**이다. 그중 5건
+(`uploadBytes`·`uploadBytesResumable`·`uploadString`·`getDownloadURL`·`listAll`)은 lazy storage vendor
+chunk의 `_throwIfRoot()` 오류 라벨과 export 이름 맵이라 같은 계열의 오탐이고, 나머지 1건
+`getStorage`는 vendor 2건 + **고객 entry의 `a.getStorage(s)` 1건**, 즉 스펙 079(MM-1=A)가 **승인한
+고객 자신의 호출**이다.
+
+NN-1=A는 `getAuth` 오탐 정밀화와 stale constant 정정만 승인했고 "테스트를 삭제하거나 해당 경계를
+약화하지 마"라고 명시했다. upload/list/download 경계 수정은 제품·보안 판단이고 `getStorage`는
+079/080 결정과의 충돌 해소라 **둘 다 이번 라운드 범위 밖**이다. 그래서 고치지 않고 기록만 했으며
+**"전체 E2E PASS"라고 기록하지 않는다.** 필요한 결정: ① vendor dead export를 고객 호출로 세지 않도록
+마커 5건 정밀화 ② `getStorage`를 079/080 승인에 맞춰 허용으로 이동 ③ 그 수정을 어느 단위에 넣을지.
+(관측 사실: dead 코드가 있어도 익명 고객 쓰기는 `storage.rules`가 서버에서 막는다.)
+
+E2E가 다시 쓴 보호 spec-018 PNG 2개는 stage/commit/restore하지 않았다. 실제 admin issue UI와 다음
+스펙은 시작하지 않았고 next transition은 `CODEX_SPEC_082_REVIEW`다.
+
+전체 진행도는 **84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
+
+> 스펙 082 구현 완료 기록(보완 전):
 
 기준 `HEAD=origin=aa7e048`, 계약 문서 commit `aa7e048`, 구현 commit `307521f`.
 

@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CLAUDE / CORRECTION_REQUIRED_ROUND_1 / NN-1=A_APPROVED / NON_UI / NO_LIVE_NETWORK`
+`READY_FOR_CODEX / CORRECTION ROUND 1 DONE / NN-1=A / NON_UI / NO_LIVE_NETWORK`
 
 선행 게이트:
 
@@ -302,3 +302,83 @@ Founder가 **NN-1=A**를 승인했다. 보완 라운드 1은
 `tests/e2e/admin-auth-read.spec.ts`와 `packages/render/src/index.ts` 두 제품 파일만 추가 허용한다.
 test marker 정밀화와 stale constant 정정 외 제품 동작 변경은 승인하지 않는다. 상태는
 `READY_FOR_CLAUDE`, 다음 transition은 `CLAUDE_CORRECTION`이다.
+
+### DONE (Claude) — 보완 라운드 1 (2026-08-27)
+
+기준 `HEAD=origin=ecc9720`, ahead/behind 0/0. Codex 검수·NN-1 문서 commit `ecc9720`, 보완 commit
+`8d4458d`. Founder **NN-1=A**가 허용한 **정확히 두 파일만** 고쳤고, 스펙 082 본 구현(executor 이동)은
+하나도 건드리지 않았다.
+
+**보완 1 — `tests/e2e/admin-auth-read.spec.ts`의 `getAuth` 마커 정밀화.**
+
+`getAuth`를 raw substring으로 보던 것을 **전체 식별자**로 본다. 고객 앱이 스펙 079/080에서 승인된
+lazy `firebase/storage` import를 갖게 되면서 Storage SDK 내부 `_getAuthToken`이
+`bundle.includes("getAuth")`에 걸렸는데, 이는 Auth 제품 API가 도달 가능하다는 증거가 아니라 **오탐**이다.
+앞뒤 식별자 경계를 요구하면 실제 `getAuth(` 호출이나 export 이름 `getAuth`는 계속 차단되고
+`_getAuthToken` · `getAuthToken`만 빠진다.
+
+실제 번들로 측정해 확인했다:
+
+| 대상 | raw substring | 식별자 경계 |
+|---|---|---|
+| 고객 staging 자산 전체(fixture 포함, js 11개) | **3** (전부 `_getAuthToken`) | **0** ✅ |
+| admin 번들(실제로 Auth를 사용) | 9 | **6** — 실제 사용은 여전히 전부 걸린다 ✅ |
+
+테스트를 삭제하지 않았고 경계를 약화하지도 않았다. **오탐만 줄였다.**
+
+**보완 2 — `packages/render/src/index.ts`의 stale constant.**
+
+`RENDER_NOT_IMPLEMENTED`가 "Canvas executor는 이후 spec에서 구현"이라고 말하는데 같은 파일이 이제 그
+executor를 export하므로 자기모순이었다. 실제로 남아 있는 미구현, 즉 **generic
+`RenderInput -> RenderOutput` facade**만 가리키도록 고쳤고 geometry·render plan·Canvas executor는
+완료됐다는 사실을 주석으로 명시했다. 이 상수는 저장소 어디에서도 읽지 않아(`grep` 0건) 다른 영향이 없다.
+
+**보완 라운드 1 게이트 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2409/2409**, build 2개 |
+| build 산출물 14개 byte+SHA-256 | **전부 보완 전과 동일** — 상수는 tree-shaking으로 번들에 없다 |
+| `git diff --check` | PASS |
+| exact diff | `tests/e2e/admin-auth-read.spec.ts` · `packages/render/src/index.ts` **두 개뿐** |
+| EOL | 두 파일 `i/lf w/lf` |
+| 포트 4183/4184/4185/8080/9099/9199 · `test-results`/temp | 잔류 **0** |
+| 전체 Chromium E2E | **158 passed / 1 failed** — 아래 |
+
+**전체 E2E는 159/159가 되지 않았다. 이유를 정확히 기록한다.**
+
+`getAuth` 단언은 이제 **통과한다**(위 표에서 식별자 경계 매치 0). 그런데 같은 테스트가 이번엔
+`uploadBytes`에서 실패한다 — 마커 검사는 `for` 루프라 **첫 실패에서 멈추므로**, `getAuth`가 앞에 있던
+동안 뒤쪽 마커들의 상태가 가려져 있었다.
+
+staging 자산 전체를 그대로 스캔해 **모든 마커 판정을 한 번에** 확인했다.
+
+| 마커 | 판정 | 실제 정체 |
+|---|---|---|
+| `admin-read` · `ADMIN_STATE_OBJECT_PATH` · `admin/state.json` · `onAuthStateChanged` · `signInWithEmailAndPassword` | **ok** | 고객 번들에 없음 |
+| `uploadBytes` (4) · `uploadBytesResumable` (2) · `uploadString` (2) · `getDownloadURL` (2) · `listAll` (1) | **FAIL** | 전부 lazy `firebase/storage` vendor chunk 안 — `_throwIfRoot("uploadBytes")` 같은 **오류 라벨 문자열**과 chunk의 **export 이름 맵**(`Jt as uploadBytes`, `en as listAll`, …). 고객 호출부가 아니다 |
+| `getStorage` (3) | **FAIL** | 2건은 vendor chunk export 맵, **1건은 고객 entry의 `a.getStorage(s)`** — 스펙 079/MM-1=A가 **승인한 고객 자신의 호출** |
+| `getAuth` (식별자 경계) | **ok** | 이번 보완으로 해결 |
+
+즉 남은 6건은 두 성격이 섞여 있다.
+
+1. **같은 계열의 오탐 5건** — vendor chunk의 dead export 이름/오류 라벨을 고객 호출로 오인한다.
+2. **테스트와 승인된 설계의 정면 충돌 1건** — `getStorage`는 스펙 079(MM-1=A)가 승인한 고객 코드의
+   실제 호출인데 마커 목록이 여전히 금지한다. 스캔을 고객 자기 코드로 좁혀도 이 한 건은 계속 실패한다.
+
+NN-1=A는 `getAuth`/`_getAuthToken` 오탐 정밀화와 stale constant 정정만 승인했고 **"테스트를 삭제하거나
+해당 경계를 약화하지 마"** 라고 명시했다. upload/list/download 경계를 손대는 것은 "고객 번들이
+Storage 쓰기 API의 dead vendor 코드를 포함해도 되는가"라는 제품·보안 경계 판단이고, `getStorage`는
+079/080 결정과의 충돌 해소다 — 둘 다 이번 라운드가 승인받은 범위가 아니다. 그래서 **고치지 않고
+기록만 했고, "전체 E2E PASS"라고 기록하지 않는다.**
+
+참고 사실(판단이 아니라 관측): 이 dead 코드가 있어도 익명 고객의 쓰기는 `storage.rules`가 서버에서
+막는다(`rebuild-space-assets` create는 approved UID 전용). 따라서 이번 실패는 인증 우회가 아니라
+**번들 위생 + 마커 정확도** 문제로 보이지만, 결론은 Founder/Codex가 정한다.
+
+**필요한 결정.** ① vendor chunk의 dead export 이름을 고객 호출로 세지 않도록 마커 5건을 정밀화할지
+(예: 고객 entry chunk만 스캔, 또는 호출부 패턴으로 검사) ② `getStorage`를 079/080 승인에 맞춰 허용
+목록으로 옮길지 ③ 그 수정을 어느 단위에 넣을지.
+
+**진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 마커 정밀화와 문구 정정이며 새
+제품 능력이 아니다.

@@ -6563,3 +6563,55 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 고객 Storage 연결·executor 동작·UI·Firebase/network/live/deploy·다음 스펙은 열지 않는다.
 - 상태 `READY_FOR_CLAUDE`, fix round **1/3**, next `CLAUDE_CORRECTION`. Codex 제품 코드 변경·commit/push
   0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-27 - 스펙 082 보완 라운드 1 (Founder NN-1=A, 두 파일)
+
+- 기준 `HEAD=origin=ecc9720`, ahead/behind 0/0. Codex 검수·NN-1 문서 commit `ecc9720`, 보완 commit
+  `8d4458d`. Founder **NN-1=A**가 허용한 **정확히 두 파일만** 고쳤고 스펙 082 본 구현(executor 이동)은
+  건드리지 않았다.
+- **보완 1 — `tests/e2e/admin-auth-read.spec.ts`의 `getAuth` 마커 정밀화.** raw substring 대신 **전체
+  식별자**로 본다(앞뒤 식별자 경계 요구). 고객 앱이 스펙 079/080에서 승인된 lazy `firebase/storage`를
+  갖게 되면서 Storage SDK 내부 `_getAuthToken`이 `bundle.includes("getAuth")`에 걸린 **오탐**이었고,
+  Auth 제품 API가 도달 가능하다는 증거가 아니었다. 실제 번들로 측정했다 — 고객 staging 자산 전체
+  (fixture 포함 js 11개)는 raw **3**건(전부 `_getAuthToken`) → 식별자 경계 매치 **0**, 반면 실제로
+  Auth를 사용하는 admin 번들은 raw 9 → 매치 **6**으로 **실제 사용은 계속 전부 차단**된다. 테스트를
+  삭제하지 않았고 경계도 약화하지 않았다 — **오탐만 줄였다**.
+- **보완 2 — `packages/render/src/index.ts`의 stale constant.** `RENDER_NOT_IMPLEMENTED`가 "Canvas
+  executor는 이후 spec에서 구현"이라 말하는데 같은 파일이 이제 그 executor를 export하므로 자기모순이
+  었다. 실제로 남은 미구현인 **generic `RenderInput -> RenderOutput` facade**만 가리키도록 고치고,
+  geometry·render plan·Canvas executor는 완료라는 사실을 주석에 명시했다. 이 상수는 저장소 어디서도
+  읽지 않아(`grep` 0건) 다른 영향이 없다.
+- **실측.** 전체 `node scripts/check.mjs` **PASS**(format·lint·typecheck 7개·unit **2409/2409**·build
+  2개). **build 산출물 14개가 모두 보완 전과 byte+SHA-256 동일**하다 — 상수가 tree-shaking으로 번들에
+  들어가지 않기 때문이며, 이 보완이 제품 산출물을 전혀 바꾸지 않았다는 직접 증거다.
+  `git diff --check` PASS, 변경 경로는 허용 두 파일뿐, EOL 두 파일 `i/lf w/lf`, 검사 포트
+  4183/4184/4185/8080/9099/9199 잔류 **0**, `test-results`/temp 잔류 0.
+- **전체 Chromium E2E는 158 passed / 1 failed이며 159/159가 되지 않았다. "전체 E2E PASS"라고 기록하지
+  않는다.** `getAuth` 단언은 이제 **통과한다**. 그런데 같은 테스트가 이번엔 `uploadBytes`에서
+  실패하는데, 마커 검사가 `for` 루프라 **첫 실패에서 멈추므로** `getAuth`가 앞에 있던 동안 뒤쪽 마커
+  상태가 가려져 있었다. staging 자산 전체를 그대로 스캔해 **모든 마커 판정을 한 번에** 확인했다:
+  - **ok 5건** — `admin-read` · `ADMIN_STATE_OBJECT_PATH` · `admin/state.json` ·
+    `onAuthStateChanged` · `signInWithEmailAndPassword`.
+  - **FAIL 5건(같은 계열 오탐)** — `uploadBytes`(4) · `uploadBytesResumable`(2) · `uploadString`(2) ·
+    `getDownloadURL`(2) · `listAll`(1). 전부 lazy `firebase/storage` vendor chunk 안의
+    `_throwIfRoot("uploadBytes")` 같은 **오류 라벨 문자열**과 chunk의 **export 이름 맵**
+    (`Jt as uploadBytes`, `en as listAll` …)이며 고객 호출부가 아니다.
+  - **FAIL 1건(설계 충돌)** — `getStorage`(3). 2건은 vendor chunk export 맵이고 **1건은 고객 entry의
+    `a.getStorage(s)`**, 즉 스펙 079(MM-1=A)가 **승인한 고객 자신의 호출**이다. 스캔을 고객 코드로
+    좁혀도 이 건은 계속 실패한다.
+- NN-1=A는 `getAuth`/`_getAuthToken` 오탐 정밀화와 stale constant 정정만 승인했고 **"테스트를
+  삭제하거나 해당 경계를 약화하지 마"** 라고 명시했다. upload/list/download 경계를 손대는 것은 "고객
+  번들이 Storage 쓰기 API의 dead vendor 코드를 포함해도 되는가"라는 제품·보안 경계 판단이고,
+  `getStorage`는 079/080 결정과의 충돌 해소다 — **둘 다 이번 라운드가 승인받은 범위가 아니다**.
+  그래서 고치지 않고 기록만 했다.
+- 관측 사실(판단 아님): 이 dead 코드가 있어도 익명 고객의 쓰기는 `storage.rules`가 서버에서 막는다
+  (`rebuild-space-assets` create는 approved UID 전용). 따라서 인증 우회가 아니라 **번들 위생 + 마커
+  정확도** 문제로 보이지만 결론은 Founder/Codex가 정한다.
+- **필요한 결정.** ① vendor chunk의 dead export 이름을 고객 호출로 세지 않도록 마커 5건 정밀화(예:
+  고객 entry chunk만 스캔, 또는 호출부 패턴 검사) ② `getStorage`를 079/080 승인에 맞춰 허용 목록으로
+  이동 ③ 그 수정을 어느 단위에 넣을지.
+- E2E가 다시 쓴 보호 spec-018 PNG 2개는 **stage/commit/restore하지 않고 dirty 그대로** 뒀고 기존 user
+  dirty 파일도 그대로다. 실제 admin issue UI와 다음 스펙, 자동화는 시작하지 않았다.
+- 상태 `READY_FOR_CODEX`, fix_round **1/3**, next transition `CODEX_SPEC_082_REVIEW`.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 마커 정밀화와 문구 정정이며 새 제품
+  능력이 아니다.
