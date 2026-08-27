@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 87923e6   # HEAD=origin at spec 082 correction round 5 start (Codex round 4 review + NN-4=A)
-candidate_commit: 7627bc6  # spec 082 correction round 5, NN-4=A exception (round 4 b1ae8b4, round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
+state: READY_FOR_CODEX
+baseline_commit: c7199f0   # HEAD=origin at spec 082 correction round 6 start (Codex round 5 review + NN-5=A)
+candidate_commit: a17c96b  # spec 082 correction round 6, NN-5=A exception (round 5 7627bc6, round 4 b1ae8b4, round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "Codex review at HEAD=origin=c7199f0, ahead/behind 0/0"
+origin_relation: "Claude pushed spec 082 correction round 6; HEAD=origin, ahead/behind 0/0"
 working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
-fix_round: 5   # NN-3=A and NN-4=A exceptions consumed; SDK export/escape shapes remain unaccounted
+fix_round: 6   # NN-3=A, NN-4=A and NN-5=A exceptions consumed; every firebase/* specifier must now be claimed
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_082_NN_5_DECISION
+next_transition: CODEX_SPEC_082_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,38 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 082 보완 라운드 6 완료 — Founder NN-5=A 예외, 모듈에서 출발하는 reader (2026-08-27)
+
+- `HEAD=origin=c7199f0`에서 시작, ahead/behind 0/0. Codex 재검수·NN-5 문서 commit `88eb3c0`, 보완
+  commit `a17c96b`. NN-5=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고
+  제품 코드·승인된 read-only Storage 연결·`package.json`/lockfile은 **무변경**이다.
+- **Codex 지적은 옳다.** 라운드 5 reader는 **구문에서 출발해 아는 형태를 찾았고**, 훑지 않는 형태로
+  들어온 모듈은 애초에 보이지 않았다 — `export * from "firebase/storage"`(순회가 `ImportKeyword`
+  기준이라 export declaration 미주사), `return import("firebase/storage")`(dot 없는 dynamic import라
+  1차 skip, 변수 선언 아니라 2차 미진입). 둘 다 `reached`/`unaccounted` 불변이고 facade가 승인 집합을
+  이미 채워 **파일 전체가 통과**했다.
+- **보완 — 모듈에서 출발한다.** 파일의 모든 `firebase/*` specifier를 **먼저 수집**하고, 각각이 허용
+  형태에 의해 **claim되어야** 한다. 허용은 셋뿐 — ① `import { ... } from`(`import type` 포함)
+  ② type query `import("...").Member` ③ 이름에 bound된 dynamic import(멤버 읽기까지 검사).
+  claim되지 않은 specifier는 보고된다. 따라서 star re-export · named re-export · namespace import ·
+  side-effect import · unbound dynamic import가 **새 규칙 다섯 개가 아니라 규칙 하나**로 막히고,
+  누가 그 형태를 미리 떠올릴 필요가 없다. 정당한 새 형태도 같은 방식으로 실패하며 그건 의도한 비용이다.
+- **before/after 실측**(라운드 5 reader 그대로): star re-export · named re-export · returned dynamic
+  import는 **unaccounted=[] 로 통과**했고 라운드 6은 **다섯 우회 전부 검출**한다.
+- **self-check**: 위 다섯 + computed member + namespace를 값으로 전달 = 실패 보고 7종. 추가로 승인된
+  `Promise.all` 형태가 `getStorage`/`ref`/`getBytes`로 **실제로 읽히는지** positive 단언(없으면 reader가
+  아무것도 못 읽어도 통과).
+- **이빨 재실측(배포 reader를 실제 코드에).** 고객 66파일: 세 모듈 전부 승인 집합과 일치, unaccounted
+  **0**, 금지 이름 **0**. admin write 35파일: `firebase/auth` 승인 안 된 모듈 + 승인 밖 멤버 **11개** +
+  금지 `uploadBytes` 검출. **두 surface 101파일에서 unaccounted 0** — 고객이 깨끗한 이유가 "못 봐서"가
+  아니라 실제로 깨끗해서임을 구분한다.
+- 실측: `admin-auth-read` **5/5**, 전체 Chromium **161/161**, 전체 `node scripts/check.mjs` **PASS**
+  (unit **2409/2409**, 89 파일), **통제 빌드 대조 산출물 16개 byte+SHA-256 동일**,
+  `package.json`/lockfile diff **0**, `git diff --check` PASS, 변경 경로 한 파일뿐, EOL `i/lf w/lf`,
+  포트 4183/4184/4185/8080/9099/9199 · `test-results`/temp 잔류 **0**. 테스트 삭제·skip·E2E 예외 0.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_082_REVIEW`. admin issue UI·다음 스펙·자동화 시작 0.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## Codex 스펙 082 보완 라운드 5 재검수 — CORRECTION_REQUIRED / EXCEPTIONS CONSUMED (2026-08-27)
 

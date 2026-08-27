@@ -6909,3 +6909,53 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   비권장).
 - 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_5_DECISION`. 실제 admin issue UI·다음
   스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-27 - 스펙 082 보완 라운드 6 (Founder NN-5=A 예외) — 구문이 아니라 모듈에서 출발
+
+- 기준 `HEAD=origin=c7199f0`, ahead/behind 0/0. Codex 재검수·NN-5 문서 commit `88eb3c0`, 보완 commit
+  `a17c96b`. NN-5=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품
+  코드·승인된 read-only Storage 연결·`package.json`/lockfile은 **무변경**이다.
+- **Codex 지적은 옳다.** 라운드 5의 reader는 **구문에서 출발해 아는 형태를 찾았다**. 그래서 자신이
+  훑지 않는 형태로 들어온 `firebase/*` 모듈은 **애초에 보이지 않았다**:
+  `export * from "firebase/storage"`는 순회가 `ImportKeyword`를 키로 삼아 export declaration을 훑지
+  않으므로 미검출, `return import("firebase/storage")`는 dot 없는 dynamic import라 1차 순회에서 skip되고
+  변수 선언이 아니라 2차 순회에도 안 들어와 미검출. 둘 다 `reached`/`unaccounted`를 안 바꾸고 금지
+  이름도 없으며 facade가 승인 집합을 이미 채우므로 **파일 전체가 통과**했다.
+- **보완 — 구문이 아니라 모듈에서 출발한다.** 파일의 모든 `firebase/*` specifier를 **먼저 수집**하고,
+  각각이 reader가 이해하고 경계가 허용하는 형태에 의해 **claim되어야** 한다. 허용 형태는 셋뿐이다 —
+  ① `import { ... } from "firebase/x"`(`import type` 포함) ② type query `import("firebase/x").Member`
+  ③ 이름에 bound된 dynamic import(그 이름의 멤버 읽기까지 검사). **아무도 claim하지 않은 specifier는
+  보고된다.**
+- **그래서 침입 경로는 "허용 형태가 아니라서" 실패하고, 누가 그 형태를 미리 떠올릴 필요가 없다.**
+  star re-export · named re-export · namespace import · side-effect import · unbound dynamic import가
+  새 규칙 다섯 개가 아니라 **규칙 하나**로 전부 막힌다. 정당한 새 형태도 같은 방식으로 실패하는데
+  그건 **의도한 비용**이다 — 고치는 방법은 "그 형태가 여기 허용되는가"를 사람이 결정하는 것이다.
+- **같은 입력 before/after 실측**(라운드 5 reader를 그대로 돌림): star re-export ·
+  named re-export · returned dynamic import는 **unaccounted=[] 로 통과**했고, 라운드 6에서는
+  **다섯 우회 전부 검출**된다. namespace/side-effect import는 라운드 5에서도 잡혔다.
+- **self-check 추가.** 위 다섯 + computed member `storage[name]()` + namespace를 값으로 전달
+  `handOff(storage)` = **실패 보고 7종**. 그리고 **positive**로 승인된 `Promise.all` 형태가
+  `unaccounted` 없이 `getStorage`/`ref`/`getBytes`로 **실제로 읽히는지**까지 단언한다 — 이게 없으면
+  reader가 아무것도 못 읽어도 통과한다.
+- **이빨 재실측 — 배포되는 reader 자체를 실제 코드에 겨눔**(test 파일에서 helper를 그대로 추출).
+  고객 surface 66파일(49,364 토큰): `firebase/app` 4 · `firebase/storage` 5 · `firebase/firestore` 3이
+  **전부 승인 집합과 일치**, unaccounted **0**, 금지 이름 **0**. admin write surface 35파일:
+  `firebase/auth`를 **승인 안 된 모듈**로, 세 제품에서 **승인 밖 멤버 11개**(`uploadBytes`·`setDoc`·
+  `getDocFromServer`·`connectFirestoreEmulator`·`getAuth`·`signInWithEmailAndPassword`·`signOut`·
+  `onAuthStateChanged`·`setPersistence`·`browserLocalPersistence`·`connectAuthEmulator`)를 검출하고
+  금지 이름 `uploadBytes`도 검출. **두 surface 101개 실제 파일에서 unaccounted 0** — 모든
+  `firebase/*` specifier가 허용 형태로 claim됐다는 뜻이고, 고객 쪽이 깨끗한 이유가 "reader가 못
+  봐서"가 아니라 **실제로 깨끗해서**임을 이걸로 구분한다.
+- **실측.** `admin-auth-read.spec.ts` Chromium **5/5 PASS**, **전체 Chromium E2E 161 passed /
+  0 failed**, 전체 `node scripts/check.mjs` **PASS**(format·lint·typecheck 7개·unit **2409/2409**(89
+  파일)·build 2개), **통제 빌드 대조 산출물 16개 전부 byte+SHA-256 동일**, `package.json`/lockfile
+  **diff 0**, `git diff --check` PASS, 변경 경로는 허용 **한 파일뿐**, EOL `i/lf w/lf`, 검사 포트
+  4183/4184/4185/8080/9099/9199 잔류 **0**, `test-results`/temp 잔류 0.
+- **약화 없음.** 테스트 삭제·skip·E2E 예외는 없다. Auth whole-identifier, admin private path marker,
+  positive marker, runtime external request 0 단언은 그대로다.
+- E2E가 다시 쓴 보호 spec-018 PNG 2개는 **stage/commit/restore하지 않고 dirty 그대로** 뒀고 기존 user
+  dirty 파일도 그대로다. 실제 admin issue UI와 다음 스펙, 자동화는 시작하지 않았다.
+- 상태 `READY_FOR_CODEX`, fix_round **6 (NN-3=A · NN-4=A · NN-5=A 예외 각 1회)**, next transition
+  `CODEX_SPEC_082_REVIEW`.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품 능력이
+  아니다.

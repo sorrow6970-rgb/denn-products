@@ -1,13 +1,64 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
+상태: `READY_FOR_CODEX`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED / NN-3+NN-4 EXCEPTIONS CONSUMED / NON_UI / NO_LIVE_NETWORK**
-- 기준: `HEAD=origin=87923e6`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`, 5 `7627bc6`.
-- next_transition: `FOUNDER_SPEC_082_NN_5_DECISION`
-- fix_round: `5` (자동 한도 3/3 + NN-3=A · NN-4=A 예외 소진, 추가 승인 전 수정 금지)
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **READY_FOR_CODEX / CORRECTION ROUND 6 DONE (NN-5=A 예외) / NON_UI / NO_LIVE_NETWORK / E2E 161-0**
+- 기준: `HEAD=origin=c7199f0`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`, 5 `7627bc6`, 6 `a17c96b`.
+- next_transition: `CODEX_SPEC_082_REVIEW`
+- fix_round: `6` (자동 한도 3/3 + NN-3=A · NN-4=A · NN-5=A 예외 각 1회)
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## 현재 결과 — 보완 라운드 6 완료(NN-5=A 예외), 구문이 아니라 모듈에서 출발
+
+NN-5=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품 코드·승인된
+read-only Storage 연결·`package.json`/lockfile은 **무변경**이다.
+
+**Codex 지적은 옳다.** 라운드 5의 reader는 **구문에서 출발해 아는 형태를 찾았다**. 그래서 자신이 훑지
+않는 형태로 들어온 모듈은 **애초에 보이지 않았다** — `export * from "firebase/storage"`는 순회가
+`ImportKeyword`를 키로 삼아 export declaration을 훑지 않았고, `return import("firebase/storage")`는 dot
+없는 dynamic import라 1차 순회에서 skip되고 변수 선언이 아니라 2차 순회에도 안 들어왔다. 둘 다
+`reached`/`unaccounted`를 안 바꾸고 금지 이름도 없으며 facade가 승인 집합을 이미 채워 **파일 전체가
+통과**했다.
+
+**보완 — 모듈에서 출발한다.** 파일의 모든 `firebase/*` specifier를 **먼저 수집**하고, 각각이 reader가
+이해하고 경계가 허용하는 형태에 **claim되어야** 한다. 허용 형태는 셋뿐이다 —
+① `import { ... } from "firebase/x"`(`import type` 포함) ② type query `import("firebase/x").Member`
+③ 이름에 bound된 dynamic import(그 이름의 멤버 읽기까지 검사). **claim되지 않은 specifier는 보고된다.**
+
+그래서 침입 경로는 "허용 형태가 아니라서" 실패하고 **누가 그 형태를 미리 떠올릴 필요가 없다**. star
+re-export · named re-export · namespace import · side-effect import · unbound dynamic import가 새 규칙
+다섯 개가 아니라 **규칙 하나**로 전부 막힌다. 정당한 새 형태도 같은 방식으로 실패하는데 그건 **의도한
+비용**이다 — 고치는 방법은 "그 형태가 여기 허용되는가"를 사람이 결정하는 것이다.
+
+**before/after 실측**(라운드 5 reader를 그대로 돌림): star re-export · named re-export · returned
+dynamic import는 **`unaccounted=[]`로 통과**했고, 라운드 6은 **다섯 우회 전부 검출**한다.
+
+**self-check**에 그 다섯 + computed member + namespace를 값으로 전달 = **실패 보고 7종**을 넣었고,
+**positive**로 승인된 `Promise.all` 형태가 `getStorage`/`ref`/`getBytes`로 **실제로 읽히는지**까지
+단언한다(이게 없으면 reader가 아무것도 못 읽어도 통과한다).
+
+**이빨 재실측 — 배포되는 reader 자체를 실제 코드에 겨눔.** 고객 66파일: 세 모듈 전부 승인 집합과
+일치, unaccounted **0**, 금지 이름 **0**. admin write 35파일: `firebase/auth`를 승인 안 된 모듈로,
+승인 밖 멤버 **11개**(`uploadBytes`·`setDoc`·`getAuth`·`signInWithEmailAndPassword` 등)를 검출하고 금지
+`uploadBytes`도 잡는다. **두 surface 101개 실제 파일에서 unaccounted 0**.
+
+**실측.** `admin-auth-read` **5/5**, **전체 Chromium E2E 161/161**, 전체 `node scripts/check.mjs`
+PASS(unit **2409/2409**, 89 파일), **통제 빌드 대조 산출물 16개 byte+SHA-256 동일**,
+`package.json`/lockfile diff **0**, `git diff --check` PASS, 변경 경로 한 파일뿐, EOL clean,
+포트·temp 잔류 0. 테스트 삭제·skip·E2E 예외 0.
+
+## 다음 단계 — Codex 재검수 대기
+
+스펙 082는 NN-5=A 예외 라운드까지 끝났고 `READY_FOR_CODEX`에서 멈춘다. 다음 단위는 Codex 재검수
+결과와 사용자 지시가 정한다. 실제 admin issue UI, 다음 스펙, 자동화는 시작하지 않았다.
+
+> 직전 지시문(스펙 082 보완 라운드 6, 수행 완료 — 기록):
+
+```text
+NN-5=A 승인. C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된 스펙 082 CORRECTION_REQUIRED 라운드 6 예외만 수행해.
+```
+
 
 ## Codex 재검수 — CORRECTION_REQUIRED / 예외 소진
 

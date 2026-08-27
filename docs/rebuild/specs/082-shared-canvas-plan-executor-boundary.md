@@ -2,7 +2,7 @@
 
 ## 상태
 
-`FOUNDER_DECISION_REQUIRED / CORRECTION_REQUIRED / NN-3+NN-4 EXCEPTIONS CONSUMED / NON_UI / NO_LIVE_NETWORK`
+`READY_FOR_CODEX / CORRECTION ROUND 6 DONE (Founder NN-5=A exception) / NON_UI / NO_LIVE_NETWORK`
 
 선행 게이트:
 
@@ -824,3 +824,86 @@ Founder **NN-5** 결정:
 
 NN-5 전에는 코드·test 수정, commit/push, spec 082 종료, 실제 admin issue UI 및 다음 스펙 착수를 하지
 않는다.
+
+### DONE (Claude) — 보완 라운드 6 (Founder NN-5=A 예외, 2026-08-27)
+
+기준 `HEAD=origin=c7199f0`, ahead/behind 0/0. Codex 재검수·NN-5 문서 commit `88eb3c0`, 보완 commit
+`a17c96b`. NN-5=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품
+코드·승인된 read-only Storage 연결·`package.json`/lockfile은 **무변경**이다.
+
+**Codex 지적은 옳다.** 라운드 5의 reader는 **구문에서 출발해 아는 형태를 찾았다**. 그래서 자신이 훑지
+않는 형태로 들어온 `firebase/*` 모듈은 **애초에 보이지 않았다**.
+
+| 우회 | 왜 안 보였나 | 라운드 5 | 라운드 6 |
+|---|---|---|---|
+| `export * from "firebase/storage";` | 순회가 `ImportKeyword`를 키로 삼음 — export declaration은 훑지 않음 | **미검출** | **검출** |
+| `export { getBytes } from "firebase/storage";` | 같은 이유 | **미검출** | **검출** |
+| `function leak() { return import("firebase/storage"); }` | dot 없는 dynamic import는 1차 순회에서 skip되고, 변수 선언이 아니라 2차 순회에도 안 들어옴 | **미검출** | **검출** |
+
+셋 다 `reached`/`unaccounted`를 바꾸지 않고 금지 이름도 없으며, 기존 facade가 승인 집합을 이미
+채우므로 aggregate equality 검사도 통과했다 — 즉 **파일 전체가 통과**했다. Codex 판정 `NOT PROVEN`이
+정확하다.
+
+**보완 — 구문이 아니라 모듈에서 출발한다.**
+
+파일 안의 모든 `firebase/*` specifier를 **먼저 수집**하고, 각각이 reader가 이해하고 경계가 허용하는
+형태에 의해 **claim되어야** 한다. 허용 형태는 셋뿐이다.
+
+1. `import { ... } from "firebase/x"` (`import type { ... }` 포함)
+2. type query `import("firebase/x").Member`
+3. 이름에 bound된 dynamic import — 그 이름의 멤버 읽기까지 검사
+
+**아무도 claim하지 않은 specifier는 보고된다.** 따라서 침입 경로는 "허용 형태가 아니라서" 실패하며,
+**누가 그 형태를 미리 떠올릴 필요가 없다**. star re-export · named re-export · namespace import ·
+side-effect import · unbound dynamic import가 새 규칙 다섯 개가 아니라 **이 규칙 하나**로 전부 막힌다.
+정당한 새 형태도 같은 방식으로 실패하는데, 그건 **의도한 비용**이다 — 고치는 방법은 "그 형태가 여기
+허용되는가"를 사람이 결정하는 것이다.
+
+**같은 입력에 대한 before/after 실측**(라운드 5 reader를 그대로 돌린 결과):
+
+```
+SLIPS THROUGH  star re-export            unaccounted=[] reached=0
+SLIPS THROUGH  named re-export           unaccounted=[] reached=0
+SLIPS THROUGH  returned dynamic import   unaccounted=[] reached=0
+caught         namespace import          unaccounted=["static import shape from firebase/storage"]
+caught         side-effect import        unaccounted=["static import shape from firebase/storage"]
+```
+
+라운드 6에서는 **다섯 전부 검출**된다(self-check가 같은 파일에서 단언).
+
+**self-check에 추가한 것.** 위 다섯 우회 + computed member `storage[name]()` + namespace를 값으로
+전달 `handOff(storage)` = **실패 보고 7종**. 그리고 **positive**로, 승인된 `Promise.all` 형태가
+`unaccounted` 없이 `getStorage`/`ref`/`getBytes`로 **실제로 읽히는지**까지 단언한다 — 단순히 "봐주는"
+게 아니라 읽는다는 뜻이고, 이게 없으면 reader가 아무것도 못 읽어도 통과한다.
+
+**이빨 재실측 — 배포되는 reader 자체를 실제 코드에 겨눔.** test 파일에서 helper를 그대로 추출해
+돌렸다.
+
+| surface | 결과 |
+|---|---|
+| 고객(66파일, 49,364 토큰) | `firebase/app` 4 · `firebase/storage` 5 · `firebase/firestore` 3 **전부 승인 집합과 일치**, unaccounted **0**, 금지 이름 **0** |
+| admin write(35파일) | `firebase/auth`를 **승인되지 않은 모듈**로 검출, 세 제품에서 **승인 밖 멤버 11개**(`uploadBytes`·`setDoc`·`getDocFromServer`·`connectFirestoreEmulator`·`getAuth`·`signInWithEmailAndPassword`·`signOut`·`onAuthStateChanged`·`setPersistence`·`browserLocalPersistence`·`connectAuthEmulator`), 금지 이름 `uploadBytes` 검출 |
+
+두 surface **101개 실제 파일에서 unaccounted 0** — 즉 모든 `firebase/*` specifier가 허용 형태로
+claim됐다. 고객 쪽이 깨끗한 이유가 "reader가 못 봐서"가 아니라 **실제로 깨끗해서**임을 이걸로 구분한다.
+
+**보완 라운드 6 게이트 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| `admin-auth-read.spec.ts` Chromium | **5/5 PASS** |
+| **전체 Chromium E2E** | **161 passed / 0 failed** |
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2409/2409**(89 파일), build 2개 |
+| 통제 빌드 대조 | 이 파일을 HEAD 버전으로 되돌려 재빌드한 산출물과 **16개 전부 byte+SHA-256 동일** |
+| `package.json`/lockfile | **diff 0** — 신규 의존성 없음 |
+| `git diff --check` | PASS |
+| exact diff | `tests/e2e/admin-auth-read.spec.ts` **한 파일뿐** |
+| EOL | `i/lf w/lf` |
+| 포트 4183/4184/4185/8080/9099/9199 · `test-results`/temp | 잔류 **0** |
+
+테스트 삭제·skip·E2E 예외는 **없다**. Auth whole-identifier, admin private path marker, positive
+marker, runtime external request 0 단언은 그대로이고, 보호 spec-018 PNG 2개는 dirty 그대로 두고
+stage/commit/restore하지 않았다.
+
+**진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
+능력이 아니다.

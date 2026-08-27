@@ -1,5 +1,22 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-27): Founder NN-5=A 예외 / spec 082 correction round 6 완료 = READY_FOR_CODEX.**
+> `HEAD=origin=c7199f0`에서 시작, Codex/NN-5 문서 `88eb3c0`, 보완 commit `a17c96b`. 허용 제품 파일은
+> `tests/e2e/admin-auth-read.spec.ts` 하나뿐이고 제품 코드·승인된 read-only Storage 연결·
+> `package.json`/lockfile 변경 0.
+> 라운드 5 reader는 **구문에서 출발**해 아는 형태만 찾았고, 그래서 `export * from "firebase/storage"`와
+> `return import("firebase/storage")`가 아예 보이지 않은 채 파일 전체가 통과했다. 이제 **모듈에서
+> 출발한다**: 파일의 모든 `firebase/*` specifier를 먼저 수집하고 각각이 허용 형태
+> (named import · type query · 이름에 bound된 dynamic import) 중 하나에 **claim되어야** 하며,
+> claim되지 않으면 보고된다. star/named re-export · namespace import · side-effect import ·
+> unbound dynamic import가 규칙 하나로 전부 막히고 **누가 그 형태를 미리 떠올릴 필요가 없다**.
+> before/after 실측: 라운드 5는 앞의 셋을 `unaccounted=[]`로 통과시켰고 라운드 6은 다섯 전부 검출한다.
+> self-check에 실패 보고 7종 + 승인 형태가 실제로 읽히는지 positive까지 넣었다.
+> **이빨 실측**: 배포 reader를 admin write surface에 겨누면 `firebase/auth`와 승인 밖 멤버 11개를
+> 잡고, 두 surface 101파일에서 unaccounted 0.
+> **전체 Chromium E2E 161/161**, check unit **2409/2409**, 통제 빌드 대조 산출물 16개 byte 동일.
+> 다음은 Codex 재검수. 전체 진행도 **84~87% / 잔여 13~16%**.
+
 > **최신 포인터 (2026-08-27): spec 082 correction round 5 Codex 재검수 = CORRECTION_REQUIRED / EXCEPTIONS CONSUMED.**
 > 검수 기준 `HEAD=origin=c7199f0`, ahead/behind 0/0. scanner/destructuring 보완은 적합하지만
 > `sdkUsage()`가 `ExportKeyword`를 처리하지 않아 `export * from "firebase/storage"`를 무시하고,
