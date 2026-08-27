@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CLAUDE / CORRECTION_REQUIRED ROUND 2 / NN-2=A APPROVED / NON_UI / NO_LIVE_NETWORK`
+`READY_FOR_CODEX / CORRECTION ROUND 2 DONE / NN-2=A / NON_UI / NO_LIVE_NETWORK / E2E 160-0`
 
 선행 게이트:
 
@@ -404,3 +404,71 @@ Founder가 **NN-2=A**를 승인했다. 보완 라운드 2는
 `tests/e2e/admin-auth-read.spec.ts` 한 제품 파일만 추가 수정한다. 승인된 read-only Storage 연결과
 제품 코드는 유지하고, app-owned production 호출 표면의 allowlist와 write/update/delete/list/download
 금지를 검사하도록 test contract만 정정한다. 상태 `READY_FOR_CLAUDE`, next `CLAUDE_CORRECTION`이다.
+
+### DONE (Claude) — 보완 라운드 2 (2026-08-27)
+
+기준 `HEAD=origin=60507b3`, ahead/behind 0/0. Codex 재검수·NN-2 문서 commit `60507b3`, 보완 commit
+`65c5b46`. Founder **NN-2=A**가 허용한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만
+고쳤다. 제품 코드는 한 줄도 바꾸지 않았다.
+
+**전체 Chromium E2E는 이제 160 passed / 0 failed다.** (기존 159 + 이번에 추가한 call-surface 테스트 1.)
+
+**결함 — 오래된 검사가 결정할 수 없는 것을 물었다.**
+
+`bundle.includes("uploadBytes")`는 번들된 Firebase 제품이 **모듈 전체를 싣는다**는 사실 때문에
+"이 앱이 쓰기를 하는가"가 아니라 "Storage SDK가 존재하는가"를 측정하고 있었다. 실제로 그 이름들은
+vendor chunk의 **export 맵**(`Jt as uploadBytes`, `en as listAll` …)과 SDK 내부 **오류 라벨**
+(`_throwIfRoot("uploadBytes")`)에 있을 뿐 고객 호출부가 아니다. 게다가 같은 목록이 `getStorage`도
+금지했는데, 그건 스펙 079(MM-1=A)가 **승인한 바로 그 호출**이라 079 이후에는 이 검사가 통과할 수
+없는 상태였다.
+
+**보완 — 결정 가능한 곳에서 경계를 검사한다.**
+
+- 번들 전체 substring 목록에서 Storage 이름 6개를 제거했다. 남긴 것은 vendor가 만들지 않는 app-level
+  문자열뿐이다 — `admin-read` · `ADMIN_STATE_OBJECT_PATH` · `admin/state.json` ·
+  `onAuthStateChanged` · `signInWithEmailAndPassword`. 라운드 1의 `getAuth` whole-identifier 검사,
+  positive marker(`denn-space-viewer`/`getFirestore`/`getDoc`), default route external request 0 검사는
+  **그대로 유지**했다.
+- 신규 테스트 `the customer app's own Storage call surface stays read-only`가 고객의 **자기 소유 production
+  source**를 검사한다 — `apps/mockup/src`(unit test와 `e2e/` 제외) + 고객이 실제로 import하는 유일한
+  `@denn/firebase` subpath인 `packages/firebase/src/space-read`(test 제외), 총 58개 파일. 주석을 제거한
+  뒤:
+  1. `@denn/firebase/space-write` · `admin-read` · `admin-write` **import 0** — 이 단언이 package 절반을
+     `space-read`로 한정한 근거다. 고객이 write/admin subpath에 손대면 **이 단언이 먼저 깨진다.**
+  2. `uploadBytes` · `uploadBytesResumable` · `uploadString` · `updateMetadata` · `deleteObject` ·
+     `list` · `listAll` · `getDownloadURL` · `getBlob` · `getStream` 의 **호출**(`\b이름\s*\(`) **0**.
+  3. `getStorage` · `ref` · `getMetadata` · `getBytes` 호출이 **실제로 존재**. 이게 없으면 Storage
+     호출이 스캔 밖으로 옮겨가도 테스트가 계속 통과해버린다.
+
+**이 검사가 실제로 잡는다는 증거(측정).**
+
+| 확인 | 결과 |
+|---|---|
+| 같은 검사를 **admin write surface**(`apps/admin/src` + `space-write`)에 겨누면 | `uploadBytes` **FAIL 1** — 실제 쓰기를 잡는다 ✅ |
+| Storage vendor chunk `index.esm-DtyxGWvl.js`의 `.이름(` 호출 형태 | **0** — export 맵·오류 라벨은 호출로 세지 않는다 ✅ |
+| 고객 app chunk(`index-*.js`, `SpacePostAuthFrameView-*.js`)의 `.이름(` | 허용 4종만(`getStorage` 1, `ref` 2, `getMetadata` 1, `getBytes` 1, `connectStorageEmulator` 1), 금지 **0** ✅ |
+| 고객 production source 58파일 | 금지 10종 **0**, 허용 4종 **전부 존재**, 금지 subpath import **0** ✅ |
+
+번들 문자열이 아니라 **호출 형태**를 보기 때문에 vendor export 맵이 호출부로 위장할 수 없고, source를
+보기 때문에 bundler chunk 분할 방식에 의존하지 않는다.
+
+**보완 라운드 2 게이트 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| targeted `admin-auth-read.spec.ts` Chromium | **4/4 PASS** |
+| **전체 Chromium E2E** | **160 passed / 0 failed** |
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2409/2409**, build 2개 |
+| build 산출물 14개 byte+SHA-256 | **전부 보완 전과 동일** — 제품 코드 무변경 |
+| `git diff --check` | PASS |
+| exact diff | `tests/e2e/admin-auth-read.spec.ts` **한 파일뿐** |
+| EOL | `i/lf w/lf` |
+| 포트 4183/4184/4185/8080/9099/9199 · `test-results`/temp | 잔류 **0** |
+
+**약화하지 않았음.** 테스트를 삭제하지 않았고 E2E 예외로 처리하지도 않았다. Storage 쓰기·열거·다운로드
+경계는 **더 강해졌다** — 예전에는 vendor 문자열 유무만 봤지만 이제 실제 호출과 import 경계를 본다.
+Auth·admin private path·external request 0 검사는 그대로다. 스펙 079/080의 read-only Storage 승인은
+보존했고 제품 코드는 건드리지 않았다.
+
+**진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
+능력이 아니다.

@@ -1,6 +1,6 @@
 # 스펙 082 shared Canvas plan executor boundary handoff
 
-- 상태: `READY_FOR_CODEX / CORRECTION ROUND 1 DONE / NN-1=A / NON_UI / NO_LIVE_NETWORK` (보완 2026-08-27)
+- 상태: `READY_FOR_CODEX / CORRECTION ROUND 2 DONE / NN-2=A / NON_UI / NO_LIVE_NETWORK / E2E 160-0` (보완 2026-08-27)
 - 구현: 계약 문서 commit `aa7e048`, 제품 commit `307521f`
 - 선행: spec 081 `DONE / CODEX_PASSED`
 - spec: `docs/rebuild/specs/082-shared-canvas-plan-executor-boundary.md`
@@ -96,5 +96,24 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
   `uploadBytes` 등 6개 마커가 드러났다 — 5건은 storage vendor chunk의 dead export/오류 라벨 오탐,
   1건 `getStorage`는 스펙 079(MM-1=A)가 승인한 고객 자신의 호출이다. NN-1=A 범위 밖이라 고치지 않고
   기록만 했다.
+- 다음은 Codex 재검수(`CODEX_SPEC_082_REVIEW`)다. 실제 admin issue UI와 다음 스펙은 시작하지 않았다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 보완 라운드 2 — Founder NN-2=A (2026-08-27, Claude Code)
+
+허용된 제품 파일 한 개(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품 코드는 무변경이다. 상세
+근거와 실측표는 스펙 082의 `### DONE (Claude) — 보완 라운드 2 (2026-08-27)`이 정본이다. 재검수·NN-2
+문서 commit `60507b3`, 보완 commit `65c5b46`.
+
+- **전체 Chromium E2E 160 passed / 0 failed** (기존 159 + 신규 call-surface 테스트 1). 158/1 해소.
+- 번들 전체 substring 검사가 vendor export 맵과 `_throwIfRoot()` 라벨을 고객 호출로 오인하던 것을
+  걷어내고, 고객의 **자기 소유 production source**(`apps/mockup/src` + 유일하게 import하는
+  `space-read`, 58파일)를 검사하도록 바꿨다 — write/admin subpath import 0, 쓰기·열거·다운로드 API
+  호출 0, 승인된 `getStorage`/`ref`/`getMetadata`/`getBytes` 호출은 실제로 존재.
+- 같은 검사를 admin write surface에 겨누면 `uploadBytes`가 FAIL로 잡힌다(이빨 확인). Storage vendor
+  chunk의 `.이름(` 호출 형태는 0이다. 테스트 삭제·E2E 예외 없이 경계는 오히려 강해졌다.
+- targeted `admin-auth-read` **4/4**, 전체 `node scripts/check.mjs` PASS(unit **2409/2409**),
+  **build 산출물 14개 byte+SHA-256 무변경**, `git diff --check` PASS, 변경 한 파일뿐, EOL clean,
+  포트·temp 잔류 0.
 - 다음은 Codex 재검수(`CODEX_SPEC_082_REVIEW`)다. 실제 admin issue UI와 다음 스펙은 시작하지 않았다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

@@ -53,7 +53,40 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CODEX` - 스펙 082 보완 라운드 1(NN-1=A) 완료, Codex 재검수 대기.**
+상태: **`READY_FOR_CODEX` - 스펙 082 보완 라운드 2(NN-2=A) 완료, 전체 E2E 160/160, Codex 재검수 대기.**
+
+Founder **NN-2=A**가 허용한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품
+코드는 한 줄도 바꾸지 않았다. 기준 `HEAD=origin=60507b3`, 재검수·NN-2 문서 commit `60507b3`, 보완
+commit `65c5b46`. **전체 Chromium E2E는 이제 160 passed / 0 failed다**(기존 159 + 신규 call-surface
+테스트 1). 라운드 1까지 남아 있던 158/1이 해소됐다.
+
+`bundle.includes("uploadBytes")`는 번들된 Firebase 제품이 모듈 전체를 싣는 탓에 "이 앱이 쓰기를
+하는가"가 아니라 "Storage SDK가 존재하는가"를 측정했다 — 그 이름들은 vendor chunk의 export 맵과
+`_throwIfRoot()` 오류 라벨일 뿐이다. 같은 목록이 스펙 079(MM-1=A)가 승인한 `getStorage`까지 금지해
+079 이후에는 통과할 수 없는 검사였다.
+
+이제 번들 substring 목록에는 vendor가 만들지 않는 app-level 문자열만 남기고(`admin-read` ·
+`ADMIN_STATE_OBJECT_PATH` · `admin/state.json` · `onAuthStateChanged` · `signInWithEmailAndPassword`),
+신규 테스트가 고객의 **자기 소유 production source**(`apps/mockup/src` + 고객이 실제 import하는 유일한
+subpath `space-read`, test·`e2e/` 제외 58파일)를 주석 제거 후 검사한다 — write/admin subpath import
+**0**, 쓰기·열거·다운로드 API **호출 0**, 승인된 `getStorage`/`ref`/`getMetadata`/`getBytes` 호출은
+**실제로 존재**. 라운드 1의 `getAuth` whole-identifier 검사와 default route external request 0 검사는
+그대로다.
+
+검사에 이빨이 있음을 측정으로 확인했다 — 같은 검사를 admin write surface에 겨누면 `uploadBytes`가
+FAIL로 잡히고, Storage vendor chunk의 `.이름(` 호출 형태는 0이라 export 맵이 호출부로 위장할 수 없다.
+테스트를 삭제하거나 E2E 예외로 처리하지 않았고 경계는 오히려 강해졌다.
+
+실측: targeted `admin-auth-read` **4/4**, **전체 Chromium E2E 160/160**, 전체 `node scripts/check.mjs`
+PASS(unit **2409/2409**), **build 산출물 14개 모두 보완 전과 byte+SHA-256 동일**, `git diff --check`
+PASS, 변경 경로 한 파일뿐, EOL clean, 포트·temp 잔류 0.
+
+보호 spec-018 PNG 2개는 stage/commit/restore하지 않았다. 실제 admin issue UI와 다음 스펙은 시작하지
+않았고 next transition은 `CODEX_SPEC_082_REVIEW`다.
+
+전체 진행도는 **84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
+
+> 스펙 082 보완 라운드 1 완료 기록(재검수 전):
 
 Founder **NN-1=A**가 허용한 **정확히 두 파일만** 고쳤다. 기준 `HEAD=origin=ecc9720`, 검수·NN-1 문서
 commit `ecc9720`, 보완 commit `8d4458d`. 스펙 082 본 구현(executor 이동)은 건드리지 않았다.

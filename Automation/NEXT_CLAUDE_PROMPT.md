@@ -1,13 +1,38 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
+상태: `READY_FOR_CODEX`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED ROUND 2 / NN-2=A APPROVED / NON_UI / NO_LIVE_NETWORK / E2E 158-1**
-- 기준: `HEAD=origin=ecc9720`에서 시작. 구현 commit `307521f`, 보완 commit `8d4458d`.
-- 현재 검수 기준: `HEAD=origin=3600198`, ahead/behind `0/0`
-- next_transition: `CLAUDE_CORRECTION`
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION ROUND 2 DONE / NN-2=A / NON_UI / NO_LIVE_NETWORK / E2E 160-0**
+- 기준: `HEAD=origin=60507b3`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 라운드 2 `65c5b46`.
+- next_transition: `CODEX_SPEC_082_REVIEW`
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## 현재 결과 — 보완 라운드 2 완료, 전체 E2E 160/160
+
+Founder **NN-2=A**가 허용한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품
+코드는 한 줄도 바꾸지 않았다. **전체 Chromium E2E는 160 passed / 0 failed**(기존 159 + 신규
+call-surface 테스트 1)로, 라운드 1까지 남아 있던 158/1이 해소됐다.
+
+`bundle.includes("uploadBytes")`는 번들된 Firebase 제품이 모듈 전체를 싣는 탓에 "이 앱이 쓰기를
+하는가"가 아니라 "Storage SDK가 존재하는가"를 측정했고(그 이름들은 vendor export 맵과
+`_throwIfRoot()` 라벨일 뿐), 같은 목록이 079(MM-1=A)가 승인한 `getStorage`까지 금지해 079 이후엔
+통과할 수 없는 검사였다.
+
+이제 번들 substring 목록에는 vendor가 만들지 않는 app-level 문자열만 남기고, 신규 테스트가 고객의
+**자기 소유 production source**(`apps/mockup/src` + 유일하게 import하는 `space-read`, test·`e2e/`
+제외 58파일)를 주석 제거 후 검사한다 — write/admin subpath import **0**, 쓰기·열거·다운로드 API
+**호출 0**, 승인된 `getStorage`/`ref`/`getMetadata`/`getBytes` 호출은 **실제로 존재**. 라운드 1의
+`getAuth` whole-identifier 검사와 default route external request 0 검사는 그대로다. 같은 검사를 admin
+write surface에 겨누면 `uploadBytes`가 FAIL로 잡혀 **이빨이 있음을 측정으로 확인**했다.
+
+**실측.** targeted `admin-auth-read` **4/4**, **전체 Chromium E2E 160/160**, 전체
+`node scripts/check.mjs` PASS(unit **2409/2409**), **build 산출물 14개 모두 보완 전과 byte+SHA-256
+동일**, `git diff --check` PASS, 변경 경로 한 파일뿐, EOL clean, 포트·temp 잔류 0.
+
+**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 재검수다.
+
+> 직전 지시문(스펙 082 보완 라운드 2, 수행 완료 — 기록):
 
 ## 현재 결과 — 보완 라운드 1 완료
 
