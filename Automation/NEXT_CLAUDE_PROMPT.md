@@ -1,14 +1,42 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
+상태: `READY_FOR_CODEX`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary`
-- 검수 기준: `HEAD=origin=df75655`, ahead/behind `0/0`
-- next_transition: `CLAUDE_SPEC_082_IMPLEMENTATION`
-- 전체 리빌드: **84~87% 완료 / 13~16% 잔여** (7개 roadmap 작업축 기반 관리 추정, 고정 spec 분모 없음)
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **IMPLEMENTED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK / E2E 158-1**
+- 기준: `HEAD=origin=aa7e048`에서 시작. 계약 문서 commit `aa7e048`, 구현 commit `307521f`.
+- next_transition: `CODEX_SPEC_082_REVIEW`
+- 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
 
-## Claude Code에 그대로 전달할 실행 지시문
+## 현재 결과
+
+React 비의존 Canvas plan executor와 타입을 `@denn/render`의 단일 구현으로 옮겼고
+(`packages/render/src/canvas/**`), `apps/mockup/src/canvas`의 두 파일은 thin re-export만 남는다.
+preflight 순서·오류 코드·command index·단일 읽기 snapshot·save/restore 우선순위·rotation/text
+capability·throw 0 계약은 하나도 바뀌지 않았다. 테스트가 local 이름이 `@denn/render` export와 **같은
+참조**임을 `toBe`로 고정하고, 소스 스캔은 shared 구현을 읽는다.
+
+**Tailwind drift 0이라 `theme.css`는 손대지 않았다**(mockup/admin CSS SHA-256 동일). bundle 변화는
+mockup entry 하나뿐 — `index-BUT7Bmak.js`(340,604) → `index-CRHkWFoL.js`(340,609, **+5 bytes**). 변경
+4파일을 HEAD로 되돌린 통제 빌드로 이전 산출물을 재현·대조해, 차이가 offset 2328부터의 **minified
+식별자 재배치**뿐이고 추가 코드·중복 사본이 없음을 확인했다. admin 전체와 mockup sibling chunk 4개는
+byte-identical이다.
+
+**실측.** targeted executor **87/87**, render/mockup/admin typecheck PASS, 전체
+`node scripts/check.mjs` **PASS**(unit **2409/2409**), `git diff --check` PASS, forbidden diff 0,
+신규 파일 EOL **3/3**, 검사 포트 잔류 0, temp 잔류 0.
+
+**전체 Chromium E2E는 158 passed / 1 failed이며 "전체 E2E PASS"라고 기록하지 않는다.** 실패
+`tests/e2e/admin-auth-read.spec.ts:82`(마커 `getAuth`)는 **스펙 082 원인이 아니다** — 변경 4파일을
+HEAD로 되돌려도 동일하게 실패하며, 문자열은 firebase/storage vendor chunk(이동 전후 SHA-256 동일)의
+`_getAuthToken`이다. 스펙 079/080이 연결한 chunk이고 080·081은 전체 suite가 NOT RUN이었다. 수정은
+`tests/e2e/admin-auth-read.spec.ts` 또는 고객 앱 storage 연결을 건드려야 해 **스펙 082 허용 범위
+밖**이라 고치지 않고 기록만 했다.
+
+**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 검수이며, 실제 admin issue UI는
+별도 스펙과 지시 이후에 시작한다.
+
+> 직전 지시문(스펙 082 구현, 수행 완료 — 기록):
 
 ```text
 C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와

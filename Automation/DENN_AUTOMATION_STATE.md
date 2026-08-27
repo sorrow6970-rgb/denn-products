@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: READY_FOR_CLAUDE
-baseline_commit: df75655   # HEAD=origin at Codex final spec 081 review
-candidate_commit: null
+state: READY_FOR_CODEX
+baseline_commit: aa7e048   # HEAD=origin at spec 082 implementation start (Codex contract docs)
+candidate_commit: 307521f  # spec 082 shared Canvas executor boundary
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "HEAD=origin=df75655, ahead/behind 0/0 before Codex contract docs; docs are intentionally uncommitted for Claude handoff"
-working_tree: "Codex spec 081 closure + spec 082 contract/handoff/status docs are uncommitted; pre-existing protected Founder/user changes remain untouched and unstaged"
+origin_relation: "spec 082 implemented from HEAD=origin=aa7e048, ahead/behind 0/0; pushed fast-forward"
+working_tree: "spec 082 implementation and allowed documents committed; protected spec-018 PNGs left dirty after the full E2E, and pre-existing Founder/user changes remain untouched and unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_SPEC_082_IMPLEMENTATION
+next_transition: CODEX_SPEC_082_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,52 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 082 공유 Canvas executor 경계 추출 완료 (2026-08-27)
+
+- 기준 `HEAD=origin=aa7e048`, ahead/behind 0/0. 계약 문서 commit `aa7e048`, 구현 commit `307521f`.
+  허용 목록 밖 제품 파일은 만들지 않았다.
+- **변경 파일 7개.** 신규 `packages/render/src/canvas/{types.ts, execute-preview-plan.ts, index.ts}`,
+  수정 `packages/render/src/index.ts`, thin re-export로 축소한
+  `apps/mockup/src/canvas/{types.ts, executePreviewPlan.ts}`, 최소 변경한
+  `apps/mockup/src/canvas/executePreviewPlan.test.ts`.
+- **동작 무변경 이동.** preflight 순서·오류 코드·command index·단일 읽기 snapshot·save/restore
+  우선순위·rotation/text capability·throw 0 계약을 하나도 바꾸지 않았다. plan 타입은
+  package-relative(`../plan`)로 import해 barrel 자기참조가 없다. 보호 파일
+  `packages/render/src/plan/index.ts`는 읽기만 했다.
+- **cross-app import·복제 0.** mockup 두 파일은 선언·구현이 0인 re-export뿐이고, 테스트가
+  `executePreviewRenderPlan`이 `@denn/render` export와 **같은 참조**임을 `toBe`로 고정한다(사본이면
+  참조가 다르다). 소스 스캔 테스트는 shared 구현을 읽도록 경로만 최소 변경했다.
+- **Tailwind drift 0 → `theme.css` 손대지 않음.** mockup CSS `index-BjqjBda8.css`(19,381) · admin CSS
+  `index-DJ_z3tK1.css`(9,146) 모두 **SHA-256까지 이동 전과 동일**하다. 스펙이 "실측될 때만" 허용한
+  exclusion을 추측으로 넣지 않았다.
+- **bundle 변화는 mockup entry 하나.** `index-BUT7Bmak.js`(340,604) → `index-CRHkWFoL.js`(340,609,
+  `5B569772F0218CC169EB7CB83EC92AC99B68D33D06651C299D757D5A912018B9`), **+5 bytes**. admin 전체와
+  mockup의 sibling chunk 4개는 byte-identical이다. 변경 4파일을 HEAD로 되돌려 빌드하니 이전 산출물이
+  그대로 재현됐고, 두 산출물을 문자 단위로 대조하니 첫 차이는 offset 2328의 React vendor 코드이며
+  전부 **minified 식별자 재배치**였다(`S`→`te`, `C`→`S`, `te`→`ne`…). module graph 이동이 rolldown
+  이름 할당을 민 것이고 추가 코드·중복 사본은 없다.
+- **실측.** targeted executor **87/87**(이동 전 86 + public export identity 1), render/mockup/admin
+  typecheck PASS, 전체 `node scripts/check.mjs` **PASS**(unit **2409/2409**).
+- **전체 Chromium E2E는 158 passed / 1 failed다.** 실패는 `tests/e2e/admin-auth-read.spec.ts:82`의
+  마커 `getAuth`이며 **스펙 082 원인이 아니다** — 변경 4파일을 HEAD로 되돌려 같은 spec만 재실행해도
+  동일하게 실패한다. 문자열은 lazily-imported firebase/storage vendor chunk
+  `index.esm-DtyxGWvl.js`(이동 전후 SHA-256 동일)의 `_getAuthToken`이며 Auth 제품 API 호출이 아니다.
+  이 chunk는 스펙 079/080이 연결했고 080·081 모두 전체 suite가 NOT RUN이었다. 고치려면
+  `tests/e2e/admin-auth-read.spec.ts` 또는 고객 앱 storage 연결을 손대야 하는데 **둘 다 스펙 082 허용
+  파일이 아니라** 기록만 하고 고치지 않았다. **따라서 "전체 E2E PASS"라고 기록하지 않는다.**
+- `git diff --check` PASS, forbidden diff **0**(`package.json`·lockfile·`pnpm-workspace.yaml`·Rules·
+  firebase config·`apps/admin/**`·`packages/render/src/plan/index.ts` 변경 0). 신규 파일 EOL
+  `i/lf w/lf` **3/3**. 검사 포트 4183/4184/4185/8080/9099/9199 잔류 **0**, `test-results`/temp 잔류 0.
+- E2E가 다시 쓴 보호 spec-018 PNG 2개는 **stage/commit/restore하지 않고 dirty 그대로** 뒀고,
+  spec-063·spec-080 결과 PNG는 재생성 후 byte-identical이라 diff 0이다. 기존 user dirty 파일도 그대로다.
+- **보고(하지 않은 것).** 신규 package 파일 3개를 `.gitattributes`에 고정하지 않았다 — 스펙 082 허용
+  파일이 아니고 §5가 정책 확대를 금지한다. `core.autocrlf=true`에서 재-checkout되면 스펙 080 라운드
+  2와 같은 format 실패가 재발할 수 있어 저장소 전체 line-ending 정책 결정 대상으로 남긴다.
+- 실제 admin issue UI가 구현됐다고 기록하지 않는다. 상태 `READY_FOR_CODEX`, next transition
+  `CODEX_SPEC_082_REVIEW`. 다음 admin UI 스펙과 자동화·반복 작업은 시작하지 않았다.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**(다음 UI의 구조적 선행 작업이며 실제 사용자
+  기능은 아직 열리지 않았다).
 
 ## 스펙 081 Codex 최종 통과 · 스펙 082 계약 준비 (2026-08-27)
 

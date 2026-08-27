@@ -24,7 +24,43 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`READY_FOR_CLAUDE` - 스펙 081 CODEX_PASSED, 스펙 082 shared Canvas executor 계약 준비.**
+상태: **`READY_FOR_CODEX` - 스펙 082 shared Canvas executor 경계 추출 완료, Codex 검수 대기.**
+
+기준 `HEAD=origin=aa7e048`, 계약 문서 commit `aa7e048`, 구현 commit `307521f`.
+
+React 비의존 Canvas plan executor와 그 타입을 `@denn/render`의 **단일 구현**으로 옮겼다. preflight
+순서·오류 코드·command index·단일 읽기 snapshot·save/restore 우선순위·rotation/text capability·
+throw 0 계약은 하나도 바뀌지 않았고, `apps/mockup/src/canvas`의 두 파일은 선언·구현이 0인 thin
+re-export만 남는다. 테스트가 `executePreviewRenderPlan`이 `@denn/render` export와 **같은 참조**임을
+`toBe`로 고정하고(사본이면 참조가 다르다), 소스 스캔 테스트는 shared 구현을 읽도록 경로만 최소
+변경했다. 보호 파일 `packages/render/src/plan/index.ts`는 읽기만 했다.
+
+**Tailwind drift는 0이라 `theme.css`를 손대지 않았다** — mockup/admin CSS 모두 SHA-256까지 동일하다.
+bundle 변화는 mockup entry 하나뿐이다: `index-BUT7Bmak.js`(340,604) → `index-CRHkWFoL.js`(340,609,
+**+5 bytes**). 변경 4파일을 HEAD로 되돌려 빌드해 이전 산출물을 재현하고 문자 단위로 대조한 결과, 첫
+차이는 offset 2328의 React vendor 코드이고 전부 minified 식별자 재배치였다. 추가 코드·중복 사본은
+없다. admin 전체와 mockup sibling chunk 4개는 byte-identical이다.
+
+실측: targeted executor **87/87**, render/mockup/admin typecheck PASS, 전체 `node scripts/check.mjs`
+**PASS**(unit **2409/2409**), `git diff --check` PASS, forbidden diff 0, 신규 파일 EOL 3/3,
+검사 포트 잔류 0, `test-results`/temp 잔류 0.
+
+**전체 Chromium E2E는 158 passed / 1 failed다.** 실패는 `tests/e2e/admin-auth-read.spec.ts:82`의 마커
+`getAuth`이며 **스펙 082 원인이 아니다** — 변경 4파일을 HEAD로 되돌려 같은 spec만 재실행해도 동일하게
+실패한다. 문자열은 lazily-imported firebase/storage vendor chunk `index.esm-DtyxGWvl.js`(이동 전후
+SHA-256 동일)의 `_getAuthToken`이고 Auth 제품 API 호출이 아니다. 이 chunk는 스펙 079/080이 연결했고
+080·081 모두 전체 suite가 NOT RUN이었다. 고치려면 `tests/e2e/admin-auth-read.spec.ts` 또는 고객 앱
+storage 연결을 손대야 하는데 둘 다 스펙 082 허용 파일이 아니라 **기록만 하고 고치지 않았다.**
+따라서 "전체 E2E PASS"라고 기록하지 않는다. 필요한 결정은 ① 마커를 제품 API 호출로 정밀화(079/080
+승인과 정합) ② 고객 앱 storage 연결 재검토(079/080과 충돌) ③ 그 수정을 어느 단위에 넣을지다.
+
+E2E가 다시 쓴 보호 spec-018 PNG 2개는 stage/commit/restore하지 않고 dirty 그대로 뒀다. 실제 admin
+issue UI가 구현됐다고 기록하지 않으며, actual Firebase/network/live/deploy는 **0**이다. next
+transition은 `CODEX_SPEC_082_REVIEW`이고 다음 admin UI 스펙은 시작하지 않았다.
+
+전체 진행도는 **84~87% 완료 / 13~16% 잔여 — 변동 없음**이다.
+
+> 스펙 082 실행 계약 · 스펙 081 최종 검수 (준비 시점 기록):
 
 스펙 081 최종 검수 기준은 `HEAD=origin=df75655`, ahead/behind `0/0`이다. 라운드 2 diff 두 파일,
 8개 error code의 exact metadata mapping, prototype own-key 차단을 확인했다. 독립 실측은 targeted

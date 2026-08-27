@@ -6475,3 +6475,64 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - actual Firebase/network/live/UID/deploy, admin UI, 운영 발급·publish·delete/orphan cleanup은 계속
   금지/NOT TESTED다. 자동화 생성·Codex commit/push는 0이다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여**다.
+
+## 2026-08-27 - 스펙 082 공유 Canvas plan executor 경계 추출
+
+- 기준 `HEAD=origin=aa7e048`, ahead/behind 0/0. 계약 문서 commit `aa7e048`, 구현 commit `307521f`.
+  시작 시 보호 dirty: `docs/rebuild/design/README.md` · spec-018 PNG 2개 ·
+  `packages/render/src/plan/index.ts` · `pnpm-workspace.yaml` · untracked `AGENTS.md` ·
+  `docs/rebuild/design/taste-v2/` · spec 038. 전부 읽기만 했다.
+- **변경 파일 7개.** 신규 `packages/render/src/canvas/{types.ts, execute-preview-plan.ts, index.ts}`,
+  수정 `packages/render/src/index.ts`, thin re-export로 축소한
+  `apps/mockup/src/canvas/{types.ts, executePreviewPlan.ts}`, 최소 변경한
+  `apps/mockup/src/canvas/executePreviewPlan.test.ts`.
+- **동작 무변경 이동.** preflight 순서·오류 코드 vocabulary·command index·단일 읽기 normalized
+  snapshot·save/restore 우선순위·rotation/text capability·throw 0 계약을 하나도 바꾸지 않았고
+  단순화나 새 fallback도 넣지 않았다. plan 타입은 package-relative(`../plan`)로 import해 barrel
+  자기참조가 없다. 보호 파일 `packages/render/src/plan/index.ts`는 읽기만 했다.
+- **cross-app import·복제 0.** mockup 두 파일은 선언 0·구현 0의 re-export뿐이다. 테스트가
+  `executePreviewRenderPlan`이 `@denn/render` export와 **같은 참조**임을 `toBe`로 고정한다 — 동등성이
+  아니라 identity를 보는 이유는 사본이면 참조가 다르고, 사본이야말로 이 경계가 막으려는 것이기
+  때문이다. 소스 스캔 테스트는 re-export가 아니라 **shared 구현**을 읽도록 경로만 최소 변경했다.
+- **Tailwind drift 0 → `theme.css` 손대지 않음.** 스펙은 drift가 실측될 때만 exclusion을 허용한다.
+  실측 결과 mockup CSS `index-BjqjBda8.css`(19,381 / `A68DCF41…BD12`)와 admin CSS
+  `index-DJ_z3tK1.css`(9,146 / `6A680479…29FD`) 모두 **SHA-256까지 이동 전과 동일**해, 추측 exclusion을
+  넣지 않았다.
+- **bundle 변화는 mockup entry 하나.** `index-BUT7Bmak.js`(340,604 / `1AA1BD0B…B4F1`) →
+  `index-CRHkWFoL.js`(340,609 / `5B569772F0218CC169EB7CB83EC92AC99B68D33D06651C299D757D5A912018B9`),
+  **+5 bytes**. admin entry·CSS·chunk 6개와 mockup sibling chunk 4개는 전부 byte-identical이다.
+  **원인을 통제 실험으로 특정했다** — 변경 4파일을 HEAD 버전으로 되돌려 빌드하니 `index-BUT7Bmak.js`가
+  그대로 재현됐고, 두 산출물을 문자 단위로 대조하니 첫 차이가 offset **2328**의 React vendor 코드이며
+  전부 minified 식별자 재배치였다(`function S(){}`→`function te(){}`, `var C=`→`var S=`, `te`→`ne`,
+  `ne`→`re`, `re`→`ie`). module graph 이동이 rolldown 이름 할당을 민 것이고 추가 코드·중복 사본은
+  없다(+5 bytes에 27 kB executor 사본이 들어갈 수 없다).
+- **실측.** targeted executor **87/87**(이동 전 86 + public export identity 1), render/mockup/admin
+  typecheck PASS, 전체 `node scripts/check.mjs` **PASS**(format·lint·typecheck 7개·unit
+  **2409/2409**·build 2개).
+- **전체 Chromium E2E는 158 passed / 1 failed다. "전체 E2E PASS"라고 기록하지 않는다.**
+  실패는 `tests/e2e/admin-auth-read.spec.ts:82` "the customer bundle contains only the approved lazy
+  space Firestore boundary"의 마커 `getAuth`다. **스펙 082 원인이 아님을 통제 실험으로 확인했다** —
+  변경 4파일을 HEAD로 되돌리고 같은 spec만 재실행해도 동일하게 실패한다. 문자열은 lazily-imported
+  firebase/storage vendor chunk `index.esm-DtyxGWvl.js`(이동 전후 SHA-256 동일 `F4CA8DEA…C0AF`)의
+  **`_getAuthToken`**(Storage SDK 내부 메서드)이며 Auth 제품 API `getAuth()` 호출이 아닌 부분 문자열
+  false positive다. 이 chunk는 스펙 079/080(MM-1=A)이 고객 앱에 연결했고 스펙 080·081 모두 전체
+  Chromium suite가 **NOT RUN**이어서 지금까지 드러나지 않았다. 해당 test 주석도 "generic Firebase
+  constants는 제품을 import하지 않아도 나타난다"고 이미 적고 있다. 고치려면
+  `tests/e2e/admin-auth-read.spec.ts`(마커 정밀화) 또는 고객 앱 storage 연결을 손대야 하는데 **둘 다
+  스펙 082 허용 파일이 아니라** 고치지 않고 기록만 한다. 필요한 결정: ① 마커를 제품 API 호출로
+  정밀화(079/080 승인과 정합) ② 고객 앱 storage 연결 재검토(079/080과 충돌) ③ 그 수정을 어느 단위에
+  넣을지.
+- `git diff --check` PASS, forbidden diff **0**(`package.json`·lockfile·`pnpm-workspace.yaml`·Rules·
+  firebase config·`apps/admin/**`·`packages/render/src/plan/index.ts` 변경 0). 신규 파일 EOL
+  `i/lf w/lf` **3/3**. 검사 포트 4183/4184/4185/8080/9099/9199 잔류 **0**, `test-results` 제거,
+  E2E staging은 OS temp `mkdtemp`에 생성·삭제해 저장소 안 기록 0.
+- E2E가 다시 쓴 보호 spec-018 PNG 2개는 **stage/commit/restore하지 않고 dirty 그대로** 뒀다.
+  spec-063·spec-080 결과 PNG는 재생성 후 byte-identical이라 diff 0이고, 기존 user dirty 파일도 그대로다.
+- **보고(하지 않은 것).** 신규 package 파일 3개를 `.gitattributes`에 `text eol=lf`로 고정하지 않았다 —
+  스펙 082 허용 파일이 아니고 §5가 정책 확대를 금지한다. `core.autocrlf=true`에서 재-checkout되면
+  스펙 080 라운드 2와 같은 format 실패가 재발할 수 있어 저장소 전체 line-ending 정책 결정 대상으로
+  남긴다.
+- 실제 admin issue UI가 구현됐다고 기록하지 않는다. 상태 `READY_FOR_CODEX`, next transition
+  `CODEX_SPEC_082_REVIEW`. 다음 admin UI 스펙과 자동화·반복 작업은 시작하지 않았다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 구조적 선행 작업이며 실제 사용자
+  기능은 아직 열리지 않았다.
