@@ -3,3 +3,12 @@
 *.bat   text eol=crlf
 *.cmd   text eol=crlf
 *.ps1   text eol=crlf
+
+# Biome formats with LF, so a CRLF working copy fails `node scripts/check.mjs` at the format step
+# even though the committed blob is already LF. `core.autocrlf=true` is what produces that CRLF copy
+# on a Windows checkout. These three exact paths are pinned to LF so the gate reproduces on a clean
+# Windows checkout. Deliberately NOT a global *.ts/*.tsx rule: repo-wide line-ending policy is its
+# own decision, not something a spec 080 correction should make.
+apps/mockup/src/space/SpacePasswordGate.tsx       text eol=lf
+apps/mockup/src/space/SpacePasswordGate.test.tsx  text eol=lf
+tests/e2e/space-production-route.spec.ts          text eol=lf
