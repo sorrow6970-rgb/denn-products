@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: READY_FOR_CODEX
+state: FOUNDER_DECISION_REQUIRED
 baseline_commit: 298c224   # HEAD=origin at spec 082 correction round 3 start (Codex round 2 review)
 candidate_commit: 68bd25c  # spec 082 correction round 3 (round 2 65c5b46, round 1 8d4458d, implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "Claude pushed spec 082 correction round 3; HEAD=origin, ahead/behind 0/0"
+origin_relation: "Codex review at HEAD=origin=f6f3940, ahead/behind 0/0"
 working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
-fix_round: 3   # final in-scope correction round; implemented and verified
+fix_round: 3   # exhausted; round 3 still has a reproducible list-alias detector hole
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_082_REVIEW
+next_transition: FOUNDER_SPEC_082_NN_3_DECISION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,29 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Codex 스펙 082 보완 라운드 3 재검수 — CORRECTION_REQUIRED / LOOP STOP (2026-08-27)
+
+- 검수 기준 `HEAD=origin=f6f3940`, ahead/behind 0/0. 라운드 3 제품 commit `68bd25c`의 변경은 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이다.
+- 라운드 3이 `uploadBytes` 계열 alias/property/bracket 우회를 닫은 것은 확인했다. 그러나
+  `storageReferenceForms()`가 `list`에만 bare identifier 검사를 적용하지 않아
+  `import { list as l } from "@denn/firebase"; l(ref)`를 **검출하지 못한다**. 현 구현과 동일한 두
+  `list` regex를 적용한 독립 합성 측정 결과 `DetectedByCurrentListForms=False`다.
+- "고객 앱이 `firebase/*`를 직접 import하지 않으므로 Storage `list`는 namespace property로만 도달한다"는
+  설명은 성립하지 않는다. 허용된 `@denn/firebase` 루트 import가 향후 `list`를 re-export하면 named alias로
+  도달할 수 있고, 현재 가드는 그 회귀를 막지 못한다. self-check도 `list` alias import 케이스를 포함하지
+  않아 이 구멍을 증명하지 못한다.
+- 따라서 금지 10종의 reference/alias를 차단하라는 라운드 3 완료 조건은 **NOT PROVEN**이며 스펙 082는
+  `CODEX_PASSED`가 아니다. 현재 전체 E2E 161/161 및 check 2409/2409라는 Claude 실측은 부정하지 않지만,
+  그 통과 자체가 detector의 이 누락을 잡지 못한다.
+- 동일 본질의 detector 누락이 라운드 3 뒤에도 남았고 `max_fix_rounds=3`을 모두 사용했으므로 보호형 자동
+  루프를 중지한다. 제품 코드·test를 수정하지 않았고 실행 게이트도 반복하지 않았다.
+- Founder **NN-3** 결정 대기: **A(권장)** — 한 번의 correction round 4 예외를 승인해 같은 test 한
+  파일에서 Storage `list`의 named import/re-export alias를 ordinary local `list`와 구분해 차단하고 합성
+  회귀를 추가한다. **B** — 알려진 검출 공백을 수용한다(비권장).
+- 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_3_DECISION`. 실제 admin issue UI·다음
+  스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## 스펙 082 보완 라운드 3 완료 — 전체 Chromium E2E 161/161 (2026-08-27)
 

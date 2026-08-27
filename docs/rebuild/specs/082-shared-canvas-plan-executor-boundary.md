@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CLAUDE / CORRECTION_REQUIRED ROUND 3 OF 3 / NON_UI / NO_LIVE_NETWORK`
+`FOUNDER_DECISION_REQUIRED / CORRECTION_REQUIRED / LOOP STOPPED AT 3 OF 3 / NON_UI / NO_LIVE_NETWORK`
 
 선행 게이트:
 
@@ -575,3 +575,30 @@ E2E 예외는 **없다**.
 
 **진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
 능력이 아니다.
+
+### CODEX REVIEW — CORRECTION_REQUIRED / LOOP STOP (2026-08-27)
+
+검수 기준 `HEAD=origin=f6f3940`, ahead/behind 0/0. 라운드 3 변경 범위는 승인된
+`tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이다. 그러나 라운드 3 완료 조건은 아직 충족되지 않았다.
+
+`storageReferenceForms()`는 `list`에만 bare identifier 검사를 생략한다. 그래서
+`import { list as l } from "@denn/firebase"; l(ref)`가 property·bracket 어느 형태에도 맞지 않아 통과한다.
+현 구현과 동일한 두 regex의 독립 합성 결과는 `DetectedByCurrentListForms=False`다. 앱의 직접
+`firebase/*` import가 금지됐다는 사실은 허용된 `@denn/firebase` 루트가 향후 `list`를 re-export하는
+경로를 닫지 못한다. self-check도 `list` property/bracket와 ordinary local 변수만 검사하고 `list` named
+alias import를 검사하지 않는다.
+
+따라서 "금지 10종의 whole identifier/reference와 alias 차단"은 **NOT PROVEN**이다. Claude가 보고한
+targeted 5/5, Chromium 161/161, check 2409/2409 결과는 그대로 기록하되, 현재 detector가 해당 회귀를
+검출하지 못하므로 이 수치만으로 승인할 수 없다. 동일 본질의 검출 누락이 round 3 뒤에도 남았고 자동
+보완 한도 3/3을 소진했으므로 `AUTO_REVIEW_LOOP.md`에 따라 중지한다.
+
+Founder **NN-3** 결정:
+
+- **A (권장):** test 한 파일에 한정한 correction round 4 예외. ordinary local `list`와 Storage named
+  import/re-export binding을 구분해 `list as l`을 차단하고, `firebase/storage` 및 허용 루트
+  `@denn/firebase` alias 합성 회귀를 추가한다.
+- **B:** 알려진 detector 공백을 수용한다(비권장).
+
+NN-3 전에는 코드·test 수정, commit/push, spec 082 종료, 실제 admin issue UI 및 다음 스펙 착수를 하지
+않는다.

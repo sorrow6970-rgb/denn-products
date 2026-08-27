@@ -6692,6 +6692,26 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품 능력이
   아니다.
 
+## 2026-08-27 - Codex 스펙 082 보완 라운드 3 재검수 — CORRECTION_REQUIRED / LOOP STOP
+
+- `HEAD=origin=f6f3940`, ahead/behind 0/0. 라운드 3 제품 diff는 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이다.
+- 잔여 결함: `list`는 bare identifier 검사를 면제해
+  `import { list as l } from "@denn/firebase"; l(ref)`를 검출하지 못한다. 현 구현의 property/bracket
+  regex를 그대로 적용한 독립 합성 측정은 `DetectedByCurrentListForms=False`다.
+- "직접 `firebase/*` import가 없으므로 Storage `list`는 namespace property로만 도달한다"는 설명은
+  허용된 `@denn/firebase` 루트의 향후 named re-export를 고려하지 않아 성립하지 않는다. self-check도
+  `list` alias import를 검사하지 않는다.
+- 결론: 금지 10종의 whole reference/alias 차단은 **NOT PROVEN**, 스펙 082는 `CODEX_PASSED`가 아니다.
+  Claude 실측 targeted 5/5 · Chromium 161/161 · check 2409/2409는 보존하지만 detector 누락 때문에
+  승인 근거로 충분하지 않다.
+- fix round 3/3 소진 및 동일 본질의 detector 누락 반복으로 보호형 자동 루프를 중지했다. Codex는
+  제품 코드·test를 수정하지 않았고 실행 게이트를 반복하지 않았다.
+- Founder **NN-3** 결정 대기: A(권장 — test 한 파일의 round 4 예외로 ordinary local `list`와 Storage
+  named import/re-export alias를 구분하고 합성 회귀 추가) / B(공백 수용, 비권장).
+- 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_3_DECISION`. 실제 admin issue UI·다음
+  스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
 ## 2026-08-27 - 스펙 082 보완 라운드 2 Codex 재검수 · CORRECTION_REQUIRED 3/3
 
 - `HEAD=origin=25cbe0f`, ahead/behind 0/0. 라운드 2 제품 diff는 승인된 test 한 파일뿐이다.

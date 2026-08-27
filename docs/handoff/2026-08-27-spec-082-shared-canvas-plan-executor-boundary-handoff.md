@@ -1,10 +1,10 @@
 # 스펙 082 shared Canvas plan executor boundary handoff
 
-- 상태: `READY_FOR_CODEX / CORRECTION ROUND 2 DONE / NN-2=A / NON_UI / NO_LIVE_NETWORK / E2E 160-0` (보완 2026-08-27)
-- 구현: 계약 문서 commit `aa7e048`, 제품 commit `307521f`
+- 상태: `FOUNDER_DECISION_REQUIRED / CORRECTION_REQUIRED / LOOP STOPPED AT 3/3 / NON_UI / NO_LIVE_NETWORK`
+- 구현: 계약 문서 `aa7e048`, 제품 `307521f`, 보완 `8d4458d` / `65c5b46` / `68bd25c`
 - 선행: spec 081 `DONE / CODEX_PASSED`
 - spec: `docs/rebuild/specs/082-shared-canvas-plan-executor-boundary.md`
-- 다음 transition: `CLAUDE_SPEC_082_IMPLEMENTATION`
+- 다음 transition: `FOUNDER_SPEC_082_NN_3_DECISION`
 
 ## 목적
 
@@ -45,6 +45,20 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
   스펙 082 허용 범위 밖이라 기록만 했고 **"전체 E2E PASS"라고 기록하지 않는다.**
 - 실제 admin issue UI가 구현됐다고 기록하지 않는다. 다음은 Codex 검수(`CODEX_SPEC_082_REVIEW`)다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## Codex 라운드 3 재검수 — CORRECTION_REQUIRED / LOOP STOP
+
+- 기준 `HEAD=origin=f6f3940`, ahead/behind 0/0.
+- `list`의 bare identifier 예외 때문에 `import { list as l } from "@denn/firebase"; l(ref)`가 현재
+  detector를 통과한다. 동일 regex의 독립 합성 결과는 `False`다.
+- 직접 `firebase/*` import 금지만으로는 허용된 `@denn/firebase` 루트의 향후 named re-export를 막지
+  못하며, 현재 self-check에도 `list` alias import가 없다.
+- 금지 10종 reference/alias 차단은 **NOT PROVEN**. 라운드 3/3 및 동일 본질 결함 반복으로 자동 루프를
+  중지한다.
+- Founder **NN-3** 대기: A(권장, test 한 파일의 round 4 예외로 `list` named import/re-export alias와
+  합성 회귀를 추가) / B(알려진 공백 수용, 비권장).
+- 결정 전 제품 코드·test·commit/push·admin issue UI·다음 스펙 시작 0. 진행도 **84~87% / 잔여
+  13~16% — 변동 없음**.
 
 ## Codex 라운드 2 재검수 · correction 3/3 (2026-08-27)
 

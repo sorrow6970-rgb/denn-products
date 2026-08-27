@@ -1,13 +1,45 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `FOUNDER_DECISION_REQUIRED`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **READY_FOR_CODEX / CORRECTION ROUND 3/3 DONE / NON_UI / NO_LIVE_NETWORK / E2E 161-0**
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED / LOOP STOPPED AT 3/3 / NON_UI / NO_LIVE_NETWORK**
 - 기준: `HEAD=origin=298c224`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 라운드 2 `65c5b46`, 라운드 3 `68bd25c`.
-- next_transition: `CODEX_SPEC_082_REVIEW`
-- fix_round: `3 / 3` (최종 in-scope 보완 라운드)
+- next_transition: `FOUNDER_SPEC_082_NN_3_DECISION`
+- fix_round: `3 / 3` (소진 — 예외 승인 없이 라운드 4 금지)
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## Codex 재검수 — CORRECTION_REQUIRED / 자동 루프 중지
+
+라운드 3의 detector는 `list`에만 bare identifier 검사를 생략한다. 따라서 다음 금지 경로가 통과한다.
+
+```ts
+import { list as l } from "@denn/firebase";
+l(ref);
+```
+
+현 구현의 `list` property/bracket regex를 그대로 적용한 독립 합성 측정은
+`DetectedByCurrentListForms=False`다. `apps/mockup`의 직접 `firebase/*` import 금지만으로는 충분하지
+않다. 허용된 `@denn/firebase` 루트가 향후 `list`를 re-export하면 named alias로 도달할 수 있기 때문이다.
+현재 self-check에는 `list` alias import가 없어서 이 누락도 보이지 않는다.
+
+금지 10종의 whole reference/alias를 차단하라는 라운드 3 완료 조건은 **NOT PROVEN**이다. 라운드 3/3이
+끝났고 같은 본질의 detector 누락이 반복됐으므로 `AUTO_REVIEW_LOOP.md`에 따라 자동 보완을 중지한다.
+Claude Code는 Founder 결정 전에 코드·test·문서·commit·push를 시작하지 않는다.
+
+### Founder NN-3
+
+- **A (권장):** correction round 4 예외를 한 번 승인한다. 허용 제품 파일은
+  `tests/e2e/admin-auth-read.spec.ts` 하나뿐이다. ordinary local `list`는 허용하면서 Storage `list`의
+  named import/re-export alias(`list as l`)는 모듈 경계에서 차단하고, `firebase/storage`와 허용된
+  `@denn/firebase` 루트 alias 합성 회귀를 추가한다. 제품 코드와 read-only Storage 연결은 변경하지 않는다.
+- **B:** 알려진 `list` alias 검출 공백을 수용한다. 비권장이다.
+
+> NN-3=A 승인 후 Claude Code에 전달할 지시문:
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 Founder NN-3=A가 승인한 스펙 082 CORRECTION_REQUIRED 라운드 4 예외만 수행해.
+```
 
 ## 현재 결과 — 보완 라운드 3 완료(최종 3/3), 전체 E2E 161/161
 

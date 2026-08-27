@@ -1,5 +1,14 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-27): spec 082 correction round 3 Codex 재검수 = CORRECTION_REQUIRED / LOOP STOP.**
+> 검수 기준 `HEAD=origin=f6f3940`, ahead/behind 0/0. `storageReferenceForms()`가 `list`에만 bare
+> identifier 검사를 생략해 `import { list as l } from "@denn/firebase"; l(ref)`를 놓친다. 현 regex와
+> 동일한 독립 합성 측정은 `False`. 직접 `firebase/*` import 금지만으로는 허용 루트 re-export를 막지
+> 못하며 self-check에도 `list` alias가 없다. 금지 10종 alias/reference 차단은 NOT PROVEN.
+> fix round 3/3 소진 및 동일 본질 결함 반복으로 자동 루프 중지. Founder NN-3=A(권장: test 한 파일의
+> round 4 예외) / B(공백 수용) 결정 전 코드·test·다음 스펙 시작 0. 전체 진행도 **84~87% / 잔여
+> 13~16% — 변동 없음**.
+
 > **최신 포인터 (2026-08-27): spec 082 correction round 3/3 완료 = READY_FOR_CODEX.**
 > `HEAD=origin=298c224`에서 시작, 보완 commit `68bd25c`. 허용 제품 파일은
 > `tests/e2e/admin-auth-read.spec.ts` 하나뿐이고 제품 코드·승인된 read-only Storage 연결 변경 0.
