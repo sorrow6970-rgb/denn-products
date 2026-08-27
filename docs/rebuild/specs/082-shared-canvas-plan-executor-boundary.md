@@ -2,7 +2,7 @@
 
 ## 상태
 
-`FOUNDER_DECISION_REQUIRED / CORRECTION_REQUIRED / NN-3 EXCEPTION CONSUMED / NON_UI / NO_LIVE_NETWORK`
+`READY_FOR_CODEX / CORRECTION ROUND 5 DONE (Founder NN-4=A exception) / NON_UI / NO_LIVE_NETWORK`
 
 선행 게이트:
 
@@ -699,3 +699,94 @@ Founder **NN-4** 결정:
 
 NN-4 전에는 코드·test 수정, commit/push, spec 082 종료, 실제 admin issue UI 및 다음 스펙 착수를 하지
 않는다.
+
+### DONE (Claude) — 보완 라운드 5 (Founder NN-4=A 예외, 2026-08-27)
+
+기준 `HEAD=origin=87923e6`, ahead/behind 0/0. Codex 재검수·NN-4 문서 commit `a1d3aaa`, 보완 commit
+`7627bc6`. NN-4=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품
+코드·승인된 read-only Storage 연결·신규 의존성은 **0**이다.
+
+**Codex 지적은 옳고, 반복의 원인도 옳게 짚었다.** 라운드 1~4는 regex로 형태를 하나씩 막아 왔다 —
+호출 → alias → property → named import. 그리고 다섯 번째 형태가 또 나왔다.
+
+```ts
+const { list: l } = storage;   // importedNames 아님, .list 아님, ["list"] 아님
+const { list } = storage;
+```
+
+**형태 목록이 문제가 아니었다.** regex는 구문을 볼 수 없으므로 매 라운드가 "다음에 누가 뭘 쓸까"에
+대한 추측이었고, 네 번 틀렸다. 그래서 이번에는 추측을 그만두고 **저장소에 이미 있는 TypeScript
+scanner로 컴파일러처럼 읽는다**(신규 의존성 없음 — `typescript` 7.0.2는 이미 root devDependency).
+
+**질문 두 개가 형태 목록을 대체한다.**
+
+**① Firebase SDK 각 모듈이 이 surface에 실제로 무엇을 건네는가?** 그 집합이 모듈별 allowlist와
+**정확히 같아야** 한다.
+
+| 모듈 | 승인된 멤버 |
+|---|---|
+| `firebase/app` | `FirebaseApp`(type) · `getApp` · `getApps` · `initializeApp` |
+| `firebase/firestore` | `doc` · `getDoc` · `getFirestore` |
+| `firebase/storage` | `connectStorageEmulator` · `getBytes` · `getMetadata` · `getStorage` · `ref` |
+
+**양방향이다.** 목록 밖은 통과하지 못하므로 **아무도 금지 목록에 넣을 생각을 못 한 능력도** 실패하고,
+목록이 비어도 실패하므로 승인된 read 경로가 조용히 사라질 수도 없다. 그리고 reader가 **설명하지 못하는
+사용 형태**(computed member `storage[name]`, namespace를 값으로 넘기기 `handOff(storage)`, 모듈과
+짝지을 수 없는 binding)는 **침묵이 아니라 실패**로 보고된다 — 이것이 allowlist를 "긴 목록"이 아니라
+**닫힌 집합**으로 만든다.
+
+**② 금지 이름이 어떤 구문 위치에서든 도달 가능한가?** 이제 위치로 판정한다 — property · string
+member · **braced clause**. 마지막 하나가 destructuring·named import·re-export alias를 **함께** 덮는다.
+셋 다 `:` 또는 `as`의 **왼쪽**에서 이름을 가져오기 때문이다. `list`의 bare identifier 면제는 유지되고
+여전히 비용이 0이다 — 그 위치들과 ①의 allowlist가 둘 다 `list`를 붙잡는다.
+
+**parser 문맥이 필요한 토큰 두 개를 parser처럼 재스캔한다.** `/`(나눗셈 vs 정규식)와 template
+substitution을 닫는 `}`(블록 닫기 vs template middle/tail). 두 번째를 처리하지 않으면 scanner가
+**파일 나머지를 template 텍스트로 삼켜버린다** — 실제로 초기 구현에서 `proof-sdk-facade.ts`가 255
+토큰에서 끊겨 `storage.getStorage` 이하 전부가 안 보였다. reader가 눈머는 것이 바로 이 검사가 막으려는
+실패이므로, **scanner가 전진을 멈추면 throw**한다.
+
+**이빨이 있다는 실측(합성이 아니라 실제 코드).** 같은 reader를 **admin write surface**
+(`apps/admin/src` + `space-write` + `admin-read`, 35파일)에 겨누면:
+
+- `firebase/auth`를 **승인되지 않은 모듈**로 검출
+- 세 제품에서 **승인 밖 멤버 11개** 검출 — `uploadBytes` · `setDoc` · `getDocFromServer` ·
+  `connectFirestoreEmulator` · `getAuth` · `signInWithEmailAndPassword` · `signOut` ·
+  `onAuthStateChanged` · `setPersistence` · `browserLocalPersistence` · `connectAuthEmulator`
+- 금지 이름 검사도 `space-write/sdk-facade.ts`의 `uploadBytes`를 property access로 검출
+
+고객 surface(66파일)에서는 **설명 못 한 형태 0**, allowlist 밖 **0**, 금지 이름 **0**이다. 두 surface
+합쳐 101개 실제 파일에서 reader가 모든 형태를 설명했다.
+
+**self-check(같은 파일)** — reader가 눈뜬 채 통과함을 증명한다.
+
+| 합성 입력 | 기대 | 결과 |
+|---|---|---|
+| `const { list: l } = storage;` / `const { list } = storage;` | 잡힘 | ✅ |
+| `import { list as l } from "@denn/firebase";` / `import { list } from "firebase/storage";` | 잡힘 | ✅ |
+| `export { list as l } from "@denn/firebase";` | 잡힘 | ✅ |
+| `storage.uploadBytes(...)` / `const u = storage.uploadBytes` / `storage["uploadBytes"]` / alias import | 잡힘 | ✅ |
+| `import { templateList as list } from "./catalog";` / `const list = categories;` | **안 잡힘** | ✅ |
+| 줄 주석·블록 주석 속 이름, `const label = "uploadBytes";` | **안 잡힘** | ✅ |
+| `storage[name]()` (computed) / `handOff(storage)` (값으로 전달) | **unaccounted로 실패 보고** | ✅ |
+
+**보완 라운드 5 게이트 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| `admin-auth-read.spec.ts` Chromium | **5/5 PASS** |
+| **전체 Chromium E2E** | **161 passed / 0 failed** |
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2409/2409**(89 파일), build 2개 |
+| 통제 빌드 대조 | 이 파일을 HEAD 버전으로 되돌려 재빌드한 산출물과 **16개 전부 byte+SHA-256 동일** |
+| 신규 의존성 | **0** — `typescript` 7.0.2는 이미 root devDependency, `package.json`/lockfile 무변경 |
+| `git diff --check` | PASS |
+| exact diff | `tests/e2e/admin-auth-read.spec.ts` **한 파일뿐** |
+| EOL | `i/lf w/lf` |
+| 포트 4183/4184/4185/8080/9099/9199 · `test-results`/temp | 잔류 **0** |
+
+테스트 삭제·skip·E2E 예외는 **없다**. Auth whole-identifier, admin private path marker, positive
+marker, runtime external request 0 단언은 그대로이고, 보호 spec-018 PNG 2개는 dirty 그대로 두고
+stage/commit/restore하지 않았다.
+
+**진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
+능력이 아니다.

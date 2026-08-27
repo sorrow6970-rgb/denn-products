@@ -1,5 +1,21 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-27): Founder NN-4=A 예외 / spec 082 correction round 5 완료 = READY_FOR_CODEX.**
+> `HEAD=origin=87923e6`에서 시작, Codex/NN-4 문서 `a1d3aaa`, 보완 commit `7627bc6`. 허용 제품 파일은
+> `tests/e2e/admin-auth-read.spec.ts` 하나뿐이고 제품 코드·승인된 read-only Storage 연결·**신규
+> 의존성 0**(`typescript` 7.0.2는 이미 root devDependency).
+> 라운드 1~4의 regex는 형태를 하나씩 막다가 다섯 번째(`const { list: l } = storage`)에 또 뚫렸다 —
+> **형태 목록이 아니라 방법이 문제**였다. 이제 저장소의 TypeScript scanner로 컴파일러처럼 읽고 질문
+> 두 개로 대체한다: ① 각 `firebase/*` 모듈이 건네는 멤버 집합이 **모듈별 allowlist와 정확히 일치**
+> (app 4 / firestore 3 / storage read-only 5)하고, 설명 못 하는 형태(computed member, namespace를 값으로
+> 전달)는 **침묵이 아니라 실패**로 보고 — 닫힌 집합이라 금지 목록에 없던 능력도 막힌다.
+> ② 금지 이름이 property·string member·**braced clause**(destructuring·named import·re-export alias를
+> 함께 덮음) 어디에도 없다. `/`와 template `}`는 parser처럼 재스캔하고, scanner가 멈추면 throw한다.
+> **이빨 실측**: 같은 reader를 admin write surface에 겨누면 `firebase/auth`와 승인 밖 멤버 11개
+> (`uploadBytes`·`setDoc`·`getAuth`…)를 잡는다. 고객 surface 66파일은 전부 0.
+> **전체 Chromium E2E 161/161**, check unit **2409/2409**, 통제 빌드 대조 산출물 16개 byte 동일.
+> 다음은 Codex 재검수. 전체 진행도 **84~87% / 잔여 13~16%**.
+
 > **최신 포인터 (2026-08-27): spec 082 correction round 4 Codex 재검수 = CORRECTION_REQUIRED / NN-3 EXCEPTION CONSUMED.**
 > 검수 기준 `HEAD=origin=87923e6`, ahead/behind 0/0. named import/re-export alias는 닫혔지만
 > `const { list: l } = storage`와 `const { list } = storage`가 `importedNames()`·`.list`·bracket 어느

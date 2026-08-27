@@ -228,3 +228,54 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
 - 상태 `READY_FOR_CODEX`, fix_round **4 (NN-3=A 예외 1회)**, next `CODEX_SPEC_082_REVIEW`. 실제 admin
   issue UI와 다음 스펙, 자동화는 시작하지 않았다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 보완 라운드 5 — Founder NN-4=A 예외, compiler scanner 전환 (2026-08-27, Claude Code)
+
+- 기준 `HEAD=origin=87923e6`, ahead/behind 0/0. Codex 재검수·NN-4 문서 commit `a1d3aaa`, 보완 commit
+  `7627bc6`. 승인된 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품 코드·승인된
+  read-only Storage 연결·**신규 의존성 0**(`typescript` 7.0.2는 이미 root devDependency,
+  `package.json`/lockfile 무변경).
+- **Codex 지적은 옳고, 반복의 원인도 옳게 짚었다.** 라운드 4는 namespace destructuring
+  (`const { list: l } = storage`, `const { list } = storage`)을 놓쳤다. 더 근본적으로, 라운드 1~4가
+  regex로 형태를 하나씩(호출 → alias → property → named import) 막아 온 방식 자체가 반복의 원인이었다.
+  regex는 구문을 볼 수 없으므로 매 라운드가 "다음에 누가 뭘 쓸까"라는 추측이었고 **네 번 틀렸다**.
+- **보완 — 추측을 그만두고 컴파일러처럼 읽는다.** 저장소에 이미 있는 TypeScript scanner로 토큰화하고,
+  형태 목록 대신 질문 두 개를 던진다.
+- **① 각 `firebase/*` 모듈이 이 surface에 실제로 건네는 멤버 집합 = 모듈별 allowlist(정확히 일치).**
+  `firebase/app`={FirebaseApp,getApp,getApps,initializeApp}, `firebase/firestore`={doc,getDoc,
+  getFirestore}, `firebase/storage`={connectStorageEmulator,getBytes,getMetadata,getStorage,ref}.
+  **양방향**이다 — 목록 밖은 통과 못 하므로 아무도 금지 목록에 넣을 생각을 못 한 능력도 막히고, 목록이
+  비어도 실패하므로 승인된 read 경로가 조용히 사라질 수 없다. reader가 **설명 못 하는 사용 형태**
+  (computed member `storage[name]`, namespace를 값으로 전달 `handOff(storage)`, 모듈과 짝지을 수 없는
+  binding)는 **침묵이 아니라 실패**로 보고돼, allowlist가 "긴 목록"이 아니라 **닫힌 집합**이 된다.
+- **② 금지 이름이 어떤 구문 위치에서든 도달 가능한가** — property · string member · **braced clause**.
+  clause 하나가 destructuring·named import·re-export alias를 **함께** 덮는다(셋 다 `:`/`as` **왼쪽**에서
+  이름을 취하므로). `list` bare identifier 면제는 유지되고 비용은 여전히 0이다 — 그 위치들과 ①의
+  allowlist가 둘 다 붙잡는다.
+- **scanner 정확성.** parser 문맥이 필요한 토큰 두 개를 parser처럼 재스캔한다: `/`(나눗셈 vs 정규식),
+  template substitution을 닫는 `}`(블록 닫기 vs template middle/tail). 후자를 처리하지 않으면 scanner가
+  **파일 나머지를 template 텍스트로 삼킨다** — 초기 구현에서 `proof-sdk-facade.ts`가 255 토큰에서 끊겨
+  `storage.getStorage` 이하가 전부 안 보였다(전체 35,701 → 49,364 토큰). reader가 눈머는 것이 이 검사가
+  막으려는 실패 자체라서 **전진이 멈추면 throw**한다.
+- **이빨이 있다는 실측 — 합성이 아니라 실제 코드.** 같은 reader를 admin write surface
+  (`apps/admin/src` + `space-write` + `admin-read`, 35파일)에 겨누면 `firebase/auth`를 **승인되지 않은
+  모듈**로 검출하고, 세 제품에서 **승인 밖 멤버 11개**(`uploadBytes`·`setDoc`·`getDocFromServer`·
+  `connectFirestoreEmulator`·`getAuth`·`signInWithEmailAndPassword`·`signOut`·`onAuthStateChanged`·
+  `setPersistence`·`browserLocalPersistence`·`connectAuthEmulator`)를 잡아내며, 금지 이름 검사도
+  `space-write/sdk-facade.ts`의 `uploadBytes`를 property access로 검출한다. 고객 surface 66파일은 설명
+  못 한 형태 **0** · allowlist 밖 **0** · 금지 이름 **0** — 두 surface 합쳐 **실제 101파일**에서 reader가
+  모든 형태를 설명했다.
+- **self-check(같은 파일).** Codex의 두 destructuring 케이스, alias/property/bracket/직접 호출, named
+  import·re-export alias는 **잡히고**; `import { templateList as list }`·지역 `list`·주석 속 이름·문자열
+  리터럴 `"uploadBytes"`는 **안 잡히며**; `storage[name]()`과 `handOff(storage)`는 **unaccounted로 실패
+  보고**됨을 증명한다.
+- **실측.** `admin-auth-read` Chromium **5/5**, **전체 Chromium 161/161**, 전체
+  `node scripts/check.mjs` **PASS**(format·lint·typecheck 7개·unit **2409/2409**(89 파일)·build 2개),
+  **통제 빌드 대조 산출물 16개 byte+SHA-256 동일**, `git diff --check` PASS, 변경 경로 한 파일뿐, EOL
+  `i/lf w/lf`, 포트 4183/4184/4185/8080/9099/9199 · `test-results`/temp 잔류 0.
+- 테스트 삭제·skip·E2E 예외는 없다. Auth whole-identifier, admin private path marker, positive marker,
+  runtime external request 0 단언은 그대로다. 보호 spec-018 PNG 2개는 dirty 그대로 두고
+  stage/commit/restore하지 않았다.
+- 상태 `READY_FOR_CODEX`, fix_round **5 (NN-3=A · NN-4=A 예외 각 1회)**, next `CODEX_SPEC_082_REVIEW`.
+  실제 admin issue UI와 다음 스펙, 자동화는 시작하지 않았다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

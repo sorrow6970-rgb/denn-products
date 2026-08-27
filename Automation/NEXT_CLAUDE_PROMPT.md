@@ -1,13 +1,60 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
+상태: `READY_FOR_CODEX`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED / NN-3 EXCEPTION CONSUMED / NON_UI / NO_LIVE_NETWORK**
-- 기준: `HEAD=origin=f6f3940`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 라운드 2 `65c5b46`, 라운드 3 `68bd25c`, 라운드 4 `b1ae8b4`.
-- next_transition: `FOUNDER_SPEC_082_NN_4_DECISION`
-- fix_round: `4` (자동 한도 3/3 + NN-3=A 예외 소진, 추가 예외 승인 전 수정 금지)
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **READY_FOR_CODEX / CORRECTION ROUND 5 DONE (NN-4=A 예외) / NON_UI / NO_LIVE_NETWORK / E2E 161-0**
+- 기준: `HEAD=origin=87923e6`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`, 5 `7627bc6`.
+- next_transition: `CODEX_SPEC_082_REVIEW`
+- fix_round: `5` (자동 한도 3/3 + NN-3=A · NN-4=A 예외 각 1회)
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## 현재 결과 — 보완 라운드 5 완료(NN-4=A 예외), regex를 버리고 compiler scanner로
+
+NN-4=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품 코드·승인된
+read-only Storage 연결·**신규 의존성은 0**이다(`typescript` 7.0.2는 이미 root devDependency).
+
+**Codex 지적은 옳고 반복의 원인도 옳게 짚었다.** 라운드 1~4는 regex로 형태를 하나씩 막아 왔다 —
+호출 → alias → property → named import — 그리고 다섯 번째(`const { list: l } = storage`)가 또 나왔다.
+**형태 목록이 아니라 방법이 문제였다**: regex는 구문을 못 보니 매 라운드가 "다음에 누가 뭘 쓸까"라는
+추측이었고 네 번 틀렸다.
+
+**보완 — 컴파일러처럼 읽는다.** 저장소의 TypeScript scanner로 토큰화하고 질문 두 개로 대체한다.
+
+**① 각 SDK 모듈이 실제로 무엇을 건네는가 — 모듈별 allowlist와 정확히 일치해야 한다.**
+`firebase/app`={FirebaseApp,getApp,getApps,initializeApp} · `firebase/firestore`={doc,getDoc,
+getFirestore} · `firebase/storage`={connectStorageEmulator,getBytes,getMetadata,getStorage,ref}.
+**양방향**이라 목록 밖(=금지 목록에 없던 능력 포함)도, 목록이 비는 것도 실패한다. 그리고 reader가
+**설명 못 하는 형태**(computed member, namespace를 값으로 전달, 모듈과 짝지을 수 없는 binding)는
+**침묵이 아니라 실패**로 보고된다 — 이게 allowlist를 닫힌 집합으로 만든다.
+
+**② 금지 이름이 어떤 구문 위치에서든 도달 가능한가** — property · string member · **braced clause**.
+clause 하나가 destructuring·named import·re-export alias를 함께 덮는다(셋 다 `:`/`as` 왼쪽에서 이름을
+취하므로). `list` bare identifier 면제는 유지되고 비용은 여전히 0이다.
+
+**scanner 정확성.** `/`와 template substitution을 닫는 `}`를 parser처럼 재스캔한다. 후자를 빼면
+scanner가 파일 나머지를 template 텍스트로 삼킨다(실측 35,701 → 49,364 토큰). 전진이 멈추면 throw한다.
+
+**이빨 실측 — 합성이 아니라 실제 코드.** 같은 reader를 admin write surface(35파일)에 겨누면
+`firebase/auth`를 승인 안 된 모듈로, 승인 밖 멤버 **11개**(`uploadBytes`·`setDoc`·`getAuth`·
+`signInWithEmailAndPassword` 등)를 검출하고 금지 이름 `uploadBytes`도 잡는다. 고객 surface 66파일은
+설명 못 한 형태 0 · allowlist 밖 0 · 금지 이름 0 — 두 surface 합쳐 실제 101파일을 모두 설명했다.
+
+**실측.** `admin-auth-read` **5/5**, **전체 Chromium E2E 161/161**, 전체 `node scripts/check.mjs`
+PASS(unit **2409/2409**, 89 파일), **통제 빌드 대조 산출물 16개 byte+SHA-256 동일**,
+`git diff --check` PASS, 변경 경로 한 파일뿐, EOL clean, 포트·temp 잔류 0. 테스트 삭제·skip·E2E 예외 0.
+
+## 다음 단계 — Codex 재검수 대기
+
+스펙 082는 NN-4=A 예외 라운드까지 끝났고 `READY_FOR_CODEX`에서 멈춘다. 다음 단위는 Codex 재검수
+결과와 사용자 지시가 정한다. 실제 admin issue UI, 다음 스펙, 자동화는 시작하지 않았다.
+
+> 직전 지시문(스펙 082 보완 라운드 5, 수행 완료 — 기록):
+
+```text
+NN-4=A 승인. C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된 스펙 082 CORRECTION_REQUIRED 라운드 5 예외만 수행해.
+```
+
 
 ## Codex 재검수 — CORRECTION_REQUIRED / NN-3 예외 소진
 

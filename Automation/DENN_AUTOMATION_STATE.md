@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: f6f3940   # HEAD=origin at spec 082 correction round 4 start (Codex round 3 review + NN-3=A)
-candidate_commit: b1ae8b4  # spec 082 correction round 4, NN-3=A exception (round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
+state: READY_FOR_CODEX
+baseline_commit: 87923e6   # HEAD=origin at spec 082 correction round 5 start (Codex round 4 review + NN-4=A)
+candidate_commit: 7627bc6  # spec 082 correction round 5, NN-4=A exception (round 4 b1ae8b4, round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "Codex review at HEAD=origin=87923e6, ahead/behind 0/0"
+origin_relation: "Claude pushed spec 082 correction round 5; HEAD=origin, ahead/behind 0/0"
 working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
-fix_round: 4   # NN-3=A exception consumed; namespace destructuring remains undetected
+fix_round: 5   # NN-3=A and NN-4=A exceptions consumed; regex reader replaced by the TypeScript scanner
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_082_NN_4_DECISION
+next_transition: CODEX_SPEC_082_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,37 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 082 보완 라운드 5 완료 — Founder NN-4=A 예외, compiler scanner 전환 (2026-08-27)
+
+- `HEAD=origin=87923e6`에서 시작, ahead/behind 0/0. Codex 재검수·NN-4 문서 commit `a1d3aaa`, 보완
+  commit `7627bc6`. NN-4=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고
+  제품 코드·승인된 read-only Storage 연결·**신규 의존성 0**(`typescript` 7.0.2는 이미 root
+  devDependency, `package.json`/lockfile 무변경).
+- **Codex 지적은 옳다.** 라운드 4는 namespace destructuring(`const { list: l } = storage`,
+  `const { list } = storage`)을 놓쳤다. 더 중요하게, 라운드 1~4가 regex로 형태를 하나씩 막아 온 방식
+  자체가 반복의 원인이었다 — regex는 구문을 못 보므로 매번 다음 형태를 추측했고 네 번 틀렸다.
+- **보완 — 추측을 그만두고 컴파일러처럼 읽는다.** 저장소의 TypeScript scanner로 토큰화하고 질문 두
+  개로 형태 목록을 대체한다.
+  ① 각 `firebase/*` 모듈이 건네는 멤버 집합이 **모듈별 allowlist와 정확히 일치**해야 한다
+  (`firebase/app` 4개 · `firebase/firestore` 3개 · `firebase/storage` read-only 5개). 양방향이라
+  목록 밖(금지 목록에 없던 능력 포함)도, 목록이 비는 것도 실패한다. reader가 설명 못 하는 형태
+  (computed member, namespace를 값으로 전달, 모듈과 짝지을 수 없는 binding)는 **침묵이 아니라 실패**로
+  보고돼 allowlist가 닫힌 집합이 된다.
+  ② 금지 이름이 property · string member · **braced clause** 어디에도 없어야 한다. clause 하나가
+  destructuring · named import · re-export alias를 함께 덮는다(셋 다 `:`/`as` 왼쪽에서 이름을 취함).
+- **scanner 정확성.** `/`(나눗셈 vs 정규식)와 template substitution을 닫는 `}`를 parser처럼 재스캔한다.
+  후자를 빼면 scanner가 파일 나머지를 template 텍스트로 삼킨다(실측: 35,701 → 49,364 토큰). 전진이
+  멈추면 throw한다.
+- **이빨 실측(실제 코드).** 같은 reader를 admin write surface(35파일)에 겨누면 `firebase/auth`를 승인
+  안 된 모듈로, 승인 밖 멤버 **11개**(`uploadBytes`·`setDoc`·`getAuth`·`signInWithEmailAndPassword` 등)를
+  검출한다. 고객 surface 66파일은 설명 못 한 형태 0 · allowlist 밖 0 · 금지 이름 0.
+- 실측: `admin-auth-read` **5/5**, 전체 Chromium **161/161**, 전체 `node scripts/check.mjs` **PASS**
+  (unit **2409/2409**, 89 파일), **통제 빌드 대조 산출물 16개 byte+SHA-256 동일**,
+  `git diff --check` PASS, 변경 경로 한 파일뿐, EOL `i/lf w/lf`, 포트 4183/4184/4185/8080/9099/9199 ·
+  `test-results`/temp 잔류 **0**. 테스트 삭제·skip·E2E 예외 0.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_082_REVIEW`. admin issue UI·다음 스펙·자동화 시작 0.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## Codex 스펙 082 보완 라운드 4 재검수 — CORRECTION_REQUIRED / EXCEPTION CONSUMED (2026-08-27)
 
