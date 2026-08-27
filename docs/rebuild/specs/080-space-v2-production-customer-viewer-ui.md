@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CODEX / IMPLEMENTED / LOCAL_VERIFIED / UI CONNECTED / NO_LIVE_NETWORK`
+`READY_FOR_CODEX / CORRECTION ROUND 1 DONE / LOCAL_VERIFIED / UI CONNECTED / NO_LIVE_NETWORK`
 
 기준:
 
@@ -418,3 +418,68 @@ viewer/controller/decoder/composition/App/fixture/CSS, admin/packages/Rules/conf
 
 상태는 `CORRECTION_REQUIRED`, fix_round 1/3, next transition `CLAUDE_CORRECTION`. 전체 진행도는
 **83~86% 완료 / 14~17% 잔여 — 변동 없음**이다.
+
+### DONE (Claude) — 보완 라운드 1 (2026-08-27)
+
+기준 `HEAD=origin=c63fe1b`, ahead/behind 0/0. Codex 검수 문서 commit `7c5fccb`, 보완 commit
+`280a6dc`. Codex 라운드 1이 지적한 **두 결함만** 반영했고 위 `### DONE (Claude) — 2026-08-27`의
+다른 결론은 하나도 되돌리지 않았다.
+
+**보완 1 — §3 N-5 / §6의 "password form keyboard submit" 실증.**
+이전 구현은 비밀번호 input과 버튼을 `denn-stack` 안에 나란히 두고 버튼 `onClick`으로만 제출했다.
+`<form>`이 없으니 브라우저의 implicit submission이 성립하지 않았고, E2E가 `space-submit` 버튼에
+Enter를 보낸 것은 "버튼을 키보드로 누른 것"이지 form 제출 증거가 아니었다. **그 지적이 맞다.**
+
+- 두 컨트롤을 semantic `<form onSubmit>`(`data-testid="space-password-form"`)으로 묶었다.
+- `Button`에 `type="submit"`을 명시했다(`@denn/ui` `Button`은 기본 `type="button"`이고 caller가 준
+  type이 이긴다). 버튼의 `onClick`은 **제거**해 제출 경로가 하나뿐이다 — 남겨두면 클릭 시 onClick과
+  form submit이 겹쳐 두 번 호출된다.
+- `onSubmit`은 `event.preventDefault()` 뒤 기존 `submit()`을 **정확히 한 번** 호출한다.
+  `submit()` 본문은 그대로라 password 즉시 삭제와 controller의 single-flight 가드가 유지된다.
+- 레이아웃은 불변이다: form에 `denn-stack`을 줘 두 컨트롤의 12px 간격이 이전과 같고, 카드·badge·
+  heading·문구·상태 메시지는 전부 그대로다.
+
+검증: unit **3건**이 ① `<form data-testid="space-password-form">`과 `<button type="submit">`이 실제
+마크업에 있고 `type="button"` 변형이 없음 ② password input이 그 form **안**에 있음(implicit
+submission 전제) ③ 제출할 게 없는 상태(non-retryable error)에서는 form과 submit 버튼이 아예 렌더되지
+않음 ④ form이 `denn-stack` 리듬을 유지함을 고정한다. targeted E2E helper는 **password input을 fill한
+뒤 그 input에서 Enter**를 누르며(버튼 Enter는 더 이상 쓰지 않는다), 성공 case가 `documentReads`
+**1** · `proofReads` **1** · `decodes` **1** · `page.url()` 무변경(preventDefault가 유지돼 navigation과
+query string 유출이 없음) · Canvas ready를 단언한다. wrong-password / proof-unavailable /
+digest-mismatch / 320px / unmount / screenshot case도 모두 같은 keyboard 제출 경로를 쓴다.
+
+**보완 2 — spec-080 시각 증거 정리.**
+이전 두 PNG에는 합성 fixture 전용 `화면 해제` 버튼이 좌상단에 찍혀 있었다. production customer
+surface의 디자인 증거로 부적합하다는 지적이 맞다.
+
+- **fixture 제품 파일(`apps/mockup/src/e2e/space-production-route-fixture.tsx`)은 수정하지 않았다.**
+- spec-080 screenshot case에서 캡처 직전 page 안의 `[data-testid="fixture-unmount"]`만
+  `display:none`으로 숨기고 `toBeHidden()`으로 확인한 뒤 같은 두 경로의 PNG를 재생성했다.
+- desktop 1280x800 · mobile 390x844 모두 육안 확인했다: **`화면 해제`가 보이지 않고** 카드 · badge
+  `저장된 시안 · 열람 전용` · heading `내 공간 시안` · 본문 · warm-taupe 프레임과 매트가 있는 proof
+  Canvas만 남았다. mobile은 320px 계약대로 가로 넘침이 없다.
+- spec-063 screenshot case는 이번 계약 범위가 아니라 손대지 않았고, 재생성 결과가 byte-identical이라
+  diff 0이다.
+
+**보완 라운드 1 게이트 실측**
+
+| 게이트 | 결과 |
+|---|---|
+| targeted unit + mockup typecheck | PASS |
+| `node scripts/check.mjs` 전체 | **PASS** — format, lint, typecheck 7개, unit **2281/2281**(이전 2278 + form unit 3), build 2개 |
+| targeted Chromium `space-production-route.spec.ts` | **14/14 PASS** |
+| 재생성 PNG 육안 확인 | desktop/mobile 모두 `화면 해제` 미노출 확인 |
+| 고객 entry 보완 전 | `index-nLbiXJi7.js` / `340,481 B` / `99A707FA3AF518933F848CF52948ADCBD95BE44D1544616FA93C49E486805879` |
+| 고객 entry 보완 후 | `index-BUT7Bmak.js` / `340,604 B` / `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1` |
+| 증가분 설명 | **+123 B** — `<form>` wrapper와 `onSubmit` 핸들러뿐 |
+| 무변경 확인 | 고객 CSS `index-BjqjBda8.css` 19,381 B · admin entry `index-D0XOQpRL.js` 226,201 B · admin CSS `index-DJ_z3tK1.css` 9,146 B — **SHA-256까지 동일**, lazy chunk 구성도 동일 |
+| `git diff --check` | PASS |
+| 허용 외 diff | **0** — viewer/controller/decoder/composition/App/fixture/CSS, `apps/admin`, `packages`, Rules/config/package/lockfile 무변경 |
+| 검사 포트 4183/4184/4185/8080/9099/9199 | 실행 전후 잔류 **0**, 강제 종료 0 |
+
+**full Chromium suite는 보호 spec-018 PNG를 다시 쓰므로 계속 NOT RUN**이며 PASS라고 기록하지 않는다.
+actual Firebase/project/bucket/network/live/CORS/deploy/actual UID는 **0 / NOT TESTED**다.
+
+상태 `READY_FOR_CODEX`, fix_round **1/3**, next transition `CODEX_SPEC_080_REVIEW`. 다음 스펙과
+자동화·반복 작업은 시작하지 않았다. 전체 진행도는 **83~86% 완료 / 14~17% 잔여 — 변동 없음**이다.
+범위 내 결함 보완이지 새 제품 능력이 아니다.

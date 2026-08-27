@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-079-space-v2-proof-reader-adapter   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_UI, NO_LIVE_NETWORK
 active_unit: spec-080-space-v2-production-customer-viewer-ui
-state: CORRECTION_REQUIRED
+state: READY_FOR_CODEX
 baseline_commit: c63fe1b   # HEAD=origin at Codex spec 080 review
-candidate_commit: 2319d1a  # spec 080 customer V2 viewer implementation (contract docs commit 971c5fa)
+candidate_commit: 280a6dc  # spec 080 correction round 1 (implementation 2319d1a, contract docs 971c5fa)
 verified_commit: 0887047   # spec 079 implementation independently reviewed
-origin_relation: "Codex review baseline HEAD=origin=c63fe1b, ahead/behind 0/0"
-working_tree: "Codex correction documents only plus pre-existing protected Founder/user changes; no product correction yet"
+origin_relation: "correction round 1 applied on HEAD=origin=c63fe1b, ahead/behind 0/0; pushed fast-forward"
+working_tree: "spec 080 correction code/test/results and status documents committed; pre-existing protected Founder/user changes remain untouched and unstaged"
 fix_round: 1
 max_fix_rounds: 3
-next_transition: CLAUDE_CORRECTION
+next_transition: CODEX_SPEC_080_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,41 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 83-86% complete; 14-17% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 080 보완 라운드 1 수행 (2026-08-27)
+
+- 기준 `HEAD=origin=c63fe1b`, ahead/behind 0/0. Codex 검수 문서 commit `7c5fccb`, 보완 commit
+  `280a6dc`. Codex가 지적한 **두 결함만** 고쳤고 다른 계약 결론은 되돌리지 않았다.
+- **보완 1 — 실제 form.** `SpacePasswordGate`의 비밀번호 input과 버튼을 semantic
+  `<form onSubmit>`(`data-testid="space-password-form"`)으로 묶고 `Button`에 `type="submit"`을
+  명시했다. 버튼의 `onClick`은 제거해 제출 경로가 하나뿐이고, `onSubmit`은 `preventDefault()` 뒤
+  기존 `submit()`을 **정확히 한 번** 호출한다. 레이아웃·문구·password 즉시 삭제·single-flight 계약은
+  그대로다(form에 `denn-stack`을 줘 기존 12px 간격이 동일하다).
+- **보완 1 검증.** unit 3건이 form·`type="submit"`·input-in-form 구조와 "제출할 게 없으면 form 자체가
+  없다"를 고정한다. targeted E2E helper는 **password input을 fill한 뒤 그 input에서 Enter**를 누르고
+  (버튼 Enter는 더 이상 쓰지 않는다), 성공 case가 `documentReads` **1** · `proofReads` **1** ·
+  `decodes` **1** · URL 무변경(preventDefault 유지) · Canvas ready를 단언한다.
+- **보완 2 — screenshot 증거.** fixture 제품 코드는 **수정하지 않고** screenshot case에서 캡처 직전
+  page 안의 `[data-testid="fixture-unmount"]`만 숨긴 뒤 같은 두 PNG를 재생성했다. desktop/mobile 모두
+  육안 확인했고 **`화면 해제`가 보이지 않으며** production customer surface만 남았다.
+- **실측.** 전체 `node scripts/check.mjs` PASS(unit **2281/2281** — 이전 2278 + form unit 3),
+  targeted Chromium `space-production-route.spec.ts` **14/14 PASS**.
+- **bundle 비교.** 고객 entry `index-nLbiXJi7.js` / `340,481 B` → `index-BUT7Bmak.js` / `340,604 B` /
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`. 증가 **+123 B**는 form
+  wrapper와 `onSubmit` 핸들러뿐이다. **고객 CSS `index-BjqjBda8.css`(19,381) · admin entry
+  `index-D0XOQpRL.js`(226,201) · admin CSS `index-DJ_z3tK1.css`(9,146)는 SHA-256까지 무변경**이고
+  lazy chunk 구성도 그대로다.
+- 변경 파일은 허용 범위뿐 — `space/SpacePasswordGate.tsx(.test.tsx)`,
+  `tests/e2e/space-production-route.spec.ts`, 기존 spec-080 PNG 2개, spec-080 상태 문서.
+  viewer/controller/decoder/composition/App/fixture/CSS, `apps/admin`, `packages`, Rules/config/
+  package/lockfile 변경 **0**이다. spec-063 결과 PNG는 재생성 후 byte-identical이라 diff 0이다.
+- `git diff --check` PASS, 검사 포트 4183/4184/4185/8080/9099/9199 잔류 **0**, 강제 종료 0.
+  Playwright `test-results/`는 제거했다.
+- **full Chromium suite는 보호 spec-018 PNG 때문에 계속 NOT RUN**이며 PASS라고 기록하지 않는다.
+  actual Firebase/network/live/deploy는 **0 / NOT TESTED**다.
+- 상태 `READY_FOR_CODEX`, fix_round **1/3**, next transition `CODEX_SPEC_080_REVIEW`. 다음 스펙과
+  자동화·반복 작업은 시작하지 않았다.
+- 전체 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**(결함 보완이지 새 범위가 아니다).
 
 ## 스펙 080 Codex 독립 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-27)
 

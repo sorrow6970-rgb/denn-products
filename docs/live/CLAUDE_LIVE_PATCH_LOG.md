@@ -6138,3 +6138,45 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `CORRECTION_REQUIRED`, fix_round 1/3, next transition `CLAUDE_CORRECTION`. actual Firebase/
   network/live/deploy는 계속 0 / NOT TESTED, 다음 스펙과 자동화·반복 작업 시작 0.
 - 전체 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**.
+
+## 2026-08-27 - 스펙 080 보완 라운드 1 (form 제출 · screenshot 증거)
+
+- 기준 `HEAD=origin=c63fe1b`, ahead/behind 0/0. Codex 검수 문서 commit `7c5fccb`, 보완 commit
+  `280a6dc`. Codex 라운드 1이 지적한 **두 결함만** 고쳤고 다른 계약 결론은 되돌리지 않았다.
+- **결함 1 — 실제 form.** `SpacePasswordGate`의 비밀번호 input과 버튼을 semantic `<form onSubmit>`
+  (`data-testid="space-password-form"`)으로 묶고 `Button`에 `type="submit"`을 명시했다. 버튼의
+  `onClick`을 제거해 제출 경로는 하나뿐이며, `onSubmit`은 `preventDefault()` 뒤 기존 `submit()`을
+  **정확히 한 번** 호출한다(`submit()` 본문은 그대로라 password 즉시 삭제와 controller의
+  single-flight 가드도 그대로다). form에 `denn-stack`을 줘 두 컨트롤 간 12px 간격과 카드 레이아웃·
+  문구는 변하지 않았다.
+- **결함 1 검증.** unit 3건 추가 — form과 `type="submit"`이 실제 마크업에 있고, password input이 그
+  form 안에 있고, 제출할 게 없는 상태에서는 form 자체가 렌더되지 않는다. targeted E2E helper는
+  **password input을 fill한 뒤 그 input에서 Enter**를 누른다(브라우저 implicit submission). 성공
+  case가 `documentReads` **1** · `proofReads` **1** · `decodes` **1** · `page.url()` 무변경
+  (preventDefault가 유지돼 navigation도 query string 유출도 없음) · Canvas ready를 단언한다. 버튼
+  Enter는 더 이상 keyboard-form 증거로 쓰지 않는다.
+- **결함 2 — screenshot 증거.** fixture 제품 파일은 **수정하지 않았다.** screenshot case에서 캡처 직전
+  page 안의 `[data-testid="fixture-unmount"]`만 `display:none`으로 숨기고 hidden을 확인한 뒤 같은 두
+  PNG를 재생성했다. desktop 1280x800·mobile 390x844 모두 육안 확인했고 **`화면 해제`가 보이지
+  않으며** production customer surface(카드·badge·heading·본문·proof Canvas)만 남았다.
+- **실측.** 전체 `node scripts/check.mjs` PASS — format, lint, typecheck 7개, unit **2281/2281**
+  (이전 2278 + form unit 3), build 2개. targeted Chromium `space-production-route.spec.ts`
+  **14/14 PASS**.
+- **bundle 비교.** 고객 entry `index-nLbiXJi7.js` / `340,481 B` → `index-BUT7Bmak.js` / `340,604 B` /
+  `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`. 증가 **+123 B**는 form
+  wrapper와 `onSubmit` 핸들러뿐이다. **고객 CSS `index-BjqjBda8.css`(19,381) · admin entry
+  `index-D0XOQpRL.js`(226,201) · admin CSS `index-DJ_z3tK1.css`(9,146)는 SHA-256까지 무변경**이며
+  lazy chunk 구성(`index.esm-DtyxGWvl.js` 포함)도 그대로다.
+- 변경 파일은 허용 범위뿐 — `apps/mockup/src/space/SpacePasswordGate.tsx(.test.tsx)`,
+  `tests/e2e/space-production-route.spec.ts`, 기존 spec-080 PNG 2개, spec-080 상태 문서.
+  viewer/controller/decoder/composition/App/fixture/CSS, `apps/admin`, `packages`, Rules/config/
+  package/lockfile 변경 **0**. spec-063 결과 PNG는 재생성 후 byte-identical이라 diff 0이고 보호 대상
+  (spec-018 PNG 2개 포함)은 읽기만 했다.
+- `git diff --check` PASS, 검사 포트 4183/4184/4185/8080/9099/9199 실행 전후 잔류 **0**, 강제 종료 0.
+  Playwright `test-results/`는 제거했다.
+- **full Chromium suite는 보호 spec-018 PNG 때문에 계속 NOT RUN**이며 PASS라고 기록하지 않는다.
+  actual Firebase/network/live/CORS/deploy/UID는 **0 / NOT TESTED**다.
+- 상태 `READY_FOR_CODEX`, fix_round **1/3**, next transition `CODEX_SPEC_080_REVIEW`. 다음 스펙과
+  자동화·반복 작업은 시작하지 않았다.
+- 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**. 범위 내 결함 보완이라 새 제품 능력으로
+  계산하지 않았다.

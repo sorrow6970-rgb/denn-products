@@ -24,7 +24,34 @@
 > 잔류 프로세스가 발생하면 진행하지 않고 보고한다.
 > (`AUTO_REVIEW_LOOP.md`는 과거 이력 문서이며 더 이상 운영 규칙이 아니다.)
 
-상태: **`CORRECTION_REQUIRED` - 스펙 080 Codex 독립 검수 라운드 1, 키보드 form 제출·시각 증거 보완 필요.**
+상태: **`READY_FOR_CODEX` - 스펙 080 보완 라운드 1 완료, Codex 재검수 대기.**
+
+Codex 라운드 1이 지적한 두 결함만 고쳤다. 기준 `HEAD=origin=c63fe1b`, 검수 문서 commit `7c5fccb`,
+보완 commit `280a6dc`.
+
+`SpacePasswordGate`의 비밀번호 input과 버튼을 semantic `<form onSubmit>`으로 묶고 `Button`에
+`type="submit"`을 명시했다. 버튼 `onClick`을 제거해 제출 경로가 하나뿐이며 `onSubmit`은
+`preventDefault()` 뒤 기존 `submit()`을 정확히 한 번 호출한다. 레이아웃·문구·password 즉시 삭제·
+single-flight 계약은 유지했다. unit 3건이 form/`type="submit"`/input-in-form 구조를 고정하고,
+targeted E2E는 password input에서 Enter를 눌러 `documentReads` 1 · `proofReads` 1 · `decodes` 1 ·
+URL 무변경 · 성공 Canvas를 검증한다.
+
+두 spec-080 PNG는 fixture 제품 코드를 건드리지 않고 캡처 직전
+`[data-testid="fixture-unmount"]`만 숨긴 뒤 재생성했다. 육안 확인 결과 `화면 해제`가 보이지 않고
+production customer surface만 남았다.
+
+실측: 전체 `node scripts/check.mjs` PASS(unit **2281/2281**), targeted Chromium **14/14 PASS**,
+`git diff --check` PASS, 허용 외 diff 0, 검사 포트 잔류 0. 고객 entry `index-BUT7Bmak.js` /
+`340,604 B` / `1AA1BD0B8C8E3EC94F5E367BD9A753822205EF083BF4A2E233BA7BB6BD7FB4F1`(+123 B)이며
+**고객 CSS·admin entry·admin CSS는 SHA-256까지 무변경**이다.
+
+full Chromium suite는 보호 spec-018 PNG 때문에 계속 NOT RUN이고 actual Firebase/network/live/deploy는
+0 / NOT TESTED다. fix_round 1/3, next transition `CODEX_SPEC_080_REVIEW`이며 다음 스펙과 자동화는
+시작하지 않았다.
+
+전체 진행도는 **83~86% 완료 / 14~17% 잔여 — 변동 없음**이다.
+
+> 스펙 080 Codex 검수 라운드 1 판정(보완 전 기록):
 
 검수 기준 `HEAD=origin=c63fe1b`, ahead/behind `0/0`. 독립 targeted unit **62/62**, 전체
 `node scripts/check.mjs` PASS(unit **2278/2278**), 임시 스테이징 targeted Chromium **14/14 PASS**,

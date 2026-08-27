@@ -66,3 +66,24 @@ NOT RUN이며 targeted production-route E2E만 실행한다.
   나머지 제품 코드/UI/CSS는 수정하지 않는다.
 - 상태 `CORRECTION_REQUIRED`, fix_round 1/3, next `CLAUDE_CORRECTION`. 진행도 **83~86% / 14~17% —
   변동 없음**.
+
+## 보완 라운드 1 (2026-08-27, Claude Code)
+
+Codex 라운드 1이 지적한 두 결함만 고쳤다. 조항별 대조와 실측표는 스펙 080의
+`### DONE (Claude) — 보완 라운드 1 (2026-08-27)`이 정본이다. 검수 문서 commit `7c5fccb`,
+보완 commit `280a6dc`.
+
+- 비밀번호 input과 버튼을 semantic `<form onSubmit>`으로 묶고 `Button`에 `type="submit"`을 명시했다.
+  버튼 `onClick`을 제거해 제출 경로가 하나뿐이며 `onSubmit`은 `preventDefault()` 뒤 기존 `submit()`을
+  정확히 한 번 호출한다. 레이아웃·문구·password 즉시 삭제·single-flight는 그대로다.
+- targeted E2E는 password input에서 Enter를 눌러 실제 제출을 검증하고 `documentReads` 1 ·
+  `proofReads` 1 · `decodes` 1 · URL 무변경 · 성공 Canvas를 단언한다. 버튼 Enter는 더 이상 쓰지 않는다.
+- spec-080 PNG 2개는 fixture 제품 코드를 건드리지 않고 캡처 직전 `[data-testid="fixture-unmount"]`만
+  숨긴 뒤 재생성했다. 육안 확인 결과 `화면 해제`가 보이지 않는다.
+- 전체 `node scripts/check.mjs` PASS(unit **2281/2281**), targeted Chromium **14/14 PASS**,
+  `git diff --check` PASS, 허용 외 diff 0, 검사 포트 잔류 0. 고객 entry는 `index-BUT7Bmak.js` /
+  340,604 B(+123 B)이고 고객 CSS·admin entry·admin CSS는 SHA-256까지 무변경이다.
+- full Chromium suite는 보호 spec-018 PNG 때문에 계속 NOT RUN이며 actual Firebase/network/live/deploy는
+  0 / NOT TESTED다.
+- 상태 `READY_FOR_CODEX`, fix_round 1/3, next transition `CODEX_SPEC_080_REVIEW`.
+- 전체 리빌드 진행도 **83~86% 완료 / 14~17% 잔여 — 변동 없음**.

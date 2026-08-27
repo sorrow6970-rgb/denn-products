@@ -1,14 +1,37 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CORRECTION_REQUIRED`
-active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **CORRECTION ROUND 1 / NO_LIVE_NETWORK**
+상태: `READY_FOR_CODEX`
+active_unit: `spec-080-space-v2-production-customer-viewer-ui` — **CORRECTION ROUND 1 DONE / LOCAL_VERIFIED / NO_LIVE_NETWORK**
 completed_unit: `spec-079-space-v2-proof-reader-adapter` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_UI**
-검수 기준: `HEAD=origin=c63fe1b`, ahead/behind `0/0`. 구현 commit `2319d1a`.
+검수 기준: `HEAD=origin=c63fe1b`, ahead/behind `0/0`. 구현 commit `2319d1a`, 보완 commit `280a6dc`.
 Founder 정본: **LL-1=A ~ LL-6=A, MM-1=A ~ MM-6=A**.
 fix_round: **1 / 3**
-next_transition: **`CLAUDE_CORRECTION`**
+next_transition: **`CODEX_SPEC_080_REVIEW`**
 
-## Claude Code 실행 지시 — 스펙 080 CORRECTION_REQUIRED 라운드 1
+## 현재 결과 — 보완 라운드 1 완료
+
+Codex가 지적한 **두 결함만** 고쳤고 다른 계약 결론은 되돌리지 않았다.
+
+**보완 1.** `SpacePasswordGate`의 비밀번호 input과 버튼을 semantic `<form onSubmit>`으로 묶고
+`Button`에 `type="submit"`을 명시했다. 버튼 `onClick`은 제거해 제출 경로가 하나뿐이며 `onSubmit`은
+`preventDefault()` 뒤 기존 `submit()`을 정확히 한 번 호출한다. 레이아웃·문구·password 즉시 삭제·
+single-flight 계약은 그대로다. unit 3건이 form/`type="submit"` 구조를 고정하고, targeted E2E는
+**password input에서 Enter**를 눌러 실제 제출·`documentReads` 1·`proofReads` 1·`decodes` 1·URL
+무변경·성공 Canvas를 검증한다. 버튼 Enter는 더 이상 사용하지 않는다.
+
+**보완 2.** fixture 제품 코드는 수정하지 않고 screenshot case에서 캡처 직전
+`[data-testid="fixture-unmount"]`만 숨긴 뒤 두 PNG를 재생성했다. desktop/mobile 육안 확인 결과
+**`화면 해제`가 보이지 않고** production customer surface만 남았다.
+
+**실측.** 전체 `node scripts/check.mjs` PASS(unit **2281/2281**), targeted Chromium
+`space-production-route.spec.ts` **14/14 PASS**, `git diff --check` PASS, 허용 외 diff 0, 검사 포트
+잔류 0. 고객 entry `index-nLbiXJi7.js`/`340,481 B` → `index-BUT7Bmak.js`/`340,604 B`(+123 B, form
+wrapper와 `onSubmit`만)이고 **고객 CSS·admin entry·admin CSS는 SHA-256까지 무변경**이다.
+**full Chromium suite는 보호 spec-018 PNG 때문에 계속 NOT RUN**이며 PASS라고 기록하지 않는다.
+
+**Claude Code에 전달할 새 실행 지시문은 없다.** 다음 단계는 Codex 재검수다.
+
+> 직전 지시문(스펙 080 보완 라운드 1, 수행 완료 — 기록):
 
 ```text
 C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 080
