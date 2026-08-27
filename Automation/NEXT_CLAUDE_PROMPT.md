@@ -1,13 +1,47 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `FOUNDER_DECISION_REQUIRED`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **READY_FOR_CODEX / CORRECTION ROUND 4 DONE (NN-3=A 예외) / NON_UI / NO_LIVE_NETWORK / E2E 161-0**
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED / NN-3 EXCEPTION CONSUMED / NON_UI / NO_LIVE_NETWORK**
 - 기준: `HEAD=origin=f6f3940`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 라운드 2 `65c5b46`, 라운드 3 `68bd25c`, 라운드 4 `b1ae8b4`.
-- next_transition: `CODEX_SPEC_082_REVIEW`
-- fix_round: `4` (자동 한도 3/3 소진 후 Founder NN-3=A가 승인한 1회 예외)
+- next_transition: `FOUNDER_SPEC_082_NN_4_DECISION`
+- fix_round: `4` (자동 한도 3/3 + NN-3=A 예외 소진, 추가 예외 승인 전 수정 금지)
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## Codex 재검수 — CORRECTION_REQUIRED / NN-3 예외 소진
+
+라운드 4는 named import/re-export alias를 닫았지만 namespace destructuring을 놓친다.
+
+```ts
+const { list: l } = storage;
+l(ref);
+
+const { list } = storage;
+list(ref);
+```
+
+두 입력은 `importedNames()`에 해당하지 않고 `.list` 또는 `["list"]`도 포함하지 않는다. 현
+`forbiddenStorageUse()`와 동일한 합성 측정에서 둘 다 `Detected=False`다. 따라서 "모든 실제 도달
+방법"과 "어떤 형태로도 reachable하지 않음"이라는 현재 설명은 **NOT PROVEN**이다.
+
+NN-3=A 예외 라운드를 이미 사용했으므로 Claude Code는 Founder 결정 전 코드·test·문서·commit·push를
+시작하지 않는다.
+
+### Founder NN-4
+
+- **A (권장):** correction round 5 예외를 한 번 승인한다. 허용 제품 파일은
+  `tests/e2e/admin-auth-read.spec.ts` 하나뿐이다. 새 regex 한두 개로 사례만 봉합하지 말고, 저장소에 이미
+  있는 TypeScript parser 또는 exact `proof-sdk-facade.ts` allowlist 방식으로 SDK namespace의 property,
+  element access, destructuring과 named import/re-export를 구조적으로 검사한다. ordinary local `list`와
+  비-Storage `templateList as list`는 계속 허용한다. 제품 코드와 read-only Storage 연결은 변경하지 않는다.
+- **B:** 알려진 namespace destructuring 검출 공백을 수용한다. 비권장이다.
+
+> NN-4=A 승인 후 Claude Code에 전달할 지시문:
+
+```text
+NN-4=A 승인. C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된 스펙 082 CORRECTION_REQUIRED 라운드 5 예외만 수행해.
+```
 
 ## 현재 결과 — 보완 라운드 4 완료(NN-3=A 예외), 전체 E2E 161/161
 

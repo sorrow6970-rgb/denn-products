@@ -6692,6 +6692,23 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품 능력이
   아니다.
 
+## 2026-08-27 - Codex 스펙 082 보완 라운드 4 재검수 — CORRECTION_REQUIRED / NN-3 EXCEPTION CONSUMED
+
+- `HEAD=origin=87923e6`, ahead/behind 0/0. 라운드 4 제품 diff는 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이고 named import/re-export alias 보완은 적합하다.
+- 잔여 결함: `const { list: l } = storage; l(ref)`와 `const { list } = storage; list(ref)`는
+  `importedNames()` 대상이 아니고 `.list`·`["list"]`도 포함하지 않는다. 현 predicate와 동일한 독립
+  합성 측정에서 두 입력 모두 `Detected=False`였다.
+- 현재 self-check에 namespace destructuring이 없어 Chromium 161/161 및 check 2409/2409도 이 누락을
+  드러내지 않는다. "모든 실제 도달 방법"과 "어떤 형태로도 reachable하지 않음"은 **NOT PROVEN**이고
+  스펙 082는 `CODEX_PASSED`가 아니다.
+- NN-3=A 예외 라운드를 이미 사용했으므로 Codex는 제품 코드·test를 수정하지 않았고 실행 게이트를
+  반복하지 않았다.
+- Founder **NN-4** 결정 대기: A(권장 — test 한 파일의 round 5 예외, 새 regex 사례 추가 대신 기존
+  TypeScript parser 또는 exact SDK-facade allowlist 기반 구조 검사) / B(공백 수용, 비권장).
+- 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_4_DECISION`. 실제 admin issue UI·다음
+  스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
 ## 2026-08-27 - Codex 스펙 082 보완 라운드 3 재검수 — CORRECTION_REQUIRED / LOOP STOP
 
 - `HEAD=origin=f6f3940`, ahead/behind 0/0. 라운드 3 제품 diff는 승인된

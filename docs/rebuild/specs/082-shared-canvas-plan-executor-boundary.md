@@ -2,7 +2,7 @@
 
 ## 상태
 
-`READY_FOR_CODEX / CORRECTION ROUND 4 DONE (Founder NN-3=A exception) / NON_UI / NO_LIVE_NETWORK`
+`FOUNDER_DECISION_REQUIRED / CORRECTION_REQUIRED / NN-3 EXCEPTION CONSUMED / NON_UI / NO_LIVE_NETWORK`
 
 선행 게이트:
 
@@ -666,3 +666,36 @@ stage/commit/restore하지 않았다.
 
 **진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
 능력이 아니다.
+
+### CODEX REVIEW — CORRECTION_REQUIRED / NN-3 EXCEPTION CONSUMED (2026-08-27)
+
+검수 기준 `HEAD=origin=87923e6`, ahead/behind 0/0. NN-3=A가 요구한 named import/re-export alias는
+`importedNames()`와 공용 `forbiddenStorageUse()`로 닫혔다. 그러나 `list` bare-identifier 예외의 다른
+namespace reference가 남아 있다.
+
+```ts
+const { list: l } = storage;
+l(ref);
+
+const { list } = storage;
+list(ref);
+```
+
+두 입력은 named module binding도 아니고 `.list` 또는 `["list"]`도 포함하지 않는다. 현 predicate와
+동일한 독립 합성 측정에서 named binding/property/bracket가 모두 `False`, 최종 `Detected=False`였다.
+self-check에도 이 namespace destructuring 두 형태가 없다.
+
+따라서 주석의 "Storage `list`가 실제로 도달하는 모든 방법"과 surface test의 "어떤 형태로도
+reachable하지 않음"은 **NOT PROVEN**이다. Claude의 targeted 5/5, Chromium 161/161, check 2409/2409
+실측은 보존하지만 이 누락을 검사하지 않으므로 스펙 082는 `CODEX_PASSED`가 아니다. NN-3 예외 라운드를
+이미 사용했으므로 추가 수정은 자동 진행하지 않는다.
+
+Founder **NN-4** 결정:
+
+- **A (권장):** test 한 파일의 correction round 5 예외. regex 사례 추가를 반복하기보다 저장소의 기존
+  TypeScript parser 또는 exact SDK-facade allowlist로 namespace property/element/destructuring 및 named
+  import/re-export를 구조적으로 검사한다. ordinary local `list`와 비-Storage alias는 허용한다.
+- **B:** 알려진 namespace destructuring 공백을 수용한다(비권장).
+
+NN-4 전에는 코드·test 수정, commit/push, spec 082 종료, 실제 admin issue UI 및 다음 스펙 착수를 하지
+않는다.

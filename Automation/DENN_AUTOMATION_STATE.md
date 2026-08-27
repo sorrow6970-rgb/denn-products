@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: READY_FOR_CODEX
+state: FOUNDER_DECISION_REQUIRED
 baseline_commit: f6f3940   # HEAD=origin at spec 082 correction round 4 start (Codex round 3 review + NN-3=A)
 candidate_commit: b1ae8b4  # spec 082 correction round 4, NN-3=A exception (round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "Claude pushed spec 082 correction round 4; HEAD=origin, ahead/behind 0/0"
+origin_relation: "Codex review at HEAD=origin=87923e6, ahead/behind 0/0"
 working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
-fix_round: 4   # one Founder NN-3=A exception past the 3/3 limit; implemented and verified
+fix_round: 4   # NN-3=A exception consumed; namespace destructuring remains undetected
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_082_REVIEW
+next_transition: FOUNDER_SPEC_082_NN_4_DECISION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,27 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Codex 스펙 082 보완 라운드 4 재검수 — CORRECTION_REQUIRED / EXCEPTION CONSUMED (2026-08-27)
+
+- 검수 기준 `HEAD=origin=87923e6`, ahead/behind 0/0. 라운드 4 제품 commit `b1ae8b4`의 변경은 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이다.
+- NN-3=A가 지정한 named import/re-export alias 결함은 닫혔다. `importedNames()`가 `as` 왼쪽 이름을
+  검사하고 self-check와 production scan이 같은 `forbiddenStorageUse()`를 쓰는 것도 확인했다.
+- 그러나 `list` bare-identifier 예외의 다른 namespace reference가 남아 있다:
+  `const { list: l } = storage; l(ref)`와 `const { list } = storage; list(ref)`. 둘은 named module binding도,
+  `.list` property도, `["list"]` bracket도 아니어서 현재 predicate가 모두 **false**다. 독립 합성 측정도
+  두 입력 모두 `Detected=False`였다.
+- 따라서 코드 주석의 "Storage `list`가 실제로 도달하는 모든 방법을 잡는다"와 surface test의 "어떤
+  형태로도 reachable하지 않음"은 성립하지 않는다. self-check에 namespace destructuring이 없어
+  Chromium 161/161과 check 2409/2409도 이 누락을 드러내지 않는다.
+- 스펙 082는 `CODEX_PASSED`가 아니다. Founder 예외 라운드 4를 이미 사용했으므로 추가 코드를 자동
+  수정하지 않았다. 실행 게이트도 결정적 정적 실패 뒤 반복하지 않았다.
+- Founder **NN-4** 결정 대기: **A(권장)** — test 한 파일의 correction round 5 예외를 승인하되 regex
+  조각을 계속 붙이지 말고 기존 TypeScript parser 또는 exact SDK-facade allowlist로 namespace
+  destructuring까지 구조적으로 차단한다. **B** — 알려진 destructuring 공백을 수용한다(비권장).
+- 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_4_DECISION`. 실제 admin issue UI·다음
+  스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## 스펙 082 보완 라운드 4 완료 — Founder NN-3=A 예외, 전체 E2E 161/161 (2026-08-27)
 

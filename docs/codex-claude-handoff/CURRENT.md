@@ -1,5 +1,13 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-27): spec 082 correction round 4 Codex 재검수 = CORRECTION_REQUIRED / NN-3 EXCEPTION CONSUMED.**
+> 검수 기준 `HEAD=origin=87923e6`, ahead/behind 0/0. named import/re-export alias는 닫혔지만
+> `const { list: l } = storage`와 `const { list } = storage`가 `importedNames()`·`.list`·bracket 어느
+> 검사에도 걸리지 않아 독립 합성 결과 둘 다 `False`. "모든 실제 도달 방법"은 NOT PROVEN이며
+> self-check에도 해당 destructuring이 없다. Founder NN-4=A(권장: test 한 파일에서 parser/exact facade
+> allowlist 기반 구조 검사) / B(공백 수용) 결정 전 코드·test·다음 스펙 시작 0. 전체 진행도
+> **84~87% / 잔여 13~16% — 변동 없음**.
+
 > **최신 포인터 (2026-08-27): Founder NN-3=A 예외 / spec 082 correction round 4 완료 = READY_FOR_CODEX.**
 > `HEAD=origin=f6f3940`에서 시작, Codex/NN-3 문서 `54fda04`, 보완 commit `b1ae8b4`. 허용 제품 파일은
 > `tests/e2e/admin-auth-read.spec.ts` 하나뿐이고 제품 코드·승인된 read-only Storage 연결 변경 0.

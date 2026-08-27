@@ -1,10 +1,10 @@
 # 스펙 082 shared Canvas plan executor boundary handoff
 
-- 상태: `FOUNDER_DECISION_REQUIRED / CORRECTION_REQUIRED / LOOP STOPPED AT 3/3 / NON_UI / NO_LIVE_NETWORK`
-- 구현: 계약 문서 `aa7e048`, 제품 `307521f`, 보완 `8d4458d` / `65c5b46` / `68bd25c`
+- 상태: `FOUNDER_DECISION_REQUIRED / CORRECTION_REQUIRED / NN-3 EXCEPTION CONSUMED / NON_UI / NO_LIVE_NETWORK`
+- 구현: 계약 `aa7e048`, 제품 `307521f`, 보완 `8d4458d` / `65c5b46` / `68bd25c` / `b1ae8b4`
 - 선행: spec 081 `DONE / CODEX_PASSED`
 - spec: `docs/rebuild/specs/082-shared-canvas-plan-executor-boundary.md`
-- 다음 transition: `FOUNDER_SPEC_082_NN_3_DECISION`
+- 다음 transition: `FOUNDER_SPEC_082_NN_4_DECISION`
 
 ## 목적
 
@@ -45,6 +45,17 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
   스펙 082 허용 범위 밖이라 기록만 했고 **"전체 E2E PASS"라고 기록하지 않는다.**
 - 실제 admin issue UI가 구현됐다고 기록하지 않는다. 다음은 Codex 검수(`CODEX_SPEC_082_REVIEW`)다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## Codex 라운드 4 재검수 — CORRECTION_REQUIRED / NN-3 예외 소진
+
+- 기준 `HEAD=origin=87923e6`, ahead/behind 0/0. named import/re-export alias 보완은 적합하다.
+- `const { list: l } = storage`와 `const { list } = storage`는 named binding·`.list`·bracket 어느
+  검사에도 걸리지 않으며 독립 합성 결과 둘 다 `False`다. self-check에도 해당 destructuring이 없다.
+- "모든 실제 도달 방법"은 **NOT PROVEN**이고 spec 082는 `CODEX_PASSED`가 아니다.
+- Founder **NN-4** 대기: A(권장, test 한 파일의 round 5 예외로 parser/exact facade allowlist 기반 구조
+  검사) / B(공백 수용, 비권장).
+- 결정 전 제품 코드·test·commit/push·admin issue UI·다음 스펙 시작 0. 진행도 **84~87% / 잔여
+  13~16% — 변동 없음**.
 
 ## Codex 라운드 3 재검수 — CORRECTION_REQUIRED / LOOP STOP
 
