@@ -287,12 +287,21 @@ function record(usage: SdkUsage, module: string, member: string): void {
  *
  * The walk starts from the modules, not from the syntax: every `firebase/*` specifier in the file
  * is collected first, and each one must then be CLAIMED by a form this reader understands and the
- * boundary allows — a named import, a type query, or a dynamic import bound to a name whose members
- * are read. A specifier nothing claims lands in `unaccounted`, which the caller treats as a
- * failure. That is what makes this closed: `export * from "firebase/storage"`, a re-export, a
- * namespace import, a side-effect import and a dynamic import that is returned rather than bound
- * are not allowed forms, so they fail by not being claimed — nobody has to have thought of them
- * first. A legitimate new shape fails the same way, and the fix is to decide it is allowed here.
+ * boundary allows — a type-only static import, a type query, or a dynamic import bound to a name
+ * whose members are read. A specifier nothing claims lands in `unaccounted`, which the caller
+ * treats as a failure. That is what makes this closed: `export * from "firebase/storage"`, a
+ * re-export, a namespace import, a side-effect import and a dynamic import that is returned rather
+ * than bound are not allowed forms, so they fail by not being claimed — nobody has to have thought
+ * of them first. A legitimate new shape fails the same way, and the fix is to decide it is allowed
+ * here.
+ *
+ * A RUNTIME static import is one of those unclaimed forms, and deliberately so. Spec 079 §4 buys
+ * `firebase/app` and `firebase/storage` through a dynamic import, and spec 080 §3 contracts the V2
+ * dependency as lazy — importing the module must start no Firebase app, service or request. So
+ * `import { getStorage } from "firebase/storage"` is not merely a different spelling of the
+ * approved read: it bundles the SDK eagerly and breaks that contract, and reading it as equivalent
+ * would let the regression through on an unchanged member set. `import type { ... }` erases before
+ * runtime and reaches nothing, so it is the one static form claimed.
  *
  * Uses of an allowed binding are held to the same rule: a computed member or a namespace passed
  * around as a value is reported, never passed over.
@@ -324,15 +333,19 @@ function sdkUsage(tokens: Token[]): SdkUsage {
       continue;
     }
 
-    // `import { ... } from "m"` and `import type { ... } from "m"` — the only static form allowed.
-    const clause = tokens[i + 1]?.text === "type" ? i + 2 : i + 1;
+    // `import type { ... } from "m"` — the only static form allowed, because it erases before
+    // runtime. A runtime `import { ... }`, a default or namespace import, a side-effect import and
+    // an inline `{ type X }` clause (whose statement survives) all fall through unclaimed and are
+    // reported below, so eager SDK bundling fails here even when it names an approved member.
+    if (tokens[i + 1]?.kind !== SyntaxKind.TypeKeyword) continue;
+    const clause = i + 2;
     if (tokens[clause]?.kind !== SyntaxKind.OpenBraceToken) continue;
     const from = matching(tokens, clause) + 2;
     if (!specifiers.has(from)) continue;
     const module = specifiers.get(from) as string;
     claimed.add(from);
     const names = clauseNames(tokens, clause);
-    if (!names) usage.unaccounted.push(`named import from ${module}`);
+    if (!names) usage.unaccounted.push(`type import from ${module}`);
     else for (const name of names) record(usage, module, name);
   }
 
@@ -595,7 +608,29 @@ test("the forbidden-Storage reader sees syntax, not text", () => {
     "namespace passed as a value",
   ).not.toEqual([]);
 
+  // A runtime static import is the case round 6 waved through: it names an approved member, so
+  // the aggregate set the surface test compares never moves, yet it bundles the SDK eagerly and
+  // breaks the lazy contract of specs 079/080. It has to fail on the form, not on the name.
+  expect(
+    unexplained('import { getStorage } from "firebase/storage";'),
+    "runtime static named import",
+  ).not.toEqual([]);
+  expect(
+    unexplained('import { type getStorage } from "firebase/storage";'),
+    "inline type modifier, whose import statement still survives",
+  ).not.toEqual([]);
+  expect(
+    unexplained('import getStorage from "firebase/storage";'),
+    "runtime default import",
+  ).not.toEqual([]);
+
   // And the forms the boundary does allow are read, not merely tolerated.
+  const typeOnly = sdkUsage(tokenize('import type { FirebaseApp } from "firebase/app";'));
+  expect(typeOnly.unaccounted, "a type-only static import is explained").toEqual([]);
+  expect([...(typeOnly.reached.get("firebase/app") ?? [])], "the type it names").toEqual([
+    "FirebaseApp",
+  ]);
+
   const bound = sdkUsage(
     tokenize(
       "const [{ getApp }, storage] = await Promise.all([\n" +
