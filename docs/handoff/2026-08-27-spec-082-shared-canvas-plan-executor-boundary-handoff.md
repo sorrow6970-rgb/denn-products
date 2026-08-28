@@ -384,3 +384,28 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
 - 상태 `READY_FOR_CODEX`, fix_round **7 (자동 한도 3/3 + NN-3=A · NN-4=A · NN-5=A · NN-6=A 예외 각
   1회)**, next `CODEX_SPEC_082_REVIEW`. 실제 admin issue UI와 다음 스펙, 자동화는 시작하지 않았다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## Codex 보완 라운드 7 독립 재검수 — CODEX_PASSED (2026-08-28)
+
+- `HEAD=origin=a1b3265`, ahead/behind 0/0. 라운드 7 `048388b`은 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일만 바꿨고 forbidden 제품/config diff는 0이다.
+- runtime static Firebase SDK import는 unaccounted/fail, `import type`·type query·bound dynamic import는
+  유지되는 것을 확인했다. 라운드 6의 eager bundling 검출 공백은 닫혔다.
+- Codex 독립 `pnpm run check` PASS(unit **2409/2409**, 89파일, build 2개), canonical Chromium E2E
+  **161/161 PASS**(`admin-auth-read` 5/5 포함), `git diff --check` PASS, 포트·temp 잔류 0.
+- 추가 결함 0. 스펙 082는 **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**다.
+- 다음은 종료 문서 전용 commit/push다. 실제 admin issue UI·다음 스펙·자동화는 시작하지 않는다. 전체
+  진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 스펙 082 종료 — 문서 전용 closure (2026-08-28, Claude Code)
+
+- Codex 최종 승인 기준 `HEAD=origin=a1b3265`, ahead/behind 0/0. 승인 대상은 라운드 7 제품 commit
+  `048388b`(`tests/e2e/admin-auth-read.spec.ts` 한 파일)이며, 스펙 082는
+  **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**로 종료한다.
+- 종료 작업 범위는 문서 6개뿐이다: 스펙 082 DONE, 이 핸드오프, `DENN_AUTOMATION_STATE.md`,
+  `NEXT_CLAUDE_PROMPT.md`, `CURRENT.md`, 라이브 로그. 제품 코드·test·package/lockfile·Rules/config는
+  수정·stage·restore하지 않았고 게이트도 재실행하지 않았다(승인 근거 = Codex 독립 실행).
+- 보호 spec-018 PNG 2개와 기존 Founder/user dirty 변경은 그대로 두었다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, active unit 없음, next `FOUNDER_NEXT_MANUAL_TASK`. 실제 admin
+  issue UI·다음 스펙·자동화는 시작하지 않는다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

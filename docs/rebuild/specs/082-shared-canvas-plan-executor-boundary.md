@@ -980,3 +980,53 @@ query)이므로 라운드 6의 admin write surface 이빨 측정(`firebase/auth`
 
 **진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
 능력이 아니다.
+
+### CODEX_PASSED — 보완 라운드 7 독립 재검수 (2026-08-28)
+
+검수 기준 `HEAD=origin=a1b3265`, ahead/behind 0/0. 라운드 7 제품 commit `048388b`은
+`tests/e2e/admin-auth-read.spec.ts` 한 파일만 변경했고 apps/packages/package/lockfile/Rules/config diff는
+0이다.
+
+Codex는 `sdkUsage()`가 static Firebase SDK import 중 `import type { ... }`만 claim하고 runtime
+named/default/namespace/side-effect 및 inline type modifier를 unaccounted로 남기는 것을 확인했다. 기존
+type query와 이름에 bound된 dynamic import는 보존된다. 따라서 스펙 079/080의 dynamic/lazy SDK 경계를
+aggregate member Set이 가리는 라운드 6 결함은 닫혔다.
+
+독립 게이트:
+
+| 게이트 | 결과 |
+|---|---|
+| `pnpm run check` | **PASS** — format/lint/typecheck, unit **2409/2409**(89파일), build 2개 |
+| canonical `pnpm run test:e2e` | **Chromium 161/161 PASS**, `admin-auth-read` 5/5 포함 |
+| round 7 exact diff | `tests/e2e/admin-auth-read.spec.ts` 한 파일 |
+| apps/packages/package/lockfile/Rules/config | diff **0** |
+| `git diff --check` | PASS |
+| 포트 4183/4184/4185/8080/9099/9199 · `denn-e2e-*` temp | 잔류 **0** |
+
+단독 targeted Playwright 직접 실행은 `DENN_E2E_STAGING` 필수 가드가 의도대로 거부했으며, 저장소 정본
+orchestrator를 사용하는 전체 E2E가 해당 파일 5/5를 포함해 통과했다. E2E가 다시 쓴 보호 spec-018 PNG
+2개와 기존 Founder/user dirty는 stage/restore하지 않았다.
+
+추가 결함 0. 스펙 082를 **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**로 판정한다.
+실제 admin issue UI, 다음 스펙, 자동화는 시작하지 않는다.
+
+### DONE (Claude) — 스펙 082 종료 (2026-08-28)
+
+**최종 승인.** Codex 독립 재검수가 보완 라운드 7을 `CODEX_PASSED`로 판정했다. 승인 기준
+`HEAD=origin=a1b3265`, ahead/behind 0/0이며 승인 대상은 라운드 7 제품 commit `048388b`
+(`tests/e2e/admin-auth-read.spec.ts` 한 파일)이다. 스펙 082는
+**DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**로 종료한다.
+
+**커밋 계보.** 구현 `307521f`, 보완 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`,
+5 `7627bc6`, 6 `a17c96b`, 7 `048388b`. 라운드 3~7은 Founder NN-3=A · NN-4=A · NN-5=A · NN-6=A 예외로
+각 1회씩 열렸고, 매 라운드의 허용 제품 파일은 `tests/e2e/admin-auth-read.spec.ts` 하나였다.
+
+**이번 종료 작업의 범위.** 문서 6개(이 스펙 DONE, 2026-08-27 핸드오프, `Automation/DENN_AUTOMATION_STATE.md`,
+`Automation/NEXT_CLAUDE_PROMPT.md`, `docs/codex-claude-handoff/CURRENT.md`,
+`docs/live/CLAUDE_LIVE_PATCH_LOG.md`)만 갱신했다. 제품 코드·test·`package.json`/lockfile·Rules/config는
+수정·stage·restore하지 않았고, 게이트도 다시 실행하지 않았다 — 승인 근거는 Codex의 독립 실행 결과
+(`pnpm run check` PASS · unit 2409/2409 · canonical Chromium E2E 161/161)다. 보호 spec-018 PNG 2개와 기존
+Founder/user dirty 변경은 그대로 두었다.
+
+**다음.** 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 실제 admin issue UI,
+다음 스펙, 자동화는 시작하지 않는다. 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

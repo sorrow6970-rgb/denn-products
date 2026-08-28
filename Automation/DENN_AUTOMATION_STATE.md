@@ -4,17 +4,17 @@
 updated_at: 2026-08-28
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
-active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: READY_FOR_CODEX
-baseline_commit: de14638   # HEAD=origin at spec 082 correction round 7 start (Codex round 6 review + NN-6=A)
+completed_unit: spec-082-shared-canvas-plan-executor-boundary   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
+active_unit: none   # spec 082 closed; the next unit waits for a Founder instruction or a new Codex spec
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: a1b3265   # HEAD=origin at Codex correction round 7 review
 candidate_commit: 048388b  # spec 082 correction round 7, NN-6=A exception (round 6 a17c96b, round 5 7627bc6, round 4 b1ae8b4, round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
-verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "Claude pushed spec 082 correction round 7; HEAD=origin, ahead/behind 0/0"
+verified_commit: 048388b   # spec 082 correction round 7 independently verified by Codex
+origin_relation: "Claude pushed the spec 082 closure docs; HEAD=origin, ahead/behind 0/0"
 working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
 fix_round: 7   # NN-3=A, NN-4=A, NN-5=A and NN-6=A exceptions consumed; static SDK imports are now type-only
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_082_REVIEW
+next_transition: FOUNDER_NEXT_MANUAL_TASK
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,33 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 082 종료 — CODEX_PASSED 종료 문서만 반영 (2026-08-28)
+
+- 승인 기준 `HEAD=origin=a1b3265`, ahead/behind 0/0. Codex 최종 승인 대상은 라운드 7 제품 commit
+  `048388b`(`tests/e2e/admin-auth-read.spec.ts` 한 파일)이다.
+- 이번 종료 작업은 **문서 6개 전용**이다: 스펙 082 DONE, 이 상태 파일, `NEXT_CLAUDE_PROMPT.md`,
+  `CURRENT.md`, 라이브 로그, 2026-08-27 핸드오프. 제품 코드·test·`package.json`/lockfile·Rules/config는
+  수정·stage·restore하지 않았고 게이트도 다시 돌리지 않았다(Codex 독립 실행 결과가 승인 근거다).
+- 보호 spec-018 PNG 2개와 기존 Founder/user dirty 변경은 그대로 두었다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, active unit 없음, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙과
+  실제 admin issue UI는 자동 시작하지 않으며 사용자 지시 또는 Codex 신규 스펙이 있어야 시작한다.
+- 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## Codex 스펙 082 보완 라운드 7 독립 재검수 — CODEX_PASSED (2026-08-28)
+
+- 검수 기준 `HEAD=origin=a1b3265`, ahead/behind 0/0. 라운드 7 제품 commit `048388b`의 변경은 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이고 apps/packages/package/lockfile/Rules/config diff 0이다.
+- `sdkUsage()`가 static SDK import 중 `import type { ... }`만 claim하고 runtime named/default/namespace/
+  side-effect와 inline type modifier를 unaccounted로 남기는 것을 확인했다. 기존 type query와 bound dynamic
+  import는 보존되며 저장소 customer source의 Firebase SDK 사용은 dynamic import/type query뿐이다.
+- Codex 독립 `pnpm run check` **PASS**: format/lint/typecheck, unit **2409/2409**(89파일), build 2개.
+  canonical `pnpm run test:e2e`도 Chromium **161/161 PASS**이며 해당 파일 5/5가 포함된다.
+- `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199·`denn-e2e-*` temp 잔류 0. E2E가 다시 쓴
+  보호 spec-018 PNG 2개와 기존 Founder/user dirty는 stage/restore하지 않았다.
+- 추가 결함 0. 스펙 082를 **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**로 판정한다.
+  다음은 Claude Code의 종료 문서 전용 commit/push이며 제품 코드·test·실제 admin issue UI·다음 스펙은
+  시작하지 않는다. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## 스펙 082 보완 라운드 7 완료 — Founder NN-6=A 예외, static SDK import는 type-only (2026-08-28)
 

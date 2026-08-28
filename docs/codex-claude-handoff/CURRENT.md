@@ -1,5 +1,23 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-28): spec 082 종료 = DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI /
+> NO_LIVE_NETWORK.** 승인 기준 `HEAD=origin=a1b3265`, ahead/behind 0/0, 승인 대상은 라운드 7 commit
+> `048388b`(`tests/e2e/admin-auth-read.spec.ts` 한 파일). 종료 작업은 **문서 6개 전용**이며 제품
+> 코드·test·package/lockfile·Rules/config 수정 0, 게이트 재실행 0(승인 근거 = Codex 독립 `pnpm run check`
+> PASS · unit **2409/2409** · canonical Chromium E2E **161/161**). 보호 spec-018 PNG 2개와 기존
+> Founder/user dirty는 그대로 두었다. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, active unit 없음, next
+> `FOUNDER_NEXT_MANUAL_TASK` — 다음 스펙과 실제 admin issue UI는 **자동 시작하지 않고** 사용자 지시
+> 또는 Codex 신규 스펙을 기다린다. 전체 진행도 **84~87% / 잔여 13~16% — 변동 없음**.
+
+> **최신 포인터 (2026-08-28): spec 082 correction round 7 Codex 독립 재검수 = CODEX_PASSED.**
+> `HEAD=origin=a1b3265`, ahead/behind 0/0. 라운드 7 `048388b`은 승인된 test 한 파일만 변경했고 runtime
+> static Firebase SDK import를 fail-closed로, `import type`·type query·bound dynamic import만 허용한다.
+> Codex 독립 `pnpm run check` PASS(unit **2409/2409**, 89파일, build 2개), canonical Chromium E2E
+> **161/161 PASS**, apps/packages/package/lockfile/Rules/config diff 0, diff/port/temp gate PASS. 추가 결함 0.
+> 스펙 082는 **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**다. 다음은 Claude Code의
+> 종료 문서 전용 commit/push이며 실제 admin issue UI와 다음 스펙은 시작하지 않는다. 전체 진행도
+> **84~87% / 잔여 13~16% — 변동 없음**.
+
 > **최신 포인터 (2026-08-28): Founder NN-6=A 예외 / spec 082 correction round 7 완료 = READY_FOR_CODEX.**
 > `HEAD=origin=de14638`에서 시작, Codex/NN-6 문서 `069a0fc`, 보완 commit `048388b`. 허용 제품 파일은
 > `tests/e2e/admin-auth-read.spec.ts` 하나뿐이고 제품 source·승인된 read-only Storage 연결·

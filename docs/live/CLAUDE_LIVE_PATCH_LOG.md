@@ -6995,3 +6995,33 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `git diff --check` PASS, 포트·temp 잔류 0, 테스트 삭제·skip 0.
 - 상태 `READY_FOR_CODEX`, fix_round **7**, next `CODEX_SPEC_082_REVIEW`. 실제 admin issue UI·다음
   스펙·자동화 시작 0. 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-28 - Codex 스펙 082 보완 라운드 7 독립 재검수 — CODEX_PASSED
+
+- `HEAD=origin=a1b3265`, ahead/behind 0/0. 라운드 7 제품 commit `048388b`은 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일만 변경했고 apps/packages/package/lockfile/Rules/config
+  diff는 0이다.
+- runtime static Firebase SDK import는 더는 claim되지 않고, type-only static import와 기존 type query/
+  bound dynamic import만 허용되는 것을 확인했다. 저장소 customer source의 SDK 사용도 dynamic/type query
+  경계와 일치한다.
+- Codex 독립 `pnpm run check` **PASS**: format/lint/typecheck, unit **2409/2409**(89파일), build 2개.
+- canonical `pnpm run test:e2e` **Chromium 161 passed / 0 failed**, `admin-auth-read` 5/5 포함. 단독 targeted
+  실행은 staging 필수 가드가 거부했으며 정본 orchestrator 전체 실행으로 검증했다.
+- `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199·`denn-e2e-*` temp 잔류 0. E2E가 다시 쓴
+  보호 spec-018 PNG 2개와 기존 Founder/user dirty는 stage/restore하지 않았다.
+- 추가 결함 0. 스펙 082를 **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**로 판정한다.
+- 다음은 Claude Code 종료 문서 전용 commit/push다. 실제 admin issue UI·다음 스펙·자동화 시작 0. 전체
+  리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-28 - 스펙 082 종료 — CODEX_PASSED 문서 전용 closure
+
+- 승인 기준 `HEAD=origin=a1b3265`, ahead/behind 0/0. 승인 대상 라운드 7 commit `048388b`
+  (`tests/e2e/admin-auth-read.spec.ts` 한 파일). 스펙 082 =
+  **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**.
+- 커밋 계보: 구현 `307521f` → 라운드 1 `8d4458d` · 2 `65c5b46` · 3 `68bd25c` · 4 `b1ae8b4` ·
+  5 `7627bc6` · 6 `a17c96b` · 7 `048388b`(NN-3=A · NN-4=A · NN-5=A · NN-6=A 예외 각 1회).
+- 이번 작업은 문서 6개 전용이다. 제품 코드·test·package/lockfile·Rules/config 수정 0, stage/restore 0,
+  게이트 재실행 0(승인 근거 = Codex 독립 `pnpm run check` PASS · unit 2409/2409 · Chromium 161/161).
+- 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 그대로 두었다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙·실제 admin issue
+  UI·자동화 시작 0. 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

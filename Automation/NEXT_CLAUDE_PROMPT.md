@@ -1,13 +1,68 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
 
-- completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **보완 라운드 7 완료(NN-6=A 예외) / READY_FOR_CODEX / NON_UI / NO_LIVE_NETWORK**
-- 기준: `HEAD=origin=de14638`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`, 5 `7627bc6`, 6 `a17c96b`, Codex/NN-6 문서 `069a0fc`, 라운드 7 `048388b`.
-- next_transition: `CODEX_SPEC_082_REVIEW`
+- completed_unit: `spec-082-shared-canvas-plan-executor-boundary` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK (종료 문서까지 반영)**
+- active_unit: 없음 — 다음 단위는 사용자 지시 또는 Codex 신규 스펙이 있어야 시작한다.
+- 승인 기준: `HEAD=origin=a1b3265`, ahead/behind 0/0. 구현 `307521f`, 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`, 5 `7627bc6`, 6 `a17c96b`, 라운드 7 `048388b`.
+- next_transition: `FOUNDER_NEXT_MANUAL_TASK`
 - fix_round: `7` (자동 한도 3/3 + NN-3=A · NN-4=A · NN-5=A · NN-6=A 예외 각 1회)
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## 현재 결과 — 스펙 082 종료 문서 반영 완료
+
+Codex `CODEX_PASSED` 판정에 따라 **문서 6개만** 종료 상태로 갱신했다 — 스펙 082 DONE, 2026-08-27
+핸드오프, `DENN_AUTOMATION_STATE.md`, 이 파일, `CURRENT.md`, 라이브 로그.
+
+제품 코드·test·`package.json`/lockfile·Rules/config는 **수정·stage·restore 0**이고, 게이트도 다시
+돌리지 않았다 — 승인 근거는 Codex 독립 실행 결과(`pnpm run check` PASS · unit **2409/2409** · canonical
+Chromium E2E **161/161**, `admin-auth-read` 5/5 포함)다. 보호 spec-018 PNG 2개와 기존 Founder/user dirty
+변경은 그대로 두었다. 문서 전용 commit을 fast-forward push하고 `HEAD=origin`, ahead/behind 0/0을
+확인했다.
+
+## 다음 단계 — 사용자 지시 대기
+
+상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙, 실제 admin issue UI,
+자동화는 **자동으로 시작하지 않는다**. 다음 단위는 사용자의 명시적 지시 또는 Codex가 작성·push한 신규
+스펙이 정한다.
+
+> 직전 지시문(스펙 082 종료 문서, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 082 CODEX_PASSED 종료 문서만 처리해.
+```
+
+
+## Codex 독립 재검수 — CODEX_PASSED
+
+- 라운드 7 diff는 `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이다. runtime static Firebase SDK import는
+  더는 claim되지 않고, type-only static import와 기존 dynamic/type-query 경계만 허용된다.
+- 독립 `pnpm run check` PASS: format/lint/typecheck, unit **2409/2409**, build 2개.
+- 독립 canonical `pnpm run test:e2e`: Chromium **161 passed / 0 failed**. `admin-auth-read` 5/5 포함.
+- apps/packages/package/lockfile/Rules/config diff 0, `git diff --check` PASS, 포트·temp 잔류 0.
+- 추가 결함 0. 실제 admin issue UI·live network·deploy는 여전히 시작하지 않는다.
+
+## Claude Code 다음 작업 — 스펙 082 종료 문서만
+
+다음 6개 문서만 실제 `CODEX_PASSED` 종료 상태로 최소 갱신한다.
+
+- `docs/rebuild/specs/082-shared-canvas-plan-executor-boundary.md`
+- `docs/handoff/2026-08-27-spec-082-shared-canvas-plan-executor-boundary-handoff.md`
+- `Automation/DENN_AUTOMATION_STATE.md`
+- `Automation/NEXT_CLAUDE_PROMPT.md`
+- `docs/codex-claude-handoff/CURRENT.md`
+- `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
+
+제품 코드·test·package/lockfile·Rules/config·보호 대상은 수정/stage/restore하지 않는다. 문서만 일반
+fast-forward commit/push하고 `HEAD=origin`, ahead/behind 0/0을 확인한다. 상태는
+`WAITING_FOR_NEXT_MANUAL_TASK`, next transition은 `FOUNDER_NEXT_MANUAL_TASK`로 두고 다음 스펙을 자동
+시작하지 않는다.
+
+Claude Code에 전달할 문구:
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 082 CODEX_PASSED 종료 문서만 처리해.
+```
 
 ## 현재 결과 — 보완 라운드 7 완료(NN-6=A 예외), static SDK import는 type-only
 
