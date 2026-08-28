@@ -6977,3 +6977,21 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   runtime named import fail + self-check) / B(공백 수용, 비권장).
 - 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_6_DECISION`. 실제 admin issue UI·다음
   스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-28 - 스펙 082 보완 라운드 7 - Founder NN-6=A 예외, static SDK import는 type-only
+
+- `HEAD=origin=de14638` 기준. Codex 재검수·NN-6 문서 `069a0fc`, 보완 `048388b`. 변경 경로는
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이고 제품 source·`package.json`/lockfile은 무변경이다.
+- 라운드 6 reader 실측: `import { getStorage } from "firebase/storage"`는 `unaccounted=[]`로 통과하고
+  facade가 이미 채운 aggregate 승인 Set 때문에 equality도 안 움직인다 — Codex 지적 그대로 재현.
+- 보완: static은 `import type { ... }`만 claim한다. 런타임 named/default/namespace/side-effect import와
+  inline `{ type X }` clause는 unaccounted로 보고된다. type query·bound dynamic import는 유지.
+- 스펙 079 §4(dynamic SDK import)와 스펙 080 §3(lazy·module import 시 app/service/network 0) 계약을
+  검사가 실제로 지킨다. 저장소 전체 source에 static `firebase/*` import 0건이라 제품 회귀 수정은 아니다.
+- self-check: negative 3종(runtime named / inline type modifier / default) + positive
+  `import type { FirebaseApp }` → `FirebaseApp`. 기존 `Promise.all` dynamic positive 유지.
+- 실측: `admin-auth-read` **5/5**, 전체 Chromium **161/161**, `node scripts/check.mjs` **PASS**(unit
+  **2409/2409**, 89 파일), 통제 빌드 대조 **산출물 16개 byte+SHA-256 동일**, lockfile diff 0,
+  `git diff --check` PASS, 포트·temp 잔류 0, 테스트 삭제·skip 0.
+- 상태 `READY_FOR_CODEX`, fix_round **7**, next `CODEX_SPEC_082_REVIEW`. 실제 admin issue UI·다음
+  스펙·자동화 시작 0. 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

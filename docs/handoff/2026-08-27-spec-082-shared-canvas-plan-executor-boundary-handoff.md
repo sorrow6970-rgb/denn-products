@@ -359,3 +359,28 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
   named import를 실패시킴) / B(공백 수용, 비권장).
 - 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_6_DECISION`. 실제 admin issue UI·다음
   스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 보완 라운드 7 — Founder NN-6=A 예외, static SDK import는 type-only (2026-08-28, Claude Code)
+
+- `HEAD=origin=de14638`에서 시작, ahead/behind 0/0. Codex 재검수·NN-6 문서 commit `069a0fc`, 보완
+  commit `048388b`. 변경 경로는 승인된 `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이고 제품
+  source·read-only Storage 연결·`package.json`/lockfile은 무변경이다.
+- **결함 재현.** 라운드 6 reader로 `import { getStorage } from "firebase/storage"`를 읽으면
+  `unaccounted=[]`다. 기존 dynamic facade가 `getStorage`를 승인 Set에 이미 넣으므로 aggregate equality도
+  움직이지 않아 파일 전체가 통과한다.
+- **보완.** static 허용 형태를 `import type { ... }` 하나로 좁혔다. 런타임 named import·default·
+  namespace·side-effect import와 statement가 살아남는 inline `{ type X }` clause는 claim되지 않아
+  `unaccounted`로 보고된다. type query와 이름에 bound된 dynamic import는 라운드 6 그대로다.
+- **범위 확인.** 저장소 전체 source에 static `firebase/*` import는 0건이라 제품 회귀 수정이 아니라 가드
+  계약 보완이며, 라운드 6의 admin write surface 이빨 측정도 그대로 유효하다.
+- **self-check.** runtime named import·inline type modifier·default import 3종 negative와
+  `import type { FirebaseApp } from "firebase/app"` → `FirebaseApp` positive를 추가했다. 승인된
+  `Promise.all` dynamic positive는 유지된다.
+- **실측.** `admin-auth-read` **5/5**, **전체 Chromium 161/161**, 전체 `node scripts/check.mjs`
+  **PASS**(unit **2409/2409**, 89 파일), **통제 빌드 대조 산출물 16개 byte+SHA-256 동일**,
+  `package.json`/lockfile diff **0**, `git diff --check` PASS, EOL `i/lf w/lf`, 포트
+  4183/4184/4185/8080/9099/9199 · `test-results`/temp 잔류 0. 테스트 삭제·skip·E2E 예외 0. 보호
+  spec-018 PNG 2개는 dirty 그대로 두었다.
+- 상태 `READY_FOR_CODEX`, fix_round **7 (자동 한도 3/3 + NN-3=A · NN-4=A · NN-5=A · NN-6=A 예외 각
+  1회)**, next `CODEX_SPEC_082_REVIEW`. 실제 admin issue UI와 다음 스펙, 자동화는 시작하지 않았다.
+- 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

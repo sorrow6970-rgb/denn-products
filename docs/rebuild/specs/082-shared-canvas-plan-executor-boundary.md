@@ -942,3 +942,41 @@ Founder **NN-6** 결정:
 
 NN-6 전에는 코드·test 수정, commit/push, spec 082 종료, 실제 admin issue UI 및 다음 스펙 착수를 하지
 않는다.
+
+### DONE (Claude) — 보완 라운드 7: static SDK import는 type-only (2026-08-28, Founder NN-6=A)
+
+기준 `HEAD=origin=de14638`. Codex 라운드 6 검수·NN-6 문서 commit `069a0fc`, 보완 commit `048388b`.
+NN-6=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 바꿨고 제품 source·승인된
+read-only Storage 연결·`package.json`/lockfile은 **무변경**이다.
+
+**Codex 지적은 옳고 실측으로 재현했다.** 라운드 6의 reader는 `import { ... } from "firebase/x"`와
+`import type { ... }`를 같은 허용 형태로 처리했다. 라운드 6 reader를 그대로 돌린 결과
+`import { getStorage } from "firebase/storage"`는 `unaccounted=[]`로 **통과**했고, 기존 dynamic facade가
+`getStorage`를 aggregate 승인 Set에 이미 넣으므로 module/member equality도 움직이지 않는다. 스펙 079 §4는
+SDK를 **dynamic import**로, 스펙 080 §3은 V2 dependency를 **lazy·module import 시 app/service/network
+시작 0**으로 계약하므로, eager static import는 같은 읽기의 다른 표기가 아니라 **다른 능력**이다.
+
+**보완 — static은 `import type`만 claim한다.** `import type { ... }`는 런타임 전에 지워져 아무것도
+건드리지 않으므로 유일하게 허용되는 static 형태로 남고, 런타임 named import·default·namespace·
+side-effect import와 **statement가 살아남는 inline `{ type X }` clause**는 claim되지 않아 그대로
+보고된다. 나머지 두 허용 형태(type query, 이름에 bound된 dynamic import)는 라운드 6 그대로다.
+
+**before/after 실측(같은 입력, 라운드 6 reader).** runtime named import는 `unaccounted=[]`로 통과했고,
+inline type modifier와 default import는 라운드 6에서도 이미 보고됐다 — 공백은 Codex가 지목한 **정확히
+그 하나**였다. 저장소 전체 source에 static `firebase/*` import는 **0건**(전부 dynamic import·type
+query)이므로 라운드 6의 admin write surface 이빨 측정(`firebase/auth` 미승인 + 승인 밖 멤버 11개)은
+그대로 유효하다.
+
+**self-check.** 위 3종 negative + `import type { FirebaseApp } from "firebase/app"`를 `FirebaseApp`로
+실제로 읽어내는 positive를 추가했고, 승인된 `Promise.all` dynamic 형태가 `getStorage`/`ref`/`getBytes`를
+읽고 `unaccounted=[]`임을 단언하는 기존 positive도 유지된다.
+
+**실측.** `admin-auth-read` Chromium **5/5**, **전체 Chromium E2E 161/161**, 전체
+`node scripts/check.mjs` PASS(format·lint·typecheck 7개·unit **2409/2409**(89 파일)·build 2개),
+**통제 빌드 대조 산출물 16개 byte+SHA-256 동일**(이 파일을 HEAD 버전으로 되돌려 재빌드한 결과와 대조),
+`package.json`/`pnpm-lock.yaml` diff **0**, `git diff --check` PASS, 변경 경로 한 파일뿐, EOL `i/lf w/lf`,
+포트 4183/4184/4185/8080/9099/9199 · `test-results`/temp staging 잔류 **0**. 테스트 삭제·skip·E2E 예외
+**0**. 보호 spec-018 PNG 2개는 dirty 그대로 두고 stage/commit/restore하지 않았다.
+
+**진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
+능력이 아니다.

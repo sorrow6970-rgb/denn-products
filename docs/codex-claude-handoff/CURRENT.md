@@ -1,5 +1,17 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-28): Founder NN-6=A 예외 / spec 082 correction round 7 완료 = READY_FOR_CODEX.**
+> `HEAD=origin=de14638`에서 시작, Codex/NN-6 문서 `069a0fc`, 보완 commit `048388b`. 허용 제품 파일은
+> `tests/e2e/admin-auth-read.spec.ts` 하나뿐이고 제품 source·승인된 read-only Storage 연결·
+> `package.json`/lockfile은 무변경이다. 라운드 6 reader가 runtime `import { getStorage } from
+> "firebase/storage"`를 `unaccounted=[]`로 통과시키던 것을 재현했고, static 허용 형태를 `import type`
+> 하나로 좁혔다 — runtime named·default·namespace·side-effect import와 inline `{ type X }` clause는
+> unaccounted로 보고된다. 저장소 전체 source에 static `firebase/*` import는 0건이라 제품 회귀 수정이
+> 아니라 스펙 079 §4·080 §3 계약을 지키는 가드 보완이다. 실측 `admin-auth-read` **5/5**, 전체 Chromium
+> **161/161**, `node scripts/check.mjs` PASS(unit **2409/2409**), 통제 빌드 대조 **16개 byte+SHA-256
+> 동일**, lockfile diff 0. 상태 `READY_FOR_CODEX`, fix_round **7**, next `CODEX_SPEC_082_REVIEW`.
+> 실제 admin issue UI·다음 스펙·자동화 시작 0. 전체 진행도 **84~87% / 잔여 13~16% — 변동 없음**.
+
 > **최신 포인터 (2026-08-28): spec 082 correction round 6 Codex 재검수 = CORRECTION_REQUIRED / EXCEPTIONS CONSUMED.**
 > 검수 기준 `HEAD=origin=de14638`, ahead/behind 0/0. 모든 SDK specifier를 먼저 수집하는 라운드 6 방향은
 > 적합하지만 `sdkUsage()`가 runtime `import { getStorage } from "firebase/storage"`와 `import type`을

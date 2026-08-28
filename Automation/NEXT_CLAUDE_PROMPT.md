@@ -1,13 +1,59 @@
 # NEXT CLAUDE PROMPT
 
-상태: `FOUNDER_DECISION_REQUIRED`
+상태: `READY_FOR_CODEX`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED / FOUNDER NN-6 DECISION / NON_UI / NO_LIVE_NETWORK**
-- 검수 기준: `HEAD=origin=de14638`, ahead/behind 0/0. 구현 `307521f`, 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`, 5 `7627bc6`, 6 `a17c96b`.
-- next_transition: `FOUNDER_SPEC_082_NN_6_DECISION`
-- fix_round: `6` (자동 한도 3/3 + NN-3=A · NN-4=A · NN-5=A 예외 각 1회)
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **보완 라운드 7 완료(NN-6=A 예외) / READY_FOR_CODEX / NON_UI / NO_LIVE_NETWORK**
+- 기준: `HEAD=origin=de14638`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`, 5 `7627bc6`, 6 `a17c96b`, Codex/NN-6 문서 `069a0fc`, 라운드 7 `048388b`.
+- next_transition: `CODEX_SPEC_082_REVIEW`
+- fix_round: `7` (자동 한도 3/3 + NN-3=A · NN-4=A · NN-5=A · NN-6=A 예외 각 1회)
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## 현재 결과 — 보완 라운드 7 완료(NN-6=A 예외), static SDK import는 type-only
+
+NN-6=A가 승인한 **제품 파일 한 개**(`tests/e2e/admin-auth-read.spec.ts`)만 고쳤고 제품 source·승인된
+read-only Storage 연결·`package.json`/lockfile은 **무변경**이다.
+
+**Codex 지적은 옳고, 라운드 6 reader로 그대로 재현했다.** 라운드 6은 모든 `firebase/*` specifier를 먼저
+수집해 claim을 요구했지만, `import { ... } from "firebase/x"`와 `import type { ... }`를 **같은 허용
+형태**로 셌다. 같은 입력에 라운드 6 reader를 돌리면 `import { getStorage } from "firebase/storage"`는
+`unaccounted=[]`로 통과하고, 기존 dynamic facade가 `getStorage`를 aggregate 승인 Set에 이미 넣으므로
+module/member equality도 움직이지 않는다.
+
+**보완 — static은 `import type`만 claim한다.** `import type { ... }`는 런타임 전에 지워져 아무것도
+건드리지 않으므로 유일한 허용 static 형태로 남고, **런타임 named import·default·namespace·side-effect
+import**와 **statement가 살아남는 inline `{ type X }` clause**는 claim되지 않아 `unaccounted`로 보고된다.
+type query와 이름에 bound된 dynamic import는 라운드 6 그대로다. 이유는 표기 취향이 아니라 계약이다 —
+스펙 079 §4는 SDK를 dynamic import로, 스펙 080 §3은 V2 dependency를 lazy·module import 시
+app/service/network 시작 0으로 계약한다. eager static import는 같은 읽기의 다른 표기가 아니라 다른
+능력이다.
+
+**before/after 실측(같은 입력, 라운드 6 reader).** runtime named import는 통과했고, inline type
+modifier와 default import는 라운드 6에서도 이미 보고됐다 — 공백은 Codex가 지목한 **정확히 그 하나**다.
+저장소 전체 source에 static `firebase/*` import는 **0건**(전부 dynamic import·type query)이므로 제품
+회귀 수정이 아니고, 라운드 6의 admin write surface 이빨 측정(`firebase/auth` 미승인 + 승인 밖 멤버
+11개)도 그대로 유효하다.
+
+**self-check.** negative 3종(runtime named · inline type modifier · default)과
+`import type { FirebaseApp } from "firebase/app"`를 `FirebaseApp`로 실제로 읽어내는 positive를 넣었고,
+승인된 `Promise.all` dynamic 형태가 `getStorage`/`ref`/`getBytes`를 읽는 기존 positive도 유지된다.
+
+**실측.** `admin-auth-read` **5/5**, **전체 Chromium E2E 161/161**, 전체 `node scripts/check.mjs`
+PASS(unit **2409/2409**, 89 파일), **통제 빌드 대조 산출물 16개 byte+SHA-256 동일**,
+`package.json`/lockfile diff **0**, `git diff --check` PASS, 변경 경로 한 파일뿐, EOL clean,
+포트·temp 잔류 0. 테스트 삭제·skip·E2E 예외 0.
+
+## 다음 단계 — Codex 재검수 대기
+
+스펙 082는 NN-6=A 예외 라운드까지 끝났고 `READY_FOR_CODEX`에서 멈춘다. 다음 단위는 Codex 재검수
+결과와 사용자 지시가 정한다. 실제 admin issue UI, 다음 스펙, 자동화는 시작하지 않았다.
+
+> 직전 지시문(스펙 082 보완 라운드 7, 수행 완료 — 기록):
+
+```text
+NN-6=A 승인. C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된 스펙 082 CORRECTION_REQUIRED 라운드 7 예외만 수행해.
+```
+
 
 ## Codex 재검수 — CORRECTION_REQUIRED / 예외 소진
 

@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: de14638   # HEAD=origin at Codex correction round 6 review
-candidate_commit: a17c96b  # spec 082 correction round 6, NN-5=A exception (round 5 7627bc6, round 4 b1ae8b4, round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
+state: READY_FOR_CODEX
+baseline_commit: de14638   # HEAD=origin at spec 082 correction round 7 start (Codex round 6 review + NN-6=A)
+candidate_commit: 048388b  # spec 082 correction round 7, NN-6=A exception (round 6 a17c96b, round 5 7627bc6, round 4 b1ae8b4, round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "HEAD=origin=de14638, ahead/behind 0/0 at Codex round 6 review"
+origin_relation: "Claude pushed spec 082 correction round 7; HEAD=origin, ahead/behind 0/0"
 working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
-fix_round: 6   # automatic limit and NN-3=A, NN-4=A, NN-5=A exceptions consumed; round 6 still allows eager static runtime SDK imports
+fix_round: 7   # NN-3=A, NN-4=A, NN-5=A and NN-6=A exceptions consumed; static SDK imports are now type-only
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_082_NN_6_DECISION
+next_transition: CODEX_SPEC_082_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,26 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 082 보완 라운드 7 완료 — Founder NN-6=A 예외, static SDK import는 type-only (2026-08-28)
+
+- `HEAD=origin=de14638`에서 시작, ahead/behind 0/0. Codex 재검수·NN-6 문서 commit `069a0fc`, 보완
+  commit `048388b`. 변경 경로는 승인된 `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이고 제품
+  source·승인된 read-only Storage 연결·`package.json`/lockfile은 무변경이다.
+- 라운드 6 reader로 재현: `import { getStorage } from "firebase/storage"`는 `unaccounted=[]`로 통과하고,
+  기존 dynamic facade가 승인 Set을 이미 채워 aggregate equality도 움직이지 않는다.
+- 보완: static 허용 형태를 `import type { ... }` 하나로 좁혔다. 런타임 named·default·namespace·
+  side-effect import와 statement가 남는 inline `{ type X }` clause는 claim되지 않아 보고된다. type query와
+  이름에 bound된 dynamic import는 라운드 6 그대로다.
+- 저장소 전체 source에 static `firebase/*` import는 0건이라 제품 회귀 수정이 아니라 스펙 079 §4·080 §3
+  계약을 실제로 지키는 가드 보완이고, 라운드 6의 admin write surface 이빨 측정도 유효하다.
+- self-check: negative 3종(runtime named / inline type modifier / default) + positive
+  `import type { FirebaseApp }` → `FirebaseApp`, 기존 `Promise.all` dynamic positive 유지.
+- 실측: `admin-auth-read` **5/5**, 전체 Chromium **161/161**, `node scripts/check.mjs` **PASS**(unit
+  **2409/2409**, 89 파일), 통제 빌드 대조 산출물 **16개 byte+SHA-256 동일**, lockfile diff 0,
+  `git diff --check` PASS, 포트·temp 잔류 0, 테스트 삭제·skip·E2E 예외 0.
+- 상태 `READY_FOR_CODEX`, fix_round **7**, next `CODEX_SPEC_082_REVIEW`. 실제 admin issue UI·다음
+  스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## Codex 스펙 082 보완 라운드 6 재검수 — CORRECTION_REQUIRED / EXCEPTIONS CONSUMED (2026-08-28)
 
