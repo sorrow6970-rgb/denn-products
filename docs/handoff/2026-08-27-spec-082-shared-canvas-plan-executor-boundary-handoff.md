@@ -343,3 +343,19 @@ admin UI, proof exporter, SDK composition은 이번 단위에 없다.
 - 상태 `READY_FOR_CODEX`, fix_round **6 (NN-3=A · NN-4=A · NN-5=A 예외 각 1회)**, next
   `CODEX_SPEC_082_REVIEW`. 실제 admin issue UI와 다음 스펙, 자동화는 시작하지 않았다.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## Codex 보완 라운드 6 재검수 — CORRECTION_REQUIRED / NN-6 결정 대기 (2026-08-28)
+
+- 검수 기준 `HEAD=origin=de14638`, ahead/behind 0/0. 라운드 6 commit `a17c96b`은 승인된 test 한
+  파일만 바꿨고 re-export·unbound dynamic import·namespace escape를 fail-closed로 만든 방향은 적합하다.
+- 잔여 결함: `sdkUsage()`가 runtime static named import와 `import type`을 모두 허용한다.
+  `import { getStorage } from "firebase/storage"`는 claim되고, 기존 dynamic facade가 이미 승인 Set에 같은
+  member를 채워 aggregate equality도 통과한다.
+- 이는 스펙 079/080의 dynamic/lazy Firebase SDK 및 module-import inert 경계를 회귀시킬 수 있다. 현재
+  customer source에는 해당 runtime static import가 없어 **제품 회귀가 아니라 guard 계약 결함**이다.
+- Claude 실측 Chromium **161/161**·check unit **2409/2409**는 보존하지만 이 합성 회귀가 없어
+  `CODEX_PASSED`는 아니다. 예외 소진으로 Codex는 코드·test 수정과 실행 게이트 반복을 하지 않았다.
+- Founder **NN-6**: A(권장 — test 한 파일 round 7 예외, static은 `import type`만 허용하고 runtime
+  named import를 실패시킴) / B(공백 수용, 비권장).
+- 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_6_DECISION`. 실제 admin issue UI·다음
+  스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

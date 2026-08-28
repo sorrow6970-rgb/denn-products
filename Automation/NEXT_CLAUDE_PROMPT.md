@@ -1,13 +1,45 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `FOUNDER_DECISION_REQUIRED`
 
 - completed_unit: `spec-081-space-v2-admin-frozen-issue-session` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **READY_FOR_CODEX / CORRECTION ROUND 6 DONE (NN-5=A 예외) / NON_UI / NO_LIVE_NETWORK / E2E 161-0**
-- 기준: `HEAD=origin=c7199f0`에서 시작. 구현 `307521f`, 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`, 5 `7627bc6`, 6 `a17c96b`.
-- next_transition: `CODEX_SPEC_082_REVIEW`
+- active_unit: `spec-082-shared-canvas-plan-executor-boundary` — **CORRECTION_REQUIRED / FOUNDER NN-6 DECISION / NON_UI / NO_LIVE_NETWORK**
+- 검수 기준: `HEAD=origin=de14638`, ahead/behind 0/0. 구현 `307521f`, 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`, 5 `7627bc6`, 6 `a17c96b`.
+- next_transition: `FOUNDER_SPEC_082_NN_6_DECISION`
 - fix_round: `6` (자동 한도 3/3 + NN-3=A · NN-4=A · NN-5=A 예외 각 1회)
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## Codex 재검수 — CORRECTION_REQUIRED / 예외 소진
+
+라운드 6은 모든 `firebase/*` specifier를 먼저 수집해 re-export·unbound dynamic import·namespace escape를
+닫았다. 그러나 static named import와 type-only import를 같은 허용 형태로 처리한다.
+
+```ts
+import { getStorage } from "firebase/storage";
+```
+
+이 런타임 정적 import는 claim되고 `getStorage`가 승인 member Set에 추가된다. 기존 dynamic facade가 이미
+같은 member를 채우므로 aggregate equality도 변하지 않아 검사를 통과한다. 이는 스펙 079의 Firebase SDK
+dynamic import와 스펙 080의 lazy dependency/module-import inert 계약을 깨뜨릴 수 있다. 현재 제품 source는
+dynamic import와 type query를 사용하므로 현 제품 회귀는 아니며, 향후 eager bundling을 허용하는 가드
+계약 결함이다.
+
+### Founder NN-6
+
+- **A (권장):** `tests/e2e/admin-auth-read.spec.ts` 한 파일의 correction round 7 예외를 승인한다.
+  static Firebase import는 `import type { ... }`만 허용하고 런타임 `import { ... }`는 unaccounted/fail로
+  고정한다. 최소 self-check는 runtime static named import 실패, type-only static import 성공,
+  현재 `Promise.all` dynamic import 성공을 포함한다. 제품 source·package/lockfile은 변경하지 않는다.
+- **B:** 알려진 eager Firebase SDK import 검출 공백을 수용한다. 비권장이다.
+
+NN-6 결정 전 Claude Code는 코드·test·문서·commit·push를 시작하지 않는다. 실제 admin issue UI와 다음
+스펙도 시작하지 않는다.
+
+> NN-6=A 승인 후 Claude Code에 전달할 지시문:
+
+```text
+NN-6=A 승인. C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된 스펙 082 CORRECTION_REQUIRED 라운드 7 예외만 수행해.
+```
 
 ## 현재 결과 — 보완 라운드 6 완료(NN-5=A 예외), 구문이 아니라 모듈에서 출발
 

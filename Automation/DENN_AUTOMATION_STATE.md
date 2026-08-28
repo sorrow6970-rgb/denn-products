@@ -1,20 +1,20 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-08-27
+updated_at: 2026-08-28
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-081-space-v2-admin-frozen-issue-session   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-082-shared-canvas-plan-executor-boundary
-state: READY_FOR_CODEX
-baseline_commit: c7199f0   # HEAD=origin at spec 082 correction round 6 start (Codex round 5 review + NN-5=A)
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: de14638   # HEAD=origin at Codex correction round 6 review
 candidate_commit: a17c96b  # spec 082 correction round 6, NN-5=A exception (round 5 7627bc6, round 4 b1ae8b4, round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
 verified_commit: df75655   # spec 081 correction round 2 record included
-origin_relation: "Claude pushed spec 082 correction round 6; HEAD=origin, ahead/behind 0/0"
+origin_relation: "HEAD=origin=de14638, ahead/behind 0/0 at Codex round 6 review"
 working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
-fix_round: 6   # NN-3=A, NN-4=A and NN-5=A exceptions consumed; every firebase/* specifier must now be claimed
+fix_round: 6   # automatic limit and NN-3=A, NN-4=A, NN-5=A exceptions consumed; round 6 still allows eager static runtime SDK imports
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_082_REVIEW
+next_transition: FOUNDER_SPEC_082_NN_6_DECISION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,25 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Codex 스펙 082 보완 라운드 6 재검수 — CORRECTION_REQUIRED / EXCEPTIONS CONSUMED (2026-08-28)
+
+- 검수 기준 `HEAD=origin=de14638`, ahead/behind 0/0. 라운드 6 제품 commit `a17c96b`의 변경은 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이다.
+- 모든 `firebase/*` specifier를 먼저 수집하고 re-export·unbound dynamic import·namespace escape를
+  fail-closed로 바꾼 방향과 Claude 실측 Chromium **161/161**·check unit **2409/2409**는 보존한다.
+- 그러나 `sdkUsage()`가 `import { ... } from "firebase/x"`와 `import type { ... }`를 구분하지 않고 둘 다
+  허용한다. 따라서 `import { getStorage } from "firebase/storage"` 같은 **런타임 정적 import**가
+  claim되고, 이미 다른 파일이 채운 aggregate allowlist Set도 변하지 않아 검사를 통과한다.
+- 이는 스펙 079의 SDK **dynamic import** 계약과 스펙 080의 V2 dependency **lazy·최대 1회** 및 module
+  import 시 Firebase app/service/network 시작 0 계약을 회귀시킬 수 있다. 현재 제품 surface는 실제로
+  dynamic import/type query만 사용하므로 **현 제품 회귀가 아니라 가드 계약 결함**이다.
+- Founder **NN-6** 결정 대기: **A(권장)** — test 한 파일의 correction round 7 예외. static form은
+  `import type`만 허용하고 런타임 static Firebase named import는 unaccounted/fail로 고정하며 positive/
+  negative self-check를 추가한다. **B** — eager SDK import 검출 공백을 수용한다(비권장).
+- 예외가 모두 소진됐으므로 코드·test 수정과 실행 게이트 반복은 하지 않았다. 상태
+  `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_6_DECISION`. 실제 admin issue UI·다음 스펙·
+  자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
 
 ## 스펙 082 보완 라운드 6 완료 — Founder NN-5=A 예외, 모듈에서 출발하는 reader (2026-08-27)
 

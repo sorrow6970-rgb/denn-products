@@ -907,3 +907,38 @@ stage/commit/restore하지 않았다.
 
 **진행도.** 전체 리빌드 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품
 능력이 아니다.
+
+### CODEX REVIEW — 보완 라운드 6 (2026-08-28): CORRECTION_REQUIRED / EXCEPTIONS CONSUMED
+
+검수 기준 `HEAD=origin=de14638`, ahead/behind 0/0. 라운드 6은 모든 `firebase/*` literal specifier를
+먼저 수집하고 각 occurrence를 claim하게 하므로 NN-5의 re-export·unbound dynamic import·namespace
+escape 지적은 닫혔다. Claude의 Chromium **161/161**, check unit **2409/2409**, build byte/hash 동일
+결과도 부정하지 않는다.
+
+다만 reader가 허용하는 static form이 너무 넓다. `tests/e2e/admin-auth-read.spec.ts:327-336`은
+`import { ... } from "firebase/x"`와 `import type { ... }`를 구분하지 않고 둘 다 claim·record한다.
+따라서 아래 런타임 정적 import는 `unaccounted` 없이 승인 member로 기록된다.
+
+```ts
+import { getStorage } from "firebase/storage";
+```
+
+현재 facade의 dynamic import가 이미 `getStorage`를 aggregate Set에 넣으므로 위 코드를 다른 scanned
+파일에 추가해도 module/member equality는 변하지 않는다. 하지만 스펙 079 §4는 `firebase/app`과
+`firebase/storage`의 **dynamic import**를, 스펙 080 §3은 V2 dependency의 **lazy·최대 1회** 조합과 module
+import 시 Firebase app/service/network 시작 0을 계약한다. 정적 runtime import를 허용하는 검사는 이
+lazy bundle 경계의 회귀를 증명하지 못한다.
+
+현재 customer surface는 실제로 dynamic import와 type query만 사용하므로 제품 회귀가 발견된 것은
+아니다. 결함은 미래의 eager SDK import를 통과시키는 **검증 계약**에 있다. 자동 한도와 NN-3/4/5 예외를
+모두 사용했으므로 Codex는 test를 수정하거나 실행 게이트를 반복하지 않았다.
+
+Founder **NN-6** 결정:
+
+- **A (권장):** `tests/e2e/admin-auth-read.spec.ts` 한 파일의 correction round 7 예외. static SDK form은
+  `import type`만 허용하고 runtime named import는 unaccounted/fail로 만든다. runtime static negative,
+  type-only static positive, 현재 `Promise.all` dynamic positive self-check를 같은 reader에 고정한다.
+- **B:** eager SDK import 검출 공백을 수용한다(비권장).
+
+NN-6 전에는 코드·test 수정, commit/push, spec 082 종료, 실제 admin issue UI 및 다음 스펙 착수를 하지
+않는다.

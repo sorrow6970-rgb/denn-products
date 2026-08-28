@@ -6959,3 +6959,21 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `CODEX_SPEC_082_REVIEW`.
 - 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**. 검증 정확도 보완이며 새 제품 능력이
   아니다.
+
+## 2026-08-28 - Codex 스펙 082 보완 라운드 6 재검수 — CORRECTION_REQUIRED / EXCEPTIONS CONSUMED
+
+- `HEAD=origin=de14638`, ahead/behind 0/0. 라운드 6 제품 diff는 승인된
+  `tests/e2e/admin-auth-read.spec.ts` 한 파일뿐이다.
+- 모든 `firebase/*` specifier를 먼저 수집해 re-export·unbound dynamic import·namespace escape를 닫은
+  보완은 적합하고, Claude 실측 Chromium **161/161**·check unit **2409/2409**는 보존한다.
+- 잔여 결함: `sdkUsage()`는 `import { ... } from "firebase/x"`와 `import type { ... }`를 모두 허용한다.
+  따라서 runtime `import { getStorage } from "firebase/storage"`가 claim되고, 기존 dynamic facade가
+  aggregate allowlist를 이미 채워 검사를 통과한다.
+- 이는 스펙 079의 SDK dynamic import와 스펙 080의 lazy dependency/module-import inert 계약을 깨뜨릴
+  수 있다. 현재 customer source에 해당 runtime static import는 없어 **현 제품 회귀가 아닌 가드 계약
+  결함**이다.
+- 자동 한도와 NN-3/NN-4/NN-5 예외가 모두 소진되어 코드·test 수정과 실행 게이트 반복은 하지 않았다.
+- Founder **NN-6** 결정 대기: A(권장 — test 한 파일 correction round 7 예외, static은 type-only만 허용,
+  runtime named import fail + self-check) / B(공백 수용, 비권장).
+- 상태 `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_6_DECISION`. 실제 admin issue UI·다음
+  스펙·자동화 시작 0. 전체 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.

@@ -1,5 +1,15 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-28): spec 082 correction round 6 Codex 재검수 = CORRECTION_REQUIRED / EXCEPTIONS CONSUMED.**
+> 검수 기준 `HEAD=origin=de14638`, ahead/behind 0/0. 모든 SDK specifier를 먼저 수집하는 라운드 6 방향은
+> 적합하지만 `sdkUsage()`가 runtime `import { getStorage } from "firebase/storage"`와 `import type`을
+> 구분하지 않고 둘 다 claim한다. 기존 dynamic facade가 승인 member Set을 이미 채워 aggregate equality도
+> 그대로 통과한다. 이는 스펙 079/080의 dynamic/lazy Firebase SDK 경계를 깨뜨릴 수 있는 **가드 계약
+> 결함**이며 현재 제품 source의 실제 회귀는 아니다. Founder NN-6=A(권장: test 한 파일 round 7 예외,
+> static은 type-only만 허용) / B(공백 수용) 결정 전 코드·test·다음 스펙 시작 0. 상태
+> `FOUNDER_DECISION_REQUIRED`, next `FOUNDER_SPEC_082_NN_6_DECISION`. 전체 진행도 **84~87% / 잔여
+> 13~16% — 변동 없음**.
+
 > **최신 포인터 (2026-08-27): Founder NN-5=A 예외 / spec 082 correction round 6 완료 = READY_FOR_CODEX.**
 > `HEAD=origin=c7199f0`에서 시작, Codex/NN-5 문서 `88eb3c0`, 보완 commit `a17c96b`. 허용 제품 파일은
 > `tests/e2e/admin-auth-read.spec.ts` 하나뿐이고 제품 코드·승인된 read-only Storage 연결·
