@@ -7042,3 +7042,24 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `CLAUDE_SPEC_083_IMPLEMENTATION`, fix round 0. 문서 6개는 아직 uncommitted/unstaged이며 기존 보호·
   Founder/user dirty를 그대로 보존했다.
 - 전체 리빌드 진행도는 계약 문서만으로 올리지 않아 **84~87% 완료 / 13~16% 잔여**를 유지한다.
+
+## 2026-08-28 - 스펙 083 구현 — Admin Space V2 발급 UI (OO-1=A · Q-1=A)
+
+- `HEAD=origin=ba9eb48` 기준. 계약 `fbf60cc`, Q-1 `977af5c`, 구현 `1a7cba9`.
+- Q-1=A: `@denn/render` workspace edge 1줄 + lockfile 3줄. offline install, downloaded 0/added 0.
+  `pnpm-workspace.yaml` sha256 무변경·미stage.
+- 한 frozen generation이 catalog/selection/orientation/width/color/transform/PNG/plan을 함께 묶고,
+  preview와 발급이 같은 generation을 쓴다. resize·새 baseline·파일 교체가 발급 내용에 닿지 않는다.
+- gate는 exact `"true"` + config + write gate 3중이며 default off. writer는 첫 valid issue에서만
+  dynamic import — 빌드에서 `space-write-*.js` 8.47 kB lazy chunk로 확인.
+- PNG owner는 MIME/확장자를 믿지 않고 고정 `image/png` Blob decode로 판정. 파일명·blob URL·MIME은
+  closure 밖으로 안 나가고 object URL revoke는 정확히 1회(자체 test가 초기 이중 revoke 검출).
+- admin plan은 customer replay와 **command JSON exact equality**(6 케이스) 회귀 test로 고정.
+- password는 submit 즉시 비우고 single-flight, definite 실패는 새 draft 요구, outcome-unknown은
+  alert·retry 0·link 0. success에서만 same-origin `?space=` + 명시 copy 1회.
+- 실측: check PASS(unit **2458/2458**, 92 파일), E2E **Chromium 177/177**, `git diff --check` PASS,
+  포트·temp 잔류 0, 실제 Firebase/network/emulator/deploy 0. 고객 번들 해시 무변경, admin entry
+  226.20 → 294.61 kB(gzip 71.75 → 91.35), admin CSS 9.14 → 10.80 kB.
+- ⚠️ 스펙 밖 1건: `issue-candidate.test.ts`의 `not.toContain("space-v2")` 단언을 `issue-candidate`로
+  좁힘(스펙이 요구한 App.tsx 배선과 양립 불가, 원래 의도 유지). Codex 판단 요청.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_083_REVIEW`. 전체 진행도 **85~88% / 잔여 12~15%**.

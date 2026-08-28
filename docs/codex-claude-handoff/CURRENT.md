@@ -1,5 +1,18 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-28): spec 083 Admin Space V2 발급 UI 구현 완료 = READY_FOR_CODEX.**
+> `HEAD=origin=ba9eb48`에서 시작, 계약 `fbf60cc`, Q-1 기록 `977af5c`, 구현 `1a7cba9`. Q-1=A 적용은
+> `apps/admin/package.json` 1줄 + `pnpm-lock.yaml` 3줄뿐이고(offline install, downloaded 0/added 0),
+> 사용자 dirty `pnpm-workspace.yaml`은 sha256 무변경·미stage다. 한 frozen generation이 catalog·
+> selection·orientation·width·color·transform·PNG·plan을 묶고 preview와 발급이 같은 generation을 쓴다.
+> gate 기본 off, writer는 첫 발급에서만 dynamic import(lazy `space-write-*.js` 8.47 kB). admin plan은
+> customer replay와 command JSON exact equality 회귀 test로 고정했다. 실측 `check` PASS(unit
+> **2458/2458**), canonical E2E **Chromium 177/177**, 고객 번들 해시 무변경, admin entry 226.20 →
+> 294.61 kB. ⚠️ 스펙 밖 1건 — `issue-candidate.test.ts`의 `not.toContain("space-v2")` 단언을
+> `issue-candidate`로 좁힘(스펙이 요구한 App.tsx 배선과 양립 불가, 원래 의도 유지) → Codex 판단 요청.
+> 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_083_REVIEW`. 실제 발급·live network·배포 0. 전체 진행도
+> **85~88% / 잔여 12~15%**.
+
 > **최신 포인터 (2026-08-28): Founder OO-1=A / spec 083 Admin Space V2 issue UI = READY_FOR_CLAUDE.**
 > 기준 `HEAD=origin=ba9eb48`, ahead/behind 0/0. 정본
 > `docs/rebuild/specs/083-admin-space-v2-issue-ui.md`와 2026-08-28 handoff를 작성했다. 실제 UI/UX 구현은

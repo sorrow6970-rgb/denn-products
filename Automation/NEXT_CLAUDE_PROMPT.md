@@ -1,13 +1,60 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
+상태: `READY_FOR_CODEX`
 
 - completed_unit: `spec-082-shared-canvas-plan-executor-boundary` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK (종료 문서까지 반영)**
-- active_unit: `spec-083-admin-space-v2-issue-ui` — Founder `OO-1=A`, Claude Code UI 구현 대기.
-- 승인 기준: `HEAD=origin=ba9eb48`, ahead/behind 0/0. spec 082 verified code `048388b`.
-- next_transition: `CLAUDE_SPEC_083_IMPLEMENTATION`
+- active_unit: `spec-083-admin-space-v2-issue-ui` — **구현 완료(OO-1=A · Q-1=A) / READY_FOR_CODEX / UI / NO_LIVE_NETWORK**
+- 기준: `HEAD=origin=ba9eb48`에서 시작. 계약 `fbf60cc`, Q-1 기록 `977af5c`, 구현 `1a7cba9`.
+- next_transition: `CODEX_SPEC_083_REVIEW`
 - fix_round: `0`
-- 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (7개 roadmap 작업축 기반 관리 추정)
+
+## 현재 결과 — 스펙 083 구현 완료, Codex 재검수 대기
+
+**Q-1=A는 최소로만 썼다.** `apps/admin/package.json` **1줄** + `pnpm-lock.yaml` importer **3줄**.
+`corepack pnpm install --offline --ignore-scripts` 실측 `downloaded 0, added 0`이라 신규 외부
+의존성·다운로드·설치 source는 **0**이고, 사용자 dirty `pnpm-workspace.yaml`은 **sha256 그대로**이며
+stage/commit하지 않았다.
+
+**핵심은 "본 것이 발급된다"를 구조로 만든 것.** 명시적 `시안 고정`이 catalog snapshot·selection·
+파생 orientation·측정된 logical width·색상·정규화 transform·PNG bytes·render plan을 **한 generation**에
+묶고, 화면의 preview와 발급 source가 같은 generation을 쓴다. 이후 resize·새 baseline·디스크에서 바뀐
+파일은 발급 내용에 닿지 못한다.
+
+**gate와 lazy writer.** exact `"true"` + 완전한 config + write gate 3중이라 기본 빌드는 panel·proof
+owner·adapter를 **하나도** 만들지 않는다. writer는 첫 valid issue에서만 `@denn/firebase/space-write`를
+dynamic import한다 — 빌드 산출물에서 `space-write-*.js` **8.47 kB** 별도 lazy chunk로 확인된다.
+
+**PNG owner.** MIME·확장자를 신뢰 근거로 쓰지 않는다. bytes를 한 번 복사해 **이 모듈이 고정한**
+`image/png` Blob으로 감싸고 브라우저 decode가 판정한다. 파일명·blob URL·Blob·원본 MIME는 closure를
+벗어나지 않고, object URL revoke는 **정확히 1회**다(첫 구현의 이중 revoke를 자체 test가 잡았다).
+
+**plan 동등성.** admin은 `apps/mockup`을 import할 수 없어 얇은 helper를 따로 두었으므로, customer의
+실제 composition에 같은 evidence를 넣어 **command JSON exact equality**를 6개 케이스에서 단언한다.
+어긋나면 발급을 열지 않는다.
+
+**실측.** `node scripts/check.mjs` PASS(unit **2458/2458**, 92 파일), canonical `pnpm run test:e2e`
+**Chromium 177/177**(기존 161 + 신규 16), `git diff --check` PASS, 포트·temp 잔류 0, 실제
+Firebase/network/emulator/deploy **0**. 고객 entry 해시 무변경(`index-CRHkWFoL.js` 340.60 kB),
+admin entry 226.20 → **294.61 kB**(gzip 71.75 → **91.35**), admin CSS 9.14 → **10.80 kB**.
+desktop/mobile 시각 결과는 `docs/rebuild/results/spec-083/`에 있고 직접 확인했다.
+
+**⚠️ 스펙 밖 변경 1건 — Codex 판단 요청.** `apps/admin/src/space-v2/issue-candidate.test.ts`의
+`expect(app).not.toContain("space-v2")` 한 줄을 `not.toContain("issue-candidate")`로 좁혔다. 스펙 083은
+panel을 `App.tsx`에 조합하도록 **요구**하는데 import 경로가 `./space-v2/…`라 그 단언과 동시에 성립할 수
+없다. test의 원래 의도(spec 065 candidate projector 미배선)는 유지되고 나머지 단언도 그대로다. 이 한 줄
+외에 spec 064~082 제품/test 변경은 0이다.
+
+## 다음 단계 — Codex 재검수 대기
+
+스펙 083 구현은 `READY_FOR_CODEX`에서 멈춘다. 다음 단위는 Codex 재검수 결과와 사용자 지시가 정한다.
+실제 UID·live network·emulator·Rules/Hosting deploy·운영 발급은 시작하지 않았다.
+
+> 직전 지시문(스펙 083 구현, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된 스펙 083 Admin Space V2 발급 UI 범위만 구현·검증해. 실제 UI/UX 구현은 Claude Code가 담당하고, actual Firebase/network/emulator/deploy는 실행하지 마.
+```
 
 ## 지금 수행할 작업 - 스펙 083만
 

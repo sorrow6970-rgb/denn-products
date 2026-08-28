@@ -6,22 +6,45 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-082-shared-canvas-plan-executor-boundary   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
 active_unit: spec-083-admin-space-v2-issue-ui   # OO-1=A; Claude Code UI implementation contract ready
-state: READY_FOR_CLAUDE
-baseline_commit: ba9eb48   # HEAD=origin before the uncommitted spec 083 contract handoff
-candidate_commit: none   # spec 083 product implementation has not started
+state: READY_FOR_CODEX
+baseline_commit: ba9eb48   # HEAD=origin at spec 083 implementation start
+candidate_commit: 1a7cba9  # spec 083 admin Space V2 issue panel (contract fbf60cc, Q-1 record 977af5c)
 verified_commit: 048388b   # spec 082 correction round 7 independently verified by Codex
-origin_relation: "HEAD=origin=ba9eb48, ahead/behind 0/0 before the uncommitted spec 083 docs"
-working_tree: "spec 083 contract docs are uncommitted; protected spec-018 PNGs and pre-existing Founder/user changes remain dirty and unstaged"
+origin_relation: "Claude pushed the spec 083 implementation; HEAD=origin, ahead/behind 0/0"
+working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_SPEC_083_IMPLEMENTATION
+next_transition: CODEX_SPEC_083_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
-overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
+overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## 스펙 083 구현 완료 — Admin Space V2 발급 UI (2026-08-28, OO-1=A · Q-1=A)
+
+- `HEAD=origin=ba9eb48`에서 시작, ahead/behind 0/0. 계약 문서 `fbf60cc`, Q-1 기록 `977af5c`,
+  구현 commit `1a7cba9`.
+- **Q-1=A**: `apps/admin/package.json`에 `@denn/render` workspace edge 1줄, `pnpm-lock.yaml` importer
+  3줄만 추가했다(`corepack pnpm install --offline`, 실측 downloaded 0 / added 0). 신규 외부 의존성·
+  다운로드·설치 source 0. 사용자 dirty `pnpm-workspace.yaml`은 sha256 그대로이고 stage/commit 0.
+- 한 frozen generation이 catalog·selection·orientation·logical width·color·transform·PNG bytes·plan을
+  함께 묶고 preview와 발급이 같은 generation을 쓴다. gate는 exact `"true"`+config+write 3중이며 기본
+  off, writer는 첫 valid issue에서만 dynamic import(빌드 `space-write-*.js` 8.47 kB lazy chunk).
+- PNG owner는 MIME/확장자를 신뢰하지 않고 고정 `image/png` Blob decode로 판정하며 파일명·blob URL·
+  MIME을 밖으로 내보내지 않는다. object URL revoke는 정확히 1회.
+- admin plan은 customer replay와 command JSON exact equality 회귀 test(6 케이스)로 고정했다.
+- 실측: `node scripts/check.mjs` PASS(unit **2458/2458**, 92 파일), canonical E2E **Chromium 177/177**
+  (기존 161 + 신규 16), `git diff --check` PASS, 포트·temp 잔류 0, 실제 Firebase/network/emulator/
+  deploy 0. 고객 번들 해시 무변경, admin entry 226.20 → 294.61 kB(gzip 71.75 → 91.35), CSS 9.14 →
+  10.80 kB.
+- ⚠️ 스펙 밖 변경 1건: `apps/admin/src/space-v2/issue-candidate.test.ts`의
+  `not.toContain("space-v2")` 단언을 `not.toContain("issue-candidate")`로 좁혔다. 스펙이 요구한
+  `App.tsx` 배선과 양립 불가한 단언이며 test의 원래 의도는 유지된다. Codex 판단을 요청한다.
+- 상태 `READY_FOR_CODEX`, fix_round 0, next `CODEX_SPEC_083_REVIEW`. 다음 스펙·실제 발급·배포는
+  시작하지 않았다. 전체 진행도 **85~88% 완료 / 12~15% 잔여**.
 
 ## Founder OO-1=A - 스펙 083 Claude UI 구현 계약 (2026-08-28)
 

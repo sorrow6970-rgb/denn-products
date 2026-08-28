@@ -323,3 +323,68 @@ executor 실행은 현재 의존성 그래프에서 **구현 불가능**하다.
   정면 충돌한다. 비권장.
 
 결정 전까지 제품 코드·test는 시작하지 않았다. 이 문서 외 변경 0.
+
+### DONE (Claude) — 스펙 083 구현 (2026-08-28, Founder OO-1=A · Q-1=A)
+
+기준 `HEAD=origin=ba9eb48`에서 시작. 계약 문서 `fbf60cc`, Q-1 기록 `977af5c`, 구현 `1a7cba9`.
+
+**Q-1=A 적용.** `apps/admin/package.json`에 `"@denn/render": "workspace:*"` **한 줄**과 `pnpm-lock.yaml`
+importer **3줄**만 추가했다. `corepack pnpm install --offline --ignore-scripts`로 갱신했고 실측
+`downloaded 0, added 0` — 신규 외부 의존성·다운로드·설치 source는 **0**이다. 사용자 dirty
+`pnpm-workspace.yaml`은 **sha256 `61c7bfe4…` 그대로**(pnpm이 다시 쓰지 않았고 stage/commit도 안 했다).
+
+**구현 요지.**
+
+- **§1 gate.** `resolveAdminSpaceV2IssueEnabled`는 정확히 `"true"`만 통과시키고 완전한 config와 write
+  gate를 함께 요구한다. off면 session·adapter·UUID source·facade가 **하나도 생성되지 않는다**.
+  기존 default app과 `OperatorAuthPort` 하나를 그대로 쓰고, writer는 첫 valid issue에서만
+  `@denn/firebase/space-write`를 dynamic import한다 — 빌드에서 `space-write-*.js` **8.47 kB** 별도
+  chunk로 분리된 것으로 확인된다. lazy factory 실패는 write에 도달하지 않은 **definite** 실패로 닫고
+  SDK 메시지·config 값을 밖으로 내보내지 않는다.
+- **§2 baseline.** `ready-clean`에서만 draft를 시작하고, freeze 시점 revision과 달라지면 stale로
+  전환해 조용한 재기준화를 막는다. 카탈로그 저장과 발급은 별개 버튼이다.
+- **§3 PNG-only owner.** `image/png` 한 개만 받되 MIME/확장자를 신뢰 근거로 쓰지 않는다 — bytes를
+  private `Uint8Array`로 **한 번** 복사하고 이 모듈이 **고정한** `image/png` Blob으로 감싸 브라우저
+  decode가 판정한다. 파일명·blob URL·Blob·원본 MIME는 closure를 벗어나지 않고, object URL은
+  replace/clear/dispose에서 **정확히 한 번** revoke된다(live Set 가드 — 첫 구현의 이중 revoke를 자체
+  test가 잡았다). superseded decode는 현재 draft를 덮지 않는다. `freeze()` 핸들은 **자기 복사본**을
+  들고 있어 이후 replace/clear와 무관하다.
+- **§4 plan.** admin-local 순수 helper 하나(`buildAdminFrameIssuePlan`)만 두고 `@denn/render`의
+  public plan/executor를 쓴다. 정규화 pan은 replay와 동일한 **2-pass**(zero-pan probe → maxPan →
+  logical)로 변환한다. 색상은 customer adapter와 같게 대문자 정규화한다.
+- **§5 frozen generation.** UI preview와 `SpaceV2FrozenIssueDraftSource`가 같은 generation을 쓰고,
+  source의 public key는 `copyFields`/`exportProofPng` 둘뿐이다.
+- **§6 issue form.** password 두 입력은 submit 시작 즉시 비우고, mismatch는 아무것도 소모하지 않으며
+  submit은 single-flight다. 실패 코드는 고정 한국어로만 매핑한다(코드·SDK 메시지 노출 0).
+  outcome-unknown은 `role="alert"`이며 retry·link가 없다.
+- **§7 link.** confirmed success에서만 현재 origin **root + `?space=` 하나**로 만들고(query·hash·자격
+  증명 미복사), 표시 문자열과 copy payload가 동일하며 **명시 click 1회**로만 clipboard에 간다.
+
+**plan 동등성(VERIFY unit 8).** customer의 `buildFrameProductPlan` + replay의 normalized→logical 변환에
+같은 evidence를 넣어 **command JSON exact equality**를 6개 케이스(identity · zoom+pan · 1/2/3 quarter
+turn · landscape+inset 0 · 소문자 색상)에서 단언한다. 불일치하면 발급을 열지 않는다.
+
+**실측.** `node scripts/check.mjs` **PASS**(format·lint·typecheck 7개·unit **2458/2458**(92 파일)·build
+2개), canonical `pnpm run test:e2e` **Chromium 177/177**(기존 161 + 신규 16),
+`admin-space-v2-issue` 16/16, `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199 ·
+`test-results`/temp staging 잔류 **0**. 실제 Firebase/network/emulator/deploy **0**.
+
+**bundle.** 고객 entry `index-CRHkWFoL.js` **340.60 kB / gzip 104.40** — 변경 전과 **동일 해시**
+(고객 번들 무변경). admin entry `index-D0XOQpRL.js` 226.20 kB → `index-Dl31AMdR.js` **294.61 kB**
+(gzip 71.75 → **91.35**), admin CSS 9.14 → **10.80 kB**(gzip 2.83 → 3.10), 신규 lazy
+`space-write-*.js` **8.47 kB**. Firebase SDK chunk 이름·크기는 그대로이고 `index.html`은 entry+CSS만
+로드한다 — **write SDK는 default entry에 eager 포함되지 않는다**.
+
+**⚠️ 스펙 밖 변경 1건(Codex 판단 요청).** `apps/admin/src/space-v2/issue-candidate.test.ts`의
+"App.tsx never imports or calls it" 단언 중 `expect(app).not.toContain("space-v2")` 한 줄을
+`not.toContain("issue-candidate")`로 좁혔다. 스펙 083 §범위 1은 panel을 `App.tsx`에 조합하도록
+**요구**하고 §대상 파일도 `App.tsx` 수정을 허용하는데, panel import 경로가 `./space-v2/…`라 그 단언과
+동시에 성립할 수 없다. test의 **원래 의도**(spec 065 candidate projector가 admin UI에 배선되지
+않는다)는 그대로 유지되며 `createSpaceV2FrameIssueCandidate` 단언도 그대로다. 이 한 줄 외에 spec
+064~082 제품/test 변경은 **0**이다.
+
+**남은 경계.** 실제 UID·live project/bucket/data/network·emulator·Rules/Hosting deploy·운영 발급은
+`NOT TESTED / FORBIDDEN`이다. pointer drag는 이번 필수 범위가 아니어서 range/button/keyboard로만
+구현했다. 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 stage/commit/restore하지 않았다.
+
+**진행도.** 전체 리빌드 **85~88% 완료 / 12~15% 잔여**(운영자 발급 UI 축이 열려 소폭 전진).

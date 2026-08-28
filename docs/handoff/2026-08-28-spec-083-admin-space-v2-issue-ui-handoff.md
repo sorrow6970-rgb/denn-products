@@ -39,3 +39,25 @@ C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된
 
 완료 후 제품 commit과 기록 commit을 일반 fast-forward push하고 `READY_FOR_CODEX`에서 멈춘다. Codex
 독립 검수 전 다음 스펙을 시작하지 않는다.
+
+## 구현 완료 — Claude Code (2026-08-28)
+
+- `HEAD=origin=ba9eb48`에서 시작. 계약 `fbf60cc`, Q-1 기록 `977af5c`, 구현 `1a7cba9`.
+- **Q-1=A**: `apps/admin/package.json` 1줄 + `pnpm-lock.yaml` 3줄만 추가(`corepack pnpm install
+  --offline`, downloaded 0/added 0). `pnpm-workspace.yaml`은 sha256 그대로이고 stage/commit 0.
+- 신규 제품 파일: `space-v2/issue-composition.ts`(gate·lazy writer·plan helper·link),
+  `space-v2/browser-proof-draft.ts`(PNG-only owner), `space-v2/AdminSpaceV2IssuePanel.tsx`,
+  `space-v2/admin-space-v2-issue.css`. 수정: `App.tsx`, `admin-composition/create.ts`,
+  `admin-read/config.ts`, `env.d.ts`, `vite.e2e-fixture.config.ts`.
+- 신규 검증: 세 unit 파일(+49 test), `tests/e2e/admin-space-v2-issue.spec.ts`(16), E2E fixture 2개,
+  `docs/rebuild/results/spec-083/` desktop·mobile 스크린샷 2장(직접 확인함).
+- **실측**: `node scripts/check.mjs` PASS(unit **2458/2458**, 92 파일), canonical E2E **Chromium
+  177/177**, `git diff --check` PASS, 포트·temp 잔류 0, 실제 Firebase/network/emulator/deploy 0.
+- **bundle**: 고객 entry 해시 무변경(`index-CRHkWFoL.js` 340.60 kB), admin entry 226.20 → 294.61 kB
+  (gzip 71.75 → 91.35), admin CSS 9.14 → 10.80 kB, write facade는 lazy `space-write-*.js` 8.47 kB로
+  분리 — write SDK eager 포함 없음.
+- **⚠️ 스펙 밖 변경 1건**: `issue-candidate.test.ts`의 `not.toContain("space-v2")` 단언을
+  `not.toContain("issue-candidate")`로 좁혔다. 스펙이 요구한 `App.tsx` 배선과 동시에 성립 불가한
+  단언이고 test의 원래 의도는 유지된다. Codex 판단을 요청한다.
+- 상태 `READY_FOR_CODEX`, fix_round **0**, next `CODEX_SPEC_083_REVIEW`. 다음 스펙은 시작하지 않았다.
+- 전체 리빌드 진행도 **85~88% 완료 / 12~15% 잔여**.
