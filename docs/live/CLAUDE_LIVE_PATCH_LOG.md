@@ -7025,3 +7025,20 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 그대로 두었다.
 - 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙·실제 admin issue
   UI·자동화 시작 0. 전체 리빌드 진행도 **84~87% 완료 / 13~16% 잔여 — 변동 없음**.
+
+## 2026-08-28 - Founder OO-1=A · 스펙 083 Admin Space V2 발급 UI Claude 계약
+
+- 기준 `HEAD=origin=ba9eb48`, ahead/behind 0/0. Founder가 다음 단위 `OO-1=A`를 승인했다.
+- 신규 정본 `docs/rebuild/specs/083-admin-space-v2-issue-ui.md`와 handoff를 작성했다. 제품 코드·test·
+  package/lockfile·Rules/config는 수정하거나 실행하지 않았다. actual UI/UX 구현은 Claude Code가 담당한다.
+- 계약 범위는 authenticated C5 `ready-clean` baseline, PNG-only local proof owner, 같은 frozen generation의
+  Canvas preview/fields/exact bytes, 별도 exact gate default false, 기존 default app/Auth 재사용, first valid
+  issue까지 lazy writer, password 즉시 폐기, confirmed success의 same-origin link와 explicit copy다.
+- PNG proof는 customer replay의 user image이므로 composed frame Canvas를 upload하지 않는다. 같은 evidence의
+  admin preview plan과 customer replay plan이 exact 일치하지 않으면 issue를 열지 않는 STOP gate를 넣었다.
+- actual Firebase/project/bucket/data/network, emulator, 실제 UID, Rules·Hosting deploy, 운영 발급, publish,
+  orphan cleanup, auto retry/merge, package/lockfile, 신규 dependency는 계속 금지다.
+- 상태 `READY_FOR_CLAUDE`, active `spec-083-admin-space-v2-issue-ui`, next
+  `CLAUDE_SPEC_083_IMPLEMENTATION`, fix round 0. 문서 6개는 아직 uncommitted/unstaged이며 기존 보호·
+  Founder/user dirty를 그대로 보존했다.
+- 전체 리빌드 진행도는 계약 문서만으로 올리지 않아 **84~87% 완료 / 13~16% 잔여**를 유지한다.

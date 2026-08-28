@@ -5,16 +5,16 @@ updated_at: 2026-08-28
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-082-shared-canvas-plan-executor-boundary   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
-active_unit: none   # spec 082 closed; the next unit waits for a Founder instruction or a new Codex spec
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: a1b3265   # HEAD=origin at Codex correction round 7 review
-candidate_commit: 048388b  # spec 082 correction round 7, NN-6=A exception (round 6 a17c96b, round 5 7627bc6, round 4 b1ae8b4, round 3 68bd25c, round 2 65c5b46, round 1 8d4458d, implementation 307521f)
+active_unit: spec-083-admin-space-v2-issue-ui   # OO-1=A; Claude Code UI implementation contract ready
+state: READY_FOR_CLAUDE
+baseline_commit: ba9eb48   # HEAD=origin before the uncommitted spec 083 contract handoff
+candidate_commit: none   # spec 083 product implementation has not started
 verified_commit: 048388b   # spec 082 correction round 7 independently verified by Codex
-origin_relation: "Claude pushed the spec 082 closure docs; HEAD=origin, ahead/behind 0/0"
-working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
-fix_round: 7   # NN-3=A, NN-4=A, NN-5=A and NN-6=A exceptions consumed; static SDK imports are now type-only
+origin_relation: "HEAD=origin=ba9eb48, ahead/behind 0/0 before the uncommitted spec 083 docs"
+working_tree: "spec 083 contract docs are uncommitted; protected spec-018 PNGs and pre-existing Founder/user changes remain dirty and unstaged"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_NEXT_MANUAL_TASK
+next_transition: CLAUDE_SPEC_083_IMPLEMENTATION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
@@ -22,6 +22,22 @@ deploy: forbidden
 overall_rebuild_progress: "estimated 84-87% complete; 13-16% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Founder OO-1=A - 스펙 083 Claude UI 구현 계약 (2026-08-28)
+
+- Founder가 다음 단위로 `OO-1=A`를 승인했다. active unit은
+  `spec-083-admin-space-v2-issue-ui`, 상태는 `READY_FOR_CLAUDE`, next transition은
+  `CLAUDE_SPEC_083_IMPLEMENTATION`이다.
+- 계약 정본 `docs/rebuild/specs/083-admin-space-v2-issue-ui.md`와 handoff를 작성했다. actual UI/UX 구현은
+  사용자 지시대로 Claude Code가 담당한다. Codex는 제품 코드·test를 수정하거나 실행하지 않았다.
+- 범위는 authenticated C5 ready-clean baseline, PNG-only local proof owner, 같은 frozen draft의 Canvas
+  preview/fields/bytes, 기존 default app/Auth 재사용, separate exact gate default false, first issue까지 lazy
+  writer, password 분리, confirmed same-origin link와 explicit copy다.
+- actual Firebase/project/bucket/data/network, emulator, 실제 UID, Rules·Hosting deploy, 운영 발급, publish,
+  orphan cleanup, package/lockfile와 신규 dependency는 계속 금지다.
+- 기준 `HEAD=origin=ba9eb48`, ahead/behind 0/0. 이번 변경은 문서 6개뿐이며 아직 commit/stage/push하지
+  않았다. 기존 보호/Founder/user dirty는 그대로다.
+- 전체 리빌드 진행도는 계약 문서만으로 올리지 않아 **84~87% 완료 / 13~16% 잔여**를 유지한다.
 
 ## 스펙 082 종료 — CODEX_PASSED 종료 문서만 반영 (2026-08-28)
 

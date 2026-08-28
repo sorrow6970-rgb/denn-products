@@ -1,5 +1,15 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-28): Founder OO-1=A / spec 083 Admin Space V2 issue UI = READY_FOR_CLAUDE.**
+> 기준 `HEAD=origin=ba9eb48`, ahead/behind 0/0. 정본
+> `docs/rebuild/specs/083-admin-space-v2-issue-ui.md`와 2026-08-28 handoff를 작성했다. 실제 UI/UX 구현은
+> Claude Code가 담당한다. 범위는 C5 ready-clean baseline, PNG-only local proof owner, 동일 frozen
+> generation의 Canvas preview/fields/bytes, default app/Auth 재사용, 별도 exact gate default false, lazy
+> writer, password 분리, confirmed same-origin link와 explicit copy다. actual Firebase/network/emulator/UID,
+> Rules·Hosting deploy, 운영 발급, publish/orphan cleanup, package/lockfile는 계속 금지다. 제품 코드·test는
+> 아직 미착수이며 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_083_IMPLEMENTATION`. 전체 진행도는 계약
+> 문서만으로 올리지 않아 **84~87% / 잔여 13~16%**를 유지한다.
+
 > **최신 포인터 (2026-08-28): spec 082 종료 = DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI /
 > NO_LIVE_NETWORK.** 승인 기준 `HEAD=origin=a1b3265`, ahead/behind 0/0, 승인 대상은 라운드 7 commit
 > `048388b`(`tests/e2e/admin-auth-read.spec.ts` 한 파일). 종료 작업은 **문서 6개 전용**이며 제품

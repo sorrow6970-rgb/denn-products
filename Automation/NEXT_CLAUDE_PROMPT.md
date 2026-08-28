@@ -1,13 +1,48 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+상태: `READY_FOR_CLAUDE`
 
 - completed_unit: `spec-082-shared-canvas-plan-executor-boundary` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK (종료 문서까지 반영)**
-- active_unit: 없음 — 다음 단위는 사용자 지시 또는 Codex 신규 스펙이 있어야 시작한다.
-- 승인 기준: `HEAD=origin=a1b3265`, ahead/behind 0/0. 구현 `307521f`, 라운드 1 `8d4458d`, 2 `65c5b46`, 3 `68bd25c`, 4 `b1ae8b4`, 5 `7627bc6`, 6 `a17c96b`, 라운드 7 `048388b`.
-- next_transition: `FOUNDER_NEXT_MANUAL_TASK`
-- fix_round: `7` (자동 한도 3/3 + NN-3=A · NN-4=A · NN-5=A · NN-6=A 예외 각 1회)
+- active_unit: `spec-083-admin-space-v2-issue-ui` — Founder `OO-1=A`, Claude Code UI 구현 대기.
+- 승인 기준: `HEAD=origin=ba9eb48`, ahead/behind 0/0. spec 082 verified code `048388b`.
+- next_transition: `CLAUDE_SPEC_083_IMPLEMENTATION`
+- fix_round: `0`
 - 전체 리빌드: **84~87% 완료 / 13~16% 잔여 — 변동 없음** (7개 roadmap 작업축 기반 관리 추정)
+
+## 지금 수행할 작업 - 스펙 083만
+
+정본 `docs/rebuild/specs/083-admin-space-v2-issue-ui.md`를 처음부터 끝까지 읽고 그 허용 범위만
+구현·검증한다. 실제 UI/UX 구현은 Claude Code가 담당한다.
+
+핵심 범위:
+
+- C5 `ready-clean` baseline에서만 Space V2 draft를 시작한다.
+- PNG-only local proof owner와 실제 Canvas preview를 같은 frozen generation에 묶는다.
+- 별도 exact env gate는 default false, 기존 default Firebase app/Auth를 재사용하며 writer는 첫 valid
+  issue action까지 lazy다.
+- password는 두 입력 일치만 검사하고 즉시 지운다. confirmed success에서만 same-origin
+  `?space=<token>`을 표시하고 명시 copy만 허용한다.
+- synthetic unit/E2E와 desktop/mobile 시각 결과를 남긴다. actual Firebase/network/emulator/deploy는
+  실행하지 않는다.
+
+제품 commit과 기록 commit을 일반 fast-forward push한 뒤 `READY_FOR_CODEX`에서 멈춘다. 다음 스펙은
+시작하지 않는다.
+
+Claude Code에 전달할 문구:
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된 스펙 083 Admin Space V2 발급 UI 범위만 구현·검증해. 실제 UI/UX 구현은 Claude Code가 담당하고, actual Firebase/network/emulator/deploy는 실행하지 마.
+```
+
+## 계속 금지
+
+실제 UID 추측, live project/bucket/data/network, emulator, Rules·Hosting deploy, 운영 발급, publish,
+orphan delete/cleanup, password 저장·URL/자동 clipboard 포함, auto retry/merge, C6/backend, V1 migration,
+신규 dependency/download/install, package/lockfile 변경과 보호 대상 변경은 0이다.
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
 
 ## 현재 결과 — 스펙 082 종료 문서 반영 완료
 
