@@ -288,3 +288,38 @@ Claude Code는 아래 범위 안에서 이름을 더 명확히 다듬을 수 있
 
 없음. `OO-1=A`는 이 단위를 다음 Claude Code UI 구현 스펙으로 여는 승인이다. actual live enablement와
 배포 승인은 아니다.
+
+#### Q-1 (Claude Code, 2026-08-28) — `@denn/render`가 admin에서 resolve되지 않는다 · STOP
+
+**모순.** §4는 "plan은 `@denn/shared` projection과 `@denn/render`의 public geometry/plan/executor만
+사용한다"를 요구하지만, `apps/admin`은 `@denn/render`를 **의존성으로 선언하지 않았고** §대상 파일의
+명시 금지는 `package.json`/`pnpm-lock.yaml` 변경을 막는다. 둘을 동시에 만족할 수 없다.
+
+**실측(읽기 전용).**
+
+- `apps/admin/package.json` dependencies = `@denn/firebase`, `@denn/shared`, `@denn/spaces`,
+  `@denn/ui`, `react`, `react-dom`. `@denn/render` **없음**.
+- `apps/admin/node_modules/@denn/` = `firebase`, `shared`, `spaces`, `ui`. `render` **없음**
+  (`apps/mockup/node_modules/@denn/`에는 있다).
+- repo root에 `node_modules/@denn` 디렉터리 자체가 **없다**(pnpm isolated layout).
+- `apps/admin`에서 `require.resolve("@denn/render")` → `MODULE_NOT_FOUND`.
+- `tsconfig.base.json`과 `apps/admin/vite.config.ts`·`vite.e2e-fixture.config.ts`에 path alias 없음.
+- 현재 `apps/admin`은 `@denn/render`를 **한 번도 import하지 않는다**.
+
+따라서 Canvas preview(§3), plan 구성(§4), spec 078 replay와의 command JSON 일치(VERIFY unit 8),
+executor 실행은 현재 의존성 그래프에서 **구현 불가능**하다.
+
+**선택지.**
+
+- **A (권장):** `apps/admin/package.json`에 `"@denn/render": "workspace:*"` 한 줄과 그에 따른
+  `pnpm-lock.yaml` importer 항목만 허용한다. 신규 외부 dependency·download·install source 추가는
+  0이고, 이미 monorepo 안에 있는 workspace edge 하나만 생긴다. admin bundle에 render가 들어가므로
+  VERIFY의 bundle size/hash 보고에 그 증가가 나타난다. ⚠️ 선행 확인 필요: 현재 `pnpm-workspace.yaml`이
+  사용자 dirty 상태(`allowBuilds`에 `set this to true or false` placeholder)라 `corepack pnpm install`이
+  실패할 수 있다(**NOT VERIFIED** — install을 실행하지 않았다).
+- **B:** `@denn/shared`가 필요한 render surface를 re-export한다. `packages/**` 변경이라 역시 명시
+  금지이고 shared의 공개 API를 넓힌다. 비권장.
+- **C:** admin이 plan/executor 없이 Canvas를 직접 그린다. §4의 "executor·cover/rotation 수학 복사 금지"와
+  정면 충돌한다. 비권장.
+
+결정 전까지 제품 코드·test는 시작하지 않았다. 이 문서 외 변경 0.
