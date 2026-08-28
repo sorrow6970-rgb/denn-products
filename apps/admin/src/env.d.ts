@@ -13,6 +13,9 @@ interface ImportMetaEnv {
   readonly VITE_DENN_ADMIN_FIREBASE_STORAGE_BUCKET?: string;
   readonly VITE_DENN_ADMIN_FIREBASE_APP_ID?: string;
   readonly VITE_DENN_ADMIN_WRITE_ENABLED?: string;
+  // spec 083: the Space V2 issue panel is a THIRD gate on top of the two above. Declared here only
+  // — no value, project id or UID is ever committed to the repository.
+  readonly VITE_DENN_ADMIN_SPACE_V2_ISSUE_ENABLED?: string;
 }
 
 interface ImportMeta {

@@ -12,11 +12,20 @@ import type {
   AdminStateWritePort,
 } from "@denn/firebase/admin-write";
 import { createLazyFacade, createCorrelationId } from "../admin-read/create";
-import { resolveAdminFirebaseConfig, resolveAdminWriteEnabled } from "../admin-read/config";
+import {
+  resolveAdminFirebaseConfig,
+  resolveAdminSpaceV2IssueEnabled,
+  resolveAdminWriteEnabled,
+} from "../admin-read/config";
 import { createAdminRemoteController } from "../admin-read/controller";
 import type { AdminRemoteController } from "../admin-read/controller";
 import { createAdminWriteSessionController } from "../admin-write/session-controller";
 import type { AdminWriteSessionController } from "../admin-write/session-controller";
+import {
+  createAdminSpaceV2IssueSession,
+  type AdminSpaceV2IssueDependencies,
+} from "../space-v2/issue-composition";
+import type { SpaceV2IssueSessionController } from "../space-v2/issue-session";
 
 type WritePortFactory = (options: {
   readonly config: AdminFirebaseConfig;
@@ -28,11 +37,18 @@ export interface AdminOperatorCompositionDependencies {
   readonly makeReadFacade?: (config: AdminFirebaseConfig) => Promise<AdminFirebaseFacade>;
   readonly makeWritePort?: WritePortFactory;
   readonly createCorrelationId?: () => string;
+  /** spec 083: injected in tests and the E2E fixture; production reaches the SDK lazily. */
+  readonly spaceV2Issue?: AdminSpaceV2IssueDependencies;
 }
 
 export interface AdminOperatorComposition {
   readonly remoteController: AdminRemoteController;
   readonly writeController: AdminWriteSessionController | null;
+  /**
+   * spec 083: null unless the third gate, the complete config and the write gate are ALL on. A null
+   * here means no session, no adapter, no UUID source and no Firebase import — not a hidden panel.
+   */
+  readonly spaceV2IssueSession: SpaceV2IssueSessionController | null;
   dispose(): void;
 }
 
@@ -126,7 +142,12 @@ export function createAdminOperatorCompositionFromEnv(
   const resolution = resolveAdminFirebaseConfig(env);
   if (resolution.status === "unconfigured") {
     const remoteController = createAdminRemoteController({ createCorrelationId: correlationId });
-    return { remoteController, writeController: null, dispose: () => remoteController.dispose() };
+    return {
+      remoteController,
+      writeController: null,
+      spaceV2IssueSession: null,
+      dispose: () => remoteController.dispose(),
+    };
   }
 
   const facade = dependencies.makeReadFacade
@@ -140,7 +161,12 @@ export function createAdminOperatorCompositionFromEnv(
   });
 
   if (!resolveAdminWriteEnabled(env, resolution)) {
-    return { remoteController, writeController: null, dispose: () => remoteController.dispose() };
+    return {
+      remoteController,
+      writeController: null,
+      spaceV2IssueSession: null,
+      dispose: () => remoteController.dispose(),
+    };
   }
 
   const makeWritePort = dependencies.makeWritePort ?? makeProductionWritePort;
@@ -152,13 +178,24 @@ export function createAdminOperatorCompositionFromEnv(
     write: lazyWrite,
     createCorrelationId: correlationId,
   });
+  // spec 083: the SAME operator auth port and the SAME default app. Creating the session builds no
+  // facade and imports no SDK — the writer inside it stays lazy until the first valid issue.
+  const spaceV2IssueSession = createAdminSpaceV2IssueSession({
+    resolution,
+    enabled: resolveAdminSpaceV2IssueEnabled(env, resolution),
+    auth,
+    dependencies: dependencies.spaceV2Issue,
+  });
+
   let disposed = false;
   return {
     remoteController,
     writeController,
+    spaceV2IssueSession,
     dispose: () => {
       if (disposed) return;
       disposed = true;
+      spaceV2IssueSession?.dispose();
       writeController.dispose();
       remoteController.dispose();
     },

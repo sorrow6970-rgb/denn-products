@@ -50,6 +50,9 @@ importers:
       '@denn/firebase':
         specifier: workspace:*
         version: link:../../packages/firebase
+      '@denn/render':
+        specifier: workspace:*
+        version: link:../../packages/render
       '@denn/shared':
         specifier: workspace:*
         version: link:../../packages/shared

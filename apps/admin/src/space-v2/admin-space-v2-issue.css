@@ -1,0 +1,118 @@
+/* Space V2 issue panel (spec 083). Hand-written plain CSS on the existing Modern Studio tokens:
+   no new token, font, icon set or design system, and no Tailwind utility — `packages/ui/theme.css`
+   excludes `apps/admin/src/space-v2/**` from Tailwind's source scan, so every class here is
+   declared in this file and the generated utility set stays unchanged.
+
+   Low motion by contract: there is no transition, animation or transform in this file. */
+
+.denn-space-v2-issue {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Flex items default to `min-width: auto`, which is the intrinsic width of their content. A
+     <select> is as wide as its longest option and a <fieldset> as wide as its widest child, so
+     without this the panel refuses to shrink below ~350px and the PAGE scrolls sideways at 320. */
+  min-width: 0;
+}
+
+.denn-space-v2-issue h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* `--ink`, not `--muted`: at this size the muted token sits just under the 4.5:1 contrast the axe
+   gate requires, and every paragraph here is operational copy the operator has to be able to read. */
+.denn-space-v2-issue p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.denn-space-v2-issue__group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.denn-space-v2-issue__group > legend {
+  padding: 0 6px;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.denn-space-v2-issue__group > label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* 44px minimum target on every interactive control (spec 083 VERIFY E2E 8). */
+.denn-space-v2-issue__group > select,
+.denn-space-v2-issue__group > input[type="file"],
+.denn-space-v2-issue__group > input[type="range"] {
+  box-sizing: border-box;
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+.denn-space-v2-issue__group > select:disabled,
+.denn-space-v2-issue__group > input:disabled {
+  color: var(--muted);
+}
+
+.denn-space-v2-issue__group > select:focus-visible,
+.denn-space-v2-issue__group > input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.denn-space-v2-issue__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The preview box is what the logical width is MEASURED from, so it must be a plain block that
+   fills the available inline space — never a fixed or aspect-driven size. */
+.denn-space-v2-issue__preview {
+  display: block;
+  width: 100%;
+}
+
+/* Wide content scrolls inside its own container; the page body never scrolls horizontally. */
+.denn-space-v2-issue__canvas-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.denn-space-v2-issue__canvas {
+  display: block;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.denn-space-v2-issue__link {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+}

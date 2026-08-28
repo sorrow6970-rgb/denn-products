@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@denn/firebase": "workspace:*",
+    "@denn/render": "workspace:*",
     "@denn/shared": "workspace:*",
     "@denn/spaces": "workspace:*",
     "@denn/ui": "workspace:*",

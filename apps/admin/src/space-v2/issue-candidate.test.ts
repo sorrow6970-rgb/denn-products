@@ -543,7 +543,11 @@ describe("createSpaceV2FrameIssueCandidate — boundary", () => {
   it("stays out of the admin UI: App.tsx never imports or calls it", () => {
     const app = readFileSync(new URL("../App.tsx", import.meta.url), "utf8");
 
-    expect(app).not.toContain("space-v2");
+    // Spec 083 composed the Space V2 issue PANEL into the admin shell, so `space-v2` is no longer a
+    // usable proxy for "this module is unwired" — the panel's import path contains it. What this
+    // test has always been about is THIS module, and that assertion is unchanged: the candidate
+    // projector is still never imported or called by the admin screen.
+    expect(app).not.toContain("issue-candidate");
     expect(app).not.toContain("createSpaceV2FrameIssueCandidate");
   });
 });

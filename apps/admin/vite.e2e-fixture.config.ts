@@ -19,6 +19,8 @@ export default defineConfig({
   build: {
     outDir,
     emptyOutDir: false,
-    rollupOptions: { input: "e2e-admin-write-fixture.html" },
+    rollupOptions: {
+      input: ["e2e-admin-write-fixture.html", "e2e-space-v2-issue-fixture.html"],
+    },
   },
 });

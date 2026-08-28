@@ -11,6 +11,7 @@ export type AdminFirebaseConfigResolution =
 /** Only the exact string "true" enables the feature — "1", "TRUE" and "yes" do not. */
 const ENABLED_FLAG = "VITE_DENN_ADMIN_FIREBASE_ENABLED";
 const WRITE_ENABLED_FLAG = "VITE_DENN_ADMIN_WRITE_ENABLED";
+const SPACE_V2_ISSUE_ENABLED_FLAG = "VITE_DENN_ADMIN_SPACE_V2_ISSUE_ENABLED";
 
 const KEYS = {
   apiKey: "VITE_DENN_ADMIN_FIREBASE_API_KEY",
@@ -65,4 +66,19 @@ export function resolveAdminWriteEnabled(
 ): boolean {
   if (resolution.status !== "configured" || env === undefined || env === null) return false;
   return (env as Record<string, unknown>)[WRITE_ENABLED_FLAG] === "true";
+}
+
+/**
+ * Space V2 issue is a THIRD gate (spec 083 §1), stacked on the other two rather than replacing
+ * them: issuing a space needs the same complete config and the same C5 write baseline the operator
+ * edits, so opening it without them would mean a panel with no baseline to freeze. Like every gate
+ * here, only the exact string "true" counts — "1", "TRUE" and "yes" leave it off.
+ */
+export function resolveAdminSpaceV2IssueEnabled(
+  env: ImportMetaEnv | Record<string, unknown> | undefined,
+  resolution: AdminFirebaseConfigResolution = resolveAdminFirebaseConfig(env),
+): boolean {
+  if (!resolveAdminWriteEnabled(env, resolution)) return false;
+  if (env === undefined || env === null) return false;
+  return (env as Record<string, unknown>)[SPACE_V2_ISSUE_ENABLED_FLAG] === "true";
 }

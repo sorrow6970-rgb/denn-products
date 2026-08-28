@@ -7,12 +7,22 @@ import {
   type AdminOperatorComposition,
 } from "./admin-composition/create";
 import { FramePrintSizeEditor } from "./admin-write/FramePrintSizeEditor";
+import { AdminSpaceV2IssuePanel } from "./space-v2/AdminSpaceV2IssuePanel";
 import { PrintSizeCmDraft } from "./PrintSizeCmDraft";
 
 // Primitive showcase shell only (spec 011): renders @denn/ui primitives to verify the
 // package boundary and real render. No product features, no click side effects
 // (the view chips toggle local UI state only — no save / network / navigation).
 const VIEWS = ["카드", "목록", "표"] as const;
+
+/**
+ * spec 083 §7: the clipboard is reached ONLY from an explicit copy click. Reading the API inside
+ * `write` keeps module import free of any browser capability check, and a browser without the
+ * capability surfaces as "링크를 복사하지 못했습니다" rather than a thrown error.
+ */
+const browserClipboard = {
+  write: (text: string): Promise<void> => globalThis.navigator.clipboard.writeText(text),
+};
 
 export function App(): React.JSX.Element {
   const [view, setView] = useState<string>("카드");
@@ -39,6 +49,16 @@ export function App(): React.JSX.Element {
 
         {composition.writeController === null ? null : (
           <FramePrintSizeEditor controller={composition.writeController} />
+        )}
+
+        {/* spec 083: rendered only when the third gate produced a session AND the C5 write
+            controller exists. An off gate mounts no panel, no proof owner and no adapter. */}
+        {composition.writeController === null || composition.spaceV2IssueSession === null ? null : (
+          <AdminSpaceV2IssuePanel
+            writeController={composition.writeController}
+            session={composition.spaceV2IssueSession}
+            clipboard={browserClipboard}
+          />
         )}
 
         <Card>
