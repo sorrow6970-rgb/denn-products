@@ -7127,3 +7127,22 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   stage/commit/restore **0**.
 - 상태 `READY_FOR_CODEX`, fix_round **1**, next `CODEX_SPEC_083_REVIEW_ROUND_2`. 다음 스펙은 시작하지
   않았다. 전체 진행도 **85~88% / 잔여 12~15%**.
+
+## 2026-08-31 - Codex 스펙 083 보완 라운드 1 재검수 — CORRECTION_REQUIRED 라운드 2 / STOP
+
+- 검수 기준 `HEAD=origin=749b2f2`, ahead/behind 0/0. 라운드 1의 clipboard 동기 throw와 object URL leak,
+  auth expiry/unmount/late completion 보완은 적합하고 spec 083 신규 E2E **21/21**도 통과했다.
+- 결함 1: 문서에는 non-Promise clipboard 반환도 fixed `copyFailed`라고 썼지만 실제 helper는
+  `Promise.resolve(undefined)`를 `copied`로 반환하고 unit도 성공을 기대한다. 실제 완료 증거 없는 값을
+  성공으로 표시하는 코드·문서 불일치다.
+- 결함 2: `App.tsx` compositionRef와 panel ownerRef는 개발 StrictMode effect setup→cleanup→setup에서
+  첫 cleanup이 dispose한 같은 객체를 재사용한다. production-build의 manual unmount→new mount는 새 ref를
+  만들므로 이 경계를 증명하지 않는다.
+- 독립 `node scripts/check.mjs` **PASS**(unit **2465/2465**, 92파일, build 2개). canonical Chromium은
+  기존 spec080 mobile screenshot의 `preview-canvas` 5초 timeout으로 **181/182**. 원인은 **NOT PROVEN**,
+  재시도·timeout 증가·skip·고객 코드 수정 0.
+- 생성 `test-results`/`debug.log` 제거, 포트·temp 잔류 0, `git diff --check` PASS. 보호 PNG와 기존 user
+  dirty는 restore/stage하지 않았다. 제품 코드·test 수정, commit/push 0.
+- 필수 gate 비결정성은 자동 루프 STOP 조건이다. 상태 `CORRECTION_REQUIRED`, fix_round **2**, next
+  `CLAUDE_SPEC_083_CORRECTION_ROUND_2`; 사용자의 수동 전달 전 자동 보완·다음 스펙 시작 0. 전체 진행도
+  **85~88% / 잔여 12~15%**.

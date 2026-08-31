@@ -1,5 +1,17 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-31): spec 083 Codex 재검수 = CORRECTION_REQUIRED 라운드 2 / AUTO LOOP STOP.**
+> `HEAD=origin=749b2f2`, ahead/behind 0/0. 라운드 1의 clipboard 동기 throw·post-URL throw·auth expiry·
+> unmount/late completion 보완은 적합하다. 그러나 `copyLinkToClipboard()`는 문서와 달리 non-Promise
+> 반환을 `copied`로 표시하고, `App.tsx` compositionRef와 panel ownerRef는 개발 StrictMode의 effect
+> setup→cleanup→setup에서 dispose된 같은 객체를 재사용한다. production-build의 실제 unmount→새 mount는
+> 새 ref를 만들므로 이 경계를 증명하지 않는다. 독립 `check` PASS(unit **2465/2465**), spec 083 E2E
+> **21/21 PASS**, canonical 전체는 기존 spec080 mobile screenshot의 `preview-canvas` timeout으로
+> **181/182**이며 원인은 **NOT PROVEN**이다. 재시도하지 않았고 생성 잔류물만 제거했다. 상태
+> `CORRECTION_REQUIRED`, fix_round 2, next `CLAUDE_SPEC_083_CORRECTION_ROUND_2`; 필수 gate 비결정성 때문에
+> 자동 루프는 STOP이다. 실제 Firebase/network/emulator/deploy와 다음 스펙은 계속 금지다. 전체 진행도
+> **85~88% / 잔여 12~15%**.
+
 > **최신 포인터 (2026-08-31): spec 083 보완 라운드 1 완료 = READY_FOR_CODEX.**
 > 기준 `HEAD=origin=0622ad0`. Codex review 문서 대행 commit `1d03bfc`, 제품 보완 `7ce9ab4`, 기록 commit은
 > 이 갱신이다. 결함 1은 copy 결정을 `copyLinkToClipboard()`로 분리해 **missing port · 동기 throw ·

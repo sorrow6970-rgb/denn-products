@@ -505,3 +505,46 @@ ref를 유지하므로 **개발 빌드에서는** 첫 cleanup이 composition(ses
   **0**, 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 stage/commit/restore **0**.
 
 상태는 `READY_FOR_CODEX`에서 멈춘다. 다음 스펙은 시작하지 않았다.
+
+### CODEX REVIEW — CORRECTION_REQUIRED 라운드 2 (2026-08-31)
+
+검수 기준 `HEAD=origin=749b2f2`, ahead/behind 0/0. 라운드 1의 clipboard synchronous throw,
+post-object-URL `createImage()` throw, auth expiry 및 unmount/late completion 보완은 적합하다.
+
+#### 결함 1 — non-Promise clipboard 반환의 보고와 실제 동작 불일치
+
+- 상태 문서와 DONE은 missing/reject/synchronous throw/**non-Promise**를 모두 fixed `copyFailed`로
+  닫았다고 썼다.
+- 실제 `copyLinkToClipboard()`는 `Promise.resolve(clipboard.write(link))`라 `undefined` 같은 non-Promise
+  반환을 fulfilled Promise로 바꾸고 `copied`를 반환한다. unit 이름은 “fails closed”지만 기대값도
+  `copied`다.
+- 실제 clipboard 완료 증거가 없는 계약 위반 반환을 성공으로 표시하지 않는다. Promise/thenable의
+  fulfilled 완료만 `copied`, non-Promise는 fixed `failed`로 닫고 unit·문서를 일치시킨다.
+
+#### 결함 2 — 개발 StrictMode effect replay가 dispose된 owner를 재사용
+
+- `App.tsx:30-33`은 composition을 ref에 한 번 만들고 cleanup에서 dispose한다.
+- `AdminSpaceV2IssuePanel.tsx:327-332`도 proof owner를 ref에 한 번 만들고 cleanup에서 dispose한다.
+- 개발 StrictMode의 effect setup→cleanup→setup은 같은 mounted component의 ref를 유지한다. cleanup 뒤
+  effect body가 live replacement를 만들지 않으므로 composition/session과 proof owner가 disposed 상태로
+  남는다.
+- 라운드 1 E2E는 production build이며 panel을 실제 unmount한 뒤 새 component instance를 mount한다. 새
+  ref/owner가 만들어지는 이 시나리오는 StrictMode effect replay와 같지 않다. fixture 주석의 “same
+  boundary” 주장은 이 ownership 형태에는 성립하지 않는다.
+- 저장소 `useLocalImageBinding`처럼 cleanup이 owned record를 disposed로 표시하고 다음 effect setup에서
+  live replacement를 publish하는 방식은 참고 가능한 기존 증거다. App composition과 panel owner 모두
+  정확한 소유권으로 고치고 실제 React 개발 StrictMode에서 live controller/owner, 중복 observer/listener/
+  object URL/write 0을 검증한다.
+
+#### 독립 gate와 STOP
+
+- `node scripts/check.mjs` **PASS**: unit **2465/2465**(92파일), typecheck, build 2개.
+- canonical `node scripts/e2e-run.mjs`: spec 083 신규 **21/21 PASS**, 전체 **181/182**. 실패는 기존
+  `space-production-route.spec.ts` spec080 mobile screenshot에서 `preview-canvas`가 5초 안에 나타나지 않은
+  timeout이다. 원인은 **NOT PROVEN**이며 재시도·timeout 증가·skip·고객 코드 수정은 하지 않았다.
+- `test-results`/`debug.log`는 안전하게 제거했고 검사 포트와 temp 잔류 0. `git diff --check` PASS.
+- flaky/필수 gate 실패는 `AUTO_REVIEW_LOOP.md` STOP 조건이다. 코드·test 수정과 commit/push는 0이며,
+  사용자의 수동 재개 전달 전 자동 보완을 시작하지 않는다.
+
+상태 `CORRECTION_REQUIRED`, fix round 2, next `CLAUDE_SPEC_083_CORRECTION_ROUND_2`. 실제 Firebase/
+network/emulator/deploy와 다음 스펙은 계속 금지한다.

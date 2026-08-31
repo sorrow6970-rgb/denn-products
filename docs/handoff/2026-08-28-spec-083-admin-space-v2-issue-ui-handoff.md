@@ -2,14 +2,26 @@
 
 ## 현재 상태
 
-- review baseline: `HEAD=origin=0622ad0`, ahead/behind 0/0
+- review baseline: `HEAD=origin=749b2f2`, ahead/behind 0/0
 - completed: spec 082 `DONE / CODEX_PASSED`
-- active: spec 083 `CORRECTION_REQUIRED`, fix round 1
+- active: spec 083 `CORRECTION_REQUIRED`, fix round 2
 - Founder: `OO-1=A`, Q-1=A
-- next: `CLAUDE_SPEC_083_CORRECTION_ROUND_1`
+- next: `CLAUDE_SPEC_083_CORRECTION_ROUND_2`
 - 전체 리빌드: **85~88% 완료 / 12~15% 잔여**.
 
-## Codex 독립 검수 — 보완 라운드 1 필요
+## Codex 독립 재검수 — 보완 라운드 2 필요
+
+- 라운드 1의 clipboard 동기 throw와 object URL leak 보완, auth expiry/unmount/late completion 추가는
+  적합하다.
+- non-Promise clipboard 반환은 문서상 fixed failure지만 실제 helper/unit은 `copied`로 처리한다.
+- `App.tsx` compositionRef와 panel ownerRef는 개발 StrictMode effect replay에서 첫 cleanup이 dispose한
+  같은 객체를 다시 쓴다. production-build manual unmount/remount는 새 component/ref라 동일한 증명이 아니다.
+- 독립 check PASS(unit 2465/2465), spec 083 E2E 21/21 PASS. canonical 전체는 기존 spec080 mobile
+  screenshot의 `preview-canvas` timeout으로 **181/182**이며 원인은 NOT PROVEN이다. 재시도하지 않았다.
+- 상태 `CORRECTION_REQUIRED`, fix round 2. flaky 필수 gate 때문에 자동 루프는 STOP이며 사용자의 수동
+  전달 뒤에만 `Automation/NEXT_CLAUDE_PROMPT.md` 상단 라운드 2를 수행한다.
+
+## 이전 Codex 검수 — 보완 라운드 1 필요
 
 - clipboard 동기 throw가 fixed failure UI로 닫히지 않는다.
 - object URL 생성 뒤 `createImage()` throw 시 URL이 회수되지 않으며 Codex가 `revoked=[]`로 재현했다.

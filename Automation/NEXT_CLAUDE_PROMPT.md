@@ -1,15 +1,48 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `CORRECTION_REQUIRED` — 라운드 2, 자동 루프 STOP
 
 - completed_unit: `spec-082-shared-canvas-plan-executor-boundary` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-083-admin-space-v2-issue-ui` — 보완 라운드 1 `7ce9ab4`(Codex review 문서 `1d03bfc`).
-- 기준: 라운드 1 검수 기준은 `0622ad0`. 보완·기록 push 후 `HEAD=origin`, ahead/behind 0/0.
-- next_transition: `CODEX_SPEC_083_REVIEW_ROUND_2`
-- fix_round: `1`
+- active_unit: `spec-083-admin-space-v2-issue-ui` — 보완 라운드 1 `7ce9ab4`, 기록 `749b2f2`.
+- 기준: Codex 라운드 2 검수 `HEAD=origin=749b2f2`, ahead/behind 0/0.
+- next_transition: `CLAUDE_SPEC_083_CORRECTION_ROUND_2`
+- fix_round: `2`
 - 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (7개 roadmap 작업축 기반 관리 추정)
 
-## 현재 결과 — 스펙 083 보완 라운드 1 완료
+## 현재 지시 — 스펙 083 CORRECTION_REQUIRED 라운드 2만
+
+자동 루프는 Codex canonical E2E의 비결정적 필수 gate 실패로 STOP 상태다. 사용자가 이 문구를 Claude
+Code에 수동 전달한 경우에만 아래 보완을 시작한다.
+
+1. `copyLinkToClipboard()`의 non-Promise 반환을 성공으로 표시하지 않는다. standard clipboard port의
+   Promise/thenable 완료만 `copied`, missing port·동기 throw·rejection·non-Promise는 모두 fixed
+   `failed`로 닫는다. 현재 모순된 unit 이름/기대값과 문서를 일치시킨다.
+2. `App.tsx`의 `AdminOperatorComposition`과 `AdminSpaceV2IssuePanel`의 proof owner를 개발 StrictMode의
+   effect setup→cleanup→setup 뒤에도 **live replacement**가 남는 ownership으로 바꾼다. cleanup은 이전
+   객체를 정확히 한 번 dispose하고 observer/listener/object URL을 남기지 않아야 한다. 저장소의
+   `useLocalImageBinding` owned-record 방식은 검증된 참고 사례지만 그대로 복사할지는 구현 근거로 결정한다.
+3. production-build의 실제 unmount→새 mount를 StrictMode 증명이라고 부르지 않는다. 실제 React 개발
+   StrictMode에서 composition과 proof owner가 dispose 뒤 재생성되고, baseline load·PNG decode·Canvas
+   preview가 동작하며 중복 observer/listener/URL/write 0임을 검증한다. 신규 dependency·설치 없이 현재
+   Vite/React/Playwright 표면으로 증명할 수 없으면 구현을 확장하지 말고 STOP한다.
+4. 허용 제품 파일은 `apps/admin/src/App.tsx`와 필요한 기존 test, `AdminSpaceV2IssuePanel.tsx`와 해당 test,
+   spec 083 E2E fixture/test의 최소 변경이다. `browser-proof-draft.ts`는 새 결함이 재현되지 않는 한 수정하지
+   않는다. package/lockfile/Rules/config, 고객 앱, 기존 spec 064~082 source/test는 변경하지 않는다.
+5. targeted 검증, `node scripts/check.mjs`, canonical `node scripts/e2e-run.mjs`를 각각 한 번 실행한다.
+   기존 고객 V2 Canvas timeout이 다시 나면 재시도·timeout 증가·skip·고객 코드 수정 없이 STOP한다.
+
+보완 코드와 기록은 모든 필수 gate가 green일 때만 별도 일반 fast-forward commit/push하고
+`READY_FOR_CODEX`에서 멈춘다. 실제 Firebase/network/emulator/deploy와 다음 스펙은 시작하지 않는다.
+
+Claude Code에 전달할 문구:
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 083 CORRECTION_REQUIRED 라운드 2만 구현·검증해. 실제 개발 StrictMode owner 재생성과 non-Promise clipboard fail-closed를 증명하고, canonical E2E가 다시 비결정적으로 실패하면 우회·재시도 없이 STOP해.
+```
+
+---
+
+## 이전 결과 — 스펙 083 보완 라운드 1 완료
 
 **결함 1(clipboard 동기 throw).** 원인은 `.then(onOk, onErr)`가 **rejected Promise 하나만** 처리한다는
 것이다. production port는 `write()` 안에서 `navigator.clipboard.writeText`를 읽으므로 capability가 없으면
@@ -54,7 +87,7 @@ stage/commit/restore **0**.
 production build라 재현·증명하지 못했고, panel만 고치면 `App.tsx`가 session을 이미 dispose한 상태여서
 반쪽 수정이 된다. 이번 라운드 지시가 "필요하지 않으면 `App.tsx`를 변경하지 않는다"이므로 변경하지 않았다.
 
-## 다음 단계 — Codex 재검수 대기
+## 이전 다음 단계 — Codex 재검수 대기
 
 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_083_REVIEW_ROUND_2`. 다음 스펙, 실제 UID·live network·
 emulator·Rules/Hosting deploy·운영 발급은 **자동으로 시작하지 않는다**.
