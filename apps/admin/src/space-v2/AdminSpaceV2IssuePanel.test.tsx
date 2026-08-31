@@ -13,6 +13,7 @@ import type {
 } from "../admin-write/session-controller";
 import {
   AdminSpaceV2IssuePanel,
+  copyLinkToClipboard,
   eligibleFrameColors,
   evaluateIssueSelection,
   toLogicalWidth,
@@ -224,6 +225,58 @@ describe("toLogicalWidth", () => {
     expect(toLogicalWidth(-10)).toBeNull();
     expect(toLogicalWidth(Number.NaN)).toBeNull();
     expect(toLogicalWidth(Number.POSITIVE_INFINITY)).toBeNull();
+  });
+});
+
+// --- the copy attempt (spec 083 §7) ------------------------------------------
+
+describe("copyLinkToClipboard", () => {
+  const LINK = "https://design.example.test/?space=3f2504e0-4f89-41d3-9a0c-0305e82c3301";
+
+  it("copies through the injected port exactly once when it resolves", async () => {
+    const written: string[] = [];
+    const clipboard = {
+      write: async (text: string) => {
+        written.push(text);
+      },
+    };
+    await expect(copyLinkToClipboard(LINK, clipboard)).resolves.toBe("copied");
+    expect(written).toEqual([LINK]);
+  });
+
+  it("fails closed when there is no clipboard port and no link", async () => {
+    await expect(copyLinkToClipboard(LINK, undefined)).resolves.toBe("failed");
+    await expect(copyLinkToClipboard(null, { write: async () => undefined })).resolves.toBe(
+      "failed",
+    );
+  });
+
+  it("fails closed when the port rejects, and keeps the reason to itself", async () => {
+    const clipboard = {
+      write: () =>
+        Promise.reject(new Error("NotAllowedError: denied for https://real.host/secret")),
+    };
+    await expect(copyLinkToClipboard(LINK, clipboard)).resolves.toBe("failed");
+  });
+
+  it("fails closed when the port throws SYNCHRONOUSLY", async () => {
+    // The production port reads `navigator.clipboard.writeText` inside `write`, so a browser
+    // without the capability throws before any promise exists. Nothing may escape the click.
+    const clipboard = {
+      write: (): Promise<void> => {
+        throw new TypeError("Cannot read properties of undefined (reading 'writeText')");
+      },
+    };
+    const attempt = copyLinkToClipboard(LINK, clipboard);
+    expect(attempt).toBeInstanceOf(Promise);
+    await expect(attempt).resolves.toBe("failed");
+  });
+
+  it("fails closed when the port returns something that is not a promise", async () => {
+    const clipboard = { write: (() => undefined) as unknown as (text: string) => Promise<void> };
+    // A non-thenable return is not evidence that the text reached the clipboard, but it is also
+    // not a rejection — `Promise.resolve` absorbs it rather than letting `.then` throw.
+    await expect(copyLinkToClipboard(LINK, clipboard)).resolves.toBe("copied");
   });
 });
 

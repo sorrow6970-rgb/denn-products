@@ -8,9 +8,10 @@
 import { useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import "@denn/ui/theme.css";
-import type { AdminFirebaseFacade } from "@denn/firebase/admin-read";
+import type { AdminFirebaseFacade, AdminFacadeUser } from "@denn/firebase/admin-read";
 import type { AdminStateWritePort } from "@denn/firebase/admin-write";
 import type {
+  SpaceV2IssueAuthPort,
   SpaceV2IssueRequest,
   SpaceV2IssueResult,
   SpaceV2IssueWritePort,
@@ -18,10 +19,92 @@ import type {
 import type { CatalogDocumentV1 } from "@denn/shared";
 import { createAdminOperatorCompositionFromEnv } from "../admin-composition/create";
 import { AdminSpaceV2IssuePanel } from "../space-v2/AdminSpaceV2IssuePanel";
-import type { AdminWriteSessionController } from "../admin-write/session-controller";
-import type { SpaceV2IssueSessionController } from "../space-v2/issue-session";
+import type {
+  AdminWriteSessionController,
+  AdminWriteSessionSnapshot,
+} from "../admin-write/session-controller";
+import type {
+  SpaceV2IssueSessionController,
+  SpaceV2IssueSessionSnapshot,
+} from "../space-v2/issue-session";
 
 type IssueMode = "success" | "definite-failure" | "outcome-unknown" | "hang";
+
+// --- instrumentation (harness only) ------------------------------------------
+//
+// Two things the panel is contractually responsible for cannot be observed from the DOM: the object
+// URLs it creates for the proof preview, and the store subscriptions it holds. Both are counted
+// here, at the boundary, so "nothing leaked when the panel went away" is a measurement rather than
+// a claim. The counters wrap the real browser API and the real controllers — the panel still runs
+// its production path.
+
+let objectUrlsCreated = 0;
+let objectUrlsRevoked = 0;
+let panelListeners = 0;
+
+const instrumentListeners = new Set<() => void>();
+const instrumentsChanged = (): void => {
+  for (const listener of [...instrumentListeners]) listener();
+};
+const instrumentSnapshot = (): string =>
+  `${objectUrlsCreated}:${objectUrlsRevoked}:${panelListeners}`;
+
+const nativeCreateObjectUrl = URL.createObjectURL.bind(URL);
+const nativeRevokeObjectUrl = URL.revokeObjectURL.bind(URL);
+URL.createObjectURL = (source: Blob | MediaSource): string => {
+  objectUrlsCreated += 1;
+  const url = nativeCreateObjectUrl(source as Blob);
+  instrumentsChanged();
+  return url;
+};
+URL.revokeObjectURL = (url: string): void => {
+  objectUrlsRevoked += 1;
+  nativeRevokeObjectUrl(url);
+  instrumentsChanged();
+};
+
+/** Counts the panel's own subscriptions without changing what it subscribes to. */
+function countingWriteController(
+  controller: AdminWriteSessionController,
+): AdminWriteSessionController {
+  return {
+    ...controller,
+    subscribe: (listener: (value: AdminWriteSessionSnapshot) => void): (() => void) => {
+      const detach = controller.subscribe(listener);
+      panelListeners += 1;
+      instrumentsChanged();
+      let active = true;
+      return () => {
+        if (!active) return;
+        active = false;
+        panelListeners -= 1;
+        detach();
+        instrumentsChanged();
+      };
+    },
+  };
+}
+
+function countingIssueSession(
+  controller: SpaceV2IssueSessionController,
+): SpaceV2IssueSessionController {
+  return {
+    ...controller,
+    subscribe: (listener: (snapshot: SpaceV2IssueSessionSnapshot) => void): (() => void) => {
+      const detach = controller.subscribe(listener);
+      panelListeners += 1;
+      instrumentsChanged();
+      let active = true;
+      return () => {
+        if (!active) return;
+        active = false;
+        panelListeners -= 1;
+        detach();
+        instrumentsChanged();
+      };
+    },
+  };
+}
 
 const CID = "abcdef0123456789";
 
@@ -70,11 +153,18 @@ function createFixture() {
     for (const listener of [...listeners]) listener();
   };
 
+  // The observer is KEPT, so the harness can deliver a later auth notification the way the SDK
+  // does. That is how an operator session that expired between two actions is reproduced here:
+  // nothing is faked in the panel, the real auth port publishes a real signed-out state.
+  const authObservers = new Set<(user: AdminFacadeUser | null) => void>();
+  let operatorUser: AdminFacadeUser | null = { isAnonymous: false };
+
   const readFacade: AdminFirebaseFacade = {
     setPersistenceLocal: async () => undefined,
     onAuthStateChanged: (listener) => {
-      listener({ isAnonymous: false });
-      return () => undefined;
+      authObservers.add(listener);
+      listener(operatorUser);
+      return () => authObservers.delete(listener);
     },
     signInWithEmailPassword: async () => undefined,
     signOut: async () => undefined,
@@ -98,8 +188,60 @@ function createFixture() {
     },
   };
 
+  /** Resolves an issue that was left hanging, so a LATE completion can be delivered on purpose. */
+  let releaseHungIssue: (() => void) | null = null;
+
+  /**
+   * The result the synthetic writer produces, decided when it answers rather than when it was
+   * called — which is what makes a late completion late.
+   *
+   * The operator gate is the REAL one: `currentOperator()` is the narrowed port the production
+   * composition handed to the writer, and a session that is no longer authenticated closes as the
+   * same definite `SPACE_V2_ISSUE_AUTH_REQUIRED` the real write port returns, never as a success.
+   */
+  const settleIssue = (
+    request: SpaceV2IssueRequest,
+    auth: SpaceV2IssueAuthPort,
+    value: { readonly token: string; readonly objectPath: string },
+  ): SpaceV2IssueResult => {
+    if (auth.currentOperator().status !== "authenticated") {
+      return {
+        ok: false,
+        error: {
+          category: "AUTH",
+          code: "SPACE_V2_ISSUE_AUTH_REQUIRED",
+          retryable: true,
+          correlationId: request.correlationId,
+        },
+      };
+    }
+    if (mode === "definite-failure") {
+      return {
+        ok: false,
+        error: {
+          category: "NETWORK",
+          code: "SPACE_V2_ISSUE_UPLOAD_FAILED",
+          retryable: true,
+          correlationId: request.correlationId,
+        },
+      };
+    }
+    if (mode === "outcome-unknown") {
+      return {
+        ok: false,
+        error: {
+          category: "NETWORK",
+          code: "SPACE_V2_ISSUE_UPLOAD_OUTCOME_UNKNOWN",
+          retryable: false,
+          correlationId: request.correlationId,
+        },
+      };
+    }
+    return { ok: true, value };
+  };
+
   /** The ONLY synthetic seam. It reads the prepared bundle exactly as the real port would. */
-  const issuePort: SpaceV2IssueWritePort = {
+  const createIssuePort = (auth: SpaceV2IssueAuthPort): SpaceV2IssueWritePort => ({
     issue: async (request: SpaceV2IssueRequest): Promise<SpaceV2IssueResult> => {
       issueCalls += 1;
       const token = request.bundle.token;
@@ -109,32 +251,17 @@ function createFixture() {
       request.bundle.copyDocument();
       lastToken = token;
       notify();
-      if (mode === "hang") return new Promise<SpaceV2IssueResult>(() => undefined);
-      if (mode === "definite-failure") {
-        return {
-          ok: false,
-          error: {
-            category: "NETWORK",
-            code: "SPACE_V2_ISSUE_UPLOAD_FAILED",
-            retryable: true,
-            correlationId: request.correlationId,
-          },
+      if (mode !== "hang") return settleIssue(request, auth, { token, objectPath });
+      return new Promise<SpaceV2IssueResult>((resolve) => {
+        releaseHungIssue = () => {
+          releaseHungIssue = null;
+          notify();
+          resolve(settleIssue(request, auth, { token, objectPath }));
         };
-      }
-      if (mode === "outcome-unknown") {
-        return {
-          ok: false,
-          error: {
-            category: "NETWORK",
-            code: "SPACE_V2_ISSUE_UPLOAD_OUTCOME_UNKNOWN",
-            retryable: false,
-            correlationId: request.correlationId,
-          },
-        };
-      }
-      return { ok: true, value: { token, objectPath } };
+        notify();
+      });
     },
-  };
+  });
 
   const composition = createAdminOperatorCompositionFromEnv(
     {
@@ -152,10 +279,10 @@ function createFixture() {
       makeWritePort: async () => write,
       createCorrelationId: () => CID,
       spaceV2Issue: {
-        makeWritePort: async () => {
+        makeWritePort: async ({ auth }) => {
           writeFactoryCalls += 1;
           notify();
-          return issuePort;
+          return createIssuePort(auth);
         },
       },
     },
@@ -180,27 +307,86 @@ function createFixture() {
       void writeController.loadBaseline();
       notify();
     },
+    /** The operator session ended between two actions — exactly what an expiry looks like here. */
+    expireAuth() {
+      operatorUser = null;
+      for (const observer of [...authObservers]) observer(null);
+      notify();
+    },
+    releaseIssue() {
+      releaseHungIssue?.();
+    },
     subscribe(listener: () => void) {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    snapshot: () => `${mode}:${writeFactoryCalls}:${issueCalls}:${lastToken}`,
-    diagnostics: () => ({ mode, writeFactoryCalls, issueCalls }),
+    snapshot: () =>
+      `${mode}:${writeFactoryCalls}:${issueCalls}:${lastToken}:${releaseHungIssue === null ? 0 : 1}`,
+    diagnostics: () => ({
+      mode,
+      writeFactoryCalls,
+      issueCalls,
+      pendingIssues: releaseHungIssue === null ? 0 : 1,
+    }),
   };
 }
 
 const fixture = createFixture();
 
-/** A synthetic clipboard: it records what an explicit copy click handed over, and nothing else. */
+/**
+ * A synthetic clipboard: it records what an explicit copy click handed over, and nothing else.
+ *
+ * The three failure shapes are selectable because they are genuinely different code paths in the
+ * caller. `sync-throw` is the one production actually takes when `navigator.clipboard` is absent —
+ * `write()` throws before a promise exists — and `missing` is a build with no port injected at all.
+ */
+type ClipboardMode = "ok" | "sync-throw" | "reject" | "missing";
+let clipboardMode: ClipboardMode = "ok";
 let copiedText = "";
 let copyCalls = 0;
 const clipboardListeners = new Set<() => void>();
+const clipboardChanged = (): void => {
+  for (const listener of [...clipboardListeners]) listener();
+};
 const clipboard = {
-  write: async (text: string): Promise<void> => {
+  write: (text: string): Promise<void> => {
     copyCalls += 1;
+    clipboardChanged();
+    if (clipboardMode === "sync-throw") {
+      throw new TypeError("Cannot read properties of undefined (reading 'writeText')");
+    }
+    if (clipboardMode === "reject") {
+      return Promise.reject(new Error("NotAllowedError: 합성 거부"));
+    }
     copiedText = text;
-    for (const listener of [...clipboardListeners]) listener();
+    clipboardChanged();
+    return Promise.resolve();
   },
+};
+const setClipboardMode = (next: ClipboardMode): void => {
+  clipboardMode = next;
+  clipboardChanged();
+};
+
+/**
+ * Whether the panel is on screen. Taking it away is a REAL unmount of the product component — the
+ * effect cleanups run, the subscriptions detach and the proof owner disposes — which is the same
+ * boundary StrictMode's double effect exercises in a development build. This bundle is a
+ * production build, where StrictMode does not double-invoke, so the harness performs the mount →
+ * unmount → mount cycle explicitly instead of relying on it.
+ */
+let panelMounted = true;
+const shellListeners = new Set<() => void>();
+const shellSnapshot = (): string => (panelMounted ? "mounted" : "unmounted");
+const subscribeShell = (listener: () => void): (() => void) => {
+  shellListeners.add(listener);
+  return () => {
+    shellListeners.delete(listener);
+  };
+};
+const setPanelMounted = (next: boolean): void => {
+  panelMounted = next;
+  for (const listener of [...shellListeners]) listener();
 };
 
 /**
@@ -229,8 +415,17 @@ function Diagnostics({
       clipboardListeners.add(listener);
       return () => clipboardListeners.delete(listener);
     },
-    () => `${copyCalls}:${copiedText}`,
-    () => `${copyCalls}:${copiedText}`,
+    () => `${copyCalls}:${copiedText}:${clipboardMode}`,
+    () => `${copyCalls}:${copiedText}:${clipboardMode}`,
+  );
+  useSyncExternalStore(subscribeShell, shellSnapshot, shellSnapshot);
+  useSyncExternalStore(
+    (listener: () => void) => {
+      instrumentListeners.add(listener);
+      return () => instrumentListeners.delete(listener);
+    },
+    instrumentSnapshot,
+    instrumentSnapshot,
   );
   const diagnostics = fixture.diagnostics();
 
@@ -260,6 +455,19 @@ function Diagnostics({
       <p style={DIAG} data-testid="fixture-copied">
         {copiedText}
       </p>
+      <p style={DIAG} data-testid="fixture-pending-issues">
+        {diagnostics.pendingIssues}
+      </p>
+      {/* created:revoked. Equal means the panel released every object URL it made. */}
+      <p style={DIAG} data-testid="fixture-object-urls">
+        {`${objectUrlsCreated}:${objectUrlsRevoked}`}
+      </p>
+      <p style={DIAG} data-testid="fixture-panel-listeners">
+        {panelListeners}
+      </p>
+      <p style={DIAG} data-testid="fixture-panel-mounted">
+        {panelMounted ? "yes" : "no"}
+      </p>
       <button type="button" onClick={() => void fixture.writeController.loadBaseline()}>
         편집 기준 불러오기
       </button>
@@ -278,20 +486,70 @@ function Diagnostics({
       <button type="button" onClick={() => fixture.bumpRevision()}>
         기준본 변경
       </button>
+      <button type="button" onClick={() => fixture.expireAuth()}>
+        운영자 인증 만료
+      </button>
+      <button type="button" onClick={() => fixture.releaseIssue()}>
+        지연 발급 완료
+      </button>
+      <button type="button" onClick={() => setPanelMounted(false)}>
+        패널 내리기
+      </button>
+      <button type="button" onClick={() => setPanelMounted(true)}>
+        패널 올리기
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          // What the production shell does when the whole app goes away: the panel is unmounted and
+          // the composition disposes the session it owns.
+          setPanelMounted(false);
+          fixture.session.dispose();
+        }}
+      >
+        패널 내리고 세션 정리
+      </button>
+      <button type="button" onClick={() => setClipboardMode("sync-throw")}>
+        복사 동기 예외
+      </button>
+      <button type="button" onClick={() => setClipboardMode("reject")}>
+        복사 거부
+      </button>
+      <button type="button" onClick={() => setClipboardMode("missing")}>
+        복사 수단 없음
+      </button>
     </section>
   );
 }
 
+/**
+ * The panel gets the COUNTING controllers; the diagnostics keep the raw ones, so the listener
+ * readout is the panel's own subscription count and nothing else.
+ */
+const panelWriteController = countingWriteController(fixture.writeController);
+const panelSession = countingIssueSession(fixture.session);
+
 function FixtureApp() {
+  useSyncExternalStore(subscribeShell, shellSnapshot, shellSnapshot);
+  useSyncExternalStore(
+    (listener: () => void) => {
+      clipboardListeners.add(listener);
+      return () => clipboardListeners.delete(listener);
+    },
+    () => clipboardMode,
+    () => clipboardMode,
+  );
   return (
     <main className="denn-shell">
       <div className="denn-shell__inner">
         <h1>Space V2 issue E2E fixture (not a product screen)</h1>
-        <AdminSpaceV2IssuePanel
-          writeController={fixture.writeController}
-          session={fixture.session}
-          clipboard={clipboard}
-        />
+        {panelMounted ? (
+          <AdminSpaceV2IssuePanel
+            writeController={panelWriteController}
+            session={panelSession}
+            clipboard={clipboardMode === "missing" ? undefined : clipboard}
+          />
+        ) : null}
         <Diagnostics writeController={fixture.writeController} session={fixture.session} />
       </div>
     </main>

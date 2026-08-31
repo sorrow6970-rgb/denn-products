@@ -212,13 +212,24 @@ export function createAdminProofDraftOwner(options?: {
         return;
       }
 
+      // The URL is created in a step of its own. Once it exists this owner is responsible for it,
+      // so any LATER failure has to release it — a `catch` that spans the creation and the steps
+      // after it cannot tell whether there is a URL to revoke, and silently leaks the one it made.
       let url: string;
-      let image: AdminProofImageElementPort;
       try {
         url = ports.createObjectUrl(ports.createBlob(bytes));
-        live.add(url);
+      } catch {
+        publish({ status: "failed", code: "ADMIN_PROOF_DECODE_FAILED" });
+        return;
+      }
+      live.add(url);
+
+      let image: AdminProofImageElementPort;
+      try {
         image = ports.createImage();
       } catch {
+        // Membership in `live` makes this exactly one revoke: a later release() cannot double it.
+        revoke(url);
         publish({ status: "failed", code: "ADMIN_PROOF_DECODE_FAILED" });
         return;
       }

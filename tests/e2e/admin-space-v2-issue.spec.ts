@@ -327,6 +327,185 @@ test("the transform controls change the preview and survive the freeze", async (
   await expect(page.getByTestId("space-v2-canvas-status")).toHaveText("미리보기가 준비되었습니다.");
 });
 
+// --- the copy attempt (spec 083 §7) ------------------------------------------
+
+test("an explicit copy keeps the success and closes every failure shape safely", async ({
+  page,
+}) => {
+  const { consoleMessages } = await open(page);
+  await prepareFrozenDraft(page);
+  await page.getByTestId("space-v2-password").fill("correct-horse");
+  await page.getByTestId("space-v2-password-confirm").fill("correct-horse");
+  await page.getByTestId("space-v2-issue").click();
+  await expect(page.getByTestId("fixture-issue-status")).toHaveText("success");
+  const link = await page.getByTestId("space-v2-link").textContent();
+  expect(link ?? "").toMatch(SPACE_LINK);
+
+  // 1. A port that throws SYNCHRONOUSLY. This is the production shape: `navigator.clipboard` is
+  //    absent, so `write()` throws before any promise — and a rejection handler alone never sees it.
+  await page.getByRole("button", { name: "복사 동기 예외" }).click();
+  await page.getByTestId("space-v2-copy-link").click();
+  await expect(page.getByTestId("space-v2-copy-status")).toHaveText(
+    "링크를 복사하지 못했습니다. 주소를 직접 선택해 복사하세요.",
+  );
+  // The issued space still exists: the success, the status and the link are untouched.
+  await expect(page.getByTestId("fixture-issue-status")).toHaveText("success");
+  await expect(page.getByTestId("space-v2-issue-status")).toHaveText("발급이 완료됐습니다.");
+  await expect(page.getByTestId("space-v2-link")).toHaveText(link ?? "");
+  await expect(page.getByTestId("fixture-copied")).toHaveText("");
+
+  // 2. A port that rejects.
+  await page.getByRole("button", { name: "복사 거부" }).click();
+  await page.getByTestId("space-v2-copy-link").click();
+  await expect(page.getByTestId("space-v2-copy-status")).toHaveText(
+    "링크를 복사하지 못했습니다. 주소를 직접 선택해 복사하세요.",
+  );
+  await expect(page.getByTestId("fixture-copy-calls")).toHaveText("2");
+
+  // 3. No clipboard port at all — nothing is called, and the same fixed copy is shown.
+  await page.getByRole("button", { name: "복사 수단 없음" }).click();
+  await page.getByTestId("space-v2-copy-link").click();
+  await expect(page.getByTestId("space-v2-copy-status")).toHaveText(
+    "링크를 복사하지 못했습니다. 주소를 직접 선택해 복사하세요.",
+  );
+  await expect(page.getByTestId("fixture-copy-calls")).toHaveText("2");
+
+  // No failure escaped the click handler, and no reason was printed.
+  expect(consoleMessages).toEqual([]);
+  const content = await page.content();
+  expect(content).not.toContain("writeText");
+  expect(content).not.toContain("NotAllowedError");
+});
+
+// --- auth expiry, unmount and late completion (spec 083 §5, §6) --------------
+
+test("an operator session that expires blocks the frozen draft before anything is spent", async ({
+  page,
+}) => {
+  const { consoleMessages } = await open(page);
+  await prepareFrozenDraft(page);
+
+  // The real auth port publishes a real signed-out state; the C5 baseline goes with it.
+  await page.getByRole("button", { name: "운영자 인증 만료" }).click();
+  await expect(page.getByTestId("fixture-write-status")).toHaveText("auth-blocked");
+
+  const status = page.getByTestId("space-v2-issue-status");
+  await expect(status).toHaveAttribute("role", "alert");
+  // The alert is the baseline-unavailable copy: without a session there is no baseline to prepare
+  // a draft from, and no new wording is invented for it.
+  await expect(status).toContainText("편집 기준을 저장할 변경이 없는 상태로");
+  await expect(page.getByTestId("space-v2-password")).toHaveCount(0);
+  await expect(page.getByTestId("space-v2-issue")).toHaveCount(0);
+  // Nothing was issued and no writer was ever built.
+  await expect(page.getByTestId("fixture-issue-calls")).toHaveText("0");
+  await expect(page.getByTestId("fixture-write-factory-calls")).toHaveText("0");
+  expect(consoleMessages).toEqual([]);
+});
+
+test("an expiry during an in-flight issue closes as a definite auth failure", async ({ page }) => {
+  const { external, consoleMessages } = await open(page);
+  await page.getByRole("button", { name: "다음 발급 지연" }).click();
+  await prepareFrozenDraft(page);
+  await page.getByTestId("space-v2-password").fill("correct-horse");
+  await page.getByTestId("space-v2-password-confirm").fill("correct-horse");
+  await page.getByTestId("space-v2-issue").click();
+  await expect(page.getByTestId("fixture-issue-status")).toHaveText("issuing");
+  await expect(page.getByTestId("fixture-pending-issues")).toHaveText("1");
+
+  await page.getByRole("button", { name: "운영자 인증 만료" }).click();
+  await expect(page.getByTestId("fixture-write-status")).toHaveText("auth-blocked");
+  // Still exactly one attempt: an expiry is not a reason to try again.
+  await expect(page.getByTestId("fixture-issue-calls")).toHaveText("1");
+
+  // The writer answers LATE, and applies the same operator gate the real write port applies.
+  await page.getByRole("button", { name: "지연 발급 완료" }).click();
+  await expect(page.getByTestId("fixture-issue-status")).toHaveText("error");
+  await expect(page.getByTestId("space-v2-issue-status")).toHaveText(
+    "운영자 인증이 필요합니다. 다시 로그인한 뒤 새 시안을 준비하세요.",
+  );
+  await expect(page.getByTestId("space-v2-link")).toHaveCount(0);
+  await expect(page.getByTestId("space-v2-issue")).toHaveCount(0);
+  await expect(page.getByTestId("fixture-issue-calls")).toHaveText("1");
+  expect(await page.content()).not.toContain("SPACE_V2_ISSUE");
+  expect(external).toEqual([]);
+  expect(consoleMessages).toEqual([]);
+});
+
+test("an unmount mid-issue releases everything and a late completion changes nothing", async ({
+  page,
+}) => {
+  const { consoleMessages } = await open(page);
+  await page.getByRole("button", { name: "다음 발급 지연" }).click();
+  await prepareFrozenDraft(page);
+  await expect(page.getByTestId("fixture-object-urls")).toHaveText("1:0");
+  await page.getByTestId("space-v2-password").fill("correct-horse");
+  await page.getByTestId("space-v2-password-confirm").fill("correct-horse");
+  await page.getByTestId("space-v2-issue").click();
+  await expect(page.getByTestId("fixture-issue-status")).toHaveText("issuing");
+
+  // What the production shell does when the whole screen goes away while an issue is in flight.
+  await page.getByRole("button", { name: "패널 내리고 세션 정리" }).click();
+  await expect(page.getByTestId("space-v2-issue-panel")).toHaveCount(0);
+  await expect(page.getByTestId("fixture-issue-status")).toHaveText("disposed");
+  // The proof owner released its object URL, and no subscription is left behind.
+  await expect(page.getByTestId("fixture-object-urls")).toHaveText("1:1");
+  await expect(page.getByTestId("fixture-panel-listeners")).toHaveText("0");
+
+  await page.getByRole("button", { name: "지연 발급 완료" }).click();
+  await expect(page.getByTestId("fixture-pending-issues")).toHaveText("0");
+  // The late result reached a disposed session: no second write, no revived state.
+  await expect(page.getByTestId("fixture-issue-status")).toHaveText("disposed");
+  await expect(page.getByTestId("fixture-issue-calls")).toHaveText("1");
+
+  // Bringing the screen back must not show the abandoned attempt as anything at all.
+  await page.getByRole("button", { name: "패널 올리기" }).click();
+  await expect(page.getByTestId("space-v2-issue-panel")).toBeVisible();
+  await expect(page.getByTestId("space-v2-link")).toHaveCount(0);
+  await expect(page.getByTestId("space-v2-password")).toHaveCount(0);
+  await expect(page.getByTestId("space-v2-preview-canvas")).toHaveCount(0);
+  await expect(page.getByTestId("fixture-issue-calls")).toHaveText("1");
+  expect(consoleMessages).toEqual([]);
+});
+
+test("a mount, unmount and mount again leaves no duplicate URL, listener or issue", async ({
+  page,
+}) => {
+  // This bundle is a production build, where StrictMode does not double-invoke effects, so the
+  // cleanup boundary StrictMode exercises in development is performed explicitly here.
+  const { consoleMessages } = await open(page);
+  await loadBaseline(page);
+  const listeners = await page.getByTestId("fixture-panel-listeners").textContent();
+  expect(Number(listeners)).toBeGreaterThan(0);
+
+  await chooseSupported(page);
+  await attach(page, PNG);
+  await expect(canvasBox(page)).toBeVisible();
+  await expect(page.getByTestId("fixture-object-urls")).toHaveText("1:0");
+
+  await page.getByRole("button", { name: "패널 내리기" }).click();
+  await expect(page.getByTestId("space-v2-issue-panel")).toHaveCount(0);
+  await expect(page.getByTestId("fixture-object-urls")).toHaveText("1:1");
+  await expect(page.getByTestId("fixture-panel-listeners")).toHaveText("0");
+
+  await page.getByRole("button", { name: "패널 올리기" }).click();
+  await expect(page.getByTestId("space-v2-issue-panel")).toBeVisible();
+  // Exactly the same number of subscriptions as the first mount — none doubled, none orphaned.
+  await expect(page.getByTestId("fixture-panel-listeners")).toHaveText(listeners ?? "");
+  // The remounted panel starts empty and, crucially, its proof owner is ALIVE: a second PNG
+  // decodes and draws, which a disposed owner could never do.
+  await expect(canvasBox(page)).toHaveCount(0);
+  await chooseSupported(page);
+  await attach(page, PNG);
+  await expect(canvasBox(page)).toBeVisible();
+  await expect(page.getByTestId("fixture-object-urls")).toHaveText("2:1");
+
+  await page.getByRole("button", { name: "패널 내리기" }).click();
+  await expect(page.getByTestId("fixture-object-urls")).toHaveText("2:2");
+  await expect(page.getByTestId("fixture-panel-listeners")).toHaveText("0");
+  await expect(page.getByTestId("fixture-issue-calls")).toHaveText("0");
+  expect(consoleMessages).toEqual([]);
+});
+
 const VIEWPORTS = [
   { name: "mobile-320x568", width: 320, height: 568 },
   { name: "mobile-390x844", width: 390, height: 844 },

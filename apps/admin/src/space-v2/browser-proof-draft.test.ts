@@ -315,6 +315,55 @@ describe("createAdminProofDraftOwner", () => {
     expect(listener).toHaveBeenCalled();
   });
 
+  it("revokes the URL it already made when a later step of the same load throws", async () => {
+    // The failure Codex reproduced: the URL exists, `createImage()` throws, and the load returns
+    // through a catch that only publishes. Nothing else in the owner knows that URL any more, so
+    // unless THIS path releases it the object URL outlives the page.
+    const h = harness({
+      createImage: () => {
+        throw new Error("no element for you");
+      },
+    });
+    const owner = createAdminProofDraftOwner({ ports: h.ports });
+    owner.load(PNG);
+    await settle();
+
+    expect(owner.getSnapshot()).toEqual({ status: "failed", code: "ADMIN_PROOF_DECODE_FAILED" });
+    expect(h.created).toHaveLength(1);
+    expect(h.revoked).toEqual(h.created);
+    // Nothing survives the failure: no drawable, no frozen handle.
+    expect(owner.bindings.get("admin-proof-1")).toBeUndefined();
+    expect(owner.freeze()).toBeNull();
+
+    // Exactly once: the release that clear() and dispose() perform cannot revoke it a second time.
+    owner.clear();
+    owner.dispose();
+    expect(h.revoked).toEqual(h.created);
+  });
+
+  it("keeps created and revoked equal when the image source assignment throws", async () => {
+    // A browser that refuses the assignment is the same shape of failure, one step later.
+    const h = harness({
+      createImage: () => {
+        const image = new FakeImage();
+        Object.defineProperty(image, "src", {
+          set: () => {
+            throw new Error("refused");
+          },
+        });
+        return image;
+      },
+    });
+    const owner = createAdminProofDraftOwner({ ports: h.ports });
+    owner.load(PNG);
+    await settle();
+
+    expect(owner.getSnapshot()).toEqual({ status: "failed", code: "ADMIN_PROOF_DECODE_FAILED" });
+    expect(h.revoked).toEqual(h.created);
+    expect(new Set(h.revoked).size).toBe(h.revoked.length);
+    expect(owner.freeze()).toBeNull();
+  });
+
   it("fails closed when the object URL port refuses the bytes", async () => {
     const h = harness({
       createObjectUrl: () => {

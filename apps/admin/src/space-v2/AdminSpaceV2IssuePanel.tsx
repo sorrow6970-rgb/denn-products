@@ -264,6 +264,38 @@ function IssuePreviewCanvas({
   );
 }
 
+// --- the copy attempt (spec 083 §7) ------------------------------------------
+
+/**
+ * One explicit copy click, resolved to a fixed outcome. It never throws and never rethrows.
+ *
+ * The clipboard is the one port here that is FOREIGN CODE running inside the click handler, and it
+ * can fail in three different shapes: the port is missing entirely, it rejects, or it throws
+ * SYNCHRONOUSLY — which is what the production port does when `navigator.clipboard` is absent,
+ * because `navigator.clipboard.writeText` is read before any promise exists. A `.then(onOk, onErr)`
+ * pair catches the second shape only; the first and the third escape the handler, leaving the
+ * operator with a success screen and a copy button that silently does nothing.
+ *
+ * So all three close into the same fixed `failed` state. The issued success and its link are NOT
+ * downgraded — the space exists either way — and the raw error is dropped here rather than shown,
+ * logged or re-thrown, so no SDK message, permission text or link fragment reaches the console.
+ */
+export function copyLinkToClipboard(
+  link: string | null,
+  clipboard: SpaceV2ClipboardPort | undefined,
+): Promise<"copied" | "failed"> {
+  if (link === null || clipboard === undefined) return Promise.resolve("failed");
+  try {
+    // `Promise.resolve` also absorbs a port that returns something that is not a promise at all.
+    return Promise.resolve(clipboard.write(link)).then(
+      () => "copied" as const,
+      () => "failed" as const,
+    );
+  } catch {
+    return Promise.resolve("failed");
+  }
+}
+
 // --- the panel ----------------------------------------------------------------
 
 export interface AdminSpaceV2IssuePanelProps {
@@ -432,14 +464,7 @@ export function AdminSpaceV2IssuePanel({
   }, [issue, readOrigin]);
 
   const copy = (): void => {
-    if (link === null || clipboard === undefined) {
-      setCopyState("failed");
-      return;
-    }
-    void clipboard.write(link).then(
-      () => setCopyState("copied"),
-      () => setCopyState("failed"),
-    );
+    void copyLinkToClipboard(link, clipboard).then(setCopyState);
   };
 
   // An untouched field is not an error: the hint appears only once the operator has actually typed
@@ -448,13 +473,18 @@ export function AdminSpaceV2IssuePanel({
     confirmation !== "" && password !== confirmation ? COPY.passwordMismatchHint : null;
 
   const status = ((): string => {
-    if (!baselineReady) return COPY.baselineBlocked;
-    if (stale) return COPY.stale;
+    // An attempt that already happened outranks the editing copy. An operator session that expires
+    // mid-issue makes the baseline unavailable, and reporting THAT would replace the outcome of the
+    // attempt with "load a baseline first" — worst of all for outcome-unknown, whose entire purpose
+    // is to say that the same draft must not be issued again. What happened is reported first; the
+    // baseline and stale copy still own every state where no attempt has been made.
     if (issue.status === "success") return COPY.success;
     if (issue.status === "outcome-unknown") return COPY.outcomeUnknown;
     if (issue.status === "error") return ERROR_COPY[String(issue.errorCode)] ?? FALLBACK_ERROR;
     if (issue.status === "preparing") return COPY.preparing;
     if (issue.status === "issuing") return COPY.issuing;
+    if (!baselineReady) return COPY.baselineBlocked;
+    if (stale) return COPY.stale;
     if (frozen !== null) return COPY.frozen;
     if (evaluation.status === "incomplete") return COPY.selectionIncomplete;
     if (evaluation.status === "unsupported") return COPY.selectionUnsupported;
