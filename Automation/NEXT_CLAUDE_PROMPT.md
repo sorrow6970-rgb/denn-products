@@ -1,15 +1,51 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CODEX_PASSED` — 스펙 083 종료 문서 전용
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
 
-- completed_unit: `spec-082-shared-canvas-plan-executor-boundary` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-083-admin-space-v2-issue-ui` — **CODEX_PASSED**, 승인 제품 `1082f55`.
-- 기준: Codex 독립 재검수 `HEAD=origin=4f7bb20`, ahead/behind 0/0.
-- next_transition: `CLAUDE_SPEC_083_CLOSURE`
-- fix_round: `2`
-- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (7개 roadmap 작업축 기반 관리 추정)
+- completed_unit: `spec-083-admin-space-v2-issue-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK (종료 문서까지 반영)**
+- 직전 완료: `spec-082-shared-canvas-plan-executor-boundary` — DONE / CODEX_PASSED
+- 기준: 승인 `HEAD=origin=4f7bb20`, 승인 제품 `1082f55`, pass 기록 `16876a3`. 종료 push 후 ahead/behind 0/0.
+- next_transition: `FOUNDER_NEXT_MANUAL_TASK`
+- fix_round: `0`
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (7개 roadmap 작업축 기반 관리 추정 — 변동 없음)
 
-## 지금 수행할 작업 — 스펙 083 종료 문서만
+## 현재 결과 — 스펙 083 종료 문서 반영 완료
+
+Codex `CODEX_PASSED` 판정에 따라 **문서 6개만** 종료 상태로 갱신했다 — 스펙 083(상태 헤더 + DONE 종료
+절), 2026-08-28 핸드오프, `Automation/DENN_AUTOMATION_STATE.md`, 이 파일, `CURRENT.md`, 라이브 로그.
+
+제품 코드·test·`apps/admin/vite.e2e-fixture.config.ts`·결과 PNG·`package.json`/lockfile·Rules/config는
+**수정·stage·restore 0**이고 게이트도 다시 돌리지 않았다 — 승인 근거는 Codex 독립 실행 결과(`node
+scripts/check.mjs` PASS · unit **2466/2466**(92 파일) · build 2개 · canonical Chromium **184/184**,
+개발 StrictMode 2건 포함 spec 083 23건 · `git diff --check` PASS · 포트·temp 잔류 0 · 추가 결함 0)다.
+보호 spec-018 PNG 2개와 기존 Founder/user dirty 변경은 그대로 두었다. 문서 전용 commit을 fast-forward
+push하고 `HEAD=origin`, ahead/behind 0/0을 확인했다.
+
+**스펙 083이 남긴 것.** 운영자가 C5 `ready-clean` 기준본에서 한 generation으로 시안을 고정하고, 같은
+generation의 PNG·fields만 기존 스펙 081 session에 넘겨 발급한 뒤, confirmed success에서만 same-origin
+`?space=` 링크를 명시적으로 복사하는 admin 화면이다. gate는 기본 off이고 writer는 첫 발급에서만 lazy
+import되며, 실제 UID·live network·emulator·Rules/Hosting deploy·운영 발급은 `NOT TESTED / FORBIDDEN`
+으로 남는다.
+
+## 다음 단계 — 사용자 지시 대기
+
+상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙, 실제 발급 활성화,
+자동화는 **자동으로 시작하지 않는다**. 다음 단위는 사용자의 명시적 지시 또는 Codex가 작성·push한 신규
+스펙이 정한다.
+
+> 직전 지시문(스펙 083 종료 문서, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 CODEX_PASSED된 스펙 083 종료 문서만 동기화·commit·fast-forward push해. 제품 코드·test·fixture config·PNG를 더 수정하거나 검증을 재실행하지 말고, 다음 스펙은 시작하지 마.
+```
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 지시 — 스펙 083 종료 문서 (수행 완료)
+
+#### 지시 본문(기록)
 
 제품 코드·test·fixture config·PNG·package/lockfile·Rules/config를 더 수정하거나 게이트를 다시 실행하지
 않는다. 아래 6개 문서만 CODEX_PASSED와 실제 독립 gate 결과에 맞춰 종료한다.

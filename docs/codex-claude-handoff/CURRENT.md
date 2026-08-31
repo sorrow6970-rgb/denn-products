@@ -1,5 +1,18 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-31): spec 083 종료 = DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK.**
+> Codex `CODEX_PASSED` 판정(기준 `HEAD=origin=4f7bb20`, 승인 제품 `1082f55`, pass 기록 `16876a3`)에 따라
+> **문서 6개만** 종료 상태로 갱신했다 — 스펙 083(상태 헤더 + DONE 종료 절), 2026-08-28 핸드오프,
+> `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`, 이 파일, 라이브 로그.
+> 제품 코드·test·`vite.e2e-fixture.config.ts`·결과 PNG·package/lockfile·Rules/config는 **수정·stage·
+> restore 0**이고 게이트도 다시 돌리지 않았다 — 승인 근거는 Codex 독립 실행 결과(`node scripts/check.mjs`
+> PASS · unit **2466/2466** · canonical Chromium **184/184**, 개발 StrictMode 2건 포함 spec 083 23건 ·
+> 추가 결함 0)다. 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 그대로 두었다. 문서 전용 commit을
+> fast-forward push하고 `HEAD=origin`, ahead/behind 0/0을 확인했다.
+> 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙, 실제 UID·live
+> network·emulator·Rules/Hosting deploy·운영 발급, 자동화는 **자동으로 시작하지 않는다**. 전체 진행도
+> **85~88% / 잔여 12~15% — 변동 없음**.
+
 > **최신 포인터 (2026-08-31): spec 083 보완 라운드 2 Codex 독립 재검수 = CODEX_PASSED.**
 > `HEAD=origin=4f7bb20`, ahead/behind 0/0, 승인 제품 commit `1082f55`. non-Promise clipboard 반환은
 > fixed failure로 닫히고 fulfil하는 thenable만 성공이다. composition/proof owner는 개발 StrictMode

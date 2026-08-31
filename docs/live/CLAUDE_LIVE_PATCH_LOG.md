@@ -7186,3 +7186,17 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 스펙 083 = **CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**. 다음은 Claude Code의 문서 전용
   closure commit/push이며 제품 추가 수정·게이트 재실행·다음 스펙 시작 0. 전체 진행도
   **85~88% / 잔여 12~15%**.
+
+## 2026-08-31 - 스펙 083 종료 — CODEX_PASSED 문서 전용 closure
+
+- Codex `CODEX_PASSED` 판정(기준 `HEAD=origin=4f7bb20`, 승인 제품 `1082f55`, pass 기록 `16876a3`)에 따라
+  스펙 083을 **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**로 종료했다.
+- 갱신 문서 6개: 스펙 083(상태 헤더 + DONE 종료 절), 2026-08-28 핸드오프,
+  `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`,
+  `docs/codex-claude-handoff/CURRENT.md`, 이 로그.
+- 제품 코드·test·`vite.e2e-fixture.config.ts`·결과 PNG·package/lockfile·Rules/config 수정·stage·restore
+  **0**, 게이트 재실행 **0**. 승인 근거는 Codex 독립 실행(`check` PASS · unit **2466/2466** · canonical
+  Chromium **184/184** · 추가 결함 0)이다.
+- 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 restore/stage/commit하지 않았다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙·실제 Firebase/network/
+  emulator/deploy·운영 발급·자동화는 시작하지 않는다. 전체 진행도 **85~88% / 잔여 12~15% — 변동 없음**.

@@ -4,25 +4,35 @@
 updated_at: 2026-08-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-082-shared-canvas-plan-executor-boundary   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
-active_unit: spec-083-admin-space-v2-issue-ui   # CODEX_PASSED; closure docs pending
-state: CODEX_PASSED
+completed_unit: spec-083-admin-space-v2-issue-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
+active_unit: none   # spec 083 closed; the next unit is set by a manual instruction or a new Codex spec
+state: WAITING_FOR_NEXT_MANUAL_TASK
 baseline_commit: 4f7bb20   # HEAD=origin at Codex correction round 2 re-review
 candidate_commit: 1082f55  # spec 083 correction round 2 (Codex review docs committed as 4d7f813)
 verified_commit: 1082f55   # spec 083 correction round 2 independently verified by Codex
-origin_relation: "HEAD=origin=4f7bb20 at Codex re-review, ahead/behind 0/0"
-working_tree: "Codex pass/closure handoff docs are modified and unstaged; protected spec-018 PNGs and pre-existing Founder/user changes remain dirty and unstaged"
-fix_round: 2
+origin_relation: "HEAD=origin after the documents-only closure push, ahead/behind 0/0"
+working_tree: "documents only this session; protected spec-018 PNGs and pre-existing Founder/user changes remain dirty and unstaged"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_SPEC_083_CLOSURE
+next_transition: FOUNDER_NEXT_MANUAL_TASK
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: CODEX_PASSED; closure documents only, do not start the next unit
+session_status: spec 083 closed on documents only; no product change, no gate re-run, no next unit started
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Claude 스펙 083 종료 — 문서 전용 closure (2026-08-31)
+
+- Codex `CODEX_PASSED`(기준 `HEAD=origin=4f7bb20`, 승인 제품 `1082f55`, pass 기록 `16876a3`)에 따라 스펙
+  083을 **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**로 종료했다.
+- 문서 6개만 갱신했다. 제품 코드·test·`vite.e2e-fixture.config.ts`·결과 PNG·package/lockfile·Rules/
+  config 수정·stage·restore 0, 게이트 재실행 0. 승인 근거는 Codex 독립 실행 결과다.
+- 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 restore/stage/commit하지 않았다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙·실제 Firebase/network/
+  emulator/deploy·운영 발급·자동화는 시작하지 않는다.
 
 ## Codex 스펙 083 보완 라운드 2 독립 재검수 — CODEX_PASSED (2026-08-31)
 

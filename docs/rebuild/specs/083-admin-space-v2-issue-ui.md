@@ -2,9 +2,11 @@
 
 ## 상태
 
-`READY_FOR_CLAUDE / UI_IMPLEMENTATION_BY_CLAUDE_CODE / LOCAL_SYNTHETIC_ONLY / NO_LIVE_NETWORK`
+`DONE / CODEX_PASSED / LOCAL_VERIFIED / LOCAL_SYNTHETIC_ONLY / NO_LIVE_NETWORK`
 
-- 기준: `HEAD=origin=ba9eb48`, ahead/behind 0/0
+- 종료(2026-08-31): Codex 독립 재검수 `CODEX_PASSED`. 승인 기준 `HEAD=origin=4f7bb20`, 승인 제품
+  `1082f55`. 종료 근거와 계보는 이 문서 맨 아래 `DONE (Claude) — 스펙 083 종료`에 있다.
+- 계약 작성 시 기준: `HEAD=origin=ba9eb48`, ahead/behind 0/0
 - 선행 완료: 스펙 080 customer V2 viewer, 081 frozen issue session, 082 shared Canvas executor
 - Founder 결정: `LL-1=A`~`LL-6=A`, `OO-1=A`
 - 구현·검증 주체: Claude Code. Codex는 이 계약과 검수 기준만 작성한다.
@@ -645,3 +647,40 @@ config·preview 서버·제품 빌드는 건드리지 않았다. 이 판단이 �
 `NOT TESTED / FORBIDDEN`이다. 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 stage/commit/restore 0.
 
 상태는 `READY_FOR_CODEX`에서 멈춘다. 다음 스펙은 시작하지 않았다.
+
+### DONE (Claude) — 스펙 083 종료 (2026-08-31)
+
+**최종 승인.** Codex 독립 재검수가 보완 라운드 2를 `CODEX_PASSED`로 판정했다. 승인 기준
+`HEAD=origin=4f7bb20`, ahead/behind 0/0이고 승인 대상은 라운드 2 제품 commit `1082f55`다. 스펙 083은
+**DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**로 종료한다.
+
+**커밋 계보.** 계약 `fbf60cc`, Q-1 기록 `977af5c`, 구현 `1a7cba9`, 구현 기록 `0622ad0`, 라운드 1 review
+기록 `1d03bfc` · 제품 `7ce9ab4` · 기록 `749b2f2`, 라운드 2 review 기록 `4d7f813` · 제품 `1082f55` ·
+기록 `92029a6` · 범위 판단 기록 `372c5c2`/`4f7bb20`, 라운드 2 pass 기록 `16876a3`.
+
+**승인된 계약 요약.** 명시적 `시안 고정`이 catalog snapshot·selection·파생 orientation·측정된 logical
+width·색상·정규화 transform·PNG bytes·render plan을 한 generation에 묶고 화면 preview와 발급 source가
+같은 generation을 쓴다. gate는 exact `"true"` 3중이라 기본 빌드는 panel·proof owner·adapter를 하나도
+만들지 않고, writer는 첫 valid issue에서만 `@denn/firebase/space-write`를 dynamic import한다(lazy
+`space-write-*.js` 8.47 kB). PNG owner는 MIME·확장자를 신뢰 근거로 쓰지 않고 object URL을 정확히 1회
+revoke한다. copy는 fulfil하는 thenable만 성공으로 보고하고 나머지 네 경계는 fixed `copyFailed`다.
+composition과 proof owner는 개발 StrictMode effect replay에서도 live owner 하나를 유지하고 실제
+unmount에서만 release된다.
+
+**이번 종료 작업의 범위.** 문서 6개(이 스펙 DONE, 2026-08-28 핸드오프, `Automation/DENN_AUTOMATION_STATE.md`,
+`Automation/NEXT_CLAUDE_PROMPT.md`, `docs/codex-claude-handoff/CURRENT.md`,
+`docs/live/CLAUDE_LIVE_PATCH_LOG.md`)만 갱신했다. 제품 코드·test·fixture config·결과 PNG·
+`package.json`/lockfile·Rules/config는 수정·stage·restore하지 않았고 게이트도 다시 실행하지 않았다 —
+승인 근거는 Codex의 독립 실행 결과(`node scripts/check.mjs` PASS · unit **2466/2466**(92 파일) · build
+2개 · canonical Chromium **184/184**, 개발 StrictMode 2건 포함 spec 083 23건)다. 보호 spec-018 PNG 2개와
+기존 Founder/user dirty 변경은 그대로 두었다.
+
+**Codex가 확인한 범위 판단.** `apps/admin/vite.e2e-fixture.config.ts`의 개발 fixture entry는 이 스펙
+§대상 파일의 "두 번째 entry가 실제로 필요할 때만 최소 변경" 조건에 해당하며, 개발 번들은 E2E staging
+전용이고 제품·Hosting 산출물에는 들어가지 않는다.
+
+**남은 경계.** 실제 UID·live project/bucket/data/network·emulator·Rules/Hosting deploy·운영 발급은
+`NOT TESTED / FORBIDDEN`으로 남는다. pointer drag는 이번 필수 범위가 아니었다.
+
+**다음.** 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙·실제 발급·
+자동화는 시작하지 않는다. 전체 리빌드 진행도 **85~88% 완료 / 12~15% 잔여 — 변동 없음**.
