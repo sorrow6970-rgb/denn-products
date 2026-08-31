@@ -1,5 +1,19 @@
 # 현재 상태
 
+> **세션 종료 포인터 (2026-08-28): 오늘 작업 종료.** 상태는 `CORRECTION_REQUIRED`, active unit은
+> `spec-083-admin-space-v2-issue-ui`, next는 `CLAUDE_SPEC_083_CORRECTION_ROUND_1` 그대로다. 제품 보완
+> commit은 아직 없고 다음 스펙·actual Firebase/network/emulator/deploy는 시작하지 않는다. 다음 세션은
+> `Automation/NEXT_CLAUDE_PROMPT.md` 상단 지시부터 재개한다.
+
+> **최신 포인터 (2026-08-28): spec 083 Codex 독립 검수 = CORRECTION_REQUIRED 라운드 1.**
+> `HEAD=origin=0622ad0`, ahead/behind 0/0. 구현 `1a7cba9`의 Q-1=A workspace edge와
+> `issue-candidate.test.ts` 정밀화는 수용 가능하다. 그러나 clipboard port가 동기 throw할 때 fixed failure로
+> 닫히지 않고, object URL 생성 뒤 `createImage()`가 throw하면 URL이 revoke되지 않는다. spec 083 E2E의
+> auth expiry-equivalent·unmount/late completion도 빠졌다. Codex 독립 `node scripts/check.mjs`는 PASS(unit
+> **2458/2458**)지만 canonical Chromium은 기존 고객 V2 320px Canvas timeout으로 **176/177**이다.
+> 상태 `CORRECTION_REQUIRED`, fix round 1, next `CLAUDE_SPEC_083_CORRECTION_ROUND_1`. 실제 Firebase/
+> network/emulator/deploy와 다음 스펙은 계속 금지다. 전체 진행도 **85~88% / 잔여 12~15%**.
+
 > **최신 포인터 (2026-08-28): spec 083 Admin Space V2 발급 UI 구현 완료 = READY_FOR_CODEX.**
 > `HEAD=origin=ba9eb48`에서 시작, 계약 `fbf60cc`, Q-1 기록 `977af5c`, 구현 `1a7cba9`. Q-1=A 적용은
 > `apps/admin/package.json` 1줄 + `pnpm-lock.yaml` 3줄뿐이고(offline install, downloaded 0/added 0),

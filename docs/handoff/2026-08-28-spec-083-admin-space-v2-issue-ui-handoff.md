@@ -2,11 +2,21 @@
 
 ## 현재 상태
 
-- baseline: `HEAD=origin=ba9eb48`, ahead/behind 0/0
+- review baseline: `HEAD=origin=0622ad0`, ahead/behind 0/0
 - completed: spec 082 `DONE / CODEX_PASSED`
-- active: spec 083 `READY_FOR_CLAUDE`
-- Founder: `OO-1=A`
-- 전체 리빌드: **84~87% 완료 / 13~16% 잔여**. 이번 계약 문서만으로 수치는 올리지 않는다.
+- active: spec 083 `CORRECTION_REQUIRED`, fix round 1
+- Founder: `OO-1=A`, Q-1=A
+- next: `CLAUDE_SPEC_083_CORRECTION_ROUND_1`
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여**.
+
+## Codex 독립 검수 — 보완 라운드 1 필요
+
+- clipboard 동기 throw가 fixed failure UI로 닫히지 않는다.
+- object URL 생성 뒤 `createImage()` throw 시 URL이 회수되지 않으며 Codex가 `revoked=[]`로 재현했다.
+- spec 083 E2E에 auth expiry-equivalent와 unmount/late completion 실제 composition 경계가 빠졌다.
+- 독립 check는 unit 2458/2458 PASS. canonical Chromium은 기존 고객 V2 320px Canvas timeout으로
+  176/177이며 원인은 NOT PROVEN이다. timeout 증가·skip·고객 코드 수정 없이 보완 후 전체를 재검증한다.
+- 다음 지시는 `Automation/NEXT_CLAUDE_PROMPT.md` 상단 correction round 1만 따른다.
 
 ## Claude Code가 구현할 것
 

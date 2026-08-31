@@ -388,3 +388,44 @@ turn · landscape+inset 0 · 소문자 색상)에서 단언한다. 불일치하�
 구현했다. 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 stage/commit/restore하지 않았다.
 
 **진행도.** 전체 리빌드 **85~88% 완료 / 12~15% 잔여**(운영자 발급 UI 축이 열려 소폭 전진).
+
+### CODEX REVIEW — CORRECTION_REQUIRED 라운드 1 (2026-08-28)
+
+검수 기준 `HEAD=origin=0622ad0`, ahead/behind 0/0. 구현 `1a7cba9`과 기록 `0622ad0`을 독립 검토했다.
+Q-1=A workspace edge는 승인 범위와 일치한다. `issue-candidate.test.ts`의 문자열 단언 정밀화도
+`App.tsx`의 panel 배선과 기존 candidate projector 비배선을 동시에 검증하도록 바꾼 것이므로 수용한다.
+
+#### 결함 1 — clipboard synchronous throw가 UI를 탈출한다
+
+- `AdminSpaceV2IssuePanel.tsx:439`는 `clipboard.write(link).then(...)`만 사용한다.
+- injected `write()`가 동기 throw하거나 production에서 `navigator.clipboard`/`writeText`가 없어
+  `browserClipboard.write()`가 동기 throw하면 rejected Promise가 생기기 전 click handler가 탈출한다.
+- 따라서 §7의 “clipboard가 없거나 throw하면 success는 유지하고 fixed copy failure를 표시”가 성립하지
+  않는다. 동기 throw를 catch해 `copyState="failed"`로 닫고 raw error를 버려야 한다.
+- missing port, synchronous throw, rejected Promise 세 경계를 unit/browser에서 각각 고정한다.
+
+#### 결함 2 — object URL 생성 후 `createImage()` throw에서 URL leak
+
+- `browser-proof-draft.ts:218-220`은 URL을 만들고 `live`에 넣은 뒤 `createImage()`를 같은 try에서 부른다.
+  catch는 failed state만 publish하고 이미 만든 URL을 revoke하지 않는다.
+- Codex 직접 재현: `createObjectUrl() => "blob:leak"`, `createImage() => throw`일 때 snapshot은
+  `ADMIN_PROOF_DECODE_FAILED`지만 `revoked=[]`였다.
+- URL을 만든 뒤 어느 후속 단계가 throw해도 정확히 한 번 revoke해야 한다. drawable/binding/frozen handle은
+  0이어야 하며 unit이 `created === revoked`를 단언해야 한다.
+
+#### 검증 공백과 독립 gate
+
+- 신규 `admin-space-v2-issue` E2E 16건에는 VERIFY가 명시한 auth expiry-equivalent와 issue 중
+  unmount/dispose·late completion이 없다. panel/fixture 실제 연결에서 이를 추가하고 duplicate issue,
+  stale UI, URL/listener leak 0을 고정한다. StrictMode cleanup도 같은 경계에서 검증한다.
+- 독립 `node scripts/check.mjs` **PASS**: format/lint/typecheck, unit **2458/2458**(92파일), build 2개.
+- 독립 canonical `node scripts/e2e-run.mjs`는 **176 passed / 1 failed**. 실패는 신규 spec 083 16건이 아니라
+  기존 `space-production-route.spec.ts`의 “V2 viewer fits 320px”에서 `preview-canvas`가 5초 안에 나타나지
+  않은 timeout이다. Chromium `debug.log`에 GPU command-buffer transient failure가 있었지만 이것이 원인인지는
+  **NOT PROVEN**이다. timeout 증가·skip·고객 코드 수정은 금지한다. 보완 후 canonical 전체를 한 번 다시
+  실행하고, 비결정적 실패가 반복되면 STOP한다.
+- `git diff --check` PASS, `HEAD=origin=0622ad0`, ahead/behind 0/0, 포트·temp 잔류 0. 테스트가 만든
+  `debug.log`만 제거했다. 보호 PNG와 기존 Founder/user dirty는 restore/stage하지 않았다.
+
+허용 보완 파일은 panel/owner source와 해당 unit, spec 083 E2E fixture/test의 최소 범위다. 제품 보완 후
+`READY_FOR_CODEX`에서 멈춘다. 실제 Firebase/network/emulator/deploy와 다음 스펙은 금지다.

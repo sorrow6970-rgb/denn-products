@@ -1,15 +1,49 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `CORRECTION_REQUIRED`
 
 - completed_unit: `spec-082-shared-canvas-plan-executor-boundary` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK (종료 문서까지 반영)**
-- active_unit: `spec-083-admin-space-v2-issue-ui` — **구현 완료(OO-1=A · Q-1=A) / READY_FOR_CODEX / UI / NO_LIVE_NETWORK**
-- 기준: `HEAD=origin=ba9eb48`에서 시작. 계약 `fbf60cc`, Q-1 기록 `977af5c`, 구현 `1a7cba9`.
-- next_transition: `CODEX_SPEC_083_REVIEW`
-- fix_round: `0`
+- active_unit: `spec-083-admin-space-v2-issue-ui` — 구현 `1a7cba9`, Codex 보완 라운드 1.
+- 기준: `HEAD=origin=0622ad0`, ahead/behind 0/0. 계약 `fbf60cc`, Q-1 `977af5c`.
+- next_transition: `CLAUDE_SPEC_083_CORRECTION_ROUND_1`
+- fix_round: `1`
 - 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (7개 roadmap 작업축 기반 관리 추정)
+- 오늘 세션 종료. 다음 세션의 첫 작업은 아래 correction round 1이며 다른 단위를 먼저 시작하지 않는다.
 
-## 현재 결과 — 스펙 083 구현 완료, Codex 재검수 대기
+## 지금 수행할 작업 — 스펙 083 CORRECTION_REQUIRED 라운드 1만
+
+정본 `docs/rebuild/specs/083-admin-space-v2-issue-ui.md`의 Codex review 라운드 1을 읽고 아래만 보완한다.
+
+1. `AdminSpaceV2IssuePanel`의 명시 copy가 missing clipboard, rejected Promise뿐 아니라
+   **synchronous throw**도 fixed `copyFailed` 상태로 닫게 한다. success/link는 보존하고 raw error를
+   노출하지 않는다. 동기 throw unit과 browser E2E를 추가한다.
+2. `browser-proof-draft`에서 object URL 생성 뒤 `createImage()`가 throw해도 만든 URL을 정확히 한 번
+   revoke한다. state는 fixed decode failure, drawable/frozen handle 0이어야 한다. 직접 unit으로 고정한다.
+3. 스펙 E2E 6·targeted 10/12의 빠진 경계를 채운다: auth expiry-equivalent, issue 중 unmount/dispose와
+   late completion, StrictMode/cleanup에서 duplicate issue·URL·listener 0. 기존 spec 081 session unit을
+   단순 인용하지 말고 spec 083 composition/panel fixture가 실제로 연결되는 경계를 검증한다.
+4. `issue-candidate.test.ts`의 현재 정밀화는 유지한다. 기존 고객 V2 320px E2E나 다른 spec 제품 코드를
+   수정·timeout 증가·skip하지 않는다.
+5. targeted unit/E2E, `node scripts/check.mjs`, canonical `node scripts/e2e-run.mjs`, diff/port/temp를 다시
+   실행한다. canonical E2E가 다시 비결정적으로 실패하면 우회·재시도 반복 없이 STOP하고 정확한 출력만
+   기록한다.
+
+허용 제품 파일은 `AdminSpaceV2IssuePanel.tsx`와 해당 test, `browser-proof-draft.ts`와 해당 test,
+spec 083 E2E fixture/test의 최소 변경뿐이다. 필요하지 않으면 `App.tsx`는 변경하지 않는다. package/
+lockfile/Rules/config, 기존 spec 064~082 source/test, 고객 앱, 보호 대상은 변경하지 않는다.
+
+제품 보완 commit과 기록 commit을 일반 fast-forward push하고 `READY_FOR_CODEX`에서 멈춘다. 실제
+Firebase/network/emulator/deploy와 다음 스펙은 시작하지 않는다.
+
+Claude Code에 전달할 문구:
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 083 CORRECTION_REQUIRED 라운드 1만 구현·검증해. actual Firebase/network/emulator/deploy는 실행하지 말고, canonical E2E가 다시 비결정적으로 실패하면 우회하지 말고 STOP해.
+```
+
+---
+
+## 이전 결과 — 스펙 083 구현 완료, Codex 검수 전 기록
 
 **Q-1=A는 최소로만 썼다.** `apps/admin/package.json` **1줄** + `pnpm-lock.yaml` importer **3줄**.
 `corepack pnpm install --offline --ignore-scripts` 실측 `downloaded 0, added 0`이라 신규 외부

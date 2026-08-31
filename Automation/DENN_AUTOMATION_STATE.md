@@ -5,23 +5,46 @@ updated_at: 2026-08-28
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-082-shared-canvas-plan-executor-boundary   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NON_UI, NO_LIVE_NETWORK
-active_unit: spec-083-admin-space-v2-issue-ui   # OO-1=A; Claude Code UI implementation contract ready
-state: READY_FOR_CODEX
-baseline_commit: ba9eb48   # HEAD=origin at spec 083 implementation start
+active_unit: spec-083-admin-space-v2-issue-ui   # implementation 1a7cba9; Codex correction round 1 required
+state: CORRECTION_REQUIRED
+baseline_commit: 0622ad0   # HEAD=origin at Codex independent review
 candidate_commit: 1a7cba9  # spec 083 admin Space V2 issue panel (contract fbf60cc, Q-1 record 977af5c)
 verified_commit: 048388b   # spec 082 correction round 7 independently verified by Codex
-origin_relation: "Claude pushed the spec 083 implementation; HEAD=origin, ahead/behind 0/0"
-working_tree: "only protected spec-018 PNGs rewritten by E2E and pre-existing Founder/user changes remain dirty and unstaged"
-fix_round: 0
+origin_relation: "HEAD=origin=0622ad0, ahead/behind 0/0 at Codex correction round 1 verdict"
+working_tree: "Codex review docs are uncommitted; protected spec-018 PNGs and pre-existing Founder/user changes remain dirty and unstaged"
+fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_083_REVIEW
+next_transition: CLAUDE_SPEC_083_CORRECTION_ROUND_1
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
+session_status: ended for today; resume only with spec 083 correction round 1
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Codex 스펙 083 독립 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-28)
+
+- 검수 기준 `HEAD=origin=0622ad0`, ahead/behind 0/0. 구현 `1a7cba9`과 기록 `0622ad0`을 검토했다.
+- Q-1=A workspace edge와 `issue-candidate.test.ts` 단언 정밀화는 승인 취지와 맞다. 후자는 panel 경로와
+  기존 candidate projector 비배선 검사를 분리하므로 스펙 밖 회귀 약화로 보지 않는다.
+- 결함 1: `AdminSpaceV2IssuePanel.tsx:439`는 `clipboard.write(link)`의 rejected Promise만 처리한다.
+  capability 부재 또는 injected port가 동기 throw하면 click handler가 탈출해 fixed copy failure를 표시하지
+  못한다. 스펙 §7의 “clipboard가 없거나 throw” 계약이 성립하지 않는다.
+- 결함 2: `browser-proof-draft.ts:218-220`은 object URL을 만든 뒤 `createImage()`가 throw하면 catch에서
+  URL을 revoke하지 않는다. Codex 직접 재현 결과 state는 `ADMIN_PROOF_DECODE_FAILED`지만
+  `revoked=[]`였다. URL lifecycle의 정확히 1회 회수 계약이 깨진다.
+- 검증 공백: 신규 spec 083 E2E 16건에는 명시된 auth expiry-equivalent와 unmount/late completion이 없고,
+  panel unit에는 synchronous clipboard throw가 없으며 owner unit에는 post-URL `createImage()` throw가 없다.
+- 독립 `node scripts/check.mjs`는 PASS(unit **2458/2458**, 92파일, build 2개). canonical Chromium은
+  **176/177**로, 기존 `space-production-route` 320px Canvas가 5초 안에 나타나지 않아 1건 실패했다.
+  `debug.log`에는 Chromium GPU command buffer transient failure가 있었지만 인과관계는 **NOT PROVEN**이다.
+  포트·temp 잔류는 0이고 생성된 `debug.log`만 제거했다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1, next `CLAUDE_SPEC_083_CORRECTION_ROUND_1`. 실제 Firebase/
+  network/emulator/deploy와 다음 스펙은 계속 금지다.
+- 오늘 세션은 여기서 종료한다. 자동 구현·재검증·다음 스펙 시작은 0이며, 다음 세션은 이 correction
+  prompt를 Claude Code에 전달하는 단계부터 재개한다.
 
 ## 스펙 083 구현 완료 — Admin Space V2 발급 UI (2026-08-28, OO-1=A · Q-1=A)
 

@@ -7063,3 +7063,31 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - ⚠️ 스펙 밖 1건: `issue-candidate.test.ts`의 `not.toContain("space-v2")` 단언을 `issue-candidate`로
   좁힘(스펙이 요구한 App.tsx 배선과 양립 불가, 원래 의도 유지). Codex 판단 요청.
 - 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_083_REVIEW`. 전체 진행도 **85~88% / 잔여 12~15%**.
+
+## 2026-08-28 - Codex 스펙 083 독립 검수 — CORRECTION_REQUIRED 라운드 1
+
+- `HEAD=origin=0622ad0`, ahead/behind 0/0. 구현 `1a7cba9`과 기록 `0622ad0`을 검토했다. Q-1=A
+  workspace edge와 `issue-candidate.test.ts` 단언 정밀화는 수용 가능하다.
+- 결함 1: `AdminSpaceV2IssuePanel.tsx:439`는 rejected Promise만 처리해 clipboard port 또는
+  `navigator.clipboard.writeText`의 **synchronous throw**가 click handler를 탈출한다. fixed copy failure
+  표시와 success 보존 계약이 증명되지 않았다.
+- 결함 2: `browser-proof-draft.ts:218-220`은 object URL 생성 뒤 `createImage()`가 throw하면 URL을
+  revoke하지 않는다. Codex 직접 재현은 failed snapshot과 `revoked=[]`를 동시에 보였다.
+- 검증 공백: spec 083 신규 E2E에는 auth expiry-equivalent, unmount/dispose와 late completion 실제 연결
+  검증이 없다. synchronous clipboard throw와 post-URL image-construction throw unit도 없다.
+- 독립 `node scripts/check.mjs` PASS(unit **2458/2458**, 92파일, build 2개). canonical Chromium은 신규
+  spec 083 16건은 PASS했지만 기존 고객 V2 320px Canvas timeout 1건으로 **176/177**. GPU transient log는
+  관찰했으나 인과는 **NOT PROVEN**이며 timeout 증가·skip은 하지 않는다.
+- `git diff --check` PASS, 포트·temp 잔류 0, 생성 `debug.log` 제거. 보호 PNG와 기존 user dirty는
+  restore/stage하지 않았다. 상태 `CORRECTION_REQUIRED`, fix round 1, next
+  `CLAUDE_SPEC_083_CORRECTION_ROUND_1`. 실제 Firebase/network/emulator/deploy와 다음 스펙은 금지다.
+
+## 2026-08-28 - 오늘 세션 종료 · 스펙 083 보완 라운드 1 대기
+
+- 최신 live 검증에서 신규 Claude 보완 commit은 없고 `HEAD=origin=0622ad0`, ahead/behind 0/0이다.
+- 상태는 `CORRECTION_REQUIRED`, active `spec-083-admin-space-v2-issue-ui`, next
+  `CLAUDE_SPEC_083_CORRECTION_ROUND_1`을 유지한다. 다음 세션은 `Automation/NEXT_CLAUDE_PROMPT.md`
+  상단 correction 지시부터 재개한다.
+- 오늘 추가 제품 코드·test·package/lockfile·Rules/config 수정 0, 실제 Firebase/network/emulator/deploy 0,
+  다음 스펙·자동화 시작 0. Codex review 문서는 STOP 정책에 따라 uncommitted/unstaged 상태로 보존한다.
+- 전체 리빌드 진행도 **85~88% 완료 / 12~15% 잔여**.
