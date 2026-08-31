@@ -1,5 +1,17 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-31): spec 084 로컬 시각 준비도 감사 = READY_FOR_CLAUDE.**
+> 사용자의 다음 작업 지시에 따라 `docs/rebuild/specs/084-local-visual-readiness-audit.md`와 handoff를
+> 작성했다. 기준 `HEAD=origin=94db3e27ec489315b93dbb8429ff93b975ad217f`, ahead/behind 0/0.
+> 현재 PNG 직접 확인 결과 spec 083 full-page 증거는 제품 panel뿐 아니라 fixture 제목·진단·제어 UI를
+> 포함하므로 최종 운영자 UI 승인 자료가 아니다. spec 084는 제품 route와 합성 fixture를 provenance로
+> 구분하고 고객·운영자 desktop/mobile/landscape PNG와 overflow·44px·keyboard·axe·console·network
+> 측정을 남기는 감사 전용이다. 신규 허용 비문서 파일은 `tests/e2e/local-visual-readiness.spec.ts`와
+> `docs/rebuild/results/spec-084/**`뿐이며 제품 UI/CSS·기존 test/config/script·package/lockfile·Rules는
+> 수정하지 않는다. finding은 P0/P1/P2/NOT TESTED로 기록만 하고 Codex 검수 전 UI 보완·다음 스펙을
+> 시작하지 않는다. 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_084_AUDIT`. 실제 Firebase/network/
+> emulator/deploy·실기기·preview channel은 계속 금지다. 전체 진행도 **85~88% / 잔여 12~15% - 변동 없음**.
+
 > **최신 포인터 (2026-08-31): spec 083 종료 = DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK.**
 > Codex `CODEX_PASSED` 판정(기준 `HEAD=origin=4f7bb20`, 승인 제품 `1082f55`, pass 기록 `16876a3`)에 따라
 > **문서 6개만** 종료 상태로 갱신했다 — 스펙 083(상태 헤더 + DONE 종료 절), 2026-08-28 핸드오프,

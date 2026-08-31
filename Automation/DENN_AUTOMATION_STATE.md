@@ -5,24 +5,41 @@ updated_at: 2026-08-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-083-admin-space-v2-issue-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: none   # spec 083 closed; the next unit is set by a manual instruction or a new Codex spec
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 4f7bb20   # HEAD=origin at Codex correction round 2 re-review
-candidate_commit: 1082f55  # spec 083 correction round 2 (Codex review docs committed as 4d7f813)
-verified_commit: 1082f55   # spec 083 correction round 2 independently verified by Codex
-origin_relation: "HEAD=origin after the documents-only closure push, ahead/behind 0/0"
-working_tree: "documents only this session; protected spec-018 PNGs and pre-existing Founder/user changes remain dirty and unstaged"
+active_unit: spec-084-local-visual-readiness-audit
+state: READY_FOR_CLAUDE
+baseline_commit: 94db3e2   # HEAD=origin when the spec 084 contract was written
+candidate_commit: null
+verified_commit: null
+origin_relation: "HEAD=origin at contract authoring, ahead/behind 0/0"
+working_tree: "spec 084 contract/handoff/state docs plus protected spec-018 PNGs and pre-existing Founder/user dirty; all unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_NEXT_MANUAL_TASK
+next_transition: CLAUDE_SPEC_084_AUDIT
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 083 closed on documents only; no product change, no gate re-run, no next unit started
+session_status: spec 084 audit contract ready; product UI/CSS change not authorized
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Founder 수동 지시 - 스펙 084 로컬 시각 준비도 감사 계약 (2026-08-31)
+
+- 사용자가 다음 작업 진행을 지시했다. 신규 정본
+  `docs/rebuild/specs/084-local-visual-readiness-audit.md`와 관련 handoff를 작성했다.
+- 현재 결과 PNG를 직접 확인했다. spec 018/063/080은 고객 제품 화면이고, spec 083 full-page PNG는 실제
+  제품 panel과 함께 fixture 제목·진단·제어 UI를 포함하므로 최종 운영자 UI 승인 증거가 아니다.
+- 스펙 084는 제품 route와 합성 fixture를 provenance로 분리하고 desktop/mobile/landscape PNG와
+  overflow·44px·keyboard·axe·console·external request 측정을 남기는 **감사 전용**이다.
+- 신규 허용 비문서 파일은 `tests/e2e/local-visual-readiness.spec.ts`와
+  `docs/rebuild/results/spec-084/**`뿐이다. 제품 UI/CSS와 기존 test/config/script/package/lockfile/Rules는
+  수정하지 않는다.
+- 감사 finding은 P0/P1/P2/NOT TESTED로 기록만 하고 후속 UI 구현을 자동 시작하지 않는다. 실제 UI/UX
+  보완은 감사 Codex 통과 후 별도 스펙에서 Claude Code가 담당한다.
+- 계약 작성으로 기능 진행도를 올리지 않아 전체 추정은 **85~88% 완료 / 12~15% 잔여**를 유지한다.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_084_AUDIT`. 실제 Firebase/network/emulator/deploy·실기기·
+  preview channel·운영 cutover는 계속 금지다.
 
 ## Claude 스펙 083 종료 — 문서 전용 closure (2026-08-31)
 

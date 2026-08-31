@@ -1,42 +1,69 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+상태: `READY_FOR_CLAUDE`
 
-- completed_unit: `spec-083-admin-space-v2-issue-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK (종료 문서까지 반영)**
-- 직전 완료: `spec-082-shared-canvas-plan-executor-boundary` — DONE / CODEX_PASSED
-- 기준: 승인 `HEAD=origin=4f7bb20`, 승인 제품 `1082f55`, pass 기록 `16876a3`. 종료 push 후 ahead/behind 0/0.
-- next_transition: `FOUNDER_NEXT_MANUAL_TASK`
+- active_unit: `spec-084-local-visual-readiness-audit`
+- completed_unit: `spec-083-admin-space-v2-issue-ui` - **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**
+- 기준: `HEAD=origin=94db3e27ec489315b93dbb8429ff93b975ad217f`, ahead/behind `0/0`
+- next_transition: `CLAUDE_SPEC_084_AUDIT`
 - fix_round: `0`
-- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (7개 roadmap 작업축 기반 관리 추정 — 변동 없음)
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (7개 roadmap 작업축 기반 관리 추정, 계약 작성으로 변동 없음)
 
-## 현재 결과 — 스펙 083 종료 문서 반영 완료
+## 현재 실행 지시 - 스펙 084 로컬 시각 준비도 감사
 
-Codex `CODEX_PASSED` 판정에 따라 **문서 6개만** 종료 상태로 갱신했다 — 스펙 083(상태 헤더 + DONE 종료
-절), 2026-08-28 핸드오프, `Automation/DENN_AUTOMATION_STATE.md`, 이 파일, `CURRENT.md`, 라이브 로그.
+정본 `docs/rebuild/specs/084-local-visual-readiness-audit.md`를 처음부터 끝까지 읽고 그 범위만 수행한다.
+이번 단위는 **감사와 시각 증거 캡처 전용**이다. 제품 UI/UX·CSS·문구·layout을 수정하지 않는다.
 
-제품 코드·test·`apps/admin/vite.e2e-fixture.config.ts`·결과 PNG·`package.json`/lockfile·Rules/config는
-**수정·stage·restore 0**이고 게이트도 다시 돌리지 않았다 — 승인 근거는 Codex 독립 실행 결과(`node
-scripts/check.mjs` PASS · unit **2466/2466**(92 파일) · build 2개 · canonical Chromium **184/184**,
-개발 StrictMode 2건 포함 spec 083 23건 · `git diff --check` PASS · 포트·temp 잔류 0 · 추가 결함 0)다.
-보호 spec-018 PNG 2개와 기존 Founder/user dirty 변경은 그대로 두었다. 문서 전용 commit을 fast-forward
-push하고 `HEAD=origin`, ahead/behind 0/0을 확인했다.
+현재 직접 확인된 문제는 spec 083 full-page PNG가 실제 제품 panel과 함께 fixture 제목·diagnostics·상태 전환
+control을 포함해 최종 운영자 UI 승인 자료가 아니라는 점이다. 신규 감사에서는 각 증거를
+`PRODUCT_ROUTE`, `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE`, `FIXTURE_CONTROL_ONLY`로 구분하고 fixture를
+제품 route라고 부르지 않는다.
 
-**스펙 083이 남긴 것.** 운영자가 C5 `ready-clean` 기준본에서 한 generation으로 시안을 고정하고, 같은
-generation의 PNG·fields만 기존 스펙 081 session에 넘겨 발급한 뒤, confirmed success에서만 same-origin
-`?space=` 링크를 명시적으로 복사하는 admin 화면이다. gate는 기본 off이고 writer는 첫 발급에서만 lazy
-import되며, 실제 UID·live network·emulator·Rules/Hosting deploy·운영 발급은 `NOT TESTED / FORBIDDEN`
-으로 남는다.
+허용되는 비문서 변경은 다음뿐이다.
 
-## 다음 단계 — 사용자 지시 대기
+- 신규 `tests/e2e/local-visual-readiness.spec.ts`
+- 신규 `docs/rebuild/results/spec-084/**`
 
-상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙, 실제 발급 활성화,
-자동화는 **자동으로 시작하지 않는다**. 다음 단위는 사용자의 명시적 지시 또는 Codex가 작성·push한 신규
-스펙이 정한다.
+감사 보고서와 상태 문서는 스펙의 허용 목록을 따른다. `apps/**`, `packages/**`, 기존 test/config/script,
+package/lockfile/workspace, Rules/Firebase config는 수정하지 않는다. 제품 component가 fixture 안에 있을 때는
+locator screenshot으로 제품 영역만 캡처하고 fixture 진단 UI를 제품처럼 꾸미거나 숨긴 product source를
+만들지 않는다.
 
-> 직전 지시문(스펙 083 종료 문서, 수행 완료 — 기록):
+desktop/mobile portrait/mobile landscape 상당에서 캡처 가능한 고객 browse/composer/Space와 운영자
+shell/editor/issue panel 상태를 수집한다. 각 이미지에 provenance, URL, viewport, synthetic/live 여부,
+준비 절차를 기록한다. overflow, 44px target, keyboard/focus, axe serious/critical, console error/warning,
+localhost/blob 외 request, Canvas readiness를 측정하고 주요 surface의 320px 폭 overflow도 별도로
+확인한다. 현재 안전하게 도달할 수 없는 상태는 꾸며내지 않고 `NOT TESTED`로 남긴다.
+
+finding은 `P0 / P1 / P2 / NOT TESTED`로 분류만 한다. 이번 단위에서 고치거나 후속 UI 스펙을 자동 시작하지
+않는다.
+
+검증:
+
+```powershell
+node scripts/check.mjs
+node scripts/e2e-run.mjs
+git diff --check
+```
+
+전체 unit/build/Chromium 수, 신규 visual spec·PNG 수, axe/console/external request 수, 고객/admin bundle
+size·SHA-256, 포트/temp 잔류, forbidden diff와 보호 hash를 보고한다. 기존 E2E timeout/retry/skip/assertion을
+바꾸지 않는다. 필수 gate가 비결정적으로 실패하거나 외부 request·제품 source 수정·신규 dependency가
+필요하면 자동 루프 STOP 보고를 남긴다.
+
+보호 대상과 기존 Founder/user dirty는 수정·삭제·restore·checkout·stage·commit하지 않는다. 특히
+`docs/rebuild/design/taste-v2/**`, `docs/rebuild/design/README.md`, spec 038, spec 018 PNG 두 장,
+`packages/render/src/plan/index.ts`, `pnpm-workspace.yaml`, `AGENTS.md`를 보존한다. canonical E2E가 spec 018
+PNG를 다시 써도 stage/restore하지 않고 시작·종료 hash만 보고한다.
+
+완료 후 허용 변경만 일반 commit·fast-forward push하고 STATE/NEXT/CURRENT/live log와 handoff를 실제 결과에
+맞춘다. 상태 `READY_FOR_CODEX`에서 멈춘다. 실제 Firebase/network/emulator/deploy·실기기·preview channel,
+제품 UI 보완, 다음 스펙은 시작하지 않는다.
+
+Claude Code에 전달할 문구:
 
 ```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 CODEX_PASSED된 스펙 083 종료 문서만 동기화·commit·fast-forward push해. 제품 코드·test·fixture config·PNG를 더 수정하거나 검증을 재실행하지 말고, 다음 스펙은 시작하지 마.
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 명시된 스펙 084 로컬 시각 준비도 감사 범위만 구현·검증해. 제품 UI/CSS는 수정하지 말고 결과를 READY_FOR_CODEX로 남겨.
 ```
 
 ---

@@ -7200,3 +7200,26 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 restore/stage/commit하지 않았다.
 - 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙·실제 Firebase/network/
   emulator/deploy·운영 발급·자동화는 시작하지 않는다. 전체 진행도 **85~88% / 잔여 12~15% — 변동 없음**.
+
+## 2026-08-31 - Founder 다음 작업 지시 · 스펙 084 로컬 시각 준비도 감사 계약
+
+- 기준 `HEAD=origin=94db3e27ec489315b93dbb8429ff93b975ad217f`, ahead/behind 0/0. spec 083은
+  `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`로 유지한다.
+- 현재 결과 PNG 6장을 직접 열어 확인했다. spec 018/063/080은 고객 제품 화면이다. spec 083 PNG는 실제
+  `AdminSpaceV2IssuePanel`을 포함하지만 full page에 `E2E fixture (not a product screen)` 제목, diagnostics,
+  상태 전환 control이 함께 있어 최종 운영자 UI 승인 증거로 사용할 수 없다.
+- 신규 정본 `docs/rebuild/specs/084-local-visual-readiness-audit.md`와 handoff를 작성했다. 목적은 제품
+  route와 제품 component-in-fixture를 provenance로 구분하고 customer/admin의 desktop/mobile/landscape
+  PNG, overflow·44px·keyboard·axe·console·external request 결과와 P0/P1/P2/NOT TESTED 감사표를 만드는
+  것이다.
+- 이번 계약은 감사 전용이다. 제품 UI/CSS·기존 test/config/script·package/lockfile·Rules 수정은 승인하지
+  않는다. 신규 허용 비문서 경로는 `tests/e2e/local-visual-readiness.spec.ts`와
+  `docs/rebuild/results/spec-084/**`뿐이다.
+- design-taste audit 기준은 기존 Modern Studio 보존, 감사 우선, 고객 `5/3/4`, 운영자 `3/2/6`으로
+  사용했으며 새 미학·dependency를 도입하지 않는다. 보호된 taste-v2/design README/spec 038과 기존 dirty는
+  수정·stage·commit하지 않는다.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_084_AUDIT`, fix round 0. Claude Code는 감사 결과를
+  fast-forward push한 뒤 `READY_FOR_CODEX`에서 멈춘다. finding을 바로 고치거나 다음 UI 스펙을 자동
+  시작하지 않는다.
+- 계약 문서만 작성했으므로 전체 진행도 **85~88% 완료 / 12~15% 잔여 - 변동 없음**. 실제 Firebase/
+  network/emulator/deploy·실기기·preview channel·운영 cutover는 계속 금지다.
