@@ -230,6 +230,13 @@ describe("toLogicalWidth", () => {
 
 // --- the copy attempt (spec 083 §7) ------------------------------------------
 
+/** Built through a constant key so a deliberately thenable value stays lintable. */
+const THEN = "then";
+const writeReturning =
+  (returned: unknown) =>
+  (_text: string): Promise<void> =>
+    returned as Promise<void>;
+
 describe("copyLinkToClipboard", () => {
   const LINK = "https://design.example.test/?space=3f2504e0-4f89-41d3-9a0c-0305e82c3301";
 
@@ -273,10 +280,43 @@ describe("copyLinkToClipboard", () => {
   });
 
   it("fails closed when the port returns something that is not a promise", async () => {
-    const clipboard = { write: (() => undefined) as unknown as (text: string) => Promise<void> };
-    // A non-thenable return is not evidence that the text reached the clipboard, but it is also
-    // not a rejection — `Promise.resolve` absorbs it rather than letting `.then` throw.
-    await expect(copyLinkToClipboard(LINK, clipboard)).resolves.toBe("copied");
+    // A port that breaks its contract has given NO evidence that the text reached the clipboard.
+    // `Promise.resolve(undefined)` would manufacture a fulfilled promise and report a copy nobody
+    // performed, so a non-thenable return is a failure, not a success.
+    for (const returned of [undefined, null, "ok", 0, true, {}, { [THEN]: 1 }]) {
+      const clipboard = { write: writeReturning(returned) };
+      await expect(copyLinkToClipboard(LINK, clipboard), String(returned)).resolves.toBe("failed");
+    }
+  });
+
+  it("accepts a thenable that fulfils and refuses one that rejects or throws", async () => {
+    const fulfils = { write: writeReturning({ [THEN]: (ok: () => void) => ok() }) };
+    await expect(copyLinkToClipboard(LINK, fulfils)).resolves.toBe("copied");
+
+    const rejects = {
+      write: writeReturning({ [THEN]: (_ok: () => void, no: () => void) => no() }),
+    };
+    await expect(copyLinkToClipboard(LINK, rejects)).resolves.toBe("failed");
+
+    // `then` itself is foreign code: a throwing call, and a throwing getter, both fail closed.
+    const throwingThen = {
+      write: writeReturning({
+        [THEN]: () => {
+          throw new Error("hostile");
+        },
+      }),
+    };
+    await expect(copyLinkToClipboard(LINK, throwingThen)).resolves.toBe("failed");
+
+    const hostile = {};
+    Object.defineProperty(hostile, THEN, {
+      get: () => {
+        throw new Error("hostile getter");
+      },
+    });
+    await expect(copyLinkToClipboard(LINK, { write: writeReturning(hostile) })).resolves.toBe(
+      "failed",
+    );
   });
 });
 

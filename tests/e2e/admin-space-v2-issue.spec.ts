@@ -9,6 +9,13 @@ import { ADMIN_PORT } from "../../playwright.config";
 // the writer is synthetic, so no Firebase service, bucket, document or network is reached.
 
 const FIXTURE_URL = `http://localhost:${ADMIN_PORT}/e2e-space-v2-issue-fixture.html`;
+/**
+ * The SAME harness source built against React's development build (see
+ * `apps/admin/vite.e2e-fixture.config.ts`). Only there does `<StrictMode>` replay effects as
+ * setup → cleanup → setup on the same mounted component — the lifecycle a production build cannot
+ * perform and an unmount/remount is not equivalent to.
+ */
+const DEV_FIXTURE_URL = `http://localhost:${ADMIN_PORT}/dev/e2e-space-v2-issue-fixture.html`;
 
 /** An 8x4 PNG, generated for this suite. Not customer data. */
 const PNG_BASE64 =
@@ -25,7 +32,7 @@ interface Harness {
   readonly consoleMessages: string[];
 }
 
-async function open(page: Page): Promise<Harness> {
+async function open(page: Page, url: string = FIXTURE_URL): Promise<Harness> {
   const external: string[] = [];
   const consoleMessages: string[] = [];
   page.on("request", (request) => {
@@ -41,7 +48,7 @@ async function open(page: Page): Promise<Harness> {
     }
   });
   page.on("pageerror", (error) => consoleMessages.push(`pageerror: ${String(error)}`));
-  await page.goto(FIXTURE_URL);
+  await page.goto(url);
   await expect(page.getByTestId("fixture-write-status")).toHaveText("unloaded");
   return { page, external, consoleMessages };
 }
@@ -502,6 +509,79 @@ test("a mount, unmount and mount again leaves no duplicate URL, listener or issu
   await page.getByRole("button", { name: "패널 내리기" }).click();
   await expect(page.getByTestId("fixture-object-urls")).toHaveText("2:2");
   await expect(page.getByTestId("fixture-panel-listeners")).toHaveText("0");
+  await expect(page.getByTestId("fixture-issue-calls")).toHaveText("0");
+  expect(consoleMessages).toEqual([]);
+});
+
+// --- development StrictMode (spec 083 보완 라운드 2) --------------------------
+
+test("development StrictMode replays the effects and leaves live owners behind", async ({
+  page,
+}) => {
+  const { external, consoleMessages } = await open(page, DEV_FIXTURE_URL);
+
+  // The page IS React's development build performing the replay. Without this the rest of the test
+  // could pass on a production bundle, where StrictMode is inert and proves nothing.
+  await expect(page.getByTestId("fixture-effect-setups")).toHaveText("2");
+  // The composition its own cleanup disposed left no live auth observer behind.
+  // attached : detached : live. ONE composition exists for the whole mount, so its auth observer
+  // is attached once and is the only live one — the replay added no duplicate and orphaned none.
+  await expect(page.getByTestId("fixture-auth-observers")).toHaveText("1:0:1");
+  await expect(page.getByTestId("fixture-panel-listeners")).toHaveText("2");
+
+  // A disposed write controller ignores loadBaseline forever, so reaching ready-clean is what
+  // proves the composition published after the replay is LIVE.
+  await loadBaseline(page);
+  await chooseSupported(page);
+
+  // A disposed proof owner ignores load() forever: a real decode and a real Canvas prove the
+  // replacement owner is live too.
+  await attach(page, PNG);
+  await expect(canvasBox(page)).toBeVisible();
+  await expect(page.getByTestId("space-v2-canvas-status")).toHaveText("미리보기가 준비되었습니다.");
+  // Exactly one object URL for one PNG — the discarded record made none.
+  await expect(page.getByTestId("fixture-object-urls")).toHaveText("1:0");
+
+  // The whole issue path still works, exactly once, through the replaced composition.
+  await page.getByTestId("space-v2-freeze").click();
+  await expect(page.getByTestId("fixture-issue-status")).toHaveText("draft-ready");
+  await page.getByTestId("space-v2-password").fill("correct-horse");
+  await page.getByTestId("space-v2-password-confirm").fill("correct-horse");
+  await page.getByTestId("space-v2-issue").click();
+  await expect(page.getByTestId("fixture-issue-status")).toHaveText("success");
+  await expect(page.getByTestId("fixture-issue-calls")).toHaveText("1");
+  await expect(page.getByTestId("fixture-write-factory-calls")).toHaveText("1");
+  expect((await page.getByTestId("space-v2-link").textContent()) ?? "").toMatch(SPACE_LINK);
+  await expect(page.getByTestId("fixture-auth-observers")).toHaveText("1:0:1");
+
+  expect(external).toEqual([]);
+  expect(consoleMessages).toEqual([]);
+});
+
+test("development StrictMode still releases everything when the panel goes away", async ({
+  page,
+}) => {
+  const { consoleMessages } = await open(page, DEV_FIXTURE_URL);
+  await expect(page.getByTestId("fixture-effect-setups")).toHaveText("2");
+  await loadBaseline(page);
+  await chooseSupported(page);
+  await attach(page, PNG);
+  await expect(canvasBox(page)).toBeVisible();
+  await expect(page.getByTestId("fixture-object-urls")).toHaveText("1:0");
+
+  await page.getByRole("button", { name: "패널 내리기" }).click();
+  await expect(page.getByTestId("space-v2-issue-panel")).toHaveCount(0);
+  // The record that owns the live owner disposes exactly it — one URL created, one revoked.
+  await expect(page.getByTestId("fixture-object-urls")).toHaveText("1:1");
+  await expect(page.getByTestId("fixture-panel-listeners")).toHaveText("0");
+
+  await page.getByRole("button", { name: "패널 올리기" }).click();
+  await expect(page.getByTestId("space-v2-issue-panel")).toBeVisible();
+  await expect(page.getByTestId("fixture-panel-listeners")).toHaveText("2");
+  await chooseSupported(page);
+  await attach(page, PNG);
+  await expect(canvasBox(page)).toBeVisible();
+  await expect(page.getByTestId("fixture-object-urls")).toHaveText("2:1");
   await expect(page.getByTestId("fixture-issue-calls")).toHaveText("0");
   expect(consoleMessages).toEqual([]);
 });

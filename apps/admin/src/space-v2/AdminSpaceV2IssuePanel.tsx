@@ -270,30 +270,79 @@ function IssuePreviewCanvas({
  * One explicit copy click, resolved to a fixed outcome. It never throws and never rethrows.
  *
  * The clipboard is the one port here that is FOREIGN CODE running inside the click handler, and it
- * can fail in three different shapes: the port is missing entirely, it rejects, or it throws
- * SYNCHRONOUSLY — which is what the production port does when `navigator.clipboard` is absent,
- * because `navigator.clipboard.writeText` is read before any promise exists. A `.then(onOk, onErr)`
- * pair catches the second shape only; the first and the third escape the handler, leaving the
- * operator with a success screen and a copy button that silently does nothing.
+ * can fail in four different shapes: the port is missing, it throws SYNCHRONOUSLY (what the
+ * production port does when `navigator.clipboard` is absent, because `writeText` is read before any
+ * promise exists), it rejects, or it returns something that is not a promise at all.
  *
- * So all three close into the same fixed `failed` state. The issued success and its link are NOT
- * downgraded — the space exists either way — and the raw error is dropped here rather than shown,
- * logged or re-thrown, so no SDK message, permission text or link fragment reaches the console.
+ * Only a promise that FULFILS is evidence that the write completed, so only that reports `copied`.
+ * A `.then(onOk, onErr)` pair sees the rejection alone; the missing port and the synchronous throw
+ * escape the handler entirely; and `Promise.resolve(anything)` would turn a contract-breaking
+ * return into a fulfilled promise and report a copy that nobody performed. All four therefore close
+ * into the same fixed `failed` state.
+ *
+ * The issued success and its link are NOT downgraded — the space exists either way — and the raw
+ * error is dropped here rather than shown, logged or re-thrown, so no SDK message, permission text
+ * or link fragment reaches the console.
  */
 export function copyLinkToClipboard(
   link: string | null,
   clipboard: SpaceV2ClipboardPort | undefined,
 ): Promise<"copied" | "failed"> {
-  if (link === null || clipboard === undefined) return Promise.resolve("failed");
+  const failed = Promise.resolve<"copied" | "failed">("failed");
+  if (link === null || clipboard === undefined) return failed;
+
+  let returned: unknown;
   try {
-    // `Promise.resolve` also absorbs a port that returns something that is not a promise at all.
-    return Promise.resolve(clipboard.write(link)).then(
-      () => "copied" as const,
-      () => "failed" as const,
-    );
+    returned = clipboard.write(link);
   } catch {
-    return Promise.resolve("failed");
+    return failed;
   }
+
+  // A thenable is the only thing that can report completion. Reading `.then` is itself foreign
+  // code (a getter can throw), so even the shape check fails closed.
+  let then: unknown;
+  try {
+    if (returned === null || (typeof returned !== "object" && typeof returned !== "function")) {
+      return failed;
+    }
+    then = (returned as { readonly then?: unknown }).then;
+  } catch {
+    return failed;
+  }
+  if (typeof then !== "function") return failed;
+
+  return new Promise<"copied" | "failed">((resolve) => {
+    try {
+      (then as (ok: () => void, no: (reason?: unknown) => void) => unknown).call(
+        returned,
+        () => resolve("copied"),
+        () => resolve("failed"),
+      );
+    } catch {
+      resolve("failed");
+    }
+  });
+}
+
+// --- the proof owner's ownership (spec 083 보완 라운드 2) ---------------------
+
+/**
+ * Ownership of the proof draft owner.
+ *
+ * Same defect and same fix as the composition in `App.tsx`. A `useRef` + dispose-in-cleanup pair
+ * leaves the panel DEAD in development: React's StrictMode replays every effect as setup → cleanup
+ * → setup on the SAME mounted component, the ref survives, and a disposed owner ignores `load()`
+ * forever — the operator picks a PNG and no preview ever appears.
+ *
+ * So exactly ONE owner lives for the whole mount. The cleanup marks the record unmounted and
+ * releases it on the NEXT TASK — where release means `dispose()`, which revokes the object URL
+ * exactly once. A StrictMode replay re-runs the setup inside the same task and cancels that
+ * release; a real unmount does not, so nothing is retained.
+ */
+interface OwnedProofDraft {
+  readonly owner: AdminProofDraftOwner;
+  /** false between a cleanup and the setup that follows it in a StrictMode replay. */
+  mounted: boolean;
 }
 
 // --- the panel ----------------------------------------------------------------
@@ -323,13 +372,26 @@ export function AdminSpaceV2IssuePanel({
   );
   const issue = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
 
-  // One owner per mount. StrictMode's double effect must not leave a second blob URL behind.
-  const ownerRef = useRef<AdminProofDraftOwner | null>(null);
-  ownerRef.current ??= createAdminProofDraftOwner(
-    proofPorts === undefined ? undefined : { ports: proofPorts },
-  );
-  const owner = ownerRef.current;
-  useEffect(() => () => owner.dispose(), [owner]);
+  // Exactly one LIVE proof owner while this panel is mounted — see `OwnedProofDraft` above.
+  const initialPorts = useRef(proofPorts).current;
+  const ownedRef = useRef<OwnedProofDraft | null>(null);
+  ownedRef.current ??= {
+    owner: createAdminProofDraftOwner(
+      initialPorts === undefined ? undefined : { ports: initialPorts },
+    ),
+    mounted: false,
+  };
+  const ownedProof = ownedRef.current;
+  const owner = ownedProof.owner;
+  useEffect(() => {
+    ownedProof.mounted = true;
+    return () => {
+      ownedProof.mounted = false;
+      setTimeout(() => {
+        if (!ownedProof.mounted) ownedProof.owner.dispose();
+      }, 0);
+    };
+  }, [ownedProof]);
   const image = useSyncExternalStore(owner.subscribe, owner.getSnapshot, owner.getSnapshot);
 
   const [frameSizeId, setFrameSizeId] = useState("");

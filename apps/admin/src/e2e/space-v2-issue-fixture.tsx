@@ -5,7 +5,7 @@
 // proof owner with real Blob/Image decoding, and the real Canvas executor. Only the writer is
 // synthetic, so the harness never reaches Firebase, a bucket, a document or the network.
 
-import { useSyncExternalStore } from "react";
+import { StrictMode, useEffect, useMemo, useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import "@denn/ui/theme.css";
 import type { AdminFirebaseFacade, AdminFacadeUser } from "@denn/firebase/admin-read";
@@ -17,7 +17,8 @@ import type {
   SpaceV2IssueWritePort,
 } from "@denn/firebase/space-write";
 import type { CatalogDocumentV1 } from "@denn/shared";
-import { createAdminOperatorCompositionFromEnv } from "../admin-composition/create";
+import type { AdminOperatorCompositionDependencies } from "../admin-composition/create";
+import { useOwnedAdminComposition } from "../App";
 import { AdminSpaceV2IssuePanel } from "../space-v2/AdminSpaceV2IssuePanel";
 import type {
   AdminWriteSessionController,
@@ -158,13 +159,22 @@ function createFixture() {
   // nothing is faked in the panel, the real auth port publishes a real signed-out state.
   const authObservers = new Set<(user: AdminFacadeUser | null) => void>();
   let operatorUser: AdminFacadeUser | null = { isAnonymous: false };
+  /** Every attach the composition's auth port ever made — a disposed composition must leave none. */
+  let authAttached = 0;
+  let authDetached = 0;
 
   const readFacade: AdminFirebaseFacade = {
     setPersistenceLocal: async () => undefined,
     onAuthStateChanged: (listener) => {
       authObservers.add(listener);
+      authAttached += 1;
+      notify();
       listener(operatorUser);
-      return () => authObservers.delete(listener);
+      return () => {
+        authObservers.delete(listener);
+        authDetached += 1;
+        notify();
+      };
     },
     signInWithEmailPassword: async () => undefined,
     signOut: async () => undefined,
@@ -263,45 +273,43 @@ function createFixture() {
     },
   });
 
-  const composition = createAdminOperatorCompositionFromEnv(
-    {
-      VITE_DENN_ADMIN_FIREBASE_ENABLED: "true",
-      VITE_DENN_ADMIN_WRITE_ENABLED: "true",
-      VITE_DENN_ADMIN_SPACE_V2_ISSUE_ENABLED: "true",
-      VITE_DENN_ADMIN_FIREBASE_API_KEY: "synthetic-api-key",
-      VITE_DENN_ADMIN_FIREBASE_AUTH_DOMAIN: "synthetic.invalid",
-      VITE_DENN_ADMIN_FIREBASE_PROJECT_ID: "demo-synthetic",
-      VITE_DENN_ADMIN_FIREBASE_STORAGE_BUCKET: "synthetic.invalid",
-      VITE_DENN_ADMIN_FIREBASE_APP_ID: "synthetic-app-id",
-    },
-    {
-      makeReadFacade: async () => readFacade,
-      makeWritePort: async () => write,
-      createCorrelationId: () => CID,
-      spaceV2Issue: {
-        makeWritePort: async ({ auth }) => {
-          writeFactoryCalls += 1;
-          notify();
-          return createIssuePort(auth);
-        },
+  /**
+   * The env and dependencies the REAL composition factory is given. The composition itself is NOT
+   * built here: `FixtureApp` builds it through the product's own `useOwnedAdminComposition`, so the
+   * ownership under test is `App.tsx`'s, not a copy of it.
+   */
+  const env = {
+    VITE_DENN_ADMIN_FIREBASE_ENABLED: "true",
+    VITE_DENN_ADMIN_WRITE_ENABLED: "true",
+    VITE_DENN_ADMIN_SPACE_V2_ISSUE_ENABLED: "true",
+    VITE_DENN_ADMIN_FIREBASE_API_KEY: "synthetic-api-key",
+    VITE_DENN_ADMIN_FIREBASE_AUTH_DOMAIN: "synthetic.invalid",
+    VITE_DENN_ADMIN_FIREBASE_PROJECT_ID: "demo-synthetic",
+    VITE_DENN_ADMIN_FIREBASE_STORAGE_BUCKET: "synthetic.invalid",
+    VITE_DENN_ADMIN_FIREBASE_APP_ID: "synthetic-app-id",
+  };
+
+  const dependencies: AdminOperatorCompositionDependencies = {
+    makeReadFacade: async () => readFacade,
+    makeWritePort: async () => write,
+    createCorrelationId: () => CID,
+    spaceV2Issue: {
+      makeWritePort: async ({ auth }) => {
+        writeFactoryCalls += 1;
+        notify();
+        return createIssuePort(auth);
       },
     },
-  );
-
-  const writeController = composition.writeController;
-  const session = composition.spaceV2IssueSession;
-  if (writeController === null || session === null) {
-    throw new Error("synthetic space v2 composition must be enabled");
-  }
+  };
 
   return {
-    writeController,
-    session,
+    env,
+    dependencies,
     setMode(next: IssueMode) {
       mode = next;
       notify();
     },
-    bumpRevision() {
+    bumpRevision(writeController: AdminWriteSessionController) {
       // An out-of-band save by another operator: the loaded baseline is no longer current.
       revision += 1;
       void writeController.loadBaseline();
@@ -321,12 +329,16 @@ function createFixture() {
       return () => listeners.delete(listener);
     },
     snapshot: () =>
-      `${mode}:${writeFactoryCalls}:${issueCalls}:${lastToken}:${releaseHungIssue === null ? 0 : 1}`,
+      `${mode}:${writeFactoryCalls}:${issueCalls}:${lastToken}:${releaseHungIssue === null ? 0 : 1}:${authAttached}:${authObservers.size}`,
     diagnostics: () => ({
       mode,
       writeFactoryCalls,
       issueCalls,
       pendingIssues: releaseHungIssue === null ? 0 : 1,
+      /** Every observer the composition's auth port ever attached, and how many are live now. */
+      authAttached,
+      authDetached,
+      authObserversLive: authObservers.size,
     }),
   };
 }
@@ -369,11 +381,14 @@ const setClipboardMode = (next: ClipboardMode): void => {
 };
 
 /**
- * Whether the panel is on screen. Taking it away is a REAL unmount of the product component — the
- * effect cleanups run, the subscriptions detach and the proof owner disposes — which is the same
- * boundary StrictMode's double effect exercises in a development build. This bundle is a
- * production build, where StrictMode does not double-invoke, so the harness performs the mount →
- * unmount → mount cycle explicitly instead of relying on it.
+ * Whether the panel is on screen. Taking it away is a REAL unmount of the product component: the
+ * effect cleanups run, the subscriptions detach and the proof owner disposes.
+ *
+ * This is NOT a stand-in for StrictMode. A real unmount destroys the component instance, so the
+ * next mount starts from fresh state; StrictMode's effect replay keeps the same instance and its
+ * state, which is exactly why a disposed owner could survive there. This page is built twice —
+ * once for production and once with React's development build (see `vite.e2e-fixture.config.ts`,
+ * output `dev/`) — and the StrictMode replay is exercised on the development page only.
  */
 let panelMounted = true;
 const shellListeners = new Set<() => void>();
@@ -468,7 +483,15 @@ function Diagnostics({
       <p style={DIAG} data-testid="fixture-panel-mounted">
         {panelMounted ? "yes" : "no"}
       </p>
-      <button type="button" onClick={() => void fixture.writeController.loadBaseline()}>
+      {/* attached : detached : live. A disposed composition must leave no live auth observer. */}
+      <p style={DIAG} data-testid="fixture-auth-observers">
+        {`${diagnostics.authAttached}:${diagnostics.authDetached}:${diagnostics.authObserversLive}`}
+      </p>
+      {/* 1 in a production build, 2 when React's development StrictMode replays the effect. */}
+      <p style={DIAG} data-testid="fixture-effect-setups">
+        {effectSetups}
+      </p>
+      <button type="button" onClick={() => void writeController.loadBaseline()}>
         편집 기준 불러오기
       </button>
       <button type="button" onClick={() => fixture.setMode("success")}>
@@ -483,7 +506,7 @@ function Diagnostics({
       <button type="button" onClick={() => fixture.setMode("hang")}>
         다음 발급 지연
       </button>
-      <button type="button" onClick={() => fixture.bumpRevision()}>
+      <button type="button" onClick={() => fixture.bumpRevision(writeController)}>
         기준본 변경
       </button>
       <button type="button" onClick={() => fixture.expireAuth()}>
@@ -504,7 +527,7 @@ function Diagnostics({
           // What the production shell does when the whole app goes away: the panel is unmounted and
           // the composition disposes the session it owns.
           setPanelMounted(false);
-          fixture.session.dispose();
+          session.dispose();
         }}
       >
         패널 내리고 세션 정리
@@ -522,14 +545,13 @@ function Diagnostics({
   );
 }
 
-/**
- * The panel gets the COUNTING controllers; the diagnostics keep the raw ones, so the listener
- * readout is the panel's own subscription count and nothing else.
- */
-const panelWriteController = countingWriteController(fixture.writeController);
-const panelSession = countingIssueSession(fixture.session);
+/** Effect setups this harness has run. 1 in production, 2 under a development StrictMode replay. */
+let effectSetups = 0;
 
 function FixtureApp() {
+  // The REAL product hook from `App.tsx`, given synthetic ports. The ownership under test is the
+  // one the admin shell ships, not a copy of it.
+  const composition = useOwnedAdminComposition(fixture.env, fixture.dependencies);
   useSyncExternalStore(subscribeShell, shellSnapshot, shellSnapshot);
   useSyncExternalStore(
     (listener: () => void) => {
@@ -539,6 +561,37 @@ function FixtureApp() {
     () => clipboardMode,
     () => clipboardMode,
   );
+  useEffect(() => {
+    // A development StrictMode replay runs this twice; a production build runs it once. The E2E
+    // reads it so a page that is NOT a development build cannot pass a StrictMode assertion.
+    effectSetups += 1;
+    instrumentsChanged();
+  }, []);
+
+  const writeController = composition.writeController;
+  const session = composition.spaceV2IssueSession;
+
+  // The panel gets the COUNTING controllers; the diagnostics keep the raw ones, so the listener
+  // readout is the panel's own subscription count and nothing else. They are memoized per
+  // controller identity, so a StrictMode replacement produces exactly one new pair.
+  const panelWriteController = useMemo(
+    () => (writeController === null ? null : countingWriteController(writeController)),
+    [writeController],
+  );
+  const panelSession = useMemo(
+    () => (session === null ? null : countingIssueSession(session)),
+    [session],
+  );
+
+  if (
+    writeController === null ||
+    session === null ||
+    panelWriteController === null ||
+    panelSession === null
+  ) {
+    throw new Error("synthetic space v2 composition must be enabled");
+  }
+
   return (
     <main className="denn-shell">
       <div className="denn-shell__inner">
@@ -550,11 +603,18 @@ function FixtureApp() {
             clipboard={clipboardMode === "missing" ? undefined : clipboard}
           />
         ) : null}
-        <Diagnostics writeController={fixture.writeController} session={fixture.session} />
+        <Diagnostics writeController={writeController} session={session} />
       </div>
     </main>
   );
 }
 
 const root = document.getElementById("root");
-if (root) createRoot(root).render(<FixtureApp />);
+// StrictMode exactly as `main.tsx` mounts the real admin shell. It is inert in the production
+// build and replays every effect in the development build this config also emits.
+if (root)
+  createRoot(root).render(
+    <StrictMode>
+      <FixtureApp />
+    </StrictMode>,
+  );
