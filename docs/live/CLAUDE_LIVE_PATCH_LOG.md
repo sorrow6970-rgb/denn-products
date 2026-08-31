@@ -7091,3 +7091,39 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 오늘 추가 제품 코드·test·package/lockfile·Rules/config 수정 0, 실제 Firebase/network/emulator/deploy 0,
   다음 스펙·자동화 시작 0. Codex review 문서는 STOP 정책에 따라 uncommitted/unstaged 상태로 보존한다.
 - 전체 리빌드 진행도 **85~88% 완료 / 12~15% 잔여**.
+
+## 2026-08-31 - 스펙 083 보완 라운드 1 — clipboard 동기 throw · object URL leak
+
+- 기준 `HEAD=origin=0622ad0`. Codex review 문서 대행 commit `1d03bfc`, 제품 보완 `7ce9ab4`.
+- 변경 범위(허용 파일만): `space-v2/AdminSpaceV2IssuePanel.tsx`(+test),
+  `space-v2/browser-proof-draft.ts`(+test), `e2e/space-v2-issue-fixture.tsx`,
+  `tests/e2e/admin-space-v2-issue.spec.ts`, `docs/rebuild/results/spec-083/` 스크린샷 2장.
+  `App.tsx`·package/lockfile/Rules/config·기존 spec 064~082 제품/test·고객 앱 diff **0**.
+- 결함 1: copy 결정을 `copyLinkToClipboard()`로 분리해 **missing port · 동기 throw · rejection ·
+  non-Promise 반환**을 모두 fixed `copyFailed`로 닫았다. success·link 보존, raw error 미노출.
+- 결함 2: object URL 생성을 자기 단계로 분리해, 그 뒤 어떤 실패도 `revoke()`를 지난다. `live` Set
+  멤버십이 정확히 1회를 보장한다. state는 decode failure, drawable·frozen handle 0.
+- 추가(보완 중 발견): status 순서가 `!baselineReady`를 먼저 반환해 **발급 중 auth 만료 시 definite auth
+  실패와 outcome-unknown 경고가 baseline 문구에 가려졌다**. 이미 일어난 시도를 먼저 보고하도록 순서만
+  바꿨다.
+- 재현 증명: 신규 owner unit과 신규 E2E 2건을 **수정 전 소스**에 대해 실행해 각각 FAIL을 확인했다
+  (`revoked=[]`, copy-status 빈 문자열, "편집 기준을 …" 문구).
+- 검증 공백 보완: fixture의 synthetic writer가 composition이 넘긴 **실제 narrowed auth port**를 읽고
+  실제 auth observer가 signed-out을 publish한다. E2E로 (a) 만료+frozen draft, (b) 발급 중 만료 →
+  late completion이 definite `SPACE_V2_ISSUE_AUTH_REQUIRED`, (c) 발급 중 unmount+dispose → URL
+  created==revoked·listener 0·late completion 무영향, (d) mount→unmount→mount 순환에서 중복 issue·
+  URL·listener 0과 재mount panel의 owner 생존을 고정했다.
+- StrictMode: E2E 번들이 production build라 effect 이중 호출이 없어 **실제 remount**로 같은 cleanup
+  경계를 측정했다. `main.tsx`의 StrictMode + `App.tsx` compositionRef/panel ownerRef가 dev 빌드에서
+  재생성되지 않는 관찰은 스펙 문서에 **관찰로만 기록**하고 고치지 않았다(`App.tsx` 변경 금지 범위).
+- 실측: `node scripts/check.mjs` **PASS**(unit **2465/2465**, 92 파일, build 2개), canonical
+  `node scripts/e2e-run.mjs` **Chromium 182 passed / 0 failed**(spec 083 **21**). Codex 라운드 1에서
+  실패했던 `space-production-route` "the V2 viewer fits a 320px viewport…"는 이번 실행 **ok (3.2s)** —
+  timeout 증가·skip·retry·고객 코드 수정 **0**.
+- `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, temp/`test-results`/
+  `debug.log` 잔류 0. 고객 entry `index-CRHkWFoL.js` **340.60 kB 해시 무변경**, admin entry 294.61 →
+  **294.80 kB**(gzip 91.35 동일), lazy `space-write-*.js` 8.47 kB 유지.
+- 실제 Firebase/network/emulator/deploy **0**. 보호 spec-018 PNG 2개와 기존 Founder/user dirty는
+  stage/commit/restore **0**.
+- 상태 `READY_FOR_CODEX`, fix_round **1**, next `CODEX_SPEC_083_REVIEW_ROUND_2`. 다음 스펙은 시작하지
+  않았다. 전체 진행도 **85~88% / 잔여 12~15%**.

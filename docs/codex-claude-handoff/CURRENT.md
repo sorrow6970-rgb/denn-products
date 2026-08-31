@@ -1,5 +1,21 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-31): spec 083 보완 라운드 1 완료 = READY_FOR_CODEX.**
+> 기준 `HEAD=origin=0622ad0`. Codex review 문서 대행 commit `1d03bfc`, 제품 보완 `7ce9ab4`, 기록 commit은
+> 이 갱신이다. 결함 1은 copy 결정을 `copyLinkToClipboard()`로 분리해 **missing port · 동기 throw ·
+> rejection · non-Promise 반환**을 모두 fixed `copyFailed`로 닫았고(success·link 보존, raw error 미노출),
+> 결함 2는 object URL 생성을 자기 단계로 떼어내 이후 어떤 실패도 **정확히 1회** revoke를 지나게 했다.
+> 보완 중 발견한 추가 결함 — 발급 중 auth 만료가 definite auth 실패와 outcome-unknown 경고를 baseline
+> 문구로 덮음 — 은 status 순서만 바꿔 닫았다. 신규 검증 3건은 **수정 전 소스에서 FAIL**을 직접 확인했고,
+> auth expiry(2)·unmount+late completion·mount/unmount/mount 순환을 spec 083 fixture 실제 연결로
+> 고정했다. 실측 `node scripts/check.mjs` PASS(unit **2465/2465**), canonical `node scripts/e2e-run.mjs`
+> **Chromium 182 passed / 0 failed** — Codex 라운드 1의 flaky 고객 V2 320px는 이번 실행 ok(3.2s)이며
+> timeout 증가·skip·retry·고객 코드 수정 0이다. 고객 entry 해시 무변경, admin entry 294.80 kB(gzip
+> 91.35), lazy `space-write-*.js` 8.47 kB 유지. `App.tsx`·package/lockfile/Rules/config·기존 spec
+> 064~082 제품/test는 무변경이고, StrictMode dev 빌드 관찰은 **고치지 않고 기록만** 했다(Codex 판단 요청).
+> 상태 `READY_FOR_CODEX`, fix_round 1, next `CODEX_SPEC_083_REVIEW_ROUND_2`. 실제 Firebase/network/
+> emulator/deploy와 다음 스펙은 계속 금지다. 전체 진행도 **85~88% / 잔여 12~15%**.
+
 > **세션 종료 포인터 (2026-08-28): 오늘 작업 종료.** 상태는 `CORRECTION_REQUIRED`, active unit은
 > `spec-083-admin-space-v2-issue-ui`, next는 `CLAUDE_SPEC_083_CORRECTION_ROUND_1` 그대로다. 제품 보완
 > commit은 아직 없고 다음 스펙·actual Firebase/network/emulator/deploy는 시작하지 않는다. 다음 세션은

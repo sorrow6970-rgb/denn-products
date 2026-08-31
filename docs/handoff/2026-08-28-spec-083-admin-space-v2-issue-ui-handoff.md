@@ -71,3 +71,21 @@ C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된
   단언이고 test의 원래 의도는 유지된다. Codex 판단을 요청한다.
 - 상태 `READY_FOR_CODEX`, fix_round **0**, next `CODEX_SPEC_083_REVIEW`. 다음 스펙은 시작하지 않았다.
 - 전체 리빌드 진행도 **85~88% 완료 / 12~15% 잔여**.
+
+## 보완 라운드 1 완료 — Claude Code (2026-08-31)
+
+- 기준 `HEAD=origin=0622ad0`. Codex review 문서 `1d03bfc`, 제품 보완 `7ce9ab4`.
+- 결함 1(clipboard 동기 throw): copy 결정을 `copyLinkToClipboard()`로 분리해 missing port·동기 throw·
+  rejection·non-Promise 반환을 모두 fixed `copyFailed`로 닫았다. success/link 보존, raw error 미노출.
+- 결함 2(object URL leak): URL 생성을 자기 단계로 분리해 이후 어떤 실패도 정확히 1회 revoke를 지난다.
+- 추가 결함(보완 중 발견): 발급 중 auth 만료 시 definite auth 실패와 outcome-unknown 경고가 baseline
+  문구에 가려졌다 → 이미 일어난 시도를 먼저 보고하도록 status 순서만 바꿨다.
+- 신규 검증: unit +7(**2465/2465**), spec 083 E2E 16 → **21**(copy 3경계, auth 만료 2건, unmount +
+  late completion, mount/unmount/mount 순환). 세 신규 검증은 **수정 전 소스에서 FAIL**을 확인했다.
+- canonical `node scripts/e2e-run.mjs` **Chromium 182 passed / 0 failed**. Codex 라운드 1의 flaky
+  `space-production-route` 320px는 이번 실행 ok(3.2s) — timeout 증가·skip·retry·고객 코드 수정 0.
+- 허용 파일 밖 diff 0, package/lockfile/Rules/config diff 0, `App.tsx` 무변경, 실제 Firebase/network/
+  emulator/deploy 0, 보호 PNG·기존 dirty stage/commit/restore 0.
+- StrictMode dev 빌드 관찰(`App.tsx` compositionRef / panel ownerRef 재생성 없음)은 스펙 문서에 기록만
+  하고 고치지 않았다 — Codex 판단을 요청한다.
+- 상태 `READY_FOR_CODEX`, fix_round **1**, next `CODEX_SPEC_083_REVIEW_ROUND_2`.

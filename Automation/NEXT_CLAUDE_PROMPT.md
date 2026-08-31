@@ -1,16 +1,77 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CORRECTION_REQUIRED`
+상태: `READY_FOR_CODEX`
 
-- completed_unit: `spec-082-shared-canvas-plan-executor-boundary` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK (종료 문서까지 반영)**
-- active_unit: `spec-083-admin-space-v2-issue-ui` — 구현 `1a7cba9`, Codex 보완 라운드 1.
-- 기준: `HEAD=origin=0622ad0`, ahead/behind 0/0. 계약 `fbf60cc`, Q-1 `977af5c`.
-- next_transition: `CLAUDE_SPEC_083_CORRECTION_ROUND_1`
+- completed_unit: `spec-082-shared-canvas-plan-executor-boundary` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
+- active_unit: `spec-083-admin-space-v2-issue-ui` — 보완 라운드 1 `7ce9ab4`(Codex review 문서 `1d03bfc`).
+- 기준: 라운드 1 검수 기준은 `0622ad0`. 보완·기록 push 후 `HEAD=origin`, ahead/behind 0/0.
+- next_transition: `CODEX_SPEC_083_REVIEW_ROUND_2`
 - fix_round: `1`
 - 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (7개 roadmap 작업축 기반 관리 추정)
-- 오늘 세션 종료. 다음 세션의 첫 작업은 아래 correction round 1이며 다른 단위를 먼저 시작하지 않는다.
 
-## 지금 수행할 작업 — 스펙 083 CORRECTION_REQUIRED 라운드 1만
+## 현재 결과 — 스펙 083 보완 라운드 1 완료
+
+**결함 1(clipboard 동기 throw).** 원인은 `.then(onOk, onErr)`가 **rejected Promise 하나만** 처리한다는
+것이다. production port는 `write()` 안에서 `navigator.clipboard.writeText`를 읽으므로 capability가 없으면
+Promise가 생기기 전에 throw하고 click handler를 탈출한다. copy 결정을 `copyLinkToClipboard(link,
+clipboard)` 한 함수로 분리해 **missing port · 동기 throw · rejection · non-Promise 반환**을 모두 fixed
+`copyFailed`로 닫았다. success와 link는 그대로 남고 raw error는 표시·log·rethrow 없이 버려진다.
+
+**결함 2(post-URL throw에서 URL leak).** URL 생성과 `createImage()`가 같은 try에 있어 catch가 "revoke할
+URL이 있는지"를 알 수 없었다. URL 생성을 **자기 단계**로 떼어내 이후 어떤 실패도 `revoke(url)`을
+지나가게 했고, `live` Set 멤버십이 정확히 1회를 보장한다. state는 decode failure, drawable·frozen
+handle은 0이다.
+
+**추가 결함 1건(보완 중 발견, 같은 파일에서 닫음).** status 순서가 `!baselineReady`를 먼저 반환해서,
+발급 중 auth가 만료되면 화면이 definite auth 실패 대신 "편집 기준을 …불러온 뒤에"를 보였고 같은 경로에서
+**outcome-unknown 경고까지 덮였다**. 이미 일어난 시도를 먼저 보고하도록 순서만 바꿨다.
+
+**재현 증명.** 신규 owner unit과 신규 E2E 2건을 **수정 전 소스**에 대해 실행해 각각 FAIL을 확인했다
+(`revoked=[]` · copy-status 빈 문자열 · "편집 기준을 …" 문구). 검증이 결함을 실제로 잡는다.
+
+**검증 공백 보완.** fixture의 synthetic writer가 composition이 넘긴 **실제 narrowed auth port**를 읽고
+실제 auth observer가 signed-out을 publish한다. E2E로 (a) 만료+frozen draft(발급·writer 0), (b) 발급 중
+만료 → late completion이 definite `SPACE_V2_ISSUE_AUTH_REQUIRED`, (c) 발급 중 unmount+session dispose →
+URL created==revoked·listener 0·late completion 무영향·재mount 시 success/link 0, (d)
+mount→unmount→mount 순환에서 중복 issue·URL·listener 0과 재mount panel owner 생존을 고정했다.
+
+**실측.** `node scripts/check.mjs` **PASS**(unit **2465/2465**, 92 파일, build 2개), canonical
+`node scripts/e2e-run.mjs` **Chromium 182 passed / 0 failed**(기존 161 + spec 083 **21**). Codex 라운드
+1에서 실패했던 `space-production-route` "the V2 viewer fits a 320px viewport…"는 이번 실행 **ok (3.2s)**
+— timeout 증가·skip·retry·고객 코드 수정은 **0**이다. `git diff --check` PASS, 포트 LISTENING 0,
+temp/`test-results`/`debug.log` 잔류 0. 고객 entry `index-CRHkWFoL.js` **340.60 kB 해시 무변경**, admin
+entry 294.61 → **294.80 kB**(gzip **91.35** 동일), lazy `space-write-*.js` **8.47 kB** 유지.
+
+**변경 범위.** `AdminSpaceV2IssuePanel.tsx`(+test), `browser-proof-draft.ts`(+test), spec 083 E2E
+fixture/test, 재생성된 spec-083 결과 PNG 2장뿐이다. `App.tsx`·package/lockfile/Rules/config·기존 spec
+064~082 제품/test·고객 앱 diff **0**. 보호 spec-018 PNG 2개와 기존 Founder/user dirty는
+stage/commit/restore **0**.
+
+**⚠️ 관찰 1건 — Codex 판단 요청(고치지 않음).** `main.tsx`는 `<StrictMode>`이고, `App.tsx`의
+`compositionRef.current ??= …` + cleanup `composition.dispose()`, panel의 `ownerRef.current ??= …` +
+`owner.dispose()`는 같은 형태다. StrictMode의 mount→cleanup→mount는 같은 ref를 유지하므로 **개발
+빌드에서는** 첫 cleanup 이후 composition(session 포함)과 proof owner가 재생성되지 않는다. E2E 번들은
+production build라 재현·증명하지 못했고, panel만 고치면 `App.tsx`가 session을 이미 dispose한 상태여서
+반쪽 수정이 된다. 이번 라운드 지시가 "필요하지 않으면 `App.tsx`를 변경하지 않는다"이므로 변경하지 않았다.
+
+## 다음 단계 — Codex 재검수 대기
+
+상태 `READY_FOR_CODEX`, next `CODEX_SPEC_083_REVIEW_ROUND_2`. 다음 스펙, 실제 UID·live network·
+emulator·Rules/Hosting deploy·운영 발급은 **자동으로 시작하지 않는다**.
+
+> 직전 지시문(스펙 083 보완 라운드 1, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 083 CORRECTION_REQUIRED 라운드 1만 구현·검증해. 실제 Firebase/network/emulator/deploy는 실행하지 말고, canonical E2E가 다시 비결정적으로 실패하면 우회하지 말고 STOP해.
+```
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 지시 — 스펙 083 CORRECTION_REQUIRED 라운드 1 (수행 완료)
+
+#### 지시 본문(기록)
 
 정본 `docs/rebuild/specs/083-admin-space-v2-issue-ui.md`의 Codex review 라운드 1을 읽고 아래만 보완한다.
 

@@ -429,3 +429,79 @@ Q-1=A workspace edge는 승인 범위와 일치한다. `issue-candidate.test.ts`
 
 허용 보완 파일은 panel/owner source와 해당 unit, spec 083 E2E fixture/test의 최소 범위다. 제품 보완 후
 `READY_FOR_CODEX`에서 멈춘다. 실제 Firebase/network/emulator/deploy와 다음 스펙은 금지다.
+
+### DONE (Claude) — 보완 라운드 1 (2026-08-31)
+
+Codex 라운드 1 검수의 두 결함과 검증 공백만 좁게 고쳤다. 기준 `HEAD=origin=0622ad0` → Codex review
+기록 `1d03bfc` → 제품 보완 `7ce9ab4`. 허용 파일 밖 diff, package/lockfile/Rules/config diff는 **0**이고
+`App.tsx`·기존 spec 064~082 제품/test·고객 앱은 건드리지 않았다.
+
+**결함 1 — clipboard 동기 throw.** 원인은 `.then(onOk, onErr)`가 **rejected Promise 하나만** 처리한다는
+것이다. production port는 `write()` 안에서 `navigator.clipboard.writeText`를 읽으므로, capability가
+없으면 Promise가 생기기 전에 throw하고 click handler를 탈출한다. copy 결정을 `copyLinkToClipboard(link,
+clipboard)` 한 함수로 분리해 **missing port · 동기 throw · rejection · non-Promise 반환**을 모두 닫았다.
+`Promise.resolve(...)`가 thenable이 아닌 반환까지 흡수한다. success·link·상태는 보존되고 raw error는
+표시·log·rethrow 없이 버려진다.
+
+**결함 2 — post-URL throw에서 object URL leak.** URL 생성과 `createImage()`가 같은 try에 있어, catch가
+"revoke할 URL이 있는지"를 알 수 없었다. URL 생성을 **자기 단계**로 떼어내고, 그 뒤의 어떤 실패도
+`revoke(url)`을 지나가게 했다. `live` Set 멤버십이 정확히 1회를 보장하므로 이후 `clear()`/`dispose()`가
+두 번 revoke하지 못한다. state는 `ADMIN_PROOF_DECODE_FAILED`, drawable·frozen handle은 0이다.
+
+**추가 결함 — settled outcome이 baseline copy에 가려짐(보완 중 발견).** auth 만료는 baseline을
+사용 불가로 만들고, 기존 status 순서는 `!baselineReady`를 **먼저** 반환했다. 그래서 발급 중 만료가
+나면 화면이 definite auth 실패 대신 "편집 기준을 …불러온 뒤에" 문구를 보였고, 같은 경로에서
+outcome-unknown 경고("같은 시안을 다시 발급하지 말라")도 덮인다 — §6이 요구하는 정보가 사라진다.
+이미 일어난 시도(success/error/outcome-unknown/preparing/issuing)를 **먼저** 보고하도록 순서만 바꿨고,
+아직 시도가 없는 모든 상태는 그대로 baseline/stale copy가 소유한다.
+
+**재현 증명(수정 전 소스에 대해 직접 실행).**
+
+- 신규 owner unit "revokes the URL it already made when a later step of the same load throws" →
+  수정 전 소스에서 **FAIL**(Codex가 보고한 `revoked=[]` 그대로), 수정 후 PASS.
+- 신규 E2E "an explicit copy keeps the success and closes every failure shape safely" → 수정 전
+  panel에서 **FAIL**(`space-v2-copy-status`가 빈 문자열 — click이 탈출).
+- 신규 E2E "an expiry during an in-flight issue closes as a definite auth failure" → 수정 전 panel에서
+  **FAIL**(Received: "편집 기준을 저장할 변경이 없는 상태로 …").
+
+**검증 공백 보완.** spec 081 session unit을 인용하지 않고 **spec 083 composition/panel fixture가 실제로
+연결되는 경계**를 검증한다.
+
+- fixture의 synthetic writer가 composition이 넘긴 **실제 narrowed auth port**(`currentOperator()`)를
+  읽고, 실제 auth observer가 signed-out을 publish한다. auth 만료는 fake state가 아니라 real port 경로다.
+- E2E: 만료 + frozen draft(발급·writer 0), **발급 중 만료 → late completion이 definite
+  `SPACE_V2_ISSUE_AUTH_REQUIRED`로 종료**(link·retry·중복 write 0, 코드 노출 0).
+- E2E: 발급 중 unmount + session dispose → object URL created==revoked, panel listener 0,
+  late completion이 `disposed`를 덮지 못하고 issue call은 1 유지. 재mount해도 success/link/password 0.
+- E2E: mount → unmount → mount 순환에서 listener 수 동일, URL created==revoked, 재mount한 panel의
+  proof owner가 **살아 있어** 두 번째 PNG가 다시 decode·draw된다(중복 issue·URL·listener 0).
+- unit: copy 세 경계(missing / 동기 throw / rejection) + non-Promise 반환.
+
+**StrictMode에 대한 정확한 범위.** E2E fixture 번들은 **production build**라 StrictMode는 effect를
+이중 호출하지 않는다. 그래서 StrictMode가 개발 빌드에서 시뮬레이션하는 것과 같은 cleanup 경계를
+**실제 mount→unmount→mount**로 직접 수행해 측정했다. 남은 차이 하나는 아래 관찰로 보고한다.
+
+**관찰(고치지 않음, Codex 판단 요청).** `main.tsx`는 `<StrictMode>`로 감싸고, `App.tsx`의
+`compositionRef.current ??= …` + effect cleanup `composition.dispose()`와 panel의
+`ownerRef.current ??= …` + `owner.dispose()`는 같은 형태다. StrictMode의 mount→cleanup→mount는 같은
+ref를 유지하므로 **개발 빌드에서는** 첫 cleanup이 composition(session 포함)과 proof owner를 dispose한
+뒤 재생성되지 않는다. 이 세션은 production build만 실행하므로 재현·증명하지 못했고, panel만 고치면
+`App.tsx`가 session을 이미 dispose한 상태라 반쪽 수정이 된다. 이번 라운드 허용 범위는 `App.tsx`를
+"필요하지 않으면 변경하지 않는다"이므로 **변경하지 않았다**.
+
+**실측(보완 후 전체 재실행).**
+
+- `node scripts/check.mjs` **PASS** — format·lint·typecheck 7개, unit **2465/2465**(92 파일, +7),
+  build 2개.
+- canonical `node scripts/e2e-run.mjs` **Chromium 182 passed / 0 failed**(기존 161 + spec 083 **21**).
+  Codex 라운드 1에서 실패했던 `space-production-route` "the V2 viewer fits a 320px viewport…"는 이번
+  실행에서 **ok (3.2s)** — timeout 증가·skip·retry·고객 코드 수정은 **0**이다.
+- `git diff --check` PASS. 포트 4183/4184/4185/8080/9099/9199 LISTENING **0**, temp staging·
+  `test-results`·`debug.log` 잔류 **0**.
+- bundle: 고객 entry `index-CRHkWFoL.js` **340.60 kB / gzip 104.40 — 해시 무변경**. admin entry
+  294.61 → **294.80 kB**(gzip **91.35** 동일), admin CSS **10.80 kB** 동일, lazy `space-write-*.js`
+  **8.47 kB** 그대로 — write SDK는 default entry에 eager 포함되지 않는다.
+- `issue-candidate.test.ts`의 라운드 0 정밀화는 그대로 유지했다. 실제 Firebase/network/emulator/deploy
+  **0**, 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 stage/commit/restore **0**.
+
+상태는 `READY_FOR_CODEX`에서 멈춘다. 다음 스펙은 시작하지 않았다.
