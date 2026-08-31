@@ -2,7 +2,7 @@
 
 ## 상태
 
-- `READY_FOR_CLAUDE`
+- `READY_FOR_CODEX` — 감사 수행 완료(2026-08-31). 결과는 이 문서 맨 아래 `DONE (Claude)` 절에 있다.
 - 기준 브랜치: `rebuild/modern-studio`
 - 기준 commit: `HEAD=origin=94db3e27ec489315b93dbb8429ff93b975ad217f`, ahead/behind `0/0`
 - 직전 완료: spec 083 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
@@ -245,3 +245,68 @@ git diff --check
 Codex가 감사 보고서와 PNG를 독립 검수한 뒤에만 후속 UI 보완 단위를 작성한다. 후속 단위의 실제 UI/UX
 구현은 사용자 지시대로 Claude Code가 담당한다. actual device, preview channel, Firebase/Rules/Hosting
 cutover는 각각 별도 승인 단위다.
+
+### DONE (Claude) — 스펙 084 감사 수행 (2026-08-31)
+
+기준 `HEAD=origin=94db3e2` → 계약 기록 `6304cfb` → 감사 산출물 `3c2e9f8`. 제품 source·CSS·기존 test·
+config·script·package/lockfile·Rules/Firebase config 변경 **0**. 신규는 visual spec 1개와 결과 폴더,
+감사 보고서뿐이다.
+
+**수집한 증거.** PNG **14장** + PNG 없이 320px만 측정한 4건을 합쳐 **18 preparation**. 등급별로
+`PRODUCT_ROUTE` 7장(고객 browse 2·composer 3·운영자 shell 2), `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE`
+7장(고객 Space 4·C5 편집기 2·발급 panel 2), `FIXTURE_CONTROL_ONLY` **0장**이다. index는
+`docs/rebuild/results/spec-084/README.md`, 원본 측정값은 같은 폴더 `measurements.json`, 판정과 finding은
+`docs/codex-claude-handoff/reviews/2026-08-31-spec-084-local-visual-readiness-audit.md`에 있다.
+
+**spec 083 문제를 구조로 해결했다.** 발급 panel은 `space-v2-issue-panel` locator로만 캡처하고, fixture
+제목과 진단 section의 bounding box가 panel box와 **교차하지 않음**을 단언하며 panel 안에 harness testid가
+0개임도 단언한다. 고객 Space 3장은 캡처 직전 harness의 unmount 버튼만 페이지에서 숨겼다. 제품 source의
+DOM·문구·스타일은 바꾸지 않았다.
+
+**자동 측정(18건 전수).** horizontal overflow 0(320/390/844/1280), viewport 밖 control 0, 제품 영역
+44px 미만 target **2건**(C5 select 518x23 / 316x23), native range는 별도 기록(높이 44px), 키보드 walk
+순서=DOM 순서 전 화면 일치, focus 표시 없는 stop 0, axe serious/critical 0, console error/warning 0,
+pageerror 0, localhost·blob 외 요청 **0**, 필요한 화면의 Canvas 0x0 **0**, 금지 문자열 노출 0.
+
+**측정 설계를 두 번 바로잡았다(결함으로 보고하지 않고).** ① 페이지 전체에서 target을 재던 첫 버전은
+발급 panel 화면에서 fixture 버튼 14개를 "제품 결함"으로 잡았다 → 제품 영역으로 범위를 좁혀 0건.
+② `element.focus()` + outline만 읽던 첫 버전은 고객 browse/composer를 "focus 표시 없음"으로 보고했다 →
+Chromium이 프로그램적 focus에 `:focus-visible`을 적용하지 않는 거짓 음성이었고, 실제 Tab walk와
+box-shadow 병행 판정으로 바꾸자 전 화면 표시 확인으로 정정됐다.
+
+**finding 8건(분류만, 수정 0).** P1 — F-1 composer 미리보기가 모든 컨트롤 아래(390/844/1280 전부,
+가로에서는 Canvas 683px > 뷰포트), F-2 파일 선택이 스타일 없는 영어 네이티브 위젯(고객·운영자 공통),
+F-3 Space 인증 후에도 "비밀번호를 입력하세요"와 제목 2개가 남음, F-4 admin 제품 route가 아직 UI
+프리미티브 데모 셸(상시 빨간 `필수 항목입니다` 포함), F-5 C5 select가 스타일 없는 23px. P2 — F-6 편집기
+카드 표면 부재, F-7 고객 화면의 마이그레이션 진단 문구, F-8 Space viewer가 데스크톱에서 확대되지 않음.
+결함 아님으로 분류한 관찰 3건(V1 blocked의 focusable 0=spec 063 계약, 시계 표시·인쇄 비활성=합성 카탈로그
+결과)도 함께 기록했다.
+
+**NOT TESTED.** 고객 Space·운영자 C5/발급 panel의 **제품 entry** 도달(실제 Firestore 문서와 env gate 필요),
+C5 dirty/conflict/save-error 상태(도달 절차 미정의), 실기기 Safari/Android·preview channel·운영 데이터.
+
+**실측(각 1회).** `node scripts/check.mjs` **PASS** — format·lint·typecheck 7개, unit **2466/2466**(92
+파일), build 2개. canonical `node scripts/e2e-run.mjs` **Chromium 203 passed / 0 failed / 0 skipped /
+0 retry**(기존 184 + 신규 visual spec **19**). `git diff --check` PASS. 포트 4183/4184/4185/8080/9099/9199
+LISTENING 0, `denn-e2e-*`·`test-results`·`playwright-report`·`debug.log` 잔류 0. 허용 경로 밖 diff 0,
+package/lockfile/Rules/config diff 0.
+
+**bundle(제품 무변경 확인).** 고객 entry `index-CRHkWFoL.js` **340.60 kB / gzip 104.40**,
+sha256 `5b569772f0218cc169eb7cb83ec92ac99b68d33d06651c299d757d5a912018b9`. admin entry
+`index-BeV6iIrs.js` **295.32 kB / gzip 91.54**, sha256
+`bdbc113a73b0b20d1424e007a722c29f2f97d3792280a38b4f7c335b67ba11c9`. 두 파일명·크기 모두 spec 083 종료
+시점과 동일하다.
+
+**보호 대상.** 시작/종료 sha256이 동일: design README `99e53de3…`, spec 038 `e6c1de7d…`,
+`packages/render/src/plan/index.ts` `cfab600b…`, `pnpm-workspace.yaml` `61c7bfe4…`, `AGENTS.md`
+`82738101…`, `taste-v2/index.html` `30eeee78…`. spec 018 PNG 2장은 canonical E2E가 다시 썼고 **stage·
+restore·commit하지 않았다**: `browse-desktop-1280x800.png` `ace8d75b…` → `7504f96a…`,
+`browse-mobile-390x844.png` `6bdcb88c…` → `99ec9df3…`.
+
+**게이트 통과와 finding의 관계(설계 근거).** 이 단위는 finding을 고치지 않으면서 전체 gate가 PASS해야
+한다(§완료 정의). 그래서 신규 spec의 **단언**은 스펙이 0으로 규정한 안전 불변식(외부 요청·console
+error·pageerror·식별자 노출·필요한 Canvas의 0 크기)에 한정하고, overflow·target·focus·axe는 측정값으로
+기록해 보고서에서 판정한다. 품질 결함을 붉은 gate로 바꿨다면 이 단위가 손대면 안 되는 제품 UI를 고쳐야만
+종료할 수 있게 된다.
+
+상태는 `READY_FOR_CODEX`에서 멈춘다. 후속 UI 보완 단위는 시작하지 않았다.

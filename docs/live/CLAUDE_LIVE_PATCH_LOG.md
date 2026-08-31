@@ -7223,3 +7223,33 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   시작하지 않는다.
 - 계약 문서만 작성했으므로 전체 진행도 **85~88% 완료 / 12~15% 잔여 - 변동 없음**. 실제 Firebase/
   network/emulator/deploy·실기기·preview channel·운영 cutover는 계속 금지다.
+
+## 2026-08-31 - 스펙 084 로컬 시각 준비도 감사 수행
+
+- 기준 `HEAD=origin=94db3e2`. 계약 문서 대행 commit `6304cfb`, 감사 산출물 `3c2e9f8`.
+- 신규 파일만 추가했다: `tests/e2e/local-visual-readiness.spec.ts`,
+  `docs/rebuild/results/spec-084/**`(PNG 14 + README + measurements.json),
+  `docs/codex-claude-handoff/reviews/2026-08-31-spec-084-local-visual-readiness-audit.md`.
+  제품 source·CSS·기존 test·config·script·package/lockfile·Rules diff **0**.
+- 증거 등급: `PRODUCT_ROUTE` 7장, `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` 7장,
+  `FIXTURE_CONTROL_ONLY` 0장. 발급 panel은 locator 캡처 + fixture chrome 비교차 단언으로 spec 083 PNG
+  문제를 구조적으로 해결했다.
+- 자동 측정 18건: overflow 0(320~1280), 화면 밖 control 0, 제품 영역 44px 미만 target 2건(C5 select 23px),
+  키보드 순서=DOM 순서, focus 표시 누락 0, axe serious/critical 0, console error/warning 0,
+  외부 요청 0, Canvas 0x0 0, 금지 문자열 0.
+- 측정 설계 2건 자체 정정: 페이지 전체 target 측정이 fixture 버튼 14개를 제품 결함으로 오탐 → 제품 영역
+  스코프. 프로그램적 focus가 focus ring 누락을 오탐 → 실제 Tab walk + box-shadow 병행 판정.
+- finding 8건(분류만, 수정 0): P1 F-1 composer 미리보기가 컨트롤 아래, F-2 스타일 없는 영어 파일 선택,
+  F-3 Space 인증 후 잔존 입력 안내·제목 2개, F-4 admin 제품 route가 데모 셸, F-5 C5 select 23px /
+  P2 F-6 편집기 카드 부재, F-7 고객 화면 진단 문구, F-8 Space viewer 데스크톱 미확대.
+- NOT TESTED: 제품 entry의 Space·C5·발급 panel(실제 문서/env 필요), C5 쓰기 실패 상태, 실기기·preview
+  channel·운영 데이터.
+- 실측: `node scripts/check.mjs` PASS(unit **2466/2466**, build 2), canonical `node scripts/e2e-run.mjs`
+  **Chromium 203 passed / 0 failed / 0 skip / 0 retry**(신규 19). `git diff --check` PASS, 포트·temp·
+  `test-results`·`debug.log` 잔류 0.
+- bundle 무변경: 고객 `index-CRHkWFoL.js` 340.60 kB sha256 `5b569772…`, admin `index-BeV6iIrs.js`
+  295.32 kB sha256 `bdbc113a…`.
+- 보호 대상 hash 동일. spec 018 PNG 2장만 canonical E2E가 다시 썼고 stage/restore 0
+  (`ace8d75b…`→`7504f96a…`, `6bdcb88c…`→`99ec9df3…`).
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_084_REVIEW`. 후속 UI 보완·다음 스펙·실제 Firebase/network/
+  emulator/deploy는 시작하지 않았다. 전체 진행도 **85~88% / 잔여 12~15%**(감사 단위로 변동 없음).

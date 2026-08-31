@@ -1,15 +1,79 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
+상태: `READY_FOR_CODEX`
 
-- active_unit: `spec-084-local-visual-readiness-audit`
-- completed_unit: `spec-083-admin-space-v2-issue-ui` - **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**
-- 기준: `HEAD=origin=94db3e27ec489315b93dbb8429ff93b975ad217f`, ahead/behind `0/0`
-- next_transition: `CLAUDE_SPEC_084_AUDIT`
+- active_unit: `spec-084-local-visual-readiness-audit` — 감사 수행 `3c2e9f8`(계약 기록 `6304cfb`)
+- completed_unit: `spec-083-admin-space-v2-issue-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**
+- 기준: 계약 기준 `94db3e2`. 감사·기록 push 후 `HEAD=origin`, ahead/behind `0/0`
+- next_transition: `CODEX_SPEC_084_REVIEW`
 - fix_round: `0`
-- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (7개 roadmap 작업축 기반 관리 추정, 계약 작성으로 변동 없음)
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (감사 단위이므로 변동 없음)
 
-## 현재 실행 지시 - 스펙 084 로컬 시각 준비도 감사
+## 현재 결과 — 스펙 084 감사 완료
+
+**증거.** PNG **14장**과 320px 전용 측정 4건을 합쳐 18 preparation. `PRODUCT_ROUTE` 7장(고객 browse 2·
+composer 3·운영자 shell 2), `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` 7장(고객 Space 4·C5 편집기 2·발급
+panel 2), `FIXTURE_CONTROL_ONLY` **0장**. index는 `docs/rebuild/results/spec-084/README.md`, 원본 측정은
+`measurements.json`, 판정은 `docs/codex-claude-handoff/reviews/2026-08-31-spec-084-local-visual-readiness-audit.md`.
+
+**spec 083 PNG 문제는 구조로 닫았다.** 발급 panel은 `space-v2-issue-panel` locator로만 캡처하고, fixture
+제목·진단 section의 bounding box가 panel box와 교차하지 않음과 panel 내부 harness testid 0개를 test가
+단언한다. 고객 Space 3장은 캡처 직전 harness unmount 버튼만 페이지에서 숨겼고 제품 source는 무변경이다.
+
+**자동 측정 18건.** horizontal overflow 0(320/390/844/1280), viewport 밖 control 0, 제품 영역 44px 미만
+target **2건**(C5 select 518x23 · 316x23), native range 별도 기록(높이 44px), 키보드 walk 순서=DOM 순서
+전 화면 일치, focus 표시 없는 stop 0, axe serious/critical 0, console error/warning 0, pageerror 0,
+localhost·blob 외 요청 **0**, 필요한 화면의 Canvas 0x0 0, 금지 문자열 노출 0.
+
+**측정 설계 2건은 결함 보고가 아니라 자체 정정으로 처리했다.** ① 페이지 전체 target 측정이 발급 panel
+화면의 fixture 버튼 14개를 "제품 결함"으로 오탐 → 제품 영역 스코프로 0건. ② `element.focus()`+outline
+판정이 고객 browse/composer를 "focus 표시 없음"으로 오탐(Chromium은 프로그램적 focus에 `:focus-visible`을
+적용하지 않는다) → 실제 Tab walk + box-shadow 병행으로 전 화면 표시 확인.
+
+**finding 8건, 수정 0.** P1 — 고객 composer 미리보기가 모든 컨트롤 아래(가로에서는 Canvas 683px >
+뷰포트), 파일 선택이 스타일 없는 영어 네이티브 위젯(고객·운영자 공통), Space 인증 후에도 "비밀번호를
+입력하세요"와 제목 2개 잔존, admin 제품 route가 아직 UI 프리미티브 데모 셸(상시 빨간 `필수 항목입니다`
+포함), C5 select 23px. P2 — 편집기 카드 표면 부재, 고객 화면의 마이그레이션 진단 문구, Space viewer가
+데스크톱에서 확대되지 않음. 결함 아님으로 분류한 관찰 3건도 함께 기록했다.
+
+**NOT TESTED.** 제품 entry에서의 고객 Space·운영자 C5/발급 panel(실제 Firestore 문서와 env gate 필요),
+C5 dirty/conflict/save-error 상태(도달 절차 미정의), 실기기 Safari/Android·preview channel·운영 데이터.
+
+**실측(각 1회).** `node scripts/check.mjs` **PASS**(unit **2466/2466**, 92 파일, build 2개), canonical
+`node scripts/e2e-run.mjs` **Chromium 203 passed / 0 failed / 0 skipped / 0 retry**(기존 184 + 신규 19),
+`git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`·`test-results`·
+`playwright-report`·`debug.log` 잔류 0, 허용 경로 밖 diff 0.
+
+**bundle·보호 대상.** 고객 entry `index-CRHkWFoL.js` 340.60 kB sha256 `5b569772…`, admin entry
+`index-BeV6iIrs.js` 295.32 kB sha256 `bdbc113a…` — 제품 무변경. 보호 파일 시작/종료 hash 동일이며 spec
+018 PNG 2장만 canonical E2E가 다시 썼고 stage/restore/commit 0(`ace8d75b…`→`7504f96a…`,
+`6bdcb88c…`→`99ec9df3…`).
+
+**게이트와 finding의 관계(설계 근거, Codex 확인 요청).** 스펙 084는 finding을 고치지 않으면서 전체
+gate가 PASS해야 한다. 그래서 신규 spec의 **단언**은 스펙이 0으로 규정한 안전 불변식(외부 요청·console
+error·pageerror·식별자 노출·필요한 Canvas의 0 크기)에 한정하고, overflow·target·focus·axe는 측정값으로
+기록해 보고서에서 판정했다. 품질 결함을 붉은 gate로 만들면 이 단위가 손대면 안 되는 제품 UI를 고쳐야만
+종료할 수 있게 된다.
+
+## 다음 단계 — Codex 검수 대기
+
+상태 `READY_FOR_CODEX`, next `CODEX_SPEC_084_REVIEW`. 후속 UI 보완 단위, 다음 스펙, 실제 Firebase/
+network/emulator/deploy·실기기·preview channel은 **자동으로 시작하지 않는다**. 후속 UI 수정 범위와 스펙
+번호는 Codex 독립 검수와 Founder 결정이 정한다.
+
+> 직전 지시문(스펙 084 감사, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 명시된 스펙 084 로컬 시각 준비도 감사 범위만 구현·검증해. 제품 UI/CSS는 수정하지 말고 결과를 READY_FOR_CODEX로 남겨.
+```
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 지시 — 스펙 084 감사 (수행 완료)
+
+#### 지시 본문(기록)
 
 정본 `docs/rebuild/specs/084-local-visual-readiness-audit.md`를 처음부터 끝까지 읽고 그 범위만 수행한다.
 이번 단위는 **감사와 시각 증거 캡처 전용**이다. 제품 UI/UX·CSS·문구·layout을 수정하지 않는다.
@@ -68,7 +132,7 @@ C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 명시된
 
 ---
 
-## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+### 그 이전 이력
 
 ### 이전 지시 — 스펙 083 종료 문서 (수행 완료)
 

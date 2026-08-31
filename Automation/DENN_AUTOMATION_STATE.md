@@ -5,24 +5,39 @@ updated_at: 2026-08-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-083-admin-space-v2-issue-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: spec-084-local-visual-readiness-audit
-state: READY_FOR_CLAUDE
+active_unit: spec-084-local-visual-readiness-audit   # audit performed in 3c2e9f8; awaiting Codex review
+state: READY_FOR_CODEX
 baseline_commit: 94db3e2   # HEAD=origin when the spec 084 contract was written
-candidate_commit: null
-verified_commit: null
-origin_relation: "HEAD=origin at contract authoring, ahead/behind 0/0"
-working_tree: "spec 084 contract/handoff/state docs plus protected spec-018 PNGs and pre-existing Founder/user dirty; all unstaged"
+candidate_commit: 3c2e9f8  # spec 084 audit evidence (contract docs committed as 6304cfb)
+verified_commit: null      # Codex has not reviewed spec 084 yet
+origin_relation: "HEAD=origin after the audit and record pushes, ahead/behind 0/0"
+working_tree: "protected spec-018 PNGs (rewritten by the canonical E2E, start/end hashes recorded) and pre-existing Founder/user dirty; all unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_SPEC_084_AUDIT
+next_transition: CODEX_SPEC_084_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 084 audit contract ready; product UI/CSS change not authorized
+session_status: spec 084 audit complete with every gate green; product UI/CSS change still not authorized
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Claude 스펙 084 감사 수행 (2026-08-31)
+
+- 계약 문서 대행 commit `6304cfb`, 감사 산출물 `3c2e9f8`. 신규는 visual spec 1개·결과 폴더·감사 보고서
+  뿐이고 제품 source/CSS·기존 test/config/script·package/lockfile·Rules diff 0.
+- 증거 PNG 14장(+320px 측정 4건). `PRODUCT_ROUTE` 7 / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` 7 /
+  `FIXTURE_CONTROL_ONLY` 0. 발급 panel은 locator 캡처 + fixture chrome 비교차 단언.
+- 자동 측정 18건: overflow 0, 화면 밖 control 0, 제품 영역 44px 미만 2건(C5 select 23px), 키보드 순서
+  일치, focus 표시 누락 0, axe serious/critical 0, console error/warning 0, 외부 요청 0, Canvas 0x0 0.
+- finding 8건 분류만(P1 5 / P2 3), 제품 UI 수정 0. NOT TESTED 항목은 근거와 함께 기록.
+- 실측: check PASS(unit **2466/2466**), canonical Chromium **203 passed / 0 failed**, `git diff --check`
+  PASS, 포트·temp 잔류 0. 고객/admin entry 크기·sha256 무변경.
+- 보호 대상 hash 동일. spec 018 PNG 2장은 canonical E2E가 다시 썼고 stage/restore 0(시작/종료 hash 기록).
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_084_REVIEW`. 후속 UI 보완 단위는 시작하지 않았다.
+
 
 ## Founder 수동 지시 - 스펙 084 로컬 시각 준비도 감사 계약 (2026-08-31)
 

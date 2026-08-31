@@ -1,5 +1,26 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-31): spec 084 로컬 시각 준비도 감사 수행 완료 = READY_FOR_CODEX.**
+> 기준 `HEAD=origin=94db3e2`. 계약 문서 대행 commit `6304cfb`, 감사 산출물 `3c2e9f8`, 기록 commit은 이
+> 갱신이다. 제품 source·CSS·기존 test/config/script·package/lockfile·Rules diff **0**이고 신규는
+> `tests/e2e/local-visual-readiness.spec.ts`, `docs/rebuild/results/spec-084/**`(PNG **14장** + README +
+> `measurements.json`), 감사 보고서
+> `docs/codex-claude-handoff/reviews/2026-08-31-spec-084-local-visual-readiness-audit.md`뿐이다.
+> 등급은 `PRODUCT_ROUTE` 7 / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` 7 / `FIXTURE_CONTROL_ONLY` 0이며,
+> spec 083 PNG 문제는 발급 panel을 locator로 캡처하고 fixture 제목·진단 box가 panel box와 **교차하지
+> 않음**을 단언해 구조로 해결했다. 자동 측정 18건에서 overflow 0(320~1280), 화면 밖 control 0, axe
+> serious/critical 0, console error/warning 0, 외부 요청 0, Canvas 0x0 0, 금지 문자열 0이고 제품 영역
+> 44px 미만 target은 C5 select 1종(23px)뿐이다. 측정 설계 2건은 **결함으로 보고하지 않고 자체
+> 정정**했다(fixture 버튼 14개 오탐 → 제품 영역 스코프, 프로그램적 focus 오탐 → 실제 Tab walk).
+> finding은 **분류만** 했다 — P1 5건(composer 미리보기가 컨트롤 아래 · 스타일 없는 영어 파일 선택 ·
+> Space 인증 후 잔존 입력 안내 · admin 제품 route가 데모 셸 · C5 select 23px), P2 3건. 제품 UI 수정 0.
+> 실측 `node scripts/check.mjs` PASS(unit **2466/2466**), canonical `node scripts/e2e-run.mjs`
+> **Chromium 203 passed / 0 failed / 0 skip / 0 retry**(신규 19), `git diff --check` PASS, 포트·temp 잔류
+> 0. 고객/admin entry 크기·sha256 무변경, 보호 대상 hash 동일, spec 018 PNG 2장은 canonical E2E가 다시
+> 썼고 stage/restore 0(시작/종료 hash 기록). 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_084_REVIEW`.
+> 후속 UI 보완 단위·다음 스펙·실제 Firebase/network/emulator/deploy는 시작하지 않았다. 전체 진행도
+> **85~88% / 잔여 12~15%**(감사 단위로 변동 없음).
+
 > **최신 포인터 (2026-08-31): spec 084 로컬 시각 준비도 감사 = READY_FOR_CLAUDE.**
 > 사용자의 다음 작업 지시에 따라 `docs/rebuild/specs/084-local-visual-readiness-audit.md`와 handoff를
 > 작성했다. 기준 `HEAD=origin=94db3e27ec489315b93dbb8429ff93b975ad217f`, ahead/behind 0/0.

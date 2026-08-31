@@ -2,11 +2,11 @@
 
 ## 상태
 
-- `READY_FOR_CLAUDE`
+- `READY_FOR_CODEX` — 감사 수행 완료(2026-08-31), 결과는 아래 `감사 수행 결과` 절
 - active unit: `spec-084-local-visual-readiness-audit`
 - 기준: `HEAD=origin=94db3e27ec489315b93dbb8429ff93b975ad217f`, ahead/behind `0/0`
 - 직전 완료: spec 083 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
-- next: `CLAUDE_SPEC_084_AUDIT`
+- next: `CODEX_SPEC_084_REVIEW`
 
 ## 목적
 
@@ -52,3 +52,25 @@ UI 보완, 실제 기기·Firebase/network/emulator/deploy, 다음 스펙을 시
 - `packages/render/src/plan/index.ts`
 - `pnpm-workspace.yaml`, `AGENTS.md` 및 기타 기존 Founder/user dirty
 
+## 감사 수행 결과 — Claude Code (2026-08-31)
+
+- 계약 문서 대행 commit `6304cfb`, 감사 산출물 `3c2e9f8`. 신규는 `tests/e2e/local-visual-readiness.spec.ts`,
+  `docs/rebuild/results/spec-084/**`(PNG 14 + README + `measurements.json`), 감사 보고서
+  `docs/codex-claude-handoff/reviews/2026-08-31-spec-084-local-visual-readiness-audit.md`뿐이다.
+  제품 source/CSS·기존 test/config/script·package/lockfile·Rules diff **0**.
+- 등급: `PRODUCT_ROUTE` 7 / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` 7 / `FIXTURE_CONTROL_ONLY` 0.
+  발급 panel은 locator 캡처 + fixture chrome 비교차·내부 harness testid 0 단언으로 spec 083 PNG 문제를
+  구조적으로 해결했다.
+- 자동 측정 18건: overflow 0(320~1280), 화면 밖 control 0, 제품 영역 44px 미만 2건(C5 select 23px),
+  키보드 순서=DOM 순서, focus 표시 누락 0, axe serious/critical 0, console error/warning 0, 외부 요청 0,
+  Canvas 0x0 0, 금지 문자열 0. 측정 설계 2건(fixture 버튼 오탐·프로그램적 focus 오탐)은 자체 정정했다.
+- finding 8건 분류만, 제품 UI 수정 0: P1 5건(composer 미리보기 위치 · 스타일 없는 영어 파일 선택 ·
+  Space 인증 후 잔존 안내 · admin 제품 route가 데모 셸 · C5 select 23px), P2 3건.
+- NOT TESTED: 제품 entry의 Space·C5·발급 panel, C5 쓰기 실패 상태, 실기기·preview channel·운영 데이터.
+- 실측: `node scripts/check.mjs` PASS(unit **2466/2466**, build 2), canonical `node scripts/e2e-run.mjs`
+  **Chromium 203 passed / 0 failed / 0 skip / 0 retry**(신규 19), `git diff --check` PASS, 포트·temp·
+  `test-results`·`debug.log` 잔류 0.
+- bundle 무변경: 고객 `index-CRHkWFoL.js` 340.60 kB `5b569772…`, admin `index-BeV6iIrs.js` 295.32 kB
+  `bdbc113a…`. 보호 대상 hash 동일, spec 018 PNG 2장만 canonical E2E가 다시 썼고 stage/restore 0
+  (`ace8d75b…`→`7504f96a…`, `6bdcb88c…`→`99ec9df3…`).
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_084_REVIEW`. 후속 UI 보완·다음 스펙은 시작하지 않았다.
