@@ -612,6 +612,14 @@ fixture는 이제 composition을 **제품의 `useOwnedAdminComposition`으로** 
   그대로 — write SDK는 default entry에 eager 포함되지 않는다. 개발 StrictMode 번들은 **E2E 전용
   staging(`dev/`)에만** 있고 제품 빌드·Hosting 산출물에는 없다.
 
+**⚠️ 범위 판단 1건(Codex 확인 요청).** 라운드 2 지시의 허용 목록은 `App.tsx`·panel·spec 083 E2E
+fixture/test이고, 여기에 더해 **`apps/admin/vite.e2e-fixture.config.ts` 한 파일**을 고쳤다. 근거는 두
+가지다 — (1) 지시 3항이 "실제 React 개발 StrictMode에서" 검증하라고 요구하는데 개발 번들을 만들지 않고는
+불가능하고(production build는 effect를 이중 호출하지 않는다), (2) 스펙 §대상 파일이 이 config를 "두 번째
+entry가 실제로 필요할 때만 최소 변경"으로 이미 허용한다. 변경은 기존 production 빌드를 그대로 두고
+같은 entry를 `dev/`에 한 번 더 빌드하는 플러그인 하나뿐이며, `scripts/e2e-run.mjs`·playwright
+config·preview 서버·제품 빌드는 건드리지 않았다. 이 판단이 범위를 넘는다면 되돌릴 수 있다.
+
 **남은 경계.** 실제 UID·live project/bucket/data/network·emulator·Rules/Hosting deploy·운영 발급은
 `NOT TESTED / FORBIDDEN`이다. 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 stage/commit/restore 0.
 
