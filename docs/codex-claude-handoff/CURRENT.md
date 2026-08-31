@@ -1,5 +1,17 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-31): spec 083 보완 라운드 2 Codex 독립 재검수 = CODEX_PASSED.**
+> `HEAD=origin=4f7bb20`, ahead/behind 0/0, 승인 제품 commit `1082f55`. non-Promise clipboard 반환은
+> fixed failure로 닫히고 fulfil하는 thenable만 성공이다. composition/proof owner는 개발 StrictMode
+> effect replay에서 하나의 live owner를 유지하며 실제 unmount에서 dispose된다. 개발 fixture는 effect
+> setup 2회를 자기검증하고 baseline load·PNG decode·Canvas·single issue·observer/listener/URL 수명을
+> 통과했다. `vite.e2e-fixture.config.ts`의 두 번째 개발 entry는 스펙 083 대상 파일에 명시된 조건부 허용과
+> 일치하며 E2E staging 전용이다. Codex 독립 `check` PASS(unit **2466/2466**, build 2개), canonical
+> Chromium **184/184 PASS**, 추가 결함 0. 상태 `CODEX_PASSED`, next `CLAUDE_SPEC_083_CLOSURE`.
+> 종료 문서 commit/push 후 `DONE / LOCAL_VERIFIED / NO_LIVE_NETWORK`로 닫고 다음 스펙은 시작하지 않는다.
+> 실제 Firebase/network/emulator/deploy·운영 발급은 계속 **NOT TESTED / FORBIDDEN**이다. 전체 진행도
+> **85~88% / 잔여 12~15%**.
+
 > **최신 포인터 (2026-08-31): spec 083 보완 라운드 2 완료 = READY_FOR_CODEX.**
 > 기준 `HEAD=origin=749b2f2`. Codex review 문서 대행 commit `4d7f813`, 제품 보완 `1082f55`, 기록 commit은
 > 이 갱신이다. 결함 1은 `Promise.resolve(write(...))`가 non-Promise 반환을 fulfilled로 만들어 **하지도

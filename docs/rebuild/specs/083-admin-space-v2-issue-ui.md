@@ -506,6 +506,27 @@ ref를 유지하므로 **개발 빌드에서는** 첫 cleanup이 composition(ses
 
 상태는 `READY_FOR_CODEX`에서 멈춘다. 다음 스펙은 시작하지 않았다.
 
+### CODEX REVIEW — CODEX_PASSED (2026-08-31)
+
+검수 기준 `HEAD=origin=4f7bb20`, ahead/behind 0/0. 승인 제품 commit은 `1082f55`다.
+
+- non-Promise 반환은 fixed `failed`로 닫히며 fulfil하는 thenable만 `copied`다. missing port, 동기 throw,
+  rejection, non-thenable, hostile `then` getter/call 검증이 계약과 일치한다.
+- composition과 proof owner는 개발 StrictMode effect replay 동안 하나의 live owner를 유지하고 실제
+  unmount에서는 dispose한다. 개발 fixture는 effect setup 2회를 먼저 단언하고 baseline load, PNG decode,
+  실제 Canvas, 단일 issue, observer/listener/object URL 수명을 검증한다.
+- `apps/admin/vite.e2e-fixture.config.ts` 변경은 이 스펙 §대상 파일의 “두 번째 entry가 실제로 필요할
+  때만 최소 변경” 조건에 해당한다. 개발 bundle은 E2E staging에만 생성되고 제품/Hosting build에는 없다.
+- Codex 독립 `node scripts/check.mjs` **PASS**: unit **2466/2466**(92파일), typecheck, build 2개.
+- Codex 독립 canonical `node scripts/e2e-run.mjs` **Chromium 184/184 PASS**. 개발 StrictMode 2건,
+  spec 083 총 23건, 이전 비결정적 spec080 mobile screenshot도 통과했다. 재시도·timeout 증가·skip 0.
+- `git diff --check` PASS, 포트·temp 잔류 0. 생성된 `test-results`/`debug.log`는 제거했다. 보호 대상과
+  기존 Founder/user dirty는 restore/stage하지 않았다.
+
+추가 결함 0. 스펙 083은 **CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**다. 다음은 문서 전용
+closure이며 실제 Firebase/network/emulator/deploy·운영 발급은 계속 `NOT TESTED / FORBIDDEN`이다. 다음
+스펙은 자동 시작하지 않는다.
+
 ### CODEX REVIEW — CORRECTION_REQUIRED 라운드 2 (2026-08-31)
 
 검수 기준 `HEAD=origin=749b2f2`, ahead/behind 0/0. 라운드 1의 clipboard synchronous throw,

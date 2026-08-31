@@ -1,15 +1,49 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `CODEX_PASSED` — 스펙 083 종료 문서 전용
 
 - completed_unit: `spec-082-shared-canvas-plan-executor-boundary` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-083-admin-space-v2-issue-ui` — 보완 라운드 2 `1082f55`(Codex review 문서 `4d7f813`).
-- 기준: 라운드 2 검수 기준은 `749b2f2`. 보완·기록 push 후 `HEAD=origin`, ahead/behind 0/0.
-- next_transition: `CODEX_SPEC_083_REVIEW_ROUND_3`
+- active_unit: `spec-083-admin-space-v2-issue-ui` — **CODEX_PASSED**, 승인 제품 `1082f55`.
+- 기준: Codex 독립 재검수 `HEAD=origin=4f7bb20`, ahead/behind 0/0.
+- next_transition: `CLAUDE_SPEC_083_CLOSURE`
 - fix_round: `2`
 - 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (7개 roadmap 작업축 기반 관리 추정)
 
-## 현재 결과 — 스펙 083 보완 라운드 2 완료
+## 지금 수행할 작업 — 스펙 083 종료 문서만
+
+제품 코드·test·fixture config·PNG·package/lockfile·Rules/config를 더 수정하거나 게이트를 다시 실행하지
+않는다. 아래 6개 문서만 CODEX_PASSED와 실제 독립 gate 결과에 맞춰 종료한다.
+
+- `docs/rebuild/specs/083-admin-space-v2-issue-ui.md`
+- `docs/handoff/2026-08-28-spec-083-admin-space-v2-issue-ui-handoff.md`
+- `Automation/DENN_AUTOMATION_STATE.md`
+- `Automation/NEXT_CLAUDE_PROMPT.md`
+- `docs/codex-claude-handoff/CURRENT.md`
+- `docs/live/CLAUDE_LIVE_PATCH_LOG.md`
+
+기록할 승인 근거:
+
+- 승인 제품 commit `1082f55`, 현재 검수 포인터 `HEAD=origin=4f7bb20`, ahead/behind 0/0
+- Codex 독립 `node scripts/check.mjs` PASS, unit **2466/2466**, build 2개
+- Codex 독립 canonical Chromium **184/184 PASS**, 개발 StrictMode 2건과 spec 083 총 23건 포함
+- `vite.e2e-fixture.config.ts`는 스펙이 이미 허용한 두 번째 E2E entry 조건에 해당하고 개발 bundle은
+  staging 전용이다.
+- 실제 Firebase/network/emulator/deploy·운영 발급은 **NOT TESTED / FORBIDDEN**
+
+문서 전용 일반 fast-forward commit/push 후 스펙 083을
+`DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`로 종료한다. 다음 스펙은 시작하지 않고
+`WAITING_FOR_NEXT_MANUAL_TASK`에서 멈춘다. 보호 대상과 기존 Founder/user dirty는 restore/stage/commit하지
+않는다.
+
+Claude Code에 전달할 문구:
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 CODEX_PASSED된 스펙 083 종료 문서만 동기화·commit·fast-forward push해. 제품 코드·test·fixture config·PNG를 더 수정하거나 검증을 재실행하지 말고, 다음 스펙은 시작하지 마.
+```
+
+---
+
+## 이전 결과 — 스펙 083 보완 라운드 2 완료
 
 **결함 1(non-Promise 반환).** `Promise.resolve(clipboard.write(link))`는 `undefined` 같은 계약 위반
 반환을 **fulfilled Promise로 만들어** 아무도 하지 않은 복사를 `copied`로 보고했다. 이제 **fulfil하는
@@ -62,7 +96,7 @@ StrictMode" 검증은 개발 번들 없이는 불가능하고, (2) 스펙 §대�
 필요할 때만 최소 변경"으로 이미 허용한다는 것이다. 변경은 같은 entry를 `dev/`에 한 번 더 빌드하는
 플러그인 하나뿐이고 `scripts/e2e-run.mjs`·playwright config·preview 서버·제품 빌드는 무변경이다.
 
-## 다음 단계 — Codex 재검수 대기
+## 이전 다음 단계 — Codex 재검수 대기
 
 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_083_REVIEW_ROUND_3`. 다음 스펙, 실제 UID·live network·
 emulator·Rules/Hosting deploy·운영 발급은 **자동으로 시작하지 않는다**.

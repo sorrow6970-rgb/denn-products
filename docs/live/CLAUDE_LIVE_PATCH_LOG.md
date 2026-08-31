@@ -7171,3 +7171,18 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   StrictMode 번들은 E2E staging에만 있고 제품 빌드에는 없다.
 - 상태 `READY_FOR_CODEX`, fix_round **2**, next `CODEX_SPEC_083_REVIEW_ROUND_3`. 실제 Firebase/network/
   emulator/deploy와 다음 스펙은 시작하지 않았다.
+
+## 2026-08-31 - Codex 스펙 083 보완 라운드 2 독립 재검수 — CODEX_PASSED
+
+- 검수 기준 `HEAD=origin=4f7bb20`, ahead/behind 0/0. 승인 제품 commit `1082f55`.
+- non-Promise clipboard 반환은 fixed failure로 닫히고 fulfil하는 thenable만 성공한다. composition/proof
+  owner는 개발 StrictMode replay 동안 하나의 live owner를 유지하며 실제 unmount에서 dispose된다.
+- `vite.e2e-fixture.config.ts`의 개발 fixture entry는 스펙 083 대상 파일의 “두 번째 entry가 실제로
+  필요할 때” 조건에 해당한다. E2E staging 전용이고 제품/Hosting build에는 포함되지 않는다.
+- Codex 독립 `node scripts/check.mjs` **PASS**(unit **2466/2466**, 92파일, build 2개), canonical
+  Chromium **184/184 PASS**. 개발 StrictMode 2건·spec 083 총 23건·이전 spec080 mobile screenshot 포함.
+- `git diff --check` PASS, 포트·temp 잔류 0. 생성 `test-results`/`debug.log` 제거. 보호 대상과 기존 user
+  dirty는 restore/stage하지 않았다. 추가 결함 0.
+- 스펙 083 = **CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**. 다음은 Claude Code의 문서 전용
+  closure commit/push이며 제품 추가 수정·게이트 재실행·다음 스펙 시작 0. 전체 진행도
+  **85~88% / 잔여 12~15%**.

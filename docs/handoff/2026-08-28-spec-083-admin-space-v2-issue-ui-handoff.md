@@ -2,14 +2,24 @@
 
 ## 현재 상태
 
-- review baseline: `HEAD=origin=749b2f2`, ahead/behind 0/0
+- review baseline: `HEAD=origin=4f7bb20`, ahead/behind 0/0
 - completed: spec 082 `DONE / CODEX_PASSED`
-- active: spec 083 `CORRECTION_REQUIRED`, fix round 2
+- active: spec 083 `CODEX_PASSED`, fix round 2; closure docs pending
 - Founder: `OO-1=A`, Q-1=A
-- next: `CLAUDE_SPEC_083_CORRECTION_ROUND_2`
+- next: `CLAUDE_SPEC_083_CLOSURE`
 - 전체 리빌드: **85~88% 완료 / 12~15% 잔여**.
 
-## Codex 독립 재검수 — 보완 라운드 2 필요
+## Codex 독립 재검수 — CODEX_PASSED
+
+- 승인 제품 commit `1082f55`; 검수 포인터 `HEAD=origin=4f7bb20`, ahead/behind 0/0.
+- non-Promise clipboard fail-closed와 개발 StrictMode live owner 수명 보완은 적합하다.
+- `vite.e2e-fixture.config.ts`의 개발 fixture entry는 스펙 083 대상 파일의 조건부 허용과 일치하며 E2E
+  staging 밖 제품/Hosting 산출물에는 들어가지 않는다.
+- 독립 check PASS(unit 2466/2466, build 2개), canonical Chromium 184/184 PASS. 추가 결함 0.
+- 다음은 문서 전용 closure다. 제품을 더 수정하거나 게이트를 다시 실행하지 않고, 다음 스펙도 시작하지
+  않는다.
+
+## 이전 Codex 재검수 — 보완 라운드 2 필요
 
 - 라운드 1의 clipboard 동기 throw와 object URL leak 보완, auth expiry/unmount/late completion 추가는
   적합하다.
