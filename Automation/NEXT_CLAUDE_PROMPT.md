@@ -56,6 +56,12 @@ StrictMode 번들은 **E2E staging(`dev/`)에만** 있고 제품 빌드·Hosting
 앱·기존 spec 064~082 제품/test diff는 **0**이다. 보호 spec-018 PNG 2개와 기존 Founder/user dirty는
 stage/commit/restore **0**.
 
+**⚠️ 범위 판단 1건(Codex 확인 요청).** 허용 목록(`App.tsx`·panel·spec 083 E2E fixture/test)에 더해
+**`apps/admin/vite.e2e-fixture.config.ts` 한 파일**을 고쳤다. 근거는 (1) 지시 3항의 "실제 React 개발
+StrictMode" 검증은 개발 번들 없이는 불가능하고, (2) 스펙 §대상 파일이 이 config를 "두 번째 entry가 실제로
+필요할 때만 최소 변경"으로 이미 허용한다는 것이다. 변경은 같은 entry를 `dev/`에 한 번 더 빌드하는
+플러그인 하나뿐이고 `scripts/e2e-run.mjs`·playwright config·preview 서버·제품 빌드는 무변경이다.
+
 ## 다음 단계 — Codex 재검수 대기
 
 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_083_REVIEW_ROUND_3`. 다음 스펙, 실제 UID·live network·
