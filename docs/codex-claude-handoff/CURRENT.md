@@ -1,5 +1,27 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-31): spec 083 보완 라운드 2 완료 = READY_FOR_CODEX.**
+> 기준 `HEAD=origin=749b2f2`. Codex review 문서 대행 commit `4d7f813`, 제품 보완 `1082f55`, 기록 commit은
+> 이 갱신이다. 결함 1은 `Promise.resolve(write(...))`가 non-Promise 반환을 fulfilled로 만들어 **하지도
+> 않은 복사를 성공으로** 보고하던 것 — 이제 fulfil하는 thenable만 `copied`이고 missing port·동기 throw·
+> rejection·non-thenable·throw하는 `then`/getter는 모두 fixed `failed`다. 결함 2는 composition(`App.tsx`)과
+> proof owner(panel)를 **한 mount 동안 살아 있는 record**로 바꿔 개발 StrictMode replay 뒤에도 live
+> owner가 남게 한 것이다(cleanup은 표시만 하고 다음 task에 release, replay의 두 번째 setup이 취소).
+> Codex가 참고로 든 `useLocalImageBinding` replacement 방식은 **먼저 측정한 뒤 기각**했다 — replacement
+> 후에도 stale subtree가 dispose된 write controller에 subscribe해 auth observer를 다시 붙이고 idempotent
+> `dispose`로 detach가 불가능해 **2 live / 0 detach**가 나왔다. 증명은 **실제 React 개발 빌드**다:
+> fixture config가 같은 entry를 `NODE_ENV=development` define으로 `dev/`에 한 번 더 빌드하고(신규
+> dependency 0), fixture는 제품 `useOwnedAdminComposition`으로 composition을 만든다. E2E는
+> `fixture-effect-setups === 2`를 먼저 단언해 production 번들이 통과할 수 없게 한 뒤 baseline load·PNG
+> decode·Canvas preview·단일 issue·auth observer `1:0:1`을 고정하며, 이전 소유권으로 되돌리면 두 건 모두
+> FAIL한다. 실측 `node scripts/check.mjs` PASS(unit **2466/2466**), canonical `node scripts/e2e-run.mjs`
+> **Chromium 184 passed / 0 failed** — Codex 라운드 2의 flaky spec080 mobile screenshot은 이번 실행
+> ok(216ms)이고 timeout 증가·skip·retry·고객 코드 수정 0이다. 고객 entry 해시 무변경, admin entry
+> 295.32 kB(gzip 91.54), lazy `space-write-*.js` 8.47 kB 유지, 개발 StrictMode 번들은 E2E staging에만
+> 있다. `browser-proof-draft.ts`·package/lockfile/Rules/config·고객 앱·기존 spec 064~082는 무변경이다.
+> 상태 `READY_FOR_CODEX`, fix_round 2, next `CODEX_SPEC_083_REVIEW_ROUND_3`. 실제 Firebase/network/
+> emulator/deploy와 다음 스펙은 계속 금지다. 전체 진행도 **85~88% / 잔여 12~15%**.
+
 > **최신 포인터 (2026-08-31): spec 083 Codex 재검수 = CORRECTION_REQUIRED 라운드 2 / AUTO LOOP STOP.**
 > `HEAD=origin=749b2f2`, ahead/behind 0/0. 라운드 1의 clipboard 동기 throw·post-URL throw·auth expiry·
 > unmount/late completion 보완은 적합하다. 그러나 `copyLinkToClipboard()`는 문서와 달리 non-Promise

@@ -7146,3 +7146,28 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 필수 gate 비결정성은 자동 루프 STOP 조건이다. 상태 `CORRECTION_REQUIRED`, fix_round **2**, next
   `CLAUDE_SPEC_083_CORRECTION_ROUND_2`; 사용자의 수동 전달 전 자동 보완·다음 스펙 시작 0. 전체 진행도
   **85~88% / 잔여 12~15%**.
+
+## 2026-08-31 - 스펙 083 보완 라운드 2 — non-Promise fail-closed · StrictMode live owner
+
+- 기준 `HEAD=origin=749b2f2`. Codex review 기록 `4d7f813`, 제품 보완 `1082f55`.
+- 변경 범위: `App.tsx`, `AdminSpaceV2IssuePanel.tsx`(+test), `e2e/space-v2-issue-fixture.tsx`,
+  `vite.e2e-fixture.config.ts`, `tests/e2e/admin-space-v2-issue.spec.ts`, 재생성 spec-083 PNG 2장.
+  `browser-proof-draft.ts`·package/lockfile/Rules/config·고객 앱·기존 spec 064~082 diff 0.
+- 결함 1: `Promise.resolve(write(...))`가 non-Promise 반환을 fulfilled로 만들어 하지도 않은 복사를
+  성공으로 보고했다 → fulfil하는 thenable만 `copied`, 나머지 전부 fixed `failed`. unit 기대값 정정.
+- 결함 2: composition/proof owner를 ref+cleanup dispose에서 **mount 동안 살아 있는 record**로 전환.
+  cleanup은 표시만 하고 다음 task에 release하며, StrictMode replay의 두 번째 setup이 이를 취소한다.
+- owned-record replacement는 실측 후 기각: stale subtree가 dispose된 write controller에 subscribe →
+  auth observer 재부착 후 detach 불가(**2 live / 0 detach**). `useLayoutEffect` 대안도 순서 동일해 기각.
+- 실제 개발 StrictMode 증명: fixture config가 같은 entry를 `NODE_ENV=development` define으로 `dev/`에
+  한 번 더 빌드(신규 dependency 0). E2E가 `fixture-effect-setups === 2`를 먼저 단언해 자기검증하고,
+  baseline load·PNG decode·Canvas preview·단일 issue·auth observer `1:0:1`을 고정한다.
+- 재현 증명: 이전 소유권으로 되돌려 신규 E2E 2건 FAIL(`auth-blocked`).
+- 실측: `node scripts/check.mjs` PASS(unit **2466/2466**), canonical `node scripts/e2e-run.mjs`
+  **Chromium 184 passed / 0 failed**(spec 083 23). Codex 라운드 2 flaky spec080 mobile screenshot은
+  이번 실행 ok(216ms) — timeout 증가·skip·retry·고객 코드 수정 0.
+- `git diff --check` PASS, 포트 LISTENING 0, temp/`test-results`/`debug.log` 잔류 0. 고객 entry 해시
+  무변경, admin entry 294.80 → 295.32 kB(gzip 91.54), lazy `space-write-*.js` 8.47 kB 유지. 개발
+  StrictMode 번들은 E2E staging에만 있고 제품 빌드에는 없다.
+- 상태 `READY_FOR_CODEX`, fix_round **2**, next `CODEX_SPEC_083_REVIEW_ROUND_3`. 실제 Firebase/network/
+  emulator/deploy와 다음 스펙은 시작하지 않았다.

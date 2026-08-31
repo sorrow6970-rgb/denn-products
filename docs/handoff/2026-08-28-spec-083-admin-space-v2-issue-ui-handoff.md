@@ -101,3 +101,26 @@ C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 승인된
 - StrictMode dev 빌드 관찰(`App.tsx` compositionRef / panel ownerRef 재생성 없음)은 스펙 문서에 기록만
   하고 고치지 않았다 — Codex 판단을 요청한다.
 - 상태 `READY_FOR_CODEX`, fix_round **1**, next `CODEX_SPEC_083_REVIEW_ROUND_2`.
+
+## 보완 라운드 2 완료 — Claude Code (2026-08-31)
+
+- 기준 `HEAD=origin=749b2f2`. Codex review 기록 `4d7f813`, 제품 보완 `1082f55`.
+- 결함 1: `copyLinkToClipboard`가 non-Promise 반환을 `copied`로 보고했다 → **fulfil하는 thenable만**
+  성공이고 missing/동기 throw/rejection/non-thenable/throw하는 `then`은 fixed `failed`다. 모순된 unit도
+  기대값을 바로잡았다.
+- 결함 2: composition(`App.tsx`)과 proof owner(panel)를 **한 mount 동안 살아 있는 record**로 바꿨다.
+  cleanup은 unmounted 표시 후 다음 task에 release하고, StrictMode replay의 두 번째 setup이 취소한다.
+- owned-record replacement(`useLocalImageBinding` 방식)는 **먼저 측정한 뒤 기각**했다: replacement 후에도
+  stale subtree가 dispose된 write controller에 subscribe → `subscribe`가 auth observer를 다시 붙이고
+  idempotent `dispose`는 이미 끝나 detach 불가 → **2 live / 0 detach**. 범위 밖 controller를 고치지 않고
+  창 자체를 없애는 쪽을 택했다.
+- 증명은 **실제 React 개발 빌드**다: fixture config가 같은 entry를 `NODE_ENV=development` define으로
+  `dev/`에 한 번 더 빌드하고, fixture는 제품의 `useOwnedAdminComposition`으로 composition을 만든다.
+  E2E는 `fixture-effect-setups === 2`를 먼저 단언해 production 번들이 통과할 수 없게 한 뒤 baseline
+  load·PNG decode·Canvas preview·단일 issue와 auth observer `1:0:1`을 고정한다. 신규 dependency·설치 0.
+- 재현 증명: 이전 소유권으로 되돌려 신규 E2E 2건 **FAIL**(`auth-blocked`) 확인.
+- 실측: `check` PASS(unit **2466/2466**), canonical **Chromium 184 passed / 0 failed**. Codex 라운드 2의
+  flaky spec080 mobile screenshot은 이번 실행 ok(216ms) — 우회·재시도·skip 0.
+- `browser-proof-draft.ts` 무변경, package/lockfile/Rules/config·고객 앱·기존 spec 064~082 diff 0,
+  실제 Firebase/network/emulator/deploy 0, 보호 PNG·기존 dirty stage/commit/restore 0.
+- 상태 `READY_FOR_CODEX`, fix_round **2**, next `CODEX_SPEC_083_REVIEW_ROUND_3`.

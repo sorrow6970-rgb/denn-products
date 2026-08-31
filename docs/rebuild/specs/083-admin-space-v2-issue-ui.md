@@ -548,3 +548,71 @@ post-object-URL `createImage()` throw, auth expiry 및 unmount/late completion �
 
 상태 `CORRECTION_REQUIRED`, fix round 2, next `CLAUDE_SPEC_083_CORRECTION_ROUND_2`. 실제 Firebase/
 network/emulator/deploy와 다음 스펙은 계속 금지한다.
+
+### DONE (Claude) — 보완 라운드 2 (2026-08-31)
+
+기준 `HEAD=origin=749b2f2` → Codex review 기록 `4d7f813` → 제품 보완 `1082f55`.
+`browser-proof-draft.ts`는 새 결함이 재현되지 않아 **무변경**이고, package/lockfile/Rules/config·고객
+앱·기존 spec 064~082 제품/test diff는 **0**이다.
+
+**결함 1 — non-Promise 반환을 성공으로 표시.** `Promise.resolve(clipboard.write(link))`는 `undefined`
+같은 계약 위반 반환을 **fulfilled Promise로 만들어** 아무도 하지 않은 복사를 `copied`로 보고했다. 이제
+**fulfil하는 thenable만** 완료의 증거다: 반환값을 먼저 받고, `then`이 함수인지(getter가 throw해도 닫히게)
+확인한 뒤, 그 `then`을 직접 호출해 결과를 기다린다. missing port · 동기 throw · rejection · non-thenable
+반환 · throw하는 `then`/getter는 전부 fixed `failed`다. "fails closed"라는 이름으로 `copied`를 기대하던
+unit이 이 결함의 신고였고 지금은 그것을 단언한다. 라운드 1 문서의 non-Promise 서술도 코드와 일치한다.
+
+**결함 2 — 개발 StrictMode에서 dispose된 owner 재사용.** `App.tsx`의 composition과 panel의 proof
+owner는 ref에 한 번 만들고 effect cleanup에서 dispose했다. 개발 StrictMode의 setup→cleanup→setup은
+**같은 mount의 ref를 유지**하므로 두 번째 setup은 자기 cleanup이 dispose한 객체를 그대로 쓴다 — auth
+observer도, baseline load도, PNG decode도 없다. 이제 각각 **한 mount 동안 살아 있는 record**이고,
+cleanup은 unmounted 표시 후 **다음 task**에 release한다. replay의 두 번째 setup은 같은 task 안에서
+표시를 되돌려 release를 취소하고, 진짜 unmount는 취소하지 않는다.
+
+**owned-record replacement를 쓰지 않은 근거(측정).** Codex가 참고로 제시한 `useLocalImageBinding`
+방식(cleanup이 dispose+표시, 다음 setup이 live replacement publish)을 **먼저 구현해 실측**했다. 결과는
+auth observer **2 live / detach 0**이었다. 원인은 replacement 이후에도 React가 **stale subtree의 passive
+effect를 계속 실행**해 이미 dispose된 write controller에 subscribe하고, 그 `subscribe`가 `attach()`로 새
+auth observer를 붙이는데 `dispose()`는 이미 실행돼 idempotent라 **영원히 detach되지 않기** 때문이다
+(해당 controller는 이번 라운드 허용 파일이 아니다). 살아 있는 객체 하나를 유지하면 그 창 자체가
+사라지고 범위 밖 controller를 고치지 않아도 된다. `useEffect` 대신 `useLayoutEffect`로 옮기는 대안도
+측정했으나 attach 순서가 동일해 채택하지 않았다.
+
+**실제 개발 StrictMode에서 검증(신규 dependency 0).** production build는 StrictMode effect를 이중
+호출하지 않으므로 unmount→새 mount는 대체 증명이 아니다. 그래서 `vite.e2e-fixture.config.ts`가 **같은
+fixture entry를 한 번 더**, `process.env.NODE_ENV`를 `"development"`로 define해 `dev/`에 빌드한다
+(`--mode development`만으로는 NODE_ENV가 production이라 React가 dev 번들로 바뀌지 않는 것을 실측했다).
+fixture는 이제 composition을 **제품의 `useOwnedAdminComposition`으로** 만들므로 검증 대상은 `App.tsx`의
+소유권 자체이고 복사본이 아니다.
+
+- E2E는 먼저 `fixture-effect-setups === 2`를 단언한다 — production 번들에서는 통과할 수 없으므로
+  "개발 StrictMode에서 검증했다"가 자기검증된다.
+- 그다음 baseline load → `ready-clean`(dispose된 controller면 영원히 불가), PNG decode + 실제 Canvas
+  preview(dispose된 owner면 영원히 불가), freeze→password→issue가 **정확히 1회**(writer factory 1,
+  issue 1, confirmed link)임을 단언한다.
+- auth observer는 `attached:detached:live = 1:0:1` — 중복 observer 0, 고아 0. panel listener 2, object
+  URL 1:0. 외부 request 0, console error/warning 0.
+- 두 번째 E2E: 개발 StrictMode 페이지에서 panel을 내리면 URL 1:1·listener 0, 다시 올리면 listener 2와
+  두 번째 PNG decode가 동작한다(URL 2:1). 중복 issue 0.
+
+**재현 증명.** 라운드 2 이전 소유권(ref + cleanup dispose)으로 되돌려 신규 개발 StrictMode E2E 2건을
+실행해 **둘 다 FAIL**을 확인했다(`fixture-write-status`가 `auth-blocked`에서 멈춰 baseline을 부르지
+못함). 신규 clipboard unit도 수정 전 helper에서는 `copied`를 반환해 실패한다.
+
+**실측(보완 후 전체 재실행, 각 1회).**
+
+- `node scripts/check.mjs` **PASS** — format·lint·typecheck 7개, unit **2466/2466**(92 파일), build 2개.
+- canonical `node scripts/e2e-run.mjs` **Chromium 184 passed / 0 failed**(기존 161 + spec 083 **23**).
+  Codex 라운드 2에서 실패했던 `space-production-route` spec080 mobile screenshot은 이번 실행
+  **ok (216ms)**이고 320px viewer도 ok — timeout 증가·skip·retry·고객 코드 수정 **0**.
+- `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, temp staging·`test-results`·
+  `debug.log` 잔류 0.
+- bundle: 고객 entry `index-CRHkWFoL.js` **340.60 kB / gzip 104.40 — 해시 무변경**. admin entry 294.80 →
+  **295.32 kB**(gzip 91.35 → **91.54**), admin CSS **10.80 kB** 동일, lazy `space-write-*.js` **8.47 kB**
+  그대로 — write SDK는 default entry에 eager 포함되지 않는다. 개발 StrictMode 번들은 **E2E 전용
+  staging(`dev/`)에만** 있고 제품 빌드·Hosting 산출물에는 없다.
+
+**남은 경계.** 실제 UID·live project/bucket/data/network·emulator·Rules/Hosting deploy·운영 발급은
+`NOT TESTED / FORBIDDEN`이다. 보호 spec-018 PNG 2개와 기존 Founder/user dirty는 stage/commit/restore 0.
+
+상태는 `READY_FOR_CODEX`에서 멈춘다. 다음 스펙은 시작하지 않았다.

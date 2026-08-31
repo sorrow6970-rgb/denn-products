@@ -1,15 +1,79 @@
 # NEXT CLAUDE PROMPT
 
-상태: `CORRECTION_REQUIRED` — 라운드 2, 자동 루프 STOP
+상태: `READY_FOR_CODEX`
 
 - completed_unit: `spec-082-shared-canvas-plan-executor-boundary` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NON_UI / NO_LIVE_NETWORK**
-- active_unit: `spec-083-admin-space-v2-issue-ui` — 보완 라운드 1 `7ce9ab4`, 기록 `749b2f2`.
-- 기준: Codex 라운드 2 검수 `HEAD=origin=749b2f2`, ahead/behind 0/0.
-- next_transition: `CLAUDE_SPEC_083_CORRECTION_ROUND_2`
+- active_unit: `spec-083-admin-space-v2-issue-ui` — 보완 라운드 2 `1082f55`(Codex review 문서 `4d7f813`).
+- 기준: 라운드 2 검수 기준은 `749b2f2`. 보완·기록 push 후 `HEAD=origin`, ahead/behind 0/0.
+- next_transition: `CODEX_SPEC_083_REVIEW_ROUND_3`
 - fix_round: `2`
 - 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (7개 roadmap 작업축 기반 관리 추정)
 
-## 현재 지시 — 스펙 083 CORRECTION_REQUIRED 라운드 2만
+## 현재 결과 — 스펙 083 보완 라운드 2 완료
+
+**결함 1(non-Promise 반환).** `Promise.resolve(clipboard.write(link))`는 `undefined` 같은 계약 위반
+반환을 **fulfilled Promise로 만들어** 아무도 하지 않은 복사를 `copied`로 보고했다. 이제 **fulfil하는
+thenable만** 완료의 증거다 — 반환값을 받고, `then`이 함수인지(getter가 throw해도 닫히게) 확인한 뒤 그
+`then`을 직접 호출한다. missing port · 동기 throw · rejection · non-thenable · throw하는 `then`/getter는
+전부 fixed `failed`이며, "fails closed"라는 이름으로 `copied`를 기대하던 unit과 문서도 일치시켰다.
+
+**결함 2(개발 StrictMode에서 dispose된 owner 재사용).** ref + cleanup dispose는 setup→cleanup→setup이
+**같은 mount의 ref를 유지**하므로 두 번째 setup이 자기 cleanup이 dispose한 객체를 그대로 쓴다. 이제
+composition(`App.tsx`)과 proof owner(panel) 각각이 **한 mount 동안 살아 있는 record**이고, cleanup은
+unmounted 표시 후 **다음 task**에 release한다. replay의 두 번째 setup은 같은 task 안에서 이를 취소하고,
+진짜 unmount는 취소하지 않는다.
+
+**`useLocalImageBinding` replacement 방식을 쓰지 않은 근거(측정).** 먼저 그대로 구현해 실측한 결과 auth
+observer가 **2 live / detach 0**이었다. replacement 이후에도 React가 stale subtree의 passive effect를
+실행해 이미 dispose된 write controller에 subscribe하고, 그 `subscribe`가 auth observer를 다시 붙이는데
+`dispose()`는 이미 실행돼 idempotent라 **영원히 detach되지 않는다**(해당 controller는 이번 라운드 허용
+파일이 아니다). 살아 있는 객체 하나를 유지하면 그 창 자체가 없어진다. `useLayoutEffect` 대안도 attach
+순서가 동일해 기각했다.
+
+**실제 개발 StrictMode 증명(신규 dependency 0).** `vite.e2e-fixture.config.ts`가 **같은 fixture entry를
+한 번 더**, `process.env.NODE_ENV`를 `"development"`로 define해 `dev/`에 빌드한다(`--mode development`
+만으로는 NODE_ENV가 production이라 React dev 번들이 되지 않는 것을 실측했다). fixture는 composition을
+**제품의 `useOwnedAdminComposition`으로** 만들므로 검증 대상은 `App.tsx`의 소유권 자체다. E2E는
+`fixture-effect-setups === 2`를 먼저 단언해 production 번들이 통과할 수 없게 한 뒤, baseline load →
+`ready-clean`, PNG decode + 실제 Canvas preview, freeze→password→issue **정확히 1회**, auth observer
+`attached:detached:live = 1:0:1`, panel listener 2, object URL 1:0, 외부 request 0, console 0을 고정한다.
+두 번째 E2E는 같은 개발 페이지에서 panel을 내렸다 올려 URL 1:1→2:1, listener 0→2, 중복 issue 0을 잡는다.
+
+**재현 증명.** 라운드 2 이전 소유권으로 되돌려 신규 개발 StrictMode E2E 2건을 실행해 **둘 다
+FAIL**(`fixture-write-status`가 `auth-blocked`)을 확인했다.
+
+**실측(각 1회).** `node scripts/check.mjs` **PASS**(unit **2466/2466**, 92 파일, build 2개), canonical
+`node scripts/e2e-run.mjs` **Chromium 184 passed / 0 failed**(기존 161 + spec 083 **23**). Codex 라운드
+2에서 실패했던 `space-production-route` spec080 mobile screenshot은 이번 실행 **ok (216ms)** — timeout
+증가·skip·retry·고객 코드 수정 **0**. `git diff --check` PASS, 포트 LISTENING 0, temp/`test-results`/
+`debug.log` 잔류 0. 고객 entry `index-CRHkWFoL.js` **340.60 kB 해시 무변경**, admin entry 294.80 →
+**295.32 kB**(gzip 91.54), admin CSS 10.80 kB 동일, lazy `space-write-*.js` **8.47 kB** 유지. 개발
+StrictMode 번들은 **E2E staging(`dev/`)에만** 있고 제품 빌드·Hosting 산출물에는 없다.
+
+**변경 범위.** `App.tsx`, `AdminSpaceV2IssuePanel.tsx`(+test), `e2e/space-v2-issue-fixture.tsx`,
+`vite.e2e-fixture.config.ts`, `tests/e2e/admin-space-v2-issue.spec.ts`, 재생성된 spec-083 PNG 2장뿐이다.
+`browser-proof-draft.ts`는 새 결함이 재현되지 않아 **무변경**이고, package/lockfile/Rules/config·고객
+앱·기존 spec 064~082 제품/test diff는 **0**이다. 보호 spec-018 PNG 2개와 기존 Founder/user dirty는
+stage/commit/restore **0**.
+
+## 다음 단계 — Codex 재검수 대기
+
+상태 `READY_FOR_CODEX`, next `CODEX_SPEC_083_REVIEW_ROUND_3`. 다음 스펙, 실제 UID·live network·
+emulator·Rules/Hosting deploy·운영 발급은 **자동으로 시작하지 않는다**.
+
+> 직전 지시문(스펙 083 보완 라운드 2, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 스펙 083 CORRECTION_REQUIRED 라운드 2만 구현·검증해. 실제 개발 StrictMode owner 재생성과 non-Promise clipboard fail-closed를 증명하고, canonical E2E가 다시 비결정적으로 실패하면 우회·재시도 없이 STOP해.
+```
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 지시 — 스펙 083 CORRECTION_REQUIRED 라운드 2 (수행 완료)
+
+#### 지시 본문(기록)
 
 자동 루프는 Codex canonical E2E의 비결정적 필수 gate 실패로 STOP 상태다. 사용자가 이 문구를 Claude
 Code에 수동 전달한 경우에만 아래 보완을 시작한다.
