@@ -2,9 +2,11 @@
 
 - 작성: Claude Code, 2026-08-31
 - 기준: `rebuild/modern-studio`, 감사 시작 `HEAD=origin=94db3e2`(계약 commit 이후 `6304cfb`), ahead/behind 0/0
-- 증거: `docs/rebuild/results/spec-084/**`(PNG 14장 + `measurements.json` 18건) ·
-  `tests/e2e/local-visual-readiness.spec.ts`
+- 증거: `docs/rebuild/results/spec-084/**`(PNG **15장** + `measurements.json` **18건** = PNG 15 +
+  measurement-only 3) · `tests/e2e/local-visual-readiness.spec.ts`
 - 성격: **감사 전용.** 제품 UI/UX·CSS·문구·layout 수정 0. finding은 분류만 하고 고치지 않는다.
+- 보완: Codex 검수 라운드 1(2026-08-31)에서 개수·참조·screenshot 결정성을 정정했다. 판정과 finding의
+  의미·우선순위는 바뀌지 않았다. 상세는 §8.
 
 ## 1. 이 감사가 답하는 질문
 
@@ -18,8 +20,12 @@
 | 등급 | 장수 | 대상 |
 |---|---|---|
 | `PRODUCT_ROUTE` | 7 | 고객 browse 2, 고객 composer 3, 운영자 shell 2 |
-| `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` | 7 | 고객 Space 4, 운영자 C5 편집기 2, 운영자 발급 panel 2 |
+| `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` | 8 | 고객 Space 4, 운영자 C5 편집기 2, 운영자 발급 panel 2 |
 | `FIXTURE_CONTROL_ONLY` | 0 | 캡처하지 않음(의도) |
+| **합계** | **15** | 저장된 PNG 전부 |
+
+PNG를 저장하지 않은 320px measurement-only 3건(고객 browse·고객 composer·운영자 shell)은 모두
+`PRODUCT_ROUTE`이며, PNG 15장과 합쳐 `measurements.json` **18건**이 된다.
 
 `PRODUCT_ROUTE`는 빌드된 제품 entry를 그대로 열고 카탈로그 JSON만 로컬에서 응답한 화면이다. Space와
 운영자 편집기/발급 panel은 제품 entry의 gate가 기본 off이거나 실제 Firestore 문서가 필요해 로컬에서
@@ -35,7 +41,7 @@
 |---|---|
 | horizontal overflow (`scrollWidth > clientWidth`) | **0건** — 320/390/844/1280 전부 |
 | viewport 밖으로 나간 interactive control | **0건** |
-| 44px 미만 pointer target(제품 영역 한정) | **2건** — 아래 F-2 |
+| 44px 미만 pointer target(제품 영역 한정) | **2건** — C5 편집기의 select. 아래 **F-5** |
 | native range | 별도 기록. 모두 높이 44px(track 폭은 컨테이너를 따름) |
 | 키보드 walk 순서 = DOM 순서 | **전 화면 일치** |
 | focus 표시 없는 stop | **0건**(outline 또는 box-shadow 기준) |
@@ -130,8 +136,9 @@
 
 - `space-v1-blocked-390x844.png`에는 focusable control이 0개다. spec 063이 재시도 CTA를 두지 않기로 한
   결과와 일치하므로 결함으로 분류하지 않는다.
-- composer의 액자 미리보기에 시계(`16:50`)가 보이는 것은 이 감사의 합성 카탈로그가 시계 opt-out을
-  명시하지 않았기 때문이다. 제품 결함이 아니라 fixture 데이터의 결과다.
+- composer의 액자 미리보기에 시계(`09:30`)가 보이는 것은 이 감사의 합성 카탈로그가 시계 opt-out을
+  명시하지 않았기 때문이다. 제품 결함이 아니라 fixture 데이터의 결과다. 표시되는 값 자체는 보완 라운드
+  1에서 test-only 고정 시각으로 못박았다(§8) — 제품은 여전히 실제 시각을 읽는다.
 - `인쇄용 파일 내려받기` 비활성과 `이 사이즈는 아직 인쇄용 파일을 만들 수 없습니다`도 합성 사이즈에
   cm이 없어 나온 정상 동작이다.
 
@@ -171,3 +178,32 @@
 - 보호 대상(`taste-v2/**`, design README, spec 038, spec 018 PNG 2장, `packages/render/src/plan/index.ts`,
   `pnpm-workspace.yaml`, `AGENTS.md`)은 읽기만 했고 stage/commit/restore하지 않았다.
 - 이 보고서는 finding을 **분류만** 한다. 수정과 후속 스펙 착수는 Codex 검수 후 별도 승인 사항이다.
+
+## 8. 보완 라운드 1 (2026-08-31, Codex CORRECTION_REQUIRED)
+
+Codex 독립 검수가 지적한 네 항목을 이 단위 안에서 닫았다. finding의 내용·우선순위·판정표는 그대로다.
+
+1. **개수·등급 정정.** 실제 산출물은 PNG **15장** + measurement-only **3건** = `measurements.json`
+   **18건**이고, PNG 등급은 `PRODUCT_ROUTE` **7** / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` **8** /
+   `FIXTURE_CONTROL_ONLY` **0**이다. 이 보고서 머리말과 §2, 결과 README, spec DONE, handoff,
+   STATE/NEXT/CURRENT/live log를 실제 값으로 고쳤다. PNG 파일 자체는 처음부터 15장이었고 표기만 틀렸다.
+2. **교차 참조 정정.** §3의 `44px 미만 pointer target 2건`은 파일 선택(F-2)이 아니라 C5 select(**F-5**,
+   518x23 · 316x23)를 가리킨다.
+3. **촬영 시각 고정.** composer PNG 3장이 재실행마다 달랐던 원인은 액자 미리보기 시계가 실제
+   `Date.now()`를 읽기 때문이다(spec 031 §2.7 — 시계는 하드웨어 표시이고 인쇄/주문에는 도달하지 않는다).
+   캡처 spec에서 `page.clock.setFixedTime`으로 제품 코드 실행 전에 시각을 `2026-08-31 09:30 KST`로
+   고정하고 `timezoneId`도 함께 고정했다. `install`이 아니라 `setFixedTime`이므로 타이머는 실제 시간으로
+   계속 돌고, 제품의 분 경계 ticker는 원래대로 시작·해제된다. 제품 source·fixture·기존 test는 무변경이다.
+4. **나머지 픽셀 흔들림의 실제 원인 두 가지.** browse PNG의 소수 픽셀 차이는 시계와 무관했다.
+   - `transition-duration:0s` 주입은 **이미 시작된** transition을 멈추지 않는다(CSS Transitions 규정).
+     준비 클릭이 남긴 색 transition이 촬영 시점에 보간 중이어서 chip 색이 `170,150,139`과 최종값
+     `159,136,122` 사이에서 갈렸다. 캡처 직전 `document.getAnimations()`를 모두 `finish()`시켜 끝값으로
+     스냅한다.
+   - 그 뒤에도 카드 모서리 안티에일리어싱이 로드마다 달랐다. 같은 페이지를 두 번 찍으면 바이트 동일하고
+     네 번의 새 로드에서 `getBoundingClientRect()`가 전부 동일했으므로 layout이 아니라 raster 문제였다.
+     Chromium의 partial raster가 compositor tile의 이전 픽셀을 재사용해 가장자리가 tile 이력에
+     의존한 것이며, `--disable-partial-raster` 하나만으로 네 로드가 모두 바이트 동일해졌다.
+5. **증명.** 보완 후 canonical `node scripts/e2e-run.mjs`를 **연속 2회** 실행해 spec-084 PNG **15장의
+   SHA-256이 모두 동일**하고 `measurements.json`도 바이트 동일함을 확인했다(각 회차 Chromium 203/203
+   PASS). timeout·retry·skip·screenshot tolerance는 추가하지 않았다 — 세 조건 모두 비교를 느슨하게 하는
+   대신 같은 픽셀을 두 번 같게 그리게 한다.

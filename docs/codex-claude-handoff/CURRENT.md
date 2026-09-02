@@ -1,5 +1,35 @@
 # 현재 상태
 
+> **최신 포인터 (2026-08-31): spec 084 보완 라운드 1 완료 = READY_FOR_CODEX.**
+> 보완 commit `cb1a600`, 기록 commit은 이 갱신이다. Codex 라운드 1의 네 항목만 처리했고 제품
+> source/CSS·fixture·기존 test/config/script·package/lockfile/workspace·Rules diff **0**이다.
+> ① 개수·등급을 실측값 **PNG 15장 + measurement-only 3건 = 18건**, `PRODUCT_ROUTE` **7** /
+> `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` **8** / `FIXTURE_CONTROL_ONLY` **0**으로 전 문서 정정.
+> ② 감사 보고서 44px target 표의 참조를 F-2 → **F-5**로 정정. ③ screenshot 결정성은 test-only 3조건으로
+> 닫았다 — 첫 `goto` 이전 `page.clock.setFixedTime` + `timezoneId` 고정(composer 시계 `09:30`), 캡처 직전
+> `document.getAnimations()` 전부 `finish()`(0s transition은 이미 시작된 transition을 멈추지 않는다),
+> `--disable-partial-raster`(compositor tile 재사용으로 모서리 AA가 로드마다 갈림). timeout·retry·skip·
+> tolerance는 쓰지 않았다. ④ canonical `node scripts/e2e-run.mjs` **연속 2회**에서 spec-084 PNG **15장
+> SHA-256 전부 동일**, `measurements.json`도 바이트 동일, 두 회차 Chromium **203/203 PASS**.
+> `node scripts/check.mjs` PASS(unit **2466/2466**, 92파일, build 2), `git diff --check` PASS, 포트/temp
+> 잔류 0, bundle 무변경(`index-CRHkWFoL.js` `5b569772…`, `index-BeV6iIrs.js` `bdbc113a…`). 보호 대상은
+> restore/stage/commit 0이고 spec 018 PNG 2장만 canonical E2E가 다시 썼다(desktop `ace8d75b…` → 2회차
+> `4a1f9fe8…`, mobile `6bdcb88c…` 무변경). 상태 `READY_FOR_CODEX`, fix_round 1, next
+> `CODEX_SPEC_084_REVIEW_ROUND_2`. 제품 UI/CSS·후속 스펙·실제 Firebase/network/emulator/deploy는
+> 시작하지 않는다. 전체 진행도 **85~88% / 잔여 12~15% — 변동 없음**.
+
+> **최신 포인터 (2026-08-31): spec 084 Codex 독립 검수 = CORRECTION_REQUIRED 라운드 1.**
+> 검수 기준 `HEAD=origin=b903976`, ahead/behind 0/0. 제품 committed diff 0. 독립
+> `node scripts/check.mjs` PASS(unit **2466/2466**, 92파일, build 2개), canonical Chromium
+> **203/203 PASS**, 포트 잔류 0이다. 그러나 실제 결과는 PNG **15장** + measurement-only **3건**이고 PNG
+> provenance는 route **7** / component-in-fixture **8** / fixture-only 0이므로 완료 문서의 14장·4건·7/7은
+> 틀렸다. 감사 보고서의 44px target 표도 F-2가 아니라 **F-5**를 가리켜야 한다. 또한 독립 E2E가
+> spec-084 제품 route PNG 5장을 다시 썼으며 composer의 실제 시계가 커밋본 `6:55`에서 `17:30`으로
+> 변했다. screenshot은 test-only 고정 시각으로 안정화하고 연속 canonical 2회에서 15장 SHA-256 동일을
+> 증명해야 한다. 상태 `CORRECTION_REQUIRED`, fix_round 1, next
+> `CLAUDE_SPEC_084_CORRECTION_ROUND_1`. 제품 UI/CSS·후속 스펙·실제 Firebase/network/emulator/deploy는
+> 시작하지 않는다. 전체 진행도 **85~88% / 잔여 12~15% — 변동 없음**.
+
 > **최신 포인터 (2026-08-31): spec 084 로컬 시각 준비도 감사 수행 완료 = READY_FOR_CODEX.**
 > 기준 `HEAD=origin=94db3e2`. 계약 문서 대행 commit `6304cfb`, 감사 산출물 `3c2e9f8`, 기록 commit은 이
 > 갱신이다. 제품 source·CSS·기존 test/config/script·package/lockfile·Rules diff **0**이고 신규는

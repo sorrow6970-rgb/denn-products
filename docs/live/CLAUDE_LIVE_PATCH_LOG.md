@@ -7253,3 +7253,54 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   (`ace8d75b…`→`7504f96a…`, `6bdcb88c…`→`99ec9df3…`).
 - 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_084_REVIEW`. 후속 UI 보완·다음 스펙·실제 Firebase/network/
   emulator/deploy는 시작하지 않았다. 전체 진행도 **85~88% / 잔여 12~15%**(감사 단위로 변동 없음).
+
+## 2026-08-31 - Codex 스펙 084 독립 검수 — CORRECTION_REQUIRED 라운드 1
+
+- 검수 기준 `HEAD=origin=b903976`, ahead/behind 0/0. 제품 source·package/lockfile·Rules/config committed
+  diff 0. 독립 `node scripts/check.mjs` PASS(unit **2466/2466**, 92파일, build 2개), canonical Chromium
+  **203/203 PASS**, `git diff --check` PASS, 포트 4183/4184/8080/9099/9199 잔류 0.
+- 실제 실측은 `measurements.json` 18건 = **PNG 15장 + measurement-only 3건**. PNG provenance는
+  `PRODUCT_ROUTE` **7** / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` **8** /
+  `FIXTURE_CONTROL_ONLY` 0이다. 완료 문서의 14장·4건·7/7 표기는 정정 필요.
+- 감사 보고서의 `44px 미만 pointer target 2건` 참조는 F-2가 아니라 C5 select **F-5**다.
+- 독립 E2E 뒤 tracked spec-084 제품 route PNG 5장이 변경됐다. composer 3장의 실제 시계가 커밋본
+  `6:55`에서 재실행 시각 `17:30`으로 변했고 browse 2장도 소수 픽셀이 달랐다. test-only 고정 시각과
+  필요한 settle 후 연속 canonical 2회에서 PNG 15장 SHA-256 동일을 증명해야 한다.
+- 보호 spec-018 PNG 2장은 canonical E2E 부수효과로 다시 써졌지만 restore/stage/commit하지 않았다.
+  기존 Founder/user dirty도 그대로다. 상태 `CORRECTION_REQUIRED`, fix_round 1, next
+  `CLAUDE_SPEC_084_CORRECTION_ROUND_1`. 제품 UI/CSS·후속 스펙·실제 Firebase/network/emulator/deploy는
+  시작하지 않는다. 전체 진행도 **85~88% / 잔여 12~15% — 변동 없음**.
+
+## 2026-08-31 - Claude 스펙 084 보완 라운드 1 (Codex CORRECTION_REQUIRED 대응)
+
+- 보완 commit `cb1a600`(캡처 spec + spec-084 PNG 5장 + 결과 README), 기록 commit은 이 갱신이다. 허용
+  파일 밖 변경 0. 제품 source/CSS·fixture·기존 test/config/script·package/lockfile/workspace·
+  Rules/Firebase config diff **0**, 실제 Firebase/network/emulator/deploy **0**.
+- 개수·등급 정정: `measurements.json` 18건 = **PNG 15장 + measurement-only 3건**, PNG 등급
+  `PRODUCT_ROUTE` **7** / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` **8** / `FIXTURE_CONTROL_ONLY` **0**.
+  spec DONE·결과 README·감사 보고서·handoff·STATE/NEXT/CURRENT를 전부 실제 값으로 고쳤다.
+- 감사 보고서 자동 측정표의 `44px 미만 pointer target 2건` 참조를 F-2 → **F-5**(C5 select 518x23·316x23)로
+  정정했다. 다른 finding의 의미·우선순위·판정표는 무변경이다.
+- screenshot 결정성(전부 test-only, 제품 무변경): ① composer 시계가 실제 `Date.now()`를 읽는 것이
+  `6:55`→`17:30` 변화의 원인이었다 → `beforeEach`에서 첫 `goto` 이전에
+  `page.clock.setFixedTime(2026-08-31T00:30:00Z)` + `timezoneId: Asia/Seoul`(표시 `09:30`).
+  `install`이 아닌 `setFixedTime`이라 타이머는 실제 시간으로 계속 돌고 제품 ticker 계약은 그대로다.
+  ② browse 차이는 시계와 무관했다 — `transition-duration:0s`는 **이미 시작된** transition을 멈추지
+  않아(CSS Transitions) 준비 클릭의 색 transition이 촬영 시점에 보간 중이었다(chip `170,150,139` ↔ 최종
+  `159,136,122`) → 캡처 직전 `document.getAnimations()` 전부 `finish()`. ③ 그 뒤에도 카드 모서리 AA가
+  로드마다 갈렸다. geometry는 4회 로드 모두 동일하고 같은 페이지 연속 촬영은 바이트 동일했으므로 raster
+  문제였고, Chromium partial raster의 tile 재사용이 원인이다 → `--disable-partial-raster` 하나로 4회 로드
+  바이트 동일. timeout·retry·skip·screenshot tolerance는 추가하지 않았다.
+- 증명: canonical `node scripts/e2e-run.mjs` **연속 2회**에서 spec-084 PNG **15장 SHA-256 전부 동일**,
+  `measurements.json`도 바이트 동일. 두 회차 모두 Chromium **203 passed / 0 failed / 0 skipped / 0 retry**.
+  `node scripts/check.mjs` PASS(format·lint·typecheck 7, unit **2466/2466**, 92파일, build 2),
+  `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*` staging·
+  `test-results`·`playwright-report`·`debug.log` 잔류 0.
+- bundle 무변경: 고객 `index-CRHkWFoL.js` 340.60 kB `5b569772…`, admin `index-BeV6iIrs.js` 295.32 kB
+  `bdbc113a…`. 보호 대상(design README·spec 038·`packages/render/src/plan/index.ts`·
+  `pnpm-workspace.yaml`·`AGENTS.md`·`taste-v2/**`)은 hash 동일이고 restore·checkout·stage·commit 0이다.
+  spec 018 PNG 2장은 canonical E2E 부수효과로 다시 써졌고 stage/restore 0: desktop `ace8d75b…` → 1회차
+  무변경 → 2회차 `4a1f9fe8…`, mobile `6bdcb88c…`는 두 회차 무변경.
+- 상태 `READY_FOR_CODEX`, fix_round 1, next `CODEX_SPEC_084_REVIEW_ROUND_2`. 후속 UI 보완·다음 스펙·실제
+  Firebase/network/emulator/deploy는 시작하지 않았다. 전체 진행도 **85~88% / 잔여 12~15%**(변동 없음).
+

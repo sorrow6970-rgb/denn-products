@@ -5,18 +5,18 @@ updated_at: 2026-08-31
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-083-admin-space-v2-issue-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: spec-084-local-visual-readiness-audit   # audit performed in 3c2e9f8; awaiting Codex review
+active_unit: spec-084-local-visual-readiness-audit   # correction round 1 applied in cb1a600; awaiting Codex review round 2
 state: READY_FOR_CODEX
 baseline_commit: 94db3e2   # HEAD=origin when the spec 084 contract was written
-candidate_commit: 3c2e9f8  # spec 084 audit evidence (contract docs committed as 6304cfb)
-verified_commit: null      # Codex has not reviewed spec 084 yet
-origin_relation: "HEAD=origin after the audit and record pushes, ahead/behind 0/0"
+candidate_commit: cb1a600  # spec 084 correction round 1 (audit evidence was 3c2e9f8, contract docs 6304cfb)
+verified_commit: null      # Codex has not passed spec 084 yet
+origin_relation: "HEAD=origin after the correction and record pushes, ahead/behind 0/0"
 working_tree: "protected spec-018 PNGs (rewritten by the canonical E2E, start/end hashes recorded) and pre-existing Founder/user dirty; all unstaged"
-fix_round: 0
+fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_084_REVIEW
+next_transition: CODEX_SPEC_084_REVIEW_ROUND_2
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 084 audit complete with every gate green; product UI/CSS change still not authorized
+session_status: spec 084 correction round 1 complete - counts/provenance/cross-reference corrected and all 15 audit PNGs byte-reproducible across two consecutive canonical runs; product UI/CSS change still not authorized
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
@@ -24,12 +24,55 @@ overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to produc
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
 
+## Claude 스펙 084 보완 라운드 1 (2026-08-31)
+
+- 보완 commit `cb1a600`(캡처 spec + spec-084 PNG 5장 + 결과 README), 기록 commit은 이 갱신이다. 제품
+  source/CSS·fixture·기존 test/config/script·package/lockfile/workspace·Rules/Firebase config diff **0**,
+  실제 Firebase/network/emulator/deploy **0**, 다음 스펙 착수 **0**.
+- 개수·등급 정정: `measurements.json` 18건 = **PNG 15장 + measurement-only 3건**, PNG 등급
+  `PRODUCT_ROUTE` **7** / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` **8** / `FIXTURE_CONTROL_ONLY` **0**
+  (measurement-only 3건은 모두 route). spec DONE·결과 README·감사 보고서·handoff·상태 문서 전부 정정.
+- 감사 보고서 자동 측정표의 `44px 미만 pointer target 2건` 참조를 F-2 → **F-5**(C5 select 518x23·316x23)로
+  고쳤다. 다른 finding의 의미·우선순위·판정표는 무변경.
+- screenshot 결정성 3조건(전부 test-only): ① `page.clock.setFixedTime(2026-08-31T00:30:00Z)`을
+  `beforeEach`에서 첫 `goto` 이전에 적용 + `timezoneId: Asia/Seoul`(composer 시계 표시 `09:30`).
+  `install`이 아니라 `setFixedTime`이라 타이머는 실제 시간으로 계속 돈다. ② 캡처 직전
+  `document.getAnimations()` 전부 `finish()` — `transition-duration:0s`는 이미 시작된 transition을 멈추지
+  않는다. ③ `--disable-partial-raster` — compositor tile 재사용으로 모서리 AA가 로드마다 갈렸다.
+  timeout·retry·skip·screenshot tolerance는 추가하지 않았다.
+- 증명: canonical `node scripts/e2e-run.mjs` **연속 2회**에서 spec-084 PNG **15장 SHA-256 전부 동일**,
+  `measurements.json`도 바이트 동일. 두 회차 Chromium **203/203 PASS**. `node scripts/check.mjs` PASS
+  (unit **2466/2466**, 92파일, build 2), `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199
+  LISTENING 0, `denn-e2e-*`·`test-results`·`playwright-report`·`debug.log` 잔류 0.
+- bundle 무변경: 고객 `index-CRHkWFoL.js` 340.60 kB `5b569772…`, admin `index-BeV6iIrs.js` 295.32 kB
+  `bdbc113a…`. 보호 대상 hash 동일이며 restore/stage/commit 0. spec 018 PNG 2장은 canonical E2E가 다시
+  썼다: desktop `ace8d75b…` → 1회차 무변경 → 2회차 `4a1f9fe8…`, mobile `6bdcb88c…` 두 회차 무변경.
+- 상태 `READY_FOR_CODEX`, fix_round 1, next `CODEX_SPEC_084_REVIEW_ROUND_2`. 후속 UI 보완·다음 스펙·실제
+  Firebase/network/emulator/deploy는 시작하지 않았다. 전체 진행도 **85~88% / 잔여 12~15% — 변동 없음**.
+
+## Codex 스펙 084 독립 검수 — CORRECTION_REQUIRED 라운드 1 (2026-08-31)
+
+- 검수 기준 `HEAD=origin=b903976`, ahead/behind 0/0. 제품 source·package/lockfile·Rules/config committed diff
+  0이며 `node scripts/check.mjs` PASS(unit **2466/2466**, 92파일, build 2개), canonical Chromium
+  **203/203 PASS**, 포트 4183/4184/8080/9099/9199 잔류 0이다.
+- 실제 파일/JSON 실측은 PNG **15장** + measurement-only **3건** = 18건이다. PNG provenance는
+  `PRODUCT_ROUTE` **7** / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` **8** / `FIXTURE_CONTROL_ONLY` 0이다.
+  Claude 완료 문서의 14장·measurement-only 4건·7/7 표기는 정정해야 한다.
+- 감사 보고서의 `44px 미만 pointer target 2건`은 F-2가 아니라 C5 select의 **F-5**를 참조해야 한다.
+- 독립 canonical E2E 재실행이 spec 084 제품 route PNG 5장을 다시 썼다. composer 3장은 실제 시계가
+  커밋본 `6:55`에서 재실행 시각 `17:30`으로 바뀌었고, browse 2장도 소수 픽셀이 달랐다. 스펙의
+  deterministic capture 계약과 맞지 않으므로 test-only 고정 시각과 안정화 후 연속 실행 재현성을
+  증명해야 한다. 제품 source는 수정하지 않는다.
+- 상태 `CORRECTION_REQUIRED`, fix_round 1, next `CLAUDE_SPEC_084_CORRECTION_ROUND_1`. 후속 UI 보완·다음
+  스펙·실제 Firebase/network/emulator/deploy는 시작하지 않는다.
+
 ## Claude 스펙 084 감사 수행 (2026-08-31)
 
 - 계약 문서 대행 commit `6304cfb`, 감사 산출물 `3c2e9f8`. 신규는 visual spec 1개·결과 폴더·감사 보고서
   뿐이고 제품 source/CSS·기존 test/config/script·package/lockfile·Rules diff 0.
-- 증거 PNG 14장(+320px 측정 4건). `PRODUCT_ROUTE` 7 / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` 7 /
-  `FIXTURE_CONTROL_ONLY` 0. 발급 panel은 locator 캡처 + fixture chrome 비교차 단언.
+- Claude 최초 보고에는 증거 PNG 14장(+320px 측정 4건), provenance 7/7로 적혔으나 Codex 실측은
+  **PNG 15장 + measurement-only 3건, PRODUCT_ROUTE 7 / component-in-fixture 8**이었다(보완 라운드 1에서
+  전 문서 정정 완료).
 - 자동 측정 18건: overflow 0, 화면 밖 control 0, 제품 영역 44px 미만 2건(C5 select 23px), 키보드 순서
   일치, focus 표시 누락 0, axe serious/critical 0, console error/warning 0, 외부 요청 0, Canvas 0x0 0.
 - finding 8건 분류만(P1 5 / P2 3), 제품 UI 수정 0. NOT TESTED 항목은 근거와 함께 기록.

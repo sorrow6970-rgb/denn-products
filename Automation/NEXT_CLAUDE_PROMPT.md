@@ -2,18 +2,119 @@
 
 상태: `READY_FOR_CODEX`
 
-- active_unit: `spec-084-local-visual-readiness-audit` — 감사 수행 `3c2e9f8`(계약 기록 `6304cfb`)
+- active_unit: `spec-084-local-visual-readiness-audit` — 감사 `3c2e9f8`, 보완 라운드 1 `cb1a600`
 - completed_unit: `spec-083-admin-space-v2-issue-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**
-- 기준: 계약 기준 `94db3e2`. 감사·기록 push 후 `HEAD=origin`, ahead/behind `0/0`
-- next_transition: `CODEX_SPEC_084_REVIEW`
-- fix_round: `0`
+- 기준: 검수 시작 `HEAD=origin=b903976` → 보완 후 `HEAD=origin`, ahead/behind `0/0`
+- next_transition: `CODEX_SPEC_084_REVIEW_ROUND_2`
+- fix_round: `1` (최대 3)
 - 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (감사 단위이므로 변동 없음)
 
-## 현재 결과 — 스펙 084 감사 완료
+## 지금 수행할 작업 — 없음. Codex 검수 라운드 2 대기
 
-**증거.** PNG **14장**과 320px 전용 측정 4건을 합쳐 18 preparation. `PRODUCT_ROUTE` 7장(고객 browse 2·
-composer 3·운영자 shell 2), `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` 7장(고객 Space 4·C5 편집기 2·발급
-panel 2), `FIXTURE_CONTROL_ONLY` **0장**. index는 `docs/rebuild/results/spec-084/README.md`, 원본 측정은
+스펙 084 `CORRECTION_REQUIRED` 라운드 1의 네 항목을 모두 처리하고 멈췄다. 후속 UI 보완 단위, 다음 스펙,
+실제 Firebase/network/emulator/deploy·실기기·preview channel은 **자동으로 시작하지 않는다**. 다음 범위는
+Codex 검수 라운드 2와 Founder 결정이 정한다.
+
+## 보완 라운드 1 결과 (수행 완료)
+
+**1·2 — 개수·참조 정정.** `measurements.json` 실측은 **18건 = PNG 15장 + measurement-only 3건**이고 PNG
+등급은 `PRODUCT_ROUTE` **7** / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` **8** / `FIXTURE_CONTROL_ONLY`
+**0**이다(measurement-only 3건은 모두 route). spec DONE, 결과 README, 감사 보고서, handoff,
+STATE/NEXT/CURRENT/live log의 14장·4건·7/7 표기를 전부 실제 값으로 고쳤다. 감사 보고서 자동 측정표의
+`44px 미만 pointer target 2건` 참조는 F-2에서 C5 select **F-5**(518x23 · 316x23)로 바꿨고, 다른 finding의
+의미·우선순위·판정표는 바꾸지 않았다.
+
+**3 — 고정 시각.** composer PNG 3장이 재실행마다 달랐던 원인은 액자 미리보기 시계가 실제 `Date.now()`를
+읽기 때문이다(spec 031 §2.7). 캡처 spec의 `beforeEach`에서 **첫 `goto` 이전**, 즉 제품 코드가 실행되기
+전에 `page.clock.setFixedTime(2026-08-31T00:30:00Z)`을 적용하고, 라벨이 local `HH:MM`이라
+`timezoneId: Asia/Seoul`도 함께 고정했다(표시 `09:30`). `clock.install`이 아니라 `setFixedTime`이므로
+`setTimeout`은 실제 시간으로 계속 돌고 제품의 분 경계 ticker는 원래대로 시작·해제된다. 합성 카탈로그의
+시계 표시 자체는 보존했다.
+
+**4 — 나머지 픽셀 흔들림 두 원인.** browse 차이는 시계와 무관했다. ① `transition-duration:0s` 주입은
+**이미 시작된** transition에 적용되지 않아(CSS Transitions) 준비 클릭이 남긴 색 transition이 촬영 시점에
+보간 중이었다(chip `170,150,139` ↔ 최종 `159,136,122`) → 캡처 직전 `document.getAnimations()`를 모두
+`finish()`로 끝값 스냅. ② 그 뒤에도 카드 모서리 안티에일리어싱이 로드마다 갈렸다. 새 로드 4회의
+`getBoundingClientRect()`가 전부 동일하고 같은 페이지 연속 촬영은 바이트 동일했으므로 layout이 아니라
+raster 문제였고, Chromium partial raster가 compositor tile의 이전 픽셀을 재사용해 가장자리가 tile 이력에
+의존한 것이다 → `--disable-partial-raster` 하나로 4회 로드가 모두 바이트 동일해졌다.
+**timeout·retry·skip·screenshot tolerance는 추가하지 않았다.**
+
+**재현성 증명.** canonical `node scripts/e2e-run.mjs` **연속 2회**에서 spec-084 PNG **15장의 SHA-256이 모두
+동일**하고 `measurements.json`도 바이트 동일하다. 두 회차 모두 Chromium **203 passed / 0 failed /
+0 skipped / 0 retry**.
+
+**실측.** `node scripts/check.mjs` **PASS**(format·lint·typecheck 7개, unit **2466/2466**, 92 파일,
+build 2개), canonical E2E 2회 각각 **203/203**, `git diff --check` PASS, 포트
+4183/4184/4185/8080/9099/9199 LISTENING **0**, `denn-e2e-*` staging·`test-results`·`playwright-report`·
+`debug.log` 잔류 **0**, 허용 경로 밖 diff **0**.
+
+**bundle·보호 대상.** 고객 entry `index-CRHkWFoL.js` 340.60 kB sha256 `5b569772…`, admin entry
+`index-BeV6iIrs.js` 295.32 kB sha256 `bdbc113a…` — 제품 무변경. 보호 파일(design README·spec 038·
+`packages/render/src/plan/index.ts`·`pnpm-workspace.yaml`·`AGENTS.md`·`taste-v2/**`)은 시작/종료 hash
+동일이며 restore·checkout·stage·commit **0**이다. spec 018 PNG 2장만 canonical E2E가 다시 썼다:
+desktop `ace8d75b…` → 1회차 무변경 → 2회차 `4a1f9fe8…`, mobile `6bdcb88c…`는 두 회차 무변경. 이 두 장은
+spec 084의 허용 파일이 아니므로 결정화 대상에서 제외했고 해당 spec의 test도 수정하지 않았다.
+
+**변경 파일.** `tests/e2e/local-visual-readiness.spec.ts`, `docs/rebuild/results/spec-084/**`(PNG 5장 +
+README), `docs/codex-claude-handoff/reviews/2026-08-31-spec-084-local-visual-readiness-audit.md`,
+`docs/rebuild/specs/084-local-visual-readiness-audit.md`,
+`docs/handoff/2026-08-31-spec-084-local-visual-readiness-audit-handoff.md`,
+`Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`,
+`docs/codex-claude-handoff/CURRENT.md`, `docs/live/CLAUDE_LIVE_PATCH_LOG.md`. 그 밖은 0이다.
+
+> 직전 지시문(스펙 084 보완 라운드 1, 수행 완료 — 기록):
+
+```text
+C:
+epo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 처음부터 끝까지 읽고, 명시된 스펙 084 CORRECTION_REQUIRED 라운드 1 범위만 구현·검증해. 기존 Codex 검수 문서와 E2E가 생성한 PNG 변경을 이어서 처리하고, 보호 대상과 기존 Founder/user dirty는 restore·checkout·stage·commit하지 마. 제품 UI/CSS, 실제 Firebase/network/emulator/deploy, 다음 스펙은 시작하지 마. 완료 결과를 STATE/NEXT/CURRENT/live log에 동기화하고 일반 fast-forward commit/push한 뒤 READY_FOR_CODEX에서 멈춰.
+```
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 지시 — 스펙 084 CORRECTION_REQUIRED 라운드 1 (수행 완료)
+
+#### 지시 본문(기록)
+
+`docs/rebuild/specs/084-local-visual-readiness-audit.md`의 `CODEX REVIEW` 절과 아래 결함만 보완한다. 제품
+UI/CSS·제품 source·기존 test/config/script·package/lockfile/workspace·Rules/Firebase config는 수정하지
+않는다.
+
+1. 실제 결과는 `measurements.json` **18건 = PNG 15장 + measurement-only 3건**이다. PNG provenance는
+   `PRODUCT_ROUTE` **7** / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` **8** /
+   `FIXTURE_CONTROL_ONLY` **0**이다. 14장·measurement-only 4건·7/7로 적힌 spec DONE, 결과 README,
+   감사 보고서, handoff, STATE/NEXT/CURRENT/live log를 모두 실제 값으로 정정한다.
+2. 감사 보고서 자동 측정표의 `44px 미만 pointer target 2건` 참조를 F-2에서 C5 select finding인 **F-5**로
+   고친다. 다른 finding의 의미·우선순위는 바꾸지 않는다.
+3. `tests/e2e/local-visual-readiness.spec.ts`에서 screenshot을 찍는 모든 audit page의 벽시계를 제품 코드가
+   실행되기 전에 **test-only 고정 시각**으로 고정한다. 기존 synthetic catalog의 시계 표시는 보존해도 되지만
+   실제 현재 시각을 읽어서는 안 된다. 제품 source·fixture source·기존 test는 수정하지 않는다.
+4. 독립 재실행에서 composer 3장은 시계가 `6:55`→`17:30`으로 바뀌었고 browse 2장도 소수 픽셀이 달라져
+   tracked spec-084 PNG 5장이 수정됐다. 고정 시각과 필요한 test-only settle을 적용한 뒤 **연속 두 번의
+   canonical 실행에서 spec-084 PNG 15장의 SHA-256이 모두 동일**함을 확인한다. timeout/retry/skip을
+   추가하거나 screenshot 차이를 허용하는 방식으로 닫지 않는다.
+
+검증은 `node scripts/check.mjs`, canonical `node scripts/e2e-run.mjs` 연속 2회, 각 실행 뒤 spec-084 PNG
+15장 hash 비교, `git diff --check`, forbidden diff, 포트/temp 잔류 검사다. Codex 검수 중 생성된 현재
+spec-084 PNG 5개 변경은 복원하지 말고 안정화된 고정 시각 증거로 재생성한다. 보호 spec-018 PNG 2장과 기존
+Founder/user dirty는 restore·checkout·stage·commit하지 않는다. 실제 Firebase/network/emulator/deploy,
+후속 UI 구현, 다음 스펙은 금지한다.
+
+보완 결과만 일반 fast-forward commit/push하고 `READY_FOR_CODEX`, next
+`CODEX_SPEC_084_REVIEW_ROUND_2`에서 멈춘다.
+
+---
+
+### 그 이전 이력 — 스펙 084 감사 (수행 완료)
+
+#### 감사 결과 요약(기록 — 개수·참조는 보완 라운드 1에서 정정됨)
+
+**증거 실측.** PNG **15장**과 320px 전용 measurement-only 3건을 합쳐 18 preparation.
+`PRODUCT_ROUTE` 7장(고객 browse 2·composer 3·운영자 shell 2),
+`PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` 8장(고객 Space 4·C5 편집기 2·발급 panel 2),
+`FIXTURE_CONTROL_ONLY` **0장**. index는 `docs/rebuild/results/spec-084/README.md`, 원본 측정은
 `measurements.json`, 판정은 `docs/codex-claude-handoff/reviews/2026-08-31-spec-084-local-visual-readiness-audit.md`.
 
 **spec 083 PNG 문제는 구조로 닫았다.** 발급 panel은 `space-v2-issue-panel` locator로만 캡처하고, fixture
@@ -55,7 +156,7 @@ error·pageerror·식별자 노출·필요한 Canvas의 0 크기)에 한정하�
 기록해 보고서에서 판정했다. 품질 결함을 붉은 gate로 만들면 이 단위가 손대면 안 되는 제품 UI를 고쳐야만
 종료할 수 있게 된다.
 
-## 다음 단계 — Codex 검수 대기
+#### 그 시점의 다음 단계(기록)
 
 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_084_REVIEW`. 후속 UI 보완 단위, 다음 스펙, 실제 Firebase/
 network/emulator/deploy·실기기·preview channel은 **자동으로 시작하지 않는다**. 후속 UI 수정 범위와 스펙
@@ -69,11 +170,7 @@ C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 명시된
 
 ---
 
-## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
-
-### 이전 지시 — 스펙 084 감사 (수행 완료)
-
-#### 지시 본문(기록)
+#### 그 지시 본문(기록)
 
 정본 `docs/rebuild/specs/084-local-visual-readiness-audit.md`를 처음부터 끝까지 읽고 그 범위만 수행한다.
 이번 단위는 **감사와 시각 증거 캡처 전용**이다. 제품 UI/UX·CSS·문구·layout을 수정하지 않는다.
