@@ -2,7 +2,8 @@
 
 ## 상태
 
-- `READY_FOR_CLAUDE`
+- `READY_FOR_CODEX` — 구현·검증 완료(2026-09-02). 결과는 이 문서 맨 아래 `DONE (Claude)` 절에 있다.
+  next `CODEX_SPEC_085_REVIEW`.
 - 기준 브랜치: `rebuild/modern-studio`
 - 기준 commit: `HEAD=origin=b86fd5cc3`, ahead/behind `0/0`
 - 직전 완료: spec 084 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
@@ -287,3 +288,116 @@ git diff --check
 ### QUESTIONS
 
 - 없음. 범위는 spec 084 F-1의 구조 보완으로 고정됐다. 제품 의미·새 미학·금지 경계가 필요해지면 STOP한다.
+
+### DONE (Claude) — 스펙 085 구현·검증 (2026-09-02)
+
+계약 문서 대행 commit `a9e7528` → 제품/test commit `7351696` → 문서 commit은 이 갱신이다.
+범위 밖 변경 0: `apps/admin/**`, `packages/**`, package/lockfile/workspace, Rules/Firebase config diff
+**0**, 실제 Firebase/network/emulator/deploy **0**, F-2·F-7·Space·운영자 UI 수정 **0**, 다음 스펙 착수 **0**.
+
+**구현 1 — 작업대 composition.** `PreviewComposer`가 `denn-composer__workbench` 안에 preview pane과
+controls pane을 갖는다. preview pane이 **DOM에서 먼저**고(status → Canvas), controls pane이 뒤따른다
+(색상 → 사진 → 사진 위치·크기 → 문구 입력 → 인쇄 영역). `<960px`는 한 열, `>=960px`는 두 열 grid이며
+desktop에서만 preview pane이 `position: sticky`(top = `20px + safe-top`, `align-self: start`)다. **CSS `order`를
+쓰지 않았다** — 시각 순서와 스크린리더·Tab 순서가 갈라질 수 있기 때문이다. 기존 fieldset/legend/label/
+`aria-pressed`/status 문구·순서는 그대로고, pane은 role·landmark·tab stop을 추가하지 않는 순수 layout box다.
+
+**구현 2 — 높이 예산을 가진 logical size.** `previewContracts.ts`에
+`FRAME_PREVIEW_VIEWPORT_RESERVE_PX = 96`과 순수 함수 `resolveFramePreviewLogicalWidth({contentBoxWidth,
+aspect, viewportHeight})`를 두었다. `heightBudget = floor(viewportHeight - 96)`,
+`heightLimitedWidth = floor(heightBudget / aspect)`,
+`logicalWidth = max(1, round(min(contentBoxWidth, 500, heightLimitedWidth)))`이고, 입력이 쓸 수 있는
+측정값이 아니거나 `heightBudget < 1`이거나 `round(width*aspect) > heightBudget`이면 **`null`**이다(기본값
+추측 0). `contentBoxWidth`는 composer가 아니라 **preview pane의 content box**이고, `aspect`는 이미 검증된
+`FramePreviewGeometry.aspect`다. 기존 `resolveFrameLogicalWidth`는 Space viewer가 그대로 쓰므로
+손대지 않았다(`apps/mockup/src/space/**`는 허용 목록 밖이다).
+
+viewport 높이는 `subscribeViewportHeight(window, ...)`가 공급한다. `window.innerHeight`(**layout**
+viewport)를 읽고 `resize`와 `visualViewport.resize`를 모두 구독하되, 값은 `innerHeight`로 고정해 화면
+키보드(visual viewport만 줄이는 것)가 고객이 문구를 치는 도중 plan을 다시 만들지 않게 했다. debounce·
+timer·retry·polling **0**, teardown은 붙인 listener만 제거한다.
+
+**구현 3 — 고객 shell의 measure.** `CatalogApp`이 `denn-customer` / `denn-customer__inner` /
+`denn-customer__card--reading` / `denn-customer__card--workbench` class를 명시한다. `@denn/ui`의 `Card`는
+이미 className을 forward하므로 **API 무변경**이고 래퍼 element도 추가하지 않았다. inner는 `>=960px`에서
+최대 **1120px**, identity·status card와 `.denn-browse`의 composer 외 직접 자식(선택 단계·완료 요약)은
+최대 **560px 중앙 정렬**이다.
+
+**범위 안에서 발견해 고친 잠재 결함 1건.** `.denn-preview-edit__area`의 주석은 예전부터 "드래그 표면은
+정확히 canvas box"라고 적었지만 실제는 `display: block`이라 컨테이너 폭을 채웠고, Canvas가 그 폭과
+같았기 때문에 우연히 일치했다. 높이 예산으로 Canvas가 pane보다 좁아지자 spec 031 시계 overlay의
+퍼센트 좌표와 포인터 드래그 표면이 Canvas **옆**으로 밀렸다(844x390 증거 캡처에서 육안으로 발견).
+`width: fit-content` 한 줄로 기존 불변식을 복원했다 — 스펙이 허용한 `surface.css`의 layout selector
+최소 변경이며 시계·드래그의 **의미**는 바꾸지 않았다.
+
+**F-1의 세 증상(같은 fixture로 측정한 before → after).**
+
+| 증상 | before | after |
+|---|---|---|
+| 모바일 세로에서 Canvas가 모든 컨트롤 아래 | 액자 밴드 상단 page y **1620** (390x844) | **973** — composer 안에서 preview가 첫 요소 |
+| 데스크톱 단일 컴럼, 미리보기와 컨트롤을 동시에 못 봄 | page y **1403**, 문서 높이 **2303** (1280x800) | page y **880**, 문서 높이 **1636**, 왼쪽 sticky preview + 오른쪽 controls |
+| 가로에서 Canvas 683px > 뷰포트 390px | Canvas **488x683** (844x390) | Canvas **210x294** — 예산 `390-96=294` 이하 |
+
+`measurements.json`의 composer Canvas는 지금 1280x800 **500x700**, 390x844 **286x400**, 844x390 **210x294**,
+320x568 **216x302**이고 horizontal overflow는 여전히 전수 0이다.
+
+**unit/component.** 전체 **2500/2500 PASS**(92 파일, 이전 2466 + 신규 **34**). 신규는
+`resolveFramePreviewLogicalWidth`(desktop 유지·landscape 높이 제한·pane 제한·500 상한·경계 rounding·
+invalid 입력 10종 `null`·viewport×aspect×pane 행렬의 `round(w*aspect) <= budget` 불변식), workbench DOM
+순서(preview가 controls보다 먼저, status는 preview pane 안, 컨트롤 순서 유지, print가 마지막, `order:` 미사용,
+ARIA/legend 유지), viewport height 구독(즉시 보고 → 양쪽 resize 반영 → teardown 후 listener 0, StrictMode
+mount→unmount→mount 잔존 0, `visualViewport` 부재 동작, invalid 높이 `null`)다. jsdom을 도입하지 않기 위해
+기존 clock ticker와 같은 **ports 주입** 방식을 썼다.
+
+**Chromium E2E.** `tests/e2e/mockup-preview.spec.ts` **60 → 75**(신규 15). 신규는 7 viewport matrix
+(320x568/390x844/844x390/932x430/1024x768/1280x800/1440x900)의 overflow 0·clipping 0·pane 관계·Canvas
+높이 예산·transform `none`·`max-height: none`·CSS size == plan size, desktop sticky, reading measure,
+390x844·1280x800의 DOM tab 순서·focus 표시·44px·axe serious/critical 0, 그리고 증거 PNG 3장 + README
+index 계약이다. **기존 60건의 핵심 단언(색상·사진·실제 Canvas pixel·pan/zoom/rotation·문구·시계·인쇄
+export)은 하나도 고치지 않았고 그대로 PASS**한다. timeout·retry·skip·screenshot tolerance 추가 **0**.
+
+**시각 증거.** `docs/rebuild/results/spec-085/`에 product-route PNG 3장 + README(provenance·viewport·
+준비 절차·synthetic 여부·F-1 대응표·재현성 조건). 세 PNG는 독립 실행에서 SHA-256이 같다 —
+`545ac7a2…`(1280x800), `75d1a5a4…`(390x844), `8fb911d7…`(844x390). 재현 조건은 스펙 084 보완 라운드 1에서
+확립한 셋이다(고정 시각 + 캡처 직전 animation `finish()` + `--disable-partial-raster`). raster 플래그는
+worker 옵션이라 describe 단위로 좁혀지지 않아 파일 최상단에 둔다. 이 파일의 모든 단언은 DOM과 Canvas
+자체 pixel을 읽고 screenshot을 비교하지 않으므로 기존 60건의 의미는 변하지 않는다(75/75 실측 PASS).
+
+**스펙 084 baseline 갱신.** canonical 실행이 composer PNG 3장을 다시 쓴다(계약이 허용한 바).
+그외에 **`browse-ready-1280x800.png`도 바뀐다** — §1이 고객 inner를 desktop에서 1120px로 넓히라고
+규정하고 browse card가 가용 폭을 쓰므로, composer를 열기 전 browse 화면도 desktop에서 폭이 변한다. 계약
+목록에는 composer 3장만 적혀 있어 **열거 밖 1장**이지만, 복원하면 현재 제품과 다른 baseline을 남기고
+canonical 실행마다 되돌려지므로 재생성된 상태로 commit했다. Codex 판단을 요청한다.
+`docs/rebuild/results/spec-084/measurements.json`은 `.gitignore:2`의 전역 `*.json` 규칙으로 **tracked가
+아니다**(스펙 084 때부터 그랬다). 디스크의 값은 현재 DOM/geometry를 반영함을 위에서 확인했고, 이
+단위에서 `.gitignore`는 건드리지 않았다.
+
+**전체 gate.** `node scripts/check.mjs` **PASS**(format·lint·typecheck 7개, unit **2500/2500**, 92 파일,
+build 2개). canonical `node scripts/e2e-run.mjs` **Chromium 218 passed / 0 failed / 0 skipped / 0 retry**
+(이전 203 + 신규 15). `git diff --check` PASS. 포트 4183/4184/4185/8080/9099/9199 LISTENING **0**,
+`denn-e2e-*` staging·`test-results`·`playwright-report`·`debug.log` 잔류 **0**.
+
+**bundle.** 고객 entry `index-CRHkWFoL.js` 340.60 kB / gzip 104.40 → `index-eQgqaWiH.js` **341.94 kB /
+gzip 104.76**(+1.34 kB), CSS `index-BjqjBda8.css` 19.38 kB / gzip 4.55 → `index-CLxRhNtu.css` **20.27 kB /
+gzip 4.73**(+0.89 kB). 원인은 이 단위가 추가한 크기 계약·viewport 구독·pane DOM과 workbench CSS뿐이다.
+운영자 entry는 **무변경** — `index-BeV6iIrs.js` 295.32 kB / gzip 91.54, sha256
+`bdbc113a73b0b20d1424e007a722c29f2f97d3792280a38b4f7c335b67ba11c9`.
+
+**보호 대상.** design README `99e53de3…`, spec 038 `e6c1de7d…`, `packages/render/src/plan/index.ts`
+`cfab600b…`, `pnpm-workspace.yaml` `61c7bfe4…`, `AGENTS.md` `82738101…`, `taste-v2/**`는 시작/종료 hash
+동일이고 restore·checkout·stage·commit **0**이다. 보호 spec 018 PNG 2장은 canonical E2E가 다시 썼고
+stage하지 않았다: `browse-desktop-1280x800.png` `ace8d75b…` → `d0a0aa52…`,
+`browse-mobile-390x844.png` `6bdcb88c…`(무변경). desktop 장은 같은 고객 shell을 1280px에서 찍기 때문에
+§1의 폭 변경이 그대로 나타난다 — 보호 대상이므로 그대로 두고 hash만 보고한다.
+
+**생각해볼 점(구현은 계약대로 했음).** §1을 그대로 따르면 desktop에서는 composer를 열기 전에도
+browse card가 1120px로 넓어지고 그 안의 선택 단계는 560px로 중앙 정렬되므로, 카드 오른쪽에 빈 면이
+생긴다(`spec-084/browse-ready-1280x800.png`). 계약이 명시적이라 그대로 구현했고 임의로 바꾸지 않았다.
+composer가 열렸을 때만 넓혀야 하는지는 Codex/Founder 판단 사항으로 남긴다.
+
+**NOT TESTED.** 실기기 Safari/Android/카카오 인앱, 200% zoom, preview channel, 실제 Firebase/network/
+emulator/deploy/운영 데이터. 스펙 084의 다른 finding(F-2·F-7·F-3·F-4·F-5·F-6·F-8)은 범위 밖이며 판정도
+바꾸지 않았다.
+
+상태는 `READY_FOR_CODEX`, next `CODEX_SPEC_085_REVIEW`에서 멈춘다. 다음 finding과 다음 스펙은 시작하지
+않았다.

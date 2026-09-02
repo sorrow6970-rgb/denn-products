@@ -68,7 +68,7 @@ PNG를 저장하지 않은 320px measurement-only 3건(고객 browse·고객 com
 
 자동 측정과 분리해, 저장된 PNG를 직접 보고 판정한 결과다.
 
-### F-1 (P1) — 고객 composer의 미리보기가 모든 컨트롤 아래에 있다
+### F-1 (P1) — 고객 composer의 미리보기가 모든 컨트롤 아래에 있다 — **스펙 085에서 해소됨(§9)**
 
 `composer-ready-390x844.png`, `composer-ready-1280x800.png`, `composer-ready-844x390.png`.
 
@@ -207,3 +207,23 @@ Codex 독립 검수가 지적한 네 항목을 이 단위 안에서 닫았다. f
    SHA-256이 모두 동일**하고 `measurements.json`도 바이트 동일함을 확인했다(각 회차 Chromium 203/203
    PASS). timeout·retry·skip·screenshot tolerance는 추가하지 않았다 — 세 조건 모두 비교를 느슨하게 하는
    대신 같은 픽셀을 두 번 같게 그리게 한다.
+
+## 9. 후속 해소 — F-1, 스펙 085 (2026-09-02)
+
+이 절은 **후속 기록**이다. 위 §4의 F-1 본문은 감사 시점(2026-08-31)의 실측 그대로 두고, 여기에 해소
+결과만 덧붙인다. 다른 finding의 의미·우선순위와 §5 판정표는 바뀌지 않는다.
+
+- **F-1 — 해소**(`docs/rebuild/specs/085-customer-composer-visible-preview-workbench.md`, 제품 commit
+  `7351696`). composer가 preview pane → controls pane 순서의 작업대가 됐고(`<960px` 한 열,
+  `>=960px` 왼쪽 sticky preview + 오른쪽 controls), 액자 Canvas는 pane 폭·500px 상한·
+  `viewportHeight-96` 높이 예산을 반영한 logical plan으로 다시 만든다(CSS 축소가 아니다).
+  같은 fixture로 측정한 before → after: 390x844 액자 상단 page y **1620 → 973**, 1280x800 **1403 → 880**
+  (문서 높이 2303 → 1636), 844x390 Canvas **488x683 → 210x294**(예산 294 이하).
+- **증거.** 신규 product-route PNG 3장은 `docs/rebuild/results/spec-085/`에 있다. 이 폴더의
+  `composer-ready-*.png` 3장과 `measurements.json`은 canonical 실행이 현재 제품 기준으로 갱신했고, 감사
+  당시의 원본은 git history에 남아 있다. 고객 shell의 desktop 폭이 바뀌어 `browse-ready-1280x800.png`도
+  함께 갱신됐다.
+- **그대로 남은 finding.** F-2(영어 native 파일 선택), F-3, F-4, F-5, F-6, F-7(고객 진단 문구), F-8은
+  스펙 085 범위 밖이고 화면에 그대로 있다. §6의 후속 후보 목록도 여전히 승인이 아니다.
+- **NOT TESTED는 그대로다.** 실기기·preview channel·운영 데이터·실제 Firebase/network는 이번에도
+  검증되지 않았다.

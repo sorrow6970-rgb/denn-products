@@ -5,24 +5,59 @@ updated_at: 2026-09-02
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-084-local-visual-readiness-audit   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: spec-085-customer-composer-visible-preview-workbench
-state: READY_FOR_CLAUDE
+active_unit: spec-085-customer-composer-visible-preview-workbench   # implemented in 7351696; awaiting Codex review
+state: READY_FOR_CODEX
 baseline_commit: b86fd5c   # HEAD=origin when the spec 085 contract was written
-candidate_commit: none
-verified_commit: none
-origin_relation: "HEAD=origin at spec 085 contract authoring, ahead/behind 0/0"
-working_tree: "unstaged spec 085 contract/handoff/STATE/NEXT/CURRENT/live-log documents plus protected spec-018 PNGs and pre-existing Founder/user dirty; product source/test changes 0"
+candidate_commit: 7351696  # spec 085 product + test (contract docs committed as a9e7528)
+verified_commit: none      # Codex has not reviewed spec 085 yet
+origin_relation: "HEAD=origin after the implementation and record pushes, ahead/behind 0/0"
+working_tree: "protected spec-018 PNGs (rewritten by the canonical E2E, start/end hashes recorded) and pre-existing Founder/user dirty; all unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_SPEC_085_IMPLEMENT
+next_transition: CODEX_SPEC_085_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 085 contract ready; Claude Code may implement only customer composer F-1 visible-preview layout, then stop at READY_FOR_CODEX
+session_status: spec 085 implemented - customer composer is preview-first and the frame Canvas fits the viewport height; F-2/F-7, Space, admin and live Firebase remain out of scope and unauthorized
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Claude 스펙 085 구현·검증 (2026-09-02)
+
+- 계약 문서 대행 commit `a9e7528`, 제품/test commit `7351696`, 문서 commit은 이 갱신이다(제품과 문서를
+  분리했다). `apps/admin/**`·`packages/**`·package/lockfile/workspace·Rules/Firebase config diff **0**,
+  실제 Firebase/network/emulator/deploy **0**, F-2·F-7·Space·운영자 UI 수정 **0**.
+- **F-1 해소.** composer가 preview pane → controls pane 순서의 작업대가 됐다. `<960px` 한 열(미리보기
+  먼저), `>=960px` 왼쪽 sticky preview + 오른쪽 controls, CSS `order` 미사용(시각 순서 = DOM·스크린리더
+  순서). 고객 shell inner는 desktop 1120px, identity/status/선택 단계는 560px 중앙 정렬 유지.
+- **Canvas 크기는 plan에서 정한다.** `resolveFramePreviewLogicalWidth`가 pane 폭·500px 상한·
+  `floor(viewportHeight-96)` 예산을 함께 반영하고, 쓸 수 없는 입력·예산 부족·불변식 위반이면 `null`이다.
+  CSS transform/`max-height` 축소는 쓰지 않아 스펙 022의 `CSS size == plan.logicalCanvas`가 유지된다.
+  같은 fixture before → after: 390x844 액자 상단 page y **1620 → 973**, 1280x800 **1403 → 880**,
+  844x390 Canvas **488x683 → 210x294**(예산 294 이하).
+- **범위 안 잠재 결함 1건 수정.** `.denn-preview-edit__area`가 `display: block`이라 Canvas가 pane보다
+  좁아지면 시계 overlay와 드래그 표면이 Canvas 옆으로 밀렸다 → `width: fit-content`로 기존 불변식 복원
+  (`surface.css` layout selector 최소 변경, 시계·드래그 의미 무변경).
+- **검증.** `node scripts/check.mjs` PASS(unit **2500/2500**, 92 파일, build 2개; 신규 unit 34).
+  canonical `node scripts/e2e-run.mjs` **Chromium 218 passed / 0 failed / 0 skipped / 0 retry**
+  (기존 203 + 신규 15). 기존 composer E2E 60건 핵심 단언은 무수정 PASS. `git diff --check` PASS,
+  포트 4183/4184/4185/8080/9099/9199 및 temp/`test-results` 잔류 0.
+- **증거.** `docs/rebuild/results/spec-085/` product-route PNG 3장 + README. 독립 실행에서 SHA-256 동일
+  (`545ac7a2…`/`75d1a5a4…`/`8fb911d7…`). canonical이 spec 084 composer PNG 3장을 갱신했고, §1의 폭 변경
+  때문에 **열거 밖인 `browse-ready-1280x800.png`도 함께 갱신**됐다(복원하지 않고 commit, Codex 판단 요청).
+  `spec-084/measurements.json`은 `.gitignore`의 전역 `*.json`으로 tracked가 아니다.
+- **bundle.** 고객 `index-CRHkWFoL.js` 340.60 kB → `index-eQgqaWiH.js` **341.94 kB**(+1.34), CSS 19.38 →
+  **20.27 kB**. 운영자 entry 무변경 `index-BeV6iIrs.js` 295.32 kB `bdbc113a…`.
+- **보호 대상.** design README·spec 038·`packages/render/src/plan/index.ts`·`pnpm-workspace.yaml`·
+  `AGENTS.md`·`taste-v2/**` hash 동일, restore·checkout·stage·commit 0. spec 018 PNG는 canonical이 다시
+  썼고 stage하지 않았다: desktop `ace8d75b…` → `d0a0aa52…`(같은 고객 shell을 1280px에서 찍어 §1의 폭
+  변경이 나타난다), mobile `6bdcb88c…` 무변경.
+- **NOT TESTED.** 실기기 Safari/Android/카카오 인앱·200% zoom·preview channel·실제 Firebase/network/
+  emulator/deploy·운영 데이터. 스펙 084의 다른 finding은 판정 그대로다.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_085_REVIEW`. 다음 finding·다음 스펙은 시작하지 않았다.
+  전체 진행도 **85~88% / 잔여 12~15%**(고객 composer 레이아웃 한 건이라 구간 변동 없음).
 
 ## Codex 스펙 085 고객 composer 결과 우선 작업대 계약 (2026-09-02)
 

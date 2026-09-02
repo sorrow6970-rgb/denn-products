@@ -1,59 +1,89 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE`
+상태: `READY_FOR_CODEX`
 
+- active_unit: `spec-085-customer-composer-visible-preview-workbench` — 계약 `a9e7528`, 제품/test `7351696`
 - completed_unit: `spec-084-local-visual-readiness-audit` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**
-- active_unit: `spec-085-customer-composer-visible-preview-workbench`
-- 기준: `HEAD=origin=b86fd5cc3`, ahead/behind `0/0`
-- next_transition: `CLAUDE_SPEC_085_IMPLEMENT`
-- fix_round: `0`
-- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (계약 작성만으로 변동 없음)
+- 기준: 계약 작성 `HEAD=origin=b86fd5cc3` → 구현 후 `HEAD=origin`, ahead/behind `0/0`
+- next_transition: `CODEX_SPEC_085_REVIEW`
+- fix_round: `0` (최대 3)
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (고객 composer 레이아웃 한 건이라 구간 변동 없음)
 
-## 지금 수행할 작업 — 스펙 085 구현·검증
+## 지금 수행할 작업 — 없음. Codex 검수 대기
 
-먼저 아래 정본을 읽는다.
+스펙 085 구현·검증을 끝내고 멈췄다. 다음 finding(F-2·F-7 등), 다음 스펙, 실제 Firebase/network/emulator/
+deploy·실기기·preview channel은 **자동으로 시작하지 않는다**. 다음 범위는 Codex 독립 검수와 Founder
+결정이 정한다.
 
-1. `docs/rebuild/specs/085-customer-composer-visible-preview-workbench.md`
-2. `docs/handoff/2026-09-02-spec-085-customer-composer-visible-preview-workbench-handoff.md`
-3. `docs/codex-claude-handoff/reviews/2026-08-31-spec-084-local-visual-readiness-audit.md`의 F-1과 후속 후보
-4. 스펙 022·027·029·031·033의 Canvas/composer 불변식
-5. 현재 `apps/mockup/src/App.tsx`, `apps/mockup/src/preview/PreviewComposer.tsx`, 관련 CSS/test
-6. 이 STATE, CURRENT, live log 최신 항목
+## 스펙 085 구현 결과 (수행 완료)
 
-정본의 허용 범위만 구현한다. 핵심 결과는 다음 세 가지다.
+**F-1 해소.** `PreviewComposer`가 `denn-composer__workbench` 안에서 **preview pane → controls pane**
+순서를 갖는다. `<960px`는 한 열(미리보기 먼저), `>=960px`는 두 열 grid에 왼쪽 sticky preview + 오른쪽
+controls다. CSS `order`는 쓰지 않았다 — 시각 순서와 DOM·스크린리더·Tab 순서가 갈라지지 않아야 한다.
+기존 fieldset/legend/label/`aria-pressed`/문구/컨트롤 순서는 그대로고, 인쇄 영역은 controls의 마지막이다.
 
-- `<960px`: preview pane이 controls보다 DOM·시각 모두 먼저인 단일 열.
-- `>=960px`: 왼쪽 sticky preview + 오른쪽 controls의 동시 작업대.
-- 액자 Canvas: pane 폭·500px 상한·`viewportHeight-96px` 높이 예산을 반영한 실제 logical plan. CSS
-  transform/`max-height`만으로 줄이지 않는다.
+**Canvas 크기는 CSS가 아니라 plan에서 정한다.** `previewContracts.ts`의 순수 함수
+`resolveFramePreviewLogicalWidth({contentBoxWidth, aspect, viewportHeight})`가
+`heightBudget = floor(viewportHeight - 96)`, `heightLimitedWidth = floor(heightBudget / aspect)`,
+`logicalWidth = max(1, round(min(contentBoxWidth, 500, heightLimitedWidth)))`를 계산하고, 쓸 수 없는
+입력·예산 부족·`round(w*aspect) > budget`이면 **`null`**(기본값 추측 0)이다. `contentBoxWidth`는
+**preview pane**의 content box이며 viewport 높이는 `window.innerHeight`(layout viewport)를 읽고
+`resize`·`visualViewport.resize`를 모두 구독한다(debounce·timer·retry·polling 0). 스펙 022의
+`CSS size == plan.logicalCanvas`가 유지된다. 기존 `resolveFrameLogicalWidth`는 Space viewer용으로 그대로 뒀다.
 
-customer catalog shell은 최대 1120px를 쓰되 identity/status와 기존 selection flow는 최대 560px를
-유지한다. F-2 native file input, F-7 고객 diagnostic, Space/admin UI는 고치지 않는다.
+**고객 shell measure.** `CatalogApp`에 `denn-customer` 계열 class를 명시했다(`@denn/ui` `Card` API·래퍼
+무변경). inner는 desktop **1120px**, identity·status card와 composer 밖 선택 단계·완료 요약은 **560px
+중앙 정렬**이다.
 
-## 허용·금지 요약
+**같은 fixture로 측정한 before → after.**
 
-허용 제품 파일은 spec의 `WHERE` 목록뿐이다. E2E는 `tests/e2e/mockup-preview.spec.ts`, 신규
-`docs/rebuild/results/spec-085/**`, canonical이 갱신하는 spec 084 composer baseline 3장과
-`measurements.json`, 감사 보고서 F-1 addendum만 허용한다. `tests/e2e/local-visual-readiness.spec.ts`는
-수정하지 않는다.
+| F-1 증상 | before | after |
+|---|---|---|
+| 390x844 액자 상단 page y | 1620 | **973** |
+| 1280x800 액자 상단 page y / 문서 높이 | 1403 / 2303 | **880 / 1636** |
+| 844x390 Canvas | 488x683 | **210x294**(예산 294 이하) |
 
-`apps/admin/**`, `packages/**`, package/lockfile/workspace, Rules/Firebase config, 실제 Firebase/network/
-emulator/deploy·운영 데이터·저장·주문은 금지다. 보호 대상과 기존 Founder/user dirty는 수정·삭제·
-restore·checkout·stage·commit하지 않는다.
+**범위 안에서 고친 잠재 결함 1건.** `.denn-preview-edit__area`가 `display: block`이라 Canvas가 pane보다
+좁아지면 spec 031 시계 overlay의 퍼센트 좌표와 포인터 드래그 표면이 Canvas 옆으로 밀렸다(844x390 증거
+캡처에서 발견). `width: fit-content` 한 줄로 "드래그 표면 = canvas box" 불변식을 복원했고 시계·드래그의
+의미는 바꾸지 않았다.
 
-## 필수 검증·종료
+**검증.** `node scripts/check.mjs` **PASS**(format·lint·typecheck 7개, unit **2500/2500**, 92 파일,
+build 2개 — 신규 unit **34**). canonical `node scripts/e2e-run.mjs` **Chromium 218 passed / 0 failed /
+0 skipped / 0 retry**(기존 203 + 신규 **15**). 기존 composer E2E **60건의 핵심 단언**(색상·사진·실제
+Canvas pixel·pan/zoom/rotation·문구·시계·인쇄 export)은 **무수정 PASS**다. timeout·retry·skip·screenshot
+tolerance 추가 0. `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199 LISTENING 0,
+`denn-e2e-*`·`test-results`·`playwright-report`·`debug.log` 잔류 0.
 
-- targeted unit/component/E2E와 7개 viewport layout matrix.
-- `node scripts/check.mjs`.
-- `node scripts/e2e-run.mjs`.
-- `git diff --check`, forbidden diff, bundle/hash, ports/temp, 보호 hash.
-- spec 085 product-route PNG 3장과 README.
-- 제품/test commit과 문서 commit을 분리한 일반 fast-forward push.
+**시각 증거.** `docs/rebuild/results/spec-085/` product-route PNG 3장 + README. 독립 실행에서 SHA-256
+동일: `545ac7a2…`(1280x800) · `75d1a5a4…`(390x844) · `8fb911d7…`(844x390).
 
-완료 결과를 spec DONE, handoff, STATE/NEXT/CURRENT/live log에 동기화하고 `READY_FOR_CODEX`, next
-`CODEX_SPEC_085_REVIEW`에서 멈춘다. 다음 finding이나 다음 스펙은 자동으로 시작하지 않는다.
+**Codex 판단 요청 2건.**
 
-> Claude Code 전달 문구:
+1. canonical 실행이 스펙 084 composer PNG 3장을 갱신했는데(계약 허용), §1이 고객 inner를 desktop에서
+   1120px로 넓히므로 **열거 밖인 `browse-ready-1280x800.png`도 함께 바뀐다**. 복원하면 현재 제품과 다른
+   baseline이 남고 canonical 실행마다 되돌려지므로 재생성된 상태로 commit했다.
+2. §1을 그대로 따르면 composer를 열기 전에도 desktop browse card가 1120px로 넓어지고 선택 단계는 560px
+   중앙 정렬이라 카드 오른쪽에 빈 면이 생긴다. 계약이 명시적이라 그대로 구현했고 임의로 바꾸지 않았다.
+
+`docs/rebuild/results/spec-084/measurements.json`은 `.gitignore:2`의 전역 `*.json` 규칙 때문에 **tracked가
+아니다**(스펙 084 때부터 그렇다). 디스크 값이 현재 DOM/geometry를 반영함은 확인했고 `.gitignore`는
+건드리지 않았다.
+
+**bundle.** 고객 entry `index-CRHkWFoL.js` 340.60 kB / gzip 104.40 → `index-eQgqaWiH.js` **341.94 kB /
+gzip 104.76**, CSS 19.38 → **20.27 kB**. 증가분은 이 단위의 크기 계약·viewport 구독·pane DOM·workbench
+CSS뿐이다. 운영자 entry는 **무변경**(`index-BeV6iIrs.js` 295.32 kB, sha256 `bdbc113a…`).
+
+**보호 대상.** design README·spec 038·`packages/render/src/plan/index.ts`·`pnpm-workspace.yaml`·
+`AGENTS.md`·`taste-v2/**`는 시작/종료 hash 동일이고 restore·checkout·stage·commit **0**이다. spec 018
+PNG 2장은 canonical E2E가 다시 썼고 stage하지 않았다: desktop `ace8d75b…` → `d0a0aa52…`(같은 고객
+shell을 1280px에서 찍으므로 §1의 폭 변경이 나타난다), mobile `6bdcb88c…` 무변경.
+
+**범위 밖 그대로.** F-2(영어 native 파일 선택), F-7(고객 진단 문구), Space V1/V2, 운영자 shell·C5
+편집기·발급 panel, 저장·주문·Kakao·upload, 실제 Firebase/network/emulator/Rules/Hosting/deploy,
+package/lockfile/workspace — 전부 무변경이다.
+
+> 직전 지시문(스펙 085 구현, 수행 완료 — 기록):
 
 ```text
 C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 처음부터 읽고, 명시된 스펙 085 고객 composer 결과 우선 작업대 범위만 구현·검증해. 실제 UI/UX 구현은 Claude Code가 담당하되 F-2/F-7·Space/admin·Firebase 범위로 확장하지 말고, 보호 대상과 기존 dirty는 건드리지 마. 제품/test와 문서 commit을 분리해 일반 fast-forward push한 뒤 READY_FOR_CODEX에서 멈춰.

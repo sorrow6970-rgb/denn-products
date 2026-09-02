@@ -1,5 +1,24 @@
 # 현재 상태
 
+> **최신 포인터 (2026-09-02): spec 085 구현·검증 완료 = READY_FOR_CODEX.**
+> 계약 `a9e7528`, 제품/test `7351696`, 기록 commit은 이 갱신이다(제품과 문서 분리). 스펙 084 P1 **F-1**을
+> 닫았다 — composer가 preview pane → controls pane 작업대가 됐고(`<960px` 한 열 미리보기 먼저,
+> `>=960px` 왼쪽 sticky preview + 오른쪽 controls, CSS `order` 미사용), 액자 Canvas는 pane 폭·500px·
+> `floor(viewportHeight-96)` 예산을 반영한 **logical plan**으로 만든다(CSS 축소 아님, 스펙 022 불변식
+> 유지). 같은 fixture before → after: 390x844 page y **1620 → 973**, 1280x800 **1403 → 880**,
+> 844x390 Canvas **488x683 → 210x294**. 고객 shell inner는 desktop 1120px, identity/status/선택 단계는
+> 560px 유지. 범위 안에서 `.denn-preview-edit__area`의 `display:block` 탓에 Canvas가 pane보다 좁아지면
+> 시계 overlay·드래그 표면이 Canvas 옆으로 밀리던 잠재 결함도 `width: fit-content`로 고쳤다.
+> `node scripts/check.mjs` PASS(unit **2500/2500**, 92파일, build 2개), canonical Chromium
+> **218/218 PASS**(기존 203 + 신규 15, 기존 composer 60건 무수정 PASS), `git diff --check` PASS,
+> 포트/temp 잔류 0. 증거는 `docs/rebuild/results/spec-085/` PNG 3장(재실행 SHA-256 동일) + README이고,
+> canonical이 spec 084 composer PNG 3장과 — §1의 폭 변경 때문에 열거 밖인 —
+> `browse-ready-1280x800.png`도 갱신했다(복원하지 않고 commit, Codex 판단 요청).
+> bundle 고객 340.60 → **341.94 kB**, 운영자 무변경 `bdbc113a…`. 보호 대상 hash 동일·stage 0이며 spec
+> 018 PNG는 canonical이 다시 썼다(desktop `ace8d75b…` → `d0a0aa52…`). F-2·F-7·Space·운영자 UI·실제
+> Firebase/network/emulator/deploy는 범위 밖 그대로다. 상태 `READY_FOR_CODEX`, next
+> `CODEX_SPEC_085_REVIEW`. 전체 진행도 **85~88% / 잔여 12~15% — 변동 없음**.
+
 > **최신 포인터 (2026-09-02): spec 085 고객 composer 결과 우선 작업대 = READY_FOR_CLAUDE.**
 > Founder의 다음 작업 지시에 따라 spec 084 P1 F-1 하나를 후속 단위로 골랐다. 실제 UI/UX 구현은 Claude
 > Code 담당이고, Codex는 `docs/rebuild/specs/085-customer-composer-visible-preview-workbench.md`와 handoff에
