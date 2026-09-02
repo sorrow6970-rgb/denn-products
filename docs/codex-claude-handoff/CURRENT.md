@@ -1,5 +1,17 @@
 # 현재 상태
 
+> **최신 포인터 (2026-09-02): spec 085 고객 composer 결과 우선 작업대 = READY_FOR_CLAUDE.**
+> Founder의 다음 작업 지시에 따라 spec 084 P1 F-1 하나를 후속 단위로 골랐다. 실제 UI/UX 구현은 Claude
+> Code 담당이고, Codex는 `docs/rebuild/specs/085-customer-composer-visible-preview-workbench.md`와 handoff에
+> 구현·검증 계약만 작성했다. 기준 `HEAD=origin=b86fd5cc3`, ahead/behind 0/0.
+> 계약은 `<960px` preview-first 단일 열, `>=960px` 왼쪽 sticky preview + 오른쪽 controls, customer shell
+> 최대 1120px(기존 선택 흐름 560px 유지), 액자 Canvas의 pane 폭/500px/`viewportHeight-96px` 기반 logical
+> size다. CSS transform 축소는 금지하고 스펙 022 size 불변식을 유지한다.
+> F-2 native 파일 input, F-7 고객 진단, Space/admin UI, 저장·주문·Firebase/network/emulator/deploy는 범위
+> 밖이다. 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_085_IMPLEMENT`, fix_round 0. Claude는 구현·검증·
+> fast-forward push 뒤 `READY_FOR_CODEX`에서 멈추며 다음 finding을 시작하지 않는다. 계약 작성만 했으므로
+> 전체 진행도 **85~88% / 잔여 12~15% — 변동 없음**.
+
 > **최신 포인터 (2026-09-02): spec 084 종료 = DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK.**
 > 문서 전용 종료다. 제품 코드·test·PNG·`measurements.json`·Rules/config·package/lockfile 수정 **0**,
 > 게이트 재실행 **0**이며 변경은 spec 084·handoff·STATE/NEXT/CURRENT/live log뿐이다. 승인 근거는 Codex

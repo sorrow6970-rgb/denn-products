@@ -5,24 +5,38 @@ updated_at: 2026-09-02
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-084-local-visual-readiness-audit   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: none   # spec 084 closed document-only; the next unit is a Founder decision
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 94db3e2   # HEAD=origin when the spec 084 contract was written
-candidate_commit: cb1a600  # spec 084 correction round 1 (audit evidence was 3c2e9f8, contract docs 6304cfb)
-verified_commit: cb1a600   # Codex independent review round 2 passed
-origin_relation: "HEAD=origin after the closure push, ahead/behind 0/0"
-working_tree: "protected spec-018 PNGs (rewritten by an earlier canonical E2E, start/end hashes recorded) and pre-existing Founder/user dirty; all unstaged"
+active_unit: spec-085-customer-composer-visible-preview-workbench
+state: READY_FOR_CLAUDE
+baseline_commit: b86fd5c   # HEAD=origin when the spec 085 contract was written
+candidate_commit: none
+verified_commit: none
+origin_relation: "HEAD=origin at spec 085 contract authoring, ahead/behind 0/0"
+working_tree: "unstaged spec 085 contract/handoff/STATE/NEXT/CURRENT/live-log documents plus protected spec-018 PNGs and pre-existing Founder/user dirty; product source/test changes 0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_NEXT_MANUAL_TASK
+next_transition: CLAUDE_SPEC_085_IMPLEMENT
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 084 closed (DONE/CODEX_PASSED); no active unit - the 8 recorded UI findings are classified only and product UI/CSS work, the next spec and live Firebase/network/deploy all remain unauthorized
+session_status: spec 085 contract ready; Claude Code may implement only customer composer F-1 visible-preview layout, then stop at READY_FOR_CODEX
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Codex 스펙 085 고객 composer 결과 우선 작업대 계약 (2026-09-02)
+
+- Founder의 다음 작업 지시에 따라 spec 084 P1 F-1만 후속 구현 단위로 선정했다. 실제 UI/UX 구현은
+  Claude Code가 담당하며 Codex는 계약·검증 기준만 작성했다.
+- 기준 `HEAD=origin=b86fd5cc3`, ahead/behind 0/0. 신규 정본
+  `docs/rebuild/specs/085-customer-composer-visible-preview-workbench.md`와 2026-09-02 handoff를 작성했다.
+- 계약: `<960px` preview-first 단일 열, `>=960px` 왼쪽 sticky preview + 오른쪽 controls, customer catalog
+  shell 최대 1120px(비-composer 흐름은 560px), 액자 Canvas는 CSS 축소가 아니라 pane 폭·500px 상한·
+  `viewportHeight-96px` 높이 예산을 함께 반영한 logical plan으로 만든다.
+- F-2 native 파일 input, F-7 고객 진단, Space/admin UI, product 의미와 저장·주문·Firebase는 범위 밖이다.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_085_IMPLEMENT`, fix round 0. 구현 후 제품/test와 문서를 분리
+  fast-forward push하고 `READY_FOR_CODEX`에서 멈춘다. 전체 진행도는 계약 작성만으로 **85~88% / 잔여
+  12~15% — 변동 없음**이다.
 
 ## Claude 스펙 084 문서 전용 종료 (2026-09-02)
 

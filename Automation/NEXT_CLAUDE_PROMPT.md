@@ -1,53 +1,62 @@
 # NEXT CLAUDE PROMPT
 
-상태: `WAITING_FOR_NEXT_MANUAL_TASK`
+상태: `READY_FOR_CLAUDE`
 
 - completed_unit: `spec-084-local-visual-readiness-audit` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**
-- 그 직전 완료: `spec-083-admin-space-v2-issue-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**
-- active_unit: **없음**
-- 기준: 승인 후보 `cb1a600`, 종료 시 `HEAD=origin=4027a5b`, ahead/behind `0/0`
-- next_transition: `FOUNDER_NEXT_MANUAL_TASK`
-- fix_round: `0` (스펙 084는 라운드 1로 마감)
-- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (감사 단위이므로 변동 없음)
+- active_unit: `spec-085-customer-composer-visible-preview-workbench`
+- 기준: `HEAD=origin=b86fd5cc3`, ahead/behind `0/0`
+- next_transition: `CLAUDE_SPEC_085_IMPLEMENT`
+- fix_round: `0`
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (계약 작성만으로 변동 없음)
 
-## 지금 수행할 작업 — 없음. Founder 지시 대기
+## 지금 수행할 작업 — 스펙 085 구현·검증
 
-스펙 084는 문서 전용 종료까지 끝났다. **다음 단위는 자동으로 시작하지 않는다.** 후속 UI 보완, 다음 스펙,
-실제 Firebase/network/emulator/deploy, 실기기·preview channel은 전부 Codex 스펙과 Founder 결정이 열어야
-한다.
+먼저 아래 정본을 읽는다.
 
-## 스펙 084 종료 (수행 완료)
+1. `docs/rebuild/specs/085-customer-composer-visible-preview-workbench.md`
+2. `docs/handoff/2026-09-02-spec-085-customer-composer-visible-preview-workbench-handoff.md`
+3. `docs/codex-claude-handoff/reviews/2026-08-31-spec-084-local-visual-readiness-audit.md`의 F-1과 후속 후보
+4. 스펙 022·027·029·031·033의 Canvas/composer 불변식
+5. 현재 `apps/mockup/src/App.tsx`, `apps/mockup/src/preview/PreviewComposer.tsx`, 관련 CSS/test
+6. 이 STATE, CURRENT, live log 최신 항목
 
-Codex 라운드 2 `CODEX_PASSED`를 받아 **문서만** 종료 상태로 맞췄다. 제품 코드·test·PNG·
-`measurements.json`·Rules/Firebase config·package/lockfile 수정 **0**, 게이트 재실행 **0**. 변경 파일은
-spec 084, 그 handoff, `Automation/DENN_AUTOMATION_STATE.md`, 이 파일,
-`docs/codex-claude-handoff/CURRENT.md`, `docs/live/CLAUDE_LIVE_PATCH_LOG.md`뿐이다.
+정본의 허용 범위만 구현한다. 핵심 결과는 다음 세 가지다.
 
-**승인 근거(Codex 독립 실측, 그대로 인용).** `HEAD=origin=4027a5b`, 승인 후보 `cb1a600`, ahead/behind
-`0/0`, 허용 범위 밖 committed diff **0**. `node scripts/check.mjs` **PASS**(unit **2466/2466**, 92 파일,
-build 2개). canonical Chromium **203/203 PASS 연속 2회**, 두 실행에서 spec-084 PNG **15장**과
-`measurements.json`의 SHA-256이 **모두 동일**. `git diff --check` PASS, forbidden diff 0, 포트
-4183/4184/4185/8080/9099/9199 및 temp 잔류 **0**. 고정 시각이 첫 제품 `goto` 이전에 적용됨과 composer
-증거의 `09:30`을 Codex가 직접 확인했고, 추가 제품 결함은 **0**이다.
+- `<960px`: preview pane이 controls보다 DOM·시각 모두 먼저인 단일 열.
+- `>=960px`: 왼쪽 sticky preview + 오른쪽 controls의 동시 작업대.
+- 액자 Canvas: pane 폭·500px 상한·`viewportHeight-96px` 높이 예산을 반영한 실제 logical plan. CSS
+  transform/`max-height`만으로 줄이지 않는다.
 
-**결과 확정치.** `measurements.json` **18건 = PNG 15장 + measurement-only 3건**, PNG provenance
-`PRODUCT_ROUTE` **7** / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` **8** / `FIXTURE_CONTROL_ONLY` **0**.
-감사 보고서의 44px 미만 target 2건은 C5 select **F-5**를 참조한다.
+customer catalog shell은 최대 1120px를 쓰되 identity/status와 기존 selection flow는 최대 560px를
+유지한다. F-2 native file input, F-7 고객 diagnostic, Space/admin UI는 고치지 않는다.
 
-**이 단위가 닫지 않은 것.** 감사 finding **8건(P1 5 / P2 3)** 은 **분류만** 되어 있고 제품 UI 수정은
-**0**이다 — composer 미리보기가 모든 컨트롤 아래, 스타일 없는 영어 파일 선택(고객·운영자 공통), Space
-인증 후 잔존 안내와 제목 2개, admin 제품 route가 아직 데모 셸, C5 select 23px, 그리고 P2 3건. `NOT
-TESTED`(제품 entry의 고객 Space·운영자 C5/발급 panel, C5 dirty/conflict/save-error, 실기기
-Safari/Android·preview channel·운영 데이터)도 그대로다. 수정 범위와 스펙 번호는 Founder 결정 사항이다.
+## 허용·금지 요약
 
-**보호 대상.** `docs/rebuild/design/taste-v2/**`, design README, spec 038, spec 018 PNG 2장,
-`packages/render/src/plan/index.ts`, `pnpm-workspace.yaml`, `AGENTS.md`와 기타 기존 Founder/user dirty는
-restore·checkout·stage·commit **0**으로 그대로 남겼다.
+허용 제품 파일은 spec의 `WHERE` 목록뿐이다. E2E는 `tests/e2e/mockup-preview.spec.ts`, 신규
+`docs/rebuild/results/spec-085/**`, canonical이 갱신하는 spec 084 composer baseline 3장과
+`measurements.json`, 감사 보고서 F-1 addendum만 허용한다. `tests/e2e/local-visual-readiness.spec.ts`는
+수정하지 않는다.
 
-> 직전 지시문(스펙 084 문서 전용 종료, 수행 완료 — 기록):
+`apps/admin/**`, `packages/**`, package/lockfile/workspace, Rules/Firebase config, 실제 Firebase/network/
+emulator/deploy·운영 데이터·저장·주문은 금지다. 보호 대상과 기존 Founder/user dirty는 수정·삭제·
+restore·checkout·stage·commit하지 않는다.
+
+## 필수 검증·종료
+
+- targeted unit/component/E2E와 7개 viewport layout matrix.
+- `node scripts/check.mjs`.
+- `node scripts/e2e-run.mjs`.
+- `git diff --check`, forbidden diff, bundle/hash, ports/temp, 보호 hash.
+- spec 085 product-route PNG 3장과 README.
+- 제품/test commit과 문서 commit을 분리한 일반 fast-forward push.
+
+완료 결과를 spec DONE, handoff, STATE/NEXT/CURRENT/live log에 동기화하고 `READY_FOR_CODEX`, next
+`CODEX_SPEC_085_REVIEW`에서 멈춘다. 다음 finding이나 다음 스펙은 자동으로 시작하지 않는다.
+
+> Claude Code 전달 문구:
 
 ```text
-C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 CODEX_PASSED된 스펙 084 문서 전용 종료만 수행해. 제품 코드·test·PNG를 수정하거나 게이트를 재실행하지 말고, 문서 commit을 일반 fast-forward push한 뒤 WAITING_FOR_NEXT_MANUAL_TASK에서 멈춰.
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 처음부터 읽고, 명시된 스펙 085 고객 composer 결과 우선 작업대 범위만 구현·검증해. 실제 UI/UX 구현은 Claude Code가 담당하되 F-2/F-7·Space/admin·Firebase 범위로 확장하지 말고, 보호 대상과 기존 dirty는 건드리지 마. 제품/test와 문서 commit을 분리해 일반 fast-forward push한 뒤 READY_FOR_CODEX에서 멈춰.
 ```
 
 ---

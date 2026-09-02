@@ -7347,3 +7347,21 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   실제 Firebase/network/emulator/deploy·실기기·preview channel은 시작하지 않았다. 전체 진행도
   **85~88% / 잔여 12~15%**(변동 없음).
 
+## 2026-09-02 - Codex 다음 단위 선정 · 스펙 085 고객 composer 결과 우선 작업대 계약
+
+- 기준 `HEAD=origin=b86fd5cc3`, ahead/behind 0/0. spec 084는 `DONE / CODEX_PASSED / LOCAL_VERIFIED /
+  NO_LIVE_NETWORK`로 유지한다.
+- Founder의 다음 작업 지시에 따라 감사 P1 F-1 하나를 spec 085로 선정했다. 실제 UI/UX 구현은 Claude
+  Code 담당이며 Codex는 계약·handoff·다음 지시만 작성했다.
+- 현 소스와 spec 084 PNG를 직접 대조했다. composer DOM은 controls→status→Canvas→print이고 shell은
+  560px 단일 열이다. 감사 실측은 mobile Canvas page y≈1370, desktop y≈1220, landscape Canvas 683px >
+  viewport 390px이다.
+- 확정 구조: `<960px` preview-first 단일 열, `>=960px` 왼쪽 sticky preview + 오른쪽 controls. customer
+  catalog shell은 최대 1120px를 쓰되 기존 선택 흐름은 최대 560px를 유지한다. 액자 Canvas는 CSS만 줄이지
+  않고 pane 폭·500px 상한·`viewportHeight-96px` 높이 예산으로 logical plan을 다시 만든다.
+- F-2 native file input, F-7 고객 diagnostic, Space/admin UI와 저장·주문·Firebase는 범위 밖이다.
+- 신규 문서: `docs/rebuild/specs/085-customer-composer-visible-preview-workbench.md`,
+  `docs/handoff/2026-09-02-spec-085-customer-composer-visible-preview-workbench-handoff.md`. 제품 구현·test·
+  gate 실행·commit/push는 Codex가 수행하지 않았다.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_085_IMPLEMENT`, fix round 0. 보호 대상과 기존 dirty는 수정·
+  restore·stage·commit하지 않았다. 전체 진행도 **85~88% / 잔여 12~15% — 계약 작성으로 변동 없음**.
