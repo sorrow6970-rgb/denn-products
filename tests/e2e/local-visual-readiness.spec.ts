@@ -34,6 +34,47 @@ const ADMIN_WRITE_FIXTURE_URL = `http://localhost:${ADMIN_PORT}/e2e-admin-write-
 const ADMIN_ISSUE_FIXTURE_URL = `http://localhost:${ADMIN_PORT}/e2e-space-v2-issue-fixture.html`;
 const CATALOG_URL = buildPublicCatalogUrl();
 
+// --- the audit's wall clock --------------------------------------------------
+//
+// The composer paints a physical-clock placeholder that reads the real `Date.now()` (spec 031
+// §2.7), so an audit PNG captured at 06:55 and the same PNG captured at 17:30 differ — which is the
+// churn Codex measured on the three `composer-ready-*.png`. The evidence must be a property of the
+// UI, not of the hour it was recorded, so this suite pins the clock BEFORE any product code runs.
+//
+// `page.clock.setFixedTime` is used rather than `clock.install`: it fixes `Date.now()`/`new Date()`
+// while leaving `setTimeout` running in real time, so the product's own minute-boundary ticker still
+// starts, still schedules exactly one timer and is still torn down — the behaviour the existing
+// specs assert is unchanged, only the value it reads is. `msUntilNextMinute` returns a full minute
+// on an exact boundary, so a frozen clock cannot busy-loop that ticker.
+//
+// The label is LOCAL `HH:MM` (`formatClockLabel`), so a fixed epoch alone would still render
+// differently on a machine in another zone; the timezone is pinned with it. Both are test-only —
+// no product source, fixture or existing test is touched.
+const AUDIT_TIMEZONE = "Asia/Seoul";
+/** 2026-08-31 09:30 KST — the audit date, at a legible hour, on a minute boundary. */
+const AUDIT_CLOCK = new Date("2026-08-31T00:30:00.000Z");
+
+// --- the audit's rasteriser --------------------------------------------------
+//
+// `--disable-partial-raster` is the second half of a reproducible PNG, and it is a MEASUREMENT
+// condition, not a tolerance. With partial raster on, Chromium re-uses the pixels a compositor tile
+// already held and re-rasters only the invalidated part of it, so an anti-aliased edge inherits
+// whatever that tile was painting a moment earlier — a history the preparation clicks make
+// different on every load. Measured on identical geometry (every `getBoundingClientRect()` byte
+// equal across four fresh loads, and two screenshots of one settled page byte-identical): four
+// loads produced three different rasterisations of the same chip corners, and the flag alone made
+// all four byte-identical. Nothing here loosens a comparison — the same pixels are simply drawn the
+// same way twice.
+test.use({
+  timezoneId: AUDIT_TIMEZONE,
+  launchOptions: { args: ["--disable-partial-raster"] },
+});
+
+test.beforeEach(async ({ page }) => {
+  // before any `goto`, so the very first product evaluation already sees the fixed time
+  await page.clock.setFixedTime(AUDIT_CLOCK);
+});
+
 type Provenance =
   | "PRODUCT_ROUTE"
   | "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE"
@@ -243,6 +284,32 @@ const settle = (page: Page): Promise<void> =>
       }),
   );
 
+/**
+ * Snap every running animation and transition to its end state.
+ *
+ * `transition-duration: 0s` only governs transitions that START after it is applied — per the CSS
+ * Transitions spec a transition already in flight keeps the timing it was created with, so the
+ * preparation clicks (kind → size → template) leave colour transitions still interpolating when the
+ * screenshot is taken. Measured: two consecutive runs of this suite disagreed on the 액자 chip fill
+ * (`170,150,139` vs `159,136,122`) and on the anti-aliased card corners, which is exactly the
+ * `browse` PNG churn Codex saw. Finishing the animations is the settle, not a tolerance: the pixels
+ * recorded are the ones the transition was heading for.
+ */
+async function finishAnimations(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    for (const animation of document.getAnimations()) {
+      try {
+        // jumps to the end of a finite transition/animation…
+        animation.finish();
+      } catch {
+        // …and an infinite one cannot finish, so it is held at its first frame instead
+        animation.pause();
+        animation.currentTime = 0;
+      }
+    }
+  });
+}
+
 /** Motion off, so a capture is deterministic. Injected into the PAGE, never into product source. */
 async function freezeMotion(page: Page): Promise<void> {
   await page.addStyleTag({
@@ -250,6 +317,7 @@ async function freezeMotion(page: Page): Promise<void> {
       "*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;transition-duration:0s!important;transition-delay:0s!important;caret-color:transparent!important;scroll-behavior:auto!important}",
   });
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await finishAnimations(page);
   await settle(page);
 }
 
@@ -413,6 +481,9 @@ async function captureAndMeasure(input: CaptureInput): Promise<Measurement> {
     (document.activeElement as HTMLElement | null)?.blur();
     window.scrollTo(0, 0);
   });
+  // The walk itself moved focus rings across the surface; anything it started ends here, so the
+  // capture below cannot catch a ring or a hover fading in or out.
+  await finishAnimations(page);
   await settle(page);
 
   const inRegion = keyboardWalk.filter((stop) => stop.inRegion);

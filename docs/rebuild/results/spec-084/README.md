@@ -50,8 +50,25 @@ control을 페이지에서 숨겼다(고객 Space 3건). 제품 source의 DOM·�
 | dirty/conflict/save-error 등 C5 쓰기 실패 상태 | `NOT TESTED` | 이번 캡처 범위에서 안전하게 도달하는 절차를 정하지 않았다. 후속 단위에서 정의한다. |
 | 실기기 Safari/Android, preview channel, 실제 데이터 | `NOT TESTED` | 별도 승인 단위다. |
 
+## 재현성 (보완 라운드 1)
+
+이 폴더의 PNG 15장은 연속 두 번의 canonical `node scripts/e2e-run.mjs`에서 **SHA-256이 모두 동일**하다.
+그러기 위해 캡처 spec에만 세 가지 test-only 조건을 둔다. 제품 source·fixture·기존 test는 무변경이다.
+
+| 조건 | 이유 |
+|---|---|
+| `page.clock.setFixedTime(2026-08-31T00:30:00Z)` + `timezoneId: Asia/Seoul` | composer의 액자 시계는 실제 `Date.now()`를 읽는다(spec 031 §2.7). 고정하지 않으면 같은 화면이 촬영 시각마다 다른 PNG가 된다(실측 `6:55`→`17:30`). 타이머는 계속 실제 시간으로 돌기 때문에 제품의 분 경계 ticker 동작은 그대로다. |
+| 캡처 직전 `document.getAnimations()` 전부 `finish()` | `transition-duration:0s`는 **이미 시작된** transition에는 적용되지 않는다(CSS Transitions). 준비 클릭이 남긴 색 transition이 촬영 순간에도 보간 중이라 chip 색이 `170,150,139`/`159,136,122`로 갈렸다. 끝값으로 스냅한다. |
+| `--disable-partial-raster` | 부분 raster는 compositor tile이 직전에 담고 있던 픽셀을 재사용하므로 안티에일리어싱 가장자리가 tile 이력에 의존한다. geometry가 바이트 단위로 같은데도 로드마다 카드 모서리 raster가 갈렸고, 이 플래그만으로 4회 로드가 모두 바이트 동일해졌다. |
+
+timeout·retry·skip·screenshot tolerance는 쓰지 않는다. 세 조건 모두 **같은 픽셀을 같은 방식으로 두 번
+그리게** 할 뿐 비교를 느슨하게 하지 않는다.
+
 ## `measurements.json`
 
-캡처 18건(PNG 14장 + PNG 없이 320px 측정만 한 3건 + 320px composer 1건)의 원본 측정값이다. 각 항목에
-overflow, viewport 밖 control, 44px 미만 target, native range 별도 기록, 키보드 walk(순서·focus 표시),
-axe serious/critical, console error/warning, 외부 request, Canvas CSS 크기, 금지 문자열 노출 여부가 있다.
+캡처 **18건 = PNG 15장 + PNG를 저장하지 않은 320px measurement-only 3건**(고객 browse·고객 composer·
+운영자 shell)의 원본 측정값이다. PNG 15장의 등급 내역은 `PRODUCT_ROUTE` **7** /
+`PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` **8** / `FIXTURE_CONTROL_ONLY` **0**이고, measurement-only 3건은
+모두 `PRODUCT_ROUTE`다(등급 합계 route 10 / fixture 8). 각 항목에 overflow, viewport 밖 control, 44px
+미만 target, native range 별도 기록, 키보드 walk(순서·focus 표시), axe serious/critical, console
+error/warning, 외부 request, Canvas CSS 크기, 금지 문자열 노출 여부가 있다.
