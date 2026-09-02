@@ -5,10 +5,12 @@ import { describe, expect, it } from "vitest";
 import {
   CASE_BODY_COLORS,
   FRAME_MAX_LOGICAL_WIDTH,
+  FRAME_PREVIEW_VIEWPORT_RESERVE_PX,
   PREVIEW_MESSAGES,
   PRINT_MESSAGES,
   readFrameColorOptions,
   resolveFrameLogicalWidth,
+  resolveFramePreviewLogicalWidth,
   zoneSlotLabel,
 } from "./previewContracts";
 
@@ -246,5 +248,124 @@ describe("PRINT_MESSAGES", () => {
       expect(typeof message, key).toBe("string");
       expect(message.trim().length, key).toBeGreaterThan(0);
     }
+  });
+});
+
+// spec 085 §4 — the composer's frame size must also fit the viewport's HEIGHT, so spec 084 F-1's
+// landscape symptom (a 683px Canvas inside a 390px-tall viewport) cannot come back.
+describe("resolveFramePreviewLogicalWidth", () => {
+  const budget = (viewportHeight: number): number =>
+    Math.floor(viewportHeight - FRAME_PREVIEW_VIEWPORT_RESERVE_PX);
+
+  it("keeps the desktop size: a roomy pane and a tall viewport still give 500 x 700", () => {
+    const width = resolveFramePreviewLogicalWidth({
+      contentBoxWidth: 517,
+      aspect: 1.4,
+      viewportHeight: 800,
+    });
+    expect(width).toBe(FRAME_MAX_LOGICAL_WIDTH);
+    expect(Math.round((width ?? 0) * 1.4)).toBe(700);
+    expect(700).toBeLessThanOrEqual(budget(800));
+  });
+
+  it("is limited by the viewport height in landscape (844x390 → 210 wide, 294 tall)", () => {
+    const width = resolveFramePreviewLogicalWidth({
+      contentBoxWidth: 494,
+      aspect: 1.4,
+      viewportHeight: 390,
+    });
+    expect(budget(390)).toBe(294);
+    expect(width).toBe(210);
+    expect(Math.round((width ?? 0) * 1.4)).toBeLessThanOrEqual(294);
+  });
+
+  it("is limited by the pane when the pane is the smallest of the three", () => {
+    expect(
+      resolveFramePreviewLogicalWidth({ contentBoxWidth: 292, aspect: 1.4, viewportHeight: 844 }),
+    ).toBe(292);
+  });
+
+  it("never exceeds 500 however much room there is", () => {
+    expect(
+      resolveFramePreviewLogicalWidth({ contentBoxWidth: 4000, aspect: 1.4, viewportHeight: 4000 }),
+    ).toBe(FRAME_MAX_LOGICAL_WIDTH);
+  });
+
+  it("rounds the pane measurement the same way the width-only contract does", () => {
+    const at = (contentBoxWidth: number): number | null =>
+      resolveFramePreviewLogicalWidth({ contentBoxWidth, aspect: 1.4, viewportHeight: 2000 });
+    expect(at(319.4)).toBe(319);
+    expect(at(319.6)).toBe(320);
+    expect(at(0.4)).toBe(1);
+  });
+
+  it("holds `round(width * aspect) <= heightBudget` across a matrix of viewports", () => {
+    for (const viewportHeight of [390, 430, 568, 768, 800, 844, 900]) {
+      for (const aspect of [0.8, 1, 1.4, 2.5]) {
+        for (const contentBoxWidth of [222, 292, 453, 494, 517, 1200]) {
+          const width = resolveFramePreviewLogicalWidth({
+            contentBoxWidth,
+            aspect,
+            viewportHeight,
+          });
+          if (width === null) continue;
+          expect(Math.round(width * aspect)).toBeLessThanOrEqual(budget(viewportHeight));
+          expect(width).toBeLessThanOrEqual(FRAME_MAX_LOGICAL_WIDTH);
+          expect(width).toBeLessThanOrEqual(Math.max(1, Math.round(contentBoxWidth)));
+        }
+      }
+    }
+  });
+
+  it.each([
+    ["zero width", { contentBoxWidth: 0, aspect: 1.4, viewportHeight: 800 }],
+    ["negative width", { contentBoxWidth: -10, aspect: 1.4, viewportHeight: 800 }],
+    ["NaN width", { contentBoxWidth: Number.NaN, aspect: 1.4, viewportHeight: 800 }],
+    [
+      "infinite width",
+      { contentBoxWidth: Number.POSITIVE_INFINITY, aspect: 1.4, viewportHeight: 800 },
+    ],
+    ["zero aspect", { contentBoxWidth: 400, aspect: 0, viewportHeight: 800 }],
+    ["NaN aspect", { contentBoxWidth: 400, aspect: Number.NaN, viewportHeight: 800 }],
+    ["negative aspect", { contentBoxWidth: 400, aspect: -1.4, viewportHeight: 800 }],
+    ["zero viewport", { contentBoxWidth: 400, aspect: 1.4, viewportHeight: 0 }],
+    ["NaN viewport", { contentBoxWidth: 400, aspect: 1.4, viewportHeight: Number.NaN }],
+    [
+      "infinite viewport",
+      { contentBoxWidth: 400, aspect: 1.4, viewportHeight: Number.POSITIVE_INFINITY },
+    ],
+  ])("has no size for %s (the caller keeps measuring)", (_label, input) => {
+    expect(resolveFramePreviewLogicalWidth(input)).toBeNull();
+  });
+
+  it("has no size when the viewport leaves no height budget at all", () => {
+    expect(
+      resolveFramePreviewLogicalWidth({ contentBoxWidth: 400, aspect: 1.4, viewportHeight: 96 }),
+    ).toBeNull();
+    expect(
+      resolveFramePreviewLogicalWidth({ contentBoxWidth: 400, aspect: 1.4, viewportHeight: 96.9 }),
+    ).toBeNull();
+  });
+
+  it("has no size when even one logical px would overflow the budget", () => {
+    // budget 1, aspect 4 → heightLimitedWidth 0: there is no width that fits, and none is invented.
+    expect(
+      resolveFramePreviewLogicalWidth({ contentBoxWidth: 400, aspect: 4, viewportHeight: 97 }),
+    ).toBeNull();
+  });
+
+  it("invents no default size", () => {
+    const invalid = resolveFramePreviewLogicalWidth({
+      contentBoxWidth: Number.NaN,
+      aspect: 1.4,
+      viewportHeight: 800,
+    });
+    expect(invalid).not.toBe(FRAME_MAX_LOGICAL_WIDTH);
+    expect(invalid).toBeNull();
+  });
+
+  it("leaves the width-only Space contract alone", () => {
+    expect(resolveFrameLogicalWidth(1280)).toBe(FRAME_MAX_LOGICAL_WIDTH);
+    expect(resolveFrameLogicalWidth(320)).toBe(320);
   });
 });

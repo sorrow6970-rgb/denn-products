@@ -14,6 +14,14 @@ import { MOCKUP_PORT } from "../../playwright.config";
 const MOCKUP_URL = `http://localhost:${MOCKUP_PORT}/`;
 const CATALOG_URL = buildPublicCatalogUrl();
 
+// Chromium's partial raster re-uses a compositor tile's previous pixels, so an anti-aliased edge
+// inherits whatever that tile was painting a moment earlier - which made spec 084's audit PNGs
+// differ between runs on identical geometry. The spec 085 evidence captures at the bottom of this
+// file need byte-reproducible output, and a launch flag is a WORKER option, so it has to be set
+// here rather than beside them. It changes how the compositor re-uses tiles, not what is drawn:
+// every assertion in this file reads the DOM or the Canvas's own pixels, never a screenshot.
+test.use({ launchOptions: { args: ["--disable-partial-raster"] } });
+
 // Case: one model (logical 300x200) with a two-zone template. Frame: one size + the builtin `full`
 // template, and three colours of which only the plain solid one is supported.
 const SECRET_COLOR_ID = "SECRET_COLOR_ID_MARKER";
@@ -2051,5 +2059,377 @@ test.describe("local frame PNG export (spec 033)", () => {
     await chooseCase(page);
     await openComposer(page);
     await expect(page.getByTestId("print-export")).toHaveCount(0);
+  });
+});
+// --- spec 085: the result-first workbench -------------------------------------
+//
+// Closes spec 084 P1 F-1, whose three symptoms were measured on the real customer route: the Canvas
+// began at page y~1370 (390x844) and y~1220 (1280x800), and was 683px tall inside a 390px-tall
+// landscape viewport. What is asserted here is therefore GEOMETRY, not markup: where the preview is
+// relative to the controls, and whether the Canvas fits the screen it is drawn on.
+
+const WORKBENCH_BREAKPOINT = 960;
+/** The same reserve the product contract spends (`FRAME_PREVIEW_VIEWPORT_RESERVE_PX`). */
+const VIEWPORT_RESERVE = 96;
+
+const MATRIX = [
+  { name: "320x568", width: 320, height: 568 },
+  { name: "390x844", width: 390, height: 844 },
+  { name: "844x390", width: 844, height: 390 },
+  { name: "932x430", width: 932, height: 430 },
+  { name: "1024x768", width: 1024, height: 768 },
+  { name: "1280x800", width: 1280, height: 800 },
+  { name: "1440x900", width: 1440, height: 900 },
+] as const;
+
+const previewPane = (page: Page) => page.getByTestId("preview-pane");
+
+interface Box {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+async function boxOf(page: Page, testId: string): Promise<Box> {
+  const box = await page.getByTestId(testId).boundingBox();
+  expect(box, `${testId} has a box`).not.toBeNull();
+  return box as Box;
+}
+
+/** Open the frame composer with one photo composed, at one viewport. */
+async function frameWorkbench(page: Page, size: { width: number; height: number }): Promise<void> {
+  await page.setViewportSize(size);
+  await gotoReady(page);
+  await chooseFrame(page);
+  await openComposer(page);
+  await pickColour(page, "#1A1A1A");
+  await pickPhoto(page, "frame-image", PHOTO_A);
+  await waitForCanvas(page);
+}
+
+for (const viewport of MATRIX) {
+  test(`spec 085 workbench @ ${viewport.name}: preview first, nothing clipped, Canvas fits`, async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    const route = await routeCatalog(page);
+    const crashes: string[] = [];
+    page.on("pageerror", (error) => crashes.push(String(error)));
+    await frameWorkbench(page, viewport);
+
+    // 1. the page never scrolls sideways, at any width in the matrix
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, "document horizontal overflow").toBeLessThanOrEqual(0);
+
+    const preview = await boxOf(page, "preview-pane");
+    const controls = await boxOf(page, "preview-controls-pane");
+    const composer = (await page.locator(".denn-composer").boundingBox()) as Box;
+
+    // 2/3. the composition itself
+    if (viewport.width < WORKBENCH_BREAKPOINT) {
+      expect(
+        preview.y + preview.height,
+        "single column: the preview ends before the controls begin",
+      ).toBeLessThanOrEqual(controls.y + 1);
+    } else {
+      expect(
+        preview.x + preview.width,
+        "workbench: the preview ends before the controls begin",
+      ).toBeLessThanOrEqual(controls.x + 1);
+      const overlapTop = Math.max(preview.y, controls.y);
+      const overlapBottom = Math.min(preview.y + preview.height, controls.y + controls.height);
+      expect(
+        overlapBottom - overlapTop,
+        "workbench: the panes share vertical space",
+      ).toBeGreaterThan(0);
+    }
+
+    // both panes stay inside the composer, and no control leaves the viewport
+    for (const [label, pane] of [
+      ["preview pane", preview],
+      ["controls pane", controls],
+    ] as const) {
+      expect(pane.x, `${label} left edge`).toBeGreaterThanOrEqual(composer.x - 1);
+      expect(pane.x + pane.width, `${label} right edge`).toBeLessThanOrEqual(
+        composer.x + composer.width + 1,
+      );
+    }
+    const clipped = await page.evaluate(() => {
+      const root = document.querySelector(".denn-composer");
+      if (root === null) return ["no composer"];
+      const limit = document.documentElement.clientWidth;
+      const out: string[] = [];
+      for (const node of root.querySelectorAll(
+        "button, a[href], input, select, textarea, canvas",
+      )) {
+        const rect = node.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) continue;
+        if (rect.left < -1 || rect.right > limit + 1) {
+          out.push(node.getAttribute("data-testid") ?? node.tagName);
+        }
+      }
+      return out;
+    });
+    expect(clipped, "controls clipped out of the viewport").toEqual([]);
+
+    // 5. the frame Canvas fits the screen it is drawn on - in the PLAN, not with a CSS transform
+    const size = await cssSize(page);
+    expect(size.width, "Canvas width").toBeGreaterThan(0);
+    expect(size.height, "Canvas height").toBeGreaterThan(0);
+    expect(size.width, "Canvas width cap").toBeLessThanOrEqual(500);
+    expect(size.height, "Canvas fits the viewport height budget").toBeLessThanOrEqual(
+      viewport.height - VIEWPORT_RESERVE,
+    );
+    // spec 022: the observed CSS size IS the plan's logical canvas - nothing is scaled after the
+    // fact, so the customer is looking at the same geometry the print export reads.
+    const attributes = await canvas(page).evaluate((element) => {
+      const node = element as HTMLCanvasElement;
+      const style = window.getComputedStyle(node);
+      return {
+        width: node.width,
+        height: node.height,
+        transform: style.transform,
+        maxHeight: style.maxHeight,
+        dpr: window.devicePixelRatio,
+      };
+    });
+    expect(attributes.width).toBe(Math.round(size.width * attributes.dpr));
+    expect(attributes.height).toBe(Math.round(size.height * attributes.dpr));
+    expect(attributes.transform === "none" || attributes.transform === "").toBe(true);
+    expect(attributes.maxHeight).toBe("none");
+    expect(size.height).toBe(Math.round(size.width * 1.4));
+
+    // 8. nothing crashed, nothing was logged, nothing left the machine
+    expect(noise.errors).toEqual([]);
+    expect(noise.warnings).toEqual([]);
+    expect(crashes).toEqual([]);
+    expect(route.unexpected()).toBe(0);
+  });
+}
+
+test("spec 085: the desktop preview stays in view while the customer works the controls", async ({
+  page,
+}) => {
+  await routeCatalog(page);
+  await frameWorkbench(page, { width: 1280, height: 800 });
+
+  const sticky = await previewPane(page).evaluate((node) => window.getComputedStyle(node).position);
+  expect(sticky).toBe("sticky");
+
+  // scroll towards the end of the controls and check the preview is still on screen...
+  await page.evaluate(() => {
+    const controls = document.querySelector('[data-testid="preview-controls-pane"]');
+    controls?.scrollIntoView({ block: "end", behavior: "instant" });
+  });
+  await page.evaluate(
+    () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
+  );
+
+  const after = await page.evaluate(() => {
+    const pane = document.querySelector('[data-testid="preview-pane"]');
+    const composer = document.querySelector(".denn-composer");
+    if (pane === null || composer === null) return null;
+    const paneRect = pane.getBoundingClientRect();
+    const composerRect = composer.getBoundingClientRect();
+    return {
+      paneTop: paneRect.top,
+      paneBottom: paneRect.bottom,
+      composerBottom: composerRect.bottom,
+      viewportHeight: window.innerHeight,
+      scrolled: window.scrollY,
+    };
+  });
+  expect(after).not.toBeNull();
+  if (after === null) return;
+  expect(after.scrolled, "the page actually scrolled").toBeGreaterThan(0);
+  expect(after.paneTop, "the preview is still on screen").toBeLessThan(after.viewportHeight);
+  expect(after.paneBottom, "the preview is still on screen").toBeGreaterThan(0);
+  // ...and it never escapes the composer, so it cannot cover what comes after it
+  expect(after.paneBottom).toBeLessThanOrEqual(after.composerBottom + 1);
+});
+
+test("spec 085: the reading flow keeps its measure while the workbench widens", async ({
+  page,
+}) => {
+  await routeCatalog(page);
+  await frameWorkbench(page, { width: 1280, height: 800 });
+
+  const widths = await page.evaluate(() => {
+    const width = (selector: string): number =>
+      document.querySelector(selector)?.getBoundingClientRect().width ?? -1;
+    return {
+      inner: width(".denn-customer__inner"),
+      reading: width(".denn-customer__card--reading"),
+      workbench: width(".denn-customer__card--workbench"),
+      composer: width(".denn-composer"),
+      firstStep: width(".denn-browse > fieldset"),
+    };
+  });
+  expect(widths.inner).toBeGreaterThan(560);
+  expect(widths.inner).toBeLessThanOrEqual(1120);
+  expect(widths.reading, "identity/status keep the reading measure").toBeLessThanOrEqual(560);
+  expect(widths.firstStep, "the selection steps keep the reading measure").toBeLessThanOrEqual(560);
+  expect(widths.workbench, "the browse card carries the workbench").toBeGreaterThan(560);
+  expect(widths.composer, "the composer uses the workbench measure").toBeGreaterThan(560);
+});
+
+for (const viewport of [
+  { name: "390x844", width: 390, height: 844 },
+  { name: "1280x800", width: 1280, height: 800 },
+] as const) {
+  test(`spec 085 accessibility @ ${viewport.name}: DOM tab order, focus, 44px, axe 0`, async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    await routeCatalog(page);
+    await frameWorkbench(page, viewport);
+
+    // The tab order follows the DOM, and the DOM is preview-then-controls - so a keyboard user
+    // reaches the result before the controls, exactly as the pointer user sees it.
+    await page.evaluate(() => {
+      document.body.setAttribute("tabindex", "-1");
+      document.body.focus();
+      document.body.removeAttribute("tabindex");
+    });
+    const stops: { index: number; ring: boolean }[] = [];
+    for (let step = 0; step < 20; step++) {
+      await page.keyboard.press("Tab");
+      const stop = await page.evaluate(() => {
+        const active = document.activeElement;
+        if (!(active instanceof HTMLElement) || active === document.body) return null;
+        const tabbable = [
+          ...document.querySelectorAll(
+            "button, a[href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
+          ),
+        ].filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+        const style = window.getComputedStyle(active);
+        return {
+          index: tabbable.indexOf(active),
+          ring:
+            (style.outlineStyle !== "none" && Number.parseFloat(style.outlineWidth) > 0) ||
+            (style.boxShadow !== "none" && style.boxShadow.length > 0),
+        };
+      });
+      if (stop === null) break;
+      stops.push(stop);
+    }
+    expect(stops.length).toBeGreaterThan(4);
+    for (let index = 1; index < stops.length; index++) {
+      expect(stops[index]?.index ?? -1, "tab order follows the DOM order").toBeGreaterThan(
+        stops[index - 1]?.index ?? -1,
+      );
+    }
+    expect(
+      stops.filter((stop) => !stop.ring),
+      "every stop shows a focus indicator",
+    ).toEqual([]);
+
+    await page.evaluate(() => {
+      (document.activeElement as HTMLElement | null)?.blur();
+      window.scrollTo(0, 0);
+    });
+
+    const targets = page.locator(
+      ".denn-composer__swatch, .denn-composer__clear, .denn-composer__slot-input, .denn-print__button",
+    );
+    const count = await targets.count();
+    expect(count).toBeGreaterThan(0);
+    for (let index = 0; index < count; index++) {
+      const box = await targets.nth(index).boundingBox();
+      expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    }
+
+    const results = await new AxeBuilder({ page }).analyze();
+    expect(
+      results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
+    ).toEqual([]);
+    expect(noise.errors).toEqual([]);
+    expect(noise.warnings).toEqual([]);
+  });
+}
+// --- spec 085 visual evidence -------------------------------------------------
+//
+// The product-route PNGs that show F-1 closed. Three test-only conditions make the bytes
+// reproducible, all of them learned in spec 084's correction round and none of them a tolerance:
+// a fixed clock (the frame preview paints a placeholder that reads the real `Date.now()`),
+// finishing in-flight transitions before the shutter, and `--disable-partial-raster` (Chromium
+// re-uses a compositor tile's previous pixels, so an anti-aliased edge otherwise inherits that
+// tile's history). No timeout, retry, skip or pixel tolerance is involved.
+
+const EVIDENCE_DIR = "docs/rebuild/results/spec-085";
+/** 2026-09-02 09:30 KST, matching spec 084's audit clock. */
+const EVIDENCE_CLOCK = new Date("2026-09-02T00:30:00.000Z");
+
+test.describe("spec 085 evidence", () => {
+  test.use({ timezoneId: "Asia/Seoul" });
+
+  const EVIDENCE = [
+    { file: "composer-workbench-1280x800.png", width: 1280, height: 800 },
+    { file: "composer-workbench-390x844.png", width: 390, height: 844 },
+    { file: "composer-workbench-844x390.png", width: 844, height: 390 },
+  ] as const;
+
+  for (const shot of EVIDENCE) {
+    test(`captures the composer at ${shot.width}x${shot.height}`, async ({ page }) => {
+      const noise = collectConsole(page);
+      const route = await routeCatalog(page);
+      await page.clock.setFixedTime(EVIDENCE_CLOCK);
+      await frameWorkbench(page, { width: shot.width, height: shot.height });
+
+      // motion off, then every animation already running is snapped to its end value:
+      // `transition-duration: 0s` does not stop a transition that has already started.
+      await page.addStyleTag({
+        content:
+          "*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;transition-duration:0s!important;transition-delay:0s!important;caret-color:transparent!important;scroll-behavior:auto!important}",
+      });
+      await page.evaluate(() => document.fonts.ready.then(() => undefined));
+      await page.evaluate(() => {
+        for (const animation of document.getAnimations()) {
+          try {
+            animation.finish();
+          } catch {
+            animation.pause();
+            animation.currentTime = 0;
+          }
+        }
+      });
+      await page.evaluate(() => {
+        (document.activeElement as HTMLElement | null)?.blur();
+        window.scrollTo(0, 0);
+      });
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+          }),
+      );
+
+      const { mkdirSync } = await import("node:fs");
+      mkdirSync(EVIDENCE_DIR, { recursive: true });
+      await page.screenshot({ path: `${EVIDENCE_DIR}/${shot.file}`, fullPage: true });
+
+      expect(noise.errors).toEqual([]);
+      expect(noise.warnings).toEqual([]);
+      expect(route.unexpected()).toBe(0);
+    });
+  }
+
+  test("every stored PNG has exactly one README entry, and every listed PNG exists", async () => {
+    const { readdirSync, readFileSync } = await import("node:fs");
+    const files = readdirSync(EVIDENCE_DIR).filter((name) => name.endsWith(".png"));
+    expect(files.sort()).toEqual([...EVIDENCE].map((shot) => shot.file).sort());
+    const readme = readFileSync(`${EVIDENCE_DIR}/README.md`, "utf8");
+    for (const file of files) {
+      expect(readme.split(`\`${file}\``).length - 1, `README entries for ${file}`).toBe(1);
+    }
+    for (const claimed of readme.matchAll(/`([a-z0-9-]+\.png)`/g)) {
+      expect(files, `README lists ${claimed[1]}`).toContain(claimed[1]);
+    }
   });
 });

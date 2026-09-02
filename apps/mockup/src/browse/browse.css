@@ -334,3 +334,95 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* ---------------------------------------------------------------------------
+   Spec 085 — customer composer "result first" workbench.
+
+   Closes spec 084 F-1: the Canvas used to come after every control, so the
+   customer had to scroll away from what they had just changed. Layout only —
+   no new colour literal, no new token, no @denn/ui change, and every control
+   keeps the size, order, copy and focus ring it already had.
+   --------------------------------------------------------------------------- */
+
+/* The customer catalog's own measure. `.denn-shell__inner` caps at 560px, which is right for the
+   identity/status/selection reading column but too narrow for a preview+controls workbench, so the
+   INNER is widened and the reading cards are capped back individually. Two classes (0,2,0) so the
+   theme's own single-class rule cannot win by source order. */
+.denn-shell__inner.denn-customer__inner {
+  max-width: 560px;
+}
+@media (min-width: 960px) {
+  .denn-shell__inner.denn-customer__inner {
+    max-width: 1120px;
+  }
+}
+
+/* Identity and catalog status keep the original reading measure and stay centred under the wider
+   inner, so widening the shell changes nothing about how they read. */
+.denn-customer__card--reading {
+  width: 100%;
+  max-width: 560px;
+  margin-inline: auto;
+}
+
+/* The browse card is the one that may use the full measure: it is what holds the composer. */
+.denn-customer__card--workbench {
+  width: 100%;
+}
+
+/* Inside it, every direct child EXCEPT the composer keeps the 560px selection measure, centred —
+   the step-by-step flow is not improved by being stretched to 1120px. */
+.denn-browse > * {
+  width: 100%;
+  max-width: 560px;
+  margin-inline: auto;
+}
+.denn-browse > .denn-composer {
+  max-width: none;
+}
+
+/* The workbench itself. Mobile-first: ONE column, preview pane first — which is also its DOM
+   order, so `order` is never used and the visual and reading orders cannot disagree. */
+.denn-composer__workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.denn-composer__preview-pane,
+.denn-composer__controls-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* both tracks may shrink; without this a wide Canvas would push the grid wider than the page */
+  min-width: 0;
+}
+
+@media (min-width: 960px) {
+  /* Two equal tracks, sized by the grid rather than by their content: the Canvas reads the pane's
+     width to choose its logical size, so a content-sized track would feed that size back into the
+     track and let the two chase each other. */
+  .denn-composer__workbench {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* The preview follows while the customer works down the controls, and stops at the composer's
+     own bottom edge — `align-self: start` keeps the pane its own height, so it can never cover the
+     content after the composer. */
+  .denn-composer__preview-pane {
+    position: sticky;
+    top: calc(20px + var(--safe-top, 0px));
+    align-self: start;
+  }
+}
+
+/* A pane is a region of one surface, not another card: the divider is the whole decoration. */
+@media (min-width: 960px) {
+  .denn-composer__controls-pane {
+    padding-left: 20px;
+    border-left: 1px solid var(--line);
+  }
+}

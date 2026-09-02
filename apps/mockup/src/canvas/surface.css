@@ -99,6 +99,11 @@
 .denn-preview-edit__area {
   /* the drag surface is exactly the canvas box; it adds no scrolling of its own */
   display: block;
+  /* spec 085: and `exactly` has to be enforced, not assumed. A block box fills its container, which
+     used to be the same width as the Canvas only by accident — once the Canvas may be narrower than
+     the space it sits in (a landscape viewport caps it by height), a full-width box would put the
+     clock overlay's percentages, and the drag surface, beside the Canvas instead of on it. */
+  width: fit-content;
   max-width: 100%;
   /* spec 031: the physical-clock overlay is positioned against this same box */
   position: relative;

@@ -75,19 +75,23 @@ function CatalogApp(): React.JSX.Element {
   const document = state.status === "ready" ? state.document : null;
   const index = useMemo(() => (document ? buildCatalogBrowseIndex(document) : null), [document]);
 
+  // spec 085 §1: the customer catalog gets its own shell classes so the composer workbench may use
+  // the wider desktop measure. `@denn/ui`'s `Card` is unchanged — it already forwards a className —
+  // and identity/status stay at the original 560px reading measure, so only the browse card (which
+  // holds the composer) grows.
   return (
-    <main className="denn-shell">
-      <div className="denn-shell__inner">
-        <Card>
+    <main className="denn-shell denn-customer">
+      <div className="denn-shell__inner denn-customer__inner">
+        <Card className="denn-customer__card denn-customer__card--reading">
           <Badge>고객 셸 · 공개 카탈로그 연결</Badge>
           <h1>{BRAND} Mockup Rebuild</h1>
           <p data-testid="app-id">{APP_IDS.mockup}</p>
         </Card>
-        <Card>
+        <Card className="denn-customer__card denn-customer__card--reading">
           <CatalogStatus state={state} onRetry={retry} />
         </Card>
         {state.status === "ready" && index && document ? (
-          <Card>
+          <Card className="denn-customer__card denn-customer__card--workbench">
             <BrowseFlow index={index} document={document} />
           </Card>
         ) : null}

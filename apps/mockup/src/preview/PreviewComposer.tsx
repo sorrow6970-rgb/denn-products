@@ -63,11 +63,64 @@ import {
   PREVIEW_TEXT_LABELS,
   type PreviewColorOption,
   readFrameColorOptions,
-  resolveFrameLogicalWidth,
+  resolveFramePreviewLogicalWidth,
   textLengthHint,
   textTooLongMessage,
   zoneSlotLabel,
 } from "./previewContracts";
+
+/**
+ * Just enough of `window` to report a viewport height and say when it changed (spec 085 §4).
+ * Structural, so the component hands it the real `window` and the unit test hands it a fake — no
+ * jsdom is introduced for a listener contract.
+ */
+export interface ViewportHeightTarget {
+  readonly innerHeight: number;
+  addEventListener(type: "resize", listener: () => void): void;
+  removeEventListener(type: "resize", listener: () => void): void;
+  readonly visualViewport?: {
+    addEventListener(type: "resize", listener: () => void): void;
+    removeEventListener(type: "resize", listener: () => void): void;
+  } | null;
+}
+
+/**
+ * The current layout-viewport height, or `null` when the environment cannot report one. A missing
+ * or nonsensical value is never replaced with a guess — the composer keeps measuring instead.
+ */
+export function readViewportHeight(target: ViewportHeightTarget): number | null {
+  const height = target.innerHeight;
+  if (typeof height !== "number" || !Number.isFinite(height) || height <= 0) return null;
+  return height;
+}
+
+/**
+ * Report the viewport height now and on every change, and return the exact undo.
+ *
+ * `innerHeight` is the LAYOUT viewport — the box the composer is laid out in, and the one the
+ * Canvas has to fit inside. `visualViewport`'s resize is subscribed to as well, because a mobile
+ * toolbar collapsing changes what the customer can actually see without always firing
+ * `window.resize`; the value read stays `innerHeight`, so an on-screen keyboard (which shrinks only
+ * the VISUAL viewport) cannot rebuild the plan under the customer's fingers while they type.
+ *
+ * No debounce, timer, retry or polling: the two resize events are the whole mechanism, and the
+ * returned teardown removes exactly the listeners this call added, so a StrictMode double-mount
+ * leaves nothing behind.
+ */
+export function subscribeViewportHeight(
+  target: ViewportHeightTarget,
+  onHeight: (height: number | null) => void,
+): () => void {
+  const publish = (): void => onHeight(readViewportHeight(target));
+  publish();
+  target.addEventListener("resize", publish);
+  const visual = target.visualViewport ?? null;
+  visual?.addEventListener("resize", publish);
+  return () => {
+    target.removeEventListener("resize", publish);
+    visual?.removeEventListener("resize", publish);
+  };
+}
 
 const FRAME_SLOT_ID = "frame-image";
 /** Namespace for the template art owner's key, kept apart from every photo owner (spec 028). */
@@ -494,7 +547,10 @@ export function PreviewComposer({
     });
   }, [slotIds, entries]);
 
-  // frame only: the logical width follows the measured content box (spec 027 §UX 5, 6)
+  // frame only: the logical width follows the measured content box (spec 027 §UX 5, 6), which from
+  // spec 085 is the PREVIEW PANE's box rather than the whole composer's — on the desktop workbench
+  // the controls sit beside the preview, so the composer's width is no longer the width the Canvas
+  // may use. The observed element is the pane, which is always rendered, so the observer is stable.
   const [contentWidth, setContentWidth] = useState<number | null>(null);
   const measureRef = useCallback((element: HTMLDivElement | null) => {
     if (element === null) return;
@@ -510,6 +566,18 @@ export function PreviewComposer({
     observer.observe(element);
     publish(element.getBoundingClientRect().width);
     return () => observer.disconnect();
+  }, []);
+
+  // The viewport height the frame plan spends its budget against (spec 085 §4). Server rendering
+  // has no viewport, so there is no height and no subscription — exactly the measuring state.
+  const [viewportHeight, setViewportHeight] = useState<number | null>(() =>
+    typeof window === "undefined" ? null : readViewportHeight(window),
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    return subscribeViewportHeight(window, (next) => {
+      setViewportHeight((previous) => (previous === next ? previous : next));
+    });
   }, []);
 
   const artBindings = art.bindings;
@@ -562,9 +630,17 @@ export function PreviewComposer({
       });
     }
 
+    // spec 085 §4: the frame's logical size answers to the pane AND to the viewport height, so a
+    // landscape phone gets a shorter plan instead of a Canvas taller than the screen. The size is
+    // decided in the plan, never with a CSS transform — spec 022 requires the observed CSS size to
+    // equal `plan.logicalCanvas`, and the print export reads this same plan.
     const logicalWidth =
-      geometry.kind === "frame" && contentWidth !== null
-        ? resolveFrameLogicalWidth(contentWidth)
+      geometry.kind === "frame" && contentWidth !== null && viewportHeight !== null
+        ? resolveFramePreviewLogicalWidth({
+            contentBoxWidth: contentWidth,
+            aspect: geometry.value.aspect,
+            viewportHeight,
+          })
         : null;
     if (geometry.kind === "frame" && logicalWidth === null) return null;
 
@@ -668,6 +744,7 @@ export function PreviewComposer({
     slotIds,
     entries,
     contentWidth,
+    viewportHeight,
     artBlocked,
     artReady,
     transforms,
@@ -993,369 +1070,390 @@ export function PreviewComposer({
   ]);
 
   return (
-    <section className="denn-composer" aria-labelledby="denn-composer-title" ref={measureRef}>
+    <section className="denn-composer" aria-labelledby="denn-composer-title">
       <h3 className="denn-composer__title" id="denn-composer-title">
         미리보기
       </h3>
 
-      <fieldset className="denn-composer__group">
-        <legend className="denn-composer__legend">색상</legend>
-        {colorOptions.length === 0 ? (
-          <p className="denn-browse__notice">{PREVIEW_MESSAGES.noColors}</p>
-        ) : (
-          <div className="denn-composer__swatches">
-            {colorOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className="denn-composer__swatch"
-                aria-pressed={color === option.value}
-                data-testid={`preview-color-${option.value}`}
-                onClick={() => setColor(option.value)}
-              >
-                <span
-                  className="denn-composer__swatch-dot"
-                  style={{ backgroundColor: option.value }}
-                  aria-hidden="true"
-                />
-                <span className="denn-composer__swatch-name">{option.name}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </fieldset>
+      {/*
+        spec 085 §2: the workbench is preview FIRST, controls second — in the DOM, so the
+        reading order a screen reader and a keyboard follow is the same order the mobile
+        customer scrolls through. Desktop puts the two side by side with grid, never with
+        `order`, so the visual order can never drift from this one.
+      */}
+      <div className="denn-composer__workbench">
+        <div className="denn-composer__preview-pane" data-testid="preview-pane" ref={measureRef}>
+          <p className="denn-browse__notice" role="status" data-testid="preview-status">
+            {status ?? ""}
+          </p>
 
-      {slotIds.length > 0 ? (
-        <fieldset className="denn-composer__group">
-          <legend className="denn-composer__legend">사진</legend>
-          <div className="denn-composer__slots">
-            {slotIds.map((slotId, index) => (
-              <ImageSlot
-                key={slotId}
-                slotId={slotId}
-                label={geometry?.kind === "case" ? zoneSlotLabel(index) : "사진"}
-                onReport={report}
-              />
-            ))}
-          </div>
-        </fieldset>
-      ) : null}
-
-      {slotIds.length > 0 ? (
-        <fieldset className="denn-composer__group" data-testid="preview-edit">
-          <legend className="denn-composer__legend">{PREVIEW_EDIT_LABELS.group}</legend>
-
-          {slotIds.length > 1 ? (
-            <fieldset className="denn-preview-edit__subgroup">
-              <legend className="denn-composer__slot-label">{PREVIEW_EDIT_LABELS.slotGroup}</legend>
-              {slotIds.map((slotId, index) => (
-                <button
-                  key={slotId}
-                  type="button"
-                  className="denn-preview-edit__slot"
-                  aria-pressed={slotId === activeSlot}
-                  data-testid={`preview-edit-slot-${slotId}`}
-                  onClick={() => setActiveSlotId(slotId)}
-                >
-                  <span>{zoneSlotLabel(index)}</span>
-                  {slotId === activeSlot ? (
-                    <span className="denn-preview-edit__active">
-                      {PREVIEW_EDIT_LABELS.activeSlot}
-                    </span>
-                  ) : null}
-                </button>
-              ))}
-            </fieldset>
-          ) : null}
-
-          {activeEditable === null ? (
-            <p className="denn-browse__notice">{PREVIEW_EDIT_LABELS.needsImage}</p>
-          ) : null}
-
-          <div className="denn-preview-edit__row">
-            <label className="denn-composer__slot-label" htmlFor="denn-preview-scale">
-              {PREVIEW_EDIT_LABELS.scale}
-            </label>
-            <input
-              id="denn-preview-scale"
-              className="denn-preview-edit__range"
-              data-testid="preview-scale"
-              type="range"
-              min={SCALE_PERCENT_MIN}
-              max={SCALE_PERCENT_MAX}
-              step={1}
-              value={scaleToPercent(activeTransform.scale)}
-              disabled={activeEditable === null}
-              onChange={(event) => {
-                const next = scaleFromPercent(Number(event.target.value));
-                if (next === null) return;
-                applyToActive((current) => withScale(current, next));
-              }}
-            />
-            <span className="denn-composer__slot-state" data-testid="preview-scale-value">
-              {scaleToPercent(activeTransform.scale)}%
-            </span>
-          </div>
-
-          <div className="denn-preview-edit__row">
-            <button
-              type="button"
-              className="denn-composer__clear"
-              data-testid="preview-zoom-out"
-              disabled={activeEditable === null}
-              onClick={() => applyToActive((current) => zoomTransform(current, "out"))}
-            >
-              {PREVIEW_EDIT_LABELS.zoomOut}
-            </button>
-            <button
-              type="button"
-              className="denn-composer__clear"
-              data-testid="preview-zoom-in"
-              disabled={activeEditable === null}
-              onClick={() => applyToActive((current) => zoomTransform(current, "in"))}
-            >
-              {PREVIEW_EDIT_LABELS.zoomIn}
-            </button>
-            <button
-              type="button"
-              className="denn-composer__clear"
-              data-testid="preview-reset"
-              disabled={activeEditable === null}
-              onClick={() => applyToActive(() => resetTransform())}
-            >
-              {PREVIEW_EDIT_LABELS.reset}
-            </button>
-          </div>
-
-          {/* spec 030: quarter turns only. Each press is exactly one step (modulo 4); scale and
-              normalized pan are untouched, so the framing survives the rotation. */}
-          <fieldset className="denn-preview-edit__subgroup">
-            <legend className="denn-composer__slot-label">{PREVIEW_EDIT_LABELS.rotateGroup}</legend>
-            {(
-              [
-                ["preview-rotate-left", PREVIEW_EDIT_LABELS.rotateLeft, "left"],
-                ["preview-rotate-right", PREVIEW_EDIT_LABELS.rotateRight, "right"],
-              ] as const
-            ).map(([testId, label, direction]) => (
-              <button
-                key={testId}
-                type="button"
-                className="denn-composer__clear"
-                data-testid={testId}
-                disabled={activeEditable === null}
-                onClick={() => applyToActive((current) => rotateTransform(current, direction))}
-              >
-                {label}
-              </button>
-            ))}
-          </fieldset>
-
-          {/* Real buttons host the keyboard pan: arrows (Shift = coarse) work whenever focus is
-              inside this group, and each button alone is enough for keyboard-only use. */}
-          <fieldset className="denn-preview-edit__subgroup" onKeyDown={onPanKeyDown}>
-            <legend className="denn-composer__slot-label">{PREVIEW_EDIT_LABELS.panGroup}</legend>
-            {(
-              [
-                ["preview-pan-left", PREVIEW_EDIT_LABELS.panLeft, -1, 0],
-                ["preview-pan-right", PREVIEW_EDIT_LABELS.panRight, 1, 0],
-                ["preview-pan-up", PREVIEW_EDIT_LABELS.panUp, 0, -1],
-                ["preview-pan-down", PREVIEW_EDIT_LABELS.panDown, 0, 1],
-              ] as const
-            ).map(([testId, label, dirX, dirY]) => (
-              <button
-                key={testId}
-                type="button"
-                className="denn-composer__clear"
-                data-testid={testId}
-                disabled={activeEditable === null}
-                onClick={(event) => {
-                  const step = event.shiftKey ? PAN_KEY_STEP_COARSE : PAN_KEY_STEP;
-                  applyToActive((current) => panTransform(current, dirX * step, dirY * step));
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </fieldset>
-        </fieldset>
-      ) : null}
-
-      {geometry?.kind === "frame" ? (
-        <fieldset className="denn-composer__group" data-testid="preview-text">
-          <legend className="denn-composer__legend">{PREVIEW_TEXT_COPY.group}</legend>
-          {textZones.length === 0 ? (
-            <p className="denn-browse__notice">{PREVIEW_TEXT_COPY.none}</p>
-          ) : (
-            // only the keys THIS template defines are offered; the rest are not rendered at all
-            textZones.map((zone) => {
-              const inputId = `denn-preview-text-${zone.key}`;
-              const hintId = `${inputId}-hint`;
-              const value = texts[zone.key];
-              const invalid = textError === zone.key;
-              return (
-                <div className="denn-preview-text__row" key={zone.key}>
-                  <label className="denn-composer__slot-label" htmlFor={inputId}>
-                    {PREVIEW_TEXT_LABELS[zone.key] ?? zone.key}
-                  </label>
-                  <input
-                    id={inputId}
-                    data-testid={`preview-text-${zone.key}`}
-                    className="denn-preview-text__input"
-                    type="text"
-                    value={value}
-                    maxLength={zone.maxChars}
-                    aria-describedby={hintId}
-                    aria-invalid={invalid || undefined}
-                    onChange={(event) => {
-                      // IME: a composing value is provisional, so it is not committed yet
-                      if (
-                        event.nativeEvent instanceof InputEvent &&
-                        event.nativeEvent.isComposing
-                      ) {
-                        return;
-                      }
-                      commitText(zone.key, event.target.value);
-                    }}
-                    onCompositionEnd={(event) => {
-                      // validated exactly once, when the composition finishes
-                      commitText(zone.key, event.currentTarget.value);
-                    }}
-                  />
-                  <span
-                    className="denn-composer__slot-state"
-                    id={hintId}
-                    data-testid={`preview-text-hint-${zone.key}`}
-                  >
-                    {invalid
-                      ? textTooLongMessage(zone.maxChars)
-                      : textLengthHint(value.length, zone.maxChars)}
-                  </span>
-                </div>
-              );
-            })
-          )}
-        </fieldset>
-      ) : null}
-
-      <p className="denn-browse__notice" role="status" data-testid="preview-status">
-        {status ?? ""}
-      </p>
-
-      {plan !== null ? (
-        // Mouse/pen drag only (spec 029 §접근성): a touch pointer is ignored and no global
-        // `touch-action: none` / unconditional preventDefault is added, so page and horizontal
-        // scrolling keep working and the browser zoom gesture is never intercepted.
-        <div
-          className="denn-preview-edit__area"
-          ref={areaRef}
-          data-testid="preview-edit-area"
-          onPointerDown={(event) => {
-            if (event.pointerType === "touch" || event.button !== 0) return;
-            const slotId = activeEditable;
-            if (slotId === null) return;
-            const limit = built?.maxPan.get(slotId);
-            if (limit === undefined) return;
-            const point = logicalPoint(event.clientX, event.clientY);
-            if (point === null) return;
-            const started = getController().begin({
-              pointerId: event.pointerId,
-              point,
-              transform: transformOf(slotId),
-              maxPan: limit,
-            });
-            if (!started) return;
-            dragSlotRef.current = slotId;
-            try {
-              event.currentTarget.setPointerCapture(event.pointerId);
-            } catch {
-              // Capture is not optional (보완 라운드 1): without it a pointer that leaves the element
-              // stops delivering move/up here, so the session would hang half-open. End it now.
-              getController().abort("lostpointercapture");
-              dragSlotRef.current = null;
-            }
-          }}
-          onPointerMove={(event) => {
-            const controller = controllerRef.current;
-            if (controller === null || !controller.isDragging()) return;
-            const point = logicalPoint(event.clientX, event.clientY);
-            if (point === null) return;
-            controller.move(event.pointerId, point);
-          }}
-          onPointerUp={(event) => controllerRef.current?.end(event.pointerId, "pointerup")}
-          onPointerCancel={(event) => controllerRef.current?.end(event.pointerId, "pointercancel")}
-          onLostPointerCapture={(event) =>
-            controllerRef.current?.end(event.pointerId, "lostpointercapture")
-          }
-        >
-          <PreviewCanvasSurface
-            plan={plan}
-            imageBindings={imageBindings}
-            accessibleName={PREVIEW_CANVAS_NAME[productKind]}
-          />
-          {clockOverlay.view.kind !== "hidden" && clockOverlay.css !== null ? (
-            // spec 031 §2.7: a DOM overlay, NOT a canvas layer — the physical clock must never be
-            // painted into the plan. It is decorative for assistive tech and ignores the pointer,
-            // so it can neither be read out nor block the photo drag. The percentages are relative
-            // to the whole canvas box but were derived from the MAT rect (보완 1 §1).
+          {plan !== null ? (
+            // Mouse/pen drag only (spec 029 §접근성): a touch pointer is ignored and no global
+            // `touch-action: none` / unconditional preventDefault is added, so page and horizontal
+            // scrolling keep working and the browser zoom gesture is never intercepted.
             <div
-              className="denn-preview-clock"
-              data-testid="preview-clock"
-              aria-hidden="true"
-              style={{
-                left: `${clockOverlay.css.leftPercent}%`,
-                top: `${clockOverlay.css.topPercent}%`,
-                width: `${clockOverlay.css.widthPercent}%`,
+              className="denn-preview-edit__area"
+              ref={areaRef}
+              data-testid="preview-edit-area"
+              onPointerDown={(event) => {
+                if (event.pointerType === "touch" || event.button !== 0) return;
+                const slotId = activeEditable;
+                if (slotId === null) return;
+                const limit = built?.maxPan.get(slotId);
+                if (limit === undefined) return;
+                const point = logicalPoint(event.clientX, event.clientY);
+                if (point === null) return;
+                const started = getController().begin({
+                  pointerId: event.pointerId,
+                  point,
+                  transform: transformOf(slotId),
+                  maxPan: limit,
+                });
+                if (!started) return;
+                dragSlotRef.current = slotId;
+                try {
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                } catch {
+                  // Capture is not optional (보완 라운드 1): without it a pointer that leaves the element
+                  // stops delivering move/up here, so the session would hang half-open. End it now.
+                  getController().abort("lostpointercapture");
+                  dragSlotRef.current = null;
+                }
               }}
+              onPointerMove={(event) => {
+                const controller = controllerRef.current;
+                if (controller === null || !controller.isDragging()) return;
+                const point = logicalPoint(event.clientX, event.clientY);
+                if (point === null) return;
+                controller.move(event.pointerId, point);
+              }}
+              onPointerUp={(event) => controllerRef.current?.end(event.pointerId, "pointerup")}
+              onPointerCancel={(event) =>
+                controllerRef.current?.end(event.pointerId, "pointercancel")
+              }
+              onLostPointerCapture={(event) =>
+                controllerRef.current?.end(event.pointerId, "lostpointercapture")
+              }
             >
-              {clockOverlay.view.kind === "image" ? (
-                <img
-                  className="denn-preview-clock__image"
-                  src={clockOverlay.view.src}
-                  alt=""
-                  data-testid="preview-clock-image"
-                  onError={() =>
-                    setFailedClockSrc(
-                      clockOverlay.view.kind === "image" ? clockOverlay.view.src : null,
-                    )
-                  }
-                />
-              ) : (
-                <span className="denn-preview-clock__label" data-testid="preview-clock-label">
-                  {clockOverlay.view.label}
-                </span>
-              )}
+              <PreviewCanvasSurface
+                plan={plan}
+                imageBindings={imageBindings}
+                accessibleName={PREVIEW_CANVAS_NAME[productKind]}
+              />
+              {clockOverlay.view.kind !== "hidden" && clockOverlay.css !== null ? (
+                // spec 031 §2.7: a DOM overlay, NOT a canvas layer — the physical clock must never be
+                // painted into the plan. It is decorative for assistive tech and ignores the pointer,
+                // so it can neither be read out nor block the photo drag. The percentages are relative
+                // to the whole canvas box but were derived from the MAT rect (보완 1 §1).
+                <div
+                  className="denn-preview-clock"
+                  data-testid="preview-clock"
+                  aria-hidden="true"
+                  style={{
+                    left: `${clockOverlay.css.leftPercent}%`,
+                    top: `${clockOverlay.css.topPercent}%`,
+                    width: `${clockOverlay.css.widthPercent}%`,
+                  }}
+                >
+                  {clockOverlay.view.kind === "image" ? (
+                    <img
+                      className="denn-preview-clock__image"
+                      src={clockOverlay.view.src}
+                      alt=""
+                      data-testid="preview-clock-image"
+                      onError={() =>
+                        setFailedClockSrc(
+                          clockOverlay.view.kind === "image" ? clockOverlay.view.src : null,
+                        )
+                      }
+                    />
+                  ) : (
+                    <span className="denn-preview-clock__label" data-testid="preview-clock-label">
+                      {clockOverlay.view.label}
+                    </span>
+                  )}
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
-      ) : null}
 
-      {productKind === "frame" ? (
-        <div className="denn-print" data-testid="print-export">
-          <p className="denn-print__provisional" data-testid="print-provisional">
-            {PRINT_MESSAGES.provisional}
-          </p>
-          <button
-            type="button"
-            className="denn-print__button"
-            data-testid="print-download"
-            onClick={onExport}
-            disabled={!canExport}
-            aria-describedby={exportReason === null ? undefined : "denn-print-reason"}
-          >
-            {PRINT_MESSAGES.download}
-          </button>
-          {exportReason === null ? null : (
-            <p className="denn-print__reason" id="denn-print-reason" data-testid="print-reason">
-              {exportReason}
-            </p>
-          )}
-          {exportFailed ? (
-            <p className="denn-print__reason" role="alert" data-testid="print-failed">
-              {PRINT_MESSAGES.exportFailed}
-            </p>
+        {/* Every control the customer operates, in their existing order; the print block
+            stays last so it can never read as an order CTA above the preview. */}
+        <div className="denn-composer__controls-pane" data-testid="preview-controls-pane">
+          <fieldset className="denn-composer__group">
+            <legend className="denn-composer__legend">색상</legend>
+            {colorOptions.length === 0 ? (
+              <p className="denn-browse__notice">{PREVIEW_MESSAGES.noColors}</p>
+            ) : (
+              <div className="denn-composer__swatches">
+                {colorOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className="denn-composer__swatch"
+                    aria-pressed={color === option.value}
+                    data-testid={`preview-color-${option.value}`}
+                    onClick={() => setColor(option.value)}
+                  >
+                    <span
+                      className="denn-composer__swatch-dot"
+                      style={{ backgroundColor: option.value }}
+                      aria-hidden="true"
+                    />
+                    <span className="denn-composer__swatch-name">{option.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </fieldset>
+
+          {slotIds.length > 0 ? (
+            <fieldset className="denn-composer__group">
+              <legend className="denn-composer__legend">사진</legend>
+              <div className="denn-composer__slots">
+                {slotIds.map((slotId, index) => (
+                  <ImageSlot
+                    key={slotId}
+                    slotId={slotId}
+                    label={geometry?.kind === "case" ? zoneSlotLabel(index) : "사진"}
+                    onReport={report}
+                  />
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+
+          {slotIds.length > 0 ? (
+            <fieldset className="denn-composer__group" data-testid="preview-edit">
+              <legend className="denn-composer__legend">{PREVIEW_EDIT_LABELS.group}</legend>
+
+              {slotIds.length > 1 ? (
+                <fieldset className="denn-preview-edit__subgroup">
+                  <legend className="denn-composer__slot-label">
+                    {PREVIEW_EDIT_LABELS.slotGroup}
+                  </legend>
+                  {slotIds.map((slotId, index) => (
+                    <button
+                      key={slotId}
+                      type="button"
+                      className="denn-preview-edit__slot"
+                      aria-pressed={slotId === activeSlot}
+                      data-testid={`preview-edit-slot-${slotId}`}
+                      onClick={() => setActiveSlotId(slotId)}
+                    >
+                      <span>{zoneSlotLabel(index)}</span>
+                      {slotId === activeSlot ? (
+                        <span className="denn-preview-edit__active">
+                          {PREVIEW_EDIT_LABELS.activeSlot}
+                        </span>
+                      ) : null}
+                    </button>
+                  ))}
+                </fieldset>
+              ) : null}
+
+              {activeEditable === null ? (
+                <p className="denn-browse__notice">{PREVIEW_EDIT_LABELS.needsImage}</p>
+              ) : null}
+
+              <div className="denn-preview-edit__row">
+                <label className="denn-composer__slot-label" htmlFor="denn-preview-scale">
+                  {PREVIEW_EDIT_LABELS.scale}
+                </label>
+                <input
+                  id="denn-preview-scale"
+                  className="denn-preview-edit__range"
+                  data-testid="preview-scale"
+                  type="range"
+                  min={SCALE_PERCENT_MIN}
+                  max={SCALE_PERCENT_MAX}
+                  step={1}
+                  value={scaleToPercent(activeTransform.scale)}
+                  disabled={activeEditable === null}
+                  onChange={(event) => {
+                    const next = scaleFromPercent(Number(event.target.value));
+                    if (next === null) return;
+                    applyToActive((current) => withScale(current, next));
+                  }}
+                />
+                <span className="denn-composer__slot-state" data-testid="preview-scale-value">
+                  {scaleToPercent(activeTransform.scale)}%
+                </span>
+              </div>
+
+              <div className="denn-preview-edit__row">
+                <button
+                  type="button"
+                  className="denn-composer__clear"
+                  data-testid="preview-zoom-out"
+                  disabled={activeEditable === null}
+                  onClick={() => applyToActive((current) => zoomTransform(current, "out"))}
+                >
+                  {PREVIEW_EDIT_LABELS.zoomOut}
+                </button>
+                <button
+                  type="button"
+                  className="denn-composer__clear"
+                  data-testid="preview-zoom-in"
+                  disabled={activeEditable === null}
+                  onClick={() => applyToActive((current) => zoomTransform(current, "in"))}
+                >
+                  {PREVIEW_EDIT_LABELS.zoomIn}
+                </button>
+                <button
+                  type="button"
+                  className="denn-composer__clear"
+                  data-testid="preview-reset"
+                  disabled={activeEditable === null}
+                  onClick={() => applyToActive(() => resetTransform())}
+                >
+                  {PREVIEW_EDIT_LABELS.reset}
+                </button>
+              </div>
+
+              {/* spec 030: quarter turns only. Each press is exactly one step (modulo 4); scale and
+                normalized pan are untouched, so the framing survives the rotation. */}
+              <fieldset className="denn-preview-edit__subgroup">
+                <legend className="denn-composer__slot-label">
+                  {PREVIEW_EDIT_LABELS.rotateGroup}
+                </legend>
+                {(
+                  [
+                    ["preview-rotate-left", PREVIEW_EDIT_LABELS.rotateLeft, "left"],
+                    ["preview-rotate-right", PREVIEW_EDIT_LABELS.rotateRight, "right"],
+                  ] as const
+                ).map(([testId, label, direction]) => (
+                  <button
+                    key={testId}
+                    type="button"
+                    className="denn-composer__clear"
+                    data-testid={testId}
+                    disabled={activeEditable === null}
+                    onClick={() => applyToActive((current) => rotateTransform(current, direction))}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </fieldset>
+
+              {/* Real buttons host the keyboard pan: arrows (Shift = coarse) work whenever focus is
+                inside this group, and each button alone is enough for keyboard-only use. */}
+              <fieldset className="denn-preview-edit__subgroup" onKeyDown={onPanKeyDown}>
+                <legend className="denn-composer__slot-label">
+                  {PREVIEW_EDIT_LABELS.panGroup}
+                </legend>
+                {(
+                  [
+                    ["preview-pan-left", PREVIEW_EDIT_LABELS.panLeft, -1, 0],
+                    ["preview-pan-right", PREVIEW_EDIT_LABELS.panRight, 1, 0],
+                    ["preview-pan-up", PREVIEW_EDIT_LABELS.panUp, 0, -1],
+                    ["preview-pan-down", PREVIEW_EDIT_LABELS.panDown, 0, 1],
+                  ] as const
+                ).map(([testId, label, dirX, dirY]) => (
+                  <button
+                    key={testId}
+                    type="button"
+                    className="denn-composer__clear"
+                    data-testid={testId}
+                    disabled={activeEditable === null}
+                    onClick={(event) => {
+                      const step = event.shiftKey ? PAN_KEY_STEP_COARSE : PAN_KEY_STEP;
+                      applyToActive((current) => panTransform(current, dirX * step, dirY * step));
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </fieldset>
+            </fieldset>
+          ) : null}
+
+          {geometry?.kind === "frame" ? (
+            <fieldset className="denn-composer__group" data-testid="preview-text">
+              <legend className="denn-composer__legend">{PREVIEW_TEXT_COPY.group}</legend>
+              {textZones.length === 0 ? (
+                <p className="denn-browse__notice">{PREVIEW_TEXT_COPY.none}</p>
+              ) : (
+                // only the keys THIS template defines are offered; the rest are not rendered at all
+                textZones.map((zone) => {
+                  const inputId = `denn-preview-text-${zone.key}`;
+                  const hintId = `${inputId}-hint`;
+                  const value = texts[zone.key];
+                  const invalid = textError === zone.key;
+                  return (
+                    <div className="denn-preview-text__row" key={zone.key}>
+                      <label className="denn-composer__slot-label" htmlFor={inputId}>
+                        {PREVIEW_TEXT_LABELS[zone.key] ?? zone.key}
+                      </label>
+                      <input
+                        id={inputId}
+                        data-testid={`preview-text-${zone.key}`}
+                        className="denn-preview-text__input"
+                        type="text"
+                        value={value}
+                        maxLength={zone.maxChars}
+                        aria-describedby={hintId}
+                        aria-invalid={invalid || undefined}
+                        onChange={(event) => {
+                          // IME: a composing value is provisional, so it is not committed yet
+                          if (
+                            event.nativeEvent instanceof InputEvent &&
+                            event.nativeEvent.isComposing
+                          ) {
+                            return;
+                          }
+                          commitText(zone.key, event.target.value);
+                        }}
+                        onCompositionEnd={(event) => {
+                          // validated exactly once, when the composition finishes
+                          commitText(zone.key, event.currentTarget.value);
+                        }}
+                      />
+                      <span
+                        className="denn-composer__slot-state"
+                        id={hintId}
+                        data-testid={`preview-text-hint-${zone.key}`}
+                      >
+                        {invalid
+                          ? textTooLongMessage(zone.maxChars)
+                          : textLengthHint(value.length, zone.maxChars)}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </fieldset>
+          ) : null}
+          {productKind === "frame" ? (
+            <div className="denn-print" data-testid="print-export">
+              <p className="denn-print__provisional" data-testid="print-provisional">
+                {PRINT_MESSAGES.provisional}
+              </p>
+              <button
+                type="button"
+                className="denn-print__button"
+                data-testid="print-download"
+                onClick={onExport}
+                disabled={!canExport}
+                aria-describedby={exportReason === null ? undefined : "denn-print-reason"}
+              >
+                {PRINT_MESSAGES.download}
+              </button>
+              {exportReason === null ? null : (
+                <p className="denn-print__reason" id="denn-print-reason" data-testid="print-reason">
+                  {exportReason}
+                </p>
+              )}
+              {exportFailed ? (
+                <p className="denn-print__reason" role="alert" data-testid="print-failed">
+                  {PRINT_MESSAGES.exportFailed}
+                </p>
+              ) : null}
+            </div>
           ) : null}
         </div>
-      ) : null}
+      </div>
     </section>
   );
 }

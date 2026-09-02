@@ -9,7 +9,12 @@
 import type { CatalogDocumentV1 } from "@denn/shared";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { PreviewComposer } from "./PreviewComposer";
+import {
+  PreviewComposer,
+  readViewportHeight,
+  subscribeViewportHeight,
+  type ViewportHeightTarget,
+} from "./PreviewComposer";
 import { PreviewSection } from "./PreviewSection";
 
 const CASE_DOC = {
@@ -657,5 +662,176 @@ describe("PreviewComposer — local print download (spec 033)", () => {
     for (const leak of ["blob:", "INVALID_", "ENCODE_FAILED", "denn-frame-", ".png", "2480"]) {
       expect(printBlock.includes(leak), leak).toBe(false);
     }
+  });
+});
+
+// spec 085 §2 — the workbench. F-1 was "the customer must scroll past every control to see the
+// result", so the ORDER is the fix and it is asserted on the markup, not on a stylesheet: CSS
+// `order` could put the preview first visually while a screen reader still read it last.
+describe("PreviewComposer — workbench composition (spec 085)", () => {
+  const frameComposer = (): string =>
+    renderToStaticMarkup(
+      <PreviewComposer
+        productKind="frame"
+        document={frameDoc([{ id: "black", name: "블랙", fill: "#1A1A1A" }])}
+        modelId={null}
+        frameSizeId="fs1"
+        templateId="full"
+      />,
+    );
+
+  const indexOf = (markup: string, needle: string): number => {
+    const at = markup.indexOf(needle);
+    expect(at, `markup contains ${needle}`).toBeGreaterThan(-1);
+    return at;
+  };
+
+  it("puts the preview pane before the controls pane in the DOM", () => {
+    const markup = caseComposer();
+    expect(indexOf(markup, 'data-testid="preview-pane"')).toBeLessThan(
+      indexOf(markup, 'data-testid="preview-controls-pane"'),
+    );
+  });
+
+  it("keeps the status line inside the preview pane, above the controls", () => {
+    const markup = caseComposer();
+    expect(indexOf(markup, 'data-testid="preview-status"')).toBeGreaterThan(
+      indexOf(markup, 'data-testid="preview-pane"'),
+    );
+    expect(indexOf(markup, 'data-testid="preview-status"')).toBeLessThan(
+      indexOf(markup, 'data-testid="preview-controls-pane"'),
+    );
+  });
+
+  it("keeps the customer's control order unchanged inside the controls pane", () => {
+    const markup = frameComposer();
+    const controls = indexOf(markup, 'data-testid="preview-controls-pane"');
+    // the legends, not the words: "색상을 선택해 주세요." legitimately appears earlier, in the
+    // preview pane's status line, which is exactly where spec 085 puts it.
+    const colour = indexOf(markup, ">색상</legend>");
+    const photo = indexOf(markup, ">사진</legend>");
+    const edit = indexOf(markup, 'data-testid="preview-edit"');
+    const text = indexOf(markup, 'data-testid="preview-text"');
+    expect(controls).toBeLessThan(colour);
+    expect(colour).toBeLessThan(photo);
+    expect(photo).toBeLessThan(edit);
+    expect(edit).toBeLessThan(text);
+  });
+
+  it("keeps the print block last, after every control and never above the preview", () => {
+    const markup = frameComposer();
+    const print = indexOf(markup, 'data-testid="print-export"');
+    expect(print).toBeGreaterThan(indexOf(markup, 'data-testid="preview-text"'));
+    expect(print).toBeGreaterThan(indexOf(markup, 'data-testid="preview-controls-pane"'));
+    expect(print).toBeGreaterThan(indexOf(markup, 'data-testid="preview-pane"'));
+  });
+
+  it("still labels the section and every existing group", () => {
+    const markup = frameComposer();
+    expect(markup).toContain('aria-labelledby="denn-composer-title"');
+    expect(markup).toContain('id="denn-composer-title"');
+    expect(markup).toContain("미리보기");
+    for (const legend of ["색상", "사진", "사진 위치·크기", "문구 입력"]) {
+      expect(markup).toContain(legend);
+    }
+    // the panes are plain layout boxes: they add no role, no landmark and no tab stop
+    expect(markup).not.toContain('data-testid="preview-pane" role=');
+    expect(markup).not.toContain('data-testid="preview-controls-pane" role=');
+    expect(markup).not.toContain("tabindex");
+  });
+
+  it("uses no CSS `order`, so the visual order cannot drift from the DOM order", () => {
+    expect(caseComposer()).not.toContain("order:");
+  });
+
+  it("builds no Canvas on the server, where there is no viewport to size it against", () => {
+    expect(frameComposer()).not.toContain("<canvas");
+  });
+});
+
+// spec 085 §4 — the height source. Ports rather than jsdom, matching the clock ticker's contract.
+describe("viewport height subscription (spec 085)", () => {
+  interface FakeTarget extends ViewportHeightTarget {
+    innerHeight: number;
+    fire(kind: "window" | "visual"): void;
+    counts(): { window: number; visual: number };
+  }
+
+  const fakeTarget = (innerHeight: number, withVisualViewport = true): FakeTarget => {
+    const listeners = { window: new Set<() => void>(), visual: new Set<() => void>() };
+    const target = {
+      innerHeight,
+      addEventListener: (_type: "resize", listener: () => void) => {
+        listeners.window.add(listener);
+      },
+      removeEventListener: (_type: "resize", listener: () => void) => {
+        listeners.window.delete(listener);
+      },
+      visualViewport: withVisualViewport
+        ? {
+            addEventListener: (_type: "resize", listener: () => void) => {
+              listeners.visual.add(listener);
+            },
+            removeEventListener: (_type: "resize", listener: () => void) => {
+              listeners.visual.delete(listener);
+            },
+          }
+        : null,
+      fire: (kind: "window" | "visual") => {
+        for (const listener of [...listeners[kind]]) listener();
+      },
+      counts: () => ({ window: listeners.window.size, visual: listeners.visual.size }),
+    };
+    return target as FakeTarget;
+  };
+
+  it("reports the height immediately, then on each resize, and removes both listeners", () => {
+    const target = fakeTarget(800);
+    const seen: (number | null)[] = [];
+    const stop = subscribeViewportHeight(target, (height) => seen.push(height));
+
+    expect(seen).toEqual([800]);
+    expect(target.counts()).toEqual({ window: 1, visual: 1 });
+
+    target.innerHeight = 390;
+    target.fire("window");
+    target.innerHeight = 430;
+    target.fire("visual");
+    expect(seen).toEqual([800, 390, 430]);
+
+    stop();
+    expect(target.counts()).toEqual({ window: 0, visual: 0 });
+    target.fire("window");
+    target.fire("visual");
+    expect(seen).toEqual([800, 390, 430]);
+  });
+
+  it("leaves nothing behind across a StrictMode-style mount → unmount → mount", () => {
+    const target = fakeTarget(800);
+    const stopFirst = subscribeViewportHeight(target, () => undefined);
+    stopFirst();
+    const stopSecond = subscribeViewportHeight(target, () => undefined);
+    expect(target.counts()).toEqual({ window: 1, visual: 1 });
+    stopSecond();
+    expect(target.counts()).toEqual({ window: 0, visual: 0 });
+  });
+
+  it("works without `visualViewport` and still cleans up", () => {
+    const target = fakeTarget(844, false);
+    const seen: (number | null)[] = [];
+    const stop = subscribeViewportHeight(target, (height) => seen.push(height));
+    expect(seen).toEqual([844]);
+    expect(target.counts()).toEqual({ window: 1, visual: 0 });
+    stop();
+    expect(target.counts()).toEqual({ window: 0, visual: 0 });
+  });
+
+  it.each([
+    ["zero", 0],
+    ["negative", -800],
+    ["NaN", Number.NaN],
+    ["Infinity", Number.POSITIVE_INFINITY],
+  ])("has no height for a %s viewport (no default is invented)", (_label, innerHeight) => {
+    expect(readViewportHeight(fakeTarget(innerHeight))).toBeNull();
   });
 });

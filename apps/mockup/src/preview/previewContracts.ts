@@ -79,12 +79,73 @@ export const FRAME_MAX_LOGICAL_WIDTH = 500;
  * Frame logical width from the measured composer content box:
  * `max(1, round(min(contentBoxWidth, 500)))`. A non-finite or non-positive measurement is NOT a
  * width — the caller waits instead of inventing one.
+ *
+ * Width-only. The composer uses `resolveFramePreviewLogicalWidth` below, which additionally spends
+ * a viewport-height budget; this one stays as the Space viewer's contract, whose surface is not the
+ * composer workbench.
  */
 export function resolveFrameLogicalWidth(contentBoxWidth: number): number | null {
   if (typeof contentBoxWidth !== "number" || !Number.isFinite(contentBoxWidth)) return null;
   if (contentBoxWidth <= 0) return null;
   return Math.max(1, Math.round(Math.min(contentBoxWidth, FRAME_MAX_LOGICAL_WIDTH)));
 }
+
+/**
+ * Vertical CSS px the composer keeps for everything that is not the frame Canvas — the section
+ * title, the status line and the page's own padding (spec 085 §4).
+ */
+export const FRAME_PREVIEW_VIEWPORT_RESERVE_PX = 96;
+
+export interface FramePreviewSizeInput {
+  /** content box of the PREVIEW PANE, not of the whole composer. */
+  readonly contentBoxWidth: number;
+  /** the already-validated `FramePreviewGeometry.aspect` (H / W). Never re-read from the catalog. */
+  readonly aspect: number;
+  /** current browser viewport height in CSS px. */
+  readonly viewportHeight: number;
+}
+
+/**
+ * The frame preview's logical width when the Canvas must also fit the viewport's HEIGHT
+ * (spec 085 §4, closing spec 084 F-1's landscape symptom: a 683px Canvas in a 390px-tall viewport).
+ *
+ * The size is decided HERE, in the plan, because spec 022 requires the observed CSS size to equal
+ * `plan.logicalCanvas`. Shrinking the drawn result with a CSS transform, `max-height` or
+ * `object-fit` would leave the plan claiming a size the customer is not looking at, and the print
+ * export reads the same plan — so the geometry, not the presentation, is what gives way:
+ *
+ *   heightBudget       = floor(viewportHeight - 96)
+ *   heightLimitedWidth = floor(heightBudget / aspect)
+ *   logicalWidth       = max(1, round(min(contentBoxWidth, 500, heightLimitedWidth)))
+ *
+ * `null` — never a guessed default — whenever an input is not a usable measurement, whenever the
+ * budget leaves no room at all, or whenever the resulting Canvas would still be taller than the
+ * budget. The caller keeps its measuring state instead.
+ */
+export function resolveFramePreviewLogicalWidth(input: FramePreviewSizeInput): number | null {
+  const { contentBoxWidth, aspect, viewportHeight } = input;
+  if (!isUsableMeasurement(contentBoxWidth)) return null;
+  if (!isUsableMeasurement(aspect)) return null;
+  if (!isUsableMeasurement(viewportHeight)) return null;
+
+  const heightBudget = Math.floor(viewportHeight - FRAME_PREVIEW_VIEWPORT_RESERVE_PX);
+  if (heightBudget < 1) return null;
+
+  const heightLimitedWidth = Math.floor(heightBudget / aspect);
+  if (heightLimitedWidth < 1) return null;
+
+  const width = Math.max(
+    1,
+    Math.round(Math.min(contentBoxWidth, FRAME_MAX_LOGICAL_WIDTH, heightLimitedWidth)),
+  );
+  // The rounding above can only add half a pixel, but the invariant is what the E2E asserts, so it
+  // is checked rather than assumed: a Canvas that still overflows the budget is no size at all.
+  if (Math.round(width * aspect) > heightBudget) return null;
+  return width;
+}
+
+const isUsableMeasurement = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value) && value > 0;
 
 /** Fixed, customer-safe copy. Never a code, an id, a file name, a URL or an exception. */
 export const PREVIEW_MESSAGES = {
