@@ -7304,3 +7304,46 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `READY_FOR_CODEX`, fix_round 1, next `CODEX_SPEC_084_REVIEW_ROUND_2`. 후속 UI 보완·다음 스펙·실제
   Firebase/network/emulator/deploy는 시작하지 않았다. 전체 진행도 **85~88% / 잔여 12~15%**(변동 없음).
 
+## 2026-09-02 - Codex 스펙 084 보완 라운드 1 독립 재검수 — CODEX_PASSED
+
+- 검수 기준 `HEAD=origin=4027a5b`, ahead/behind 0/0. 승인 후보 `cb1a600`. 변경은 허용된 audit test,
+  spec-084 결과와 문서뿐이고 제품 source·package/lockfile·Rules/config committed diff 0.
+- 결과 개수는 `measurements.json` 18건 = PNG 15장 + measurement-only 3건, PNG provenance route 7 /
+  component-in-fixture 8 / fixture-only 0. 44px 표는 C5 select **F-5**를 정확히 참조한다.
+- 고정 시각이 첫 `goto` 전에 적용됨을 코드로 확인하고 composer PNG의 `09:30`을 직접 확인했다.
+  timeout·retry·skip·screenshot tolerance 추가 0.
+- Codex 독립 `node scripts/check.mjs` PASS(unit **2466/2466**, 92파일, build 2개). canonical Chromium
+  **203/203 PASS를 연속 2회** 실행했고 PNG 15장과 `measurements.json` SHA-256이 모두 동일했다.
+- `git diff --check` PASS, forbidden committed diff 0, 포트 4183/4184/4185/8080/9099/9199 및 temp 잔류
+  0. 보호 spec-018 PNG와 기존 Founder/user dirty는 restore/stage/commit하지 않았다.
+- 추가 제품 결함 0. 상태 `CODEX_PASSED`, next `CLAUDE_SPEC_084_CLOSURE`. 다음은 문서 전용 종료이며 후속
+  UI 보완·다음 스펙·실제 Firebase/network/emulator/deploy는 시작하지 않는다. 전체 진행도
+  **85~88% / 잔여 12~15% — 변동 없음**.
+
+## 2026-09-02 - Claude 스펙 084 문서 전용 종료 (DONE / CODEX_PASSED)
+
+- Codex 라운드 2 `CODEX_PASSED`를 받아 **문서만** 종료 상태로 맞췄다. 제품 코드·test·PNG·
+  `measurements.json`·Rules/Firebase config·package/lockfile 수정 **0**, 게이트 재실행 **0**. 변경 파일은
+  `docs/rebuild/specs/084-local-visual-readiness-audit.md`,
+  `docs/handoff/2026-08-31-spec-084-local-visual-readiness-audit-handoff.md`,
+  `Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`,
+  `docs/codex-claude-handoff/CURRENT.md`, 이 로그뿐이다.
+- 승인 근거(Codex 독립 실측 인용, 재실행 없음): `HEAD=origin=4027a5b`, 승인 후보 `cb1a600`,
+  ahead/behind 0/0, 허용 범위 밖 committed diff 0. `node scripts/check.mjs` PASS(unit **2466/2466**,
+  92파일, build 2개), canonical Chromium **203/203 연속 2회 PASS**, 두 실행의 spec-084 PNG **15장**과
+  `measurements.json` SHA-256 전부 동일, `git diff --check`·forbidden diff·포트
+  4183/4184/4185/8080/9099/9199·temp 잔류 PASS, 추가 제품 결함 0. 고정 시각이 첫 `goto` 이전에 적용됨과
+  composer 증거의 `09:30`도 Codex가 직접 확인했다.
+- 상태 전환: `completed_unit = spec-084-local-visual-readiness-audit — DONE / CODEX_PASSED /
+  LOCAL_VERIFIED / NO_LIVE_NETWORK`, `active_unit: none`, `state: WAITING_FOR_NEXT_MANUAL_TASK`,
+  `next_transition: FOUNDER_NEXT_MANUAL_TASK`. NEXT 과거 지시문의 손상된 `C:` + `epo\denn-products`도
+  정확한 `C:\repo\denn-products`로 바로잡았다.
+- 남은 것: 감사 finding 8건(P1 5 — composer 미리보기 위치 · 스타일 없는 영어 파일 선택 · Space 인증 후
+  잔존 안내 · admin 제품 route가 데모 셸 · C5 select 23px, P2 3건)은 **분류만** 되어 있고 제품 UI 수정은
+  0이다. `NOT TESTED`(제품 entry의 Space·C5/발급 panel, C5 쓰기 실패 상태, 실기기 Safari/Android·preview
+  channel·운영 데이터)도 그대로다. 후속 UI 보완 범위와 스펙 번호는 Codex 스펙과 Founder 결정이 정한다.
+- 보호 대상(`taste-v2/**`·design README·spec 038·spec 018 PNG 2장·`packages/render/src/plan/index.ts`·
+  `pnpm-workspace.yaml`·`AGENTS.md`)과 기존 Founder/user dirty는 restore·checkout·stage·commit **0**.
+  실제 Firebase/network/emulator/deploy·실기기·preview channel은 시작하지 않았다. 전체 진행도
+  **85~88% / 잔여 12~15%**(변동 없음).
+

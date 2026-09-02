@@ -1,19 +1,62 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `WAITING_FOR_NEXT_MANUAL_TASK`
 
-- active_unit: `spec-084-local-visual-readiness-audit` — 감사 `3c2e9f8`, 보완 라운드 1 `cb1a600`
-- completed_unit: `spec-083-admin-space-v2-issue-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**
-- 기준: 검수 시작 `HEAD=origin=b903976` → 보완 후 `HEAD=origin`, ahead/behind `0/0`
-- next_transition: `CODEX_SPEC_084_REVIEW_ROUND_2`
-- fix_round: `1` (최대 3)
+- completed_unit: `spec-084-local-visual-readiness-audit` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**
+- 그 직전 완료: `spec-083-admin-space-v2-issue-ui` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**
+- active_unit: **없음**
+- 기준: 승인 후보 `cb1a600`, 종료 시 `HEAD=origin=4027a5b`, ahead/behind `0/0`
+- next_transition: `FOUNDER_NEXT_MANUAL_TASK`
+- fix_round: `0` (스펙 084는 라운드 1로 마감)
 - 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (감사 단위이므로 변동 없음)
 
-## 지금 수행할 작업 — 없음. Codex 검수 라운드 2 대기
+## 지금 수행할 작업 — 없음. Founder 지시 대기
 
-스펙 084 `CORRECTION_REQUIRED` 라운드 1의 네 항목을 모두 처리하고 멈췄다. 후속 UI 보완 단위, 다음 스펙,
-실제 Firebase/network/emulator/deploy·실기기·preview channel은 **자동으로 시작하지 않는다**. 다음 범위는
-Codex 검수 라운드 2와 Founder 결정이 정한다.
+스펙 084는 문서 전용 종료까지 끝났다. **다음 단위는 자동으로 시작하지 않는다.** 후속 UI 보완, 다음 스펙,
+실제 Firebase/network/emulator/deploy, 실기기·preview channel은 전부 Codex 스펙과 Founder 결정이 열어야
+한다.
+
+## 스펙 084 종료 (수행 완료)
+
+Codex 라운드 2 `CODEX_PASSED`를 받아 **문서만** 종료 상태로 맞췄다. 제품 코드·test·PNG·
+`measurements.json`·Rules/Firebase config·package/lockfile 수정 **0**, 게이트 재실행 **0**. 변경 파일은
+spec 084, 그 handoff, `Automation/DENN_AUTOMATION_STATE.md`, 이 파일,
+`docs/codex-claude-handoff/CURRENT.md`, `docs/live/CLAUDE_LIVE_PATCH_LOG.md`뿐이다.
+
+**승인 근거(Codex 독립 실측, 그대로 인용).** `HEAD=origin=4027a5b`, 승인 후보 `cb1a600`, ahead/behind
+`0/0`, 허용 범위 밖 committed diff **0**. `node scripts/check.mjs` **PASS**(unit **2466/2466**, 92 파일,
+build 2개). canonical Chromium **203/203 PASS 연속 2회**, 두 실행에서 spec-084 PNG **15장**과
+`measurements.json`의 SHA-256이 **모두 동일**. `git diff --check` PASS, forbidden diff 0, 포트
+4183/4184/4185/8080/9099/9199 및 temp 잔류 **0**. 고정 시각이 첫 제품 `goto` 이전에 적용됨과 composer
+증거의 `09:30`을 Codex가 직접 확인했고, 추가 제품 결함은 **0**이다.
+
+**결과 확정치.** `measurements.json` **18건 = PNG 15장 + measurement-only 3건**, PNG provenance
+`PRODUCT_ROUTE` **7** / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` **8** / `FIXTURE_CONTROL_ONLY` **0**.
+감사 보고서의 44px 미만 target 2건은 C5 select **F-5**를 참조한다.
+
+**이 단위가 닫지 않은 것.** 감사 finding **8건(P1 5 / P2 3)** 은 **분류만** 되어 있고 제품 UI 수정은
+**0**이다 — composer 미리보기가 모든 컨트롤 아래, 스타일 없는 영어 파일 선택(고객·운영자 공통), Space
+인증 후 잔존 안내와 제목 2개, admin 제품 route가 아직 데모 셸, C5 select 23px, 그리고 P2 3건. `NOT
+TESTED`(제품 entry의 고객 Space·운영자 C5/발급 panel, C5 dirty/conflict/save-error, 실기기
+Safari/Android·preview channel·운영 데이터)도 그대로다. 수정 범위와 스펙 번호는 Founder 결정 사항이다.
+
+**보호 대상.** `docs/rebuild/design/taste-v2/**`, design README, spec 038, spec 018 PNG 2장,
+`packages/render/src/plan/index.ts`, `pnpm-workspace.yaml`, `AGENTS.md`와 기타 기존 Founder/user dirty는
+restore·checkout·stage·commit **0**으로 그대로 남겼다.
+
+> 직전 지시문(스펙 084 문서 전용 종료, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 CODEX_PASSED된 스펙 084 문서 전용 종료만 수행해. 제품 코드·test·PNG를 수정하거나 게이트를 재실행하지 말고, 문서 commit을 일반 fast-forward push한 뒤 WAITING_FOR_NEXT_MANUAL_TASK에서 멈춰.
+```
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 지시 — 스펙 084 CORRECTION_REQUIRED 라운드 1 (수행 완료)
+
+#### 그 시점의 결과 요약(기록)
 
 ## 보완 라운드 1 결과 (수행 완료)
 
@@ -66,8 +109,7 @@ README), `docs/codex-claude-handoff/reviews/2026-08-31-spec-084-local-visual-rea
 > 직전 지시문(스펙 084 보완 라운드 1, 수행 완료 — 기록):
 
 ```text
-C:
-epo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 처음부터 끝까지 읽고, 명시된 스펙 084 CORRECTION_REQUIRED 라운드 1 범위만 구현·검증해. 기존 Codex 검수 문서와 E2E가 생성한 PNG 변경을 이어서 처리하고, 보호 대상과 기존 Founder/user dirty는 restore·checkout·stage·commit하지 마. 제품 UI/CSS, 실제 Firebase/network/emulator/deploy, 다음 스펙은 시작하지 마. 완료 결과를 STATE/NEXT/CURRENT/live log에 동기화하고 일반 fast-forward commit/push한 뒤 READY_FOR_CODEX에서 멈춰.
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 처음부터 끝까지 읽고, 명시된 스펙 084 CORRECTION_REQUIRED 라운드 1 범위만 구현·검증해. 기존 Codex 검수 문서와 E2E가 생성한 PNG 변경을 이어서 처리하고, 보호 대상과 기존 Founder/user dirty는 restore·checkout·stage·commit하지 마. 제품 UI/CSS, 실제 Firebase/network/emulator/deploy, 다음 스펙은 시작하지 마. 완료 결과를 STATE/NEXT/CURRENT/live log에 동기화하고 일반 fast-forward commit/push한 뒤 READY_FOR_CODEX에서 멈춰.
 ```
 
 ---

@@ -2,11 +2,11 @@
 
 ## 상태
 
-- `READY_FOR_CODEX` — Codex 검수 라운드 1 보완 완료(2026-08-31), 결과는 아래 `보완 라운드 1 결과` 절
-- active unit: `spec-084-local-visual-readiness-audit`, fix_round `1`
-- 기준: 검수 시작 `HEAD=origin=b903976`, ahead/behind `0/0`
+- `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK` — 문서 전용 종료 완료(2026-09-02)
+- active unit: 없음. 이 단위는 종료됐다(fix_round `1`로 마감)
+- 기준: 승인 후보 `cb1a600`, 종료 시 `HEAD=origin=4027a5b`, ahead/behind `0/0`
 - 직전 완료: spec 083 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
-- next: `CODEX_SPEC_084_REVIEW_ROUND_2`
+- next: `FOUNDER_NEXT_MANUAL_TASK`
 
 ## 목적
 
@@ -108,4 +108,26 @@ Firebase/network/emulator/deploy 0, 다음 스펙 0.
   canonical E2E가 다시 썼고 stage/restore 0: desktop `ace8d75b…` → 1회차 무변경 → 2회차 `4a1f9fe8…`,
   mobile `6bdcb88c…` → 두 회차 무변경.
 - 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_084_REVIEW_ROUND_2`. 후속 UI 보완·다음 스펙·실제
+  Firebase/network/emulator/deploy는 시작하지 않았다.
+
+## 종료 — 문서 전용 closure (2026-09-02)
+
+Codex 라운드 2가 `CODEX_PASSED`를 냈고, 이 종료에서는 문서만 맞췄다. 제품 코드·test·PNG·
+`measurements.json`·Rules/config·package/lockfile 수정 **0**, 게이트 재실행 **0**이다.
+
+- 승인 근거(Codex 독립 실측): `HEAD=origin=4027a5b`, 승인 후보 `cb1a600`, ahead/behind 0/0, 허용 범위
+  밖 committed diff 0. `node scripts/check.mjs` PASS(unit **2466/2466**, 92파일, build 2개), canonical
+  Chromium **203/203 연속 2회 PASS**, 두 실행의 PNG **15장**과 `measurements.json` SHA-256 전부 동일,
+  `git diff --check`·forbidden diff·포트·temp 잔류 PASS. composer 증거의 `09:30`과 고정 시각이 첫
+  `goto` 이전에 적용됨을 Codex가 직접 확인했다. 추가 제품 결함 0.
+- 결과 개수·등급은 `measurements.json` 18건 = PNG 15장 + measurement-only 3건, PNG provenance
+  route **7** / component-in-fixture **8** / fixture-only **0**으로 확정됐고, 감사 보고서 44px 표는
+  **F-5**를 참조한다.
+- 보호 대상(`taste-v2/**`, design README, spec 038, spec 018 PNG 2장,
+  `packages/render/src/plan/index.ts`, `pnpm-workspace.yaml`, `AGENTS.md`)과 기존 Founder/user dirty는
+  restore·checkout·stage·commit **0**이다.
+- 남은 것: finding 8건(P1 5 / P2 3)은 분류만 되어 있고 제품 UI 수정은 0이다. 후속 UI 보완 범위·스펙
+  번호와 `NOT TESTED` 항목(제품 entry의 Space·C5·발급 panel, C5 쓰기 실패 상태, 실기기·preview
+  channel·운영 데이터)은 Codex 스펙과 Founder 결정이 정한다.
+- 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙과 실제
   Firebase/network/emulator/deploy는 시작하지 않았다.

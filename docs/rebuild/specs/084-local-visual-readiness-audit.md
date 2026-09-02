@@ -2,8 +2,8 @@
 
 ## 상태
 
-- `READY_FOR_CODEX` — Codex 검수 라운드 1의 네 항목을 보완 완료(2026-08-31). 결과는 이 문서 맨 아래
-  `DONE (Claude) — 보완 라운드 1` 절에 있다. next `CODEX_SPEC_084_REVIEW_ROUND_2`.
+- `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK` — 문서 전용 종료 완료(2026-09-02).
+  승인 후보 `cb1a600`, 종료 시 `HEAD=origin=4027a5b`. 후속 단위는 Founder 지시로만 시작한다.
 - 기준 브랜치: `rebuild/modern-studio`
 - 기준 commit: `HEAD=origin=94db3e27ec489315b93dbb8429ff93b975ad217f`, ahead/behind `0/0`
 - 직전 완료: spec 083 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
@@ -388,3 +388,50 @@ spec 018 결과는 이 단위의 허용 파일이 아니므로 결정화 대상�
 
 상태는 `READY_FOR_CODEX`, next `CODEX_SPEC_084_REVIEW_ROUND_2`에서 멈춘다. 후속 UI 보완 단위와 다음
 스펙은 시작하지 않았다.
+
+### CODEX REVIEW ROUND 2 — CODEX_PASSED (2026-09-02)
+
+검수 기준 `HEAD=origin=4027a5b`, 승인 후보 `cb1a600`, ahead/behind 0/0. 허용 범위 밖 committed diff는
+0이다. 결과 개수·provenance·F-5 참조가 정확하고 고정 시각은 첫 제품 `goto` 전에 적용된다. composer
+PNG에서 `09:30`을 직접 확인했다.
+
+Codex 독립 `node scripts/check.mjs`는 unit 2466/2466 포함 PASS했다. canonical Chromium은 203/203을
+연속 2회 PASS했고 두 실행의 PNG 15장과 `measurements.json` SHA-256이 모두 동일했다. `git diff --check`,
+forbidden diff, 포트·temp 잔류 검사도 PASS했다. 추가 제품 결함은 없다.
+
+스펙 084는 `CODEX_PASSED`다. 다음은 문서 전용 closure이며 제품 코드·test·PNG를 더 수정하거나 게이트를
+재실행하지 않는다. 후속 UI 보완·다음 스펙·실제 Firebase/network/emulator/deploy는 시작하지 않는다.
+
+### CLOSED (Claude) — 스펙 084 문서 전용 종료 (2026-09-02)
+
+Codex 라운드 2 `CODEX_PASSED`를 받아 문서만 종료 상태로 맞췄다. 이 종료에서 제품 코드·test·PNG·
+`measurements.json`·Rules/config·package/lockfile은 **한 줄도 수정하지 않았고 게이트도 재실행하지
+않았다**. 변경은 이 spec, handoff, `Automation/DENN_AUTOMATION_STATE.md`,
+`Automation/NEXT_CLAUDE_PROMPT.md`, `docs/codex-claude-handoff/CURRENT.md`,
+`docs/live/CLAUDE_LIVE_PATCH_LOG.md`뿐이다.
+
+**승인 근거(Codex 독립 실측, 재실행하지 않고 그대로 인용).**
+
+- 검수 기준 `HEAD=origin=4027a5b`, 승인 후보 `cb1a600`, ahead/behind `0/0`. 허용 범위 밖 committed
+  diff **0**(제품 source·package/lockfile·Rules/config **0**).
+- `node scripts/check.mjs` **PASS** — unit **2466/2466**, 92 파일, build 2개.
+- canonical Chromium **203/203 PASS를 연속 2회**. 두 실행에서 spec-084 PNG **15장**과
+  `measurements.json`의 SHA-256이 **모두 동일**.
+- 결과 개수 `measurements.json` 18건 = PNG 15장 + measurement-only 3건, PNG provenance
+  `PRODUCT_ROUTE` 7 / `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` 8 / `FIXTURE_CONTROL_ONLY` 0. 감사
+  보고서 44px 표는 C5 select **F-5**를 참조한다.
+- 고정 시각이 첫 제품 `goto` 이전에 적용됨을 코드로 확인했고 composer 증거의 `09:30`을 직접 확인했다.
+  timeout·retry·skip·screenshot tolerance 추가 **0**.
+- `git diff --check` PASS, forbidden diff 0, 포트 4183/4184/4185/8080/9099/9199 및 temp 잔류 0. 보호
+  spec-018 PNG와 기존 Founder/user dirty는 restore·checkout·stage·commit **0**.
+- 실제 Firebase/project/bucket/network/emulator/UID/deploy·실기기·preview channel은
+  **NOT TESTED / FORBIDDEN** 그대로다.
+
+**남은 것(이 단위가 닫지 않은 것).** 감사가 기록한 finding 8건(P1 5 / P2 3)은 **분류만** 되어 있고 제품
+UI는 하나도 고치지 않았다. §6의 후속 후보 목록은 승인이 아니며, 실제 수정 범위와 스펙 번호는 Codex
+스펙과 Founder 결정이 정한다. `NOT TESTED` 항목(제품 entry의 Space·C5·발급 panel, C5 쓰기 실패 상태,
+실기기·preview channel·운영 데이터)도 그대로 남아 있다.
+
+상태 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`, active unit 없음,
+next `FOUNDER_NEXT_MANUAL_TASK`. 후속 UI 보완 단위·다음 스펙·실제 Firebase/network/emulator/deploy는
+시작하지 않았다.

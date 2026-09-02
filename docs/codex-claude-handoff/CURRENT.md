@@ -1,5 +1,28 @@
 # 현재 상태
 
+> **최신 포인터 (2026-09-02): spec 084 종료 = DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK.**
+> 문서 전용 종료다. 제품 코드·test·PNG·`measurements.json`·Rules/config·package/lockfile 수정 **0**,
+> 게이트 재실행 **0**이며 변경은 spec 084·handoff·STATE/NEXT/CURRENT/live log뿐이다. 승인 근거는 Codex
+> 독립 실측 그대로다 — `HEAD=origin=4027a5b`, 승인 후보 `cb1a600`, ahead/behind 0/0, 허용 범위 밖
+> committed diff 0, `node scripts/check.mjs` PASS(unit **2466/2466**, 92파일, build 2개), canonical
+> Chromium **203/203 연속 2회 PASS**, 두 실행의 PNG **15장**과 `measurements.json` SHA-256 전부 동일,
+> `git diff --check`·forbidden diff·포트·temp 잔류 PASS, 추가 제품 결함 0.
+> **active unit 없음**: `state: WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`.
+> 감사 finding 8건(P1 5 / P2 3)은 여전히 **분류만** 되어 있고 제품 UI 수정은 0이다. 후속 UI 보완 범위와
+> 스펙 번호, `NOT TESTED` 항목(제품 entry의 Space·C5·발급 panel, C5 쓰기 실패 상태, 실기기·preview
+> channel·운영 데이터)은 Codex 스펙과 Founder 결정이 정한다. 다음 스펙·실제 Firebase/network/emulator/
+> deploy는 자동으로 시작하지 않는다. 전체 진행도 **85~88% / 잔여 12~15% — 변동 없음**.
+
+> **최신 포인터 (2026-09-02): spec 084 보완 라운드 1 Codex 독립 재검수 = CODEX_PASSED.**
+> `HEAD=origin=4027a5b`, 승인 후보 `cb1a600`, ahead/behind 0/0. 허용 범위 밖 committed diff 0.
+> 개수·provenance·F-5 참조가 정확하고 고정 시각은 첫 `goto` 이전에 적용되며 composer PNG의 `09:30`을
+> 직접 확인했다. 독립 `node scripts/check.mjs` PASS(unit **2466/2466**, 92파일, build 2개), canonical
+> Chromium **203/203 연속 2회 PASS**. 두 실행의 PNG 15장과 `measurements.json` SHA-256이 모두 동일했다.
+> `git diff --check` PASS, forbidden diff·포트·temp 잔류 0. 보호 대상과 기존 dirty는 restore/stage하지
+> 않았다. 상태 `CODEX_PASSED`, next `CLAUDE_SPEC_084_CLOSURE`. 다음은 문서 전용 종료이며 UI 보완·다음
+> 스펙·실제 Firebase/network/emulator/deploy는 시작하지 않는다. 전체 진행도 **85~88% / 잔여
+> 12~15% — 변동 없음**.
+
 > **최신 포인터 (2026-08-31): spec 084 보완 라운드 1 완료 = READY_FOR_CODEX.**
 > 보완 commit `cb1a600`, 기록 commit은 이 갱신이다. Codex 라운드 1의 네 항목만 처리했고 제품
 > source/CSS·fixture·기존 test/config/script·package/lockfile/workspace·Rules diff **0**이다.

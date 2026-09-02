@@ -1,28 +1,61 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-08-31
+updated_at: 2026-09-02
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-083-admin-space-v2-issue-ui   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: spec-084-local-visual-readiness-audit   # correction round 1 applied in cb1a600; awaiting Codex review round 2
-state: READY_FOR_CODEX
+completed_unit: spec-084-local-visual-readiness-audit   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
+active_unit: none   # spec 084 closed document-only; the next unit is a Founder decision
+state: WAITING_FOR_NEXT_MANUAL_TASK
 baseline_commit: 94db3e2   # HEAD=origin when the spec 084 contract was written
 candidate_commit: cb1a600  # spec 084 correction round 1 (audit evidence was 3c2e9f8, contract docs 6304cfb)
-verified_commit: null      # Codex has not passed spec 084 yet
-origin_relation: "HEAD=origin after the correction and record pushes, ahead/behind 0/0"
-working_tree: "protected spec-018 PNGs (rewritten by the canonical E2E, start/end hashes recorded) and pre-existing Founder/user dirty; all unstaged"
-fix_round: 1
+verified_commit: cb1a600   # Codex independent review round 2 passed
+origin_relation: "HEAD=origin after the closure push, ahead/behind 0/0"
+working_tree: "protected spec-018 PNGs (rewritten by an earlier canonical E2E, start/end hashes recorded) and pre-existing Founder/user dirty; all unstaged"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_084_REVIEW_ROUND_2
+next_transition: FOUNDER_NEXT_MANUAL_TASK
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 084 correction round 1 complete - counts/provenance/cross-reference corrected and all 15 audit PNGs byte-reproducible across two consecutive canonical runs; product UI/CSS change still not authorized
+session_status: spec 084 closed (DONE/CODEX_PASSED); no active unit - the 8 recorded UI findings are classified only and product UI/CSS work, the next spec and live Firebase/network/deploy all remain unauthorized
 commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Claude 스펙 084 문서 전용 종료 (2026-09-02)
+
+- Codex 라운드 2 `CODEX_PASSED`를 받아 **문서만** 종료 상태로 맞췄다. 제품 코드·test·PNG·
+  `measurements.json`·Rules/config·package/lockfile 수정 **0**, 게이트 재실행 **0**. 변경 파일은 spec
+  084, 그 handoff, 이 STATE, NEXT, CURRENT, live log뿐이다.
+- 승인 근거(Codex 독립 실측 인용): `HEAD=origin=4027a5b`, 승인 후보 `cb1a600`, ahead/behind 0/0, 허용
+  범위 밖 committed diff 0. `node scripts/check.mjs` PASS(unit **2466/2466**, 92파일, build 2개),
+  canonical Chromium **203/203 연속 2회 PASS**, 두 실행의 PNG **15장**과 `measurements.json` SHA-256 전부
+  동일, `git diff --check`·forbidden diff·포트·temp 잔류 PASS, 추가 제품 결함 0.
+- `completed_unit`을 `spec-084-local-visual-readiness-audit — DONE / CODEX_PASSED / LOCAL_VERIFIED /
+  NO_LIVE_NETWORK`로 바꾸고 `active_unit: none`, `state: WAITING_FOR_NEXT_MANUAL_TASK`,
+  `next_transition: FOUNDER_NEXT_MANUAL_TASK`로 종료했다. NEXT의 과거 지시문에서 줄바꿈으로 손상돼
+  있던 `C:` + `epo\denn-products`도 정확한 `C:\repo\denn-products`로 바로잡았다.
+- 남은 것: 감사 finding 8건(P1 5 / P2 3)은 분류만 되어 있고 제품 UI 수정은 0이다. 후속 UI 보완 범위와
+  스펙 번호, `NOT TESTED` 항목은 Codex 스펙과 Founder 결정이 정한다.
+- 보호 대상과 기존 Founder/user dirty는 restore·checkout·stage·commit 0. 전체 진행도
+  **85~88% / 잔여 12~15% — 변동 없음**.
+
+## Codex 스펙 084 보완 라운드 1 독립 재검수 — CODEX_PASSED (2026-09-02)
+
+- 검수 기준 `HEAD=origin=4027a5b`, ahead/behind 0/0. 승인 후보 `cb1a600`과 기록 commit `4027a5b`의 변경은
+  허용된 audit test·spec-084 결과·문서뿐이며 제품 source·package/lockfile·Rules/config diff 0이다.
+- 실제 결과는 `measurements.json` 18건 = PNG 15장 + measurement-only 3건, PNG provenance route 7 /
+  component-in-fixture 8 / fixture-only 0이고 감사 보고서 44px 표는 C5 select F-5를 정확히 참조한다.
+- 고정 시각은 첫 `goto` 이전에 적용되고 composer 증거에서 `09:30`을 직접 확인했다. timeout·retry·skip·
+  screenshot tolerance 추가 0이다.
+- Codex 독립 `node scripts/check.mjs` PASS(unit **2466/2466**, 92파일, build 2개). canonical Chromium
+  **203/203 PASS를 연속 2회** 실행했고 PNG 15장과 `measurements.json` SHA-256이 두 실행에서 모두 동일했다.
+- `git diff --check` PASS, forbidden committed diff 0, 포트 4183/4184/4185/8080/9099/9199 및 temp 잔류 0.
+  보호 spec-018 PNG와 기존 Founder/user dirty는 restore/stage/commit하지 않았다.
+- 추가 제품 결함 0. 상태 `CODEX_PASSED`, next `CLAUDE_SPEC_084_CLOSURE`. 다음은 문서 전용 종료이며 UI
+  보완·다음 스펙·실제 Firebase/network/emulator/deploy는 시작하지 않는다.
 
 ## Claude 스펙 084 보완 라운드 1 (2026-08-31)
 
