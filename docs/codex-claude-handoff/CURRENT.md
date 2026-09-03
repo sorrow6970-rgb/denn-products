@@ -1,5 +1,31 @@
 # 현재 상태
 
+> **최신 포인터 (2026-09-03): spec 086 구현·검증 완료 = READY_FOR_CODEX.**
+> 계약 `d7408b2`, 제품/test/PNG `8c7b7ff`, 문서 commit은 이 갱신이다(제품과 문서 분리). 스펙 084 P1
+> **F-5**를 닫았다 — 운영자 C5 편집기의 `액자 사이즈` `<select>`가 컴포넌트 전용 stylesheet
+> (`apps/admin/src/admin-write/frame-print-size-editor.css`, 클래스
+> `denn-frame-print-size-editor__select`)로 바로 아래 `TextField`와 같은 표면을 갖는다: `min-height:
+> 44px`, `width: 100%`, `1px var(--line)`, `var(--radius)`, `var(--surface)`, `var(--ink)`,
+> `font: inherit`, `:focus-visible` 3px `var(--accent-ink)` + offset 2px, disabled `not-allowed` +
+> `opacity: .55`. **native select를 유지**했고 `appearance`도 재설정하지 않았다(disclosure arrow는 목록이
+> 열린다는 유일한 시각 단서다). label/id·`data-testid`·option 값/순서/문구·legacy disabled·자동 첫 선택
+> 0·C5 load/save/CAS 의미는 무변경이고 global `select` selector·`@denn/ui`·`space-v2/**` 수정은 0이다.
+> `node scripts/check.mjs` PASS(unit **2502/2502**, 92파일, build 2개), canonical Chromium
+> **220 passed / 0 failed / 0 skipped / 0 retry**(기존 218 + 신규 2), `git diff --check` PASS, 포트/temp
+> 잔류 0. 신규 Chromium 2건은 두 viewport에서 44px·containment·overflow 0·Tab focus ring·disabled 단서·
+> 선택 계약·axe·console·network를 단언한다. **범위 안 정정 1건**: axe 페이지 전체 스캔은 이 fixture의
+> 진단 section(`fixture-status`/`fixture-expected-base`, `--muted` on `--bg`, 대비 4.39:1)이 내는
+> `color-contrast` serious 때문에 실패하므로, 스펙 084 §3의 fixture-control 원칙에 맞춰 스캔을
+> `[data-testid="frame-print-size-editor"]`로 좁혔다(단언은 그대로 0건 요구). 증거는 canonical이 다시 쓴
+> C5 PNG 2장(`30ab97fe…` → `2f70c95e…`, `8d685ce5…` → `b9765d7c…`)이고 **다른 tracked spec-084 PNG 변경
+> 0**, `measurements.json`의 두 C5 항목 `smallTargets` **0건**(감사 당시 518x23 · 316x23)이다. 감사
+> 보고서에 §10 F-5 해소 addendum을 남겼고 F-6 철회·F-8 재분류는 그대로다. bundle은 **고객 entry 파일명
+> 해시까지 무변경**(`index-eQgqaWiH.js` 341.94 kB), 운영자 295.32 → **295.37 kB**·CSS 10.80 →
+> **11.24 kB**. 보호 대상 hash 동일·stage 0이며 spec 018 PNG는 canonical이 다시 썼다(desktop
+> `a5dbdf93…` → `99e5e410…`, 기존 비결정성). F-2·F-3·F-4·F-7·F-8·고객 앱·Space·실제 Firebase/network/
+> emulator/deploy는 범위 밖 그대로다. 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_086_REVIEW`, fix_round 0.
+> 전체 진행도 **85~88% / 잔여 12~15% — 변동 없음**.
+
 > **최신 포인터 (2026-09-03): spec 086 운영자 C5 select 접근성 표면 = READY_FOR_CLAUDE.**
 > 기준 `HEAD=origin=452c03b`, ahead/behind 0/0에서 Codex가 다음 단위를 선정하고 계약을 작성했다.
 > 스펙 084 재확인 요청에 대한 결정은 **F-6 철회**, **F-8은 검증된 UI finding이 아니므로 별도 Founder

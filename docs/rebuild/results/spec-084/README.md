@@ -41,6 +41,12 @@ control을 페이지에서 숨겼다(고객 Space 3건). 제품 source의 DOM·�
 | `operator-space-v2-issue-frozen-1280x800.png` | Space V2 발급 panel · 시안 고정 후 비밀번호 대기 | 1280x800 | `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` | `…/e2e-space-v2-issue-fixture.html` | 기준본 로드 → A4/전체 사진/블랙 → 합성 PNG → 시안 고정 · `space-v2-issue-panel` 영역만 캡처 |
 | `operator-space-v2-issue-frozen-390x844.png` | Space V2 발급 panel · 시안 고정 후 | 390x844 | `PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE` | `…/e2e-space-v2-issue-fixture.html` | 위와 동일 |
 
+> **F-5는 스펙 086에서 해소됐다(2026-09-03).** 위 C5 두 장은 canonical 실행이 현재 제품 기준으로 다시
+> 썼다. `액자 사이즈` select는 이제 아래 `TextField`와 같은 Modern Studio form 표면(44px·`--line`
+> border·`--radius`·`--surface`)을 쓰고, `measurements.json`의 두 C5 항목에서 44px 미만 pointer target은
+> **0건**이다(감사 당시 `518x23` · `316x23`). 감사 시점 원본은 git history에 남아 있고, 다른 finding의
+> 판정은 바뀌지 않았다.
+
 ## 캡처하지 않은 매트릭스 항목
 
 | 항목 | 상태 | 이유 |

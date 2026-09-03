@@ -7492,3 +7492,55 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 이번 Codex 작업은 문서 전용이다. 제품/test/PNG/Rules/config/package/lockfile 수정 및 gate 실행 0.
   보호 대상과 기존 dirty는 untouched/stage 0. 상태 `READY_FOR_CLAUDE`, next
   `CLAUDE_SPEC_086_IMPLEMENT`, fix_round 0. 전체 진행도 **85~88% / 잔여 12~15%**(변동 없음).
+
+## 2026-09-03 - Claude 스펙 086 운영자 C5 사이즈 선택 컨트롤 접근성 표면 (F-5 해소)
+
+- 계약 작성 기준 `HEAD=origin=452c03b` → Codex 계약 `d7408b2` → 제품/test/PNG `8c7b7ff` → 문서 commit은
+  이 갱신이다(제품과 문서를 분리했다). `apps/mockup/**`·`packages/**`·package/lockfile/workspace·
+  Rules/Firebase config diff **0**, 실제 Firebase/network/emulator/deploy **0**,
+  F-2·F-3·F-4·F-7·F-8·Space·고객 앱 수정 **0**.
+- **F-5 해소.** `액자 사이즈` `<select>`가 컴포넌트 전용 stylesheet
+  (`apps/admin/src/admin-write/frame-print-size-editor.css`, 클래스
+  `denn-frame-print-size-editor__select`)로 인접 `TextField`와 같은 Modern Studio form 표면을 갖는다 —
+  `box-sizing: border-box`, `min-height: 44px`, `width: 100%`/`min-width: 0`/`max-width: 100%`,
+  `padding: 11px 13px`, `1px solid var(--line)`, `var(--radius)`, `var(--surface)`, `var(--ink)`,
+  `font: inherit`. `:focus-visible`은 `.denn-field__input`과 같은 3px `var(--accent-ink)` + offset 2px,
+  disabled는 Button·Chip과 같은 `cursor: not-allowed` + `opacity: 0.55`다. transition·animation·
+  transform·새 색상 literal·`!important` 0, global `select` selector 0, `@denn/ui/theme.css`·
+  `apps/admin/src/space-v2/**` 수정 0(발급 panel은 spec 083 규칙 유지).
+- **native select 유지.** custom listbox/combobox 교체 0, **`appearance` 재설정 0** — disclosure arrow는
+  "목록이 열린다"는 유일한 시각 단서라 지우면 결함이 방향만 바뀐다. `<label for>`/`<select id>` 연결,
+  `data-testid`, `value`, `disabled`, `onChange`, option 값·순서·문구, legacy disabled, 빈 초기값(자동
+  첫 선택 0), C5 load/save/CAS 의미 무변경.
+- **검증.** `node scripts/check.mjs` PASS(unit **2502/2502**, 92 파일, build 2개; 신규 unit 2).
+  canonical `node scripts/e2e-run.mjs` **Chromium 220 passed / 0 failed / 0 skipped / 0 retry**
+  (기존 218 + 신규 2). 신규 2건은 `390x844`·`1280x800`에서 disabled/enabled 두 상태의 computed
+  `min-height` 44px·border·radius·배경·`not-allowed`+dim, bounding box 높이 >= 44, editor box 안
+  containment + document horizontal overflow 0, Tab 실제 도달과 computed outline 3px·offset 2px,
+  자동 첫 선택 0·legacy disabled·A4 prefill(21/29.7)·Blank 빈 쌍·save call 0, 전용 class carrier 1개,
+  axe serious/critical 0·console error/warning 0·pageerror 0·외부 요청 0을 단언한다. 새 fixture·timeout
+  증가·retry·skip·screenshot tolerance 추가 0. `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/
+  9199 LISTENING 0, `denn-e2e-*`·`playwright-report`·`debug.log` 잔류 0.
+- **범위 안 axe scope 정정 1건.** 페이지 전체 스캔은 이 fixture의 진단 section
+  (`p[data-testid="fixture-status"]`, `p[data-testid="fixture-expected-base"]`가 `--muted` `#71717a`를
+  `--bg` `#f4f4f5` 위에 올려 대비 **4.39:1**) 때문에 `color-contrast` serious를 내며 신규 2건이 처음
+  실패했다. 제품이 아니라 harness다. 스펙 084 §3("fixture control을 제품 결함으로 보고하는 것은 이 스펙이
+  없애려는 혼동 그 자체")과 감사 자신의 chrome 숨김 처리에 맞춰 스캔을
+  `[data-testid="frame-print-size-editor"]`로 좁혔다. **단언은 그대로 0건 요구**이고 tolerance는 넣지
+  않았다. 제품 영역 위반 0.
+- **증거.** canonical이 C5 PNG 두 장을 다시 썼고(별도 screenshot writer 추가 0) 직접 열어 확인했다 —
+  select가 아래 두 `TextField`와 같은 form 계층으로 읽히고 disclosure arrow가 남아 있다. sha256
+  `30ab97fe…` → `2f70c95e…`(1280x800), `8d685ce5…` → `b9765d7c…`(390x844). **다른 tracked spec-084 PNG
+  변경 0**. `measurements.json`(untracked)의 두 C5 항목은 `smallTargets` **0건**(감사 당시 `518x23` ·
+  `316x23`), `horizontalOverflow` false, `axeSeriousCritical` 0이다. 감사 보고서 §10에 F-5 해소
+  addendum을 남겼고 F-6 철회·F-8 재분류 문구는 되돌리지 않았다.
+- **bundle.** 고객 entry `index-eQgqaWiH.js` **341.94 kB / gzip 104.76**·CSS `index-CLxRhNtu.css`
+  **20.27 kB** — 파일명 해시까지 무변경. 운영자 `index-BeV6iIrs.js` 295.32 → `index-BWeRXD_J.js`
+  **295.37 kB**, CSS `index-CYneUH5V.css` 10.80 → `index-CCW8unbN.css` **11.24 kB**.
+- **보호 대상.** design README·spec 038·`packages/render/src/plan/index.ts`·`pnpm-workspace.yaml`·
+  `AGENTS.md`·`taste-v2/**` hash 동일, restore·checkout·stage·commit 0. spec 018 PNG는 canonical이 다시
+  썼고 stage하지 않았다: desktop `a5dbdf93…` → `99e5e410…`(기존 비결정성), mobile `6bdcb88c…` 무변경.
+- **NOT TESTED.** 제품 route의 C5 gate는 여전히 off. 실기기 Safari/Android·200% zoom·preview channel·
+  실제 Firebase/network/emulator/deploy·운영 데이터. 스펙 084의 다른 finding 판정은 그대로다.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_086_REVIEW`, fix_round 0. 다음 finding·다음 스펙은 시작하지
+  않았다. 전체 진행도 **85~88% / 잔여 12~15%**(변동 없음).

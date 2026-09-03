@@ -2,7 +2,8 @@
 
 ## 상태
 
-- `READY_FOR_CLAUDE / CONTRACT_ONLY / NO_LIVE_NETWORK`
+- `READY_FOR_CODEX` — 구현·검증 완료(2026-09-03). 결과는 이 문서 맨 아래 `DONE (Claude)` 절에 있다.
+  제품/test/PNG `8c7b7ff`, 문서 commit은 그 다음이다. next `CODEX_SPEC_086_REVIEW`, fix_round `0`.
 - 기준 브랜치: `rebuild/modern-studio`
 - 기준 commit: `HEAD=origin=452c03b`, ahead/behind `0/0`
 - 직전 완료: spec 085 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
@@ -227,3 +228,82 @@ E2E orchestrator는 filter 인자를 지원하지 않고 임시 staging build를
 - 실제 network/Firebase/emulator/deploy 또는 사용자 결정이 필요함.
 
 STOP 시 코드·commit·push를 멈추고 근거와 필요한 결정만 보고한다.
+
+### DONE (Claude) — 스펙 086 구현·검증 (2026-09-03)
+
+계약 작성 기준 `HEAD=origin=452c03b` → 계약 commit `d7408b2` → 제품/test/PNG `8c7b7ff` →
+문서 commit은 이 갱신이다.
+범위 밖 변경 0: `apps/mockup/**`·`packages/**`·package/lockfile/workspace·Rules/Firebase config diff
+**0**, 실제 Firebase/network/emulator/deploy **0**, F-2·F-3·F-4·F-7·F-8·Space·고객 앱 수정 **0**,
+다음 스펙 착수 **0**.
+
+**구현 1 — native select를 유지했다.** `<label htmlFor="frame-print-size-id">`와
+`<select id="frame-print-size-id">` 연결, `data-testid`, `value`, `disabled`, `onChange`, option
+값·순서·문구·legacy disabled, 빈 초기값(첫 항목 자동 선택 0), C5 load/save/CAS 의미는 한 줄도 바뀌지
+않았다. custom listbox/combobox로 바꾸지 않았고 **`appearance`도 재설정하지 않았다** — disclosure
+arrow는 "이 컨트롤이 목록을 연다"는 유일한 시각 단서라, 지우면 결함이 방향만 바뀐다.
+
+**구현 2 — 컴포넌트 전용 stylesheet.** 신규 `apps/admin/src/admin-write/frame-print-size-editor.css`를
+`FramePrintSizeEditor.tsx`가 직접 import하고, select에 `denn-frame-print-size-editor__select` 한 개를
+부여했다. 규칙은 `@denn/ui`의 `.denn-field__input`을 **그대로 따라간다**(재발명 아님):
+`box-sizing: border-box`, `min-height: 44px`, `width: 100%` + `min-width: 0` + `max-width: 100%`,
+`padding: 11px 13px`, `1px solid var(--line)`, `var(--radius)`, `var(--surface)`, `var(--ink)`,
+`font: inherit` + `font-size: 14px`. `:focus-visible`은 인접 입력과 동일한 `3px solid var(--accent-ink)`
++ `outline-offset: 2px`, disabled는 Button·Chip과 같은 `cursor: not-allowed` + `opacity: 0.55`
+(비색상 단서). transition·animation·transform·새 색상 literal·`!important` **0**, global `select`
+selector **0**, `@denn/ui/theme.css`와 `apps/admin/src/space-v2/**` 수정 **0** — 발급 panel은 spec 083이
+준 자기 규칙을 그대로 유지한다.
+
+**unit(신규 2건, 총 2502).** ① label의 `for`와 select의 `id`가 일치하고 전용 class가 select에 붙는다
+② 그 class가 페이지 markup에 **정확히 1회**만 나오고 인접 입력은 계속 `denn-field__input`을 쓴다.
+auth-blocked 단언에는 "disabled select가 class를 그대로 유지한다"를 덧붙였다. CSS 픽셀 값은 SSR
+문자열로 증명하지 않았다 — 높이·focus는 Chromium에서만 단언한다.
+
+**Chromium(신규 2건, 총 220).** `tests/e2e/admin-write-editor.spec.ts`의 기존 제품 component fixture에
+`390x844`·`1280x800` 두 건을 추가했다. 단언은 ① disabled/enabled 두 상태 모두에서 computed
+`min-height` 44px·border·radius·배경 유지, disabled는 `not-allowed` + opacity < 1, enabled는
+opacity 1 ② bounding box 높이 >= 44 ③ select 좌우가 `frame-print-size-editor` box 안, document
+horizontal overflow 0 ④ Tab으로 실제 도달하고 computed outline이 3px·offset 2px로 그려짐
+⑤ 자동 첫 선택 0·legacy option disabled·A4 canonical prefill(21 / 29.7)·Blank 빈 쌍·save call 0
+⑥ 전용 class carrier 1개 ⑦ axe serious/critical 0·console error/warning 0·pageerror 0·외부 요청 0이다.
+새 fixture·timeout 증가·retry·skip·screenshot tolerance 추가 **0**.
+
+**axe scope 정정 1건(범위 안).** 처음에는 페이지 전체를 스캔해 두 건이 실패했다. 원인은 제품이 아니라
+이 fixture의 진단 section이다 — `p[data-testid="fixture-status"]`와
+`p[data-testid="fixture-expected-base"]`가 `--muted`(`#71717a`)를 페이지 배경 `--bg`(`#f4f4f5`) 위에
+올려 대비 **4.39:1**(기준 4.5:1)로 `color-contrast` serious를 낸다. 스펙 084 §3이 "fixture control을
+제품 결함으로 보고하는 것은 이 스펙이 없애려는 혼동 그 자체"라고 정하고 감사 자신도 axe 실행 전
+`section[aria-label="합성 fixture 진단"]`을 숨긴다. 그래서 스캔을 제품 component
+(`[data-testid="frame-print-size-editor"]`)로 **좁혔다** — 단언 자체는 그대로 0건 요구다. 제품 영역에는
+위반이 없다.
+
+**검증 실측.** `node scripts/check.mjs` **PASS**(format·lint·typecheck, unit **2502/2502** · 92 파일,
+build 2개; 이전 2500 + 신규 2). canonical `node scripts/e2e-run.mjs` **Chromium 220 passed / 0 failed /
+0 skipped / 0 retry**(이전 218 + 신규 2). `git diff --check` PASS. 포트 `4183/4184/4185/8080/9099/9199`
+LISTENING **0**. `denn-e2e-*`·`playwright-report`·`debug.log` 잔류 **0**(Playwright의
+`test-results/.last-run.json` 한 개는 `.gitignore:32`로 추적 대상이 아니다).
+
+**bundle.** 고객 entry `index-eQgqaWiH.js` **341.94 kB / gzip 104.76** 및 CSS `index-CLxRhNtu.css`
+**20.27 kB** — 파일명 해시까지 **무변경**(고객 앱 영향 0의 증명). 운영자 entry
+`index-BeV6iIrs.js` 295.32 → `index-BWeRXD_J.js` **295.37 kB**(gzip 91.54 → 91.55), CSS
+`index-CYneUH5V.css` 10.80 → `index-CCW8unbN.css` **11.24 kB**. 증가분은 이 stylesheet와 class 이름뿐이다.
+
+**시각 근거.** canonical 실행이 `operator-c5-editor-ready-clean-{1280x800,390x844}.png` 두 장을 다시
+썼고(별도 screenshot writer 추가 0) 두 장을 직접 열어 확인했다 — select가 아래 두 `TextField`와 같은
+form 계층으로 읽히고 disclosure arrow가 남아 있다. sha256 `30ab97fe…` → `2f70c95e…`(1280x800),
+`8d685ce5…` → `b9765d7c…`(390x844). **다른 tracked spec-084 PNG 변경 0**이다.
+`measurements.json`(untracked)의 두 C5 항목은 `smallTargets` **0건**(감사 당시 `518x23` · `316x23`),
+`horizontalOverflow` false, `axeSeriousCritical` 0이다.
+
+**보호 대상.** design README·spec 038·`packages/render/src/plan/index.ts`·`pnpm-workspace.yaml`·
+`AGENTS.md`·`taste-v2/**`는 시작/종료 hash 동일이고 restore·checkout·stage·commit **0**이다.
+spec 018 PNG 2장은 canonical E2E가 다시 썼고 stage하지 않았다: desktop `a5dbdf93…` → `99e5e410…`
+(이 파일의 실행 간 비결정성은 스펙 084 보완 라운드 1에서 이미 "결정화 대상 밖"으로 기록됐다),
+mobile `6bdcb88c…` 무변경.
+
+**NOT TESTED.** 제품 route의 C5 gate는 여전히 off다. 실기기 Safari/Android·200% zoom·preview channel·
+실제 Firebase/network/emulator/deploy·운영 데이터는 이번에도 검증되지 않았다. 스펙 084의 다른 finding
+(F-2·F-3·F-4·F-7)은 판정 그대로이고 F-6 철회·F-8 재분류도 그대로다.
+
+상태 `READY_FOR_CODEX`, next `CODEX_SPEC_086_REVIEW`, fix_round 0에서 멈춘다. 다음 finding·다음 스펙은
+시작하지 않았다.

@@ -106,7 +106,7 @@ PNG를 저장하지 않은 320px measurement-only 3건(고객 browse·고객 com
 데모 오류가 실제 오류로 읽힐 수 있고, 운영자에게 노출되는 첫 화면이 제품이 아니라 스캐폴드다. 다만 이
 상태에서 저장·발급 같은 조작이 존재하지 않아 P0가 아니라 P1로 둔다.
 
-### F-5 (P1) — C5 편집기의 select가 스타일 없는 23px 네이티브 위젯이다
+### F-5 (P1) — C5 편집기의 select가 스타일 없는 23px 네이티브 위젯이다 — **스펙 086에서 해소됨(§10)**
 
 `operator-c5-editor-ready-clean-1280x800.png`(518x23), `operator-c5-editor-ready-clean-390x844.png`(316x23).
 
@@ -239,3 +239,31 @@ Codex 독립 검수가 지적한 네 항목을 이 단위 안에서 닫았다. f
   별도 Founder 제품 결정이다.
 - **F-5 후속 착수.** Codex는 F-5 단독을 spec 086으로 선정했다. 이 시점에는 계약 문서만 작성했고 제품
   수정은 없다. 구현과 독립 검수 통과 전에는 F-5를 해소로 표시하지 않는다.
+
+## 10. 후속 해소 — F-5, 스펙 086 (2026-09-03)
+
+이 절은 **후속 기록**이다. 위 §4의 F-5 본문은 감사 시점(2026-08-31)의 실측 그대로 두고 해소 결과만
+덧붙인다. 다른 finding의 의미·우선순위와 §5 판정표는 바뀌지 않는다. §9의 F-1 기록, F-6 철회와 F-8
+재분류(2026-09-03 Codex 선정)도 되돌리지 않는다.
+
+- **F-5 — 해소**(`docs/rebuild/specs/086-admin-c5-select-accessibility-surface.md`). `FramePrintSizeEditor`의
+  `액자 사이즈` `<select>`가 component 전용 stylesheet
+  (`apps/admin/src/admin-write/frame-print-size-editor.css`)로 인접 `TextField`와 같은 Modern Studio form
+  표면을 갖는다: `min-height: 44px`, `width: 100%`, `1px var(--line)` border, `var(--radius)`,
+  `var(--surface)`, `var(--ink)`, `font: inherit`. `:focus-visible`은 `.denn-field__input`과 같은 3px
+  `var(--accent-ink)` outline + 2px offset이고, disabled는 `cursor: not-allowed` + `opacity: 0.55`로
+  Button·Chip과 같은 비색상 단서를 쓴다.
+- **native select를 유지했다.** custom listbox/combobox로 바꾸지 않았고 `appearance`도 재설정하지
+  않았다 — 목록이 열린다는 유일한 시각 단서인 disclosure arrow를 지우면 결함이 방향만 바뀐다.
+  label/id, `data-testid`, option 값·순서·문구, legacy disabled, 첫 항목 자동 선택 0, C5 load/save/CAS
+  의미는 그대로다.
+- **증거.** `docs/rebuild/results/spec-084/operator-c5-editor-ready-clean-{1280x800,390x844}.png`을
+  canonical 실행이 다시 썼고 두 장을 직접 확인했다. `measurements.json`의 두 C5 항목에서
+  `smallTargets` **0건**(감사 당시 `518x23` · `316x23`), `horizontalOverflow` false,
+  `axeSeriousCritical` 0이다. Chromium E2E는 두 viewport에서 44px·containment·Tab focus ring·disabled
+  단서·선택 계약·axe·console·network를 함께 단언한다.
+- **그대로 남은 finding.** F-2(영어 native 파일 선택), F-3(Space 헤더), F-4(운영자 root 데모 셸),
+  F-7(고객 진단 문구)은 스펙 086 범위 밖이고 화면에 그대로 있다. F-6은 철회, F-8은 별도 Founder 제품
+  결정이다.
+- **NOT TESTED는 그대로다.** 제품 route의 C5 gate는 여전히 off이고 실기기·preview channel·운영
+  데이터·실제 Firebase/network는 이번에도 검증되지 않았다.

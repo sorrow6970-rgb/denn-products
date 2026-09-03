@@ -1,14 +1,93 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE / CONTRACT_ONLY / NO_LIVE_NETWORK`
+상태: `READY_FOR_CODEX`
 
-- completed_unit: `spec-085-customer-composer-visible-preview-workbench` - **DONE / CODEX_PASSED /
+- active_unit: `spec-086-admin-c5-select-accessibility-surface` — 계약 `d7408b2`, 제품/test/PNG `8c7b7ff`
+- completed_unit: `spec-085-customer-composer-visible-preview-workbench` — **DONE / CODEX_PASSED /
   LOCAL_VERIFIED / NO_LIVE_NETWORK**
-- active_unit: `spec-086-admin-c5-select-accessibility-surface`
-- 기준: `HEAD=origin=452c03b`에서 Codex 계약 작성, ahead/behind `0/0`
-- next_transition: `CLAUDE_SPEC_086_IMPLEMENT`
-- fix_round: `0`
-- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (계약 작성만으로 구간 변동 없음)
+- 기준: 계약 작성 `HEAD=origin=452c03b` → 구현 후 `HEAD=origin`, ahead/behind `0/0`
+- next_transition: `CODEX_SPEC_086_REVIEW`
+- fix_round: `0` (최대 3)
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (운영자 컨트롤 한 건이라 구간 변동 없음)
+
+## 지금 수행할 작업 — 없음. Codex 검수 대기
+
+스펙 086 구현·검증을 끝내고 멈췄다. 스펙 084의 남은 finding(F-2·F-3·F-4·F-7), F-8의 Founder 제품 결정,
+다음 스펙, 실제 Firebase/network/emulator/deploy·실기기·preview channel은 **자동으로 시작하지 않는다**.
+다음 범위는 Codex 독립 검수와 Founder 결정이 정한다.
+
+## 스펙 086 구현 결과 (수행 완료)
+
+**F-5 해소.** 운영자 C5 편집기의 `액자 사이즈` `<select>`가 컴포넌트 전용 stylesheet
+(`apps/admin/src/admin-write/frame-print-size-editor.css`, 클래스
+`denn-frame-print-size-editor__select`)로 바로 아래 `TextField`와 같은 Modern Studio form 표면을 갖는다:
+`box-sizing: border-box`, `min-height: 44px`, `width: 100%` + `min-width: 0` + `max-width: 100%`,
+`padding: 11px 13px`, `1px solid var(--line)`, `var(--radius)`, `var(--surface)`, `var(--ink)`,
+`font: inherit`. `:focus-visible`은 `.denn-field__input`과 **같은** 3px `var(--accent-ink)` outline +
+`outline-offset: 2px`이고, disabled는 Button·Chip과 같은 `cursor: not-allowed` + `opacity: 0.55`
+(비색상 단서)다. transition·animation·transform·새 색상 literal·`!important` **0**, global `select`
+selector **0**, `@denn/ui/theme.css`와 `apps/admin/src/space-v2/**` 수정 **0** — 발급 panel은 spec 083이
+준 자기 규칙을 그대로 유지한다.
+
+**native select를 유지했다.** custom listbox/combobox로 바꾸지 않았고 **`appearance`도 재설정하지
+않았다**. disclosure arrow는 "이 컨트롤이 목록을 연다"는 유일한 시각 단서이므로, 지우면 결함이 방향만
+바뀐다. `<label for>`/`<select id>` 연결, `data-testid`, `value`, `disabled`, `onChange`, option
+값·순서·문구, legacy disabled, 빈 초기값(첫 항목 자동 선택 0), C5 load/save/CAS 의미는 무변경이다.
+
+**검증.** `node scripts/check.mjs` **PASS**(format·lint·typecheck, unit **2502/2502** · 92 파일,
+build 2개 — 신규 unit **2**). canonical `node scripts/e2e-run.mjs` **Chromium 220 passed / 0 failed /
+0 skipped / 0 retry**(기존 218 + 신규 **2**). 신규 Chromium 2건은 `390x844`·`1280x800`에서 ① disabled/
+enabled 두 상태의 computed `min-height` 44px·border·radius·배경 유지와 disabled `not-allowed`+dim
+② bounding box 높이 >= 44 ③ editor box 안 containment + document horizontal overflow 0 ④ Tab 실제 도달과
+computed outline 3px·offset 2px ⑤ 자동 첫 선택 0·legacy disabled·A4 prefill(21/29.7)·Blank 빈 쌍·save
+call 0 ⑥ 전용 class carrier 1개 ⑦ axe serious/critical 0·console error/warning 0·pageerror 0·외부 요청
+0을 단언한다. 새 fixture·timeout 증가·retry·skip·screenshot tolerance 추가 **0**. `git diff --check`
+PASS, 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`·`playwright-report`·`debug.log`
+잔류 0.
+
+**범위 안에서 정정한 axe scope 1건.** 처음에는 페이지 전체를 스캔해 신규 2건이 실패했다. 원인은 제품이
+아니라 이 fixture의 진단 section이다 — `p[data-testid="fixture-status"]`와
+`p[data-testid="fixture-expected-base"]`가 `--muted`(`#71717a`)를 페이지 배경 `--bg`(`#f4f4f5`) 위에
+올려 대비 **4.39:1**(기준 4.5:1)로 `color-contrast` serious를 낸다. 스펙 084 §3이 "fixture control을
+제품 결함으로 보고하는 것은 이 스펙이 없애려는 혼동 그 자체"라고 정했고 감사 자신도 axe 실행 전
+`section[aria-label="합성 fixture 진단"]`을 숨긴다. 그래서 스캔을 제품 component
+(`[data-testid="frame-print-size-editor"]`)로 좁혔다 — **단언은 그대로 0건 요구**이며 tolerance를 넣지
+않았다. 제품 영역에는 위반이 없다.
+
+**시각 증거.** canonical 실행이 `operator-c5-editor-ready-clean-{1280x800,390x844}.png` 두 장을 다시
+썼고(별도 screenshot writer 추가 0) 두 장을 직접 열어 확인했다 — select가 아래 두 `TextField`와 같은
+form 계층으로 읽히고 disclosure arrow가 남아 있다. sha256 `30ab97fe…` → `2f70c95e…`(1280x800),
+`8d685ce5…` → `b9765d7c…`(390x844). **다른 tracked spec-084 PNG 변경 0**이다.
+`measurements.json`(전역 `*.json` ignore로 untracked)의 두 C5 항목은 `smallTargets` **0건**(감사 당시
+`518x23` · `316x23`), `horizontalOverflow` false, `axeSeriousCritical` 0이다. 감사 보고서에 §10 F-5 해소
+addendum을 남겼고 F-6 철회·F-8 재분류 문구는 되돌리지 않았다.
+
+**bundle.** 고객 entry `index-eQgqaWiH.js` **341.94 kB / gzip 104.76**와 CSS `index-CLxRhNtu.css`
+**20.27 kB**는 파일명 해시까지 **무변경**(고객 앱 영향 0의 증명). 운영자 entry `index-BeV6iIrs.js`
+295.32 → `index-BWeRXD_J.js` **295.37 kB**(gzip 91.54 → 91.55), CSS `index-CYneUH5V.css` 10.80 →
+`index-CCW8unbN.css` **11.24 kB**. 증가분은 이 stylesheet와 class 이름뿐이다.
+
+**보호 대상.** design README·spec 038·`packages/render/src/plan/index.ts`·`pnpm-workspace.yaml`·
+`AGENTS.md`·`taste-v2/**`는 시작/종료 hash 동일이고 restore·checkout·stage·commit **0**이다. spec 018
+PNG 2장은 canonical E2E가 다시 썼고 stage하지 않았다: desktop `a5dbdf93…` → `99e5e410…`(이 파일의 실행
+간 비결정성은 스펙 084 보완 라운드 1에서 이미 "결정화 대상 밖"으로 기록됐다), mobile `6bdcb88c…` 무변경.
+
+**범위 밖 그대로.** F-2(영어 native 파일 선택), F-3(Space 헤더), F-4(운영자 root 데모 셸), F-7(고객 진단
+문구), F-8(replay 크기의 Founder 제품 결정), 고객 앱·Space·C5 controller/save/CAS·Rules/Firebase config·
+package/lockfile/workspace — 전부 무변경이다. 제품 route의 C5 gate는 여전히 off이므로 실기기·200% zoom·
+preview channel·실제 Firebase/network/emulator/deploy·운영 데이터는 `NOT TESTED`다.
+
+> 직전 지시문(스펙 086 구현, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고, 명시된 스펙 086 범위만 구현·검증해. 실제 UI 구현은 Claude Code가 담당한다. 보호 대상과 기존 dirty는 건드리지 말고 READY_FOR_CODEX에서 멈춰.
+```
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 지시 — 스펙 086 계약 (Codex 작성)
 
 ## 지금 수행할 작업 - 스펙 086 구현·검증
 

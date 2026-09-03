@@ -5,23 +5,19 @@ updated_at: 2026-09-03
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-085-customer-composer-visible-preview-workbench   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: spec-086-admin-c5-select-accessibility-surface
-state: READY_FOR_CLAUDE
-baseline_commit: 452c03b   # HEAD=origin when Codex selected and wrote the spec 086 contract
-candidate_commit: none     # contract only; Claude Code has not implemented spec 086
-verified_commit: 7351696   # spec 085, Codex independent review passed on 2026-09-03, fix round 0
-origin_relation: "HEAD=origin=452c03b, ahead/behind 0/0 before the spec 086 document commit"
-working_tree: "protected spec-018 PNGs (rewritten by an earlier canonical E2E) and pre-existing Founder/user dirty; all unstaged and untouched"
+active_unit: spec-086-admin-c5-select-accessibility-surface   # implemented in 8c7b7ff; awaiting Codex review
+state: READY_FOR_CODEX
+baseline_commit: 452c03b   # HEAD=origin the spec 086 contract was written from (contract d7408b2)
+candidate_commit: 8c7b7ff  # spec 086 product + test + the two C5 evidence PNGs
+verified_commit: none      # Codex has not reviewed spec 086 yet
+origin_relation: "HEAD=origin after the implementation and record pushes, ahead/behind 0/0"
+working_tree: "protected spec-018 PNGs (rewritten by the canonical E2E, start/end hashes recorded) and pre-existing Founder/user dirty; all unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_SPEC_086_IMPLEMENT
+next_transition: CODEX_SPEC_086_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 086 contract ready; Claude Code implements only the admin C5 native select 44px Modern Studio surface, while F-6 is withdrawn and F-8 waits for a separate Founder product decision
-commit_owner: Codex contract; Claude Code implementation next
-push_policy: fast-forward-only
-deploy: forbidden
-overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
-progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
+session_status: spec 086 implemented - the C5 size picker is a 44px Modern Studio form control and keeps its native select semantics; F-2/F-3/F-4/F-7, F-8's product decision, the customer app, Space and live Firebase stay out of scope
+commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 ```
 
 ## Codex 다음 단위 선정 · 스펙 086 계약 (2026-09-03)
@@ -37,6 +33,50 @@ progress_basis: "7 roadmap workstreams; management estimate, not spec-count arit
   Firebase/network/emulator/deploy 0. 보호 대상과 기존 dirty는 untouched/stage 0.
 - 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_086_IMPLEMENT`, fix_round 0. 전체 진행도 **85~88% / 잔여
   12~15%**(계약 작성만으로 변동 없음).
+
+## Claude 스펙 086 운영자 C5 사이즈 선택 컨트롤 접근성 표면 (F-5 해소) (2026-09-03)
+
+- 계약 작성 기준 `HEAD=origin=452c03b` → Codex 계약 `d7408b2` → 제품/test/PNG `8c7b7ff` → 문서 commit은
+  이 갱신이다(제품과 문서를 분리했다). `apps/mockup/**`·`packages/**`·package/lockfile/workspace·
+  Rules/Firebase config diff **0**, 실제 Firebase/network/emulator/deploy **0**,
+  F-2·F-3·F-4·F-7·F-8·Space·고객 앱 수정 **0**.
+- **F-5 해소.** `액자 사이즈` `<select>`가 컴포넌트 전용 stylesheet
+  (`apps/admin/src/admin-write/frame-print-size-editor.css`, 클래스
+  `denn-frame-print-size-editor__select`)로 인접 `TextField`와 같은 Modern Studio form 표면을 갖는다:
+  `min-height: 44px`, `width: 100%`/`min-width: 0`/`max-width: 100%`, `1px solid var(--line)`,
+  `var(--radius)`, `var(--surface)`, `var(--ink)`, `font: inherit`. `:focus-visible`은
+  `.denn-field__input`과 같은 3px `var(--accent-ink)` + offset 2px, disabled는 Button·Chip과 같은
+  `cursor: not-allowed` + `opacity: 0.55`다.
+- **native select를 유지했다.** custom listbox/combobox 교체 0이고 **`appearance`도 재설정하지 않았다**
+  — disclosure arrow는 "목록이 열린다"는 유일한 시각 단서라 지우면 결함이 방향만 바뀐다. label/id·
+  `data-testid`·option 값/순서/문구·legacy disabled·빈 초기값(자동 첫 선택 0)·C5 load/save/CAS 의미는
+  무변경이다. global `select` selector 0, `@denn/ui/theme.css`·`apps/admin/src/space-v2/**` 수정 0.
+- **검증.** `node scripts/check.mjs` PASS(unit **2502/2502**, 92 파일, build 2개; 신규 unit 2).
+  canonical `node scripts/e2e-run.mjs` **Chromium 220 passed / 0 failed / 0 skipped / 0 retry**
+  (기존 218 + 신규 2). `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199 LISTENING 0,
+  `denn-e2e-*`·`playwright-report`·`debug.log` 잔류 0.
+- **axe scope 정정 1건(범위 안).** 페이지 전체 스캔은 이 fixture의 진단 section
+  (`p[data-testid="fixture-status"]`, `p[data-testid="fixture-expected-base"]` — `--muted` `#71717a`를
+  `--bg` `#f4f4f5` 위에 올려 대비 **4.39:1**) 때문에 `color-contrast` serious를 낸다. 제품이 아니라
+  harness다. 스펙 084 §3("fixture control을 제품 결함으로 보고하는 것은 이 스펙이 없애려는 혼동")과 감사
+  자신의 chrome 숨김 처리에 맞춰 스캔을 `[data-testid="frame-print-size-editor"]`로 좁혔고, 단언은 그대로
+  0건 요구다. 제품 영역 위반은 없다.
+- **bundle.** 고객 entry `index-eQgqaWiH.js` **341.94 kB / gzip 104.76**, CSS `index-CLxRhNtu.css`
+  **20.27 kB** — 파일명 해시까지 **무변경**(고객 앱 영향 0의 증명). 운영자 `index-BeV6iIrs.js` 295.32 →
+  `index-BWeRXD_J.js` **295.37 kB**, CSS `index-CYneUH5V.css` 10.80 → `index-CCW8unbN.css` **11.24 kB**.
+- **증거.** canonical이 C5 PNG 두 장을 다시 썼고(별도 screenshot writer 추가 0) 직접 열어 확인했다:
+  `30ab97fe…` → `2f70c95e…`(1280x800), `8d685ce5…` → `b9765d7c…`(390x844). **다른 tracked spec-084 PNG
+  변경 0**이다. `measurements.json`(untracked)의 두 C5 항목은 `smallTargets` **0건**(감사 당시
+  `518x23` · `316x23`), `horizontalOverflow` false, `axeSeriousCritical` 0이다. 감사 보고서에 §10 F-5
+  해소 addendum을 남겼고 F-6 철회·F-8 재분류 문구는 되돌리지 않았다.
+- **보호 대상.** design README·spec 038·`packages/render/src/plan/index.ts`·`pnpm-workspace.yaml`·
+  `AGENTS.md`·`taste-v2/**` hash 동일, restore·checkout·stage·commit 0. spec 018 PNG는 canonical이 다시
+  썼고 stage하지 않았다: desktop `a5dbdf93…` → `99e5e410…`(스펙 084에서 이미 "결정화 대상 밖"으로 기록된
+  기존 비결정성), mobile `6bdcb88c…` 무변경.
+- **NOT TESTED.** 제품 route의 C5 gate는 여전히 off다. 실기기 Safari/Android·200% zoom·preview channel·
+  실제 Firebase/network/emulator/deploy·운영 데이터. 스펙 084의 다른 finding 판정은 그대로다.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_086_REVIEW`, fix_round 0. 다음 finding·다음 스펙은 시작하지
+  않았다. 전체 진행도 **85~88% / 잔여 12~15%**(운영자 컨트롤 한 건이라 구간 변동 없음).
 
 ## Claude 스펙 084 잔여 finding 재확인 · Codex 다음 단위 검토 요청 (2026-09-03)
 
