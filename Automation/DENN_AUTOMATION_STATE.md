@@ -5,24 +5,53 @@ updated_at: 2026-09-03
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-085-customer-composer-visible-preview-workbench   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: none          # spec 085 closed on the Codex pass; the next unit is a Founder decision
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: b86fd5c   # HEAD=origin when the spec 085 contract was written
-candidate_commit: 7351696  # spec 085 product + test (contract docs a9e7528, record 786ca54)
-verified_commit: 7351696   # Codex independent review passed on 2026-09-03, fix round 0
-origin_relation: "HEAD=origin=786ca54 at review time, ahead/behind 0/0; this closure is documents only"
-working_tree: "protected spec-018 PNGs (rewritten again by the reviewer's canonical E2E, desktop a5dbdf93) and pre-existing Founder/user dirty; all unstaged"
+active_unit: none          # next unit NOT selected; a Codex review request is on the table
+state: REQUEST_CODEX_NEXT_UNIT_SELECTION
+baseline_commit: 5a1aee9   # HEAD=origin when the remaining findings were re-verified
+candidate_commit: none     # read-only re-verification; no product, test or PNG change
+verified_commit: 7351696   # spec 085, Codex independent review passed on 2026-09-03, fix round 0
+origin_relation: "HEAD=origin=5a1aee9, ahead/behind 0/0; this request is documents only"
+working_tree: "protected spec-018 PNGs (rewritten by an earlier canonical E2E) and pre-existing Founder/user dirty; all unstaged and untouched"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_NEXT_MANUAL_TASK
+next_transition: CODEX_NEXT_UNIT_SELECTION
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 085 passed Codex review and is closed - the customer composer is preview-first and the frame Canvas fits the viewport height; the remaining spec 084 findings, the next spec, Space, admin and live Firebase stay out of scope and unauthorized
-commit_owner: Claude Code implementation; Codex independent review and closure
+session_status: spec 085 closed; the remaining spec 084 findings were re-verified against current source and two of them (F-6, F-8) must not be turned into a contract as written - Codex selects the next unit
+commit_owner: Claude Code re-verification and request; Codex next-unit selection and contract
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Claude 스펙 084 잔여 finding 재확인 · Codex 다음 단위 검토 요청 (2026-09-03)
+
+- 기준 `HEAD=origin=5a1aee9`, ahead/behind 0/0. **읽기 전용**이다 — 제품 source·CSS·문구·test·PNG·
+  `measurements.json`·config·package/lockfile·Rules 수정 **0**, 게이트 실행 **0**, 새 스펙 작성 **0**,
+  스펙 번호 선점 **0**. 실제 Firebase/network/emulator/deploy·실기기 **0**.
+- 요청 정본:
+  `docs/codex-claude-handoff/reviews/2026-09-03-spec-084-remaining-findings-next-unit-request.md`.
+- F-1은 스펙 085로 닫혔고 남은 후보는 **F-2·F-3·F-4·F-5·F-6·F-7·F-8**이다. 현재 소스 대조 결과
+  **F-2·F-3·F-4·F-5·F-7 5건은 유효**하고 **2건은 그대로 스펙화하면 안 된다**.
+- **F-6 철회 후보(사실과 다름).** `FramePrintSizeEditor.tsx:104-105`의 root가 이미 `<Card>`이며 spec 041
+  (`27e6ff4`) 이후 계속 그랬다. 증거 PNG가 `denn-stack` locator 캡처라 카드 padding/border가 잘렸을 뿐이다.
+- **F-8 재도출 필요(제품이 아니라 fixture를 잼).** `space-v2-viewer-*.png`의 320x480은
+  `apps/mockup/src/e2e/space-production-route-fixture.tsx:157`이 replay evidence에 `logicalWidth: 320`,
+  `aspect: 1.5`를 하드코딩한 결과다. 측정 폭 경로(`useContentLogicalWidth` → `resolveFrameLogicalWidth`,
+  500 상한)는 이 화면을 그리지 않았고 그 경로의 `composeSpaceFramePlan`은 아직 V1 거절 stub이다
+  (`frame-plan.ts:66-84`). 진짜 질문은 **V2 replay가 발행 당시 logical size를 충실 재현해야 하는가**라는
+  제품 결정이다.
+- **스펙화 난이도.** F-5가 가장 작다 — `admin-space-v2-issue.css:60-85`(spec 083)가 발급 panel의
+  `select`/`file`/`range`에 이미 `min-height:44px` + Modern Studio border/radius를 주는 선례다. F-3은 한
+  컴포넌트 범위(인증 후 제목 문구 결정 1건 필요). F-2는 두 앱 동시 변경 + spec 026 §5 재선택 계약 보존이
+  조건. **F-4는 데모를 지우면 제품 기본값이 빈 화면이 된다**(작업 표면은 gate off) → gate 정책·기본 진입
+  화면이 Founder 결정. F-7은 운영 카탈로그 확인이 live network라 현재 금지다.
+- **Codex 결정 요청 5건.** ① F-6 철회 여부 ② F-8 재도출·Founder 상신 여부 ③ 다음 단위 범위
+  (A F-5 단독 / B F-3 단독 / C F-2 단독 / D F-5+F-3 / E 문서 전용 정정 선행) ④ 한 단위에 고객 앱과 운영자
+  앱을 함께 넣어도 되는지 ⑤ F-7을 문구 판단만으로 단위화할 수 있는지.
+- 상태 `REQUEST_CODEX_NEXT_UNIT_SELECTION`, next `CODEX_NEXT_UNIT_SELECTION`. 보호 대상과 기존
+  Founder/user dirty는 수정·restore·checkout·stage·commit **0**. 전체 진행도 **85~88% / 잔여 12~15%**
+  (읽기 전용이라 변동 없음).
 
 ## Codex 스펙 085 독립 검수 · 종료 (2026-09-03)
 

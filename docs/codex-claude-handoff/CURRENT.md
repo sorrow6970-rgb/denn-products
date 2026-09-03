@@ -1,5 +1,25 @@
 # 현재 상태
 
+> **최신 포인터 (2026-09-03): 스펙 084 잔여 finding 재확인 = REQUEST_CODEX_NEXT_UNIT_SELECTION.**
+> 기준 `HEAD=origin=5a1aee9`, ahead/behind 0/0. **읽기 전용** — 제품 source·CSS·문구·test·PNG·
+> `measurements.json`·config·package/lockfile·Rules 수정 0, 게이트 실행 0, 새 스펙 작성 0, 스펙 번호
+> 선점 0. 요청 정본은
+> `docs/codex-claude-handoff/reviews/2026-09-03-spec-084-remaining-findings-next-unit-request.md`다.
+> F-1은 스펙 085로 닫혔고 남은 후보는 **F-2·F-3·F-4·F-5·F-6·F-7·F-8**이다. 현재 소스로 다시 대조한
+> 결과 **F-2·F-3·F-4·F-5·F-7은 유효**하고, **2건은 그대로 스펙화하면 안 된다**. ① **F-6 철회 후보** —
+> `FramePrintSizeEditor.tsx:104-105`의 root가 이미 `<Card>`다(spec 041 `27e6ff4` 이후). 증거 PNG가
+> `denn-stack` locator 캡처라 카드 padding/border가 잘렸을 뿐이다. ② **F-8 재도출 필요** — 320x480은
+> `space-production-route-fixture.tsx:157`이 replay evidence에 `logicalWidth: 320`·`aspect: 1.5`를
+> 하드코딩한 값이고, 측정 폭 경로(`useContentLogicalWidth` → `resolveFrameLogicalWidth` 500 상한)는 이
+> 화면을 그리지 않았다(`composeSpaceFramePlan`은 아직 V1 거절 stub). 진짜 질문은 **V2 replay가 발행 당시
+> logical size를 충실 재현해야 하는가**라는 제품 결정이다. 스펙화 난이도는 **F-5가 가장 작다** —
+> `admin-space-v2-issue.css:60-85`(spec 083)가 이미 선례다. F-3은 한 컴포넌트 + 문구 결정 1건, F-2는 두 앱
+> 동시 변경 + spec 026 §5 재선택 계약 보존, **F-4는 데모를 지우면 제품 기본값이 빈 화면**이라 gate 정책이
+> Founder 결정, F-7은 운영 카탈로그 확인이 live network라 금지다. Codex 결정 요청 5건(F-6 철회 / F-8
+> 재도출 / 다음 단위 A~E / 고객·운영자 앱 동시 포함 가부 / F-7 단위화 가부)은 요청 문서 §4에 있다.
+> 상태 `REQUEST_CODEX_NEXT_UNIT_SELECTION`, next `CODEX_NEXT_UNIT_SELECTION`. 보호 대상과 기존
+> Founder/user dirty는 수정·restore·stage·commit 0. 전체 진행도 **85~88% / 잔여 12~15% — 변동 없음**.
+
 > **최신 포인터 (2026-09-03): spec 085 종료 = DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK.**
 > Codex 독립 검수를 보완 라운드 **0회**로 통과했다. 검수 기준 `HEAD=origin=786ca54`, 승인 후보
 > `7351696`, ahead/behind 0/0, 허용 범위 밖 committed diff **0**. 검수자가 게이트를 다시 돌렸다 —

@@ -1,21 +1,78 @@
 # NEXT CLAUDE PROMPT
 
-상태: `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
+상태: `REQUEST_CODEX_NEXT_UNIT_SELECTION`
 
-- completed_unit: `spec-085-customer-composer-visible-preview-workbench` — 계약 `a9e7528`, 제품/test
-  `7351696`, 기록 `786ca54`, 종료 문서는 이 갱신이다
-- 직전 완료: `spec-084-local-visual-readiness-audit` — **DONE / CODEX_PASSED / LOCAL_VERIFIED /
-  NO_LIVE_NETWORK**
-- active_unit: 없음. 검수 기준 `HEAD=origin=786ca54`, 승인 후보 `7351696`, ahead/behind `0/0`
-- next_transition: `FOUNDER_NEXT_MANUAL_TASK`
-- fix_round: `0` (보완 라운드 없이 1회 통과)
-- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (고객 composer 레이아웃 한 건이라 구간 변동 없음)
+- completed_unit: `spec-085-customer-composer-visible-preview-workbench` — **DONE / CODEX_PASSED /
+  LOCAL_VERIFIED / NO_LIVE_NETWORK** (계약 `a9e7528`, 제품/test `7351696`, 기록 `786ca54`, 종료 `5a1aee9`)
+- active_unit: 없음. 다음 단위 **미선정**
+- 기준: `HEAD=origin=5a1aee9`, ahead/behind `0/0`
+- next_transition: `CODEX_NEXT_UNIT_SELECTION`
+- fix_round: `0`
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (읽기 전용 재확인이라 변동 없음)
 
-## 지금 수행할 작업 — 없음. Founder 지시 대기
+## 지금 수행할 작업 — 없음. Codex의 다음 단위 선정 대기
 
-스펙 085는 Codex 독립 검수를 통과했고 문서 전용 종료까지 끝났다. 스펙 084 감사에 남은 finding
-(F-2·F-3·F-4·F-5·F-6·F-7·F-8), 다음 스펙, 실제 Firebase/network/emulator/deploy·실기기·preview channel은
-**자동으로 시작하지 않는다**. 다음 범위와 스펙 번호는 Codex 계약과 Founder 결정이 정한다.
+스펙 084의 잔여 finding을 현재 소스로 다시 대조하고, 다음 구현 단위를 고를 수 있도록 **검토 요청
+문서만** 작성했다. 제품 코드·test·PNG 수정 0, 게이트 실행 0, 새 스펙 작성 0이다. 다음 범위·스펙 번호는
+Codex 계약과 Founder 결정이 정한다.
+
+요청 정본: `docs/codex-claude-handoff/reviews/2026-09-03-spec-084-remaining-findings-next-unit-request.md`
+
+## 스펙 084 잔여 finding 재확인 결과 (수행 완료)
+
+F-1은 스펙 085로 닫혔고, 남은 후보는 **F-2·F-3·F-4·F-5·F-6·F-7·F-8** 일곱 건이다. 현재 소스로 다시
+확인한 결과 **두 건은 그대로 스펙화하면 안 된다**.
+
+**유효 확인 5건.**
+
+- **F-2**(P1) 제품 file input은 **2곳**이다 — 고객 `PreviewComposer.tsx:248`, 운영자
+  `AdminSpaceV2IssuePanel.tsx:631`. 스펙 085 증거 PNG에도 `Choose File No file chosen`이 남아 있다.
+- **F-3**(P1) `SpacePasswordGate.tsx:90-92`가 badge·`<h1>내 공간 시안 확인</h1>`·비밀번호 입력 안내를
+  **상태와 무관하게** 렌더하고 성공 화면이 그 아래에 붙는다 → 제목 2개 + 잔존 안내. PNG로도 확인했다.
+- **F-4**(P1) `apps/admin/src/App.tsx:99·127·141·158·161`의 데모 badge·데모 버튼·데모 보기 옵션·상시
+  빨강 `담당자 / 필수 항목입니다`가 그대로다.
+- **F-5**(P1) `FramePrintSizeEditor.tsx:111`의 `<select>`에 class·CSS가 없다(23px native).
+- **F-7**(P2) `일부 이전 데이터가 호환 처리되었습니다`가 스펙 085 PNG에도 남아 있다.
+
+**F-6 — 철회 후보(사실과 다름).** 감사는 "`App.tsx`가 `FramePrintSizeEditor`를 `Card` 없이 배치한다"에서
+"편집기만 배경 위에 놓인다"를 도출했지만, **편집기 컴포넌트의 root가 이미 `<Card>`다**
+(`FramePrintSizeEditor.tsx:104-105`, spec 041 `27e6ff4` 이후 계속). 증거 PNG가 `denn-stack` locator
+캡처라 카드 padding/border가 잘려 보이지 않았을 뿐이다.
+
+**F-8 — 재도출 필요(제품이 아니라 fixture를 잼).** `space-v2-viewer-*.png`의 320x480은
+`apps/mockup/src/e2e/space-production-route-fixture.tsx:157`이 replay evidence에 **`logicalWidth: 320`,
+`aspect: 1.5`를 하드코딩**한 결과다. 측정 폭을 쓰는 경로(`useContentLogicalWidth` →
+`resolveFrameLogicalWidth`, 500 상한)는 이 화면을 그리지 않았고, 그 경로의 `composeSpaceFramePlan`은 아직
+V1 거절 stub이다(`frame-plan.ts:66-84`). 따라서 F-8의 진짜 질문은 CSS 폭이 아니라 **V2 replay가 발행 당시
+logical size를 충실히 재현해야 하는가, 열람 기기 폭으로 다시 렌더해야 하는가**라는 제품 결정이다.
+
+**스펙화 난이도.** F-5는 가장 작다 — `admin-space-v2-issue.css:60-85`(spec 083)가 이미 발급 panel의
+`select`/`file`/`range`에 `min-height:44px` + Modern Studio border/radius를 주는 **선례**이므로 같은 처리를
+옮기면 된다. F-3은 한 컴포넌트 범위지만 인증 후 제목 문구 결정이 하나 필요하다. F-2는 두 앱 동시 변경 +
+`event.target.value = ""`(spec 026 §5) 재선택 계약 보존이 조건이다. **F-4는 데모를 지우면 제품 기본값이
+빈 화면이 된다**(실제 작업 표면은 gate off) — gate 정책·기본 진입 화면이 Founder 결정 사항이다. F-7은
+운영 카탈로그 확인이 live network라 현재 금지된다.
+
+**Codex 결정 요청 5건.** ① F-6 철회 여부 ② F-8 재도출 여부와 Founder 상신 여부 ③ 다음 단위 범위
+(A: F-5 단독 / B: F-3 단독 / C: F-2 단독 / D: F-5+F-3 / E: 문서 전용 정정 선행) ④ 한 단위에 고객 앱과
+운영자 앱을 함께 넣어도 되는지(스펙 085는 고객 앱 하나로 한정했다) ⑤ F-7을 문구 판단만으로 단위화할 수
+있는지. 상세와 근거는 요청 정본 문서에 있다.
+
+**하지 않은 것.** 다음 스펙 파일 작성 0, 스펙 번호 선점 0, 제품/test/PNG/`measurements.json` 수정 0,
+게이트 실행 0, 실제 Firebase/network/emulator/deploy·실기기·preview channel 0. 보호 대상과 기존
+Founder/user dirty는 수정·restore·checkout·stage·commit 0이다.
+
+> 직전 지시문(스펙 084 잔여 finding 재확인·Codex 검토 요청, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 최신 live log를 읽고, 남은 스펙 084 finding 중 다음 구현 단위를 선정할 수 있도록 Codex 검토를 요청해. 보호 대상과 기존 dirty는 건드리지 마.
+```
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 지시 — 스펙 085 Codex 독립 검수 (수행 완료)
 
 ## 스펙 085 Codex 독립 검수 결과 (수행 완료)
 
