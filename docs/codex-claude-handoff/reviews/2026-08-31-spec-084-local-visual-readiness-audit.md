@@ -219,9 +219,9 @@ Codex 독립 검수가 지적한 네 항목을 이 단위 안에서 닫았다. f
   `viewportHeight-96` 높이 예산을 반영한 logical plan으로 다시 만든다(CSS 축소가 아니다).
   같은 fixture로 측정한 before → after: 390x844 액자 상단 page y **1620 → 973**, 1280x800 **1403 → 880**
   (문서 높이 2303 → 1636), 844x390 Canvas **488x683 → 210x294**(예산 294 이하).
-- **증거.** 신규 product-route PNG 3장은 `docs/rebuild/results/spec-085/`에 있다. 이 폴더의
-  `composer-ready-*.png` 3장과 `measurements.json`은 canonical 실행이 현재 제품 기준으로 갱신했고, 감사
-  당시의 원본은 git history에 남아 있다. 고객 shell의 desktop 폭이 바뀌어 `browse-ready-1280x800.png`도
+- **증거.** 신규 product-route PNG 3장은 `docs/rebuild/results/spec-085/`에 있다.
+  `docs/rebuild/results/spec-084/`의 `composer-ready-*.png` 3장과 `measurements.json`은 canonical 실행이
+  현재 제품 기준으로 갱신했고, 감사 당시의 원본은 git history에 남아 있다. 고객 shell의 desktop 폭이 바뀌어 `browse-ready-1280x800.png`도
   함께 갱신됐다.
 - **그대로 남은 finding.** F-2(영어 native 파일 선택), F-3, F-4, F-5, F-6, F-7(고객 진단 문구), F-8은
   스펙 085 범위 밖이고 화면에 그대로 있다. §6의 후속 후보 목록도 여전히 승인이 아니다.

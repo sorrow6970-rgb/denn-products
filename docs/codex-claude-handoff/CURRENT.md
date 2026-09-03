@@ -1,5 +1,25 @@
 # 현재 상태
 
+> **최신 포인터 (2026-09-03): spec 085 종료 = DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK.**
+> Codex 독립 검수를 보완 라운드 **0회**로 통과했다. 검수 기준 `HEAD=origin=786ca54`, 승인 후보
+> `7351696`, ahead/behind 0/0, 허용 범위 밖 committed diff **0**. 검수자가 게이트를 다시 돌렸다 —
+> `node scripts/check.mjs` PASS(unit **2500/2500**, 92파일, build 2개), canonical Chromium
+> **218 passed / 0 failed / 0 skipped / 0 retry**, `git diff --check`·포트·temp 잔류 PASS. 그 실행 뒤
+> spec-085 PNG 3장과 spec-084 PNG 15장에 **수정이 나타나지 않아** 재생성 바이트가 commit 바이트와
+> 같음이 증명됐다. 시각 결과도 직접 열어 보고 PNG를 디코드해 다시 쟀다: 390x844 액자 상단 page y
+> **973**, 1280x800 **880**(문서 높이 **1636**), 844x390 액자 높이 **294**(예산 `390-96` 상한),
+> `measurements.json` composer Canvas `500x700`/`286x400`/`210x294`/`216x302`·overflow 전수 false.
+> 운영자 entry는 검수자 build에서도 sha256 `bdbc113a…`로 바이트 동일이다. **판단 요청 2건은 둘 다
+> 승인** — ① 열거 밖 `browse-ready-1280x800.png` 갱신은 desktop만 바뀌고 mobile은 무변경이라 §1 폭
+> 변경이 원인임이 확인되므로 복원하지 않은 판단이 옳다, ② composer 전 desktop browse card의 빈
+> 오른쪽 면은 계약 §1 그대로라 결함이 아니고 미관 다듬기는 후속 **후보로 기록만** 한다. 비차단 관찰은
+> `heightLimitedWidth < 1`의 추가 `null`(보수적·도달 불가), spec 018 desktop PNG의 기존 비결정성
+> (stage 0), gitignore된 `test-results/.last-run.json` 1개다. 종료는 **문서 전용** — 제품 코드·test·
+> PNG·`measurements.json`·Rules/config·package/lockfile 수정 0, 게이트 추가 재실행 0. 상태
+> `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 스펙 084의 남은 finding
+> (F-2~F-8)과 `NOT TESTED`는 그대로이며 다음 스펙은 시작하지 않았다. 전체 진행도 **85~88% / 잔여
+> 12~15% — 변동 없음**.
+
 > **최신 포인터 (2026-09-02): spec 085 구현·검증 완료 = READY_FOR_CODEX.**
 > 계약 `a9e7528`, 제품/test `7351696`, 기록 commit은 이 갱신이다(제품과 문서 분리). 스펙 084 P1 **F-1**을
 > 닫았다 — composer가 preview pane → controls pane 작업대가 됐고(`<960px` 한 열 미리보기 먼저,

@@ -2,10 +2,12 @@
 
 ## 상태
 
-- `READY_FOR_CODEX` — 구현·검증 완료(2026-09-02), 결과는 아래 `구현 결과` 절
-- 기준 `HEAD=origin=b86fd5cc3` → 계약 `a9e7528` → 제품/test `7351696`, ahead/behind `0/0`
-- active unit: `spec-085-customer-composer-visible-preview-workbench`, fix_round `0`
-- next: `CODEX_SPEC_085_REVIEW`
+- `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK` — Codex 독립 검수 통과(2026-09-03),
+  문서 전용 종료 완료. 검수 결과는 spec 085의 `CODEX REVIEW` 절
+- 기준 `HEAD=origin=b86fd5cc3` → 계약 `a9e7528` → 제품/test `7351696` → 기록 `786ca54` → 종료 문서,
+  ahead/behind `0/0`
+- active unit: 없음(완료 단위 `spec-085-customer-composer-visible-preview-workbench`), fix_round `0`
+- next: `FOUNDER_NEXT_MANUAL_TASK`
 - 직전 spec 084: `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
 
 ## Claude Code가 수행할 것
@@ -80,3 +82,24 @@ Rules/Firebase config, 실제 Firebase/network/emulator/deploy는 금지다.
   emulator/deploy·운영 데이터. 스펙 084의 다른 finding은 판정 그대로다.
 - 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_085_REVIEW`. 다음 finding·다음 스펙은 시작하지 않았다.
   전체 진행도 **85~88% / 잔여 12~15%**(고객 composer 레이아웃 한 건이라 구간 변동 없음).
+
+## Codex 검수·종료 (2026-09-03)
+
+- **판정 `CODEX_PASSED`, 보완 라운드 0회.** 검수 기준 `HEAD=origin=786ca54`, 승인 후보 `7351696`,
+  ahead/behind `0/0`, 허용 범위 밖 committed diff **0**.
+- **재실행 실측.** `node scripts/check.mjs` PASS(unit **2500/2500**, 92 파일, build 2개), canonical
+  Chromium **218 passed / 0 failed / 0 skipped / 0 retry**, `git diff --check` PASS, 포트·temp 잔류 검사
+  PASS. 검수자 실행 뒤 spec-085 PNG 3장과 spec-084 PNG 15장에 **수정이 나타나지 않았다** — 재생성
+  바이트가 commit된 바이트와 같다.
+- **시각 결과 직접 확인.** PNG를 열어 보고 디코드해 다시 쟀다: 390x844 액자 상단 page y **973**,
+  1280x800 **880**(문서 높이 **1636**), 844x390 액자 높이 **294**(예산 상한). `measurements.json`의
+  composer Canvas는 `500x700` / `286x400` / `210x294` / `216x302`, overflow 전수 `false`.
+- **판단 요청 2건 모두 승인.** ① `browse-ready-1280x800.png` 재생성 — 인과 확인(desktop만 변경,
+  mobile 무변경), 복원하지 않은 판단이 옳다. ② composer를 열기 전 desktop browse card의 빈 오른쪽 면 —
+  계약 §1 그대로이므로 결함이 아니며, 미관 다듬기는 후속 **후보로 기록만** 한다.
+- **비차단 관찰.** `heightLimitedWidth < 1`의 추가 `null`(보수적, matrix 도달 불가), spec 018 desktop
+  PNG의 기존 비결정성(스펙 084에서 이미 범위 밖으로 기록, stage 0), gitignore된
+  `test-results/.last-run.json` 1개.
+- **종료 처리.** 문서 전용. 제품 코드·test·PNG·`measurements.json`·Rules/config·package/lockfile 수정
+  **0**, 게이트 추가 재실행 **0**. 다음 단위·스펙 번호는 Codex 계약과 Founder 결정이 정하고, 스펙 084의
+  남은 finding과 `NOT TESTED`는 그대로다.

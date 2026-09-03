@@ -1,28 +1,56 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-09-02
+updated_at: 2026-09-03
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-084-local-visual-readiness-audit   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: spec-085-customer-composer-visible-preview-workbench   # implemented in 7351696; awaiting Codex review
-state: READY_FOR_CODEX
+completed_unit: spec-085-customer-composer-visible-preview-workbench   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
+active_unit: none          # spec 085 closed on the Codex pass; the next unit is a Founder decision
+state: WAITING_FOR_NEXT_MANUAL_TASK
 baseline_commit: b86fd5c   # HEAD=origin when the spec 085 contract was written
-candidate_commit: 7351696  # spec 085 product + test (contract docs committed as a9e7528)
-verified_commit: none      # Codex has not reviewed spec 085 yet
-origin_relation: "HEAD=origin after the implementation and record pushes, ahead/behind 0/0"
-working_tree: "protected spec-018 PNGs (rewritten by the canonical E2E, start/end hashes recorded) and pre-existing Founder/user dirty; all unstaged"
+candidate_commit: 7351696  # spec 085 product + test (contract docs a9e7528, record 786ca54)
+verified_commit: 7351696   # Codex independent review passed on 2026-09-03, fix round 0
+origin_relation: "HEAD=origin=786ca54 at review time, ahead/behind 0/0; this closure is documents only"
+working_tree: "protected spec-018 PNGs (rewritten again by the reviewer's canonical E2E, desktop a5dbdf93) and pre-existing Founder/user dirty; all unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_085_REVIEW
+next_transition: FOUNDER_NEXT_MANUAL_TASK
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 085 implemented - customer composer is preview-first and the frame Canvas fits the viewport height; F-2/F-7, Space, admin and live Firebase remain out of scope and unauthorized
-commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
+session_status: spec 085 passed Codex review and is closed - the customer composer is preview-first and the frame Canvas fits the viewport height; the remaining spec 084 findings, the next spec, Space, admin and live Firebase stay out of scope and unauthorized
+commit_owner: Claude Code implementation; Codex independent review and closure
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Codex 스펙 085 독립 검수 · 종료 (2026-09-03)
+
+- **판정 `CODEX_PASSED`, 보완 라운드 0회.** 검수 기준 `HEAD=origin=786ca54`, 승인 후보 `7351696`
+  (계약 `a9e7528`, 기록 `786ca54`), ahead/behind 0/0. 허용 범위 밖 committed diff **0**.
+- **게이트 재실행.** `node scripts/check.mjs` PASS(format·lint·typecheck, unit **2500/2500** · 92 파일,
+  build 2개), canonical `node scripts/e2e-run.mjs` **Chromium 218 passed / 0 failed / 0 skipped /
+  0 retry**, `git diff --check` PASS, 포트 4183/4184/4185/8080/9099/9199 LISTENING 0,
+  `denn-e2e-*`·`playwright-report`·`debug.log` 잔류 0.
+- **PNG 재현성.** 검수자 canonical 실행 뒤 spec-085 PNG 3장·spec-084 PNG 15장에 수정이 나타나지
+  않았다 — 재생성 바이트 = commit 바이트. `545ac7a2…`/`75d1a5a4…`/`8fb911d7…` 일치.
+- **시각 결과 직접 확인.** PNG를 열어 보고 디코드해 재측정: 390x844 액자 상단 page y **973**,
+  1280x800 **880**(문서 높이 **1636**), 844x390 액자 높이 **294**(예산 `390-96` 상한).
+  `measurements.json` 18건의 composer Canvas는 `500x700`/`286x400`/`210x294`/`216x302`, overflow 전수 false.
+- **범위·보호 대상.** `apps/admin/**`·`packages/**`·package/lockfile/workspace·Rules/Firebase config·
+  `AGENTS.md`·design README·spec 038·`taste-v2/**`·spec 018 PNG·`local-visual-readiness.spec.ts`
+  committed diff 0. 운영자 entry `index-BeV6iIrs.js`는 검수자 build에서도 sha256 `bdbc113a…`로 바이트
+  동일. `.denn-preview-edit__area`는 composer 전용이고 `resolveFrameLogicalWidth`는 Space viewer가 계속 쓴다.
+- **판단 요청 2건 모두 승인.** ① 열거 밖 `browse-ready-1280x800.png` 갱신 — desktop만 바뀌고 mobile은
+  무변경이라 §1 폭 변경이 원인임이 확인된다. 복원하지 않은 판단이 옳다. ② composer 전 desktop browse
+  card의 빈 오른쪽 면 — 계약 §1 그대로이므로 결함이 아니고, 미관 다듬기는 후속 **후보로 기록만** 한다.
+- **비차단 관찰 3건.** `heightLimitedWidth < 1`의 추가 `null`(보수적·matrix 도달 불가), spec 018
+  desktop PNG의 기존 비결정성(`a5dbdf93…`, 스펙 084에서 이미 범위 밖·stage 0), gitignore된
+  `test-results/.last-run.json` 1개.
+- **종료 처리.** 문서 전용. 제품 코드·test·PNG·`measurements.json`·Rules/config·package/lockfile 수정
+  **0**, 게이트 추가 재실행 0. 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`.
+  스펙 084의 남은 finding(F-2~F-8)과 `NOT TESTED`는 그대로다. 전체 진행도 **85~88% / 잔여 12~15%**
+  (문서 전용 종료라 변동 없음).
 
 ## Claude 스펙 085 구현·검증 (2026-09-02)
 

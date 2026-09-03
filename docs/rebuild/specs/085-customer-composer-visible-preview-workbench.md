@@ -2,8 +2,9 @@
 
 ## 상태
 
-- `READY_FOR_CODEX` — 구현·검증 완료(2026-09-02). 결과는 이 문서 맨 아래 `DONE (Claude)` 절에 있다.
-  next `CODEX_SPEC_085_REVIEW`.
+- `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK` — Codex 독립 검수 통과(2026-09-03),
+  문서 전용 종료 완료. 승인 후보 `7351696`, 종료 시 `HEAD=origin=786ca54`. 보완 라운드 0회.
+  후속 단위는 Founder 지시로만 시작한다. next `FOUNDER_NEXT_MANUAL_TASK`.
 - 기준 브랜치: `rebuild/modern-studio`
 - 기준 commit: `HEAD=origin=b86fd5cc3`, ahead/behind `0/0`
 - 직전 완료: spec 084 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
@@ -335,7 +336,7 @@ timer·retry·polling **0**, teardown은 붙인 listener만 제거한다.
 | 증상 | before | after |
 |---|---|---|
 | 모바일 세로에서 Canvas가 모든 컨트롤 아래 | 액자 밴드 상단 page y **1620** (390x844) | **973** — composer 안에서 preview가 첫 요소 |
-| 데스크톱 단일 컴럼, 미리보기와 컨트롤을 동시에 못 봄 | page y **1403**, 문서 높이 **2303** (1280x800) | page y **880**, 문서 높이 **1636**, 왼쪽 sticky preview + 오른쪽 controls |
+| 데스크톱 단일 컬럼, 미리보기와 컨트롤을 동시에 못 봄 | page y **1403**, 문서 높이 **2303** (1280x800) | page y **880**, 문서 높이 **1636**, 왼쪽 sticky preview + 오른쪽 controls |
 | 가로에서 Canvas 683px > 뷰포트 390px | Canvas **488x683** (844x390) | Canvas **210x294** — 예산 `390-96=294` 이하 |
 
 `measurements.json`의 composer Canvas는 지금 1280x800 **500x700**, 390x844 **286x400**, 844x390 **210x294**,
@@ -401,3 +402,76 @@ emulator/deploy/운영 데이터. 스펙 084의 다른 finding(F-2·F-7·F-3·F-
 
 상태는 `READY_FOR_CODEX`, next `CODEX_SPEC_085_REVIEW`에서 멈춘다. 다음 finding과 다음 스펙은 시작하지
 않았다.
+
+### CODEX REVIEW — CODEX_PASSED (2026-09-03)
+
+검수 기준 `HEAD=origin=786ca54`, 승인 후보 `7351696`(계약 `a9e7528`, 기록 `786ca54`), ahead/behind
+`0/0`. 보고 수치를 그대로 믿지 않고 게이트를 다시 실행하고 증거를 다시 측정했다. 결함은 없다.
+
+**게이트 재실행.** `node scripts/check.mjs` **PASS**(format·lint·typecheck, unit **2500/2500** ·
+92 파일, build 2개). canonical `node scripts/e2e-run.mjs` **Chromium 218 passed / 0 failed / 0 skipped /
+0 retry**. `git diff --check` PASS. 포트 `4183/4184/4185/8080/9099/9199` LISTENING **0**.
+`denn-e2e-*`·`playwright-report`·`debug.log` 잔류 **0**.
+
+**PNG 재현성.** 검수자의 canonical 실행 뒤 working tree에 spec-085 PNG 3장·spec-084 PNG 15장의 수정이
+**전혀 나타나지 않았다** — 재생성 바이트가 commit된 바이트와 같다는 뜻이다. `545ac7a2…` /
+`75d1a5a4…` / `8fb911d7…` 모두 일치한다.
+
+**시각 결과 직접 확인.** 세 PNG를 직접 열어 확인하고, PNG를 디코드해 액자 밴드 위치를 다시 쟀다.
+390x844 액자 상단 page y **973**, 1280x800 **880**(문서 높이 **1636**), 844x390 액자 높이 **294**
+(= 예산 `390-96`의 상한)로 DONE 표와 픽셀 단위로 일치한다. `measurements.json` 18건의 composer Canvas도
+`500x700` / `286x400` / `210x294` / `216x302`이고 horizontal overflow는 전수 `false`다.
+
+**계약 대조.** §1 shell measure, §2 DOM 순서(preview pane → controls pane, 인쇄 영역 마지막), §3
+breakpoint·sticky(`top = 20px + safe-top`은 `.denn-shell`의 page padding과 같다)·`order` 미사용,
+§4 공식·`null` 조건·`round(w*aspect) <= heightBudget` 불변식, §5 기능 불변식을 코드에서 확인했다.
+`PreviewComposer.tsx`의 786줄 변경은 공백 무시 diff로 보면 **구조 이동 + viewport 구독 추가**뿐이고
+legend·label·ARIA·컨트롤 순서·드래그/시계/인쇄 로직의 의미는 변하지 않았다. 기존 composer E2E는 60건
+그대로이고 신규 15건이 더해져 75건이다.
+
+**범위·보호 대상.** `b86fd5c..HEAD` committed diff에 `apps/admin/**`·`packages/**`·모든 `package.json`·
+`pnpm-lock.yaml`·`pnpm-workspace.yaml`·Rules/Firebase config·`AGENTS.md`·design README·spec 038·
+`taste-v2/**`·spec 018 PNG·`tests/e2e/local-visual-readiness.spec.ts`는 **0**건이다. 운영자 entry
+`index-BeV6iIrs.js`는 검수자 build에서도 sha256 `bdbc113a…`로 바이트 동일했다.
+`.denn-preview-edit__area`는 `PreviewComposer`에서만 쓰이고 `resolveFrameLogicalWidth`는 Space viewer가
+계속 쓰므로, 두 변경 모두 composer 밖으로 새지 않는다.
+
+**판단 요청 2건 — 둘 다 승인.**
+
+1. **열거 밖 `browse-ready-1280x800.png` 갱신 — 승인.** §1이 desktop inner를 1120px로 넓히므로 같은
+   고객 shell을 1280px에서 찍는 baseline은 반드시 바뀐다. 실제로 desktop만 바뀌고
+   `browse-ready-390x844.png`는 무변경이라(mobile inner 560px 유지) 인과가 확인된다. 복원하면 제품과
+   어긋난 baseline이 남고 canonical 실행마다 되돌려진다. 재생성 상태로 commit한 판단이 옳다.
+2. **composer를 열기 전 desktop browse card의 빈 오른쪽 면 — 계약대로이므로 결함 아님.** §1이
+   "browse card는 가용 폭을 사용한다 / composer 밖 선택 단계는 최대 560px 중앙 정렬"을 명시했고 구현은
+   그대로 따랐다. 임의 변경하지 않은 판단이 옳다. 1120px 카드 안에 560px 열만 놓이는 화면은 미관상
+   후속 다듬기 **후보로 기록만** 한다 — 이번 단위의 결함이 아니며 승인된 후속 범위도 아니다.
+
+**비차단 관찰 3건(수정 요구 아님).**
+
+- `resolveFramePreviewLogicalWidth`는 §4가 열거하지 않은 `heightLimitedWidth < 1`에서도 `null`이다.
+  보수적인 방향이고 검증 matrix에서 도달 불가능하다(`viewportHeight` 97~98px 구간에서만 발생).
+- spec 018 desktop PNG는 검수자 실행에서 또 달라졌다(`a5dbdf93…`). 스펙 084 보완 라운드 1에서 이미
+  "결정화 대상 밖"으로 기록된 기존 조건이고 stage·commit되지 않았다. 스펙 085의 결함이 아니다.
+- Playwright가 남기는 `test-results/.last-run.json` 한 개는 `.gitignore:32`로 추적 대상이 아니다.
+
+스펙 085는 `CODEX_PASSED`다. 다음은 문서 전용 closure이며 제품 코드·test·PNG를 더 수정하거나 게이트를
+재실행하지 않는다. 스펙 084의 남은 finding·다음 스펙·실제 Firebase/network/emulator/deploy는 시작하지
+않는다.
+
+### CLOSED (Claude) — 스펙 085 문서 전용 종료 (2026-09-03)
+
+Codex `CODEX_PASSED`를 받아 문서만 종료 상태로 맞췄다. 이 종료에서 제품 코드·test·PNG·
+`measurements.json`·Rules/config·package/lockfile은 **한 줄도 수정하지 않았다**. 변경은 이 spec, handoff,
+스펙 084 감사 addendum의 지시 대상 문구 하나, `Automation/DENN_AUTOMATION_STATE.md`,
+`Automation/NEXT_CLAUDE_PROMPT.md`, `docs/codex-claude-handoff/CURRENT.md`,
+`docs/live/CLAUDE_LIVE_PATCH_LOG.md`뿐이다(위 DONE 절의 오탈자 `단일 컴럼` → `단일 컬럼` 포함, 수치·판정
+무변경).
+
+`completed_unit`은 `spec-085-customer-composer-visible-preview-workbench`
+(`DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`), `active_unit`은 없음, 상태
+`WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`다.
+
+스펙 084 감사의 남은 finding(F-2·F-3·F-4·F-5·F-6·F-7·F-8)은 분류 그대로이고 승인된 범위가 아니다.
+`NOT TESTED`(실기기 Safari/Android/카카오 인앱·200% zoom·preview channel·실제 Firebase/network/
+emulator/deploy·운영 데이터)도 그대로다. 다음 단위와 스펙 번호는 Codex 계약과 Founder 결정이 정한다.

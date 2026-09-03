@@ -1,19 +1,92 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
 
-- active_unit: `spec-085-customer-composer-visible-preview-workbench` — 계약 `a9e7528`, 제품/test `7351696`
-- completed_unit: `spec-084-local-visual-readiness-audit` — **DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK**
-- 기준: 계약 작성 `HEAD=origin=b86fd5cc3` → 구현 후 `HEAD=origin`, ahead/behind `0/0`
-- next_transition: `CODEX_SPEC_085_REVIEW`
-- fix_round: `0` (최대 3)
+- completed_unit: `spec-085-customer-composer-visible-preview-workbench` — 계약 `a9e7528`, 제품/test
+  `7351696`, 기록 `786ca54`, 종료 문서는 이 갱신이다
+- 직전 완료: `spec-084-local-visual-readiness-audit` — **DONE / CODEX_PASSED / LOCAL_VERIFIED /
+  NO_LIVE_NETWORK**
+- active_unit: 없음. 검수 기준 `HEAD=origin=786ca54`, 승인 후보 `7351696`, ahead/behind `0/0`
+- next_transition: `FOUNDER_NEXT_MANUAL_TASK`
+- fix_round: `0` (보완 라운드 없이 1회 통과)
 - 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (고객 composer 레이아웃 한 건이라 구간 변동 없음)
 
-## 지금 수행할 작업 — 없음. Codex 검수 대기
+## 지금 수행할 작업 — 없음. Founder 지시 대기
 
-스펙 085 구현·검증을 끝내고 멈췄다. 다음 finding(F-2·F-7 등), 다음 스펙, 실제 Firebase/network/emulator/
-deploy·실기기·preview channel은 **자동으로 시작하지 않는다**. 다음 범위는 Codex 독립 검수와 Founder
-결정이 정한다.
+스펙 085는 Codex 독립 검수를 통과했고 문서 전용 종료까지 끝났다. 스펙 084 감사에 남은 finding
+(F-2·F-3·F-4·F-5·F-6·F-7·F-8), 다음 스펙, 실제 Firebase/network/emulator/deploy·실기기·preview channel은
+**자동으로 시작하지 않는다**. 다음 범위와 스펙 번호는 Codex 계약과 Founder 결정이 정한다.
+
+## 스펙 085 Codex 독립 검수 결과 (수행 완료)
+
+**판정: `CODEX_PASSED`.** 보고된 수치를 믿지 않고 전부 다시 실행·재측정했으며 결함은 없다.
+
+**게이트 재실행.** `node scripts/check.mjs` **PASS**(format·lint·typecheck, unit **2500/2500** · 92 파일,
+build 2개). canonical `node scripts/e2e-run.mjs` **Chromium 218 passed / 0 failed / 0 skipped / 0 retry**.
+`git diff --check` PASS. 포트 `4183/4184/4185/8080/9099/9199` LISTENING **0**. `denn-e2e-*`·
+`playwright-report`·`debug.log` 잔류 **0**(Playwright가 남기는 `test-results/.last-run.json` 한 개는
+`.gitignore:32`로 추적 대상이 아니다).
+
+**PNG 재현성 — 독립 실행에서 증명.** 검수자의 canonical 실행 뒤 working tree에 spec-085 PNG 3장과
+spec-084 PNG 15장의 **수정이 하나도 나타나지 않았다**. 즉 재생성 결과가 commit된 바이트와 동일하다.
+`545ac7a2…`(1280x800) · `75d1a5a4…`(390x844) · `8fb911d7…`(844x390) 모두 실측 일치다.
+
+**시각 결과 직접 확인.** 세 PNG를 직접 열어 봤고, PNG를 디코드해 액자 밴드 위치도 재측정했다.
+390x844 액자 상단 page y **973**, 1280x800 **880**(문서 높이 **1636**), 844x390 액자 높이 **294**
+(= `390 - 96` 예산의 상한) — 보고된 표와 픽셀 단위로 일치한다. `measurements.json` 18건도 실제로
+`500x700` / `286x400` / `210x294` / `216x302`이고 horizontal overflow는 전수 `false`다.
+
+**보호 대상·범위.** `b86fd5c..HEAD` committed diff에 `apps/admin/**`·`packages/**`·모든 `package.json`·
+`pnpm-lock.yaml`·`pnpm-workspace.yaml`·Rules/Firebase config·`AGENTS.md`·design README·spec 038·
+`taste-v2/**`·spec 018 PNG·`tests/e2e/local-visual-readiness.spec.ts`는 **0**건이다. 운영자 entry
+`index-BeV6iIrs.js`는 검수자 build에서도 sha256 `bdbc113a…`로 **바이트 동일**했다 — 운영자 영향 0의 증명이다.
+`.denn-preview-edit__area`는 `PreviewComposer`에서만 쓰이고 `resolveFrameLogicalWidth`는 Space viewer가
+그대로 쓰므로 두 변경 모두 composer 밖으로 새지 않는다.
+
+**계약 대조.** §1 shell measure, §2 DOM 순서(preview pane → controls pane, print 마지막), §3 breakpoint·
+sticky·`order` 미사용, §4 순수 함수 공식·`null` 조건·`round(w*aspect) <= budget` 불변식, §5 기능 불변식은
+모두 코드에서 확인했다. `PreviewComposer.tsx`의 786줄 변경은 공백 무시 diff로 보면 **순수한 구조 이동 +
+viewport 구독 추가**이고 legend·label·ARIA·컨트롤 순서·드래그/시계/인쇄 로직은 한 줄도 의미가 바뀌지
+않았다. 기존 composer E2E는 **60건 그대로**이고 새 15건이 더해져 75건이다.
+
+### 판단 요청 2건 — 둘 다 승인
+
+1. **열거 밖 `browse-ready-1280x800.png` 갱신 — 승인.** 인과를 직접 확인했다. §1이 desktop inner를
+   1120px로 넓히므로 같은 고객 shell을 1280px에서 찍는 baseline은 반드시 바뀌고, 실제로 desktop만
+   바뀌고 `browse-ready-390x844.png`는 무변경이다(mobile inner는 560px 그대로). 복원하면 제품과
+   어긋난 baseline이 남고 canonical 실행마다 되돌려진다. 재생성 상태로 commit한 판단이 옳다.
+2. **composer를 열기 전 desktop browse card의 빈 오른쪽 면 — 계약대로이므로 결함 아님.** §1이
+   "browse card는 가용 폭을 사용한다 / 선택 단계는 최대 560px 중앙 정렬"을 명시했고 구현은 그대로
+   따랐다. 임의로 바꾸지 않은 판단이 옳다. 다만 1120px 카드 안에 560px 열만 놓이는 화면은 미관상
+   후속 다듬기 후보로 **기록만** 남긴다 — 이번 단위의 결함이 아니고, 승인된 후속 범위도 아니다.
+
+### 비차단 관찰 3건 (수정 요구 아님)
+
+- `resolveFramePreviewLogicalWidth`는 §4가 열거하지 않은 `heightLimitedWidth < 1` 경우에도 `null`이다.
+  보수적인 방향이고 matrix에서 도달 불가능하다(`viewportHeight` 97~98px 구간에서만 발생).
+- spec 018 desktop PNG는 검수자 실행에서 또 달라졌다(`a5dbdf93…`). 이는 스펙 084 보완 라운드 1에서
+  이미 "결정화 대상 밖"으로 기록된 **기존 조건**이고 stage·commit되지 않았다. 스펙 085의 결함이 아니다.
+- 문서 오탈자 2건(`단일 컴럼` → `단일 컬럼`, 감사 addendum의 "이 폴더" 지시 모호)은 이 종료 commit에서
+  함께 고쳤다. 수치·판정은 바꾸지 않았다.
+
+### 종료 처리
+
+문서 전용 종료다. 제품 코드·test·PNG·`measurements.json`·Rules/config·package/lockfile은 **한 줄도
+수정하지 않았다**. 변경은 spec 085, handoff, 감사 addendum 문구, `Automation/DENN_AUTOMATION_STATE.md`,
+`Automation/NEXT_CLAUDE_PROMPT.md`, `docs/codex-claude-handoff/CURRENT.md`,
+`docs/live/CLAUDE_LIVE_PATCH_LOG.md`뿐이다.
+
+> 직전 지시문(스펙 085 Codex 독립 검수, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 최신 live log를 읽고, 스펙 085 구현 7351696 및 기록 786ca54를 Codex 독립 검수해. 보고된 두 판단 항목과 시각 결과를 직접 확인하고 전체 게이트를 재검증하되, 결함이 없으면 CODEX_PASSED 종료 지시를 남기고 다음 스펙은 시작하지 마.
+```
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 지시 — 스펙 085 구현 (수행 완료)
 
 ## 스펙 085 구현 결과 (수행 완료)
 

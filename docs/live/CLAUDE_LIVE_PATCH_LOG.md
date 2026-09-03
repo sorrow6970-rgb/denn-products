@@ -7400,3 +7400,38 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   emulator/deploy·운영 데이터. 스펙 084의 다른 finding은 판정 그대로다.
 - 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_085_REVIEW`. 다음 finding·다음 스펙은 시작하지 않았다.
   전체 진행도 **85~88% / 잔여 12~15%**(고객 composer 레이아웃 한 건이라 구간 변동 없음).
+
+## 2026-09-03 - Codex 스펙 085 독립 검수 · CODEX_PASSED · 문서 전용 종료
+
+- 검수 기준 `HEAD=origin=786ca54`, 승인 후보 `7351696`(계약 `a9e7528`, 기록 `786ca54`), ahead/behind
+  0/0. **판정 `CODEX_PASSED`, 보완 라운드 0회.** 허용 범위 밖 committed diff **0**.
+- **게이트 재실행.** `node scripts/check.mjs` PASS(format·lint·typecheck, unit **2500/2500** · 92 파일,
+  build 2개). canonical `node scripts/e2e-run.mjs` **Chromium 218 passed / 0 failed / 0 skipped /
+  0 retry**. `git diff --check` PASS. 포트 4183/4184/4185/8080/9099/9199 LISTENING 0,
+  `denn-e2e-*`·`playwright-report`·`debug.log` 잔류 0.
+- **PNG 재현성 증명.** 검수자 canonical 실행 뒤 working tree에 spec-085 PNG 3장·spec-084 PNG 15장의
+  수정이 하나도 나타나지 않았다 — 재생성 바이트가 commit된 바이트와 동일하다.
+  `545ac7a2…`/`75d1a5a4…`/`8fb911d7…` 일치.
+- **시각 결과 직접 확인.** 세 PNG를 열어 보고 디코드해 액자 밴드를 재측정했다: 390x844 액자 상단
+  page y **973**, 1280x800 **880**(문서 높이 **1636**), 844x390 액자 높이 **294**(예산 `390-96` 상한).
+  `measurements.json` 18건의 composer Canvas는 `500x700`/`286x400`/`210x294`/`216x302`이고 horizontal
+  overflow는 전수 `false`다.
+- **계약 대조.** §1 shell measure, §2 DOM 순서(preview → controls, 인쇄 마지막), §3 breakpoint·sticky
+  (`top = 20px + safe-top` = `.denn-shell` page padding)·`order` 미사용, §4 공식·`null` 조건·
+  `round(w*aspect) <= budget` 불변식, §5 기능 불변식을 코드에서 확인했다. `PreviewComposer.tsx`의 786줄
+  변경은 공백 무시 diff로 보면 구조 이동 + viewport 구독 추가뿐이고 legend·label·ARIA·컨트롤 순서·
+  드래그/시계/인쇄 의미는 무변경이다. 기존 composer E2E 60건 그대로 + 신규 15건 = 75건.
+- **보호 대상.** `apps/admin/**`·`packages/**`·package/lockfile/workspace·Rules/Firebase config·
+  `AGENTS.md`·design README·spec 038·`taste-v2/**`·spec 018 PNG·`local-visual-readiness.spec.ts`
+  committed diff 0. 운영자 entry `index-BeV6iIrs.js`는 검수자 build에서도 sha256 `bdbc113a…` 바이트 동일.
+- **판단 요청 2건 모두 승인.** ① 열거 밖 `browse-ready-1280x800.png` 갱신 — desktop만 바뀌고 mobile은
+  무변경이라 §1 폭 변경이 원인임이 확인된다. 복원하면 제품과 어긋난 baseline이 남으므로 재생성 상태로
+  commit한 판단이 옳다. ② composer를 열기 전 desktop browse card의 빈 오른쪽 면 — 계약 §1이 명시한
+  결과이므로 결함이 아니다. 미관 다듬기는 후속 **후보로 기록만** 하고 승인하지 않는다.
+- **비차단 관찰 3건.** `resolveFramePreviewLogicalWidth`의 `heightLimitedWidth < 1` 추가 `null`
+  (보수적·matrix 도달 불가), spec 018 desktop PNG의 기존 비결정성(`a5dbdf93…`, 스펙 084에서 이미 범위
+  밖·stage 0), gitignore된 `test-results/.last-run.json` 1개. 문서 오탈자 2건은 이 종료에서 고쳤다.
+- **종료 처리.** 문서 전용이다. 제품 코드·test·PNG·`measurements.json`·Rules/config·package/lockfile
+  수정 **0**, 게이트 추가 재실행 0, 실제 Firebase/network/emulator/deploy 0. 상태
+  `WAITING_FOR_NEXT_MANUAL_TASK`, next `FOUNDER_NEXT_MANUAL_TASK`. 스펙 084의 남은 finding(F-2~F-8)과
+  `NOT TESTED`는 그대로이고 다음 스펙은 시작하지 않았다. 전체 진행도 **85~88% / 잔여 12~15%**(변동 없음).
