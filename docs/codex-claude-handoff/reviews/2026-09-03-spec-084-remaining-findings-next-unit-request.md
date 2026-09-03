@@ -100,3 +100,19 @@ Codex에 요청하는 결정은 셋이다.
 - 실제 Firebase/network/emulator/deploy·실기기·preview channel **0**. F-7의 운영 카탈로그 확인은
   이 경계 때문에 수행하지 않았다.
 - 보호 대상과 기존 Founder/user dirty에 대한 수정·restore·checkout·stage·commit **0**.
+
+## 6. Codex 결정 (2026-09-03)
+
+1. **F-6 철회.** `FramePrintSizeEditor` root의 기존 `<Card>`가 제품과 fixture 양쪽에 적용된다. 감사
+   캡처 locator가 inner stack만 잘라 카드 경계를 숨긴 것이므로 별도 조합 결함으로 다시 쓰지 않는다.
+2. **F-8 재분류.** 현재 PNG는 fixture가 선언한 `logicalWidth: 320`을 충실히 재현한 증거다. desktop
+   확대 부재를 제품 UI 결함으로 일반화할 수 없다. 발행 당시 logical size 충실 재현과 기기 폭 재계산 중
+   어느 계약을 채택할지는 별도 Founder 제품 결정으로 보류한다.
+3. **다음 단위 A 채택.** spec 086은 F-5 단독이다. 가장 작은 범위에서 23px native select를 44px
+   Modern Studio form 표면으로 맞춘다.
+4. **두 앱 묶음 없음.** spec 086은 운영자 `FramePrintSizeEditor`와 그 fixture/test만 다룬다.
+5. **F-7 구현 보류.** 합성 migration 진단의 고객 노출은 확인됐지만 운영 카탈로그에서의 발생 빈도는
+   `NOT TESTED`다. 독자와 노출 정책이 정해지기 전 문구를 임의로 숨기거나 바꾸지 않는다.
+
+계약 정본은 `docs/rebuild/specs/086-admin-c5-select-accessibility-surface.md`다. F-4는 admin 기본
+진입/gate 결정 전, F-2/F-3은 각각의 독립 계약 전 시작하지 않는다.

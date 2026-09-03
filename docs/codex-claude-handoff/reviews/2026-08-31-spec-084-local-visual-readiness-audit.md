@@ -113,11 +113,11 @@ PNG를 저장하지 않은 320px measurement-only 3건(고객 browse·고객 com
 바로 아래 `인쇄 폭/높이` 입력은 Modern Studio 토큰(라운드·보더·높이)을 따르는데 `액자 사이즈` select만
 브라우저 기본이다. 높이 23px는 44px 규칙에도 미달한다. 이 화면의 44px 미만 target은 이 항목 하나뿐이다.
 
-### F-6 (P2) — 편집기가 셸의 카드 표면을 쓰지 않는다
+### F-6 — **철회(2026-09-03 재확인)**
 
-`App.tsx`는 `FramePrintSizeEditor`를 `Card` 없이 배치한다. 다른 섹션이 모두 흰 카드 위에 놓이는 것과
-달리 편집기만 배경 위에 직접 놓여 시각적 위계가 끊긴다. locator 캡처라 여백이 없는 것이 아니라, 제품
-조합에도 카드가 없다.
+기존 판정은 사실과 달랐다. `App.tsx`가 별도 `Card`로 감싸지 않지만 `FramePrintSizeEditor`의 root가
+spec 041부터 이미 `<Card>`다. 증거 PNG는 inner `denn-stack` locator를 캡처해 바깥 카드의 padding과
+border가 잘렸을 뿐이다. 제품과 fixture 모두 같은 component root를 사용하므로 결함 목록에서 철회한다.
 
 ### F-7 (P2) — 고객 화면에 마이그레이션 진단 문구가 보인다
 
@@ -127,10 +127,12 @@ PNG를 저장하지 않은 320px measurement-only 3건(고객 browse·고객 com
 측면이 있고, 운영 카탈로그에서 항상 뜨는지는 **NOT TESTED**다. 문구의 대상 독자가 손님이 맞는지 후속
 판단이 필요하다.
 
-### F-8 (P2) — Space viewer가 데스크톱에서 확대되지 않는다
+### F-8 — **검증된 finding 아님 / 제품 결정 대기(2026-09-03 재확인)**
 
-`space-v2-viewer-1280x800.png`의 Canvas는 320x480으로, 390x844일 때와 같다. 1280px에서 카드 좌측에
-작게 놓이고 우측이 비어 "시안을 확인한다"는 목적에 비해 작다.
+`space-v2-viewer-*.png`의 320x480은 제품의 반응형 폭을 측정한 값이 아니다. 합성 fixture가 V2 replay
+evidence에 `logicalWidth: 320`, `aspect: 1.5`를 선언했고 viewer가 발행 당시 logical size를 그대로
+재현한 결과다. 이 근거로 desktop 확대 부재를 제품 결함으로 일반화할 수 없다. 발행 당시 size 충실
+재현과 열람 기기 폭 재계산 중 어느 계약을 택할지는 별도 Founder 제품 결정으로 보류한다.
 
 ### 관찰(결함 아님)
 
@@ -149,10 +151,10 @@ PNG를 저장하지 않은 320px measurement-only 3건(고객 browse·고객 com
 | 고객 browse | ready | PASS | FINDING(F-7) |
 | 고객 composer | ready + 실제 Canvas | PASS | FINDING(F-1, F-2, F-7) |
 | 고객 Space V2 | 비밀번호 게이트 | PASS | PASS |
-| 고객 Space V2 | 인증 후 열람 | PASS | FINDING(F-3, F-8) |
+| 고객 Space V2 | 인증 후 열람 | PASS | FINDING(F-3), F-8은 제품 결정 대기 |
 | 고객 Space V1 | 표시 거부 | PASS | PASS |
 | 운영자 shell | 제품 기본값 | PASS | FINDING(F-4) |
-| 운영자 C5 편집기 | ready-clean | FINDING(44px, F-5) | FINDING(F-5, F-6) |
+| 운영자 C5 편집기 | ready-clean | FINDING(44px, F-5) | FINDING(F-5), F-6 철회 |
 | 운영자 발급 panel | frozen draft | PASS | FINDING(F-2) |
 | 고객/운영자 제품 route의 Space·C5·발급 | — | `NOT TESTED` | 실제 network/gate 필요 |
 | dirty/conflict/save-error 등 쓰기 실패 상태 | — | `NOT TESTED` | 도달 절차 미정의 |
@@ -167,8 +169,8 @@ PNG를 저장하지 않은 320px measurement-only 3건(고객 browse·고객 com
 2. 파일 선택 컨트롤을 `@denn/ui` 버튼 + 한국어 문구로 감싼다. 고객·운영자 양쪽(F-2).
 3. Space 게이트/뷰어 헤더 분리: 인증 후에는 입력 안내를 제거하고 제목을 하나로 만든다(F-3).
 4. admin root를 운영자 작업 표면으로 바꾸고 데모 섹션과 상시 오류 필드를 제거한다(F-4).
-5. C5 select를 디자인 시스템 컨트롤로 교체(높이 44px 이상)하고 편집기를 카드 위에 올린다(F-5, F-6).
-6. 고객 대상 진단 문구의 독자 재검토(F-7), Space viewer의 데스크톱 확대 규칙(F-8).
+5. C5 native select의 의미를 유지하면서 Modern Studio form 표면과 높이 44px 이상을 적용한다(F-5).
+6. 고객 대상 진단 문구의 독자를 재검토한다(F-7). V2 replay size는 UI 결함이 아니라 별도 제품 결정이다.
 
 ## 7. 이번 단위의 경계
 
@@ -211,7 +213,7 @@ Codex 독립 검수가 지적한 네 항목을 이 단위 안에서 닫았다. f
 ## 9. 후속 해소 — F-1, 스펙 085 (2026-09-02)
 
 이 절은 **후속 기록**이다. 위 §4의 F-1 본문은 감사 시점(2026-08-31)의 실측 그대로 두고, 여기에 해소
-결과만 덧붙인다. 다른 finding의 의미·우선순위와 §5 판정표는 바뀌지 않는다.
+결과만 덧붙인다. F-6/F-8의 후속 사실 정정은 §10을 우선한다.
 
 - **F-1 — 해소**(`docs/rebuild/specs/085-customer-composer-visible-preview-workbench.md`, 제품 commit
   `7351696`). composer가 preview pane → controls pane 순서의 작업대가 됐고(`<960px` 한 열,
@@ -223,7 +225,17 @@ Codex 독립 검수가 지적한 네 항목을 이 단위 안에서 닫았다. f
   `docs/rebuild/results/spec-084/`의 `composer-ready-*.png` 3장과 `measurements.json`은 canonical 실행이
   현재 제품 기준으로 갱신했고, 감사 당시의 원본은 git history에 남아 있다. 고객 shell의 desktop 폭이 바뀌어 `browse-ready-1280x800.png`도
   함께 갱신됐다.
-- **그대로 남은 finding.** F-2(영어 native 파일 선택), F-3, F-4, F-5, F-6, F-7(고객 진단 문구), F-8은
-  스펙 085 범위 밖이고 화면에 그대로 있다. §6의 후속 후보 목록도 여전히 승인이 아니다.
+- **그대로 남은 검증된 finding.** F-2(영어 native 파일 선택), F-3, F-4, F-5, F-7(고객 진단 문구)은
+  스펙 085 범위 밖이다. F-6/F-8은 §10에서 정정한다.
 - **NOT TESTED는 그대로다.** 실기기·preview channel·운영 데이터·실제 Firebase/network는 이번에도
   검증되지 않았다.
+
+## 10. 후속 사실 정정과 다음 단위 선정 (2026-09-03)
+
+- **F-6 철회.** `FramePrintSizeEditor` root가 이미 `<Card>`이고 제품/fixture 모두 같은 component를
+  쓴다. inner locator 캡처가 카드 외곽을 잘라낸 것이 원인이므로 결함으로 유지하지 않는다.
+- **F-8 재분류.** 저장된 V2 PNG의 320x480은 합성 fixture가 선언한 발행 당시 logical size를 viewer가
+  재현한 결과다. desktop 반응형 크기의 제품 증거가 아니므로 UI finding에서 제외한다. replay size 계약은
+  별도 Founder 제품 결정이다.
+- **F-5 후속 착수.** Codex는 F-5 단독을 spec 086으로 선정했다. 이 시점에는 계약 문서만 작성했고 제품
+  수정은 없다. 구현과 독립 검수 통과 전에는 F-5를 해소로 표시하지 않는다.

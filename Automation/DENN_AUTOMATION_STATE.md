@@ -5,24 +5,38 @@ updated_at: 2026-09-03
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-085-customer-composer-visible-preview-workbench   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: none          # next unit NOT selected; a Codex review request is on the table
-state: REQUEST_CODEX_NEXT_UNIT_SELECTION
-baseline_commit: 5a1aee9   # HEAD=origin when the remaining findings were re-verified
-candidate_commit: none     # read-only re-verification; no product, test or PNG change
+active_unit: spec-086-admin-c5-select-accessibility-surface
+state: READY_FOR_CLAUDE
+baseline_commit: 452c03b   # HEAD=origin when Codex selected and wrote the spec 086 contract
+candidate_commit: none     # contract only; Claude Code has not implemented spec 086
 verified_commit: 7351696   # spec 085, Codex independent review passed on 2026-09-03, fix round 0
-origin_relation: "HEAD=origin=5a1aee9, ahead/behind 0/0; this request is documents only"
+origin_relation: "HEAD=origin=452c03b, ahead/behind 0/0 before the spec 086 document commit"
 working_tree: "protected spec-018 PNGs (rewritten by an earlier canonical E2E) and pre-existing Founder/user dirty; all unstaged and untouched"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_NEXT_UNIT_SELECTION
+next_transition: CLAUDE_SPEC_086_IMPLEMENT
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 085 closed; the remaining spec 084 findings were re-verified against current source and two of them (F-6, F-8) must not be turned into a contract as written - Codex selects the next unit
-commit_owner: Claude Code re-verification and request; Codex next-unit selection and contract
+session_status: spec 086 contract ready; Claude Code implements only the admin C5 native select 44px Modern Studio surface, while F-6 is withdrawn and F-8 waits for a separate Founder product decision
+commit_owner: Codex contract; Claude Code implementation next
 push_policy: fast-forward-only
 deploy: forbidden
 overall_rebuild_progress: "estimated 85-88% complete; 12-15% remaining to production cutover"
 progress_basis: "7 roadmap workstreams; management estimate, not spec-count arithmetic; final spec denominator is not fixed"
 ```
+
+## Codex 다음 단위 선정 · 스펙 086 계약 (2026-09-03)
+
+- 기준 `HEAD=origin=452c03b`, ahead/behind 0/0. 스펙 084 잔여 finding 요청을 현재 소스와 대조했다.
+- 결정: **F-6 철회**, **F-8 제품 결정 대기로 재분류**, 다음 단위는 **F-5 단독**. F-2/F-3/F-4/F-7은
+  묶지 않고 시작하지 않는다.
+- 신규 정본: `docs/rebuild/specs/086-admin-c5-select-accessibility-surface.md`와 2026-09-03 handoff.
+- 목표는 `FramePrintSizeEditor` native select의 의미를 유지하면서 전용 CSS로 44px, Modern Studio token,
+  focus-visible, disabled, overflow 계약을 맞추는 것이다. custom select·공유 UI API·문구·C5 저장 의미는
+  바꾸지 않는다.
+- 이번 갱신은 문서 전용이다. 제품/test/PNG/Rules/config/package/lockfile 수정 및 gate 실행 0. 실제
+  Firebase/network/emulator/deploy 0. 보호 대상과 기존 dirty는 untouched/stage 0.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_086_IMPLEMENT`, fix_round 0. 전체 진행도 **85~88% / 잔여
+  12~15%**(계약 작성만으로 변동 없음).
 
 ## Claude 스펙 084 잔여 finding 재확인 · Codex 다음 단위 검토 요청 (2026-09-03)
 

@@ -1,5 +1,34 @@
 # NEXT CLAUDE PROMPT
 
+상태: `READY_FOR_CLAUDE / CONTRACT_ONLY / NO_LIVE_NETWORK`
+
+- completed_unit: `spec-085-customer-composer-visible-preview-workbench` - **DONE / CODEX_PASSED /
+  LOCAL_VERIFIED / NO_LIVE_NETWORK**
+- active_unit: `spec-086-admin-c5-select-accessibility-surface`
+- 기준: `HEAD=origin=452c03b`에서 Codex 계약 작성, ahead/behind `0/0`
+- next_transition: `CLAUDE_SPEC_086_IMPLEMENT`
+- fix_round: `0`
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (계약 작성만으로 구간 변동 없음)
+
+## 지금 수행할 작업 - 스펙 086 구현·검증
+
+```text
+C:\repo\denn-products에서 docs/rebuild/specs/086-admin-c5-select-accessibility-surface.md와 docs/handoff/2026-09-03-spec-086-admin-c5-select-accessibility-surface-handoff.md를 처음부터 끝까지 읽고, 명시된 스펙 086 범위만 구현·검증해. 실제 UI 구현은 Claude Code가 담당한다. 보호 대상과 기존 dirty는 수정·복원·stage·commit하지 말고, 실제 Firebase/network/emulator/deploy와 자동화는 만들지 마. 제품/test/허용 PNG commit과 문서 기록 commit을 분리해 일반 fast-forward push한 뒤 READY_FOR_CODEX에서 멈춰.
+```
+
+핵심은 spec 084 F-5 하나다. C5 `액자 사이즈` native select의 의미, label/id, option, no auto-select,
+legacy disabled, save/CAS를 그대로 유지하면서 component 전용 CSS로 44px, Modern Studio token,
+focus-visible, disabled, overflow를 맞춘다. F-6은 철회됐고 F-8은 별도 Founder 제품 결정이다.
+F-2/F-3/F-4/F-7과 다음 스펙은 시작하지 않는다.
+
+허용 파일·targeted/전체 게이트·C5 PNG 두 장·forbidden diff·STOP 조건은 스펙 086이 정본이다.
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 요청 - 스펙 084 잔여 finding 재확인과 Codex 선정 대기
+
 상태: `REQUEST_CODEX_NEXT_UNIT_SELECTION`
 
 - completed_unit: `spec-085-customer-composer-visible-preview-workbench` — **DONE / CODEX_PASSED /

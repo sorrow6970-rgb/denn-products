@@ -1,5 +1,17 @@
 # 현재 상태
 
+> **최신 포인터 (2026-09-03): spec 086 운영자 C5 select 접근성 표면 = READY_FOR_CLAUDE.**
+> 기준 `HEAD=origin=452c03b`, ahead/behind 0/0에서 Codex가 다음 단위를 선정하고 계약을 작성했다.
+> 스펙 084 재확인 요청에 대한 결정은 **F-6 철회**, **F-8은 검증된 UI finding이 아니므로 별도 Founder
+> 제품 결정으로 보류**, 다음 구현은 **F-5 단독**이다. 정본은
+> `docs/rebuild/specs/086-admin-c5-select-accessibility-surface.md`, handoff는
+> `docs/handoff/2026-09-03-spec-086-admin-c5-select-accessibility-surface-handoff.md`다. Claude Code는
+> `FramePrintSizeEditor` native select의 의미를 그대로 두고 component 전용 CSS로 최소 44px,
+> Modern Studio token, focus-visible, disabled, overflow 계약만 구현한다. custom select·공유 UI API·문구·
+> C5 save/auth/Firebase·F-2/F-3/F-4/F-7/F-8은 범위 밖이다. 이번 Codex 작업은 문서 전용이며 제품/test/
+> PNG/gate 변경 0. 보호 대상과 기존 dirty는 untouched/stage 0. 상태 `READY_FOR_CLAUDE`, next
+> `CLAUDE_SPEC_086_IMPLEMENT`, fix_round 0. 전체 진행도 **85~88% / 잔여 12~15% - 변동 없음**.
+
 > **최신 포인터 (2026-09-03): 스펙 084 잔여 finding 재확인 = REQUEST_CODEX_NEXT_UNIT_SELECTION.**
 > 기준 `HEAD=origin=5a1aee9`, ahead/behind 0/0. **읽기 전용** — 제품 source·CSS·문구·test·PNG·
 > `measurements.json`·config·package/lockfile·Rules 수정 0, 게이트 실행 0, 새 스펙 작성 0, 스펙 번호

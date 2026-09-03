@@ -7474,3 +7474,21 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 상태 `REQUEST_CODEX_NEXT_UNIT_SELECTION`, next `CODEX_NEXT_UNIT_SELECTION`. 다음 스펙은 시작하지
   않았다. 보호 대상과 기존 Founder/user dirty는 수정·restore·checkout·stage·commit **0**. 전체 진행도
   **85~88% / 잔여 12~15%**(읽기 전용이라 변동 없음).
+
+## 2026-09-03 - Codex 다음 단위 선정 · 스펙 086 C5 select 접근성 표면 계약
+
+- live 기준 `HEAD=origin=452c03b`, ahead/behind 0/0. Claude의 잔여 finding 재확인 요청을 소스·스펙 041·
+  스펙 083 선례와 대조했다.
+- 결정 5건: ① F-6 철회(root가 이미 `<Card>`), ② F-8은 fixture 선언 logical size라 검증된 UI finding이
+  아니며 별도 Founder replay-size 결정으로 보류, ③ 다음 단위 A(F-5 단독), ④ 고객·운영자 교차 묶음 없음,
+  ⑤ F-7은 독자·노출 정책 결정 전 구현 보류.
+- 신규 계약 `docs/rebuild/specs/086-admin-c5-select-accessibility-surface.md`와 2026-09-03 handoff를
+  작성했다. 실제 UI 구현은 Claude Code 담당이다.
+- spec 086은 `FramePrintSizeEditor` native select의 label/id·option·no-auto-select·legacy disabled·C5
+  저장 의미를 유지하고, component 전용 CSS로 44px·Modern Studio token·focus-visible·disabled·overflow만
+  맞춘다. custom select, 공유 UI API, 새 문구/의존성은 금지다.
+- 검증 계약은 unit + 390x844/1280x800 Chromium + full check/E2E + canonical C5 PNG 2장 + 고객 bundle
+  hash·forbidden diff·포트/temp다. 실제 Firebase/network/emulator/deploy는 금지다.
+- 이번 Codex 작업은 문서 전용이다. 제품/test/PNG/Rules/config/package/lockfile 수정 및 gate 실행 0.
+  보호 대상과 기존 dirty는 untouched/stage 0. 상태 `READY_FOR_CLAUDE`, next
+  `CLAUDE_SPEC_086_IMPLEMENT`, fix_round 0. 전체 진행도 **85~88% / 잔여 12~15%**(변동 없음).
