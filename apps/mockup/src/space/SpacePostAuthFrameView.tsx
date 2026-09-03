@@ -125,9 +125,11 @@ function SpaceReplayBlockedNotice(): React.JSX.Element {
       data-testid="space-frame-view"
     >
       <Badge>이전 버전 시안</Badge>
-      <h2 className="denn-space-blocked__title" id="space-frame-blocked-title">
+      {/* spec 087: the gate no longer prints a title above this notice, so this IS the page's
+          heading. The id and the section's `aria-labelledby` are unchanged. */}
+      <h1 className="denn-space-blocked__title" id="space-frame-blocked-title">
         이 시안은 지금 화면에 표시할 수 없습니다
-      </h2>
+      </h1>
       {/* role="alert": the state appears in response to the password being accepted, so it is
           announced at the moment the reader is waiting for the result. */}
       <div className="denn-space-blocked__body" role="alert" data-testid="space-frame-status">
@@ -249,7 +251,9 @@ function SpaceExactFrameComposition({
       data-testid="space-frame-view"
     >
       <Badge>저장된 시안 · 열람 전용</Badge>
-      <h2 id="space-frame-title">내 공간 시안</h2>
+      {/* spec 087: the only heading on the authenticated screen. Same text, same id, same
+          `aria-labelledby` — only the level moves, because the gate's own title is gone. */}
+      <h1 id="space-frame-title">내 공간 시안</h1>
       <p>저장된 액자 구성을 확인할 수 있습니다.</p>
       <div ref={width.ref} data-testid="space-frame-measure" style={{ width: "100%" }}>
         {view.status === "ready" ? (

@@ -187,6 +187,98 @@ describe("SpacePasswordGate", () => {
     expect(html).not.toContain("PRIVATE_OWNER_MARKER");
   });
 
+  // --- spec 087 (spec 084 F-3): one title after authentication ------------------
+  //
+  // The audit screenshot showed `내 공간 시안 확인` above `내 공간 시안`, plus an instruction to type
+  // a password the customer had already typed. These pin the rule that removes it — and pin the
+  // fallback that must NOT lose its heading.
+
+  const PASSWORD_PROMPT = "담당자에게 전달받은 비밀번호를 입력하세요.";
+  const GATE_TITLE = "내 공간 시안 확인";
+  const GATE_BADGE = "비공개 시안 · 열람 전용";
+
+  it.each([
+    ["awaiting", { status: "awaiting-password", requestId: 1 }],
+    ["loading", { status: "loading", requestId: 1 }],
+    ["invalid-link", { status: "invalid-link", requestId: 1 }],
+    ["error", { status: "error", requestId: 1, code: "SPACE_VIEW_UNEXPECTED", retryable: false }],
+  ] as const)("keeps the gate header and the prompt before authentication (%s)", (_name, state) => {
+    const html = renderToStaticMarkup(
+      <SpacePasswordGate controller={pinned(state as never)} renderReadyV2={() => <p>X</p>} />,
+    );
+    expect(html).toContain(GATE_BADGE);
+    expect(html).toContain(`<h1>${GATE_TITLE}</h1>`);
+    expect(html).toContain(PASSWORD_PROMPT);
+  });
+
+  it("drops the gate header and the prompt once a V2 result is on screen", () => {
+    const html = renderToStaticMarkup(
+      <SpacePasswordGate
+        controller={pinned({
+          status: "ready",
+          requestId: 1,
+          v2: {
+            plan: {
+              kind: "frame",
+              logicalCanvas: { width: 320, height: 480 },
+              commands: [],
+            } as never,
+            imageBindings: { get: () => undefined },
+          },
+        })}
+        renderReadyV2={() => <h1 id="space-frame-title">V2_CHILD_TITLE</h1>}
+      />,
+    );
+    expect(html).toContain("V2_CHILD_TITLE");
+    expect(html).not.toContain(GATE_TITLE);
+    expect(html).not.toContain(GATE_BADGE);
+    expect(html).not.toContain(PASSWORD_PROMPT);
+    // exactly one heading level 1 remains: the result's own
+    expect(html.split("<h1").length - 1).toBe(1);
+  });
+
+  it("drops the gate header and the prompt once a V1 result is on screen", () => {
+    const html = renderToStaticMarkup(
+      <SpacePasswordGate
+        controller={pinned({
+          status: "ready",
+          requestId: 1,
+          value: { ownerLabel: "o", createdAt: "c", scene: readyScene },
+        })}
+        renderReady={() => <h1 id="space-frame-blocked-title">V1_CHILD_TITLE</h1>}
+      />,
+    );
+    expect(html).toContain("V1_CHILD_TITLE");
+    expect(html).not.toContain(GATE_TITLE);
+    expect(html).not.toContain(PASSWORD_PROMPT);
+    expect(html.split("<h1").length - 1).toBe(1);
+  });
+
+  it("keeps its own header when the ready body is the spec 061 fallback", () => {
+    // No seam injected: `pendingNotice` has no heading of its own, so taking the gate's away
+    // would leave the screen with no title at all. The prompt still goes — nothing is left to type.
+    const html = renderToStaticMarkup(
+      <SpacePasswordGate
+        controller={pinned({
+          status: "ready",
+          requestId: 1,
+          v2: {
+            plan: {
+              kind: "frame",
+              logicalCanvas: { width: 320, height: 480 },
+              commands: [],
+            } as never,
+            imageBindings: { get: () => undefined },
+          },
+        })}
+      />,
+    );
+    expect(html).toContain("시안 인증이 완료되었습니다.");
+    expect(html).toContain(`<h1>${GATE_TITLE}</h1>`);
+    expect(html).toContain(GATE_BADGE);
+    expect(html).not.toContain(PASSWORD_PROMPT);
+  });
+
   it("shows the safe V2 failure wording without a code", () => {
     const html = renderToStaticMarkup(
       <SpacePasswordGate

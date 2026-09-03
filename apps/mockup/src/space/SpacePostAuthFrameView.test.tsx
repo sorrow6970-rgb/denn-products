@@ -136,4 +136,16 @@ describe("SpacePostAuthFrameView V1 preflight", () => {
     expect(html).toContain('aria-labelledby="space-frame-blocked-title"');
     expect(html).toContain('id="space-frame-blocked-title"');
   });
+
+  // spec 087 (spec 084 F-3): the gate no longer prints a title above this notice, so the notice's
+  // own heading became the page heading. Only the LEVEL moved — the text, the class and the id
+  // that `aria-labelledby` resolves against are unchanged, so the section keeps its name.
+  it("carries the page heading itself, with the labelling relationship intact", () => {
+    const { html } = renderBlocked(IDENTITY);
+    expect(html).toContain(
+      '<h1 class="denn-space-blocked__title" id="space-frame-blocked-title">이 시안은 지금 화면에 표시할 수 없습니다</h1>',
+    );
+    expect(html).not.toContain("<h2");
+    expect(html.split("<h1").length - 1).toBe(1);
+  });
 });

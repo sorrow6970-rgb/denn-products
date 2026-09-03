@@ -78,6 +78,18 @@ export function SpacePasswordGate({
     return renderReady === undefined ? pendingNotice : renderReady(ready.value.scene);
   };
 
+  /**
+   * spec 087 (spec 084 F-3): whether the ready body brings its own title.
+   *
+   * The condition is EXACTLY the one `renderReadyBody` already branches on — is a seam injected —
+   * so the two can never disagree. The gate does not look inside the child to decide: the
+   * `pendingNotice` fallback has no heading of its own, and taking the gate's away would leave that
+   * screen with no title at all.
+   */
+  const readyBodyOwnsTitle =
+    snapshot.status === "ready" &&
+    ("v2" in snapshot ? renderReadyV2 !== undefined : renderReady !== undefined);
+
   const awaiting = snapshot.status === "awaiting-password";
   const retryableError = snapshot.status === "error" && snapshot.retryable;
   const canSubmit = awaiting || retryableError;
@@ -87,9 +99,20 @@ export function SpacePasswordGate({
       <div className="denn-shell__inner">
         <Card>
           <div className="denn-stack">
-            <Badge>비공개 시안 · 열람 전용</Badge>
-            <h1>내 공간 시안 확인</h1>
-            <p>담당자에게 전달받은 비밀번호를 입력하세요.</p>
+            {/*
+              spec 087: before authentication this is the whole screen, so it stays exactly as it
+              was. Once the result is on screen the result owns the title, and repeating a second
+              heading here — plus an instruction the customer has already followed — is what spec
+              084 F-3 reported. The instruction goes as soon as the password is accepted, whether or
+              not a seam is injected: there is nothing left to type either way.
+            */}
+            {readyBodyOwnsTitle ? null : (
+              <>
+                <Badge>비공개 시안 · 열람 전용</Badge>
+                <h1>내 공간 시안 확인</h1>
+              </>
+            )}
+            {snapshot.status === "ready" ? null : <p>담당자에게 전달받은 비밀번호를 입력하세요.</p>}
 
             {canSubmit ? (
               // A real form: Enter in the password field submits it, exactly as a browser user

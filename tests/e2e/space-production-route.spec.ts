@@ -481,6 +481,113 @@ test("unmounting the V2 route leaves no canvas and starts no deferred work", asy
   expect(probe.consoleProblems).toEqual([]);
 });
 
+// --- spec 087: one title after authentication ---------------------------------
+//
+// Closes spec 084 F-3, measured on this same surface: the gate printed `내 공간 시안 확인` and
+// `담당자에게 전달받은 비밀번호를 입력하세요.` in EVERY state, so the authenticated screen carried two
+// headings and an instruction the customer had already followed. What is asserted here is the
+// rendered document — how many `h1`s exist and whether the prompt is still in the DOM — because the
+// component contract alone does not prove what the customer ends up looking at.
+
+const GATE_TITLE = "내 공간 시안 확인";
+const PASSWORD_PROMPT = "담당자에게 전달받은 비밀번호를 입력하세요.";
+
+/** Every heading on the page, in document order, as `level: text`. */
+const headings = (page: Page): Promise<string[]> =>
+  page.evaluate(() =>
+    [...document.querySelectorAll("h1, h2, h3, h4, h5, h6")].map(
+      (node) => `${node.tagName.toLowerCase()}: ${(node.textContent ?? "").trim()}`,
+    ),
+  );
+
+const SURFACE_VIEWPORTS = [
+  { name: "390x844", width: 390, height: 844 },
+  { name: "1280x800", width: 1280, height: 800 },
+] as const;
+
+for (const viewport of SURFACE_VIEWPORTS) {
+  test(`spec 087 @ ${viewport.name}: the V2 result owns the only title and the prompt is gone`, async ({
+    page,
+  }) => {
+    const probe = await installProbe(page);
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto(v2Url("v2"));
+
+    // §1 — before authentication the gate is unchanged: its own title and its instruction.
+    await expect(page.getByRole("heading", { level: 1, name: GATE_TITLE })).toBeVisible();
+    await expect(page.getByText(PASSWORD_PROMPT)).toBeVisible();
+    expect(await headings(page)).toEqual([`h1: ${GATE_TITLE}`]);
+
+    await authenticateWith(page, "SYNTHETIC_PASSWORD");
+    await expect(page.getByTestId("preview-canvas")).toBeVisible();
+    await settle(page);
+    await expect(page.getByTestId("canvas-status")).toHaveText("미리보기가 준비되었습니다.");
+
+    // §3 — exactly one heading, and it is the result's own. No level is skipped because there is
+    // only one, and the gate's title and instruction are gone from the DOM, not merely hidden.
+    expect(await headings(page)).toEqual(["h1: 내 공간 시안"]);
+    await expect(page.getByText(GATE_TITLE)).toHaveCount(0);
+    await expect(page.getByText(PASSWORD_PROMPT)).toHaveCount(0);
+    // the badge that carries the "열람 전용" state is still there
+    await expect(page.getByTestId("space-v2-proof-view")).toContainText("저장된 시안 · 열람 전용");
+
+    // the section is still named by that heading, so promoting the level named nothing away.
+    // The V2 route's result is `SpaceV2ProofView`, whose section is labelled `space-v2-proof-title`
+    // (`space-frame-title` belongs to the V1 frame view, which this route never reaches).
+    const labelled = await page.evaluate(() => {
+      const section = document.querySelector('[aria-labelledby="space-v2-proof-title"]');
+      const target = document.getElementById("space-v2-proof-title");
+      return { hasSection: section !== null, resolves: target !== null, tag: target?.tagName };
+    });
+    expect(labelled).toEqual({ hasSection: true, resolves: true, tag: "H1" });
+
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, "document horizontal overflow").toBeLessThanOrEqual(0);
+
+    const accessibility = await new AxeBuilder({ page }).analyze();
+    expect(
+      accessibility.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
+    ).toEqual([]);
+    expect(probe.consoleProblems).toEqual([]);
+    expect(probe.requests).toEqual([]);
+  });
+}
+
+test("spec 087: the V1 blocked notice is the only title and asks for no password again", async ({
+  page,
+}) => {
+  const probe = await installProbe(page);
+  await page.goto(FIXTURE_URL);
+
+  await expect(page.getByRole("heading", { level: 1, name: GATE_TITLE })).toBeVisible();
+  await expect(page.getByText(PASSWORD_PROMPT)).toBeVisible();
+
+  await authenticate(page);
+  await expect(page.getByTestId("space-frame-view")).toBeVisible();
+
+  expect(await headings(page)).toEqual([`h1: ${BLOCKED_HEADING}`]);
+  await expect(page.getByText(GATE_TITLE)).toHaveCount(0);
+  await expect(page.getByText(PASSWORD_PROMPT)).toHaveCount(0);
+  // the safe-stop contract itself is untouched: still an alert, still no retry affordance
+  await expect(page.getByTestId("space-frame-status")).toHaveAttribute("role", "alert");
+  await expect(page.getByTestId("space-frame-view").getByRole("button")).toHaveCount(0);
+
+  const labelled = await page.evaluate(() => {
+    const section = document.querySelector('[aria-labelledby="space-frame-blocked-title"]');
+    const target = document.getElementById("space-frame-blocked-title");
+    return { hasSection: section !== null, resolves: target !== null, tag: target?.tagName };
+  });
+  expect(labelled).toEqual({ hasSection: true, resolves: true, tag: "H1" });
+
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(
+    accessibility.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
+  ).toEqual([]);
+  expect(probe.consoleProblems).toEqual([]);
+});
+
 // --- spec 080 representative screenshots (synthetic fixture only) -----------
 //
 // The fixture's own "화면 해제" control is harness scaffolding, not product UI. It is hidden in the

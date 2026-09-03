@@ -26,7 +26,10 @@ export function SpaceV2ProofView({
       data-testid="space-v2-proof-view"
     >
       <Badge>저장된 시안 · 열람 전용</Badge>
-      <h2 id="space-v2-proof-title">내 공간 시안</h2>
+      {/* spec 087 (spec 084 F-3): the gate no longer prints `내 공간 시안 확인` above this, so this is
+          the only heading the authenticated customer sees. Same text, same id, same
+          `aria-labelledby` — only the level moved. */}
+      <h1 id="space-v2-proof-title">내 공간 시안</h1>
       <p>저장된 액자 구성을 확인할 수 있습니다.</p>
       <PreviewCanvasSurface
         plan={plan}

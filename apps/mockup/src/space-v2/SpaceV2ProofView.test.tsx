@@ -77,5 +77,8 @@ describe("SpaceV2ProofView", () => {
     const html = renderToStaticMarkup(<SpaceV2ProofView plan={plan()} imageBindings={bindings} />);
     expect(html).toContain('aria-labelledby="space-v2-proof-title"');
     expect(html).toContain('id="space-v2-proof-title"');
+    // spec 087: it is the page heading now, and the id the section is named by is unchanged
+    expect(html).toContain('<h1 id="space-v2-proof-title">내 공간 시안</h1>');
+    expect(html).not.toContain("<h2");
   });
 });
