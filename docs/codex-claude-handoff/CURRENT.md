@@ -1,5 +1,28 @@
 # 현재 상태
 
+> **최신 포인터 (2026-09-03): spec 086 종료 = DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK,
+> 다음 단위 spec 087 = READY_FOR_CLAUDE.**
+> Codex 독립 검수를 보완 라운드 **0회**로 통과했다. 검수 기준 `HEAD=origin=9ffdf1b`, 승인 후보
+> `8c7b7ff`, ahead/behind 0/0, 허용 범위 밖 committed diff **0**. 검수자가 게이트를 다시 돌렸다 —
+> `node scripts/check.mjs` PASS(unit **2502/2502**, 92파일, build 2개), canonical Chromium
+> **220 passed / 0 failed / 0 skipped / 0 retry**, 포트·temp 잔류 PASS. 그 실행 뒤 C5 PNG 두 장에
+> **수정이 나타나지 않아** 재생성 바이트가 commit 바이트와 같음이 증명됐다(`2f70c95e…`, `b9765d7c…`).
+> 시각 결과는 PNG를 디코드해 다시 쟀다 — 두 viewport 모두 select **44px**(인접 `TextField` 45px)로,
+> 감사 실측 `518x23`·`316x23`에서 **518x44**·**316x44**로 바뀌었다. 구현이 axe 스캔을 편집기 영역으로
+> 좁힌 것이 제품 결함을 가린 것이 아님도 별도로 확인했다: 감사 spec은 harness 진단 section만 숨기고
+> 페이지 전체를 스캔하는데 `measurements.json`의 두 C5 항목이 `[]`이고 운영자 제품 route도 unscoped
+> `[]`이므로 `--muted` on `--bg` 4.39:1은 fixture 전용이다. 고객 entry는 검수자 build에서도
+> `index-eQgqaWiH.js` **341.94 kB**로 파일명 해시까지 동일했다. 비차단 관찰은 select 44px vs TextField
+> 45px(line-height 해석 차이), `FramePrintSizeEditor.tsx`의 "not imported by App.tsx" 주석이 이제 사실이
+> 아님(허용 목록 밖), spec 018 desktop PNG의 기존 비결정성(`d0a0aa52…`, stage 0)이다.
+> **다음 단위는 `spec-087-space-post-auth-header-collapse`(spec 084 F-3)**다 — 인증 후에도 남는
+> `내 공간 시안 확인` 제목과 비밀번호 입력 안내를 정리한다. 인증 전 화면은 무변경이고, 결과 renderer가
+> 주입됐을 때만 게이트 머리말을 숨기며, 결과 화면의 기존 `<h2>`를 `<h1>`로 올리되 `id`·`aria-labelledby`는
+> 고정, **새 고객 문구는 0**이다. F-2는 두 앱에 걸쳐 spec 086의 단일 앱 원칙에 걸리고 F-4/F-7/F-8은
+> 결정이 선행돼야 해서 뒤로 미뤘다. 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_087_IMPLEMENT`,
+> fix_round 0. 종료·계약 모두 문서 전용이며 제품 코드·test·PNG 수정 0이다. 전체 진행도
+> **85~88% / 잔여 12~15% — 변동 없음**.
+
 > **최신 포인터 (2026-09-03): spec 086 구현·검증 완료 = READY_FOR_CODEX.**
 > 계약 `d7408b2`, 제품/test/PNG `8c7b7ff`, 문서 commit은 이 갱신이다(제품과 문서 분리). 스펙 084 P1
 > **F-5**를 닫았다 — 운영자 C5 편집기의 `액자 사이즈` `<select>`가 컴포넌트 전용 stylesheet

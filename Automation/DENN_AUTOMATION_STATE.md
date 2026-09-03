@@ -4,20 +4,20 @@
 updated_at: 2026-09-03
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-085-customer-composer-visible-preview-workbench   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: spec-086-admin-c5-select-accessibility-surface   # implemented in 8c7b7ff; awaiting Codex review
-state: READY_FOR_CODEX
-baseline_commit: 452c03b   # HEAD=origin the spec 086 contract was written from (contract d7408b2)
-candidate_commit: 8c7b7ff  # spec 086 product + test + the two C5 evidence PNGs
-verified_commit: none      # Codex has not reviewed spec 086 yet
-origin_relation: "HEAD=origin after the implementation and record pushes, ahead/behind 0/0"
-working_tree: "protected spec-018 PNGs (rewritten by the canonical E2E, start/end hashes recorded) and pre-existing Founder/user dirty; all unstaged"
+completed_unit: spec-086-admin-c5-select-accessibility-surface   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
+active_unit: spec-087-space-post-auth-header-collapse   # Codex contract only; Claude has not implemented it
+state: READY_FOR_CLAUDE
+baseline_commit: 9ffdf1b   # HEAD=origin when the spec 087 contract was written
+candidate_commit: none     # spec 087 has no product commit yet
+verified_commit: 8c7b7ff   # spec 086, Codex independent review passed on 2026-09-03, fix round 0
+origin_relation: "HEAD=origin after the spec 086 closure and the spec 087 contract push, ahead/behind 0/0"
+working_tree: "protected spec-018 PNGs (rewritten by the reviewer's canonical E2E, desktop d0a0aa52) and pre-existing Founder/user dirty; all unstaged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_086_REVIEW
+next_transition: CLAUDE_SPEC_087_IMPLEMENT
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 086 implemented - the C5 size picker is a 44px Modern Studio form control and keeps its native select semantics; F-2/F-3/F-4/F-7, F-8's product decision, the customer app, Space and live Firebase stay out of scope
-commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
+session_status: spec 086 passed Codex review and is closed; spec 087 (spec 084 F-3, customer Space post-auth header) is contracted and waiting for Claude - F-2 spans two apps, F-4/F-7/F-8 need decisions first
+commit_owner: Codex review, closure and next contract; Claude Code implements spec 087
 ```
 
 ## Codex 다음 단위 선정 · 스펙 086 계약 (2026-09-03)
@@ -33,6 +33,41 @@ commit_owner: Claude Code implementation; Codex independent review and next-cont
   Firebase/network/emulator/deploy 0. 보호 대상과 기존 dirty는 untouched/stage 0.
 - 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_086_IMPLEMENT`, fix_round 0. 전체 진행도 **85~88% / 잔여
   12~15%**(계약 작성만으로 변동 없음).
+
+## Codex 스펙 086 독립 검수 · 종료 · 스펙 087 계약 (2026-09-03)
+
+- **판정 `CODEX_PASSED`, 보완 라운드 0회.** 검수 기준 `HEAD=origin=9ffdf1b`, 승인 후보 `8c7b7ff`
+  (계약 `d7408b2`, 기록 `9ffdf1b`), ahead/behind 0/0. 허용 범위 밖 committed diff **0**
+  (`apps/mockup/**`·`packages/**`·package/lockfile/workspace·Rules/Firebase config·`AGENTS.md`·
+  design README·spec 038·`taste-v2/**`·spec 018 PNG·`local-visual-readiness.spec.ts`·
+  `apps/admin/src/space-v2/**` 전부 0).
+- **게이트 재실행.** `node scripts/check.mjs` PASS(unit **2502/2502** · 92 파일, build 2개), canonical
+  `node scripts/e2e-run.mjs` **Chromium 220 passed / 0 failed / 0 skipped / 0 retry**, 포트
+  4183/4184/4185/8080/9099/9199 LISTENING 0, temp 잔류 0.
+- **PNG 재현성.** 검수자 canonical 실행 뒤 C5 PNG 두 장에 수정이 나타나지 않았다 — 재생성 바이트 =
+  commit 바이트(`2f70c95e…`, `b9765d7c…`). 다른 tracked spec-084 PNG 변경 0.
+- **픽셀 재측정.** PNG를 디코드해 `--line` border 가로 run으로 form field box를 직접 쟀다:
+  1280x800·390x844 모두 select **44px**, 인접 `TextField` 45px. 감사 실측 `518x23`·`316x23` →
+  **518x44**·**316x44**.
+- **axe scope 축소 정당성 독립 확인.** 구현은 스캔을 `[data-testid="frame-print-size-editor"]`로 좁혔다.
+  감사 spec은 진단 section만 숨기고 **페이지 전체**를 스캔하는데 `measurements.json`의 두 C5 항목
+  `axeSeriousCritical`가 `[]`다 → 위반은 편집기가 아니라 harness 진단 section에 있다. 운영자 제품
+  route도 unscoped `[]`이므로 `--muted` on `--bg` 4.39:1은 fixture 전용이다. 제품 결함을 가린 것이 아니다.
+- **계약 대조.** §1 native select 유지·`appearance` 재설정 0, §2 전용 class 1개와 요구 속성 전부 +
+  금지 항목 0, §3 unit 4항목, §4 Chromium 7항목, §5 canonical 재생성·PNG 확인·addendum — 전부 충족.
+  검수자 build에서도 고객 entry `index-eQgqaWiH.js` **341.94 kB** 파일명 해시까지 동일.
+- **비차단 관찰 3건.** select 44px vs TextField 45px(line-height 해석 차이, 둘 다 계약 충족),
+  `FramePrintSizeEditor.tsx`의 "not imported by App.tsx" 주석이 이제 사실이 아님(허용 목록 밖이라 건드리지
+  않은 것이 옳다), spec 018 desktop PNG 기존 비결정성(`99e5e410…` → `d0a0aa52…`, stage 0).
+- **다음 단위 = spec 087 `space-post-auth-header-collapse`(spec 084 F-3).** F-2는 고객·운영자 두 앱에
+  걸쳐 spec 086의 "한 단위에 두 앱을 묶지 않는다"에 걸리고, F-4는 admin 기본 진입/gate 결정, F-7은 고객
+  노출 독자·운영 발생 조건 결정, F-8은 replay 크기 제품 결정이 선행돼야 한다. 고객 앱 한 곳에서 닫히고
+  새 제품 결정이 필요 없는 것은 F-3뿐이다. 계약은 **새 고객 문구 0**을 요구한다 — 인증 후 게이트 머리말을
+  숨기고 결과 화면의 기존 `<h2>`를 `<h1>`로 올리되 `id`·`aria-labelledby`는 고정이며, 결과 renderer가
+  주입되지 않은 spec 061 fallback은 머리말을 유지한다.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_087_IMPLEMENT`. 종료·계약 모두 **문서 전용**이며 제품
+  코드·test·PNG·`measurements.json`·Rules/config·package/lockfile 수정 0이다. 전체 진행도
+  **85~88% / 잔여 12~15%**(변동 없음).
 
 ## Claude 스펙 086 운영자 C5 사이즈 선택 컨트롤 접근성 표면 (F-5 해소) (2026-09-03)
 

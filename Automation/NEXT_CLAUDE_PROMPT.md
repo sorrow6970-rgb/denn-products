@@ -1,20 +1,84 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `READY_FOR_CLAUDE / CONTRACT_ONLY / NO_LIVE_NETWORK`
 
-- active_unit: `spec-086-admin-c5-select-accessibility-surface` — 계약 `d7408b2`, 제품/test/PNG `8c7b7ff`
-- completed_unit: `spec-085-customer-composer-visible-preview-workbench` — **DONE / CODEX_PASSED /
-  LOCAL_VERIFIED / NO_LIVE_NETWORK**
-- 기준: 계약 작성 `HEAD=origin=452c03b` → 구현 후 `HEAD=origin`, ahead/behind `0/0`
-- next_transition: `CODEX_SPEC_086_REVIEW`
+- completed_unit: `spec-086-admin-c5-select-accessibility-surface` — **DONE / CODEX_PASSED /
+  LOCAL_VERIFIED / NO_LIVE_NETWORK** (계약 `d7408b2`, 제품/test/PNG `8c7b7ff`, 기록 `9ffdf1b`, 종료 문서)
+- active_unit: `spec-087-space-post-auth-header-collapse` — 계약만 작성됨(제품 구현 0)
+- 기준: `HEAD=origin=9ffdf1b`에서 Codex 검수·종료·계약 작성, ahead/behind `0/0`
+- next_transition: `CLAUDE_SPEC_087_IMPLEMENT`
 - fix_round: `0` (최대 3)
-- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (운영자 컨트롤 한 건이라 구간 변동 없음)
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (검수·계약 작성이라 구간 변동 없음)
 
-## 지금 수행할 작업 — 없음. Codex 검수 대기
+## 지금 수행할 작업 - 스펙 087 구현·검증
 
-스펙 086 구현·검증을 끝내고 멈췄다. 스펙 084의 남은 finding(F-2·F-3·F-4·F-7), F-8의 Founder 제품 결정,
-다음 스펙, 실제 Firebase/network/emulator/deploy·실기기·preview channel은 **자동으로 시작하지 않는다**.
-다음 범위는 Codex 독립 검수와 Founder 결정이 정한다.
+```text
+C:\repo\denn-products에서 docs/rebuild/specs/087-space-post-auth-header-collapse.md와 docs/handoff/2026-09-03-spec-087-space-post-auth-header-collapse-handoff.md를 처음부터 끝까지 읽고, 명시된 스펙 087 범위만 구현·검증해. 실제 UI 구현은 Claude Code가 담당한다. 새 고객 문구를 만들지 말고, 보호 대상과 기존 dirty는 수정·복원·stage·commit하지 마. 실제 Firebase/network/emulator/deploy는 시작하지 말고, 제품/test/허용 PNG commit과 문서 기록 commit을 분리해 일반 fast-forward push한 뒤 READY_FOR_CODEX에서 멈춰.
+```
+
+핵심은 spec 084 **F-3** 하나다. `SpacePasswordGate`가 badge·`<h1>내 공간 시안 확인</h1>`·`담당자에게
+전달받은 비밀번호를 입력하세요.`를 상태와 무관하게 렌더해서, 인증 후 화면에 **제목이 둘**이고 이미 입력을
+마친 손님에게 **입력 안내가 남는다**.
+
+- **인증 전은 한 글자도 바꾸지 않는다.** `space-v2-password-gate-390x844.png`가 바뀌면 STOP이다.
+- **인증 후**에는 결과 renderer가 주입돼 있을 때 게이트가 자기 머리말을 렌더하지 않고, 결과 화면
+  (V2 액자 뷰 / V1 차단 안내)이 유일한 제목을 갖는다. 각 화면의 기존 `<h2>`를 `<h1>`로 올리되
+  `id`(`space-frame-title`, `space-frame-blocked-title`)와 `aria-labelledby`는 **고정**이다.
+- 판정은 `renderReadyBody`가 이미 쓰는 **주입 여부**로 한다. 주입이 없는 spec 061 fallback은 자기 제목이
+  없으므로 머리말을 유지하고 비밀번호 안내만 사라진다.
+- **새 고객 문구 0.** 기존 문자열만 재배치한다. 결과 화면의 badge는 유지한다.
+- 게이트의 인증 로직·오답·오류 코드·재시도 정책·비밀번호 취급, Space V1/V2 판정과 렌더 결과는 바꾸지
+  않는다. F-2·F-4·F-7·F-8, 운영자 앱, 고객 composer/browse, `packages/**`는 범위 밖이다.
+
+허용 파일·targeted/전체 게이트·Space PNG 3장·gate PNG 무변경·forbidden diff·STOP 조건은 스펙 087이
+정본이다.
+
+## 스펙 086 Codex 독립 검수 결과 (수행 완료)
+
+**판정 `CODEX_PASSED`, 보완 라운드 0회.** 검수 기준 `HEAD=origin=9ffdf1b`, 승인 후보 `8c7b7ff`.
+보고 수치를 그대로 믿지 않고 게이트를 다시 실행하고 증거를 다시 측정했다.
+
+- **게이트 재실행.** `node scripts/check.mjs` **PASS**(unit **2502/2502** · 92 파일, build 2개).
+  canonical `node scripts/e2e-run.mjs` **Chromium 220 passed / 0 failed / 0 skipped / 0 retry**.
+  포트 6개 LISTENING 0, `denn-e2e-*`·`playwright-report`·`debug.log` 잔류 0.
+- **PNG 재현성.** 검수자 canonical 실행 뒤 C5 PNG 두 장에 수정이 나타나지 않았다 — 재생성 바이트가
+  commit 바이트와 같다(`2f70c95e…`, `b9765d7c…`). 다른 tracked spec-084 PNG 변경 0.
+- **픽셀 재측정.** PNG를 디코드해 `--line` border로 form field box를 직접 쟀다: 두 viewport 모두 select
+  **44px**, 인접 `TextField` 45px. 감사 실측 `518x23`·`316x23` → **518x44**·**316x44**.
+- **axe scope 축소 정당성 독립 확인.** 감사 spec은 harness 진단 section만 숨기고 **페이지 전체**를
+  스캔하는데 `measurements.json`의 두 C5 항목 `axeSeriousCritical`가 `[]`다 → 위반은 편집기가 아니라
+  진단 section에 있다. 운영자 제품 route도 unscoped `[]`이므로 `--muted` on `--bg` 4.39:1은 fixture
+  전용이며, scope 축소가 제품 결함을 가린 것이 아니다.
+- **계약 대조.** §1~§5 전부 충족. 고객 entry는 검수자 build에서도 `index-eQgqaWiH.js` **341.94 kB**로
+  파일명 해시까지 동일했고, 운영자는 `index-BWeRXD_J.js` 295.37 kB · CSS 11.24 kB로 보고와 일치했다.
+  허용 범위 밖 committed diff **0**이다.
+- **비차단 관찰 3건(수정 요구 아님).** ① select 44px vs `TextField` 45px — select의 line box가 body의
+  `line-height: 1.5`를 같은 방식으로 잡지 않기 때문이고 둘 다 44px 계약을 만족한다. ②
+  `FramePrintSizeEditor.tsx`의 "It is intentionally not imported by App.tsx" 주석은 이제 사실이 아니다
+  (`App.tsx`가 import한다). spec 086 이전부터 있던 문구이고 허용 변경 목록 밖이라 건드리지 않은 것이
+  옳다. ③ spec 018 desktop PNG는 검수자 실행에서 또 달라졌다(`99e5e410…` → `d0a0aa52…`) — 스펙 084에서
+  이미 "결정화 대상 밖"으로 기록된 기존 조건이고 stage 0이다.
+- **종료 처리.** 문서 전용이다. 제품 코드·test·PNG·`measurements.json`·Rules/config·package/lockfile
+  수정 **0**, 게이트 추가 재실행 0.
+
+### 다음 단위를 F-3으로 고른 이유
+
+F-2는 고객 `PreviewComposer`와 운영자 발급 panel **두 앱**에 걸쳐 있어 spec 086이 세운 "고객·운영자 앱을
+한 단위에 묶지 않는다"에 걸린다. F-4는 데모를 지우면 제품 기본값이 빈 화면이 되므로 admin 기본 진입/gate
+결정이, F-7은 고객 노출 독자·운영 발생 조건 결정이, F-8은 replay 크기 제품 결정이 선행돼야 한다.
+고객 앱 한 곳에서 닫히고 새 제품 결정이 필요 없는 것은 **F-3**뿐이다.
+
+> 직전 지시문(스펙 086 Codex 독립 검수, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 스펙 086 구현 커밋 8c7b7ff와 기록 커밋 9ffdf1b를 독립 검수하고, 전체 게이트를 재검증해. 통과하면 CODEX_PASSED 종료 문서와 다음 Claude 작업 지시를 남겨.
+```
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 지시 — 스펙 086 구현 (수행 완료)
 
 ## 스펙 086 구현 결과 (수행 완료)
 

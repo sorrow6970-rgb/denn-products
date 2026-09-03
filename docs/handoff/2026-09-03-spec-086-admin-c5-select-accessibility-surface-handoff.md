@@ -2,10 +2,12 @@
 
 ## 상태
 
-- `READY_FOR_CODEX` — 구현·검증 완료(2026-09-03), 결과는 아래 `구현 결과` 절
-- 기준 `HEAD=origin=452c03b` → 계약 `d7408b2` → 제품/test/PNG `8c7b7ff`, ahead/behind `0/0`
-- active unit: `spec-086-admin-c5-select-accessibility-surface`, fix_round `0`
-- next: `CODEX_SPEC_086_REVIEW`
+- `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK` — Codex 독립 검수 통과(2026-09-03),
+  문서 전용 종료 완료. 검수 결과는 spec 086의 `CODEX REVIEW` 절
+- 기준 `HEAD=origin=452c03b` → 계약 `d7408b2` → 제품/test/PNG `8c7b7ff` → 기록 `9ffdf1b` → 종료 문서,
+  ahead/behind `0/0`
+- completed unit: `spec-086-admin-c5-select-accessibility-surface`, fix_round `0`(보완 없이 1회 통과)
+- next: `CLAUDE_SPEC_087_IMPLEMENT` (spec 087 = spec 084 F-3)
 - 직전 완료: spec 085 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
 
 ## Claude Code가 수행할 것
@@ -84,3 +86,21 @@
   Firebase/network/emulator/deploy·운영 데이터. 스펙 084의 다른 finding 판정은 그대로다.
 - 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_086_REVIEW`, fix_round 0. 다음 finding·다음 스펙은 시작하지
   않았다.
+
+## Codex 검수·종료 (2026-09-03)
+
+- **판정 `CODEX_PASSED`, 보완 라운드 0회.** 검수 기준 `HEAD=origin=9ffdf1b`, 승인 후보 `8c7b7ff`,
+  ahead/behind `0/0`, 허용 범위 밖 committed diff **0**.
+- **재실행 실측.** `node scripts/check.mjs` PASS(unit **2502/2502**, 92 파일, build 2개), canonical
+  Chromium **220 passed / 0 failed / 0 skipped / 0 retry**, 포트·temp 잔류 검사 PASS. 검수자 실행 뒤
+  C5 PNG 두 장에 **수정이 나타나지 않았다** — 재생성 바이트가 commit된 바이트와 같다.
+- **픽셀 재측정.** PNG를 디코드해 `--line` border로 form field box를 직접 쟀다: 두 viewport 모두 select
+  **44px**, 인접 `TextField` 45px. 감사 실측 `518x23`·`316x23` → **518x44`·`316x44`.
+- **axe scope 축소 정당성 독립 확인.** 감사 spec은 진단 section만 숨기고 **페이지 전체**를 스캔하는데
+  `measurements.json`의 두 C5 항목 `axeSeriousCritical`가 `[]`다. 위반은 편집기가 아니라 harness 진단
+  section에 있고, 운영자 제품 route도 unscoped `[]`이므로 4.39:1 조합은 fixture 전용이다.
+- **비차단 관찰.** select 44px vs TextField 45px(1px, line-height 해석 차이·둘 다 계약 충족),
+  `FramePrintSizeEditor.tsx`의 "not imported by App.tsx" 주석이 이제 사실이 아님(허용 목록 밖이라
+  건드리지 않은 것이 옳다), spec 018 desktop PNG의 기존 비결정성(`99e5e410…` → `d0a0aa52…`, stage 0).
+- **종료 처리.** 문서 전용. 제품 코드·test·PNG·`measurements.json`·Rules/config·package/lockfile 수정
+  **0**, 게이트 추가 재실행 **0**. 다음 단위는 `spec-087-space-post-auth-header-collapse`(F-3)다.

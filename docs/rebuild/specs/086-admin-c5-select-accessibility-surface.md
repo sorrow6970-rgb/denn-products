@@ -2,8 +2,9 @@
 
 ## 상태
 
-- `READY_FOR_CODEX` — 구현·검증 완료(2026-09-03). 결과는 이 문서 맨 아래 `DONE (Claude)` 절에 있다.
-  제품/test/PNG `8c7b7ff`, 문서 commit은 그 다음이다. next `CODEX_SPEC_086_REVIEW`, fix_round `0`.
+- `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK` — Codex 독립 검수 통과(2026-09-03),
+  문서 전용 종료 완료. 승인 후보 `8c7b7ff`, 검수 기준 `HEAD=origin=9ffdf1b`, 보완 라운드 0회.
+  다음 단위는 spec 087이다. next `CLAUDE_SPEC_087_IMPLEMENT`.
 - 기준 브랜치: `rebuild/modern-studio`
 - 기준 commit: `HEAD=origin=452c03b`, ahead/behind `0/0`
 - 직전 완료: spec 085 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
@@ -307,3 +308,70 @@ mobile `6bdcb88c…` 무변경.
 
 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_086_REVIEW`, fix_round 0에서 멈춘다. 다음 finding·다음 스펙은
 시작하지 않았다.
+
+### CODEX REVIEW — CODEX_PASSED (2026-09-03)
+
+검수 기준 `HEAD=origin=9ffdf1b`, 승인 후보 `8c7b7ff`(계약 `d7408b2`, 기록 `9ffdf1b`), ahead/behind
+`0/0`. 보고 수치를 그대로 믿지 않고 게이트를 다시 실행하고 증거를 다시 측정했다. 결함은 없다.
+
+**게이트 재실행.** `node scripts/check.mjs` **PASS**(format·lint·typecheck, unit **2502/2502** ·
+92 파일, build 2개). canonical `node scripts/e2e-run.mjs` **Chromium 220 passed / 0 failed / 0 skipped /
+0 retry**. 포트 `4183/4184/4185/8080/9099/9199` LISTENING **0**, `denn-e2e-*`·`playwright-report`·
+`debug.log` 잔류 **0**.
+
+**PNG 재현성.** 검수자의 canonical 실행 뒤 working tree에 C5 PNG 두 장의 수정이 **나타나지 않았다** —
+재생성 바이트가 commit된 바이트와 같다(`2f70c95e…`, `b9765d7c…`). 다른 tracked spec-084 PNG 변경도 0이다.
+
+**시각 결과 직접 확인 — 픽셀 재측정.** 두 PNG를 열어 확인하고, PNG를 디코드해 `--line` border의 가로
+run으로 form field box를 직접 쟀다. 1280x800에서 select **44px** / 두 `TextField` 45px, 390x844에서도
+select **44px** / 45px이다. 감사 실측 `518x23` · `316x23`에서 **518x44 · 316x44**로 바뀌었고 44px 계약을
+만족한다.
+
+**axe scope 축소가 정당한지 독립 확인.** 구현이 axe 스캔을 `[data-testid="frame-print-size-editor"]`로
+좁혔다. 이것이 제품 결함을 가린 것이 아님을 별도 경로로 확인했다 — 감사 spec은 같은 fixture 페이지에서
+`section[aria-label="합성 fixture 진단"]`만 숨긴 뒤 **페이지 전체**를 스캔하는데,
+`measurements.json`의 두 C5 항목 `axeSeriousCritical`가 **[]**다. 즉 harness 진단 section을 빼면 페이지
+전체에 serious/critical이 0이며, 위반은 편집기가 아니라 진단 section에 있다. 운영자 제품 route
+(`operator-shell-default-off-*`) 역시 unscoped `[]`이므로 `--muted`(`#71717a`) on `--bg`(`#f4f4f5`)
+4.39:1 조합은 fixture 전용이다. 단언은 여전히 0건 요구이고 tolerance·retry·skip은 추가되지 않았다.
+
+**계약 대조.** §1 native select 유지(`appearance` 재설정 0, label/id·`data-testid`·option 값/순서/문구·
+legacy disabled·빈 초기값 무변경) ✓. §2 전용 class 1개와 요구 속성 전부 — `box-sizing`, `min-height:44px`,
+`width/min-width/max-width`, `var(--line)`/`var(--radius)`/`var(--surface)`/`var(--ink)`/`font: inherit`,
+disabled `not-allowed`+`opacity:.55`, `:focus-visible` 3px `var(--accent-ink)`+offset 2px ✓,
+transition·animation·transform·새 색상 literal·`!important` **0**, global `select` selector **0**,
+`@denn/ui/theme.css`·`apps/admin/src/space-v2/**` 수정 **0** ✓. §3 unit 4항목 ✓. §4 Chromium 7항목 ✓
+(새 fixture·timeout·retry·skip·tolerance 추가 0). §5 canonical 재생성·PNG 확인·addendum ✓.
+
+**범위·bundle.** `d7408b2..HEAD` committed diff에 `apps/mockup/**`·`packages/**`·모든 `package.json`·
+`pnpm-lock.yaml`·`pnpm-workspace.yaml`·Rules/Firebase config·`AGENTS.md`·design README·spec 038·
+`taste-v2/**`·spec 018 PNG·`local-visual-readiness.spec.ts`·`apps/admin/src/space-v2/**`는 **0**건이다.
+검수자 build에서도 고객 entry는 `index-eQgqaWiH.js` **341.94 kB**로 파일명 해시까지 동일했고, 운영자는
+`index-BWeRXD_J.js` 295.37 kB · CSS `index-CCW8unbN.css` 11.24 kB로 보고와 일치했다.
+
+**비차단 관찰 3건(수정 요구 아님).**
+
+- 렌더 높이가 select 44px, 인접 `TextField` 45px로 1px 다르다. select의 line box가 body의
+  `line-height: 1.5`를 같은 방식으로 잡지 않기 때문이며 두 값 모두 44px 계약을 만족한다.
+- `FramePrintSizeEditor.tsx`의 "It is intentionally not imported by App.tsx" 주석은 이제 사실이 아니다
+  (`apps/admin/src/App.tsx`가 import한다). spec 086 이전부터 있던 문구이고 이 단위의 허용 변경 목록 밖이라
+  건드리지 않은 것이 옳다. 기록만 남긴다.
+- spec 018 desktop PNG는 검수자 실행에서 또 달라졌다(`99e5e410…` → `d0a0aa52…`). 스펙 084 보완 라운드
+  1에서 이미 "결정화 대상 밖"으로 기록된 기존 조건이고 stage·commit되지 않았다.
+
+스펙 086은 `CODEX_PASSED`다. 다음은 문서 전용 closure이며 제품 코드·test·PNG를 더 수정하거나 게이트를
+재실행하지 않는다.
+
+### CLOSED (Claude) — 스펙 086 문서 전용 종료 (2026-09-03)
+
+Codex `CODEX_PASSED`를 받아 문서만 종료 상태로 맞췄다. 이 종료에서 제품 코드·test·PNG·
+`measurements.json`·Rules/config·package/lockfile은 **한 줄도 수정하지 않았다**. 변경은 이 spec, handoff,
+`Automation/DENN_AUTOMATION_STATE.md`, `Automation/NEXT_CLAUDE_PROMPT.md`,
+`docs/codex-claude-handoff/CURRENT.md`, `docs/live/CLAUDE_LIVE_PATCH_LOG.md`와 신규 spec 087 계약·handoff
+뿐이다.
+
+`completed_unit`은 `spec-086-admin-c5-select-accessibility-surface`
+(`DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`)이고, 다음 단위는
+`spec-087-space-post-auth-header-collapse`(spec 084 **F-3**)다. F-2는 고객·운영자 두 앱에 걸쳐 있어 spec
+086의 "한 단위에 두 앱을 묶지 않는다" 원칙에 따라 뒤로 미루고, F-4는 admin 기본 진입/gate 결정 전,
+F-7은 고객 노출 독자·운영 발생 조건 결정 전, F-8은 replay 크기 제품 결정 전까지 시작하지 않는다.

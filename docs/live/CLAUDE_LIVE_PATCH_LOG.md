@@ -7544,3 +7544,51 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   실제 Firebase/network/emulator/deploy·운영 데이터. 스펙 084의 다른 finding 판정은 그대로다.
 - 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_086_REVIEW`, fix_round 0. 다음 finding·다음 스펙은 시작하지
   않았다. 전체 진행도 **85~88% / 잔여 12~15%**(변동 없음).
+
+## 2026-09-03 - Codex 스펙 086 독립 검수 · CODEX_PASSED · 종료 · 스펙 087 계약
+
+- 검수 기준 `HEAD=origin=9ffdf1b`, 승인 후보 `8c7b7ff`(계약 `d7408b2`, 기록 `9ffdf1b`), ahead/behind
+  0/0. **판정 `CODEX_PASSED`, 보완 라운드 0회.** 허용 범위 밖 committed diff **0**
+  (`apps/mockup/**`·`packages/**`·package/lockfile/workspace·Rules/Firebase config·`AGENTS.md`·
+  design README·spec 038·`taste-v2/**`·spec 018 PNG·`local-visual-readiness.spec.ts`·
+  `apps/admin/src/space-v2/**`).
+- **게이트 재실행.** `node scripts/check.mjs` PASS(format·lint·typecheck, unit **2502/2502** · 92 파일,
+  build 2개). canonical `node scripts/e2e-run.mjs` **Chromium 220 passed / 0 failed / 0 skipped /
+  0 retry**. 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`·`playwright-report`·
+  `debug.log` 잔류 0.
+- **PNG 재현성 증명.** 검수자 canonical 실행 뒤 working tree에 C5 PNG 두 장의 수정이 나타나지 않았다 —
+  재생성 바이트가 commit된 바이트와 동일하다(`2f70c95e…`, `b9765d7c…`). 다른 tracked spec-084 PNG 변경 0.
+- **시각 결과 픽셀 재측정.** PNG를 디코드해 `--line` border(`#eaeaed`)의 가로 run으로 form field box를
+  직접 쟀다: 1280x800·390x844 모두 select **44px**, 인접 `TextField` 45px. 감사 실측 `518x23`·`316x23`
+  → **518x44**·**316x44**로 44px 계약을 만족한다.
+- **axe scope 축소 정당성 독립 확인.** 구현은 스캔을 `[data-testid="frame-print-size-editor"]`로 좁혔다.
+  이것이 제품 결함을 가린 것이 아님을 별도 경로로 확인했다 — 감사 spec은 같은 fixture에서
+  `section[aria-label="합성 fixture 진단"]`만 숨긴 뒤 **페이지 전체**를 스캔하는데 `measurements.json`의
+  두 C5 항목 `axeSeriousCritical`가 `[]`다. 운영자 제품 route(`operator-shell-default-off-*`)도 unscoped
+  `[]`이므로 `--muted`(`#71717a`) on `--bg`(`#f4f4f5`) 4.39:1 조합은 fixture 전용이다.
+- **계약 대조.** §1 native select 유지·`appearance` 재설정 0, §2 전용 class 1개와 요구 속성 전부 +
+  금지 항목(transition/animation/transform/새 색상 literal/`!important`/global selector) 0, §3 unit
+  4항목, §4 Chromium 7항목, §5 canonical 재생성·PNG 확인·addendum — 전부 충족. 검수자 build에서도 고객
+  entry `index-eQgqaWiH.js` **341.94 kB** 파일명 해시까지 동일, 운영자 `index-BWeRXD_J.js` 295.37 kB ·
+  CSS `index-CCW8unbN.css` 11.24 kB로 보고와 일치.
+- **비차단 관찰 3건.** ① select 44px vs `TextField` 45px(select의 line box가 body `line-height: 1.5`를
+  같은 방식으로 잡지 않음, 둘 다 계약 충족) ② `FramePrintSizeEditor.tsx`의 "It is intentionally not
+  imported by App.tsx" 주석이 이제 사실이 아님(`App.tsx`가 import한다 — spec 086 이전부터 있던 문구이고
+  허용 변경 목록 밖이라 건드리지 않은 것이 옳다) ③ spec 018 desktop PNG의 기존 비결정성
+  (`99e5e410…` → `d0a0aa52…`, stage 0).
+- **종료 처리.** 문서 전용. 제품 코드·test·PNG·`measurements.json`·Rules/config·package/lockfile 수정
+  **0**, 게이트 추가 재실행 0.
+- **다음 단위 = spec 087 `space-post-auth-header-collapse`(spec 084 F-3).** F-2는 고객 `PreviewComposer`와
+  운영자 발급 panel 두 앱에 걸쳐 spec 086의 "한 단위에 두 앱을 묶지 않는다"에 걸리고, F-4는 데모를 지우면
+  제품 기본값이 빈 화면이 되어 admin 기본 진입/gate 결정이, F-7은 고객 노출 독자·운영 발생 조건 결정이,
+  F-8은 replay 크기 제품 결정이 선행돼야 한다. 고객 앱 한 곳에서 닫히고 새 제품 결정이 필요 없는 것은
+  F-3뿐이다.
+- **스펙 087 계약 요지.** 인증 전 화면은 무변경(`space-v2-password-gate-390x844.png`가 바뀌면 STOP).
+  인증 후에는 결과 renderer가 **주입돼 있을 때만** 게이트가 badge·`<h1>내 공간 시안 확인</h1>`·
+  `담당자에게 전달받은 비밀번호를 입력하세요.`를 렌더하지 않고, 결과 화면(V2 액자 뷰 / V1 차단 안내)이
+  유일한 제목을 갖는다 — 기존 `<h2>`를 `<h1>`로 올리되 `id`(`space-frame-title`,
+  `space-frame-blocked-title`)와 `aria-labelledby`는 고정이다. 주입이 없는 spec 061 fallback은 자기 제목이
+  없으므로 머리말을 유지한다. **새 고객 문구 0**, 결과 화면 badge 유지, 인증·오류·재시도·V1/V2 판정 의미
+  무변경이다. 허용 PNG는 `space-v2-viewer-{1280x800,390x844}`와 `space-v1-blocked-390x844` 세 장이다.
+- 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_087_IMPLEMENT`, fix_round 0. 보호 대상과 기존 Founder/user
+  dirty는 수정·restore·checkout·stage·commit **0**. 전체 진행도 **85~88% / 잔여 12~15%**(변동 없음).
