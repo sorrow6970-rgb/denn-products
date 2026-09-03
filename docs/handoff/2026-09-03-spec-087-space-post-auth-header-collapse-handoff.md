@@ -2,10 +2,10 @@
 
 ## 상태
 
-- `READY_FOR_CLAUDE / CONTRACT_ONLY / NO_LIVE_NETWORK`
-- 기준 `HEAD=origin=9ffdf1b`, ahead/behind `0/0`
+- `READY_FOR_CODEX` — 구현·검증 완료(2026-09-03), 결과는 아래 `구현 결과` 절
+- 기준 `HEAD=origin=9ffdf1b` → 계약 `f72e2e2` → 제품/test/PNG `ac684e3`, ahead/behind `0/0`
 - active unit: `spec-087-space-post-auth-header-collapse`, fix_round `0`
-- next: `CLAUDE_SPEC_087_IMPLEMENT`
+- next: `CODEX_SPEC_087_REVIEW` (**계약 보완 판단 2건 요청**)
 - 직전 완료: spec 086 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
 
 ## Claude Code가 수행할 것
@@ -57,3 +57,36 @@ spec 086이 세운 "한 단위에 두 앱을 묶지 않는다"에 걸리고, F-4
 - spec 018 PNG 두 장
 - `packages/render/src/plan/index.ts`
 - `pnpm-workspace.yaml`, `AGENTS.md`
+
+## 구현 결과 (2026-09-03)
+
+- 계약 `f72e2e2`, 제품/test/PNG `ac684e3`, 문서 commit은 이 갱신이다. `apps/admin/**`·`packages/**`·
+  package/lockfile/workspace·Rules/Firebase config diff **0**, 실제 Firebase/network/emulator/deploy
+  **0**, F-2·F-4·F-7·F-8·고객 composer/browse 수정 **0**.
+- **§1 인증 전 무변경.** `space-v2-password-gate-390x844.png` sha256 `67a1433c…` **바이트 동일**.
+- **§2 인증 후.** `readyBodyOwnsTitle`(= `renderReadyBody`가 쓰는 주입 여부와 같은 조건)이면 게이트
+  badge·`<h1>`을 렌더하지 않고, 비밀번호 안내는 `ready`이면 무조건 렌더하지 않는다. renderer가 없는
+  spec 061 fallback은 머리말을 유지한다.
+- **결과 화면 3곳의 `<h2>` → `<h1>`.** `SpaceV2ProofView`, V1 액자 뷰, V1 차단 안내. 문구·class·id
+  그대로라 `aria-labelledby` 3개가 모두 해석되고 badge도 유지. **새 고객 문구 0**, CSS 수정 0.
+- **★ 계약 보완 판단 요청 2건.** ① 허용 파일에 `apps/mockup/src/space-v2/SpaceV2ProofView.tsx`(+test)가
+  없었다 — 제품 V2 route가 실제로 렌더하는 결과 화면이라 빼면 §3 "h1 1개"가 그 화면에서 성립하지 않는다
+  (E2E가 `h2`로 실패). §2가 이미 요구하는 의도 안이라 보고 포함했다. ② canonical이 같은 두 화면의 다른
+  baseline 4장(`spec-063/space-v1-blocked-*`, `spec-080/space-v2-viewer-*`)도 다시 썼다. 허용 목록에
+  없으므로 **stage하지 않고** 인과만 확인해 보고한다(spec-080 두 장은 spec-084 viewer와 sha256이 같은
+  동일 캡처다).
+- **검증.** `node scripts/check.mjs` PASS(unit **2510/2510**, 92 파일, build 2개; 신규 unit 8).
+  canonical `node scripts/e2e-run.mjs` **Chromium 223 passed / 0 failed / 0 skipped / 0 retry**
+  (기존 220 + 신규 3). `git diff --check` PASS, 포트 6개·temp 잔류 0.
+- **bundle.** 운영자 `index-BWeRXD_J.js` 295.37 kB · CSS `index-CCW8unbN.css` 11.24 kB **무변경**,
+  고객 CSS `index-CLxRhNtu.css` 20.27 kB **무변경**, 고객 entry 341.94 → `index-CqOWaAno.js`
+  **342.07 kB**.
+- **증거.** 허용 3장 갱신·직접 확인: `9c601fe8…` → `c84d8f16…`, `7a6482d1…` → `0ce9e921…`,
+  `768b8310…` → `64927f4f…`. `measurements.json` Space 4항목 overflow false·axe 0·smallTargets 0.
+- **보호 대상.** hash 동일, restore·stage·commit 0. spec 018 PNG는 canonical이 다시 썼고 stage하지
+  않았다(desktop `d0a0aa52…` → `bd5ff207…`, **mobile도 이번엔 `6bdcb88c…` → `8676d263…`** — browse DOM은
+  건드리지 않았으므로 기존 raster 비결정성으로 본다).
+- **NOT TESTED.** 제품 `?space=` route(실제 Firestore 필요)·실기기·200% zoom·preview channel·실제
+  Firebase/network/emulator/deploy·운영 데이터.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_087_REVIEW`, fix_round 0. 다음 finding·다음 스펙은 시작하지
+  않았다.

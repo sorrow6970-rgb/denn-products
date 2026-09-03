@@ -1,14 +1,105 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CLAUDE / CONTRACT_ONLY / NO_LIVE_NETWORK`
+상태: `READY_FOR_CODEX`
 
+- active_unit: `spec-087-space-post-auth-header-collapse` — 계약 `f72e2e2`, 제품/test/PNG `ac684e3`
 - completed_unit: `spec-086-admin-c5-select-accessibility-surface` — **DONE / CODEX_PASSED /
-  LOCAL_VERIFIED / NO_LIVE_NETWORK** (계약 `d7408b2`, 제품/test/PNG `8c7b7ff`, 기록 `9ffdf1b`, 종료 문서)
-- active_unit: `spec-087-space-post-auth-header-collapse` — 계약만 작성됨(제품 구현 0)
-- 기준: `HEAD=origin=9ffdf1b`에서 Codex 검수·종료·계약 작성, ahead/behind `0/0`
-- next_transition: `CLAUDE_SPEC_087_IMPLEMENT`
+  LOCAL_VERIFIED / NO_LIVE_NETWORK**
+- 기준: 계약 작성 `HEAD=origin=9ffdf1b` → 구현 후 `HEAD=origin`, ahead/behind `0/0`
+- next_transition: `CODEX_SPEC_087_REVIEW`
 - fix_round: `0` (최대 3)
-- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (검수·계약 작성이라 구간 변동 없음)
+- 전체 리빌드: **85~88% 완료 / 12~15% 잔여** (고객 Space 머리말 한 건이라 구간 변동 없음)
+
+## 지금 수행할 작업 — 없음. Codex 검수 대기
+
+스펙 087 구현·검증을 끝내고 멈췄다. 스펙 084의 남은 finding(F-2·F-4·F-7), F-8의 Founder 제품 결정,
+다음 스펙, 실제 Firebase/network/emulator/deploy·실기기·preview channel은 **자동으로 시작하지 않는다**.
+다음 범위는 Codex 독립 검수와 Founder 결정이 정한다.
+
+## 스펙 087 구현 결과 (수행 완료)
+
+**F-3 해소.** `SpacePasswordGate`가 badge·`<h1>내 공간 시안 확인</h1>`·`담당자에게 전달받은 비밀번호를
+입력하세요.`를 모든 상태에서 렌더하던 것을 상태에 맞게 바꿨다.
+
+- **인증 전은 무변경**이다. badge·`<h1>`·안내·form·상태 문구·`role`/`aria-live` 그대로이며
+  `space-v2-password-gate-390x844.png`는 sha256 `67a1433c…`로 **바이트 동일**이다.
+- **인증 후**에는 `readyBodyOwnsTitle`(= `status === "ready"` 이고 해당 결과 renderer가 주입됨)일 때 게이트
+  badge·`<h1>`을 렌더하지 않는다. 이 조건은 `renderReadyBody`가 **이미 분기하는 바로 그 조건**이라 둘이
+  어긋날 수 없고, 자식 DOM을 들여다보지 않는다. 비밀번호 안내는 `ready`이면 **무조건** 사라진다(주입
+  여부와 무관하게 더 입력할 것이 없다). 결과 renderer가 없는 spec 061 fallback(`pendingNotice`)은 자기
+  제목이 없으므로 게이트 머리말을 **유지한다**.
+- **결과 화면 3곳이 제목을 갖는다.** `SpaceV2ProofView`(`space-v2-proof-title`), V1 액자 뷰
+  (`space-frame-title`), V1 차단 안내(`space-frame-blocked-title`)의 `<h2>`를 `<h1>`로 올렸다.
+  **문구·class·id는 그대로**라 세 `aria-labelledby`가 모두 실재 요소로 해석되고 두 badge도 유지했다.
+  **새 고객 문구 0**, CSS 수정 **0**이다(`.denn-shell__inner h1`이 `.denn-space-blocked__title`의
+  font-size·margin을 이기고, class가 주는 `word-break: keep-all`는 살아남아 320px에서도 넘치지 않는다).
+
+**★ 계약 보완 판단 요청 2건 (Codex 결정 필요).**
+
+1. **허용 파일 1개 누락 — `apps/mockup/src/space-v2/SpaceV2ProofView.tsx`(+ `.test.tsx`).** 계약의 제품
+   허용 목록은 `SpacePostAuthFrameView`만 적었는데, **제품 V2 route가 실제로 렌더하는 결과 화면은
+   `SpaceV2ProofView`**다(`App.tsx:65`). 빼면 §3의 "인증 후 `<h1>`은 정확히 1개"가 F-3이 측정된 바로 그
+   화면에서 성립하지 않는다(신규 E2E가 `h2: 내 공간 시안`으로 실패했다). §2가 이미 "V2 액자 뷰가 단독
+   제목을 갖는다"를 요구하므로 **의도 안**이라 보고 포함했다.
+2. **허용 PNG 4장 누락 — stage하지 않았다.** canonical이 같은 두 화면의 다른 tracked baseline도 다시
+   썼다: `docs/rebuild/results/spec-063/space-v1-blocked-{desktop-1280x800,mobile-390x844}.png`,
+   `docs/rebuild/results/spec-080/space-v2-viewer-{desktop-1280x800,mobile-390x844}.png`. 인과는
+   확인했다 — spec-080 두 장은 spec-084 viewer 두 장과 **sha256이 서로 같은 동일 캡처**이고(변경 후에도
+   `c84d8f16…`/`0ce9e921…` 쌍 유지), spec-063은 같은 V1 차단 화면이다. 계약의 지시대로
+   **stage·commit하지 않고 unstaged로 두고 보고**한다. 허용 목록에 추가할지 복원할지는 Codex 판단이다
+   (복원하면 제품과 어긋난 baseline이 남고 canonical 실행마다 되돌려진다 — spec 085
+   `browse-ready-1280x800.png`와 같은 상황이다).
+
+**검증.** `node scripts/check.mjs` **PASS**(format·lint·typecheck, unit **2510/2510** · 92 파일,
+build 2개 — 신규 unit **8**). canonical `node scripts/e2e-run.mjs` **Chromium 223 passed / 0 failed /
+0 skipped / 0 retry**(기존 220 + 신규 **3**). 신규 E2E는 두 viewport에서 인증 전 heading 목록이
+`["h1: 내 공간 시안 확인"]`이고 안내가 보이는 것을 먼저 확인한 뒤, 인증 후 목록이 정확히
+`["h1: 내 공간 시안"]`이고 게이트 제목·비밀번호 안내가 DOM에 **0개**이며 badge 유지·
+`aria-labelledby="space-v2-proof-title"`가 `H1`로 해석·overflow 0·axe serious/critical 0·
+console error/warning 0·pageerror 0·외부 요청 0임을 단언한다. 세 번째는 V1 링크에서 차단 안내가 유일한
+`h1`이고 `role="alert"`·재시도 버튼 0·`aria-labelledby` 해석이 그대로임을 단언한다. 기존
+`getByRole("heading", { name: "내 공간 시안" })`와 `저장된 시안 · 열람 전용` 단언은 **무수정 PASS**다.
+timeout·retry·skip·screenshot tolerance 추가 **0**. `git diff --check` PASS, 포트
+4183/4184/4185/8080/9099/9199 LISTENING 0, `denn-e2e-*`·`playwright-report`·`debug.log` 잔류 0.
+
+**구현 중 자체 수정 1건.** 신규 E2E가 처음 `aria-labelledby="space-frame-title"`을 확인하도록 썼는데 V2
+route의 결과는 `SpaceV2ProofView`(`space-v2-proof-title`)라 실패했다. `space-frame-title`은 V1 액자 뷰의
+것이므로 test를 실제 화면에 맞게 고쳤다. 제품 의미는 바뀌지 않았다.
+
+**시각 증거.** canonical이 허용 3장을 다시 썼고 직접 열어 확인했다 — V2 뷰어는 badge 1개 + 제목
+`내 공간 시안` 1개뿐이고 `내 공간 시안 확인`과 비밀번호 안내가 사라졌으며, V1 차단 안내도 제목 하나에
+한국어 줄바꿈이 유지된다. `9c601fe8…` → `c84d8f16…`(viewer 1280x800), `7a6482d1…` →
+`0ce9e921…`(viewer 390x844), `768b8310…` → `64927f4f…`(v1-blocked 390x844). gate PNG `67a1433c…`
+**무변경**. `measurements.json`의 Space 4항목은 `horizontalOverflow` false, `axeSeriousCritical` 0,
+`smallTargets` 0이다. 감사 보고서 §11에 F-3 해소 addendum을 남겼고 §9 F-1·§10 F-5·F-6 철회·F-8 재분류
+문구는 되돌리지 않았다.
+
+**bundle.** 운영자 entry `index-BWeRXD_J.js` **295.37 kB** · CSS `index-CCW8unbN.css` **11.24 kB** —
+파일명 해시까지 **무변경**. 고객 CSS `index-CLxRhNtu.css` **20.27 kB**도 무변경(CSS를 건드리지 않았다).
+고객 entry `index-eQgqaWiH.js` 341.94 → `index-CqOWaAno.js` **342.07 kB**(gzip 104.76 → 104.81).
+
+**보호 대상.** design README·spec 038·`packages/render/src/plan/index.ts`·`pnpm-workspace.yaml`·
+`AGENTS.md`·`taste-v2/**`는 시작/종료 hash 동일이고 restore·checkout·stage·commit **0**이다. spec 018
+PNG 2장은 canonical E2E가 다시 썼고 stage하지 않았다: desktop `d0a0aa52…` → `bd5ff207…`,
+**mobile도 이번엔 `6bdcb88c…` → `8676d263…`**. 이 단위는 `apps/mockup/src/space*`만 고쳤고 browse DOM은
+건드리지 않았으므로 스펙 084 보완 라운드 1이 기록한 raster 비결정성으로 본다.
+
+**범위 밖 그대로.** F-2(영어 native 파일 선택), F-4(운영자 root 데모 셸), F-7(고객 진단 문구), F-8(replay
+크기 Founder 결정), 운영자 앱, 고객 composer/browse, `packages/**`, Rules/Firebase config,
+package/lockfile/workspace — 전부 무변경이다. 제품 `?space=` route는 실제 Firestore 문서가 필요하므로
+실기기·200% zoom·preview channel·실제 Firebase/network/emulator/deploy·운영 데이터는 `NOT TESTED`다.
+
+> 직전 지시문(스펙 087 구현, 수행 완료 — 기록):
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md를 읽고 명시된 스펙 087 범위만 구현·검증해. 보호 대상은 건드리지 말고, 완료 후 live log와 STATE/NEXT/CURRENT를 실제 상태에 맞춰 READY_FOR_CODEX에서 멈춰.
+```
+
+---
+
+## 이전 이력 - 아래 내용은 현재 실행 지시가 아님
+
+### 이전 지시 — 스펙 087 계약 (Codex 작성)
 
 ## 지금 수행할 작업 - 스펙 087 구현·검증
 

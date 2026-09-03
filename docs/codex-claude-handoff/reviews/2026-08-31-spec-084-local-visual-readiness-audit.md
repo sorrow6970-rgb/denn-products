@@ -87,7 +87,7 @@ PNG를 저장하지 않은 320px measurement-only 3건(고객 browse·고객 com
 컨트롤이다. 고객 화면과 운영자 화면 양쪽에 같은 형태로 있다. 접근성 측면에서도 label과 위젯이 시각적으로
 분리돼 보인다.
 
-### F-3 (P1) — Space 인증 후에도 "비밀번호를 입력하세요"가 남는다
+### F-3 (P1) — Space 인증 후에도 "비밀번호를 입력하세요"가 남는다 — **스펙 087에서 해소됨(§11)**
 
 `space-v2-viewer-1280x800.png`, `space-v2-viewer-390x844.png`.
 
@@ -267,3 +267,34 @@ Codex 독립 검수가 지적한 네 항목을 이 단위 안에서 닫았다. f
   결정이다.
 - **NOT TESTED는 그대로다.** 제품 route의 C5 gate는 여전히 off이고 실기기·preview channel·운영
   데이터·실제 Firebase/network는 이번에도 검증되지 않았다.
+
+## 11. 후속 해소 — F-3, 스펙 087 (2026-09-03)
+
+이 절은 **후속 기록**이다. 위 §4의 F-3 본문은 감사 시점(2026-08-31)의 실측 그대로 두고 해소 결과만
+덧붙인다. 다른 finding의 의미·우선순위와 §5 판정표는 바뀌지 않는다. §9 F-1, §10 F-5, F-6 철회, F-8
+재분류도 되돌리지 않는다.
+
+- **F-3 — 해소**(`docs/rebuild/specs/087-space-post-auth-header-collapse.md`, 제품 commit `ac684e3`).
+  `SpacePasswordGate`는 인증 **전**에는 그대로지만, 결과 renderer가 주입된 `ready` 상태에서는 자기
+  badge와 `<h1>내 공간 시안 확인</h1>`을 렌더하지 않고, `담당자에게 전달받은 비밀번호를 입력하세요.`는
+  `ready`이면 무조건 렌더하지 않는다. 판정은 `renderReadyBody`가 이미 쓰는 **주입 여부**와 같은 조건이라
+  둘이 어긋날 수 없다.
+- **결과 화면이 제목을 갖는다.** `SpaceV2ProofView`(`space-v2-proof-title`), V1 액자 뷰
+  (`space-frame-title`), V1 차단 안내(`space-frame-blocked-title`)의 기존 `<h2>`가 각각 `<h1>`이 됐다.
+  **문구·class·id는 그대로**라 세 `aria-labelledby`가 모두 해석되고 두 badge도 남아 있다. 새 고객 문구는
+  **0**이며 CSS는 수정하지 않았다.
+- **결과 renderer가 없는 spec 061 fallback**(`pendingNotice`)은 자기 제목이 없으므로 게이트 머리말을
+  유지한다 — 머리말을 무조건 지웠다면 그 화면에 제목이 하나도 남지 않았을 것이다.
+- **증거.** `space-v2-viewer-{1280x800,390x844}.png`와 `space-v1-blocked-390x844.png`를 canonical 실행이
+  다시 썼고 직접 확인했다(`9c601fe8…` → `c84d8f16…`, `7a6482d1…` → `0ce9e921…`, `768b8310…` →
+  `64927f4f…`). 인증 **전** 화면인 `space-v2-password-gate-390x844.png`는 `67a1433c…`로 **무변경**이다.
+  `measurements.json`의 Space 4항목은 `horizontalOverflow` false, `axeSeriousCritical` 0,
+  `smallTargets` 0이다. 감사 당시의 원본은 git history에 남아 있다.
+- **범위 밖 baseline 4장.** 같은 두 화면의 다른 baseline인 `docs/rebuild/results/spec-063/
+  space-v1-blocked-*.png`와 `docs/rebuild/results/spec-080/space-v2-viewer-*.png`도 canonical 실행이 다시
+  썼다. 스펙 087의 허용 목록에 없어 **stage하지 않았고** Codex 판단을 요청한다.
+- **그대로 남은 finding.** F-2(영어 native 파일 선택), F-4(운영자 root 데모 셸), F-7(고객 진단 문구)은
+  스펙 087 범위 밖이고 화면에 그대로 있다.
+- **NOT TESTED는 그대로다.** 제품 `?space=` route는 실제 Firestore 문서가 필요하므로 이번 근거도 제품
+  component + 합성 fixture이며, 실기기·preview channel·운영 데이터·실제 Firebase/network는 검증되지
+  않았다.

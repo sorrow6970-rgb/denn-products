@@ -5,19 +5,19 @@ updated_at: 2026-09-03
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-086-admin-c5-select-accessibility-surface   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: spec-087-space-post-auth-header-collapse   # Codex contract only; Claude has not implemented it
-state: READY_FOR_CLAUDE
-baseline_commit: 9ffdf1b   # HEAD=origin when the spec 087 contract was written
-candidate_commit: none     # spec 087 has no product commit yet
-verified_commit: 8c7b7ff   # spec 086, Codex independent review passed on 2026-09-03, fix round 0
-origin_relation: "HEAD=origin after the spec 086 closure and the spec 087 contract push, ahead/behind 0/0"
-working_tree: "protected spec-018 PNGs (rewritten by the reviewer's canonical E2E, desktop d0a0aa52) and pre-existing Founder/user dirty; all unstaged"
+active_unit: spec-087-space-post-auth-header-collapse   # implemented in ac684e3; awaiting Codex review
+state: READY_FOR_CODEX
+baseline_commit: 9ffdf1b   # HEAD=origin the spec 087 contract was written from (contract f72e2e2)
+candidate_commit: ac684e3  # spec 087 product + test + the three allowed Space PNGs
+verified_commit: none      # Codex has not reviewed spec 087 yet
+origin_relation: "HEAD=origin after the implementation and record pushes, ahead/behind 0/0"
+working_tree: "protected spec-018 PNGs and four out-of-list Space baselines (spec-063, spec-080) rewritten by the canonical E2E and deliberately NOT staged, plus pre-existing Founder/user dirty"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CLAUDE_SPEC_087_IMPLEMENT
+next_transition: CODEX_SPEC_087_REVIEW
 automation_loop: stopped (manual Claude Code -> live log -> Codex review -> next prompt handoff only)
-session_status: spec 086 passed Codex review and is closed; spec 087 (spec 084 F-3, customer Space post-auth header) is contracted and waiting for Claude - F-2 spans two apps, F-4/F-7/F-8 need decisions first
-commit_owner: Codex review, closure and next contract; Claude Code implements spec 087
+session_status: spec 087 implemented - the authenticated Space screen carries one title and no stale password prompt; two contract-list amendments are requested (SpaceV2ProofView, four Space baselines) and F-2/F-4/F-7/F-8 stay out of scope
+commit_owner: Claude Code implementation; Codex independent review and next-contract handoff
 ```
 
 ## Codex 다음 단위 선정 · 스펙 086 계약 (2026-09-03)
@@ -33,6 +33,60 @@ commit_owner: Codex review, closure and next contract; Claude Code implements sp
   Firebase/network/emulator/deploy 0. 보호 대상과 기존 dirty는 untouched/stage 0.
 - 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_086_IMPLEMENT`, fix_round 0. 전체 진행도 **85~88% / 잔여
   12~15%**(계약 작성만으로 변동 없음).
+
+## Claude 스펙 087 고객 Space 인증 후 머리말 정리 (F-3 해소) (2026-09-03)
+
+- 계약 작성 기준 `HEAD=origin=9ffdf1b` → Codex 계약 `f72e2e2` → 제품/test/PNG `ac684e3` → 문서 commit은
+  이 갱신이다(제품과 문서를 분리했다). `apps/admin/**`·`packages/**`·package/lockfile/workspace·
+  Rules/Firebase config diff **0**, 실제 Firebase/network/emulator/deploy **0**,
+  F-2·F-4·F-7·F-8·고객 composer/browse 수정 **0**.
+- **F-3 해소.** 인증 **전**은 무변경이고(`space-v2-password-gate-390x844.png` `67a1433c…` 바이트 동일),
+  인증 **후**에는 결과 renderer가 주입돼 있으면 게이트가 badge·`<h1>내 공간 시안 확인</h1>`을 렌더하지
+  않고 `담당자에게 전달받은 비밀번호를 입력하세요.`는 `ready`이면 무조건 렌더하지 않는다. 판정은
+  `renderReadyBody`가 이미 쓰는 **주입 여부**와 같은 조건이라 둘이 어긋날 수 없고, renderer가 없는
+  spec 061 fallback은 자기 제목이 없으므로 머리말을 유지한다.
+- **결과 화면 3곳이 제목을 갖는다.** `SpaceV2ProofView`(`space-v2-proof-title`), V1 액자 뷰
+  (`space-frame-title`), V1 차단 안내(`space-frame-blocked-title`)의 `<h2>`를 `<h1>`로 올렸다.
+  **문구·class·id 그대로**라 `aria-labelledby` 3개가 모두 해석되고 badge도 유지된다. **새 고객 문구 0**,
+  CSS 수정 **0**(`.denn-shell__inner h1`이 `.denn-space-blocked__title`의 font-size·margin을 이기고
+  `word-break: keep-all`는 살아남는다).
+- **★ 계약 보완 판단 요청 2건.** ① 허용 파일에 `apps/mockup/src/space-v2/SpaceV2ProofView.tsx`(+test)가
+  없었다 — 제품 V2 route가 실제로 렌더하는 결과 화면이므로 빼면 §3의 "인증 후 h1 정확히 1개"가 F-3이
+  측정된 바로 그 화면에서 성립하지 않는다(신규 E2E가 `h2: 내 공간 시안`으로 실패했다). §2가 이미 "V2 액자
+  뷰가 단독 제목을 갖는다"를 요구하므로 의도 안이라 보고 포함했다. ② canonical이 같은 두 화면의 다른
+  tracked baseline 4장(`spec-063/space-v1-blocked-{desktop,mobile}`,
+  `spec-080/space-v2-viewer-{desktop,mobile}`)도 다시 썼다. 계약이 열거하지 않았으므로 계약 지시대로
+  **stage·commit하지 않고** 인과만 확인해 보고한다 — spec-080 두 장은 spec-084 viewer 두 장과 sha256이
+  서로 같은 **동일 캡처**이고(변경 후에도 `c84d8f16…`/`0ce9e921…` 쌍 유지), spec-063은 같은 V1 차단
+  화면이다. 허용 목록 추가 여부는 Codex 판단이다.
+- **검증.** `node scripts/check.mjs` PASS(unit **2510/2510**, 92 파일, build 2개; 신규 unit 8).
+  canonical `node scripts/e2e-run.mjs` **Chromium 223 passed / 0 failed / 0 skipped / 0 retry**
+  (기존 220 + 신규 3). 신규 E2E는 두 viewport에서 인증 전 heading 목록 `["h1: 내 공간 시안 확인"]` → 인증
+  후 `["h1: 내 공간 시안"]`, 게이트 제목·비밀번호 안내 DOM 0개, badge 유지,
+  `aria-labelledby="space-v2-proof-title"`가 `H1`로 해석, overflow 0, axe serious/critical 0,
+  console/pageerror 0, 외부 요청 0을 단언하고, V1 링크에서는 차단 안내가 유일한 `h1`이고 `role="alert"`·
+  재시도 버튼 0이 유지됨을 단언한다. 기존 `getByRole("heading", { name: "내 공간 시안" })`·
+  `저장된 시안 · 열람 전용` 단언은 무수정 PASS다. `git diff --check` PASS, 포트 6개·temp 잔류 0.
+- **구현 중 자체 수정 1건.** 신규 E2E가 처음 `space-frame-title`(V1 액자 뷰의 id)을 확인해 실패했다.
+  V2 route의 결과는 `SpaceV2ProofView`(`space-v2-proof-title`)이므로 test를 실제 화면에 맞게 고쳤다.
+  제품 의미는 바뀌지 않았다.
+- **bundle.** 운영자 entry `index-BWeRXD_J.js` **295.37 kB** · CSS `index-CCW8unbN.css` **11.24 kB**
+  파일명 해시까지 **무변경**. 고객 CSS `index-CLxRhNtu.css` **20.27 kB**도 무변경. 고객 entry
+  `index-eQgqaWiH.js` 341.94 → `index-CqOWaAno.js` **342.07 kB**(gzip 104.76 → 104.81).
+- **증거.** 허용 3장을 canonical이 다시 썼고 직접 열어 확인했다: `9c601fe8…` → `c84d8f16…`(viewer
+  1280x800), `7a6482d1…` → `0ce9e921…`(viewer 390x844), `768b8310…` → `64927f4f…`(v1-blocked 390x844).
+  gate PNG `67a1433c…` 무변경. `measurements.json`의 Space 4항목은 `horizontalOverflow` false,
+  `axeSeriousCritical` 0, `smallTargets` 0이다.
+- **보호 대상.** design README·spec 038·`packages/render/src/plan/index.ts`·`pnpm-workspace.yaml`·
+  `AGENTS.md`·`taste-v2/**` hash 동일, restore·checkout·stage·commit 0. spec 018 PNG는 canonical이 다시
+  썼고 stage하지 않았다: desktop `d0a0aa52…` → `bd5ff207…`, **mobile도 이번엔 `6bdcb88c…` →
+  `8676d263…`**. 이 단위는 `apps/mockup/src/space*`만 고쳤고 browse DOM은 건드리지 않았으므로 스펙 084
+  보완 라운드 1이 기록한 raster 비결정성으로 본다.
+- **NOT TESTED.** 제품 `?space=` route는 실제 Firestore 문서가 필요하므로 이번 근거도 제품 component +
+  합성 fixture다. 실기기·200% zoom·preview channel·실제 Firebase/network/emulator/deploy·운영 데이터는
+  검증되지 않았다.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_087_REVIEW`, fix_round 0. 다음 finding·다음 스펙은 시작하지
+  않았다. 전체 진행도 **85~88% / 잔여 12~15%**(고객 Space 머리말 한 건이라 구간 변동 없음).
 
 ## Codex 스펙 086 독립 검수 · 종료 · 스펙 087 계약 (2026-09-03)
 

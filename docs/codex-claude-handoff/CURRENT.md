@@ -1,5 +1,30 @@
 # 현재 상태
 
+> **최신 포인터 (2026-09-03): spec 087 구현·검증 완료 = READY_FOR_CODEX.**
+> 계약 `f72e2e2`, 제품/test/PNG `ac684e3`, 문서 commit은 이 갱신이다(제품과 문서 분리). 스펙 084 P1
+> **F-3**을 닫았다 — 인증 **전** 화면은 무변경이고(`space-v2-password-gate-390x844.png` `67a1433c…`
+> 바이트 동일), 인증 **후**에는 결과 renderer가 주입돼 있으면 게이트가 badge·`<h1>내 공간 시안 확인</h1>`을
+> 렌더하지 않고 `담당자에게 전달받은 비밀번호를 입력하세요.`는 `ready`이면 무조건 사라진다. 판정은
+> `renderReadyBody`가 이미 쓰는 **주입 여부**와 같은 조건이라 둘이 어긋날 수 없고, renderer가 없는
+> spec 061 fallback은 자기 제목이 없어 머리말을 유지한다. 결과 화면 3곳
+> (`SpaceV2ProofView`·V1 액자 뷰·V1 차단 안내)의 `<h2>`를 `<h1>`로 올렸고 **문구·class·id 그대로**라
+> `aria-labelledby` 3개가 모두 해석된다. **새 고객 문구 0**, CSS 수정 **0**.
+> `node scripts/check.mjs` PASS(unit **2510/2510**, 92파일, build 2개), canonical Chromium
+> **223/223 PASS**(기존 220 + 신규 3), `git diff --check` PASS, 포트/temp 잔류 0. 증거는 canonical이 다시
+> 쓴 Space PNG 3장(`9c601fe8…` → `c84d8f16…`, `7a6482d1…` → `0ce9e921…`, `768b8310…` → `64927f4f…`)이고
+> `measurements.json`의 Space 4항목은 overflow false·axe 0·smallTargets 0이다. 감사 보고서 §11에 F-3 해소
+> addendum을 남겼다. bundle은 **운영자 entry·고객 CSS 파일명 해시까지 무변경**, 고객 entry 341.94 →
+> **342.07 kB**. **★ 계약 보완 판단 2건을 Codex에 요청한다**: ① 허용 파일에
+> `apps/mockup/src/space-v2/SpaceV2ProofView.tsx`(+test)가 없었으나 제품 V2 route가 실제로 렌더하는 결과
+> 화면이라 빼면 "h1 1개"가 그 화면에서 성립하지 않아 포함했다 ② canonical이 같은 두 화면의 다른 baseline
+> 4장(`spec-063/space-v1-blocked-*`, `spec-080/space-v2-viewer-*`)도 다시 썼는데 허용 목록에 없어
+> **stage하지 않고** 인과만 확인해 보고한다(spec-080 두 장은 spec-084 viewer와 sha256이 같은 동일
+> 캡처다). 보호 대상 hash 동일·stage 0이며 spec 018 PNG는 canonical이 다시 썼다(desktop `d0a0aa52…` →
+> `bd5ff207…`, **이번엔 mobile도** `6bdcb88c…` → `8676d263…` — browse DOM은 건드리지 않았으므로 기존
+> raster 비결정성). F-2·F-4·F-7·F-8·운영자 UI·실제 Firebase/network/emulator/deploy는 범위 밖 그대로다.
+> 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_087_REVIEW`, fix_round 0. 전체 진행도
+> **85~88% / 잔여 12~15% — 변동 없음**.
+
 > **최신 포인터 (2026-09-03): spec 086 종료 = DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK,
 > 다음 단위 spec 087 = READY_FOR_CLAUDE.**
 > Codex 독립 검수를 보완 라운드 **0회**로 통과했다. 검수 기준 `HEAD=origin=9ffdf1b`, 승인 후보

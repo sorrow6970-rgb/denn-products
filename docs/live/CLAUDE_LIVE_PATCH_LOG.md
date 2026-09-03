@@ -7592,3 +7592,65 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   무변경이다. 허용 PNG는 `space-v2-viewer-{1280x800,390x844}`와 `space-v1-blocked-390x844` 세 장이다.
 - 상태 `READY_FOR_CLAUDE`, next `CLAUDE_SPEC_087_IMPLEMENT`, fix_round 0. 보호 대상과 기존 Founder/user
   dirty는 수정·restore·checkout·stage·commit **0**. 전체 진행도 **85~88% / 잔여 12~15%**(변동 없음).
+
+## 2026-09-03 - Claude 스펙 087 고객 Space 인증 후 머리말 정리 (F-3 해소)
+
+- 계약 작성 기준 `HEAD=origin=9ffdf1b` → Codex 계약 `f72e2e2` → 제품/test/PNG `ac684e3` → 문서 commit은
+  이 갱신이다(제품과 문서를 분리했다). `apps/admin/**`·`packages/**`·package/lockfile/workspace·
+  Rules/Firebase config diff **0**, 실제 Firebase/network/emulator/deploy **0**,
+  F-2·F-4·F-7·F-8·고객 composer/browse 수정 **0**.
+- **F-3 해소.** 인증 **전**은 무변경이다 — badge·`<h1>내 공간 시안 확인</h1>`·`담당자에게 전달받은
+  비밀번호를 입력하세요.`·form·상태 문구·`role`/`aria-live` 그대로이고
+  `space-v2-password-gate-390x844.png`는 sha256 `67a1433c…`로 바이트 동일이다. 인증 **후**에는
+  `readyBodyOwnsTitle`(= `status === "ready"` 이고 해당 결과 renderer가 주입됨)일 때 게이트가
+  badge·`<h1>`을 렌더하지 않고, 비밀번호 안내는 `ready`이면 **무조건** 사라진다. 판정은
+  `renderReadyBody`가 이미 분기하는 **바로 그 조건**이라 둘이 어긋날 수 없고 자식 DOM을 보지 않는다.
+  결과 renderer가 없는 spec 061 fallback(`pendingNotice`)은 자기 제목이 없으므로 머리말을 유지한다.
+- **결과 화면 3곳이 제목을 갖는다.** `SpaceV2ProofView`(`space-v2-proof-title`), V1 액자 뷰
+  (`space-frame-title`), V1 차단 안내(`space-frame-blocked-title`)의 `<h2>`를 `<h1>`로 올렸다.
+  **문구·class·id 그대로**라 세 `aria-labelledby`가 모두 실재 요소로 해석되고 두 badge도 유지했다.
+  **새 고객 문구 0**, CSS 수정 **0**(`.denn-shell__inner h1`(0,1,1)이 `.denn-space-blocked__title`(0,1,0)의
+  font-size·margin을 이기고, class가 주는 `word-break: keep-all` / `overflow-wrap: anywhere`는 살아남아
+  320px에서도 넘치지 않는다).
+- **★ 계약 보완 판단 요청 2건.** ① **허용 파일 1개 누락** — 계약은 `SpacePostAuthFrameView`만 적었는데
+  제품 V2 route가 실제로 렌더하는 결과 화면은 `apps/mockup/src/space-v2/SpaceV2ProofView.tsx`다
+  (`App.tsx:65`). 빼면 §3의 "인증 후 `<h1>` 정확히 1개"가 F-3이 측정된 바로 그 화면에서 성립하지 않는다
+  (신규 E2E가 `h2: 내 공간 시안`으로 실패했다). §2가 이미 "V2 액자 뷰가 단독 제목을 갖는다"를 요구하므로
+  의도 안이라 보고 포함했다. ② **허용 PNG 4장 누락 — stage하지 않았다.** canonical이 같은 두 화면의 다른
+  tracked baseline `spec-063/space-v1-blocked-{desktop-1280x800,mobile-390x844}.png`와
+  `spec-080/space-v2-viewer-{desktop-1280x800,mobile-390x844}.png`도 다시 썼다. 인과는 확인했다 —
+  spec-080 두 장은 spec-084 viewer 두 장과 **sha256이 서로 같은 동일 캡처**이고(변경 후에도
+  `c84d8f16…`/`0ce9e921…` 쌍 유지), spec-063은 같은 V1 차단 화면이다. 계약의 "허용 3장 밖 tracked PNG가
+  바뀌면 stage하지 말고 보고한다"에 따라 unstaged로 두었다. 허용 목록 추가 여부는 Codex 판단이다.
+- **검증.** `node scripts/check.mjs` PASS(format·lint·typecheck, unit **2510/2510** · 92 파일, build
+  2개; 신규 unit 8). canonical `node scripts/e2e-run.mjs` **Chromium 223 passed / 0 failed / 0 skipped /
+  0 retry**(기존 220 + 신규 3). 신규 E2E 3건은 `390x844`·`1280x800`에서 인증 전 heading 목록
+  `["h1: 내 공간 시안 확인"]`·안내 표시를 확인한 뒤 인증 후 목록이 정확히 `["h1: 내 공간 시안"]`이고 게이트
+  제목·비밀번호 안내가 DOM에 0개, badge 유지, `aria-labelledby="space-v2-proof-title"`가 `H1`로 해석,
+  horizontal overflow 0, axe serious/critical 0, console error/warning 0, pageerror 0, 외부 요청 0을
+  단언하고, V1 링크에서는 차단 안내가 유일한 `h1`이며 `role="alert"`·재시도 버튼 0이 유지됨을 단언한다.
+  기존 `getByRole("heading", { name: "내 공간 시안" })`·`저장된 시안 · 열람 전용` 단언은 **무수정 PASS**다.
+  timeout·retry·skip·screenshot tolerance 추가 0. `git diff --check` PASS, 포트 4183/4184/4185/8080/
+  9099/9199 LISTENING 0, `denn-e2e-*`·`playwright-report`·`debug.log` 잔류 0.
+- **구현 중 자체 수정 1건.** 신규 E2E가 처음 `aria-labelledby="space-frame-title"`(V1 액자 뷰의 id)을
+  확인해 실패했다. V2 route의 결과는 `SpaceV2ProofView`(`space-v2-proof-title`)이므로 test를 실제 화면에
+  맞게 고쳤다. 제품 의미는 바뀌지 않았다.
+- **증거.** 허용 3장을 canonical이 다시 썼고 직접 열어 확인했다 — V2 뷰어는 badge 1개 + 제목
+  `내 공간 시안` 1개뿐이고 `내 공간 시안 확인`과 비밀번호 안내가 사라졌으며, V1 차단 안내도 제목 하나에
+  한국어 줄바꿈이 유지된다. `9c601fe8…` → `c84d8f16…`(viewer 1280x800), `7a6482d1…` →
+  `0ce9e921…`(viewer 390x844), `768b8310…` → `64927f4f…`(v1-blocked 390x844). gate PNG `67a1433c…`
+  무변경. `measurements.json`의 Space 4항목은 overflow false·axe serious/critical 0·smallTargets 0이다.
+  감사 보고서 §11에 F-3 해소 addendum을 남겼고 §9 F-1·§10 F-5·F-6 철회·F-8 재분류는 되돌리지 않았다.
+- **bundle.** 운영자 entry `index-BWeRXD_J.js` **295.37 kB** · CSS `index-CCW8unbN.css` **11.24 kB** —
+  파일명 해시까지 무변경. 고객 CSS `index-CLxRhNtu.css` **20.27 kB**도 무변경. 고객 entry
+  `index-eQgqaWiH.js` 341.94 → `index-CqOWaAno.js` **342.07 kB**(gzip 104.76 → 104.81).
+- **보호 대상.** design README·spec 038·`packages/render/src/plan/index.ts`·`pnpm-workspace.yaml`·
+  `AGENTS.md`·`taste-v2/**` hash 동일, restore·checkout·stage·commit 0. spec 018 PNG는 canonical이 다시
+  썼고 stage하지 않았다: desktop `d0a0aa52…` → `bd5ff207…`, **이번엔 mobile도** `6bdcb88c…` →
+  `8676d263…`. 이 단위는 `apps/mockup/src/space*`만 고쳤고 browse DOM은 건드리지 않았으므로 스펙 084
+  보완 라운드 1이 기록한 raster 비결정성으로 본다.
+- **NOT TESTED.** 제품 `?space=` route는 실제 Firestore 문서가 필요하므로 이번 근거도 제품 component +
+  합성 fixture다. 실기기 Safari/Android·200% zoom·preview channel·실제 Firebase/network/emulator/deploy·
+  운영 데이터는 검증되지 않았다.
+- 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_087_REVIEW`, fix_round 0. 다음 finding·다음 스펙은 시작하지
+  않았다. 전체 진행도 **85~88% / 잔여 12~15%**(변동 없음).
