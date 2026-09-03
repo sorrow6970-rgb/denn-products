@@ -2,6 +2,7 @@ import { useSyncExternalStore, useState } from "react";
 import { applyFramePrintSizeEdit, type CatalogDocumentV1, type CatalogItemV1 } from "@denn/shared";
 import { Button, Card, TextField } from "@denn/ui";
 import type { AdminWriteSessionController } from "./session-controller";
+import "./frame-print-size-editor.css";
 
 export interface FramePrintSizeEditorProps {
   readonly controller: AdminWriteSessionController;
@@ -108,7 +109,11 @@ export function FramePrintSizeEditor({ controller }: FramePrintSizeEditorProps):
         <p>항목을 직접 선택한 뒤 폭과 높이를 함께 저장합니다. 자동 저장은 없습니다.</p>
 
         <label htmlFor="frame-print-size-id">액자 사이즈</label>
+        {/* spec 086: still the native select — only its surface is styled, in a component-only
+            stylesheet, so the option order, the empty initial value and the legacy read-only
+            option keep the exact meaning spec 041 gave them. */}
         <select
+          className="denn-frame-print-size-editor__select"
           id="frame-print-size-id"
           data-testid="frame-print-size-id"
           value={selectedId}

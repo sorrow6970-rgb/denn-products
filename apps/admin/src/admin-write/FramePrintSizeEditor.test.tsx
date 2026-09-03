@@ -64,6 +64,24 @@ describe("FramePrintSizeEditor isolated markup", () => {
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>변경 저장<\/button>/);
   });
 
+  // spec 086 (spec 084 F-5): the size picker carries the component's own class so its 44px
+  // surface can exist without a global `select` rule. These assert the WIRING only — a computed
+  // height cannot be read out of an SSR string, so the pixel contract is asserted in Chromium.
+  it("labels the size picker and carries the component select class on it", () => {
+    const html = renderToStaticMarkup(<FramePrintSizeEditor controller={controller()} />);
+    expect(html).toContain('<label for="frame-print-size-id">액자 사이즈</label>');
+    expect(html).toMatch(
+      /<select class="denn-frame-print-size-editor__select" id="frame-print-size-id"/,
+    );
+  });
+
+  it("puts that class on the select and on nothing else", () => {
+    const html = renderToStaticMarkup(<FramePrintSizeEditor controller={controller()} />);
+    expect(html.split("denn-frame-print-size-editor__select").length - 1).toBe(1);
+    // the neighbouring inputs keep the shared @denn/ui class; the editor does not restyle them
+    expect(html).toContain("denn-field__input");
+  });
+
   it("keeps controls locked when auth is blocked", () => {
     const html = renderToStaticMarkup(
       <FramePrintSizeEditor
@@ -78,6 +96,8 @@ describe("FramePrintSizeEditor isolated markup", () => {
     );
     expect(html).toContain("운영자 로그인이 필요합니다.");
     expect(html).toMatch(/<select[^>]*disabled=""/);
+    // spec 086: the disabled picker keeps its class, so the disabled cue is styled rather than lost
+    expect(html).toMatch(/<select class="denn-frame-print-size-editor__select"[^>]*disabled=""/);
     expect(html).not.toContain("abcdef");
   });
 

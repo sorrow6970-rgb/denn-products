@@ -1,0 +1,50 @@
+/*
+ * Spec 086 — the C5 size picker's visual and accessibility surface (spec 084 F-5).
+ *
+ * The control stays a native <select>: it is what a keyboard, a screen reader and a mobile
+ * OS picker already understand, and replacing it with a custom listbox would trade a styling
+ * gap for a behaviour one. Only its presentation is brought in line with the `TextField`
+ * directly beneath it, whose rules this file mirrors (`@denn/ui/theme.css` `.denn-field__input`)
+ * rather than re-inventing.
+ *
+ * Scoped to one component class on purpose. A bare `select` selector here would restyle every
+ * other native select in the admin app — including the Space V2 issue panel, which spec 083
+ * already styles with its own rules — so the selector never widens beyond this editor.
+ *
+ * No new colour literal, no new token, no `@denn/ui` change, no transition/animation/transform
+ * and no `!important`: nothing here moves, and nothing needs to win a specificity fight.
+ *
+ * `appearance` is deliberately NOT reset. The disclosure arrow is the only thing that tells a
+ * sighted operator this control opens a list, and a flat box with no arrow would read as a text
+ * input — the same confusion this unit exists to remove, pointing the other way.
+ */
+
+.denn-frame-print-size-editor__select {
+  box-sizing: border-box;
+  /* 44px is the pointer-target contract; the audit measured this control at 23px. */
+  min-height: 44px;
+  /* a select is otherwise as wide as its longest option, which is what pushed it out of the card */
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+/* Same ring as the neighbouring input, so tabbing through the form never changes its language. */
+.denn-frame-print-size-editor__select:focus-visible {
+  outline: 3px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+
+/* The same non-colour cue the disabled Button and Chip use: dimmed AND not-allowed, so the state
+   is legible without relying on colour alone. */
+.denn-frame-print-size-editor__select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
