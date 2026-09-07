@@ -1,5 +1,24 @@
 # 현재 상태
 
+> 최신종료2026-09-07:spec096 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일Codex),코드·시험·증거b03f8d4.
+> 보완2 check2545/2545·canonical271/271(52.8초)·PNG3직접검토PASS.093README이력·SHA회복.
+> 기존101hash100동일,PNGmobile1기존예외,보호복원/stage/commit0.포트6개0/staging제거/diff--checkPASS.
+> 종료8문서별도commit/push단계. READY_FOR_NEXT_SCOPED_UNIT / active none,
+> next CODEX_ROOM_LOCAL_BOUNDARY_READ_ONLY_INVESTIGATION.다음조사계약/제품착수0,정확재개지시NEXT.
+> 전체실측률불명,과거85~88%관리추정상향0.운영/Firebase/UID/배포/발행/삭제/자동화0.아래는이력이다.
+
+> 최신2026-09-07:사용자 두 파일 이력 헤더 예외 승인. spec096 보완 라운드1 재개.
+> CLAUDE_WORKING / CODEX_SPEC_096_CORRECTION_VERIFY_AND_REVIEW. 계약 WHERE 먼저 갱신.
+> 기존093 단언/fixture/증거내용 변경0. 아래 STOP은 승인 전 이력, PASS 전 완료/전송0.
+
+> 최신2026-09-07:RG-1=A승인,096 구현 미커밋 / CORRECTION_REQUIRED 라운드1.
+> FOUNDER_DECISION_REQUIRED / FOUNDER_SPEC_096_EVIDENCE_GENERATOR_SCOPE_EXCEPTION.
+> check2545/2545 PASS,canonical268 PASS/3 FAIL(신규 정확 라벨 선택자).096 PNG0/시각 NOT TESTED.
+> 기존093 생성기가093 README의094 이력을 제거해 범위 밖 STOP. 생성 테스트 헤더/README2파일만
+> 이력 보존하는 예외 승인 대기. 아직 보완/재실행/stage/commit/push0. 상세096검수 및 NEXT.
+> HEAD=origin 추적ref f7c9ecd·0/0. 기존101hash 중98동일,PNG2예외+README1 STOP.
+> 방/외곽/실물1:1/저장/발행/Space/운영확장0.보호/userdirty보존.아래095대기는해소이력.
+
 > 최신2026-09-07:095 잔여기능·승인경계 문서조사 DONE/DOCUMENT_REVIEW_PASSED(동일Codex).
 > FOUNDER_DECISION_REQUIRED / rg1-print-size-comparison-scope / FOUNDER_RG1_COMPARISON_SCOPE_DECISION.
 > canonical 인쇄cm의로컬상대비교를다음최소제품범위로할지RG-1질문1개.권장A미승인,096계약/구현0.

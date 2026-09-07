@@ -1,5 +1,55 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 완료 / 다음 안전한 작업 (2026-09-07)
+
+spec096 DONE / CODEX_PASSED / LOCAL_VERIFIED(동일 Codex),코드·시험·증거12파일 b03f8d4.
+보완2 check2545/2545,canonical271/271(52.8초),PNG3직접검토 PASS.093이력손실 해소.
+종료8문서분리commit·정상push 후 다음 문서조사 후보로 넘긴다.아래WORKING/STOP은이력이다.
+
+다음 재개 지시:
+
+```text
+C:\repo\denn-products에서 최신 STATE/CURRENT/live와095 잔여기능 조사,096 종료 결과를 먼저 확인해.
+다음은 룸 목업의 최소 로컬 경계에 대한 읽기 전용 조사다. 코드 전에 문서 조사 계약의 정확한 범위를 정해.
+기존 레거시 분석을 기준으로 방 목업의 최종 유효 정의, 좌표·앵커·축척·원근/효과·자산과
+현재 shared/render/Space의 관계를 추적해. 인쇄 cm와 액자 외곽/방 실측을 동일시하지 마.
+095의 전체 표를 반복하지 말고 로컬에서 검증 가능한 최소 후보, 미확인 입력값, 기존 승인으로
+열리지 않는 제품 결정·schema·보호plan 경계를 근거와 함께 좁혀. 새로운 계약은 구현 승인이 아니다.
+실제 데이터·실제 네트워크·방 사진 수집·제품코드/test/Rules/config 수정·emulator·배포·설치0.
+보호 및 별도 사용자 작업은 읽기 외 변경/stage/commit하지 마. 새 결정은 질문하고 STOP.
+문서 범위만 검증하고 STATE/NEXT/CURRENT/live에 결과·다음 지시·전체 진행률의 불확실성을 남겨.
+자동화/반복 작업 생성0. 룸 제품 구현이나 Space/저장/발행 확대를 자동 시작하지 마.
+```
+
+이 조사는 아직 착수하지 않았다.전체실측완료율/최종스펙수/종료일은확인불가,과거85~88%추정상향0.
+
+## 현재 재개 — spec096 보완 라운드1 예외 승인 (2026-09-07)
+
+사용자 `응 승인해`로 아래 정확 두 파일의094 이력 보존 예외 승인. 계약 WHERE/결정 정본 반영.
+CLAUDE_WORKING / CODEX_SPEC_096_CORRECTION_VERIFY_AND_REVIEW. 선택자 보완 후 check/canonical,
+3PNG 직접 시각검수와 hash/범위/포트 확인을 수행한다. 아래 STOP은 승인 전 이력이다.
+기존093 검증 단언/fixture/PNG/측정과 timeout/retry/worker 변경0. 보호/운영 경계 유지.
+
+## 현재 STOP — spec096 CORRECTION_REQUIRED 라운드1 (2026-09-07)
+
+Founder `응 진행해`로 직전 RG-1=A권장안승인. 결정정본2026-09-07-rg1-print-size-comparison-decisions.md.
+096계약작성·동일Codex검토후로컬모델/비교UI/합성시험구현. check2545/2545 PASS,
+canonical268 PASS/3 FAIL(271전체). 새 viewport3건은 getByLabel 정확 선택자 실패, PNG0.
+기존093 생성기가093 README의094 이력5줄을 제거하여 범위 밖 변경 STOP.
+FOUNDER_DECISION_REQUIRED / FOUNDER_SPEC_096_EVIDENCE_GENERATOR_SCOPE_EXCEPTION.
+검수: docs/codex-claude-handoff/reviews/2026-09-07-spec-096-local-print-size-comparison.md.
+
+미승인 최소 예외는 정확히 두 파일의 이력 헤더뿐이다:
+
+- tests/e2e/admin-write-pending-error.spec.ts: README 출력 헤더에 기존094 이력 보존.
+- docs/rebuild/results/spec-093/README.md: 제거된094 이력만 회복. 표/PNG/측정 변경 금지.
+
+승인 전 추가 코드/테스트 실행/stage/commit/push0. 승인 후에만 계약 허용 목록을 갱신하고,
+신규096 E2E의 역할/접근성 이름 기반 선택자 원인을 확인·보완한다. 093 검증 단언/fixture,
+timeout/retry/worker를 바꾸거나 게이트를 완화하지 않는다. check/canonical 재검증 후3PNG를
+직접 검토하고 hash/forbidden diff/포트/상태를 확인한다. PASS 전 완료/전송 금지.
+HEAD=origin 추적ref f7c9ecd·0/0. 보호/userdirty 보존. 아래RG-1미승인은 해소 이력이다.
+
 ## 현재 대기 — RG-1 제품 범위 선택 (2026-09-07)
 
 095 문서조사 DONE/DOCUMENT_REVIEW_PASSED(동일 Codex),094 제품DONE유지.

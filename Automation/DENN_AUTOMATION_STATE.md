@@ -4,23 +4,44 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-095-remaining-product-scope-audit   # DOCUMENT DONE / DOCUMENT_REVIEW_PASSED; spec094 DONE remains
-active_unit: rg1-print-size-comparison-scope
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: e083aec
-candidate_commit: 3859fa2   # spec095 document review; receipt separate
-verified_commit: 38257ef   # last product verification, spec094; no product test rerun in095
-origin_relation: "spec095 docs3859fa2 normal push confirmed; HEAD=origin3859fa2 and 0/0 before receipt; receipt HEAD via git"
-working_tree: "spec095 receipt within allowed documents; starting dirty22 files including protected/user work preserved and excluded"
-fix_round: 0
+completed_unit: spec-096-local-print-size-comparison   # DONE / CODEX_PASSED / LOCAL_VERIFIED
+active_unit: none
+state: READY_FOR_NEXT_SCOPED_UNIT
+baseline_commit: f7c9ecd
+candidate_commit: b03f8d4
+verified_commit: b03f8d4   # same Codex implementation/review; not independent review
+origin_relation: "code b03f8d4 local commit; origin tracking ref f7c9ecd; closure documents and normal push pending"
+working_tree: "spec096 closure8 documents only for next commit; protected/user dirty excluded; baseline101 hashes100 same and spec018mobile canonical exception1; spec093 README restored history/hash matches baseline"
+fix_round: 2
 max_fix_rounds: 3
-next_transition: FOUNDER_RG1_COMPARISON_SCOPE_DECISION
+next_transition: CODEX_ROOM_LOCAL_BOUNDARY_READ_ONLY_INVESTIGATION
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec095 document review passed; RG-1 recommendation not adopted; print cm is not proven outer frame or room scale, product096 not started
+session_status: spec096 CODEX_PASSED; final check2545/canonical271 PASS and3PNG reviewed; closure push pending, next product not started
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 종료 — spec095 문서 조사 (2026-09-07)
+## 최신 종료 — spec096 (2026-09-07)
+
+RG-1=A와 정확 두 파일 이력 보존 예외 승인에 따라 보완2 완료. 코드·시험·증거12파일 b03f8d4.
+check2545/2545·canonical271/271(52.8초)·PNG3 직접 검토 PASS.동일 Codex 검수,독립검수 아님.
+093 README 이력/해시 보존,생성 테스트 헤더5줄만변경.기존101hash100동일,PNGmobile1예외.
+보호복원/stage/commit0,포트6개0/staging제거/diff--check PASS.종료8문서분리commit/push.
+NEXT는 룸 목업의 최소 로컬 경계 읽기 전용 조사 후보.새schema/계약/제품착수0.
+전체실측률불명,이전85~88%관리추정상향0.운영보류/실제Firebase·UID·배포·삭제·자동화0.
+
+## STOP 이력 — spec096 (2026-09-07)
+
+구현 미커밋 / CORRECTION_REQUIRED 라운드1. check 단위2545/2545 PASS이나 canonical271 중268 PASS/3 FAIL.
+신규 viewport3건이 정확한 getByLabel 선택자에서 실패했다. 접근성 snapshot에는 combobox 이름이 존재한다.
+제품 접근성 결함으로 단정하지 않으며 역할 기반 선택자 보완 후보는 아직 적용하지 않았다.
+기존093 E2E 생성기가093 README의094 이력5줄을 제거했다. 096 허용 밖이므로 즉시 STOP.
+최소 예외 후보: tests/e2e/admin-write-pending-error.spec.ts의 README 헤더와
+docs/rebuild/results/spec-093/README.md의094 이력 보존만. 아직 미승인, 기존 검사/fixture 변경 금지.
+기존101hash 중98동일, PNG2는 기존 예외, README1은 이번 STOP. 096 PNG0/시각검수 NOT TESTED.
+HEAD=origin 추적ref f7c9ecd·0/0, stage/commit/push0. 상세096검수/handoff와 NEXT 참조.
+RG-1 승인으로 아래095 선택대기는 해소됐지만,096 완료/전체 진행률 상향으로 기록하지 않는다.
+
+## 종료 이력 — spec095 문서 조사 (2026-09-07)
 
 룸/사이즈가이드/주문·카카오/전체catalog/발행5축을 정적 대조했다. 조사 정본은095검수·계약·handoff.
 다음 최소 후보 RG-1=A는canonical cm만 쓰는로컬인쇄크기상대비교이며 아직미승인이다.

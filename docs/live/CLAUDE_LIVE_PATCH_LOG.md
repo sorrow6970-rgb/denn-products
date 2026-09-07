@@ -8142,3 +8142,51 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - STATE/NEXT/CURRENT/live/095handoff에전송영수증만추가.제품/기존사용자문서/보호파일추가변경0.
 - 095조사DONE/DOCUMENT_REVIEW_PASSED,FOUNDER_DECISION_REQUIRED·RG-1미승인유지.
   096구현계약/제품코드0.답변전임의진행/운영개방/자동화0.전체실측완료율확인불가,이전85~88%는추정이력.
+
+## 2026-09-07 - spec096 RG-1=A 구현 · 검증 보완 라운드1 범위 STOP
+
+- 사용자 `응 진행해`로 직전 RG-1=A 승인. 결정 정본/096 계약을 먼저 작성·검토하고
+  canonical 인쇄cm만 사용하는 로컬 비교 모델/native UI/시험을 구현했다. 방/외곽/저장 의미 확장0.
+- check exit0: format/lint/7typecheck/unit97파일2545/2545(2526+19)/두앱build PASS.
+  canonical 최초1회 exit1:268 PASS/3 FAIL(271전체,54.9초). 기존267+신규빈상태1 PASS.
+- 신규3viewport가 정확 getByLabel focus 단언에서 실패. snapshot에는 combobox 이름이 있으므로
+  제품 접근성 결함으로 단정하지 않는다. 역할 기반 선택자 조사/보완 후보는 아직 미적용.
+  후속 기하/axe/캡처 미도달,096 PNG0/직접 시각검수 NOT TESTED.
+- 기존093 E2E 생성기가093 README의094 검수 이력5줄을 제거했다. 표/18PNG/측정 불변.
+  096 허용 밖이므로 자동복원/기존test수정/재실행/stage/commit/push 중단.
+  최소 예외 후보는093 README 이력 회복과 admin-write-pending-error.spec.ts 출력 헤더 보존만.
+  정확 두 파일이며 기존 검증 단언/fixture/PNG 변경 승인 아님. 아직 미승인이다.
+- 기존101hash 중98동일, spec018PNG2는 기존 canonical 명시 예외,093README1은 STOP.
+  보호/별도사용자작업 나머지불변,복원/stage/commit0. 정확 SHA는096검수 표에 기록했다.
+- 고객entry index-jnlo-lEH.js SHA FECAC548F3BD64B02873F5191E53EA8E2816F76CF609C648AAB67A108A3EE22A.
+  운영자entry SHA B0A1F85F9271E4A929D2F6AB0F20BB0D0BFDADDA211533DDD675C8FB85711246 불변.
+  포트4183/4184/4185/8080/9099/9199 listener0,staging denn-e2e-ientgk 부재.
+- HEAD=origin 추적ref f7c9ecd·0/0, 이번fetch/stage/commit/push0. FOUNDER_DECISION_REQUIRED,
+  active spec-096-local-print-size-comparison,next FOUNDER_SPEC_096_EVIDENCE_GENERATOR_SCOPE_EXCEPTION.
+  상세096검수/handoff/NEXT.096 DONE 아님,095문서/094제품DONE유지.
+- 최종 git diff--check PASS,staged목록0. 기존 dirty 및 신규096파일은 미스테이지 그대로 보존.
+- 실제Firebase/UID/운영/배포/발행/삭제/설치/자동화0. 전체85~88%는기존관리추정이며
+  잔여12~15%=100-88~100-85. 현재실측률/최종스펙수/종료일확인불가,미검증기능으로상향0.
+
+## 2026-09-07 - spec096 최소 예외 승인 · 보완2 검증 통과 · 로컬 종료
+
+- 사용자 `응 승인해`로 직전 요청의093 README와 생성테스트 헤더2파일 이력 보존 승인.
+  결정/계약 WHERE를 먼저갱신.기존093 단언/fixture/PNG/측정 변경0.운영/제품 의미 확장승인아님.
+- 보완1:check2545 PASS,canonical268 PASS/3 FAIL(53.4초).정확 getByRole은성공했으나 option의
+  toBeDisabled가label.control인select로retarget하는검사작성문제.설치된Playwright1.61.1소스확인.
+- 보완2:option.native disabled속성과ArrowDown의중복건너뛰기실동작을검사,focus3px/재진입초기화유지.
+  최종check format/lint/7typecheck/unit97파일2545/2545(2.87초)/두앱build PASS.
+  canonical271/271(52.8초)exit0/last-run passed.기존267+신규4=271,단위2526+19=2545.
+  최초54.9초/보완1실패는096검수에보존,timeout/retry/worker변경·단언삭제·제품추가보완0.
+- PNG3직접확인:320/390세로선택,1280가로선택,공통축척도형/실선·점선/치수범례구별.
+  44px/focus/overflow0/axe중대0/외부시도0/console0/Canvas0 PASS.패널crop이며실물cm표시가아니다.
+- 기존101hash중100동일,spec018mobile만기존canonical예외.보호복원/stage/commit0.
+  mobile SHA5043D55564D51A7F577EDBC520C2062C3FDA8FF277FE9B7C105E3FB8B0D135BD.
+  093README 시작SHA46DD5BD864E526D2F92EB895C2D2CED4AD7C59B73D4AF4E97ABC06AE30AAED50와동일,
+  최종diff0/커밋미포함.18PNG/측정동일.양앱entry SHA직전기록동일.
+- 포트4183/4184/4185/8080/9099/9199 listener0,staging UfF5R7제거,debug.log신규0,diff--checkPASS.
+  허용코드·시험8+신규증거4=12파일 b03f8d4.검수·종료8문서별도commit/정상push단계.
+  보호/별도roadmap/spec091handoff 제외.같은Codex검토이지독립검수아님.096 DONE/CODEX_PASSED.
+- 다음은룸목업최소로컬경계의읽기전용조사후보이며아직착수0.NEXT에정확한재개지시기록.
+  READY_FOR_NEXT_SCOPED_UNIT/active none.실제기기/스크린리더/실제Firebase/운영NOT TESTED.
+  운영보류·실제UID/배포/발행/삭제/설치/자동화0.전체실측률불명,이전85~88%관리추정상향0.
