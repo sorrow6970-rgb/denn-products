@@ -10,8 +10,8 @@ state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: 2959569
 candidate_commit: 3c3abca   # spec098 code4; closure documents separate
 verified_commit: 3c3abca   # same Codex implementation/review; not independent review
-origin_relation: "spec098 code committed locally; normal push pending, not yet synchronized"
-working_tree: "spec098 closure8 documents; protected/user dirty22 excluded; only spec018PNG2 allowed canonical regeneration"
+origin_relation: "spec098 code3c3abca/docs2a9b347 normal push confirmed; HEAD=origin2a9b347 and0/0 before receipt; receipt HEAD via git"
+working_tree: "spec098 receipt5 documents only; protected/user dirty22 excluded; only spec018PNG2 allowed canonical regeneration"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: CODEX_ROOM_LOCAL_ADAPTER_CONTRACT_REVIEW
@@ -21,6 +21,9 @@ commit_owner: Codex; scoped code/test and closure documents separately, normal f
 ```
 
 ## 최신 종료 — spec098 비-UI 모델 (2026-09-07)
+
+전송확인:3c3abca/2a9b347 정상push2959569..2a9b347, HEAD=origin2a9b347·0/0.
+허용12경로=코드4+문서8. 전송영수증5문서 별도기록; 기존dirty22 제외, 추가제품/시험0.
 
 RG-2=A 승인 후 계약 선행, 코드4파일3c3abca. targeted46/46, check2591/2591,
 canonical271/271(52.8초) PASS. 양앱entry SHA불변, 기존105hash 중103동일/PNG2기존예외.
