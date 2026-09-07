@@ -7841,3 +7841,42 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   종료 문서 9개는 별도 commit 대상이다. 원격 동기화 결과는 후속 기록으로 남긴다.
 - 다음 안전 후보는 F-2 운영자 PNG 선택 UI. 별도 계약 전에는 코드 변경하지 않는다.
   전체 기존 계획 추정 85~88%/잔여12~15% 유지, 운영전환 및 실제 Firebase/live/배포는 보류한다.
+
+## 2026-09-07 - spec088 push 확인 · spec089 계약 선행
+
+- spec088 제품 f2f7f67, 종료 문서 0465f24 일반 fast-forward push 성공. 시작 HEAD=origin 추적 ref
+  0465f24, ahead/behind 0/0. 기존 보호/user dirty만 남은 상태에서 다음 단위를 시작했다.
+- 사용자 UI 직접 구현·연속 진행 지시로 spec089 운영자 PNG 선택 표면 계약을 코드 전에 작성했다.
+  허용 제품/test 4파일, 신규 PNG 3장·기존 직접 영향 PNG 4장과 문서. owner/handler/freeze/gate/발급
+  불변, F-4/F-7/F-8 제품 결정 보류. STATE/NEXT/CURRENT 실행 포인터를 동기화했다.
+- 검증 전이므로 spec089 PASS/DONE 아님. 전체 기존 계획 추정 85~88%/잔여12~15% 유지.
+  보호 hash 20파일을 읽기 전용으로 기준 기록했다. 실제 network/emulator/배포·자동화 없음.
+
+## 2026-09-07 - spec089 운영자 PNG 선택 표면 완료 · 다음 제품 결정 대기
+
+- 제품/test 4파일 + PNG 7장, 총 11파일 `f95cb29`. 한국어 선택/교체와 로컬 상태 표시, native input
+  overlay 및 label/description, 44px focus/disabled 경계. 기존 handler는 value를 비우지 않는 그대로다.
+  owner·freeze·인증·발급·SDK·gate·기본 route 변경 0. 새 SSR 1/E2E 3, 기존 실패 테스트에 교체 단언 추가.
+- targeted 22/22; 최초 check 2512/2512, canonical 230/230(50.0초) PASS. 시각 검수에서 확대본이
+  외부 focus outline을 잘라 캡처 locator만 first fieldset으로 보완했다. 이어 format에서 test 체인
+  줄바꿈 1건 exit1 → 해당 test formatter → check exit0(2512/2512, 92파일, unit 2.98초).
+  최종 canonical exit0 **230 passed / 0 failed / 0 skipped / 0 retry, 51.1초**. 제품 보완/기대값 완화 0.
+- 신규 3 PNG와 기존 frozen 4 PNG를 직접 열어 확인했다. ready 편집은 warm-taupe·검정 focus,
+  frozen에서는 neutral disabled. 320px overflow 0/axe serious·critical0/console0/외부 egress0,
+  새 test issue/write factory0. 실제 OS chooser 시각/보조기술/운영 route는 NOT TESTED다.
+- 고객 entry SHA256 `879FBEF1482D3DBC0075C27C22A1D76FC7C4392C985FF5AD2FC2BFDC39EB1896` 동일,
+  342,371 bytes. 운영자 `index-u3oWJ96z.js` 296,116 bytes/gzip91.72kB,
+  SHA256 `D604F9BA069A1D97A3765288549C3860F2E279D2938A3B14052AC607CC1FC3AF`. 기존 chunk 경고 유지.
+- 보호 20파일 중 19개 hash 동일. spec018 desktop만 canonical 재생성으로 `D0A0AA52… →
+  FCB869CAF8B126357765CB49EBF47AC07DDAA9A0ACF324DFD0EC142C80DB7A74`; mobile 동일. 보호 대상
+  restore/stage/commit 0. 허용 source/test 외 고객/packages/Rules/config/package/lockfile diff0.
+  measurements.json diff0. PNG의 정확 hash/출처는 results/spec-089/README, 변경 경로는 계약에 고정.
+- 포트 4183/4184/4185/8080/9099/9199 LISTENING0. staging fnI2Y2/7QbC2A 모두 제거,
+  신규 debug.log 없음. ignored last-run은 passed/failedTests[]. git diff --check PASS.
+- 최종 same-agent 검토에서 추가 결함 미발견, DONE/CODEX_PASSED. 독립 에이전트/Founder 시각 승인 아님.
+  spec088 최초 timeout 원인 UNCONFIRMED 이력 유지. 실제 Firebase/live/emulator/deploy/운영전환 없음.
+- 종료 문서 8개를 별도 commit/push한다. push 직전 원격 ls-remote는 0465f24로 fast-forward 가능.
+  최종 동기화 결과는 이어지는 전송 기록/보고 참조. 기존 보호/user dirty는 그대로 남긴다.
+- 다음은 F-4/F-7/F-8 제품 결정 대기. handoff에 A/B 선택지와 현재 소스 근거를 남겼으며 미채택이다.
+  전체 기존 계획 추정 **85~88% 완료/12~15% 잔여** 유지. 이 숫자는 스펙 수 기반 계산이 아니다.
+  다음 스펙/구현 착수 0, 예약 자동화/반복 작업 생성 0.

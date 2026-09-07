@@ -64,6 +64,12 @@ control을 페이지에서 숨겼다(고객 Space 3건). 제품 source의 DOM·�
 
 ## 캡처하지 않은 매트릭스 항목
 
+**F-2 파일 선택 표면(2026-09-07):** 고객은 spec088, 운영자 발급 panel은 spec089에서 한국어 선택
+표면으로 정리했다. 위 운영자 발급 표의 두 장은 spec089 최종 canonical으로 다시 생성한 frozen 상태다.
+회색 `PNG 바꾸기`는 실제 disabled input이며 `선택됨`은 기존 로컬 이미지 상태다. freeze/발급/gate의
+의미는 바뀌지 않았다. ready 편집·키보드 초점 확대본은 results/spec-089를 참조한다.
+이번 measurements.json diff는 0이다. 이 캡처를 기본 운영자 route나 운영 발급 증거로 일반화하지 않는다.
+
 | 항목 | 상태 | 이유 |
 |---|---|---|
 | 고객 Space V1/V2 · 제품 entry(`/?space=<token>`) | `NOT TESTED` | 제품 entry는 실제 Firestore 문서를 읽어야 도달한다. 실제 network는 이 단위에서 금지다. |

@@ -1,5 +1,26 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 다음 지시 — Founder 제품 결정 대기 (2026-09-07)
+
+spec089 DONE / CODEX_PASSED / LOCAL_VERIFIED, 제품/test/PNG `f95cb29`.
+최종 check(unit 2512/2512)·canonical(230/230, 51.1초) PASS. 같은 Codex의 구현·검토다.
+사용자의 UI 포함 연속 진행 승인은 유효하지만, 새 제품 정책을 대신 선택하지 않는다.
+
+```text
+C:\repo\denn-products에서 최신 STATE/CURRENT/live와 docs/handoff/2026-09-07-spec-089-admin-png-picker-handoff.md를 읽어. F-4 운영자 첫 화면, F-7 고객 호환 안내, F-8 저장 시안 표시 크기에 대한 Founder 답변이 있는지 확인해. 답변 전에는 다음 코드나 구현 계약을 작성하지 마. 답변이 있으면 선택한 범위만 별도 스펙으로 작성한 뒤 Codex가 직접 구현·검증해. 운영전환 보류·실제 Firebase/network/emulator/deploy 금지·보호 파일 보존을 유지하고 자동화를 만들지 마.
+```
+
+선택지 A/B와 출처는 handoff의 표에 있다. A는 권장안일 뿐 승인된 결정이 아니다.
+진행률은 기존 추정 85~88%/잔여12~15% 유지. 아래 실행 지시는 완료된 이력이다.
+
+## spec089 실행 이력 (2026-09-07)
+
+spec088 `f2f7f67`/`0465f24` 일반 fast-forward push 완료. 다음은 작성된
+`docs/rebuild/specs/089-admin-png-picker-surface.md`만 Codex가 직접 구현·검증한다.
+운영자 native PNG 선택 표면 4파일과 명시된 문서/증거만 허용한다. handler·owner·freeze·발급·gate는
+유지한다. check → canonical 순차 검증, 보호 경계/실제 네트워크 금지 유지. F-4/F-7/F-8은 결정 대기한다.
+아래 지시는 과거 이력이며 재실행하지 않는다.
+
 ## 최신 종료 포인터 (2026-09-07)
 
 스펙088 DONE / CODEX_PASSED / LOCAL_VERIFIED. 제품·test·PNG commit `f2f7f67`.

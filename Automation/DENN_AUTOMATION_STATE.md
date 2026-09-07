@@ -4,23 +4,43 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-088-customer-photo-picker-surface   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 03cd5e6   # spec088 started after the approved spec087 push
+completed_unit: spec-089-admin-png-picker-surface   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
+active_unit: ui-audit-remaining-product-decisions
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: 0465f24
 candidate_commit: none
-verified_commit: f2f7f67   # spec088 product/test and evidence; same-agent final review
-origin_relation: "2026-09-07 explicit user approval followed by successful fast-forward push; HEAD=origin/rebuild/modern-studio=03cd5e6; ahead/behind 0/0"
-working_tree: "spec088 source/test/docs and final composer/picker PNGs are unstaged; pre-existing protected/user dirty preserved; no commit/push this turn"
-fix_round: 1
+verified_commit: f95cb29   # spec089 product/test/evidence, same-agent review
+origin_relation: "origin 0465f24 confirmed by ls-remote before closure; final documentation commit/push verification follows in the closing Git report"
+working_tree: "spec089 product/test/PNG committed; closure documents awaiting separate commit; pre-existing protected/user dirty preserved"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_ADMIN_PNG_PICKER_CONTRACT
+next_transition: FOUNDER_UI_F4_F7_F8_DECISION
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec088 DONE/CODEX_PASSED; standalone canonical 227/227 PASS; initial timeout root cause remains UNCONFIRMED; next admin PNG picker contract
-commit_owner: Codex for scoped UI/non-UI work per latest policy; no commit/push during this investigation and revalidation
+session_status: spec089 DONE/CODEX_PASSED; final unit 2512/2512 and Chromium 230/230 PASS; F4/F7/F8 proposals not selected
+commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 승인된 push 완료 · 다음 UI 경계 (2026-09-07)
+## 최신 종료 — spec089 (2026-09-07)
+
+제품/test 4 + PNG 7 = 11파일 commit `f95cb29`. 최종 check 2512/2512(92파일)·canonical 230/230
+PASS(51.1초, skip/retry 0). 동일 Codex 최종 검토에서 추가 결함 미발견. 새 의존성/권한/운영 연결 0.
+캡처 범위를 보완한 뒤 발생한 format 1건을 수정하고 check/canonical을 순차 재실행했다.
+고객 bundle hash 동일, 보호 20파일 중 spec018 desktop만 canonical 재생성으로 변경. 보호 stage/restore 0.
+포트 6개/이번 staging 잔류 0. 실제 Firebase/live/기기/운영 route NOT TESTED, 운영전환 보류.
+
+다음은 handoff `2026-09-07-spec-089-admin-png-picker-handoff.md`의 F-4/F-7/F-8 결정이다.
+운영자 준비 화면(gate off), 성공 호환 정보성 배지 제외(누락/실패 안내 유지), 기존 replay 크기 유지가
+각 A 제안이다. 아직 승인/채택 아님. 답변 전 다음 구현·스펙 생성 없음. 자동화 생성 없음.
+전체 기존 계획 추정 85~88% 완료/12~15% 잔여 유지(스펙 개수 기반 계산 아님).
+
+## spec089 착수 이력 (2026-09-07)
+
+spec088 제품 `f2f7f67` + 문서 `0465f24` push 성공, HEAD=origin 추적 ref 0465f24, 0/0 확인.
+사용자 연속 진행에 따라 spec089 계약을 먼저 작성했다. 운영자 PNG 선택 표면만 구현·검증한다.
+아래 과거 WORKING/STOP/READY 포인터는 이력이다. F-4/F-7/F-8은 제품 결정 전 착수하지 않는다.
+전체 리빌드 기존 계획 추정 85~88% 완료/12~15% 잔여 유지(스펙 개수 기반 계산 아님).
+
+## 승인된 push 완료 · 다음 UI 경계 (2026-09-07 이력)
 
 **최종 검수:** spec088 DONE / CODEX_PASSED. 코드·test 4파일 + PNG 9장 `f2f7f67`, 종료 문서는 별도
 commit. 직전 check 2511/2511 및 단독 canonical 227/227를 검토했고 추가 결함 미발견. 같은 Codex의

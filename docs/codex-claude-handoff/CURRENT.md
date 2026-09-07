@@ -1,5 +1,19 @@
 # 현재 상태
 
+> **최신 종료 (2026-09-07): spec089 DONE / CODEX_PASSED / LOCAL_VERIFIED.**
+> 제품/test/허용 PNG f95cb29. 최종 check 2512/2512, Chromium 230/230(51.1초, retry/skip 0) PASS.
+> 동일 Codex가 구현·검토, 운영자 선택 표면만 변경. 고객/owner/handler/gate/발급 계약 무변경.
+> 현재 FOUNDER_DECISION_REQUIRED, active ui-audit-remaining-product-decisions,
+> next FOUNDER_UI_F4_F7_F8_DECISION. A/B 선택지는 spec089 handoff, 아직 선택 없음.
+> 전체 기존 추정 85~88%/잔여12~15% 유지. 실제 운영·Firebase/기기 NOT TESTED, 운영전환 보류.
+> 아래 포인터는 이력이다. 최신 NEXT를 따르고 결정 전 다음 구현이나 자동화를 시작하지 않는다.
+
+> **현재 (2026-09-07): spec089 WORKING — 운영자 PNG 선택 표면.**
+> spec088 제품 f2f7f67/종료 0465f24 push 성공, 시작 HEAD=origin 추적 ref 0465f24, 0/0.
+> Codex가 계약을 먼저 작성하고 해당 4파일·증거만 구현/순차 검증한다. owner·freeze·발급·gate는 무변경.
+> 완료 spec088 DONE 유지, next CODEX_SPEC_089_IMPLEMENT_AND_VERIFY. F-4/F-7/F-8 제품 결정은 보류.
+> 아래 포인터는 이력이다. 보호·운영전환 보류·실제 네트워크/자동화 금지 유지.
+
 > **최종 종료 (2026-09-07): spec088 DONE / CODEX_PASSED / LOCAL_VERIFIED.**
 > 제품·test·허용 PNG `f2f7f67`. 최종 diff·증거 검토에서 추가 결함 미발견. 직전 check 2511/2511,
 > canonical 227/227 PASS. 최초 timeout 원인 미확정은 보존한다. 다음은 운영자 PNG 선택 UI 별도 계약.
