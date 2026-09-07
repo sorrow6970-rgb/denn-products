@@ -1,6 +1,8 @@
 # 현재 상태
 
 > **최신 종료 (2026-09-07): spec089 DONE / CODEX_PASSED / LOCAL_VERIFIED.**
+> 제품 f95cb29 + 종료 문서 9a55f67 push 성공; 직후 HEAD=origin 추적 ref 9a55f67, 0/0 확인.
+> 이 전송 확인 문구만 후속 기록 commit으로 남긴다. F-4/F-7/F-8 결정 대기는 유지한다.
 > 제품/test/허용 PNG f95cb29. 최종 check 2512/2512, Chromium 230/230(51.1초, retry/skip 0) PASS.
 > 동일 Codex가 구현·검토, 운영자 선택 표면만 변경. 고객/owner/handler/gate/발급 계약 무변경.
 > 현재 FOUNDER_DECISION_REQUIRED, active ui-audit-remaining-product-decisions,

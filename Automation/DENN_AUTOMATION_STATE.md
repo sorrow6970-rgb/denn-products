@@ -10,8 +10,8 @@ state: FOUNDER_DECISION_REQUIRED
 baseline_commit: 0465f24
 candidate_commit: none
 verified_commit: f95cb29   # spec089 product/test/evidence, same-agent review
-origin_relation: "origin 0465f24 confirmed by ls-remote before closure; final documentation commit/push verification follows in the closing Git report"
-working_tree: "spec089 product/test/PNG committed; closure documents awaiting separate commit; pre-existing protected/user dirty preserved"
+origin_relation: "2026-09-07 closure push receipt: HEAD=origin/rebuild/modern-studio=9a55f67, ahead/behind 0/0; the subsequent receipt-only commit records this verified snapshot"
+working_tree: "spec089 code/evidence and closure documents committed; remaining dirty is limited to pre-existing protected/user paths; receipt documents are committed separately"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: FOUNDER_UI_F4_F7_F8_DECISION
@@ -21,6 +21,9 @@ commit_owner: Codex; scoped code/test and closure documents separately, normal f
 ```
 
 ## 최신 종료 — spec089 (2026-09-07)
+
+전송 확인: 제품 `f95cb29` + 종료 문서 `9a55f67` 일반 fast-forward push 성공. 직후 HEAD=origin
+추적 ref 9a55f67, 0/0 및 보호/user dirty만 잔존함을 확인했다. 이 영수증 자체의 commit은 후속이다.
 
 제품/test 4 + PNG 7 = 11파일 commit `f95cb29`. 최종 check 2512/2512(92파일)·canonical 230/230
 PASS(51.1초, skip/retry 0). 동일 Codex 최종 검토에서 추가 결함 미발견. 새 의존성/권한/운영 연결 0.
