@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { APP_IDS, BRAND } from "@denn/shared";
-import { Badge, Button, Card, Chip, TextField, VisuallyHidden } from "@denn/ui";
+import { Badge, Card, VisuallyHidden } from "@denn/ui";
 import { AdminRemoteStateCard } from "./admin-read/AdminRemoteStateCard";
 import {
   createAdminOperatorCompositionFromEnv,
@@ -10,11 +10,6 @@ import {
 import { FramePrintSizeEditor } from "./admin-write/FramePrintSizeEditor";
 import { AdminSpaceV2IssuePanel } from "./space-v2/AdminSpaceV2IssuePanel";
 import { PrintSizeCmDraft } from "./PrintSizeCmDraft";
-
-// Primitive showcase shell only (spec 011): renders @denn/ui primitives to verify the
-// package boundary and real render. No product features, no click side effects
-// (the view chips toggle local UI state only — no save / network / navigation).
-const VIEWS = ["카드", "목록", "표"] as const;
 
 /**
  * spec 083 §7: the clipboard is reached ONLY from an explicit copy click. Reading the API inside
@@ -90,15 +85,17 @@ export function useOwnedAdminComposition(
 }
 
 export function App(): React.JSX.Element {
-  const [view, setView] = useState<string>("카드");
   const composition = useOwnedAdminComposition(import.meta.env);
   return (
     <main className="denn-shell">
       <div className="denn-shell__inner">
         <Card>
-          <Badge>관리자 셸 · UI 프리미티브 데모</Badge>
-          <h1>{BRAND} Admin Rebuild</h1>
-          <p data-testid="app-id">{APP_IDS.admin}</p>
+          <Badge>{BRAND}</Badge>
+          <h1>운영자 작업 준비</h1>
+          <p>작업에 필요한 도구와 연결 상태를 확인하세요.</p>
+          <VisuallyHidden>
+            <span data-testid="app-id">{APP_IDS.admin}</span>
+          </VisuallyHidden>
         </Card>
 
         {composition.writeController === null ? <PrintSizeCmDraft /> : null}
@@ -121,46 +118,6 @@ export function App(): React.JSX.Element {
             clipboard={browserClipboard}
           />
         )}
-
-        <Card>
-          <div className="denn-stack">
-            <p>버튼 (데모 — 동작 없음)</p>
-            <div className="denn-row">
-              <Button variant="primary">기본</Button>
-              <Button variant="ghost">보조</Button>
-              <Button variant="kakao">카카오로 주문</Button>
-              <Button variant="ghost" disabled>
-                비활성
-              </Button>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <fieldset className="denn-fieldset">
-            <legend className="denn-fieldset__legend">보기 옵션 (데모 — 저장 없음)</legend>
-            <div className="denn-row">
-              {VIEWS.map((v) => (
-                <Chip key={v} selected={view === v} onClick={() => setView(v)}>
-                  {v}
-                  {view === v ? <VisuallyHidden> 선택됨</VisuallyHidden> : null}
-                </Chip>
-              ))}
-              <Chip disabled>비활성</Chip>
-            </div>
-          </fieldset>
-        </Card>
-
-        <Card>
-          <div className="denn-stack">
-            <TextField
-              label="검색어"
-              description="데모 입력 — 저장되지 않음"
-              placeholder="검색어"
-            />
-            <TextField label="담당자" error="필수 항목입니다" />
-          </div>
-        </Card>
       </div>
     </main>
   );
