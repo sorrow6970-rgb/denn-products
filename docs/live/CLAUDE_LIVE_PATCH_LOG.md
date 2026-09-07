@@ -8080,3 +8080,12 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   094계약/구현미시작.실제데이터/secret/보호파일/운영·배포/forcepush/자동화는계속제외.
 - spec093감사DONE/CODEX_PASSED/LOCAL_VERIFIED(동일Codex),UI전체승인아님.전체기존추정85~88%,
   잔여100-88=12~100-85=15%유지,전체실측률/최종스펙수확인불가.
+
+## 2026-09-07 - 스펙093 및 후속 합의 스펙의 일반 push 범위 승인
+
+- 사용자 `응 승인할게,`:093의1e322c1/cfb1a32와 이후 합의된 스펙의 검증된 코드·합성 증거·상태 문서를
+  https://github.com/sorrow6970-rgb/denn-products.git의rebuild/modern-studio로 일반 fast-forward push 승인.
+- 결정 정본2026-09-07-scoped-origin-push-authorization.md 작성. 동일 승인 범위 내 재확인은 생략하되
+  보호/별도사용자작업/실제운영데이터/secret/배포/forcepush 제외, 권한거절·새결정·미확정실패 STOP 유지.
+- 현재 승인 기록 문서만 추가, 아직 전송 성공을 주장하지 않는다. 이후 실제 Git 결과로 확인한다.
+  전체 기존추정85~88%/잔여12~15%유지. 운영연결/실제Firebase/자동화0.

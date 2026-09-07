@@ -6,7 +6,7 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-093-admin-c5-pending-error-audit   # AUDIT DONE, CODEX_PASSED, LOCAL_VERIFIED; UI finding F-9 remains
 active_unit: spec-093-push-authorization
-state: FOUNDER_DECISION_REQUIRED
+state: CLAUDE_WORKING
 baseline_commit: cca5a16
 candidate_commit: 1e322c1   # spec093 test-only/evidence22; closure is separate
 verified_commit: 1e322c1   # same-agent review
@@ -14,13 +14,17 @@ origin_relation: "origincca5a16; spec093 implementation and closure remain local
 working_tree: "spec093 closure8 docs committed separately; prior roadmap/spec091handoff2 and protected/user dirty preserved and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_SPEC_093_AND_FUTURE_SCOPED_ORIGIN_PUSH_AUTHORIZATION
+next_transition: CODEX_SPEC_093_APPROVED_PUSH_THEN_SPEC_094
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec092 synchronized; spec093 audit passed unit2517/E2E267 with UI wording finding F-9; no spec093 push attempted; prior explicit approval covered spec092 only
+session_status: user explicitly approved spec093 and future agreed verified code/synthetic evidence/status docs to exact origin branch; push verification pending
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
 ## 최신 종료 — spec093 (2026-09-07)
+
+**최신 승인:** 사용자 `응 승인할게,`로093 및 이후 합의된 스펙의 검증된 코드·합성 증거·상태 문서를
+같은 origin/rebuild/modern-studio로 일반 push 승인. 정본 `decisions/2026-09-07-scoped-origin-push-authorization.md`
+(docs/codex-claude-handoff 아래). 아래 미승인은 이전 이력이다. 전송 성공은 실제 Git으로 확인한다.
 
 시험 전용fixture/test/증거22파일1e322c1, check2517/2517·canonical267/267(50.2초) PASS.
 18PNG 직접 확인; 수치 gate PASS이나head-failed 안내문구F-9(P2)는후속094후보다.093제품UI수정0.

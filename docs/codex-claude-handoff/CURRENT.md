@@ -1,5 +1,9 @@
 # 현재 상태
 
+> 최신 승인2026-09-07: 사용자 `응 승인할게,`로093 및 이후 합의된 스펙의 검증된 코드·합성 증거·상태
+> 문서를 동일 origin/rebuild/modern-studio로 일반 push 승인. 정본 decisions/2026-09-07-scoped-origin-push-authorization.md.
+> 현재093 전송·확인 후094 문구 보완 계약 선행. 보호/운영/배포/자동화 제외. 아래 승인대기는 이력이다.
+
 > 최신 종료2026-09-07:093감사DONE/CODEX_PASSED/LOCAL_VERIFIED,시험전용22파일1e322c1.
 > check2517/2517·canonical267/267(50.2초),18PNG직접확인.시각문구F-9(P2)1개후속,제품수정0.
 > 092전송은cca5a16까지완료.093새payload는이번092명시전송승인에미포함이므로push시도0.
