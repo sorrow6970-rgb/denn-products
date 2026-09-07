@@ -387,6 +387,104 @@ test("no file name, blob url, catalog id or failure code reaches the page", asyn
   expect(noise.errors).toEqual([]);
 });
 
+for (const size of [
+  { width: 320, height: 568 },
+  { width: 390, height: 844 },
+  { width: 1280, height: 800 },
+]) {
+  test(`spec 088 Korean picker ${size.width}: native keyboard, cancel, repick and clear`, async ({
+    page,
+  }) => {
+    const noise = collectConsole(page);
+    const route = await routeCatalog(page);
+    await page.setViewportSize(size);
+    await gotoReady(page);
+    await chooseCase(page);
+    await openComposer(page);
+    await pickColour(page, "#1A1A1A");
+    const input = page.getByTestId("preview-file-case-zone-0");
+    const picker = page.locator(".denn-composer__photo-picker").first();
+    const status = page.getByTestId("preview-slot-case-zone-0");
+    await expect(input).toHaveAccessibleName("사진 1");
+    await expect(input).toHaveAccessibleDescription("선택 안 됨");
+    await expect(picker).toHaveText("사진 선택");
+    await input.focus();
+    // Return via genuine keyboard navigation; programmatic focus after a mouse click
+    // does not establish the browser's focus-visible keyboard modality.
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Shift+Tab");
+    await expect(input).toBeFocused();
+    await expect(picker).toHaveCSS("outline-style", "solid");
+    const box = await input.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(input).toHaveCSS("opacity", "0");
+    const firstChooser = page.waitForEvent("filechooser");
+    await input.press("Enter");
+    await (await firstChooser).setFiles(photo(`${FILE_MARKER}.png`, PHOTO_A));
+    await expect(status).toHaveText("선택됨");
+    await expect(picker).toHaveText("사진 바꾸기");
+    await expect(input).toHaveValue("");
+    await expect(input).toHaveAccessibleDescription("선택됨");
+    await expect(page.getByTestId("preview-slot-case-zone-1")).toHaveText("선택 안 됨");
+
+    // The OS dialog itself is outside automation. Model its no-file change/cancel notification.
+    await input.setInputFiles([]);
+    await input.dispatchEvent("cancel");
+    await expect(status).toHaveText("선택됨");
+    const secondChooser = page.waitForEvent("filechooser");
+    await input.press("Space");
+    await (await secondChooser).setFiles(photo(`${FILE_MARKER}.png`, PHOTO_B));
+    await expect(status).toHaveText("선택됨");
+    await expect(input).toHaveValue("");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    const axe = await new AxeBuilder({ page }).analyze();
+    expect(axe.violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual(
+      [],
+    );
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    const { mkdirSync } = await import("node:fs");
+    mkdirSync("docs/rebuild/results/spec-088", { recursive: true });
+    await page.locator(".denn-composer__slots").screenshot({
+      path: `docs/rebuild/results/spec-088/photo-picker-${size.width}x${size.height}.png`,
+      animations: "disabled",
+    });
+    await page.getByTestId("preview-clear-case-zone-0").click();
+    await expect(status).toHaveText("선택 안 됨");
+    await expect(picker).toHaveText("사진 선택");
+    expect(await page.locator("body").innerText()).not.toContain(FILE_MARKER);
+    expect(noise.all.join("|")).not.toContain(FILE_MARKER);
+    expect(noise.errors).toEqual([]);
+    expect(noise.warnings).toEqual([]);
+    expect(route.unexpected()).toBe(0);
+  });
+}
+
+test("spec 088 failed photo keeps the picker usable and allows an explicit replacement", async ({
+  page,
+}) => {
+  const noise = collectConsole(page);
+  const route = await routeCatalog(page);
+  await gotoReady(page);
+  await chooseCase(page);
+  await openComposer(page);
+  const input = page.getByTestId("preview-file-case-zone-0");
+  await input.setInputFiles({
+    name: `${FILE_MARKER}.png`,
+    mimeType: "image/png",
+    buffer: Buffer.from("invalid"),
+  });
+  await expect(page.getByTestId("preview-slot-case-zone-0")).toHaveText("실패");
+  await expect(input).toBeEnabled();
+  await expect(input).toHaveAccessibleDescription("실패");
+  await pickPhoto(page, "case-zone-0", PHOTO_A);
+  await expect(page.getByTestId("preview-slot-case-zone-0")).toHaveText("선택됨");
+  expect(noise.errors).toEqual([]);
+  expect(route.unexpected()).toBe(0);
+});
+
 test("keyboard only: open the composer, choose a colour, reach the file inputs", async ({
   page,
 }) => {

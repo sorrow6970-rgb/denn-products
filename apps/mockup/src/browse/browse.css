@@ -302,11 +302,58 @@
   color: var(--ink);
 }
 
-.denn-composer__slot-input {
+.denn-composer__slot > .denn-composer__slot-label {
+  flex-basis: 100%;
+}
+
+/* The native input stays focusable and owns the whole Korean selection surface. */
+.denn-composer__photo-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 44px hit area inside the two 1px borders. */
+  min-height: 46px;
   max-width: 100%;
-  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius, 12px);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
   font: inherit;
   font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.denn-composer__photo-picker:hover {
+  background: var(--surface);
+}
+
+.denn-composer__photo-picker:active {
+  background: var(--accent-soft);
+}
+
+.denn-composer__photo-picker:has(input:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.denn-composer__slot-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.denn-composer__slot[data-photo-state="ready"] > .denn-composer__slot-state {
+  color: var(--ink);
+}
+
+.denn-composer__slot[data-photo-state="failed"] > .denn-composer__slot-state {
+  color: var(--danger-ink);
 }
 
 .denn-composer__slot-state {

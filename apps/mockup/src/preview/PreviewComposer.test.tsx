@@ -77,6 +77,20 @@ describe("PreviewSection", () => {
 });
 
 describe("PreviewComposer — before any choice", () => {
+  it("keeps each native picker named, described and paired with a Korean surface", () => {
+    const markup = caseComposer();
+    expect(markup.match(/type="file"/g)).toHaveLength(2);
+    expect(markup.match(/>사진 선택<\/span>/g)).toHaveLength(2);
+    for (const slot of ["case-zone-0", "case-zone-1"]) {
+      const id = `denn-preview-file-${slot}`;
+      expect(markup).toContain(`id="${id}-label"`);
+      expect(markup).toContain(`aria-labelledby="${id}-label"`);
+      expect(markup).toContain(`aria-describedby="${id}-state"`);
+      expect(markup).toContain(`id="${id}-state"`);
+    }
+    expect(markup).not.toContain('type="file" hidden');
+  });
+
   it("shows every case colour with none pre-selected", () => {
     const markup = caseComposer();
     expect(markup).toContain("#1A1A1A");

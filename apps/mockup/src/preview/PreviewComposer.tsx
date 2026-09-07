@@ -236,25 +236,36 @@ function ImageSlot({
   useEffect(() => () => onReport(slotId, null), [slotId, onReport]);
 
   const inputId = `denn-preview-file-${slotId}`;
+  const labelId = `${inputId}-label`;
+  const stateId = `${inputId}-state`;
   return (
-    <div className="denn-composer__slot">
-      <label className="denn-composer__slot-label" htmlFor={inputId}>
+    <div className="denn-composer__slot" data-photo-state={state.status}>
+      <label id={labelId} className="denn-composer__slot-label" htmlFor={inputId}>
         {label}
       </label>
-      <input
-        id={inputId}
-        data-testid={`preview-file-${slotId}`}
-        className="denn-composer__slot-input"
-        type="file"
-        accept="image/*"
-        onChange={(event) => {
-          const chosen = event.target.files?.[0];
-          // emptied by THIS owner so the same file can be picked again (spec 026 §5)
-          event.target.value = "";
-          if (chosen) picked.load(chosen);
-        }}
-      />
-      <span className="denn-composer__slot-state" data-testid={`preview-slot-${slotId}`}>
+      <label className="denn-composer__photo-picker" htmlFor={inputId}>
+        <span aria-hidden="true">{state.status === "ready" ? "사진 바꾸기" : "사진 선택"}</span>
+        <input
+          id={inputId}
+          data-testid={`preview-file-${slotId}`}
+          className="denn-composer__slot-input"
+          type="file"
+          accept="image/*"
+          aria-labelledby={labelId}
+          aria-describedby={stateId}
+          onChange={(event) => {
+            const chosen = event.target.files?.[0];
+            // emptied by THIS owner so the same file can be picked again (spec 026 §5)
+            event.target.value = "";
+            if (chosen) picked.load(chosen);
+          }}
+        />
+      </label>
+      <span
+        id={stateId}
+        className="denn-composer__slot-state"
+        data-testid={`preview-slot-${slotId}`}
+      >
         {SLOT_STATE_LABEL[state.status]}
       </span>
       {state.status === "ready" ? (
