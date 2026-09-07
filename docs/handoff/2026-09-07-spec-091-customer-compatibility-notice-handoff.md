@@ -1,5 +1,21 @@
 # spec091 고객 호환 정보성 배지 — 완료 handoff
 
+## 전송 명시 승인 (2026-09-07)
+
+사용자 `응 승인 다음`으로 두 커밋과 상태 정정 문서를 아래 명시된 GitHub origin/rebuild/modern-studio로
+일반 fast-forward push 승인. 보호 파일 제외 유지. 실제 전송 결과는 Git/후속 기록으로 확인한다.
+전송 후에는 NEXT의 전체 잔여 로드맵 읽기 전용 검토만 수행한다. 아래 거절은 승인 전 이력이다.
+
+## 전송 차단 정정 (2026-09-07)
+
+로컬 제품 `95279e7` + 종료 문서 `0692f4a` 커밋 완료. push는 자동 승인 검토가 코드·문서·생성
+아티팩트의 해당 원격 전송 승인이 불충분하다는 사유로 거절했다. 우회/재시도0.
+실제 HEAD0692f4a, origin6992aba, ahead/behind2/0. 보호/user dirty 외 전송 정정5문서 미스테이지.
+사용자가 `https://github.com/sorrow6970-rgb/denn-products.git`의 `rebuild/modern-studio`로
+두 커밋과 정정 문서를 일반 fast-forward 전송하는 것을 명시 승인하기 전 멈춘다.
+로컬 검증 DONE/CODEX_PASSED는 유지하되 원격 동기화는 미완료. 현재 FOUNDER_DECISION_REQUIRED.
+아래 전송/대기 계획은 차단 전 기록이다. 다음 스펙은 시작하지 않았다.
+
 ## 최종 결과 (2026-09-07)
 
 DONE / CODEX_PASSED / LOCAL_VERIFIED. 제품/test3+PNG13=16파일 `95279e7`.

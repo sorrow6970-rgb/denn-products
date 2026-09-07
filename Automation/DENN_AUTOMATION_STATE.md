@@ -5,22 +5,31 @@ updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-091-customer-compatibility-notice-policy   # DONE, CODEX_PASSED, LOCAL_VERIFIED
-active_unit: none
-state: WAITING_FOR_NEXT_MANUAL_TASK
+active_unit: rebuild-remaining-roadmap-review
+state: CLAUDE_WORKING   # Codex read-only review after explicitly approved push
 baseline_commit: 6992aba
 candidate_commit: 95279e7
 verified_commit: 95279e7   # spec091 product/test/evidence, same-agent review
-origin_relation: "resume check HEAD=origin6992aba, 0/0; final closure push verified separately in Git and final report"
-working_tree: "product/test/evidence16 files committed95279e7; closure10 docs separately; protected/user dirty excluded, canonical spec018 PNG2 preserved"
+origin_relation: "push rejected by approval review; HEAD0692f4a, origin6992aba, ahead/behind2/0; no retry"
+working_tree: "product16 files95279e7 and closure10 docs0692f4a committed; push-stop correction5 docs unstaged; protected/user dirty excluded"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: CODEX_REBUILD_REMAINING_ROADMAP_REVIEW
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec091 DONE; targeted13, unit2517, canonical230 PASS; initial Space timeout cause UNCONFIRMED; no next spec started
+session_status: user explicitly approved spec091 commits and correction docs to existing origin; push and then read-only roadmap review; no new implementation
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
 ## 최신 종료 — spec091 (2026-09-07)
+
+**전송 승인:** 사용자 `응 승인 다음`으로 아래 두 커밋+상태 정정 문서를 명시된 origin 브랜치로
+일반 fast-forward push하는 것을 승인했다. 보호 제외 유지. 전송 후 NEXT의 읽기 전용 로드맵 검토만 진행.
+아래 거절은 승인 전 이력이며 전송 성공은 실제 Git 결과로 별도 확인한다.
+
+**전송 정정:** 제품 `95279e7`와 종료 문서 `0692f4a` 로컬 커밋 완료. 자동 승인 검토가 정확한
+코드/문서/합성 PNG의 원격 전송 승인 부족으로 push를 거절했다. HEAD0692f4a, origin6992aba,2/0.
+원격은 `https://github.com/sorrow6970-rgb/denn-products.git`의 `rebuild/modern-studio`다.
+명시적 승인 전 재시도/우회0. 이 정정5문서는 미스테이지. 아래 push 계획은 완료 사실이 아니다.
 
 제품/test3 + PNG13 =16파일 `95279e7`. 사용자 승인 재검증: targeted13/13, check2517/2517(94파일,
 2.95초), canonical230/230(51.1초) PASS. 최초 Space timeout 이번 미재현, 원인 UNCONFIRMED.

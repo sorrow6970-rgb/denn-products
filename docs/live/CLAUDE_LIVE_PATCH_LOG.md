@@ -7956,3 +7956,22 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   `95279e7` 일반 커밋. 종료 문서10파일 별도 commit/push, 최종 전송 결과는 후속 확인과 Git 참조.
 - WAITING_FOR_NEXT_MANUAL_TASK. NEXT에 전체 잔여 로드맵 읽기 전용 검토 문구를 남김. 새 스펙/구현0.
   F-4/F-7 완료, F-8 기존 크기 유지. 전체 기존 추정85~88%/잔여12~15%, 실제 운영/UID/배포/자동화0.
+
+## 2026-09-07 - spec091 전송 차단 정정
+
+- 로컬 제품16파일 `95279e7`, 종료 문서10파일 `0692f4a` 일반 커밋 완료. push 직전 ls-remote는
+  origin6992aba를 반환해 fast-forward 가능했지만, 실제 push 요청은 자동 승인 검토에서 거절됐다.
+  사유: 코드·문서·생성 아티팩트를 해당 remote로 전송하는 명시적 사용자 승인이 불충분함.
+- 원격 URL 읽기 확인: https://github.com/sorrow6970-rgb/denn-products.git, 대상 rebuild/modern-studio.
+  HEAD0692f4a/origin6992aba,2/0. push 성공으로 보고하지 않는다. 재시도/우회/다른 전송 경로0.
+- STATE/NEXT/CURRENT/이live/spec091handoff 5문서에 정정, 미스테이지 보존. 사용자 승인 전 추가
+  commit/push0. 보호 파일 제외 유지. 현재 FOUNDER_DECISION_REQUIRED, next 명시적 원격 전송 승인.
+- 로컬 단위2517/2517·E2E230/230 PASS 유지. 최초 timeout 원인 UNCONFIRMED, 새로운 게이트 실행0.
+  다음 스펙/실제 운영/배포/자동화0. 전체 기존 계획 추정85~88%/잔여12~15% 유지.
+
+## 2026-09-07 - spec091 전송 명시 승인 · 로드맵 검토 재개
+
+- 사용자 `응 승인 다음`으로 제품95279e7·문서0692f4a·상태 정정 문서를 명시된
+  https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio로 일반 push 승인.
+- 이 정정5문서만 별도 커밋 후 fast-forward push한다. 보호 파일 제외, 새 제품 변경/검증 반복0.
+  전송 성공 여부는 후속 실제 Git 결과로 확인. 이후 NEXT의 잔여 로드맵 읽기 전용 검토만 수행한다.
