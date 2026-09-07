@@ -20,7 +20,6 @@ const STATUS_MESSAGE: Record<string, string> = {
   conflict: "다른 저장이 먼저 반영됐습니다. 최신 상태를 다시 불러오세요.",
   "outcome-unknown": "저장 결과를 확인할 수 없습니다. 최신 상태를 다시 불러오세요.",
   "load-error": "편집 기준을 불러오지 못했습니다.",
-  "save-error": "저장하지 못했습니다. 상태를 확인한 뒤 명시적으로 다시 시도하세요.",
 };
 
 function canonicalText(item: CatalogItemV1, key: "printWidthCm" | "printHeightCm"): string {
@@ -102,6 +101,13 @@ export function FramePrintSizeEditor({ controller }: FramePrintSizeEditorProps):
   };
 
   const editable = snapshot.canEdit && selected !== null;
+  // Use the same capability that enables the save button; this does not grant a retry.
+  const statusMessage =
+    snapshot.status === "save-error"
+      ? snapshot.canSave
+        ? "저장하지 못했습니다. 변경 저장 버튼을 눌러 다시 시도할 수 있습니다."
+        : "저장하지 못했습니다. 편집 기준 불러오기 버튼을 눌러 최신 상태를 확인하세요."
+      : STATUS_MESSAGE[snapshot.status];
   return (
     <Card>
       <div className="denn-stack" data-testid="frame-print-size-editor">
@@ -157,7 +163,7 @@ export function FramePrintSizeEditor({ controller }: FramePrintSizeEditorProps):
         />
 
         <div role="status" aria-live="polite" data-testid="frame-print-size-status">
-          {STATUS_MESSAGE[snapshot.status]}
+          {statusMessage}
         </div>
         <div className="denn-row">
           <Button

@@ -941,7 +941,7 @@
     "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
     "url": "http://localhost:4184/e2e-admin-write-fixture.html?audit=spec093",
     "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
-    "message": "저장하지 못했습니다. 상태를 확인한 뒤 명시적으로 다시 시도하세요.",
+    "message": "저장하지 못했습니다. 변경 저장 버튼을 눌러 다시 시도할 수 있습니다.",
     "preparation": "upload-failed",
     "box": {
       "x": 16,
@@ -1248,7 +1248,7 @@
       "file": "c5-upload-failed-320x568.png",
       "width": 288,
       "height": 571,
-      "sha256": "1e5ddfd54cdba9bb82c69ce0191e9e876d320041df64e9f774ad008bdbb64f6d"
+      "sha256": "e12e0afadde039e3a4a44c7e91e43bd631bad989394427fa96022bc96b67a827"
     },
     "measuredVerdict": "PASS",
     "visualReview": "SEE AUDIT REPORT"
@@ -1262,7 +1262,7 @@
     "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
     "url": "http://localhost:4184/e2e-admin-write-fixture.html?audit=spec093",
     "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
-    "message": "저장하지 못했습니다. 상태를 확인한 뒤 명시적으로 다시 시도하세요.",
+    "message": "저장하지 못했습니다. 편집 기준 불러오기 버튼을 눌러 최신 상태를 확인하세요.",
     "preparation": "head-failed",
     "box": {
       "x": 16,
@@ -1559,7 +1559,7 @@
       "file": "c5-head-failed-320x568.png",
       "width": 288,
       "height": 571,
-      "sha256": "c5961bd309fbd5ce921f3b8f564f0e28542be7526585443faef27f96cd676f76"
+      "sha256": "63b3d0a15b400e106ef37e416cf99b52b93cfb7d5dc06bba3bb800e15df91b18"
     },
     "measuredVerdict": "PASS",
     "visualReview": "SEE AUDIT REPORT"
@@ -2827,7 +2827,7 @@
     "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
     "url": "http://localhost:4184/e2e-admin-write-fixture.html?audit=spec093",
     "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
-    "message": "저장하지 못했습니다. 상태를 확인한 뒤 명시적으로 다시 시도하세요.",
+    "message": "저장하지 못했습니다. 변경 저장 버튼을 눌러 다시 시도할 수 있습니다.",
     "preparation": "upload-failed",
     "box": {
       "x": 16,
@@ -3134,7 +3134,7 @@
       "file": "c5-upload-failed-390x844.png",
       "width": 358,
       "height": 494,
-      "sha256": "2795b718314b2f5bc94f93841665874f0092dd7d65e6f9d539fb3ad1c4cdc6b1"
+      "sha256": "fb60c4057c156882b289ecdb98873a3358a4e473e6de6eef016d5229cfe08b32"
     },
     "measuredVerdict": "PASS",
     "visualReview": "SEE AUDIT REPORT"
@@ -3148,7 +3148,7 @@
     "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
     "url": "http://localhost:4184/e2e-admin-write-fixture.html?audit=spec093",
     "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
-    "message": "저장하지 못했습니다. 상태를 확인한 뒤 명시적으로 다시 시도하세요.",
+    "message": "저장하지 못했습니다. 편집 기준 불러오기 버튼을 눌러 최신 상태를 확인하세요.",
     "preparation": "head-failed",
     "box": {
       "x": 16,
@@ -3445,7 +3445,7 @@
       "file": "c5-head-failed-390x844.png",
       "width": 358,
       "height": 494,
-      "sha256": "cc2a83ee05ceb384eac90932feb82738618b4a7e7c7172201cca4b7ea0c37200"
+      "sha256": "54377e4a3e884ac0b975ccab772c1b72180f1bfc9e5b83b494459f60b82d28cd"
     },
     "measuredVerdict": "PASS",
     "visualReview": "SEE AUDIT REPORT"
@@ -4713,7 +4713,7 @@
     "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
     "url": "http://localhost:4184/e2e-admin-write-fixture.html?audit=spec093",
     "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
-    "message": "저장하지 못했습니다. 상태를 확인한 뒤 명시적으로 다시 시도하세요.",
+    "message": "저장하지 못했습니다. 변경 저장 버튼을 눌러 다시 시도할 수 있습니다.",
     "preparation": "upload-failed",
     "box": {
       "x": 360,
@@ -5020,7 +5020,7 @@
       "file": "c5-upload-failed-1280x800.png",
       "width": 560,
       "height": 450,
-      "sha256": "0657b37107e16ffb488172d13fbaf0405d64cbc4137b454e6f67a580ddeb9d20"
+      "sha256": "c1fbad5d161bbc179af751f6a3abee8c680440996dafa7a0480fdd9a401867e3"
     },
     "measuredVerdict": "PASS",
     "visualReview": "SEE AUDIT REPORT"
@@ -5034,13 +5034,13 @@
     "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
     "url": "http://localhost:4184/e2e-admin-write-fixture.html?audit=spec093",
     "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
-    "message": "저장하지 못했습니다. 상태를 확인한 뒤 명시적으로 다시 시도하세요.",
+    "message": "저장하지 못했습니다. 편집 기준 불러오기 버튼을 눌러 최신 상태를 확인하세요.",
     "preparation": "head-failed",
     "box": {
       "x": 360,
       "y": 20.75,
       "width": 560,
-      "height": 448.75
+      "height": 472.75
     },
     "exclusions": [
       {
@@ -5055,7 +5055,7 @@
       {
         "box": {
           "x": 360,
-          "y": 485.5,
+          "y": 509.5,
           "width": 560,
           "height": 294.75
         },
@@ -5126,12 +5126,12 @@
           "disabled": false,
           "box": {
             "x": 381,
-            "y": 404.5,
+            "y": 428.5,
             "width": 155.84375,
             "height": 44,
-            "top": 404.5,
+            "top": 428.5,
             "right": 536.84375,
-            "bottom": 448.5,
+            "bottom": 472.5,
             "left": 381
           }
         },
@@ -5141,12 +5141,12 @@
           "disabled": true,
           "box": {
             "x": 546.84375,
-            "y": 404.5,
+            "y": 428.5,
             "width": 94.921875,
             "height": 44,
-            "top": 404.5,
+            "top": 428.5,
             "right": 641.765625,
-            "bottom": 448.5,
+            "bottom": 472.5,
             "left": 546.84375
           }
         }
@@ -5330,8 +5330,8 @@
     "png": {
       "file": "c5-head-failed-1280x800.png",
       "width": 560,
-      "height": 450,
-      "sha256": "040c8b5fedd81299d9b1e9fa5044e5a45ef432b0be7a4ce9bfa57d72310082d0"
+      "height": 474,
+      "sha256": "57634f35aafbd846f83abee5b1da129db3d10a804baf1a7f1e37a3dac2f3edf1"
     },
     "measuredVerdict": "PASS",
     "visualReview": "SEE AUDIT REPORT"

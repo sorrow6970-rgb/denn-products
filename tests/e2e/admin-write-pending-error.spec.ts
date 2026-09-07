@@ -27,8 +27,8 @@ const MESSAGES = {
   loading: "편집 기준을 불러오는 중입니다.",
   saving: "변경을 저장하는 중입니다.",
   "load-error": "편집 기준을 불러오지 못했습니다.",
-  "upload-failed": "저장하지 못했습니다. 상태를 확인한 뒤 명시적으로 다시 시도하세요.",
-  "head-failed": "저장하지 못했습니다. 상태를 확인한 뒤 명시적으로 다시 시도하세요.",
+  "upload-failed": "저장하지 못했습니다. 변경 저장 버튼을 눌러 다시 시도할 수 있습니다.",
+  "head-failed": "저장하지 못했습니다. 편집 기준 불러오기 버튼을 눌러 최신 상태를 확인하세요.",
   "auth-blocked": "운영자 로그인이 필요합니다.",
 };
 const records: Record<string, unknown> = {};
