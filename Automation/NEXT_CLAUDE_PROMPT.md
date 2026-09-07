@@ -1,6 +1,101 @@
 # NEXT CLAUDE PROMPT
 
-상태: `READY_FOR_CODEX`
+상태: `WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 087 DONE / CODEX_PASSED (2026-09-07)
+
+- completed_unit: `spec-087-space-post-auth-header-collapse`
+- active_unit: `none`
+- next_transition: `FOUNDER_NEXT_MANUAL_TASK`
+- 제품 `ac684e3`, PNG 정합 `1b0506e`; 문서 보완·종료는 후속 별도 commit.
+- 라운드 1 보완 후 check PASS(unit **2510/2510**), canonical Chromium **223/223 PASS**.
+- 전체 리빌드 기존 계획 추정 **85~88% / 잔여 12~15%** 유지.
+
+## 지금 수행할 작업 — 없음. 현재 단위 종료
+
+2026-09-07 사용자가 **UI 구현이 아니면 Codex가 직접 작업**하도록 지시했다. 이번 README 출처 중복
+보완·PNG 정합·검증·종료는 Codex가 직접 수행했다. 아래 라운드 1 Claude 지시는 이미 완료된 이력이다.
+승인된 후속 비-UI 작업은 Codex가 담당하고, 실제 UI/UX 구현은 Claude Code가 담당한다.
+
+다음 단위의 계약과 허용 범위가 정해지기 전에는 아래 과거 지시를 다시 실행하지 않는다. 새 스펙·UI 변경·
+Firebase/network/emulator/deploy·자동화는 시작하지 않는다. 기존 운영전환 보류와 보호 경계를 유지한다.
+
+재개 요청 문구:
+
+```text
+C:\repo\denn-products에서 최신 STATE/NEXT/CURRENT와 live log를 읽고 스펙 087 종료 커밋을 확인한 뒤 다음 단위를 선정해. 승인된 비-UI 작업은 직접 수행·검증하고, 실제 UI/UX 구현이 필요한 단계는 Claude Code용 계약과 프롬프트를 남겨. 보호 대상과 운영전환 보류를 유지해.
+```
+
+보완 결과: README 출처 표 15개를 그대로 유지하고 F-3 설명만 의미 참조로 바꿨다. 문서 변경 뒤
+전체 E2E에서 실패했던 유일성 검사가 통과했다. 테스트/source 수정 0, 추가 Space PNG 4장은 검수 시점과
+동일한 canonical 결과다. 문서 보완을 수행한 Codex의 재검증이며 별도 에이전트 검수로 주장하지 않는다.
+
+검증 한계: Chromium 내부 raster SharedImage 오류 로그가 발견돼 저장소 밖 CreatorTemp에 보존했다.
+E2E/Space PNG 결과는 정상이지만 내부 그래픽 로그 무오류를 뜻하지 않는다(STATE의 정확한 경로 참조).
+
+---
+
+## 이전 이력 — 라운드 1 지시 및 실패 기록 (수행 완료, 재실행 지시 아님)
+
+상태: `CORRECTION_REQUIRED` — 스펙 087 보완 라운드 1 (2026-09-07)
+
+- 현재 기준: `eab7199` (제품 `ac684e3` + 기록 `eab7199`)
+- active_unit: `spec-087-space-post-auth-header-collapse`
+- next_transition: `CLAUDE_SPEC_087_CORRECTION_ROUND_1`
+- fix_round: `1` / 최대 `3`
+- completed_unit: spec 086 DONE / CODEX_PASSED 유지
+- 전체 리빌드: 기존 계획 추정 **85~88% / 잔여 12~15%**, 변동 없음
+
+## 지금 수행할 작업 — 스펙 087 문서 보완·PNG 정합·재검증만
+
+```text
+C:\repo\denn-products에서 Automation/NEXT_CLAUDE_PROMPT.md와 스펙 087의 2026-09-07 Codex 검수 절을 읽고 CORRECTION_REQUIRED 라운드 1만 수행해. README의 PNG 출처 중복을 고치고, 허용된 spec-063/spec-080 PNG 4장만 정합 처리한 뒤 전체 게이트를 재검증해. 제품 코드·CSS·테스트·설정은 수정하지 말고 보호 대상은 건드리지 마. 최종 문서 내용까지 검증한 뒤 허용 파일만 일반 fast-forward commit/push하고 READY_FOR_CODEX에서 멈춰. 자동화와 다음 스펙은 시작하지 마.
+```
+
+1. `docs/rebuild/results/spec-084/README.md`의 F-3 addendum을 최소 수정한다. 출처 표의 정확한 백틱 PNG
+   파일명은 각 1회만 유지하고, 설명에서는 **위 표의 V1 차단 화면**, **위 표의 인증 전 화면**처럼 의미로
+   참조한다. 현재 V1 차단 파일과 인증 전 gate 파일은 각각 2회다. 출처 표·기존 finding 설명을 지우거나
+   테스트의 유일성 단언을 바꾸지 않는다.
+2. Codex가 계약 목록 누락 2건을 해소했다. `SpaceV2ProofView.tsx`와 `.test.tsx`는 원래 2파일이며
+   현재 heading 변경을 인정한다(이번 라운드 추가 코드 수정 허용은 아님). 아래 PNG 4장은 같은 제품
+   변경으로 갱신된 baseline이므로 canonical 결과가 유지되는지 확인 후 별도 증거 commit에 포함할 수 있다.
+   기존 spec-084 허용 3장은 바이트가 이미 HEAD와 같다. 임의 복원·수동 이미지 편집은 하지 않는다.
+
+   - `docs/rebuild/results/spec-063/space-v1-blocked-desktop-1280x800.png`
+   - `docs/rebuild/results/spec-063/space-v1-blocked-mobile-390x844.png`
+   - `docs/rebuild/results/spec-080/space-v2-viewer-desktop-1280x800.png`
+   - `docs/rebuild/results/spec-080/space-v2-viewer-mobile-390x844.png`
+
+3. 검수 문서 6개(스펙 087, 해당 handoff, STATE/NEXT/CURRENT/live log)의 Codex 기록을 보존하고 실제
+   보완 결과를 추가한다. `eab7199` 기준 독립 E2E는 **222 passed / 1 failed**였음을 보존한다. 과거
+   223/223 기록을 삭제하지 말고, 그 뒤 README 변경이 최종 상태에서 실패함을 정정한다.
+4. `node scripts/check.mjs`, canonical `node scripts/e2e-run.mjs`, `git diff --check`를 실행한다.
+   README를 포함한 최종 문서 편집을 먼저 마쳐 출처 검사가 최종 내용을 읽게 한다. 테스트 삭제·skip·retry·
+   timeout/tolerance 변경은 금지한다. 검증 후 문서를 더 수정했다면 최소한 같은 README 출처 검사를
+   최종 파일에 다시 적용하고 수치를 보고한다. 실제 Firebase/network/emulator/deploy는 금지다.
+5. PNG 7장(기존 3 + 추가 4), 인증 전 gate 무변경, 나머지 spec-084 PNG 무변경, SHA-256, 포트/temp,
+   bundle, forbidden diff 및 staged 경로를 보고한다. spec-063은 기존 fixture 제어가 포함된 증거이므로
+   spec-084의 정제된 제품 캡처와 동일 등급으로 설명하지 않는다. spec-080 두 장은 spec-084 viewer와
+   각각 바이트가 같아야 한다.
+6. 허용 PNG 증거 commit과 문서 commit을 분리해 fast-forward push한다. 이 검수에서 Codex가 만든
+   문서 diff도 빠뜨리지 않는다. 보호 대상·기존 사용자 dirty·ignored 측정 JSON/test-results는 stage하지
+   않는다. 종료 상태는 `READY_FOR_CODEX`, fix_round `1`, next `CODEX_SPEC_087_REVIEW_ROUND_1`.
+
+추가 Founder 결정은 필요 없다. 제품 오류가 새로 발견돼 코드 변경이 필요하면 증거를 남기고 Codex에
+보고한다. 실제 UID·운영 데이터·삭제·발행·배포·다음 UI 작업은 승인되지 않았다.
+
+## 독립 검수 근거
+
+- `node scripts/check.mjs` PASS: unit 2510/2510(92파일), build 2. 전체 E2E exit 1:
+  222 passed / 1 failed / 0 skipped / 0 retry. 새 스펙 087 E2E 3건은 PASS.
+- 실패 위치 `tests/e2e/local-visual-readiness.spec.ts:940`: 정확한 백틱 파일명 occurrence를 1로 요구한다.
+  `eab7199`에서 추가된 README 설명만으로 두 파일이 각각 2회가 된다.
+- 제품 결과 PNG 직접 확인, spec-084 PNG 15장 diff 0, 보호 파일 검수 전후 SHA-256 동일.
+- 이번 Codex 작업은 검수/지시 문서만 수정했다. stage/commit/push 0, 원격 fetch 0.
+
+---
+
+## 이전 이력 — 아래 READY_FOR_CODEX와 구현 지시는 과거 기록
+
+이전 상태: `READY_FOR_CODEX`
 
 - active_unit: `spec-087-space-post-auth-header-collapse` — 계약 `f72e2e2`, 제품/test/PNG `ac684e3`
 - completed_unit: `spec-086-admin-c5-select-accessibility-surface` — **DONE / CODEX_PASSED /

@@ -1,5 +1,34 @@
 # 현재 상태
 
+> **최신 포인터 (2026-09-07): spec 087 DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK.**
+> 사용자의 비-UI 직접 수행 지시에 따라 Codex가 README 중복 참조를 고치고 전체 게이트를 재검증했다.
+> check PASS(unit **2510/2510**, 92파일, build 2), canonical **223 passed / 0 failed / 0 skipped /
+> 0 retry**. 이전 222/1 실패는 기록 commit의 README 설명 때문이었고 출처 표/테스트는 무변경이다.
+> 제품 `ac684e3`, 허용 PNG 정합 `1b0506e`, 문서 보완·종료는 별도 commit. 제품 코드를 검수했던
+> Codex가 보완과 재검증도 맡았으며 별도 에이전트 독립 검수로 간주하지 않는다.
+> 승인된 비-UI 작업은 Codex 직접 수행·검증, UI/UX 구현은 Claude Code 담당으로 한다.
+> 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, active 없음, next `FOUNDER_NEXT_MANUAL_TASK`.
+> 보호 문서/코드 hash 동일, spec-018 PNG만 canonical에서 재생성됐고 stage/restore 0.
+> Space PNG 19장(spec-084 15 + 추가 4) 검수 때와 동일, 포트 6개/staging 잔류 0.
+> Chromium 내부 raster 오류 로그는 발견돼 저장소 밖 CreatorTemp에 보존했다(STATE 경로 참조).
+> 테스트의 JS console/화면 검증 PASS와 내부 그래픽 로그는 구분한다.
+> ignored last-run만 남았고 운영 전환은 계속 보류다. 전체 리빌드 기존 추정 **85~88% / 잔여 12~15%**
+> 유지. 새 스펙이나 다음 UI 구현은 시작하지 않았다. 실행 포인터는 NEXT 최상단을 따른다.
+
+> **최신 포인터 (2026-09-07): spec 087 독립 검수 = CORRECTION_REQUIRED 라운드 1.**
+> 기준 HEAD와 로컬 origin 추적 ref는 `eab7199`(ahead/behind 0/0, 이번 fetch 미실행), 제품 `ac684e3`.
+> check PASS(unit **2510/2510**, 92파일, build 2), canonical Chromium **222 passed / 1 failed /
+> 0 skipped / 0 retry**. 실패는 제품 구현 뒤 기록 커밋에서 추가된 spec-084 README의 PNG 파일명 중복이다.
+> V1 차단 및 인증 전 gate 파일명은 출처 표와 F-3 설명에 각각 2회 등장한다. 기존 출처 유일성 검사를
+> 그대로 두고 README 설명을 고쳐야 한다. 제품 신규 E2E 3건은 PASS이며 추가 제품 결함 미발견.
+> 계약 누락 `SpaceV2ProofView.tsx` + 테스트 **2파일**과 spec-063/spec-080 PNG **4장**은 제목 변경의
+> 직접 결과로 확인해 허용 목록을 보완했다. 코드 추가 수정 없이 README 보완·PNG 정합·전체 재검증만
+> Claude가 수행한다. 상태 `CORRECTION_REQUIRED`, next `CLAUDE_SPEC_087_CORRECTION_ROUND_1`.
+> 이번 검수의 보호 파일·PNG·build 전후 hash 변화 0, spec-084 PNG 15장 HEAD diff 0, 포트 6개 0,
+> 실행 staging 제거 확인. ignored test-results에는 실패 근거가 남아 있다. stage/commit/push 0.
+> spec 086 DONE 유지, spec 087은 아직 미승인. 전체 리빌드 기존 추정 **85~88% / 잔여 12~15%** 유지.
+> 현재 실행 정본은 `Automation/NEXT_CLAUDE_PROMPT.md` 최상단 라운드 1 지시다.
+
 > **최신 포인터 (2026-09-03): spec 087 구현·검증 완료 = READY_FOR_CODEX.**
 > 계약 `f72e2e2`, 제품/test/PNG `ac684e3`, 문서 commit은 이 갱신이다(제품과 문서 분리). 스펙 084 P1
 > **F-3**을 닫았다 — 인증 **전** 화면은 무변경이고(`space-v2-password-gate-390x844.png` `67a1433c…`

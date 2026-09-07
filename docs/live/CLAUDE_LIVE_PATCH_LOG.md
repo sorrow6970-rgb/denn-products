@@ -7654,3 +7654,89 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   운영 데이터는 검증되지 않았다.
 - 상태 `READY_FOR_CODEX`, next `CODEX_SPEC_087_REVIEW`, fix_round 0. 다음 finding·다음 스펙은 시작하지
   않았다. 전체 진행도 **85~88% / 잔여 12~15%**(변동 없음).
+
+## 2026-09-07 — Codex 작업 재개 · 스펙 087 독립 검수 CORRECTION_REQUIRED 라운드 1
+
+- 기준 `HEAD=origin/rebuild/modern-studio=eab7199`, ahead/behind 0/0(로컬 원격 추적 ref 대조,
+  이번 fetch 미실행). 제품 `ac684e3`와 기록 `eab7199`를 검수했다. 수동 Claude → Codex → 다음 프롬프트
+  절차를 재개했으며 자동화/반복 작업은 만들지 않았다.
+- **독립 실측:** `node scripts/check.mjs` exit 0, format/lint/typecheck PASS, unit **2510/2510**
+  (92파일), build 2. canonical `node scripts/e2e-run.mjs` exit 1, **222 passed / 1 failed /
+  0 skipped / 0 retry**, 50.7초. 스펙 087 신규 E2E 3건은 PASS다.
+- **차단 R1:** `local-visual-readiness.spec.ts:933-945`의 PNG 출처 유일성 검사가 실패한다. README의
+  출처 표와 F-3 addendum이 V1 차단·인증 전 gate의 정확한 백틱 파일명을 각각 2회 적는다(요구 1회).
+  첫 assertion은 V1 차단에서 멈추지만 별도 전수 카운트로 gate의 중복도 확인했다. README 6줄 추가는
+  제품 커밋 후 `eab7199`에 들어갔다. 과거 223/223 결과는 보존하되 최종 HEAD의 PASS로 간주하지 않는다.
+  다음 Claude는 README 설명을 의미 참조로 고치고 최종 문서를 포함해 게이트를 다시 실행한다.
+- **계약 보완 요청 2건 해소:** `App.tsx:64-65`의 실제 V2 결과인 `SpaceV2ProofView.tsx`와 테스트는
+  **2파일**이며, 현 heading 변경은 F-3 요구 실현에 필요하다. 현재 변경을 인정해 목록을 보완했다.
+  `space-production-route.spec.ts:268,614`가 쓰는 spec-063/spec-080 PNG 4장도 같은 제목 변경의 직접
+  산출물이므로 정합 commit을 허용한다. 추가 제품 코드/테스트 수정 허용은 아니다.
+- **PNG 검증:** 독립 실행 전후 수집한 PNG hash 차이 0. spec-084 PNG 15장 HEAD diff 0, 인증 전
+  gate `67a1433c…` 그대로다. 기존 허용 3장을 직접 열어 제목 1개·입력 안내 부재를 확인했다.
+  추가 spec-063 desktop도 직접 확인했으며 기존 fixture 제어가 들어 있으므로 제품-only 증거로
+  일반화하지 않는다. Space 감사 4건 overflow false, smallTargets/axeSeriousCritical/externalRequests []다.
+
+  | 정합 대상 | 독립 재생성 SHA-256 |
+  |---|---|
+  | spec-063/space-v1-blocked-desktop-1280x800.png | `E8989C5ECAA9B708F1C7169ED07A7A63AB75735B9F207AE59BF1744DB0A35622` |
+  | spec-063/space-v1-blocked-mobile-390x844.png | `CF0261611E82255D050A6E3A62472F8249DEF1EF32D3B967D92D024A7F182983` |
+  | spec-080/space-v2-viewer-desktop-1280x800.png | `C84D8F16A370D78250C604573CE0CCB9D278B16ED9B9E9DDC48D2D44364F554F` |
+  | spec-080/space-v2-viewer-mobile-390x844.png | `0CE9E921AE3428D39794899F633FF0F8B58E413F5459425842BC3FBAFB7F2D31` |
+
+- spec-080 두 장은 spec-084 viewer의 같은 viewport와 SHA-256이 각각 같다. V1 감사 mobile은
+  `64927F4F8ACB010695530067007C40D4C5982BC4B04AC0B1CAEAB201CCB633F8`이다.
+- **bundle/보호:** 고객 entry `index-CqOWaAno.js` 342.07 kB/gzip 104.81, 운영자 entry
+  `index-BWeRXD_J.js` 295.37 kB/gzip 91.55. 수집한 build 파일은 검수 전후 SHA-256 동일하다.
+  보호 파일·spec-018 PNG도 전후 hash 동일(각각 `bd5ff207…`, `8676d263…`). canonical 재생성은
+  수행됐으나 restore/stage/commit 0이다. 추가 제품 결함은 발견하지 못했다.
+- **게이트 한계/잔류:** build 500 kB chunk 경고 및 Node 색상 환경 경고는 발생했으며 숨기지 않았다.
+  포트 4183/4184/4185/8080/9099/9199 LISTENING 0, 이번 `denn-e2e-oMwZzo` staging 제거 확인,
+  playwright-report/debug.log 없음. ignored test-results의 실패 error-context와 last-run은 보존했다.
+  `git diff --check` PASS, 금지 경로 committed diff 0, staged 0.
+- **문서 변경 6개:** 스펙 087, 해당 handoff, STATE/NEXT/CURRENT/live log. README 실제 보완과 PNG
+  정합은 Claude 다음 작업으로 남겼다. Codex stage/commit/push 0. 다음은
+  `CLAUDE_SPEC_087_CORRECTION_ROUND_1`, 상태 `CORRECTION_REQUIRED`, fix_round 1.
+- spec 086 DONE 유지. spec 087은 아직 DONE/CODEX_PASSED가 아니다. 실제 Firebase/network/emulator/
+  deploy·실기기·운영 데이터 NOT TESTED. 다음 스펙 착수 없음. 전체 리빌드 **85~88% / 잔여 12~15%**는
+  기존 계획 추정치를 유지한다(이번 검수는 기능 범위나 운영 전환 진척을 늘리지 않았고 정량 재산정 없음).
+
+## 2026-09-07 — Codex 스펙 087 비-UI 보완 직접 수행 · 재검증 PASS · DONE
+
+- 최신 사용자 지시: **UI 구현이 아니면 Codex가 직접 작업 진행**. 이번 문서 보완·검증·증거 정합·종료는
+  Codex가 직접 수행했다. 승인된 비-UI 작업은 Codex, 실제 UI/UX 구현은 Claude Code가 담당한다.
+  신규 범위·제품 결정·배포 승인이나 자동화 생성으로 해석하지 않는다.
+- README F-3 addendum의 V1 차단/인증 전 PNG 중복을 의미 참조로 바꿨다. 출처 표는 보존했다.
+  위 `eab7199`의 222/1 실패 기록은 유효한 과거 결과로 남긴다. source/CSS/test/config 수정 0.
+- 재검증 `node scripts/check.mjs` exit 0: format/lint/typecheck, **unit 2510/2510**(92파일), build
+  2개 PASS. canonical `node scripts/e2e-run.mjs` exit 0: **223 passed / 0 failed / 0 skipped /
+  0 retry**, 43.6초. 기존 출처 유일성 테스트가 수정된 최종 README로 통과했다. 최종 상태 문서 작성 뒤
+  같은 15개 출처 유일성 및 파일 존재 조건을 다시 적용했다. 테스트 완화 0.
+- 기존 제품 코드 검수에서 추가 결함 미발견, 문서 결함은 재검증으로 해소됨. 최종 판정
+  **CODEX_PASSED**, spec 087 **DONE**. 보완과 재검증은 같은 Codex가 수행했으며 별도 에이전트의
+  독립 검수라고 주장하지 않는다.
+- **commit 분리:** PNG 증거 `1b0506e`는 spec-063/spec-080 4장만 포함한다. 후속 문서 commit은
+  README와 스펙 087/handoff/STATE/NEXT/CURRENT/live log **7개**다. 이전 턴의 미커밋 검수 기록도
+  포함한다. 종료 문서 commit hash는 Git과 최종 보고로 확인한다. 일반 fast-forward push만 수행한다.
+- 원격 GitHub 브랜치는 `git ls-remote`로 시작 기준 `eab7199`임을 확인했다. sandbox network 제한으로
+  첫 조회는 실패했고 승인된 원격 조회로 재확인했다. 실제 Firebase/project/bucket 접근은 0이다.
+- spec-084 PNG 15장과 추가 Space PNG 4장은 이전 검수 hash와 모두 동일하다. 고객/운영자 build
+  파일도 동일하다. 고객 entry 342.07 kB/gzip 104.81, 운영자 295.37 kB/gzip 91.55.
+- 보호 문서/코드 hash 동일. canonical이 보호 spec-018 PNG를 재생성해 desktop은
+  `BD5FF207… → D0A0AA521AE8EE16374E6A5C170C6DFB3D3364EEDF136565FEA95DC477798F01`, mobile은
+  `8676D263… → 6BDCB88CE5C0212E9E0829DCE2D99964C290F24A06B4B5167553094EDB3730F8`로 바뀌었다.
+  해당 두 파일은 restore/stage/commit하지 않았다. 다른 기존 사용자 dirty도 유지한다.
+- 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, 실행 `denn-e2e-dNvl3t` staging 제거 확인.
+  canonical이 이전 실패 결과를 정리했고 ignored `test-results/.last-run.json`만 남았다.
+  build chunk-size 및 Node 색상 환경 경고는 기존대로 발생했다. `git diff --check` PASS.
+- 종료 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, completed spec 087, active none, next
+  `FOUNDER_NEXT_MANUAL_TASK`. NEXT 최상단에 재개 지시를 남겼다. 다음 스펙·UI 구현은 미착수.
+  전체 리빌드 **기존 계획 추정 85~88% 완료 / 12~15% 잔여** 유지. 운영전환 보류 및 실기기·실제
+  Firebase/network/emulator/deploy NOT TESTED를 유지한다.
+
+- **최종 잔류 확인 보충:** 위 정상 canonical 실행 후 최종 Git status에서 `debug.log`를 발견했다.
+  생성 시각 12:14:27, 1,210 bytes, Chromium `one_copy_raster_buffer_provider.cc:282`의
+  `Creation of StagingBuffer's SharedImage failed` 오류 10줄이다. JS console 단언/Space PNG 검증은
+  통과했으나 내부 그래픽 로그 무오류는 아니다. 삭제하지 않고
+  `C:/Users/Public/Documents/ESTsoft/CreatorTemp/denn-spec087-20260907-review/chromium-debug.log`로
+  이동해 보존했다(SHA-256 `CDADCC96025DDBE6F777F4F26EC6566CFF65EA0728E4EC6E0CD53BD669D49CF7`).

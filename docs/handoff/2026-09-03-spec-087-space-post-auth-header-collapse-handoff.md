@@ -1,6 +1,38 @@
 # Spec 087 handoff - customer Space post-auth header collapse
 
-## 상태
+## 최종 상태 — DONE / CODEX_PASSED (2026-09-07)
+
+- 사용자 지시로 비-UI 보완을 Codex가 직접 수행·검증했다. README F-3 설명에서 파일명 중복을 제거하고
+  출처 표는 보존했다. source/CSS/test/config 변경 0. 이전 라운드 1 실패 기록은 아래에 남긴다.
+- check exit 0(unit **2510/2510**, 92파일, build 2), canonical exit 0(**223 passed**, 43.6초,
+  failed/skipped/retry 0). 최종 문서에 대한 README 출처 15개 유일성/파일 존재 조건도 재확인한다.
+- 제품 `ac684e3`, PNG 정합 commit `1b0506e`(4장). README 포함 문서 7개는 별도 기록 commit.
+- 기존 검수에서 제품 추가 결함을 발견하지 못했고 문서 결함도 재검증으로 해소돼 **CODEX_PASSED**로
+  종료한다. 보완/재검증 담당은 같은 Codex이며 별도 에이전트 검수로 표기하지 않는다.
+- 승인된 비-UI 후속 작업은 Codex 담당, 실제 UI 구현은 Claude Code 담당. 현재 active 없음,
+  `WAITING_FOR_NEXT_MANUAL_TASK` / `FOUNDER_NEXT_MANUAL_TASK`. 다음 스펙은 미착수.
+- 보호 문서/코드 hash 동일. spec-018 PNG만 canonical이 다시 썼으며 stage/restore 0. Space 증거 hash
+  동일, 포트 6개/staging 잔류 0. 실제 Firebase/network/emulator/deploy·실기기 NOT TESTED.
+- 전체 리빌드 기존 추정 85~88% / 잔여 12~15% 유지. 운영전환 보류는 그대로다.
+- 최종 확인에서 Chromium 내부 raster SharedImage 오류 로그(10줄)를 발견했다. 테스트 결과/Space PNG는
+  정상이며 내부 로그 무오류로 주장하지 않는다. 로그는 삭제하지 않고 STATE에 적은 CreatorTemp로 이동했다.
+
+## 현재 상태 — Codex 검수 라운드 1 (2026-09-07)
+
+- `CORRECTION_REQUIRED`, fix_round `1`, next `CLAUDE_SPEC_087_CORRECTION_ROUND_1`.
+- 기준 `eab7199`, 제품 `ac684e3`. check PASS(unit 2510/2510), canonical E2E **222 passed / 1 failed**.
+  README F-3 추가 설명이 정확한 PNG 파일명 2개를 중복 기재해 출처 유일성 검사에 실패한다.
+- 기존 계약의 `SpaceV2ProofView.tsx`와 테스트 누락(2파일), spec-063/spec-080 PNG 누락(4장)을
+  Codex가 현 제목 변경 범위로 인정했다. 현재 코드 변경은 적합하고 새 제품 결정은 필요하지 않다.
+- 다음 Claude는 README 설명을 의미 참조로 바꾸고 출처 표를 보존한다. 허용 PNG 4장의 현재 baseline을
+  검증·기록하고, 최종 문서가 적용된 상태로 전체 게이트를 재검증한다. 추가 source/CSS/test/config 수정 0.
+- 허용 문서는 spec-084 README, 이 handoff, 스펙 087, STATE/NEXT/CURRENT/live log다. 구체적인 PNG
+  목록과 검증·commit/push 순서는 NEXT 최상단을 따른다. 완료 후 READY_FOR_CODEX로 멈춘다.
+- 이번 Codex는 검수/지시만 남기며 stage/commit/push하지 않았다. 보호 파일과 검수 전 PNG의 hash는
+  동일하다. 기존 사용자 dirty를 보존한다. 실제 Firebase/network/emulator/deploy/실기기는 NOT TESTED.
+- 전체 리빌드 기존 추정 85~88% 완료 / 12~15% 잔여 유지. spec 087은 아직 DONE/CODEX_PASSED가 아니다.
+
+## 이전 상태 (2026-09-03, 기록)
 
 - `READY_FOR_CODEX` — 구현·검증 완료(2026-09-03), 결과는 아래 `구현 결과` 절
 - 기준 `HEAD=origin=9ffdf1b` → 계약 `f72e2e2` → 제품/test/PNG `ac684e3`, ahead/behind `0/0`

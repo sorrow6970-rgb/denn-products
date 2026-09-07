@@ -2,14 +2,15 @@
 
 ## 상태
 
-- `READY_FOR_CODEX` — 구현·검증 완료(2026-09-03). 결과는 이 문서 맨 아래 `DONE (Claude)` 절에 있다.
-  제품/test/PNG `ac684e3`, 문서 commit은 그 다음이다. next `CODEX_SPEC_087_REVIEW`, fix_round `0`.
-  **계약 보완 판단 2건을 요청한다**(허용 파일 1개, 허용 PNG 4장 — 아래 DONE 절 참조).
+- `DONE / CODEX_PASSED` — 라운드 1 문서 보완 및 재검증 완료(2026-09-07).
+  제품 `ac684e3`, PNG 정합 `1b0506e`, README 보완과 종료 문서는 별도 commit.
+  check PASS(unit 2510/2510), canonical E2E **223 passed / 0 failed / 0 skipped / 0 retry**.
+  사용자 지시로 비-UI 보완·검증·종료를 Codex가 직접 수행했다. UI 구현은 Claude 담당을 유지한다.
 - 기준 브랜치: `rebuild/modern-studio`
 - 기준 commit: `HEAD=origin=9ffdf1b`, ahead/behind `0/0`
 - 직전 완료: spec 086 `DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK`
 - 출처 finding: spec 084 F-3(P1)
-- next: `CLAUDE_SPEC_087_IMPLEMENT`
+- next: `FOUNDER_NEXT_MANUAL_TASK`, active 없음, 보완 라운드 `1` 완료
 
 ## 목표 (WHY)
 
@@ -107,6 +108,8 @@ Space V2 replay의 계산·증명 경로는 바꾸지 않는다.
 - `apps/mockup/src/space/SpacePasswordGate.test.tsx`
 - `apps/mockup/src/space/SpacePostAuthFrameView.tsx`
 - `apps/mockup/src/space/SpacePostAuthFrameView.test.tsx`
+- `apps/mockup/src/space-v2/SpaceV2ProofView.tsx` (2026-09-07 계약 목록 보완: 기존 제목 h1 승격만 인정)
+- `apps/mockup/src/space-v2/SpaceV2ProofView.test.tsx` (동일 제목/label 관계 검증만 인정)
 - `apps/mockup/src/space/space-post-auth-frame-view.css` (필요할 때만 최소 layout selector)
 - `tests/e2e/space-production-route.spec.ts`
 - `tests/e2e/mockup-space-gate.spec.ts`, `tests/e2e/space-frame-view.spec.ts` (필요할 때만)
@@ -119,11 +122,15 @@ Space V2 replay의 계산·증명 경로는 바꾸지 않는다.
 - `docs/rebuild/results/spec-084/space-v2-viewer-1280x800.png`
 - `docs/rebuild/results/spec-084/space-v2-viewer-390x844.png`
 - `docs/rebuild/results/spec-084/space-v1-blocked-390x844.png`
+- `docs/rebuild/results/spec-063/space-v1-blocked-desktop-1280x800.png` (2026-09-07 목록 보완)
+- `docs/rebuild/results/spec-063/space-v1-blocked-mobile-390x844.png` (동일)
+- `docs/rebuild/results/spec-080/space-v2-viewer-desktop-1280x800.png` (동일)
+- `docs/rebuild/results/spec-080/space-v2-viewer-mobile-390x844.png` (동일)
 - `docs/rebuild/results/spec-084/README.md` (F-3 해소 메모만)
 - `docs/codex-claude-handoff/reviews/2026-08-31-spec-084-local-visual-readiness-audit.md`
   (F-3 해소 addendum과 교차 참조만. §9 F-1, §10 F-5, F-6 철회, F-8 재분류 문구는 되돌리지 않는다.)
 
-`space-v2-password-gate-390x844.png`는 **바뀌면 안 된다**(§1). 위 세 장 밖의 tracked PNG가 바뀌면 인과를
+`space-v2-password-gate-390x844.png`는 **바뀌면 안 된다**(§1). 위 일곱 장 밖의 tracked PNG가 바뀌면 인과를
 확인하고 임의로 stage하지 말고 STOP 보고한다. `measurements.json`은 전역 `*.json` ignore 대상이라 검증
 근거로만 쓰고 stage하지 않는다. 보호 spec-018 PNG는 restore·stage하지 않는다.
 
@@ -223,7 +230,69 @@ STOP 시 코드·commit·push를 멈추고 근거와 필요한 결정만 보고�
 
 ### QUESTIONS
 
-- 없음. 범위는 spec 084 F-3의 머리말 정리로 고정됐고, 새 문구가 필요해지는 순간 STOP한다.
+- 구현의 계약 목록 보완 요청 2건은 아래 Codex 검수에서 해소했다. 새 Founder 결정은 필요하지 않다.
+  제품 의도는 F-3로 고정하며 신규 문구·기능은 계속 범위 밖이다.
+
+### DONE (Codex) — 비-UI 보완·재검증·종료 (2026-09-07)
+
+- 최신 사용자 지시 **UI 구현이 아니면 Codex가 직접 진행**을 적용했다. 기존 UI 구현 `ac684e3`는
+  수정하지 않고 README 출처 중복만 의미 참조로 바꿨다. 출처 표와 기존 테스트는 보존했다.
+- 이전 독립 검수는 제품 코드의 추가 결함을 찾지 못했으나 최종 기록의 README에서 222/1 실패했다.
+  보완 후 check exit 0(unit 2510/2510, 92파일, build 2) 및 canonical exit 0(223/223, 43.6초)를
+  확인해 라운드 1을 통과시켰다. 테스트 skip/retry/tolerance 변경 0. 동일 Codex가 보완/재검증했다.
+- 최종 문서 갱신 뒤 README 15개 출처 유일성/파일 존재 검사를 다시 적용한다. 출처 검사가 읽는
+  README는 전체 canonical 실행 전에 수정 완료했고 이후에는 변경하지 않았다.
+- PNG 정합 `1b0506e`에 허용 4장만 포함했다. spec-084 PNG 15장은 HEAD와 동일하고 추가 4장도
+  검수 시점 SHA-256과 같다. spec-080 viewer는 spec-084와 각각 바이트 동일하다.
+- 고객/운영자 build 파일 SHA-256은 보완 전후 동일. 보호 문서/코드 동일, spec-018 PNG만 canonical
+  재생성으로 desktop `bd5ff207… → d0a0aa52…`, mobile `8676d263… → 6bdcb88c…`(stage/restore 0).
+- 포트 6개 0, 실행 staging 제거 확인. 실패 error-context는 canonical이 정상 정리했고 ignored
+  last-run만 남았다. 실제 Firebase/network/emulator/deploy·실기기·운영 전환은 미검증/보류다.
+- 최종 확인에서 Chromium raster SharedImage 오류 10줄이 담긴 `debug.log`(1,210 bytes)를 발견했다.
+  223개 E2E 및 Space PNG hash는 정상이나 내부 그래픽 로그 무오류는 아니다. 파일은 삭제하지 않고
+  `C:/Users/Public/Documents/ESTsoft/CreatorTemp/denn-spec087-20260907-review/chromium-debug.log`로 보존했다.
+- 판정 **CODEX_PASSED**, 스펙 087 **DONE**. 현재 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, 다음
+  `FOUNDER_NEXT_MANUAL_TASK`. 새 스펙은 시작하지 않는다. 기존 전체 추정 85~88% / 잔여 12~15% 유지.
+
+### Codex 독립 검수 — CORRECTION_REQUIRED 라운드 1 (2026-09-07)
+
+검수 기준 `eab7199`(제품 `ac684e3`, 계약 `f72e2e2`). 제품 diff는 조건부 게이트 머리말과 기존 제목
+승격뿐이며 인증·renderer 분기·Canvas 계산은 보존된다. App.tsx:64-65가 V2 결과를 실제로
+`SpaceV2ProofView`에 연결하므로 이 컴포넌트와 테스트 **2파일**은 §2/§3 실현에 필요한 누락이다.
+현재 변경을 인정하고 WHERE 목록을 보완한다. 이 인정은 원래 목록에 있었다는 소급 기록이 아니다.
+
+PNG 4장도 동일 제품 변경에서 나온다. `space-production-route.spec.ts:268,614`의 기존 writer가
+spec-063 V1 차단, spec-080 V2 viewer를 찍는다. 독립 실행 전후 SHA-256이 모두 동일했고 spec-080은
+spec-084 viewer와 각 viewport마다 동일 바이트다. 4장을 baseline 정합 대상으로 명시 허용한다.
+spec-063에는 기존 fixture의 화면 해제 버튼이 포함된다. 제품만 정제한 감사 이미지로 간주하지 않는다.
+
+**차단 결함 R1: 최종 README가 필수 E2E를 깨뜨린다.** `eab7199`가 더한 F-3 addendum에서
+`space-v1-blocked-390x844.png`, `space-v2-password-gate-390x844.png`를 각각 정확한 백틱 파일명으로
+다시 적었다. 출처 표에 이미 있으므로 2회이며 `local-visual-readiness.spec.ts:940`은 1회를 요구한다.
+제품 커밋 `ac684e3`에는 이 README 변경이 없고, 이후 기록 커밋에 6줄이 추가됐다. 이전 223/223 보고를
+삭제하지는 않지만 최종 HEAD에 대한 PASS 근거로 사용할 수 없다.
+
+- 독립 check exit 0: format/lint/typecheck, unit **2510/2510**, 92파일, build 2.
+- 독립 canonical E2E exit 1: **222 passed / 1 failed / 0 skipped / 0 retry**, 50.7초. 신규 3건 PASS.
+- README 전체 파일명 검사로 두 중복을 확인했다. 첫 파일에서 assertion이 중단되므로 오류 출력은
+  V1 차단 파일만 보여도 인증 전 gate 중복도 함께 고쳐야 한다.
+- 시각 증거 직접 확인: V2 mobile/desktop 제목 1개, V1 안내 제목 1개. Space 감사 4항목에서 overflow
+  false, smallTargets/axeSeriousCritical/externalRequests 빈 배열. spec-084 PNG 15장은 HEAD diff 0.
+- 고객 entry 342.07 kB/gzip 104.81, 운영자 entry 295.37 kB/gzip 91.55. 기존 build 파일과 SHA-256
+  차이 0. build의 500 kB chunk 경고와 Node NO_COLOR/FORCE_COLOR 경고는 존재했고 gate 실패는 아니다.
+- 금지 경로 committed diff 0(위 목록 보완 반영), staged 0, git diff --check PASS. 포트 6개 0,
+  이번 staging 제거 확인. ignored test-results에는 이번 실패 증거와 last-run이 남아 있다.
+- 보호 파일·spec-018 PNG 검수 전후 hash 동일. PNG의 mtime은 canonical 재생성으로 바뀔 수 있으며
+  restore·stage·commit은 하지 않았다. 실제 Firebase/network/emulator/deploy·실기기 NOT TESTED.
+
+**라운드 1 허용 수정:** spec-084 README F-3 설명의 중복 참조 최소 보완, 위 PNG 4장 정합, 이 스펙과
+handoff·STATE/NEXT/CURRENT/live log. source/CSS/test/config/package/lockfile 추가 수정은 하지 않는다.
+출처 표의 정확한 파일명은 유지하고 설명은 의미로 참조한다. README 최종 편집 후 check와 canonical을
+재실행하며 테스트 완화는 금지한다. 통과 후 허용 PNG와 문서만 분리 commit/push하고
+`READY_FOR_CODEX`, fix_round 1, next `CODEX_SPEC_087_REVIEW_ROUND_1`에서 멈춘다.
+
+판정은 **CORRECTION_REQUIRED**이며 새 스펙·제품 구현을 열지 않는다. 전체 리빌드 기존 추정
+85~88% / 잔여 12~15% 유지(검수로 범위 확대·운영 전환 없음, 정량 재산정 아님).
 
 ### DONE (Claude) — 스펙 087 구현·검증 (2026-09-03)
 
