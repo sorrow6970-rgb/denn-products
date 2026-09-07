@@ -1,5 +1,16 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 실행 (2026-09-07)
+
+spec090 DONE/CODEX_PASSED, 제품 a08c462. check2513/2513, canonical230/230(49.8초) PASS.
+다음 실행은 승인된 F-7=A의 spec091 계약 작성 → 고객 정보성 배지만 제거 → 로컬 검증이다.
+아래 spec090 작업 지시는 종료 이력이다. 스펙 없이 먼저 코드를 변경하지 않는다.
+
+Founder F-4=A/F-7=A/F-8=A 승인. 결정 정본 `decisions/2026-09-07-ui-audit-f4-f7-f8-decisions.md`
+(docs/codex-claude-handoff 아래)를 따른다. spec090 계약을 먼저 작성했으며 운영자 데모 표면만 정리한다.
+완료 후 F-7=A는 별도 spec091 계약 뒤 구현, F-8은 코드 변경 없이 현재 재현 계약 유지.
+Codex 직접 구현·로컬 검증, 운영 연결/배포/보호 대상/자동화 금지 유지. 아래 미결정은 과거 이력이다.
+
 ## 현재 다음 지시 — Founder 제품 결정 대기 (2026-09-07)
 
 spec089 DONE / CODEX_PASSED / LOCAL_VERIFIED, 제품/test/PNG `f95cb29`.

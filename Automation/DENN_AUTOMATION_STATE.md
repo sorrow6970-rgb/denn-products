@@ -4,19 +4,19 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-089-admin-png-picker-surface   # DONE, CODEX_PASSED, LOCAL_VERIFIED, NO_LIVE_NETWORK
-active_unit: ui-audit-remaining-product-decisions
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 0465f24
+completed_unit: spec-090-admin-preparation-entry   # DONE, CODEX_PASSED, LOCAL_VERIFIED
+active_unit: none
+state: READY_FOR_NEXT_APPROVED_UNIT
+baseline_commit: 830a644
 candidate_commit: none
-verified_commit: f95cb29   # spec089 product/test/evidence, same-agent review
+verified_commit: a08c462   # spec090 product/test/evidence, same-agent review
 origin_relation: "2026-09-07 closure push receipt: HEAD=origin/rebuild/modern-studio=9a55f67, ahead/behind 0/0; the subsequent receipt-only commit records this verified snapshot"
 working_tree: "spec089 code/evidence and closure documents committed; remaining dirty is limited to pre-existing protected/user paths; receipt documents are committed separately"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_UI_F4_F7_F8_DECISION
+next_transition: CODEX_SPEC_091_CONTRACT_AND_IMPLEMENT
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec089 DONE/CODEX_PASSED; final unit 2512/2512 and Chromium 230/230 PASS; F4/F7/F8 proposals not selected
+session_status: spec090 DONE; check2513/2513 and Chromium230/230 PASS; approved F7 implementation next; F8 no code change
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 

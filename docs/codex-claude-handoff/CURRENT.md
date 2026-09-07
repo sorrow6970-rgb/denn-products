@@ -1,5 +1,12 @@
 # 현재 상태
 
+> 최신 종료 2026-09-07: spec090 DONE/CODEX_PASSED, a08c462. check2513/2513, Chromium230/230 PASS.
+> 다음 승인 단위 F-7=A, spec091 계약 선행. F-8=A 유지 확정, 운영 연결/배포/보호 경계 불변.
+
+> 현재 2026-09-07: Founder F-4=A/F-7=A/F-8=A 승인. spec090 WORKING, 기준 830a644.
+> 운영자 진입 화면 계약 선행, 완료 후 승인된 F-7 별도 spec091. F-8 기존 크기 재현 계약 유지.
+> 결정 정본 2026-09-07-ui-audit-f4-f7-f8-decisions.md 우선. 운영전환/보호/네트워크 금지 유지.
+
 > **최신 종료 (2026-09-07): spec089 DONE / CODEX_PASSED / LOCAL_VERIFIED.**
 > 제품 f95cb29 + 종료 문서 9a55f67 push 성공; 직후 HEAD=origin 추적 ref 9a55f67, 0/0 확인.
 > 이 전송 확인 문구만 후속 기록 commit으로 남긴다. F-4/F-7/F-8 결정 대기는 유지한다.

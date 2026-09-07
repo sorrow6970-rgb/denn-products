@@ -27,6 +27,10 @@ native input을 유지한 한국어 선택/교체·상태·focus·disabled 표�
 
 ## 다음 경계 — 아직 채택되지 않은 Founder 선택지
 
+**후속 확정(2026-09-07):** Founder가 질문지에서 F-4=A/F-7=A/F-8=A 승인.
+정본 `docs/codex-claude-handoff/decisions/2026-09-07-ui-audit-f4-f7-f8-decisions.md`가 우선한다.
+아래 표와 미결정 문구는 승인 전 이력이다. F-4/F-7은 각각 090/091, F-8은 기존 계약 유지로 종료한다.
+
 근거: spec084 잔여 finding 요청(2026-09-03), 현재 `apps/admin/src/App.tsx:93` 이후,
 `apps/mockup/src/App.tsx:121`, `apps/mockup/src/browse/BrowseFlow.tsx:101`,
 spec084 감사의 F-8 정정. 사용자 연속 진행은 이 제품 결정을 대신하지 않는다.

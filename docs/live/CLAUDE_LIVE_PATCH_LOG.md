@@ -7890,3 +7890,22 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   제품 코드/test/PNG 추가 변경·검증 반복·새 스펙 시작 없음. 최종 기록 commit hash는 Git/최종 보고 참조.
 - 상태 FOUNDER_DECISION_REQUIRED, next FOUNDER_UI_F4_F7_F8_DECISION 유지. 선택지 미채택,
   전체 기존 추정 85~88%/잔여12~15%, 운영전환 보류·실제 network/emulator/deploy·자동화 금지 유지.
+
+## 2026-09-07 - Founder F-4/F-7/F-8 전부 A 승인 · spec090 착수
+
+- 질문지 직접 응답을 결정 정본으로 기록. F-4 운영자 준비 안내·기존 도구/gate off 유지,
+  F-7 성공 호환 배지만 숨기고 누락/오류 유지, F-8 발행 크기 재현 유지. 운영 연결 승인이 아니다.
+- 시작 HEAD=origin 추적 ref 830a644, 0/0. 보호/user dirty만 존재, 보호 20파일 hash 기준 확보.
+- spec090 계약을 코드 전에 작성. 운영자 root 1파일·SSR·scaffold E2E와 직접 영향 증거만 허용.
+  spec091은 090 종료 뒤 별도 계약, F-8 코드 변경 없음. 전체 기존 추정85~88%/잔여12~15% 유지.
+
+## 2026-09-07 - spec090 검증 완료
+
+- 제품 a08c462(소스/test3+PNG4=7파일), 데모3카드 제거·기존 도구/읽기/gate/lifecycle 유지.
+  targeted1/1, check exit0 unit2513/2513(93파일,2.95초), canonical exit0 230/230(49.8초), skip/retry0.
+- 기존 데모 존재 단언만 승인된 부재/실제 input 단언으로 교체. 44px/keyboard/local 입력/overflow0/
+  axe0/console error0/외부 요청0. 캡처4장 직접 확인, measurements.json diff0, 고객bundle hash 동일.
+- 보호20 중19동일, spec018 mobile만 재생성하여 EEFA9BE2EE1849442C6D6250219655348BC29588FDEF7F702D2DC91E5E7DB6AC.
+  restore/stage/commit0. 포트6개/staging w1wvHV 잔류0, 신규debug.log0, forbidden diff0, diffcheck PASS.
+- same-agent 최종검토 추가결함0, DONE/CODEX_PASSED. 종료 문서10개 별도commit/push 후 spec091 진행.
+  실제 network/live/emulator/deploy/운영전환0. 전체기존추정85~88%/잔여12~15% 유지, 자동화0.
