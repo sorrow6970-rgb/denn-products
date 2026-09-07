@@ -1,5 +1,31 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 준비 / 다음 구현 지시 — spec102 (2026-09-07)
+
+102 CONTRACT_REVIEW_PASSED / READY_FOR_IMPLEMENTATION(동일 Codex). 정본:
+docs/rebuild/specs/102-room-frame-snapshot-contract.md. 계약작성7문서만,제품/시험작성·실행0.
+100제품DONE·101문서DONE유지,102제품DONE아님. 다음명시구현지시 전에는 코드변경0.
+보호/별도dirty22 보존·전송제외. 새Founder질문없음. 아래101의 계약작성지시는 완료이력이다.
+
+```text
+C:\repo\denn-products에서 STATE/CURRENT/live와 스펙102 계약·검토·handoff를 읽고 명시된 범위만 구현·검증해.
+신규 frame-snapshot.ts/test.ts, 기존 apps/mockup/src/e2e/canvas-fixture.tsx의 spec102 전용분기,
+신규 tests/e2e/room-frame-snapshot.spec.ts 정확4파일만 코드/시험허용이다.
+같은 final plan 동기실행·필수 scale/예산·ceil backing와 fractional crop·private lease/paint/release,
+BUSY/부분실패/재진입/source교체/dispose우선을 고정해. default browser port/제품route/100 API변경0.
+fixture의 ?roomSnapshot=1만 새기능을 사용하고 기존fixture/고객화면은 바꾸지마. config/HTML/runner수정0.
+실제브라우저시험은 로컬 합성Canvas뿐. 같은두단계 scale/crop 기준픽셀·원본변경후사본독립성·사용권차단 검증.
+File/Image/Blob/URL/배경로더/실제이미지/외부폰트/실제Firebase/UID/운영data/룸UI연결0.
+targeted Vitest, node scripts/check.mjs, node scripts/e2e-run.mjs canonical을 실행해.
+기존양앱entry JS·고객CSS hash, 보호/기존증거·범위·diff--check·포트·staging제거를 확인해.
+canonical이 재생성하는 spec018PNG2만 기존예외로 hash보고하고 복원/stage/commit하지마.
+다른기존증거/보호변경이면 STOP. timeout/retry/worker/tolerance를 바꿔 실패를 감추지마.
+코드4와 문서7 분리 일반commit/push하고 실제검증/NOT TESTED/다음지시를 STATE/NEXT/CURRENT/live에 남겨.
+스코프밖 파일/API/새제품선택/신규권한이면 STOP·질문. 실제배포/발행/삭제/설치/자동화 금지유지.
+```
+
+배경정책/실제source producer/두자원합성/룸UI는 별도계약. 전체실측진행률 확인불가·이번화면변화0.
+
 ## 최신 완료 / 다음 계약 — spec101 (2026-09-07)
 
 전송완료: 조사7문서d89eaad 정상push, HEAD=origin d89eaad·0/0 확인. 영수증5문서별도기록.

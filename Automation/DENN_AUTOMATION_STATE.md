@@ -5,22 +5,32 @@ updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-101-room-browser-adapter-boundary-investigation   # DOCUMENT DONE; spec100 product DONE remains
-active_unit: none
-state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: 85136b1
-candidate_commit: d89eaad   # spec101 document-only investigation
+active_unit: spec-102-room-frame-snapshot
+state: READY_FOR_IMPLEMENTATION
+baseline_commit: 2dcf7b4
+candidate_commit: pending   # spec102 reviewed contract; implementation not started
 verified_commit: 6e41c48   # same Codex implementation/review; not independent review
-origin_relation: "spec101 document7 d89eaad normal push confirmed; HEAD=origin d89eaad,0/0 before receipt; final receipt HEAD via git"
-working_tree: "spec101 receipt5 documents only; preexisting protected/user dirty22 preserved and excluded,22 hashes unchanged"
+origin_relation: "baseline HEAD=origin tracking ref2dcf7b4; spec102 contract7 pending normal commit/push"
+working_tree: "spec102 contract7 documents only; preexisting protected/user dirty22 preserved and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_ROOM_FRAME_SNAPSHOT_CONTRACT
+next_transition: CODEX_SPEC_102_IMPLEMENT_AND_VERIFY
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec101 document review passed; next frame snapshot contract not started
+session_status: spec102 contract review passed; waiting for explicit implementation instruction, no code or tests run
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 완료 — spec101 browser adapter 경계 문서 조사 (2026-09-07)
+## 최신 준비 — spec102 독립 frame snapshot 계약 (2026-09-07)
+
+사용자 `응 진행해줘`로101 NEXT의 계약 작성·검토 차례만 수행. CONTRACT_REVIEW_PASSED(동일 Codex).
+같은 final plan 동기실행·필수 scale/예산·ceil backing/crop·private surface/paint/release·재진입을 고정했다.
+격리 Canvas 시험 포함: 후속 코드2+기존fixture 제한분기1+신규E2E1=4파일, config/제품route/100변경0.
+이번은 문서7개만 일반commit/push. 실제 코드/시험작성·targeted/check/E2E/browser실행0,제품DONE아님.
+100제품DONE·101문서DONE 유지. 보호/별도dirty22 전송제외. 다음 명시구현지시NEXT, 새Founder질문없음.
+실제 background/source producer/룸UI/CORS/메모리는 NOT TESTED. 수치 기본값·배경정책을 승인하지 않았다.
+전체실측진행률 확인불가·화면변화0. 운영/실제Firebase/UID/배포/삭제/설치/자동화0.
+
+## 종료 이력 — spec101 browser adapter 경계 문서 조사 (2026-09-07)
 
 전송확인: 조사7문서d89eaad 정상push85136b1..d89eaad, HEAD=origin d89eaad·0/0.
 링크35/35·시작dirty22/22 SHA동일·diff--check PASS. 영수증5문서만 별도 기록, 추가제품/시험0.

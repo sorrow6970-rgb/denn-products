@@ -8363,3 +8363,22 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 링크35/35·시작dirty22/22 SHA동일·diff--check PASS. 영수증5문서만 별도기록, 보호/별도작업 커밋제외.
 - 101 DOCUMENT DONE/DOCUMENT_REVIEW_PASSED(동일 Codex),100 제품DONE 유지. 다음102 계약 상세지시NEXT.
   아직 새계약/구현0, 추가Founder질문 없음. 실제 배경정책은 미확정, 운영/배포/자동화0·전체실측률불명.
+
+## 2026-09-07 - spec102 독립 frame snapshot 계약 작성·검토 완료
+
+- 사용자 `응 진행해줘`로101 NEXT의 계약작성 범위 수행. 기준HEAD=origin 추적ref2dcf7b4.
+  정확102계약/검토/handoff+STATE/NEXT/CURRENT/live7문서, 제품/시험작성·실행0.
+- 확정 final plan 동기실행·trusted producer·명시 scale/maxEdge/maxPixels·ceil backing/content crop,
+  private surface·paint/release·한 capturer당 lease1·BUSY/재진입/부분실패/dispose 우선 계약.
+  trusted copyTo/native target이 내부drawable을 다룸을 숨기지 않고 악의적target 보안격리 보증은 제외.
+- 후속 구현검증에 로컬 합성Canvas 포함. 신규코드2+기존 canvas-fixture 전용분기1+신규E2E1=4파일.
+  독립 두단계 reference와 동일scale/crop RGBA 비교, 원본변경후사본독립성 및 source변경사용차단을 구분.
+  default browser port/실제loader/제품route/100 API/기존owner/print/packages/config수정0.
+- CONTRACT_REVIEW_PASSED(동일Codex),READY_FOR_IMPLEMENTATION.102제품DONE/unitPASS 아님.
+  active spec-102-room-frame-snapshot,next CODEX_SPEC_102_IMPLEMENT_AND_VERIFY. 상세구현지시NEXT.
+  100제품DONE·101문서DONE유지. 새Founder질문없음, 실제배경정책/수치기본값/룸UI는별도계약.
+- 이번 targeted/check/build/E2E/browser/Canvas/이미지실행0. 보호/별도dirty22 보존·전송제외.
+  실제Firebase/UID/운영data/배포/발행/삭제/설치/자동화0. 문서검증 후 일반commit/push.
+  전체실측완료율/최종스펙수 확인불가,이번화면변화0.
+- 문서검증 실측: 신규3문서 링크/지정라인15/15 PASS, 시작dirty22/22 SHA동일,diff--check PASS.
+  정확7문서외새변경0·신규제품/시험3경로 부재·기존fixture 미변경. 배율예시 산술확인, 제품검증 NOT RUN.
