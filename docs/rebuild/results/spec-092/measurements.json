@@ -1,0 +1,3593 @@
+{
+  "c5-dirty-valid-320x568": {
+    "file": "c5-dirty-valid-320x568.png",
+    "state": "ready-dirty-valid",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → save0",
+    "box": {
+      "x": 16,
+      "y": 0,
+      "width": 288,
+      "height": 523
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 16,
+          "y": -319,
+          "width": 288,
+          "height": 60
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 539,
+          "width": 288,
+          "height": 149.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": -243,
+          "width": 288,
+          "height": 227
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 145.5,
+            "width": 246,
+            "height": 44,
+            "top": 145.5,
+            "right": 283,
+            "bottom": 189.5,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 227.75,
+            "width": 246,
+            "height": 45,
+            "top": 227.75,
+            "right": 283,
+            "bottom": 272.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 311,
+            "width": 246,
+            "height": 45,
+            "top": 311,
+            "right": 283,
+            "bottom": 356,
+            "left": 37
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 404,
+            "width": 155.84375,
+            "height": 44,
+            "top": 404,
+            "right": 192.84375,
+            "bottom": 448,
+            "left": 37
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 458,
+            "width": 94.921875,
+            "height": 44,
+            "top": 458,
+            "right": 131.921875,
+            "bottom": 502,
+            "left": 37
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 288,
+      "height": 523,
+      "sha256": "042a6d75dc09c1c11724f0f5b4884c899f45349a5b18198e0331693457b1fb43"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 1,
+          "inProduct": true,
+          "label": "frame-print-size-id",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 2,
+          "inProduct": true,
+          "label": "frame-print-size-width",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 3,
+          "inProduct": true,
+          "label": "frame-print-size-height",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 5,
+          "inProduct": true,
+          "label": "변경 저장",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "ready-dirty-valid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "after": {
+      "status": "ready-dirty-valid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-dirty-invalid-320x568": {
+    "file": "c5-dirty-invalid-320x568.png",
+    "state": "ready-dirty-invalid",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이빈 값 → save0",
+    "box": {
+      "x": 16,
+      "y": 0,
+      "width": 288,
+      "height": 523
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 16,
+          "y": -319,
+          "width": 288,
+          "height": 60
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 539,
+          "width": 288,
+          "height": 149.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": -243,
+          "width": 288,
+          "height": 227
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 145.5,
+            "width": 246,
+            "height": 44,
+            "top": 145.5,
+            "right": 283,
+            "bottom": 189.5,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 227.75,
+            "width": 246,
+            "height": 45,
+            "top": 227.75,
+            "right": 283,
+            "bottom": 272.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 311,
+            "width": 246,
+            "height": 45,
+            "top": 311,
+            "right": 283,
+            "bottom": 356,
+            "left": 37
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 404,
+            "width": 155.84375,
+            "height": 44,
+            "top": 404,
+            "right": 192.84375,
+            "bottom": 448,
+            "left": 37
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 458,
+            "width": 94.921875,
+            "height": 44,
+            "top": 458,
+            "right": 131.921875,
+            "bottom": 502,
+            "left": 37
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 288,
+      "height": 523,
+      "sha256": "56f2b84dfa004eff271c356c38d6446c368ccb434650b9788fbd5962d51eab5b"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 1,
+          "inProduct": true,
+          "label": "frame-print-size-id",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 2,
+          "inProduct": true,
+          "label": "frame-print-size-width",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 3,
+          "inProduct": true,
+          "label": "frame-print-size-height",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "ready-dirty-invalid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "after": {
+      "status": "ready-dirty-invalid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-conflict-320x568": {
+    "file": "c5-conflict-320x568.png",
+    "state": "conflict",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → 충돌 모드 save1",
+    "box": {
+      "x": 16,
+      "y": 0,
+      "width": 288,
+      "height": 547
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 16,
+          "y": -319,
+          "width": 288,
+          "height": 60
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 563,
+          "width": 288,
+          "height": 149.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": -243,
+          "width": 288,
+          "height": 227
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 145.5,
+            "width": 246,
+            "height": 44,
+            "top": 145.5,
+            "right": 283,
+            "bottom": 189.5,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 227.75,
+            "width": 246,
+            "height": 45,
+            "top": 227.75,
+            "right": 283,
+            "bottom": 272.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 311,
+            "width": 246,
+            "height": 45,
+            "top": 311,
+            "right": 283,
+            "bottom": 356,
+            "left": 37
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 428,
+            "width": 155.84375,
+            "height": 44,
+            "top": 428,
+            "right": 192.84375,
+            "bottom": 472,
+            "left": 37
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 482,
+            "width": 94.921875,
+            "height": 44,
+            "top": 482,
+            "right": 131.921875,
+            "bottom": 526,
+            "left": 37
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 288,
+      "height": 547,
+      "sha256": "e758daa6abd379e0718da46fd5cf2add9b4ce79bdd6e3332e4e223c64ead2dd7"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "conflict",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "after": {
+      "status": "conflict",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-outcome-unknown-320x568": {
+    "file": "c5-outcome-unknown-320x568.png",
+    "state": "outcome-unknown",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → 미확정 모드 save1",
+    "box": {
+      "x": 16,
+      "y": 0,
+      "width": 288,
+      "height": 547
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 16,
+          "y": -319,
+          "width": 288,
+          "height": 60
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 563,
+          "width": 288,
+          "height": 149.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": -243,
+          "width": 288,
+          "height": 227
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 145.5,
+            "width": 246,
+            "height": 44,
+            "top": 145.5,
+            "right": 283,
+            "bottom": 189.5,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 227.75,
+            "width": 246,
+            "height": 45,
+            "top": 227.75,
+            "right": 283,
+            "bottom": 272.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 311,
+            "width": 246,
+            "height": 45,
+            "top": 311,
+            "right": 283,
+            "bottom": 356,
+            "left": 37
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 428,
+            "width": 155.84375,
+            "height": 44,
+            "top": 428,
+            "right": 192.84375,
+            "bottom": 472,
+            "left": 37
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 482,
+            "width": 94.921875,
+            "height": 44,
+            "top": 482,
+            "right": 131.921875,
+            "bottom": 526,
+            "left": 37
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 288,
+      "height": 547,
+      "sha256": "ea1486ebd0b2b12347bbadb9da4c7488b4c432cc71753ea8c0ead1979da1a70f"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "outcome-unknown",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "after": {
+      "status": "outcome-unknown",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-discard-confirmation-320x568": {
+    "file": "c5-discard-confirmation-320x568.png",
+    "state": "discard-confirmation",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → 충돌 모드 save1 → 명시 reload → 폐기 확인(클릭 전)",
+    "box": {
+      "x": 16,
+      "y": -33,
+      "width": 288,
+      "height": 601
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 16,
+          "y": -352,
+          "width": 288,
+          "height": 60
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 584,
+          "width": 288,
+          "height": 149.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": -276,
+          "width": 288,
+          "height": 227
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 112.5,
+            "width": 246,
+            "height": 44,
+            "top": 112.5,
+            "right": 283,
+            "bottom": 156.5,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 194.75,
+            "width": 246,
+            "height": 45,
+            "top": 194.75,
+            "right": 283,
+            "bottom": 239.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 278,
+            "width": 246,
+            "height": 45,
+            "top": 278,
+            "right": 283,
+            "bottom": 323,
+            "left": 37
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 395,
+            "width": 155.84375,
+            "height": 44,
+            "top": 395,
+            "right": 192.84375,
+            "bottom": 439,
+            "left": 37
+          }
+        },
+        {
+          "label": "초안 폐기하고 다시 불러오기",
+          "domIndex": 5,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 449,
+            "width": 216.765625,
+            "height": 44,
+            "top": 449,
+            "right": 253.765625,
+            "bottom": 493,
+            "left": 37
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 6,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 503,
+            "width": 94.921875,
+            "height": 44,
+            "top": 503,
+            "right": 131.921875,
+            "bottom": 547,
+            "left": 37
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 288,
+      "height": 601,
+      "sha256": "8c6c6084337baea48d8d5cc96f0d9d5385e08cdb8225bb5bb302c82b944fe3ec"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 5,
+          "inProduct": true,
+          "label": "초안 폐기하고 다시 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 9,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "discard-confirmation",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "after": {
+      "status": "discard-confirmation",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "recovery": "explicit discard/reload: ready-clean, revision3, save1",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-dirty-valid-390x844": {
+    "file": "c5-dirty-valid-390x844.png",
+    "state": "ready-dirty-valid",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → save0",
+    "box": {
+      "x": 16,
+      "y": 322.75,
+      "width": 358,
+      "height": 469
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 16,
+          "y": 24,
+          "width": 358,
+          "height": 60
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 807.75,
+          "width": 358,
+          "height": 149.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 100,
+          "width": 358,
+          "height": 206.75
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 468.25,
+            "width": 316,
+            "height": 44,
+            "top": 468.25,
+            "right": 353,
+            "bottom": 512.25,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 550.5,
+            "width": 316,
+            "height": 45,
+            "top": 550.5,
+            "right": 353,
+            "bottom": 595.5,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 633.75,
+            "width": 316,
+            "height": 45,
+            "top": 633.75,
+            "right": 353,
+            "bottom": 678.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 726.75,
+            "width": 155.84375,
+            "height": 44,
+            "top": 726.75,
+            "right": 192.84375,
+            "bottom": 770.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": false,
+          "box": {
+            "x": 202.84375,
+            "y": 726.75,
+            "width": 94.921875,
+            "height": 44,
+            "top": 726.75,
+            "right": 297.765625,
+            "bottom": 770.75,
+            "left": 202.84375
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 358,
+      "height": 470,
+      "sha256": "66f988479026cc147ae3d3227bf3ff7a6ff4438cdb4e5489f1dc2e7481720181"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 1,
+          "inProduct": true,
+          "label": "frame-print-size-id",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 2,
+          "inProduct": true,
+          "label": "frame-print-size-width",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 3,
+          "inProduct": true,
+          "label": "frame-print-size-height",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 5,
+          "inProduct": true,
+          "label": "변경 저장",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "ready-dirty-valid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "after": {
+      "status": "ready-dirty-valid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-dirty-invalid-390x844": {
+    "file": "c5-dirty-invalid-390x844.png",
+    "state": "ready-dirty-invalid",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이빈 값 → save0",
+    "box": {
+      "x": 16,
+      "y": 322.75,
+      "width": 358,
+      "height": 469
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 16,
+          "y": 24,
+          "width": 358,
+          "height": 60
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 807.75,
+          "width": 358,
+          "height": 149.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 100,
+          "width": 358,
+          "height": 206.75
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 468.25,
+            "width": 316,
+            "height": 44,
+            "top": 468.25,
+            "right": 353,
+            "bottom": 512.25,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 550.5,
+            "width": 316,
+            "height": 45,
+            "top": 550.5,
+            "right": 353,
+            "bottom": 595.5,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 633.75,
+            "width": 316,
+            "height": 45,
+            "top": 633.75,
+            "right": 353,
+            "bottom": 678.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 726.75,
+            "width": 155.84375,
+            "height": 44,
+            "top": 726.75,
+            "right": 192.84375,
+            "bottom": 770.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": true,
+          "box": {
+            "x": 202.84375,
+            "y": 726.75,
+            "width": 94.921875,
+            "height": 44,
+            "top": 726.75,
+            "right": 297.765625,
+            "bottom": 770.75,
+            "left": 202.84375
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 358,
+      "height": 470,
+      "sha256": "71e6531e7fb19f69d070111253a988d4049dd5e5ebf89858d87f549dca7d7170"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 1,
+          "inProduct": true,
+          "label": "frame-print-size-id",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 2,
+          "inProduct": true,
+          "label": "frame-print-size-width",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 3,
+          "inProduct": true,
+          "label": "frame-print-size-height",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "ready-dirty-invalid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "after": {
+      "status": "ready-dirty-invalid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-conflict-390x844": {
+    "file": "c5-conflict-390x844.png",
+    "state": "conflict",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → 충돌 모드 save1",
+    "box": {
+      "x": 16,
+      "y": 189.75,
+      "width": 358,
+      "height": 493
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 16,
+          "y": -109,
+          "width": 358,
+          "height": 60
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 698.75,
+          "width": 358,
+          "height": 149.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": -33,
+          "width": 358,
+          "height": 206.75
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 335.25,
+            "width": 316,
+            "height": 44,
+            "top": 335.25,
+            "right": 353,
+            "bottom": 379.25,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 417.5,
+            "width": 316,
+            "height": 45,
+            "top": 417.5,
+            "right": 353,
+            "bottom": 462.5,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 500.75,
+            "width": 316,
+            "height": 45,
+            "top": 500.75,
+            "right": 353,
+            "bottom": 545.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 617.75,
+            "width": 155.84375,
+            "height": 44,
+            "top": 617.75,
+            "right": 192.84375,
+            "bottom": 661.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": true,
+          "box": {
+            "x": 202.84375,
+            "y": 617.75,
+            "width": 94.921875,
+            "height": 44,
+            "top": 617.75,
+            "right": 297.765625,
+            "bottom": 661.75,
+            "left": 202.84375
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 358,
+      "height": 494,
+      "sha256": "1313a92de822f333c8b0b1c586c1b6b89200827f1fca4b3acacd7accf063505b"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "conflict",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "after": {
+      "status": "conflict",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-outcome-unknown-390x844": {
+    "file": "c5-outcome-unknown-390x844.png",
+    "state": "outcome-unknown",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → 미확정 모드 save1",
+    "box": {
+      "x": 16,
+      "y": 189.75,
+      "width": 358,
+      "height": 493
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 16,
+          "y": -109,
+          "width": 358,
+          "height": 60
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 698.75,
+          "width": 358,
+          "height": 149.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": -33,
+          "width": 358,
+          "height": 206.75
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 335.25,
+            "width": 316,
+            "height": 44,
+            "top": 335.25,
+            "right": 353,
+            "bottom": 379.25,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 417.5,
+            "width": 316,
+            "height": 45,
+            "top": 417.5,
+            "right": 353,
+            "bottom": 462.5,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 500.75,
+            "width": 316,
+            "height": 45,
+            "top": 500.75,
+            "right": 353,
+            "bottom": 545.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 617.75,
+            "width": 155.84375,
+            "height": 44,
+            "top": 617.75,
+            "right": 192.84375,
+            "bottom": 661.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": true,
+          "box": {
+            "x": 202.84375,
+            "y": 617.75,
+            "width": 94.921875,
+            "height": 44,
+            "top": 617.75,
+            "right": 297.765625,
+            "bottom": 661.75,
+            "left": 202.84375
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 358,
+      "height": 494,
+      "sha256": "b416f196f1452d9b30b426150c4bc110b5b95b046a605f9863505a3d1113433e"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "outcome-unknown",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "after": {
+      "status": "outcome-unknown",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-discard-confirmation-390x844": {
+    "file": "c5-discard-confirmation-390x844.png",
+    "state": "discard-confirmation",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → 충돌 모드 save1 → 명시 reload → 폐기 확인(클릭 전)",
+    "box": {
+      "x": 16,
+      "y": 189.75,
+      "width": 358,
+      "height": 601
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 16,
+          "y": -109,
+          "width": 358,
+          "height": 60
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": 806.75,
+          "width": 358,
+          "height": 149.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 16,
+          "y": -33,
+          "width": 358,
+          "height": 206.75
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 335.25,
+            "width": 316,
+            "height": 44,
+            "top": 335.25,
+            "right": 353,
+            "bottom": 379.25,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 417.5,
+            "width": 316,
+            "height": 45,
+            "top": 417.5,
+            "right": 353,
+            "bottom": 462.5,
+            "left": 37
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 500.75,
+            "width": 316,
+            "height": 45,
+            "top": 500.75,
+            "right": 353,
+            "bottom": 545.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 617.75,
+            "width": 155.84375,
+            "height": 44,
+            "top": 617.75,
+            "right": 192.84375,
+            "bottom": 661.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "초안 폐기하고 다시 불러오기",
+          "domIndex": 5,
+          "disabled": false,
+          "box": {
+            "x": 37,
+            "y": 671.75,
+            "width": 216.765625,
+            "height": 44,
+            "top": 671.75,
+            "right": 253.765625,
+            "bottom": 715.75,
+            "left": 37
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 6,
+          "disabled": true,
+          "box": {
+            "x": 37,
+            "y": 725.75,
+            "width": 94.921875,
+            "height": 44,
+            "top": 725.75,
+            "right": 131.921875,
+            "bottom": 769.75,
+            "left": 37
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 358,
+      "height": 602,
+      "sha256": "53c5d10051552a194ef6d7ae9b8907ca4d199d5e8c7e28a4cc60363a88c45758"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 5,
+          "inProduct": true,
+          "label": "초안 폐기하고 다시 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 9,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "discard-confirmation",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "after": {
+      "status": "discard-confirmation",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "recovery": "explicit discard/reload: ready-clean, revision3, save1",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-dirty-valid-1280x800": {
+    "file": "c5-dirty-valid-1280x800.png",
+    "state": "ready-dirty-valid",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → save0",
+    "box": {
+      "x": 360,
+      "y": 292.75,
+      "width": 560,
+      "height": 448.75
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 360,
+          "y": 24,
+          "width": 560,
+          "height": 30
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 360,
+          "y": 757.5,
+          "width": 560,
+          "height": 125.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 360,
+          "y": 70,
+          "width": 560,
+          "height": 206.75
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": false,
+          "box": {
+            "x": 381,
+            "y": 418,
+            "width": 518,
+            "height": 44,
+            "top": 418,
+            "right": 899,
+            "bottom": 462,
+            "left": 381
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": false,
+          "box": {
+            "x": 381,
+            "y": 500.25,
+            "width": 518,
+            "height": 45,
+            "top": 500.25,
+            "right": 899,
+            "bottom": 545.25,
+            "left": 381
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": false,
+          "box": {
+            "x": 381,
+            "y": 583.5,
+            "width": 518,
+            "height": 45,
+            "top": 583.5,
+            "right": 899,
+            "bottom": 628.5,
+            "left": 381
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 381,
+            "y": 676.5,
+            "width": 155.84375,
+            "height": 44,
+            "top": 676.5,
+            "right": 536.84375,
+            "bottom": 720.5,
+            "left": 381
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": false,
+          "box": {
+            "x": 546.84375,
+            "y": 676.5,
+            "width": 94.921875,
+            "height": 44,
+            "top": 676.5,
+            "right": 641.765625,
+            "bottom": 720.5,
+            "left": 546.84375
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 560,
+      "height": 450,
+      "sha256": "12ff8610f2cb6e792a932ebbe852ea8c5820dffd655cf15dd2cb2493c4ab704f"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 1,
+          "inProduct": true,
+          "label": "frame-print-size-id",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 2,
+          "inProduct": true,
+          "label": "frame-print-size-width",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 3,
+          "inProduct": true,
+          "label": "frame-print-size-height",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 5,
+          "inProduct": true,
+          "label": "변경 저장",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "ready-dirty-valid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "after": {
+      "status": "ready-dirty-valid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-dirty-invalid-1280x800": {
+    "file": "c5-dirty-invalid-1280x800.png",
+    "state": "ready-dirty-invalid",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이빈 값 → save0",
+    "box": {
+      "x": 360,
+      "y": 292.75,
+      "width": 560,
+      "height": 448.75
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 360,
+          "y": 24,
+          "width": 560,
+          "height": 30
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 360,
+          "y": 757.5,
+          "width": 560,
+          "height": 125.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 360,
+          "y": 70,
+          "width": 560,
+          "height": 206.75
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": false,
+          "box": {
+            "x": 381,
+            "y": 418,
+            "width": 518,
+            "height": 44,
+            "top": 418,
+            "right": 899,
+            "bottom": 462,
+            "left": 381
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": false,
+          "box": {
+            "x": 381,
+            "y": 500.25,
+            "width": 518,
+            "height": 45,
+            "top": 500.25,
+            "right": 899,
+            "bottom": 545.25,
+            "left": 381
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": false,
+          "box": {
+            "x": 381,
+            "y": 583.5,
+            "width": 518,
+            "height": 45,
+            "top": 583.5,
+            "right": 899,
+            "bottom": 628.5,
+            "left": 381
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 381,
+            "y": 676.5,
+            "width": 155.84375,
+            "height": 44,
+            "top": 676.5,
+            "right": 536.84375,
+            "bottom": 720.5,
+            "left": 381
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": true,
+          "box": {
+            "x": 546.84375,
+            "y": 676.5,
+            "width": 94.921875,
+            "height": 44,
+            "top": 676.5,
+            "right": 641.765625,
+            "bottom": 720.5,
+            "left": 546.84375
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 560,
+      "height": 450,
+      "sha256": "15b2d011bf3d33af7321487a9be4675d2c19af0446a1177844813abe569acab2"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 1,
+          "inProduct": true,
+          "label": "frame-print-size-id",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 2,
+          "inProduct": true,
+          "label": "frame-print-size-width",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 3,
+          "inProduct": true,
+          "label": "frame-print-size-height",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "ready-dirty-invalid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "after": {
+      "status": "ready-dirty-invalid",
+      "revision": "3",
+      "factory": "1",
+      "saves": "0",
+      "expectedBase": "none"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-conflict-1280x800": {
+    "file": "c5-conflict-1280x800.png",
+    "state": "conflict",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → 충돌 모드 save1",
+    "box": {
+      "x": 360,
+      "y": 189.75,
+      "width": 560,
+      "height": 448.75
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 360,
+          "y": -79,
+          "width": 560,
+          "height": 30
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 360,
+          "y": 654.5,
+          "width": 560,
+          "height": 125.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 360,
+          "y": -33,
+          "width": 560,
+          "height": 206.75
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": true,
+          "box": {
+            "x": 381,
+            "y": 315,
+            "width": 518,
+            "height": 44,
+            "top": 315,
+            "right": 899,
+            "bottom": 359,
+            "left": 381
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": true,
+          "box": {
+            "x": 381,
+            "y": 397.25,
+            "width": 518,
+            "height": 45,
+            "top": 397.25,
+            "right": 899,
+            "bottom": 442.25,
+            "left": 381
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": true,
+          "box": {
+            "x": 381,
+            "y": 480.5,
+            "width": 518,
+            "height": 45,
+            "top": 480.5,
+            "right": 899,
+            "bottom": 525.5,
+            "left": 381
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 381,
+            "y": 573.5,
+            "width": 155.84375,
+            "height": 44,
+            "top": 573.5,
+            "right": 536.84375,
+            "bottom": 617.5,
+            "left": 381
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": true,
+          "box": {
+            "x": 546.84375,
+            "y": 573.5,
+            "width": 94.921875,
+            "height": 44,
+            "top": 573.5,
+            "right": 641.765625,
+            "bottom": 617.5,
+            "left": 546.84375
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 560,
+      "height": 450,
+      "sha256": "e18bb0aa81788cc3a409831a7b89abd6c740fcffaa2611d40fcbeefbcb019912"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "conflict",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "after": {
+      "status": "conflict",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-outcome-unknown-1280x800": {
+    "file": "c5-outcome-unknown-1280x800.png",
+    "state": "outcome-unknown",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → 미확정 모드 save1",
+    "box": {
+      "x": 360,
+      "y": 189.75,
+      "width": 560,
+      "height": 448.75
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 360,
+          "y": -79,
+          "width": 560,
+          "height": 30
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 360,
+          "y": 654.5,
+          "width": 560,
+          "height": 125.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 360,
+          "y": -33,
+          "width": 560,
+          "height": 206.75
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": true,
+          "box": {
+            "x": 381,
+            "y": 315,
+            "width": 518,
+            "height": 44,
+            "top": 315,
+            "right": 899,
+            "bottom": 359,
+            "left": 381
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": true,
+          "box": {
+            "x": 381,
+            "y": 397.25,
+            "width": 518,
+            "height": 45,
+            "top": 397.25,
+            "right": 899,
+            "bottom": 442.25,
+            "left": 381
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": true,
+          "box": {
+            "x": 381,
+            "y": 480.5,
+            "width": 518,
+            "height": 45,
+            "top": 480.5,
+            "right": 899,
+            "bottom": 525.5,
+            "left": 381
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": false,
+          "box": {
+            "x": 381,
+            "y": 573.5,
+            "width": 155.84375,
+            "height": 44,
+            "top": 573.5,
+            "right": 536.84375,
+            "bottom": 617.5,
+            "left": 381
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 5,
+          "disabled": true,
+          "box": {
+            "x": 546.84375,
+            "y": 573.5,
+            "width": 94.921875,
+            "height": 44,
+            "top": 573.5,
+            "right": 641.765625,
+            "bottom": 617.5,
+            "left": 546.84375
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 560,
+      "height": 450,
+      "sha256": "806e0c38ebb297b8b5d43474de2ec46d500ba41ad5b785ee9e61d8c1cad6acae"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 4,
+          "inProduct": true,
+          "label": "편집 기준 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 6,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "outcome-unknown",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "after": {
+      "status": "outcome-unknown",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "recovery": "NOT APPLICABLE",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  },
+  "c5-discard-confirmation-1280x800": {
+    "file": "c5-discard-confirmation-1280x800.png",
+    "state": "discard-confirmation",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "provenance": "PRODUCT_COMPONENT_IN_SYNTHETIC_FIXTURE",
+    "url": "http://localhost:4184/e2e-admin-write-fixture.html",
+    "selector": ".denn-card:has([data-testid=\"frame-print-size-editor\"])",
+    "preparation": "명시 load → a4 선택 → 폭22/높이30 → 충돌 모드 save1 → 명시 reload → 폐기 확인(클릭 전)",
+    "box": {
+      "x": 360,
+      "y": 189.75,
+      "width": 560,
+      "height": 448.75
+    },
+    "exclusions": [
+      {
+        "box": {
+          "x": 360,
+          "y": -79,
+          "width": 560,
+          "height": 30
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 360,
+          "y": 654.5,
+          "width": 560,
+          "height": 125.25
+        },
+        "overlaps": false
+      },
+      {
+        "box": {
+          "x": 360,
+          "y": -33,
+          "width": 560,
+          "height": 206.75
+        },
+        "overlaps": false
+      }
+    ],
+    "geometry": {
+      "documentOverflow": 0,
+      "cardOverflow": 0,
+      "controls": [
+        {
+          "label": "frame-print-size-id",
+          "domIndex": 1,
+          "disabled": true,
+          "box": {
+            "x": 381,
+            "y": 315,
+            "width": 518,
+            "height": 44,
+            "top": 315,
+            "right": 899,
+            "bottom": 359,
+            "left": 381
+          }
+        },
+        {
+          "label": "frame-print-size-width",
+          "domIndex": 2,
+          "disabled": true,
+          "box": {
+            "x": 381,
+            "y": 397.25,
+            "width": 518,
+            "height": 45,
+            "top": 397.25,
+            "right": 899,
+            "bottom": 442.25,
+            "left": 381
+          }
+        },
+        {
+          "label": "frame-print-size-height",
+          "domIndex": 3,
+          "disabled": true,
+          "box": {
+            "x": 381,
+            "y": 480.5,
+            "width": 518,
+            "height": 45,
+            "top": 480.5,
+            "right": 899,
+            "bottom": 525.5,
+            "left": 381
+          }
+        },
+        {
+          "label": "편집 기준 불러오기",
+          "domIndex": 4,
+          "disabled": true,
+          "box": {
+            "x": 381,
+            "y": 573.5,
+            "width": 155.84375,
+            "height": 44,
+            "top": 573.5,
+            "right": 536.84375,
+            "bottom": 617.5,
+            "left": 381
+          }
+        },
+        {
+          "label": "초안 폐기하고 다시 불러오기",
+          "domIndex": 5,
+          "disabled": false,
+          "box": {
+            "x": 546.84375,
+            "y": 573.5,
+            "width": 216.765625,
+            "height": 44,
+            "top": 573.5,
+            "right": 763.609375,
+            "bottom": 617.5,
+            "left": 546.84375
+          }
+        },
+        {
+          "label": "변경 저장",
+          "domIndex": 6,
+          "disabled": true,
+          "box": {
+            "x": 773.609375,
+            "y": 573.5,
+            "width": 94.921875,
+            "height": 44,
+            "top": 573.5,
+            "right": 868.53125,
+            "bottom": 617.5,
+            "left": 773.609375
+          }
+        }
+      ]
+    },
+    "png": {
+      "width": 560,
+      "height": 450,
+      "sha256": "bb2470bf101146f33b18695c938860b951b27465d9487fc03602526d4a946ca3"
+    },
+    "keyboard": {
+      "completedCycle": true,
+      "stops": [
+        {
+          "domIndex": 0,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 5,
+          "inProduct": true,
+          "label": "초안 폐기하고 다시 불러오기",
+          "focusVisible": true,
+          "outline": "rgb(25, 26, 29) solid 3px",
+          "outlineWidth": 3,
+          "outlineStyle": "solid",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 7,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 8,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        },
+        {
+          "domIndex": 9,
+          "inProduct": false,
+          "label": "FIXTURE_CONTROL_ONLY",
+          "focusVisible": true,
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "outlineWidth": 1,
+          "outlineStyle": "auto",
+          "boxShadow": "none",
+          "centerUnoccluded": true
+        }
+      ]
+    },
+    "keyboardOrder": true,
+    "smallTargets": [],
+    "focusFindings": [],
+    "axeSeriousCritical": [],
+    "noise": {
+      "errors": 0,
+      "warnings": 0,
+      "pageErrors": 0,
+      "externalAttempts": 0
+    },
+    "before": {
+      "status": "discard-confirmation",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "after": {
+      "status": "discard-confirmation",
+      "revision": "3",
+      "factory": "1",
+      "saves": "1",
+      "expectedBase": "3"
+    },
+    "recovery": "explicit discard/reload: ready-clean, revision3, save1",
+    "findings": [],
+    "measuredVerdict": "PASS",
+    "visualReview": "SEE AUDIT REPORT"
+  }
+}
