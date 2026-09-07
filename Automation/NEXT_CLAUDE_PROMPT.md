@@ -2,6 +2,11 @@
 
 상태: `WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 087 DONE / CODEX_PASSED (2026-09-07)
 
+**먼저 확인할 전송 대기:** `1b0506e`(PNG 4장), `a429f0a`(문서 7개)는 로컬 commit이다. 일반 push가
+자동 승인 검토에서 외부 자료 전송 권한 부족으로 거절돼 origin은 `eab7199`다. 이 차단 기록도 로컬
+commit으로 남긴다. 사용자에게 정확한 대상 `origin/rebuild/modern-studio`와 해당 commit 묶음의 push
+승인을 받은 뒤 진행한다. 원격 완료로 보고하거나 우회 전송하지 않는다.
+
 - completed_unit: `spec-087-space-post-auth-header-collapse`
 - active_unit: `none`
 - next_transition: `FOUNDER_NEXT_MANUAL_TASK`

@@ -1,5 +1,10 @@
 # 현재 상태
 
+> **전송 상태 (2026-09-07): 로컬 DONE, push 승인 대기.** 증거 `1b0506e`와 종료 문서 `a429f0a`의
+> 일반 push를 자동 승인 검토가 외부 문서/이미지 전송에 대한 명시 승인 부족으로 거절했다.
+> origin은 `eab7199`이며 이 차단 기록도 로컬 commit으로 남긴다. 아래 CODEX_PASSED는 검증 판정이고
+> 원격 동기화 완료를 뜻하지 않는다. 사용자 승인 전 push 재시도/다음 스펙 진행 없음.
+
 > **최신 포인터 (2026-09-07): spec 087 DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK.**
 > 사용자의 비-UI 직접 수행 지시에 따라 Codex가 README 중복 참조를 고치고 전체 게이트를 재검증했다.
 > check PASS(unit **2510/2510**, 92파일, build 2), canonical **223 passed / 0 failed / 0 skipped /
