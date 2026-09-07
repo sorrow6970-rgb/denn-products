@@ -5,22 +5,32 @@ updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-099-room-local-adapter-boundary-investigation   # DOCUMENT DONE; spec098 product DONE remains
-active_unit: none
-state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: 1b20293
-candidate_commit: d2c2c9a   # spec099 document review; receipt separate
+active_unit: spec-100-room-preparation-controller
+state: READY_FOR_IMPLEMENTATION
+baseline_commit: 04ccfae
+candidate_commit: null   # spec100 contract documents pending commit; implementation not started
 verified_commit: 3c3abca   # same Codex implementation/review; not independent review
-origin_relation: "spec099 docs d2c2c9a normal push confirmed; HEAD=origin d2c2c9a and0/0 before receipt; receipt HEAD via git"
-working_tree: "spec099 receipt5 documents only; protected/user dirty22 preserved and excluded,22 hashes unchanged"
+origin_relation: "start HEAD=origin tracking ref04ccfae,0/0; spec100 contract document push pending"
+working_tree: "spec100 contract documents7 only; protected/user dirty22 preserved and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_ROOM_PREPARATION_PORT_CONTRACT
+next_transition: CODEX_SPEC_100_IMPLEMENT_AND_VERIFY
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec098 targeted recheck passed; spec099 document investigation complete; next preparation port contract candidate only
+session_status: spec100 CONTRACT_REVIEW_PASSED; contract-only turn complete; implementation/tests not started; awaiting explicit implementation instruction
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 종료 — spec099 adapter 경계 문서 조사 (2026-09-07)
+## 최신 준비 — spec100 계약 작성·검토 (2026-09-07)
+
+사용자 `응 다음`으로099 NEXT의계약작성차례수행. CONTRACT_REVIEW_PASSED(동일Codex),제품DONE아님.
+source/no-clock gate·동기frame capture port·background sink/cancel·partial/aggregate 소유권과
+취소정착/늦은완료/재진입을계약화. 공개표면은상태·크기뿐, draw capability/실제loader/UI0.
+코드2신규파일은후속구현시허용목록이며이번생성0. 문서7개만일반commit/push, 보호/별도dirty22제외.
+targeted/check/E2E/browser/emulator실행0. 098제품DONE·099문서DONE유지,100검증은NOT RUN.
+다음명시구현지시에서100계약범위만구현·검증. 정확명령NEXT. 신규Founder제품질문없음.
+운영/실제Firebase/UID/배포/발행/삭제/설치/자동화0. 전체실측진행률불명,화면변화0.
+
+## 종료 이력 — spec099 adapter 경계 문서 조사 (2026-09-07)
 
 전송확인:문서7개d2c2c9a 정상push1b20293..d2c2c9a,HEAD=origin d2c2c9a·0/0.
 링크33/33·dirty22/22 hash동일·diff--checkPASS. 전송영수증5문서만별도기록, 추가제품/시험0.

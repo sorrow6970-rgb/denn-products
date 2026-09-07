@@ -1,5 +1,12 @@
 # 현재 상태
 
+> 최신2026-09-07:100-room-preparation-controller 계약작성·검토완료, CONTRACT_REVIEW_PASSED.
+> READY_FOR_IMPLEMENTATION / active spec-100-room-preparation-controller / CODEX_SPEC_100_IMPLEMENT_AND_VERIFY.
+> 100제품코드/시험생성·실행0,제품DONE아님. 099문서DONE·098제품DONE유지.
+> 신규코드2파일의후속구현계약:source/no-clock·partial소유권·취소·재진입·늦은완료; 공개정보는상태/크기뿐.
+> 이번문서7개만일반commit/push,보호/별도dirty22제외. 다음명시구현프롬프트NEXT, 추가Founder제품질문없음.
+> 실제loader/UI/draw capability/운영/배포/자동화0. 전체실측률불명·화면변화0. 아래는이력이다.
+
 > 전송확인2026-09-07:099 조사7문서d2c2c9a 정상push1b20293..d2c2c9a,HEAD=origin·0/0.
 > 링크33/33·dirty22/22 SHA동일·diff--checkPASS. 전송영수증5문서만추가, 추가제품/시험0.
 > 아래099전송계획은완료됐다. 다음100계약 지시는NEXT, 아직작성/구현0.

@@ -1,5 +1,30 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 준비 / 다음 구현 지시 — spec100 (2026-09-07)
+
+100계약작성·문서검토완료: CONTRACT_REVIEW_PASSED / READY_FOR_IMPLEMENTATION.
+정본 docs/rebuild/specs/100-room-preparation-controller-contract.md.
+이번은문서7개뿐. 제품/시험작성·실행0,100제품DONE아님. 098제품·099문서DONE유지.
+현재새Founder제품질문없음. 아래명시구현지시를받으면고정범위에서진행한다.
+
+```text
+C:\repo\denn-products에서 STATE/CURRENT/live와 스펙100 계약·검토·handoff를 읽고,
+스펙100의 주입형 room preparation controller와 합성 fake만 구현·검증해.
+신규 apps/mockup/src/room-placement/preparation.ts 및 preparation.test.ts 두 파일만 코드허용이다.
+098 session은수정없이재사용하고 gate/partial→aggregate/취소정착/동기callback/재진입/늦은완료를고정해.
+공개출력은안전상태·크기뿐이며 renderer/drawable전달/UI/default browser port를추가하지마.
+실제File/Image/Canvas/URL생성·사진선택·기존owner/print/route/packages/Rules/config수정0.
+targeted Vitest, node scripts/check.mjs, node scripts/e2e-run.mjs canonical과번들hash/범위/diff/포트를검증해.
+기존spec018PNG2의canonical재생성만예외: hash보고하고복원/stage/commit하지마.
+다른기존증거나보호파일이달라지면STOP. 실패를timeout/retry/worker변경으로완화하지마.
+코드2와문서7을분리일반commit/push하고 STATE/NEXT/CURRENT/live에실제결과·다음지시를기록해.
+범위밖기존파일수정·새제품선택·신규권한이필요하면멈추고질문해.
+실제Firebase/UID/운영data/배포/발행/삭제/설치/자동화와보호/별도dirty수정금지유지.
+```
+
+실제룸UI/브라우저adapter/이미지예산은후속별도계약. 전체실측진행률확인불가,이번화면변화0.
+아래099의다음계약작성은100에서완료한이력이다.
+
 ## 최신 완료 / 다음 계약 — spec099 (2026-09-07)
 
 전송완료:조사7문서d2c2c9a 정상push,HEAD=origin d2c2c9a·0/0확인. 영수증5문서별도기록.

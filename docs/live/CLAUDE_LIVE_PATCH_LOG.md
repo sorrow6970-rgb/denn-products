@@ -8275,3 +8275,22 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 링크33/33·dirty22/22hash동일·diff--checkPASS. 전송영수증5문서 별도기록, 보호/별도작업커밋제외.
 - 099 DOCUMENT DONE/DOCUMENT_REVIEW_PASSED,098 제품DONE 유지. 다음100계약 상세지시NEXT.
   아직새제품계약/구현0, 추가Founder질문없음. 전체실측진행률확인불가, 운영/배포/자동화0.
+
+## 2026-09-07 - spec100 준비controller 계약 작성·검토 완료
+
+- 사용자 `응 다음`으로099 NEXT의계약작성범위진행. 기준HEAD=origin 추적ref04ccfae·0/0.
+  100계약/검토/handoff+STATE/NEXT/CURRENT/live 정확7문서,제품코드/시험생성0.
+- source proof의frame-ready/no-clock/identity, 동기frame lease, background sink와cancel task,
+  partial→098 aggregate 소유권·sync callback/return전취소·재진입·late/duplicate를고정했다.
+  public Promise의고정취소결과와실제취소성공을분리. 공개출력은상태/크기뿐,draw capability0.
+  부실port가전달하지않은자원회수·실제clock/픽셀/메모리검증을보증하지않는다.
+- CONTRACT_REVIEW_PASSED(동일Codex),READY_FOR_IMPLEMENTATION. 제품CODEX_PASSED/DONE아님.
+  active spec-100-room-preparation-controller,next CODEX_SPEC_100_IMPLEMENT_AND_VERIFY.
+  신규preparation.ts/preparation.test.ts2파일은후속명시구현시의허용범위,이번생성0.
+- targeted/check/build/E2E/browser/emulator실행0. 기존098/099시험수를100결과로기록하지않았다.
+  098제품DONE·099문서DONE유지. NEXT에정확구현·검증지시기록,새Founder제품질문없음.
+- 실제loader/UI/File/Image/Canvas/URL/공개schema·Rules/config변경0. 보호/별도dirty22보존·커밋제외.
+  실제Firebase/UID/운영data/배포/발행/삭제/설치/자동화0. 문서검증뒤일반commit/push.
+  전체실측진행률/최종스펙수확인불가,이번계약으로제품완료율상향0·화면변화0.
+- 문서검증실측:링크/지정라인13/13 PASS, 시작dirty22/22 SHA동일,diff--check PASS,
+  정확7문서외이번변경0,신규제품2파일부재. 테스트/빌드결과를주장하지않는다.
