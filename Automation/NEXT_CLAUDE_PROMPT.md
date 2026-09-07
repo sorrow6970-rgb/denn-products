@@ -2,6 +2,9 @@
 
 ## 최신 완료 / 다음 계약 — spec099 (2026-09-07)
 
+전송완료:조사7문서d2c2c9a 정상push,HEAD=origin d2c2c9a·0/0확인. 영수증5문서별도기록.
+링크33/33·dirty22/22hash동일·diff--checkPASS. 다음100계약은 아직작성하지 않았다.
+
 098 targeted46/46 재실행PASS, 코드3c3abca의 DONE 유지. 099 DOCUMENT DONE/DOCUMENT_REVIEW_PASSED.
 조사 정본: docs/codex-claude-handoff/reviews/2026-09-07-spec-099-room-local-adapter-boundary-investigation.md.
 현재추가Founder질문없음. 준비controller+fake가 다음 최소후보이며 아직100계약/코드0.

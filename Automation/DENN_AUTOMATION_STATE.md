@@ -8,10 +8,10 @@ completed_unit: spec-099-room-local-adapter-boundary-investigation   # DOCUMENT 
 active_unit: none
 state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: 1b20293
-candidate_commit: null   # spec099 documents pending commit
+candidate_commit: d2c2c9a   # spec099 document review; receipt separate
 verified_commit: 3c3abca   # same Codex implementation/review; not independent review
-origin_relation: "start HEAD=origin tracking ref1b20293,0/0; spec099 document push pending"
-working_tree: "spec099 documents7 only; starting protected/user dirty22 preserved and excluded"
+origin_relation: "spec099 docs d2c2c9a normal push confirmed; HEAD=origin d2c2c9a and0/0 before receipt; receipt HEAD via git"
+working_tree: "spec099 receipt5 documents only; protected/user dirty22 preserved and excluded,22 hashes unchanged"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: CODEX_ROOM_PREPARATION_PORT_CONTRACT
@@ -21,6 +21,9 @@ commit_owner: Codex; scoped code/test and closure documents separately, normal f
 ```
 
 ## 최신 종료 — spec099 adapter 경계 문서 조사 (2026-09-07)
+
+전송확인:문서7개d2c2c9a 정상push1b20293..d2c2c9a,HEAD=origin d2c2c9a·0/0.
+링크33/33·dirty22/22 hash동일·diff--checkPASS. 전송영수증5문서만별도기록, 추가제품/시험0.
 
 098 targeted46/46(240ms) 재실행 PASS. 기존전체check2591/E2E271은 이번 재실행 아님.
 Canvas ready의 source 식별 부재·borrowed binding·DOM clock과 hidden/없음 차이를 정적확인했다.
