@@ -8198,3 +8198,22 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 보호/별도사용자dirty22파일은전송제외·잔존.전송영수증5문서만별도기록하며새제품/시험실행0.
 - 096 DONE/CODEX_PASSED 유지.다음룸목업최소로컬경계읽기전용조사 지시는NEXT에기록,아직착수0.
   전체실측진행률불명,과거85~88%관리추정유지.실제운영/배포/자동화0.
+
+## 2026-09-07 - spec097 룸 목업 로컬 경계 문서 조사 완료
+
+- 사용자 `응 다음`으로096 NEXT의문서조사착수.기준HEAD=origin7a1a981·0/0,정확7문서조사계약선행.
+- 레거시openRoomMockup/rmRender의후반래퍼,cover/focus·이미지앵커·모바일사이징·역할별flat파생을추적.
+  마지막텍스트대입=모든환경최종활성함수라고단정하지않고런타임순서/전체parity는UNCONFIRMED.
+- 현재시계는DOM overlay이며Canvas사본만으로전체시안이동불가.인쇄cm/UI배율은방실측근거아님.
+  guideBackgrounds opaque보존/Space room unsupported/보호plan경계도확인.실제자산·운영데이터조회0.
+- 권장RG-2=A는로컬참고용룸의단계준비,첫단위순수좌표·세대소유권/fake만.후속UI는별도계약이고
+  시계활성시조용한누락대신지원gate후보를명시.운영프리셋/효과/Space우선은B후보.둘다미채택.
+- 097 DOCUMENT DONE/DOCUMENT_REVIEW_PASSED(동일Codex).FOUNDER_DECISION_REQUIRED,
+  active rg2-room-local-scope,next FOUNDER_RG2_ROOM_LOCAL_SCOPE_DECISION.질문1개,RG-2답변전구현계약0.
+- 허용7문서:097계약/조사/handoff3+STATE/NEXT/CURRENT/live4.제품/test/Rules/config/package/lockfile/
+  PNG/브라우저/emulator/실제Firebase/UID/운영/배포/발행/삭제/설치/자동화실행0.보호/별도dirty22제외.
+  096의2545/271/PNG3은직전제품검증값,이번재실행아님.문서만검증·일반전송한다.
+- 인쇄상대비교096은제품DONE,룸은조사만완료.전체85~88%는과거관리추정,잔여12~15%=100-88~100-85.
+  전체실측률/최종스펙수/종료일확인불가.새문서로비율을상향하지않는다.상세097조사/NEXT참조.
+- 문서검증실측:신규3문서링크44/44·지정라인존재,시작dirty22/22 SHA동일,양앱entry096동일,
+  diff--checkPASS,허용7문서외이번변경0.문서만범위확인후일반commit/push하며RG-2는미승인유지.

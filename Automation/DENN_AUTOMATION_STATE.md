@@ -4,23 +4,33 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-096-local-print-size-comparison   # DONE / CODEX_PASSED / LOCAL_VERIFIED
-active_unit: none
-state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: f7c9ecd
-candidate_commit: b03f8d4
+completed_unit: spec-097-room-local-boundary-investigation   # DOCUMENT DONE; spec096 product DONE remains
+active_unit: rg2-room-local-scope
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: 7a1a981
+candidate_commit: null   # spec097 documents not committed yet
 verified_commit: b03f8d4   # same Codex implementation/review; not independent review
-origin_relation: "normal push f7c9ecd..5460fb3 confirmed, HEAD=origin5460fb3 and0/0 before receipt; receipt commit resolved by git"
-working_tree: "receipt5 scoped documents only; starting protected/user dirty22 excluded; baseline101 hashes100 same and spec018mobile canonical exception1; spec093 README hash matches baseline"
-fix_round: 2
+origin_relation: "spec096 receipt7a1a981 already pushed; starting HEAD=origin7a1a981,0/0; spec097 document push pending"
+working_tree: "spec097 scoped7 documents only; starting protected/user dirty22 preserved and excluded"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_ROOM_LOCAL_BOUNDARY_READ_ONLY_INVESTIGATION
+next_transition: FOUNDER_RG2_ROOM_LOCAL_SCOPE_DECISION
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec096 CODEX_PASSED; code b03f8d4 and closure5460fb3 pushed; final check2545/canonical271 PASS and3PNG reviewed; receipt only, next product not started
+session_status: spec097 DOCUMENT_REVIEW_PASSED; RG-2=A proposed not approved; no next product contract or implementation
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 종료 — spec096 (2026-09-07)
+## 최신 종료 — spec097 문서 조사 (2026-09-07)
+
+룸의 최후반 래퍼/좌표·배경cover/focus·이미지앵커·역할별flat파생·Space경계를정적추적했다.
+런타임 최종활성체인/실제자산/실측보정은UNCONFIRMED/NOT TESTED.현재시계는DOM층이므로
+Canvas사본만으로전체시안재현이라고주장하지않는다.정확근거는097조사/계약/handoff.
+RG-2=A권장:로컬참고용룸배치를단계준비,첫단위는UI/사진로딩없는좌표·세대소유권+fake만.
+방실측/효과/기존프리셋/Space/저장확장0.아직미승인,다음제품계약/구현0.
+문서7개만일반commit/push,보호/별도dirty22제외.테스트/브라우저/운영/Firebase/자동화0.
+096제품DONE(b03f8d4/5460fb3/7a1a981)유지.전체실측률불명,과거85~88%관리추정상향0.
+
+## 종료 이력 — spec096 (2026-09-07)
 
 전송확인: b03f8d4/5460fb3 정상push f7c9ecd..5460fb3,HEAD=origin5460fb3·0/0.
 총변경20경로=코드·시험·증거12+종료문서8,보호/별도dirty22제외.전송영수증5문서별도기록.

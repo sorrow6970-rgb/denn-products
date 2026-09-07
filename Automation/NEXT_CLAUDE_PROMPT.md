@@ -1,5 +1,32 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 대기 — RG-2 로컬 룸 단계 방향 (2026-09-07)
+
+097 문서조사 DONE/DOCUMENT_REVIEW_PASSED(동일Codex).096제품 DONE유지.
+정본 docs/codex-claude-handoff/reviews/2026-09-07-spec-097-room-local-boundary-investigation.md.
+FOUNDER_DECISION_REQUIRED / rg2-room-local-scope / FOUNDER_RG2_ROOM_LOCAL_SCOPE_DECISION.
+사용자 `응 다음`은097 조사지시이며 이 조사에서 새로 제안한RG-2의 승인이 아니다.
+
+질문 하나:RG-2=A(로컬 참고용 룸 배치의 단계적 준비)를 선택할지 확인한다.
+첫 단위는 UI·사진 로딩 없이 순수 좌표와 세대 소유권/fake만.후속 UI에서는 실측 아님을
+명시하고 시계 활성 상태를 조용히 생략하지 않고 차단하는 제한을 별도 계약에 반영하는 후보다.
+실제효과/원근/운영프리셋/Space재현이 먼저 필요하면RG-2=B조사 방향으로 다시 경계를 좁힌다.
+둘다미채택.실제운영전환/데이터접근 권한은 이 질문에 포함하지 않는다.
+
+답변 전 다음 제품계약/코드/UI/test 작성·실행0.답변 뒤 지시:
+
+```text
+C:\repo\denn-products에서097조사와이대화의RG-2답변을대조해.승인된방향만결정정본에기록하고
+STATE/NEXT/CURRENT/live를동기화해.A라면첫좌표·자원세대모델단위의정확한스펙을코드전에작성해.
+contain·정규화위치·폭비율과실측의차이를명시하고수치경계/clamp/invalid/소유권검증을확정해.
+첫단위에UI연결/사진로딩/기존프리셋적용/공개schema/보호plan/Space/저장·발행을열지마.
+B라면추가문서조사만진행해.미결정내용을승인으로기록하지말고새제품선택이필요하면질문해.
+보호/별도사용자dirty·실제Firebase/UID/운영data/배포/삭제/신규의존성/자동화금지유지.
+```
+
+이번문서7개외제품변경0.전체실측률/최종스펙수/종료일불명,과거85~88%추정상향0.
+아래096 다음조사지시는097에서완료한이력이다.
+
 ## 최신 완료 / 다음 안전한 작업 (2026-09-07)
 
 전송완료:b03f8d4/5460fb3 정상push,HEAD=origin5460fb3·0/0확인.영수증5문서는후속기록.

@@ -1,5 +1,12 @@
 # 현재 상태
 
+> 최신2026-09-07:097-room-local-boundary-investigation DOCUMENT DONE/DOCUMENT_REVIEW_PASSED.
+> FOUNDER_DECISION_REQUIRED / rg2-room-local-scope / FOUNDER_RG2_ROOM_LOCAL_SCOPE_DECISION.
+> RG-2=A는권장미승인:로컬참고용룸단계준비,첫단위UI/사진없는좌표·세대소유권/fake후보.
+> 시계DOM층/배경이미지좌표/flat파생/Space미지원경계를확인,실측/활성래퍼전체는미확정.
+> 097문서7개만수정,테스트/제품/운영0.보호/별도dirty22제외.상세097조사/NEXT,다음제품계약0.
+> 096제품DONE유지,전체실측률불명·과거85~88%추정상향0.아래는이력이다.
+
 > 전송확인2026-09-07:spec096 b03f8d4+5460fb3 정상push f7c9ecd..5460fb3,
 > HEAD=origin5460fb3·0/0.전송20경로=코드·시험·증거12+문서8.보호/별도dirty22제외.
 > 영수증5문서별도기록,다음읽기전용조사지시는NEXT.추가제품·테스트실행0.
