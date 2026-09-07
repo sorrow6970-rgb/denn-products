@@ -2,6 +2,9 @@
 
 ## 최신 준비 / 다음 구현 지시 — spec100 (2026-09-07)
 
+계약전송완료:7문서6ab4345 정상push,HEAD=origin6ab4345·0/0확인. 영수증5문서별도기록.
+문서링크13/13·dirty22/22hash동일·diff--checkPASS. 제품코드/시험은 아직시작하지않았다.
+
 100계약작성·문서검토완료: CONTRACT_REVIEW_PASSED / READY_FOR_IMPLEMENTATION.
 정본 docs/rebuild/specs/100-room-preparation-controller-contract.md.
 이번은문서7개뿐. 제품/시험작성·실행0,100제품DONE아님. 098제품·099문서DONE유지.

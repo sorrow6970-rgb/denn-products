@@ -8,10 +8,10 @@ completed_unit: spec-099-room-local-adapter-boundary-investigation   # DOCUMENT 
 active_unit: spec-100-room-preparation-controller
 state: READY_FOR_IMPLEMENTATION
 baseline_commit: 04ccfae
-candidate_commit: null   # spec100 contract documents pending commit; implementation not started
+candidate_commit: 6ab4345   # spec100 reviewed contract only; implementation not started
 verified_commit: 3c3abca   # same Codex implementation/review; not independent review
-origin_relation: "start HEAD=origin tracking ref04ccfae,0/0; spec100 contract document push pending"
-working_tree: "spec100 contract documents7 only; protected/user dirty22 preserved and excluded"
+origin_relation: "spec100 contract6ab4345 normal push confirmed; HEAD=origin6ab4345 and0/0 before receipt; receipt HEAD via git"
+working_tree: "spec100 receipt5 documents only; protected/user dirty22 preserved and excluded,22 hashes unchanged"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: CODEX_SPEC_100_IMPLEMENT_AND_VERIFY
@@ -21,6 +21,9 @@ commit_owner: Codex; scoped code/test and closure documents separately, normal f
 ```
 
 ## 최신 준비 — spec100 계약 작성·검토 (2026-09-07)
+
+전송확인:계약7문서6ab4345 정상push04ccfae..6ab4345,HEAD=origin6ab4345·0/0.
+링크13/13·dirty22/22hash동일·diff--checkPASS. 영수증5문서만별도기록, 제품구현/시험0.
 
 사용자 `응 다음`으로099 NEXT의계약작성차례수행. CONTRACT_REVIEW_PASSED(동일Codex),제품DONE아님.
 source/no-clock gate·동기frame capture port·background sink/cancel·partial/aggregate 소유권과

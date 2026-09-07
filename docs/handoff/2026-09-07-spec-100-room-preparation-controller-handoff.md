@@ -1,5 +1,9 @@
 # spec100 — 룸 준비 controller 계약 인수인계
 
+전송확인2026-09-07:계약7문서6ab4345 정상push04ccfae..6ab4345,HEAD=origin6ab4345·0/0.
+영수증STATE/NEXT/CURRENT/live/이handoff5문서만추가. 아래계약전송계획완료, 제품코드/시험0.
+보호/별도dirty22제외, 최종영수증HEAD는Git으로확인한다.
+
 2026-09-07. 기준04ccfae. [계약](../rebuild/specs/100-room-preparation-controller-contract.md),
 [검토](../codex-claude-handoff/reviews/2026-09-07-spec-100-room-preparation-controller-contract.md).
 CONTRACT_REVIEW_PASSED / READY_FOR_IMPLEMENTATION. 구현/시험 NOT STARTED, 제품DONE 아님.
