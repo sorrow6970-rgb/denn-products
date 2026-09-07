@@ -1,5 +1,13 @@
 # 현재 상태
 
+> 최신2026-09-07:RG-2=A승인,098 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일Codex,독립검수 아님).
+> 코드4파일3c3abca, targeted46/46·check2591/2591·canonical271/271(52.8초) PASS, 양앱bundle불변.
+> READY_FOR_NEXT_SCOPED_UNIT / active none / CODEX_ROOM_LOCAL_ADAPTER_CONTRACT_REVIEW.
+> 다음은 별도 로컬adapter·frame snapshot 소유권·clock gate 문서 조사, 정확지시NEXT. 아직착수0.
+> 기존105hash중103동일,PNG2기존예외만. 보호/별도dirty22제외, 종료8문서 별도전송단계.
+> UI/이미지로딩/기존프리셋/Space/저장/공개schema변경0. 실제룸UX NOT TESTED.
+> 전체실측률불명·과거85~88%추정상향0. 실제운영/보호/자동화금지유지. 아래는이력이다.
+
 > 전송확인2026-09-07:097 조사7문서5f52a02 정상push,HEAD=origin5f52a02·0/0.
 > 링크44/44,기존dirty22/22 hash동일,제품/test실행0.영수증5문서별도기록.현재RG-2미승인대기.
 

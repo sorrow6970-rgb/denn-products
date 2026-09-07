@@ -4,23 +4,32 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-097-room-local-boundary-investigation   # DOCUMENT DONE; spec096 product DONE remains
-active_unit: rg2-room-local-scope
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 7a1a981
-candidate_commit: 5f52a02   # spec097 document review; receipt separate
-verified_commit: b03f8d4   # same Codex implementation/review; not independent review
-origin_relation: "spec097 docs5f52a02 normal push confirmed; HEAD=origin5f52a02 and0/0 before receipt; receipt HEAD via git"
-working_tree: "spec097 receipt5 documents only; starting protected/user dirty22 preserved and excluded, all22 hashes unchanged"
+completed_unit: spec-098-room-placement-geometry-session   # DONE / CODEX_PASSED / LOCAL_VERIFIED
+active_unit: none
+state: READY_FOR_NEXT_SCOPED_UNIT
+baseline_commit: 2959569
+candidate_commit: 3c3abca   # spec098 code4; closure documents separate
+verified_commit: 3c3abca   # same Codex implementation/review; not independent review
+origin_relation: "spec098 code committed locally; normal push pending, not yet synchronized"
+working_tree: "spec098 closure8 documents; protected/user dirty22 excluded; only spec018PNG2 allowed canonical regeneration"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_RG2_ROOM_LOCAL_SCOPE_DECISION
+next_transition: CODEX_ROOM_LOCAL_ADAPTER_CONTRACT_REVIEW
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec097 DOCUMENT_REVIEW_PASSED; RG-2=A proposed not approved; no next product contract or implementation
+session_status: spec098 non-UI implementation verified; next adapter boundary document review only, no automatic UI connection
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 종료 — spec097 문서 조사 (2026-09-07)
+## 최신 종료 — spec098 비-UI 모델 (2026-09-07)
+
+RG-2=A 승인 후 계약 선행, 코드4파일3c3abca. targeted46/46, check2591/2591,
+canonical271/271(52.8초) PASS. 양앱entry SHA불변, 기존105hash 중103동일/PNG2기존예외.
+기존제품/UI/로더/공개schema/Rules/config수정0, 보호복원/stage/commit0, 포트6개0.
+종료문서8개 별도기록 후 일반push. 동일Codex검토이지 독립검수 아님.
+다음은 로컬adapter·frame snapshot 소유권·clock gate의 문서 계약 경계 조사만.
+새UI구현/운영/배포/삭제/자동화0. 전체실측진행률불명, 과거85~88%관리추정상향0.
+
+## 종료 이력 — spec097 문서 조사 (2026-09-07)
 
 전송확인:7문서5f52a02 정상push7a1a981..5f52a02,HEAD=origin5f52a02·0/0.
 전송영수증5문서별도기록.링크44/44·dirty22/22 hash동일·diff--checkPASS.제품/test실행0.

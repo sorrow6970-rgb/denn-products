@@ -8224,3 +8224,21 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 영수증STATE/NEXT/CURRENT/live/097handoff5문서만추가기록.보호/별도dirty22보존·커밋제외.
 - DOCUMENT DONE/DOCUMENT_REVIEW_PASSED,FOUNDER_DECISION_REQUIRED·RG-2미승인유지.
   다음제품계약/구현/테스트/운영/자동화0.전체실측률불명,이전85~88%관리추정상향0.
+
+## 2026-09-07 - spec098 RG-2=A 승인 · 비-UI 룸 배치 기반 검증 완료
+
+- 사용자 `응 승인`으로 RG-2=A의 첫 비-UI 단위 승인. 결정/098계약을 코드보다 먼저 작성했다.
+  기준2959569, 코드4파일3c3abca. geometry의 contain/정규화/clamp와 session의 세대/lease 소유권만.
+  기존 UI/제품파일/사진로딩/Canvas/Space/저장·발행/공개schema/Rules/config 변경0.
+- targeted 최종46/46(2파일255ms), check format/lint304파일·7typecheck·unit99파일2591/2591(2.83초)·
+  양앱build PASS. 단위 증가2545+46=2591. 초기targeted45/45 후 경계사례1개추가, 실패/검사완화0.
+  canonical1회271/271(52.8초),exit0/last-run passed. 신규 UI 시험/PNG0, 기존UI 회귀검증이다.
+- 양앱entry SHA불변: 고객 FECAC548F3BD64B02873F5191E53EA8E2816F76CF609C648AAB67A108A3EE22A,
+  운영자 B0A1F85F9271E4A929D2F6AB0F20BB0D0BFDADDA211533DDD675C8FB85711246.
+  기존105hash 중103동일; spec018PNG2만 기존canonical 재생성 예외. 전후hash는098검수에기록.
+  보호복원/stage/commit0, 다른기존증거변경0. 포트6개0/staging iOjVxK제거/debug.log없음/diff--checkPASS.
+- 코드4+종료문서8=허용12경로. 동일Codex 검수이며 독립검수 아님. DONE/CODEX_PASSED/LOCAL_VERIFIED.
+  종료문서별도commit/일반push 단계. 보호/별도dirty22제외. 실제 자원회수/룸UI/기기검증 NOT TESTED.
+- READY_FOR_NEXT_SCOPED_UNIT / active none / CODEX_ROOM_LOCAL_ADAPTER_CONTRACT_REVIEW.
+  NEXT에 로컬adapter·frame snapshot 소유권·clock gate의 문서조사 지시를 기록, 아직 착수0.
+  전체실측진행률·최종스펙수·종료일 확인불가, 과거85~88%관리추정상향0. 운영/배포/삭제/자동화0.

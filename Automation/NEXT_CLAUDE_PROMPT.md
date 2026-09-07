@@ -1,6 +1,31 @@
 # NEXT CLAUDE PROMPT
 
-## 현재 대기 — RG-2 로컬 룸 단계 방향 (2026-09-07)
+## 최신 완료 / 다음 지시 — spec098 (2026-09-07)
+
+사용자 `응 승인`으로RG-2=A승인.정본2026-09-07-rg2-local-room-preparation-decisions.md.
+098계약을먼저작성·검토하고신규앱-local geometry/session+unit4파일만구현했다.
+코드3c3abca DONE/CODEX_PASSED/LOCAL_VERIFIED(동일Codex). targeted46/46,
+check2591/2591,canonical271/271(52.8초) PASS. 제품route/UI/사진로딩/Space/저장/공개schema변경0.
+양앱번들불변. 종료8문서별도commit/정상push 단계이며 전송성공은 영수증으로 확인한다.
+보호/별도dirty22보존.아래RG-2미승인대기는해소된이력이며새제품단계는자동으로열지않는다.
+
+다음 재개 지시(아직 착수하지 않음):
+
+```text
+C:\repo\denn-products에서 STATE/CURRENT/live, RG-2 결정,097 조사,098 계약·검수·handoff를 읽어.
+다음은 로컬 룸 adapter의 별도 계약 경계에 대한 문서 조사다. 조사 스펙과 허용 문서를 먼저 정해.
+현재 PreviewComposer/local image binding/frame snapshot의 소유권·세대·해제 경계를 정적 추적하고,
+098 session과의 접점, 배경 로더 실패/늦은 완료, 시계 DOM층을 누락하지 않는 gate를 좁혀.
+새 drawable 전달·사진 선택·frame capture·UI 연결은 이 조사의 구현 승인이 아니다.
+실측/효과/레거시프리셋/Space/저장·발행/공개schema/보호plan 변경은 열지 마.
+제품/test/Rules/config 수정이나 이미지 로딩/브라우저 실행 없이 문서 근거와 최소 다음 계약 후보를 남겨.
+새 제품 선택/권한이 필요하면 질문하고 STOP. 보호/별도dirty, 실제Firebase/UID/운영data,
+배포/삭제/설치/자동화 금지 유지. STATE/NEXT/CURRENT/live에 다음 지시와 진행률 불확실성을 기록해.
+```
+
+전체실측완료율/최종스펙수/종료일은 확인불가. 과거85~88%관리추정을 새 모델만으로 상향하지 않는다.
+
+## 대기 이력 — RG-2 로컬 룸 단계 방향 (2026-09-07)
 
 097 조사7문서5f52a02 정상push완료,HEAD=origin5f52a02·0/0확인.영수증5문서별도기록.
 RG-2답변전다음계약/구현0,보호/별도dirty22보존.문서전송은제품방향승인을뜻하지않는다.
