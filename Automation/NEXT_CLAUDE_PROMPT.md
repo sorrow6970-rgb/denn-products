@@ -1,5 +1,15 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 STOP — GitHub scoped push 명시 승인 필요
+
+스펙102 구현·검증 완료, 코드37c581e/문서d12d56c 로컬 커밋. 원격 전송은 도구 실행 전에
+auto-review가 거절했다. 정확 저장소·payload의 사용자 메시지 승인 부재 사유. 재시도/우회0.
+전송 대상은 https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio,
+102 코드4+문서7 및 전송차단 영수증5만. 보호/별도dirty22는 포함하지 않는다.
+사용자에게 위 정확한 전송 승인을 받은 뒤 범위/diff/hash/Git 상태를 다시 검사하여 일반push한다.
+완료 후 HEAD=origin·0/0과 live receipt를 확인한 다음 아래 배경 입력정책 문서 조사로 이어간다.
+현재 BLOCKED / USER_EXPLICIT_SCOPED_GITHUB_PUSH_APPROVAL. 103은 미착수다.
+
 ## 최신 완료 / 다음 문서 조사 — spec102 → 배경 입력정책
 
 102 DONE/CODEX_PASSED/LOCAL_VERIFIED, 코드37c581e. targeted200/200, check2745/2745,

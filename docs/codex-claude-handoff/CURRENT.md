@@ -1,5 +1,11 @@
 # 현재 상태
 
+> 최신2026-09-07: BLOCKED / active spec-102-scoped-origin-push / USER_EXPLICIT_SCOPED_GITHUB_PUSH_APPROVAL.
+> 102제품 DONE/CODEX_PASSED 유지. 코드37c581e·종료문서d12d56c 로컬 커밋, push 실행 전 보안 거절.
+> 정확 GitHub 저장소·payload의 명시 사용자 승인이 필요하다는 사유. 재시도/우회/103 착수0.
+> HEAD d12d56c·origin tracking6c0e0ac·2/0(영수증 전). 차단 영수증5문서 로컬 기록 후 Git 재확인.
+> 허용 전송범위/재개 조건 NEXT. 보호/별도dirty22 제외. 제품검증200/2745/281 PASS 그대로.
+
 > 최신2026-09-07: spec102 DONE/CODEX_PASSED/LOCAL_VERIFIED, 코드37c581e(동일 Codex 자체검토).
 > targeted200/200·check2745/2745·최종canonical281/281(50.3초), 양앱JS/고객CSS 불변.
 > READY_FOR_NEXT_SCOPED_UNIT / next CODEX_ROOM_BACKGROUND_INPUT_POLICY_INVESTIGATION.
