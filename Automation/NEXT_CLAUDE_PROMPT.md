@@ -1,5 +1,23 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 명시 승인 — 2026-09-07
+
+사용자 `응 승인`으로36eb15a/b9a24c5와 전송 상태 정정5문서의 아래 정확한 origin/브랜치 일반 push 승인.
+정정5문서만 커밋하고 전송 결과·HEAD/origin·0/0을 확인한다. 보호/기존 미커밋2문서는 제외한다.
+아래 STOP은 승인 전 이력이다. 성공 후에는092 종료 후 다음 지시의 읽기 전용 범위 조사부터 재개한다.
+이 승인은 운영 연결/배포/실제 Firebase/자동화 승인이 아니다.
+
+## STOP — spec092 원격 전송 승인 대기 (2026-09-07)
+
+spec092 로컬 DONE/CODEX_PASSED, 테스트/합성증거36eb15a + 종료문서b9a24c5.
+일반 push는 자동 승인 검토가 구체적 payload/destination 승인 부족으로 거절했다.
+HEADb9a24c5/origin54aa472,2/0. 우회/재시도/다음 스펙 착수0. 아래093 후보는 아직 시작하지 않는다.
+
+필요 승인: 위 두 커밋과 이 전송 상태 정정5문서를
+`https://github.com/sorrow6970-rgb/denn-products.git`의 `rebuild/modern-studio`로 일반 fast-forward push.
+승인 후에만 정정5문서를 별도 커밋하고 해당 원격으로 전송·검증한다. 보호/기존 roadmap/spec091handoff2 제외.
+허가 전 로컬 정정은 미커밋·미스테이지다. 운영 연결·배포·실제 Firebase·자동화는 여전히 금지한다.
+
 ## 최신 다음 지시 — spec092 종료 후 (2026-09-07)
 
 spec092 DONE/CODEX_PASSED/LOCAL_VERIFIED, 테스트·증거18파일36eb15a.
