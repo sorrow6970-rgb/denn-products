@@ -1,5 +1,8 @@
 # spec097 — 룸 로컬 경계 조사 인수인계
 
+전송확인2026-09-07:7문서5f52a02 정상push7a1a981..5f52a02,HEAD=origin5f52a02·0/0.
+STATE/NEXT/CURRENT/live/이handoff5문서에영수증만추가.추가제품/시험0,RG-2미승인유지.
+
 2026-09-07. [계약](../rebuild/specs/097-room-local-boundary-investigation.md),
 [조사 정본](../codex-claude-handoff/reviews/2026-09-07-spec-097-room-local-boundary-investigation.md).
 시작7a1a981=origin 추적ref,0/0. 문서7개만 변경,제품코드/테스트/운영실행0.

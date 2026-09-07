@@ -8217,3 +8217,10 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   전체실측률/최종스펙수/종료일확인불가.새문서로비율을상향하지않는다.상세097조사/NEXT참조.
 - 문서검증실측:신규3문서링크44/44·지정라인존재,시작dirty22/22 SHA동일,양앱entry096동일,
   diff--checkPASS,허용7문서외이번변경0.문서만범위확인후일반commit/push하며RG-2는미승인유지.
+
+## 2026-09-07 - spec097 조사 문서 전송 완료 · RG-2 대기
+
+- 조사7문서5f52a02 정상push7a1a981..5f52a02,확인시HEAD=origin5f52a02,ahead/behind0/0.
+- 영수증STATE/NEXT/CURRENT/live/097handoff5문서만추가기록.보호/별도dirty22보존·커밋제외.
+- DOCUMENT DONE/DOCUMENT_REVIEW_PASSED,FOUNDER_DECISION_REQUIRED·RG-2미승인유지.
+  다음제품계약/구현/테스트/운영/자동화0.전체실측률불명,이전85~88%관리추정상향0.

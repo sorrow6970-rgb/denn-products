@@ -2,6 +2,9 @@
 
 ## 현재 대기 — RG-2 로컬 룸 단계 방향 (2026-09-07)
 
+097 조사7문서5f52a02 정상push완료,HEAD=origin5f52a02·0/0확인.영수증5문서별도기록.
+RG-2답변전다음계약/구현0,보호/별도dirty22보존.문서전송은제품방향승인을뜻하지않는다.
+
 097 문서조사 DONE/DOCUMENT_REVIEW_PASSED(동일Codex).096제품 DONE유지.
 정본 docs/codex-claude-handoff/reviews/2026-09-07-spec-097-room-local-boundary-investigation.md.
 FOUNDER_DECISION_REQUIRED / rg2-room-local-scope / FOUNDER_RG2_ROOM_LOCAL_SCOPE_DECISION.

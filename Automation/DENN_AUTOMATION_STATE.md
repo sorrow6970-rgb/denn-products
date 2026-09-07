@@ -8,10 +8,10 @@ completed_unit: spec-097-room-local-boundary-investigation   # DOCUMENT DONE; sp
 active_unit: rg2-room-local-scope
 state: FOUNDER_DECISION_REQUIRED
 baseline_commit: 7a1a981
-candidate_commit: null   # spec097 documents not committed yet
+candidate_commit: 5f52a02   # spec097 document review; receipt separate
 verified_commit: b03f8d4   # same Codex implementation/review; not independent review
-origin_relation: "spec096 receipt7a1a981 already pushed; starting HEAD=origin7a1a981,0/0; spec097 document push pending"
-working_tree: "spec097 scoped7 documents only; starting protected/user dirty22 preserved and excluded"
+origin_relation: "spec097 docs5f52a02 normal push confirmed; HEAD=origin5f52a02 and0/0 before receipt; receipt HEAD via git"
+working_tree: "spec097 receipt5 documents only; starting protected/user dirty22 preserved and excluded, all22 hashes unchanged"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: FOUNDER_RG2_ROOM_LOCAL_SCOPE_DECISION
@@ -21,6 +21,9 @@ commit_owner: Codex; scoped code/test and closure documents separately, normal f
 ```
 
 ## 최신 종료 — spec097 문서 조사 (2026-09-07)
+
+전송확인:7문서5f52a02 정상push7a1a981..5f52a02,HEAD=origin5f52a02·0/0.
+전송영수증5문서별도기록.링크44/44·dirty22/22 hash동일·diff--checkPASS.제품/test실행0.
 
 룸의 최후반 래퍼/좌표·배경cover/focus·이미지앵커·역할별flat파생·Space경계를정적추적했다.
 런타임 최종활성체인/실제자산/실측보정은UNCONFIRMED/NOT TESTED.현재시계는DOM층이므로
