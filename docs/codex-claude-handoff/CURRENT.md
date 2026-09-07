@@ -1,9 +1,30 @@
 # 현재 상태
 
-> **전송 상태 (2026-09-07): 로컬 DONE, push 승인 대기.** 증거 `1b0506e`와 종료 문서 `a429f0a`의
-> 일반 push를 자동 승인 검토가 외부 문서/이미지 전송에 대한 명시 승인 부족으로 거절했다.
-> origin은 `eab7199`이며 이 차단 기록도 로컬 commit으로 남긴다. 아래 CODEX_PASSED는 검증 판정이고
-> 원격 동기화 완료를 뜻하지 않는다. 사용자 승인 전 push 재시도/다음 스펙 진행 없음.
+> **최종 종료 (2026-09-07): spec088 DONE / CODEX_PASSED / LOCAL_VERIFIED.**
+> 제품·test·허용 PNG `f2f7f67`. 최종 diff·증거 검토에서 추가 결함 미발견. 직전 check 2511/2511,
+> canonical 227/227 PASS. 최초 timeout 원인 미확정은 보존한다. 다음은 운영자 PNG 선택 UI 별도 계약.
+> UI 포함 Codex 직접 진행, 제품 정책·운영전환·실제 네트워크·보호 경계는 유지한다.
+
+> **최신 결과 (2026-09-07): spec088 READY_FOR_CODEX / LOCAL_VERIFIED.**
+> 사용자 승인 후 canonical 단독 1회 227/227 PASS(46.3초, retry/skip 0), 직전 check 2511/2511 PASS 유지.
+> 이번 추가 코드·test·config 변경 0. 최초 timeout 3건은 미재현, 원인 UNCONFIRMED 이력 유지.
+> 새 사진 선택 PNG 3장 + 전체 composer 6장 최종 생성. 시각 확인은 spec085 전체 화면/spec088 확대본.
+> next CODEX_SPEC_088_FINAL_REVIEW. 이번 stage/commit/push 0. 아래 BLOCKED는 과거 이력이다.
+
+> **최신 정책 정정 (2026-09-07): UI 포함 Codex 직접 설계·구현·검증.**
+> 사용자 최신 지시에 따라 Claude 전용 UI 인계 제한을 해제했다. active spec 088, `BLOCKED`,
+> next `FOUNDER_SPEC_088_GATE_INVESTIGATION_DECISION`. 계약을 먼저 작성한 뒤 고객 파일 선택 UI를 구현했다.
+> 최초 E2E 217/227 PASS, 10 FAIL. UI 관련 7건 보완 뒤 check 2511/2511 PASS, 최종 E2E 미실행.
+> 범위 밖 admin/Space timeout 3건 원인 미확정으로 STOP. stage/commit/push 0, 다음 단위 시작 없음.
+> 운영자 표면·제품 결정·운영 권한 확대는 제외. 보호 대상·운영전환 보류·자동화 금지는 유지한다.
+> 아래 spec 087/Claude 인계 포인터는 이력이다. NEXT 최상단과 spec 088을 따른다.
+
+> **전송 완료 (2026-09-07): 사용자 명시 승인 후 일반 fast-forward push 성공.**
+> `1b0506e`, `a429f0a`, `03cd5e6` 반영. HEAD=origin/rebuild/modern-studio=`03cd5e6`, ahead/behind 0/0.
+> 과거 승인 차단은 해소됐다. 이번 전송 확인/다음 포인터 문서 4개는 미커밋·미스테이지다.
+> 다음 후보는 **F-2 고객 파일 선택 UI 계약**이며 next `CODEX_F2_UI_CONTRACT`다. 비-UI는 Codex가
+> 직접 진행하되 UI 구현은 Claude Code에 맡긴다. 아직 후속 구현 계약이나 제품 코드를 작성하지 않았다.
+> F-4/F-7/F-8 제품 선택은 보류한다. NEXT 최상단의 범위를 따른다. 예약 자동화 생성 없음.
 
 > **최신 포인터 (2026-09-07): spec 087 DONE / CODEX_PASSED / LOCAL_VERIFIED / NO_LIVE_NETWORK.**
 > 사용자의 비-UI 직접 수행 지시에 따라 Codex가 README 중복 참조를 고치고 전체 게이트를 재검증했다.
@@ -12,7 +33,7 @@
 > 제품 `ac684e3`, 허용 PNG 정합 `1b0506e`, 문서 보완·종료는 별도 commit. 제품 코드를 검수했던
 > Codex가 보완과 재검증도 맡았으며 별도 에이전트 독립 검수로 간주하지 않는다.
 > 승인된 비-UI 작업은 Codex 직접 수행·검증, UI/UX 구현은 Claude Code 담당으로 한다.
-> 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, active 없음, next `FOUNDER_NEXT_MANUAL_TASK`.
+> 상태 `WAITING_FOR_NEXT_MANUAL_TASK`, active 없음, next `CODEX_F2_UI_CONTRACT`.
 > 보호 문서/코드 hash 동일, spec-018 PNG만 canonical에서 재생성됐고 stage/restore 0.
 > Space PNG 19장(spec-084 15 + 추가 4) 검수 때와 동일, 포트 6개/staging 잔류 0.
 > Chromium 내부 raster 오류 로그는 발견돼 저장소 밖 CreatorTemp에 보존했다(STATE 경로 참조).

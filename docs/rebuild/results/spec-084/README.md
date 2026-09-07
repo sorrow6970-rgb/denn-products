@@ -1,5 +1,14 @@
 # spec 084 — local visual readiness evidence
 
+## 후속 갱신: spec 088 고객 사진 선택 (2026-09-07)
+
+현재 composer PNG는 사용자 승인 재검증으로 **최종 46px 선택 표면**에서 생성됐다(2026-09-07,
+canonical 227/227 PASS). 최초 42px 단계의 실패는 스펙 088 STOP REPORT에 보존한다.
+
+위 감사 이후 고객 composer의 파일 선택 표면을 한국어로 정리했다. 이 폴더의 composer 3장은 canonical이
+현재 제품으로 재생성한다. 원 감사 시점은 Git 이력에 남는다. F-2 전체 종료가 아니라 **고객 표면만**
+보완하며 운영자 file input은 아직 기존 상태다. F-7 진단 정책 등 다른 finding 판정은 바꾸지 않는다.
+
 로컬 Chromium에서 실제로 도달한 화면만 담는다. 모든 이미지는 **합성 데이터**이며 실제 Firebase/
 project/bucket/운영 데이터/네트워크는 0이다. 생성 주체는 `tests/e2e/local-visual-readiness.spec.ts`이고
 자동 측정 원본은 같은 폴더의 `measurements.json`이다. 판정과 finding은

@@ -1,20 +1,78 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 종료 포인터 (2026-09-07)
+
+스펙088 DONE / CODEX_PASSED / LOCAL_VERIFIED. 제품·test·PNG commit `f2f7f67`.
+최종 검수에서 추가 결함 미발견, check 2511/2511·canonical 227/227 PASS. 최초 timeout 원인
+UNCONFIRMED는 이력으로 유지한다. 사용자 연속 진행 지시에 따라 다음은 **운영자 PNG 선택 UI 계약**이다.
+고객 표면·운영자 gate/발급/저장/인증·실제 네트워크·보호 대상은 바꾸지 않는다. 다음 계약이 작성되기
+전에는 구현하지 않는다. 아래 READY_FOR_CODEX/STOP 포인터는 과거 이력이다.
+
+## 최신 정책·실행 포인터 (2026-09-07)
+
+**가장 최근 결과:** 사용자 승인 재개 후 canonical 단독 실행 **227 passed / 0 failed / 0 skipped /
+0 retry (46.3초)**. 코드·test·config 추가 변경 0. 상태 `READY_FOR_CODEX / LOCAL_VERIFIED`,
+next `CODEX_SPEC_088_FINAL_REVIEW`. 아래 BLOCKED는 이전 이력이며 현재 실행 지시가 아니다.
+직전 최종 check 2511/2511 PASS. timeout 3건은 이번 미재현이나 원인 UNCONFIRMED를 유지한다.
+
+현재 다음 지시:
+
+```text
+C:\repo\denn-products에서 스펙 088의 사용자 승인 재개·재검증 절과 handoff/live log를 읽고 최종 검수해. 최신 canonical 227/227 PASS와 최초 timeout 원인 미확정 한계를 함께 반영해. 결과 폴더의 최신 전체 화면/사진 선택 확대본으로 시각 증거도 확인해. 구현 범위 확대·운영 연결·보호 파일 변경·실패 이력 삭제를 하지 말고, 종료 판정 전에는 다음 스펙을 시작하지 마.
+```
+
+사용자 확인 경로: `docs/rebuild/results/spec-085/composer-workbench-1280x800.png`, 같은 폴더의 모바일
+세로 PNG, `docs/rebuild/results/spec-088/` 사진 선택 확대본 3장. 합성 데이터의 정적 캡처다.
+
+### 이전 STOP 포인터 (사용자 승인 후 재검증 완료)
+
+사용자가 UI도 Codex 직접 구현으로 정정했다. 이전 Claude 전용 UI 인계 제한은 더 이상 현재 정책이 아니다.
+현재 `BLOCKED`, active `spec-088-customer-photo-picker-surface`, next `FOUNDER_SPEC_088_GATE_INVESTIGATION_DECISION`.
+정본 `docs/rebuild/specs/088-customer-photo-picker-surface.md`의 STOP REPORT를 먼저 읽는다.
+고객 UI focus/높이를 보완한 뒤 check PASS(unit 2511/2511), 최종 브라우저 검증은 NOT VERIFIED다.
+최초 E2E 217 PASS / 10 FAIL 중 범위 밖 admin/Space timeout 3건 원인이 미확정이다.
+추가 코드 변경·E2E 반복·stage/commit/push·다음 단위는 하지 않는다.
+
+사용자 승인 후에만 사용할 다음 지시(현재 실행 승인이 아님):
+
+```text
+C:\repo\denn-products에서 스펙 088 STOP REPORT와 보존한 실패 자료를 읽어. 범위 밖 E2E 시간 초과 3건을 읽기 전용으로 조사하고, 확인된 원인과 수정된 고객 사진 선택 UI의 로컬 재검증 계획을 보고해. timeout·worker·skip·retry·기대값·제품 코드·config를 임의로 바꾸지 말고, 보호 대상과 운영전환 보류를 유지해.
+```
+아래 087 종료·F-2 계약 준비 문구는 과거 이력이다. 운영자 F-2/F-4/F-7/F-8은 시작하지 않는다.
+보호 대상·운영전환 보류·실제 Firebase/live/emulator/deploy 금지 및 자동화 생성 금지는 유지한다.
+
 상태: `WAITING_FOR_NEXT_MANUAL_TASK` — 스펙 087 DONE / CODEX_PASSED (2026-09-07)
 
-**먼저 확인할 전송 대기:** `1b0506e`(PNG 4장), `a429f0a`(문서 7개)는 로컬 commit이다. 일반 push가
-자동 승인 검토에서 외부 자료 전송 권한 부족으로 거절돼 origin은 `eab7199`다. 이 차단 기록도 로컬
-commit으로 남긴다. 사용자에게 정확한 대상 `origin/rebuild/modern-studio`와 해당 commit 묶음의 push
-승인을 받은 뒤 진행한다. 원격 완료로 보고하거나 우회 전송하지 않는다.
+**전송 완료:** 사용자 명시 승인 후 `1b0506e`(PNG 4장), `a429f0a`(문서 7개), `03cd5e6`(차단 이력)를
+`origin/rebuild/modern-studio`에 일반 fast-forward push했다. HEAD=origin=`03cd5e6`, ahead/behind 0/0.
+아래 과거 차단 기록은 해소됐다. 이 전송 확인과 다음 작업 포인터를 갱신한 문서 4개는 아직 unstaged다.
 
 - completed_unit: `spec-087-space-post-auth-header-collapse`
 - active_unit: `none`
-- next_transition: `FOUNDER_NEXT_MANUAL_TASK`
+- next_transition: `CODEX_F2_UI_CONTRACT`
 - 제품 `ac684e3`, PNG 정합 `1b0506e`; 문서 보완·종료는 후속 별도 commit.
 - 라운드 1 보완 후 check PASS(unit **2510/2510**), canonical Chromium **223/223 PASS**.
 - 전체 리빌드 기존 계획 추정 **85~88% / 잔여 12~15%** 유지.
 
-## 지금 수행할 작업 — 없음. 현재 단위 종료
+## 다음 작업 — F-2 고객 파일 선택 UI 계약 준비 (제품 구현 지시 아님)
+
+스펙 084 잔여 finding 요청의 F-2를 다음 후보로 좁혔다. 고객 `PreviewComposer`의 파일 선택 표면부터
+계약을 작성하고 실제 UI 구현은 Claude Code에 인계한다. 운영자 파일 선택 표면은 별도 후속 단위다.
+새 스펙 번호/허용 파일/검증 계약이 확정되기 전에는 이 요약만으로 구현하지 않는다.
+
+- 읽을 근거: `docs/codex-claude-handoff/reviews/2026-09-03-spec-084-remaining-findings-next-unit-request.md`,
+  스펙 026, `apps/mockup/src/preview/PreviewComposer.tsx`와 기존 unit/E2E.
+- 보존할 동작: 실제 native file input과 label 연결, 키보드 접근, `accept="image/*"`, 기존 testid,
+  선택 직후 input value 초기화, 같은 파일 재선택, 선택 취소 시 기존 이미지 유지, 삭제/교체 lifecycle.
+  원본 파일명·경로·blob URL을 새 표시/오류/로그에 노출하지 않는다.
+- 한국어 선택 표면과 상태 표시의 정확한 문구·focus·접근성·320px overflow·시각 증거를 계약에서 먼저
+  고정한다. 공유 UI API 확장이나 업로드/저장 기능을 섞지 않는다. 기존 테스트를 약화하지 않는다.
+- F-4 운영자 기본 진입, F-7 고객 진단 정책, F-8 replay 크기 의미는 선택하지 않는다. 운영전환 보류,
+  실제 Firebase/live/emulator/deploy 금지와 보호 대상을 유지한다.
+- 이 문서는 후속 UI 계약 준비 범위만 남긴다. Codex가 UI 코드를 직접 구현하지 않으며 Claude도
+  구현 계약 없이 먼저 수정하지 않는다. 스펙 087 보완은 재실행하지 않는다.
+
+## 현재 단위 종료 및 역할
 
 2026-09-07 사용자가 **UI 구현이 아니면 Codex가 직접 작업**하도록 지시했다. 이번 README 출처 중복
 보완·PNG 정합·검증·종료는 Codex가 직접 수행했다. 아래 라운드 1 Claude 지시는 이미 완료된 이력이다.

@@ -7751,3 +7751,93 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - origin은 `eab7199` 유지. 이 전송 차단 설명을 STATE/NEXT/CURRENT/live log에 동기화해 로컬로
   기록한다. 사용자에게 commit 묶음과 `origin/rebuild/modern-studio`를 명시해 승인을 요청한다.
   우회 push/다른 원격 전송/반복 재시도는 하지 않는다. 최종 HEAD와 ahead 수는 최종 보고 참조.
+
+## 2026-09-07 — 사용자 승인 push 완료 · 후속 UI 경계 확인
+
+- 사용자가 정확한 기존 원격/commit 묶음 전송을 승인했다. `git push origin HEAD:rebuild/modern-studio`
+  성공: `eab7199..03cd5e6`. `1b0506e`, `a429f0a`, `03cd5e6` **3개 commit** 반영이다.
+  이후 `git rev-parse HEAD origin/rebuild/modern-studio` 두 결과는
+  `03cd5e63508252fd36da52ebd660be037a190166`, ahead/behind `0/0`이다. 위 차단 이력은 해소됐다.
+- 스펙 087 DONE/CODEX_PASSED 유지. 이번에는 제품·테스트·PNG 수정이나 gate 재실행을 하지 않았다.
+  unit 2510/2510, Chromium 223/223은 직전 재검증 근거이며 이번 실행값으로 바꿔 쓰지 않는다.
+- 승인된 비-UI 작업은 Codex 직접 수행·검증, UI 구현은 Claude Code 담당이다. 제품 결정/권한 확대는
+  자동 채택하지 않으며 예약 자동화 생성 0이다.
+- 잔여 finding 요청과 현재 파일 선택 코드를 읽었다. 다음 후보 F-2는 UI이므로 고객 표면의 별도 계약을
+  먼저 준비하고 Claude에 인계한다. NEXT에 native input/label/키보드/취소/같은 파일 재선택/개인정보
+  비노출 보존 조건을 남겼다. 후속 계약·UI 구현은 아직 시작하지 않았다.
+- F-4 운영자 기본 화면, F-7 진단 정책, F-8 replay 크기는 Founder 결정 경계로 남긴다. 감사 잔여
+  항목 분류를 리빌드 전체의 완전한 작업 목록으로 일반화하지 않는다. 전체 기존 계획 추정
+  **85~88% 완료 / 12~15% 잔여** 유지; 새 측정치나 스펙 수 비율이 아니다.
+- 이번 문서 변경은 STATE/NEXT/CURRENT/live log **4개만**이며 미커밋·미스테이지로 남긴다.
+  보호 대상과 기존 사용자 dirty를 보존한다. 실제 Firebase/live/emulator/deploy/운영전환 0.
+  상태 `WAITING_FOR_NEXT_MANUAL_TASK`, completed spec 087, active none, next `CODEX_F2_UI_CONTRACT`.
+
+## 2026-09-07 - UI 직접 구현 정책 정정 · spec 088 구현 및 게이트 STOP
+
+- 사용자 최신 승인: **UI 구현도 Codex가 아이디어를 보태 직접 수행**. 이전 Claude 전용 UI 역할을 정정한다.
+  제품 결정·운영 권한·보호 대상은 별개이며 확대하지 않는다. 예약 자동화 생성 0.
+- spec088 계약을 코드 전에 작성했다. 고객 사진 선택만 Korean native input overlay로 구현했다.
+  Modern Studio 토큰 유지, 선택/교체 문구와 상태/접근성 연결, 이미지 소유·교체·취소 계약 보존.
+  제품 2 + 테스트 2파일. 운영자/packages/Rules/config/package/lockfile 변경 0.
+- targeted unit 61/61 PASS. 최초 check PASS: 2511/2511(92파일), 2 builds. 최초 canonical은
+  **217 passed / 10 failed / 0 skipped / 0 retry, 5.7분**. 두 게이트는 병행 실행했다.
+- 7건은 신규 focus 검사 3 + 실제 input 높이 42px인 기존 접근성 검사 4. 실제 Tab/Shift+Tab으로
+  keyboard modality를 만들고 label 높이를 46px로 보완했다. 기존 단언/44px 기준 완화 0.
+  보완 뒤 check 단독 재실행 PASS: 2511/2511, unit 56.46초, format/lint/typecheck/build PASS.
+- 나머지 3건: scaffold admin mobile test 30초 timeout, 잘못된 V2 비밀번호 안내 5초 timeout,
+  spec087 mobile Canvas 5초 timeout. 범위 밖 원인은 UNCONFIRMED. 환경 부하나 flaky로 단정하지 않는다.
+  루프의 필수 게이트 원인 미확정 STOP에 따라 추가 E2E/코드 변경/commit/push를 중단한다.
+- **최종 E2E·시각 검수 NOT VERIFIED.** 보완 전 composer PNG 6장만 생성됐으며 spec088 PNG 3장은
+  최초 focus 단언 실패로 미생성. 기존 증거 README를 이 상태에 맞췄다. DONE/CODEX_PASSED 아님.
+- 실패 자료 test-results를
+  `C:/Users/써드플~1/AppData/Local/Temp/denn-spec088-first-gate-10fdc7182ce54b31ac1bc44341e5a53f/`
+  아래에도 보존했다. Chromium debug.log(1,530 bytes, GPU command buffer 오류 포함)는 그 폴더의
+  chromium-debug.log로 이동했다(삭제 아님). 내부 그래픽 오류 무발생으로 주장하지 않는다.
+- 보호 20파일 hash 중 spec018 PNG 2장만 canonical 재생성으로 변경:
+  desktop `D0A0AA52… → 1129CE580E9D52192C29D16D136715EDD790FC775B39D259CA27A8F962DBD850`,
+  mobile `6BDCB88C… → 5821C5886FAD1FE9919F67200783DCCB5E119189E3D7EF6C5C61769417B9FC5E`.
+  나머지 18개 동일. 보호 대상 restore/stage/commit 0. 포트 6개 LISTENING 0, staging 제거 확인.
+- 최종 고객 entry index-qnJvLZZR.js 342.37 kB/gzip 104.91, CSS 21.10 kB. 운영자 entry
+  index-BWeRXD_J.js 295.37 kB/gzip 91.55, CSS 파일명 동일. 기존 chunk-size 경고 남음.
+- HEAD=origin 추적 ref 03cd5e6, ahead/behind 0/0. 이번 stage/commit/push 0, 변경은 미커밋이다.
+  최신 상태 `BLOCKED`, completed spec087, active spec088, next `FOUNDER_SPEC_088_GATE_INVESTIGATION_DECISION`.
+  재개 질문은 범위 밖 3건 읽기 전용 원인 조사와 수정 UI 로컬 재검증 허용 여부 하나다.
+  기존 전체 리빌드 계획 추정 85~88% 완료/12~15% 잔여 유지. 이번 미완료 단위로 수치를 올리지 않는다.
+
+## 2026-09-07 - spec088 승인 재검증 PASS · 사용자 시각 확인 안내
+
+- 사용자 승인: 범위 밖 timeout 읽기 전용 원인 조사와 수정 UI 재검증 재개. 시각 확인 방법도 요청했다.
+- 코드·test·config 추가 변경 없이 `node scripts/e2e-run.mjs` 단독 1회: exit 0,
+  **227 passed / 0 failed / 0 skipped / 0 retry**, 46.3초. 직전 최종 check 2511/2511 PASS 유지.
+  unit은 이번에 다시 실행하지 않았다. 처음의 217/10 실패를 삭제하거나 마지막 PASS로 덮지 않는다.
+- 이전 UI 관련 7건과 범위 밖 timeout 3건 모두 이번 실행에서 통과. 3건의 정확한 최초 원인은
+  UNCONFIRMED다. 당시 Space snapshot 두 건은 `시안을 확인하는 중입니다…`, admin은 전체 30초 timeout.
+  fixture createV2Replay는 syntheticPng/SHA-256 후 fake opener를 만들며 wrong-password는 fake에서
+  실패를 반환한다. 실제 PBKDF2 지연 증거가 아니다. 당시 단계별 timing/trace가 없어 부하 인과도 증명
+  못 했다. 단독 실행에서 미재현된 사실만 기록하고 timeout/worker/기대값/skip/retry 변경 0을 유지한다.
+- 신규 picker PNG 3장과 composer PNG 6장 최종 생성. 320/390/1280 picker와 전체 데스크톱/모바일을
+  직접 열어 확인했다. 320px에서 삭제 버튼 줄바꿈은 컨테이너 안이며 overflow 0, input >=44px,
+  keyboard focus/chooser/cancel 상당/repick/clear/실패 후 선택 테스트 PASS. 실제 OS dialog는 NOT TESTED.
+- 사용자 확인 경로: spec085 전체 화면, spec088 사진 선택 확대본. 이미지가 합성임과 보라색 사진이
+  테스트 자료임을 명시했다. Codex 파일 패널 열기 요청은 queued 응답이었다. 정적 캡처이며 서버는
+  종료되어 localhost를 상시 실행 화면으로 안내하지 않는다. 기본 dev URL도 안내하지 않는다.
+- 신규 PNG SHA-256: 320 `3D7840ECD5B5B520D725325C2BC2ABDF6D9DF5FB3C1D0A3FF665F18FB8AF8B7E`,
+  390 `7391EF15B330AEC9253D664ED530476C8B54AF53F638782AF09E735A4AAA8C78`,
+  1280 `2E864621E1B0AAB03285BC47C1C80E2DEC8581ABEDBFE20631E0B42E49586505`.
+- 보호 20파일 중 spec018 PNG만 canonical 재생성, 나머지 18개 hash 동일. desktop `1129CE58… →
+  D0A0AA52…`, mobile `5821C588… → 6BDCB88C…`. restore/stage/commit 0. staging `denn-e2e-00wvDX`
+  제거, 포트 4183/4184/4185/8080/9099/9199 LISTENING 0, 새 debug.log 없음.
+- 상태 READY_FOR_CODEX / LOCAL_VERIFIED, completed087 유지, active088, next CODEX_SPEC_088_FINAL_REVIEW.
+  이번 commit/push 0, HEAD=origin 추적 ref 03cd5e6. 전체 기존 계획 추정 85~88%/잔여12~15% 유지.
+  실제 Firebase/live/emulator/deploy·운영전환·자동화·후속 스펙 시작 0.
+
+## 2026-09-07 - spec088 최종 검수 통과 · 종료
+
+- 사용자 연속 진행 지시 후 diff 4파일/접근성/동작 경계와 최신 PNG를 최종 검토했다. 추가 결함 미발견.
+  직전 check 2511/2511·canonical 227/227 PASS를 근거로 DONE/CODEX_PASSED/LOCAL_VERIFIED.
+  같은 Codex의 최종 검토이며 별도 에이전트 독립 검수나 Founder 시각 승인을 주장하지 않는다.
+- 최초 E2E 217/10 실패 및 timeout 원인 UNCONFIRMED 이력은 보존한다. 테스트 완화 0.
+- 제품/test 4파일 + 허용 PNG 9장, 총 13파일을 `f2f7f67`에 commit. 보호 대상 stage/restore 0.
+  종료 문서 9개는 별도 commit 대상이다. 원격 동기화 결과는 후속 기록으로 남긴다.
+- 다음 안전 후보는 F-2 운영자 PNG 선택 UI. 별도 계약 전에는 코드 변경하지 않는다.
+  전체 기존 계획 추정 85~88%/잔여12~15% 유지, 운영전환 및 실제 Firebase/live/배포는 보류한다.
