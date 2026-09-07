@@ -159,6 +159,12 @@ test("a file the browser cannot decode as a PNG fails closed", async ({ page }) 
   await expect(page.getByTestId("fixture-issue-calls")).toHaveText("0");
   // The picked file's name never reaches the DOM.
   expect(await page.content()).not.toContain("renamed.png");
+  await expect(page.getByTestId("space-v2-proof-file")).toHaveAccessibleDescription("선택 실패");
+  await expect(page.getByTestId("space-v2-proof-file")).toBeEnabled();
+  await attach(page, PNG, "replacement.png");
+  await expect(page.getByTestId("space-v2-proof-file")).toHaveAccessibleDescription("선택됨");
+  await expect(canvasBox(page)).toBeVisible();
+  await expect(page.getByTestId("fixture-issue-calls")).toHaveText("0");
 });
 
 test("a mismatched password issues nothing and needs a new draft", async ({ page }) => {
@@ -593,6 +599,93 @@ const VIEWPORTS = [
 ] as const;
 
 for (const viewport of VIEWPORTS) {
+  test(`spec 089 PNG picker keyboard and frozen boundary at ${viewport.name}`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    const { external, consoleMessages } = await open(page);
+    const input = page.getByTestId("space-v2-proof-file");
+    const picker = page.locator(".denn-space-v2-issue__file-picker");
+    await expect(input).toBeDisabled();
+    await expect(picker).toHaveCSS("cursor", "not-allowed");
+    await expect(input).toHaveAccessibleName("시안 이미지 (PNG)");
+    await expect(input).toHaveAccessibleDescription("선택 안 됨");
+    await loadBaseline(page);
+    await chooseSupported(page);
+    await expect(input).toBeEnabled();
+    await expect(picker).toHaveText("PNG 선택");
+
+    await input.focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Shift+Tab");
+    await expect(input).toBeFocused();
+    await expect(picker).toHaveCSS("outline-style", "solid");
+    await expect(input).toHaveCSS("opacity", "0");
+    const box = await input.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
+
+    const firstChooser = page.waitForEvent("filechooser");
+    await input.press("Enter");
+    await (await firstChooser).setFiles({
+      name: "private-first.png",
+      mimeType: "image/png",
+      buffer: PNG,
+    });
+    await expect(input).toHaveAccessibleDescription("선택됨");
+    await expect(picker).toHaveText("PNG 바꾸기");
+    await expect(canvasBox(page)).toBeVisible();
+    await expect(page.getByTestId("fixture-object-urls")).toHaveText("1:0");
+
+    // OS dialog pixels are outside this test. Model its no-file change and cancel notification.
+    await input.setInputFiles([]);
+    await input.dispatchEvent("cancel");
+    await expect(input).toHaveAccessibleDescription("선택됨");
+    await expect(canvasBox(page)).toBeVisible();
+    await expect(page.getByTestId("fixture-object-urls")).toHaveText("1:0");
+    const secondChooser = page.waitForEvent("filechooser");
+    await input.press("Space");
+    await (await secondChooser).setFiles({
+      name: "private-second.png",
+      mimeType: "image/png",
+      buffer: PNG,
+    });
+    await expect(page.getByTestId("fixture-object-urls")).toHaveText("2:1");
+    await expect(input).toHaveAccessibleDescription("선택됨");
+    // Unlike the customer picker, this handler intentionally retains the native input value.
+    await expect(input).toHaveValue(/private-second\.png$/);
+    expect(await page.locator("body").innerText()).not.toContain("private-");
+    expect(await page.content()).not.toContain("private-");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    const axe = await new AxeBuilder({ page }).analyze();
+    expect(axe.violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual(
+      [],
+    );
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    const { mkdirSync } = await import("node:fs");
+    mkdirSync("docs/rebuild/results/spec-089", { recursive: true });
+    // Include the fieldset padding so the outer keyboard outline is not cropped off.
+    await page
+      .locator(".denn-space-v2-issue__group")
+      .first()
+      .screenshot({
+        path: `docs/rebuild/results/spec-089/png-picker-${viewport.width}x${viewport.height}.png`,
+        animations: "disabled",
+      });
+
+    await page.getByTestId("space-v2-freeze").click();
+    await expect(page.getByTestId("fixture-issue-status")).toHaveText("draft-ready");
+    await expect(input).toBeDisabled();
+    await expect(picker).toHaveCSS("cursor", "not-allowed");
+    await input.focus();
+    await expect(input).not.toBeFocused();
+    await expect(canvasBox(page)).toBeVisible();
+    await expect(page.getByTestId("fixture-issue-calls")).toHaveText("0");
+    await expect(page.getByTestId("fixture-write-factory-calls")).toHaveText("0");
+    expect(external).toEqual([]);
+    expect(consoleMessages).toEqual([]);
+  });
+
   test(`layout, targets and axe at ${viewport.name}`, async ({ page }) => {
     const { consoleMessages } = await open(page);
     await page.setViewportSize({ width: viewport.width, height: viewport.height });

@@ -624,17 +624,41 @@ export function AdminSpaceV2IssuePanel({
             ))}
           </select>
 
-          <label htmlFor="space-v2-proof-file">시안 이미지 (PNG)</label>
-          <input
-            id="space-v2-proof-file"
-            data-testid="space-v2-proof-file"
-            type="file"
-            accept="image/png"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file !== undefined) owner.load(file);
-            }}
-          />
+          <div className="denn-space-v2-issue__file" data-photo-state={image.status}>
+            <label id="space-v2-proof-file-label" htmlFor="space-v2-proof-file">
+              시안 이미지 (PNG)
+            </label>
+            <div className="denn-space-v2-issue__file-row">
+              <label className="denn-space-v2-issue__file-picker" htmlFor="space-v2-proof-file">
+                <span aria-hidden="true">
+                  {image.status === "ready" ? "PNG 바꾸기" : "PNG 선택"}
+                </span>
+                <input
+                  className="denn-space-v2-issue__file-input"
+                  id="space-v2-proof-file"
+                  data-testid="space-v2-proof-file"
+                  type="file"
+                  accept="image/png"
+                  aria-labelledby="space-v2-proof-file-label"
+                  aria-describedby="space-v2-proof-file-state"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file !== undefined) owner.load(file);
+                  }}
+                />
+              </label>
+              <span id="space-v2-proof-file-state" className="denn-space-v2-issue__file-state">
+                {
+                  {
+                    idle: "선택 안 됨",
+                    loading: "준비 중",
+                    ready: "선택됨",
+                    failed: "선택 실패",
+                  }[image.status]
+                }
+              </span>
+            </div>
+          </div>
         </fieldset>
 
         <div className="denn-space-v2-issue__preview" ref={boxRef}>

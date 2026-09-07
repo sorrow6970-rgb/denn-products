@@ -323,6 +323,19 @@ describe("copyLinkToClipboard", () => {
 // --- the rendered states (spec 083 §6) ---------------------------------------
 
 describe("AdminSpaceV2IssuePanel", () => {
+  it("keeps a native PNG input with Korean label and explicit local state", () => {
+    const html = render();
+    expect(html).toContain('id="space-v2-proof-file-label"');
+    expect(html).toContain('aria-labelledby="space-v2-proof-file-label"');
+    expect(html).toContain('aria-describedby="space-v2-proof-file-state"');
+    expect(html).toContain('type="file" accept="image/png"');
+    expect(html).toContain('id="space-v2-proof-file-state"');
+    expect(html).toContain("시안 이미지 (PNG)");
+    expect(html).toContain("PNG 선택");
+    expect(html).toContain("선택 안 됨");
+    expect(html.match(/type="file"/g)).toHaveLength(1);
+  });
+
   it("explains why a draft cannot start when the baseline is not ready-clean", () => {
     for (const status of ["unloaded", "ready-dirty-valid", "saving", "conflict"] as const) {
       const html = render(writeController({ ...WRITE_SNAPSHOT, status }));

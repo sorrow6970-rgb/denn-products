@@ -59,7 +59,6 @@
 
 /* 44px minimum target on every interactive control (spec 083 VERIFY E2E 8). */
 .denn-space-v2-issue__group > select,
-.denn-space-v2-issue__group > input[type="file"],
 .denn-space-v2-issue__group > input[type="range"] {
   box-sizing: border-box;
   min-height: 44px;
@@ -89,6 +88,73 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.denn-space-v2-issue__file {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+
+.denn-space-v2-issue__file > label {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.denn-space-v2-issue__file-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.denn-space-v2-issue__file-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  /* The overlay input inside the border retains a full 44px pointer target. */
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+}
+
+.denn-space-v2-issue__file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.denn-space-v2-issue__file-picker:has(input:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.denn-space-v2-issue__file-picker:has(input:disabled) {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.denn-space-v2-issue__file-input:disabled {
+  cursor: not-allowed;
+}
+
+.denn-space-v2-issue__file[data-photo-state="failed"] .denn-space-v2-issue__file-state {
+  color: var(--danger-ink);
 }
 
 /* The preview box is what the logical width is MEASURED from, so it must be a plain block that
