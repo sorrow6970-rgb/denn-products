@@ -8,10 +8,10 @@ completed_unit: spec-101-room-browser-adapter-boundary-investigation   # DOCUMEN
 active_unit: spec-102-room-frame-snapshot
 state: READY_FOR_IMPLEMENTATION
 baseline_commit: 2dcf7b4
-candidate_commit: pending   # spec102 reviewed contract; implementation not started
+candidate_commit: e130764   # spec102 reviewed contract; implementation not started
 verified_commit: 6e41c48   # same Codex implementation/review; not independent review
-origin_relation: "baseline HEAD=origin tracking ref2dcf7b4; spec102 contract7 pending normal commit/push"
-working_tree: "spec102 contract7 documents only; preexisting protected/user dirty22 preserved and excluded"
+origin_relation: "spec102 contract7 e130764 normal push confirmed; HEAD=origin e130764,0/0 before receipt; final receipt HEAD via git"
+working_tree: "spec102 receipt5 documents only; preexisting protected/user dirty22 excluded,22 hashes unchanged"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: CODEX_SPEC_102_IMPLEMENT_AND_VERIFY
@@ -21,6 +21,10 @@ commit_owner: Codex; scoped code/test and closure documents separately, normal f
 ```
 
 ## 최신 준비 — spec102 독립 frame snapshot 계약 (2026-09-07)
+
+전송확인: 계약7문서e130764 정상push2dcf7b4..e130764,HEAD=origin e130764·0/0.
+링크15/15·dirty22/22 SHA동일·diff--check PASS. 영수증5문서만 추가, 제품/시험0 유지.
+아래 전송계획 완료. 다음 명시 구현 지시는NEXT, 아직착수0.
 
 사용자 `응 진행해줘`로101 NEXT의 계약 작성·검토 차례만 수행. CONTRACT_REVIEW_PASSED(동일 Codex).
 같은 final plan 동기실행·필수 scale/예산·ceil backing/crop·private surface/paint/release·재진입을 고정했다.
