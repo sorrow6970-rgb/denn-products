@@ -8,10 +8,10 @@ completed_unit: spec-101-room-browser-adapter-boundary-investigation   # DOCUMEN
 active_unit: none
 state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: 85136b1
-candidate_commit: pending   # spec101 document-only investigation
+candidate_commit: d89eaad   # spec101 document-only investigation
 verified_commit: 6e41c48   # same Codex implementation/review; not independent review
-origin_relation: "baseline HEAD=origin tracking ref85136b1,0/0; spec101 document7 pending normal commit/push"
-working_tree: "spec101 document7 only; preexisting protected/user dirty22 preserved and excluded"
+origin_relation: "spec101 document7 d89eaad normal push confirmed; HEAD=origin d89eaad,0/0 before receipt; final receipt HEAD via git"
+working_tree: "spec101 receipt5 documents only; preexisting protected/user dirty22 preserved and excluded,22 hashes unchanged"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: CODEX_ROOM_FRAME_SNAPSHOT_CONTRACT
@@ -21,6 +21,10 @@ commit_owner: Codex; scoped code/test and closure documents separately, normal f
 ```
 
 ## 최신 완료 — spec101 browser adapter 경계 문서 조사 (2026-09-07)
+
+전송확인: 조사7문서d89eaad 정상push85136b1..d89eaad, HEAD=origin d89eaad·0/0.
+링크35/35·시작dirty22/22 SHA동일·diff--check PASS. 영수증5문서만 별도 기록, 추가제품/시험0.
+아래 전송계획은 완료 이력이다. 다음102 계약은 아직 작성하지 않았다.
 
 100 NEXT에 따라 정적 조사만 수행, 동일 Codex DOCUMENT DONE/DOCUMENT_REVIEW_PASSED.
 source producer/committed 묶음·owner incarnation·동기 final-plan 사본·private drawable 사용권,

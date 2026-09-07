@@ -2,6 +2,9 @@
 
 ## 최신 완료 / 다음 계약 — spec101 (2026-09-07)
 
+전송완료: 조사7문서d89eaad 정상push, HEAD=origin d89eaad·0/0 확인. 영수증5문서별도기록.
+링크35/35·dirty22/22 SHA동일·diff--check PASS. 보호/별도작업 제외. 다음102 계약은 아직 미작성.
+
 101 DOCUMENT DONE/DOCUMENT_REVIEW_PASSED(동일 Codex). source producer·snapshot·drawable 사용권과
 background 취소·입력예산 경계를 정적으로 조사했다. 결과 정본:
 docs/codex-claude-handoff/reviews/2026-09-07-spec-101-room-browser-adapter-boundary-investigation.md.

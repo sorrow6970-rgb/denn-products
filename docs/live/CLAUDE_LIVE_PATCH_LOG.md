@@ -8356,3 +8356,10 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   문서 검증 후 일반commit/push. 전체실측 완료율/최종스펙수 확인불가, 이번 화면변화0.
 - 최종 문서검증 실측: 신규3문서 링크/지정라인35/35 PASS, 시작dirty22/22 SHA동일,
   정확7문서외새변경0·diff--check PASS·staged0. 양앱 기존entry SHA100동일(재build아님), 포트6개listener0.
+
+## 2026-09-07 - spec101 조사 전송 완료 · 다음 frame snapshot 계약 대기
+
+- 조사7문서d89eaad 정상push85136b1..d89eaad. 확인시HEAD=origin d89eaad,ahead/behind0/0.
+- 링크35/35·시작dirty22/22 SHA동일·diff--check PASS. 영수증5문서만 별도기록, 보호/별도작업 커밋제외.
+- 101 DOCUMENT DONE/DOCUMENT_REVIEW_PASSED(동일 Codex),100 제품DONE 유지. 다음102 계약 상세지시NEXT.
+  아직 새계약/구현0, 추가Founder질문 없음. 실제 배경정책은 미확정, 운영/배포/자동화0·전체실측률불명.
