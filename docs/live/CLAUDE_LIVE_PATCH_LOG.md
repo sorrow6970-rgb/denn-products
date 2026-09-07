@@ -8117,3 +8117,21 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   다음은상세읽기전용계약대조.새제품의미·권한·첫출시선택이필요하면구현하지않고질문한다.
 - READY_FOR_NEXT_SCOPED_UNIT / remaining-product-scope-review.094 DONE/CODEX_PASSED유지.
   전체관리추정85~88%/잔여12~15%유지(실측아님).실제Firebase/운영/배포/삭제/자동화0.
+
+## 2026-09-07 - spec095 잔여 기능·승인 경계 문서 조사 완료
+
+- 사용자 `응 다음진행해줘`에 따라094 NEXT의상세대조진행.시작HEAD=origine083aec·0/0.
+- 룸/사이즈가이드/주문·카카오/전체catalog/발행5축의레거시·현재코드·정본·테스트범위를추적.
+  데이터보존과제품구현,로컬PNG와주문,전체문서CAS와전체편집/발행을구별했다.
+- canonical cm는인쇄치수이며액자외곽/방축척이라는근거는없다.레거시가이드의UI배율도실측보정증거아님.
+  다음최소후보RG-1=A(로컬인쇄크기상대비교)를권장하되미승인유지.정확한질문은095조사§5.
+  새제품의미를선택하기전096제품코드/구현계약은중지.운영개방/발행/삭제권한을묻거나추정하지않는다.
+- 095 DOCUMENT_REVIEW_PASSED/DOCUMENT DONE(동일Codex).현재FOUNDER_DECISION_REQUIRED,
+  active rg1-print-size-comparison-scope,next FOUNDER_RG1_COMPARISON_SCOPE_DECISION.094제품DONE유지.
+- 허용7문서:095계약/조사/handoff3+STATE/NEXT/CURRENT/live4.기존dirty22파일보호·커밋제외.
+  제품코드/PNG/Rules/config/test/설치/브라우저/emulator/실제데이터/외부서비스/배포/자동화실행0.
+  기존094 unit2526·canonical267 exit0는인용값이며이번재실행아님.문서/경로/hash/diff검증만수행한다.
+- 전체85~88%/잔여12~15%는이전관리추정(100-88=12,100-85=15).이번조사로상향하지않으며
+  현재전체실측완료율·최종스펙수·완료일은확인불가.상세근거는095검수문서참조.
+- 문서검증실측:시작dirty22/22SHA동일,신규3문서로컬링크28/28존재,허용7문서외이번변경0,
+  git diff--checkPASS,검증시staged0.조사문서만일반commit/push단계이며RG-1은여전히미승인.

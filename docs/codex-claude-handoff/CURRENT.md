@@ -1,5 +1,12 @@
 # 현재 상태
 
+> 최신2026-09-07:095 잔여기능·승인경계 문서조사 DONE/DOCUMENT_REVIEW_PASSED(동일Codex).
+> FOUNDER_DECISION_REQUIRED / rg1-print-size-comparison-scope / FOUNDER_RG1_COMPARISON_SCOPE_DECISION.
+> canonical 인쇄cm의로컬상대비교를다음최소제품범위로할지RG-1질문1개.권장A미승인,096계약/구현0.
+> 인쇄치수≠확인된액자외곽/방사진축척.룸/전체catalog/주문/발행은완료처리하지않는다.
+> 시작HEAD=origine083aec·0/0;허용7문서만변경,기존dirty22파일보호·제외.제품/테스트/PNG/운영/자동화0.
+> 094제품DONE/CODEX_PASSED유지.전체85~88%는과거관리추정,현재실측완료율/종료일확인불가.상세095조사/NEXT참조.
+
 > 최신2026-09-07: spec094 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일Codex), F-9해소. 코드/증거38257ef.
 > check2526/2526·canonical267 tests exit0/last-run passed, 변경6PNG직접검수. 고객entry불변.
 > 093은a80cd9c까지push완료.094코드38257ef/종료5a1abe6도push완료·HEAD=origin5a1abe6·0/0확인.
