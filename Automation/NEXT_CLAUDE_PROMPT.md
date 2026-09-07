@@ -1,6 +1,54 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 다음 지시 — spec092 종료 후 (2026-09-07)
+
+spec092 DONE/CODEX_PASSED/LOCAL_VERIFIED, 테스트·증거18파일36eb15a.
+최종 check2517/2517·canonical246/246(48.6초),15PNG 직접 확인·시각 finding0. 같은 Codex 검수다.
+사용자 연속 구현 승인에 따라 종료 문서 별도 커밋·일반 push 후 아래 읽기 전용 다음 단위를 진행한다.
+
+```text
+C:\repo\denn-products에서 spec092 감사 보고서와 현재 C5 session-controller/fixture/test를 읽어. 아직 촬영하지 않은 loading/saving/load-error/save-error/auth expiry를 기존 포트와 의미를 바꾸지 않고 합성 검증할 수 있는지 조사해. 새 제품 결정 없이 test-only fixture/테스트로 가능한 최소 범위만 spec093 계약으로 먼저 작성하고, 소스와 계약 검토 후 그 범위만 구현·검증해. 실제 서비스/운영 gate/제품 상태 의미/Rules/설정/보호 대상/의존성 변경은 금지한다. 범위 모순·미확정 실패·새 권한 필요 시 중단하고 상태와 근거를 남겨. 자동화는 만들지 마.
+```
+
+이는 모든 미완 제품 기능의 무조건 구현 승인이 아니다. 첫 출시 범위/실기기/운영 전환 결정은 별도다.
+아래092 작업 중·계약 대기는 과거 이력이다. 전체 추정85~88% 유지, 잔여12~15%는 실측치가 아니다.
+
+## 최신 승인·실행 — spec092 (2026-09-07)
+
+사용자 `스팩 자동구현 쭉해줘 아까 정한 규칙대로`로 직접 구현·검증 연속 진행 승인.
+Codex가092 계약/fixture/controller/Card를 재검토했고 모순 미발견. 아래 문서 전용 대기는 이전 단계다.
+현재 신규 감사test 한 파일과15PNG/JSON/README/보고서만 구현·검증한다. 제품/기존test/config/Rules 무변경.
+check → canonical1회 → 증거/범위/hash 검토 → 상태 동기화. 미확정 실패나 범위 밖 증거 변경은 STOP.
+새 제품 결정·운영 연결·보호 대상·의존성·배포 권한은 확대하지 않는다. 예약 자동화 생성0.
+
 ## 최신 실행 (2026-09-07)
+
+**현재 spec092 계약 문서 검토 대기:** `docs/rebuild/specs/092-admin-c5-failure-state-visual-audit.md`와
+`docs/handoff/2026-09-07-spec-092-admin-c5-failure-state-visual-audit-handoff.md` 작성 완료.
+READY_FOR_CODEX / CONTRACT_DRAFT / NOT IMPLEMENTED / NOT TESTED. HEAD=origin54aa472·0/0.
+이번 계약6문서와 직전 보존2문서=전체 작업 문서8개 미커밋. 보호/user dirty 별도 보존.
+아래 계약 후보/로드맵 지시는 이력이며 현재 다음 행동은 문서 검토뿐이다.
+
+### 다음 전달 문구 — spec092 계약 검수
+
+```text
+C:\repo\denn-products에서 spec092-admin-c5-failure-state-visual-audit 계약과 해당 handoff를 검수해. 기존 fixture/control로5상태가 도달 가능한지, fake save/revision/disabled 분기와 Card root/fixture 경계가 정확한지,15PNG·JSON·README·신규test 한정 범위와 감사finding/게이트 판정이 일관적인지 읽기 전용 확인해. 오류가 있으면 문서만 보완해. 이번 검수에서는 제품/기존test/fixture/Rules/config/보호파일 변경, 신규test/PNG 생성, 게이트·브라우저·emulator 실행, 실제Firebase/UID/운영연결/배포/자동화를 하지 마. 계약 통과와 구현 승인을 분리하고 상태 문서에 결과를 남겨.
+```
+
+**최종 상태:** spec091 전송 완료. `95279e7`/`0692f4a`/`54aa472`, HEAD=origin54aa472·0/0.
+전체 잔여 로드맵 읽기 전용 검토 완료, 보고서
+`docs/codex-claude-handoff/reviews/2026-09-07-rebuild-remaining-roadmap-review.md`.
+현재 WAITING_FOR_NEXT_MANUAL_TASK. 보고서+상태/영수증6문서 로컬 미커밋, 추가 제품/test/PNG 변경0.
+아래 과거 전송 차단/재검증 지시는 재실행하지 않는다.
+
+### 다음 작업 문구 — C5 실패 상태 시각 감사 계약 후보
+
+```text
+C:\repo\denn-products에서 최신 STATE/CURRENT/live와 2026-09-07-rebuild-remaining-roadmap-review.md §5를 읽어. 기존 admin-write-fixture와 admin-write-editor E2E로 도달 가능한 dirty-valid/dirty-invalid/conflict/outcome-unknown/discard-confirmation의 제품 영역만 시각 감사하는 spec092 계약을 먼저 작성해. 이 단계에서는 계약 문서만 작성하고 제품 코드/기존 fixture/test/Rules/config를 바꾸거나 게이트를 실행하지 마. save-error 등 추가 상태는 현재 fixture가 지원한다고 추측하지 마. 최소 허용 파일과 PNG 목록·viewport·provenance·검증 절차·보호 PNG 예외·STOP을 계약에 명시해. 실제 Firebase/UID/운영 연결/배포/자동화 금지를 유지하고 계약 검토 후에만 구현·캡처로 넘어가.
+```
+
+이것은 다음 계약 작성 지시이며 spec092 구현 승인이 아니다. 전체 실측 완료율/최종 잔여 스펙 수는
+확인 불가,85~88%는 이전 관리 추정으로만 보존한다. 출시 범위·운영 전환 결정을 대신하지 않는다.
 
 **최신 승인:** 사용자 `응 승인 다음`으로 제품95279e7/문서0692f4a와 상태 정정 문서의 아래 origin
 브랜치 일반 push를 명시 승인했다. 보호 파일 제외. 전송 확인 후 아래 전체 잔여 로드맵 읽기 전용 검토를

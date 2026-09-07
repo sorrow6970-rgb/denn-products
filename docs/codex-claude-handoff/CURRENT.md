@@ -1,5 +1,32 @@
 # 현재 상태
 
+> 최신 종료 2026-09-07: spec092 DONE/CODEX_PASSED/LOCAL_VERIFIED, test/evidence18파일36eb15a.
+> check2517/2517·canonical246/246(48.6초), PNG15 직접 검토·finding0. 같은 Codex 검수, 실제 운영 아님.
+> 종료 문서7개 별도 커밋·push 후 연속 승인 범위에서 C5 나머지 실패 상태 test-only 가능성 조사.
+> READY_FOR_NEXT_SCOPED_UNIT, next CODEX_C5_REMAINING_FAILURE_TEST_ONLY_SCOPE_REVIEW.
+> 기존 roadmap/spec091handoff2·보호/user dirty 보존. PNG2만 canonical 예외, 보호 stage/commit0.
+> 전체 관리 추정85~88%/잔여12~15% 유지, 실측률 확인 불가. 아래는 이력이다.
+
+> 최신 승인 2026-09-07: 사용자 연속 구현 지시로092 계약을 같은 Codex가 검토 후 감사 구현 착수.
+> CLAUDE_WORKING, next CODEX_SPEC_092_LOCAL_VERIFY_AND_REVIEW. 신규test/증거 한정, 제품 변경0.
+> 아래 계약 검수 대기는 이전 단계다. 실제 운영/배포/자동화/보호 변경 금지와 STOP은 유지한다.
+
+> 최신 2026-09-07: spec092 C5 실패 상태 시각 감사 계약/hand off 작성 완료. READY_FOR_CODEX,
+> CONTRACT_DRAFT / NOT IMPLEMENTED / NOT TESTED, next CODEX_SPEC_092_CONTRACT_REVIEW.
+> 정본 docs/rebuild/specs/092-admin-c5-failure-state-visual-audit.md. 상태5×viewport3=15증거는 계획일 뿐 생성0.
+> HEAD=origin54aa472·0/0, 작업 문서8개 미커밋/미스테이지(이번6+직전 보존2). 제품/test/PNG·게이트0.
+> spec091 DONE 유지. 보호/user dirty 보존, 실제 Firebase/UID/운영 전환/배포/자동화0.
+> 전체85~88%/잔여12~15%는 기존 관리 추정, 전체 실측률 확인 불가. 아래는 과거 이력이다.
+
+> 최신 완료 2026-09-07: 승인된 spec091 제품95279e7/문서0692f4a/정정54aa472 일반 push 성공.
+> HEAD=origin54aa472,0/0. 전송 승인 차단 해소. 이어서 전체 잔여 로드맵 읽기 전용 검토 완료.
+> 보고서 reviews/2026-09-07-rebuild-remaining-roadmap-review.md. 보고서+상태/영수증6문서 로컬 미커밋.
+> 현재 WAITING_FOR_NEXT_MANUAL_TASK, active none, next CODEX_SPEC_092_C5_FAILURE_VISUAL_AUDIT_CONTRACT_CANDIDATE.
+> 다음 후보 C5 실패 상태 시각 감사는 아직 계약/구현 없음. F-1~F-8 처리와 전체 리빌드 완료를 구분한다.
+> 85~88%/잔여12~15%는 기존 관리 추정이며 전체 실측 완료율은 확인 불가. 보호/user dirty 보존,
+> 추가 제품/test/PNG/Rules/config 변경·게이트 실행0, 운영전환 보류·실제 Firebase/UID/배포/자동화0.
+> 아래 전송 차단/WORKING 포인터는 모두 과거 이력이다.
+
 > 최신 승인 2026-09-07: 사용자 `응 승인 다음`으로 spec091 두 커밋+정정 문서를 아래 origin 브랜치로
 > 일반 push 승인. 전송 확인 뒤 전체 잔여 로드맵 읽기 전용 검토 진행. 현재 CLAUDE_WORKING,
 > active rebuild-remaining-roadmap-review. 보호 파일 제외, 새 제품 스펙/구현·운영 연결·자동화0.

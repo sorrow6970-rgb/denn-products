@@ -7975,3 +7975,57 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio로 일반 push 승인.
 - 이 정정5문서만 별도 커밋 후 fast-forward push한다. 보호 파일 제외, 새 제품 변경/검증 반복0.
   전송 성공 여부는 후속 실제 Git 결과로 확인. 이후 NEXT의 잔여 로드맵 읽기 전용 검토만 수행한다.
+
+## 2026-09-07 - spec091 전송 성공 · 전체 잔여 로드맵 검토 완료
+
+- 승인된 제품95279e7/종료0692f4a/전송 정정54aa472 일반 push 성공. Git 응답6992aba..54aa472,
+  HEAD=origin54aa472, ahead/behind0/0. 이전 전송 승인 차단 해소. 보호 파일 stage/commit0.
+- NEXT의 읽기 전용 검토 수행: 레거시 인벤토리·배포/보류 결정·039/041/045/080/083/084~091·실제
+  App/fixture/tests와 이전 진행도 기록을 대조했다. 보고서
+  `docs/codex-claude-handoff/reviews/2026-09-07-rebuild-remaining-roadmap-review.md` 작성.
+- UI 감사 F-1~F-8은6개 구현보완+1철회+1정책결정=8처리. 전체 리빌드/최종 UI 완료 판정 아님.
+  고객편집/로컬PNG/C5/V2는 로컬 근거가 있지만 룸·가이드·주문/카카오·전체catalog관리 등 레거시
+  전체 기능의 완료 근거는 없다. 출시 범위와 실기기·운영 검증을 별도 경계로 분리했다.
+- 진행률85~88%/잔여12~15%는 기존 관리 추정 유지. 최종 범위/가중치/일정 전수표를 확인하지 못해
+  전체 실측 완료율·잔여 스펙 수·완료일은 확인 불가. 배포만 남았다고 보고하지 않는다.
+- 다음 안전 후보는 기존 fixture로 도달 가능한 C5 dirty/충돌/결과미확정/초안폐기 안내 시각 감사.
+  NEXT에092 계약 작성 문구만 남겼고 새 스펙/구현/브라우저·게이트 실행0. 새 제품 선택은 하지 않았다.
+- 보고서1+STATE/NEXT/CURRENT/live/spec091handoff5=6문서 로컬 미커밋·미스테이지. 새 보고서는
+  이번 명시 승인 전송 payload에 미포함. 기존 보호/user dirty 그대로, 제품/test/PNG/Rules/config 변경0.
+  WAITING_FOR_NEXT_MANUAL_TASK. 실제 Firebase/UID/운영 쓰기/배포/자동화0.
+
+## 2026-09-07 - spec092 C5 실패 상태 시각 감사 계약 작성
+
+- 사용자 `응 다음 진행해줘`: NEXT에 명시된 계약 문서 작성만 수행. 신규
+  `docs/rebuild/specs/092-admin-c5-failure-state-visual-audit.md` 및 spec092 handoff 작성.
+- 기존 admin-write-fixture/FramePrintSizeEditor/session-controller/Card/동작 E2E를 읽어5상태의
+  실제 조작·save 수·revision·활성/비활성 분기를 대조했다. invalid/valid2상태는 save0,
+  conflict/unknown/conflict후 폐기확인3상태는 save1/revision3. 서버 저장 실행이 아니다.
+- viewport320x568/390x844/1280x800으로15PNG·15측정 설계. 실제 제품 Card root를 캡처하고
+  fixture 진단과 외부 카드/제목을 제외한다. source/test 수정·PNG/측정 생성·브라우저/게이트 실행0.
+- save-error/loading/auth expiry 등 기존 fixture가 제어하지 못하는 상태는 미검증으로 제외.
+  시각 finding과 동작/출처 게이트를 분리했다. 새 UI/복구 정책/운영 권한은 열지 않았다.
+- 현재 READY_FOR_CODEX / CONTRACT_DRAFT, next CODEX_SPEC_092_CONTRACT_REVIEW. 계약 통과/구현 승인 전
+  신규test/캡처 시작0. 이번 문서6개 작성/갱신+직전 보존2=작업 문서8개 미커밋/미스테이지.
+- HEAD=origin54aa472,0/0. commit/push/stage0, 보호/user dirty 보존. 전체 관리 추정85~88%/잔여12~15%
+  유지, 전체 실측 완료율은 확인 불가. 이전2517unit/230E2E PASS는091 기록이며 이번 신규 실행0.
+  실제 Firebase/UID/emulator/운영전환/배포/자동화0.
+
+## 2026-09-07 - spec092 직접 구현·검증·시각 감사 완료
+
+- 사용자 `스팩 자동구현 쭉해줘 아까 정한 규칙대로`에 따라 계약 검토 후 Codex가 직접 구현·검증.
+  같은 에이전트의 자체 검수이며 독립 검수/Founder 최종 시각 승인은 아니다.
+- 신규 감사test1+결과17(PNG15/README/JSON)=18파일 `36eb15a`. 기존 product/fixture/test/config/Rules 변경0.
+  결과 JSON은 합성 측정값이며 *.json 무시 때문에 해당 한 파일만 명시 add-f. .gitignore 변경0.
+- 최초 check2517/2517·canonical246/246(47.6초) PASS 후 자체 검토에서 합성 CID 정확값 검사1줄 추가.
+  최종 check2517/2517(94파일2.88초)·canonical246/246(48.6초) PASS; 실패/skip/retry0.
+  230기존+15상태·viewport+1manifest=246. timeout/worker/retry/허용차 변경0.
+- PNG15 전부 직접 확인. JSON/README/PNG15는 두 실행 hash 동일. enabled36/disabled42개 분리,
+  가로 overflow/활성44px미만/axe중대/console·pageerror/외부 요청시도0. 시각 finding 미발견.
+  실제 Firebase/인증/서버 CAS/실기기/스크린리더/미지원 실패 상태는 NOT TESTED.
+- 기존 결과·보호63파일 중61동일, 명시 예외 spec018 PNG2만 재생성. 보호20중18불변,
+  restore/stage/commit0. 정확한 전후 hash와 bundle091동일 근거는092 감사 보고서 참조.
+  ports4183/4184/4185/8080/9099/9199 listener0, staging0G2gue/w90xjU 제거 확인.
+- closure7문서는 별도 commit/push 단계. 기존 roadmap/spec091handoff2는 이번 커밋에 포함하지 않는다.
+  DONE/CODEX_PASSED/LOCAL_VERIFIED. 다음은 C5 남은 실패 상태 test-only 가능성 조사 후 별도 계약.
+  운영 연결·UID·배포·자동화0. 전체 관리 추정85~88%/잔여12~15% 유지, 전체 실측률은 확인 불가.

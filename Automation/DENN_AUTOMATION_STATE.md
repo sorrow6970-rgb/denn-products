@@ -4,23 +4,52 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-091-customer-compatibility-notice-policy   # DONE, CODEX_PASSED, LOCAL_VERIFIED
-active_unit: rebuild-remaining-roadmap-review
-state: CLAUDE_WORKING   # Codex read-only review after explicitly approved push
-baseline_commit: 6992aba
-candidate_commit: 95279e7
-verified_commit: 95279e7   # spec091 product/test/evidence, same-agent review
-origin_relation: "push rejected by approval review; HEAD0692f4a, origin6992aba, ahead/behind2/0; no retry"
-working_tree: "product16 files95279e7 and closure10 docs0692f4a committed; push-stop correction5 docs unstaged; protected/user dirty excluded"
-fix_round: 0
+completed_unit: spec-092-admin-c5-failure-state-visual-audit   # DONE, CODEX_PASSED, LOCAL_VERIFIED
+active_unit: none
+state: READY_FOR_NEXT_SCOPED_UNIT
+baseline_commit: 54aa472
+candidate_commit: 36eb15a   # spec092 test/evidence18
+verified_commit: 36eb15a   # same-agent review
+origin_relation: "HEAD36eb15a/origin54aa472; 1/0 before closure commit/push"
+working_tree: "spec092 closure7 docs pending; prior roadmap/spec091handoff2 preserved; protected/user dirty separate"
+fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_REBUILD_REMAINING_ROADMAP_REVIEW
+next_transition: CODEX_C5_REMAINING_FAILURE_TEST_ONLY_SCOPE_REVIEW
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: user explicitly approved spec091 commits and correction docs to existing origin; push and then read-only roadmap review; no new implementation
+session_status: spec092 audit passed; unit2517 and E2E246; PNG15 reviewed; next read-only test-only scope review under continuous approval; live/cutover on hold
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 종료 — spec091 (2026-09-07)
+## 최신 종료 — spec092 (2026-09-07)
+
+DONE/CODEX_PASSED/LOCAL_VERIFIED, 테스트·증거18파일 `36eb15a`. 최종 check2517/2517,
+canonical246/246(48.6초) PASS. 최초246/246(47.6초) PASS 뒤 합성CID 누출 검사 보강1회 재검증.
+PNG15/JSON/README 동일,15PNG 직접 확인. 시각/측정 finding0, 실제 운영 검증은 아니다.
+closure7문서 별도 커밋 후 일반 push 예정. 보호18불변/PNG2만 알려진 canonical 예외,복원/stage/commit0.
+기존 roadmap/spec091handoff2문서는 이번 커밋 제외. 다음은 C5 미지원 실패 상태 test-only 가능성 조사.
+새 제품 결정·운영 권한 필요 시 STOP. 전체 기존 추정85~88%/잔여12~15% 유지, 실측률 확인 불가.
+
+## 계약 작성 이력 — spec092 (2026-09-07)
+
+사용자 다음 지시에 따라 `docs/rebuild/specs/092-admin-c5-failure-state-visual-audit.md`와 handoff 작성.
+상태5×viewport3=15캡처를 설계했지만 test/PNG/측정 생성·게이트 실행0. 기존 fixture만 사용하며
+save-error 등 미지원 상태는 제외한다. 현재 READY_FOR_CODEX는 계약 문서 검토 대기이며 구현 완료가 아니다.
+이번6문서 작성/갱신, 기존 미커밋2문서 그대로=전체 작업 문서8개 미스테이지. commit/push/stage0.
+보호/user dirty 보존. 전체 관리 추정85~88%/잔여12~15% 유지, 전체 실측률 확인 불가.
+아래091/로드맵 상태는 과거 이력이다.
+
+## spec091 종료·로드맵 검토 이력 (2026-09-07)
+
+**최종 전송 확인:** `95279e7`/`0692f4a`/전송 정정 `54aa472` push 성공,
+HEAD=origin54aa472·0/0. Git 응답6992aba..54aa472. 아래 전송 차단은 해소됐다.
+이후 NEXT의 읽기 전용 로드맵 검토를 완료했다. 보고서:
+`docs/codex-claude-handoff/reviews/2026-09-07-rebuild-remaining-roadmap-review.md`.
+보고서1+STATE/NEXT/CURRENT/live/spec091handoff5=6문서는 로컬 미커밋이며 이번 승인 전송에 미포함.
+추가 제품/test/PNG/Rules/config 변경·게이트 실행0, 보호/user dirty 보존.
+F-1~F-8은6구현보완+1철회+1정책결정으로 처리됐지만 전체 제품/최종 UI 완료를 뜻하지 않는다.
+다음 후보는 기존 fixture만 쓰는 C5 dirty/conflict/outcome-unknown/discard-confirmation 시각 감사다.
+spec092 계약/구현은 아직 없다. 전체85~88%/잔여12~15%는 기존 관리 추정일 뿐 실측 재산정 불가.
+룸/가이드/주문·카카오/전체 catalog 관리 등 출시 범위와 실제 기기·운영 전환은 별도 미완/선택 경계다.
 
 **전송 승인:** 사용자 `응 승인 다음`으로 아래 두 커밋+상태 정정 문서를 명시된 origin 브랜치로
 일반 fast-forward push하는 것을 승인했다. 보호 제외 유지. 전송 후 NEXT의 읽기 전용 로드맵 검토만 진행.
