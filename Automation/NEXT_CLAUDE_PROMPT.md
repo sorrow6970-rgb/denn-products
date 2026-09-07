@@ -1,5 +1,33 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 완료 / 다음 계약 — spec099 (2026-09-07)
+
+098 targeted46/46 재실행PASS, 코드3c3abca의 DONE 유지. 099 DOCUMENT DONE/DOCUMENT_REVIEW_PASSED.
+조사 정본: docs/codex-claude-handoff/reviews/2026-09-07-spec-099-room-local-adapter-boundary-investigation.md.
+현재추가Founder질문없음. 준비controller+fake가 다음 최소후보이며 아직100계약/코드0.
+기존전체check2591/E2E271은098의 과거실행. 이번099는 문서7개만, 보호/별도dirty22보존.
+
+다음 재개 지시:
+
+```text
+C:\repo\denn-products에서 STATE/CURRENT/live와 RG-2 결정,098 계약·코드,099 조사·handoff를 읽어.
+다음100은 room preparation 주입형 controller와 합성 fake의 계약부터 작성·검토해.
+정확 새파일 후보는 apps/mockup/src/room-placement/preparation.ts 및 preparation.test.ts다.
+이 경로는 아직 허용목록이 아니므로 먼저100계약에서 API/허용파일/검증 기준을 확정해야 한다.
+current source identity·no-clock/frame-ready gate, 동기frame capture port, 비동기background port,
+partial→aggregate 소유권, 취소결과정착·stale완료·재진입·clear/dispose를 명시해.
+098 session에는 partial자원/취소기능이 없고 ready문자열은 source증명이 아님을 반영해.
+성공한frame projection의 clockPreview===null만 no-clock 근거; hidden/필드부재를 쓰지마.
+실제File/Image/Canvas/URL 생성·기본browser port·route/UI연결·기존print/owner 수정은 포함하지마.
+필요한 공개API/기존파일변경·새제품판단이 생기면 계약 밖으로 확장하지 말고 STOP·질문해.
+실제background 형식/메모리예산·UI초기값은 이 fake단위에서 승인된 것처럼 기록하지마.
+계약 선행 없이 구현하지마. 보호/별도dirty·실제Firebase/UID/운영data/Rules/배포/발행/삭제/
+신규의존성/설치/자동화 금지. 결과와 다음 지시를 STATE/NEXT/CURRENT/live에 동기화해.
+```
+
+전체실측률/최종스펙수/완료일 확인불가. 099는 연결설계 조사이지 룸UI완료가 아니다.
+아래098의 “다음조사”는099에서 완료한 이력이다.
+
 ## 최신 완료 / 다음 지시 — spec098 (2026-09-07)
 
 전송완료:3c3abca/2a9b347 정상push, HEAD=origin2a9b347·0/0 확인. 아래 전송계획은 완료됐다.

@@ -4,23 +4,33 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-098-room-placement-geometry-session   # DONE / CODEX_PASSED / LOCAL_VERIFIED
+completed_unit: spec-099-room-local-adapter-boundary-investigation   # DOCUMENT DONE; spec098 product DONE remains
 active_unit: none
 state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: 2959569
-candidate_commit: 3c3abca   # spec098 code4; closure documents separate
+baseline_commit: 1b20293
+candidate_commit: null   # spec099 documents pending commit
 verified_commit: 3c3abca   # same Codex implementation/review; not independent review
-origin_relation: "spec098 code3c3abca/docs2a9b347 normal push confirmed; HEAD=origin2a9b347 and0/0 before receipt; receipt HEAD via git"
-working_tree: "spec098 receipt5 documents only; protected/user dirty22 excluded; only spec018PNG2 allowed canonical regeneration"
+origin_relation: "start HEAD=origin tracking ref1b20293,0/0; spec099 document push pending"
+working_tree: "spec099 documents7 only; starting protected/user dirty22 preserved and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_ROOM_LOCAL_ADAPTER_CONTRACT_REVIEW
+next_transition: CODEX_ROOM_PREPARATION_PORT_CONTRACT
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec098 non-UI implementation verified; next adapter boundary document review only, no automatic UI connection
+session_status: spec098 targeted recheck passed; spec099 document investigation complete; next preparation port contract candidate only
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 종료 — spec098 비-UI 모델 (2026-09-07)
+## 최신 종료 — spec099 adapter 경계 문서 조사 (2026-09-07)
+
+098 targeted46/46(240ms) 재실행 PASS. 기존전체check2591/E2E271은 이번 재실행 아님.
+Canvas ready의 source 식별 부재·borrowed binding·DOM clock과 hidden/없음 차이를 정적확인했다.
+독립 frame snapshot + 배경 획득의 partial/aggregate ownership, cancel·늦은완료·재진입을 설계 후보로 정리.
+동일Codex DOCUMENT_REVIEW_PASSED. 다음100 preparation port+fake 계약 작성 후보, 아직제품계약/구현0.
+추가Founder질문없음. 실제background 예산/형식·UI초기값·브라우저adapter는 후속별도계약.
+정확문서7개만 일반commit/push, 보호/별도dirty22보존. 기존제품/Rules/config/운영/자동화0.
+화면변화0. 전체실측완료율/최종스펙수불명, 과거85~88%관리추정상향0.
+
+## 종료 이력 — spec098 비-UI 모델 (2026-09-07)
 
 전송확인:3c3abca/2a9b347 정상push2959569..2a9b347, HEAD=origin2a9b347·0/0.
 허용12경로=코드4+문서8. 전송영수증5문서 별도기록; 기존dirty22 제외, 추가제품/시험0.

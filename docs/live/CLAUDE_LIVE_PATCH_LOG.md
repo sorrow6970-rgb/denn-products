@@ -8250,3 +8250,21 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 문서링크12/12·diff--check PASS. 보호/별도dirty22 제외. 영수증5문서만 별도기록.
 - 098 DONE/CODEX_PASSED 유지. 다음 로컬adapter 계약 경계 문서조사 지시는NEXT, 아직착수0.
   UI/운영/배포/삭제/자동화0, 전체실측진행률 확인불가. 추가제품/시험실행0.
+
+## 2026-09-07 - spec098 재확인 · spec099 로컬 룸 adapter 경계 조사 완료
+
+- 사용자 `응 검증하고 다음`: HEAD=origin 추적ref1b20293·0/0,098 코드4/문서8 범위 재확인.
+  targeted2파일46/46(240ms)exit0. 기존전체check2591/E2E271은 이번재실행아님. 새재현결함확인0.
+- 099 조사계약 선행 후 PreviewComposer·localImageBinding·surface·print executor·clock 및 관련시험 정적추적.
+  Canvas ready는 source별draw ack가 아니며 bindings는 borrowed lookup, DOM clock hidden은 no-clock 증명 아님.
+  성공한frame projection과 현재source/no-clock gate, 동일plan detached실행, partial/aggregate 소유권을 후보화.
+  독립snapshot·cancel/settlement·재진입·늦은완료·resize 실패표를099조사정본에 기록했다.
+- 동일Codex DOCUMENT DONE/DOCUMENT_REVIEW_PASSED. 다음100 주입형preparation port+fake 계약 후보,
+  아직100계약/코드0. 실제browser adapter/사진선택/UI/지원형식·예산·초기값은 별도계약. 추가Founder질문없음.
+- 허용7문서:099계약/조사/handoff3+STATE/NEXT/CURRENT/live4. 제품/test/Rules/config/package/lockfile수정0.
+  099 browser/이미지로딩/build/E2E/emulator0. 보호/별도dirty22 및spec018PNG 보존·커밋제외.
+  실제Firebase/UID/운영data/배포/발행/삭제/설치/자동화0. 문서검증 뒤 일반commit/push.
+- READY_FOR_NEXT_SCOPED_UNIT / active none / CODEX_ROOM_PREPARATION_PORT_CONTRACT, 정확다음지시NEXT.
+  전체리빌드 실측률·최종스펙수·종료일 확인불가; 룸기반098완료,실제연결/UI미완료. 과거85~88%추정상향0.
+- 최종문서검증:신규3문서 링크/라인33/33 PASS, 시작dirty22/22 SHA동일,
+  양앱dist entry SHA098동일(재build아님),포트6개listener0,diff--check PASS. 허용7문서외이번변경0.
