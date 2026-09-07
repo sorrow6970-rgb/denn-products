@@ -8050,3 +8050,33 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - STATE/NEXT/CURRENT/live/092handoff5문서만 정정 커밋. 보호/기존 roadmap/spec091handoff2는 제외한다.
   이전 거절은 승인 전 이력이며 전송 성공을 미리 주장하지 않는다. 실제 Git 결과로 후속 확인한다.
 - 제품·test·PNG 추가 변경/게이트 재실행0, 운영 연결/실제 Firebase/배포/자동화0. 전체 기존 추정85~88% 유지.
+
+## 2026-09-07 - spec092 전송 확인 · spec093 test-only 착수
+
+- 사용자 명시 승인대로36eb15a/b9a24c5 및상태정정cca5a16 push 성공. Git54aa472..cca5a16,
+  HEAD=origincca5a16·0/0,staged0.기존 roadmap/spec091handoff2와보호파일제외.
+- 연속 진행 지시에 따라092 NEXT의남은상태조사 수행. 현재controller/unit/포트계약과fake를대조해
+  제품의미변경없이loading/saving/load-error/upload-failed/head-failed/auth-blocked6상태 합성가능 확인.
+- 093계약 선행·동일Codex검토 후fixture opt-in test-only확장과 신규E2E착수.6상태×3=18PNG,
+  late load/save2·manifest1 추가계획.실제 출력은검증후기록하며 아직PASS를주장하지않는다.
+- 보호·기존미커밋보존.운영/Firebase/UID/emulator/배포/자동화0.전체기존추정85~88%유지,실측률확인불가.
+
+## 2026-09-07 - spec093 합성 감사 완료 · 후속 전송 범위 확인 대기
+
+- 기존fixture opt-in확장·신규test·18PNG/JSON/README22파일1e322c1.제품controller/UI/포트/config무변경.
+- check format/lint/typecheck/unit/build exit0,unit94파일2517/2517(2.79초).
+  canonical1회267/267(50.2초)PASS,기존246+18상태+late2+manifest1=267.실패/skip/retry0.
+- 18PNG직접확인.가로overflow/활성44px미만/axe중대/console·pageerror/외부요청시도0.
+  enabled12/disabled78분리집계,제품Tab12도달.늦은load/save완료후auth-blocked/revision none유지.
+- F-9(P2):head-failed에서저장버튼잠김·재로드만허용되는데upload-failed와동일한재시도안내라모호하다.
+  실제동작오류/데이터손실아님.수동시각finding1개,093제품수정0.후보094는기존canSave에맞춘문구분리.
+- 기존결과·보호80중79hash동일,spec018desktop1개만canonical명시예외.보호20중19동일,
+  PNG2복원/stage/commit0.기존092증거15PNG/README/JSON동일.두제품entry SHA092동일.
+  정확hash와한계는093감사보고서참조.ports6개listener0,staging6nwSYx부재,diff--checkPASS.
+- 종료문서7+092전송영수증1=8문서별도커밋.기존roadmap/spec091handoff2및보호userdirty제외.
+  합성JSON1개만명시add-f,.gitignore변경0.093새payload는092명시전송승인에미포함이므로push시도0.
+- 현재FOUNDER_DECISION_REQUIRED/spec-093-push-authorization.같은origin/브랜치로093과이후합의된
+  스펙의검증된코드·합성증거·상태문서만일반push하는권한확인을요청하며아직승인으로기록하지않는다.
+  094계약/구현미시작.실제데이터/secret/보호파일/운영·배포/forcepush/자동화는계속제외.
+- spec093감사DONE/CODEX_PASSED/LOCAL_VERIFIED(동일Codex),UI전체승인아님.전체기존추정85~88%,
+  잔여100-88=12~100-85=15%유지,전체실측률/최종스펙수확인불가.

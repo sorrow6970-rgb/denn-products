@@ -1,5 +1,32 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 대기 — spec093 전송 범위 승인 (2026-09-07)
+
+092는cca5a16까지push완료.093은감사DONE/CODEX_PASSED,시험전용코드·증거22파일1e322c1과
+별도종료문서8파일이로컬에있다.이번`응승인`의명시전송범위는092였으므로093push는시도하지않았다.
+check2517/2517·canonical267/267(50.2초)PASS,18PNG확인;UI문구F-9(P2)만후속후보다.
+
+필요 확인: https://github.com/sorrow6970-rgb/denn-products.git의rebuild/modern-studio로
+093및이후합의된스펙의검증된코드·합성증거·상태문서를일반fast-forward push하는범위승인.
+아직승인받지않았다.보호/실제운영데이터/secret/배포/forcepush는제외한다.승인전에새push를하지않는다.
+
+승인·전송 확인 뒤 다음 안전 후보:
+
+```text
+C:\repo\denn-products에서093감사F-9와FramePrintSizeEditor/session-controller의canSave분기를읽어.기존save-error에서직접재저장이가능한경우와명시재로드가필요한경우의안내문구만분리하는094계약을먼저작성해.제품권한·상태·자동retry/merge·오류코드노출은바꾸지마.해당제품파일·신규단위테스트·093의문구기대값/해당증거를정확히범위로열거하고검토후구현·검증해.새제품의미/권한/보호변경/미확정실패가필요하면STOP.실제Firebase/운영/배포/자동화금지유지.
+```
+
+아래093작업중/092차단은이력이다.094계약/구현은아직시작하지않았다.전체추정85~88%유지.
+
+## 현재 실행 — spec093 (2026-09-07)
+
+092 전송 성공:36eb15a/b9a24c5/cca5a16, Git54aa472..cca5a16, HEAD=origincca5a16·0/0.
+연속 진행 승인으로092 NEXT의 조사 후 `docs/rebuild/specs/093-admin-c5-pending-error-audit.md` 작성·검토.
+기존 fixture에 opt-in audit=spec093 응답 제어만 추가하고 새 test로6상태×3viewport·late2·manifest1을 검증한다.
+제품/controller/포트/기존test/config 무변경, 기존 URL은 확장 진단0. 현재 다음은 check→canonical→시각/범위검토다.
+정확한 허용 파일·STOP은093 계약 참조. 범위 밖 생성물/원인불명실패/새 결정·권한은 중단한다.
+운영/Firebase/UID/emulator/배포/보호 변경/신규 의존성/자동화 금지. 아래092 승인/차단은 해소된 이력이다.
+
 ## 최신 명시 승인 — 2026-09-07
 
 사용자 `응 승인`으로36eb15a/b9a24c5와 전송 상태 정정5문서의 아래 정확한 origin/브랜치 일반 push 승인.

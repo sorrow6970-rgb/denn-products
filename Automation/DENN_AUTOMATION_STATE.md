@@ -4,23 +4,34 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-092-admin-c5-failure-state-visual-audit   # DONE, CODEX_PASSED, LOCAL_VERIFIED
-active_unit: spec-092-push-authorization
-state: CLAUDE_WORKING   # explicitly approved spec092 transmission
-baseline_commit: 54aa472
-candidate_commit: b9a24c5   # spec092 closure7; test/evidence36eb15a
-verified_commit: 36eb15a   # same-agent review
-origin_relation: "HEADb9a24c5/origin54aa472; 2/0; explicit user approval received, push result pending"
-working_tree: "push-block status correction5 docs unstaged; prior roadmap/spec091handoff2 preserved; protected/user dirty separate"
-fix_round: 1
+completed_unit: spec-093-admin-c5-pending-error-audit   # AUDIT DONE, CODEX_PASSED, LOCAL_VERIFIED; UI finding F-9 remains
+active_unit: spec-093-push-authorization
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: cca5a16
+candidate_commit: 1e322c1   # spec093 test-only/evidence22; closure is separate
+verified_commit: 1e322c1   # same-agent review
+origin_relation: "origincca5a16; spec093 implementation and closure remain local pending explicit transmission approval; closure HEAD from git log"
+working_tree: "spec093 closure8 docs committed separately; prior roadmap/spec091handoff2 and protected/user dirty preserved and excluded"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_092_APPROVED_PUSH_AND_VERIFY
+next_transition: FOUNDER_SPEC_093_AND_FUTURE_SCOPED_ORIGIN_PUSH_AUTHORIZATION
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: user approved spec092 two commits and five status docs to exact origin; commit/push and verify before next scoped work
+session_status: spec092 synchronized; spec093 audit passed unit2517/E2E267 with UI wording finding F-9; no spec093 push attempted; prior explicit approval covered spec092 only
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 종료 — spec092 (2026-09-07)
+## 최신 종료 — spec093 (2026-09-07)
+
+시험 전용fixture/test/증거22파일1e322c1, check2517/2517·canonical267/267(50.2초) PASS.
+18PNG 직접 확인; 수치 gate PASS이나head-failed 안내문구F-9(P2)는후속094후보다.093제품UI수정0.
+계약/보고서/handoff/상태7+092전송영수증1=종료8문서별도커밋.보호/기존미커밋2제외.
+09236eb15a/b9a24c5/cca5a16 push는성공했지만이번명시승인payload에093은포함되지않았다.
+093의새원격전송은아직시도하지않고명시권한확인대기.앞선거절을재시도하거나우회하지않는다.
+같은origin/브랜치로093과이후합의된스펙의검증된코드·합성증거·상태문서를일반push하는
+범위승인을요청한다.미승인상태이며실제운영데이터·secret·보호파일·배포·forcepush는포함하지않는다.
+전체기존관리추정85~88%/잔여12~15%유지,실측률확인불가.다음094계약/구현은아직없다.
+
+## 종료 이력 — spec092 (2026-09-07)
 
 **명시 전송 승인:** 사용자 `응 승인`은 직전 질문의36eb15a/b9a24c5와 상태 정정5문서를
 `https://github.com/sorrow6970-rgb/denn-products.git`의 `rebuild/modern-studio`로 일반 push하는 승인이다.
