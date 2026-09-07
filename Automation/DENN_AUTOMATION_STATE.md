@@ -10,8 +10,8 @@ state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: 4f69e0a
 candidate_commit: 6e41c48   # spec100 implementation code2
 verified_commit: 6e41c48   # same Codex implementation/review; not independent review
-origin_relation: "code6e41c48 committed locally; closure7 documents pending commit/normal push, confirmation in receipt"
-working_tree: "spec100 closure7 documents only; preexisting dirty22 excluded;105 baseline hashes103 unchanged, spec018PNG2 canonical regeneration exception"
+origin_relation: "spec100 code6e41c48/closure4e264ec normal push confirmed; HEAD=origin4e264ec and0/0 before receipt; final receipt HEAD via git"
+working_tree: "spec100 receipt5 documents only; preexisting dirty22 excluded;105 baseline hashes103 unchanged, spec018PNG2 canonical regeneration exception"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: CODEX_ROOM_BROWSER_ADAPTER_BOUNDARY_REVIEW
@@ -21,6 +21,10 @@ commit_owner: Codex; scoped code/test and closure documents separately, normal f
 ```
 
 ## 최신 완료 — spec100 준비 controller 구현·검증 (2026-09-07)
+
+전송확인: 코드6e41c48/종료4e264ec 정상push4f69e0a..4e264ec, HEAD=origin4e264ec·0/0.
+허용9경로=코드2+문서7, 로컬링크18/18·diff--check PASS. 영수증5문서만 추가기록.
+보호/별도dirty22 커밋제외, 추가제품/시험0. 아래 종료문서 전송계획은 완료됐다.
 
 최신 사용자 `응 루틴으로 진행해줘`에 따라 계약을 읽고 신규 코드2만 구현, 커밋6e41c48.
 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일 Codex 자체검토). source gate·partial/aggregate·취소·재진입 고정.

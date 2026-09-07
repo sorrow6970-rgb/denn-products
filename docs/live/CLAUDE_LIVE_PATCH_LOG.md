@@ -8328,3 +8328,11 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   next CODEX_ROOM_BROWSER_ADAPTER_BOUNDARY_REVIEW. 다음 정적 문서 조사 지시를 NEXT에 남겼고 착수0.
   실제frame/source producer·CORS·메모리·새룸UI는 NOT TESTED; 내부 준비 기능을 화면 완성으로 계산하지 않는다.
   전체실측 완료율/최종스펙수 확인불가. 운영/실제UID/배포/발행/삭제/설치/자동화0.
+
+## 2026-09-07 - spec100 구현·검증 전송 완료 · 다음 별도 계약 경계 조사 대기
+
+- 코드6e41c48/종료4e264ec 정상push4f69e0a..4e264ec. 확인시 HEAD=origin4e264ec,ahead/behind0/0.
+- 허용9경로=코드2+문서7, 로컬링크18/18·diff--check PASS. 영수증5문서 별도기록, 추가제품/시험0.
+  별도dirty22(보호 포함) 커밋제외. hash변화는 앞 항목의 spec018PNG2 canonical 기존 예외뿐.
+- spec100 DONE/CODEX_PASSED/LOCAL_VERIFIED, 동일 Codex 검토. 다음 문서조사 상세지시NEXT, 아직착수0.
+  전체실측진행률 확인불가·화면변화0. 실제adapter/UI/운영/배포/삭제/설치/자동화0.

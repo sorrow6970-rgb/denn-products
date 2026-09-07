@@ -2,6 +2,10 @@
 
 ## 최신 완료 / 다음 문서 조사 — spec100 (2026-09-07)
 
+전송완료:6e41c48/4e264ec 정상push, HEAD=origin4e264ec·0/0 확인. 영수증5문서 별도기록.
+정확 코드2+문서7, 로컬링크18/18·diff--check PASS. 아래 전송계획은 완료 이력이다.
+보호/별도dirty22 전송제외, 다음 조사/구현은 아직 시작하지 않았다.
+
 100 DONE/CODEX_PASSED/LOCAL_VERIFIED. 코드6e41c48(신규2파일), 동일 Codex 구현·자체검토.
 targeted114/114, 전체check2659/2659·canonical271/271(50.3초) PASS. 양앱entry SHA불변.
 기존105hash 중103동일/spec018PNG2만 기존 예외, 보호/별도dirty22 커밋 제외.
