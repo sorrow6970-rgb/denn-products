@@ -1,0 +1,89 @@
+.denn-size-compare {
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  margin-top: 20px;
+  min-width: 0;
+}
+.denn-size-compare summary {
+  min-height: 48px;
+  padding: 14px 0;
+  cursor: pointer;
+  font-weight: 700;
+}
+.denn-size-compare__body {
+  display: grid;
+  gap: 16px;
+  padding: 4px 0 20px;
+  min-width: 0;
+}
+.denn-size-compare__body p {
+  margin: 0;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.denn-size-compare__description {
+  max-width: 60ch;
+}
+.denn-size-compare__choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.denn-size-compare__choice {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  font-weight: 600;
+}
+.denn-size-compare select,
+.denn-size-compare button {
+  min-height: 44px;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  padding: 10px 12px;
+}
+.denn-size-compare button {
+  justify-self: start;
+  cursor: pointer;
+}
+.denn-size-compare button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.denn-size-compare :focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+.denn-size-compare__diagram {
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1;
+  justify-self: center;
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+}
+.denn-size-compare__legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.denn-size-compare__legend li {
+  display: grid;
+  gap: 6px;
+  padding-left: 12px;
+  border-left: 3px solid var(--accent);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .denn-size-compare__choices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

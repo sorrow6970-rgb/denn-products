@@ -18,6 +18,7 @@ import {
 import { Badge, Chip } from "@denn/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PreviewSection } from "../preview/PreviewSection";
+import { PrintSizeComparison } from "../size-comparison/PrintSizeComparison";
 import "./browse.css";
 import {
   type BrowseAction,
@@ -125,6 +126,7 @@ export function BrowseFlow({
           templateId={selection.templateId}
         />
       ) : null}
+      {selection.productKind === "frame" ? <PrintSizeComparison document={document} /> : null}
     </div>
   );
 }
