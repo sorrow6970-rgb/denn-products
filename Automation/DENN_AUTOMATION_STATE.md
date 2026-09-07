@@ -10,17 +10,20 @@ state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: f7c9ecd
 candidate_commit: b03f8d4
 verified_commit: b03f8d4   # same Codex implementation/review; not independent review
-origin_relation: "code b03f8d4 local commit; origin tracking ref f7c9ecd; closure documents and normal push pending"
-working_tree: "spec096 closure8 documents only for next commit; protected/user dirty excluded; baseline101 hashes100 same and spec018mobile canonical exception1; spec093 README restored history/hash matches baseline"
+origin_relation: "normal push f7c9ecd..5460fb3 confirmed, HEAD=origin5460fb3 and0/0 before receipt; receipt commit resolved by git"
+working_tree: "receipt5 scoped documents only; starting protected/user dirty22 excluded; baseline101 hashes100 same and spec018mobile canonical exception1; spec093 README hash matches baseline"
 fix_round: 2
 max_fix_rounds: 3
 next_transition: CODEX_ROOM_LOCAL_BOUNDARY_READ_ONLY_INVESTIGATION
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec096 CODEX_PASSED; final check2545/canonical271 PASS and3PNG reviewed; closure push pending, next product not started
+session_status: spec096 CODEX_PASSED; code b03f8d4 and closure5460fb3 pushed; final check2545/canonical271 PASS and3PNG reviewed; receipt only, next product not started
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
 ## 최신 종료 — spec096 (2026-09-07)
+
+전송확인: b03f8d4/5460fb3 정상push f7c9ecd..5460fb3,HEAD=origin5460fb3·0/0.
+총변경20경로=코드·시험·증거12+종료문서8,보호/별도dirty22제외.전송영수증5문서별도기록.
 
 RG-1=A와 정확 두 파일 이력 보존 예외 승인에 따라 보완2 완료. 코드·시험·증거12파일 b03f8d4.
 check2545/2545·canonical271/271(52.8초)·PNG3 직접 검토 PASS.동일 Codex 검수,독립검수 아님.
