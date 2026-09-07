@@ -76,11 +76,30 @@ test("gated response shows loading then ready (production initial mount request 
   expect(errors).toEqual([]);
 });
 
-test("warning fixture surfaces the safe compatibility notice", async ({ page }) => {
-  await routeCatalog(page, (r) => fulfillJson(r, LEGACY_WARN));
+test("spec 091 warning fixture stays ready without a compatibility information badge", async ({
+  page,
+}) => {
+  const errors = collectConsoleErrors(page);
+  const route = await routeCatalog(page, (r) => fulfillJson(r, LEGACY_WARN));
   await page.goto(MOCKUP_URL);
   await expect(status(page)).toHaveText("카탈로그 준비 완료");
-  await expect(page.getByText("일부 이전 데이터가 호환 처리되었습니다")).toBeVisible();
+  await expect(page.getByText("일부 이전 데이터가 호환 처리되었습니다")).toHaveCount(0);
+  expect(route.hits()).toBe(1);
+  expect(route.unexpected()).toBe(0);
+  expect(errors).toEqual([]);
+  const { mkdirSync } = await import("node:fs");
+  mkdirSync("docs/rebuild/results/spec-091", { recursive: true });
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 1280, height: 800 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.screenshot({
+      path: `docs/rebuild/results/spec-091/catalog-ready-${viewport.width}x${viewport.height}.png`,
+      fullPage: true,
+      animations: "disabled",
+    });
+  }
 });
 
 test("500 → safe error + retry → 200 → ready (2 requests total)", async ({ page }) => {

@@ -118,7 +118,6 @@ function CatalogStatus({
     return (
       <div className="denn-stack">
         <p data-testid="catalog-status">카탈로그 준비 완료</p>
-        {state.warningCount > 0 ? <Badge>일부 이전 데이터가 호환 처리되었습니다</Badge> : null}
       </div>
     );
   }
