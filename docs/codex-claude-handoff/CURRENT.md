@@ -1,5 +1,11 @@
 # 현재 상태
 
+> 최신2026-09-07: spec094 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일Codex), F-9해소. 코드/증거38257ef.
+> check2526/2526·canonical267 tests exit0/last-run passed, 변경6PNG직접검수. 고객entry불변.
+> 093은a80cd9c까지push완료·0/0확인. 현재094종료9문서별도commit/push단계이며 다음은잔여범위읽기전용대조.
+> 코드/권한/운영 의미 확장0. 보호/user dirty·별도문서2개 제외. 실제Firebase/운영/배포/자동화0.
+> 전체85~88%는관리추정,잔여12~15%,전체실측률확인불가. 상세094검수/STATE/NEXT참조;아래는이력.
+
 > 최신 승인2026-09-07: 사용자 `응 승인할게,`로093 및 이후 합의된 스펙의 검증된 코드·합성 증거·상태
 > 문서를 동일 origin/rebuild/modern-studio로 일반 push 승인. 정본 decisions/2026-09-07-scoped-origin-push-authorization.md.
 > 현재093 전송·확인 후094 문구 보완 계약 선행. 보호/운영/배포/자동화 제외. 아래 승인대기는 이력이다.
