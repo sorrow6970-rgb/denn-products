@@ -2,7 +2,9 @@
 
 > 최신2026-09-07: spec094 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일Codex), F-9해소. 코드/증거38257ef.
 > check2526/2526·canonical267 tests exit0/last-run passed, 변경6PNG직접검수. 고객entry불변.
-> 093은a80cd9c까지push완료·0/0확인. 현재094종료9문서별도commit/push단계이며 다음은잔여범위읽기전용대조.
+> 093은a80cd9c까지push완료.094코드38257ef/종료5a1abe6도push완료·HEAD=origin5a1abe6·0/0확인.
+> READY_FOR_NEXT_SCOPED_UNIT / remaining-product-scope-review.전송영수증5문서기록,초기대조근거는094handoff.
+> 다음은잔여범위상세읽기전용대조.새제품스펙선정/구현0,운영개방을묻거나승인으로간주하지않는다.
 > 코드/권한/운영 의미 확장0. 보호/user dirty·별도문서2개 제외. 실제Firebase/운영/배포/자동화0.
 > 전체85~88%는관리추정,잔여12~15%,전체실측률확인불가. 상세094검수/STATE/NEXT참조;아래는이력.
 

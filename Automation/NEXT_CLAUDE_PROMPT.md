@@ -4,8 +4,9 @@
 
 spec094 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일 Codex), 코드·증거11파일38257ef, F-9 해소.
 check2526/2526, canonical267 tests exit0/last-run passed, 변경6PNG 직접 검수. 실제 운영 검증 아님.
-093은a80cd9c까지정상push완료.094종료9문서를별도커밋·승인된동일원격으로push하고Git동기화확인.
-보호/별도roadmap/spec091handoff2는포함하지않는다. 그 뒤 허용되는 다음 단계는 아래 읽기 전용 범위 대조다.
+093은a80cd9c까지정상push완료.094코드38257ef/종료5a1abe6도push완료,HEAD=origin5a1abe6·0/0확인.
+전송영수증5문서를별도커밋한다.보호/별도roadmap/spec091handoff2는포함하지않는다.
+레거시/App/033제외범위와기존로드맵의초기대조는094handoff에기록했다.다음은아래상세읽기전용대조다.
 
 ```text
 C:\repo\denn-products에서 STATE/CURRENT/live 마지막 항목과094검수,00-legacy-analysis,현재로드맵 및 기존 제품 결정 정본을 읽어. 룸/사이즈가이드/주문·카카오/전체 catalog authoring/발행의 기존 필수 기능과 현재 구현·검증·미확정 범위를 근거 표로 대조해. 기존 승인만으로 진행할 수 있는 다음 최소 단위가 있는지 먼저 확인하되 새 출시 범위/제품 의미/운영 권한을 임의 승인하지마. 새 결정이 필요하면 정확한 질문과 근거를 남기고 구현은 멈춰. 코드 전에는 별도 스펙을 작성하고 검토해. 실제Firebase/UID/운영데이터/배포/발행/삭제/자동화 및 보호 파일 변경은 금지하며 별도 사용자 미커밋 문서를 stage하지마.
