@@ -7909,3 +7909,50 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   restore/stage/commit0. 포트6개/staging w1wvHV 잔류0, 신규debug.log0, forbidden diff0, diffcheck PASS.
 - same-agent 최종검토 추가결함0, DONE/CODEX_PASSED. 종료 문서10개 별도commit/push 후 spec091 진행.
   실제 network/live/emulator/deploy/운영전환0. 전체기존추정85~88%/잔여12~15% 유지, 자동화0.
+
+## 2026-09-07 - spec090 push 완료 · spec091 계약 선행
+
+- a08c462/6992aba 일반 fast-forward push 성공, HEAD=origin6992aba·0/0 확인.
+- 승인된 F-7=A를 spec091로 계약화. 고객 ready 정보성 배지 한 줄만 제거하고 warningCount/누락/
+  오류/수동 retry 유지. 제품/test3파일·직접 영향 PNG/문서만. 코드 전에 계약을 작성했다.
+- 전체 기존 추정85~88%/잔여12~15% 유지. 운영전환/실기기 검증 별도, F-8 코드 변경0, 자동화0.
+
+## 2026-09-07 - spec091 구현 · 로컬 게이트/증거 범위 STOP
+
+- F-7=A에 따라 App ready 호환 배지 한 줄만 제거, SSR4건과 기존 warning E2E 보완. 미커밋.
+  targeted4+9=13/13 PASS, check exit0 format/lint/typecheck/build PASS, unit2517/2517(94파일,2.99초).
+- canonical exit1: 229 PASS + 1 FAIL = 230건,52.2초,skip/retry0. Space production route unavailable
+  proof 테스트(line405/410)에서5000ms 동안 로딩 상태가 남았다. 원인 UNCONFIRMED.
+  이전 spec090230/230 PASS와 구분하며 환경/이전 timeout과 동일 원인/변경과 무관하다고 단정하지 않는다.
+- 신규 catalog 캡처2 직접 확인. spec084 고객5장/spec0853장도 실패 실행에서 재생성돼 README 출처 정정.
+  spec088 picker PNG3은 범위 밖 변경: 미스테이지 보존, README088 변경0. 기존 SHA 표 불일치 유지.
+  실패 error-context/.last-run 원본과 TEMP 사본 위치, 현재 PNG/bundle hash는 spec091 handoff에 기록.
+- 고객 index-LpX-FRZg.js SHA2E70F01BA9DC341D10B158587BB30EE8075A2EDE7E66B716BC67903432B2B28E,
+  342.26kB/gzip104.86. admin D868510748C60622888FE7E2D6C1B88E119700FD94F74B1D183D7065E6311D30 불변.
+- 보호20 중18동일, canonical 예외 spec018 PNG2만 변경. desktop
+  91572C5C544242785733F9EF82714D54667E4C2DD1362820C14C56531671F361, mobile
+  C6D37BF3F9B4B96EFB1A15C955ADD3848FFDCA3F41FCB6B2E75417E6D0DA6C0F. restore/stage/commit0.
+  admin/packages/Rules/config/package/lockfile diff0. measurements.json diff0. 포트6개/staging 잔류0.
+- state BLOCKED, next FOUNDER_SPEC_091_GATE_AND_EVIDENCE_SCOPE_DECISION. Space 읽기 전용 조사,
+  spec088 PNG3+README 증거 범위 추가와 spec091 재검증은 아직 미승인. 이후 추가 코드/게이트 실행0.
+- 완료 spec090 a08c462/6992aba push 유지, HEAD=origin 추적 ref6992aba·0/0. spec091 stage/commit/push0.
+  전체 기존 계획 추정85~88%/잔여12~15% 유지(실측·스펙 수 계산 아님). 실제 운영/UID/배포/자동화0.
+
+## 2026-09-07 - spec091 승인 재검증 PASS · 완료
+
+- 사용자 `응`으로 Space 읽기 전용 조사/spec088 PNG3+README 증거 범위 추가/로컬 재검증 승인.
+  승인 내용을 계약에 먼저 반영했다. Space fixture:127/176과 production-controller.ts:202 이후 await
+  경계를 읽었지만 최초 지연 위치를 특정할 trace가 없어 원인은 UNCONFIRMED다. 소스/test 추가 수정0.
+- targeted13/13(705ms), `node scripts/check.mjs` exit0, format/lint/typecheck/build PASS,
+  unit2517/2517(94파일,2.95초). `node scripts/e2e-run.mjs` exit0, **230/230 PASS,51.1초**,skip/retry0.
+  이전 Space 실패 사례1.7초 PASS. 최초229/230 실패를 지우거나 원인 해결로 단정하지 않는다.
+- 허용 PNG13장 직접 시각 확인. 고객catalog2와 picker3은 이전 실행과 SHA동일. README 출처갱신.
+  고객/admin bundle SHA는 직전 기록과 동일. measurements.json diff0. 금지 source/config/Rules diff0.
+- 보호20 중18동일. 예외 canonical spec018 desktop
+  BDB7EAD2E8F5A82746236D68474D215678823CF168D5141075B1D19E0A4C163D, mobile
+  5043D55564D51A7F577EDBC520C2062C3FDA8FF277FE9B7C105E3FB8B0D135BD. 보호 restore/stage/commit0.
+  포트6개/staging F78DMO 잔류0, debug.log0. staging은 기존 runner가 자신이 만든 임시 폴더만 제거했다.
+- 같은 Codex 최종 검토 추가 결함 미발견, DONE/CODEX_PASSED. 제품/test3+PNG13=16파일
+  `95279e7` 일반 커밋. 종료 문서10파일 별도 commit/push, 최종 전송 결과는 후속 확인과 Git 참조.
+- WAITING_FOR_NEXT_MANUAL_TASK. NEXT에 전체 잔여 로드맵 읽기 전용 검토 문구를 남김. 새 스펙/구현0.
+  F-4/F-7 완료, F-8 기존 크기 유지. 전체 기존 추정85~88%/잔여12~15%, 실제 운영/UID/배포/자동화0.

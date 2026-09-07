@@ -1,5 +1,12 @@
 # spec 084 — local visual readiness evidence
 
+## 최신 산출물: spec091 승인 재검증 완료 (2026-09-07)
+
+이 폴더의 고객 browse2장/composer3장은 spec091 최종 canonical **230/230 PASS,51.1초**에서 재생성됐다.
+Founder F-7=A에 따라 성공 호환 배지만 숨겼고 누락·오류 안내는 유지한다. 5장 직접 확인,
+measurements.json diff0. 운영자 화면의 spec090 완료 상태도 유지한다. 아래 이전 감사는 이력이다.
+최초229 PASS/1 FAIL의 Space timeout 원인은 UNCONFIRMED이며 spec091 STOP REPORT에 보존한다.
+
 ## 후속 갱신: spec 088 고객 사진 선택 (2026-09-07)
 
 현재 composer PNG는 사용자 승인 재검증으로 **최종 46px 선택 표면**에서 생성됐다(2026-09-07,

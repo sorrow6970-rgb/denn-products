@@ -1,5 +1,24 @@
 # 현재 상태
 
+> 최신 종료 2026-09-07: spec091 DONE / CODEX_PASSED / LOCAL_VERIFIED, 제품 `95279e7`(16파일).
+> check2517/2517, canonical230/230(51.1초) PASS. Space 최초 timeout 원인 UNCONFIRMED, 이번 미재현.
+> 현재 WAITING_FOR_NEXT_MANUAL_TASK, active none, next CODEX_REBUILD_REMAINING_ROADMAP_REVIEW.
+> F-4/F-7 구현 완료, F-8 기존 발행 크기 유지. 동일 Codex 검토이며 독립 검수/Founder 시각 승인 아님.
+> 문서10파일 별도 종료 commit/push, 보호/user dirty 제외. 다음 스펙/실제 운영/배포/자동화0.
+> 전체 기존 계획 추정85~88%/잔여12~15% 유지. 아래 WORKING/STOP 포인터는 모두 과거 이력이다.
+
+> 최신 재개 2026-09-07: 사용자 `응`으로 Space 읽기 전용 조사·spec088 PNG3/README 증거 범위 추가·
+> spec091 로컬 재검증 승인. 현재 CLAUDE_WORKING, next CODEX_SPEC_091_REVALIDATE_AND_REVIEW.
+> Space 소스/test/timeout/worker/retry 변경0. 아래 STOP은 이력이며 최초 원인은 여전히 UNCONFIRMED.
+
+> 현재 spec091 BLOCKED(2026-09-07). spec090 a08c462/6992aba DONE/CODEX_PASSED·push 완료.
+> HEAD=origin 추적 ref6992aba,0/0. spec091 구현/증거는 미커밋·미스테이지.
+> targeted13/13, check unit2517/2517 PASS. canonical229 PASS/1 FAIL: Space 오류 안내 timeout 원인 UNCONFIRMED.
+> spec088 picker PNG3 범위 밖 변경도 보존. 추가 실행/stage/commit/push 중단.
+> next FOUNDER_SPEC_091_GATE_AND_EVIDENCE_SCOPE_DECISION. 상세 spec091 handoff/STOP 참조.
+> F-4/F-7/F-8 승인 유지. Space 읽기 전용 조사·증거 범위 추가·재검증은 미승인, 운영 연결/자동화0.
+> 전체 기존 추정85~88% 완료/12~15% 잔여 유지. 아래 현재/최신 표기는 과거 이력이다.
+
 > 최신 종료 2026-09-07: spec090 DONE/CODEX_PASSED, a08c462. check2513/2513, Chromium230/230 PASS.
 > 다음 승인 단위 F-7=A, spec091 계약 선행. F-8=A 유지 확정, 운영 연결/배포/보호 경계 불변.
 

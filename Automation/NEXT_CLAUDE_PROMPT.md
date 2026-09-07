@@ -2,6 +2,36 @@
 
 ## 최신 실행 (2026-09-07)
 
+**종료:** spec091 DONE/CODEX_PASSED, 제품/test/PNG16파일 `95279e7`. 최종 check2517/2517,
+canonical230/230(51.1초) PASS. Space 최초 timeout은 이번 미재현, 원인 UNCONFIRMED 유지.
+현재 WAITING_FOR_NEXT_MANUAL_TASK. 아래 재개/STOP 문구는 모두 종료 전 이력이며 반복 실행하지 않는다.
+
+### 다음 수동 작업 문구 — 전체 잔여 로드맵 검토
+
+```text
+C:\repo\denn-products에서 STATE/CURRENT/live와 spec091 handoff, 리빌드 정본 로드맵을 읽어. F-4/F-7 구현 완료와 F-8 기존 재현 계약 유지를 반영해 전체 미완 작업을 사용자 기능·UI·실기기 검증·운영 승인 경계로 나눠 읽기 전용 검토해. 스펙 번호 개수를 전체 제품 진행률로 계산하지 말고 근거와 미확정 항목을 구분해. 다음 안전한 단위 후보와 Founder 선택 필요 여부를 문서화하되 현재 새 스펙/구현은 자동 시작하지 마. 운영전환 보류·실제 Firebase/UID/배포·보호 대상·자동화 금지를 유지해.
+```
+
+전체85~88% 완료/12~15% 잔여는 기존 계획 추정이며 이번 실측값이 아니다.
+
+**재개 승인:** 사용자 `응`으로 아래 재개 문구의 읽기 전용 조사·증거 범위 추가·로컬 재검증 승인.
+현재 spec091 WORKING. Space 코드/test/timeout/worker/retry 변경0. 실패 반복 시 중단한다.
+아래 BLOCKED/미승인은 승인 전 이력이며 현재 지시는 이 문단과 갱신된 spec091이다.
+
+현재 spec091 BLOCKED. spec090 a08c462/6992aba push 완료, HEAD=origin 추적 ref6992aba·0/0.
+check(unit2517/2517) PASS, canonical229/230: 범위 밖 Space 오류 안내5000ms timeout 1건.
+원인 UNCONFIRMED. spec088 picker PNG3도 허용 범위 밖에서 변경돼 추가 실행/stage/commit/push 중단.
+계약과 `docs/handoff/2026-09-07-spec-091-customer-compatibility-notice-handoff.md`의 STOP을 읽는다.
+F-4/F-7/F-8 승인은 유효하나 다음 범위는 아직 승인되지 않았다. 아래 작업 이력은 재실행 지시가 아니다.
+
+### 승인 후에만 사용할 재개 문구 (현재 미승인)
+
+```text
+C:\repo\denn-products에서 spec091 STOP REPORT를 읽어. 승인된 경우에만 Space timeout을 읽기 전용으로 조사하고, spec088 picker PNG3와 README를 증거 허용 범위에 추가한 뒤 spec091 로컬 검증을 수행해. Space 제품/test/timeout/worker/retry 변경이나 게이트 완화는 하지 마. 원인 미확정 실패가 반복되거나 새 범위가 필요하면 중단해. 기존 보호/user dirty를 보존하고 운영 연결·실제 Firebase·배포·자동화는 금지해.
+```
+
+현재는 승인 대기다. spec091 미커밋, F-8 크기 재현 코드 변경0. 전체 기존 추정85~88%/잔여12~15% 유지.
+
 spec090 DONE/CODEX_PASSED, 제품 a08c462. check2513/2513, canonical230/230(49.8초) PASS.
 다음 실행은 승인된 F-7=A의 spec091 계약 작성 → 고객 정보성 배지만 제거 → 로컬 검증이다.
 아래 spec090 작업 지시는 종료 이력이다. 스펙 없이 먼저 코드를 변경하지 않는다.

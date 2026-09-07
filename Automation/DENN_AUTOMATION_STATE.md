@@ -4,21 +4,46 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-090-admin-preparation-entry   # DONE, CODEX_PASSED, LOCAL_VERIFIED
+completed_unit: spec-091-customer-compatibility-notice-policy   # DONE, CODEX_PASSED, LOCAL_VERIFIED
 active_unit: none
-state: READY_FOR_NEXT_APPROVED_UNIT
-baseline_commit: 830a644
-candidate_commit: none
-verified_commit: a08c462   # spec090 product/test/evidence, same-agent review
-origin_relation: "2026-09-07 closure push receipt: HEAD=origin/rebuild/modern-studio=9a55f67, ahead/behind 0/0; the subsequent receipt-only commit records this verified snapshot"
-working_tree: "spec089 code/evidence and closure documents committed; remaining dirty is limited to pre-existing protected/user paths; receipt documents are committed separately"
+state: WAITING_FOR_NEXT_MANUAL_TASK
+baseline_commit: 6992aba
+candidate_commit: 95279e7
+verified_commit: 95279e7   # spec091 product/test/evidence, same-agent review
+origin_relation: "resume check HEAD=origin6992aba, 0/0; final closure push verified separately in Git and final report"
+working_tree: "product/test/evidence16 files committed95279e7; closure10 docs separately; protected/user dirty excluded, canonical spec018 PNG2 preserved"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_091_CONTRACT_AND_IMPLEMENT
+next_transition: CODEX_REBUILD_REMAINING_ROADMAP_REVIEW
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec090 DONE; check2513/2513 and Chromium230/230 PASS; approved F7 implementation next; F8 no code change
+session_status: spec091 DONE; targeted13, unit2517, canonical230 PASS; initial Space timeout cause UNCONFIRMED; no next spec started
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
+
+## 최신 종료 — spec091 (2026-09-07)
+
+제품/test3 + PNG13 =16파일 `95279e7`. 사용자 승인 재검증: targeted13/13, check2517/2517(94파일,
+2.95초), canonical230/230(51.1초) PASS. 최초 Space timeout 이번 미재현, 원인 UNCONFIRMED.
+Space 제품/test/timeout/worker/retry 변경0. 동일 Codex 검토, 추가 결함 미발견. 독립 검수로 표기하지 않는다.
+문서10개 별도 종료 commit/push. 보호20 중18동일, 예외 spec018 PNG2만 재생성·미스테이지 보존.
+포트6개/staging 잔류0, forbidden diff0, measurements.json diff0. 실제 운영/Firebase/UID/배포0.
+F-4/F-7 구현 완료, F-8 기존 발행 크기 재현 유지. 다음은 전체 미완 로드맵·검증 경계의 읽기 전용 정리다.
+새 스펙/구현은 시작하지 않았다. 전체85~88%/잔여12~15%는 기존 계획 추정 유지, 자동화0.
+
+## 재개 이력 — spec091 (2026-09-07)
+
+사용자 `응`으로 Space 읽기 전용 조사·spec088 PNG3/README 증거 범위 추가·spec091 재검증 승인.
+Space 소스/test/timeout/worker/retry 변경0, 게이트 완화0. 아래 STOP은 승인 전 이력이다.
+
+## 이전 STOP — spec091 (2026-09-07)
+
+spec090 a08c462/6992aba DONE/CODEX_PASSED, push 완료. spec091 F-7=A 구현은 미커밋.
+targeted13/13, check(unit2517/2517) PASS, canonical229 PASS/1 FAIL(52.2초)로 중단.
+Space unavailable proof의5000ms timeout 원인은 UNCONFIRMED. spec088 PNG3도 범위 밖에서 재생성됐다.
+상세: `docs/handoff/2026-09-07-spec-091-customer-compatibility-notice-handoff.md`.
+Space 읽기 전용 조사·spec088 PNG3/README 증거 범위 추가·spec091 재검증의 승인 대기.
+Space 제품/test/timeout 완화는 미승인. 추가 실행/stage/commit/push0. 아래 상태는 과거 이력이다.
+전체 기존 계획 추정85~88% 완료/12~15% 잔여 유지. 운영전환 보류, 실제 Firebase/UID/배포/자동화0.
 
 ## 최신 종료 — spec089 (2026-09-07)
 
