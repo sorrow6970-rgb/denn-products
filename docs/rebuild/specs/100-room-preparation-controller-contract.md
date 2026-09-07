@@ -1,9 +1,10 @@
 # 100 — 룸 준비 controller·합성 fake 계약
 
 2026-09-07. 기준04ccfae, rebuild/modern-studio.
-현재 단계: CONTRACT_REVIEW_PASSED / READY_FOR_IMPLEMENTATION / IMPLEMENTATION_NOT_STARTED.
-같은 Codex의 계약 검토이며 독립검수나 제품 구현검증 통과가 아니다.
-사용자 `응 다음`은099 NEXT의 계약 작성·검토 지시다. 이번 차례는 문서만 작성한다.
+현재 단계: DONE / CODEX_PASSED / LOCAL_VERIFIED (동일 Codex 구현·자체검토, 독립검수 아님).
+사용자 `응 루틴으로 진행해줘`로 본 계약의 코드2파일 구현·합성검증 착수 승인. 아래 계약작성차례는 이력이다.
+계약 작성 이력: 같은 Codex의 계약 검토만으로 제품 검증 통과를 주장하지 않았다.
+이전 사용자 `응 다음`은099 NEXT의 계약 작성·검토 지시였고 그 차례는 문서만 작성했다.
 이후 구현 착수 지시가 오면 아래 고정 범위로 구현하며, 계약 작성 완료를 제품 DONE으로 표시하지 않는다.
 
 ## 1. 목표 (WHY)와 근거
@@ -211,7 +212,8 @@ diff--check·정확변경코드2+문서7·포트4183/4184/4185/8080/9099/9199·s
 ## 8. 완료 조건과 NOT TESTED
 
 계약단계 완료는 문서정합/소스링크/범위/hash검사 통과다. 제품완료와 별개다.
-구현DONE은 §7 실제실행 PASS 후에만 가능하다. 현재 preparation코드/시험0, 모든 §7은 NOT RUN.
+구현DONE은 §7 실제실행 PASS 후에만 가능하다. 계약 작성 당시 코드/시험0·NOT RUN이었고,
+최신 구현·실행 결과는 아래 DONE에 기록한다.
 실제frame픽셀·background형식/용량·CORS·브라우저취소/메모리·UI/실기기는 NOT TESTED.
 UI초기위치/폭/슬라이더/파일한도/해상도·시간·비용은 UNCONFIRMED, 새로승인하지 않는다.
 draw API/실제adapter가 필요하면 후속별도계약. 이번범위를 넘어 기존파일수정이 필요해도 STOP한다.
@@ -223,4 +225,28 @@ draw API/실제adapter가 필요하면 후속별도계약. 이번범위를 넘�
 기존파일수정/그리기 API/새제품기본값 없이 구현할 계약 범위를 코드2파일로 고정했다.
 [검토 기록](../../codex-claude-handoff/reviews/2026-09-07-spec-100-room-preparation-controller-contract.md),
 [인수인계](../../handoff/2026-09-07-spec-100-room-preparation-controller-handoff.md).
-아직제품코드·시험작성/실행0. 이번 계약 작성 차례 뒤에는 명시된 구현 착수 지시를 기다린다.
+당시 제품코드·시험작성/실행0으로 명시된 구현 착수 지시를 기다렸다. 이후 아래 승인으로 진행했다.
+
+### DONE (Codex) — 2026-09-07
+
+- 사용자 `응 루틴으로 진행해줘`에 따라 계약 선행 후 코드2파일 구현. 코드 커밋 `6e41c48`.
+  [controller](../../../apps/mockup/src/room-placement/preparation.ts),
+  [합성 테스트](../../../apps/mockup/src/room-placement/preparation.test.ts).
+- source gate·lease admission·partial→098 aggregate 소유권·취소결과 정착·sync sink/start 실패·
+  stale/duplicate/reentrant 작업 격리·readPrepared 재검사를 구현했다. 기존 session/geometry 변경0.
+- targeted `vitest run apps/mockup/src/room-placement`: 기존46+신규68=114/114 PASS (254ms).
+  `node scripts/check.mjs`: format/lint/7대상 typecheck/unit2659/2659/양앱build PASS.
+  최초 check는 미사용 type import와 의도적 thenable fixture lint로 실패; 허용 test 파일에서
+  import 제거·해당 fixture만 이유 있는 lint 주석으로 보완한 뒤 전체 재검증 PASS. 전역 검사 완화0.
+- `node scripts/e2e-run.mjs`: canonical Chromium271/271 PASS (50.3초), timeout/retry/worker 변경0.
+  이는 기존 UI 회귀이며 새 룸 UI·실제 adapter 검증이 아니다. 현재 신규 모듈의 route 연결0.
+- 양앱 entry SHA-256 불변: customer `FECAC548F3BD64B02873F5191E53EA8E2816F76CF609C648AAB67A108A3EE22A`,
+  admin `B0A1F85F9271E4A929D2F6AB0F20BB0D0BFDADDA211533DDD675C8FB85711246`.
+- 시작 hash105 중103 동일, spec018PNG2만 canonical 재생성 기존 예외. 복원/stage/commit0.
+  포트4183/4184/4185/8080/9099/9199 listener0, 이번 staging 제거 확인, diff--check PASS.
+  정확 코드2+문서7 외 새 변경0; 기존 별도 dirty22는 커밋 제외.
+- 동일 Codex 코드 검토에서 계약 밖 API·이중 해제·옛 cohort의 새 상태 덮어쓰기 결함을 발견하지 않았다.
+  합성 fake가 실제 projection 증명·물리적 자원 회수·브라우저 취소 성공을 보증하지 않는 한계 유지.
+- 실제 loader/그리기 capability/사진 선택/UI·Firebase·운영·배포·삭제·설치·자동화0.
+  다음은 browser adapter와 이미지 입력 예산의 별도 계약 전 조사 후보이며 아직 시작하지 않았다.
+  전체 리빌드 실측 완료율은 확인할 수 없다. 이번 내부 준비 lifecycle 완료를 화면 완료로 계산하지 않는다.

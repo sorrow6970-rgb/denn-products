@@ -1,5 +1,26 @@
 # spec100 — 룸 준비 controller 계약 인수인계
 
+## 최신 구현 완료 — 2026-09-07
+
+DONE / CODEX_PASSED / LOCAL_VERIFIED (동일 Codex 구현·검토; 독립검수 아님).
+사용자 `응 루틴으로 진행해줘`로4f69e0a 기준 착수, 코드2파일 커밋 `6e41c48`.
+source/no-clock gate, partial→aggregate lease ownership, 취소·실패·stale/duplicate·재진입을 구현했다.
+기존098/owner/print/route/UI/Rules/config 수정0; 실제 renderer/drawable 공개0.
+
+targeted114/114=기존46+신규68(254ms), 전체 check format/lint/typecheck/unit2659/2659/build PASS,
+canonical Chromium271/271(50.3초) PASS. 최초 check의 테스트 lint2건만 in-scope 보완 후 전체통과.
+고객 entry SHA `FECAC548F3BD64B02873F5191E53EA8E2816F76CF609C648AAB67A108A3EE22A`,
+admin entry SHA `B0A1F85F9271E4A929D2F6AB0F20BB0D0BFDADDA211533DDD675C8FB85711246` 불변.
+시작hash105 중103동일/spec018PNG2 기존 재생성 예외, 보호 복원/stage/commit0.
+포트4183/4184/4185/8080/9099/9199 listener0·staging제거·diff--check PASS.
+정확 코드2+문서7만 변경/전송 대상; 별도dirty22 제외. 종료 문서 전송 결과는 후속 영수증에 기록한다.
+
+READY_FOR_NEXT_SCOPED_UNIT / active none / completed spec100 /
+next CODEX_ROOM_BROWSER_ADAPTER_BOUNDARY_REVIEW. NEXT에 다음 문서 조사 지시를 남기며 아직 착수0.
+실제 픽셀·CORS·메모리·source producer·browser adapter·룸 UI는 NOT TESTED. 기존 E2E 통과와 구분한다.
+실제Firebase/UID/운영/배포/발행/삭제/설치/자동화0. 전체 실측 진행률 확인불가·이번 화면 변화0.
+아래는 계약 작성·전송 이력이며 최신 미구현 상태가 아니다.
+
 전송확인2026-09-07:계약7문서6ab4345 정상push04ccfae..6ab4345,HEAD=origin6ab4345·0/0.
 영수증STATE/NEXT/CURRENT/live/이handoff5문서만추가. 아래계약전송계획완료, 제품코드/시험0.
 보호/별도dirty22제외, 최종영수증HEAD는Git으로확인한다.

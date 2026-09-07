@@ -8301,3 +8301,30 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 링크13/13·dirty22/22hash동일·diff--checkPASS. 영수증5문서추가기록, 보호/별도작업커밋제외.
 - CONTRACT_REVIEW_PASSED / READY_FOR_IMPLEMENTATION 유지. 제품DONE/테스트PASS아님.
   NEXT에구현지시기록, 제품코드/시험시작0. 운영/배포/자동화0,전체실측진행률확인불가.
+
+## 2026-09-07 - spec100 준비 controller 구현·검증 완료
+
+- 최신 사용자 `응 루틴으로 진행해줘`로 계약100의 고정 신규코드2파일만 구현·합성검증.
+  기준HEAD=origin4f69e0a·0/0, 코드 커밋6e41c48. preparation.ts와 preparation.test.ts 외 제품변경0.
+- source/frame-ready/no-clock gate, 동기 frame lease와 background sink/task, partial→098 aggregate,
+  cancel latch·첫 terminal result·late/duplicate·재진입·readPrepared 현재성 검사를 구현했다.
+  동일 Codex 자체검토 CODEX_PASSED/LOCAL_VERIFIED/DONE. 독립검수나 실제 픽셀 검증 아님.
+- targeted114/114=기존46+신규68(254ms). check 최초 lint는 미사용 import1·의도적 thenable fixture1로 실패.
+  허용 test 파일에서 import 제거/fixture 한 곳의 이유 있는 lint 주석으로 보완했다. 전역 검사 완화0.
+  재실행 format/lint/7대상 typecheck/unit2659/2659/build PASS. 기존 chunk-size warning은 남아 있다.
+- canonical `node scripts/e2e-run.mjs`: Chromium271/271 PASS(50.3초), timeout/retry/worker변경0.
+  기존 UI 회귀 검증일 뿐100의 실제 adapter/UI 검증이 아니다. emulator/실제Firebase 실행0.
+- 양앱 entry SHA불변: customer FECAC548F3BD64B02873F5191E53EA8E2816F76CF609C648AAB67A108A3EE22A,
+  admin B0A1F85F9271E4A929D2F6AB0F20BB0D0BFDADDA211533DDD675C8FB85711246.
+- 시작hash105 중103동일. canonical 재생성 예외 spec018PNG2만 변경:
+  desktop 516E718706FF621FEC5D3313B0EC457F177F6A069D355537BED2CF75B9B03129
+  → 89565478E4994C1BA5757F5955BDAE15EEBB31C867CBEAE5185149446CC99D01;
+  mobile 073103F2A891EEF3DCFC43B321F78EA03AF280D670F98C1ED671FCE11ED7C559
+  → 5043D55564D51A7F577EDBC520C2062C3FDA8FF277FE9B7C105E3FB8B0D135BD.
+  보호파일 복원/stage/commit0. 그 외 기존 증거/보호 hash변경0. 별도dirty22는 전송 제외.
+- 포트4183/4184/4185/8080/9099/9199 listener0, 이번 denn-e2e-APreMF staging 제거 확인,
+  git diff--check PASS. 정확 코드2+문서7 분리 일반commit/push; 실제전송 결과는 후속영수증.
+- READY_FOR_NEXT_SCOPED_UNIT / active none / completed spec100 /
+  next CODEX_ROOM_BROWSER_ADAPTER_BOUNDARY_REVIEW. 다음 정적 문서 조사 지시를 NEXT에 남겼고 착수0.
+  실제frame/source producer·CORS·메모리·새룸UI는 NOT TESTED; 내부 준비 기능을 화면 완성으로 계산하지 않는다.
+  전체실측 완료율/최종스펙수 확인불가. 운영/실제UID/배포/발행/삭제/설치/자동화0.

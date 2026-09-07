@@ -1,5 +1,15 @@
 # 현재 상태
 
+> 최신2026-09-07: spec100 DONE/CODEX_PASSED/LOCAL_VERIFIED, 코드6e41c48의 신규2파일.
+> 사용자 `응 루틴으로 진행해줘` 승인 후 구현·자체검토(동일 Codex, 독립검수 아님).
+> targeted114/114·check2659/2659·canonical271/271(50.3초) PASS, 양앱entry SHA불변.
+> 최초 check의 test lint2건은 해당 파일 안에서 보완 후 전체 PASS. 검사조건 완화0.
+> READY_FOR_NEXT_SCOPED_UNIT / active none / next CODEX_ROOM_BROWSER_ADAPTER_BOUNDARY_REVIEW.
+> 정확코드2+종료문서7 분리 일반commit/push 단계, 보호/별도dirty22 전송제외.
+> 105hash 중103동일/spec018PNG2 기존 재생성 예외, 포트6개0·staging제거·diff--check PASS.
+> 다음 문서 조사 지시는 NEXT, 아직착수0. 신규룸UI/실제adapter/운영/배포/자동화0.
+> 전체 실측률 확인불가·화면 변화0. 아래 계약만 완료/미구현 상태는 과거 이력이다.
+
 > 전송확인2026-09-07:100 계약7문서6ab4345 정상push04ccfae..6ab4345,HEAD=origin·0/0.
 > 링크13/13·dirty22/22 SHA동일·diff--checkPASS. 영수증5문서추가기록,아래전송계획완료.
 > READY_FOR_IMPLEMENTATION 유지. 제품코드/시험0, 정확구현지시NEXT.

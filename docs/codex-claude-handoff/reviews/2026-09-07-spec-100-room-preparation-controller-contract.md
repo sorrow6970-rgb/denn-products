@@ -1,5 +1,29 @@
 # spec100 — 준비 controller 계약 검토
 
+## 최신 구현 검토 — 2026-09-07
+
+DONE / CODEX_PASSED / LOCAL_VERIFIED. 사용자 `응 루틴으로 진행해줘` 승인, 기준4f69e0a,
+코드 `6e41c48`의 신규 preparation.ts/preparation.test.ts2개만 구현. 동일 Codex 자체검토이며 독립검수 아님.
+아래 IMPLEMENTATION_NOT_STARTED는 이전 계약 작성 시점의 기록이다.
+
+검토 근거: [구현](../../../apps/mockup/src/room-placement/preparation.ts),
+[시험](../../../apps/mockup/src/room-placement/preparation.test.ts), [계약 DONE](../../rebuild/specs/100-room-preparation-controller-contract.md).
+release capability 선취득·중복 lease 예약·cleanup 전 귀속 분리·cancel latch·first terminal result·
+현재 source 재확인·완성 자원만098에 양도하는 경계를 코드와 합성 테스트로 대조했다.
+동일/새 lease 중복, A의 늦은 완료/B ready, 동기 완료 후 start 실패, getter/cancel/release 재진입을 검증했다.
+추가 결함 발견0. 기존098/API/route/renderer/Rules/config 변경0.
+
+검증: targeted114/114(기존46+신규68), check unit2659/2659 및 format/lint/typecheck/build PASS,
+canonical Chromium271/271(50.3초) PASS. 최초 check lint2건은 test 파일 안에서 보완 후 전체 PASS;
+unused import 제거와 의도적인 thenable fixture 한 곳의 이유 명시 주석뿐, 전역 검사 완화0.
+양앱 entry SHA불변. 시작105hash 중103동일, 기존 예외 spec018PNG2만 재생성·커밋 제외.
+포트6개0/staging제거/diff--check PASS. 코드2와 종료문서7을 분리 전송한다.
+
+실제 source producer의 증명·픽셀·이미지 예산/형식·CORS·브라우저 취소/메모리·새 룸 UI는 NOT TESTED.
+공개 출력은 크기와 안전 상태뿐이다. 전체 진행률 실측 불가, 화면 변화0. 다음 계약 전 조사만 NEXT에 남긴다.
+
+## 계약 작성 이력
+
 2026-09-07. 기준04ccfae. CONTRACT_REVIEW_PASSED / IMPLEMENTATION_NOT_STARTED.
 [계약](../../rebuild/specs/100-room-preparation-controller-contract.md).
 동일Codex 문서검토이며 독립검수·제품CODEX_PASSED·unit PASS가 아니다.

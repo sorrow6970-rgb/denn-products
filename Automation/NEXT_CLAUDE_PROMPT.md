@@ -1,5 +1,32 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 완료 / 다음 문서 조사 — spec100 (2026-09-07)
+
+100 DONE/CODEX_PASSED/LOCAL_VERIFIED. 코드6e41c48(신규2파일), 동일 Codex 구현·자체검토.
+targeted114/114, 전체check2659/2659·canonical271/271(50.3초) PASS. 양앱entry SHA불변.
+기존105hash 중103동일/spec018PNG2만 기존 예외, 보호/별도dirty22 커밋 제외.
+종료7문서 별도 일반commit/push 뒤 영수증 확인. 아래100 구현 지시는 완료 이력이다.
+실제 browser adapter/룸 UI는 아직 없으며 이번 준비 controller가 source producer나 픽셀을 증명하지 않는다.
+
+다음 재개 지시 (아직 시작하지 않음):
+
+```text
+C:\repo\denn-products에서 STATE/CURRENT/live, RG-2 결정과099 조사·100 계약/구현/검수/handoff를 읽어.
+다음은 실제 로컬 browser adapter를 위한 최소 경계의 문서 조사다. 새 조사 스펙과 허용 문서를 먼저 고정해.
+source identity 발급·무효화/성공한 no-clock projection/독립 frame snapshot/배경 decode cancel의
+책임 주체와100 port의 접점을 정적으로 대조하고, 구현 전 필요한 정확 파일·API·검증 후보를 좁혀.
+기존 print/owner 재사용 시 빌린 자원과 독립 자원, DOM clock 층, source별 draw ack 부재를 숨기지마.
+기존 local image 형식/크기 정책이 룸 배경에도 승인된 것인지는 근거로 구분해.
+파일 byte·pixel·메모리 예산·UI초기값 등 새제품 선택은 임의 확정하지 말고 최소 질문으로 분리해.
+문서 조사만: 제품/test/Rules/config 수정·브라우저/실제이미지 실행·UI연결·File/Canvas/URL 생성0.
+draw capability/API 확장이나 adapter 구현은 별도 검토된 계약 전에는 시작하지마.
+보호/별도dirty22, 실제Firebase/UID/운영data/배포/발행/삭제/설치/자동화 금지 유지.
+문서 근거·미확정·다음 지시와 전체진행률 불확실성을 STATE/NEXT/CURRENT/live에 동기화해.
+새권한/제품결정/스코프 충돌이면 STOP. 검증된 합의범위 문서만 일반commit/push해.
+```
+
+전체 실측 완료율/최종 스펙수는 확인할 수 없다. 이번 화면 변화0; 실제 룸 UI·브라우저 메모리는 NOT TESTED.
+
 ## 최신 준비 / 다음 구현 지시 — spec100 (2026-09-07)
 
 계약전송완료:7문서6ab4345 정상push,HEAD=origin6ab4345·0/0확인. 영수증5문서별도기록.

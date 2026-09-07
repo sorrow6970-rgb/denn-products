@@ -4,23 +4,36 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-099-room-local-adapter-boundary-investigation   # DOCUMENT DONE; spec098 product DONE remains
-active_unit: spec-100-room-preparation-controller
-state: READY_FOR_IMPLEMENTATION
-baseline_commit: 04ccfae
-candidate_commit: 6ab4345   # spec100 reviewed contract only; implementation not started
-verified_commit: 3c3abca   # same Codex implementation/review; not independent review
-origin_relation: "spec100 contract6ab4345 normal push confirmed; HEAD=origin6ab4345 and0/0 before receipt; receipt HEAD via git"
-working_tree: "spec100 receipt5 documents only; protected/user dirty22 preserved and excluded,22 hashes unchanged"
+completed_unit: spec-100-room-preparation-controller   # DONE / CODEX_PASSED / LOCAL_VERIFIED
+active_unit: none
+state: READY_FOR_NEXT_SCOPED_UNIT
+baseline_commit: 4f69e0a
+candidate_commit: 6e41c48   # spec100 implementation code2
+verified_commit: 6e41c48   # same Codex implementation/review; not independent review
+origin_relation: "code6e41c48 committed locally; closure7 documents pending commit/normal push, confirmation in receipt"
+working_tree: "spec100 closure7 documents only; preexisting dirty22 excluded;105 baseline hashes103 unchanged, spec018PNG2 canonical regeneration exception"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_100_IMPLEMENT_AND_VERIFY
+next_transition: CODEX_ROOM_BROWSER_ADAPTER_BOUNDARY_REVIEW
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec100 CONTRACT_REVIEW_PASSED; contract-only turn complete; implementation/tests not started; awaiting explicit implementation instruction
+session_status: spec100 implementation verified; next separate contract boundary investigation not started
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 준비 — spec100 계약 작성·검토 (2026-09-07)
+## 최신 완료 — spec100 준비 controller 구현·검증 (2026-09-07)
+
+최신 사용자 `응 루틴으로 진행해줘`에 따라 계약을 읽고 신규 코드2만 구현, 커밋6e41c48.
+DONE/CODEX_PASSED/LOCAL_VERIFIED(동일 Codex 자체검토). source gate·partial/aggregate·취소·재진입 고정.
+targeted114/114=기존46+신규68, 전체check2659/2659 및 format/lint/typecheck/build PASS,
+canonical271/271(50.3초) PASS. 첫 check 테스트 lint2건은 허용 test 안에서 보완 후 PASS.
+양앱entry SHA불변, 시작105hash 중103동일/spec018PNG2만 기존 재생성 예외. 복원/커밋0.
+포트6개listener0·staging제거·diff--check PASS, 기존 별도dirty22는 전송대상 제외.
+코드2와 종료문서7 분리 일반commit/push 단계. 성공은 후속 영수증에서 확인한다.
+새 UI/loader/그리기 API/실제 Firebase/UID/운영/배포/삭제/설치/자동화0.
+다음 별도 browser adapter·이미지 예산 계약 전 조사는 NEXT, 아직 착수0. 새 룸 UX는 NOT TESTED.
+전체 실측 진행률 확인불가. 이번은 내부 lifecycle 준비 완료이며 화면 변화0.
+
+## 계약 작성 이력 — spec100 (2026-09-07)
 
 전송확인:계약7문서6ab4345 정상push04ccfae..6ab4345,HEAD=origin6ab4345·0/0.
 링크13/13·dirty22/22hash동일·diff--checkPASS. 영수증5문서만별도기록, 제품구현/시험0.
