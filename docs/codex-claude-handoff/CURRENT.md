@@ -1,5 +1,23 @@
 # 현재 상태
 
+> 최신2026-09-07: spec102 DONE/CODEX_PASSED/LOCAL_VERIFIED, 코드37c581e(동일 Codex 자체검토).
+> targeted200/200·check2745/2745·최종canonical281/281(50.3초), 양앱JS/고객CSS 불변.
+> READY_FOR_NEXT_SCOPED_UNIT / next CODEX_ROOM_BACKGROUND_INPUT_POLICY_INVESTIGATION.
+> baseline105중104동일, PNG2 기존 재생성예외·별도dirty22 전송제외. 포트0/staging제거/diff--check PASS.
+> 코드4+종료문서7 분리 정상전송 단계. 실제사진/source/UI/운영 NOT TESTED, 전체실측률불명·화면변화0.
+> 다음103은 문서 계약·조사부터 진행. 새 제품 결정이면 STOP. 아래 WORKING은 완료 이력.
+
+> 최신2026-09-07: Q-102-1 사용자 재개 승인. 계약 정정·재검토 완료, spec102 WORKING.
+> live copyTo/BUSY, release/RELEASED, dispose/DISPOSED. 정확4파일 구현·검증, 문서7 동기화.
+> 아래 CORRECTION_REQUIRED는 해소된 이력. 막힘 없는 스펙 간 진행 승인/운영·보호 금지 유지.
+
+> 최신2026-09-07: spec102 CORRECTION_REQUIRED / Q-102-1 확인 대기. HEAD=origin6c0e0ac·0/0.
+> 계약 §6은 release 중 paint BUSY, §7은 released 우선으로 서로 충돌. 코드/시험 착수 전 발견.
+> 제안: live copyTo 중 BUSY / release 이후 RELEASED / dispose 이후 DISPOSED. 사용자 확인 전 미채택.
+> 최신 사용자 승인으로 막힘·새결정·권한변경 없는 스펙 간 자동 진행을 허용하되, 이번 모순은 STOP.
+> 허용7문서만 미커밋 상태 기록. stage/commit/push/제품/시험/자동화0. NEXT의 재개 조건 우선.
+> 100제품DONE·101문서DONE 유지, 전체진행률 변화0. 아래 착수가능 상태는 과거 이력이다.
+
 > 전송확인2026-09-07:102 계약7문서e130764 정상push2dcf7b4..e130764,HEAD=origin·0/0.
 > 링크15/15·dirty22/22 SHA동일·diff--check PASS. 영수증5문서추가,보호/별도작업 전송제외.
 > READY_FOR_IMPLEMENTATION 유지. 제품/시험0,정확지시NEXT. 아래전송계획완료.

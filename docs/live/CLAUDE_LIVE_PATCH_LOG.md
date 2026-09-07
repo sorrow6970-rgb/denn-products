@@ -8389,3 +8389,52 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
 - 링크15/15·시작dirty22/22 SHA동일·diff--check PASS. 전송영수증5문서만 추가,보호/별도작업 커밋제외.
 - CONTRACT_REVIEW_PASSED / READY_FOR_IMPLEMENTATION,제품DONE/시험PASS 아님. 정확다음구현지시NEXT.
   새Founder질문없음. 실제배경/source producer/룸UI/운영/배포/자동화0,전체실측진행률 확인불가.
+
+## 2026-09-07 - 스펙 간 자동 진행 승인 · spec102 착수 전 계약 모순으로 중단
+
+- 사용자 `별도 확인하거나 문제없지않은이상 모든스펙 자동 진행해줘`로 막힘/새결정/권한변경 없는
+  단위의 계약→구현→검증→다음단위 진행 승인. 예약 자동화·운영/배포·보호파일 예외 승인은 아니다.
+- 시작HEAD=origin6c0e0ac,ahead/behind0/0. 102 계약을 다시 읽고 §6/§7의 Q-102-1 모순 발견:
+  release는 live를 먼저 닫지만 release 중 paint를 BUSY라 적었고, 오류순서는 RELEASED를 우선한다.
+  앞선 동일 Codex 계약 검토에서 놓친 문서 결함이며 제품실행 결함으로 보고하지 않는다.
+- 제안: live copyTo 중 중첩paint BUSY, release 이후 RELEASED, dispose 이후 DISPOSED. 미채택.
+  사용자 확인 후 계약정정·재검토부터 자동루틴 재개. 현재 CORRECTION_REQUIRED,102제품DONE 아님.
+- 허용102문서7개만 중단기록, 제품코드/시험작성·실행0, stage/commit/push0. 보호/별도dirty 제외.
+  실제Firebase/UID/운영data/배포/발행/삭제/설치/자동화0. 전체실측진행률 확인불가·화면변화0.
+
+## 2026-09-07 - spec102 Q-102-1 승인 · 자동 진행 재개
+
+- 사용자 `응 자동진행 재개해줘`로 오류 우선순위 정정 승인. §6/§7 재검토 완료.
+- live copyTo/BUSY, release cleanup/RELEASED, dispose/DISPOSED, 추가 copyTo0.
+- 정확 코드4+문서7 구현·검증 진행. 보호/별도dirty22 제외, 새 결정·문제 STOP/운영금지 유지.
+- 예약 자동화0. 검증 결과는 실행 후 기록하며 제품 PASS를 선기록하지 않는다.
+
+## 2026-09-07 - spec102 독립 frame snapshot 구현·검증 완료
+
+## 구현 완료 — 2026-09-07
+
+DONE / CODEX_PASSED / LOCAL_VERIFIED. 코드 `37c581e`, 동일 Codex 구현·자체 검토(독립 검수 아님).
+Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Composer/owner/print 수정0.
+
+- targeted room-placement 200/200 = 기존114 + 신규86.
+- `node scripts/check.mjs` PASS: format/lint/7개 프로젝트 typecheck/unit2745/2745/build.
+- 최종 `node scripts/e2e-run.mjs` canonical281/281(50.3초) = 기존271 + 신규10. 이전 실행도281/281(50.8초).
+- 합성 Chromium 정수/비정수 scale, clip/회전/확정 text: 독립 두 단계 기준 대비 RGBA 차이0;
+  borrowed 원본을 변경해도 사본 픽셀 차이0. 별도 source 교체/release/dispose는 copy0, cleanup1.
+- 초기 테스트의 Number.MIN_VALUE 거부 기대값은 잘못된 계약 해석이어서 정정했고 유효성 시험을 추가했다.
+  테스트 lint2건도 해당 파일에서 보완. 최종 자체검토로 함수의 custom bind/call을 읽지 않고
+  Reflect.apply로 receiver를 유지하도록 고정. 실패 은닉/timeout/retry/worker/tolerance 완화0.
+- 양앱 entry와 고객 CSS SHA-256 불변:
+  customer `FECAC548F3BD64B02873F5191E53EA8E2816F76CF609C648AAB67A108A3EE22A`;
+  admin `B0A1F85F9271E4A929D2F6AB0F20BB0D0BFDADDA211533DDD675C8FB85711246`;
+  customer CSS `6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81`.
+- baseline105 중 최종104 동일; 기존 canonical 예외 spec018 PNG2 재생성, 최종 desktop은 시작 SHA 동일,
+  mobile은 `1103D366D28B33D07411CB34942FFBDC32E8C82F44AC00324BAAD1C4EAB84374`.
+  두 PNG 모두 복원/stage/commit0. 나머지 보호/별도dirty20 SHA동일, 전체 별도dirty22 전송제외.
+- 포트4183/4184/4185/8080/9099/9199 listener0; 이번 temp staging 두 곳 제거 확인; diff--check PASS.
+
+신규 테스트의 외부 egress/console error·warning0은 합성 픽셀 시나리오에서 측정했다.
+실제 사진/배경 decoder/source producer/두 자원 합성/룸 UI/실기기/메모리회수/CORS는 NOT TESTED.
+운영/Firebase/UID/배포/발행/삭제/설치/예약 자동화0. 이번 고객 화면 변화0, 전체실측완료율 확인불가.
+다음은 배경 입력 정책·decode 전 예산 경계의 문서 조사. 새 계약 전 제품 확장0, 새 제품 선택이면 STOP.
+아래 계약만 완료/미구현/중단 기록은 해당 시점의 이력이다.

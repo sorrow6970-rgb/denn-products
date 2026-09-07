@@ -4,23 +4,46 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-101-room-browser-adapter-boundary-investigation   # DOCUMENT DONE; spec100 product DONE remains
-active_unit: spec-102-room-frame-snapshot
-state: READY_FOR_IMPLEMENTATION
-baseline_commit: 2dcf7b4
-candidate_commit: e130764   # spec102 reviewed contract; implementation not started
-verified_commit: 6e41c48   # same Codex implementation/review; not independent review
-origin_relation: "spec102 contract7 e130764 normal push confirmed; HEAD=origin e130764,0/0 before receipt; final receipt HEAD via git"
-working_tree: "spec102 receipt5 documents only; preexisting protected/user dirty22 excluded,22 hashes unchanged"
-fix_round: 0
+completed_unit: spec-102-room-frame-snapshot   # DONE / CODEX_PASSED; same Codex self-review
+active_unit: none
+state: READY_FOR_NEXT_SCOPED_UNIT
+baseline_commit: 6c0e0ac
+candidate_commit: 37c581e
+verified_commit: 37c581e   # same Codex implementation/review; not independent review
+origin_relation: "code37c581e committed; scoped closure document commit/push pending confirmation"
+working_tree: "spec102 closure7 documents; preexisting protected/user dirty22 excluded, PNG2 canonical exception only"
+fix_round: 1
 max_fix_rounds: 3
-next_transition: CODEX_SPEC_102_IMPLEMENT_AND_VERIFY
-automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec102 contract review passed; waiting for explicit implementation instruction, no code or tests run
+next_transition: CODEX_ROOM_BACKGROUND_INPUT_POLICY_INVESTIGATION
+automation_loop: user authorizes cross-spec contract-implementation-verification continuation absent blockers or decisions; no scheduled automation; protected and operational restrictions remain
+session_status: spec102 verified; continuing next scoped document investigation under cross-spec authorization
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 준비 — spec102 독립 frame snapshot 계약 (2026-09-07)
+## 최신 완료 — spec102 (2026-09-07)
+
+코드37c581e, DONE/CODEX_PASSED/LOCAL_VERIFIED(동일 Codex). targeted200/200,
+check2745/2745·format/lint/typecheck/build PASS, 최종canonical281/281(50.3초) PASS.
+양앱entry/고객CSS SHA불변. baseline105중104동일, spec018PNG2만 기존 재생성 예외(최종mobile만 변경).
+포트6개0·staging제거·diff--check PASS. 코드4/종료문서7 분리 전송, 별도dirty22 제외.
+상세 근거/한계는102 계약 DONE·review·handoff. 실제source/사진/룸UI/운영 NOT TESTED, 화면변화0.
+다음 배경 입력정책 조사는 계약부터 작성한다. 새 결정 없으면 계속, 정책 선택이 필요하면 STOP.
+
+## 재개 이력 — spec102 Q-102-1 승인 (2026-09-07)
+
+사용자 `응 자동진행 재개해줘`로 정정 승인. live copyTo/BUSY, release/RELEASED,
+dispose/DISPOSED를 계약에 반영하고 재검토했다. 코드4+문서7 범위 구현·검증 진행 중.
+아래 중단/준비 문구는 과거 이력이며 보호/운영 금지와 새 결정 STOP은 유지한다.
+
+## 중단 이력 — spec102 계약 모순 Q-102-1 (2026-09-07)
+
+최신 사용자 지시로 막힘·추가 확인 필요사항이 없으면 다음 스펙까지 진행하는 루틴을 승인받았다.
+그러나 착수 검토에서 §6의 release 중 paint BUSY와 §7의 released 우선순위가 충돌해 중단했다.
+제안: live copyTo 재진입 BUSY / release 이후 RELEASED / dispose 이후 DISPOSED. 아직 미채택.
+사용자 확인→계약 정정·검토→102 구현·검증 순으로 재개한다. 추가 제품코드/시험/자동화0.
+현재허용7문서만 중단기록, commit/push/stage0. 100제품DONE·101문서DONE 유지, 전체진행률 변화0.
+
+## 준비 이력 — spec102 독립 frame snapshot 계약 (2026-09-07)
 
 전송확인: 계약7문서e130764 정상push2dcf7b4..e130764,HEAD=origin e130764·0/0.
 링크15/15·dirty22/22 SHA동일·diff--check PASS. 영수증5문서만 추가, 제품/시험0 유지.

@@ -1,9 +1,11 @@
 # 102 — 독립 frame snapshot·격리 Canvas 검증 계약
 
 2026-09-07. 기준2dcf7b4, rebuild/modern-studio.
-CONTRACT_REVIEW_PASSED / READY_FOR_IMPLEMENTATION / IMPLEMENTATION_NOT_STARTED.
-사용자 `응 진행해줘`는101 NEXT의 계약 작성·검토 지시다. 이번에는 문서7개만 변경한다.
-아래 코드/시험 범위는 다음 명시 구현 착수 지시에서 적용한다. 제품 DONE 또는 구현승인 기록이 아니다.
+DONE / CODEX_PASSED / LOCAL_VERIFIED — Q-102-1 정정 승인 후 구현·검증 완료. 코드37c581e.
+최신 사용자 지시로 막힘·새결정·권한변경 없는 스펙 간 자동 진행을 승인받았다. 이 승인은 계약 모순의
+임의 해석이나 운영/보호 경계 해제를 포함하지 않는다. 이전 계약 검토 통과 기록은 이력이다.
+최신 사용자 `응 자동진행 재개해줘`로 Q-102-1 제안과 아래 정확4파일 구현·검증을 재개한다.
+문서7개와 코드/시험4개만 허용하며, 이전 문서 차례의 실행0 기록은 당시 이력이다.
 
 ## 1. 목표 (WHY)
 
@@ -148,7 +150,8 @@ released/disposed/BUSY paint 재진입은 copyTo0. 잘못된 paint request는 IN
 재검사, 종료 후 live/current 재검사. source 변경이면 lease의 사용권을 닫고 release 후 SOURCE_CHANGED.
 copyTo 중 release/dispose면 성공으로 반환하지 않는다. copyTo가 throw하면 PAINT_FAILED이며 lease는 폐기한다.
 copyTo가 target에 이미 쓴 픽셀은 rollback되지 않는다. caller는 실패한 destination을 공개하지 않아야 한다.
-copyTo/release 동안의 중첩 paint는 BUSY, 외부 callback 무한재귀를 만들지 않는다.
+live copyTo 중 중첩 paint는 BUSY, release cleanup 중에는 RELEASED, dispose 뒤에는 DISPOSED다.
+모두 추가 copyTo0이며 외부 callback 무한재귀를 만들지 않는다(승인된 Q-102-1 정정).
 
 **trusted copyTo 구현은 내부에서 native drawImage에 private canvas를 인자로 전달한다.** raw canvas를
 public lease 필드/반환값으로 노출하지 않는다는 뜻이지 악의적 target/copyTo의 캡처를 보안적으로 막는다는
@@ -224,3 +227,45 @@ UI초기값/배경형식·예산 기본값/운영 정책은 미확정. 전체실
 문서 검증 실측: 신규3문서 링크/지정라인15/15, 시작dirty22/22 SHA동일, diff--check PASS.
 정확 허용7문서 외 새변경0. 신규제품/시험3경로 부재·기존fixture 미변경 확인. 배율 예시 산술도 대조했다.
 이는 제품unit/브라우저 검증이 아니며 모든 후속 구현 검증은 NOT RUN이다.
+
+### QUESTIONS — 2026-09-07 착수 전 검토
+
+Q-102-1 (CLOSED / APPROVED): 이전 §6의 `copyTo/release 동안의 중첩 paint는 BUSY`와 §7의
+`paint는 disposed→released→busy→입력→source→copy 순서`가 release 재진입에서 충돌한다.
+§6은 release가 live 상태를 먼저 닫도록 요구하므로, cleanup callback이 paint를 부를 때는 이미 released다.
+BUSY와 RELEASED를 동시에 만족하는 구현은 없다. 실제 코드 재현이 아니라 계약 문장의 정적 모순이다.
+
+최신 재개 지시로 정정 승인: §7 우선순위를 정본으로 유지한다. live copyTo 중 재진입 paint만 BUSY;
+release cleanup 중 재진입은 RELEASED, capturer.dispose 중에는 DISPOSED. 모두 copyTo 추가호출0.
+§6 문장과 §7 우선순위를 일치시켜 동일 Codex 계약 재검토 후 구현·검증 루틴을 재개한다.
+이전 중단 당시 제품코드/시험작성·실행0, commit/push/stage0은 과거 기록이다.
+
+### DONE (Codex)
+
+## 구현 완료 — 2026-09-07
+
+DONE / CODEX_PASSED / LOCAL_VERIFIED. 코드 `37c581e`, 동일 Codex 구현·자체 검토(독립 검수 아님).
+Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Composer/owner/print 수정0.
+
+- targeted room-placement 200/200 = 기존114 + 신규86.
+- `node scripts/check.mjs` PASS: format/lint/7개 프로젝트 typecheck/unit2745/2745/build.
+- 최종 `node scripts/e2e-run.mjs` canonical281/281(50.3초) = 기존271 + 신규10. 이전 실행도281/281(50.8초).
+- 합성 Chromium 정수/비정수 scale, clip/회전/확정 text: 독립 두 단계 기준 대비 RGBA 차이0;
+  borrowed 원본을 변경해도 사본 픽셀 차이0. 별도 source 교체/release/dispose는 copy0, cleanup1.
+- 초기 테스트의 Number.MIN_VALUE 거부 기대값은 잘못된 계약 해석이어서 정정했고 유효성 시험을 추가했다.
+  테스트 lint2건도 해당 파일에서 보완. 최종 자체검토로 함수의 custom bind/call을 읽지 않고
+  Reflect.apply로 receiver를 유지하도록 고정. 실패 은닉/timeout/retry/worker/tolerance 완화0.
+- 양앱 entry와 고객 CSS SHA-256 불변:
+  customer `FECAC548F3BD64B02873F5191E53EA8E2816F76CF609C648AAB67A108A3EE22A`;
+  admin `B0A1F85F9271E4A929D2F6AB0F20BB0D0BFDADDA211533DDD675C8FB85711246`;
+  customer CSS `6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81`.
+- baseline105 중 최종104 동일; 기존 canonical 예외 spec018 PNG2 재생성, 최종 desktop은 시작 SHA 동일,
+  mobile은 `1103D366D28B33D07411CB34942FFBDC32E8C82F44AC00324BAAD1C4EAB84374`.
+  두 PNG 모두 복원/stage/commit0. 나머지 보호/별도dirty20 SHA동일, 전체 별도dirty22 전송제외.
+- 포트4183/4184/4185/8080/9099/9199 listener0; 이번 temp staging 두 곳 제거 확인; diff--check PASS.
+
+신규 테스트의 외부 egress/console error·warning0은 합성 픽셀 시나리오에서 측정했다.
+실제 사진/배경 decoder/source producer/두 자원 합성/룸 UI/실기기/메모리회수/CORS는 NOT TESTED.
+운영/Firebase/UID/배포/발행/삭제/설치/예약 자동화0. 이번 고객 화면 변화0, 전체실측완료율 확인불가.
+다음은 배경 입력 정책·decode 전 예산 경계의 문서 조사. 새 계약 전 제품 확장0, 새 제품 선택이면 STOP.
+아래 계약만 완료/미구현/중단 기록은 해당 시점의 이력이다.

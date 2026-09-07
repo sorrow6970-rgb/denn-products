@@ -1,5 +1,40 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 완료 / 다음 문서 조사 — spec102 → 배경 입력정책
+
+102 DONE/CODEX_PASSED/LOCAL_VERIFIED, 코드37c581e. targeted200/200, check2745/2745,
+최종canonical281/281(50.3초), entry/CSS hash·보호범위·diff--check·포트/staging PASS.
+코드4/종료문서7 분리 정상전송, 별도dirty22 제외. 상세102 계약 DONE. 아래 구현지시는 완료 이력.
+
+다음 작업: RG-2,101 §5~8,102 완료,026 owner/계약과 기존 EXIF 시험을 읽고,
+103 배경 입력정책·decode 전 예산 경계의 문서 조사 계약을 먼저 작성한다.
+형식/서명/방향·파일 byte/decoded pixels/동시 surface 예산과 검사시점을 구분한다.
+102 fake 예산·print36M·100 dimension을 실제 배경 기본값으로 상속하지 않는다.
+제품/UI/File/Image/URL 생성·실제사진·기존코드 변경0, 수치/지원형식 새 제품 결정이면 Founder 질문 후 STOP.
+막힘 없는 스펙 간 자동진행 승인 유지, 예약 자동화/실제Firebase/UID/운영/배포/보호변경 금지.
+
+## 최신 재개 — spec102 구현·검증
+
+Q-102-1 사용자 승인 완료(`응 자동진행 재개해줘`). §6/§7 정정·재검토 후 정확4파일 구현 중.
+live copyTo 재진입 BUSY, release cleanup RELEASED, dispose DISPOSED. 추가 copyTo0.
+아래 중단 지시는 해소된 이력이다.102 정본의 targeted/check/canonical 및 경계 hash 검증 후
+코드/문서를 분리 일반commit/push하고 새 결정·막힘 없는 다음 단위로 계속한다. 예약 자동화0.
+
+## 최신 중단 / Q-102-1 확인 후 재개 (2026-09-07)
+
+CORRECTION_REQUIRED. 스펙102 §6/§7의 release 중 paint 결과(BUSY 대 RELEASED)가 모순이다.
+사용자 확인 전 아래 과거 구현지시를 실행하지 않는다. 제안: live copyTo 재진입 BUSY,
+release cleanup 중 RELEASED, dispose 중 DISPOSED. 모두 추가 copyTo0. 아직 채택0.
+정본 QUESTIONS Q-102-1: docs/rebuild/specs/102-room-frame-snapshot-contract.md.
+
+최신 사용자 승인으로 이후 막힘·새제품선택·권한변경 없는 단위는 매번 재확인 없이
+계약작성→검토→구현→검증→분리commit/정상push→다음 단위로 진행한다.
+이것은 모순·STOP·운영/보호 금지의 해제가 아니고 예약 자동화 생성 요청도 아니다.
+
+재개 조건: Q-102-1에 사용자 확인을 받으면 §6/§7·검수표를 일치시키고 계약 재검토를 수행한다.
+그 뒤 아래 정확4파일102 구현·검증 지시로 이어간다. 보호/별도dirty22·운영/배포/설치/자동화 금지 유지.
+이번은 문서7개 미커밋, 제품/시험작성·실행0. 아래 READY_FOR_IMPLEMENTATION은 과거 이력이다.
+
 ## 최신 준비 / 다음 구현 지시 — spec102 (2026-09-07)
 
 전송완료: 계약7문서e130764 정상push,HEAD=origin e130764·0/0확인. 영수증5문서 별도기록.
