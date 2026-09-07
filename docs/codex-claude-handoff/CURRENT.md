@@ -4,7 +4,8 @@
 > FOUNDER_DECISION_REQUIRED / rg1-print-size-comparison-scope / FOUNDER_RG1_COMPARISON_SCOPE_DECISION.
 > canonical 인쇄cm의로컬상대비교를다음최소제품범위로할지RG-1질문1개.권장A미승인,096계약/구현0.
 > 인쇄치수≠확인된액자외곽/방사진축척.룸/전체catalog/주문/발행은완료처리하지않는다.
-> 시작HEAD=origine083aec·0/0;허용7문서만변경,기존dirty22파일보호·제외.제품/테스트/PNG/운영/자동화0.
+> 시작HEAD=origine083aec·0/0;허용7문서3859fa2정상push·HEAD=origin3859fa2·0/0확인.전송영수증별도기록.
+> 기존dirty22파일보호·제외.제품/테스트/PNG/운영/자동화0.
 > 094제품DONE/CODEX_PASSED유지.전체85~88%는과거관리추정,현재실측완료율/종료일확인불가.상세095조사/NEXT참조.
 
 > 최신2026-09-07: spec094 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일Codex), F-9해소. 코드/증거38257ef.

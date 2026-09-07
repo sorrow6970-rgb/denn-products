@@ -8,10 +8,10 @@ completed_unit: spec-095-remaining-product-scope-audit   # DOCUMENT DONE / DOCUM
 active_unit: rg1-print-size-comparison-scope
 state: FOUNDER_DECISION_REQUIRED
 baseline_commit: e083aec
-candidate_commit: null   # spec095 documentation only; resulting commit from git log
+candidate_commit: 3859fa2   # spec095 document review; receipt separate
 verified_commit: 38257ef   # last product verification, spec094; no product test rerun in095
-origin_relation: "spec094 receipt e083aec synchronized, 0/0 at095 start;095 documents normal push pending"
-working_tree: "spec095 allowed7 documents only; starting dirty22 files including protected/user work preserved and excluded"
+origin_relation: "spec095 docs3859fa2 normal push confirmed; HEAD=origin3859fa2 and 0/0 before receipt; receipt HEAD via git"
+working_tree: "spec095 receipt within allowed documents; starting dirty22 files including protected/user work preserved and excluded"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: FOUNDER_RG1_COMPARISON_SCOPE_DECISION
@@ -26,7 +26,8 @@ commit_owner: Codex; scoped code/test and closure documents separately, normal f
 다음 최소 후보 RG-1=A는canonical cm만 쓰는로컬인쇄크기상대비교이며 아직미승인이다.
 액자외곽/방사진실측과같다고추측할수없어 새제품의미선택 전에096제품코드/구현계약은시작하지않는다.
 F-B/P-4a/운영보류/G-4삭제보류등기존정책유지.운영개방을새로묻지않는다.
-허용문서7개만정상commit/push.기존dirty22파일보존,테스트/브라우저/실제Firebase/배포/자동화0.
+허용문서7개3859fa2정상push완료,e083aec..3859fa2·HEAD=origin3859fa2·0/0확인.전송영수증은별도기록.
+기존dirty22파일보존,테스트/브라우저/실제Firebase/배포/자동화0.
 094제품DONE/CODEX_PASSED(38257ef,종료5a1abe6,영수증e083aec)유지.이전테스트수치는재실행결과아님.
 전체85~88%/잔여12~15%는이전관리추정이력이다.현재전체실측완료율/최종스펙수/종료일확인불가.
 

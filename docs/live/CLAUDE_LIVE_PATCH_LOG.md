@@ -8135,3 +8135,10 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   현재전체실측완료율·최종스펙수·완료일은확인불가.상세근거는095검수문서참조.
 - 문서검증실측:시작dirty22/22SHA동일,신규3문서로컬링크28/28존재,허용7문서외이번변경0,
   git diff--checkPASS,검증시staged0.조사문서만일반commit/push단계이며RG-1은여전히미승인.
+
+## 2026-09-07 - spec095 문서 전송 완료 · RG-1 선택 대기
+
+- 7문서3859fa2 정상push e083aec..3859fa2,확인시HEAD=origin3859fa2,ahead/behind0/0.
+- STATE/NEXT/CURRENT/live/095handoff에전송영수증만추가.제품/기존사용자문서/보호파일추가변경0.
+- 095조사DONE/DOCUMENT_REVIEW_PASSED,FOUNDER_DECISION_REQUIRED·RG-1미승인유지.
+  096구현계약/제품코드0.답변전임의진행/운영개방/자동화0.전체실측완료율확인불가,이전85~88%는추정이력.
