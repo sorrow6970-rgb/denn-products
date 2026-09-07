@@ -4,23 +4,35 @@
 updated_at: 2026-09-07
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-100-room-preparation-controller   # DONE / CODEX_PASSED / LOCAL_VERIFIED
+completed_unit: spec-101-room-browser-adapter-boundary-investigation   # DOCUMENT DONE; spec100 product DONE remains
 active_unit: none
 state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: 4f69e0a
-candidate_commit: 6e41c48   # spec100 implementation code2
+baseline_commit: 85136b1
+candidate_commit: pending   # spec101 document-only investigation
 verified_commit: 6e41c48   # same Codex implementation/review; not independent review
-origin_relation: "spec100 code6e41c48/closure4e264ec normal push confirmed; HEAD=origin4e264ec and0/0 before receipt; final receipt HEAD via git"
-working_tree: "spec100 receipt5 documents only; preexisting dirty22 excluded;105 baseline hashes103 unchanged, spec018PNG2 canonical regeneration exception"
+origin_relation: "baseline HEAD=origin tracking ref85136b1,0/0; spec101 document7 pending normal commit/push"
+working_tree: "spec101 document7 only; preexisting protected/user dirty22 preserved and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: CODEX_ROOM_BROWSER_ADAPTER_BOUNDARY_REVIEW
+next_transition: CODEX_ROOM_FRAME_SNAPSHOT_CONTRACT
 automation_loop: no scheduled automation; scoped UI and non-UI implementation/verification by Codex per latest user policy
-session_status: spec100 implementation verified; next separate contract boundary investigation not started
+session_status: spec101 document review passed; next frame snapshot contract not started
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 완료 — spec100 준비 controller 구현·검증 (2026-09-07)
+## 최신 완료 — spec101 browser adapter 경계 문서 조사 (2026-09-07)
+
+100 NEXT에 따라 정적 조사만 수행, 동일 Codex DOCUMENT DONE/DOCUMENT_REVIEW_PASSED.
+source producer/committed 묶음·owner incarnation·동기 final-plan 사본·private drawable 사용권,
+background당 owner·취소 정착·예산 검사 전후를 분리했다. 결과 정본은101 검토 문서.
+100은 상태/크기만 제공; 기존026 byte/pixel cap 없음. print36M/100의100만 변 한계는 룸 예산 아님.
+다음102는 독립 frame snapshot 계약 작성 후보, 실제 adapter/사진 선택/UI 구현은 아직 승인0.
+추가 Founder 질문은 현재 없음. 실제 배경 형식/방향/예산·UI값은 별도 근거·계약·결정 필요.
+문서7개만 일반commit/push, 보호/별도dirty22 제외. 제품/test/build/E2E/browser/emulator 실행0.
+100 제품DONE 유지; 이전114/2659/271은101 실행결과가 아님. 전체실측진행률 불명·화면변화0.
+실제Firebase/UID/운영/배포/발행/삭제/설치/자동화0. 다음 지시NEXT, 아직 새 계약 착수0.
+
+## 종료 이력 — spec100 준비 controller 구현·검증 (2026-09-07)
 
 전송확인: 코드6e41c48/종료4e264ec 정상push4f69e0a..4e264ec, HEAD=origin4e264ec·0/0.
 허용9경로=코드2+문서7, 로컬링크18/18·diff--check PASS. 영수증5문서만 추가기록.

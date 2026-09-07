@@ -8336,3 +8336,23 @@ Founder가 D-1~D-3을 결정하면 그때 최소 파일 범위가 열린다(정�
   별도dirty22(보호 포함) 커밋제외. hash변화는 앞 항목의 spec018PNG2 canonical 기존 예외뿐.
 - spec100 DONE/CODEX_PASSED/LOCAL_VERIFIED, 동일 Codex 검토. 다음 문서조사 상세지시NEXT, 아직착수0.
   전체실측진행률 확인불가·화면변화0. 실제adapter/UI/운영/배포/삭제/설치/자동화0.
+
+## 2026-09-07 - spec101 browser adapter 경계 문서 조사 완료
+
+- 사용자 `응 다음 진행해`로100 NEXT의 정적 조사 수행. 기준 HEAD=origin 추적ref85136b1·0/0.
+  조사 스펙101을 먼저 작성하고 허용7문서만 변경. 신규제품/시험/브라우저/이미지 실행0.
+- Composer의 성공 projection/final plan·owner incarnation·입력 무효화와 현재 source 증명 경계를 분리.
+  ready 문자열/옛 closure/공유 bindings는 독립 snapshot 증명이 아님. 같은 final plan의 동기 private
+  snapshot 후보,100이 제공하지 않는 drawable 사용권·per-job registry의 필요 조건을 정리했다.
+- 기존026에는 byte/pixel cap이 없고 dispose는 논리 취소/정리 시도다. print36M/100의100만 변 범위를
+  룸 예산으로 상속하지 않았다. 배경당 owner·sync/late 결과·release·decode 전후 검사 한계를 기록했다.
+  새 실제 budget/지원형식/방향/UI값은 UNCONFIRMED, 실제adapter/메모리/픽셀/React 연결 NOT TESTED.
+- 동일 Codex DOCUMENT DONE/DOCUMENT_REVIEW_PASSED,100 제품DONE 유지. 이전114/2659/271은 이번 실행 아님.
+  READY_FOR_NEXT_SCOPED_UNIT / active none / next CODEX_ROOM_FRAME_SNAPSHOT_CONTRACT.
+  다음102는 독립 frame snapshot 계약 작성 후보, 정확 지시NEXT. 새 제품/API구현 착수0.
+  지금 추가Founder질문 없음, 실제 배경 입력정책은 근거 갖춘 별도 질문으로 남김.
+- 정확 문서7개=101 계약/결과/handoff3+STATE/NEXT/CURRENT/live4. 제품/test/Rules/config/package/lockfile0.
+  보호/별도dirty22 보존·커밋 제외, PNG재생성0. 실제Firebase/UID/운영/배포/발행/삭제/설치/자동화0.
+  문서 검증 후 일반commit/push. 전체실측 완료율/최종스펙수 확인불가, 이번 화면변화0.
+- 최종 문서검증 실측: 신규3문서 링크/지정라인35/35 PASS, 시작dirty22/22 SHA동일,
+  정확7문서외새변경0·diff--check PASS·staged0. 양앱 기존entry SHA100동일(재build아님), 포트6개listener0.

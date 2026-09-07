@@ -1,5 +1,13 @@
 # 현재 상태
 
+> 최신2026-09-07:101 browser adapter 경계 조사 DOCUMENT DONE/DOCUMENT_REVIEW_PASSED(동일 Codex).
+> source 증명·동기 snapshot·private 사용권·background owner·예산 검사 시점을 정적으로 대조했다.
+> READY_FOR_NEXT_SCOPED_UNIT / active none / next CODEX_ROOM_FRAME_SNAPSHOT_CONTRACT.
+> 다음102는 독립 frame snapshot 계약만; 정확 지시NEXT. 추가 Founder 질문 없음, 실제 배경정책은 미확정.
+> 정확7문서만 일반commit/push, 보호/별도dirty22 제외. 제품/test/browser 실행0,100 제품DONE 유지.
+> 100의114/2659/271은 이번 실적 아님. 실제adapter/UI/운영/배포/자동화0, 전체실측률불명·화면변화0.
+> 아래100의 다음 경계 조사 지시는101에서 완료한 이력이다.
+
 > 전송확인2026-09-07:100 코드6e41c48/종료4e264ec 정상push4f69e0a..4e264ec,HEAD=origin·0/0.
 > 정확9경로=코드2+문서7, 로컬링크18/18·diff--check PASS. 영수증5문서만 추가, 별도dirty22 커밋제외.
 > 아래 전송계획은 완료. 다음 문서조사 지시는 NEXT, 추가제품/시험/새스펙착수0.

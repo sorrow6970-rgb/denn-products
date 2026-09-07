@@ -1,5 +1,36 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 완료 / 다음 계약 — spec101 (2026-09-07)
+
+101 DOCUMENT DONE/DOCUMENT_REVIEW_PASSED(동일 Codex). source producer·snapshot·drawable 사용권과
+background 취소·입력예산 경계를 정적으로 조사했다. 결과 정본:
+docs/codex-claude-handoff/reviews/2026-09-07-spec-101-room-browser-adapter-boundary-investigation.md.
+정확7문서만 일반commit/push. 제품/test/build/E2E/browser 실행0,100 제품DONE 유지.
+보호/별도dirty22 제외. 실제 adapter/픽셀/메모리/룸UI NOT TESTED. 아래100 다음조사는 완료 이력이다.
+
+다음 재개 지시 (아직 시작하지 않음):
+
+```text
+C:\repo\denn-products에서 STATE/CURRENT/live, RG-2,099 조사,100 계약/코드와101 조사/handoff를 읽어.
+다음102는 독립 frame snapshot의 계약 작성·검토만 수행해. 제품코드부터 작성하지마.
+frame-snapshot.ts와 frame-snapshot.test.ts를 최소 신규 후보로 삼되 정확 허용경로를 계약에 먼저 고정해.
+성공한 no-clock frame source/current final plan을 동기로 실행하고, borrowed bindings와 독립 output을
+구분해. source 검사는 실제 producer 연결 검증과 다르며 기존 UI/owner/print/plan은 변경하지마.
+할당 전에 필수 budget/backing 입력을 검증하고 묵시적 수치·DPR·print 해상도를 채택하지마.
+private output/release 이후 접근 차단·부분 실패·재진입·source 교체·fractional scale/clip을 계약화해.
+100 공개 API는 상태/크기뿐이다. snapshot capability가 필요하면 새 app-local 계약에 정확히 명시해.
+실제 Canvas 합성 시험을 포함할지, 필요한 기존 canvas-fixture.tsx/신규 E2E 경로의 허용 범위를
+정적으로 검토해. 이 차례는 browser/이미지/Canvas/URL 생성·제품/test/config 수정0이다.
+실제 배경 파일/로더/사진선택/룸UI/React source producer/100 API확장까지 묶지마.
+배경 형식·byte/decode 예산·UI기본값은 아직 미확정이다. 새 제품 선택/권한이 필요하면 STOP·질문해.
+보호/별도dirty22·실제Firebase/UID/운영data/배포/발행/삭제/설치/자동화 금지 유지.
+계약 검토 결과와 정확 다음 구현 지시, 전체진행률 불확실성을 STATE/NEXT/CURRENT/live에 기록해.
+검증된 합의범위 문서만 일반commit/push하고 새 구현은 계약 검토 전 시작하지마.
+```
+
+지금 계약 작성에 추가 Founder 선택은 없다. 실제 사용자 배경 허용 정책은 수치 근거와 함께 별도 결정한다.
+전체리빌드 실측완료율/최종스펙수 확인불가. 룸은 내부준비 완료·실제 이미지/그리기 연결 전, 화면변화0.
+
 ## 최신 완료 / 다음 문서 조사 — spec100 (2026-09-07)
 
 전송완료:6e41c48/4e264ec 정상push, HEAD=origin4e264ec·0/0 확인. 영수증5문서 별도기록.
