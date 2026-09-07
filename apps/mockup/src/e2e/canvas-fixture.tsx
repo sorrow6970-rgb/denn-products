@@ -9,12 +9,17 @@
 // untouched.
 
 import type { PreviewRenderPlan } from "@denn/render";
-import { StrictMode, useMemo, useState } from "react";
+import { StrictMode, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "@denn/ui/theme.css";
 import { PreviewCanvasSurface } from "../canvas/PreviewCanvasSurface";
 import type { PreviewImageBindings } from "../canvas/types";
 import { useLocalImageBinding } from "../canvas/useLocalImageBinding";
+import { executePreviewRenderPlan } from "../canvas/executePreviewPlan";
+import {
+  createFrameSnapshotCapturer,
+  type FrameSnapshotLease,
+} from "../room-placement/frame-snapshot";
 
 const BODY_COLOR = "#112233";
 const STROKE_COLOR = "#FF0000";
@@ -263,11 +268,232 @@ function Fixture(): React.JSX.Element {
   );
 }
 
+// Spec102 synthetic-only ports. Never imported by the customer entry.
+function runSnapshotCase(mode: string, scale: number, host: HTMLDivElement) {
+  const counters = { creates: 0, copies: 0, releases: 0, execute: 0 };
+  const codes: string[] = [];
+  const makeCanvas = (id: string, width: number, height: number) => {
+    const c = document.createElement("canvas");
+    c.dataset.testid = id;
+    c.width = width;
+    c.height = height;
+    return c;
+  };
+  const borrowed = makeCanvas("rs-borrowed", 12, 8);
+  const art = borrowed.getContext("2d");
+  if (!art) return { setup: false };
+  art.fillStyle = "#EE4422";
+  art.fillRect(0, 0, 12, 8);
+  art.fillStyle = "#2277CC";
+  art.fillRect(0, 0, 5, 8);
+  const plan: PreviewRenderPlan = {
+    kind: "frame",
+    logicalCanvas: { width: 100.5, height: 80.25 },
+    commands: [
+      {
+        type: "fill-rect",
+        layerId: "rs-body",
+        rect: { x: 0, y: 0, width: 100.5, height: 80.25 },
+        color: "#DDBB88",
+      },
+      {
+        type: "draw-image-cover",
+        layerId: "rs-photo",
+        imageRef: "rs-art",
+        clipRect: { x: 8, y: 9, width: 70, height: 45 },
+        drawRect: { x: 5, y: 4, width: 80, height: 60 },
+        rotationQuarterTurns: 1,
+      },
+      {
+        type: "draw-text",
+        layerId: "rs-text",
+        lines: [{ text: "DENN", width: 35 }],
+        origin: { x: 12, y: 65 },
+        align: "left",
+        font: {
+          family: "Arial",
+          sizePx: 12,
+          weight: "normal",
+          italic: false,
+          fallback: "sans-serif",
+        },
+        color: "#112233",
+        lineHeightPx: 14,
+        letterSpacingPx: 0,
+        rotationDegrees: 0,
+      },
+    ],
+  };
+  const imageBindings = { get: () => borrowed };
+  const identity = {};
+  let currentIdentity = identity;
+  const contentWidth = 100.5 * scale;
+  const contentHeight = 80.25 * scale;
+  const referenceSurface = makeCanvas(
+    "rs-reference-surface",
+    Math.ceil(contentWidth),
+    Math.ceil(contentHeight),
+  );
+  const reference = makeCanvas("rs-reference", 220, 185);
+  const output = makeCanvas("rs-output", 220, 185);
+  const after = makeCanvas("rs-after", 220, 185);
+  const referenceContext = referenceSurface.getContext("2d");
+  const target = output.getContext("2d");
+  const laterTarget = after.getContext("2d");
+  const refTarget = reference.getContext("2d");
+  if (!referenceContext || !target || !laterTarget || !refTarget) return { setup: false };
+  referenceContext.setTransform(scale, 0, 0, scale, 0, 0);
+  const referenceResult = executePreviewRenderPlan({
+    context: referenceContext,
+    plan,
+    imageBindings,
+  });
+  // Independent two-stage reference; no snapshot helper in this branch.
+  refTarget.drawImage(referenceSurface, 0, 0, contentWidth, contentHeight, 4, 7, 201, 160.5);
+  let lease: FrameSnapshotLease | undefined;
+  const paintRequest = { target, rect: { x: 4, y: 7, width: 201, height: 160.5 } };
+  const made = createFrameSnapshotCapturer({
+    readSource: () => ({
+      identity: currentIdentity,
+      kind: "frame",
+      projectionOk: true,
+      planReady: true,
+      clockPreview: null,
+      plan,
+      imageBindings,
+    }),
+    createSurface: ({ width, height }: { width: number; height: number }) => {
+      counters.creates++;
+      if (mode === "create-failure") throw new Error("synthetic");
+      let c: HTMLCanvasElement | undefined = makeCanvas("rs-private", width, height);
+      const context = c.getContext("2d");
+      return {
+        release() {
+          counters.releases++;
+          const old = c;
+          c = undefined;
+          if (old) {
+            old.width = 1;
+            old.height = 1;
+          }
+          if (mode === "reentry") {
+            const r = lease?.paint(paintRequest);
+            if (r && !r.ok) codes.push(r.code);
+          }
+        },
+        context: mode === "context-failure" ? null : context,
+        copyTo(
+          destination: CanvasRenderingContext2D,
+          crop: { x: number; y: number; width: number; height: number },
+          rect: { x: number; y: number; width: number; height: number },
+        ) {
+          counters.copies++;
+          if (mode === "reentry") {
+            const r = lease?.paint(paintRequest);
+            if (r && !r.ok) codes.push(r.code);
+          }
+          if (!c) throw new Error("synthetic");
+          destination.drawImage(
+            c,
+            crop.x,
+            crop.y,
+            crop.width,
+            crop.height,
+            rect.x,
+            rect.y,
+            rect.width,
+            rect.height,
+          );
+        },
+      };
+    },
+    execute: (args: Parameters<typeof executePreviewRenderPlan>[0]) => {
+      counters.execute++;
+      if (mode === "execute-failure") return { ok: false };
+      return executePreviewRenderPlan(args);
+    },
+  });
+  if (!made.ok) return { setup: false };
+  const request = {
+    sourceIdentity: identity,
+    scale,
+    budget: { maxEdge: mode === "budget" ? 1 : 1024, maxPixels: 1024 * 1024 },
+  };
+  const result = made.capturer.capture(request);
+  if (result.ok) {
+    lease = result.lease;
+    const busy = made.capturer.capture(request);
+    if (!busy.ok) codes.push(busy.code);
+    if (mode === "source-change") currentIdentity = {};
+    if (mode === "release") {
+      lease.release();
+      lease.release();
+    }
+    if (mode === "dispose") made.capturer.dispose();
+    const painted = lease.paint(paintRequest);
+    if (!painted.ok) codes.push(painted.code);
+    if (mode === "pixels") {
+      art.fillStyle = "#00FF00";
+      art.fillRect(0, 0, 12, 8);
+      const later = lease.paint({ ...paintRequest, target: laterTarget });
+      if (!later.ok) codes.push(later.code);
+    }
+    lease.release();
+  } else codes.push(result.code);
+  made.capturer.dispose();
+  host.replaceChildren(reference, output, after, borrowed);
+  return {
+    setup: true,
+    referenceOk: referenceResult.ok,
+    captured: result.ok,
+    ...counters,
+    codes,
+    originalSize: [borrowed.width, borrowed.height],
+  };
+}
+
+function SnapshotFixture(): React.JSX.Element {
+  const host = useRef<HTMLDivElement>(null);
+  const [report, setReport] = useState("idle");
+  return (
+    <main>
+      <h1>Spec102 synthetic Canvas</h1>
+      {[1, 1.25].map((scale) =>
+        [
+          "pixels",
+          "release",
+          "dispose",
+          "source-change",
+          "reentry",
+          "budget",
+          "create-failure",
+          "context-failure",
+          "execute-failure",
+        ].map((mode) => (
+          <button
+            key={`${mode}-${scale}`}
+            type="button"
+            data-testid={`rs-${mode}-${scale}`}
+            onClick={() => {
+              if (host.current)
+                setReport(JSON.stringify(runSnapshotCase(mode, scale, host.current)));
+            }}
+          >
+            {mode} {scale}
+          </button>
+        )),
+      )}
+      <pre data-testid="rs-report">{report}</pre>
+      <div ref={host} />
+    </main>
+  );
+}
+
 const root = document.getElementById("root");
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      <Fixture />
+      {window.location.search === "?roomSnapshot=1" ? <SnapshotFixture /> : <Fixture />}
     </StrictMode>,
   );
 }
