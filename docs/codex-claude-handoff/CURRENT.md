@@ -1,5 +1,37 @@
 # 현재 상태
 
+> 최신2026-09-08: spec104 DONE/CODEX_PASSED/LOCAL_VERIFIED, 코드420b2dc(동일 Codex 자체 검토).
+> READY_FOR_NEXT_SCOPED_UNIT / completed spec-104-room-background-input-preflight.
+> targeted96/96·unit2841/2841·Chromium281/281(52.2초), format/lint/typecheck/build PASS.
+> 양앱entry/고객CSS 시작SHA동일. 보호/별도20 SHA동일, PNG2만 E2E 재생성 예외·복원/커밋0.
+> 포트6개0/staging제거/diff--check PASS. 정확6코드커밋, 문서11개 분리commit/push 후 최종관계 기록.
+> 다음은 bounded file owner 계약 검토 후보/NEXT. 실제File/사진/EXIF/decoder/UI/운영/설치/자동화0.
+> 이번 화면변화0·전체실측진행률 확인불가. 아래 구현중/계약만 기록은 완료된 과거 이력이다.
+
+> 최신2026-09-08: 사용자 루틴 재개 승인, spec104 CODEX_WORKING / 구현·검증 착수.
+> 정확6 신규코드/시험파일, 기존11문서. 추가 API/UI/decoder/운영 범위0. 보호/별도dirty22 제외.
+> 아래 계약 검증까지만/미착수는 이전 차례 이력이다. 완료 게이트 전 commit/push0.
+
+> 최신2026-09-08: RG-3=A 승인, spec104 CONTRACT_REVIEW_PASSED(동일 Codex 자체 검토).
+> READY_FOR_IMPLEMENTATION / active spec-104-room-background-input-preflight / next USER_SCOPED_SPEC104_IMPLEMENTATION_START.
+> 최신 요청은 승인·계약 검증까지. 제품 구현 NOT STARTED. 다음 명시 착수 전 실행0.
+> 정본 RG-3 결정·104 계약/review/handoff, 실행 문구 NEXT. 순수 preflight6파일만 후속 범위.
+> 성공도 decodeAllowed:false/방향 NOT_VERIFIED. 실제파일·EXIF·decoder·UI/동시예산 검증은 별도.
+> 문서 누적11개 unstaged, HEAD=origin 추적cc0bc4c·0/0, stage/commit/push/fetch0. 보호·별도dirty22 보존.
+> 102제품 DONE/CODEX_PASSED 유지,103문서 DONE·RG-3 CLOSED. 화면변화0·전체실측진행률 확인불가.
+> 제품/시험/브라우저/실제사진/운영/배포/설치/예약자동화0. 아래 RG-3 대기는 해소된 이력이다.
+> 문서 검증: 링크43/43·누적허용11문서·dirty22/22 SHA동일·diff--check/신규whitespace PASS.
+> Git global ignore 접근 경고는 기록했고 설정 우회/변경0. remote fetch는 하지 않아 origin은 로컬 추적ref 기준이다.
+
+> 최신2026-09-08: spec103 배경 입력정책 조사 DOCUMENT DONE/DOCUMENT_REVIEW_PASSED(동일 Codex).
+> FOUNDER_DECISION_REQUIRED / active spec-103-room-background-input-policy / next FOUNDER_RG3_BACKGROUND_INPUT_POLICY.
+> 제품102 DONE/CODEX_PASSED 유지. HEAD=origin 추적cc0bc4c·0/0, 문서7개 미커밋·stage/commit/push0.
+> RG-3=A: 정적 JPEG/PNG·20,000,000 bytes·40,000,000 pixels·미지원/초과/검증불가 거부 제안, 미채택.
+> 상위20MB/40MP 정책을101 누락 근거로 보충. 실제기기 안전성/룸 전체 예산/방향 검증과 별개.
+> 보호/별도dirty22 보존, 제품/시험/기존증거/브라우저/운영/자동화0.104 계약/구현은 선택 전 STOP.
+> 결과·다음 조건 NEXT/103 review/handoff. 이번 화면변화0·전체실측진행률 확인불가. 아래 종료는 이력.
+> 문서 검증23/23 링크·dirty22/22 SHA동일·허용7경로·diff--check PASS. staged0/commit0/push0.
+
 > 최신2026-09-07: 스펙102 전송 완료 · 사용자 요청으로 오늘 세션 종료.
 > WAITING_FOR_NEXT_MANUAL_TASK / active none / completed spec-102-room-frame-snapshot DONE/CODEX_PASSED.
 > 37c581e/d12d56c/3540551 정상push6c0e0ac..3540551, HEAD=origin3540551·0/0 확인(종료영수증 전).

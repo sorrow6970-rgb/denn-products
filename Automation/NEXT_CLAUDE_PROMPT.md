@@ -1,5 +1,75 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 완료 / 다음 계약 후보 — spec104 (2026-09-08)
+
+104 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일 Codex), 코드420b2dc. targeted96/unit2841/Chromium281 PASS.
+정확6코드/시험파일, 문서11개는 분리 커밋/정상push 후 최종관계 기록. 보호/별도dirty22 제외.
+고객/admin entry·고객CSS SHA불변, PNG2만 기존 재생성 예외·복원/커밋0. 포트0/staging제거/diff PASS.
+아래104 구현 지시는 완료 이력이며 반복 구현하지 않는다. 실제File/EXIF/decoder/UI는 미구현·미검증.
+다음 스펙 전에 종료하고, 다음 수동 재개 시 아래 계약 작성·검토부터 진행한다. 예약자동화0.
+
+```text
+C:\repo\denn-products에서 STATE/CURRENT/live 마지막 완료, RG-3,103 조사와104 DONE/handoff를 읽어.
+Git·보호/별도dirty를 확인하고 다음은 룸 배경 bounded file owner의 문서 계약 작성·검토만 수행해.
+size-before-read·읽은 바이트 소유권·104 검사와 소비의 동일성·복사 수·취소/늦은완료/실패 경계를 정해.
+104 결과는 decodeAllowed:false이고 orientation NOT_VERIFIED임을 유지해.
+실제 file reader/EXIF/parser확장/decoder/100·102 연결/UI를 계약 없이 구현하지 마.
+추가 제품 수치/지원형식/권한 또는 공식근거 미확정이면 STOP. 실제사진/서비스/운영/설치/보호변경0.
+```
+
+## 최신 착수 — spec104 구현·검증 (2026-09-08)
+
+사용자 `응 다음작업 진행해줘 루틴으로`로 아래104 구현 프롬프트 착수 승인.
+정확6코드/시험파일만 구현 중. 테스트/번들/경계 게이트 완료 전 DONE/commit/push0.
+기존11문서와 보호/별도dirty22 구분. 실제 사진/EXIF/decoder/UI/설정/운영/설치/예약자동화 금지 유지.
+아래 계약까지만/다음지시대기 문구는 이전 계약 작성 차례의 이력이다.
+
+## 최신 상태 — RG-3=A 승인 · spec104 계약 검토 완료 (2026-09-08)
+
+사용자 `승인하고 계약 검증 해줘`의 요청 범위는 계약까지다. 지금 제품코드/시험 작성·실행0.
+READY_FOR_IMPLEMENTATION / next USER_SCOPED_SPEC104_IMPLEMENTATION_START.
+정본 docs/codex-claude-handoff/decisions/2026-09-08-rg3-room-background-input-policy-decisions.md,
+docs/rebuild/specs/104-room-background-input-preflight-contract.md,
+docs/codex-claude-handoff/reviews/2026-09-08-spec-104-room-background-input-preflight-contract.md,
+docs/handoff/2026-09-08-spec-104-room-background-input-preflight-handoff.md.
+CONTRACT_REVIEW_PASSED(동일 Codex), 제품 구현 NOT STARTED. RG-3 CLOSED/A 승인,103 문서DONE,102 제품DONE 유지.
+누적11문서 unstaged+보호/별도dirty22, HEAD=origin 추적cc0bc4c·0/0. stage/commit/push0, fetch0.
+아래 구현 프롬프트는 다음 사용자 착수 지시를 받은 뒤에만 실행한다. 이번 자동구현/예약자동화0.
+
+문서 검증 실측: 대상7문서의 로컬 링크/지정라인43/43, 누적 허용11문서만 변경, 시작dirty22/22 SHA256 동일. git diff --check 및 신규문서 whitespace PASS. HEAD=origin 추적cc0bc4c·ahead/behind0/0, staged0, commit/push/fetch0. Git 전역 ignore 경로 접근 경고는 있었으며 설정 우회/변경0. 제품/시험/브라우저 실행0.
+
+```text
+C:\repo\denn-products에서 STATE/CURRENT/live 최신과 RG-3/104 계약·review·handoff를 읽고104만 구현·검증해.
+신규 background-input.ts/test.ts, background-png-envelope.ts/test.ts, background-jpeg-envelope.ts/test.ts
+정확6파일만 허용. bytes-only 동기 검사, fixed ArrayBuffer view/필수 maxEdge/20Mbytes·40Mpixels,
+4096구조·단방향 순회·고정 오류 우선순위·원본변경/보유/복사0을 지켜.
+성공은 preflight-only, orientation NOT_VERIFIED, decodeAllowed:false. decoder/EXIF parser/File/URL/Image/
+Canvas/browser adapter/100·102 연결/제품 UI/import/config/Rules/패키지 변경0.
+계약의 targeted/typecheck/check/canonical·entry/CSS hash·범위/보호/잔류/diff 게이트를 실행해.
+기존 PNG2 재생성 예외 외 보호/별도dirty22 불변·stage/commit 제외. 실제사진/서비스/배포/설치/자동화0.
+새 결정/계약 모순/범위 확대/권한 요구/비재현 실패면 STOP하고 근거를 보고해.
+```
+
+## 조사 이력 — spec103 / RG-3 선택 대기 (이후 A 승인으로 해소)
+
+수동 재개 후103 문서 조사 완료. 정본:
+docs/rebuild/specs/103-room-background-input-policy-investigation.md
+docs/codex-claude-handoff/reviews/2026-09-08-spec-103-room-background-input-policy-investigation.md
+docs/handoff/2026-09-08-spec-103-room-background-input-policy-handoff.md
+
+RG-3=A 권장: 첫 룸 배경은 정적 JPEG·PNG만, 파일≤20,000,000 bytes·이미지≤40,000,000 pixels,
+초과/미지원/검증 불가 명시 거부. 자동 형식변환/초과원본 축소 허용0. 허용입력의 화면용 축소는 별개.
+RG-3=B는 추가형식/변환 요구부터 별도 조사. 현재 어느 후보도 승인되지 않았다.
+기존 성능 결정20MB/40MP를 발견했으나, 룸 byte 단위·입력변·실기기 peak 검증을 대신하지 않는다.
+
+현재 FOUNDER_DECISION_REQUIRED / FOUNDER_RG3_BACKGROUND_INPUT_POLICY.
+103 문서7개만 미커밋, stage/commit/push0. HEAD=origin 추적cc0bc4c·0/0, 보호/별도dirty22 보존.
+102 제품 DONE/PASS 유지. 새로운 구현/테스트 실행0. 다음104 구현 계약은 선택 이후에만 작성한다.
+A 선택 후에도 공식 형식 근거·bounded 읽기/헤더·방향·각 변/동시자원 예산·오류·취소 시험부터 계약화하며,
+기존 customer/admin/Space·100/102 API·Rules/config/의존성/보호파일/실제사진/운영 경계를 열지 않는다.
+예약 자동화0. 아래103 미착수·세션종료 지시는 과거 이력이다.
+문서 검증23/23 링크·dirty22/22 SHA동일·허용7경로·diff--check PASS. 실행 시험 결과로 해석하지 않는다.
+
 ## 최신 지시 — 오늘 세션 종료 / 다음 수동 재개 대기
 
 사용자 `응 푸시하고 오늘 작업여기까지 마무리`를 수행했다.

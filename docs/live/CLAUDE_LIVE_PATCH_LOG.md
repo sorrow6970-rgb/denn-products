@@ -8466,3 +8466,53 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
   다음 수동 재개: 배경 입력정책·decode 전 예산 문서 조사 계약부터. 새 결정/권한 필요 시 STOP.
 - 운영/실제Firebase/UID/배포/발행/삭제/설치0. 전체실측진행률 확인불가, 이번 고객화면 변화0.
   종료 영수증5문서 일반commit/push 후 최종HEAD·origin 관계·허용diff·보호 SHA를 다시 확인한다.
+
+## 2026-09-08 - 수동 재개 · spec103 배경 사진 입력정책 조사
+
+- 사용자 `다음 작업 이어할까?`로 NEXT의 문서 조사부터 재개. 시작 HEAD=origin 추적cc0bc4c·0/0.
+- 문서 계약103을 선작성하고026 owner/PNG proof 후보/Space decoder/EXIF 시험/102 사본/성능정본 대조.
+  026은 decode 전 byte/형식/pixel 예산 검사기가 아니며, 기존 EXIF 시험은 적용/미적용을 모두 허용한다.
+- 101이 빠뜨린 상위 성능정책20MB/40MP를 확인하고103에 보충했다. 정책 부재로 일반화하지 않는다.
+  정확 룸 byte·각 변·동시자원·실기기 peak는 미확정. PNG 앞부분 검사는 정적/전체유효성 증명이 아니다.
+- RG-3=A 제안: 정적 JPEG/PNG·20,000,000 bytes·40,000,000 pixels·미지원/초과/검증불가 명시 거부.
+  자동 형식변환/초과원본 자동축소0, 허용입력 화면 축소는 별도. RG-3=B는 추가형식 요구 조사. 미채택.
+- 103 DOCUMENT DONE/DOCUMENT_REVIEW_PASSED(동일 Codex), FOUNDER_DECISION_REQUIRED.
+  제품102 DONE/CODEX_PASSED 유지.104 구현 계약/제품은 선택 전 STOP. 문서7개만 미커밋·stage/push0.
+- 보호/별도dirty22 보존. 제품/test/config/Rules/기존증거/실제사진/브라우저/emulator/서비스/운영/자동화0.
+  102의unit2745/Chromium281은 과거검증이며103 재실행0. 전체실측진행률 확인불가·화면변화0.
+- 상세 근거/산술/한계/다음 후보: docs/codex-claude-handoff/reviews/2026-09-08-spec-103-room-background-input-policy-investigation.md.
+- 문서 검증 실측: 신규3문서 링크/지정라인23/23, 시작dirty22/22 SHA256 동일, 정확 허용7문서만 변경, git diff --check PASS. 산술20,000,000/20,971,519/971,519 bytes와RGBA8 가정152.587890625 MiB 대조. HEAD=origin 추적cc0bc4c·0/0, staged0, commit/push0. 제품/시험/브라우저 실행0.
+
+## 2026-09-08 - RG-3=A Founder 승인 · spec104 계약 검증
+
+- 사용자 `승인하고 계약 검증 해줘`로 직전 RG-3=A를 승인했다. 첫 정적JPEG/PNG·20,000,000bytes·
+  40,000,000pixels 이하, 미지원/초과/검증불가 거부·자동변환/초과원본축소0. RG-3 CLOSED/A APPROVED.
+- 결정 정본 및104 계약/review/handoff 신규4문서,103 승인 링크3문서+STATE/NEXT/CURRENT/live4문서 동기화.
+  이전103 미커밋7+신규4=누적11문서. 이번 stage/commit/push0, 기준HEAD cc0bc4c 유지.
+- 공식PNG/JPEG/File API 문서를 확인하고 envelope/선언치수 검사 범위를 고정했다.
+  CIPA 목록만 확인, 최신EXIF 본문은 동의 UI 이후 미취득·2019 사본 조회도 도구 오류. 파싱을 추정하지 않는다.
+- 104 CONTRACT_REVIEW_PASSED(동일 Codex 자체 검토), READY_FOR_IMPLEMENTATION.
+  후속 신규6파일은 순수 사전검사만. 성공도 preflight-only/방향NOT_VERIFIED/decodeAllowed:false.
+  실제파일읽기/동일byte owner/방향처리/decoder취소/동시메모리/100·102 연결/룸UI는 이 범위 밖이다.
+- 이번 최신 요청은 계약 검증까지만이므로 구현을 시작하지 않는다. 다음 착수 프롬프트는 NEXT에 남겼다.
+  102제품DONE/CODEX_PASSED 유지,103문서DONE. 실제 화면 변화0, 전체실측진행률 확인불가.
+- 제품/시험/브라우저/emulator/실제사진/실제서비스/운영/배포/설치/예약자동화0. 보호/별도dirty22 보존.
+- 문서 검증 실측: 대상7문서의 로컬 링크/지정라인43/43, 누적 허용11문서만 변경, 시작dirty22/22 SHA256 동일. git diff --check 및 신규문서 whitespace PASS. HEAD=origin 추적cc0bc4c·ahead/behind0/0, staged0, commit/push/fetch0. Git 전역 ignore 경로 접근 경고는 있었으며 설정 우회/변경0. 제품/시험/브라우저 실행0.
+
+## 2026-09-08 - spec104 구현·검증 완료 · 루틴 종료 기록
+
+- 사용자 `응 다음작업 진행해줘 루틴으로`로104 신규6파일 구현·검증 착수. 코드420b2dc 일반 커밋.
+- DONE/CODEX_PASSED/LOCAL_VERIFIED(동일 Codex 자체 검토). targeted96/96=public36+PNG36+JPEG24,
+  unit2841/2841=기존2745+신규96, format/lint315파일·7프로젝트typecheck·양앱build PASS.
+- 전체 canonical Chromium281/281(52.2초), 신규E2E0. 실제사진/새decoder/룸UI 시험으로 해석하지 않는다.
+- pnpm exec 도구경로 해석 실패는 기존 .CMD 실행으로 해결(정확버전 확인), 설치/환경설정변경0.
+  초기테스트 URL constructor mock/TS 생성자 표기를 보완. 테스트 문구가 Tailwind 후보로 인식된
+  고객CSS48bytes 증가도 같은 테스트 설명만 정정하여 시작 hash를 회복했다. 제품CSS/config 변경0.
+- 양앱entry/고객CSS SHA불변, 전체 hash/bytes는104 DONE. 기존 큰chunk 경고는 유지·한도완화0.
+- 보호/별도20/20 SHA동일. PNG2는 기존 canonical 재생성 예외: desktop D6D12495…B97DAE,
+  mobile5043D555…D135BD, 전체SHA104 DONE. 복원/stage/commit0, 별도dirty22 전부 제외.
+- 포트4183/4184/4185/8080/9099/9199 listener0, temp denn-e2e-dwP3v3 제거, diff--check PASS.
+- 문서11개는 승인/계약/완료를 분리 일반commit/push하고 최종 Git 관계를 후속 영수증에 기록한다.
+  다음은 bounded file owner의 문서 계약 후보만 NEXT에 기록. 새 스펙/제품을 자동 착수하지 않는다.
+- 실제File/EXIF방향/decoder/동일byte owner/동시메모리/UI/실제서비스/운영/배포/설치/자동화0.
+  이번은 사전 검사 기반 완료이며 고객화면 변화0, 전체리빌드 실측완료율 확인불가.
