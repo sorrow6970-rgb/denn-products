@@ -1,5 +1,11 @@
 # Spec104 — 배경 입력 사전 검사 인수인계
 
+최신2026-09-08 전송완료: 사용자 `응 모두승인 진행해줘`의 정확범위 승인으로
+420b2dc/0f5810f/c0d6245 일반push 성공(cc0bc4c..c0d6245), HEAD=origin·0/0 확인(전송영수증 전).
+코드6+문서11만 전송, 보호/별도dirty22 제외·이번22/22 SHA동일. BLOCKED 해소.
+전송영수증5문서만 별도commit/push하며104 DONE/CODEX_PASSED 유지. 제품/시험 재실행0.
+다음은 bounded file owner의 문서 계약 후보. 이번 새 스펙 착수0. 아래 STOP는 해소된 이력이다.
+
 최신 STOP: 코드420b2dc/문서0f5810f 로컬 완료, 원격 push는 실행 전 보안 검토에서 거절됐다.
 정확 destination/payload에 대한 직접 사용자 승인 미확인 사유. 우회/재시도0.
 대상 github.com/sorrow6970-rgb/denn-products.git / rebuild/modern-studio, 고유 코드6+문서11파일만.

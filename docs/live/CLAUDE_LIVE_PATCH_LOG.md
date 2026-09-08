@@ -8529,3 +8529,16 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
   사용자 직접 승인 뒤 HEAD/payload/fast-forward 가능성을 확인하고 일반push한다.
 - 104 DONE/CODEX_PASSED·targeted96/unit2841/Chromium281 PASS 유지. 코드 결함이나 검증 실패가 아니다.
   새 스펙/계약 시작0. 영수증 로컬 커밋 후 최종 HEAD/ahead를 다시 보고한다.
+
+## 2026-09-08 - spec104 직접 승인 후 push 완료
+
+- 사용자 `응 모두승인 진행해줘`로 직전 질문의 정확3커밋/17파일/원격 대상 전송 승인.
+- https://github.com/sorrow6970-rgb/denn-products.git / rebuild/modern-studio에 일반push 성공:
+  cc0bc4c..c0d6245, 코드420b2dc·문서0f5810f·차단영수증c0d6245 포함. force/merge/rebase0.
+- HEAD=origin c0d6245·ahead/behind0/0 확인(이번 전송영수증 전). BLOCKED 해소.
+- 전송범위 코드6+문서11=고유17파일 확인. 보호/별도dirty22 전송제외·이번22/22 SHA동일.
+  이번 PNG재생성/복원/stage0. diff--check PASS. 기존 Git global ignore 접근 경고는 설정변경 없이 기록.
+- STATE/NEXT/CURRENT/live/104handoff 전송영수증5문서만 별도commit/push하고 최종 Git 관계 확인.
+- 104 DONE/CODEX_PASSED 유지(동일 Codex). 직전targeted96/unit2841/Chromium281 PASS, 이번 재실행0.
+  READY_FOR_NEXT_SCOPED_UNIT. 다음 bounded file owner 계약 후보는 NEXT, 새 스펙/구현 착수0.
+- 실제사진/서비스/운영/배포/설치/예약자동화0. 화면변화0, 전체 실측완료율 확인불가.

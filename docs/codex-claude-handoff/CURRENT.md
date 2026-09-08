@@ -1,5 +1,13 @@
 # 현재 상태
 
+> 최신2026-09-08: 사용자 정확범위 전송 승인 후420b2dc/0f5810f/c0d6245 정상push 완료.
+> HEAD=origin c0d6245·ahead/behind0/0 확인(전송영수증 전), BLOCKED 해소.
+> READY_FOR_NEXT_SCOPED_UNIT / active none / completed spec-104-room-background-input-preflight DONE/CODEX_PASSED.
+> 전송 코드6+문서11만. 보호/별도dirty22 제외·이번 SHA22/22 동일. 영수증5문서만 분리commit/push.
+> 직전96/2841/281 PASS 유지, 이번 제품변경/테스트재실행0. 다음 bounded file owner 계약 후보는 NEXT.
+> 새 스펙/구현/실제사진/운영/배포/설치/예약자동화0. 고객화면 변화0·전체실측진행률 확인불가.
+> 아래 BLOCKED는 해소된 이력이다.
+
 > 최신2026-09-08: BLOCKED / active spec-104-scoped-origin-push / USER_EXPLICIT_SCOPED_GITHUB_PUSH_APPROVAL.
 > 코드420b2dc·문서0f5810f 로컬 완료. push는 정확payload/destination 직접승인 미확인으로 실행 전 차단.
 > github.com/sorrow6970-rgb/denn-products.git / rebuild/modern-studio, 고유17파일(코드6/문서11)만 전송 후보.

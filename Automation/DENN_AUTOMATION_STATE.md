@@ -5,22 +5,32 @@ updated_at: 2026-09-08
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-104-room-background-input-preflight   # DONE / CODEX_PASSED; same Codex self-review
-active_unit: spec-104-scoped-origin-push
-state: BLOCKED
+active_unit: none
+state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: cc0bc4c
-candidate_commit: 0f5810f   # code420b2dc and closure11 documents committed locally
+candidate_commit: c0d6245   # code, closure and blocker receipt pushed; transfer receipt follows
 verified_commit: 420b2dc   # same Codex implementation/review; not independent review
-origin_relation: "tracking origin cc0bc4c; local code420b2dc,docs0f5810f and blocker receipt; push rejected before execution"
-working_tree: "after blocker receipt commit: excluded protected/user dirty22 only; PNG2 kept without restore or staging"
+origin_relation: "push cc0bc4c..c0d6245 succeeded; HEAD=origin c0d6245 and0/0 verified before transfer receipt"
+working_tree: "transfer receipt5 documents only; after receipt commit, excluded protected/user dirty22 remain; all22 hashes preserved this turn"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: USER_EXPLICIT_SCOPED_GITHUB_PUSH_APPROVAL
+next_transition: CODEX_ROOM_BACKGROUND_FILE_OWNER_CONTRACT_REVIEW
 automation_loop: user resumed scoped implementation and verification routine; no scheduled automation
-session_status: spec104 DONE/CODEX_PASSED maintained; remote transfer BLOCKED; no retry or next spec before user direction
+session_status: explicit scoped push approval received and transfer completed; spec104 DONE/CODEX_PASSED; next contract not started
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 STOP — 원격 전송 직접 승인 필요 (2026-09-08)
+## 최신 전송 완료 — spec104 (2026-09-08)
+
+사용자 `응 모두승인 진행해줘`는 직전 정확3커밋/17파일/GitHub 대상 전송 질문의 직접 승인이다.
+420b2dc/0f5810f/c0d6245 일반push 성공(cc0bc4c..c0d6245), HEAD=origin c0d6245·0/0 확인.
+기존 BLOCKED 해소. 코드6+문서11만 전송, 보호/별도dirty22 제외·이번 SHA22/22 동일.
+STATE/NEXT/CURRENT/live/104handoff 전송영수증5문서만 추가 동기화하여 분리commit/push한다.
+직전104 검증96/2841/281 PASS 유지. 이번은 제품/시험 변경·검증 재실행0, diff--check PASS.
+다음은 bounded file owner 계약 후보. 새 스펙/구현/실제사진/서비스/배포/설치/자동화0.
+현재 고객화면 변화0. 전체 실측완료율은 확인불가. 아래 전송 차단은 해소된 이력이다.
+
+## STOP 이력 — 원격 전송 직접 승인 필요 (2026-09-08, 해소)
 
 코드420b2dc·완료문서0f5810f는 로컬 커밋 완료. push 요청은 실행 전에 보안 검토에서 차단됐다.
 사유: 정확한 payload와 destination의 명시적 사용자 승인 미확인. 원격 전송/우회/재시도0.
