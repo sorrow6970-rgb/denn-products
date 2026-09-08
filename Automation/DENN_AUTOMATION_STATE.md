@@ -8,19 +8,37 @@ completed_unit: spec-104-room-background-input-preflight   # DONE / CODEX_PASSED
 active_unit: none
 state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: cc0bc4c
-candidate_commit: c0d6245   # code, closure and blocker receipt pushed; transfer receipt follows
+candidate_commit: c9f8ed6   # transfer receipt pushed; this final status update follows
 verified_commit: 420b2dc   # same Codex implementation/review; not independent review
-origin_relation: "push cc0bc4c..c0d6245 succeeded; HEAD=origin c0d6245 and0/0 verified before transfer receipt"
-working_tree: "transfer receipt5 documents only; after receipt commit, excluded protected/user dirty22 remain; all22 hashes preserved this turn"
+origin_relation: "receipt push c0d6245..c9f8ed6 succeeded; HEAD=origin c9f8ed6,0/0 verified before this final status commit"
+working_tree: "after final status commit: excluded protected/user dirty22 only; all22 hashes preserved this turn"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: CODEX_ROOM_BACKGROUND_FILE_OWNER_CONTRACT_REVIEW
 automation_loop: user resumed scoped implementation and verification routine; no scheduled automation
-session_status: explicit scoped push approval received and transfer completed; spec104 DONE/CODEX_PASSED; next contract not started
+session_status: product and receipt transfers completed; scoped final status update authorized; spec104 DONE/CODEX_PASSED; next contract not started
 commit_owner: Codex; scoped code/test and closure documents separately, normal fast-forward push after passing gates
 ```
 
-## 최신 전송 완료 — spec104 (2026-09-08)
+## 최신 완료 — 추가 영수증 전송 차단 해소 (2026-09-08)
+
+사용자 `응 다음 진행해줘`는 직전 c9f8ed6 및 동일5문서의 차단·최종전송결과 갱신까지
+같은 저장소/브랜치에 commit/push할지 묻는 질문에 대한 승인이다.
+c9f8ed6 일반push 성공(c0d6245..c9f8ed6), HEAD=origin c9f8ed6·0/0 확인. 추가영수증 BLOCKED 해소.
+승인된 STATE/NEXT/CURRENT/live/104handoff5문서의 이번 최종상태만 commit/push한 뒤 Git 확인으로 종료한다.
+보호/별도dirty22 SHA동일·전송제외, 제품/시험변경·재실행0.104 DONE/CODEX_PASSED 유지.
+다음 단위 후보는 bounded file owner 계약 검토, 새 스펙/제품착수0. 실제서비스/배포/설치/자동화0.
+
+## 부분 완료 / 영수증 전송 차단 이력 (2026-09-08, 해소)
+
+승인받은420b2dc/0f5810f/c0d6245는 원격 전송 완료. 이 사실은 취소되지 않았다.
+그 뒤 작성한 전송영수증c9f8ed6(같은 상태/인수인계5문서)의 추가push만 실행 전 거절됐다.
+보안 검토는 사용자의 승인을 앞선3커밋에 한정하여 해석했다. 추가 전송/우회/재시도0.
+현재 HEAD c9f8ed6, origin c0d6245·1/0. 이 부분차단 동기화5문서는 미커밋으로 남긴다.
+사용자에게 c9f8ed6와 동일5문서의 차단/최종전송결과 갱신을 같은 원격·브랜치로 commit/push할 직접 승인을 요청한다.
+코드/테스트/새스펙 작업은 하지 않는다.104 DONE/CODEX_PASSED 유지, BLOCKED는 추가영수증 전송뿐이다.
+
+## 승인된3커밋 전송 완료 — spec104 (2026-09-08)
 
 사용자 `응 모두승인 진행해줘`는 직전 정확3커밋/17파일/GitHub 대상 전송 질문의 직접 승인이다.
 420b2dc/0f5810f/c0d6245 일반push 성공(cc0bc4c..c0d6245), HEAD=origin c0d6245·0/0 확인.

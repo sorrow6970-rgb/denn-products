@@ -1,5 +1,22 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 완료 — 영수증까지 전송 / 다음 계약 후보
+
+사용자 `응 다음 진행해줘`로 c9f8ed6 및 같은5문서의 차단·최종전송결과 갱신 전송 승인.
+c9f8ed6 push 성공, HEAD=origin c9f8ed6·0/0 확인(이번 최종상태 커밋 전). BLOCKED 해소.
+승인된5문서 최종상태를 commit/push하고 Git 확인만 수행한다. 추가 영수증을 반복 생성하지 않는다.
+104 DONE/CODEX_PASSED, 보호/별도dirty22 SHA동일·전송제외. 이번 제품/시험변경·재실행0.
+다음은 아래 bounded file owner 문서 계약 작성·검토 프롬프트다. 새 단위는 아직 미착수.
+이전 전송승인 요청은 해소된 이력이며 다시 질문하지 않는다. 예약자동화/운영/설치0.
+
+## 최신 STOP — 제품 전송 완료 / 추가 영수증만 차단
+
+420b2dc/0f5810f/c0d6245는 승인대로 원격 전송 완료. 추가영수증c9f8ed6의 별도push만 실행 전 거절됐다.
+현재 HEAD c9f8ed6 / origin c0d6245·1/0. 같은 상태문서5개에 이 차단을 미커밋 기록했다.
+사용자에게 c9f8ed6와 STATE/NEXT/CURRENT/live/104handoff의 차단·최종전송결과 기록까지
+github.com/sorrow6970-rgb/denn-products.git / rebuild/modern-studio로 commit/push할 직접 승인을 요청한다.
+그 전 재시도/우회/새스펙0.104 제품 DONE/CODEX_PASSED와 승인된3커밋 전송 완료는 유지한다.
+
 ## 최신 전송 완료 — spec104 / 다음 계약 대기
 
 사용자 `응 모두승인 진행해줘`로 정확 전송범위 승인,420b2dc/0f5810f/c0d6245 push 성공.
