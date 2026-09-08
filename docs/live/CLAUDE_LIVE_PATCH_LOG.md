@@ -8516,3 +8516,16 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
   다음은 bounded file owner의 문서 계약 후보만 NEXT에 기록. 새 스펙/제품을 자동 착수하지 않는다.
 - 실제File/EXIF방향/decoder/동일byte owner/동시메모리/UI/실제서비스/운영/배포/설치/자동화0.
   이번은 사전 검사 기반 완료이며 고객화면 변화0, 전체리빌드 실측완료율 확인불가.
+
+## 2026-09-08 - spec104 원격 push 승인 차단
+
+- 코드420b2dc(6파일)·문서0f5810f(11파일)는 로컬 일반 커밋 완료.
+- `git push origin rebuild/modern-studio`는 실행 전에 보안 검토가 거절했다. 실제 전송0.
+  사유는 정확한17파일 payload와 GitHub destination에 대한 명시적 사용자 승인 미확인이다.
+- 대상 https://github.com/sorrow6970-rgb/denn-products.git / rebuild/modern-studio.
+  STATE/NEXT/CURRENT/live/104handoff 차단영수증5개는 이미 포함된 문서11의 부분집합이다.
+  보호/별도dirty22와 실제사진/설정/운영data는 전송하지 않는다.
+- BLOCKED / USER_EXPLICIT_SCOPED_GITHUB_PUSH_APPROVAL. 우회/간접실행/재시도0.
+  사용자 직접 승인 뒤 HEAD/payload/fast-forward 가능성을 확인하고 일반push한다.
+- 104 DONE/CODEX_PASSED·targeted96/unit2841/Chromium281 PASS 유지. 코드 결함이나 검증 실패가 아니다.
+  새 스펙/계약 시작0. 영수증 로컬 커밋 후 최종 HEAD/ahead를 다시 보고한다.

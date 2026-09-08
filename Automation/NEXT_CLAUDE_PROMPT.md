@@ -1,5 +1,15 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 STOP — spec104 GitHub 전송 직접 승인 필요
+
+코드420b2dc·문서0f5810f 로컬 완료. push는 보안 검토가 실행 전에 거절했다.
+정확 payload/destination의 직접 사용자 승인 미확인 사유. 우회/간접실행/재시도0.
+대상 https://github.com/sorrow6970-rgb/denn-products.git / rebuild/modern-studio.
+payload:104 코드6+관련문서11=고유17파일. 차단영수증5문서는 그11문서의 부분집합. 보호/별도dirty22 제외.
+사용자에게 이 정확한 범위의 일반 fast-forward push 승인을 받은 뒤 Git·경계 재검사/전송/영수증부터 처리한다.
+104 DONE/CODEX_PASSED·96/2841/281 PASS 유지. BLOCKED / USER_EXPLICIT_SCOPED_GITHUB_PUSH_APPROVAL.
+다음 스펙/계약 자동시작0. 아래 다음계약 프롬프트는 이 전송 차단 해소 전 실행하지 않는다.
+
 ## 최신 완료 / 다음 계약 후보 — spec104 (2026-09-08)
 
 104 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일 Codex), 코드420b2dc. targeted96/unit2841/Chromium281 PASS.

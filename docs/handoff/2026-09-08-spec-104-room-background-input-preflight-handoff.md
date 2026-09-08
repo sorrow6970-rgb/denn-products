@@ -1,5 +1,11 @@
 # Spec104 — 배경 입력 사전 검사 인수인계
 
+최신 STOP: 코드420b2dc/문서0f5810f 로컬 완료, 원격 push는 실행 전 보안 검토에서 거절됐다.
+정확 destination/payload에 대한 직접 사용자 승인 미확인 사유. 우회/재시도0.
+대상 github.com/sorrow6970-rgb/denn-products.git / rebuild/modern-studio, 고유 코드6+문서11파일만.
+보호/별도dirty22 제외, 차단 영수증5문서는 문서11의 부분집합. 직접 승인 후 범위 재검사/일반push부터.
+104 제품 DONE/CODEX_PASSED 유지. BLOCKED는 전송 권한이며 다음 계약 착수도 대기한다.
+
 2026-09-08 / baseline cc0bc4c / rebuild/modern-studio.
 DONE / CODEX_PASSED / LOCAL_VERIFIED(동일 Codex 자체 검토), 코드420b2dc.
 최신 사용자 `응 다음작업 진행해줘 루틴으로`로 정확6파일 구현·검증 완료.

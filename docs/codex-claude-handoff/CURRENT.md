@@ -1,5 +1,11 @@
 # 현재 상태
 
+> 최신2026-09-08: BLOCKED / active spec-104-scoped-origin-push / USER_EXPLICIT_SCOPED_GITHUB_PUSH_APPROVAL.
+> 코드420b2dc·문서0f5810f 로컬 완료. push는 정확payload/destination 직접승인 미확인으로 실행 전 차단.
+> github.com/sorrow6970-rgb/denn-products.git / rebuild/modern-studio, 고유17파일(코드6/문서11)만 전송 후보.
+> 보호/별도dirty22 제외. 우회/재시도/다음스펙0.104 DONE/CODEX_PASSED·96/2841/281 PASS 유지.
+> STATE/NEXT/CURRENT/live/104handoff 차단영수증5문서만 추가 기록·로컬 커밋. 정확HEAD/ahead 최종 Git 보고.
+
 > 최신2026-09-08: spec104 DONE/CODEX_PASSED/LOCAL_VERIFIED, 코드420b2dc(동일 Codex 자체 검토).
 > READY_FOR_NEXT_SCOPED_UNIT / completed spec-104-room-background-input-preflight.
 > targeted96/96·unit2841/2841·Chromium281/281(52.2초), format/lint/typecheck/build PASS.
