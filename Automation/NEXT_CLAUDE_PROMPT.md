@@ -1,5 +1,14 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 —107 완료 / 다음 container 계약 (2026-09-09)
+
+1061a35951 push완료,107 DONE/CODEX_PASSED(동일 Codex),targeted101/unit3025/check·번들SHA PASS.
+107 코드aa7ed09. spec/review/handoff를 읽고 정확2코드+7문서 검증·일반commit/push,보호/별도dirty22 제외.
+다음은 JPEG APP1/PNG eXIf를107의TIFF view로 식별하는 bounded container 조사·계약부터다.
+원본view안정성/104같은byte/중복·모순·누락/unknownAPP1·XMP/PNG의미미확인/오류·작업량을 먼저 정한다.
+107은PARTIAL이며decodeAllowed:false다.전체metadata/pixel/decoder/UI로 자동승격0.
+중요결정·권한·충돌아니면 다음 scoped루틴 계속.실제사진/운영/설치/예약자동화0.
+
 ## 최신 — CIPA 승인·정본 확보,107 parser-only 계약으로 계속 (2026-09-09)
 
 사용자 `응 승인 다음진행`으로106의 CIPA 조건 동의 질문 해소. 정본267쪽 중 관련 IFD/방향/APP1절 확인.

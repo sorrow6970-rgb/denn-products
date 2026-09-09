@@ -1,5 +1,11 @@
 # 현재 상태
 
+> 최신2026-09-09:107 DONE/CODEX_PASSED(동일 Codex),101 targeted/3025 unit·check·번들불변 PASS.
+> [107 handoff](../handoff/2026-09-09-spec-107-tiff-orientation-tag-reader-handoff.md).1061a35951 push완료.
+>107 코드2/문서7만 scopedcommit/push 후 다음container조사·계약.보호dirty22·PNG불변, E2E실행0.
+>코드aa7ed09.문서링크7/7·허용9/9·보호dirty SHA22/22·diff--check PASS,관련포트listener0.
+>TAG PARTIAL/NOT_VERIFIED/decodeAllowed:false.전체metadata/사진방향/decoder/UI/운영 미검증·미연결.
+
 > 최신2026-09-09: CIPA 동의 승인·Exif3.1 정본 필요한 본문 확인,106 권한 BLOCKED 해소.
 >106 DONE/DOCUMENT_REVIEW_PASSED(동일 Codex), next SPEC107_BOUNDED_ORIENTATION_PARSER_CONTRACT.
 >106 문서7개 검증·일반 commit/push 후107 parser-only 계약. 제품/test/config변경·실행0, 보호dirty22 보존.

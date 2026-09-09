@@ -4,21 +4,28 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-105-room-background-file-owner   # DONE / CODEX_PASSED; pushed; same Codex self-review
-active_unit: spec-106-room-background-orientation-investigation
+completed_unit: spec-106-room-background-orientation-investigation # DONE / DOCUMENT_REVIEW_PASSED; pushed1a35951
+active_unit: spec-107-tiff-orientation-tag-reader
 state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: 5a4341b
-candidate_commit: UNCOMMITTED_SPEC106_DOCS7   # CIPA authorization and document acquisition completed
-verified_commit: 77773db   # same Codex self-review, not independent review
-origin_relation: "spec105 final5a4341b pushed; HEAD=origin tracking5a4341b,0/0; no spec106 remote request"
-working_tree: "spec106 documents7 unstaged + protected/user dirty22; no spec106 PNG regeneration"
+baseline_commit: 1a35951
+candidate_commit: aa7ed09   # spec107 code; documentation commit follows
+verified_commit: aa7ed09   # same Codex self-review, not independent review
+origin_relation: "spec1061a35951 pushed; spec107 codeaa7ed09 local; documents7 pending scoped commit/push"
+working_tree: "spec107 documents7 + protected/user dirty22; no PNG regeneration"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC107_BOUNDED_ORIENTATION_PARSER_CONTRACT
+next_transition: BACKGROUND_ORIENTATION_CONTAINER_CONTRACT
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec106 investigation DONE/DOCUMENT_REVIEW_PASSED same Codex; CIPA source-access blocker resolved
-commit_owner: Codex; scoped spec106 documents7 only; exclude protected/user dirty22
+session_status: spec107 DONE/CODEX_PASSED same Codex; native orientation/decode/UI remain unverified
+commit_owner: Codex; scoped spec107 code2/documents7 only; exclude protected/user dirty22
 ```
+
+## 최신 — spec107 구현·검증 완료 (2026-09-09)
+
+1061a35951 push 완료.107의 bounded0thIFD reader2파일 구현,상세107 review/handoff.
+targeted101·전체unit3025·format/lint/typecheck/build PASS,고객JS/CSS·adminJS SHA동일.
+PARTIAL/NOT_VERIFIED/decodeAllowed:false 유지.제품연결·E2E·실제사진·설치·운영·자동화0.
+107 코드2+문서7만 일반commit/push후 다음container조사·계약으로 진행한다.보호dirty22 제외.
 
 ## 최신 — CIPA 승인·정본 확보 /106 종료·107 계약 준비 (2026-09-09)
 

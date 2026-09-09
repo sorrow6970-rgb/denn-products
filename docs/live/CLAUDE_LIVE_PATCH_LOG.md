@@ -8656,3 +8656,17 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
 -106 DOCUMENT_REVIEW_PASSED(동일 Codex), 이전 권한 BLOCKED 해소. 문서7개만 검증·일반 commit/push 대상.
   후속107 parser-only 계약 작성,104/105/제품/test/config변경·실행0. PNG의 metadata 의미/native/decoder는 NOT TESTED.
   보호/별도dirty22 보존·전송제외, 실제사진/서비스/운영/설치/배포/예약자동화0.
+
+## 2026-09-09 - spec107 TIFF 방향 tag reader 구현·자체검증 완료
+
+- 106 문서1a35951 일반push성공(5a4341b..1a35951).이어107 계약을 먼저 고정하고 신규2파일 구현.
+- 0th IFD방향태그 reader.부재/명시1구분,nativeview/범위/정렬/타입/작업량검사,PARTIAL/NOT_VERIFIED/decodeAllowed:false.
+  전체Exif graph·JPEG/PNGcontainer·픽셀방향·decoder/UI검증을 주장하지 않는다.
+- targeted101/101,전체unit3025=2924+101,format/lint321·7프로젝트typecheck·2앱build PASS.
+  최초test생성구문의TS2554,미적용patch재반영,nextIFD1byte겹침 보완.시험문구로추가된CSS21bytes 원인분리·문구수정.
+  최종check와번들SHA 재통과,상세107 review.고객JS/CSS·adminJS가105baseline과일치한다.
+- E2E실행0(순수미연결계약),이전Chromium292를재사용0,PNG재생성0.보호/별도dirty22 유지·commit제외.
+  코드2+문서7만 일반commit/push 대상.다음은 bounded container조사·계약.중요문제 외루틴계속·예약자동화0.
+  실제사진/서비스/Rules/운영/설치/배포/발행/삭제0.전체리빌드완료율은분모없어확인불가.
+- 코드aa7ed09.문서링크7/7·범위9/9·보호/별도dirty SHA22/22·diff--check PASS,관련포트listener0.
+  문서7개만 별도커밋 후 코드와함께 일반push한다.보호/별도dirty22·공식PDF/temp 전송0.
