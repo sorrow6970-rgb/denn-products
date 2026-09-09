@@ -1,5 +1,8 @@
 # 현재 상태
 
+> 115 bdcf18c/35477e9 일반push, HEAD=origin35477e9·ahead/behind0/0 확인(최종 기록 전).
+> 완료분 전송 대기 없음. 다음 Firefox/WebKit 캐시 다운로드 권한은 미승인 상태 그대로다.
+
 > 현재115 bdcf18c DONE/CODEX_PASSED, check3291/Chromium46·보호/번들SHA·diff PASS.
 > [115 handoff](../handoff/2026-09-09-spec-115-background-native-handoff.md). 다음 교차 엔진 검증은 Firefox/WebKit 바이너리 부재.
 > FOUNDER_DECISION_REQUIRED는 기존 Playwright의 테스트 브라우저 다운로드 권한에 한정한다.

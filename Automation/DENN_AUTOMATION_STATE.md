@@ -10,8 +10,8 @@ state: FOUNDER_DECISION_REQUIRED
 baseline_commit: 32924f2
 candidate_commit: bdcf18c
 verified_commit: bdcf18c   # same Codex self-review, not independent review
-origin_relation: "114 8ae5853/32924f2 pushed; 115 bdcf18c and its documents are the scoped transfer batch"
-working_tree: "115 documents7 pending scoped transfer; protected/user dirty22 and debug.log excluded"
+origin_relation: "115 bdcf18c/35477e9 pushed; HEAD=origin35477e9 and0/0 verified before this final record"
+working_tree: "payload transfer done; protected/user dirty22 plus debug.log excluded; only this same-scope final record follows"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: PLAYWRIGHT_FIREFOX_WEBKIT_DOWNLOAD_PERMISSION
@@ -21,6 +21,9 @@ commit_owner: Codex; spec115 code5 and documents7 only; exclude protected/user d
 ```
 
 ## 현재 —115 완료 / 다음 검증 환경 권한 필요 (2026-09-09)
+
+bdcf18c/35477e9 일반push 및 HEAD=origin35477e9·0/0 확인 완료. 완료분 전송 대기 아님.
+이 최종 기록을 같은 허용 문서에 한 번 전송한 뒤 실제 다운로드 권한 경계에서 대기한다.
 
 bdcf18c check3291/Chromium46 PASS. 다음 Firefox/WebKit 실행 파일 부재를 실제 확인했다.
 기존 다운로드 금지 때문에 설치/실행하지 않는다. 요청 권한은 기존 Playwright1.61.1의 공식
