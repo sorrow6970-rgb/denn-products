@@ -7,6 +7,10 @@ import {
   type BackgroundContainerResult,
   inspectRoomBackgroundContainer,
 } from "./background-container";
+import {
+  type BackgroundMetadataAbsenceResult,
+  inspectRoomBackgroundMetadataAbsence,
+} from "./background-metadata-absence";
 
 export type BackgroundFileCode =
   | BackgroundInputCode
@@ -50,7 +54,24 @@ export interface BackgroundEvidenceJob {
   cancel(): void;
   dispose(): void;
 }
-type RunResult = BackgroundFileRunResult | BackgroundEvidenceRunResult;
+export type BackgroundAbsenceEvidence = Extract<BackgroundMetadataAbsenceResult, { ok: true }>;
+export type BackgroundAbsenceCode =
+  | BackgroundFileCode
+  | Extract<BackgroundMetadataAbsenceResult, { ok: false }>["code"];
+export interface BackgroundAbsenceLease {
+  take(): Readonly<{ blob: Blob; evidence: BackgroundAbsenceEvidence }> | null;
+  release(): void;
+}
+export type BackgroundAbsenceRunResult =
+  | Readonly<{ ok: false; code: BackgroundAbsenceCode }>
+  | Readonly<{ ok: true; lease: BackgroundAbsenceLease }>;
+export interface BackgroundAbsenceJob {
+  run(): Promise<BackgroundAbsenceRunResult>;
+  cancel(): void;
+  dispose(): void;
+}
+type Mode = "preflight" | "orientation" | "absence";
+type RunResult = BackgroundFileRunResult | BackgroundEvidenceRunResult | BackgroundAbsenceRunResult;
 type InternalJob = Omit<BackgroundFileJob, "run"> & { run(): Promise<RunResult> };
 export interface BackgroundFileReaderPort {
   readonly result: unknown;
@@ -70,7 +91,7 @@ const blobSlice = NativeBlob?.prototype.slice;
 const bufferSize = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength")?.get;
 const resizable = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "resizable")?.get;
 const handlers = ["onload", "onerror", "onabort", "onloadend"] as const;
-const failure = <Code extends BackgroundEvidenceCode>(code: Code) =>
+const failure = <Code extends BackgroundEvidenceCode | BackgroundAbsenceCode>(code: Code) =>
   Object.freeze({ ok: false, code });
 const record = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -80,7 +101,7 @@ export function createRoomBackgroundFileJob(
   request: unknown,
   environment?: unknown,
 ): Failure | Readonly<{ ok: true; job: BackgroundFileJob }> {
-  return createFactory(request, environment, false);
+  return createFactory(request, environment, "preflight");
 }
 
 /** Same-byte partial evidence and immutable snapshot; no decoding or display permission. */
@@ -88,23 +109,36 @@ export function createRoomBackgroundEvidenceJob(
   request: unknown,
   environment?: unknown,
 ): Failure | Readonly<{ ok: true; job: BackgroundEvidenceJob }> {
-  return createFactory(request, environment, true);
+  return createFactory(request, environment, "orientation");
+}
+
+/** Spec119: same-byte core-only absence evidence; still no decoding or display authority. */
+export function createRoomBackgroundAbsenceJob(
+  request: unknown,
+  environment?: unknown,
+): Failure | Readonly<{ ok: true; job: BackgroundAbsenceJob }> {
+  return createFactory(request, environment, "absence");
 }
 
 function createFactory(
   request: unknown,
   environment: unknown,
-  evidenceMode: false,
+  mode: "preflight",
 ): Failure | Readonly<{ ok: true; job: BackgroundFileJob }>;
 function createFactory(
   request: unknown,
   environment: unknown,
-  evidenceMode: true,
+  mode: "orientation",
 ): Failure | Readonly<{ ok: true; job: BackgroundEvidenceJob }>;
 function createFactory(
   request: unknown,
   environment: unknown,
-  evidenceMode: boolean,
+  mode: "absence",
+): Failure | Readonly<{ ok: true; job: BackgroundAbsenceJob }>;
+function createFactory(
+  request: unknown,
+  environment: unknown,
+  mode: Mode,
 ): Failure | Readonly<{ ok: true; job: InternalJob }> {
   try {
     if (!record(request)) return failure("ROOM_BACKGROUND_FILE_INVALID_INPUT");
@@ -145,7 +179,7 @@ function createFactory(
     }
     return Object.freeze({
       ok: true,
-      job: createJob(file as unknown as Blob, size, maxEdge, makeReader, evidenceMode),
+      job: createJob(file as unknown as Blob, size, maxEdge, makeReader, mode),
     });
   } catch {
     return failure("ROOM_BACKGROUND_FILE_INVALID_INPUT");
@@ -157,7 +191,7 @@ function createJob(
   size: number,
   maxEdge: number,
   initialFactory: () => unknown,
-  evidenceMode: boolean,
+  mode: Mode,
 ): InternalJob {
   let source: Blob | null = initialFile;
   let makeReader: (() => unknown) | null = initialFactory;
@@ -171,6 +205,7 @@ function createJob(
   let eventConsumed = false;
   let owned: Blob | null = null;
   let joint: Readonly<{ blob: Blob; evidence: BackgroundEvidence }> | null = null;
+  let absentJoint: Readonly<{ blob: Blob; evidence: BackgroundAbsenceEvidence }> | null = null;
   let promise: Promise<RunResult> | null = null;
   let resolve: ((result: RunResult) => void) | null = null;
 
@@ -249,9 +284,12 @@ function createJob(
         finish(failure("ROOM_BACKGROUND_FILE_LENGTH_MISMATCH"));
         return;
       }
-      const preflight = evidenceMode
-        ? inspectRoomBackgroundContainer({ bytes, budget: { maxEdge } })
-        : inspectRoomBackgroundInput({ bytes, budget: { maxEdge } });
+      const preflight =
+        mode === "absence"
+          ? inspectRoomBackgroundMetadataAbsence({ bytes, budget: { maxEdge } })
+          : mode === "orientation"
+            ? inspectRoomBackgroundContainer({ bytes, budget: { maxEdge } })
+            : inspectRoomBackgroundInput({ bytes, budget: { maxEdge } });
       if (!preflight.ok) {
         finish(preflight);
         return;
@@ -263,6 +301,22 @@ function createJob(
       if (!blobSize || Reflect.apply(blobSize, owned, []) !== size) {
         owned = null;
         rejectRead();
+        return;
+      }
+      if (preflight.kind === "metadata-absence-evidence") {
+        absentJoint = Object.freeze({ blob: owned, evidence: preflight });
+        owned = null;
+        const lease: BackgroundAbsenceLease = Object.freeze({
+          take() {
+            const value = absentJoint;
+            absentJoint = null;
+            return value;
+          },
+          release() {
+            absentJoint = null;
+          },
+        });
+        finish(Object.freeze({ ok: true, lease }));
         return;
       }
       if (preflight.kind === "container-orientation-evidence") {
@@ -295,6 +349,7 @@ function createJob(
     } catch {
       owned = null;
       joint = null;
+      absentJoint = null;
       rejectRead();
     }
   }
@@ -367,6 +422,7 @@ function createJob(
   function cancel(code: "ROOM_BACKGROUND_FILE_CANCELLED" | "ROOM_BACKGROUND_FILE_DISPOSED"): void {
     owned = null;
     joint = null;
+    absentJoint = null;
     finish(failure(code), true);
   }
   return Object.freeze({
