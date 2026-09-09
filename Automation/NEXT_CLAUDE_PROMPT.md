@@ -1,5 +1,14 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 —120 로컬검증 완료 /전송후 decode준비 계약
+
+docs/rebuild/specs/120-background-absence-native-contract.md 및120 review/handoff를읽는다.
+코드5d5c30a 자체검수CODEX_PASSED,check3397/selector26/새3엔진33/기존Chromium46 PASS.
+초기Firefox11FAIL은앱없는진단에서도제한환경재현,권한허용일반환경재실행PASS;실패이력삭제0.
+문서7 일반전송후119owner와113~115 작업/decoder수명결속의비연결준비계약을검토한다.
+실사진/decoder/표시허가0,기존116불일치유지. 보호SHA/scope/포트/temp확인후지속승인범위일반전송.
+아래119전송포인터는276158e로완료했다. 같은제품/전송재질문없이허용루틴을진행한다.
+
 ## 최종 —119 DONE /합성 native owner 계약으로 진행
 
 코드08dc655+문서f0ca262 일반push성공,HEAD=originf0ca262·0/0. 보호23/번들3SHA동일.

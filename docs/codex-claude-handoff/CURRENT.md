@@ -1,5 +1,10 @@
 # 현재 상태
 
+> 현재120 CODEX_WORKING: [계약](../rebuild/specs/120-background-absence-native-contract.md) 자체검토,
+> 코드5d5c30a 로컬CODEX_PASSED,check3397/새3엔진33/기존46회귀PASS. 기준276158e,119 DONE유지.
+> 초기Firefox제한환경11FAIL은진단·권한허용일반환경재실행PASS로별도기록. 문서7 전송후decode준비계약.
+> 지속전송승인119 handoff범위유효. 실제사진/표시/UI/운영/예약자동화0.
+
 > 최종119 DONE/CODEX_PASSED: code08dc655/docsf0ca262 push성공,HEAD=originf0ca262·0/0 확인.
 > 보호23+번들3 SHA동일. 지속전송승인유효,다음은합성native owner 시험계약. 아래전송대기는이력이다.
 

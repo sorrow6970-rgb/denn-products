@@ -5,22 +5,28 @@ updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-119-background-absence-owner # DONE / CODEX_PASSED; same Codex, isolated owner only
-active_unit: spec-119-background-absence-owner
+active_unit: spec-120-background-absence-native
 state: CODEX_PASSED
-baseline_commit: 9429065
-candidate_commit: 08dc655
-verified_commit: 08dc655 # same Codex self-review
-origin_relation: "119 code08dc655/docsf0ca262 pushed; HEAD=originf0ca262 ahead/behind0/0 verified; final receipt follows once"
-working_tree: "task transferred; protected/user23 unchanged; approved final receipt only"
+baseline_commit: 276158e
+candidate_commit: 5d5c30a
+verified_commit: 5d5c30a # same Codex self-review
+origin_relation: "HEAD5d5c30a/origin276158e; code local, docs7 pending"
+working_tree: "spec120 docs7 pending; protected/user23 unchanged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: NATIVE_ABSENCE_OWNER_CONTRACT_REVIEW
-pending_product_decision: NONE_FOR_SPEC119 # PG-1=A unchanged
+next_transition: SPEC120_TRANSFER_THEN_ABSENCE_DECODE_PREPARATION_CONTRACT
+pending_product_decision: NONE_FOR_SPEC120 # PG-1=A unchanged
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: Spec119 DONE and pushed; continuing transfer authority recorded; next synthetic native owner contract; actual photos/UI/live operations still prohibited
+session_status: Spec120 code5d5c30a self-reviewed; check3397/selector26/new native33/regression46 passed; initial restricted Firefox11 failures recorded and isolated; docs7 transfer pending
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: Codex; spec119 exact code2/docs7 only; exclude protected/user22 and debug.log
+commit_owner: Codex; spec120 exact code5/docs7 only; exclude protected/user22 and debug.log
 ```
+
+## 최신 —120 합성 native 결속 검증
+
+119최종276158e동기화후120계약자체검토→코드5/문서7구현. check3397/새Chromium11 PASS.
+실제FileReader+합성byte만,decoder/표시/사진/운영0. 새33/기존46회귀PASS,자체검수완료.
+Firefox최초제한환경실패이력은120 review보존,일반환경권한허용후동일시험PASS. 문서전송으로이어간다.
 
 ## 최신 —119 동일byte 부재증거 owner 로컬검증 완료
 

@@ -9012,3 +9012,24 @@ bdcf18c/35477e9 일반push 성공(32924f2..35477e9),HEAD=origin35477e9·0/0 확�
 - 보호23+번들3SHA동일,taskdirty0,예상밖dirty0,정확code2/docs7.119 DONE/CODEX_PASSED.
 - 같은문서최종결과1회만전송후다음합성native계약으로이어간다. 지속전송승인은위정확범위에유효.
   검증재실행/실사진/운영/UI/배포/예약자동화0. 전체리빌드의실사진준비·룸UI통합·운영검증은남음.
+
+## 2026-09-09 —120 합성 native 부재증거 인계 검증
+
+- 119최종276158e동기화후120계약작성·자체검토→code5/docs7구현.
+- 실제FileReader+합성JPEG/PNG/File,metadata거부/취소/late wrapper배달11mode. decoder/실사진0.
+- check3397=3394+selector3 PASS(format/lint344·7typecheck·114unit파일·2build).
+  새Chromium11 PASS(exit0,2.9s). 나머지2엔진 및기존Chromium46회귀는진행중.
+  상태patch1회는중간git_transfer_authority줄이있어문맥불일치미적용후수정,코드영향0.
+
+### 120 합성 native 검증 완료
+
+- 코드5d5c30a,정확5파일. 동일Codex CODEX_PASSED,독립검수아님. selector26/check3397 PASS.
+- 새엔진별11:Chromium2.9s/Firefox일반환경27.9s/WebKit23.9s,모두exit0. 새최종33PASS.
+  기존Chromium46회귀5.3s PASS(exit0). 이번성공79=33+46.
+- 초기제한환경Firefox11FAIL은newPage._page오류. 앱없는about:blank도동일실패,정식권한tool로허용된
+  일반환경동일진단PASS(Firefox151.0) 후원래단언/설정으로11PASS. 총90실행=79PASS+초기11FAIL이력보존.
+  세부OS원인UNCONFIRMED. 단언/timeout완화·다운로드·전역설정·제품코드수정0.
+- read/abort/동일bytes/쌍동결/취소/metadata거부/외부시도0/decoder0/브라우저console문제0 단언통과.
+  기존116PNG방향14불일치유지.120은native인계시험이지pixel지원/실사진표시허가아님.
+- 보호23+번들3SHA동일,scope12/diff--check PASS,관련포트0,자기staging5개자동정리·부재확인.
+  지속승인범위로문서7 전송후결과동기화. 다음은비연결decode준비계약검토. 실제사진/UI/운영/자동화0.
