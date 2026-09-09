@@ -10,8 +10,8 @@ state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: 2b6d739
 candidate_commit: b779c1a
 verified_commit: b779c1a   # same Codex self-review, not independent review
-origin_relation: "spec111 c5de76f/2b6d739 pushed; spec112 code local; docs pending"
-working_tree: "spec112 documents7 only; protected/user dirty22 excluded"
+origin_relation: "spec112 b779c1a/50409b2 pushed; HEAD=origin50409b2 and0/0 checked before final record"
+working_tree: "same permitted final transfer documents only; protected/user dirty22 excluded"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: BACKGROUND_DECODE_PORT_SETTLEMENT_CONTRACT
@@ -21,6 +21,10 @@ commit_owner: Codex; spec112 code2 and documents7 only; exclude protected/user d
 ```
 
 ## 최신 —112 단일 작업 수명 완료 (2026-09-09)
+
+112 b779c1a/50409b2 일반push완료,HEAD=origin50409b2·0/0 확인(최종기록전).
+109→110→111→112의계약·구현·검증·일반전송을연속수행했다.동일승인재질문/예약자동화0.
+다음정착port계약은NEXT에기록됐으며승인대기상태가아니다.최종기록은같은허용문서에한번만전송한다.
 
 111 2b6d739 전송완료.112 b779c1a targeted23/check3235·번들/보호SHA·diff--check PASS.
 취소해도물리settle전새슬롯0,불명정리는blocked. 실제decoderport/제품허가/다중instance상한은아님.

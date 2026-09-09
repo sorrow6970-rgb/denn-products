@@ -1,6 +1,9 @@
 # Spec112 — 취소와 물리 완료 분리 인수인계
 
 2026-09-09 / codeb779c1a / DONE / CODEX_PASSED(동일 Codex 자체검토).
+
+문서50409b2와코드일반push완료,HEAD=origin50409b2·0/0 확인(최종기록전).
+같은허용문서최종기록만1회전송후Git확인.다음승인대기를생성하지않는다.
 [계약](../rebuild/specs/112-background-work-admission.md) ·
 [검증](../codex-claude-handoff/reviews/2026-09-09-spec-112-background-work-admission-review.md).
 

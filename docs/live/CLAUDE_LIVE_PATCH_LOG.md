@@ -8776,3 +8776,11 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
 - 보호22SHA·번들3종SHA동일,diff--check PASS.순수primitive이므로E2E/native실행0·PNG출력0.
   취소와물리정착분리·중복자원1회정리·정리불명차단완료,전역메모리상한/물리완료검출/사진허가아님.
 - 다음실제Promise정착port계약검토로루틴계속.운영/실제사진/설치/예약자동화0.
+
+## 2026-09-09 - spec109~112 연속 구현·검증 전송 확인
+
+- 109 fecb8a4/5357bb3,110 67dadeb/3de092b,111 c5de76f/2b6d739,112 b779c1a/50409b2 일반push완료.
+  HEAD=origin50409b2·0/0 확인.같은허용5문서최종기록1회전송후Git확인하며별도승인대기를만들지않는다.
+- 최신check3235 PASS,110 targetChromium34·111 targetChromium36 PASS는각단위별실측이다.전체E2E통과주장0.
+  보호22·고객JS/CSS/adminJS SHA불변,실제사진/운영/설치/배포/자동화0.
+- 다음은실제Promise정착port계약.실제고객배경사진연결·룸UI통합·실기기·운영전환은미완료다.
