@@ -1,5 +1,8 @@
 # 120 합성 native 부재증거 인계 handoff
 
+최종DONE/CODEX_PASSED: code5d5c30a/docsf30a846 push성공,HEAD=originf30a846·0/0확인.
+보호23+번들3SHA동일,같은문서최종결과1회전송후Git확인. 다음계약포인터는NEXT상단을따른다.
+
 [계약](../rebuild/specs/120-background-absence-native-contract.md),
 [검토](../codex-claude-handoff/reviews/2026-09-09-spec-120-background-absence-native-review.md).
 119전송종료276158e에서계약작성·검토후진행. 코드5/문서7,새제품정책/실사진/UI/운영0.

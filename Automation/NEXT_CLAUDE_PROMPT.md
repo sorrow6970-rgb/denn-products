@@ -1,5 +1,21 @@
 # NEXT CLAUDE PROMPT
 
+## 최종 실행 포인터 —120 DONE /부재입력 decode준비 계약
+
+119는276158e로종료,120 code5d5c30a/docsf30a846 일반push완료. HEAD=originf30a846·0/0 확인.
+최종기록1회전송후Git확인한다. 아래119/120전송배치/승인질문재실행0.
+
+다음정확작업은 PG-1 결정→118/119/120계약·검토→113/114/115작업·lease/admission 구현을읽고
+부재확인된private Blob을단발native decode수명과결합하는 **비연결 준비 계약**을작성·자체검토하는것이다.
+새번호는실제스펙목록에서확인한다. caller증거/다른Blob교체를신뢰하지않고같은owner에서직접시작할것.
+진행중논리취소와물리decode완료구별,late bitmap해제,동시작업제한,치수/오류/자원정리/합성시험을
+구현전에정확파일범위로고정한다. decoder성공을사진의현실방향/전체metadata 의미검증으로승격0.
+기존PG-1/RG-3/20MB·40MP·명시maxEdge를유지하며실사진·기본UI·운영·추가형식·회전보정0.
+실제새제품결정/예산선택/권한/충돌이필요한지대조하고없으면승인된루틴으로계약범위구현·검증한다.
+Git은119 handoff의지속승인목적지/파일종류내일반전송,보호/secret/운영데이터제외,재질문반복0.
+Firefox120은제한환경newPage실패→권한허용일반환경PASS였다. 설치/기대값완화로해결하지않는다.
+예약자동화/다음실제운영작업0. 끝난작업을재검증한것처럼기록하지않는다.
+
 ## 현재 —120 로컬검증 완료 /전송후 decode준비 계약
 
 docs/rebuild/specs/120-background-absence-native-contract.md 및120 review/handoff를읽는다.

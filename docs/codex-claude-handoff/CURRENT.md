@@ -1,5 +1,9 @@
 # 현재 상태
 
+> 최종120 DONE/CODEX_PASSED: code5d5c30a/docsf30a846 push성공,HEAD=originf30a846·0/0.
+> 119·120완료,보호23+번들3SHA동일,지속전송승인적용. 다음은비연결단발decode준비계약검토.
+> check3397/새native33/기존46회귀PASS. 실제사진준비·룸UI통합·운영검증은남아있다. 아래진행중은이력.
+
 > 현재120 CODEX_WORKING: [계약](../rebuild/specs/120-background-absence-native-contract.md) 자체검토,
 > 코드5d5c30a 로컬CODEX_PASSED,check3397/새3엔진33/기존46회귀PASS. 기준276158e,119 DONE유지.
 > 초기Firefox제한환경11FAIL은진단·권한허용일반환경재실행PASS로별도기록. 문서7 전송후decode준비계약.

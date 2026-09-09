@@ -4,25 +4,29 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-119-background-absence-owner # DONE / CODEX_PASSED; same Codex, isolated owner only
+completed_unit: spec-120-background-absence-native # DONE / CODEX_PASSED; same Codex, synthetic native handoff only
 active_unit: spec-120-background-absence-native
 state: CODEX_PASSED
 baseline_commit: 276158e
 candidate_commit: 5d5c30a
 verified_commit: 5d5c30a # same Codex self-review
-origin_relation: "HEAD5d5c30a/origin276158e; code local, docs7 pending"
-working_tree: "spec120 docs7 pending; protected/user23 unchanged"
+origin_relation: "code5d5c30a/docsf30a846 pushed; HEAD=originf30a846 ahead/behind0/0 verified; final receipt follows once"
+working_tree: "task transferred; protected/user23 unchanged; final receipt only"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC120_TRANSFER_THEN_ABSENCE_DECODE_PREPARATION_CONTRACT
+next_transition: ABSENCE_DECODE_PREPARATION_CONTRACT_REVIEW
 pending_product_decision: NONE_FOR_SPEC120 # PG-1=A unchanged
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: Spec120 code5d5c30a self-reviewed; check3397/selector26/new native33/regression46 passed; initial restricted Firefox11 failures recorded and isolated; docs7 transfer pending
+session_status: Spec119 and120 DONE and pushed; standing Git transfer authority applied without repeated user question; next bounded decode preparation contract; actual photos/UI/operations remain closed
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
 commit_owner: Codex; spec120 exact code5/docs7 only; exclude protected/user22 and debug.log
 ```
 
 ## 최신 —120 합성 native 결속 검증
+
+최종120 DONE: 코드5d5c30a/문서f30a846 일반push성공,HEAD=originf30a846·0/0 확인.
+보호23+번들3SHA동일,taskdirty0. 같은문서최종결과1회후Git확인,추가영수증루프0.
+다음은부재확인입력의단발decode준비계약검토이며진행/전송승인대기가아니다. 아래검증중은이력이다.
 
 119최종276158e동기화후120계약자체검토→코드5/문서7구현. check3397/새Chromium11 PASS.
 실제FileReader+합성byte만,decoder/표시/사진/운영0. 새33/기존46회귀PASS,자체검수완료.
