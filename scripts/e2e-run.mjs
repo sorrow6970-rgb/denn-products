@@ -52,7 +52,21 @@ function run(command, args, env) {
   return result.status ?? 1;
 }
 
+export function selectPlaywrightArgs(args) {
+  if (Array.isArray(args) && args.length === 0) return ["test"];
+  if (Array.isArray(args) && args.length === 1 && args[0] === "--background-evidence-only") {
+    return [
+      "test",
+      "tests/e2e/room-background-file.spec.ts",
+      "tests/e2e/room-background-evidence.spec.ts",
+    ];
+  }
+  throw new Error("Unsupported E2E selector");
+}
+
 async function main() {
+  // Validate before creating staging or spawning commands. Never forward arbitrary shell input.
+  const playwrightArgs = selectPlaywrightArgs(process.argv.slice(2));
   const staging = mkdtempSync(join(tmpdir(), STAGING_PREFIX));
   const mockupOut = join(staging, "mockup");
   const adminOut = join(staging, "admin");
@@ -100,7 +114,7 @@ async function main() {
           ["build", "--config", "apps/admin/vite.e2e-fixture.config.ts"],
           { DENN_E2E_ADMIN_FIXTURE_OUT_DIR: adminOut },
         ],
-        ["playwright", ["test"], { DENN_E2E_STAGING: staging }],
+        ["playwright", playwrightArgs, { DENN_E2E_STAGING: staging }],
       ];
       for (const [command, args, env] of steps) {
         status = run(command, args, env);

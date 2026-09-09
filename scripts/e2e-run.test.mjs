@@ -5,9 +5,34 @@
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { isDisposableStagingPath, STAGING_PREFIX } from "./e2e-run.mjs";
+import { isDisposableStagingPath, selectPlaywrightArgs, STAGING_PREFIX } from "./e2e-run.mjs";
 
 const TEMP = resolve(tmpdir());
+
+describe("spec110 explicit E2E selection", () => {
+  it("preserves default full suite", () => {
+    expect(selectPlaywrightArgs([])).toEqual(["test"]);
+  });
+  it("selects only fixed evidence and legacy ownership checks", () => {
+    expect(selectPlaywrightArgs(["--background-evidence-only"])).toEqual([
+      "test",
+      "tests/e2e/room-background-file.spec.ts",
+      "tests/e2e/room-background-evidence.spec.ts",
+    ]);
+  });
+  it.each([
+    null,
+    {},
+    "--background-evidence-only",
+    ["other"],
+    ["--background-evidence-only", "extra"],
+    ["--background-evidence-only", "--background-evidence-only"],
+    ["; echo invalid"],
+    ["tests/e2e/mockup-browse.spec.ts"],
+  ])("rejects unapproved selector %#", (args) => {
+    expect(() => selectPlaywrightArgs(args)).toThrow("Unsupported E2E selector");
+  });
+});
 
 describe("isDisposableStagingPath", () => {
   it("accepts a per-run staging directory directly under the OS temp root", () => {

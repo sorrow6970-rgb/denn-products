@@ -1,6 +1,7 @@
 // Isolated spec105 byte checks. No image rendering or product entry imports.
 import { useState } from "react";
 import {
+  createRoomBackgroundEvidenceJob,
   createRoomBackgroundFileJob,
   type BackgroundFileReaderPort,
 } from "../room-placement/background-file";
@@ -48,6 +49,7 @@ function png(): Uint8Array<ArrayBuffer> {
 }
 
 async function check(mode: string): Promise<Record<string, unknown>> {
+  if (mode.startsWith("evidence-")) return checkEvidence(mode.slice(9));
   const bytes = mode === "png" ? png() : jpeg();
   const original = Array.from(bytes);
   const input =
@@ -111,6 +113,104 @@ async function check(mode: string): Promise<Record<string, unknown>> {
   };
 }
 
+function evidenceBytes(mode: string): Uint8Array<ArrayBuffer> {
+  const [format, label] = mode.split(":");
+  const tag = label !== "no-tag";
+  const profile = new Uint8Array(tag ? 26 : 14);
+  const view = new DataView(profile.buffer);
+  profile.set([73, 73, 42, 0, 8, 0, 0, 0]);
+  view.setUint16(8, tag ? 1 : 0, true);
+  if (tag) {
+    view.setUint16(10, 274, true);
+    view.setUint16(12, 3, true);
+    view.setUint32(14, 1, true);
+    view.setUint16(18, Number(label) || 6, true);
+  }
+  if (format !== "png") {
+    const base = jpeg();
+    return label === "no-profile"
+      ? base
+      : new Uint8Array([
+          255,
+          216,
+          255,
+          225,
+          0,
+          profile.length + 8,
+          69,
+          120,
+          105,
+          102,
+          0,
+          0,
+          ...profile,
+          ...base.subarray(2),
+        ]);
+  }
+  const base = png();
+  if (label === "no-profile") return base;
+  const body = new Uint8Array([101, 88, 73, 102, ...profile]);
+  let crc = 0xffffffff;
+  for (const b of body) {
+    crc ^= b;
+    for (let i = 0; i < 8; i++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+  }
+  crc = (crc ^ 0xffffffff) >>> 0;
+  return new Uint8Array([
+    ...base.subarray(0, 33),
+    0,
+    0,
+    0,
+    profile.length,
+    ...body,
+    crc >>> 24,
+    (crc >>> 16) & 255,
+    (crc >>> 8) & 255,
+    crc & 255,
+    ...base.subarray(33),
+  ]);
+}
+
+async function checkEvidence(mode: string): Promise<Record<string, unknown>> {
+  const bytes = evidenceBytes(mode),
+    original = Array.from(bytes);
+  const made = createRoomBackgroundEvidenceJob({
+    file: new Blob([bytes], { type: "image/gif" }),
+    budget: { maxEdge: 8000 },
+  });
+  if (!made.ok) return made;
+  const pending = made.job.run(),
+    samePromise = pending === made.job.run();
+  if (mode === "cancel") made.job.cancel();
+  if (mode === "dispose") made.job.dispose();
+  const result = await pending;
+  if (!result.ok) return { ...result, samePromise };
+  bytes.fill(0);
+  if (mode === "release") result.lease.release();
+  const pair = result.lease.take();
+  const output = pair ? new Uint8Array(await pair.blob.arrayBuffer()) : null;
+  const equal =
+    output !== null &&
+    output.length === original.length &&
+    output.every((b, i) => b === original[i]);
+  const secondNull = result.lease.take() === null;
+  made.job.dispose();
+  result.lease.release();
+  return {
+    ok: true,
+    samePromise,
+    secondNull,
+    equal,
+    hasPair: pair !== null,
+    frozen:
+      Object.isFrozen(result) &&
+      Object.isFrozen(result.lease) &&
+      (!pair || (Object.isFrozen(pair) && Object.isFrozen(pair.evidence))),
+    evidence: pair?.evidence ?? null,
+    mime: pair?.blob.type ?? null,
+  };
+}
+
 export function RoomBackgroundFileFixture() {
   const [report, setReport] = useState("");
   return (
@@ -128,6 +228,14 @@ export function RoomBackgroundFileFixture() {
         "late",
         "read-error",
         "bad-result",
+        ...["jpeg", "png"].flatMap((format) =>
+          ["1", "2", "3", "4", "5", "6", "7", "8", "no-profile", "no-tag"].map(
+            (value) => `evidence-${format}:${value}`,
+          ),
+        ),
+        "evidence-release",
+        "evidence-cancel",
+        "evidence-dispose",
       ].map((mode) => (
         <button
           type="button"
