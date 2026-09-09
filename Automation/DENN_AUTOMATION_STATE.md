@@ -6,21 +6,29 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-120-background-absence-native # DONE / CODEX_PASSED; same Codex, synthetic native handoff only
 active_unit: spec-120-background-absence-native
-state: CODEX_PASSED
+state: WAITING_FOR_NEXT_MANUAL_TASK
 baseline_commit: 276158e
 candidate_commit: 5d5c30a
 verified_commit: 5d5c30a # same Codex self-review
-origin_relation: "code5d5c30a/docsf30a846 pushed; HEAD=originf30a846 ahead/behind0/0 verified; final receipt follows once"
-working_tree: "task transferred; protected/user23 unchanged; final receipt only"
+origin_relation: "session-close baseline HEAD=origin=8fc5036, ahead/behind 0/0 verified; session-close docs commit is checked after push without another receipt commit"
+working_tree: "session-close docs5 only; pre-existing protected/user23 excluded and SHA-256 checked"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: ABSENCE_DECODE_PREPARATION_CONTRACT_REVIEW
 pending_product_decision: NONE_FOR_SPEC120 # PG-1=A unchanged
-automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: Spec119 and120 DONE and pushed; standing Git transfer authority applied without repeated user question; next bounded decode preparation contract; actual photos/UI/operations remain closed
+automation_loop: stopped for today at user request; no scheduled automation or automatic restart
+session_status: "2026-09-09 session ended by user; spec119/120 DONE and CODEX_PASSED retained; resume bounded decode preparation contract only after next user request; no new implementation today"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: Codex; spec120 exact code5/docs7 only; exclude protected/user22 and debug.log
+commit_owner: Codex; session-close STATE/NEXT/CURRENT/live/spec120 handoff docs5 only; exclude protected/user22 and debug.log
 ```
+
+## 오늘 세션 종료 — 2026-09-09
+
+사용자 `오늘 여기까지 마무리하자`에 따라 루틴을 종료한다. 119·120 DONE / CODEX_PASSED 유지.
+120 최종 기록 8fc5036의 원격 동기화와 0/0을 확인했다. 종료 문서 5개만 일반 commit/push한 뒤
+최종 Git 결과를 보고한다. 새 계약·구현·테스트 실행·예약 자동화·자동 재개는 하지 않는다.
+직전 검증 check3397, 새 native33 및 기존 회귀46 PASS를 유지하며 오늘 종료 작업에서 재시험하지 않았다.
+다음 사용자 재개 시 NEXT의 비연결 decode 준비 계약 검토부터 시작한다. 실사진/UI/운영 연결은 여전히 미개방이다.
 
 ## 최신 —120 합성 native 결속 검증
 
