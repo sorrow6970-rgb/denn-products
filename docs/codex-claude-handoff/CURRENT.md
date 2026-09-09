@@ -1,5 +1,32 @@
 # 현재 상태
 
+> 최신2026-09-09: spec105 로컬 DONE/CODEX_PASSED(동일 Codex), 코드77773db.
+> WAITING_FOR_SCOPED_PUSH_APPROVAL / next USER_EXPLICIT_SPEC105_SCOPED_GITHUB_PUSH_APPROVAL.
+> targeted83/unit2924/Chromium292(56.1초), typecheck/format/lint/build/범위/hash/잔류/diff PASS.
+> 코드5+문서7=고유12파일 및 같은7문서의 최종 전송결과 기록에 대한 정확 GitHub 전송 승인 필요.
+> 원격push/fetch0, 문서7만 별도 로컬커밋. 보호/별도dirty22 제외·desktop PNG만 기존재생성 예외.
+> 고객/admin entry·고객CSS SHA불변. 새 합성 FileReader 검증까지 완료, 사진 표시/방향/decoder/UI연결은 미완료.
+> 다음 방향/EXIF·소비자 계약 조사 후보는 NEXT. 새 스펙/운영/설치/자동화0, 전체 실측완료율 확인불가.
+> 아래 계약까지만/세션종료는 이전 이력이다.
+
+> 최신2026-09-08: 사용자 `오늘 여기까지,`로 세션 종료. WAITING_FOR_NEXT_MANUAL_TASK.
+> 104 DONE/CODEX_PASSED,105 CONTRACT_REVIEW_PASSED 유지.105 구현·시험 미착수.
+> 다음 수동 재개 시 NEXT의105 구현 범위부터 확인. 자동 다음 작업/예약자동화0.
+> 종료 기록 STATE/NEXT/CURRENT/live4개만 갱신. 누적 문서7개 unstaged·미커밋, 보호/별도dirty22 보존.
+> 제품변경/시험실행/stage/commit/push/fetch0. 아래 READY_FOR_IMPLEMENTATION은 종료 전 계약 준비 상태다.
+
+> 최신2026-09-08: spec105 CONTRACT_REVIEW_PASSED(동일 Codex 문서 자체 검토), READY_FOR_IMPLEMENTATION.
+> active spec-105-room-background-file-owner / next USER_SCOPED_SPEC105_IMPLEMENTATION_START.
+> [105 계약](../rebuild/specs/105-room-background-file-owner-contract.md) · [검토](reviews/2026-09-08-spec-105-room-background-file-owner-contract.md).
+> 최신 `착수해줘`의 bounded file owner 문서 작업만 완료. 제품/시험 구현·실행 NOT STARTED.
+> native size-before-read·단발 읽기·104검사와 같은 byte의 불변 Blob 인계·복사/취소 경계 확정.
+> orientation NOT_VERIFIED/decodeAllowed:false, decoder/100·102 연결/제품UI/실제사진/운영/설치0 유지.
+> 104 DONE/CODEX_PASSED 유지. HEAD=origin 추적d063ae1·0/0, 문서7 unstaged+보호/별도dirty22.
+> stage/commit/push/fetch0, 예약자동화0. 화면변화0·전체 실측진행률 확인불가. 다음 실행 문구 NEXT.
+> 아래104 전송 및 다음계약 미착수는 그 시점의 이력이며 최신 작업 포인터가 아니다.
+> 문서 검증: 링크16/16·허용7/7·dirty SHA22/22 동일·diff--check/신규whitespace PASS, staged0.
+> 총dirty29=기존22+이번7. 기존pnpm-workspace3줄 보존; 이번 제품/설정 추가diff0.
+
 > 최신2026-09-08: 추가영수증c9f8ed6와 같은5문서 최종상태 전송의 직접 승인 확인.
 > c9f8ed6 push 성공, HEAD=origin c9f8ed6·0/0 확인(이번 최종상태 커밋 전). BLOCKED 해소.
 > READY_FOR_NEXT_SCOPED_UNIT / active none / spec104 DONE/CODEX_PASSED 유지.

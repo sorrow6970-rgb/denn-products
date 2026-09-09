@@ -8564,3 +8564,57 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
 - 104 DONE/CODEX_PASSED 유지, 직전96/2841/281 PASS. READY_FOR_NEXT_SCOPED_UNIT.
   다음 bounded file owner 계약 후보는 NEXT에 보존, 새 스펙/구현/실제서비스/배포/설치/자동화0.
   이번 화면변화0, 전체 실측완료율 확인불가.
+
+## 2026-09-08 - spec105 bounded file owner 계약 작성·자체 검토
+
+- 사용자 `착수해줘`로 NEXT의 문서 계약 작성·검토만 수행했다. baseline d063ae1.
+- 신규105 계약/review/handoff3 + STATE/NEXT/CURRENT/live4 = 정확7문서만 변경한다.
+- CONTRACT_REVIEW_PASSED(동일 Codex, 독립 검수 아님), READY_FOR_IMPLEMENTATION.
+  단발 job·native size-before-read·bounded slice·104 검사한 view의 불변 Blob 인계·복사 N+N,
+  startup 재진입·취소·늦은완료·인계 후 회수 불가를 계약에 명시했다.
+- W3C File API 2026-08-23 Working Draft 본문을2026-09-08 확인; URL/절/결론은105 계약 §3.
+  공식 문서 읽기만 수행, 실제사진/서비스/Firebase 요청0. 규격과 브라우저 실측을 구분했다.
+- 다음 구현 후보 정확5경로/합성 unit/native FileReader E2E/회귀 게이트는105 계약 §2/7/8.
+  이번 제품코드·시험 작성/실행·PNG재생성0. orientation NOT_VERIFIED/decodeAllowed:false 유지.
+- 104 DONE/CODEX_PASSED 유지.105 제품 NOT STARTED, decoder/EXIF/100·102 연결/제품UI/기기안전 NOT TESTED.
+  다음 USER_SCOPED_SPEC105_IMPLEMENTATION_START, 실행 문구 NEXT. 오늘 범위를 자동으로 구현까지 확장0.
+- stage/commit/push/fetch0. 보호/별도dirty22 보존·전송제외, 문서7 unstaged.
+  실제 운영/Rules/배포/발행/삭제/설치/자동화0. 고객 화면 변화0, 전체 실측완료율 확인불가.
+- 문서 검증 실측: 로컬 링크16/16, 허용7/7, 보호/별도dirty SHA22/22 동일, 총dirty29=22+7.
+  git diff--check/신규whitespace PASS, staged0. HEAD=origin 로컬추적d063ae1·0/0, fetch0.
+  기존pnpm-workspace3줄 등은 보존했고 이번 코드/설정 추가diff0. Git global ignore 경고는 설정 변경하지 않았다.
+
+## 2026-09-08 - 오늘 세션 종료 · spec105 구현 전 수동 재개 대기
+
+- 사용자 `오늘 여기까지,`에 따라 WAITING_FOR_NEXT_MANUAL_TASK로 종료한다.
+- 104 DONE/CODEX_PASSED,105 CONTRACT_REVIEW_PASSED(동일 Codex) 유지.105 제품·시험 미착수.
+- STATE/NEXT/CURRENT/live4개만 종료 상태 동기화. 다음105 구현 프롬프트는 NEXT에 보존한다.
+  다음 사용자 재개 전 자동 구현/검증/새스펙 시작0, 예약자동화0.
+- 누적105 문서7개는 unstaged·미커밋으로 남긴다. 보호/별도dirty22와 제품코드는 변경하지 않는다.
+  이번 stage/commit/push/fetch·시험실행·실제서비스 접근0. HEAD d063ae1 유지.
+
+## 2026-09-09 - spec105 구현·자체 검증 완료 · 원격 전송 승인 대기
+
+- 사용자 루틴 재개 및 `응 확인하고 이어가` 지시. 지난 helper 오류의 상태 수정은 반영되지 않았음을 확인했고
+  이번 파일 읽기/최소 상태 수정 성공 후105 구현을 진행했다. 도구 지연 재발 후 최종 작업 정상 완료.
+- 코드77773db, 계약의 정확5파일만 로컬커밋. 단발 FileReader/bounded Blob/104 동일 byte 검사/불변 인계1회,
+  중복run 동일Promise·startup/중첩 이벤트·취소/late·safe 오류·참조 정리를 구현했다.
+- targeted83/83, mockup typecheck PASS. 최종check format/lint319·7프로젝트·unit2924=2841+83·2앱build PASS.
+  최초 TS2352 두 곳은 runtime native brand 검증 뒤 unknown 경유 단언으로 보완했다.
+- 전체 Chromium292=281+신규11 PASS(56.1초). 합성 native FileReader와 byte 동일성/취소/해제,
+  late/error/invalid result는 fake로 구분. 새11에서 Image/URL/Canvas/bitmap/외부egress/console error·warning0.
+  E2E 후 unit5개 추가, 최종check 재통과; 제품/E2E 코드는 동일하다.
+- 고객JS345,362bytes SHA256 FECAC548F3BD64B02873F5191E53EA8E2816F76CF609C648AAB67A108A3EE22A,
+  고객CSS22,675bytes 6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81,
+  adminJS294,873bytes B0A1F85F9271E4A929D2F6AB0F20BB0D0BFDADDA211533DDD675C8FB85711246. 시작과 동일.
+- 보호/별도dirty22 중20 비PNG SHA동일; 전체21/22동일. desktop만 canonical 기존 예외로 재생성:
+  972EE10863E97900320510530CBE2CDEA4B3C74EAD6ACAD930C438F10BC1E551.
+  mobile5043D55564D51A7F577EDBC520C2062C3FDA8FF277FE9B7C105E3FB8B0D135BD 동일. 복원/stage/commit0.
+- ports4183/4184/4185/8080/9099/9199 listener0, OS temp denn-e2e-oNrifw 제거, diff--check PASS.
+  추가경로0. 기존pnpm-workspace3줄 등 보존, Rules/config/manifest/lock 신규변경0. 기존chunk경고/ignore경고 설정변경0.
+- 105 로컬 DONE/CODEX_PASSED(동일 Codex 자체 검토, 독립 검증 아님).105문서7만 별도 로컬커밋 후 Git 확인.
+  원격 전송은 아직 시도하지 않았다. 코드5+문서7=12파일과 같은7문서 최종 전송결과 기록을
+  https://github.com/sorrow6970-rgb/denn-products.git / rebuild/modern-studio로 일반push할 정확범위 승인 필요.
+- 다음 방향/EXIF·불변 Blob 소비자 계약 조사 후보는 NEXT. 새 계약/구현 미착수.
+  실제사진/방향/decoder/기기전체메모리/다중 job admission/100·102 연결/UI/운영 NOT TESTED.
+  이번 고객화면 변화0. 전체 리빌드 실측완료율 확인불가. 설치/배포/예약자동화0.

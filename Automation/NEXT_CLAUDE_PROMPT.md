@@ -1,5 +1,53 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 — spec105 로컬 완료 / 정확범위 전송 승인 대기 (2026-09-09)
+
+105 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일 Codex), 코드77773db.83/2924/292 PASS.
+도구 helper 오류의 이전 상태 수정은 미반영이었고 이번 정상 재개 후 구현·검증 완료.
+코드5+105문서7=고유12파일만 전송 후보, 같은7문서 최종 전송결과 기록까지 승인 대상으로 묶는다.
+대상 https://github.com/sorrow6970-rgb/denn-products.git / rebuild/modern-studio, 일반 fast-forward만.
+보호/별도dirty22 제외. 원격push/fetch 미실행. 사용자 정확범위 승인 전 새 원격 요청/우회0.
+기존105 구현 프롬프트는 완료 이력이며 재구현하지 않는다. 다음 스펙 자동 시작0·예약자동화0.
+
+```text
+스펙105 전송 범위가 승인되면 먼저 STATE/CURRENT/live 및105 계약 DONE/handoff를 읽어.
+로컬 코드77773db와105 문서 커밋의 정확12경로, 보호/별도dirty22 제외, Git 관계를 확인해.
+승인된 원격/브랜치로 일반 fast-forward push하고, 동일7문서 내 최종 전송결과만 기록해.
+추가 영수증 승인 루프를 만들지 말고 마지막 Git 확인으로 종료해. 실패는 성공으로 추측하지 마.
+그 뒤 다음 후보는 방향/EXIF 공식 근거·불변 Blob 소비자 계약 조사다. 새 decoder/UI는 계약 없이 구현하지 마.
+실제사진/서비스/Firebase/운영/Rules/설치/자동화0. 방향·기기메모리·100/102 연결은 아직 NOT TESTED.
+```
+
+## 최신 — 오늘 종료 / 수동 재개 대기 (2026-09-08)
+
+사용자 `오늘 여기까지,`에 따라 WAITING_FOR_NEXT_MANUAL_TASK. 자동으로 다음 작업을 시작하지 않는다.
+104 구현 완료·105 계약 자체 검토 완료 유지.105 제품/시험 미착수, 아래 구현 프롬프트는 그대로 보존한다.
+다음 사용자 재개 지시 후 Git·보호/별도dirty와 계약을 다시 확인하고 명시된105 범위만 진행한다.
+문서7개 미커밋·unstaged로 남김. 이번 커밋/푸시/설치/실제서비스/예약자동화0.
+
+## 최신 — spec105 계약 검토 완료 / 구현 지시 대기 (2026-09-08)
+
+사용자 `착수해줘`의 문서 작업 완료.105 CONTRACT_REVIEW_PASSED(동일 Codex), READY_FOR_IMPLEMENTATION.
+현재 제품/시험 작성·실행0, 문서7개 unstaged. HEAD=origin 추적d063ae1·0/0, fetch/stage/commit/push0.
+104 DONE/CODEX_PASSED 유지. 보호/별도dirty22 보존. 예약자동화/실제서비스/운영/설치0.
+아래 실행 문구는 **다음 명시적 구현 착수** 때만 사용한다. 이번에는 문서 검토에서 종료한다.
+과거104 전송차단은 해소됐으며 과거 프롬프트를 반복 실행하지 않는다.
+
+문서 게이트: 링크16/16·7허용경로·dirty SHA22/22 보존·diff--check/신규whitespace PASS.
+총dirty29=기존22+문서7. 기존 pnpm-workspace3줄 등은 별도 사용자 변경이며 수정/포함하지 않는다.
+
+```text
+C:\repo\denn-products에서 STATE/CURRENT/live 최신, RG-3,105 계약·review·handoff를 읽고105만 구현·검증해.
+정본 docs/rebuild/specs/105-room-background-file-owner-contract.md §2의 정확5코드/시험경로만 허용한다.
+단발 job/native Blob size-before-read/bounded slice/FileReader1회/104 검사/불변 Blob 1회 인계,
+같은Promise·N+N 복사장부·cancel/dispose/시작중재진입/늦은완료·고정오류를 구현해.
+orientation NOT_VERIFIED/decodeAllowed:false 유지.104·100·102·기존 제품 import/UI/EXIF/decoder 변경0.
+합성 unit 및 기존 분리 fixture의 native FileReader 시험, typecheck/check/canonical/번들SHA/경계/diff/잔류를 검증해.
+기존 canonical PNG2 재생성 예외 외 보호/별도dirty22 불변, 모두 stage/commit 제외.
+실제사진/서비스/운영/Rules/배포/발행/삭제/설치/새설정/자동화0. 범위밖 변경이나 flaky/권한 차단이면 STOP.
+현재 미커밋105 문서7개와 별도dirty를 구분하고, 원격 전송은 별도 정확범위 권한 확인 없이 시도하지 마.
+```
+
 ## 최신 완료 — 영수증까지 전송 / 다음 계약 후보
 
 사용자 `응 다음 진행해줘`로 c9f8ed6 및 같은5문서의 차단·최종전송결과 갱신 전송 승인.
