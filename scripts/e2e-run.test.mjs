@@ -10,6 +10,15 @@ import { isDisposableStagingPath, selectPlaywrightArgs, STAGING_PREFIX } from ".
 const TEMP = resolve(tmpdir());
 
 describe("spec110 explicit E2E selection", () => {
+  it("spec111 selects fixed native pixel probe only", () => {
+    expect(selectPlaywrightArgs(["--native-orientation-only"])).toEqual([
+      "test",
+      "tests/e2e/native-orientation-pixel.spec.ts",
+    ]);
+    expect(() =>
+      selectPlaywrightArgs(["--native-orientation-only", "--background-evidence-only"]),
+    ).toThrow("Unsupported E2E selector");
+  });
   it("preserves default full suite", () => {
     expect(selectPlaywrightArgs([])).toEqual(["test"]);
   });

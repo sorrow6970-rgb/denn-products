@@ -54,6 +54,9 @@ function run(command, args, env) {
 
 export function selectPlaywrightArgs(args) {
   if (Array.isArray(args) && args.length === 0) return ["test"];
+  if (Array.isArray(args) && args.length === 1 && args[0] === "--native-orientation-only") {
+    return ["test", "tests/e2e/native-orientation-pixel.spec.ts"];
+  }
   if (Array.isArray(args) && args.length === 1 && args[0] === "--background-evidence-only") {
     return [
       "test",
