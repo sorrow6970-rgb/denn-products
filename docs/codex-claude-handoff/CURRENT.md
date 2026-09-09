@@ -1,5 +1,8 @@
 # 현재 상태
 
+> 113 코드 fe1b837/문서27ea083 일반 push 완료, HEAD=origin27ea083·0/0 확인(최종 기록 전).
+> staged0, 보호/사용자 dirty22와 별도 debug.log만 남았다. 다음 계약 포인터는 NEXT, 승인대기 아님.
+
 > 현재113 fe1b837 DONE/CODEX_PASSED (동일 Codex 자체 검토).
 > targeted20/check3255·번들SHA·보호22SHA·diff PASS. [113 handoff](../handoff/2026-09-09-spec-113-background-promise-handoff.md).
 > 다음 100 sink lease 인계 계약 검토이며 승인대기 아님. 제품 사진/룸 UI/운영전환 미완료.

@@ -10,8 +10,8 @@ state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: eaef514
 candidate_commit: fe1b837
 verified_commit: fe1b837   # same Codex self-review, not independent review
-origin_relation: "112 final eaef514 pushed and 0/0 verified; 113 fe1b837 plus its document commit are the scoped transfer batch; final relation is checked after push"
-working_tree: "113 documents7 only pending transfer; protected/user dirty22 and separate debug.log excluded"
+origin_relation: "113 fe1b837/27ea083 pushed; HEAD=origin27ea083 and 0/0 verified before this final record"
+working_tree: "at payload push verification: only protected/user dirty22 plus separate debug.log; staged0; this final record is confined to permitted documents"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: BACKGROUND_PREPARATION_SINK_LEASE_CONTRACT
@@ -21,6 +21,9 @@ commit_owner: Codex; spec113 code2 and documents7 only; exclude protected/user d
 ```
 
 ## 최신 —113 Promise 정착 연결 완료 (2026-09-09)
+
+fe1b837/27ea083 일반 push 완료, HEAD=origin27ea083·ahead/behind0/0 확인.
+같은 허용 문서의 이 최종 기록 한 번만 전송한다. 아래 전송 예정은 완료 이력이며 재실행하지 않는다.
 
 코드 fe1b837, targeted20/check3255·번들3종/보호22 SHA·diff PASS. 동일 Codex 자체 검토.
 109~113 계약→구현→검증 루틴을 수행했다. 제품 사진/룸 UI 통합 및 운영전환은 미완료다.
