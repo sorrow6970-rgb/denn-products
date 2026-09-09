@@ -54,6 +54,14 @@ function run(command, args, env) {
 
 export function selectPlaywrightArgs(args) {
   if (Array.isArray(args) && args.length === 0) return ["test"];
+  if (Array.isArray(args) && args.length === 1 && args[0] === "--background-lifecycle-only") {
+    return [
+      "test",
+      "tests/e2e/background-native-lifecycle.spec.ts",
+      "tests/e2e/room-background-file.spec.ts",
+      "tests/e2e/room-background-evidence.spec.ts",
+    ];
+  }
   if (Array.isArray(args) && args.length === 1 && args[0] === "--native-orientation-only") {
     return ["test", "tests/e2e/native-orientation-pixel.spec.ts"];
   }

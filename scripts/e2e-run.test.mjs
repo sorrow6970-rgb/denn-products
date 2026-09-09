@@ -10,6 +10,17 @@ import { isDisposableStagingPath, selectPlaywrightArgs, STAGING_PREFIX } from ".
 const TEMP = resolve(tmpdir());
 
 describe("spec110 explicit E2E selection", () => {
+  it("spec115 selects only native lifecycle and ownership regressions", () => {
+    expect(selectPlaywrightArgs(["--background-lifecycle-only"])).toEqual([
+      "test",
+      "tests/e2e/background-native-lifecycle.spec.ts",
+      "tests/e2e/room-background-file.spec.ts",
+      "tests/e2e/room-background-evidence.spec.ts",
+    ]);
+    expect(() =>
+      selectPlaywrightArgs(["--background-lifecycle-only", "--native-orientation-only"]),
+    ).toThrow("Unsupported E2E selector");
+  });
   it("spec111 selects fixed native pixel probe only", () => {
     expect(selectPlaywrightArgs(["--native-orientation-only"])).toEqual([
       "test",

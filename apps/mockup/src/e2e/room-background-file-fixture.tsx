@@ -1,5 +1,6 @@
 // Isolated spec105 byte checks. No image rendering or product entry imports.
 import { useState } from "react";
+import { checkBackgroundNative } from "./background-native-check";
 import {
   createRoomBackgroundEvidenceJob,
   createRoomBackgroundFileJob,
@@ -49,6 +50,7 @@ function png(): Uint8Array<ArrayBuffer> {
 }
 
 async function check(mode: string): Promise<Record<string, unknown>> {
+  if (mode.startsWith("native-")) return checkBackgroundNative(mode.slice(7));
   if (mode.startsWith("evidence-")) return checkEvidence(mode.slice(9));
   const bytes = mode === "png" ? png() : jpeg();
   const original = Array.from(bytes);
@@ -236,6 +238,11 @@ export function RoomBackgroundFileFixture() {
         "evidence-release",
         "evidence-cancel",
         "evidence-dispose",
+        ...["jpeg", "png"].flatMap((format) =>
+          ["normal", "clear", "dispose", "source-change", "pending-replace", "decode-reject"].map(
+            (action) => `native-${format}:${action}`,
+          ),
+        ),
       ].map((mode) => (
         <button
           type="button"
