@@ -4,22 +4,30 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-118-background-metadata-absence # CODEX_PASSED locally; same Codex, isolated classifier only
+completed_unit: spec-118-background-metadata-absence # DONE / CODEX_PASSED; same Codex, isolated classifier only
 active_unit: spec-118-background-metadata-absence
-state: CODEX_WORKING
+state: CODEX_PASSED
 baseline_commit: 8a10fe6
 candidate_commit: d543d8d
 verified_commit: d543d8d # same Codex self-review, not independent
-origin_relation: "HEADd543d8d/origin8a10fe6; ahead/behind1/0; document commit/push rejected before execution"
-working_tree: "spec118 exact code2/docs8 only; protected/user22 plus debug.log23 preserved separately"
+origin_relation: "approved push8a10fe6..a22e494 succeeded; HEAD=origin a22e494 and ahead/behind0/0 verified; this final receipt is the only follow-up"
+working_tree: "task transferred; protected/user22 plus debug.log23 unchanged; only approved final receipt pending"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC118_APPROVED_TRANSFER_AND_CLOSE
+next_transition: BACKGROUND_ABSENCE_SAME_BYTE_OWNER_CONTRACT_REVIEW
 pending_product_decision: NONE_FOR_SPEC118 # PG-1=A explicitly selected
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: User explicitly approved spec118 code and document8 GitHub transfer plus final receipt; scope and protected26 hashes rechecked; transfer in progress
+session_status: Spec118 DONE and transferred; protected23 and bundles3 hashes unchanged; record final receipt once then Git verify; no next implementation started
 commit_owner: Codex; spec118 exact code2/docs8 only; exclude protected/user22 and debug.log
 ```
+
+## 최종 —118 DONE /전송 완료 (2026-09-09)
+
+코드d543d8d+문서a22e494 일반push 성공. HEAD=origin a22e494·ahead/behind0/0 확인.
+정확코드2+문서8만 포함,보호/별도23+번들3 SHA동일,taskdirty0,예상밖dirty0,diff--check PASS.
+이번 최종결과만 같은8문서로 한 번 commit/push 후 Git결과로 종료한다. 추가 영수증 루프0.
+다음은 부재증거와 동일byte/Blob owner 결속의 계약 검토이며 PG-1/전송 재승인 대기가 아니다.
+실제사진/UI/운영/배포/설치/자동화0. 아래 전송 대기·작업중 문구는 과거 이력이다.
 
 ## 최신 — PG-1=A /118 로컬 검증 완료 (2026-09-09)
 
