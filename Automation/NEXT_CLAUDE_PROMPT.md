@@ -2,6 +2,9 @@
 
 ## 최신 —109 계약 검토 완료 / P2 비연결 owner 구현 (2026-09-09)
 
+109 계약7841be0 일반push완료·HEAD=origin7841be0·0/0 확인(최종기록전).
+같은허용문서최종기록1회전송후Git확인.아래문서commit대기는완료이력이며재실행하지않는다.
+
 `docs/rebuild/specs/109-background-evidence-owner-contract.md`와109 review/handoff를 읽는다.
 현재 CONTRACT_REVIEW_PASSED(동일 Codex)·구현0.108 종료기록abdc191 전송완료,과거전송/승인대기 재실행0.
 109 문서7개 범위/hash/링크/diff를 확인하여 일반commit/push한 뒤 같은109의 정확3파일 구현으로 진행한다.

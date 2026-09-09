@@ -8,10 +8,10 @@ completed_unit: spec-108-background-orientation-container # DONE / CODEX_PASSED;
 active_unit: spec-109-background-evidence-owner
 state: READY_FOR_IMPLEMENTATION
 baseline_commit: abdc191
-candidate_commit: UNCOMMITTED_SPEC109_CONTRACT
+candidate_commit: 7841be0 # contract only, not implementation
 verified_commit: 4cc4988   # same Codex self-review, not independent review
-origin_relation: "spec108 final abdc191 pushed; spec109 documents not yet committed"
-working_tree: "spec109 documents7 only; protected/user dirty22 preserved and excluded"
+origin_relation: "spec109 contract7841be0 pushed; HEAD=origin7841be0 and0/0 checked before final record"
+working_tree: "same allowed final transfer documents only; after record protected/user dirty22 remain"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: SPEC109_P2_EVIDENCE_OWNER_IMPLEMENTATION
@@ -21,6 +21,9 @@ commit_owner: Codex; spec109 documents7 only in this contract phase; exclude pro
 ```
 
 ## 최신 —109 P2 결속 계약 검토 완료 (2026-09-09)
+
+계약7841be0 일반push완료(abdc191..7841be0),HEAD=origin7841be0·0/0 확인(최종기록전).
+같은허용문서의최종기록만1회commit/push후Git확인한다.구현PASS가아닌계약PASS·다음동일109 구현대기.
 
 108 종료기록abdc191 push완료.109 spec/review/handoff에 P1/P2 비교·공식 근거·정확3파일 구현계약 작성.
 P2 선택:private view에서108을검사하고 같은byte snapshot과함께 take1회. 기존105 factory/API는 유지한다.

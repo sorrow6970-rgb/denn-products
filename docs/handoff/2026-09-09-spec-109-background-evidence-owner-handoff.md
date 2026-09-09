@@ -2,6 +2,9 @@
 
 2026-09-09 / baseline `abdc191` / CONTRACT_REVIEW_PASSED(동일 Codex 자체 검토).
 
+계약커밋7841be0 일반push완료·HEAD=origin7841be0·0/0 확인(최종기록전).
+같은허용문서 최종기록만1회commit/push후Git확인한다.코드미착수이며다음동일109 구현범위는변함없다.
+
 - [계약](../rebuild/specs/109-background-evidence-owner-contract.md)
 - [조사·검토](../codex-claude-handoff/reviews/2026-09-09-spec-109-background-evidence-owner-review.md)
 
