@@ -6,6 +6,8 @@ import {
   createRoomBackgroundEvidenceJob,
   createRoomBackgroundFileJob,
   type BackgroundFileReaderPort,
+  type BackgroundAbsenceJob,
+  createRoomBackgroundAbsenceJob,
 } from "../room-placement/background-file";
 
 function jpeg(): Uint8Array<ArrayBuffer> {
@@ -51,6 +53,7 @@ function png(): Uint8Array<ArrayBuffer> {
 }
 
 async function check(mode: string): Promise<Record<string, unknown>> {
+  if (mode.startsWith("absence-")) return checkAbsence(mode.slice(8));
   if (mode.startsWith("capability-")) {
     const probe = createRoomBackgroundPngCapabilityProbe();
     if (mode === "capability-dispose-before") probe.dispose();
@@ -227,6 +230,111 @@ async function checkEvidence(mode: string): Promise<Record<string, unknown>> {
   };
 }
 
+async function checkAbsence(mode: string): Promise<Record<string, unknown>> {
+  const bytes =
+    mode === "png"
+      ? png()
+      : mode === "metadata-png"
+        ? evidenceBytes("png:no-tag")
+        : mode === "metadata-jpeg"
+          ? evidenceBytes("jpeg:no-tag")
+          : mode === "unknown-jpeg"
+            ? new Uint8Array([255, 216, 255, 224, 0, 2, ...jpeg().subarray(2)])
+            : jpeg();
+  const original = Array.from(bytes);
+  const file =
+    mode === "file"
+      ? new File([bytes], "synthetic.gif", { type: "image/gif" })
+      : new Blob([bytes], { type: "image/gif" });
+  let job: BackgroundAbsenceJob | null = null;
+  let native: FileReader | null = null;
+  let lateDelivered = false;
+  const environment =
+    mode === "late"
+      ? {
+          createReader() {
+            const reader = new FileReader();
+            native = reader;
+            const bridge: BackgroundFileReaderPort = {
+              get result() {
+                return reader.result;
+              },
+              get readyState() {
+                return reader.readyState;
+              },
+              onload: null,
+              onerror: null,
+              onabort: null,
+              onloadend: null,
+              readAsArrayBuffer(blob) {
+                reader.readAsArrayBuffer(blob);
+              },
+              abort() {
+                reader.abort();
+              },
+            };
+            reader.onload = () => {
+              lateDelivered = true;
+              const saved = bridge.onload;
+              job?.cancel();
+              saved?.(); // Actual native read; deliberately delayed delivery after logical cancellation.
+            };
+            reader.onerror = () => bridge.onerror?.();
+            reader.onabort = () => bridge.onabort?.();
+            reader.onloadend = () => bridge.onloadend?.();
+            return bridge;
+          },
+        }
+      : undefined;
+  const made = createRoomBackgroundAbsenceJob({ file, budget: { maxEdge: 8000 } }, environment);
+  if (!made.ok) return made;
+  job = made.job;
+  try {
+    if (mode === "cancel-before") job.cancel();
+    const pending = job.run(),
+      samePromise = pending === job.run();
+    if (mode === "cancel") job.cancel();
+    if (mode === "dispose") job.dispose();
+    const result = await pending;
+    if (!result.ok) return { ...result, samePromise, lateDelivered };
+    bytes.fill(0);
+    if (mode === "release") result.lease.release();
+    const pair = result.lease.take();
+    try {
+      const output = pair ? new Uint8Array(await pair.blob.arrayBuffer()) : null;
+      return {
+        ok: true,
+        samePromise,
+        secondNull: result.lease.take() === null,
+        equal:
+          output !== null &&
+          output.length === original.length &&
+          output.every((v, i) => v === original[i]),
+        hasPair: pair !== null,
+        frozen:
+          Object.isFrozen(result) &&
+          Object.isFrozen(result.lease) &&
+          (!pair || (Object.isFrozen(pair) && Object.isFrozen(pair.evidence))),
+        evidence: pair?.evidence ?? null,
+        mime: pair?.blob.type ?? null,
+        lateDelivered,
+      };
+    } finally {
+      result.lease.release();
+    }
+  } finally {
+    job.dispose();
+    // The test-only bridge is not a production cancellation mechanism.
+    const reader = native as FileReader | null;
+    if (reader) {
+      reader.onload = null;
+      reader.onerror = null;
+      reader.onabort = null;
+      reader.onloadend = null;
+    }
+  }
+}
+
 export function RoomBackgroundFileFixture() {
   const [report, setReport] = useState("");
   return (
@@ -244,6 +352,19 @@ export function RoomBackgroundFileFixture() {
         "late",
         "read-error",
         "bad-result",
+        ...[
+          "jpeg",
+          "png",
+          "file",
+          "metadata-jpeg",
+          "metadata-png",
+          "unknown-jpeg",
+          "release",
+          "cancel-before",
+          "cancel",
+          "dispose",
+          "late",
+        ].map((mode) => `absence-${mode}`),
         "capability-normal",
         "capability-dispose-before",
         "capability-dispose-pending",

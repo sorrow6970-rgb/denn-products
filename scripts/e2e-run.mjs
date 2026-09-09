@@ -58,6 +58,19 @@ export function selectPlaywrightArgs(args) {
     if (
       Array.isArray(args) &&
       args.length === 1 &&
+      args[0] === `--background-absence-${engine}-only`
+    ) {
+      return [
+        "test",
+        "--config",
+        "tests/background-absence-owner.config.ts",
+        `--project=${engine}`,
+        "--workers=1",
+      ];
+    }
+    if (
+      Array.isArray(args) &&
+      args.length === 1 &&
       args[0] === `--background-capability-${engine}-only`
     ) {
       return [
