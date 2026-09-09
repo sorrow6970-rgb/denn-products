@@ -8627,3 +8627,32 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
   HEAD=origin bc1c240·0/0 확인(최종기록 전). 같은7문서 최종기록만 commit/push 후 Git 확인, 영수증 반복0.
 - 105 DONE/CODEX_PASSED 유지. 이번 제품/시험변경·재실행0, 보호/별도dirty22 전송제외.
   다음 방향/EXIF 근거·불변 Blob 소비자 계약 조사부터 진행한다. decoder/UI/실제사진/운영/설치0.
+
+## 2026-09-09 - spec106 방향 조사 완료 · CIPA 정본 열람 조건 STOP
+
+- 105 최종기록5a4341b push 완료·HEAD=origin 추적5a4341b·0/0 확인.105 DONE/CODEX_PASSED 유지.
+- 사용자 중요 문제 외 계속 지시로106 조사스펙을 먼저 작성하고 정확7문서만 작업했다.
+  결과는106 review/handoff. 공개 CIPA목록/안내·W3C PNG·WHATWG HTML·Adobe TIFF namespace 및 기존코드 확인.
+- PNG eXIf는 편집 전 정보일 수 있어 byte 정상과 현재 픽셀 의미 유효성을 분리했다.
+  기존 EXIF E2E는 방향 적용/미적용 둘다 허용해8방향 증거가 아니다. 치수만으로 반전 판정 불가.
+  1~8 수학적 변환 후보·실패시험표·동일Blob 인계·P1/P2 복사/변경 경계 기록, 아직 채택/실측 아님.
+- CIPA Exif3.1 본문은 면책조건 동의 필요. 수락/다운로드/우회0, 최신 binary 상세 UNCONFIRMED.
+  조사 DONE/DOCUMENT_REVIEW_PASSED(동일 Codex 자체 검토), 후속 BLOCKED/USER_CIPA_EXIF_DOCUMENT_ACCESS_DECISION.
+  필요한 권한은 해당 조건 동의 또는 사용자 제공 정본. RG-3 검증 불가 거부 유지, 새 허용 확대0.
+- 변경7문서=106 spec/review/handoff3+STATE/NEXT/CURRENT/live4. 제품/test/config변경·unit/build/E2E실행0.
+  105의83/2924/292는 과거 결과로만 인용한다. 보호/별도dirty22·PNG 보존, 이번 stage/commit/push/fetch0.
+  실제사진/서비스/운영/설치/배포/발행/삭제/예약자동화0. 방향/decoder/룸 UI 연결은 아직 남았으며 전체실측완료율 확인불가.
+- 문서 게이트: 링크12/12, 허용7/7, 보호/별도dirty SHA22/22 불변, 예상 밖 경로0, 총dirty29=22+7.
+  diff--check/신규3문서 whitespace PASS, staged0, HEAD=origin 로컬추적5a4341b·0/0. Git ignore 경고 설정변경0.
+
+## 2026-09-09 - CIPA 동의 승인·Exif3.1 정본 확보 /106 차단 해소
+
+- 사용자 `응 승인 다음진행`으로 면책조건 동의·정본 다운로드/열람 승인. 동일조건 Accept 반영 확인.
+  브라우저 폼의 빈dlltarget으로 다운로드 실패; 공식dll.js 확인 후 공식dll.cgi에 정확 문서식별자로 POST했다.
+  사용자/저장소 파일 전송0. PDF4,451,181bytes/267쪽, SHA256 9CC36399A46AB7AA4A65473BB8A4945D3B044DA739B8F16A01B0BE11886DCFF9.
+- PDF 스킬·기존 runtime으로 관련 절 추출과 방향 표/그림44/46/47쪽을 확인. 전체정독/브라우저 PASS 아님.
+  IFD/APP1/Orientation274·SHORT·count1·1~8·규격default1 확인. 미확인 입력의 임의default 허용0.
+  PDF/temp는Git 제외. 설치0. UTF-8 재추출로 인코딩 오류 해소, 렌더링 글리프 경고는 결과 직접 확인.
+-106 DOCUMENT_REVIEW_PASSED(동일 Codex), 이전 권한 BLOCKED 해소. 문서7개만 검증·일반 commit/push 대상.
+  후속107 parser-only 계약 작성,104/105/제품/test/config변경·실행0. PNG의 metadata 의미/native/decoder는 NOT TESTED.
+  보호/별도dirty22 보존·전송제외, 실제사진/서비스/운영/설치/배포/예약자동화0.

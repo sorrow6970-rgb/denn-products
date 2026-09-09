@@ -1,5 +1,29 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 — CIPA 승인·정본 확보,107 parser-only 계약으로 계속 (2026-09-09)
+
+사용자 `응 승인 다음진행`으로106의 CIPA 조건 동의 질문 해소. 정본267쪽 중 관련 IFD/방향/APP1절 확인.
+106 review 최신 근거와 동일문서7개 diff/hash를 확인해 일반 commit/push 후107 parser-only 계약을 작성한다.
+태그 없음/명시값/해석 실패를 구별하고 decodeAllowed:false 유지.104/105/제품연결·decoder/UI0.
+같은 CIPA 권한 재질문0, 새 범위·중요 제품 선택/권한/충돌만 STOP. 보호dirty22 제외·예약자동화0.
+이하 미취득/권한대기는 해소된 이력이다.
+
+## 최신 — spec106 조사 DONE / 열람 조건 권한 STOP (2026-09-09)
+
+DOCUMENT_REVIEW_PASSED(동일 Codex 자체 검토), 후속은 USER_CIPA_EXIF_DOCUMENT_ACCESS_DECISION.
+106 review/handoff 및 조사 스펙을 읽는다. CIPA Exif3.1 본문은 면책조건 동의 필요로 미취득.
+사용자 조건 동의 권한 또는 적법하게 제공한 정본 전 동의/다운로드/우회/parser계약·구현0.
+PNG 방향 검증 불가는 RG-3대로 거부 유지. strict/native/P1/P2는 후보이며 아직 채택되지 않았다.
+문서7개 unstaged, 보호/별도dirty22 제외.105 최종5a4341b push 완료,106 stage/commit/push0.
+승인 해소 뒤 먼저 정본을 읽고106 미확인 부분을 갱신·검수한 다음 새 parser-only 스펙 범위를 고정한다.
+실제사진/운영/설치/decoder/UI/예약자동화0. 아래 CODEX_WORKING과105 전송대기는 과거 이력이다.
+
+## 최신 — spec106 방향·소비자 경계 조사 착수 (2026-09-09)
+
+105 최종기록5a4341b push 완료·HEAD=origin0/0. 사용자 루틴 계속 지시로106 문서 전용 조사에 착수했다.
+정본 docs/rebuild/specs/106-room-background-orientation-investigation.md의7문서만 허용.
+공식공개문서/로컬코드 읽기, 접근조건 임의수락/우회0. parser/decoder/UI/실제사진/운영/설치/자동화0.
+
 ## 최신 — spec105 push 완료 / 다음 조사 루틴 (2026-09-09)
 
 사용자 직전 전송범위 승인 및 큰 문제 없으면 계속 지시.77773db/bc1c240 push 성공, HEAD=origin bc1c240·0/0.

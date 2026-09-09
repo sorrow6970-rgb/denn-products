@@ -1,5 +1,21 @@
 # 현재 상태
 
+> 최신2026-09-09: CIPA 동의 승인·Exif3.1 정본 필요한 본문 확인,106 권한 BLOCKED 해소.
+>106 DONE/DOCUMENT_REVIEW_PASSED(동일 Codex), next SPEC107_BOUNDED_ORIENTATION_PARSER_CONTRACT.
+>106 문서7개 검증·일반 commit/push 후107 parser-only 계약. 제품/test/config변경·실행0, 보호dirty22 보존.
+>규격 방향 default1 확인과 미확인 사진 허용은 구별한다. decoder/UI/실제사진/운영/설치/자동화0.
+
+> 최신2026-09-09: spec106 조사 DONE/DOCUMENT_REVIEW_PASSED(동일 Codex), 후속 BLOCKED.
+> next USER_CIPA_EXIF_DOCUMENT_ACCESS_DECISION. CIPA 최신 정본은 면책조건 동의 필요로 미취득, 수락/우회0.
+> [106 결과](reviews/2026-09-09-spec-106-room-background-orientation-investigation.md) · [handoff](../handoff/2026-09-09-spec-106-room-background-orientation-handoff.md).
+> PNG metadata 의미 미확인 거부 유지, 방향/parser/native/소유권 후보 NOT TESTED.1055a4341b 전송 완료 유지.
+> 문서7개 unstaged+보호/별도dirty22.106 stage/commit/push·제품/test/config변경·실행·실제사진/운영/자동화0.
+> 중요권한 해소 전 후속 parser 계약 시작0. 아래 조사 중/전송대기 등은 과거 이력이다.
+
+> 최신2026-09-09: 105 종료기록까지5a4341b push 완료,106 방향/불변Blob 소비자 경계 문서 조사 CODEX_WORKING.
+> docs/rebuild/specs/106-room-background-orientation-investigation.md의7문서만. 제품/parser/decoder/UI변경0.
+> 공식 공개 문서 및 기존코드 읽기만. 접근조건 수락/우회·실제사진·운영·설치·예약자동화0.
+
 > 최신2026-09-09: spec105 전송 승인 확인,77773db/bc1c240 일반push 성공. HEAD=origin bc1c240·0/0(최종기록 전).
 > READY_FOR_NEXT_SCOPED_UNIT / next CODEX_BACKGROUND_ORIENTATION_INVESTIGATION.105 DONE/CODEX_PASSED 유지.
 > 같은7문서 최종기록 commit/push 후 다음 조사 루틴. 중요한 결정/권한/충돌 외 반복 확인하지 않는다.
