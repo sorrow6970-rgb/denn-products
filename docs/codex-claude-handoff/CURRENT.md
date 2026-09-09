@@ -1,5 +1,8 @@
 # 현재 상태
 
+> 최신111 c5de76f DONE/CODEX_PASSED,check3212/Chromium36 PASS.픽셀방향합성관찰완료,제품허가아님.
+> [111 handoff](../handoff/2026-09-09-spec-111-native-orientation-handoff.md).다음decoder수명/동시제한계약으로계속.
+
 > 최신110 67dadeb DONE/CODEX_PASSED. unit3211/targetedChromium34 PASS,보호PNG불변·포트/temp0.
 > [110 handoff](../handoff/2026-09-09-spec-110-background-evidence-native-handoff.md). 다음native픽셀검증계약으로계속.
 

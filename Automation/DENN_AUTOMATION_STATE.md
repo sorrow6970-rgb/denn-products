@@ -4,21 +4,28 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-110-background-evidence-native # DONE / CODEX_PASSED; same Codex self-review
-active_unit: spec-110-background-evidence-native
+completed_unit: spec-111-native-orientation-pixel-probe # DONE / CODEX_PASSED; same Codex self-review
+active_unit: spec-111-native-orientation-pixel-probe
 state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: 5357bb3
-candidate_commit: 67dadeb
-verified_commit: 67dadeb   # same Codex self-review, not independent review
-origin_relation: "spec109 fecb8a4/5357bb3 pushed; spec110 code67dadeb local; docs pending"
-working_tree: "spec110 documents7 only; protected/user dirty22 excluded"
+baseline_commit: 3de092b
+candidate_commit: c5de76f
+verified_commit: c5de76f   # same Codex self-review, not independent review
+origin_relation: "spec110 67dadeb/3de092b pushed; spec111 code local; docs pending"
+working_tree: "spec111 documents7 only; protected/user dirty22 excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC111_NATIVE_ORIENTATION_PIXEL_PROOF_CONTRACT
+next_transition: BACKGROUND_DECODE_ADMISSION_LIFETIME_CONTRACT
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec110 CODEX_PASSED; unit3211 targetedChromium34 passed; continue native pixel contract
-commit_owner: Codex; spec110 code4 and documents7 only; exclude protected/user dirty22
+session_status: spec111 CODEX_PASSED; unit3212 targetedChromium36 passed; continue admission lifetime contract
+commit_owner: Codex; spec111 code3 and documents7 only; exclude protected/user dirty22
 ```
+
+## 최신 —111 native 픽셀방향 검증 완료 (2026-09-09)
+
+110 3de092b 전송완료.111 c5de76f,selector15/check3212/Chromium36(2.7초)PASS.
+8방향·정사각형/직사각형·no-profile합성픽셀확인.경고발생은시험readback설정수정후재검증,단언완화0.
+보호22/번들SHA동일·PNG출력0·포트/temp0.다음nonabortable decode수명/동시제한계약으로계속.
+제품/실제사진/다른엔진/운영허가0.상세111review/handoff.
 
 ## 최신 —110 native 결속시험 완료 (2026-09-09)
 

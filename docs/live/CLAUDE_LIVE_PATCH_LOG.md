@@ -8757,3 +8757,13 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
   외부egress/console error·warning/URL/Image/Canvas/bitmap0,보호22SHA·번들SHA동일.
   temp denn-e2e-hcVx1y 제거확인·관련포트listener0·PNG출력0.기설치browser확인시잘못된import경로만수정,설치0.
 - 동일Codex CODEX_PASSED,다음native픽셀방향조사계약으로계속.실제사진/제품decoder/UI/운영금지유지.
+
+## 2026-09-09 - spec111 native 회전·반전 픽셀 probe 완료
+
+- 110 67dadeb/3de092b 전송후111계약→정확3파일구현.코드c5de76f.
+- selector15/check3212,format/lint326·7typecheck·2build PASS.최종Chromium36/36,2.7초.
+  JPEG/PNG×shape2×Exif8=32와no-profile4.치수와모서리색검증,앱추가회전0.
+- 최초36실패는최종console warning단언:Canvas반복readback성능경고.최소probe로본문확인후
+  outputcontext willReadFrequently:true 적용,같은색·치수·무경고조건으로재통과.기대값완화0.
+- 보호22/번들SHA동일·PNG출력0·포트0·실행temp2개제거확인.전체E2E/다른엔진/실기기/일반사진은NOT TESTED.
+- 다음decoder수명·admission계약검토로계속.제품허가/배포/실제데이터/설치/자동화0.

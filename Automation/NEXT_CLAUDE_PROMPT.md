@@ -1,5 +1,12 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 —111 완료 / decoder 수명·동시제한 계약 (2026-09-09)
+
+111 c5de76f CODEX_PASSED,check3212/Chromium36 PASS.110 3de092b 전송완료.
+111문서전송후100/102/109소유권과111제한을읽고취소와물리완료를분리하는decoder수명/admission계약을검토한다.
+Promise취소를native작업중단으로치지않으며늦은결과해제전에새할당을겹치지않는다.
+현재PARTIAL·decodeAllowed:false를허가로승격0.새제품정책/권한/충돌이면STOP,그외같은승인재질문없이계속.
+
 ## 최신 —110 완료 / native 픽셀방향 검증으로 (2026-09-09)
 
 110 67dadeb CODEX_PASSED,selector14/unit3211/targetedChromium34·번들/보호SHA PASS. 전체E2E아님.
