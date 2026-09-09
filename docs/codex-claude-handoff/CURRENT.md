@@ -1,5 +1,11 @@
 # 현재 상태
 
+> 현재113 fe1b837 DONE/CODEX_PASSED (동일 Codex 자체 검토).
+> targeted20/check3255·번들SHA·보호22SHA·diff PASS. [113 handoff](../handoff/2026-09-09-spec-113-background-promise-handoff.md).
+> 다음 100 sink lease 인계 계약 검토이며 승인대기 아님. 제품 사진/룸 UI/운영전환 미완료.
+> 113 코드2+문서7 일반 전송 후 Git 최종 확인. 별도 debug.log 포함 보호/사용자 파일은 제외.
+> 아래 전송대기·검증 상태는 해당 시점 이력이다.
+
 > 전송완료112 b779c1a/50409b2,HEAD=origin50409b2·0/0 확인(최종기록전).
 > 이번루틴109~112 구현·검증·전송완료.다음정착port계약은승인대기가아니며NEXT에서이어간다.
 

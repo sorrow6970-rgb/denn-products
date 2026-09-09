@@ -8784,3 +8784,17 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
 - 최신check3235 PASS,110 targetChromium34·111 targetChromium36 PASS는각단위별실측이다.전체E2E통과주장0.
   보호22·고객JS/CSS/adminJS SHA불변,실제사진/운영/설치/배포/자동화0.
 - 다음은실제Promise정착port계약.실제고객배경사진연결·룸UI통합·실기기·운영전환은미완료다.
+
+## 2026-09-09 - spec113 Promise 실제 정착 연결 구현·검증 완료
+
+- 112 최종 eaef514 전송/HEAD=origin·0/0 확인 후 113 계약과 정확 코드2개 구현. 코드 fe1b837.
+- 동일 Codex 자체 검토 CODEX_PASSED. targeted20/20, 전체3255=3235+20,
+  format/lint330·7typecheck·2build PASS. 첫 lint 실패는 의도적인 hostile then fixture 한 줄의
+  설명 예외를 추가해 해결했고 전체 check를 재실행했다. 설정/기대값 완화0.
+- 취소 결과와 실제 Promise 완료 분리, 늦은 자원 release, held 소유, 무효 포트 불명 차단 구현.
+  제품 decoder/실제 사진 허가/100 sink 연결/실기기/native E2E 검증은 이번 범위가 아니다.
+- 보호22 SHA 동일·고객 JS/CSS/admin JS SHA 동일·diff--check PASS.
+  109~112 문서12개 상대 링크18개 missing0 확인. 별도 debug.log를 발견했으며 손대지 않고 제외했다.
+- 이번 루틴은 109~113 구현·검증 완료. 실제 사용자 사진 연결·룸 UI 통합·운영전환은 남아 있다.
+  다음은 100 sink lease 인계 계약 검토이며 승인대기 아님. 같은 진행 질문/예약 자동화0.
+  113 코드2+문서7 일반 전송 후 마지막 Git 결과로 완료 확인한다. 영수증 커밋 루프0.

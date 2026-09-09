@@ -4,21 +4,29 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-112-background-work-admission # DONE / CODEX_PASSED; same Codex self-review
-active_unit: spec-112-background-work-admission
+completed_unit: spec-113-background-promise-settlement # DONE / CODEX_PASSED; same Codex self-review
+active_unit: spec-113-background-promise-settlement
 state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: 2b6d739
-candidate_commit: b779c1a
-verified_commit: b779c1a   # same Codex self-review, not independent review
-origin_relation: "spec112 b779c1a/50409b2 pushed; HEAD=origin50409b2 and0/0 checked before final record"
-working_tree: "same permitted final transfer documents only; protected/user dirty22 excluded"
+baseline_commit: eaef514
+candidate_commit: fe1b837
+verified_commit: fe1b837   # same Codex self-review, not independent review
+origin_relation: "112 final eaef514 pushed and 0/0 verified; 113 fe1b837 plus its document commit are the scoped transfer batch; final relation is checked after push"
+working_tree: "113 documents7 only pending transfer; protected/user dirty22 and separate debug.log excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: BACKGROUND_DECODE_PORT_SETTLEMENT_CONTRACT
+next_transition: BACKGROUND_PREPARATION_SINK_LEASE_CONTRACT
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec112 CODEX_PASSED; targeted23 and full3235 passed; continue port settlement contract
-commit_owner: Codex; spec112 code2 and documents7 only; exclude protected/user dirty22
+session_status: spec113 CODEX_PASSED; targeted20 and full3255 passed; continue sink lease contract without repeated approval
+commit_owner: Codex; spec113 code2 and documents7 only; exclude protected/user dirty22 and debug.log
 ```
+
+## 최신 —113 Promise 정착 연결 완료 (2026-09-09)
+
+코드 fe1b837, targeted20/check3255·번들3종/보호22 SHA·diff PASS. 동일 Codex 자체 검토.
+109~113 계약→구현→검증 루틴을 수행했다. 제품 사진/룸 UI 통합 및 운영전환은 미완료다.
+다음은 100 sink lease 인계 계약 검토. 승인대기가 아니다. 실제 사진/운영/설치/예약 자동화0.
+113 문서7개까지 한 배치로 일반 전송하고 Git 상태를 확인한다. 추가 영수증 커밋을 반복하지 않는다.
+아래 이전 전송대기/검증 상태는 과거 이력이다.
 
 ## 최신 —112 단일 작업 수명 완료 (2026-09-09)
 

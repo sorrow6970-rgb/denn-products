@@ -1,5 +1,20 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 실행 포인터 —113 완료 / 100 sink lease 연결 계약 (2026-09-09)
+
+113 코드 fe1b837, targeted20/check3255·번들/보호SHA PASS. 동일 Codex CODEX_PASSED.
+112 최종 eaef514 전송/0/0 확인 완료. 113 코드2+문서7 일반전송 뒤 Git 관계를 확인한다.
+재개 시 log를 먼저 확인해 이미 전송된 배치를 반복하지 않는다.
+
+다음은 100 preparation.ts 및 102 snapshot, 109 evidence, 112 admission, 113 promise-work를 읽고
+sink complete/fail과 lease 소유권 연결의 정확한 다음 계약을 작성·검토한다. 기본 앱 연결은 아직 없다.
+113 result에는 원자원/치수가 없으므로 임의 강제 cast나 별도 side-channel로 우회하지 않는다.
+cancel 후에도 물리 pending 슬롯 유지, 늦은 자원 해제, release 단일 소유자, clear/dispose/
+source invalidation의 합성 연결검증을 설계하고 같은 범위 구현·검증 루틴을 이어간다.
+사진 허가 PARTIAL/decodeAllowed:false 유지. 제품/운영 권한을 이 계약에서 만들어내지 않는다.
+중요 결정/권한/범위 충돌 외 같은 진행 승인 재질문0. 보호22 및 별도 debug.log 제외, 예약 자동화0.
+아래는 과거 프롬프트이며 현재 작업을 덮어쓰지 않는다.
+
 ## 최신 —112 완료 / 실제 정착 port 계약으로 (2026-09-09)
 
 112 b779c1a/50409b2 전송완료·HEAD=origin50409b2·0/0 확인(최종기록전).전송대기재실행0.
