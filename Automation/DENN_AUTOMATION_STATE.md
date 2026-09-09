@@ -5,23 +5,28 @@ updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-117-background-png-capability-probe # DONE / CODEX_PASSED; same Codex, isolated probe only
-active_unit: spec-117-completion-transfer
-state: CODEX_WORKING
+active_unit: room-background-absence-policy
+state: FOUNDER_DECISION_REQUIRED
 baseline_commit: 585f88b
 candidate_commit: 3c13334
 verified_commit: 3c13334   # same Codex self-review, not independent review
-origin_relation: "HEAD3c13334, origin585f88b, ahead/behind2/0; docs commit/push rejected before execution; staged0"
-working_tree: "spec116/117 documents11 awaiting commit; protected/user dirty22 plus debug.log excluded"
+origin_relation: "verified HEAD=origin9839f2c and ahead/behind0/0 after approved transfer; this final documentation receipt is the only follow-up commit"
+working_tree: "approved task changes transferred; only protected/user dirty22 plus debug.log remain outside this final receipt"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC116_117_APPROVED_GIT_TRANSFER
+next_transition: FOUNDER_PG1_DIRECTION_ABSENCE_POLICY
 pending_product_decision: PG-1 direction-metadata absence policy, not selected
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: User explicitly approved code2 and documents11 transfer to the named GitHub branch; scope and protected baseline rechecked; transfer in progress; PG-1 unselected
+session_status: Spec116/117 transfer succeeded; protected/user23 hashes unchanged; spec117 local gates remain passed; PG-1 product policy unselected; no next implementation started
 commit_owner: Codex; exact spec116/117 code and documents only; exclude protected/user dirty22 and debug.log
 ```
 
 ## 최신 —117 완료 / PG-1 입력 표시 기준 선택 (2026-09-09)
+
+전송 완료: 코드bfd1e55/3c13334와 문서2662e40/9839f2c 일반push 성공(585f88b..9839f2c).
+HEAD=origin9839f2c·0/0,기존보호22+debug.log23개의SHA불변·예상밖dirty0 확인했다.
+이 최종 결과기록만 같은 허용문서로 한 번 전송한 뒤 Git으로 마친다. 추가 영수증커밋 루프0.
+현재 대기는 전송승인이 아니라 PG-1 입력표시정책이며 미선택이다. 아래전송대기/차단은과거이력.
 
 최신 사용자 `응 승인 다음 루틴진행해`는 직전 명시 질문의 코드bfd1e55/3c13334와 문서11개를
 https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio로 일반commit/push하는
