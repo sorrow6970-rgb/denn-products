@@ -1,5 +1,12 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 — spec105 push 완료 / 다음 조사 루틴 (2026-09-09)
+
+사용자 직전 전송범위 승인 및 큰 문제 없으면 계속 지시.77773db/bc1c240 push 성공, HEAD=origin bc1c240·0/0.
+동일7문서 최종기록만 commit/push 후 Git 확인한다. 이전 전송대기는 해소됐으며 다시 묻지 않는다.
+다음은 방향/EXIF 공식 근거와 불변 Blob 소비자 계약 조사부터다. 조사 스펙 MD 작성 후 범위를 고정한다.
+중요 제품 선택/권한/범위충돌이면 STOP; decoder/UI/실제사진/운영을 조사 없이 구현하지 않는다. 예약자동화0.
+
 ## 최신 — spec105 로컬 완료 / 정확범위 전송 승인 대기 (2026-09-09)
 
 105 DONE/CODEX_PASSED/LOCAL_VERIFIED(동일 Codex), 코드77773db.83/2924/292 PASS.

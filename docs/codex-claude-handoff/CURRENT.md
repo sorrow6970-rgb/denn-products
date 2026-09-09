@@ -1,5 +1,10 @@
 # 현재 상태
 
+> 최신2026-09-09: spec105 전송 승인 확인,77773db/bc1c240 일반push 성공. HEAD=origin bc1c240·0/0(최종기록 전).
+> READY_FOR_NEXT_SCOPED_UNIT / next CODEX_BACKGROUND_ORIENTATION_INVESTIGATION.105 DONE/CODEX_PASSED 유지.
+> 같은7문서 최종기록 commit/push 후 다음 조사 루틴. 중요한 결정/권한/충돌 외 반복 확인하지 않는다.
+> 기존 전송 대기는 해소. 실제사진/운영/설치/예약자동화0, 보호/별도dirty22 제외.
+
 > 최신2026-09-09: spec105 로컬 DONE/CODEX_PASSED(동일 Codex), 코드77773db.
 > WAITING_FOR_SCOPED_PUSH_APPROVAL / next USER_EXPLICIT_SPEC105_SCOPED_GITHUB_PUSH_APPROVAL.
 > targeted83/unit2924/Chromium292(56.1초), typecheck/format/lint/build/범위/hash/잔류/diff PASS.

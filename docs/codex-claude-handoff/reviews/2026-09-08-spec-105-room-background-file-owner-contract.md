@@ -1,5 +1,9 @@
 # Spec105 — bounded file owner 계약 검토
 
+최신 전송2026-09-09: 사용자 정확범위 전송 승인 후77773db/bc1c240 일반push 성공.
+HEAD=origin bc1c240·0/0 확인(같은7문서 최종기록 전). CODEX_PASSED 유지, 시험재실행/코드변경0.
+최종기록 commit/push 뒤 방향/EXIF 조사 루틴으로 진행. 아래 전송대기는 해소된 이력이다.
+
 ## 최신 구현 자체 검토 — 2026-09-09
 
 **CODEX_PASSED / LOCAL_VERIFIED**, 코드77773db. 동일 Codex의 구현 후 재검토이며 독립 에이전트 검증 아님.
