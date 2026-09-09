@@ -54,6 +54,20 @@ function run(command, args, env) {
 
 export function selectPlaywrightArgs(args) {
   if (Array.isArray(args) && args.length === 0) return ["test"];
+  for (const engine of ["firefox", "webkit", "chromium"]) {
+    if (Array.isArray(args) && args.length === 1 && args[0] === `--background-${engine}-only`) {
+      return [
+        "test",
+        "--config",
+        "tests/background-cross-engine.config.ts",
+        `--project=${engine}`,
+        "--workers=1",
+      ];
+    }
+  }
+  if (Array.isArray(args) && args.length === 1 && args[0] === "--background-cross-engine-only") {
+    return ["test", "--config", "tests/background-cross-engine.config.ts"];
+  }
   if (Array.isArray(args) && args.length === 1 && args[0] === "--background-lifecycle-only") {
     return [
       "test",

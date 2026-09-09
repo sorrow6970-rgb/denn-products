@@ -10,6 +10,35 @@ import { isDisposableStagingPath, selectPlaywrightArgs, STAGING_PREFIX } from ".
 const TEMP = resolve(tmpdir());
 
 describe("spec110 explicit E2E selection", () => {
+  it.each(["firefox", "webkit", "chromium"])("spec116 isolates %s with one worker", (engine) => {
+    const selector = `--background-${engine}-only`;
+    expect(selectPlaywrightArgs([selector])).toEqual([
+      "test",
+      "--config",
+      "tests/background-cross-engine.config.ts",
+      `--project=${engine}`,
+      "--workers=1",
+    ]);
+    expect(() => selectPlaywrightArgs([selector, "--timeout=60000"])).toThrow(
+      "Unsupported E2E selector",
+    );
+    expect(() => selectPlaywrightArgs([selector, "--project=other"])).toThrow(
+      "Unsupported E2E selector",
+    );
+  });
+  it("spec116 selects only the isolated cross-engine configuration", () => {
+    expect(selectPlaywrightArgs(["--background-cross-engine-only"])).toEqual([
+      "test",
+      "--config",
+      "tests/background-cross-engine.config.ts",
+    ]);
+    expect(() =>
+      selectPlaywrightArgs(["--background-cross-engine-only", "--background-lifecycle-only"]),
+    ).toThrow("Unsupported E2E selector");
+    expect(() =>
+      selectPlaywrightArgs(["--background-cross-engine-only", "--project=chromium"]),
+    ).toThrow("Unsupported E2E selector");
+  });
   it("spec115 selects only native lifecycle and ownership regressions", () => {
     expect(selectPlaywrightArgs(["--background-lifecycle-only"])).toEqual([
       "test",
