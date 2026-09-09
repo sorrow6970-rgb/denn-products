@@ -1,5 +1,13 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 —109 구현 완료 / 다음 native 결속시험 (2026-09-09)
+
+109 fecb8a4 CODEX_PASSED(동일 Codex),targeted259/unit3201/check·번들/보호SHA PASS.
+109문서7개일반전송후110의보호출력없는opt-in native시험계약을작성하고검토→구현→검증을계속한다.
+기본canonical실행은변경하지않으며무인자전체시험을일부시험으로바꾸지않는다.
+고정opt-in selector와시험분리를정확파일로계약화하고synthetic Blob만localhost에서읽는다.
+decode/회전/실제사진/UI/운영/설치0.동일승인재질문·단계완료로임의정지0. 아래구현미착수는과거이력이다.
+
 ## 최신 —109 계약 검토 완료 / P2 비연결 owner 구현 (2026-09-09)
 
 109 계약7841be0 일반push완료·HEAD=origin7841be0·0/0 확인(최종기록전).

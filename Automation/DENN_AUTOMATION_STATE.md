@@ -4,23 +4,29 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-108-background-orientation-container # DONE / CODEX_PASSED; same Codex self-review
+completed_unit: spec-109-background-evidence-owner # DONE / CODEX_PASSED; same Codex self-review
 active_unit: spec-109-background-evidence-owner
-state: READY_FOR_IMPLEMENTATION
+state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: abdc191
-candidate_commit: 7841be0 # contract only, not implementation
-verified_commit: 4cc4988   # same Codex self-review, not independent review
+candidate_commit: fecb8a4
+verified_commit: fecb8a4   # same Codex self-review, not independent review
 origin_relation: "spec109 contract7841be0 pushed; HEAD=origin7841be0 and0/0 checked before final record"
 working_tree: "same allowed final transfer documents only; after record protected/user dirty22 remain"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC109_P2_EVIDENCE_OWNER_IMPLEMENTATION
+next_transition: SPEC110_OPT_IN_NATIVE_EVIDENCE_VERIFICATION
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec109 CONTRACT_REVIEW_PASSED same Codex; implementation and runtime tests NOT STARTED
-commit_owner: Codex; spec109 documents7 only in this contract phase; exclude protected/user dirty22
+session_status: spec109 CODEX_PASSED; targeted259 and full3201 passed; continuing next scoped native test contract
+commit_owner: Codex; spec109 code3 and documents7 only; exclude protected/user dirty22
 ```
 
 ## 최신 —109 P2 결속 계약 검토 완료 (2026-09-09)
+
+구현완료 fecb8a4. targeted259/전체3201·check·번들3종SHA·보호22SHA·diff--check PASS.
+새93+기존회귀1=94추가. E2E실행0은계약범위이며native성공주장0. 다음보호출력없는native시험계약으로계속.
+
+사용자 `속행해`로 구현 루틴 진행. 정확3파일 구현, 초기targeted245 PASS. 전체검증/상한·실패검토 진행중.
+아래 코드미착수 문구는 계약단계 이력이며 실제 decoder/UI/운영 금지는 유지한다.
 
 계약7841be0 일반push완료(abdc191..7841be0),HEAD=origin7841be0·0/0 확인(최종기록전).
 같은허용문서의최종기록만1회commit/push후Git확인한다.구현PASS가아닌계약PASS·다음동일109 구현대기.
