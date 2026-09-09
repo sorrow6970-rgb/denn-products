@@ -14,11 +14,32 @@ export interface BackgroundPromiseTask {
   cancel(): void;
   release(): void;
 }
+export interface BackgroundSizeLease {
+  readonly width: number;
+  readonly height: number;
+  release(): void;
+}
+export interface BackgroundPromiseLeaseTask extends BackgroundPromiseTask {
+  takeLease(): BackgroundSizeLease | null;
+}
+interface Work<T extends BackgroundPromiseTask> {
+  getState(): ReturnType<ReturnType<typeof createRoomBackgroundWorkAdmission>["getState"]>;
+  start(start: unknown): Readonly<{ ok: false; code: Code } | { ok: true; task: T }>;
+  dispose(): void;
+}
 const nativeThen = Promise.prototype.then;
 const failure = (code: Code): Result => Object.freeze({ ok: false, code });
 
 /** Trusted Promise port only. Neither a decoder nor permission to use partial file evidence. */
 export function createRoomBackgroundPromiseWork() {
+  return makeWork(false);
+}
+export function createRoomBackgroundPromiseLeaseWork() {
+  return makeWork(true);
+}
+function makeWork(leaseMode: false): Work<BackgroundPromiseTask>;
+function makeWork(leaseMode: true): Work<BackgroundPromiseLeaseTask>;
+function makeWork(leaseMode: boolean): Work<BackgroundPromiseTask | BackgroundPromiseLeaseTask> {
   const admission = createRoomBackgroundWorkAdmission();
   let disposed = false;
   let currentStop: ((code: Code) => void) | null = null;
@@ -35,6 +56,7 @@ export function createRoomBackgroundPromiseWork() {
       const { ticket } = reserved;
       let cancelled = false,
         reported = false;
+      let size: { width: number; height: number } | null = null;
       let resolve!: (result: Result) => void;
       const result = new Promise<Result>((done) => {
         resolve = done;
@@ -49,6 +71,7 @@ export function createRoomBackgroundPromiseWork() {
       }
       function stop(code: Code) {
         cancelled = true;
+        size = null;
         report(failure(code));
         // Keep pending native work reserved even though its logical result is settled.
         ticket.release();
@@ -56,13 +79,48 @@ export function createRoomBackgroundPromiseWork() {
       }
       currentStop = stop;
       const cancel = () => stop("ROOM_BACKGROUND_WORK_CANCELLED");
-      const task: BackgroundPromiseTask = Object.freeze({ result, cancel, release: cancel });
+      function takeLease(): BackgroundSizeLease | null {
+        if (!reported || cancelled || disposed || admission.getState() !== "held" || !size)
+          return null;
+        const dimensions = size;
+        size = null;
+        return Object.freeze({ ...dimensions, release: cancel });
+      }
+      const task = leaseMode
+        ? Object.freeze({ result, cancel, release: cancel, takeLease })
+        : Object.freeze({ result, cancel, release: cancel });
       try {
         const pending: unknown = start();
         Reflect.apply(nativeThen, pending, [
           (resource: unknown) => {
             ticket.settle(resource);
             if (cancelled || disposed) return;
+            if (leaseMode && admission.getState() === "held") {
+              try {
+                const dimensions = resource as { width?: unknown; height?: unknown };
+                const width = dimensions.width;
+                if (cancelled || disposed) return;
+                const height = dimensions.height;
+                if (cancelled || disposed) return;
+                if (
+                  typeof width !== "number" ||
+                  typeof height !== "number" ||
+                  !Number.isSafeInteger(width) ||
+                  !Number.isSafeInteger(height) ||
+                  width < 1 ||
+                  height < 1 ||
+                  width > 1_000_000 ||
+                  height > 1_000_000
+                )
+                  throw new Error();
+                size = { width, height };
+              } catch {
+                ticket.release();
+                report(failure("ROOM_BACKGROUND_WORK_FAILED"));
+                detach();
+                return;
+              }
+            }
             if (admission.getState() === "held") report(Object.freeze({ ok: true }));
             else {
               report(failure("ROOM_BACKGROUND_WORK_FAILED"));

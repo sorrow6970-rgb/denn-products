@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { createRoomBackgroundPromiseWork as create } from "./promise-work";
+import {
+  createRoomBackgroundPromiseWork as create,
+  createRoomBackgroundPromiseLeaseWork,
+} from "./promise-work";
 function deferred() {
   let resolve!: (value: unknown) => void, reject!: (reason?: unknown) => void;
   const promise = new Promise<unknown>((yes, no) => {
@@ -202,5 +205,116 @@ describe("spec113 native Promise settlement bridge", () => {
     await t.result;
     t.release();
     expect(o.getState()).toBe("idle");
+  });
+});
+
+describe("spec114 opt-in dimension lease", () => {
+  function setup() {
+    const o = createRoomBackgroundPromiseLeaseWork(),
+      d = deferred();
+    const r = o.start(() => d.promise);
+    if (!r.ok) throw new Error("setup");
+    return { o, d, t: r.task };
+  }
+  it("keeps the original task shape and does not read dimensions", async () => {
+    const o = create(),
+      width = vi.fn(() => {
+        throw new Error();
+      });
+    const t = start(o, () =>
+      Promise.resolve(Object.defineProperty({ release() {} }, "width", { get: width })),
+    );
+    expect(Object.keys(t).sort()).toEqual(["cancel", "release", "result"]);
+    expect(await t.result).toEqual({ ok: true });
+    expect(width).not.toHaveBeenCalled();
+    t.release();
+  });
+  it("captures release before dimensions, takes a frozen lease exactly once", async () => {
+    const { o, d, t } = setup(),
+      order: string[] = [],
+      release = vi.fn();
+    expect(t.takeLease()).toBeNull();
+    d.resolve({
+      get release() {
+        order.push("release");
+        return release;
+      },
+      get width() {
+        order.push("width");
+        return 300;
+      },
+      get height() {
+        order.push("height");
+        return 200;
+      },
+    });
+    expect(await t.result).toEqual({ ok: true });
+    const lease = t.takeLease();
+    expect(order).toEqual(["release", "width", "height"]);
+    expect(lease).toEqual({ width: 300, height: 200, release: expect.any(Function) });
+    expect(Object.isFrozen(lease)).toBe(true);
+    expect(t.takeLease()).toBeNull();
+    lease?.release();
+    lease?.release();
+    t.release();
+    expect(release).toHaveBeenCalledTimes(1);
+    expect(o.getState()).toBe("idle");
+  });
+  for (const key of ["width", "height"] as const)
+    for (const value of [0, -1, 1.5, NaN, Infinity, 1_000_001, "3", undefined]) {
+      it(`rejects ${key}=${String(value)} and releases acquired ownership`, async () => {
+        const { o, d, t } = setup(),
+          release = vi.fn();
+        d.resolve({ width: 2, height: 3, release, [key]: value });
+        expect(await t.result).toEqual(failed("FAILED"));
+        expect(t.takeLease()).toBeNull();
+        expect(release).toHaveBeenCalledTimes(1);
+        expect(o.getState()).toBe("idle");
+      });
+    }
+  it("contains getter failure and preserves cleanup uncertainty", async () => {
+    const { o, d, t } = setup(),
+      release = vi.fn(() => {
+        throw new Error("private");
+      });
+    d.resolve({
+      release,
+      get width() {
+        throw new Error("private");
+      },
+    });
+    expect(await t.result).toEqual(failed("FAILED"));
+    expect(release).toHaveBeenCalledTimes(1);
+    expect(o.getState()).toBe("blocked");
+  });
+  for (const action of ["cancel", "dispose"] as const) {
+    it(`${action} in width getter prevents subsequent field reads and transfer`, async () => {
+      const { o, d, t } = setup(),
+        release = vi.fn(),
+        height = vi.fn(() => 3);
+      const resource = {
+        release,
+        get width() {
+          if (action === "cancel") t.cancel();
+          else o.dispose();
+          return 2;
+        },
+      };
+      Object.defineProperty(resource, "height", { get: height });
+      d.resolve(resource);
+      expect(await t.result).toEqual(failed(action === "cancel" ? "CANCELLED" : "DISPOSED"));
+      expect(height).not.toHaveBeenCalled();
+      expect(t.takeLease()).toBeNull();
+      expect(release).toHaveBeenCalledTimes(1);
+    });
+  }
+  it("invalidates an untaken successful lease on disposal", async () => {
+    const { o, d, t } = setup(),
+      release = vi.fn();
+    d.resolve({ width: 1, height: 1_000_000, release });
+    await t.result;
+    o.dispose();
+    expect(t.takeLease()).toBeNull();
+    expect(release).toHaveBeenCalledTimes(1);
   });
 });
