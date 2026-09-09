@@ -10,6 +10,19 @@ import { isDisposableStagingPath, selectPlaywrightArgs, STAGING_PREFIX } from ".
 const TEMP = resolve(tmpdir());
 
 describe("spec110 explicit E2E selection", () => {
+  it.each(["firefox", "webkit", "chromium"])("spec117 isolates capability %s", (engine) => {
+    const selector = `--background-capability-${engine}-only`;
+    expect(selectPlaywrightArgs([selector])).toEqual([
+      "test",
+      "--config",
+      "tests/background-png-capability.config.ts",
+      `--project=${engine}`,
+      "--workers=1",
+    ]);
+    expect(() => selectPlaywrightArgs([selector, "--timeout=60000"])).toThrow(
+      "Unsupported E2E selector",
+    );
+  });
   it.each(["firefox", "webkit", "chromium"])("spec116 isolates %s with one worker", (engine) => {
     const selector = `--background-${engine}-only`;
     expect(selectPlaywrightArgs([selector])).toEqual([

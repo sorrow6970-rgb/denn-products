@@ -1,5 +1,6 @@
 // Isolated spec105 byte checks. No image rendering or product entry imports.
 import { useState } from "react";
+import { createRoomBackgroundPngCapabilityProbe } from "../room-placement/background-png-capability";
 import { checkBackgroundNative } from "./background-native-check";
 import {
   createRoomBackgroundEvidenceJob,
@@ -50,6 +51,19 @@ function png(): Uint8Array<ArrayBuffer> {
 }
 
 async function check(mode: string): Promise<Record<string, unknown>> {
+  if (mode.startsWith("capability-")) {
+    const probe = createRoomBackgroundPngCapabilityProbe();
+    if (mode === "capability-dispose-before") probe.dispose();
+    const pending = probe.run();
+    const samePromise = pending === probe.run();
+    if (mode === "capability-dispose-pending") {
+      await Promise.resolve();
+      probe.dispose();
+    }
+    const result = await pending;
+    probe.dispose();
+    return { ...result, samePromise };
+  }
   if (mode.startsWith("native-")) return checkBackgroundNative(mode.slice(7));
   if (mode.startsWith("evidence-")) return checkEvidence(mode.slice(9));
   const bytes = mode === "png" ? png() : jpeg();
@@ -230,6 +244,9 @@ export function RoomBackgroundFileFixture() {
         "late",
         "read-error",
         "bad-result",
+        "capability-normal",
+        "capability-dispose-before",
+        "capability-dispose-pending",
         ...["jpeg", "png"].flatMap((format) =>
           ["1", "2", "3", "4", "5", "6", "7", "8", "no-profile", "no-tag"].map(
             (value) => `evidence-${format}:${value}`,
