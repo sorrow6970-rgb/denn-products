@@ -1,5 +1,17 @@
 # 현재 상태
 
+> 최신: 사용자 `응 승인해줘`로119묶음 및 향후승인스펙의고정GitHub/동일브랜치 일반전송 승인.
+> [지속전송범위](../handoff/2026-09-09-spec-119-background-absence-owner-handoff.md#지속-git-전송-승인).
+> 119전송·최종기록후합성native결속시험계약으로이어간다. 아래전송차단은과거이력,보호/운영금지유지.
+
+> 최종119 BLOCKED_TRANSFER: 코드08dc655 로컬검증PASS,문서7 commit/push가권한검사에서실행전거절.
+> HEAD08dc655/origin9429065·1/0,staged0. 새payload의고정GitHub/동일브랜치 외부전송권한필요.
+> 구현상문제/PG-1 제품결정대기아님. 보호23별도유지,우회/다음구현0. 아래계속계획은전송거절전이력.
+
+> 현재119 로컬 CODEX_PASSED: [계약](../rebuild/specs/119-background-absence-owner-contract.md),코드08dc655.
+> targeted258/check3394/기존Chromium46 PASS. 보호SHA동일·포트/temp정리,문서7 전송후다음native결속계약.
+> 새진입점의부재증거+snapshot쌍은decodeAllowed:false. 보호23/기본앱/실제사진/UI/운영불변.
+
 > 최종118 DONE/CODEX_PASSED(동일Codex): 코드d543d8d+문서a22e494 일반push 성공,HEAD=origin a22e494·0/0.
 > 보호23+번들3 SHA불변,정확코드2/문서8만 전송. 같은문서 최종결과1회 전송 후 Git확인으로 마친다.
 > 다음은118 부재증거+109 동일byte/Blob owner 결속 계약 검토. PG-1=A 및 전송 승인 대기는 해소됐다.

@@ -5,21 +5,40 @@ updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-118-background-metadata-absence # DONE / CODEX_PASSED; same Codex, isolated classifier only
-active_unit: spec-118-background-metadata-absence
-state: CODEX_PASSED
-baseline_commit: 8a10fe6
-candidate_commit: d543d8d
-verified_commit: d543d8d # same Codex self-review, not independent
-origin_relation: "approved push8a10fe6..a22e494 succeeded; HEAD=origin a22e494 and ahead/behind0/0 verified; this final receipt is the only follow-up"
-working_tree: "task transferred; protected/user22 plus debug.log23 unchanged; only approved final receipt pending"
+active_unit: spec-119-background-absence-owner
+state: CODEX_WORKING
+baseline_commit: 9429065
+candidate_commit: 08dc655
+verified_commit: 08dc655 # same Codex self-review
+origin_relation: "HEAD08dc655/origin9429065; ahead/behind1/0; docs7 commit/push rejected before execution; staged0"
+working_tree: "spec119 docs7 pending; protected/user22 plus debug.log23 unchanged"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: BACKGROUND_ABSENCE_SAME_BYTE_OWNER_CONTRACT_REVIEW
-pending_product_decision: NONE_FOR_SPEC118 # PG-1=A explicitly selected
+next_transition: SPEC119_APPROVED_TRANSFER_THEN_NATIVE_CONTRACT
+pending_product_decision: NONE_FOR_SPEC119 # PG-1=A unchanged
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: Spec118 DONE and transferred; protected23 and bundles3 hashes unchanged; record final receipt once then Git verify; no next implementation started
-commit_owner: Codex; spec118 exact code2/docs8 only; exclude protected/user22 and debug.log
+session_status: User explicitly approved spec119 payload and continuing approved-spec transfer to fixed GitHub branch; protected/scope checks passed; transfer in progress
+git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
+commit_owner: Codex; spec119 exact code2/docs7 only; exclude protected/user22 and debug.log
 ```
+
+## 최신 —119 동일byte 부재증거 owner 로컬검증 완료
+
+최신 직접승인: `응 승인해줘`는 직전 질문의119묶음과향후승인된스펙의고정목적지 지속전송 승인이다.
+[지속범위 정본기록](../docs/handoff/2026-09-09-spec-119-background-absence-owner-handoff.md#지속-git-전송-승인).
+아래전송차단은승인전이력. 범위확인→일반전송→최종결과1회기록후다음허용계약으로이어간다.
+
+최종 전송 STOP: 권한검사는 루틴 계속 지시와 새 내부문서 payload 전송 승인을 구분하여
+문서7 commit/push를 실행 전에 거절했다. HEAD08dc655/origin9429065·1/0,staged0.
+필요범위: 코드08dc655+119 spec/review/handoff/STATE/NEXT/CURRENT/live 7문서 및 최종결과를
+기존 https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio로 일반전송.
+재시도/분할우회/다음구현0. PG-1=A와로컬검증은유효. 기존118전송승인을새119에확대하지않는다.
+
+사용자 `응 루틴 끊지말고`로 다음계약·구현·검증을재개했다. 118최종9429065 원격동기화완료.
+[119 계약](../docs/rebuild/specs/119-background-absence-owner-contract.md) 자체검토 후 코드2/문서7만.
+105/109 API 그대로,새factory만118검사→같은view snapshot→쌍take1회. decodeAllowed:false 유지.
+targeted258/check3394/기존Chromium46회귀 PASS. 코드08dc655 자체검수통과,문서7 전송후종료기록한다.
+보호23/번들3SHA동일,포트/자기temp정리확인. 아래118전송포인터는완료이력이다.
 
 ## 최종 —118 DONE /전송 완료 (2026-09-09)
 

@@ -1,5 +1,36 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 —119 전송 및 승인된 스펙의 지속 Git 전송 승인
+
+사용자 `응 승인해줘`로119 코드08dc655/문서7과향후승인된스펙의코드·테스트·계약·검증·상태문서
+일반commit/push를 기존 https://github.com/sorrow6970-rgb/denn-products.git /rebuild/modern-studio에 승인.
+보호파일·개인정보·secret·운영데이터·배포 제외,새목적지/force/merge/rebase권한0.
+119 handoff의「지속 Git 전송 승인」을보존한다. 같은고정범위전송을매번재질문하지않는다.
+새스펙코드는항상정확계약·검수후시작한다. 새제품정책/실제운영권한을이승인으로만들지않는다.
+119문서7 전송·최종결과동기화1회후새119경로의합성native결속시험계약으로이어간다.
+아래BLOCKED_TRANSFER는해소된이력. 실제새권한실패가나면우회하지않는다.
+
+## 최종 실행 포인터 —119 로컬완료 /외부전송 권한 차단
+
+코드08dc655는로컬 CODEX_PASSED,check3394/targeted258/기존Chromium46 PASS.
+권한검사가새119문서7개 commit/push를 실행전거절. HEAD08dc655/origin9429065·1/0,staged0.
+필요한 승인: 코드08dc655와119 spec/review/handoff/STATE/NEXT/CURRENT/live 7문서 및최종결과의
+https://github.com/sorrow6970-rgb/denn-products.git /rebuild/modern-studio 일반전송.
+승인전재시도/분할우회/간접전송/다음구현0. 같은PG-1 제품정책을재질문하지않는다.
+고정저장소의향후승인된스펙 code/test/계약·검증·상태문서 지속전송권한도사용자에게명확히물었으나
+아직승인됐다고기록하지않는다. 보호/개인정보/운영데이터/secret/새목적지/배포는허용대상아니다.
+직접답변후정확승인범위를기록→scope/보호SHA/Git확인→일반전송→같은문서최종결과1회→Git확인.
+아래전송후계속계획은권한거절전포인터다.
+
+## 현재 —119 로컬검증 완료 /전송후 native결속 계약
+
+docs/rebuild/specs/119-background-absence-owner-contract.md 및119 review/handoff를읽는다.
+사용자 `응 루틴 끊지말고`로 계약자체검토→코드2구현→targeted258 PASS까지진행했다.
+check3394/기존Chromium46회귀/보호SHA/exactscope PASS,코드08dc655 자체검수 CODEX_PASSED.
+문서7 일반전송·결과동기화후119factory합성native결속시험계약을검토한다. PG-1 재질문0.
+118전송은9429065로완료했으며 아래전송배치재실행0. 허용코드2/문서7외변경0.
+새119 native경로·실제사진·UI·운영·예약자동화0. 실재하는새결정/권한/충돌에만STOP.
+
 ## 최종 실행 포인터 —118 DONE /다음은 동일byte owner 계약 검토
 
 코드d543d8d+문서a22e494 일반전송 완료. HEAD=origin a22e494·0/0 확인했다.
