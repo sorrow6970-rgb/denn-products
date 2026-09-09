@@ -1,5 +1,8 @@
 # 현재 상태
 
+> 최신110 67dadeb DONE/CODEX_PASSED. unit3211/targetedChromium34 PASS,보호PNG불변·포트/temp0.
+> [110 handoff](../handoff/2026-09-09-spec-110-background-evidence-native-handoff.md). 다음native픽셀검증계약으로계속.
+
 > 최신109 fecb8a4 DONE/CODEX_PASSED,259 targeted/3201unit·전체check·번들SHA·보호22 PASS.
 > 다음110 보호출력없는opt-in native결속시험계약→구현→검증으로계속. 실제decoder/UI/운영금지유지.
 

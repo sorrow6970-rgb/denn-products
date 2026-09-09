@@ -1,5 +1,12 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 —110 완료 / native 픽셀방향 검증으로 (2026-09-09)
+
+110 67dadeb CODEX_PASSED,selector14/unit3211/targetedChromium34·번들/보호SHA PASS. 전체E2E아님.
+110문서전송후111계약을먼저작성한다:합성비대칭8방향이미지의native처리·치수·모서리위치관찰.
+공식HTML근거와지원환경/PNG의미를분리,실제사진허가·제품decoder/UI구현으로확대0.
+로컬기설치브라우저·합성자산만,보호출력0·설치/실제서비스/운영/자동화0.같은승인재질문없이루틴계속.
+
 ## 최신 —109 구현 완료 / 다음 native 결속시험 (2026-09-09)
 
 109 fecb8a4 CODEX_PASSED(동일 Codex),targeted259/unit3201/check·번들/보호SHA PASS.

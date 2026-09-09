@@ -4,21 +4,27 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-109-background-evidence-owner # DONE / CODEX_PASSED; same Codex self-review
-active_unit: spec-109-background-evidence-owner
+completed_unit: spec-110-background-evidence-native # DONE / CODEX_PASSED; same Codex self-review
+active_unit: spec-110-background-evidence-native
 state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: abdc191
-candidate_commit: fecb8a4
-verified_commit: fecb8a4   # same Codex self-review, not independent review
-origin_relation: "spec109 contract7841be0 pushed; HEAD=origin7841be0 and0/0 checked before final record"
-working_tree: "same allowed final transfer documents only; after record protected/user dirty22 remain"
+baseline_commit: 5357bb3
+candidate_commit: 67dadeb
+verified_commit: 67dadeb   # same Codex self-review, not independent review
+origin_relation: "spec109 fecb8a4/5357bb3 pushed; spec110 code67dadeb local; docs pending"
+working_tree: "spec110 documents7 only; protected/user dirty22 excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC110_OPT_IN_NATIVE_EVIDENCE_VERIFICATION
+next_transition: SPEC111_NATIVE_ORIENTATION_PIXEL_PROOF_CONTRACT
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec109 CODEX_PASSED; targeted259 and full3201 passed; continuing next scoped native test contract
-commit_owner: Codex; spec109 code3 and documents7 only; exclude protected/user dirty22
+session_status: spec110 CODEX_PASSED; unit3211 targetedChromium34 passed; continue native pixel contract
+commit_owner: Codex; spec110 code4 and documents7 only; exclude protected/user dirty22
 ```
+
+## 최신 —110 native 결속시험 완료 (2026-09-09)
+
+109 fecb8a4/5357bb3 push완료.110 code67dadeb,selector14/check3211/targetedChromium34(4.9초)PASS.
+기본전체명령유지·고정opt-in2시험파일만실행.고객JS/CSS·adminJS/보호22SHA불변,PNG출력0·포트/temp잔류0.
+다음native픽셀방향조사·검증계약으로계속.실제사진/decoder제품/UI/운영허가0.상세110review/handoff.
 
 ## 최신 —109 P2 결속 계약 검토 완료 (2026-09-09)
 
