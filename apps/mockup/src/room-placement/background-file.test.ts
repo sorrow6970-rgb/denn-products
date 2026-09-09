@@ -48,6 +48,33 @@ afterEach(() => {
 });
 
 describe("spec105 bounded file ownership without decoding", () => {
+  it("keeps the original API on preflight only even with unknown APP1", async () => {
+    vi.resetModules();
+    const inputModule = await import("./background-input");
+    const profileModule = await import("./background-container");
+    const old = vi.spyOn(inputModule, "inspectRoomBackgroundInput");
+    const profile = vi.spyOn(profileModule, "inspectRoomBackgroundContainer");
+    const module = await import("./background-file");
+    const base = jpeg();
+    const bytes = new Uint8Array([255, 216, 255, 225, 0, 3, 88, ...base.subarray(2)]);
+    const reader = new Reader();
+    reader.result = bytes.buffer;
+    const made = module.createRoomBackgroundFileJob(request(new Blob([bytes])), {
+      createReader: () => reader,
+    });
+    if (!made.ok) throw new Error("setup");
+    const pending = made.job.run();
+    reader.onload?.();
+    const result = await pending;
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(Object.keys(result).sort()).toEqual(["lease", "ok", "preflight"]);
+      expect(result.lease.takeBlob()).toBeInstanceOf(Blob);
+      expect(result.lease.takeBlob()).toBeNull();
+    }
+    expect(old).toHaveBeenCalledTimes(1);
+    expect(profile).not.toHaveBeenCalled();
+  });
   it.each(["png", "animation", "crc", "pixels"])("preserves %s preflight outcome", async (mode) => {
     const chunk = (type: string, data: number[]) => {
       const body = [...Array.from(type, (c) => c.charCodeAt(0)), ...data];

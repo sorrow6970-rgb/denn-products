@@ -3,6 +3,10 @@ import {
   type BackgroundInputResult,
   inspectRoomBackgroundInput,
 } from "./background-input";
+import {
+  type BackgroundContainerResult,
+  inspectRoomBackgroundContainer,
+} from "./background-container";
 
 export type BackgroundFileCode =
   | BackgroundInputCode
@@ -30,6 +34,24 @@ export interface BackgroundFileJob {
   cancel(): void;
   dispose(): void;
 }
+export type BackgroundEvidence = Extract<BackgroundContainerResult, { ok: true }>;
+export type BackgroundEvidenceCode =
+  | BackgroundFileCode
+  | Extract<BackgroundContainerResult, { ok: false }>["code"];
+export interface BackgroundEvidenceLease {
+  take(): Readonly<{ blob: Blob; evidence: BackgroundEvidence }> | null;
+  release(): void;
+}
+export type BackgroundEvidenceRunResult =
+  | Readonly<{ ok: false; code: BackgroundEvidenceCode }>
+  | Readonly<{ ok: true; lease: BackgroundEvidenceLease }>;
+export interface BackgroundEvidenceJob {
+  run(): Promise<BackgroundEvidenceRunResult>;
+  cancel(): void;
+  dispose(): void;
+}
+type RunResult = BackgroundFileRunResult | BackgroundEvidenceRunResult;
+type InternalJob = Omit<BackgroundFileJob, "run"> & { run(): Promise<RunResult> };
 export interface BackgroundFileReaderPort {
   readonly result: unknown;
   readonly readyState: number;
@@ -48,7 +70,8 @@ const blobSlice = NativeBlob?.prototype.slice;
 const bufferSize = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength")?.get;
 const resizable = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "resizable")?.get;
 const handlers = ["onload", "onerror", "onabort", "onloadend"] as const;
-const failure = (code: BackgroundFileCode): Failure => Object.freeze({ ok: false, code });
+const failure = <Code extends BackgroundEvidenceCode>(code: Code) =>
+  Object.freeze({ ok: false, code });
 const record = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
 
@@ -57,6 +80,32 @@ export function createRoomBackgroundFileJob(
   request: unknown,
   environment?: unknown,
 ): Failure | Readonly<{ ok: true; job: BackgroundFileJob }> {
+  return createFactory(request, environment, false);
+}
+
+/** Same-byte partial evidence and immutable snapshot; no decoding or display permission. */
+export function createRoomBackgroundEvidenceJob(
+  request: unknown,
+  environment?: unknown,
+): Failure | Readonly<{ ok: true; job: BackgroundEvidenceJob }> {
+  return createFactory(request, environment, true);
+}
+
+function createFactory(
+  request: unknown,
+  environment: unknown,
+  evidenceMode: false,
+): Failure | Readonly<{ ok: true; job: BackgroundFileJob }>;
+function createFactory(
+  request: unknown,
+  environment: unknown,
+  evidenceMode: true,
+): Failure | Readonly<{ ok: true; job: BackgroundEvidenceJob }>;
+function createFactory(
+  request: unknown,
+  environment: unknown,
+  evidenceMode: boolean,
+): Failure | Readonly<{ ok: true; job: InternalJob }> {
   try {
     if (!record(request)) return failure("ROOM_BACKGROUND_FILE_INVALID_INPUT");
     const file = request.file;
@@ -96,7 +145,7 @@ export function createRoomBackgroundFileJob(
     }
     return Object.freeze({
       ok: true,
-      job: createJob(file as unknown as Blob, size, maxEdge, makeReader),
+      job: createJob(file as unknown as Blob, size, maxEdge, makeReader, evidenceMode),
     });
   } catch {
     return failure("ROOM_BACKGROUND_FILE_INVALID_INPUT");
@@ -108,7 +157,8 @@ function createJob(
   size: number,
   maxEdge: number,
   initialFactory: () => unknown,
-): BackgroundFileJob {
+  evidenceMode: boolean,
+): InternalJob {
   let source: Blob | null = initialFile;
   let makeReader: (() => unknown) | null = initialFactory;
   let reader: BackgroundFileReaderPort | null = null;
@@ -120,10 +170,11 @@ function createJob(
   let candidate: "load" | "error" | null = null;
   let eventConsumed = false;
   let owned: Blob | null = null;
-  let promise: Promise<BackgroundFileRunResult> | null = null;
-  let resolve: ((result: BackgroundFileRunResult) => void) | null = null;
+  let joint: Readonly<{ blob: Blob; evidence: BackgroundEvidence }> | null = null;
+  let promise: Promise<RunResult> | null = null;
+  let resolve: ((result: RunResult) => void) | null = null;
 
-  function ensurePromise(): Promise<BackgroundFileRunResult> {
+  function ensurePromise(): Promise<RunResult> {
     if (!promise)
       promise = new Promise((done) => {
         resolve = done;
@@ -157,7 +208,7 @@ function createJob(
       }
     }
   }
-  function finish(result: BackgroundFileRunResult, stop = false): void {
+  function finish(result: RunResult, stop = false): void {
     if (terminal) return;
     ensurePromise();
     terminal = true;
@@ -198,7 +249,9 @@ function createJob(
         finish(failure("ROOM_BACKGROUND_FILE_LENGTH_MISMATCH"));
         return;
       }
-      const preflight = inspectRoomBackgroundInput({ bytes, budget: { maxEdge } });
+      const preflight = evidenceMode
+        ? inspectRoomBackgroundContainer({ bytes, budget: { maxEdge } })
+        : inspectRoomBackgroundInput({ bytes, budget: { maxEdge } });
       if (!preflight.ok) {
         finish(preflight);
         return;
@@ -210,6 +263,22 @@ function createJob(
       if (!blobSize || Reflect.apply(blobSize, owned, []) !== size) {
         owned = null;
         rejectRead();
+        return;
+      }
+      if (preflight.kind === "container-orientation-evidence") {
+        joint = Object.freeze({ blob: owned, evidence: preflight });
+        owned = null;
+        const lease: BackgroundEvidenceLease = Object.freeze({
+          take() {
+            const value = joint;
+            joint = null;
+            return value;
+          },
+          release() {
+            joint = null;
+          },
+        });
+        finish(Object.freeze({ ok: true, lease }));
         return;
       }
       const lease: BackgroundFileLease = Object.freeze({
@@ -225,6 +294,7 @@ function createJob(
       finish(Object.freeze({ ok: true, preflight, lease }));
     } catch {
       owned = null;
+      joint = null;
       rejectRead();
     }
   }
@@ -296,6 +366,7 @@ function createJob(
   }
   function cancel(code: "ROOM_BACKGROUND_FILE_CANCELLED" | "ROOM_BACKGROUND_FILE_DISPOSED"): void {
     owned = null;
+    joint = null;
     finish(failure(code), true);
   }
   return Object.freeze({
