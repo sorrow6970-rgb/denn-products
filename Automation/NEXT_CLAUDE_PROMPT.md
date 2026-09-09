@@ -1,5 +1,83 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 —정확 Git 전송 승인 해소 / 실행 중
+
+사용자 `응 승인 다음 루틴진행해`로 코드2커밋+문서11개 및 같은문서 최종결과를 기존
+https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio로 일반전송 승인.
+정확범위/보호SHA 확인→문서분리commit/push→같은문서 최종Git결과 동기화만 수행한다.
+PG-1 입력정책은별도미선택이므로 표시허가/118제품구현은 시작하지 않는다.
+아래 전송승인대기는 해소된 이력이다. 같은 전송질문 반복0,운영/배포/자동화0.
+
+## 최종 —117 로컬 검증 완료, 정확 Git 전송 승인 대기
+
+문서commit/push명령이권한검사에서실행전거절됐다. HEAD3c13334/origin585f88b·2/0,staged0.
+로컬code bfd1e55/3c13334와116/117문서11개만정확전송대상. 목적지는
+https://github.com/sorrow6970-rgb/denn-products.git 의기존rebuild/modern-studio다.
+사용자의해당payload/destination전송승인전재시도/명령분할우회/간접push0.
+승인후보호SHA/scope/Git관계재확인→문서일반commit/push→같은문서최종결과기록으로마무리한다.
+PG-1은별도미결정. 사진표시정책/다음제품구현은답변전0. 아래전송계획은실행전거절된계획이다.
+
+## 최신 —117 완료, PG-1 Founder 입력 정책 대기 (2026-09-09)
+
+117 spec/review/handoff 최종결과를읽는다. 코드3c13334,check3313/새3엔진E2E9/targeted38 PASS.
+116코드bfd1e55는조사완료지만232/14지원불일치는유지한다. 시험실패를skip/완화하지않는다.
+방향metadata부재파일을저장된픽셀방향으로표시할지(PG-1)아직미결정이다. review의A/B참조.
+답변전에실사진허가/새표시코드/118구현을시작하지않는다. 이미질문했으니중복승인질문0.
+PG-1답변이오면직접선택내용만결정정본에기록하고후속정확계약을작성·자체검토한다.
+recognizedExif부재=전체metadata부재로추정0,unknown/충돌/손상·의미미검증PNG eXIf거부유지.
+117probe 성공은사진허가가아니며109의PARTIAL/decodeAllowed:false는그대로다.
+현재마무리는정확116/117문서11개일반전송·Git확인까지. 보호22/debug.log/운영/자동화0.
+아래작업중/116무조건정지포인터는과거이력이다.
+
+## 현재 —117 기능 관찰 검증 중 (2026-09-09)
+
+116원래완료기준의조사/지원구별을재검토해조사종료,232/14지원게이트NOT MET는보존했다.
+117spec의정확비연결probe 구현·새3엔진E2E9 PASS,기존fixture회귀와최종검수진행중.
+같은Codex 자체검토이며실제사진허가/UA보정/새운영연결아님.117결과는항상decodeAllowed:false.
+기존116실패를117PASS로덮지말고두장부를구별한다. 보호22/debug.log 제외·예약자동화0.
+아래116무조건후속금지는조사종료기준을재검토하기전이력이다.
+
+## 현재 —116 재검증 결과 / 다음 안전 계약 검토 (2026-09-09)
+
+116 spec/review/handoff의 최신 단독 검증 결과를 읽는다. Firefox82/Chromium82 PASS,
+WebKit68pass/14fail(모두PNG방향2..8×shape2),check3295 PASS. 전체246PASS/116DONE이 아니다.
+프로세스/관련 포트/확인한 자기 temp 정리완료,보호22/번들3SHA 동일,stage/commit/push0.
+더 이상 Firefox 시작 실패로 같은 시험을 맹목 재실행하거나 동일 다운로드 승인을 묻지 않는다.
+
+다음 안전 작업은 읽기 전용 계약 검토다:111의PNG합성 입력과106공식근거,108부분검사,
+109불변byte/Blob,114port의PARTIAL/decodeAllowed:false 경계를 대조한다. PNG metadata 의미와
+native from-image 지원차이를 구별하고,기존RG-3 검증불가 거부를 유지한 안전 capability 판정 후보를
+검토한다. 새로운 회전 보정/UA별 예외/형식 지원 축소·확대는 승인된 것처럼 만들지 않는다.
+실패를 PASS로 치거나 단언/timeout/fixture를 바꾸지 않는다. 별도 제품 코드 변경은 정확 계약 없이는0.
+필수게이트 차단 유지·다음 구현/commit/push0; 실제로 새 제품 선택이 필요할 때만 근거와 함께 질문한다.
+이번은 자동화가 아닌 수동 재개 포인터다. 아래 실행 중/권한대기 문구는 과거 이력이다.
+
+## 이전 —116 단독 엔진 검증 재개 (2026-09-09)
+
+사용자가 잠깐 느려졌음을 확인하고 재시도를 요청했다.116 재개 진단 계약에 따라
+--background-firefox-only → --background-webkit-only → --background-chromium-only를
+각각 종료 확인 후 실행한다. 고정 worker1이며 기존 단언/timeout/retry는 유지한다.
+Firefox 잔류/관련 listener0 및 selector unit20 PASS 확인. 최종 결과는116 review/handoff에 기록한다.
+과거 중단/실패를 삭제하거나 전체 PASS로 덮지 않는다. 제품/운영/추가 다운로드/자동화0.
+같은 조회/다운로드 권한 재질문0. 아래 이전 상태는 과거 이력이다.
+
+## 현재 —116 BLOCKED_VERIFICATION / Firefox 진단 (2026-09-09)
+
+다운로드는 완료했다.116 spec/review/handoff를 읽는다. check3292 PASS지만 예상246시험 미완료.
+WebKit PNG2..8×shape2=14실패. Firefox 결과 지연으로 자기 session을 중단했고 프로세스 조회는
+Access denied였다. 포트0·자기 temp정리완료,잔류프로세스UNCONFIRMED.코드3+문서8 unstaged.
+stage/commit/push/다음구현0. 다음은 권한 있는 Firefox 로컬 프로세스 진단/정리 확인이다.
+같은 다운로드 승인 재질문/무조건 재시도/타 프로세스 종료/기대값 완화/제품허용 변경0.
+기존115 DONE은 유지. 아래 실행 중/계속 지시는 중단 이전 이력이다.
+
+## 현재 —116 교차 엔진 검증 (2026-09-09)
+
+Founder `응 허용`으로 Firefox/WebKit 다운로드 질문 해소.116 spec과 다운로드 결정 정본을 읽는다.
+공식 캐시 다운로드 성공·check3292 PASS,고정 opt-in246건 실행 결과를 엔진별 검토한다.
+기존 단언/기대값/timeout을 완화하지 않는다. 제품 지원정책은 임의 변경하지 않는다.
+같은 다운로드 승인 재질문0. 보호22/debug.log 및 운영/실사진/OS설정 변경 금지는 유지한다.
+아래 미승인/부재는 승인 전 이력이다.
+
 ## 현재 —115 완료 / 다음 교차 엔진 검증의 다운로드 권한 (2026-09-09)
 
 115 bdcf18c/35477e9 전송 및 HEAD=origin35477e9·0/0 확인 완료. 아래 완료분 전송 예정은 해소된 이력.

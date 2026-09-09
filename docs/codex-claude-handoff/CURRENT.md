@@ -1,5 +1,43 @@
 # 현재 상태
 
+> 최신: 사용자가 정확 코드2커밋+문서11개의 기존GitHub브랜치 전송을 승인했다. CODEX_WORKING(전송).
+> 아래 전송차단은 해소된 이력. PG-1 입력표시정책은 별도미선택,실제사진/운영연결0 유지.
+
+> 최종BLOCKED(전송권한).117로컬검증CODEX_PASSED,문서commit/push는실행전권한검사거절.
+> HEAD3c13334/origin585f88b·2/0,staged0,문서11개미커밋. 정확GitHub목적지/묶음승인전우회0.
+> PG-1제품선택도별도미결정. 구현검증완료와원격전송완료를구별한다. 아래전송예정은차단전계획이다.
+
+> 최신117 DONE/CODEX_PASSED(동일Codex,비연결probe만). 코드3c13334,check3313·targeted38·새E2E9 PASS.
+> 116은조사종료/지원232PASS14FAIL 유지(코드bfd1e55). 기존회귀추가실패0,사진허가0.
+> 상태FOUNDER_DECISION_REQUIRED / 다음PG-1(metadata부재파일표시기준). 질문제시·아직미선택.
+> 보호22/번들3SHA불변·포트/프로세스/temp정리확인. 정확문서11개전송확인후제품선택대기.
+> 전체리빌드는배경입력/수명/브라우저기능관찰까지진행;실사진·룸UI통합·운영전환은미완료.
+> [117 검토·선택지](reviews/2026-09-09-spec-117-background-png-capability-review.md). 아래는과거이력이다.
+
+> 현재117 CODEX_WORKING. 116은 INVESTIGATION_REVIEW_PASSED(조사만),native지원232/14 NOT MET유지.
+> 고정 PNG 기능probe 구현·새E2E9 PASS,기존회귀/최종검수중. 제품사진허가0,decodeAllowed:false.
+> [117 계약](../rebuild/specs/117-background-png-capability-probe.md). 아래116정지는재검토전이력이다.
+
+> 최신116 BLOCKED_VERIFICATION: 단독 실행246건 완료,232pass/14fail. Firefox82/Chromium82 PASS,
+> WebKit68pass/14fail(PNG방향2..8×shape2). timeout0,check3295 PASS. 전체교차엔진 PASS 아님.
+> 보호22/번들3SHA 불변·프로세스/포트/자기temp 정리 확인. HEAD=origin585f88b·0/0(추적 ref),전송0.
+> 다음은 WebKit PNG 방향 안전 처리 계약의 읽기 전용 검토. 제품 지원 변경/자동 보정은 미승인.
+> 전체 리빌드는 배경 읽기·수명 관리에서 교차 엔진 검증까지 진행;실사진/룸 UI 통합·운영전환은 남아 있다.
+> [최종 실측](reviews/2026-09-09-spec-116-background-cross-engine-review.md). 아래 실행 중은 이전 이력이다.
+
+> 현재116 CODEX_WORKING. 사용자 일시적 PC 지연 확인 후 엔진별 worker1 재검증 재개.
+> 재개 전 Firefox 잔류0·관련 포트0,고정 selector unit20 PASS. 아직 교차 엔진 PASS 아님.
+> 과거 실패/중단은 유지하며 조회 권한 대기는 해소됐다. 아래는 이전 이력이다.
+
+> 현재116 BLOCKED_VERIFICATION. 다운로드 완료/check3292 PASS,교차엔진246건 미완료.
+> WebKit PNG14실패,Firefox 결과지연·프로세스조회 Access denied.자기실행중단exit1,포트/temp정리 확인.
+> [116 handoff](../handoff/2026-09-09-spec-116-background-cross-engine-handoff.md). HEAD=origin585f88b·0/0,stage/commit/push0.
+> 다음 Firefox 프로세스 진단 권한이 필요하다. 다운로드 승인은 이미 해소됐다.
+
+> 현재116 CODEX_WORKING. Founder 승인으로 Firefox1532/WebKit2311 다운로드 완료.
+> 기본 설정 유지한 opt-in 교차 엔진 config/selector 구현·check3292 PASS,246건 실행 중.
+> 다운로드 승인 차단은 해소됐으며 다음은 결과 검토다. 아래115 대기는 과거 이력이다.
+
 > 115 bdcf18c/35477e9 일반push, HEAD=origin35477e9·ahead/behind0/0 확인(최종 기록 전).
 > 완료분 전송 대기 없음. 다음 Firefox/WebKit 캐시 다운로드 권한은 미승인 상태 그대로다.
 

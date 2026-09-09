@@ -4,23 +4,77 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-115-background-native-lifecycle-verification # DONE / CODEX_PASSED; same Codex self-review
-active_unit: room-background-cross-engine-verification
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 32924f2
-candidate_commit: bdcf18c
-verified_commit: bdcf18c   # same Codex self-review, not independent review
-origin_relation: "115 bdcf18c/35477e9 pushed; HEAD=origin35477e9 and0/0 verified before this final record"
-working_tree: "payload transfer done; protected/user dirty22 plus debug.log excluded; only this same-scope final record follows"
+completed_unit: spec-117-background-png-capability-probe # DONE / CODEX_PASSED; same Codex, isolated probe only
+active_unit: spec-117-completion-transfer
+state: CODEX_WORKING
+baseline_commit: 585f88b
+candidate_commit: 3c13334
+verified_commit: 3c13334   # same Codex self-review, not independent review
+origin_relation: "HEAD3c13334, origin585f88b, ahead/behind2/0; docs commit/push rejected before execution; staged0"
+working_tree: "spec116/117 documents11 awaiting commit; protected/user dirty22 plus debug.log excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: PLAYWRIGHT_FIREFOX_WEBKIT_DOWNLOAD_PERMISSION
+next_transition: SPEC116_117_APPROVED_GIT_TRANSFER
+pending_product_decision: PG-1 direction-metadata absence policy, not selected
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec115 CODEX_PASSED; check3291 and targeted Chromium46 passed; next engines absent and downloads not authorized
-commit_owner: Codex; spec115 code5 and documents7 only; exclude protected/user dirty22 and debug.log
+session_status: User explicitly approved code2 and documents11 transfer to the named GitHub branch; scope and protected baseline rechecked; transfer in progress; PG-1 unselected
+commit_owner: Codex; exact spec116/117 code and documents only; exclude protected/user dirty22 and debug.log
 ```
 
-## 현재 —115 완료 / 다음 검증 환경 권한 필요 (2026-09-09)
+## 최신 —117 완료 / PG-1 입력 표시 기준 선택 (2026-09-09)
+
+최신 사용자 `응 승인 다음 루틴진행해`는 직전 명시 질문의 코드bfd1e55/3c13334와 문서11개를
+https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio로 일반commit/push하는
+전송 승인이다. 같은 문서의 승인·전송결과 동기화까지 처리한다. PG-1=A/B 선택은 포함하지 않는다.
+아래 권한차단은 승인 전 이력이며 이번 승인으로 해소됐다. 보호22+debug.log=23파일의 시작SHA를
+읽기전용으로 기록하고 stage 제외한다. 실제 전송 결과는 완료 후 갱신한다.
+
+최종전송BLOCKED:권한검사가문서2커밋+push복합명령을실행전에거절했다. 문서11개미커밋,staged0,
+로컬code bfd1e55/3c13334만있다. HEAD3c13334/origin585f88b·2/0. 요청대상은정확11문서와
+위코드2커밋을 https://github.com/sorrow6970-rgb/denn-products.git 의rebuild/modern-studio로
+일반전송하는것이다. 내부프로젝트문서외부전송에대한구체승인없다는거절이며우회/재시도0.
+승인전코드검증완료를원격완료로표기하지않는다. PG-1은별도미결정이며실제사진허가0.
+
+116은조사만INVESTIGATION_REVIEW_PASSED,지원게이트232/14 NOT MET유지.117CODEX_PASSED는
+검사기의분류/수명동작검증이다. 항상decodeAllowed:false,고객사진허가/제품지원확정아님.
+코드bfd1e55/3c13334분리커밋,check3313·targeted38·새E2E9 PASS,기존회귀추가실패0.
+보호22/번들3SHA불변,포트/프로세스0,temp6부재. 문서11개범위만일반전송후Git확인한다.
+다음은PG-1:metadata부재파일을저장된픽셀방향으로표시할지A/B. 미결정이며후속표시구현0.
+예약자동화0,기존운영/사진접근권한확대0. 아래116/117작업중은과거이력이다.
+
+## 현재 —116 단독 검증 완료 / WebKit PNG 방향 차단 (2026-09-09)
+
+고정 엔진별 worker1: Firefox82/82(exit0,2.0m),WebKit68pass/14fail(exit1,30.1s),
+Chromium82/82(exit0,11.5s). 합계232pass+14fail=246건. timeout0,병렬 실행 안정성 증명은 아님.
+실패14=PNG방향2..8×rectangle/square이며 기존 단언을 유지해 재현했다. 전체 PASS/116 DONE 아님.
+check3295=3292+고정 selector3,format/lint335·7typecheck·2build PASS. 보호22/번들3 SHA 동일.
+프로세스/관련 포트0,이번 staging3 자동 정리 확인;직전 자기 temp2만 정확경로 검증 후 삭제·부재 확인.
+stage/commit/push0,HEAD=origin585f88b·0/0(로컬 추적 ref 기준). 원격 재조회는 하지 않았다.
+다음은 WebKit PNG 방향 안전 처리의 별도 계약 검토이며 조회/다운로드 재승인 대기가 아니다.
+제품/fixture/기존시험/기본설정/Rules 변경0. 115 DONE/CODEX_PASSED 유지.
+
+## 이전 —116 엔진별 단독 재검증 재개 (2026-09-09)
+
+사용자 `어 잠깐 느려졌었어 다시시도`로 재개. 프로세스 조회 승인은 이미 해소됐고 재개 전
+Firefox 프로세스0·관련 listener0 확인. 고정 단독 selector unit20 PASS,Firefox82건 실행 중.
+직전 일반 환경 병렬 실행에서도 지연/timeout으로 중단했다. 그 결과와 WebKit 방향 실패는 유지한다.
+이번에는 동일 config/단언/timeout의 엔진별 worker1 진단이다. 아직116 PASS/완료 아님.
+아래 차단/조회 권한 대기는 과거 이력이며 최신 상태를 덮어쓰지 않는다.
+
+## 이전 —116 교차 엔진 검증 차단 (2026-09-09)
+
+다운로드 성공·check3292 PASS. 교차 엔진 예상246건은 미완료,WebKit PNG방향14실패 확인.
+Firefox 결과 지연·프로세스조회 Access denied로 원인 확인 불가,자기 세션 중단exit1.
+포트0·자기 temp 정리완료,프로세스 잔류UNCONFIRMED. 필수게이트/미종료 STOP으로commit/push0.
+다음 Firefox 로컬 프로세스 진단 권한이 필요하다. 다운로드 승인은 해소됐으며 재질문하지 않는다.
+아래 실행 중 문구는 중단 전 기록이다.
+
+Founder `응 허용`으로 다운로드 승인. 기존 Playwright1.61.1 Firefox1532/WebKit2311 공식 캐시
+다운로드 성공, 기존 FFmpeg/Winldd 재사용·캐시정리0·package/lock/OS설정 변경0.
+116 계약·opt-in config/selector 구현, check3292 PASS. 동일단언246건 실행 중, 아직 PASS 아님.
+아래 다운로드 승인 대기는 해소된 이력이다.
+
+## 이전 —115 완료 / 다음 검증 환경 권한 필요 (2026-09-09)
 
 bdcf18c/35477e9 일반push 및 HEAD=origin35477e9·0/0 확인 완료. 완료분 전송 대기 아님.
 이 최종 기록을 같은 허용 문서에 한 번 전송한 뒤 실제 다운로드 권한 경계에서 대기한다.

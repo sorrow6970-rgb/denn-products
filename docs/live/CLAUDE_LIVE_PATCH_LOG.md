@@ -8834,3 +8834,79 @@ bdcf18c/35477e9 일반push 성공(32924f2..35477e9),HEAD=origin35477e9·0/0 확�
 114/115 문서6개 상대링크6개 missing0,보호22 SHA 불변,예상밖 변경0.
 같은 허용 상태 문서의 이 최종 기록 한 번만 전송한다. 다음 대기는 완료보고 임의 종료가 아니라
 부재한 Firefox/WebKit 테스트 브라우저 다운로드 권한에 한정된다. 설치/우회/예약자동화0.
+
+## 2026-09-09 — spec116 다운로드 승인 실행 / 교차 엔진 STOP
+
+- Founder `응 허용`으로 기존 Playwright1.61.1 Firefox1532/WebKit2311 공식 캐시 다운로드 승인·성공exit0.
+  기존FFmpeg/Winldd 재사용·GC0·신규package/lock/OS설정 변경0. 다운로드 질문 해소.
+- opt-in config+runner/selector unit의정확3파일 구현. check3292=3291+1,format/lint335·7typecheck·2build PASS.
+- 예상246시험 실행은 미완료. WebKit PNG방향2..8×shape2=14오류 artifact 확인.
+  예:rectangle6 기대32×48/실제48×32,rectangle2/square8 색채널 오차208/허용0. 단언완화0.
+- Firefox 결과지연·Get-CimInstance Access denied. 원인/잔류프로세스UNCONFIRMED.
+  자신의exec session17784 Ctrl-C 중단exit1.포트4183/4184/4185/8080/9099/9199 listener0.
+  남은 자기 temp/denn-e2e-7iuOel만 부모/정확경로 검증 후 삭제,부재확인.타프로세스강제종료0.
+- 보호22/번들3종SHA불변·금지설정diff0·diff--check PASS.116코드3+문서8 unstaged.
+  필수게이트/미종료 STOP에 따라commit/push0,HEAD=origin585f88b·0/0.
+  다음은 권한 있는 Firefox 로컬 프로세스 진단이다. 다운로드 재승인/운영/UI/실사진/자동화0.
+
+## 2026-09-09 — spec116 PC 지연 확인 후 단독 재시도 / PNG 방향 실패 분리
+
+- 사용자 `어 잠깐 느려졌었어 다시시도`. 이전 진단의 일반환경 Firefox launch357ms/종료1284ms
+  성공과 제한환경15초timeout은116 review에 기록했다. 근본원인은 UNCONFIRMED.
+  앞선 일반환경 병렬 실행도 지연/timeout으로 중단했고 문서 patch 실패2회는 이번 실제파일 대조로 확인했다.
+- 계약부터 엔진별 고정1worker 진단으로 보완. 기존허용 runner/unit2파일만 추가 수정,
+  새 opt-in config 포함코드3+문서8=11개 unstaged. 기존단언/fixture/timeout/retry/기본설정 변경0.
+- `node scripts/e2e-run.mjs --background-firefox-only`:82/82 PASS(2.0m),exit0.
+  `--background-webkit-only`:68PASS/14FAIL(30.1s),exit1.
+  `--background-chromium-only`:82/82 PASS(11.5s),exit0.
+  합계232=82+68+82 PASS,14FAIL,총246=82×3. 이번 timeout0,병렬 안정성은 NOT VERIFIED.
+- WebKit 실패는 모두PNG방향2..8×rectangle/square. rectangle5..8 기대32×48/실제48×32,
+  나머지 색채널절대오차176/208(허용0). 정확 실패표는116 review. 단독에서도 재현,제품코드수정0.
+- selector20/20,check3295=3292+3 PASS(format/lint335,7typecheck,111unit파일,2build).
+  보호22/고객JS·CSS/adminJS SHA동일·diff--check PASS. 보호PNG출력0,debug.log 제외.
+- 재개전/종료후 테스트브라우저·관련포트0. 이번staging3은자동정리. 이전자기temp
+  denn-e2e-NOQtQB,playwright_firefoxdev_profile-Ajy2b5만 부모/정확경로/reparse검증 후삭제·부재확인.
+  임시파일은시험 재생성 가능,휴지통복구아님. 타프로세스강제종료/사용자파일삭제0.
+- 최종BLOCKED_VERIFICATION. HEAD=origin추적ref585f88b·0/0,stage/commit/push0,원격재조회0.
+  다음포인터는WebKitPNG안전capability계약의읽기전용검토. 같은다운로드/진행승인재질문0.
+  115DONE유지,116전체PASS/완료아님. 실제사진·룸UI통합·운영전환은미완료,운영/배포/예약자동화0.
+
+## 2026-09-09 —116 조사 종료와 지원게이트 분리 /117 비연결 PNG probe 완료
+
+- 사용자 `응 다음 루프대로 진행해줘`.116원래완료기준의조사/246PASS구별을적용했다.
+  116INVESTIGATION_REVIEW_PASSED(조사만),지원게이트232PASS14FAIL NOT MET유지. Founder예외승인아님.
+- 고정Node생성PNG18개를같은bytes로3엔진에순차전달한추가진단에서도WebKit4일치14불일치,
+  encoded identity18개. Firefox/Chromium각18일치. 외부요청0,exit0,긴출력잘림후요약진단1회.
+  정확입력SHA·공식PNG/HTML근거·판정한계는116 review. 제품/기존시험의보정·단언완화0.
+- 116진단코드3파일bfd1e55,117코드7파일3c13334로분리커밋.117계약작성·자체검토후구현.
+  같은Codex CODEX_PASSED는단발기능관찰기범위다. 반환항상decodeAllowed:false,실사진입력0.
+- targeted38=probe15+selector23,최종check3313=3295+15+3 PASS.
+  format/lint339·7typecheck·112unit파일·2build. 고정bytes SHA/close뒤다음decode/latedispose검증.
+- 신규E2E9=각엔진3 PASS:Firefox8.9s,WebKit2.1s,Chromium1.2s,각exit0.
+  기존fixture회귀Firefox82(2.0m)/Chromium82(11.7s) PASS,WebKit68PASS14FAIL(30.3s),기존과동일.
+  전체canonicalE2E는보호PNG때문에실행0;subset결과를전체E2E PASS로표기0.
+- 보호22/번들3SHA불변,diff--check PASS,테스트프로세스/관련포트0,이번staging6모두부재확인.
+  PowerShell혼합객체출력에서temp필드가가려져JSON으로재확인했다. 조회구문오류1회수정,삭제/설정변경0.
+- 다음실제사진계약은PG-1(방향metadata부재파일표시기준)선택필요. review에A/B명시·대화질문1건.
+  아직미선택,FOUNDER_DECISION_REQUIRED. 기존진행/다운로드승인재질문아님.
+  실제파일/운영/UI연결/배포/설치/예약자동화0. 정확문서11개만일반전송후Git관계를확인한다.
+
+### 최종 전송 STOP — 같은 날
+
+문서4개commit→문서7개commit→기존origin일반push명령이권한검사에서실행전거절됐다.
+사유:내부프로젝트문서payload와GitHub목적지에대한구체적전송승인부재. 강행/분할우회0.
+읽기전용재확인:HEAD3c13334,origin585f88b,ahead/behind2/0,staged0,문서11개미커밋.
+기존코드bfd1e55/3c13334는로컬에있고원격전송0. PG-1제품선택도별도미결정이다.
+정확전송대상19파일합집합(코드8+문서11),보호22/debug.log제외,로컬링크7 missing0확인.
+다음은기존 https://github.com/sorrow6970-rgb/denn-products.git 의rebuild/modern-studio로
+이코드2커밋과문서11개를일반commit/push할직접승인이다. 운영배포승인을요청하는것이아니다.
+
+## 2026-09-09 —116/117 정확 전송 승인 해소
+
+- 사용자 `응 승인 다음 루틴진행해`는 직전 코드bfd1e55/3c13334+문서11개를
+  https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio로
+  일반commit/push하는구체질문에대한승인이다. 같은허용문서의전송결과동기화까지수행한다.
+- 시작: HEAD3c13334/origin585f88b,staged0,허용문서11개외보호22+debug.log23개별도유지.
+  이번전송전후SHA대조기준을읽기전용으로확보했다. 제품코드추가수정/보호파일stage0.
+- PG-1 입력표시정책선택은포함하지않는다. 운영/사진입력/배포/예약자동화승인아님.
+  아래에실제전송결과를확인후기록한다. 같은전송승인재질문0.
