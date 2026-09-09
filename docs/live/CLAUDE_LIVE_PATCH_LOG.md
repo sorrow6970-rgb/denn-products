@@ -8708,3 +8708,12 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
   같은 승인 재질문 없이 기존 origin/rebuild/modern-studio로 일반 전송한다. 보호22·공식PDF/temp 제외.
 - 시작 HEAD4cc4988/origin c5459cb·1/0 확인. 검증 완료 코드는 변경/재실행0, 문서 상태만 갱신한다.
   전송 성공 여부는 도구 결과와 Git 관계 확인 후 기록한다. 새 권한 충돌이나 중요 제품결정은 자동 승인하지 않는다.
+
+## 2026-09-09 - spec108 전송 완료 / 반복 승인 대기 해소
+
+- 코드4cc4988/문서07235d6 일반push 성공(c5459cb..07235d6). HEAD=origin07235d6·0/0을 확인했다.
+- 같은 허용 STATE/NEXT/CURRENT/live/108handoff의 최종결과만 한 번 commit/push한 뒤 Git을 확인한다.
+  추가 영수증 루프·같은 범위 승인 재질문0. 보호/별도dirty22·공식PDF/temp 전송 제외.
+- DONE/CODEX_PASSED는 동일 Codex 자체검증이다. 기존 targeted82/전체unit3107 및 check PASS 유지,
+  이번 코드 변경/테스트 재실행0. 방향 식별까지 완료, 실제 decode/회전/룸UI 통합은 미완료·운영 금지 유지.
+  다음 불변Blob 소비자·허용판정 조사/계약을 NEXT에 남겼다. 예약자동화0.

@@ -6,21 +6,24 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-108-background-orientation-container # DONE / CODEX_PASSED; same Codex self-review
 active_unit: spec-108-background-orientation-container
-state: READY_FOR_SCOPED_TRANSFER
+state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: c5459cb
 candidate_commit: 4cc4988
 verified_commit: 4cc4988   # same Codex self-review, not independent review
-origin_relation: "HEAD4cc4988; origin c5459cb; ahead/behind1/0; documentation commit/push rejected before execution"
-working_tree: "spec108 documents7 unstaged including blocker record; protected/user dirty22 preserved and excluded"
+origin_relation: "code4cc4988/docs07235d6 pushed; HEAD=origin07235d6 and0/0 checked before final transfer record"
+working_tree: "same scoped final transfer documentation only; protected/user dirty22 preserved and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC108_SCOPED_COMMIT_PUSH
+next_transition: IMMUTABLE_BLOB_ORIENTATION_CONSUMER_CONTRACT
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec108 LOCAL_VERIFIED/CODEX_PASSED same Codex; user directed exact scoped transfer without repeated approval
+session_status: spec108 DONE/CODEX_PASSED same Codex; code and validation docs pushed; no repeated approval
 commit_owner: Codex; scoped spec108 code2/documents7 only; exclude protected/user dirty22
 ```
 
 ## 최신 —108 profile 식별 구현·검증 완료 (2026-09-09)
+
+전송 완료: 코드4cc4988/문서07235d6 일반push 성공(c5459cb..07235d6),HEAD=origin07235d6·0/0 확인.
+같은 허용문서의 최종 전송기록을 한 번만 commit/push하고 Git 확인으로 마무리한다. 아래 차단은 해소된 이력이다.
 
 사용자 `별도 승인 자꾸 물어보지말고 스펙대로 진행해`는 직전 정확 전송범위 질문에 대한 진행 지시다.
 코드2+문서7 및 동일문서 최종기록을 기존 origin/브랜치로 일반 전송한다. 결과는 실행 후 확인하며 동일승인 재질문0.
