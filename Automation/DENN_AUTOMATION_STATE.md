@@ -4,21 +4,27 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-111-native-orientation-pixel-probe # DONE / CODEX_PASSED; same Codex self-review
-active_unit: spec-111-native-orientation-pixel-probe
+completed_unit: spec-112-background-work-admission # DONE / CODEX_PASSED; same Codex self-review
+active_unit: spec-112-background-work-admission
 state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: 3de092b
-candidate_commit: c5de76f
-verified_commit: c5de76f   # same Codex self-review, not independent review
-origin_relation: "spec110 67dadeb/3de092b pushed; spec111 code local; docs pending"
-working_tree: "spec111 documents7 only; protected/user dirty22 excluded"
+baseline_commit: 2b6d739
+candidate_commit: b779c1a
+verified_commit: b779c1a   # same Codex self-review, not independent review
+origin_relation: "spec111 c5de76f/2b6d739 pushed; spec112 code local; docs pending"
+working_tree: "spec112 documents7 only; protected/user dirty22 excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: BACKGROUND_DECODE_ADMISSION_LIFETIME_CONTRACT
+next_transition: BACKGROUND_DECODE_PORT_SETTLEMENT_CONTRACT
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec111 CODEX_PASSED; unit3212 targetedChromium36 passed; continue admission lifetime contract
-commit_owner: Codex; spec111 code3 and documents7 only; exclude protected/user dirty22
+session_status: spec112 CODEX_PASSED; targeted23 and full3235 passed; continue port settlement contract
+commit_owner: Codex; spec112 code2 and documents7 only; exclude protected/user dirty22
 ```
+
+## 최신 —112 단일 작업 수명 완료 (2026-09-09)
+
+111 2b6d739 전송완료.112 b779c1a targeted23/check3235·번들/보호SHA·diff--check PASS.
+취소해도물리settle전새슬롯0,불명정리는blocked. 실제decoderport/제품허가/다중instance상한은아님.
+다음실제Promise정착연결계약검토로계속.코드2/문서7만일반전송·보호22제외.
 
 ## 최신 —111 native 픽셀방향 검증 완료 (2026-09-09)
 

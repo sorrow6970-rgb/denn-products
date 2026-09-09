@@ -1,5 +1,8 @@
 # 현재 상태
 
+> 최신112 b779c1a DONE/CODEX_PASSED,targeted23/unit3235·check·보호/번들SHA PASS.
+> [112 handoff](../handoff/2026-09-09-spec-112-background-work-admission-handoff.md).다음Promise정착port계약으로계속.
+
 > 최신111 c5de76f DONE/CODEX_PASSED,check3212/Chromium36 PASS.픽셀방향합성관찰완료,제품허가아님.
 > [111 handoff](../handoff/2026-09-09-spec-111-native-orientation-handoff.md).다음decoder수명/동시제한계약으로계속.
 

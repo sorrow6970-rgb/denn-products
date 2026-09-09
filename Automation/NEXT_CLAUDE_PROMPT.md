@@ -1,5 +1,12 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 —112 완료 / 실제 정착 port 계약으로 (2026-09-09)
+
+112 b779c1a CODEX_PASSED,targeted23/check3235·번들/보호SHA PASS.111 2b6d739 전송완료.
+112문서전송후109/111/112와100의startBackground를대조해실제Promise정착·lateclose연결계약을작성한다.
+현재112 ticket은trusted내부통지일뿐물리완료검출기가아니다.공개임의ticket을사진허가로사용0.
+실제사진허용/PNG의미/지원환경·새제품결정이필요하면분리기록한다.그외같은승인재질문없이구현·검증루틴계속.
+
 ## 최신 —111 완료 / decoder 수명·동시제한 계약 (2026-09-09)
 
 111 c5de76f CODEX_PASSED,check3212/Chromium36 PASS.110 3de092b 전송완료.
