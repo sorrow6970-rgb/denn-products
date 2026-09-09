@@ -1,5 +1,35 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 —118 정확 전송 승인 해소
+
+사용자 `승인할게`로 코드d543d8d+문서8개 및 최종결과기록의 기존GitHub/동일브랜치 일반전송 승인.
+보호23·번들3 SHA동일,범위확인 후 문서commit/push→같은문서 최종결과1회→Git확인만 처리한다.
+아래 BLOCKED_TRANSFER는 승인 전 이력이며 같은전송 질문을 반복하지 않는다.
+이 승인으로 실제사진/UI/운영/배포/새payload 전송권한을 확대하지 않는다.
+
+## 최종 실행 포인터 —118 로컬완료 / 정확 전송 승인 대기
+
+PG-1=A 유효,코드d543d8d 자체검수 CODEX_PASSED,check3358/targeted127 PASS.
+권한검사가 새 문서8개 commit/push를 실행 전에 거절했다. HEADd543d8d/origin8a10fe6·1/0,staged0.
+직접 승인 대상은 코드d543d8d+PG-1결정/118 spec·review·handoff/STATE·NEXT·CURRENT·live 8문서를
+https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio로 일반 commit/push하는 것.
+같은8문서 전송결과 동기화1회도 포함한다. 보호23/실제사진/운영데이터/배포는 제외한다.
+승인 전 분할/간접전송/재시도/다음구현0. 승인 후 exactscope/보호SHA 재확인→일반전송→결과기록→Git확인.
+PG-1 제품정책을 다시 묻지 않는다. 아래118 전송 예정은 권한검사 거절 전 계획이다.
+
+## 현재 — PG-1=A /118 검증 완료, 문서 전송 후 owner 계약
+
+PG-1 결정과 docs/rebuild/specs/118-background-metadata-absence-contract.md를 읽는다.
+사용자의 `응 A안으로`로 정책 선택은 해소됐다. 아래 PG-1 대기/117 전송 포인터는 과거 이력이다.
+118 코드d543d8d 자체검수 CODEX_PASSED. targeted127/check3358 PASS,보호23·번들3SHA동일.
+정확 문서8개+코드2개 일반 Git전송 및결과동기화 후 아래 다음 안전작업으로 이어간다.
+성공도 decodeAllowed:false. 108 Exif부재를 전체metadata 부재로 간주하지 않는다.
+core-only-v1 밖 유효한 metadata도 미지원이며 원본 제거/변환0. 실제사진/UI/운영 연결0.
+보호23 SHA/번들3/exactscope/diff 확인 후 정상 Git 루틴. 권한 거절이면 우회하지 않는다.
+다음 안전 작업은118 부재 증거와109 private same-byte/Blob owner 결속의 정확 계약 작성·검토다.
+기존109 API/기본앱 무변경,caller 증거+다른Blob 조합 허가0,실사진 표시/native지원 승격0.
+PG-1 반복질문/설치/예약 자동화0. 새 제품 의미/권한/불일치가 실제 필요한 경우만 중단한다.
+
 ## 최종 실행 포인터 —전송 완료 / PG-1 정책 대기
 
 코드bfd1e55/3c13334,문서2662e40/9839f2c 일반push 완료. HEAD=origin9839f2c·0/0 확인.

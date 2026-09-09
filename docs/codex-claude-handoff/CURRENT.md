@@ -1,5 +1,18 @@
 # 현재 상태
 
+> 최신: 사용자 `승인할게`로 118 코드d543d8d+문서8개와 최종결과의 기존GitHub/동일브랜치 전송 승인.
+> CODEX_WORKING(문서전송),보호23·번들3 SHA동일,제품추가변경/재시험0. 아래 전송차단은 승인 전 이력.
+
+> 최종118 BLOCKED_TRANSFER: 구현자체검수 CODEX_PASSED이나 문서8개 commit/push가 권한검사에서 실행전 거절.
+> HEADd543d8d/origin8a10fe6·1/0,staged0. 정확 코드2+문서8의 기존GitHub/동일브랜치 직접전송 승인 대기.
+> PG-1=A는 유효. 보호23 제외·우회/재시도/다음구현0. [118 검토](reviews/2026-09-09-spec-118-background-metadata-absence-review.md).
+
+> 최신 2026-09-09: PG-1=A 확정. [118 계약](../rebuild/specs/118-background-metadata-absence-contract.md)
+> 비연결 부재 검사 코드d543d8d 자체검수 CODEX_PASSED. targeted127/check3358 PASS.
+> 문서8개 전송·종료확인 후 다음은118 증거+109 same-byte owner 결속 계약이다. 아직 다음코드0.
+> 아래 PG-1 미선택/116·117 전송대기는 과거 이력이다. 117 DONE,116 지원게이트 NOT MET 유지.
+> 코드2+문서8만,보호22/debug.log 제외. 실제 사진 표시·UI·운영·예약 자동화0.
+
 > 최종: 전송완료(코드bfd1e55/3c13334,문서2662e40/9839f2c),HEAD=origin9839f2c·0/0 확인.
 > 이최종기록만한번전송후Git확인. 보호22+debug.log23 SHA불변,예상밖dirty0.
 > 상태FOUNDER_DECISION_REQUIRED / PG-1미선택. 117DONE유지,운영/사진표시허가0. 아래전송차단은이력이다.

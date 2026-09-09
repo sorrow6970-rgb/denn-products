@@ -4,22 +4,41 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-117-background-png-capability-probe # DONE / CODEX_PASSED; same Codex, isolated probe only
-active_unit: room-background-absence-policy
-state: FOUNDER_DECISION_REQUIRED
-baseline_commit: 585f88b
-candidate_commit: 3c13334
-verified_commit: 3c13334   # same Codex self-review, not independent review
-origin_relation: "verified HEAD=origin9839f2c and ahead/behind0/0 after approved transfer; this final documentation receipt is the only follow-up commit"
-working_tree: "approved task changes transferred; only protected/user dirty22 plus debug.log remain outside this final receipt"
+completed_unit: spec-118-background-metadata-absence # CODEX_PASSED locally; same Codex, isolated classifier only
+active_unit: spec-118-background-metadata-absence
+state: CODEX_WORKING
+baseline_commit: 8a10fe6
+candidate_commit: d543d8d
+verified_commit: d543d8d # same Codex self-review, not independent
+origin_relation: "HEADd543d8d/origin8a10fe6; ahead/behind1/0; document commit/push rejected before execution"
+working_tree: "spec118 exact code2/docs8 only; protected/user22 plus debug.log23 preserved separately"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FOUNDER_PG1_DIRECTION_ABSENCE_POLICY
-pending_product_decision: PG-1 direction-metadata absence policy, not selected
+next_transition: SPEC118_APPROVED_TRANSFER_AND_CLOSE
+pending_product_decision: NONE_FOR_SPEC118 # PG-1=A explicitly selected
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: Spec116/117 transfer succeeded; protected/user23 hashes unchanged; spec117 local gates remain passed; PG-1 product policy unselected; no next implementation started
-commit_owner: Codex; exact spec116/117 code and documents only; exclude protected/user dirty22 and debug.log
+session_status: User explicitly approved spec118 code and document8 GitHub transfer plus final receipt; scope and protected26 hashes rechecked; transfer in progress
+commit_owner: Codex; spec118 exact code2/docs8 only; exclude protected/user22 and debug.log
 ```
+
+## 최신 — PG-1=A /118 로컬 검증 완료 (2026-09-09)
+
+전송 승인 해소: 최신 사용자 `승인할게`는 직전 질문의 코드d543d8d와 문서8개 및 같은문서
+최종기록을 기존 https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio로
+일반 commit/push하는 직접 승인이다. 아래 전송 STOP은 승인 전 이력이다.
+시작상태1/0·staged0,보호/별도23+번들3 SHA 동일·범위 밖 변경0 재확인. 제품 추가변경/재시험0.
+
+전송 STOP: 권한검사가 문서8개 commit+push 명령을 실행 전에 거절했다. 이번 새 내부문서 payload와
+GitHub 목적지에 대한 직접 승인 필요. 제품정책 PG-1=A는 유효하며 재질문 대상이 아니다.
+대상: 코드d543d8d(신규2파일)+PG-1결정/118 spec·review·handoff/STATE·NEXT·CURRENT·live 8문서,
+목적지 https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio 일반전송.
+HEADd543d8d/origin8a10fe6·1/0,staged0. 승인 전 명령분할/간접전송/재시도/다음구현0.
+
+사용자 `응 A안으로`로 부재 확인 시 저장 픽셀 기준을 채택했다. 아래 PG-1 미선택은 과거 이력이다.
+[결정](../docs/codex-claude-handoff/decisions/2026-09-09-pg1-background-direction-absence-decisions.md)과
+[118 계약](../docs/rebuild/specs/118-background-metadata-absence-contract.md)의 비연결 검사기 코드d543d8d 검증 완료.
+targeted127/check3358 PASS. 정확 문서8개 일반 전송 후 Git확인까지 남았다. 코드 추가변경0.
+117 DONE 및116 지원게이트 NOT MET 유지. 실제사진/표시/UI/운영/예약 자동화0.
 
 ## 최신 —117 완료 / PG-1 입력 표시 기준 선택 (2026-09-09)
 
