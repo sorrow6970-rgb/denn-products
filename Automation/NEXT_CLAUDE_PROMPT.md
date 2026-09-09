@@ -1,5 +1,23 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 —108 완료 / 불변Blob 소비자·허용판정 계약으로 (2026-09-09)
+
+최신 사용자 지시로 직전 코드2+문서7 및 동일문서 최종기록 전송 질문은 해소됐다.
+정확 경로/보호SHA 확인 후 기존 origin/rebuild/modern-studio 일반 commit/push를 진행하고 결과를 확인한다.
+같은 승인 재질문0. 아래 BLOCKED는 과거 이력이며 새 권한·충돌 발생 시만 실제 근거와 함께 중단한다.
+
+현재 전송 BLOCKED: 문서7개 commit/push 명령이 실행 전 거절됐다. staged0, HEAD4cc4988/origin c5459cb·1/0.
+코드2+108문서7 및 같은7문서의 차단 해소·최종전송 기록을 기존 GitHub origin/브랜치로 전송할 직접 승인 대기.
+승인 전 재시도·우회·다음 단위 시작0. 승인 후 정확 경로/보호SHA 확인→문서commit→일반push→동일문서 최종기록.
+추가 영수증 루프를 만들지 않는다. 아래 후속 조사는 전송 차단 해소 뒤 후보이다.
+
+107종료기록c5459cb push완료.108 DONE/CODEX_PASSED(동일 Codex),targeted82/unit3107/check·번들SHA PASS.
+108 코드4cc4988. spec/review/handoff의 검증을 확인하고 문서7개 commit 후 일반push. 보호dirty22 제외.
+다음은105의불변Blob과108부분검사를결속하는P1/P2소비자/decoder전허용판정조사·계약부터다.
+추가복사장부·순서/참조해제·원본안정성·profile없음/tag없음/PNG eXIf의미/unknownAPP1을구별한다.
+현재decodeAllowed:false·PARTIAL을ready로승격0,새owner/decoder/UI연결은새스펙없이고치지않는다.
+중요결정/권한/충돌외루틴계속,실제사진/운영/설치/예약자동화0.이하이전프롬프트재실행0.
+
 ## 최신 —107 완료 / 다음 container 계약 (2026-09-09)
 
 1061a35951 push완료,107 DONE/CODEX_PASSED(동일 Codex),targeted101/unit3025/check·번들SHA PASS.

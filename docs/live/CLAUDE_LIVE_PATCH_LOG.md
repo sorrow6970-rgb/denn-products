@@ -8677,3 +8677,34 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
 - 같은허용상태/handoff문서의최종전송기록만1회commit/push후Git확인한다.추가영수증반복0.
 -107 DONE/CODEX_PASSED(동일Codex) 유지.이번제품/시험변경·재실행0,보호dirty22 전송제외.
   다음container조사·계약을NEXT에남겼다.새decode/UI연결/실제사진/운영/설치/예약자동화0.
+
+## 2026-09-09 - spec108 JPEG/PNG profile 식별 구현·검증 완료
+
+- 107최종기록c5459cb push완료확인후108계약을먼저고정하고신규2파일구현.
+  W3C PNG공식Table7에서eXIf최대1·IDAT앞조건을확인.동일byte104검사→APP1/eXIf탐색→107범위제한view.
+- 알수없는APP1/XMP·중복·PNG순서·TIFFoffset이탈검증,profile/태그부재구분.PARTIAL/NOT_VERIFIED/decodeAllowed:false.
+- targeted82/82,전체unit3107=3025+82,format/lint323·7프로젝트typecheck·2앱build PASS.
+  최초undefined시험helper·fixtureTS타입보완,CSS후보문구로추가된299=272+27bytes를시험문구/변수명변경으로제거.
+  전체check재통과및고객JS/CSS·adminJS SHA107baseline일치.생성CSS/설정직접수정0.상세108 review.
+- 순수미연결계약으로E2E실행0·PNG재생성0.실제사진/native방향/전체metadata/decoder/UI/운영NOT TESTED.
+  코드2+문서7만일반commit/push대상,보호/별도dirty22보존·제외,설치/배포/발행/삭제/예약자동화0.
+  다음불변Blob소비자·허용판정조사/계약은NEXT.전체리빌드실측완료율은분모없어확인불가.
+- 코드 `4cc4988`. 문서 링크7/7·허용9/9·보호/별도dirty SHA22/22·diff--check PASS.
+  제품 import0, 관련 로컬 포트 listener0. 문서7개만 별도커밋 후 일반push한다.
+
+## 2026-09-09 - spec108 로컬 검증 완료 / 문서·원격 전송 차단
+
+- 코드4cc4988 커밋 성공. 이어진 문서7개 add/commit/push 명령 전체가 실행 전 보안 검토에서 거절됐다.
+  사유: 원격의 신뢰 여부 또는 정확 payload의 외부 전송 승인이 확인되지 않음. 재시도·우회0.
+- HEAD4cc4988/origin c5459cb·ahead/behind1/0, staged0을 읽기 전용으로 확인했다.
+  문서7개에만 차단 상태 동기화. LOCAL_VERIFIED/CODEX_PASSED 유지, 전송 BLOCKED·다음 조사 미착수.
+- 승인 요청 범위: 코드2+108문서7 및 같은7문서의 차단 해소·최종전송 결과 기록.
+  대상 https://github.com/sorrow6970-rgb/denn-products.git / rebuild/modern-studio, 일반 fast-forward만.
+  보호/별도dirty22·공식PDF/temp는 전송 제외. 제품 추가변경·재실행·자동화0.
+
+## 2026-09-09 - spec108 정확 전송범위 진행 지시
+
+- 사용자 `별도 승인 자꾸 물어보지말고 스펙대로 진행해`는 직전 코드2+문서7 및 동일문서 최종기록 전송 질문에 대한 지시다.
+  같은 승인 재질문 없이 기존 origin/rebuild/modern-studio로 일반 전송한다. 보호22·공식PDF/temp 제외.
+- 시작 HEAD4cc4988/origin c5459cb·1/0 확인. 검증 완료 코드는 변경/재실행0, 문서 상태만 갱신한다.
+  전송 성공 여부는 도구 결과와 Git 관계 확인 후 기록한다. 새 권한 충돌이나 중요 제품결정은 자동 승인하지 않는다.

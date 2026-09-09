@@ -4,21 +4,39 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-107-tiff-orientation-tag-reader # DONE / CODEX_PASSED; codeaa7ed09/docscd53187 pushed
-active_unit: spec-107-tiff-orientation-tag-reader
-state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: 1a35951
-candidate_commit: cd53187   # code and completion documents pushed; same-document transfer record follows
-verified_commit: aa7ed09   # same Codex self-review, not independent review
-origin_relation: "spec107 push1a35951..cd53187 succeeded; HEAD=origin cd53187,0/0 checked before final record"
-working_tree: "same scoped completion-document transfer record only; after commit protected/user dirty22 remain"
+completed_unit: spec-108-background-orientation-container # DONE / CODEX_PASSED; same Codex self-review
+active_unit: spec-108-background-orientation-container
+state: READY_FOR_SCOPED_TRANSFER
+baseline_commit: c5459cb
+candidate_commit: 4cc4988
+verified_commit: 4cc4988   # same Codex self-review, not independent review
+origin_relation: "HEAD4cc4988; origin c5459cb; ahead/behind1/0; documentation commit/push rejected before execution"
+working_tree: "spec108 documents7 unstaged including blocker record; protected/user dirty22 preserved and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: BACKGROUND_ORIENTATION_CONTAINER_CONTRACT
+next_transition: SPEC108_SCOPED_COMMIT_PUSH
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec107 DONE/CODEX_PASSED same Codex; native orientation/decode/UI remain unverified
-commit_owner: Codex; scoped spec107 code2/documents7 only; exclude protected/user dirty22
+session_status: spec108 LOCAL_VERIFIED/CODEX_PASSED same Codex; user directed exact scoped transfer without repeated approval
+commit_owner: Codex; scoped spec108 code2/documents7 only; exclude protected/user dirty22
 ```
+
+## 최신 —108 profile 식별 구현·검증 완료 (2026-09-09)
+
+사용자 `별도 승인 자꾸 물어보지말고 스펙대로 진행해`는 직전 정확 전송범위 질문에 대한 진행 지시다.
+코드2+문서7 및 동일문서 최종기록을 기존 origin/브랜치로 일반 전송한다. 결과는 실행 후 확인하며 동일승인 재질문0.
+아래 실행 전 거절은 과거 이력이다. 보호22·새 제품결정·운영/배포 금지는 그대로 유지한다.
+
+문서7개 commit/push 명령이 실행 전 보안 검토에서 거절됐다. 원격 신뢰/정확 payload 전송 승인이 사유다.
+stage/문서commit/push 실행0, 재시도·우회0. 코드4cc4988만 로컬에 있으며 1/0이다.
+승인 대상은 코드2+108문서7 및 같은7문서 안의 차단 해소·최종 전송결과 기록이다.
+대상은 기존 https://github.com/sorrow6970-rgb/denn-products.git 의 rebuild/modern-studio, 일반 fast-forward만.
+아래 기술검증 PASS와 원격 전달 완료는 별개다. 승인 전 다음 단위는 시작하지 않는다.
+
+107종료기록c5459cb push완료.108신규2파일구현,82 targeted/3107전체unit·check·번들SHA PASS.
+동일byte104→container탐색→107,부분증거만반환하고decodeAllowed:false유지.
+코드 4cc4988. 링크7/7·허용9/9·보호SHA22/22·diff--check PASS. 문서7개와 함께 일반push 예정.
+다음 불변Blob 소비자/허용판정 조사·계약. 제품UI·실제사진·운영·설치·자동화0.
+보호/별도dirty22·PNG불변,상세108 review/handoff.이하107상태는이력이다.
 
 ## 최신 — spec107 구현·검증 완료 (2026-09-09)
 
