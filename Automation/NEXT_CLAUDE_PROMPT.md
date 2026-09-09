@@ -1,5 +1,17 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 —115 완료 / 다음 교차 엔진 검증의 다운로드 권한 (2026-09-09)
+
+114 8ae5853/32924f2 전송완료.115 코드bdcf18c,check3291/Chromium46·보호/번들SHA·diff PASS.
+115 contract/review/handoff의 QUESTIONS를 먼저 읽는다. Firefox1532/WebKit2311 실행 파일이
+기존 Playwright1.61.1 캐시에 없다는 것을 확인했다. 현재 다운로드·설치 권한은 없다.
+사용자가 테스트 브라우저 캐시 다운로드를 승인한 경우에만 다음 정확 교차 엔진 검증 계약을
+작성·검토하고 공식 Playwright 버전과 대상 두 엔진을 고정한다. package/lockfile/OS dependency
+설치·시스템 브라우저 변경·실사진/운영 권한으로 확장하지 않는다. 승인 전 다운로드/우회0.
+Chromium 성공을 Firefox/Safari/실기기 성공으로 기록하지 않는다.
+115 완료분 문서 전송 결과를 Git으로 확인한 뒤 해당 실제 권한 경계에서 대기한다.
+아래 'bounded decoder 계속'은 이 환경 제약을 확인하기 전의 포인터다.
+
 ## 현재 —114 완료 / bounded decoder 경계 검토 (2026-09-09)
 
 113 최종9997bcd 전송완료.114 코드8ae5853 targeted55/check3290·SHA/diff PASS, 같은 Codex 자체 검토.

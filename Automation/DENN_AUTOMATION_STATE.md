@@ -4,23 +4,30 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-114-background-preparation-lease-bridge # DONE / CODEX_PASSED; same Codex self-review
-active_unit: spec-114-background-preparation-lease-bridge
-state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: 9997bcd
-candidate_commit: 8ae5853
-verified_commit: 8ae5853   # same Codex self-review, not independent review
-origin_relation: "113 final9997bcd pushed; 114 code8ae5853 and its documents are the scoped transfer batch"
-working_tree: "114 documents7 pending scoped transfer; protected/user dirty22 and debug.log excluded"
+completed_unit: spec-115-background-native-lifecycle-verification # DONE / CODEX_PASSED; same Codex self-review
+active_unit: room-background-cross-engine-verification
+state: FOUNDER_DECISION_REQUIRED
+baseline_commit: 32924f2
+candidate_commit: bdcf18c
+verified_commit: bdcf18c   # same Codex self-review, not independent review
+origin_relation: "114 8ae5853/32924f2 pushed; 115 bdcf18c and its documents are the scoped transfer batch"
+working_tree: "115 documents7 pending scoped transfer; protected/user dirty22 and debug.log excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: BOUNDED_BACKGROUND_DECODER_CONTRACT
+next_transition: PLAYWRIGHT_FIREFOX_WEBKIT_DOWNLOAD_PERMISSION
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec114 CODEX_PASSED; targeted55 and full3290 passed; continue bounded decoder contract
-commit_owner: Codex; spec114 code4 and documents7 only; exclude protected/user dirty22 and debug.log
+session_status: spec115 CODEX_PASSED; check3291 and targeted Chromium46 passed; next engines absent and downloads not authorized
+commit_owner: Codex; spec115 code5 and documents7 only; exclude protected/user dirty22 and debug.log
 ```
 
-## 최신 —114 준비 컨트롤러 연결 완료 (2026-09-09)
+## 현재 —115 완료 / 다음 검증 환경 권한 필요 (2026-09-09)
+
+bdcf18c check3291/Chromium46 PASS. 다음 Firefox/WebKit 실행 파일 부재를 실제 확인했다.
+기존 다운로드 금지 때문에 설치/실행하지 않는다. 요청 권한은 기존 Playwright1.61.1의 공식
+테스트 브라우저 두 개를 로컬 캐시에 내려받는 범위뿐이다. 신규 package/lockfile/시스템 설치0.
+115 실패가 아니며 제품 지원 축소/미검증 환경 PASS로 우회하지 않는다. 같은 진행 승인 질문과 다르다.
+
+## 이전 —114 준비 컨트롤러 연결 완료 (2026-09-09)
 
 > 최신114 코드8ae5853 DONE/CODEX_PASSED, targeted55/check3290 PASS. 다음 bounded decoder 계약 검토 진행.
 > 113 최종9997bcd push 완료. 아래113 이전 전송 관계는 이력이며 재실행하지 않는다.

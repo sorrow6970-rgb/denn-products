@@ -1,5 +1,10 @@
 # 현재 상태
 
+> 현재115 bdcf18c DONE/CODEX_PASSED, check3291/Chromium46·보호/번들SHA·diff PASS.
+> [115 handoff](../handoff/2026-09-09-spec-115-background-native-handoff.md). 다음 교차 엔진 검증은 Firefox/WebKit 바이너리 부재.
+> FOUNDER_DECISION_REQUIRED는 기존 Playwright의 테스트 브라우저 다운로드 권한에 한정한다.
+> 설치/다운로드/제품 지원 축소/실사진/운영/자동화는 실행하지 않았다. 아래 계속 포인터는 이전 이력이다.
+
 > 최신114 8ae5853 DONE/CODEX_PASSED, targeted55/check3290·보호/번들SHA·diff PASS.
 > [114 handoff](../handoff/2026-09-09-spec-114-background-preparation-handoff.md). 다음 bounded decoder 계약 검토로 계속.
 > 제품 사진/룸 UI/운영전환은 아직 미완료. 승인대기를 새로 만들지 않는다.

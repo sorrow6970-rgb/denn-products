@@ -8813,3 +8813,17 @@ staged0 확인. dirty는 기존 보호/사용자22와 별도 debug.log뿐이다.
   targeted55=20+22+13, 전체3290=3255+35·format/lint332·7typecheck·2build PASS.
 - 보호22/번들3종 SHA 동일·diff PASS. 별도 debug.log 제외. native/E2E/실제사진/제품연결0.
   114 코드4+문서7만 일반 전송하며 다음 bounded decoder 계약을 검토한다.
+
+## 2026-09-09 — spec115 native 연결 검증 완료 / 다음 엔진 실제 제약
+
+- 114 8ae5853/32924f2 일반push 성공 후115를 연속 수행. 코드bdcf18c 정확5파일.
+- check3291=3290+selector1·format/lint334·7typecheck·2build PASS.
+  opt-in Chromium46=신규12+기존11+23,5.1초 PASS. 전체E2E 통과 주장이 아니다.
+- native read1/bitmap1, URL/Image0·외부egress/consoleerror·warning0. close후0치수·late정리 확인.
+  bitmap 인계 gate는 native 자체 정지 보증이 아니며 실제사진/metadata 의미를 검증한 것도 아니다.
+- 보호22/번들3종SHA 동일·PNG출력0·diff PASS. staging denn-e2e-HHX5qP 제거 및 관련포트0 확인.
+- 다음 환경 읽기 검사: Playwright1.61.1 Chromium1228 존재,Firefox1532/WebKit2311 부재.
+  기존 다운로드·설치 금지를 지켜 아무것도 내려받지 않았다. 다음은 해당 공식 테스트 브라우저의
+  캐시 다운로드 권한이 필요하다. package/lockfile/OS 의존성·제품 지원 축소·운영 권한과 구별한다.
+  115 DONE 유지, FOUNDER_DECISION_REQUIRED/PLAYWRIGHT_FIREFOX_WEBKIT_DOWNLOAD_PERMISSION.
+  보호22/debug.log 제외·115 코드5+문서7만 일반 전송한다.
