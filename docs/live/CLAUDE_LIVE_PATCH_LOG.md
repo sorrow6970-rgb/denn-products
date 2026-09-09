@@ -8804,3 +8804,12 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
 fe1b837/27ea083 일반 push 성공(eaef514..27ea083). HEAD=origin27ea083·ahead/behind0/0,
 staged0 확인. dirty는 기존 보호/사용자22와 별도 debug.log뿐이다. 같은 허용 문서의 이 최종
 기록을 한 번 전송한 뒤 Git 확인으로 마친다. 다음 실행 포인터는 100 sink lease 계약이며 승인대기 아님.
+
+## 2026-09-09 — 루틴 재개 / spec114 준비 컨트롤러 연결 완료
+
+- 사용자 `왜멈췄지?`: 실질 차단이 아니라113 완료 보고에서 턴을 끝낸 실행 오류였다.
+  같은 진행 승인을 다시 묻지 않고114 계약→구현→검증을 수행하고 다음 경계 검토로 계속한다.
+- 8ae5853 정확코드4파일. 기존113 shape 유지, 새 frozen size lease와100 sink 연결.
+  targeted55=20+22+13, 전체3290=3255+35·format/lint332·7typecheck·2build PASS.
+- 보호22/번들3종 SHA 동일·diff PASS. 별도 debug.log 제외. native/E2E/실제사진/제품연결0.
+  114 코드4+문서7만 일반 전송하며 다음 bounded decoder 계약을 검토한다.

@@ -1,5 +1,13 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 —114 완료 / bounded decoder 경계 검토 (2026-09-09)
+
+113 최종9997bcd 전송완료.114 코드8ae5853 targeted55/check3290·SHA/diff PASS, 같은 Codex 자체 검토.
+114 spec/review/handoff·106 공식근거·109 evidence·111 native시험·114 size lease를 대조한다.
+실제사진 허가와 합성 native decoder 시험을 분리하고 다음 정확 계약부터 검토·구현·검증한다.
+보호22/debug.log 제외, 제품허용 확대/운영/배포/설치/예약 자동화0. 같은 진행 승인 재질문0.
+113 완료 보고로 임의 턴 종료했던 루틴 단절을 재발시키지 않는다. 아래 포인터는 과거 이력이다.
+
 ## 현재 실행 포인터 —113 완료 / 100 sink lease 연결 계약 (2026-09-09)
 
 113 fe1b837/27ea083 push 및 HEAD=origin27ea083·0/0 확인 완료. 전송 대기는 해소됐다.

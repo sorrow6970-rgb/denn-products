@@ -4,23 +4,28 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-113-background-promise-settlement # DONE / CODEX_PASSED; same Codex self-review
-active_unit: spec-113-background-promise-settlement
+completed_unit: spec-114-background-preparation-lease-bridge # DONE / CODEX_PASSED; same Codex self-review
+active_unit: spec-114-background-preparation-lease-bridge
 state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: eaef514
-candidate_commit: fe1b837
-verified_commit: fe1b837   # same Codex self-review, not independent review
-origin_relation: "113 fe1b837/27ea083 pushed; HEAD=origin27ea083 and 0/0 verified before this final record"
-working_tree: "at payload push verification: only protected/user dirty22 plus separate debug.log; staged0; this final record is confined to permitted documents"
+baseline_commit: 9997bcd
+candidate_commit: 8ae5853
+verified_commit: 8ae5853   # same Codex self-review, not independent review
+origin_relation: "113 final9997bcd pushed; 114 code8ae5853 and its documents are the scoped transfer batch"
+working_tree: "114 documents7 pending scoped transfer; protected/user dirty22 and debug.log excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: BACKGROUND_PREPARATION_SINK_LEASE_CONTRACT
+next_transition: BOUNDED_BACKGROUND_DECODER_CONTRACT
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec113 CODEX_PASSED; targeted20 and full3255 passed; continue sink lease contract without repeated approval
-commit_owner: Codex; spec113 code2 and documents7 only; exclude protected/user dirty22 and debug.log
+session_status: spec114 CODEX_PASSED; targeted55 and full3290 passed; continue bounded decoder contract
+commit_owner: Codex; spec114 code4 and documents7 only; exclude protected/user dirty22 and debug.log
 ```
 
-## 최신 —113 Promise 정착 연결 완료 (2026-09-09)
+## 최신 —114 준비 컨트롤러 연결 완료 (2026-09-09)
+
+> 최신114 코드8ae5853 DONE/CODEX_PASSED, targeted55/check3290 PASS. 다음 bounded decoder 계약 검토 진행.
+> 113 최종9997bcd push 완료. 아래113 이전 전송 관계는 이력이며 재실행하지 않는다.
+
+## 이전 —113 Promise 정착 연결 완료 (2026-09-09)
 
 fe1b837/27ea083 일반 push 완료, HEAD=origin27ea083·ahead/behind0/0 확인.
 같은 허용 문서의 이 최종 기록 한 번만 전송한다. 아래 전송 예정은 완료 이력이며 재실행하지 않는다.

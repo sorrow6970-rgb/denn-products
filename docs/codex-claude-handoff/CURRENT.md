@@ -1,5 +1,9 @@
 # 현재 상태
 
+> 최신114 8ae5853 DONE/CODEX_PASSED, targeted55/check3290·보호/번들SHA·diff PASS.
+> [114 handoff](../handoff/2026-09-09-spec-114-background-preparation-handoff.md). 다음 bounded decoder 계약 검토로 계속.
+> 제품 사진/룸 UI/운영전환은 아직 미완료. 승인대기를 새로 만들지 않는다.
+
 > 113 코드 fe1b837/문서27ea083 일반 push 완료, HEAD=origin27ea083·0/0 확인(최종 기록 전).
 > staged0, 보호/사용자 dirty22와 별도 debug.log만 남았다. 다음 계약 포인터는 NEXT, 승인대기 아님.
 
