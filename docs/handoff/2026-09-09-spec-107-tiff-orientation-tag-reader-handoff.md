@@ -1,5 +1,9 @@
 # Spec107 — TIFF 방향 태그 reader 인수인계
 
+최신 전송: 코드aa7ed09/문서cd53187 일반push성공,HEAD=origin cd53187·0/0확인(이최종기록전).
+동일허용문서 최종전송기록만1회commit/push후Git확인.보호/별도dirty22는남기며영수증반복0.
+이하commit/push대상문구는완료전기록이다.다음container조사·계약은NEXT,decoder/UI허가아님.
+
 2026-09-09 / baseline1a35951 / DONE / CODEX_PASSED(동일 Codex 자체 검토).
 
 - [계약](../rebuild/specs/107-tiff-orientation-tag-reader.md)

@@ -4,14 +4,14 @@
 updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-106-room-background-orientation-investigation # DONE / DOCUMENT_REVIEW_PASSED; pushed1a35951
+completed_unit: spec-107-tiff-orientation-tag-reader # DONE / CODEX_PASSED; codeaa7ed09/docscd53187 pushed
 active_unit: spec-107-tiff-orientation-tag-reader
 state: READY_FOR_NEXT_SCOPED_UNIT
 baseline_commit: 1a35951
-candidate_commit: aa7ed09   # spec107 code; documentation commit follows
+candidate_commit: cd53187   # code and completion documents pushed; same-document transfer record follows
 verified_commit: aa7ed09   # same Codex self-review, not independent review
-origin_relation: "spec1061a35951 pushed; spec107 codeaa7ed09 local; documents7 pending scoped commit/push"
-working_tree: "spec107 documents7 + protected/user dirty22; no PNG regeneration"
+origin_relation: "spec107 push1a35951..cd53187 succeeded; HEAD=origin cd53187,0/0 checked before final record"
+working_tree: "same scoped completion-document transfer record only; after commit protected/user dirty22 remain"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: BACKGROUND_ORIENTATION_CONTAINER_CONTRACT
@@ -25,7 +25,8 @@ commit_owner: Codex; scoped spec107 code2/documents7 only; exclude protected/use
 1061a35951 push 완료.107의 bounded0thIFD reader2파일 구현,상세107 review/handoff.
 targeted101·전체unit3025·format/lint/typecheck/build PASS,고객JS/CSS·adminJS SHA동일.
 PARTIAL/NOT_VERIFIED/decodeAllowed:false 유지.제품연결·E2E·실제사진·설치·운영·자동화0.
-107 코드2+문서7만 일반commit/push후 다음container조사·계약으로 진행한다.보호dirty22 제외.
+107 코드aa7ed09/문서cd53187 push완료.최종전송기록은같은허용문서에만한번남기고일반commit/push한다.
+다음container조사·계약은NEXT에남겼다.보호dirty22 제외,승인재질문/영수증반복0.
 
 ## 최신 — CIPA 승인·정본 확보 /106 종료·107 계약 준비 (2026-09-09)
 

@@ -2,7 +2,8 @@
 
 > 최신2026-09-09:107 DONE/CODEX_PASSED(동일 Codex),101 targeted/3025 unit·check·번들불변 PASS.
 > [107 handoff](../handoff/2026-09-09-spec-107-tiff-orientation-tag-reader-handoff.md).1061a35951 push완료.
->107 코드2/문서7만 scopedcommit/push 후 다음container조사·계약.보호dirty22·PNG불변, E2E실행0.
+>107 코드aa7ed09/문서cd53187 push완료,HEAD=origin cd53187·0/0(최종기록전).
+>동일허용문서 최종전송기록1회commit/push후Git확인.다음container조사·계약은NEXT.보호dirty22·PNG불변,E2E실행0.
 >코드aa7ed09.문서링크7/7·허용9/9·보호dirty SHA22/22·diff--check PASS,관련포트listener0.
 >TAG PARTIAL/NOT_VERIFIED/decodeAllowed:false.전체metadata/사진방향/decoder/UI/운영 미검증·미연결.
 
