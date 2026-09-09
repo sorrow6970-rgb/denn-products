@@ -8717,3 +8717,18 @@ Q-102-1 사용자 승인 후 정확4파일 구현. 기본 제품 route/100/Compo
 - DONE/CODEX_PASSED는 동일 Codex 자체검증이다. 기존 targeted82/전체unit3107 및 check PASS 유지,
   이번 코드 변경/테스트 재실행0. 방향 식별까지 완료, 실제 decode/회전/룸UI 통합은 미완료·운영 금지 유지.
   다음 불변Blob 소비자·허용판정 조사/계약을 NEXT에 남겼다. 예약자동화0.
+
+## 2026-09-09 - spec109 불변 Blob·방향 증거 결속 조사와 계약 검토
+
+- 사용자 `응`으로 NEXT 후속조사·계약 진행.108 최종abdc191 전송완료확인,109 문서7개만 작성.
+- File API의불변Blob/BufferSource복사,HTML imageOrientation기본값,PNG eXIf의미한계를공식본문으로확인했다.
+  근거URL/제목/지위/확인일은109 review.실제사진/서비스/browser/설치0.
+- P2 선택:105 private읽기view에서108검사후동일bytes snapshot과증거를쌍으로인계.
+  기존factory는104만유지,새factory와정확3파일구현계약. P1추가읽기미채택.
+  명시표현2N≤40M과P1의3N≤60M을비교했지만실제peak/GC/동시job안전성증명은아니다.
+- CONTRACT_REVIEW_PASSED(동일 Codex),109 구현/시험실행0.부분증거의decode허가승격0.
+  native결속/8방향/메모리/룸UI는NOT TESTED.전체E2E의보호PNG출력은예외없이별도시험계약으로분리.
+- 다음은같은109의정확3파일구현,unit/typecheck/check·hash/scope검증.같은승인재질문/예약자동화0.
+  전체리빌드백분율은분모없어확인불가.현재사진방향식별기반은완료,실제표시·통합은남았다.
+- 문서실측:링크9/9·허용7/7·보호SHA22/22·diff--check/신규whitespace PASS,예상밖경로0.
+  총dirty29=22+7,staged0,HEAD=origin abdc191·0/0.문서7개만일반전송,기존dirty제외.

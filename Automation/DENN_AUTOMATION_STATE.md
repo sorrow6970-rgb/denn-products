@@ -5,20 +5,29 @@ updated_at: 2026-09-09
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-108-background-orientation-container # DONE / CODEX_PASSED; same Codex self-review
-active_unit: spec-108-background-orientation-container
-state: READY_FOR_NEXT_SCOPED_UNIT
-baseline_commit: c5459cb
-candidate_commit: 4cc4988
+active_unit: spec-109-background-evidence-owner
+state: READY_FOR_IMPLEMENTATION
+baseline_commit: abdc191
+candidate_commit: UNCOMMITTED_SPEC109_CONTRACT
 verified_commit: 4cc4988   # same Codex self-review, not independent review
-origin_relation: "code4cc4988/docs07235d6 pushed; HEAD=origin07235d6 and0/0 checked before final transfer record"
-working_tree: "same scoped final transfer documentation only; protected/user dirty22 preserved and excluded"
+origin_relation: "spec108 final abdc191 pushed; spec109 documents not yet committed"
+working_tree: "spec109 documents7 only; protected/user dirty22 preserved and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: IMMUTABLE_BLOB_ORIENTATION_CONSUMER_CONTRACT
+next_transition: SPEC109_P2_EVIDENCE_OWNER_IMPLEMENTATION
 automation_loop: user authorized scoped spec continuation unless material decision or conflict; no scheduled automation
-session_status: spec108 DONE/CODEX_PASSED same Codex; code and validation docs pushed; no repeated approval
-commit_owner: Codex; scoped spec108 code2/documents7 only; exclude protected/user dirty22
+session_status: spec109 CONTRACT_REVIEW_PASSED same Codex; implementation and runtime tests NOT STARTED
+commit_owner: Codex; spec109 documents7 only in this contract phase; exclude protected/user dirty22
 ```
+
+## 최신 —109 P2 결속 계약 검토 완료 (2026-09-09)
+
+108 종료기록abdc191 push완료.109 spec/review/handoff에 P1/P2 비교·공식 근거·정확3파일 구현계약 작성.
+P2 선택:private view에서108을검사하고 같은byte snapshot과함께 take1회. 기존105 factory/API는 유지한다.
+부분증거와표시허가를구분하며PARTIAL/NOT_VERIFIED/decodeAllowed:false유지. 새 허가API/decoder/UI0.
+현재 문서7개만 변경·검증·일반전송.109 코드/시험변경·unit/build/E2E실행0,계약PASS를제품PASS로기록하지않는다.
+다음109 비연결구현3파일과unit/typecheck/check. nativebrowser/보호PNG출력은별도시험계약으로분리한다.
+보호dirty22·설치/실제서비스/운영/예약자동화금지유지. 같은승인재질문0. 아래108등은이력이다.
 
 ## 최신 —108 profile 식별 구현·검증 완료 (2026-09-09)
 

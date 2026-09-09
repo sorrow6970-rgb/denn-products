@@ -1,5 +1,20 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 —109 계약 검토 완료 / P2 비연결 owner 구현 (2026-09-09)
+
+`docs/rebuild/specs/109-background-evidence-owner-contract.md`와109 review/handoff를 읽는다.
+현재 CONTRACT_REVIEW_PASSED(동일 Codex)·구현0.108 종료기록abdc191 전송완료,과거전송/승인대기 재실행0.
+109 문서7개 범위/hash/링크/diff를 확인하여 일반commit/push한 뒤 같은109의 정확3파일 구현으로 진행한다.
+
+허용: background-file.ts(새factory·P2 private흐름),background-file.test.ts(기존API회귀),신규background-evidence.test.ts.
+기존factory는104만,새factory는108(내부104)만 호출. 같은view검사→snapshot→frozen쌍의take1회.
+reader/lease 취소·late·오류·복사예산과기존API를보존한다. caller사전판정/validator주입/Blob재읽기0.
+PARTIAL/NOT_VERIFIED/decodeAllowed:false 유지.미검증방향을decode허가로승격0.
+targetedunit/typecheck/check·번들SHA·보호SHA·scope/diff검증 후 코드/문서 분리commit·일반push.
+이번미연결단위는nativebrowser/E2E NOT TESTED. canonical은PNG보호출력때문에실행하지않으며가짜filter0.
+104/107/108/100/102/fixture/UI/config/Rules/package/lock수정0.실제사진/운영/설치/예약자동화0.
+보호/별도dirty22수정·복원·stage·commit0.중요결정/권한/충돌아니면같은승인재질문0.
+
 ## 최신 —108 완료 / 불변Blob 소비자·허용판정 계약으로 (2026-09-09)
 
 전송 완료:4cc4988/07235d6 일반push 성공,HEAD=origin07235d6·0/0 확인(최종기록 전).
