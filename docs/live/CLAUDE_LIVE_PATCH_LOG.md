@@ -9076,3 +9076,19 @@ bdcf18c/35477e9 일반push 성공(32924f2..35477e9),HEAD=origin35477e9·0/0 확�
 
 - 코드 ec87d65/문서 e71e44b 일반push 성공,HEAD=origin e71e44b·0/0.121 DONE/CODEX_PASSED.
 - 같은 문서7 최종 기록1회 후 다음 합성 native 계약 검토. 새 시험/실사진/운영 수행으로 기록하지 않는다.
+
+## 2026-09-10 — 122 합성 native 검증 착수
+
+- 121 최종66a2caa=origin·0/0. 루틴 지시로 새122 계약·자체검토 후 코드6/문서7 작성.
+- 작은 JPEG/PNG를 처음부터 생성,실제 FileReader/bitmap 수명과 오류·metadata 선차단 검증.
+  제품 코드121/기본UI/실사진/운영/설치/보호/예약자동화 변경0. 목표 수치를 아직 PASS로 적지 않는다.
+
+### 122 구현·검증 완료
+
+- 코드9837a51,정확6파일. 동일Codex CODEX_PASSED. check3465=3462+3/selector29 PASS.
+- 새native12×3=36 PASS: Chromium3.1s/Firefox30.8s/WebKit27.3s,각exit0.
+  기존Chromium46(5.3s)+120owner11(2.9s) PASS.총93=36+46+11,이번실행실패0.
+- 초기check는PASS였지만fixture table변수명으로고객CSS utility1개추가. 해당규칙제외SHA가baseline과
+  정확일치함을확인,변수명만변경→전체check재실행→번들3SHA동일. 제품CSS/설정수정0.
+- 보호23SHA동일,scope13/diff--check PASS,관련포트0/temp5개자동정리·부재확인. 세부review참조.
+  다음문서7전송후100 sink 결속계약검토.실사진/UI/운영/새metadata지원/예약자동화0.

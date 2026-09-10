@@ -1,5 +1,19 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 — 122 로컬완료 / 다음은 비연결 preparation sink 계약
+
+9837a51 CODEX_PASSED,check3465/selector29/새3엔진36/기존Chromium57 PASS.122문서7 일반전송후
+100/114 preparation sink와121 size lease를 연결할 정확계약을 검토한다. 기준소스 identity/capture선행,
+BUSY시입력조회0,취소/clear/dispose/source-change/late해제,콜백예외와한정자원소유권을 고정한다.
+기본UI·실사진·원bitmap노출·전체metadata지원·운영 연결은 이 계약에 섞지 않는다.
+루틴/지속Git승인유효,중요결정외재질문0. 보호·번들 SHA는시작상태와같다. 새번호는목록확인후작성.
+
+## 최신 — 122 합성 native 구현·검증
+
+121은66a2caa 전송 종료. 122 계약/review/handoff를 읽고 코드6/문서7만 구현·검증한다.
+자체 생성3×2 JPEG/PNG,실제FileReader/bitmap,고장주입·취소·late/close. 제품121/기본UI/실사진0.
+새3엔진36·기존Chromium46+11 목표. 결과는 실측 후 기록,권한/설치/실제중요결정만STOP.
+
 ## 최종 — 121 DONE / 합성 native 계약 검토
 
 ec87d65/e71e44b 일반 전송 완료, HEAD=origin e71e44b·0/0. 최종 기록1회 후 아래 합성 native 계약 검토.

@@ -1,5 +1,11 @@
 # 현재 상태
 
+> 122 코드9837a51 로컬 CODEX_PASSED. check3465/새native36/기존Chromium57 PASS,보호23/번들3 불변.
+> 문서전송후100 preparation sink 비연결계약 검토로 루틴 계속. 실사진/기본UI/운영은 남아 있음.
+
+> 122 CODEX_WORKING,기준66a2caa·0/0. [계약](../rebuild/specs/122-background-absence-decode-native.md).
+> 121 DONE 유지,정확code6/docs7. 합성 native 시험만,실사진/UI/운영 미개방.
+
 > 121 DONE: ec87d65/e71e44b 일반push 완료,HEAD=origin·0/0. 아래 전송 대기는 과거 이력.
 > 최종 기록1회 후 합성 native 계약 검토로 계속. 실사진·UI·운영은 여전히 미개방.
 

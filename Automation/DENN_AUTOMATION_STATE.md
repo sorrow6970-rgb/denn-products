@@ -5,21 +5,21 @@ updated_at: 2026-09-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-121-background-absence-decode # DONE / CODEX_PASSED; same Codex
-active_unit: spec-121-background-absence-decode
+active_unit: spec-122-background-absence-decode-native
 state: CODEX_PASSED
-baseline_commit: 57f6dd0
-candidate_commit: ec87d65
-verified_commit: ec87d65 # same Codex self-review
-origin_relation: "spec121 code ec87d65/docs e71e44b pushed; HEAD=origin e71e44b 0/0 verified; final receipt once"
-working_tree: "spec121 final docs7 receipt only; pre-existing protected/user23 SHA unchanged and excluded"
+baseline_commit: 66a2caa
+candidate_commit: 9837a51
+verified_commit: 9837a51 # same Codex self-review
+origin_relation: "spec122 code9837a51 local, docs7 ordinary push pending"
+working_tree: "spec122 docs7 only; protected/user23 SHA unchanged and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SYNTHETIC_ABSENCE_DECODE_NATIVE_CONTRACT
-pending_product_decision: NONE_FOR_SPEC121 # PG-1=A unchanged
+next_transition: SPEC122_PUSH_THEN_ABSENCE_PREPARATION_SINK_CONTRACT
+pending_product_decision: NONE_FOR_SPEC122 # PG-1=A unchanged
 automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
-session_status: "2026-09-10 spec121 local CODEX_PASSED; check3462/targeted166/Chromium46 PASS; push docs then next synthetic native contract within routine"
+session_status: "2026-09-10 spec122 local CODEX_PASSED; check3465/new native36/old Chromium57 PASS; push then isolated preparation sink contract"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: Codex; spec121 code2/docs7 only; exclude protected/user22 and debug.log
+commit_owner: Codex; spec122 code6/docs7 only; exclude protected/user22 and debug.log
 ```
 
 ## 오늘 세션 종료 — 2026-09-09
