@@ -1,5 +1,8 @@
 # 현재 상태
 
+> 121 DONE: ec87d65/e71e44b 일반push 완료,HEAD=origin·0/0. 아래 전송 대기는 과거 이력.
+> 최종 기록1회 후 합성 native 계약 검토로 계속. 실사진·UI·운영은 여전히 미개방.
+
 > 121 코드 ec87d65 로컬 CODEX_PASSED(동일 Codex). check3462/targeted166/기존 Chromium46 PASS.
 > 문서7 전송·Git 확인 후 다음 합성 native 계약으로 진행. 보호23/번들3 SHA 동일.
 > 실제사진·룸 UI 통합·운영 검증은 남아 있으며 새121 native 경로는 아직 NOT TESTED.

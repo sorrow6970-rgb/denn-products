@@ -1,5 +1,10 @@
 # NEXT CLAUDE PROMPT
 
+## 최종 — 121 DONE / 합성 native 계약 검토
+
+ec87d65/e71e44b 일반 전송 완료, HEAD=origin e71e44b·0/0. 최종 기록1회 후 아래 합성 native 계약 검토.
+121 전송·제품 승인 재질문0, 새 계약을 먼저 작성한다. 실제사진/UI/운영/보호 변경0.
+
 ## 최신 — 121 로컬 완료 / 전송 후 합성 native 계약
 
 121 코드 ec87d65 자체검수 CODEX_PASSED,unit65/targeted166/check3462/기존 Chromium46 PASS.

@@ -14,3 +14,7 @@ ec87d65 CODEX_PASSED(동일 Codex). unit65/targeted166/check3462/기존 Chromium
 새121 native 경로는 NOT TESTED. 다음은 합성 native 계약 검토로, 실제 사진/UI/운영 승인 확대0.
 전체 리빌드의 이미지 안전 준비는 부재 확인→동일Blob→취소 가능한 decode 수명/치수 인계까지
 합성 검증했다. 실제 픽셀의 새 경로 검증·룸 UI 통합·운영 전환은 아직 남아 있다.
+## 전송 완료
+
+코드 ec87d65/문서 e71e44b 일반 push 완료, HEAD=origin e71e44b·0/0 확인.
+121 DONE/CODEX_PASSED(동일 Codex), 다음 합성 native 계약 검토로 루틴을 이어간다.

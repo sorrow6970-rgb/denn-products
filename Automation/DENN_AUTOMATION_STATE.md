@@ -4,17 +4,17 @@
 updated_at: 2026-09-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-120-background-absence-native # DONE / CODEX_PASSED; same Codex, synthetic native handoff only
+completed_unit: spec-121-background-absence-decode # DONE / CODEX_PASSED; same Codex
 active_unit: spec-121-background-absence-decode
 state: CODEX_PASSED
 baseline_commit: 57f6dd0
 candidate_commit: ec87d65
 verified_commit: ec87d65 # same Codex self-review
-origin_relation: "spec121 code ec87d65 local, docs7 pending ordinary push to existing origin branch"
-working_tree: "spec121 docs7 only; pre-existing protected/user23 SHA unchanged and excluded"
+origin_relation: "spec121 code ec87d65/docs e71e44b pushed; HEAD=origin e71e44b 0/0 verified; final receipt once"
+working_tree: "spec121 final docs7 receipt only; pre-existing protected/user23 SHA unchanged and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC121_PUSH_THEN_SYNTHETIC_NATIVE_CONTRACT
+next_transition: SYNTHETIC_ABSENCE_DECODE_NATIVE_CONTRACT
 pending_product_decision: NONE_FOR_SPEC121 # PG-1=A unchanged
 automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
 session_status: "2026-09-10 spec121 local CODEX_PASSED; check3462/targeted166/Chromium46 PASS; push docs then next synthetic native contract within routine"
