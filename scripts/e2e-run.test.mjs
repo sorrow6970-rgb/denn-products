@@ -10,6 +10,22 @@ import { isDisposableStagingPath, selectPlaywrightArgs, STAGING_PREFIX } from ".
 const TEMP = resolve(tmpdir());
 
 describe("spec110 explicit E2E selection", () => {
+  it.each(["firefox", "webkit", "chromium"])("spec122 isolates absence decode %s", (engine) => {
+    const selector = `--absence-decode-${engine}-only`;
+    expect(selectPlaywrightArgs([selector])).toEqual([
+      "test",
+      "--config",
+      "tests/background-absence-decode.config.ts",
+      `--project=${engine}`,
+      "--workers=1",
+    ]);
+    expect(() => selectPlaywrightArgs([selector, "--timeout=60000"])).toThrow(
+      "Unsupported E2E selector",
+    );
+    expect(() => selectPlaywrightArgs([selector, "--background-lifecycle-only"])).toThrow(
+      "Unsupported E2E selector",
+    );
+  });
   it.each(["firefox", "webkit", "chromium"])("spec120 isolates absence owner %s", (engine) => {
     const selector = `--background-absence-${engine}-only`;
     expect(selectPlaywrightArgs([selector])).toEqual([
