@@ -1,5 +1,13 @@
 # 현재 상태
 
+> 121 코드 ec87d65 로컬 CODEX_PASSED(동일 Codex). check3462/targeted166/기존 Chromium46 PASS.
+> 문서7 전송·Git 확인 후 다음 합성 native 계약으로 진행. 보호23/번들3 SHA 동일.
+> 실제사진·룸 UI 통합·운영 검증은 남아 있으며 새121 native 경로는 아직 NOT TESTED.
+
+> 2026-09-10 사용자 루틴 재개. 현재121 CODEX_WORKING,120 DONE 유지,기준57f6dd0·0/0.
+> [121 계약](../rebuild/specs/121-background-absence-decode-work.md) 자체검토 통과 후 코드2/문서7 구현·검증.
+> 중요 결정 외 재승인 없이 진행. 실제사진/UI/운영 연결 없음. 아래 종료 지시는 과거 이력이다.
+
 > 2026-09-09 오늘 세션 종료: 사용자 요청으로 WAITING_FOR_NEXT_MANUAL_TASK.
 > 119·120 DONE / CODEX_PASSED 유지. 120 최종 기록 8fc5036, HEAD=origin·0/0 확인 후 종료 문서5만 전송.
 > 다음 사용자 재개 시 비연결 decode 준비 계약 검토. 오늘 새 계약/구현/테스트/예약 자동화/자동 재개 없음.

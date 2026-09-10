@@ -1,25 +1,25 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-09-09
+updated_at: 2026-09-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-120-background-absence-native # DONE / CODEX_PASSED; same Codex, synthetic native handoff only
-active_unit: spec-120-background-absence-native
-state: WAITING_FOR_NEXT_MANUAL_TASK
-baseline_commit: 276158e
-candidate_commit: 5d5c30a
-verified_commit: 5d5c30a # same Codex self-review
-origin_relation: "session-close baseline HEAD=origin=8fc5036, ahead/behind 0/0 verified; session-close docs commit is checked after push without another receipt commit"
-working_tree: "session-close docs5 only; pre-existing protected/user23 excluded and SHA-256 checked"
+active_unit: spec-121-background-absence-decode
+state: CODEX_PASSED
+baseline_commit: 57f6dd0
+candidate_commit: ec87d65
+verified_commit: ec87d65 # same Codex self-review
+origin_relation: "spec121 code ec87d65 local, docs7 pending ordinary push to existing origin branch"
+working_tree: "spec121 docs7 only; pre-existing protected/user23 SHA unchanged and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: ABSENCE_DECODE_PREPARATION_CONTRACT_REVIEW
-pending_product_decision: NONE_FOR_SPEC120 # PG-1=A unchanged
-automation_loop: stopped for today at user request; no scheduled automation or automatic restart
-session_status: "2026-09-09 session ended by user; spec119/120 DONE and CODEX_PASSED retained; resume bounded decode preparation contract only after next user request; no new implementation today"
+next_transition: SPEC121_PUSH_THEN_SYNTHETIC_NATIVE_CONTRACT
+pending_product_decision: NONE_FOR_SPEC121 # PG-1=A unchanged
+automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
+session_status: "2026-09-10 spec121 local CODEX_PASSED; check3462/targeted166/Chromium46 PASS; push docs then next synthetic native contract within routine"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: Codex; session-close STATE/NEXT/CURRENT/live/spec120 handoff docs5 only; exclude protected/user22 and debug.log
+commit_owner: Codex; spec121 code2/docs7 only; exclude protected/user22 and debug.log
 ```
 
 ## 오늘 세션 종료 — 2026-09-09

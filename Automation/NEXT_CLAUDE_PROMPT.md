@@ -1,5 +1,24 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 — 121 로컬 완료 / 전송 후 합성 native 계약
+
+121 코드 ec87d65 자체검수 CODEX_PASSED,unit65/targeted166/check3462/기존 Chromium46 PASS.
+정확 문서7 전송·Git 확인 후 다음 합성 native 검증 계약을 작성·자체검토한다.
+121 어댑터를 실제 FileReader/createImageBitmap에 연결하되 fixture가 직접 생성한 core-only 입력만.
+metadata를 제거해 일반 파일을 허가하지 않는다. 실제사진/제품 UI/운영/설치/예약 자동화0.
+native 자원 close·pending 취소·late·치수 mismatch·decoder reject·metadata 선차단을 분리 검증한다.
+새 계약의 번호·정확 범위는 실제 목록과 fixture 구현을 읽고 고정한다. 기존11614불일치 유지.
+아래 구현 중 지시는 로컬완료 전 이력. 기존GitHub/동일브랜치 지속전송 승인 범위 내 진행한다.
+
+## 최신 — 2026-09-10 루틴 재개 / 121
+
+사용자 재개 지시로 어제 종료 대기는 해소됐다. 57f6dd0·origin동일·0/0 확인.
+`docs/rebuild/specs/121-background-absence-decode-work.md`와121 review/handoff를 읽고
+정확 코드2/문서7만 구현·검증한다. 명시적인 trusted decode 포트와119 snapshot/112 admission 결속.
+동일 Codex 자체검토임을 표시. 새 Founder 선택 없음, 중요 결정/권한/충돌만 STOP.
+일반 전송은119 handoff 지속승인 범위. 실제사진/UI/운영/설치/보호 변경/예약 자동화0.
+아래 2026-09-09 종료는 과거 이력이며121 완료 수치는 실행 후 기록한다.
+
 ## 최우선 — 2026-09-09 오늘 세션 종료 / 수동 재개 대기
 
 사용자 `오늘 여기까지 마무리하자`. 상태 WAITING_FOR_NEXT_MANUAL_TASK.
