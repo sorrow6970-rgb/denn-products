@@ -1,5 +1,10 @@
 # 현재 상태
 
+> 최종121·122 DONE/CODEX_PASSED(동일 Codex).122 code9837a51/docs061af73 push,HEAD=origin·0/0.
+> check3465/새native36/기존Chromium57 PASS. 보호23/번들3SHA불변,실사진/기본UI/운영 미개방.
+> 다음: NEXT 상단의100 preparation sink 비연결 계약 검토. 새123은 아직 없으며 승인대기아님.
+> 최종기록1회 전송 후Git확인. 아래 로컬전송대기/작업중은 과거 이력이다.
+
 > 122 코드9837a51 로컬 CODEX_PASSED. check3465/새native36/기존Chromium57 PASS,보호23/번들3 불변.
 > 문서전송후100 preparation sink 비연결계약 검토로 루틴 계속. 실사진/기본UI/운영은 남아 있음.
 

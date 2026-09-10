@@ -1,5 +1,25 @@
 # NEXT CLAUDE PROMPT
 
+## 최종 실행 포인터 — 121·122 DONE / 다음 preparation sink 계약
+
+121은66a2caa 종료,122 코드9837a51/문서061af73 일반push 완료. HEAD=origin061af73·0/0 확인.
+이 최종기록1회 전송 후 Git 결과 확인. 아래 완료된 전송·검증을 다시 실행한 것으로 기록하지 않는다.
+현재 CODEX_PASSED, 다음은 **100 preparation sink와121 부재검사 decode lease 연결 계약** 검토다.
+중요사항 외 재승인 없이 진행하는 사용자 루틴은 유지되며 승인대기 상태가 아니다. 예약자동화0.
+
+다음 정확 순서:
+1. 최신 STATE/CURRENT/live 완료항목, PG-1,121·122 계약/review 및119 지속Git승인 범위를 읽는다.
+2. 실제번호/HEAD/원격관계/dirty소유권·보호23/번들3 SHA를 확인한다.
+3. preparation.ts,background-preparation-port.ts와시험,background-absence-decode.ts와시험을 읽는다.
+4. source/background identity에 따른 신뢰된 입력조회는 작업슬롯 확보 후1회만 하고,
+   frame capture 선행, request snapshot/치수 lease 소유권, source 변경/clear/dispose/교체/late,
+   sink getter/callback 예외 및 재진입, BUSY시새read/decode0을 정확 계약·자체검토로 고정한다.
+5. 기존113/114API나100코드를 임의 변경하지 않는다. exact 신규port/시험 및필요문서 범위를 먼저
+   명시한 뒤 구현·검증·고정Git 일반전송. 기본UI/원bitmap그리기/실사진/metadata추가허가/운영은 제외한다.
+
+새123 계약/제품코드는 아직 없다. 기존116 PNG14불일치, 실기기/일반사진 허용률은 미해결이다.
+이번122 성공은 작은 합성 native 수명만. 실제 새 제품결정·권한·예산·충돌에만 STOP한다.
+
 ## 최신 — 122 로컬완료 / 다음은 비연결 preparation sink 계약
 
 9837a51 CODEX_PASSED,check3465/selector29/새3엔진36/기존Chromium57 PASS.122문서7 일반전송후

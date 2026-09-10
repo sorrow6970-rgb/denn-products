@@ -4,20 +4,20 @@
 updated_at: 2026-09-10
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-121-background-absence-decode # DONE / CODEX_PASSED; same Codex
+completed_unit: spec-122-background-absence-decode-native # DONE / CODEX_PASSED; same Codex
 active_unit: spec-122-background-absence-decode-native
 state: CODEX_PASSED
 baseline_commit: 66a2caa
 candidate_commit: 9837a51
 verified_commit: 9837a51 # same Codex self-review
-origin_relation: "spec122 code9837a51 local, docs7 ordinary push pending"
-working_tree: "spec122 docs7 only; protected/user23 SHA unchanged and excluded"
+origin_relation: "spec122 code9837a51/docs061af73 pushed; HEAD=origin061af73 0/0 verified; final receipt once, then Git check without another receipt"
+working_tree: "spec122 final docs7 receipt only; protected/user23 SHA unchanged and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC122_PUSH_THEN_ABSENCE_PREPARATION_SINK_CONTRACT
+next_transition: ABSENCE_PREPARATION_SINK_CONTRACT_REVIEW
 pending_product_decision: NONE_FOR_SPEC122 # PG-1=A unchanged
 automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
-session_status: "2026-09-10 spec122 local CODEX_PASSED; check3465/new native36/old Chromium57 PASS; push then isolated preparation sink contract"
+session_status: "2026-09-10 spec121 and122 DONE/pushed; check3465/new native36/old Chromium57 PASS; next isolated preparation sink contract, no routine approval needed"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
 commit_owner: Codex; spec122 code6/docs7 only; exclude protected/user22 and debug.log
 ```
