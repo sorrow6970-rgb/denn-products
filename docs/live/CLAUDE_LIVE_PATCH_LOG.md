@@ -9162,3 +9162,19 @@ bdcf18c/35477e9 일반push 성공(32924f2..35477e9),HEAD=origin35477e9·0/0 확�
 - 코드와분리한완료문서7을고정origin/rebuild/modern-studio 일반전송후Git확인한다.
 - 전송확인: ce9d4cf/9d6fb07 일반push성공,HEAD=origin9d6fb07·ahead/behind0/0.
   작업소유dirty0,기존보호/사용자23만남음. 최종기록1회전송후Git만확인,다음제한paint계약은아직미착수.
+
+## 2026-09-11 — 125 제한 paint lease 착수
+
+- 사용자스펙간루틴승인으로125계약·조사·자체검토. 기준HEAD=origin76ebe36·0/0,보호23 SHA캡처.
+- 기존100/123 size-only/102privatepaint/121단일소유권을대조했다. 중복decode·외부registry미채택.
+  명시paintfactory추가/기존factory불변을code3/docs7로고정. 새native/UI/실사진/운영권한0.
+
+## 2026-09-11 — 125 제한 paint 구현·검증 완료
+
+- 코드5b1d172 CODEX_PASSED/DONE(동일Codex). code3/docs7. 기존sizefactory변경없음을실행검증.
+- 신규40,targeted277=237+40,전체check3571=3531+40(117파일),format/lint356,typecheck7,build2 PASS.
+- 기존Chromium18(4.1s)/Firefox18(43.3s)/WebKit18(40.9s)+Chromium46(5.3s)+12(3.2s)=112 PASS.
+  이번게이트실패/재시도0. 신규paintnative PASS로오인하지않는다.
+- 보호23/번들3 SHA불변,diff--check PASS,예상밖변경0,temp5부재/포트3listen0.
+  copy/getter재진입,종료우선순위,단일인계,close실패blocked를고정했다. 실사진/UI/운영/자동화0.
+- 다음합성native paint계약검토로사용자루틴을이어간다. 중요제품선택이나새권한이아니면재승인질문0.

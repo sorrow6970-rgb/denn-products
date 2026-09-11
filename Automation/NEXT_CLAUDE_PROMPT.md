@@ -1,5 +1,21 @@
 # NEXT CLAUDE PROMPT
 
+## 최우선 — 125 완료 / 다음 합성 native paint 검증
+
+5b1d172 CODEX_PASSED/DONE. targeted277/check3571/기존회귀112 PASS.125문서7 일반전송후
+명시paintfactory의native검증계약을작성·자체검토하고정확범위로진행한다. 새승인질문없음.
+125spec/review/handoff와122codec/124fixture/102paint검증패턴을읽고,합성JPEG/PNG만 사용한다.
+실제FileReader/bitmap/copyTo→별도Canvas의동일환경reference RGBA비교,해제/취소/dispose후copy0,
+invalid aspect·copythrow·metadata선차단·safe-net미사용·외부egress0을정확행렬로고정한다.
+기본UI/실사진/원자원반환/metadata추가허용/운영/설치/보호변경0. 새코드경로는새계약전열지않는다.
+
+## 현재 — 125 제한paint lease 구현·검증
+
+사용자 스펙간루틴지시로125계약/review작성·자체검토통과. 기준76ebe36.
+`docs/rebuild/specs/125-background-absence-paint-lease.md`의code3/docs7만실행.
+기존sizefactory불변/명시paintfactory추가,단일decode/소유권공유. 기본UI/실사진/운영/보호변경0.
+새nativepaint와100/123쌍결속은이번범위밖. 아래124완료포인터는이력.
+
 124 전송완료: codece9d4cf/docs9d6fb07 일반push,HEAD=origin9d6fb07·0/0 확인.
 이최종기록1회전송후Git만확인한다.124 DONE유지,다음NEXT의제한paint계약검토.중요사항외재질문0.
 

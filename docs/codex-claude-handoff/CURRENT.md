@@ -1,5 +1,11 @@
 # 현재 상태
 
+> 최신125 DONE/CODEX_PASSED,5b1d172. check3571/targeted277/기존회귀112 PASS,보호23/번들3불변.
+> 다음은합성native paint계약·검증.125native paint·룸UI/실사진/운영은아직미검증/미개방.
+
+> 2026-09-11 현재125 CODEX_WORKING. code3/docs7 계약자체검토통과,검증은실행후기록.
+> 124 DONE유지. 기존100/123 size-only에그리기권한이없음을확인하고배경paintfactory를명시분리한다.
+
 124 전송완료: codece9d4cf/docs9d6fb07 일반push,HEAD=origin9d6fb07·0/0 확인.
 이최종기록1회전송후Git만확인한다.124 DONE유지,다음NEXT의제한paint계약검토.중요사항외재질문0.
 

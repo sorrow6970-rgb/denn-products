@@ -4,22 +4,22 @@
 updated_at: 2026-09-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-124-background-absence-preparation-native # DONE / CODEX_PASSED; same Codex
-active_unit: spec-124-background-absence-preparation-native
+completed_unit: spec-125-background-absence-paint # DONE / CODEX_PASSED; same Codex
+active_unit: spec-125-background-absence-paint
 state: CODEX_PASSED
-baseline_commit: 3287aaf
-candidate_commit: ce9d4cf
-verified_commit: ce9d4cf # same Codex; local synthetic native gates passed
+baseline_commit: 76ebe36
+candidate_commit: 5b1d172
+verified_commit: 5b1d172 # same Codex; synthetic paint and existing native regression
 origin_relation: "spec124 codece9d4cf/docs9d6fb07 pushed; HEAD=origin9d6fb07 0/0 verified; final receipt once then Git check"
 working_tree: "spec124 final docs7 receipt; pre-existing protected/user23 SHA unchanged and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: ROOM_PAINT_OWNERSHIP_CONTRACT_REVIEW
-pending_product_decision: NONE_FOR_SPEC124 # PG-1=A unchanged
+next_transition: BACKGROUND_PAINT_NATIVE_CONTRACT_REVIEW
+pending_product_decision: NONE_FOR_SPEC125 # PG-1=A unchanged
 automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
-session_status: "2026-09-11 spec123 and124 DONE; spec124 check3531/native54/regression58 PASS; next bounded paint ownership contract, no routine reapproval"
+session_status: "2026-09-11 spec125 DONE; check3571/targeted277/native regression112 PASS; next synthetic native paint contract under user routine"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: "Codex spec124 code6/docs7 only; protected/user23 excluded"
+commit_owner: "Codex spec125 code3/docs7 only; protected/user23 excluded"
 ```
 
 ## 오늘 세션 종료 — 2026-09-09
