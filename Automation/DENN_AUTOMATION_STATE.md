@@ -10,8 +10,8 @@ state: CONTRACT_REVIEW_IN_PROGRESS
 baseline_commit: 05d0971
 candidate_commit: NOT_IMPLEMENTED
 verified_commit: 595cb6a # check3732; targeted133; final native33+regression31 PASS
-origin_relation: "start HEAD=origin05d0971 0/0; font binding docs8 pending ordinary transfer"
-working_tree: "font binding docs8 unstaged; protected22 + approved debug.log preserved/excluded; local font artifacts8 ignored"
+origin_relation: "font binding docs8 pushed25273a7; verified HEAD=origin25273a7 0/0; final receipt5 only"
+working_tree: "font binding docs8 committed; final receipt5; protected22 + approved debug.log preserved/excluded; local font artifacts8 ignored"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: SPEC132_CONSOLIDATED_CONTRACT_REVIEW

@@ -2,6 +2,9 @@
 
 ## 최신 인계 — 폰트 결속 설계 검토 완료
 
+문서8 전송:25273a761b91def32f8c4a4f8b9e9c1ad41501f5,HEAD=origin25273a7·0/0 확인.
+최종 전송 기록5문서만1회 처리하며 제품/원본/보호 추가 변경은 없다.
+
 05d0971에서 시작해132 S-19~S-23을 작성/자체검토했다. runtime geometry의 동일-font alias와
 같은 plan의 실행 차용을 선택했고,preview/capture/print·Space의 실제 호출 경계를 대조했다.
 shared builder의 자간 wrap/paint 측정 차이를 정적으로 확인했다. 합성 반례는 예정 시험이지 실측이 아니다.
