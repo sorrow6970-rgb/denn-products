@@ -1,5 +1,13 @@
 # 현재 상태
 
+> 최신126 code91e5b36 DONE/CODEX_PASSED(동일Codex),check3574/새48+회귀76 PASS.
+> 보호23/번들3불변. 문서전송후 다음준비세대-paint결속계약 검토로루틴계속.
+> 실제룸UI/실사진/운영과116PNG14는미완. 아래착수상태는이력.
+
+> 2026-09-11 최신126 CODEX_WORKING. b6e4df2 기준,계약/review 선행작성·자체검토 통과.
+> exact code6/docs7,새native48+회귀76은 NOT TESTED.125 DONE 유지. 실사진/UI/운영/보호변경0.
+> 이하125 및 이전은 완료 이력.
+
 125 전송완료: code5b1d172/docsfb85ab5,HEAD=originfb85ab5·0/0 확인. 최종기록1회후다음native계약.
 
 > 최신125 DONE/CODEX_PASSED,5b1d172. check3571/targeted277/기존회귀112 PASS,보호23/번들3불변.

@@ -1,5 +1,19 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 — 126 합성 native paint 검증 진행
+
+126 code91e5b36 DONE/CODEX_PASSED(동일Codex),check3574/새48+회귀76 PASS.
+완료문서7 일반전송후 준비세대와 frame/background paint의 결속 계약을 선행작성·검토하고 진행한다.
+100 preparation과123 port는 아직치수전용. 같은cohort 안의명시paint모드와기존모드불변,
+종료/교체/source변경/재진입후옛handle paint0,두rect 선검증·실패target비공개를 고정해야한다.
+102/125 실제권한을중복decode/별도registry없이연결하고정확파일목록/시험을 먼저 문서화한다.
+기본UI/실사진/운영/보호/설치권한추가0. 이하착수문구는이력이며재승인대기가아니다.
+
+125 최종 b6e4df2=origin 0/0. 사용자 루틴에 따라126 계약/review 선행 작성·자체검토 통과.
+`docs/rebuild/specs/126-background-absence-paint-native.md` exact code6/docs7만 구현·검증한다.
+새48/기존76 목표이며 실측 전 PASS 기록0. 기본UI/실사진/운영/설치/보호변경0.
+아래125 및 이전의 포인터는 완료 이력이다. 다음은 준비세대/두 paint 권한의 결속 계약 후보.
+
 125 전송완료: code5b1d172/docsfb85ab5,HEAD=originfb85ab5·0/0 확인. 최종기록1회후다음native계약.
 
 ## 최우선 — 125 완료 / 다음 합성 native paint 검증

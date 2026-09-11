@@ -9179,3 +9179,23 @@ bdcf18c/35477e9 일반push 성공(32924f2..35477e9),HEAD=origin35477e9·0/0 확�
   copy/getter재진입,종료우선순위,단일인계,close실패blocked를고정했다. 실사진/UI/운영/자동화0.
 - 다음합성native paint계약검토로사용자루틴을이어간다. 중요제품선택이나새권한이아니면재승인질문0.
 - 전송완료: code5b1d172/docsfb85ab5 일반push,HEAD=originfb85ab5·0/0 확인. 최종기록1회후다음단위.
+
+## 2026-09-11 — 126 합성 native paint 계약·착수
+
+- 125 최종 b6e4df2=origin·0/0 확인. 보호·사용자23 SHA 동일.
+- 126 code6/docs7 계약·자체검토 선행완료. synthetic JPEG/PNG ×8경로 ×3엔진48,
+  기존Chromium76 목표. 새native 결과는 NOT TESTED. 기본UI/실사진/운영/자동화0.
+
+## 2026-09-11 — 126 완료 검증
+
+코드91e5b36 CODEX_PASSED/DONE(동일 Codex 자체검수; 독립검수 아님).
+selector35=32+3, 전체check3574=3571+3(117파일), format/lint359,typecheck7,build2 PASS.
+신규Chromium16(3.9s)/Firefox16(39.0s)/WebKit16(36.7s)=48 PASS.
+기존Chromium18(4.2s)+46(5.4s)+12(3.2s)=76 PASS. 총124=48+76, 실패/재시도0.
+Firefox 일반실행 권한 도구승인 후 실행. 설정완화/설치0.
+RGBA전체일치·비어있지않음·외곽투명, copy0·부분copy실패 비공개·close1/0×0,
+beforeCleanup 및 needsSafetyClose:false, 외부시도/console/pageerror/URL/Image/DOM표시0 검증.
+보호23/기본번들3 SHA불변,exactcode6/docs7,diff--check PASS.
+자기temp 0IaMMS/bSyZ6r/PCyMYs/PoWpWg/PrbXxb/tM4mS1 부재,4183/4184/4185 listen0.
+기본룸UI/실사진/운영 미개방. 기존116PNG14미해결. same-bitmap reference는 독립decode기준 아님.
+다음은 준비세대와 두 paint 사용권의 결속 계약·검토다. 총가중진척은 UNCONFIRMED.
