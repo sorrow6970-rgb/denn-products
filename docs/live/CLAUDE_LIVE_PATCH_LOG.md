@@ -9259,3 +9259,24 @@ tBSrYZ/wdPhnn/5OrDj6/sCba1B/EXuVOe/eJJdRZ/OzhKFG/XjpWHQ/VyAB7j 부재,
 - 128 전송확인:code16780ea/docs83ea33a 일반push,HEAD=origin83ea33a·ahead/behind0/0.
   taskdirty0·기존보호/사용자23만남음을확인. 이최종기록1회전송후Git확인,추가영수증루프0.
   125~128 루틴완료,다음실제시안source계약순서를NEXT에남겼다.새정책/운영권한승인0.
+
+## 2026-09-11 — 129 committed source 계약·착수
+
+- 사용자129이후루틴진행지시에따라3157325=origin·0/0,보호23SHA확보.
+- 현재Composer/hook/owner대조:surface ready/probe는정본아님,dispose후state잔존가능.
+- 신규source 등록·즉시무효화규약code2/docs7 계약·자체검토선행완료.
+  trusted isCurrent와실제React증명을분리한다. 신시험NOT TESTED.기본UI/실사진/운영/자동화0.
+
+## 2026-09-11 — 129 완료 / image owner 증명 경계로 계속
+
+code fe58f07 DONE / CODEX_PASSED(동일 Codex 자체검수). 신규2/docs7 정확범위.
+새 unit52 / targeted189=137+52 / check3689=3637+52(120파일) PASS.
+format/lint366, typecheck7, build2 PASS. 기존 Chromium pair20(5.0s)+paint16(4.0s)+
+preparation18(4.4s)=54 PASS. 신규 source의 React/native 연결은 NOT TESTED.
+실제102/127 합성 결속에서 ready pair 즉시해제, pending 취소·late lease 해제를 검증했다.
+보호23 SHA 불변, 기본 고객 JS/CSS 및 admin JS 3개 SHA 불변. diff--check/exactscope PASS.
+cfjAsD/JD1DKc/82rabn staging 부재, 4183/4184/4185 listen0.
+다음 계약은 이미지 owner 생존을 실제 private disposed/generation/ready-record로 증명하는
+읽기 전용 port다. 오래된 React ready snapshot은 그 증명을 대신하지 못한다.
+실제UI/일반사진/실기기/운영은 미완·미개방. 전체 완료율 분모 및 잔여 총 스펙수 UNCONFIRMED.
+문서7 일반 전송 후 Git을 확인하고 루틴 계속. 새 제품선택·권한 추가/예약자동화0.

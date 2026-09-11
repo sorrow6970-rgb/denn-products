@@ -1,5 +1,12 @@
 # 현재 상태
 
+> 최신129 fe58f07 DONE / CODEX_PASSED(동일 Codex). 새52/targeted189/check3689/회귀54 PASS.
+> code2/docs7·보호23/번들3 불변. 문서 전송 확인 후 image-owner 생존 증명 계약으로 계속.
+> 실제 고객 source/UI·일반사진·실기기·운영 미완. 아래 착수 상태는 이력.
+
+> 최신129 CODEX_WORKING,3157325기준계약·자체검토통과. 신규code2/docs7.
+> 128DONE/동기화0/0 유지. 새source 규약시험NOT TESTED,React연결·실사진·운영0.
+
 128 전송확인:16780ea/83ea33a 일반push,HEAD=origin83ea33a·0/0.최종기록1회후다음source계약.
 
 > 최신128 code16780ea DONE/CODEX_PASSED(동일Codex),check3637/새60+회귀92 PASS.

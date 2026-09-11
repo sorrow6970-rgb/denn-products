@@ -1,5 +1,22 @@
 # NEXT CLAUDE PROMPT
 
+## 최우선 — 129 완료 / image owner 생존 증명 계약
+
+129 code fe58f07 DONE / CODEX_PASSED(동일 Codex). 새52/targeted189/check3689/기존 Chromium54 PASS.
+정확 docs7 일반 전송 후 Git0/0·보호23을 확인하고 다음 계약→검토→구현→검증 루틴을 이어간다.
+current LocalImageBinding/TemplateArtBinding controller와 hooks를 읽고 ready snapshot과
+실제 disposed/generation/ready-record 생존을 구분하는 읽기 전용 port를 선행 계약화한다.
+source의 isCurrent가 마지막 ready 상태나 같은 imageRef만으로 true를 반환하게 하지 않는다.
+새 UI/실사진/운영/설치/보호 변경 권한은 없으며 실제 React source 연결도 별도 정확 계약이다.
+다음 일반 구조·검증 단계는 승인 재질문 없이 진행한다. 이하129 착수 및 이전은 이력.
+
+## 이력 — 129 committed source 등록규약
+
+3157325=origin·0/0 확인.129 계약/review선행작성·자체검토완료.
+`docs/rebuild/specs/129-room-committed-source-contract.md`의신규code2/docs7만구현·검증한다.
+실제React/hook/Composer연결은다음계약. current ready상태만으로owner생존을추정하지않는다.
+실사진/기본UI/운영/보호/설치/자동화0. 아래128은완료이력.
+
 ## 최우선 — 128 완료 / 실제 시안 source 연결 경계
 
 전송확인:128 code16780ea/docs83ea33a 일반push,HEAD=origin83ea33a·0/0.

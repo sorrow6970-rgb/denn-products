@@ -4,22 +4,22 @@
 updated_at: 2026-09-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-128-preparation-pair-paint-native # DONE / CODEX_PASSED; same Codex
-active_unit: spec-128-preparation-pair-paint-native
+completed_unit: spec-129-room-committed-source # DONE / CODEX_PASSED; same Codex
+active_unit: spec-129-room-committed-source
 state: CODEX_PASSED
-baseline_commit: 033916e
-candidate_commit: 16780ea
-verified_commit: 16780ea #sameCodex;check3637/native60+regression92 PASS
-origin_relation: "128 code16780ea/docs83ea33a pushed; HEAD=origin83ea33a 0/0 verified; final receipt once"
-working_tree: "128 final receipt docs only; pre-existing protected/user23 unchanged and excluded"
-fix_round: 1
+baseline_commit: 3157325
+candidate_commit: fe58f07
+verified_commit: fe58f07
+origin_relation: "code fe58f07 committed; docs7/push pending; origin3157325"
+working_tree: "129 docs7 pending; code2 committed; protected/user23 SHA unchanged and excluded"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: ROOM_COMMITTED_SOURCE_CONTRACT_REVIEW
-pending_product_decision: NONE_FOR_SPEC128 # PG-1=A unchanged
+next_transition: IMAGE_OWNER_LIVENESS_CONTRACT
+pending_product_decision: NONE_FOR_SPEC129 # PG-1=A unchanged
 automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
-session_status: "2026-09-11 spec128 DONE;check3637/native60+regression92 PASS;next committed source contract under routine, no routine approval question"
+session_status: "2026-09-11 spec129 DONE; new52/targeted189/check3689/Chromium54 PASS; routine continues"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: "Codex spec128 code6/docs7 only; protected/user23 excluded"
+commit_owner: "Codex spec129 code2/docs7 only; protected/user23 excluded"
 ```
 
 ## 오늘 세션 종료 — 2026-09-09
