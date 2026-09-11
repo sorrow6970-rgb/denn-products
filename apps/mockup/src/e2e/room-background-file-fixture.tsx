@@ -3,6 +3,7 @@ import { useState } from "react";
 import { createRoomBackgroundPngCapabilityProbe } from "../room-placement/background-png-capability";
 import { checkBackgroundNative } from "./background-native-check";
 import { checkAbsenceDecode } from "./background-absence-decode-check";
+import { checkAbsencePaint } from "./background-absence-paint-check";
 import { checkAbsencePreparation } from "./background-absence-preparation-check";
 import {
   createRoomBackgroundEvidenceJob,
@@ -55,6 +56,7 @@ function png(): Uint8Array<ArrayBuffer> {
 }
 
 async function check(mode: string): Promise<Record<string, unknown>> {
+  if (mode.startsWith("paint-")) return checkAbsencePaint(mode.slice(6));
   if (mode.startsWith("prepare-")) return checkAbsencePreparation(mode.slice(8));
   if (mode.startsWith("absence-")) return checkAbsence(mode.slice(8));
   if (mode.startsWith("decode-")) return checkAbsenceDecode(mode.slice(7));
@@ -370,6 +372,18 @@ export function RoomBackgroundFileFixture() {
           "late",
         ].map((mode) => `absence-${mode}`),
         "capability-normal",
+        ...["jpeg", "png"].flatMap((format) =>
+          [
+            "normal",
+            "fractional",
+            "release",
+            "dispose",
+            "cancel",
+            "copy-throw",
+            "invalid-aspect",
+            "metadata",
+          ].map((action) => `paint-${format}:${action}`),
+        ),
         ...["jpeg", "png"].flatMap((format) =>
           [
             "normal",

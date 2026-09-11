@@ -55,6 +55,15 @@ function run(command, args, env) {
 export function selectPlaywrightArgs(args) {
   if (Array.isArray(args) && args.length === 0) return ["test"];
   for (const engine of ["firefox", "webkit", "chromium"]) {
+    if (Array.isArray(args) && args.length === 1 && args[0] === `--absence-paint-${engine}-only`) {
+      return [
+        "test",
+        "--config",
+        "tests/background-absence-paint.config.ts",
+        `--project=${engine}`,
+        "--workers=1",
+      ];
+    }
     if (
       Array.isArray(args) &&
       args.length === 1 &&
