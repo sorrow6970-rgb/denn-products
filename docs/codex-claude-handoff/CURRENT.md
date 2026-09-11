@@ -1,5 +1,13 @@
 # 현재 상태
 
+> FP-1=A 승인 반영.관리형폰트 공급계약 문서 자체검토 PASS,132전체 CONTRACT_REVIEW_IN_PROGRESS.
+> 결정1+기존문서7=8파일,제품코드0/자산미선정·미취득.다음공식공급근거 문서조사,승인방향재질문0.
+> 131DONE 유지.아래FP-1미선택/STOP은과거이력.실제룸UI·폰트/일반사진·운영은미완.
+
+> 현재132 BLOCKED_CONTRACT / FOUNDER_DECISION_REQUIRED — 폰트 공급 방향 FP-1 미선택.
+> a85da9f=origin·0/0 재개.031의 '요청family차단'은 fonts.check만으로증명되지 않음(공식근거+3엔진진단).
+> 문서7unstaged만보완,제품구현/commit/push0.131DONE 유지. 아래계약진행중/승인대기아님은이력.
+
 > 현재132 CONTRACT_REVIEW_IN_PROGRESS.131595cb6a/e0f69e7 DONE·원격0/0 확인.
 > 실제 Composer source adapter 초안 작성; 기술 QUESTIONS3 검토가 다음 작업. Founder 승인대기 아님.
 > 132문서7만 변경·제품구현0/새검증NOT TESTED. 아래131이하 완료이력.

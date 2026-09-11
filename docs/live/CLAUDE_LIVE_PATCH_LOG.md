@@ -9362,3 +9362,41 @@ BrowseFlow selection key를 읽어 실제연결 범위를 정리했다. 후보�
 입력updater 밖 즉시무효화·부모 pending선택·font환경현재성의 기술항목3개를 검토한다.
 CONTRACT_REVIEW_IN_PROGRESS,Founder 승인대기 아님. 구현·신규시험0/NOT TESTED.
 131검증값은131에만 유효.132코드 착수는 계약자체검토 후. 일반재승인 질문/예약자동화0.
+
+## 2026-09-11 —132 계약 검토 STOP / 폰트 가정 반례
+
+재개 HEAD=origin a85da9f·0/0.132계약·STATE/NEXT/CURRENT와현재Composer/parent/owner를읽었다.
+031:33/54–55/216–218은신규폰트로드0+요청family미준비차단+fonts.check를동시에요구한다.
+PreviewComposer:420–438은check만검사한다. W3C CSS Font Loading Module Level3 §3.3:
+https://www.w3.org/TR/css-font-loading-3/#font-face-set-check
+(2023Working Draft,확인2026-09-11;2026EditorDraft도대조)는없는family에도true임을명시.
+ready 이후새로드가능,check/ready를정확family및전역폰트불변증명으로사용할수없다.
+React useState/useLayoutEffect 공식문서도검토:updater내무효화/cleanup부작용금지,commit-onlyattach.
+
+로컬진단:기설치Playwright3엔진,빈setContent,전requestabort,finallyclose.가짜family단독/표준fallback
+포함check를각검사하여3×2=6true.각엔진document.fonts.size0/요청0,exit0.실제폰트목록접근0.
+진단은제품구현E2E PASS가아니다.실제카탈로그/고객폰트실패·정확지원비율은NOT TESTED.
+tracked폰트확장자목록0/일반rg검색0;ignored자산·운영자폰트·OS폰트유무는확인하지않았다.
+
+정책선택 FP-1:A(권장)=사용권/출처를확인한관리형폰트공급계약,B=대체폰트명시허용.
+어느것도채택하지않음.새폰트로드/자산선정또는기기별대체정책은제품결정이므로자동승인0.
+기술QUESTIONS1/2는후보정리만,폰트문제를숨기거나문구제거/사진전용우회0.
+state FOUNDER_DECISION_REQUIRED,131DONE 유지,132구현게이트NOT TESTED.
+문서7만보완/보호23SHA불변/제품코드·Rules·config·test·의존성변경0.
+STOP 규칙에따라stage/commit/push/다음스펙/예약자동화0.최종diff/Git확인후Founder방향을묻는다.
+최종확인:문서7 diff +134/-9(이확인행추가전),diff--check PASS,staged0,
+HEAD=origin a85da9f·0/0,보호23/기본번들3SHA불변,preview포트4183/4184/4185잔류0.
+
+## 2026-09-11 — FP-1=A 승인 /132 공급 계약 문서 보완
+
+사용자 `응 보완해`는직전권장A(관리형지정폰트,확인불가자동대체금지)와공급계약보완의직접승인.
+결정정본1+132spec/review/handoff/STATE/NEXT/CURRENT/live7=문서8만수정한다.
+132 S-1~S-7: 출처/정확사용권/byte hash/face·style/문자·shaping/재현증거,
+자산취득전권한게이트,등록owner와차용수명,측정~capture현재성,실패행렬을문서화했다.
+공식W3C CSS Font Loading,Microsoft OpenType cmap/OS2본문확인(2026-09-11),특정license판정0.
+공급문서 FONT_SUPPLY_DOCUMENT_REVIEW_PASSED(동일Codex),132전체계약은아직검토중.
+자산명/파일/버전미선정·NOT PROVIDED,실제문자지원·browser픽셀·구현NOT TESTED.
+이전3엔진반례를이번신규제품검증으로계산하지않았다.이번unit/E2E/build/browser실행0.
+다운로드/설치/제품코드/Rules/config/test/CSS/manifest/lockfile/운영/보호/예약자동화변경0.
+일반지속Git승인범위의문서8만검증후전송,다음공식공급·사용권후보문서조사로포인터를맞춘다.
+전송전검증:정확문서8/보호23SHA불변/기본번들3SHA불변/diff--check PASS,staged0,Git0/0.

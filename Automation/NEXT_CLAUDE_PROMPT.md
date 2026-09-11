@@ -1,5 +1,26 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 — FP-1=A 승인 / 관리형 폰트 공급 문서 보완 완료
+
+사용자 `응 보완해`로직전A방향승인.결정정본2026-09-11-fp1-managed-font-supply-decisions.md와
+132spec S-1~S-7이현재정본.공급문서 FONT_SUPPLY_DOCUMENT_REVIEW_PASSED(동일Codex).
+132전체 CONTRACT_REVIEW_IN_PROGRESS,131DONE. A방향승인은 다시묻지않는다.
+다음은같은문서8에서공식공급·사용권 후보의공개본문 조사와자산수용기록을준비한다.
+실제family/파일/버전은미선정,byte/coverage/재현NOT TESTED.특정폰트선정이나binary요청전권한확인.
+제품코드/test/CSS/config/manifest/lockfile/폰트취득·설치·배포·운영접근·보호변경0.
+기존지속Git승인으로정확문서8일반commit/push가능.아래미선택STOP은승인전이력.
+
+## 최우선 STOP —132 폰트 공급 방향 FP-1 미선택
+
+a85da9f=origin·0/0에서 재개한132계약 검토에서031폰트 가정 불일치를 확인했다.
+W3C CSS Font Loading §3.3과 빈페이지3엔진 모두 없는family에도 fonts.check=true.
+이 값은family실존증명이 아니다.132spec 마지막 절·review/handoff에 공식근거/진단/선택지 기록.
+state FOUNDER_DECISION_REQUIRED,next FOUNDER_FP1_FONT_SUPPLY_DIRECTION.
+권장A=출처·사용권 확인된 관리형폰트 공급 계약 먼저;B=명시적 시스템/대체 허용. 아직미선택.
+A도 다운로드/설치/운영조회 승인이 아니다. 선택 후 문서공급계약부터 정확범위를 고정한다.
+현재제품코드/test/config0,문서7만unstaged. STOP 중 stage/commit/push/자동화0.
+131DONE 유지. 아래 'Founder 승인대기 아님'은 이번 결함 발견 전 이력이며 현재 지시가 아니다.
+
 ## 현재 —132 실제 Composer source 계약 기술 검토
 
 131595cb6a/e0f69e7 일반push,HEAD=origin e0f69e7·0/0 확인.131DONE 유지.

@@ -7,19 +7,20 @@ pipeline: rebuild-modern-studio
 completed_unit: spec-131-react-room-source # DONE / CODEX_PASSED; same Codex
 active_unit: spec-132-composer-room-source-adapter
 state: CONTRACT_REVIEW_IN_PROGRESS
-baseline_commit: e0f69e7
+baseline_commit: a85da9f
 candidate_commit: NOT_IMPLEMENTED
 verified_commit: 595cb6a # check3732; targeted133; final native33+regression31 PASS
-origin_relation: "131 595cb6a/e0f69e7 pushed; HEAD=origin e0f69e7 0/0 at132 start"
-working_tree: "132 draft/review/handoff/STATE/NEXT/CURRENT/live docs7 only; protected/user23 excluded"
+origin_relation: "HEAD=origin a85da9f 0/0 at FP-1=A resume; docs8 ordinary transfer after verification"
+working_tree: "132 docs7 plus FP-1 decision1 only; protected/user23 unchanged and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC132_TECHNICAL_CONTRACT_REVIEW
-pending_product_decision: NONE #132 technical questions3; not Founder approval wait
+next_transition: FONT_SUPPLY_PUBLIC_EVIDENCE_REVIEW
+pending_product_decision: NONE_FOR_DOCUMENT_REVIEW #FP-1=A accepted; actual asset selection/acquisition not approved
+font_supply_document_review: PASSED_SAME_CODEX
 automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
-session_status: "2026-09-11 spec131 DONE/pushed;132 technical contract review in progress; no new implementation"
+session_status: "2026-09-11 FP-1=A supply document completed; actual font assets/implementation NOT TESTED;132 overall contract review remains"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: "Codex spec132 docs7 only during contract review; protected/user23 excluded"
+commit_owner: "Codex spec132 docs8 only; protected/user23 excluded"
 ```
 
 ## 오늘 세션 종료 — 2026-09-09
