@@ -1,5 +1,12 @@
 # 현재 상태
 
+> 최신128 code16780ea DONE/CODEX_PASSED(동일Codex),check3637/새60+회귀92 PASS.
+> R1 합성좌표보완이력보존,보호23/번들3불변. 다음실제시안의committed source계약검토.
+> 기본룸UI/실사진/실기기/운영미완. 아래착수/이전상태는이력.
+
+> 최신128 CODEX_WORKING,033916e기준계약/자체검토통과. code6/docs7,새native60미검증.
+> 127 DONE 일반push HEAD=origin033916e·0/0.실사진/기본UI/운영/보호변경0.아래이력.
+
 > 최신127 coded21a49d DONE/CODEX_PASSED(동일Codex). check3634/targeted317/회귀92 PASS.
 > 보호23/번들3불변.문서전송후합성native pair계약으로계속. 실제UI/실사진/운영미개방.
 

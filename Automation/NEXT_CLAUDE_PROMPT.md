@@ -1,5 +1,36 @@
 # NEXT CLAUDE PROMPT
 
+## 최우선 — 128 완료 / 실제 시안 source 연결 경계
+
+128 code16780ea DONE/CODEX_PASSED(동일Codex). check3637/selector38/최종native60+회귀92 PASS.
+최초Firefox의합성좌표2FAIL은R1에서여백을확보해정정했고기존단언은유지했다. 실패이력보존.
+완료문서7전송확인후다음계약검토는사용자스펙간루틴범위,일반승인재질문0.
+
+다음정확순서:
+1. STATE/CURRENT/live의최종Git·보호23·기본번들3확인,128 spec/review/handoff를읽는다.
+2. RG-2/RG-3/PG-1,098 geometry,101 source조사,102/127API를현재PreviewComposer와대조한다.
+   101의이전line은위치힌트뿐이며현코드로재확인한다.
+3. PreviewComposer의built.final plan / imageBindings / entries·art owner / font/viewport /
+   clockPreview,입력변경handler,unmount/StrictMode/commit이전옛event의시간순서를조사한다.
+   canvas surface.state==ready,frameTrialRef 또는동일catalogID로source증명을대체하지않는다.
+4. committed source identity 발급·즉시무효화와readSource/capture에넘길정확묶음을별도spec에
+   선행기록·자체검토한다. render 중자원생성/해제0,원ownerrelease0,staleclosure/source gate시험,
+   정확파일목록·타입/단위/합성browser회귀를고정한뒤범위내구현한다.
+5. 새기본룸UI/사진선택/출력surface/조작은각정확계약이선행돼야한다.
+   core-only-v1을최종JPEG/PNG제품지원으로축소하거나시계DOM층을조용히생략하지않는다.
+   사진형식/실측/실기기예산·운영같은실질제품선택만Founder에게질문한다.
+
+보호/실사진조회/실제UID/Firebase/운영/발행/배포/설치/예약자동화0. 기본전체E2E의보호PNG재생성금지.
+진척:합성native pair기반완료,실제고객source/UI는아직미연결.095잔여기능축미완,전체비율분모미확정.
+아래128착수및이전NEXT는이력이다.
+
+## 최신 — 128 합성 native pair 검증
+
+127 coded21a49d/docs033916e 일반전송완료,HEAD=origin033916e·0/0.128 계약·자체검토통과.
+`docs/rebuild/specs/128-preparation-pair-paint-native.md` code6/docs7만실행.
+실제102/127/125단일cohort 합성native60+기존92 목표. 새실측아직없음.
+기본UI/실사진/운영/보호/설치/자동화0. 이하127및이전은완료이력.
+
 ## 최신 — 127 준비세대 pair paint 구현
 
 127 coded21a49d DONE/CODEX_PASSED(동일Codex). check3634/targeted317/회귀92 PASS.
