@@ -34,16 +34,29 @@ export interface RoomPreparationController {
   clear(): void;
   dispose(): void;
 }
+type PaintSuffix = "INVALID_INPUT" | "RELEASED" | "DISPOSED" | "BUSY" | "SOURCE_CHANGED" | "FAILED";
+export type PreparedPaintResult = Readonly<
+  { ok: true } | { ok: false; code: `ROOM_PREPARED_PAINT_${PaintSuffix}` }
+>;
+export interface PreparedPaintInfo extends PreparedInfo {
+  paint(request: unknown): PreparedPaintResult;
+}
+export interface RoomPaintPreparationController extends RoomPreparationController {
+  readPaintPrepared(request: unknown): PreparedPaintInfo | null;
+}
 interface Request {
   sourceIdentity: object;
   backgroundIdentity: object;
 }
 interface Resource {
   size: Size;
+  paint?: (...args: unknown[]) => unknown;
   release(): void;
   released: boolean;
 }
 interface Cohort {
+  pair: { frame: Resource; background: Resource } | null;
+  view: PreparedPaintInfo | null;
   request: Request | null;
   ticket: RoomSessionTicket | null;
   ended: boolean;
@@ -92,11 +105,23 @@ const dimension = (value: unknown): number => {
 };
 
 /** Injected lifecycle only: no default browser ports, renderer, timers or resource creation. */
-export function createRoomPreparationController(
+export function createRoomPreparationController(input: unknown) {
+  return createController(input, false);
+}
+export function createRoomPaintPreparationController(input: unknown) {
+  return createController(input, true);
+}
+function createController<Paint extends boolean>(
   input: unknown,
+  paintMode: Paint,
 ):
   | { readonly ok: false; readonly code: "ROOM_PREPARATION_INVALID_INPUT" }
-  | { readonly ok: true; readonly controller: RoomPreparationController } {
+  | {
+      readonly ok: true;
+      readonly controller: Paint extends true
+        ? RoomPaintPreparationController
+        : RoomPreparationController;
+    } {
   let readSource: () => unknown;
   let capture: (...args: unknown[]) => unknown;
   let start: (...args: unknown[]) => unknown;
@@ -115,6 +140,7 @@ export function createRoomPreparationController(
   let current: Cohort | null = null;
   let state: RoomSessionState = "empty";
   let readingSource = false;
+  let painting = false;
   const active = (c: Cohort) => current === c && !c.ended && state !== "disposed";
   const release = (r: Resource | null) => {
     if (!r || r.released) return;
@@ -125,7 +151,7 @@ export function createRoomPreparationController(
       /* At most one attempt, not proof of physical cleanup. */
     }
   };
-  function admit(value: unknown): Resource | null {
+  function admit(value: unknown, c: Cohort): Resource | null {
     let r: Resource | null = null;
     let object: Record<string, unknown> | null = null;
     let reserved = false;
@@ -143,11 +169,22 @@ export function createRoomPreparationController(
         released: false,
       };
       resources.set(object, r);
+      const guard = () => {
+        if (paintMode && !active(c)) throw new Error();
+      };
+      guard();
       const width = dimension(object.width);
+      guard();
       const height = dimension(object.height);
+      guard();
       // A capture must be synchronous; a thenable with lease-shaped fields is not accepted.
       if (typeof object.then === "function") throw new Error();
+      guard();
       r.size = { width, height };
+      if (paintMode) {
+        r.paint = method(object, "paint");
+        guard();
+      }
       return r;
     } catch {
       release(r);
@@ -174,6 +211,8 @@ export function createRoomPreparationController(
   function retire(c: Cohort, code: RoomPreparationCode) {
     if (c.ended) return;
     c.ended = true;
+    c.view = null;
+    c.pair = null;
     c.info = null;
     settle(c, failure(code));
     c.cancelWanted = true;
@@ -254,9 +293,140 @@ export function createRoomPreparationController(
     c.taskSucceeded = true;
     c.cancel = null;
     c.info = info;
+    if (paintMode) {
+      c.pair = { frame, background };
+      c.view = paintView(c, info);
+    }
     state = "ready";
     settle(c, { ok: true });
   }
+  function paintView(c: Cohort, info: PreparedInfo): PreparedPaintInfo {
+    const failurePaint = (suffix: PaintSuffix): PreparedPaintResult =>
+      Object.freeze({ ok: false, code: `ROOM_PREPARED_PAINT_${suffix}` });
+    const terminal = (): PaintSuffix | null =>
+      state === "disposed"
+        ? "DISPOSED"
+        : !active(c) || !c.pair || state !== "ready"
+          ? "RELEASED"
+          : null;
+    const guard = () => {
+      if (terminal()) throw new Error();
+    };
+    const field = (value: Record<string, unknown>, key: string) => {
+      const result = value[key];
+      guard();
+      return result;
+    };
+    const finite = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+    const rectOf = (raw: unknown, size: Size) => {
+      const r = record(raw),
+        x = field(r, "x"),
+        y = field(r, "y"),
+        width = field(r, "width"),
+        height = field(r, "height");
+      if (
+        !finite(x) ||
+        !finite(y) ||
+        !finite(width) ||
+        !finite(height) ||
+        width <= 0 ||
+        height <= 0
+      )
+        throw new Error();
+      const sx = width / size.width,
+        sy = height / size.height,
+        scaledHeight = size.height * sx;
+      if (
+        !finite(sx) ||
+        !finite(sy) ||
+        !finite(scaledHeight) ||
+        scaledHeight <= 0 ||
+        sx <= 0 ||
+        sy <= 0 ||
+        Math.abs(sx - sy) / Math.max(sx, sy) > 1e-9
+      )
+        throw new Error();
+      return { x, y, width, height };
+    };
+    const sourceGate = () => {
+      guard();
+      if (readingSource) throw new Error();
+      readingSource = true;
+      try {
+        const raw = readSource();
+        guard();
+        const source = record(raw);
+        if (
+          field(source, "identity") !== c.request?.sourceIdentity ||
+          field(source, "kind") !== "frame" ||
+          field(source, "projectionOk") !== true ||
+          field(source, "planReady") !== true ||
+          field(source, "clockPreview") !== null
+        )
+          throw new Error();
+      } finally {
+        readingSource = false;
+      }
+    };
+    return Object.freeze({
+      frameSize: Object.freeze({ ...info.frameSize }),
+      backgroundSize: Object.freeze({ ...info.backgroundSize }),
+      paint(raw: unknown): PreparedPaintResult {
+        const ended = terminal();
+        if (ended) return failurePaint(ended);
+        if (painting) return failurePaint("BUSY");
+        painting = true;
+        let phase: "input" | "source" | "copy" = "input";
+        try {
+          const request = record(raw),
+            target = record(field(request, "target"));
+          const frameRect = rectOf(field(request, "frameRect"), info.frameSize);
+          const backgroundRect = rectOf(field(request, "backgroundRect"), info.backgroundSize);
+          phase = "source";
+          sourceGate();
+          const pair = c.pair;
+          if (!pair) throw new Error();
+          const copy = (resource: Resource, rect: ReturnType<typeof rectOf>) => {
+            phase = "copy";
+            const result = resource.paint?.({ target, rect });
+            guard();
+            const object = record(result);
+            if (typeof field(object, "then") === "function" || field(object, "ok") !== true)
+              throw new Error();
+          };
+          copy(pair.background, backgroundRect);
+          phase = "source";
+          sourceGate();
+          copy(pair.frame, frameRect);
+          phase = "source";
+          sourceGate();
+          return Object.freeze({ ok: true });
+        } catch {
+          const reason = terminal();
+          if (!reason && phase !== "input")
+            end(
+              c,
+              phase === "source"
+                ? "ROOM_PREPARATION_SUPERSEDED"
+                : "ROOM_PREPARATION_BACKGROUND_FAILED",
+            );
+          return failurePaint(
+            state === "disposed"
+              ? "DISPOSED"
+              : (reason ??
+                  (phase === "input"
+                    ? "INVALID_INPUT"
+                    : phase === "source"
+                      ? "SOURCE_CHANGED"
+                      : "FAILED")),
+          );
+        } finally {
+          painting = false;
+        }
+      },
+    });
+  }
+
   function run(c: Cohort, raw: unknown) {
     c.request = requestOf(raw);
     if (!active(c)) return;
@@ -277,7 +447,7 @@ export function createRoomPreparationController(
       end(c, "ROOM_PREPARATION_CAPTURE_FAILED");
       return;
     }
-    const frame = admit(value);
+    const frame = admit(value, c);
     if (!active(c)) {
       release(frame);
       return;
@@ -295,7 +465,7 @@ export function createRoomPreparationController(
         // Reserve the first delivery before any lease getter may synchronously deliver again.
         const first = active(c) && !c.delivered;
         if (first) c.delivered = true;
-        const resource = admit(value);
+        const resource = admit(value, c);
         if (!first || !active(c)) {
           release(resource);
           return;
@@ -337,6 +507,8 @@ export function createRoomPreparationController(
         resolve = done;
       });
       const c: Cohort = {
+        pair: null,
+        view: null,
         request: null,
         ticket: null,
         ended: false,
@@ -390,5 +562,18 @@ export function createRoomPreparationController(
       session.dispose();
     },
   };
-  return { ok: true, controller };
+  const extended: RoomPaintPreparationController = {
+    ...controller,
+    readPaintPrepared(raw) {
+      const c = current;
+      if (!c || !controller.readPrepared(raw) || !active(c)) return null;
+      return c.view;
+    },
+  };
+  return {
+    ok: true,
+    controller: (paintMode ? extended : controller) as Paint extends true
+      ? RoomPaintPreparationController
+      : RoomPreparationController,
+  };
 }

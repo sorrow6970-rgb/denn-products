@@ -1,6 +1,7 @@
 import {
   type BackgroundAbsenceDecodeTask,
   createRoomBackgroundAbsenceDecodeWork,
+  createRoomBackgroundAbsencePaintWork,
 } from "./background-absence-decode";
 
 const code = "ROOM_BACKGROUND_WORK_INVALID_INPUT" as const;
@@ -9,6 +10,12 @@ const record = (value: unknown): value is Record<string, unknown> =>
 
 /** Trusted identity lookup inside the existing work reservation; no default UI or decoder. */
 export function createRoomBackgroundAbsencePreparationPort(environment: unknown) {
+  return createPort(environment, false);
+}
+export function createRoomBackgroundAbsencePaintPreparationPort(environment: unknown) {
+  return createPort(environment, true);
+}
+function createPort(environment: unknown, paintMode: boolean) {
   let lookup: (identity: object) => unknown;
   let decode: (blob: Blob, options: unknown) => unknown;
   let createReader: (() => unknown) | undefined;
@@ -29,7 +36,9 @@ export function createRoomBackgroundAbsencePreparationPort(environment: unknown)
   } catch {
     return Object.freeze({ ok: false as const, code });
   }
-  const made = createRoomBackgroundAbsenceDecodeWork({ decode, createReader });
+  const made = paintMode
+    ? createRoomBackgroundAbsencePaintWork({ decode, createReader })
+    : createRoomBackgroundAbsenceDecodeWork({ decode, createReader });
   if (!made.ok) return made;
   const { work } = made;
   let disposed = false;
