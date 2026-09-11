@@ -1,5 +1,7 @@
 # NEXT CLAUDE PROMPT
 
+125 전송완료: code5b1d172/docsfb85ab5,HEAD=originfb85ab5·0/0 확인. 최종기록1회후다음native계약.
+
 ## 최우선 — 125 완료 / 다음 합성 native paint 검증
 
 5b1d172 CODEX_PASSED/DONE. targeted277/check3571/기존회귀112 PASS.125문서7 일반전송후

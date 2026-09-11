@@ -10,8 +10,8 @@ state: CODEX_PASSED
 baseline_commit: 76ebe36
 candidate_commit: 5b1d172
 verified_commit: 5b1d172 # same Codex; synthetic paint and existing native regression
-origin_relation: "spec124 codece9d4cf/docs9d6fb07 pushed; HEAD=origin9d6fb07 0/0 verified; final receipt once then Git check"
-working_tree: "spec124 final docs7 receipt; pre-existing protected/user23 SHA unchanged and excluded"
+origin_relation: "spec125 code5b1d172/docsfb85ab5 pushed; HEAD=originfb85ab5 0/0 verified; final receipt once then next native contract"
+working_tree: "spec125 final docs7; pre-existing protected/user23 unchanged and excluded"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: BACKGROUND_PAINT_NATIVE_CONTRACT_REVIEW

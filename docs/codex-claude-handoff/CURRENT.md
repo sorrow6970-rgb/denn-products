@@ -1,5 +1,7 @@
 # 현재 상태
 
+125 전송완료: code5b1d172/docsfb85ab5,HEAD=originfb85ab5·0/0 확인. 최종기록1회후다음native계약.
+
 > 최신125 DONE/CODEX_PASSED,5b1d172. check3571/targeted277/기존회귀112 PASS,보호23/번들3불변.
 > 다음은합성native paint계약·검증.125native paint·룸UI/실사진/운영은아직미검증/미개방.
 

@@ -1,5 +1,7 @@
 # 125 — 부재검사 배경의 제한 paint lease
 
+125 전송완료: code5b1d172/docsfb85ab5,HEAD=originfb85ab5·0/0 확인. 최종기록1회후다음native계약.
+
 
 ## 구현 완료 — 2026-09-11
 
