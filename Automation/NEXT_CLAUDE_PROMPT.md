@@ -1,5 +1,25 @@
 # NEXT CLAUDE PROMPT
 
+## 최우선 — 130 완료 / 실제 commit phase 결속 계약
+
+130 code01a35fa DONE / CODEX_PASSED(동일 Codex). R1 공통 interface 호환 보완 후
+새36/targeted192/check3725/기존 Chromium31 PASS. docs7 전송 후 Git0/0 확인한다.
+다음은 129 source와130 proof를 React가 채택한 plan/입력에 결속하는 정확 계약이다.
+PreviewComposer의 state·handlers·built·imageBindings·font readiness·clock·commit 순서를 먼저 읽는다.
+render 중 source publish/자원 mutation0, 버려진 render publish0, 입력 변경 즉시 이전 source 무효,
+StrictMode/unmount·old closure·art 없음 및 clock 존재 fail-closed를 계약/합성 native로 검증한다.
+source 전체 현재성이나 실제 고객 연결이 아직 구현됐다고 기록하지 않는다.
+새파일/수정경로·회귀 범위를 먼저 열거하고 자체 검토 후 진행한다. 실질 제품/권한 선택만 질문.
+보호/실사진/실제UID/Firebase/운영/발행/배포/설치/자동화0. 이하130 착수는 완료 이력이다.
+
+## 최신 — 130 image owner 준비 증명
+
+129 fe58f07/bf37bcf 일반 push 완료,HEAD=origin bf37bcf·0/0 확인.
+130-image-owner-ready-proof.md 계약·자체검토 선행 통과. 정확 code8/docs7만 구현·검증한다.
+기존 snapshot과 실제 owner 생존을 구분하고 hook은 render state에 묶는다.
+기본 UI/React source 연결/실사진/운영/보호/설치 변경0. 새 gate는 아직 NOT TESTED.
+다음은 commit phase 결속 계약이며 루틴의 일반 승인 질문은 하지 않는다. 아래129는 완료 이력.
+
 ## 최우선 — 129 완료 / image owner 생존 증명 계약
 
 129 code fe58f07 DONE / CODEX_PASSED(동일 Codex). 새52/targeted189/check3689/기존 Chromium54 PASS.

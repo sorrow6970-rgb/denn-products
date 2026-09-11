@@ -1,5 +1,13 @@
 # 현재 상태
 
+> 최신130 code01a35fa DONE / CODEX_PASSED(동일 Codex). 새36/check3725/Chromium31 PASS.
+> R1 타입 호환 보완 완료. 보호23/CSS/admin 불변, 고객JS +582bytes. docs7 전송 후 다음 계약.
+> 실제 React source/UI·일반사진·실기기·운영 미완. 아래 상태는 이력.
+
+> 최신130 CODEX_WORKING. bf37bcf=origin·0/0 확인,129 DONE/전송 완료.
+> image owner proof 계약·자체검토 선행 통과. exact code8/docs7; 새 검증 NOT TESTED.
+> 실제 React source/UI·실사진·운영 연결0. 이하129 및 이전은 이력.
+
 > 최신129 fe58f07 DONE / CODEX_PASSED(동일 Codex). 새52/targeted189/check3689/회귀54 PASS.
 > code2/docs7·보호23/번들3 불변. 문서 전송 확인 후 image-owner 생존 증명 계약으로 계속.
 > 실제 고객 source/UI·일반사진·실기기·운영 미완. 아래 착수 상태는 이력.

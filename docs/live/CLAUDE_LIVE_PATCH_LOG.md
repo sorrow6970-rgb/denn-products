@@ -9280,3 +9280,33 @@ cfjAsD/JD1DKc/82rabn staging 부재, 4183/4184/4185 listen0.
 읽기 전용 port다. 오래된 React ready snapshot은 그 증명을 대신하지 못한다.
 실제UI/일반사진/실기기/운영은 미완·미개방. 전체 완료율 분모 및 잔여 총 스펙수 UNCONFIRMED.
 문서7 일반 전송 후 Git을 확인하고 루틴 계속. 새 제품선택·권한 추가/예약자동화0.
+
+## 2026-09-11 — 129 전송 완료 / 130 선행 계약
+
+129 fe58f07/bf37bcf 일반 push 완료, HEAD=origin bf37bcf·0/0 확인.
+현재 두 image controller/hooks 전체를 읽고 실제 생존·정확 snapshot·세대·ready identity 증명을
+130 계약으로 고정했다. code8/docs7, 자체검토 선행 완료. 새 gate NOT TESTED.
+후속 React source 연결을 이 단계의 검증으로 대신하지 않는다. 기본 UI/실사진/운영/자동화0.
+
+## 2026-09-11 — 130 R1 타입 호환 보완
+
+최초 targeted192 PASS. check typecheck: SyntheticArtOwner/FakeArtOwner에 새 필수 메서드가
+없어4건 FAIL. 공통 interface를 유지하고 실제 factory 반환 ProofController 확장 타입에만
+메서드를 고정한다. 정확8파일 내 보완, 기존 fake/fixture 변경0, proof optional 완화0.
+이후 전체 게이트를 재실행한다.
+
+## 2026-09-11 — 130 완료 / 다음 commit phase 결속 계약
+
+code01a35fa CODEX_PASSED/DONE(동일 Codex 자체검수, 독립검수 아님).
+R1 후 targeted192, check3725=3689+36(122파일), format/lint368, typecheck7, build2 PASS.
+새36=controller29+hook SSR6+selector1. 기존 Chromium owner11(4.7s)+pair20(4.9s)=31 PASS.
+기존 interface·effect 규약 보존, 실제 proof로129 무효화 확인. 신규 proof의 직접 native 호출 및
+React source 결속은 NOT TESTED이며 기존 browser 회귀/SSR로 대체하지 않는다.
+고객JS index-DEIIu6v-.js 345944bytes=345362+582,
+SHA256 FAF40F5709E329CACC4E2DB730326F224FB4B84C590561EB5CFB5C663021CB43.
+고객CSS 6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81,
+adminJS B0A1F85F9271E4A929D2F6AB0F20BB0D0BFDADDA211533DDD675C8FB85711246 불변.
+보호23 SHA 불변, exact code8/docs7/diff--check PASS, 자기 temp pFO4t3/vTWBl0 부재·포트0.
+다음은 committed plan/borrowed owner proof를 React commit phase와 입력 즉시무효화에 결속하는
+정확 계약 조사·검토다. 사용자 스펙간 루틴에 따라 일반 승인 재질문 없이 계속한다.
+실제 룸 UI/일반사진/실기기/운영 미완, 전체 완료율 분모·잔여 총 스펙수 UNCONFIRMED.
