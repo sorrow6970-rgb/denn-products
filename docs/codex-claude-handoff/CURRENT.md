@@ -1,5 +1,12 @@
 # 현재 상태
 
+> 최신127 coded21a49d DONE/CODEX_PASSED(동일Codex). check3634/targeted317/회귀92 PASS.
+> 보호23/번들3불변.문서전송후합성native pair계약으로계속. 실제UI/실사진/운영미개방.
+
+> 최신127 CODEX_WORKING. f3d76e7 기준계약/review작성·자체검토통과,code4/docs7.
+> 126 일반전송완료 HEAD=originf3d76e7·0/0,DONE.127 새pair는NOT TESTED.
+> 기본UI/실사진/운영미개방. 이하이력.
+
 > 최신126 code91e5b36 DONE/CODEX_PASSED(동일Codex),check3574/새48+회귀76 PASS.
 > 보호23/번들3불변. 문서전송후 다음준비세대-paint결속계약 검토로루틴계속.
 > 실제룸UI/실사진/운영과116PNG14는미완. 아래착수상태는이력.

@@ -4,22 +4,22 @@
 updated_at: 2026-09-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-126-background-absence-paint-native # DONE / CODEX_PASSED; same Codex
-active_unit: spec-126-background-absence-paint-native
+completed_unit: spec-127-preparation-pair-paint # DONE / CODEX_PASSED; same Codex
+active_unit: spec-127-preparation-pair-paint
 state: CODEX_PASSED
-baseline_commit: b6e4df2
-candidate_commit: 91e5b36
-verified_commit: 91e5b36 # same Codex; native48 + regression76 PASS
-origin_relation: "code126 local91e5b36; completed docs7 then ordinary push pending"
-working_tree: "spec126 docs7 pending; protected/user23 unchanged and excluded"
+baseline_commit: f3d76e7
+candidate_commit: d21a49d
+verified_commit: d21a49d #sameCodex unit/newpair + existing native regression
+origin_relation: "127 coded21a49d local; docs7 then ordinary push pending"
+working_tree: "127 docs7 pending; protected/user23 unchanged and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: PREPARATION_PAIR_PAINT_CONTRACT_REVIEW
-pending_product_decision: NONE_FOR_SPEC126 # PG-1=A unchanged
+next_transition: PREPARATION_PAIR_NATIVE_CONTRACT_REVIEW
+pending_product_decision: NONE_FOR_SPEC127 # PG-1=A unchanged
 automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
-session_status: "2026-09-11 spec126 DONE;check3574/selector35/native48+regression76 PASS;next same-cohort pair paint contract"
+session_status: "2026-09-11 spec127 DONE;check3634/targeted317/regression92 PASS;next synthetic pair native contract"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: "Codex spec126 code6/docs7 only; protected/user23 excluded"
+commit_owner: "Codex spec127 code4/docs7 only; protected/user23 excluded"
 ```
 
 ## 오늘 세션 종료 — 2026-09-09

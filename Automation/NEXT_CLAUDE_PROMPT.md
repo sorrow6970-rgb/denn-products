@@ -1,5 +1,18 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 — 127 준비세대 pair paint 구현
+
+127 coded21a49d DONE/CODEX_PASSED(동일Codex). check3634/targeted317/회귀92 PASS.
+완료문서7전송후 실제102 frame capturer +127 controller/port+125 background 권한을
+합성native Canvas로결속하는정확계약을먼저작성·자체검토한다. 기본UI/실사진/운영권한추가0.
+교체/clear/dispose/late/source-change/부분paint실패후비공개와same-env RGBA기준을고정한다.
+아래127착수는이력,다음승인대기가아니다.
+
+126 code91e5b36/docsf3d76e7 전송완료,HEAD=originf3d76e7·0/0.
+127 계약/review 선행작성·자체검토통과. `docs/rebuild/specs/127-preparation-pair-paint-contract.md`
+exactcode4/docs7만구현·검증한다. 기존모드불변/명시모드의같은cohort결속,새native는후속계약.
+실사진/기본UI/운영/보호/설치/자동화0. 이하126및이전문구는이력.
+
 ## 최신 — 126 합성 native paint 검증 진행
 
 126 code91e5b36 DONE/CODEX_PASSED(동일Codex),check3574/새48+회귀76 PASS.
