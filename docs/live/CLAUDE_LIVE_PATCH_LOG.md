@@ -9135,3 +9135,28 @@ bdcf18c/35477e9 일반push 성공(32924f2..35477e9),HEAD=origin35477e9·0/0 확�
 - 다음지시는NEXT최상단:123bridge의합성native검증정확계약부터. 새범위계약없이구현시작0.
 - 전송완료: code641b13c/docs67cf184 일반push성공,HEAD=origin67cf184·0/0 확인.
   taskdirty0,기존보호·사용자23만남음. 이최종기록1회전송후다음계약으로이어간다.
+
+## 2026-09-11 — 124 합성native 연결 검증 착수
+
+- 123 종료3287aaf 일반push,HEAD=origin·0/0. 사용자 `이어서해줘`로다음124계약작성·자체검토.
+- code6/docs7만,actual123+100/native reader/bitmap·합성2형식×9경로,3엔진54+회귀58목표.
+- CONTRACT_REVIEW_PASSED(동일Codex),현재CODEX_WORKING/새게이트NOT TESTED.
+  기본UI/실사진/운영/제품room-placement/보호23변경금지. 다음수치는실측후기록.
+
+## 2026-09-11 — 124 합성 native 검증 완료
+
+- 코드ce9d4cf,정확fixture/test/config/selector6파일. 동일Codex 자체검수CODEX_PASSED/DONE.
+- selector32/32,전체check3531/3531=3528+3(116파일),format/lint354,typecheck7,build2 PASS.
+  최초추가버튼배열format1건수정후전체check PASS. 기존코드·단언·게이트완화0.
+- 신규Chromium18(4.4s),Firefox18(44.7s),WebKit18(42.0s)=54 PASS.
+  Firefox일반실행권한도구승인후실행,설치/우회0. 이번브라우저실패/재시도0.
+  기존Chromium46(5.6s)+12(3.1s)=58 PASS. 이번총112=54+58 PASS.
+- 실제FileReader/bitmap을actual100/123/121/119로결속. frame은48×32합성자원.
+  beforeCleanup해제카운터/needsSafetyClose:false,metadata선차단,capture/source차단,
+  pending교체추가lookup/read/decode0,외부egress/console/pageerror/Canvas/URL/Image0 검증.
+- 보호·사용자23/기본번들3 SHA동일,예상밖변경0,diff--check PASS.
+  자기temp Y5o2ra/AE6M9G/cEUl2R/IsnQXO/EcUPjF 부재,4183/4184/4185 listen0.
+  실제사진/UID/Firebase/운영/배포/설치/기본UI/보호수정/예약자동화0.
+- 진행: 합성배경준비연결을실제3엔진까지검증. 실제룸표시·일반metadata/사진·실기기·운영미완,
+  기존116PNG14불일치미해결. 다음제한paint사용권·준비세대결속검토지시를NEXT에작성했다.
+- 코드와분리한완료문서7을고정origin/rebuild/modern-studio 일반전송후Git확인한다.

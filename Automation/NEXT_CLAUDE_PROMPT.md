@@ -1,5 +1,34 @@
 # NEXT CLAUDE PROMPT
 
+## 최우선 — 123·124 완료 / 실제 표시를 위한 제한 paint 계약 검토
+
+124 코드ce9d4cf DONE/CODEX_PASSED(동일Codex). selector32/check3531,새3엔진54+회귀58 PASS.
+완료문서7 일반전송·Git확인후다음작업은 **제한paint사용권과준비세대결속 조사·계약검토**다.
+아래124착수/123완료전송 문구는지난이력이다. 완료시험을미실행으로되돌리거나재전송질문하지않는다.
+
+다음작업정확순서:
+1. STATE/CURRENT/live최종완료,124spec/review/handoff,RG-2/RG-3/PG-1,119지속Git승인을읽는다.
+2. 실제branch/HEAD/origin/dirty소유권·보호23·번들3 SHA를확인한다. protected/실제사진/운영경계유지.
+3. 098좌표/100 preparation/102 frame-snapshot의paint와시험,121decode/123bridge의size-only계약을
+   정적으로대조한다. 지금readPrepared의치수만으로원자원그리기가가능하다고추정하지않는다.
+4. rawbitmap/canvas를공개하지않는제한paint권한후보,frame/background소유권,현재준비세대와identity,
+   cancel/clear/교체/dispose/late/reentrancy후paint0,중복decode0,자원한도와실패표를문서화한다.
+5. 조사결과로기존API변경필요성과정확후속코드/시험/합성검증파일을계약에선행명시·자체검토한다.
+   새제품정책/실제데이터/권한/보호충돌이면STOP. 단순구조선택은근거를남겨기존루틴으로처리한다.
+6. 기본룸UI·실사진선택·metadata추가허용·Space/저장/발행/운영을후속후보에조용히섞지않는다.
+   실제표시/통합은그에맞는별도정확계약없이는구현하지않는다. 예약자동화/설치0.
+
+진행상황은합성배경의browser준비수명검증완료까지다. 실제룸화면과일반사진·실기기·운영은미완,
+095잔여기능축도완료아님. 총스펙수/가중완료율은UNCONFIRMED이며임의퍼센트로표시하지않는다.
+
+## 현재 — 124 합성 native 계약검토 통과 / 구현·검증
+
+123 종료3287aaf=origin0/0. 사용자 `이어서해줘`에따라124 계약/review/handoff작성·자체검토완료.
+`docs/rebuild/specs/124-background-absence-preparation-native.md` 코드6/docs7만실행한다.
+actual100/123/121/119와native reader/bitmap,합성2형식×9경로×3엔진54 및기존회귀58목표.
+실측전PASS기록0. 기본UI/실사진/운영/기존room-placement/보호/설치수정0. 새중요결정외질문0.
+이하123전송·계약 포인터는완료이력이며재실행하지않는다.
+
 123 전송 완료: code641b13c/docs67cf184 일반push,HEAD=origin67cf184·0/0 확인.
 최종 기록1회 전송 뒤 Git확인. 123 DONE/CODEX_PASSED 유지,다음합성native계약검토는별도단위.
 

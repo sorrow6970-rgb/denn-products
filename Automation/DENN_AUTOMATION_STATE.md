@@ -4,22 +4,22 @@
 updated_at: 2026-09-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-123-background-absence-preparation # DONE / CODEX_PASSED; same Codex
-active_unit: spec-123-background-absence-preparation
+completed_unit: spec-124-background-absence-preparation-native # DONE / CODEX_PASSED; same Codex
+active_unit: spec-124-background-absence-preparation-native
 state: CODEX_PASSED
-baseline_commit: 7e7a42d
-candidate_commit: 641b13c
-verified_commit: 641b13c # same Codex local implementation review
-origin_relation: "spec123 code641b13c/docs67cf184 pushed; HEAD=origin67cf184 0/0 verified; final receipt once then Git check"
-working_tree: "spec123 final docs7 receipt; pre-existing protected/user23 unchanged and excluded"
+baseline_commit: 3287aaf
+candidate_commit: ce9d4cf
+verified_commit: ce9d4cf # same Codex; local synthetic native gates passed
+origin_relation: "spec124 codece9d4cf local; docs7 completion push pending; origin3287aaf"
+working_tree: "spec124 completion docs7; pre-existing protected/user23 SHA unchanged and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: ABSENCE_PREPARATION_NATIVE_CONTRACT_REVIEW
-pending_product_decision: NONE_FOR_SPEC123 # PG-1=A unchanged
+next_transition: ROOM_PAINT_OWNERSHIP_CONTRACT_REVIEW
+pending_product_decision: NONE_FOR_SPEC124 # PG-1=A unchanged
 automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
-session_status: "2026-09-11 spec123 DONE; targeted209/check3528/Chromium58 PASS; new bridge native NOT TESTED; send completion docs then next scoped contract review"
+session_status: "2026-09-11 spec123 and124 DONE; spec124 check3531/native54/regression58 PASS; next bounded paint ownership contract, no routine reapproval"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: "Codex spec123 final docs7 only; protected/user23 excluded"
+commit_owner: "Codex spec124 code6/docs7 only; protected/user23 excluded"
 ```
 
 ## 오늘 세션 종료 — 2026-09-09
