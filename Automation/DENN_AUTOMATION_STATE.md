@@ -10,8 +10,8 @@ state: CODEX_PASSED
 baseline_commit: 3287aaf
 candidate_commit: ce9d4cf
 verified_commit: ce9d4cf # same Codex; local synthetic native gates passed
-origin_relation: "spec124 codece9d4cf local; docs7 completion push pending; origin3287aaf"
-working_tree: "spec124 completion docs7; pre-existing protected/user23 SHA unchanged and excluded"
+origin_relation: "spec124 codece9d4cf/docs9d6fb07 pushed; HEAD=origin9d6fb07 0/0 verified; final receipt once then Git check"
+working_tree: "spec124 final docs7 receipt; pre-existing protected/user23 SHA unchanged and excluded"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: ROOM_PAINT_OWNERSHIP_CONTRACT_REVIEW
