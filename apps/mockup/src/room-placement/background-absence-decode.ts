@@ -4,6 +4,11 @@ import {
   createRoomBackgroundAbsenceJob,
 } from "./background-file";
 import type { BackgroundSizeLease } from "./promise-work";
+import {
+  type BackgroundCopy,
+  type BackgroundPaintLease,
+  createBackgroundPaintLease,
+} from "./background-paint-lease";
 import { createRoomBackgroundWorkAdmission } from "./work-admission";
 
 type Code =
@@ -11,11 +16,13 @@ type Code =
   | `ROOM_BACKGROUND_WORK_${"INVALID_INPUT" | "BUSY" | "BLOCKED" | "DISPOSED" | "CANCELLED"}`
   | `ROOM_BACKGROUND_DECODE_${"FAILED" | "SIZE_MISMATCH" | "OUTCOME_UNKNOWN"}`;
 type Result = Readonly<{ ok: true } | { ok: false; code: Code }>;
-export interface BackgroundAbsenceDecodeTask {
+export interface BackgroundAbsenceDecodeTask<
+  Lease extends BackgroundSizeLease = BackgroundSizeLease,
+> {
   readonly result: Promise<Result>;
   cancel(): void;
   release(): void;
-  takeLease(): BackgroundSizeLease | null;
+  takeLease(): Lease | null;
 }
 const nativeThen = Promise.prototype.then;
 const options = Object.freeze({ imageOrientation: "from-image" as const });
@@ -25,6 +32,16 @@ const record = (value: unknown): value is Record<string, unknown> =>
 
 /** Explicit trusted decoder only. No default decoder, drawable export or production wiring. */
 export function createRoomBackgroundAbsenceDecodeWork(environment: unknown) {
+  return createWork<false>(environment, false);
+}
+
+/** Explicit opt-in: decoder supplies a private synchronous copyTo capability. */
+export function createRoomBackgroundAbsencePaintWork(environment: unknown) {
+  return createWork<true>(environment, true);
+}
+
+function createWork<Paint extends boolean>(environment: unknown, paintMode: Paint) {
+  type Lease = Paint extends true ? BackgroundPaintLease : BackgroundSizeLease;
   let decode: (blob: Blob) => unknown;
   let readEnvironment: { createReader(): unknown } | undefined;
   try {
@@ -55,6 +72,7 @@ export function createRoomBackgroundAbsenceDecodeWork(environment: unknown) {
       let stopped = false;
       let reported = false;
       let size: { width: number; height: number } | null = null;
+      let copy: BackgroundCopy | null = null;
       let resolve!: (value: Result) => void;
       const result = new Promise<Result>((done) => {
         resolve = done;
@@ -70,6 +88,7 @@ export function createRoomBackgroundAbsenceDecodeWork(environment: unknown) {
       function stop() {
         stopped = true;
         size = null;
+        copy = null;
         report(
           failure(disposed ? "ROOM_BACKGROUND_WORK_DISPOSED" : "ROOM_BACKGROUND_WORK_CANCELLED"),
         );
@@ -82,7 +101,7 @@ export function createRoomBackgroundAbsenceDecodeWork(environment: unknown) {
         detach();
       }
       currentStop = stop;
-      const task: BackgroundAbsenceDecodeTask = Object.freeze({
+      const task: BackgroundAbsenceDecodeTask<Lease> = Object.freeze({
         result,
         cancel: stop,
         release: stop,
@@ -91,7 +110,18 @@ export function createRoomBackgroundAbsenceDecodeWork(environment: unknown) {
             return null;
           const value = size;
           size = null;
-          return Object.freeze({ ...value, release: stop });
+          // Only the explicit paint factory can transfer this capability.
+          return (
+            paintMode
+              ? createBackgroundPaintLease(
+                  value,
+                  (target, crop, destination) => copy?.(target, crop, destination),
+                  () => !stopped && copy !== null,
+                  () => disposed,
+                  stop,
+                )
+              : Object.freeze({ ...value, release: stop })
+          ) as Lease;
         },
       });
       const made = createRoomBackgroundAbsenceJob(request, readEnvironment);
@@ -158,6 +188,13 @@ export function createRoomBackgroundAbsenceDecodeWork(environment: unknown) {
               ticket.release();
               failed("ROOM_BACKGROUND_DECODE_SIZE_MISMATCH");
               return;
+            }
+            if (paintMode) {
+              const suppliedCopy = (bitmap as Record<string, unknown>).copyTo;
+              if (stopped || disposed) return;
+              if (typeof suppliedCopy !== "function") throw new Error();
+              copy = (target, crop, destination) =>
+                Reflect.apply(suppliedCopy, bitmap, [target, crop, destination]);
             }
             size = { width: expectedWidth, height: expectedHeight };
             report(Object.freeze({ ok: true }));
