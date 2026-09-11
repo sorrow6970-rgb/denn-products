@@ -1,5 +1,22 @@
 # NEXT CLAUDE PROMPT
 
+## 최우선 —131 완료 / 실제 Composer source 연결 계약
+
+131 code595cb6a DONE/CODEX_PASSED(동일 Codex). R3 최종 check3732/targeted133/native64 PASS.
+code8/docs7 일반 전송 후 Git0/0 확인한다. 보호23/번들3SHA불변,실제Composer연결아직0.
+다음은 PreviewComposer·PhotoImageSlot report·130 hooks와 art load·폰트/입력 변경 전체를
+읽고 source adapter의 정확 파일/입력 즉시무효화/commit/회귀 계약을 선행 작성·자체검토한다.
+131의 합성 gate 통과를 실제 고객 화면 연결 증명으로 대체하지 않는다.
+일반 구조 선택은 루틴 계속,실질 제품/권한/보호 충돌만 질문. 실사진/실제UID/운영/배포/설치/자동화0.
+아래131 착수/이전 내용은 완료 이력이다.
+
+## 최신 — 131 React source commit 규약
+
+130 01a35fa/2589520 전송완료,HEAD=origin2589520·0/0.131 선행계약·자체검토통과.
+131-react-room-source-commit.md exact8+7 구현·검증. 실제 Composer wiring은 아직 하지 않는다.
+130 proof/129 source/102 capture를 실제 React commit·입력 epoch와 합성 native에서 검증한다.
+보호/기본UI/실사진/운영/설치/배포/자동화0. 새 gate NOT TESTED, 이하130는완료이력.
+
 ## 최우선 — 130 완료 / 실제 commit phase 결속 계약
 
 130 code01a35fa DONE / CODEX_PASSED(동일 Codex). R1 공통 interface 호환 보완 후

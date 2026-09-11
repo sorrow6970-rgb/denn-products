@@ -9310,3 +9310,45 @@ adminJS B0A1F85F9271E4A929D2F6AB0F20BB0D0BFDADDA211533DDD675C8FB85711246 불변.
 다음은 committed plan/borrowed owner proof를 React commit phase와 입력 즉시무효화에 결속하는
 정확 계약 조사·검토다. 사용자 스펙간 루틴에 따라 일반 승인 재질문 없이 계속한다.
 실제 룸 UI/일반사진/실기기/운영 미완, 전체 완료율 분모·잔여 총 스펙수 UNCONFIRMED.
+
+## 2026-09-11 — 130 전송 완료 / 131 선행 계약
+
+130 01a35fa/2589520 일반push,HEAD=origin2589520·0/0 확인.
+Composer 전체·BrowseFlow key·PreviewSection을 읽어 passive photo report/art load와
+commit 사이의 시간차, font readiness와 실제 환경의 차이를 확인했다.
+131 code8/docs7 선행계약·자체검토완료. 실제 React commit/epoch·130proof·129source·102capture를
+opt-in synthetic native로 검증한 뒤 제품 adapter 계약으로 간다.신규 gate NOT TESTED.
+실사진/기본UI/운영/보호/설치/자동화0.
+
+131 검증 R1: 최초 lint가 candidate effect의 onInvalidate dependency를 불필요로 판정했다.
+앞 lifetime effect가 이 callback 변경에 따라 owner를 재생성하므로 재등록 dependency는 필요하다.
+정확한 사유를 해당 hook에만 주석으로 기록하고 dependency는 유지했다. 전체 lint 완화0.
+
+R1 후 check3732/targeted133 PASS. fixture 영어 주석의 Tailwind 후보가 CSS를576bytes 증가시켜
+주석 표현만 정정, 다음 check에서 기본 CSS/JS 파일명 재현. 테마/config 수정0.
+R2 최초 Chromium11/11 FAIL은 마지막 console0 단언. 진단 재실행도11/11,
+ERR_FILE_NOT_FOUND 확인. mount effect의 자동 blob load와 StrictMode cleanup revoke가
+겹치는 fixture 경계를 명시 load 동작으로 분리. 콘솔 필터/단언 완화/제품owner 변경0.
+
+R2 후 Chromium11 PASS(1.4m). 제한환경 check는 unit에서 장시간 정체되어 자기 session만
+interrupt(exit1, PASS 아님). WMI 메모리 조회는 access denied로 중단/재조회0.
+동일 check 명령을 권한검사 통과한 일반환경에서 실행하여 check3732 PASS(6.77s).
+단언/timeout/worker/config 변경0. 정확한 환경 원인 UNCONFIRMED.
+Firefox11 PASS(30.0s). WebKit 최초11FAIL은 photo failed/ready에서 재현.
+R3 diagnostic fail-fast1회:1FAIL/10미실행, DECODE_FAILED + external:[blob:] 확인.
+시험 guard가 local blob 요청을 외부로 오판하여 abort했다. 정확 localhost:4183 HTTP와
+같은 페이지에서 생성·미revoke한 same-origin blob만 허용하도록 수정. 다른 요청 차단 유지.
+진단 maxFailures 제거, 실제 이미지owner/기존 단언/timeout 변경0. 최종3엔진 재실행한다.
+
+## 2026-09-11 — 131 R3 최종 검증 완료 / 다음 계약
+
+code595cb6a DONE/CODEX_PASSED(동일 Codex 자체검수; 독립검수 아님).
+최종 check3732=3725+7(SSR4+selector3),123파일/format·lint373/typecheck7/build2 PASS.
+targeted5파일133 PASS. Chromium11(5.1s)+Firefox11(29.6s)+WebKit11(12.6s)=새33 PASS.
+기존 Chromium owner11(4.5s)+pair20(4.7s)=31 PASS. 최종 native 합계64,과거 재실행 중복 합산0.
+기본 고객JS/CSS/adminJS SHA는130의 세 hash와 동일. 보호/사용자23SHA불변.
+exact8+7/diff--check PASS,staged 보호0. 자기 staging pDHUVC/fdc2vS/5fnAgW/NJu7fz/9plw2X/
+7Xm0jD/QFwvNN/EaRNo2/xO0wL3/nev5XX/msohRL 11개 부재,4183/4184/4185 포트0.
+문서7 일반 전송 뒤 Git0/0 확인. 실제 Composer source adapter의 정확 계약을 다음으로 검토한다.
+실제룸UI/일반사진/실기기/운영 미완,기존116 PNG14 미해결. 전체 완료율 분모 UNCONFIRMED.
+실사진/실제UID/Firebase/운영/설치/배포/발행/예약자동화0.
