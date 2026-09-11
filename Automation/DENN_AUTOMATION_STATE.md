@@ -10,8 +10,8 @@ state: CONTRACT_REVIEW_IN_PROGRESS
 baseline_commit: a85da9f
 candidate_commit: NOT_IMPLEMENTED
 verified_commit: 595cb6a # check3732; targeted133; final native33+regression31 PASS
-origin_relation: "HEAD=origin a85da9f 0/0 at FP-1=A resume; docs8 ordinary transfer after verification"
-working_tree: "132 docs7 plus FP-1 decision1 only; protected/user23 unchanged and excluded"
+origin_relation: "FP-1=A docs8 dd64517 pushed; last verified HEAD=origin dd64517 0/0; final transfer receipt only"
+working_tree: "132 document work committed; protected/user23 unchanged and excluded; final receipt then Git verification"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: FONT_SUPPLY_PUBLIC_EVIDENCE_REVIEW
