@@ -1,5 +1,52 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 — debug.log 단일보존예외 승인 / 기술계약검토 재개
+
+최신사용자응답은기존추가3줄그대로보존/Git제외예외승인.132 S-14와FP결정정본을읽는다.
+debug.log는1438bytes/SHA2D4C9622F42F2F9DAEF857E0A0C4CBDC4385FBAF5B0D590DB67678F794A45A6F로보존,
+다른보호22는기존기준.어느보호파일도수정·복원·stage·전송하지않는다.향후추가변경승인아님.
+문서8일반전송과132 QUESTIONS1/2/3의기술검토재개,FP-1/FP-2재질문0.
+실제제품font등록·추가취득·설치·변환·배포권한은여전히없다.아래STOP은승인전이력이다.
+
+이번추가검토는132 S-15.다음은drag수락/settlement port,부모snapshot/currentness최소port와
+정확최종파일목록을먼저확정한뒤동일font의measure/execute결속·재현조건을검토한다.
+현재후보13은미확정.제품코드/공유executor/보호파일을계약없이수정하지않는다.
+
+## 최우선 STOP — debug.log 보호 파일 자동 추가
+
+FP-2 로컬원본검증은완료했으나최종보호SHA검사에서debug.log변경발견.
+이전1075byte prefix hash는기준과동일,2026-09-11 13:58:50 SharedImage 오류3줄363bytes가추가됐다.
+최초browser진단시각과일치하여그실행의자동기록으로판단한다.직접수정·복원·stage하지않았다.
+다른보호/사용자22파일과번들3불변. fetch후HEAD=origin e4df5c9·0/0,문서8 unstaged.
+state BLOCKED_PROTECTED_FILE_CHANGE,next USER_DEBUG_LOG_APPEND_DISPOSITION.
+권장처리:추가로그를그대로보존·계속Git제외하는이번예외확인후문서전송/계약검토재개.
+사용자지시전stage/commit/push/새진단/추가구현0.기존baseline자동갱신·로그삭제/복원0.
+아래다음계약순서는보호처리해결후에만유효하며FP-1/FP-2승인을재질문하지않는다.
+
+## 현재 — FP-2 로컬 공급 검증 완료 /132 계약 검토 계속
+
+사용자 `응 진행해`로원본3폰트+고지 로컬취득승인.132 S-11계약선행,S-12실측완료.
+고정google/fonts commit8e44913e4ff26fc997e6856c1ec40ff4791c98c5의TTF3/OFL2 size+blob일치5/5.
+제한적sfnt검사3과3엔진×3파일=9로드/measure/paint진단완료.제품재현PASS아님.
+DM한글완성형0/11172,Noto11172/11172,기본weight100/normal만이라는차이를유지한다.
+같은문구폭의브라우저차이·최초newPage실패·browser내부경고를S-12에보존,원인확정주장0.
+FP-1/FP-2승인재질문0.다음은같은문서8에서exactfont identity/axes/문자·재현차이와
+기존QUESTIONS1/2(입력즉시무효화/부모pending commit)를연결하여전체계약검토.
+제품적용·font변환·추가다운로드·설치·운영/배포·보호·예약자동화0.
+취득원본/로컬진단물은test-results의S-11격리경로에만보존하고Git전송하지않는다.
+기존지속Git승인으로문서8만일반전송,이하FP-2미승인/STOP은과거이력이다.
+
+## 현재 — 132 공개 후보 조사 완료 / FP-2 자산 취득 범위 대기
+
+132 S-8~S-10이 최신 정본이다. DM Sans normal/italic 2 + Noto Sans KR normal 1 = 후보3파일.
+공식 METADATA/OFL/README/SIL 본문 확인만 완료; binary·glyph·native 검증 NOT TESTED.
+FP-1=A 유지,재질문0. 실제 고객폰트/자동fallback/기본UI 폰트 변경을 승인한 것이 아니다.
+다음 필요권한은 후보3개+고지의 로컬 공급검증용 취득(FP-2)이다. 아직 미승인.
+취득 전에 배포commit/정확URL/목적경로/검사절차부터 고정; OS설치/의존성/변환/제품등록/배포 금지.
+state FOUNDER_DECISION_REQUIRED,next FOUNDER_FP2_LOCAL_FONT_ASSET_SCOPE.
+현재 조사문서8만 unstaged,HEAD=origin e4df5c9·0/0 기준. STOP 규약상 commit/push/코드 착수0.
+보호23/운영/실제UID/예약자동화0. 아래공개조사착수·기존전송 문구는 완료이력이다.
+
 ## 현재 — FP-1=A 승인 / 관리형 폰트 공급 문서 보완 완료
 
 전송확인: 문서8 dd64517 일반push,HEAD=origin dd64517·0/0.최종전송기록1회외 추가제품작업0.

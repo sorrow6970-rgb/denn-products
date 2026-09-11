@@ -1,5 +1,30 @@
 # 현재 상태
 
+> 최신:사용자가debug.log기존3줄보존/Git제외예외승인.132 S-14 및FP결정정본이우선한다.
+> 승인된1438byte/SHA를기준으로보존,다른22는기존기준유지.새로그추가/다른보호변경승인아님.
+> CONTRACT_REVIEW_IN_PROGRESS,문서8일반전송·입력/부모/font기술계약검토재개.제품코드0.
+> 아래보호STOP은승인전이력.131DONE,132전체미완,추가취득/설치/제품적용/배포0.
+
+132 S-15추가검토:현재후보13에없는drag수락시점/부모snapshot port 검토필요.
+pending/committed분리후보와폰트측정·실행일치조건정리,아직전체구현계약통과아님.
+
+> 최우선 STOP: BLOCKED_PROTECTED_FILE_CHANGE. FP-2진단완료후debug.log자동추가3줄363bytes발견.
+> 기존1075byte prefix는기준hash동일.다른보호22/번들3불변.삭제·복원·stage0.
+> fetch확인HEAD=origin e4df5c9·0/0,문서8 unstaged,commit/push0.
+> 추가로그보존/Git제외예외처리는사용자지시대기.아래계약검토는해결후진행한다.
+
+> 최신: FP-2 직접승인 반영,132 S-11~S-12 로컬 공급 검증 완료(동일Codex).
+> 고정원본3+고지2의size/blob 일치,제한적sfnt3,3엔진×3=9 blank-page진단완료.
+> 브라우저별측정폭차이로동일재현보장아님.132전체 CONTRACT_REVIEW_IN_PROGRESS /131DONE.
+> 다음동일문서8에서font identity/axes/재현과입력·부모commit계약검토.승인재질문0.
+> binary/로컬진단물전송·제품적용·설치·배포0.아래FP-2미승인/STOP은과거이력이다.
+
+> 2026-09-11:132 공식 폰트 후보/사용권 문서 조사 자체검토 통과(S-8~S-10).
+> FP-1=A 유효; 다음 FP-2 후보 원본3파일+고지의 로컬 공급검증 취득 범위는 미승인.
+> FOUNDER_DECISION_REQUIRED / BLOCKED_FONT_ASSET_AUTHORITY. 제품등록·UI·fallback·설치·배포 허가 아님.
+> 문서8 unstaged,HEAD=origin e4df5c9·0/0 기준,STOP에 따라 commit/push0.131DONE 유지.
+> 실제 font byte/문자 재현 NOT TESTED. 이하 공급문서/전송 상태는 과거 이력이다.
+
 전송확인: FP-1=A 공급문서8 dd64517 일반push·원격0/0.최종기록 후 Git만 확인한다.
 
 > FP-1=A 승인 반영.관리형폰트 공급계약 문서 자체검토 PASS,132전체 CONTRACT_REVIEW_IN_PROGRESS.

@@ -7,18 +7,21 @@ pipeline: rebuild-modern-studio
 completed_unit: spec-131-react-room-source # DONE / CODEX_PASSED; same Codex
 active_unit: spec-132-composer-room-source-adapter
 state: CONTRACT_REVIEW_IN_PROGRESS
-baseline_commit: a85da9f
+baseline_commit: e4df5c9
 candidate_commit: NOT_IMPLEMENTED
 verified_commit: 595cb6a # check3732; targeted133; final native33+regression31 PASS
-origin_relation: "FP-1=A docs8 dd64517 pushed; last verified HEAD=origin dd64517 0/0; final transfer receipt only"
-working_tree: "132 document work committed; protected/user23 unchanged and excluded; final receipt then Git verification"
+origin_relation: "last fetch verified HEAD=origin e4df5c9 0/0; docs8 transfer pending after accepted debug.log exception"
+working_tree: "docs8 unstaged; ignored local font artifacts8; protected22 unchanged + approved debug.log1438byte preservation; no protected staging"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: FONT_SUPPLY_PUBLIC_EVIDENCE_REVIEW
-pending_product_decision: NONE_FOR_DOCUMENT_REVIEW #FP-1=A accepted; actual asset selection/acquisition not approved
+next_transition: COMPOSER_INPUT_PARENT_AND_FONT_CONTRACT_REVIEW
+pending_product_decision: NONE_FOR_DOCUMENT_REVIEW #FP1/FP2 and single debug preservation exception accepted
+debug_log_accepted_sha256: 2D4C9622F42F2F9DAEF857E0A0C4CBDC4385FBAF5B0D590DB67678F794A45A6F #1438bytes;keep untracked;not future-write approval
 font_supply_document_review: PASSED_SAME_CODEX
+font_supply_public_evidence_review: PASSED_SAME_CODEX #132 S-8~S-10; font bytes/glyph/native NOT TESTED
+font_supply_local_diagnostic: COMPLETED_SAME_CODEX #S-12:5 byte identities;3 limited sfnt;9 native load/paint;NOT product replay PASS
 automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
-session_status: "2026-09-11 FP-1=A supply document completed; actual font assets/implementation NOT TESTED;132 overall contract review remains"
+session_status: "FP-2 local diagnostic completed; user accepted existing debug3line preservation; resume docs8 review/ordinary transfer; product code remains unapproved"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
 commit_owner: "Codex spec132 docs8 only; protected/user23 excluded"
 ```

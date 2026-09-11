@@ -9402,3 +9402,67 @@ HEAD=origin a85da9f·0/0,보호23/기본번들3SHA불변,preview포트4183/4184/
 전송전검증:정확문서8/보호23SHA불변/기본번들3SHA불변/diff--check PASS,staged0,Git0/0.
 전송결과:문서8 dd64517 일반push완료,HEAD=origin dd64517·0/0.최종기록5문서만1회전송후Git확인.
 132공급문서보완완료/전체구현계약검토중,특정폰트자산취득·제품코드·신규시험0 유지.
+
+## 2026-09-11 —132 공식 폰트 공급 후보 조사 / 취득 전 STOP
+
+재개 HEAD=origin e4df5c9·0/0. NEXT의 정확문서8에서공식공급/사용권본문만확인했다.
+132 S-8~S-10에Google Fonts DM Sans normal/italic2,Noto Sans KR normal1의metadata/OFL,
+upstream구분,SIL OFL1.1/FAQ 조건,제목·URL·확인일과수용기록을작성했다.
+source commit≠배포pin/bytehash,문자subset≠실제glyph/shaping증명,RFN/고지조건을분리했다.
+공개조사 PUBLIC_EVIDENCE_REVIEW_PASSED(동일Codex),실제binary/coverage/native NOT TESTED.
+FP-1=A유효;FP-2 후보원본3파일+고지의로컬공급검증용취득은아직미승인.
+제품font/UI채택·자동fallback·설치·변환·운영·배포승인으로확대0.
+state FOUNDER_DECISION_REQUIRED,next FOUNDER_FP2_LOCAL_FONT_ASSET_SCOPE.
+131DONE,132 BLOCKED_FONT_ASSET_AUTHORITY.실제룸UI연결·일반사진·운영미완,전체완료율분모미확정.
+신규unit/E2E/build/browser실행0,기존131게이트를이번PASS로재계산0.
+STOP규약에따라이번문서8만unstaged,stage/commit/push·보호변경·예약자동화0.
+최종검증:diff--check PASS,허용문서8외신규변경0,기존보호/사용자23 SHA불변,
+고객JS/CSS·adminJS 번들3 SHA불변,staged0.HEAD와로컬origin추적ref는e4df5c9·0/0.
+이번원격fetch/조회0이므로서버최신ref재확인주장0.위검증기록전diff는+156/-10,제품재시험0.
+
+## 2026-09-11 — FP-2 승인 /132 고정 폰트 원본 로컬 검증
+
+사용자 `응 진행해`=직전폰트3+고지의로컬검증용다운로드직접승인.설치·제품적용·배포제외.
+132 S-11에배포pin/정확URL·Git제외목적경로·검사절차를취득전기록,자체검토했다.
+google/fonts8e44913e4ff26fc997e6856c1ec40ff4791c98c5의TTF3/OFL2취득,size/Gitblob5/5일치,
+SHA256/실제bytes/고지본문/S-12기록.총10948662bytes(파일5개실측합산).
+Python표준라이브러리제한적sfnt3:DM한글완성형0/11172,Noto11172/11172;이것은shaping증명아님.
+Noto기본wght100,DMopsz기본9. 모든axis/variation·실제고객지원검증미실시.
+최초sandbox공개API socket거부→승인된일반실행성공. FontTools미설치확인후설치0.
+최초native newPage `_page` TypeError(exit1)→같은script일반실행exit0,3엔진×3=9완료.
+초기오류내부원인미확정.최종page요청/error0/ownface해제,자기browser종료확인.
+DEBUG에는browser내부SharedImage/Firefox경고존재,page console0과구분한다.
+합성문구폭브라우저차이실측을S-12에보존.동일glyph/pixel재현·132제품PASS로확대0.
+공급진단 LOCAL_SUPPLY_DIAGNOSTIC_COMPLETED(동일Codex),131DONE,132전체CONTRACT_REVIEW_IN_PROGRESS.
+다음같은문서8의font identity/axes/문자/재현·입력/부모commit정확계약검토,승인재질문0.
+원본/로컬probe/결과는test-results격리경로8파일만보존,Git전송0.문서8만일반전송대상.
+제품코드/Rules/config/test/CSS/manifest/lockfile·설치·운영·배포·예약자동화변경0.
+
+최종STOP:보호SHA검사debug.log변경,다른22파일불변.1075byte기존prefix는기준SHA동일,
+추가363bytes/3줄은0911/135850.460 SharedImage오류로최초native실행시각과일치한다.
+전체새SHA2D4C9622F42F2F9DAEF857E0A0C4CBDC4385FBAF5B0D590DB67678F794A45A6F.
+기존내용변조없음은prefix검사로확인했지만보호23불변게이트는FAIL.직접수정/복원/삭제0.
+다른보호22/기본번들3SHA불변,diff--check PASS,staged0.동시에진행된fetch는성공,
+HEAD=origin e4df5c9·0/0.이후stage/commit/push·새진단/계약진행0.
+STATE/NEXT/CURRENT/spec/review/handoff/결정/live문서8만STOP과동기화.
+state BLOCKED_PROTECTED_FILE_CHANGE,next USER_DEBUG_LOG_APPEND_DISPOSITION.
+추가로그보존·계속전송제외예외를사용자에게요청하며기준자동갱신/우회전송하지않는다.
+
+## 2026-09-11 — debug.log 단일 보존 예외 승인 /132 계약검토 재개
+
+사용자 `응 루틴대로 중요결정외엔 우선 진행 해`=직전질문의debug추가3줄보존/Git제외예외승인.
+debug1438bytes/2D4C9622F42F2F9DAEF857E0A0C4CBDC4385FBAF5B0D590DB67678F794A45A6F재확인,
+다른22기존SHA불변.기존1075byte/추가363byte증거와이전STOP이력은보존한다.
+로그직접수정/복원/삭제/stage/전송0.이번보존예외만이며미래보호변경일괄승인아님.
+132 CONTRACT_REVIEW_IN_PROGRESS,문서8의정합성/정확범위검증과일반전송·기술검토재개.
+131DONE/FP-2제한적공급진단완료,제품132미구현.승인재질문·예약자동화0.
+
+이어서132 S-15기술검토:PreviewComposer·BrowseFlow/selection·PreviewSection·App·cataloghook/controller,
+imageTransform·131hook·공유executor와React공식useState/useLayoutEffect를대조했다.
+드래그move수락과RAFcommit사이무효화필요,부모snapshot미노출,문구trial의renderref/closure문제를구체화.
+pending/committed ledger후보와정확추가파일검토필요성을기록.현재13후보는아직확정목록아님.
+기본catalogretry는error전용이며ready실시간새로고침이존재한다고주장하지않는다.
+동일fontalias/axes/context·자간재현은아직미검증.공급native9를제품재현PASS로확대0.
+신규browser/제품check실행0,제품코드0.문서8일반전송후다음정확API/파일범위검토로인계한다.
+전송전검증:기존보호22+명시예외debug1 보존PASS,기본번들3SHA불변,diff--check PASS,
+허용문서8이외신규추적변경0,staged0.원본/로컬진단물/보호파일전송0을exact staging으로확인한다.
