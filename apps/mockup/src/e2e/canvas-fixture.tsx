@@ -12,6 +12,7 @@ import type { PreviewRenderPlan } from "@denn/render";
 import { StrictMode, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { RoomBackgroundFileFixture } from "./room-background-file-fixture";
+import { RoomSourceFixture } from "./room-source-fixture";
 import "@denn/ui/theme.css";
 import { PreviewCanvasSurface } from "../canvas/PreviewCanvasSurface";
 import type { PreviewImageBindings } from "../canvas/types";
@@ -494,7 +495,9 @@ const root = document.getElementById("root");
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      {window.location.search === "?roomBackgroundFile=1" ? (
+      {window.location.search === "?roomSource=1" ? (
+        <RoomSourceFixture />
+      ) : window.location.search === "?roomBackgroundFile=1" ? (
         <RoomBackgroundFileFixture />
       ) : window.location.search === "?roomSnapshot=1" ? (
         <SnapshotFixture />

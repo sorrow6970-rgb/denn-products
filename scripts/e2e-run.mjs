@@ -64,6 +64,15 @@ export function selectPlaywrightArgs(args) {
     ];
   }
   for (const engine of ["firefox", "webkit", "chromium"]) {
+    if (Array.isArray(args) && args.length === 1 && args[0] === `--room-source-${engine}-only`) {
+      return [
+        "test",
+        "--config",
+        "tests/room-source-native.config.ts",
+        `--project=${engine}`,
+        "--workers=1",
+      ];
+    }
     if (Array.isArray(args) && args.length === 1 && args[0] === `--pair-paint-${engine}-only`) {
       return [
         "test",

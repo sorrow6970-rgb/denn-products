@@ -10,6 +10,22 @@ import { isDisposableStagingPath, selectPlaywrightArgs, STAGING_PREFIX } from ".
 const TEMP = resolve(tmpdir());
 
 describe("spec110 explicit E2E selection", () => {
+  it.each(["firefox", "webkit", "chromium"])("spec131 isolates React room source %s", (engine) => {
+    const selector = `--room-source-${engine}-only`;
+    expect(selectPlaywrightArgs([selector])).toEqual([
+      "test",
+      "--config",
+      "tests/room-source-native.config.ts",
+      `--project=${engine}`,
+      "--workers=1",
+    ]);
+    expect(() => selectPlaywrightArgs([selector, "--timeout=60000"])).toThrow(
+      "Unsupported E2E selector",
+    );
+    expect(() => selectPlaywrightArgs([selector, "--local-image-owner-only"])).toThrow(
+      "Unsupported E2E selector",
+    );
+  });
   it("spec130 isolates existing local image owner tests without protected screenshot writers", () => {
     const selector = "--local-image-owner-only";
     expect(selectPlaywrightArgs([selector])).toEqual([
