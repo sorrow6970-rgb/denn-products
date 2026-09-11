@@ -545,3 +545,138 @@ S-12의엔진간폭차이를오차허용으로덮지않는다.다음재현계약
 다음 검토 순서: 드래그 수락·settlement port와부모snapshot port의최소 API/정확파일목록 확정 →
 동일owner font 측정/실행 binding 및재현검증 조건 → 전체132계약자체검토.
 기술QUESTIONS1/2/3은구체화됐지만아직구현가능판정완료가아니다.제품등록/새자산취득/코드수정0.
+
+### S-16. 드래그 결속 — 최소 내부 port 설계
+
+다음은 현재 132의 구조 설계 선택이며 구현 승인/검증 완료가 아니다.
+`imageTransform.ts`의 기존 begin/move/end/abort/dispose와 commit/RAF 계약은 유지한다.
+추가 내부 표면은 두 개로 한정한다(신규 dependency/전역 registry 없음).
+
+```ts
+type DragInputStatus = Readonly<{
+  revision: number;
+  phase: "settled" | "pending" | "disposed";
+}>;
+// DragController에 추가: 같은 상태에서는 같은 불변 객체 반환
+interface DragInputReadPort {
+  readInputStatus(): DragInputStatus;
+}
+// DragSessionPorts에 선택적으로 추가: snapshot 변경 후 동기 통지
+interface DragInputNoticePort {
+  onInputStatusChange?: (status: DragInputStatus) => void;
+}
+```
+
+revision은 controller 수명 내 단조 증가하며 이전 snapshot은 재사용하지 않는다.
+사진 경로/원문/포인터 좌표를 이 상태에 넣지 않는다. 인스턴스 간 동일 revision은 같은 identity가 아니다.
+현재 pending 또는 마지막 commit에 전달한 transform과 scale/x/y/rotation의 숫자값을 비교한다.
+참조만 달라진 동일값·잘못된 pointer·거부된 입력·begin만 한 경우는 새 pending 통지를 만들지 않는다.
+기존 호출자의 commit 횟수/RAF 합치기/정상 pointerup flush/취소 폐기 계약은 변경하지 않는다.
+
+| 사건 | source용 상태 전환 | 순서/회귀 조건 |
+| --- | --- | --- |
+| 실제 move 수락 | 새 revision, pending | controller snapshot 먼저 교체 → 동기 통지 → 생존/session 재확인 → RAF 예약 |
+| 연속 move | 새값이면 새 pending revision | 매 move마다 새 RAF를 만들지 않음; A→B→A도 이전 snapshot 부활0 |
+| RAF 또는 pointerup flush | commit 전달 후 새 settled revision | React에 입력을 전달한 것과 React commit 완료를 구분; caller의 intentRevision 일치까지 source 차단 |
+| cancel/abort/예약 실패 | pending 폐기 후 새 settled revision | 아직 적용하지 않은 draft만 철회,이미 전달된 마지막 입력은 보존; 옛 lease 재활성화0 |
+| dispose/통지 실패 | disposed, 이후 현재성 false | 자원/구독 해제; 예외를 성공 통지로 취급하지 않음 |
+
+통지가 재진입하여 end/dispose/new session을 호출하면 바깥 move가 그 뒤에 RAF를 예약하거나 새 session의
+pending을 소비하지 않는다. snapshot 교체 후 통지하므로 callback 안에서 읽어도 옛 settled 상태가 아니다.
+통지 예외는 source 연결을 fail-closed로 종료하며,이때도 pending/예약 정리가 누락되지 않아야 한다.
+숫자 revision overflow는 재사용하지 않고 연결 종료로 처리한다.
+
+Composer는 통지에서131 invalidate를 먼저 호출하고,S-15 ledger에 별도의 source settlement revision을
+반영해 React commit을 요청한다. cancel로 화면 transform이 같아도 새 commit/candidate가 필요하다.
+이때 문구·색 등 다른 pending 입력을 덮어쓰지 않는다. readSource/get/capture/paint 전후에는
+캡처한 controller snapshot의 identity/settled/생존과 caller의 commit revision을 함께 검사한다.
+구독통지 하나만 믿거나 phase만 settled이면 오래된 candidate를 허용하는 방식은 금지한다.
+
+필수 검증: move 직후 RAF 전 capture0,동일값/noop,서로 다른 pointer,연속 move,move→cancel,
+pointerup 1회 flush,late RAF,requestFrame throw,통지 throw/재진입,dispose/StrictMode,
+cancel 뒤 unrelated render·새 commit 구분. 현재 모두 NOT TESTED.
+
+### S-17. 부모·catalog 결속 — 현재성 identity와 전달 경계
+
+기존 controller는 detach 후에도 getState()가 마지막 ready를 반환할 수 있다.
+따라서 자식에 getState만 노출하거나 document 참조만 비교하는 방식은 채택하지 않는다.
+같은 document 객체가 새 요청에서 다시 반환되는 경우까지 구분하기 위해 새 읽기 port를 설계한다.
+
+```ts
+type ReadyCatalogIdentity = Readonly<{ document: CatalogDocumentV1 }>;
+// PublicCatalogController,hook에서 전달할 안정된 메서드
+interface ReadyCatalogReadPort {
+  readReadyIdentity(): ReadyCatalogIdentity | null;
+}
+```
+
+성공한 각 load generation마다 새로운 불변 wrapper를 한 번 만들고,active+ready인 동안만 동일 wrapper를
+반환한다. idle/loading/error/detach에서는 null이다. 내부 검증 대상은 wrapper identity와 document이며,
+requestId/URL/오류 원문을 source/DOM에 추가하지 않는다. wrapper 동결이 document 깊은 불변성 증명은 아니다.
+카탈로그는 기존 읽기 결과를 수정하지 않는 입력으로 사용하며,임의 in-place 변경 감지 기능을 새로 주장하지 않는다.
+기존 getState/subscribe/reader/retry/error/UI 스키마는 그대로 둔다. 이 port를 읽어도 load 호출은0이다.
+
+hook→App→BrowseFlow→PreviewSection(props 전달 유지)→Composer로 같은 읽기 함수를 전달한다.
+source 후보는 부모가 채택한 ready identity를 캡처하고,isCurrent에서 현재 readReadyIdentity와 같은지 검사한다.
+detach/restart/같은 document 재수신 시 옛 proof는 false다. 없는/throwing port는 source만 차단한다.
+기존 standalone preview나 SSR에 source consumer가 없으면 새 기능 때문에 UI를 차단하지 않는다.
+standalone source 시험은 합성 동일 계약 port를 반드시 제공한다.
+
+selection은 부모의 pending ledger와 같은 reducer를 사용한다. 새로운 selection 수락 시 자식 invalidate가
+setter보다 앞선다. 부모 render에서 선택/문서를 live ref에 덮어쓰지 않는다. 새 catalog/index 문맥의
+reconcile은 해당 문맥의 pending revision으로 결속하고,기존 선택을 자동 대체하지 않는다.
+자식 layout effect가 부모보다 먼저 실행될 수 있음을 가정하고,문맥 rebase가 아직 commit되지 않았으면
+source를 등록하지 않는다. 부모의 새 revision 상태 반영으로 후속 commit에서만 등록하게 한다.
+source의 무한 대기/불필요한 reconcile 반복도 native 검증 대상이다.
+
+공식 근거: [React useSyncExternalStore](https://react.dev/reference/react/useSyncExternalStore),
+확인2026-09-11. snapshot 안정성·불변성과 변경 구독 계약을 명시한다. React가 임의 source lease의
+즉시 무효화를 대신 수행한다는 근거는 아니므로 위 별도 currentness 검사를 유지한다.
+현재 제품의 retry는 error 전용이며,이 설계로 ready 중 새로고침이나 운영 네트워크 시험을 추가하지 않는다.
+
+필수 검증: loading/error/detach null,같은 ready wrapper 안정성,같은 document의 다음 generation은
+다른 wrapper,old async settle 무시,StrictMode restart,같은 tick selection2회/noop,
+부모 교체 후 child commit 이전 read0,child-first layout/rebase,unmount/port throw. 현재 NOT TESTED.
+
+### S-18. 구조 부분의 정확 파일과 남은 폰트 계약
+
+위 S-16/S-17 구조 검토에 필요한 파일은 원래 WHERE의13개에 아래9개를 더한 **22개**로 정리한다.
+이는 향후 구조 구현 계약의 파일 목록이며,이번에 이22개를 수정해도 된다는 승인이 아니다.
+
+1. apps/mockup/src/preview/imageTransform.ts
+2. apps/mockup/src/preview/imageTransform.test.ts
+3. apps/mockup/src/App.tsx
+4. apps/mockup/src/App.test.tsx
+5. apps/mockup/src/catalog/usePublicCatalog.ts
+6. apps/mockup/src/catalog/usePublicCatalog.test.ts (신규)
+7. apps/mockup/src/catalog/controller.ts
+8. apps/mockup/src/catalog/controller.test.ts
+9. apps/mockup/src/browse/BrowseFlow.test.tsx (신규)
+
+PreviewSection은 기존props전달로충분하므로 수정목록에 추가하지 않는다. 실제 타입/시험에서 추가 필요가
+확인되면 먼저 계약 수정한다. 기존 selection reducer,131hook,공유 executor/plan/print는 이 목록에 없다.
+원래13에있는 composer helper/test와native fixture에서ledger/현재성 통합을검증하고,기본전체E2E는금지한다.
+구조 부분 자체검토: 경계/생존/noop/실패/정확경로 명시 완료. 구현·unit/native PASS를 뜻하지 않는다.
+
+폰트가 남은 전체계약 차단 조건이다. S-12는 byte 로드만 검증했고,현재 executor는 승인된 family 문법의
+shorthand와fallback을 직접 사용한다. 측정만 내부alias를 쓰는 것으로는 공급identity가 결속되지 않는다.
+다음 문서 단계에서 다음 둘의 실제 지원 여부·파일범위·검증법을 비교하여 하나의 기술안을 확정한다:
+
+- catalog 원문은 유지하고 측정/preview/capture가 같은 관리형 runtime family binding을 사용하는 경계.
+- 공유 executor의 주입 경계에서 같은 font proof를 요구하되 plan 의미·print/Space를 바꾸지 않는 경계.
+
+둘 다 원본 catalog의 자동 family 치환·폰트변환·미지원문구삭제를 허용하지 않는다.
+font axes/weight/style/optical sizing/kerning/자간을 동일 환경에서 제어·재현 가능한지 먼저 검증 조건을
+작성한다. 단순 엔진간 pixel 동일성을 새 완료조건으로 만들거나 사후 tolerance로 통과시키지 않는다.
+정확 FontFace descriptor/API 지원이 확인되지 않은 부분은 UNCONFIRMED로 남긴다.
+product font 등록/배포허가는 FP-2에 없으므로 코드/자산적용은 하지 않는다.
+다음은 **FONT_MEASURE_EXECUTE_BINDING_CONTRACT_REVIEW**,승인 재질문 없이 같은문서8에서 진행한다.
+
+이번 공식 폰트 API 대조에서 추가 확인한 한계:
+[CSS Font Loading §2](https://www.w3.org/TR/css-font-loading-3/)(2023-04-06 Working Draft,
+확인2026-09-11)는 style/weight/family 등 matching descriptor와 실제 face에 작용하는
+variationSettings/featureSettings를 구분한다. normal byte에style=italic을붙이는것은실제italic공급증명이아니다.
+동일하게S-12의weight400등록만으로모든엔진에서의variable axis선택을증명하지않는다.
+[WHATWG HTML Canvas text styles](https://html.spec.whatwg.org/multipage/canvas.html#text-styles)의
+API 정의와 별개로 현재3엔진의descriptor/측정/실행일치 native시험은NOT TESTED다.
+이근거는새제품font옵션·신규FontFace등록을실행해도된다는승인이아니다.

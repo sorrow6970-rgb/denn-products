@@ -1,5 +1,16 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 —132 입력/부모 구조 계약 정리 완료 /폰트 binding 검토
+
+132 S-16~S-18과review가최신정본.구조문서자체검토PASS,제품구현/native검증은NOT TESTED.
+drag readInputStatus+동기통지,controller readReadyIdentity+hook→App→Browse→Composer전달을명시했다.
+구조부분경로는기존13+추가9=22.폰트·print부분까지전체확정/구현승인한것은아니다.
+다음은FONT_MEASURE_EXECUTE_BINDING_CONTRACT_REVIEW: runtimefamily binding과executor주입경계를
+실제측정/preview/capture/print/Space호출부에대조,동일owner수명·axes·자간재현과정확파일범위확정.
+FP-2는로컬취득승인만: 제품font등록/추가취득/설치/변환/배포0.일반문서검토재승인질문0.
+이번신규browser실행0.보호22+승인debug1438bytes/SHA유지,폰트원본/진단물Git전송0.
+아래S-15다음작업과이전전송기록은이력이다.
+
 전송확인:132문서8 커밋53ea844 일반push,HEAD=origin53ea844·0/0.최종전송기록5문서1회후Git확인.
 다음작업은S-15의drag/부모snapshot 최소port와font재현계약검토이며재승인대기아님.
 

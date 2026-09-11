@@ -9469,3 +9469,17 @@ pending/committed ledger후보와정확추가파일검토필요성을기록.현�
 전송완료:문서8 53ea84446230af6801e6f17dd1407736b42f761a 일반commit/push,e4df5c9..53ea844.
 HEAD=origin53ea844·ahead/behind0/0 확인.최종전송기록STATE/NEXT/CURRENT/handoff/live5문서만1회전송.
 추가원본취득/제품구현/시험0.131DONE,132전체계약검토중,S-15최소port/최종파일·font재현검토가다음.
+
+## 2026-09-11 —132 드래그·부모 currentness 구조 계약 검토
+
+0cfd577에서NEXT S-15다음지시재개.현drag/controller/hook/App/preview/sharedexecutor를읽었다.
+S-16:readInputStatus와선택동기통지,수락→무효화→RAF/commit/취소settlement·재진입·생존규약.
+S-17:active+ready의새generation별identity,동일문서재수신·detach구분,부모pending/child-firstcommit규약.
+S-18:구조13+9=22파일명시,기존network/retry·기본UI/131hook/공유executor무변경.
+React useSyncExternalStore/W3C FontFace/WHATWG Canvas공식본문대조,출처와확인일은spec에기록.
+구조문서DOCUMENT_REVIEW_PASSED(동일Codex),실제구조구현/unit/native는NOT TESTED.
+폰트descriptor가실제글꼴변환과같지않음을구분,제품font/print부분은전체계약미확정.
+다음FONT_MEASURE_EXECUTE_BINDING_CONTRACT_REVIEW.131DONE,132전체CONTRACT_REVIEW_IN_PROGRESS.
+이번제품코드/신규browser/다운로드/설치/운영/배포/예약자동화0,허용문서8만일반전송대상.
+전송전검증:정확문서8외신규변경0,staged0,diff--check PASS,보호22+승인debug1보존PASS,
+고객JS/CSS·adminJS번들3SHA불변.구조문서검토와제품게이트를구분하고일반전송한다.

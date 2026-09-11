@@ -71,3 +71,15 @@ imageTransform.move는void이며commit callback은RAF뒤이므로기존후보13�
 catalog retry는error전용으로ready실시간갱신을만들어주장하지않았다.상위snapshot/currentness연결은미구현.
 자간0뿐인폰트진단을공유executor의글자별측정재현으로확대하지않았다.
 문서검토의근거·한계구분PASS,전체132 구현계약은검토중.추가제품파일변경0/신규시험0.
+
+## S-16~S-18 구조 문서 검수 — 2026-09-11
+
+current0cfd577의controller/drag/hook/실제전달경로를대조했다.구조설계부분문서검토PASS(동일Codex).
+drag는phase만이아닌불변snapshot identity와revision,callercommit을결속한다.상태교체→통지→
+재진입생존검사→RAF순서,취소settlement/lateRAF/통지throw를명시했고,기존정상pointerupflush는유지한다.
+catalog는getState.ready만검사하지않는다:detach active=false와같은document의재수신을구분하는
+readReadyIdentity를제안했고기존network/retry정책은늘리지않는다.깊은불변성증명주장0.
+child-first layout에서부모rebase전source차단및후속commit등록,standaloneconsumer의guard부재차단을명시했다.
+원13+추가9=구조22파일,PreviewSection/selection/131hook무수정.전체폰트/print범위는별도로미확정이다.
+공식React useSyncExternalStore와W3C FontFace descriptor를대조했다.문서API정의와실제native효과를구분한다.
+구조구현·unit/native·모든weight/axis·제품재현은NOT TESTED.이번browser/다운로드/제품수정0.
