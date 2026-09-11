@@ -9486,3 +9486,19 @@ React useSyncExternalStore/W3C FontFace/WHATWG Canvas공식본문대조,출처�
 전송완료:28f65f871a909f4f32287dcb6c46711efdbc5474(정확문서8),0cfd577..28f65f8 일반push.
 HEAD=origin28f65f8·ahead/behind0/0 확인.최종기록5문서만1회전송후Git결과보고.
 131DONE/132계약검토중,다음폰트측정·실행binding검토.제품132승인/구현/native완료아님.
+
+## 2026-09-11 — 132 폰트 측정·실행 결속 설계 검토
+
+사용자 `루틴대로 진행해`에 따라05d0971=origin·0/0에서 NEXT의 font binding 검토를 수행했다.
+실제 Composer/preview surface/102 capture/print/Space V1·V2/shared builder·executor를 대조했다.
+S-19~S-23: runtime alias 사전 projection + 같은 plan 차용 선택,인쇄 async 수명/같은 commit snapshot,
+폰트 세대·descriptor 오염 검사,자간 측정 불일치와 code-point 합산 보완 설계를 기록했다.
+합성 AV=15/A=10/V=10/spacing2의17대22는 향후 test 정의이며 특정 font 실측 결과가 아니다.
+원래13+구조9+font/print/builder13=후보35.이번 실제 수정은 허용 문서8이며 제품 변경0이다.
+W3C Font Loading3/Fonts4와 WHATWG Canvas 공식 본문·확인일·한계는132 S-22에 기록했다.
+문서검토 DOCUMENT_REVIEW_PASSED(동일 Codex),전체132 CONTRACT_REVIEW_IN_PROGRESS/131 DONE.
+신규 native/unit/E2E/build/원본 취득/제품 등록/설치/운영/배포/예약자동화0.과거 PASS의 확대 적용0.
+다음 SPEC132_CONSOLIDATED_CONTRACT_REVIEW: 분산 계약35경로·검증 명령·자산 권한 통합 검토.
+일반 기술 재승인 질문 없이 진행하되 FP-2 범위 밖 제품 적용은 하지 않는다.
+전송 전 검증: fetch 후 HEAD=origin05d0971·0/0,task 문서8/staged0/diff--check PASS.
+보호22+승인 debug1의 SHA 보존 PASS,고객JS/CSS와adminJS 번들3 SHA 동일.제품/보호 추가변경0.

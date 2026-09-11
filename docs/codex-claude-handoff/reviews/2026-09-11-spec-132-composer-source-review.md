@@ -83,3 +83,27 @@ child-first layout에서부모rebase전source차단및후속commit등록,standal
 원13+추가9=구조22파일,PreviewSection/selection/131hook무수정.전체폰트/print범위는별도로미확정이다.
 공식React useSyncExternalStore와W3C FontFace descriptor를대조했다.문서API정의와실제native효과를구분한다.
 구조구현·unit/native·모든weight/axis·제품재현은NOT TESTED.이번browser/다운로드/제품수정0.
+
+## S-19~S-23 폰트 결속 설계 문서 검수 — 2026-09-11
+
+판정: DOCUMENT_REVIEW_PASSED(동일 Codex). 전체132 구현 계약 통과/제품 CODEX_PASSED는 아니다.
+기준05d0971에서 실제 Composer measure/trial/final,PreviewCanvasSurface/hook/surface,
+102 frame-snapshot,print exporter,Space V1 frame-plan/preflight와 V2 PNG 표시를 읽었다.
+
+- 측정 전 runtime geometry projection을 선택하고 원본 catalog/최종 plan 후치환0을 명시했다.
+  공유 executor에 새 family resolver를 추가하는 대안은 이번 미채택이다.
+- plan-bound 차용은 동일 plan 검사/owner retire/물리적 해제/예외·재진입을 분리한다.
+  preview의 passive 갱신을 그대로 증명으로 삼지 않고,같은 commit의 plan/binding snapshot이 필요하다.
+- print는 원래 클릭 plan을 보존한다. 일반 문구 편집과 font 무효화를 구분하며,toBlob 이후 무효 결과의
+  download를 차단하는 보완이 필요하다.102는 기존 execute 주입과 source gate를 재사용한다.
+- 발견 사항: build.ts:measureWithSpacing의 문장 전체 폭과 executor의 code-point 폭 합산은 다른 알고리즘이다.
+  S-21에서 spacing !=0만 개별 합산하는 최소 보완과 합성 AV 반례를 고정했다. 실제 폰트 오차 실측 주장0.
+  공개 port/plan 스키마/보호 index.ts를 바꾸지 않지만 shared builder 회귀는 필수다.
+- Space V1 fail-closed/V2 PNG를 관리형 font 때문에 새로 열지 않는다. 원래13+구조9+font13=후보35,
+  이번 실제 변경은 문서8이다. 예상 파일과 현재 수정 허용을 구분했다.
+- W3C Font Loading3·Fonts4와 WHATWG Canvas 본문을 확인했다. API/descriptor의 존재를 설치된
+  엔진의 axis/shape/pixel 검증으로 확대하지 않았다.출처/확인일/Working Draft 상태는 S-22에 기록했다.
+
+남은 게이트: context profile/native 지원·실효 axes·coverage/cluster,전체35파일 통합 계약과 정확 명령,
+제품 자산 적용 권한. 다음 SPEC132_CONSOLIDATED_CONTRACT_REVIEW; 일반 기술 사항 재승인 질문0.
+이번 신규 browser/제품 unit/E2E/build 실행0.131 check3732/native64와 공급 진단9는 기존 결과만 유지한다.

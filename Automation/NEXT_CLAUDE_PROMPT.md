@@ -1,5 +1,26 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 정본 — 132 폰트 결속 설계 검토 후 전체 계약 통합
+
+132 S-19~S-23과 review가 최신이다. 아래 font binding 착수/과거 STOP/전송 문구는 이력이다.
+runtime alias 사전 projection + 동일 plan의 font 차용을 기술안으로 선택했다. 공유 executor API와
+Space V1 차단/V2 PNG 계약은 유지한다. 제품 font 선정/등록 승인으로 해석하지 않는다.
+builder의 문장 전체 측정과 자간 paint의 개별 측정 불일치를 확인했고,S-21의 최소 보완안을 명시했다.
+구조22 + font/print/builder13 = 향후 후보35. 이번 변경은 문서8,새 코드/시험/native/취득0이다.
+
+다음은 SPEC132_CONSOLIDATED_CONTRACT_REVIEW. 같은 문서8에서 다음을 수행한다:
+
+1. S-16~S-23을 원래 WHERE/WHAT/VERIFY와 대조하고35경로의 역할·필수 회귀를 통합한다.
+2. print의 동일 plan/클릭 snapshot을 보존하면서 font retire와 async 인코딩 후 차단을 구분한다.
+3. 자간 합성 반례/실제 glyph·axes·context profile 검증,정확 opt-in native 명령과 fixture 경계를 고정한다.
+4. FP-2 로컬 검증 권한과 제품 적용 권한을 분리한다. 같은 원본의 추가 진단도 기존 허용 범위를
+   먼저 대조한다. 일반 기술 검토는 재승인 질문 없이 진행하되 제품 등록을 몰래 시작하지 않는다.
+5. 전체 계약 자체검토 전 code/test/자산 배치 변경0. 공급/native9 결과를 제품 재현 PASS로 대체하지 않는다.
+
+131 DONE,132 CONTRACT_REVIEW_IN_PROGRESS. font 설계 문서 검토 PASS(동일 Codex),구현/native NOT TESTED.
+보호22 + 승인된 debug1438bytes/SHA 보존,원본/진단물 Git 제외. 설치/추가 다운로드/운영/배포/자동화0.
+문서8 일반 전송 전후 정확 scope와 Git/보호 hash를 확인한다. 같은 결과의 반복 기록 루프는 만들지 않는다.
+
 최신전송:구조문서8 28f65f8 일반push/HEAD=origin28f65f8·0/0.최종기록5문서1회후Git확인.
 
 ## 현재 —132 입력/부모 구조 계약 정리 완료 /폰트 binding 검토

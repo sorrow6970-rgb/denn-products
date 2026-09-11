@@ -1,5 +1,14 @@
 # 현재 상태
 
+## 최신 — 132 폰트 실행 결속 설계 검토
+
+S-19~S-23: runtime alias 사전 projection + plan-bound 차용을 기술안으로 선택했다.
+인쇄 async 수명과 자간 측정 불일치 보완을 포함해 향후 후보35파일(22+13)을 명시했다.
+문서 검토 DOCUMENT_REVIEW_PASSED(동일 Codex). 이번 code/test/native/제품 font 적용0.
+131 DONE /132 CONTRACT_REVIEW_IN_PROGRESS. 다음 SPEC132_CONSOLIDATED_CONTRACT_REVIEW.
+FP-1/FP-2 재질문 대기 아님. 제품 등록·새 취득·설치·변환·운영·배포는 계속 미승인이다.
+보호22+승인 debug 보존,원본/진단물 Git 제외. 아래 상태/전송은 완료 또는 중지 이력이다.
+
 최신전송확인:132 구조문서8 28f65f8 일반push,HEAD=origin28f65f8·0/0.최종기록5문서1회.
 
 > 최신132 S-16~S-18:드래그pending/settlement와catalog ready identity구조문서검토완료.

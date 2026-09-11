@@ -1,5 +1,16 @@
 # 132 실제 Composer source handoff
 
+## 최신 인계 — 폰트 결속 설계 검토 완료
+
+05d0971에서 시작해132 S-19~S-23을 작성/자체검토했다. runtime geometry의 동일-font alias와
+같은 plan의 실행 차용을 선택했고,preview/capture/print·Space의 실제 호출 경계를 대조했다.
+shared builder의 자간 wrap/paint 측정 차이를 정적으로 확인했다. 합성 반례는 예정 시험이지 실측이 아니다.
+구조22+추가13=향후 후보35,이번 변경은 허용 문서8뿐이다. 제품 code/test/native는 NOT TESTED.
+다음은 SPEC132_CONSOLIDATED_CONTRACT_REVIEW. NEXT 최신 절의 계약 통합/정확 회귀/권한 분리를 수행한다.
+131 DONE 유지. 실제 룸 UI 연결/일반사진/운영 등은 남아있으며 전체 완료율 분모는 UNCONFIRMED다.
+제품 font 등록·추가 취득·설치·배포 미승인,보호23과 기존 원본/진단물은 그대로 Git 제외한다.
+아래 인계·STOP·전송은 과거 이력이다.
+
 최신전송:구조문서8 28f65f8 일반push,HEAD=origin28f65f8·0/0.최종기록후추가원본/제품작업0.
 
 최신인계:132 S-16~S-18 구조문서검토완료.드래그pending상태/통지와catalog ready identity확정설계,

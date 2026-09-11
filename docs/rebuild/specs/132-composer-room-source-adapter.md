@@ -2,6 +2,9 @@
 
 2026-09-11 / 기준 e0f69e7=origin·0/0. 131 code595cb6a/docs e0f69e7 DONE.
 상태: CONTRACT_REVIEW_IN_PROGRESS. FP-1=A/FP-2 공급 진단 완료,debug.log 단일보존예외 승인.
+최신: S-19~S-23 폰트 실행 결속 설계 검토. runtime alias 사전 projection + plan-bound 차용을
+기술안으로 선택했다. 자간 측정 불일치와 인쇄 async 경계를 포함해 향후 후보는35파일이다.
+이번 변경은 문서8뿐이며,제품 font 등록/전체 구현 계약 통과/새 native PASS를 뜻하지 않는다.
 결정 정본: [FP-1 관리형 폰트 공급](../../codex-claude-handoff/decisions/2026-09-11-fp1-managed-font-supply-decisions.md).
 사용자의 스펙간 루틴에 따라 기술 검토를 계속하며 일반 구조 결정의 재승인을 요청하지 않는다.
 
@@ -58,7 +61,8 @@
 - source 등록은 React commit만. render는 외부 publish·URL 생성·기존 owner 해제0.
 - callback 변경/StrictMode/unmount의 attach 해제 순서를 계약과 native 시험에서 고정한다.
   과거 detach가 새 attach를 지우는 ABA 문제를 opaque incarnation으로 구분한다.
-- 소비자가 없을 때 추가 snapshot Canvas/URL/네트워크0. 기존 print/export 계약은 변경하지 않는다.
+- 소비자가 없을 때 추가 snapshot Canvas/URL/네트워크0. print의 동일 plan/출력 크기/단발 계약은
+  유지한다. 관리형 font 차용·인코딩 후 확인의 향후 보완 범위는 S-20/S-23으로 명시한다.
 
 ### 2. 이미지와 아트
 
@@ -680,3 +684,191 @@ variationSettings/featureSettings를 구분한다. normal byte에style=italic을
 [WHATWG HTML Canvas text styles](https://html.spec.whatwg.org/multipage/canvas.html#text-styles)의
 API 정의와 별개로 현재3엔진의descriptor/측정/실행일치 native시험은NOT TESTED다.
 이근거는새제품font옵션·신규FontFace등록을실행해도된다는승인이아니다.
+
+### S-19. 측정과 실행 결속 — 실제 호출부 대조와 기술안 선택
+
+2026-09-11, 기준05d0971. 아래는 코드 읽기와 문서 설계 결과이며 실행 결과가 아니다.
+
+| 소비자 | 현재 근거 | 설계에서 유지/추가할 경계 |
+| --- | --- | --- |
+| 문구 측정·trial | PreviewComposer.tsx:createMeasurePort/fontShorthand/built/commitText | 동일 owner의 runtime geometry와 측정 port를 probe/trial/final 모두 사용 |
+| 고객 preview | canvas/PreviewCanvasSurface.tsx → usePreviewCanvasSurface.ts → surface.ts | plan/bindings와 font binding을 한 snapshot으로 commit; draw 때 차용 |
+| 룸 capture | room-placement/frame-snapshot.ts:createFrameSnapshotCapturer | 기존 execute 주입과 readSource 전후 검사를 재사용;102 코드는 변경하지 않음 |
+| 인쇄 | print/exportFramePng.ts:run, PreviewComposer.tsx:onExport | 같은 plan 객체 그대로 실행; 클릭 때 차용하고 toBlob 이후에도 유효성 확인 |
+| Space V1 | space/frame-plan.ts:composeSpaceFramePlan, SpacePostAuthFrameView.tsx:preflightSpaceV1Replay | 현재 fail-closed 재생 계약 유지; 관리형 alias로 재생을 우회 개방하지 않음 |
+| Space V2 | space-v2/SpaceV2ProofView.tsx | 완성 PNG plan 표시 유지; 새 font 로드나 catalog 재구성 없음 |
+
+두 대안을 비교한 뒤 **runtime alias 사전 projection**을 기술안으로 선택한다.
+이는 Founder의 특정 제품 폰트 채택이나 제품 적용 승인이 아니라 구현 구조 선택이다.
+
+| 대안 | 이점 | 부담/판정 |
+| --- | --- | --- |
+| 측정 전 geometry의 family를 owner 전용 alias로 결속 | 기존 builder/공유 executor가 같은 font 문자열 사용; 완성 plan을 print에서 재작성하지 않음 | alias의 수명·등록 오염 검사와 출력 차용 필요. 선택 |
+| 공유 executor에 family resolver/proof를 새 인자로 추가 | 원래 family를 plan에 유지 가능 | 모든 호출자의 측정 resolver와 실행 resolver 결속,공유 API·admin/Space 회귀 확대. 이번에는 미채택 |
+
+projection은 원본 catalog/ProjectedGeometry를 수정하지 않는 별도 메모리 값이다. 각 text zone의
+원래 family/weight/style와 승인된 원본 byte를 정확히 대응시킨 후 fontFamily만 내부 alias로 바꾼다.
+원래 family가 미지원이면 다른 family로 바꾸지 않는다. 동일 원본의 alias는 대체 폰트가 아니다.
+alias는 owner 세대별 고유 ASCII 이름이며 PlanFontSpec의1..64/금지문자 규약을 만족한다.
+이전 alias를 재활용하지 않는다. 고객 문구/ID/URL/UID를 이름에 넣지 않는다.
+완성 plan의 alias를 나중에 치환하지 않는다. catalog 쓰기·Space 저장 스키마·발행·로그로 내보내지 않는다.
+현재 선택은 로컬 Composer/preview/room capture/print 경계만이며 범용 직렬화 폰트 계약이 아니다.
+
+### S-20. plan-bound 차용·현재성·소유권
+
+소비자에게 native FontFace/원본 byte/등록 삭제 권한을 노출하지 않는다. 내부 공통 표면 후보:
+
+```ts
+interface FontBoundExecution {
+  acquire(): FontExecutionLease | null;
+}
+interface FontExecutionLease {
+  isCurrent(): boolean;
+  execute: typeof executePreviewRenderPlan;
+  release(): void;
+}
+```
+
+factory는 완성 plan의 정확한 객체 identity,측정에 사용한 font owner 세대/요청 목록/context profile을
+결속한다. execute는 다른 plan을 거부하고 같은 공유 executor에 원래 plan을 그대로 전달한다.
+그리기 전후 검사·context 준비만 감싸며 별도 텍스트 renderer/재줄바꿈/plan clone을 만들지 않는다.
+measure port도 같은 owner/currentness/profile을 검사한다. 비동기 자원 취득·등록·해제는 render 밖이다.
+render의 trial/probe는 이미 준비된 차용의 읽기 전용 측정만 사용한다.
+
+owner의 상태는 preparing → ready → retired/disposed다. 준비가 완료된 새 세대만 새 identity를 발급한다.
+retire 시 먼저 모든 proof를 무효화하고 통지한 뒤 등록 해제를 진행한다. 남은 차용은 물리적 해제를
+늦출 수 있지만 retired proof를 다시 유효하게 만들 수 없다. release는 멱등이며 차용자는 다른 owner를
+dispose하지 않는다. 늦은 load 성공/StrictMode cleanup/동일 byte 재등록도 옛 proof를 복구하지 않는다.
+
+검사는 단순 fonts.ready/check가 아니다. 소유한 face의 identity·loaded 상태·등록 membership,
+family/style/weight/stretch/unicodeRange 및 feature/variation/metric descriptor의 채택된 직렬화값을
+대조한다. 동일 alias에 추가 face가 생기거나 소유 face가 사라지거나 descriptor가 바뀌면 차단한다.
+FontFaceSet 이벤트가 없는 변경도 read/acquire/measure/execute 전후 직접 검사 대상으로 둔다.
+다른 alias의 관계없는 font 변화만으로 모든 source를 폐기하지 않는다. 전역 폰트 함수를 monkey-patch하지 않는다.
+이 검사는 관찰 가능한 현재 상태와 앱 owner 규약을 증명할 뿐,검사 사이 외부 스크립트의 일시적
+삭제→복원 이력 전체를 검출하는 감시 기능이 아니다. native 호출 중 브라우저 내부 변경까지 보장한다고
+주장하지 않는다. glyph coverage/shape 증명이 별도로 없으면 현재성 검사만으로 성공을 만들지 않는다.
+
+```text
+같은 byte/face 세대 → runtime geometry → measure → final plan + binding
+                                              ├ preview draw 차용
+                                              ├ 102 capture 차용 → 픽셀 lease
+                                              └ print 차용 → draw → toBlob → 재검사 → download
+retire/오염 → proof false → source 차단 + 진행 중 결과의 성공 인계 차단
+```
+
+preview의 plan/imageBindings/font binding은 같은 committed snapshot이어야 한다. 기존 hook의 passive
+plan/bindings 갱신만으로는 부족하므로 layout commit 결속과 미완 render 비공개를 설계한다.
+surface는 snapshot 차용 실패 시 execute0,ready 보고0. 외부 port 재진입 후에도 다시 검사한다.
+이미 일부 그린 뒤 검사 실패한 경우에는 성공을 보고하지 않고 해당 surface를 숨기거나 비워야 한다.
+이를 '모든 실패에서 Canvas 호출0'으로 과장하지 않는다. 같은 plan에서 binding만 바뀌어도 재검사한다.
+
+102 capture는 기존 execute 주입에서 이 binding을 차용/해제한다. 기존 source gate에는 font proof를
+포함한다. capture 완료 후 lease는 픽셀을 보유하지만 source가 무효해지면 기존 paint gate가 차단한다.
+102의 bitmap lease가 native font를 직접 소유하거나 caller font를 delete하지 않는다.
+
+print request에는 선택적 binding을 추가하는 설계다. 관리형 plan 생산자는 반드시 같은 binding을
+전달하고,없는 경우 legacy 경로로 우회하지 못하도록 Composer 경계에서도 검사한다. 기존 비관리형
+호출자의 API 동작은 유지한다. 시작 전 차용 실패는 Canvas/toBlob/download0이다. 정상 차용은 async
+toBlob 완료/실패까지 유지하고 finally에서 release한다. 인코딩 뒤 또는 URL 생성 중 retire/dispose면
+download0/자기 URL 회수이며 신규 retry0. 원래 클릭 plan을 보존하므로 일반 문구 편집만으로 진행 중
+인쇄를 취소하는 새 제품 정책은 만들지 않는다. 이 검사는 font 수명과 기존 unmount/dispose 경계다.
+prepare/save/restore/release/외부 callback 예외와 재진입에도 안전 오류만 반환해야 한다.
+
+### S-21. 자간 측정 불일치 — 코드 근거와 보완 설계
+
+현재 packages/render/src/plan/build.ts:measureWithSpacing은 문장 전체 measureText 결과에
+code point 사이 자간을 더한다. 공유 execute-preview-plan.ts:draw-text는 자간이0이 아니면
+Array.from으로 각 code point를 따로 measure/paint한다. 다음 두 값의 동일성은 현재 코드로 보장되지 않는다.
+
+```text
+현재 wrap 폭 = measure(문장) + (n-1) × spacing
+현재 paint의 논리 advance = Σ measure(codePoint[i]) + (n-1) × spacing
+```
+
+공백·kerning·ligature·결합문자 등에서 전체 측정이 개별 측정의 합과 같다는 가정은 금지한다.
+이것은 정적 코드에서 확인한 알고리즘 차이이며,특정 폰트/기기에서 실제 오차를 실측했다는 주장은 아니다.
+이번 native 실행0. S-12의 단일 문구 폭 결과로 이 결함의 수치를 추정하지 않는다.
+
+선택한 최소 보완 설계는 builder에서 spacing !=0일 때 **같은 기존 TextMeasurePort를 code point별로
+호출하여 합산**하는 것이다. spacing0은 기존 문장 전체 측정/그리기를 유지한다. TextMeasureRequest,
+plan 스키마,공유 executor 공개 API는 변경하지 않는다. Σ는 기존 executor 순서와 동일하게 누적한다.
+마지막 glyph 이후 불필요한 spacing은 line.width에 포함하지 않는다. negative spacing/빈 줄/한 글자/
+명시 newline/maxChars/maxLines도 기존 제약을 유지한다. 합계 overflow·throw/non-finite는 fail-closed다.
+이는 기존 code-point 그리기 모델과 폭을 일치시키는 보완이며 grapheme-aware shaping 구현이 아니다.
+결합문자/ZWJ/IVS/미지원 script를 자동 정규화·삭제하거나 전체 Unicode 지원 완료로 표시하지 않는다.
+
+fake 반례는 예를 들어 measure('AV')=15,measure('A')=10,measure('V')=10,spacing=2로 둔다.
+수정 전17과 paint22의 차이를 재현하고 수정 후 line.width22를 검사한다. 이 숫자는 합성 test 정의이지
+DM Sans 실측값이 아니다. spacing0이면15 유지,정렬 left/center/right와 wrap 경계까지 검사한다.
+변경이 shared builder에 미치므로 기존 productPlan 및 전체 unit 회귀를 필수로 둔다.
+packages/render/src/plan/index.ts는 보호 대상이며 수정/복원/stage0이다.
+
+### S-22. 재현 프로필과 미검증 조건
+
+관리형 font의 기술 검증 후보는 원본 hash/face/명시 weight400 또는700/style과 같은 context profile의
+결속이다. DM Sans는 실제 normal/italic byte를 구분하고,opsz의 진단 기준값은 fvar 기본값9로 고정해
+자동 optical-size 영향을 분리하는 후보를 시험한다. Noto Sans KR는 실제 normal byte만 후보이며
+기본 축값100을 normal400으로 혼동하지 않는다. Noto italic/faux italic은 공급 완료가 아니다.
+이는 기존3원본의 검증 행렬이며 모든 family/스타일을 제품에 채택한 결정이 아니다.
+
+profile 후보는 direction=ltr,kerning=normal,stretch/caps=normal,textRendering=auto,
+native letterSpacing/wordSpacing=0px다. 실제 자간은 S-21의 기존 수동 배치를 따른다.
+측정·preview·capture·print에서 같은 profile을 적용하고 canvas 언어 문맥도 동일하게 결속한다.
+지원되지 않는 속성에 일반 JS 필드를 추가한 뒤 성공이라고 하지 않는다. native 지원/직렬화·실제효과를
+구분하고,필수 제어가 미지원이면 해당 profile은 미검증/차단이다. 존재하지 않는 Canvas opticalSizing
+API를 가정하지 않는다. descriptor로 지정한 opsz/wght가 최종 효과를 고정하는지는 별도 native gate다.
+
+공식 근거(모두 확인2026-09-11):
+
+- [W3C CSS Font Loading Module Level3 §2/§3](https://www.w3.org/TR/css-font-loading-3/),
+  2023-04-06 Working Draft: binary FontFace,mutable descriptor,FontFaceSet 검사 API. matching descriptor와
+  실제 feature/variation 설정을 구분한다. 이 문서는 DENN owner/lease의 원자성 증명이 아니다.
+- [WHATWG HTML Canvas text styles](https://html.spec.whatwg.org/multipage/canvas.html#text-styles),
+  HTML Standard: font shorthand 및 direction/kerning/spacing 등의 상태를 정의한다. 명세에 API가
+  있다는 사실과 설치된 세 엔진의 지원은 별개다. font 문자열 직렬화만으로 glyph 선택을 증명하지 않는다.
+- [W3C CSS Fonts Level4 §4.6/§7/§8](https://www.w3.org/TR/2026/WD-css-fonts-4-20260907/),
+  2026-09-07 Working Draft: descriptor와 속성의 적용 순서,variation/optical sizing을 구분한다.
+  지원하지 않는 축이나 범위 밖 값을 그대로 적용했다고 가정하지 않는다. Recommendation으로 부르지 않는다.
+
+검증은 서로 다른 세 가지를 구분한다:
+
+1. fake: owner/차용/currentness/순서·오류·자간 반례. 실제 font나 native glyph 증명 아님.
+2. 같은 엔진·같은 byte/profile: 전체·개별 측정,줄바꿈,같은 plan preview/capture/print를 비교.
+   동일 backing/transform 비교와 print의 다른 배율 비교를 분리하고,DPR/배율이 다른 PNG의 hash 일치를
+   요구하지 않는다. 논리 줄/정렬·유한 좌표와 같은 조건의 pixels를 검사한다.
+3. 엔진 간 비교: 실측 차이를 그대로 보고한다. 사후 tolerance/폰트 교체로 PASS를 만들지 않는다.
+
+필수 실패 행렬: 없는 family,DM의 한글,미공급 Noto italic,unsupported cluster,face delete/add/descriptor
+변경,늦은 load,retire 중 measure/execute/toBlob,StrictMode/unmount,foreign plan/다른 binding,
+same-plan 새 binding,preview RAF 지연,release 중복/재진입/예외. glyph 경로를 증명할 수 없는 요청은
+차단하며 photo-only 완료 선언은 하지 않는다. 현재 이 행렬과 axes/profile 효과는 **NOT TESTED**다.
+
+### S-23. 향후 정확 파일 범위와 다음 검토
+
+S-18 구조22 + 다음13 = **향후 구현 후보35파일**. 이번 수정 허용은 계속 문서8개뿐이다.
+
+1. apps/mockup/src/canvas/font-bound-execution.ts (신규: 공통 차용 타입/공유 executor wrapper)
+2. apps/mockup/src/canvas/font-bound-execution.test.ts (신규)
+3. apps/mockup/src/canvas/PreviewCanvasSurface.tsx
+4. apps/mockup/src/canvas/PreviewCanvasSurface.test.tsx
+5. apps/mockup/src/canvas/usePreviewCanvasSurface.ts
+6. apps/mockup/src/canvas/usePreviewCanvasSurface.test.ts (신규)
+7. apps/mockup/src/canvas/surface.ts
+8. apps/mockup/src/canvas/surface.test.ts
+9. apps/mockup/src/print/exportFramePng.ts
+10. apps/mockup/src/print/exportFramePng.test.ts
+11. packages/render/src/plan/build.ts
+12. packages/render/src/plan/build.test.ts
+13. apps/mockup/src/canvas/productPlan.test.ts
+
+원래 WHERE의 composer-font-proof는 owner/준비 proof를,S-23의 font-bound-execution은 차용과 실행 결속을
+담당하도록 분리한다. 102/129/131,shared executor/types/index,admin,Space 제품 파일,원본 catalog,
+Rules/config/manifest/lockfile/CSS/font asset 배치 파일은 이 목록에 없다. 기존 Space/인쇄/unit 회귀는
+읽기·실행 대상으로 지정할 수 있지만 몰래 수정하지 않는다. 새 필요 경로는 먼저 계약을 보완한다.
+
+다음은 **SPEC132_CONSOLIDATED_CONTRACT_REVIEW**다. 같은 문서8에서 분산된 WHERE/WHAT/VERIFY를
+S-16~S-23과 대조하고 정확 단위/opt-in native 명령·합성 font 주입·자산 권한을 하나의 착수 계약으로
+정리한다. 일반 기술안은 재승인 질문 없이 검토한다. 이번 설계 선택만으로 제품 font 등록/새 취득/
+다운로드·설치·변환·배포를 시작하지 않는다. 실제 제품 적용은 FP-2 범위 밖임을 유지한다.
+전체132는 CONTRACT_REVIEW_IN_PROGRESS,후보35의 구현/제품 게이트 NOT TESTED.131 DONE 유지.
