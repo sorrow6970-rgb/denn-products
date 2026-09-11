@@ -5,21 +5,21 @@ updated_at: 2026-09-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-131-react-room-source # DONE / CODEX_PASSED; same Codex
-active_unit: spec-131-react-room-source
-state: CODEX_PASSED
-baseline_commit: 2589520
-candidate_commit: 595cb6a
+active_unit: spec-132-composer-room-source-adapter
+state: CONTRACT_REVIEW_IN_PROGRESS
+baseline_commit: e0f69e7
+candidate_commit: NOT_IMPLEMENTED
 verified_commit: 595cb6a # check3732; targeted133; final native33+regression31 PASS
-origin_relation: "131 code595cb6a local; docs7 ordinary commit/push then verify 0/0"
-working_tree: "131 code8 committed; docs7 pending; protected/user23 SHA unchanged and excluded"
-fix_round: 3
+origin_relation: "131 595cb6a/e0f69e7 pushed; HEAD=origin e0f69e7 0/0 at132 start"
+working_tree: "132 draft/review/handoff/STATE/NEXT/CURRENT/live docs7 only; protected/user23 excluded"
+fix_round: 0
 max_fix_rounds: 3
-next_transition: COMPOSER_SOURCE_ADAPTER_CONTRACT_REVIEW
-pending_product_decision: NONE_FOR_SPEC131 # PG-1=A unchanged
+next_transition: SPEC132_TECHNICAL_CONTRACT_REVIEW
+pending_product_decision: NONE #132 technical questions3; not Founder approval wait
 automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
-session_status: "2026-09-11 spec131 DONE; R3 all gates PASS; continue next scoped contract after transfer"
+session_status: "2026-09-11 spec131 DONE/pushed;132 technical contract review in progress; no new implementation"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: "Codex spec131 code8/docs7 only; protected/user23 excluded"
+commit_owner: "Codex spec132 docs7 only during contract review; protected/user23 excluded"
 ```
 
 ## 오늘 세션 종료 — 2026-09-09

@@ -1,5 +1,15 @@
 # NEXT CLAUDE PROMPT
 
+## 현재 —132 실제 Composer source 계약 기술 검토
+
+131595cb6a/e0f69e7 일반push,HEAD=origin e0f69e7·0/0 확인.131DONE 유지.
+`docs/rebuild/specs/132-composer-room-source-adapter.md`는 CONTRACT_REVIEW_IN_PROGRESS 초안이다.
+QUESTIONS3(입력 updater 밖 즉시무효화/noop,부모 pending선택,폰트현재성)을 코드·공식API근거로
+먼저 해소한다. 후보13파일/native행렬 확정·자체검토 통과 뒤에만 구현한다.
+사용자 스펙간 루틴에 따라 일반 기술 선택은 재승인 없이 진행. 실제 제품/권한 변경만 질문.
+132제품코드0/신규검증NOT TESTED. 보호23/실사진/실제UID/운영/배포/설치/자동화0.
+131합성검증을 실제고객연결완료로 확대하지 않는다. 아래131포인터는 완료이력.
+
 ## 최우선 —131 완료 / 실제 Composer source 연결 계약
 
 131 code595cb6a DONE/CODEX_PASSED(동일 Codex). R3 최종 check3732/targeted133/native64 PASS.
