@@ -10,8 +10,8 @@ state: CODEX_PASSED
 baseline_commit: 033916e
 candidate_commit: 16780ea
 verified_commit: 16780ea #sameCodex;check3637/native60+regression92 PASS
-origin_relation: "128 code16780ea local; completed docs7 then ordinary push pending"
-working_tree: "128 docs7 pending; protected/user23 unchanged and excluded"
+origin_relation: "128 code16780ea/docs83ea33a pushed; HEAD=origin83ea33a 0/0 verified; final receipt once"
+working_tree: "128 final receipt docs only; pre-existing protected/user23 unchanged and excluded"
 fix_round: 1
 max_fix_rounds: 3
 next_transition: ROOM_COMMITTED_SOURCE_CONTRACT_REVIEW
