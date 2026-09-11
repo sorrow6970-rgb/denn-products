@@ -1,5 +1,8 @@
 # 123 — 부재 확인 decode와 준비 컨트롤러 연결 계약
 
+123 전송 완료: code641b13c/docs67cf184 일반push,HEAD=origin67cf184·0/0 확인.
+최종 기록1회 전송 뒤 Git확인. 123 DONE/CODEX_PASSED 유지,다음합성native계약검토는별도단위.
+
 2026-09-10 / 검토 기준7e7a42d / CONTRACT_REVIEW_PASSED (동일 Codex 문서·정적 자체검토).
 2026-09-11 사용자 `작업이어서해줘`로 아래 정확 범위 구현·검증 완료 / DONE / CODEX_PASSED.
 2026-09-10 계약검토만 수행한 이력은 유지하며, 오늘 결과는 별도로 기록한다.
