@@ -58,6 +58,15 @@ export interface TemplateArtBindingOptions {
   readonly ports?: TemplateArtPorts;
 }
 
+/** Read-only liveness for one exact ready snapshot; owns no drawable or cleanup. */
+export interface TemplateArtReadyProof {
+  isCurrent(): boolean;
+}
+
+export interface TemplateArtProofController extends TemplateArtBindingController {
+  readReadyProof(expectedState: unknown): TemplateArtReadyProof | null;
+}
+
 export interface TemplateArtBindingController {
   getSnapshot(): TemplateArtBindingState;
   subscribe(listener: () => void): () => void;
@@ -111,14 +120,19 @@ function readSourceOnce(value: unknown): { kind: TemplateArtSourceKind; src: str
  */
 export function createTemplateArtBindingController(
   options?: TemplateArtBindingOptions,
-): TemplateArtBindingController {
+): TemplateArtProofController {
   const ports = options?.ports ?? browserPorts();
 
   let state: TemplateArtBindingState = IDLE;
   let disposed = false;
   let generation = 0;
   let pending: PendingArt | null = null;
-  let ready: { readonly imageRef: string; readonly drawable: unknown } | null = null;
+  let ready: {
+    readonly imageRef: string;
+    readonly drawable: unknown;
+    readonly generation: number;
+    readonly identity: object;
+  } | null = null;
   const listeners = new Set<() => void>();
 
   const notify = (): void => {
@@ -206,7 +220,7 @@ export function createTemplateArtBindingController(
           return;
         }
         const imageRef = `template-art-${record.generation}`;
-        ready = { imageRef, drawable: record.element };
+        ready = { imageRef, drawable: record.element, generation: record.generation, identity: {} };
         settle({ status: "ready", imageRef });
       };
       element.onerror = (): void => {
@@ -252,6 +266,29 @@ export function createTemplateArtBindingController(
   };
 
   return {
+    readReadyProof(expectedState: unknown) {
+      if (
+        disposed ||
+        expectedState !== state ||
+        state.status !== "ready" ||
+        pending !== null ||
+        ready === null ||
+        ready.generation !== generation
+      )
+        return null;
+      // Capture the safe snapshot and opaque token, never the ready record/drawable itself.
+      const snapshot = state,
+        issuedGeneration = generation,
+        identity = ready.identity;
+      return Object.freeze({
+        isCurrent: () =>
+          !disposed &&
+          generation === issuedGeneration &&
+          pending === null &&
+          state === snapshot &&
+          ready?.identity === identity,
+      });
+    },
     getSnapshot: () => state,
     subscribe: (listener: () => void) => {
       if (disposed) return () => undefined;

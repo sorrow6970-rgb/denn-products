@@ -63,6 +63,15 @@ export interface LocalImageBindingOptions {
   readonly ports?: LocalImageBindingPorts;
 }
 
+/** Read-only liveness for one exact ready snapshot; owns no drawable or cleanup. */
+export interface LocalImageReadyProof {
+  isCurrent(): boolean;
+}
+
+export interface LocalImageProofController extends LocalImageBindingController {
+  readReadyProof(expectedState: unknown): LocalImageReadyProof | null;
+}
+
 export interface LocalImageBindingController {
   /** Stable reference until the state actually changes (safe for `useSyncExternalStore`). */
   getSnapshot(): LocalImageBindingState;
@@ -110,7 +119,7 @@ interface PendingLoad {
  */
 export function createLocalImageBindingController(
   options?: LocalImageBindingOptions,
-): LocalImageBindingController {
+): LocalImageProofController {
   const ports = options?.ports ?? browserPorts();
 
   let state: LocalImageBindingState = IDLE;
@@ -118,7 +127,12 @@ export function createLocalImageBindingController(
   let generation = 0;
   let sequence = 0;
   let pending: PendingLoad | null = null;
-  let ready: { readonly imageRef: string; readonly drawable: unknown } | null = null;
+  let ready: {
+    readonly imageRef: string;
+    readonly drawable: unknown;
+    readonly generation: number;
+    readonly identity: object;
+  } | null = null;
   const listeners = new Set<() => void>();
 
   const notify = (): void => {
@@ -240,7 +254,7 @@ export function createLocalImageBindingController(
         }
         sequence += 1;
         const imageRef = `user-image-${sequence}`;
-        ready = { imageRef, drawable: record.element };
+        ready = { imageRef, drawable: record.element, generation: record.generation, identity: {} };
         settle({
           status: "ready",
           imageState: {
@@ -291,6 +305,29 @@ export function createLocalImageBindingController(
   };
 
   return {
+    readReadyProof(expectedState: unknown) {
+      if (
+        disposed ||
+        expectedState !== state ||
+        state.status !== "ready" ||
+        pending !== null ||
+        ready === null ||
+        ready.generation !== generation
+      )
+        return null;
+      // Capture the safe snapshot and opaque token, never the ready record/drawable itself.
+      const snapshot = state,
+        issuedGeneration = generation,
+        identity = ready.identity;
+      return Object.freeze({
+        isCurrent: () =>
+          !disposed &&
+          generation === issuedGeneration &&
+          pending === null &&
+          state === snapshot &&
+          ready?.identity === identity,
+      });
+    },
     getSnapshot: () => state,
     subscribe: (listener: () => void) => {
       if (disposed) return () => undefined;

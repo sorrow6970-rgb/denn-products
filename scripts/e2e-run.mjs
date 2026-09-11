@@ -54,6 +54,15 @@ function run(command, args, env) {
 
 export function selectPlaywrightArgs(args) {
   if (Array.isArray(args) && args.length === 0) return ["test"];
+  if (Array.isArray(args) && args.length === 1 && args[0] === "--local-image-owner-only") {
+    return [
+      "test",
+      "tests/e2e/canvas-surface.spec.ts",
+      "--grep",
+      "local.*image.binding",
+      "--workers=1",
+    ];
+  }
   for (const engine of ["firefox", "webkit", "chromium"]) {
     if (Array.isArray(args) && args.length === 1 && args[0] === `--pair-paint-${engine}-only`) {
       return [

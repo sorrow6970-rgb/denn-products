@@ -12,12 +12,14 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   createLocalImageBindingController,
-  type LocalImageBindingController,
   type LocalImageBindingState,
+  type LocalImageProofController,
+  type LocalImageReadyProof,
 } from "./localImageBinding";
 import type { PreviewImageBindings } from "./types";
 
 export interface UseLocalImageBindingResult {
+  readonly readReadyProof: () => LocalImageReadyProof | null;
   readonly state: LocalImageBindingState;
   readonly bindings: PreviewImageBindings;
   readonly load: (input: Blob) => void;
@@ -25,7 +27,7 @@ export interface UseLocalImageBindingResult {
 }
 
 interface OwnedController {
-  readonly controller: LocalImageBindingController;
+  readonly controller: LocalImageProofController;
   /** set by the cleanup of the effect that owns this record; read on the next mount only. */
   disposed: boolean;
 }
@@ -59,6 +61,8 @@ export function useLocalImageBinding(): UseLocalImageBindingResult {
   );
 
   return {
+    // Keep this render's snapshot: a stale caller must not adopt the owner's next ready image.
+    readReadyProof: () => controller.readReadyProof(state),
     state,
     bindings: controller.bindings,
     load: controller.load,

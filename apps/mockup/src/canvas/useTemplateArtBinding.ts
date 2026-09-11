@@ -6,13 +6,15 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   createTemplateArtBindingController,
-  type TemplateArtBindingController,
   type TemplateArtBindingState,
+  type TemplateArtProofController,
+  type TemplateArtReadyProof,
   type TemplateArtSource,
 } from "./templateArtBinding";
 import type { PreviewImageBindings } from "./types";
 
 export interface UseTemplateArtBindingResult {
+  readonly readReadyProof: () => TemplateArtReadyProof | null;
   readonly state: TemplateArtBindingState;
   readonly bindings: PreviewImageBindings;
   readonly load: (source: TemplateArtSource) => void;
@@ -20,7 +22,7 @@ export interface UseTemplateArtBindingResult {
 }
 
 interface OwnedController {
-  readonly controller: TemplateArtBindingController;
+  readonly controller: TemplateArtProofController;
   disposed: boolean;
 }
 
@@ -51,6 +53,8 @@ export function useTemplateArtBinding(): UseTemplateArtBindingResult {
   );
 
   return {
+    // Keep this render's snapshot: a stale caller must not adopt the owner's next ready image.
+    readReadyProof: () => controller.readReadyProof(state),
     state,
     bindings: controller.bindings,
     load: controller.load,
