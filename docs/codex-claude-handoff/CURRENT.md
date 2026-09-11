@@ -1,5 +1,19 @@
 # 현재 상태
 
+> 2026-09-11 최신:123 DONE/CODEX_PASSED,코드641b13c(동일Codex자체검수).
+> targeted209/check3528/기존Chromium58 PASS,보호23/번들3 SHA불변. 문서7 완료전송 후 Git확인.
+> 다음: NEXT최상단의123bridge 합성native 검증계약. 신규123native/실사진/UI/운영 NOT TESTED.
+> 아래작업중·구현미착수문구는과거이력. 새Founder질문없음,중요권한/범위충돌만STOP.
+
+> 2026-09-11 사용자 재개:123 CODEX_WORKING. 신규port/test2 구현 후 정확 검증 중.
+> 첫 신규unit 수집 실패(getter를 시험 목록에서 평가) 수정 후 targeted209/209 PASS.
+> 아래9월10일 계약검토-only는 이력이며 현재 실행 중지 지시가 아니다. 보호23/실사진/UI/운영 금지 유지.
+
+> 123 CONTRACT_REVIEW_PASSED(동일Codex 문서·정적자체검토),구현·시험은미착수/NOT TESTED.
+> [계약](../rebuild/specs/123-background-absence-preparation-port.md) / [검토](reviews/2026-09-10-spec-123-background-absence-preparation-review.md).
+> 기준HEAD=origin7e7a42d,이번문서7로컬변경만,stage/commit/push0.122 DONE유지.
+> 새Founder질문없음. 다음신규port/test2개범위는고정됐으나이번요청은계약검토에서종료한다.
+
 > 최종121·122 DONE/CODEX_PASSED(동일 Codex).122 code9837a51/docs061af73 push,HEAD=origin·0/0.
 > check3465/새native36/기존Chromium57 PASS. 보호23/번들3SHA불변,실사진/기본UI/운영 미개방.
 > 다음: NEXT 상단의100 preparation sink 비연결 계약 검토. 새123은 아직 없으며 승인대기아님.

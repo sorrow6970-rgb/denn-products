@@ -9102,3 +9102,34 @@ bdcf18c/35477e9 일반push 성공(32924f2..35477e9),HEAD=origin35477e9·0/0 확�
   새123 계약·구현은 아직 시작하지 않았다. 재승인대기가 아니며 사용자루틴 권한은 유지한다.
 - 전체 진행: 작은 합성 배경의검사·snapshot·native decode·취소/close 경로까지3엔진 확인.
   실제사진의일반metadata지원·실기기·룸UI통합·운영전환은 남아 있으며 임의완료율0.
+
+## 2026-09-10 — 123 준비 연결 계약 검토
+
+- 사용자 `계약검토해`에따라정적검토·문서만.시작HEAD=origin7e7a42d,보호·사용자dirty23 SHA확보.
+- 123 계약/review/handoff 신규3 + STATE/NEXT/CURRENT/live4 = 문서7 작성.
+  제품/Rules/config/test/package/lockfile/보호변경0,시험실행0,stage/commit/push0.
+- CONTRACT_REVIEW_PASSED(동일Codex),구현NOT STARTED/새통합검증NOT TESTED.
+  슬롯내입력조회·identity매핑책임·snapshot·cancel선등록·공동dispose·100기존cap을고정했다.
+- lookup내controller.clear는handle반환전read1가능,port.dispose는별도종료체크로read0 조건을설계.
+  기존코드를확장하지않고신규port/test2개로검증하도록명시.새Founder질문없음.
+- 다음은123정확범위구현이며이번계약검토와구현완료를혼동하지않는다.실사진/UI/운영미개방유지.
+- 최종문서검사: 문서7만,보호·사용자23 SHA동일,예상밖변경0,diff--check PASS,
+  staged0,HEAD=origin7e7a42d·0/0. 예정신규코드2개부재확인. commit/push/시험실행0.
+
+## 2026-09-11 — 123 비연결 준비bridge 구현·자체검수 완료
+
+- 사용자 `작업이어서해줘`:123 계약 범위신규port/test2만 구현. 코드641b13c.
+  동일Codex CODEX_PASSED/DONE,독립검수아님. 문서7은코드와분리일반전송예정.
+- 예약안lookup/identity snapshot,종료추적선등록,치수-onlylease,공동dispose를실제100/119/121/112로검증.
+  port.dispose lookup중read0 vs controller.clear lookup중read1가능을구분했다.
+- 신규unit63,targeted209=63+기존146 PASS. 전체check PASS: format/lint351,typecheck7,
+  unit3528=3465+63(116파일),build2. 브라우저기존회귀Chromium46(7.6s)+12(3.1s)=58 PASS.
+- 실패/수정이력: 최초it.each가hostile getter를시험등록중평가→case생성함수로수정.
+  최초check의시험string index타입오류2건→리터럴tuple고정후전체check PASS. 제품/기존코드/게이트완화0.
+- 보호·사용자23 SHA동일,기본mockupJS/CSS·adminJS3 SHA동일(review전체해시),예상밖dirty0,
+  diff--check PASS. temp AiSUpF/DfG4xv 부재,4183/4184/4185 listen0. 보호018PNG를쓰는전체E2E실행0.
+- 정확변경code2/docs7. Rules/config/기존test/package/lockfile/보호수정0,실사진/실제Firebase/
+  실제UID/운영/배포/설치/예약자동화0. 기존chunk warning유지.
+- 진행: 합성배경의부재검사·decode관리와준비컨트롤러연결완료. 새123native통합은NOT TESTED,
+  룸UI·일반사진/실기기·운영검증미완. 기존116PNG14불일치미해결. 임의전체완료율표시0.
+- 다음지시는NEXT최상단:123bridge의합성native검증정확계약부터. 새범위계약없이구현시작0.

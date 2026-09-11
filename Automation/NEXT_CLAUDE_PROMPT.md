@@ -1,5 +1,44 @@
 # NEXT CLAUDE PROMPT
 
+## 최우선 — 2026-09-11 스펙123 완료 / 합성 native 연결 계약
+
+123 code641b13c DONE/CODEX_PASSED(동일Codex). targeted209/check3528/기존Chromium58 PASS.
+문서7 일반전송·Git확인 후 다음은 **123 준비bridge 합성 native 검증 계약**이다.
+아래CODEX_WORKING/계약검토-only/122완료 포인터는 이전 이력이며 재실행 지시가 아니다.
+
+다음 작업 순서:
+1. 최신STATE/CURRENT/live완료항목,123계약/review/handoff,PG-1,119지속Git승인과실제Git관계확인.
+2. 보호·사용자23 및기본번들3 SHA기준 확보. 기본앱/UI·실사진·운영·설치·보호변경금지 유지.
+3. 123 port/시험,기존100 preparation,122 absence-decode fixture·시험,
+   115 native lifecycle fixture를읽고정확 신규번호/파일범위의계약MD를먼저작성·자체검토한다.
+4. 합성JPEG/PNG만,actual123+100와native FileReader/createImageBitmap 결속을검증하도록설계한다.
+   정상/clear/공동dispose/source-change/pending교체/late/decoder실패/metadata 선차단,
+   frame와bitmap해제횟수·lookup/reader/decode0 경계·safe-net미사용을구분한다.
+5. 새selector/fixture/시험 허용목록과browser별행렬·고정포트/temp·외부egress0 단언을정확히고정한다.
+   계약없는코드나기본UI연결은시작하지않는다. 기존116PNG14불일치를이시험으로해결됐다고표시하지않는다.
+
+새중요결정없으면기존수동요청기반루틴으로진행,일반확인반복0. 예약자동화는만들지않는다.
+현재123native는NOT TESTED,이번회귀58은기존경로다. 실사진/실기기/출시·운영검증은여전히남았다.
+
+## 현재 — 2026-09-11 스펙123 구현 재개
+
+사용자 재개 지시에 따라123 계약의 신규port/test2개와문서7만 구현·검증한다.
+CODEX_WORKING. 아래 계약검토-only 기록은 9월10일 이력이며 오늘의 중지 지시가 아니다.
+보호23/번들3 기준 캡처, 실제100/119/121 결속시험과 명시opt-in 회귀만 실행한다.
+실사진/UI/운영/배포/설치/예약 자동화0. 기존코드 변경이 필요하면 범위 충돌로 STOP.
+
+## 최신 — 123 계약검토 통과 / 구현 미착수
+
+사용자 `계약검토해` 요청은 이번에문서검토만수행.123 spec/review/handoff를작성했다.
+CONTRACT_REVIEW_PASSED(동일Codex 정적자체검토),구현·새시험 NOT STARTED/NOT TESTED.
+HEAD=origin7e7a42d,로컬문서7미커밋.이번stage/commit/push0,122 DONE유지.
+
+후속실행은 `docs/rebuild/specs/123-background-absence-preparation-port.md`의신규port/test2개와
+문서7만. 슬롯안lookup/identity고정snapshot/cancel선등록/공동dispose 계약을그대로구현한다.
+새Founder질문은없다. 중요한새결정/권한/충돌이아니면기존루틴으로구현·검증가능하나
+이번계약검토요청에서구현을시작한것처럼기록하지않는다. 이전코드/Rules/UI/실사진/운영/보호수정0.
+아래 '새123계약없음'은이번작성전이력이다. 재개시현재문서7변경은이번Codex소유로구분한다.
+
 ## 최종 실행 포인터 — 121·122 DONE / 다음 preparation sink 계약
 
 121은66a2caa 종료,122 코드9837a51/문서061af73 일반push 완료. HEAD=origin061af73·0/0 확인.

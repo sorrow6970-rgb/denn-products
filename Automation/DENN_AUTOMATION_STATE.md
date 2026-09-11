@@ -1,25 +1,25 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-09-10
+updated_at: 2026-09-11
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
-completed_unit: spec-122-background-absence-decode-native # DONE / CODEX_PASSED; same Codex
-active_unit: spec-122-background-absence-decode-native
+completed_unit: spec-123-background-absence-preparation # DONE / CODEX_PASSED; same Codex
+active_unit: spec-123-background-absence-preparation
 state: CODEX_PASSED
-baseline_commit: 66a2caa
-candidate_commit: 9837a51
-verified_commit: 9837a51 # same Codex self-review
-origin_relation: "spec122 code9837a51/docs061af73 pushed; HEAD=origin061af73 0/0 verified; final receipt once, then Git check without another receipt"
-working_tree: "spec122 final docs7 receipt only; protected/user23 SHA unchanged and excluded"
+baseline_commit: 7e7a42d
+candidate_commit: 641b13c
+verified_commit: 641b13c # same Codex local implementation review
+origin_relation: "code641b13c local; docs7 completion commit/push pending; baseline origin7e7a42d"
+working_tree: "spec123 docs7 pending; pre-existing protected/user23 unchanged and excluded"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: ABSENCE_PREPARATION_SINK_CONTRACT_REVIEW
-pending_product_decision: NONE_FOR_SPEC122 # PG-1=A unchanged
+next_transition: ABSENCE_PREPARATION_NATIVE_CONTRACT_REVIEW
+pending_product_decision: NONE_FOR_SPEC123 # PG-1=A unchanged
 automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
-session_status: "2026-09-10 spec121 and122 DONE/pushed; check3465/new native36/old Chromium57 PASS; next isolated preparation sink contract, no routine approval needed"
+session_status: "2026-09-11 spec123 DONE; targeted209/check3528/Chromium58 PASS; new bridge native NOT TESTED; send completion docs then next scoped contract review"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: Codex; spec122 code6/docs7 only; exclude protected/user22 and debug.log
+commit_owner: "Codex spec123 code2 committed641b13c; docs7 completion pending; protected/user23 excluded"
 ```
 
 ## 오늘 세션 종료 — 2026-09-09
