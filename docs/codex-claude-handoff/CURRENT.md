@@ -2,6 +2,9 @@
 
 ## 최신 — 2026-09-28 부분 작업 checkpoint 전송
 
+82343e9(code/test16+docs8) push 성공, 원격 ls-remote 일치 및 ahead/behind0/0 확인.
+보호/user23 SHA 불변 및 stage 잔류0. 전송 기록 문서 커밋의 최종 hash는 최종 보고에 남긴다.
+
 사용자가 현재까지의 commit/push를 직접 요청했다. 이전 전송 보류는 이번 부분 작업 저장에 한해 해제한다.
 코드/test16+문서8만 대상, 보호/user23 제외. 기존 WebKit3FAIL을 유지하며132 DONE이나 배포 승인으로 해석하지 않는다.
 131 DONE/132 부분 구현, READY_FOR_CODEX. 검증값은9월14일 결과이며 이번에는 재시험/구현 재개0.

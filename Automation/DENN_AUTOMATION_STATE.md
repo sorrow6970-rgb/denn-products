@@ -8,10 +8,10 @@ completed_unit: spec-131-react-room-source # DONE / CODEX_PASSED; same Codex
 active_unit: spec-132-composer-room-source-adapter
 state: READY_FOR_CODEX
 baseline_commit: 102860e
-candidate_commit: PARTIAL_CHECKPOINT_TRANSFER_PENDING
+candidate_commit: 82343e9 # partial checkpoint; not whole132 PASS
 verified_commit: 595cb6a # check3732; targeted133; final native33+regression31 PASS
-origin_relation: "2026-09-28 fetch confirmed HEAD102860e=remote branch, ahead/behind0/0 before checkpoint"
-working_tree: "checkpoint scope code/test16 + docs8; protected/user23 excluded; final transfer result to be recorded separately"
+origin_relation: "2026-09-28 checkpoint82343e9 push and ls-remote match verified, ahead/behind0/0; subsequent docs-only transfer record commit verified in final report"
+working_tree: "checkpoint code/test16 + docs8 committed; protected/user23 unchanged and excluded; transfer record touches STATE/NEXT/CURRENT/live only"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: SPEC132_PLAN_BOUND_LIFETIME_CONTRACT_REVIEW
@@ -28,7 +28,7 @@ consolidated_document_review: PASSED_SAME_CODEX #S24-S27;local35 paths;new code/
 session_status: "2026-09-28 explicit user request: commit/push existing partial work only; no implementation resumption; prior WebKit3FAIL and incomplete integration preserved"
 native_preflight_review: "Chromium12/Firefox12 PASS; WebKit9PASS3FAIL preserved; new static owner body54/fragment102/shared-plan162 conditions PASS; no whole132 PASS or gate removal"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: "2026-09-28 user explicitly requests current work commit/push: code/test16 + docs8 partial checkpoint only; not gate waiver/DONE/deployment; protected/user23 excluded"
+commit_owner: "2026-09-28 checkpoint82343e9 pushed: code/test16 + docs8; docs-only transfer record follows; not gate waiver/DONE/deployment; protected/user23 excluded"
 ```
 
 ## 최신 — 2026-09-14 S43~S44 고정 owner 구현·공유 plan 결합 검증 완료

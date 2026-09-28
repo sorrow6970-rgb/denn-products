@@ -9986,3 +9986,16 @@ next_transition SPEC132_PLAN_BOUND_LIFETIME_CONTRACT_REVIEW / Founder pending NO
 보호/user23은 수정·복원·stage·commit 대상에서 제외한다. 폰트 원본/변환 사본 및 ignored 로컬 도구도 전송하지 않는다.
 따라서 새 clone에서 opt-in 폰트 시험에는 별도 로컬 검증 자산이 필요하며 이번 커밋이 모든 외부 자산을 포함한다고 주장하지 않는다.
 제품 추가 구현/운영/배포/자동화0. commit/push 결과는 후속 기록과 최종 Git 확인으로 구분한다.
+
+### 전송 확인 — 82343e9
+
+82343e9e639187b4fd089a358af9a9ff301f6adb: spec 132: checkpoint partial font owner and plan validation.
+정확24파일(code/test16+docs8), staged scope 비교/diff--check PASS 후 일반 commit.
+origin/rebuild/modern-studio에102860e→82343e9 fast-forward push 성공.
+git ls-remote 원격hash=로컬HEAD, ahead/behind0/0 확인. stage 잔류0.
+전송 전후 보호 내용22경로 SHA목록 일치+보호 plan/index.ts 별도 SHA 일치=23경로 불변.
+plan/index.ts는 status에 남지만 content diff가 없어 별도로 hash 검증했으며 stage/commit하지 않았다.
+남은 작업트리는 보호/user 변경뿐이다. 초기 secret-pattern 검사 glob 호출 오류는 명시적24경로 검사로 정정했고 해당 패턴 일치0.
+Git EOL/global ignore 권한 경고는 유지했다. 이 검사는 포괄적 secret 보안 감사를 의미하지 않는다.
+STATE/NEXT/CURRENT/live4문서에 이 확인 결과를 후속 문서 커밋으로 기록한다.
+132 부분 구현/기존 WebKit3FAIL 유지, 재시험/추가 구현/배포/자동화0.
