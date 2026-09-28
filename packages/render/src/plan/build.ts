@@ -658,12 +658,19 @@ function measureWithSpacing(
   font: PlanFontSpec,
   spacingPx: number,
 ): number | null {
-  const base = measure(port, text, font);
-  if (base === null) return null;
-  if (spacingPx === 0) return base;
-  const glyphs = Array.from(text).length;
-  const total = base + Math.max(0, glyphs - 1) * spacingPx;
-  return Number.isFinite(total) ? total : null;
+  if (spacingPx === 0) return measure(port, text, font);
+  // The executor paints separate code points when spacing is nonzero. Whole-string shaping
+  // (kerning/ligatures) is not their advance sum. Preserve its per-glyph accumulation order,
+  // without the final, unused spacing after the last glyph. This is not grapheme shaping.
+  const glyphs = Array.from(text);
+  let total = 0;
+  for (let index = 0; index < glyphs.length; index++) {
+    const width = measure(port, glyphs[index], font);
+    if (width === null) return null;
+    total += width + (index < glyphs.length - 1 ? spacingPx : 0);
+    if (!Number.isFinite(total)) return null;
+  }
+  return total;
 }
 
 /**

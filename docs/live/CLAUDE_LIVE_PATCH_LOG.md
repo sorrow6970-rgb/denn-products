@@ -9505,3 +9505,484 @@ W3C Font Loading3/Fonts4와 WHATWG Canvas 공식 본문·확인일·한계는132
 전송 완료:25273a761b91def32f8c4a4f8b9e9c1ad41501f5,정확 문서8/05d0971..25273a7 일반 push.
 HEAD=origin25273a7·ahead/behind0/0 확인.최종 기록STATE/NEXT/CURRENT/handoff/live5문서1회만 전송한다.
 131 DONE/132 계약 검토 중;다음 전체 계약 통합 지시를 NEXT에 남겼다.추가 제품 구현/신규 시험0.
+
+## 2026-09-14 — 132 통합 계약 문서 동기화 복구 / FP-3 대기
+
+사용자 `우선 작업이어가자`로 재개. HEAD102860e0665317d70ee93548def126ee06437dcd,
+로컬 origin/rebuild/modern-studio 추적ref와 ahead/behind0/0 확인. 원격 fetch/조회는 이번0.
+지난 도구 실패 후 실제 task dirty는 spec/STATE/NEXT 3개였고 나머지5개에는 S-24~S-27이 없었다.
+당시 docs8 unstaged 집계는 잘못됐으며 이를 정정한다. 이번에 정확 같은8문서 동기화를 수행한다.
+S-24~S-27의 통합 문서 검토 완료(동일 Codex)를 인계했으며 새 독립 설계/제품 검증 판정은 아니다.
+131 DONE/CODEX_PASSED,132 NOT_IMPLEMENTED. FP-3 미승인으로 FOUNDER_DECISION_REQUIRED 유지.
+다음 FOUNDER_FP3_LOCAL_COMPOSER_INTEGRATION_SCOPE:35경로 구현·unit·opt-in native4명령,
+기존3폰트의 테스트 전용 등록만 요청. 기본 제품 공급/실제 룸 UI/새 취득/설치/운영/배포 제외.
+코드/제품 시험/browser/emulator/다운로드/폰트 등록/실제 데이터/예약자동화/stage/commit/push0.
+시작23개 보호·사용자 파일의 SHA를 이번 세션 비교용으로 캡처했다. debug.log는 승인된1438bytes
+SHA2D4C9622F42F2F9DAEF857E0A0C4CBDC4385FBAF5B0D590DB67678F794A45A6F와 일치한다.
+이외22개의 과거 전체 SHA 목록은 이번 메모리에 없어 과거 기준 재검증 완료라고 주장하지 않는다.
+이번 수정 전후 비교와 실제 scope/diff 검증은 아래에 기록한다. 제품 진행률의 새 수치 산정0.
+
+복구 검증: task 문서8=기존3+동기화5,그 외 예상밖 경로0,staged0,git diff --check PASS.
+보호/사용자23개 SHA가 이번 세션 시작값과23/23 동일. 제품/Rules/config/test 추가변경0.
+HEAD102860e 유지,로컬 origin 추적ref와0/0. 원격 최신 상태를 새로 확인했다는 뜻은 아니다.
+Git 전역 ignore 읽기 권한 경고와 LF→CRLF 안내는 보존했고 설정 변경/권한 우회0.
+첫 문서 패치 시 문맥 불일치로 적용0인 실패가 있었고,정확 문맥으로 재작성 후8문서 저장·검사 성공.
+FP-3 명시 승인 전 구현과전송은 계속 보류한다. 다음 프롬프트는 NEXT 최우선 절에 기록했다.
+
+## 2026-09-14 — FP-3 승인·132 부분 구현 / admin 번들 계약 충돌 STOP
+
+직전 정확 FP-3 질문에 사용자 `응 루틴으로 중요승인외 자동진행해`로 승인. 결정 정본에 직접기록.
+S-24 허용35경로 중10 code/test를 수정했다(정확 목록/시험/SHA는132 S-28).
+자간 비전체측정 반례6 FAIL/184 PASS를 먼저 확인,개별glyph 누적 수정 후 targeted413 PASS.
+catalog ready identity와drag 즉시통지/settlement·재진입·syncRAF,전용selector4·temp cwd를 추가했다.
+실제 Composer 연결/폰트 owner/인쇄binding은 미구현. native config/사전시험은 작성만 했고 실행0.
+node scripts/check.mjs PASS:format/lint375,7typecheck,unit3757=기존3732+추가25,2build exit0.
+기존500kB chunk 경고는 보존했으며 임계값/빌드설정 변경0. 새native/fullE2E/폰트등록/실제데이터0.
+S-26 admin 번들 불변 검사 FAIL:294873→294910bytes(+37),
+SHA B0A1F85F9271E4A929D2F6AB0F20BB0D0BFDADDA211533DDD675C8FB85711246 →
+2A25F27A178E6CC8877A46D515F2EB32DDED848F26DAA87B791139F7853AEF21.
+admin space-v2/issue-composition의 공유 buildPreviewRenderPlan import/call을 정적으로 확인했다.
+admin src diff0,현재 호출은 textZones/measureText를 주지 않음. 전체admin 동작 불변의 최종 검증 아님.
+원인은 S-21 공유 빌더 수정 허용과 S-26 admin hash 불변의 계약 모순으로 판단한다.
+게이트를 임의로 통과시키지 않고 S-28 QUESTIONS와 STATE/NEXT/CURRENT/review/handoff/결정에 기록.
+FP-3는 유효. 필요한 정정은 공유수정에 따른 번들 변화 허용+admin src/config0·회귀·SHA기록 유지다.
+고객JS346959bytes(+1015),SHA6182B4B409ACFC8B44550467F6942ED625538BCFB59E3C37AE57A14CE93ACE3C,
+고객CSS SHA6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81 불변.
+보호/사용자23개 SHA는세션시작과동일,task code/test10+docs8외추가경로0,staged0,diff--check PASS.
+HEAD102860e/로컬origin추적ref0/0,fetch/commit/push0. 브라우저/서버를 이번에 시작하지 않았다.
+Get-NetTCPConnection 무결과만으로 포트 전수부재를 보장하지 않으며 새 프로세스 잔류가 없다는
+브라우저 종료 실측을 주장하지 않는다. 신규依存성/설치/다운로드/운영/배포/보호수정/예약자동화0.
+현재 BLOCKED_CONTRACT_CONFLICT,131 DONE/132 PARTIALLY_IMPLEMENTED. 전체제품완료율 상승 주장0.
+
+## 2026-09-14 — S-28 번들 정정 승인 /132 native preflight WebKit 실패
+
+사용자 `응 승인,`을 직전 S-28 정정의 직접 승인으로 기록했다. FP-3 유효,admin src/config0 유지,
+공유 빌더로 인한 번들 변화만 허용하며 기존 plan/issue 회귀와 size/SHA 검증을 유지한다.
+admin issue/productPlan/build targeted309/309 PASS. 마지막 진단 코드 후 check 재실행 PASS:
+format/lint375파일,7프로젝트typecheck,unit3757/3757(123파일),2앱build. 기존 chunk 경고 보존.
+이전 부분 코드 targeted413/413 결과도 유지하되 실제 Composer 통합 PASS로 확대하지 않는다.
+
+전용 local native5회: Chromium4PASS → Firefox 기본환경 newPage 오류4FAIL →
+Firefox 일반 실행 권한 허용 후 같은 명령4PASS → WebKit3PASS/1FAIL → WebKit 전체 실패목록 진단3PASS/1FAIL.
+Firefox 최초 _page 오류의 내부 원인은 UNCONFIRMED다. WebKit 필수 native accessor 미지원:
+fontKerning/fontStretch/fontVariantCaps/textRendering. assertions를 완화하지 않고 실패4개를 한 번에 기록했다.
+Chromium/Firefox는 이 출력 변경 전 실행 결과다. 반복 실행 합산으로 coverage를 부풀리지 않는다.
+원본3폰트 load는 엔진별 PASS이나 axis/동일plan 출력/실제 Composer 결속은 NOT VERIFIED.
+공식 WHATWG Canvas/W3C Font Loading3 본문 확인일·URL·대안의 한계를132 S-29에 기록했다.
+descriptor를 지원해도4개 Canvas 제어 전체와 동등하다는 근거는 아직 없다. profile 교체는 채택하지 않았다.
+지정6파일 회귀 selector/전체132 통합은 미실행. S-25에 따라 mandatory gate 실패를 보존한다.
+
+자기 temp5개 Test-Path false,4183/4184/4185 LISTENING0 확인. 타 프로세스 종료0.
+보호/사용자23 SHA 세션 시작 대비23/23 동일,debug.log1438bytes 승인 SHA 동일.
+code/test10+문서8만 task dirty,예상밖0,staged0,git diff--check PASS.
+고객JS346959bytes SHA6182B4B409ACFC8B44550467F6942ED625538BCFB59E3C37AE57A14CE93ACE3C,
+adminJS294910bytes SHA2A25F27A178E6CC8877A46D515F2EB32DDED848F26DAA87B791139F7853AEF21,
+고객CSS22675bytes SHA6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81.
+최신 check에서 재빌드한 위3파일의 bytes/SHA가 기록값과 동일함을 최종 재확인했다.
+HEAD102860e/로컬origin추적ref0/0 유지. 원격 최신 확인/fetch/stage/commit/push0.
+실제 서비스/데이터/폰트 취득·설치/배포/예약자동화0. 룸UI/font owner/print binding 미구현.
+
+STATE/NEXT/CURRENT/결정/review/handoff/spec/live 문서8 동기화:
+BLOCKED_VERIFICATION / SPEC132_FONT_PROFILE_COMPATIBILITY_REVIEW,새 Founder 질문 대기 아님.
+다음은 S-29 기술 호환성 검토이며 FP-3/S-28을 재질문하지 않는다. 지원 플랫폼/필수 검증 의미를
+바꾸지 않고 근거·반례를 먼저 확인한다.132 DONE 아님,131 DONE 유지;전체완료율 새 추정0.
+
+## 2026-09-14 — 132 WebKit CSS/face 대안 제한 진단 / 루틴 기술 검토
+
+사용자 `응 루틴으로 진행해`에 따라 S-30 진단 계약을 먼저 쓰고
+tests/composer-room-source/source.spec.ts에 탐색 진단1개를 추가했다. 이번 제품 소스/config/원본 추가변경0.
+required native accessor gate 유지,expando/skip/tolerance/설치/폰트 교체0. FP-3/S-28 재질문0.
+
+공식 CSS Fonts4 §7.2/WHATWG Canvas 본문 및 WebKit 공식 소스를 확인했다(2026-09-14,URL·한계는132 S-30).
+FontFace feature descriptor와 CSS 속성의 우선순위를 분리하고,main 소스를 설치 binary 근거로 쓰지 않았다.
+같은 DM Sans normal원본/고정 합성 문구/32px/400/opsz9,connected/detached 각각12조건을
+독립 Canvas2개로 비교했다.24조건×3엔진=72쌍(144Canvas),각 pair의 폭/실제 ImageData 동일.
+이 pair 결과는 문구/크기 한정 재현이며 measure→paint advance 또는 전체 profile 동등성 PASS가 아니다.
+
+최종 동일 test파일:
+- Chromium149.0.7827.55:5/5 PASS,exit0.
+- Firefox151.0:일반 실행 허용 후5/5 PASS,exit0.
+- WebKit26.5:4/5 PASS,exit1. 네 필수 native accessor 부재 FAIL 유지.
+5개=required profile1+기존font load3+탐색1. 전체15개 중14PASS/1FAIL이며132 완료 판정 아님.
+첫 Chromium 호출은 도구 결과 직렬화 오류로 결과 확보 실패/PASS 미집계. 자기 temp/포트 부재 확인 후
+동일 명령 재실행으로 위 확정 결과를 얻었다. CIM 프로세스 조회 접근 거부는 재시도/우회하지 않았다.
+
+핵심 반례: WebKit connected CSS kern none:
+baseline184.9599151611328 →190.9439239501953,차이5.9840087890625px인데 ImageData는 baseline과 동일.
+face kern0은 같은190.9439239501953 폭이면서 baseline과 픽셀이 달랐다.
+CSS-only가 측정/paint를 함께 제어한다고 볼 수 없다. detached CSS readback은 빈 값이며 조건별 효과도
+connected와 다르다. face kern 설정은 세 엔진에서 실제 효과를 확인했으나4속성 전체 대체 NOT PROVEN.
+font shorthand small-caps/별도 getter 차이도 기록했다. 전체glyph/style/축/출력배율은 미검증이다.
+
+node scripts/check.mjs exit0:format/lint375,7프로젝트typecheck,unit3757/3757(123파일),2build PASS.
+이전 admin 회귀309/targeted413은 이번 재실행 아님. 이번 공통 check에는 기존unit들이 포함된다.
+3개 확정 실행의 자기 staging Yu5QQh/WIZPNo/S16VoF 부재 확인,4183/4184/4185 LISTENING0.
+원본/PNG/픽셀 byte 파일 저장0,타 프로세스 종료0. 시스템 전체 프로세스 잔류0으로 확대하지 않는다.
+보호/사용자23 SHA 세션 시작 대비 동일,code/test10+문서8 task경로 외 추가0,staged0,diff--check PASS.
+HEAD102860e/로컬origin추적ref0/0,원격fetch/조회/stage/commit/push0. 운영/배포/새취득·설치/자동화0.
+
+문서8 동기화: BLOCKED_VERIFICATION 유지,다음 SPEC132_ISOLATED_PROFILE_CONTRACT_REVIEW.
+같은8문서 안에서 격리 context/face feature/font assignment의 동등성·DPR/printScale·35파일 내 완결성을
+먼저 검토한다. 아직 격리안 채택/필수 gate 완화/제품 출력 변경 승인이 아니다.
+131 DONE,132 부분 구현;Composer 결속/font owner/print binding 미구현. 새 전체진척률 추정0.
+
+## 2026-09-14 — 132 격리 렌더링 선행 진단 / FP-4 계약 전환 제안
+
+사용자 `어떻게 해결하지? 다음 진행해줘`에 따라 S-31을 문서화하고 기존
+tests/composer-room-source/source.spec.ts에 진단1개를 추가했다. 이번 제품 소스/config/원본 변경0.
+I-2 후보: DOM 미부착 환경에서 같은 font/plan을 측정·실행하고,preview는 해당 backing에서1:1 전달,
+print는 본래 출력 backing/scale에서 직접 실행한다. preview 이미지를 확대해 인쇄하는 안이 아니다.
+
+같은3원본의 normal/italic/Korean×weight400/700×size12/32/64×scale1/2=36조건/엔진.
+Chromium149.0.7827.55와Firefox151.0,WebKit26.5에서 총108조건의 pair 폭/pixel·전송 pixel·scale 보존 PASS.
+native profile 명시 reference는 Chromium/Firefox72조건에서 같음. WebKit36조건은 비교 불가(null).
+null을 PASS로 치환하지 않았고 기존4속성 gate는 그대로 FAIL.
+전용명령 최종결과:Chromium6/6 exit0,Firefox6/6 exit0,WebKit5/6 exit1. 총17PASS/1FAIL.
+6개=기존required1+font load3+S30탐색1+S31탐색1. 탐색 PASS는132 완료나native API 지원 판정이 아니다.
+실제 Composer/공유 executor/PNG encode/전체glyph·axes·실기기 검증은 아직 NOT VERIFIED.
+
+공통 check 첫 실행은 unit 단계에서 추가 출력이 없어 Codex가 자기 실행 세션만 Ctrl-C로 중단(exit1).
+test assertion 실패는 확인하지 못했고 지연 원인은 UNCONFIRMED. 다른 프로세스 종료/환경 변경0.
+브라우저 진단 후 동일 node scripts/check.mjs 재실행 exit0:
+format/lint375,7프로젝트typecheck,unit3757/3757(123파일),2build PASS. 기준/timeout/의존성 변경0.
+첫 중단을 최종 PASS로 소급 덮지 않았다. 전역 Node 프로세스 전체 잔류0을 주장하지 않는다.
+
+I-2는 선행 실행 가능성을 확인했지만 기존 S-20 직접 context 실행/S-22 literal native gate를
+그대로 충족하는 구현이 아니다. 따라서 S-32/FP-4 계약 전환 방향을 PENDING으로 기록한다.
+권장: 격리 렌더링 +1:1 표시 전달을 선택하고,먼저 같은 문서8에서 새 실행·소유권·대체 검증 계약을 작성/검수.
+추가 Canvas 비용/색공간/target clip·alpha·filter/restore 실패/retire/default 추가Canvas0을 포함해야 한다.
+구현은 보완 계약 검수 이후에만 기존 로컬 경계에서 재개. 현재 gate 삭제/예외 종료/배포 승인 아님.
+FP-3/S-28은 여전히 유효하며 재질문하지 않는다.
+
+최종 STATE/NEXT/CURRENT/결정/review/handoff/spec/live8문서 동기화:
+FOUNDER_DECISION_REQUIRED / FOUNDER_FP4_ISOLATED_RENDERING_CONTRACT.
+131 DONE/132 PARTIALLY_IMPLEMENTED 유지,실제 Composer/font owner/print binding 미구현.
+보호/사용자23 SHA 세션 시작 대비 동일,task code/test10+docs8외추가0,staged0,diff--check PASS.
+이번의 실제 추가 수정은 그중 test1+문서8이다. HEAD102860e/로컬origin추적ref0/0 유지.
+원격 최신조회/fetch/commit/push0. 원본 변환·설치/운영·실제데이터/배포/예약자동화0.
+자기 staging nWVCzf/PQ9f9k/5m1OWo3개 부재,4183/4184/4185 LISTENING0 확인.
+고객JS/adminJS/고객CSS bytes·SHA는 S-28/S-30 기록값과 동일. 이번 새 전체진척률 추정0.
+
+## 2026-09-14 — FP-4 직접 승인 / 격리 실행 계약 검수
+
+직전 FP-4 질문에 사용자 `응 승인할게`로 계약 전환 방향을 승인했다.
+S33에 target 소유권/reset/1:1 인계/print 직접 encode/async release/대체 native 행렬과35파일 대응을 명시했다.
+동일 Codex 계약 검수 PASS. 이전WebKit4속성FAIL·S31미검증은 보존;지원되었다는 주장0.
+CODEX_WORKING / SPEC132_ISOLATED_FRAME_IMPLEMENTATION_AND_VERIFICATION.
+먼저 허용 신규 font-bound-execution.ts/test의 내부 primitive부터 구현한다. 전체132 PASS 아님.
+131 DONE 유지. 운영/배포/추가취득·설치/보호/예약자동화0. 실행 결과는 후속 실제 출력으로만 기록한다.
+
+## 2026-09-14 — FP-4 격리 primitive 구현·검증 / 색공간·PNG 기술 보완
+
+FP4승인·S33검수후신규primitive/test와전용fixture/기존entry/native5파일작업. 전체code/test14+문서8unstaged.
+targeted29/29,최종check3786/3786(3757+29)·format/lint378·7typecheck·2build PASS.
+pnpm exec실행파일탐색실패는본문전exit1;기설치.bin CMD직접호출로검증,설치/설정변경0.
+fixture문자열의Tailwind추가CSS생성을같은속성의표기분리로해소;고객JS346959/CSS22675/adminJS294910bytes,
+SHA는S28/S31동일. 설정/고객CSS소스수정0. 기본앱격리helper연결0.
+
+native:Chromium7/7 PASS. Firefox제한환경7실패(_page/본문전),일반환경6/7,진단추가후6/7.
+WebKit일반환경5/7,capability진단후5/7. 반복횟수를coverage로합산하지않는다.
+Firefox:표시1:1/배율복구3개PASS. PNG전후RGBA다른sample수1588/2388/7160,최대절대차23/37/32(배율1/1.25/2).
+직접executor PNG와격리PNG의decode결과3개는byte동일. 원인단계미확정;무손실PASS/허용오차승인아님.
+WebKit:getContextAttributes()는function이며반환은{desynchronized:false,willReadFrequently:false}.
+alpha/colorSpace읽기키부재로새primitive안전실패. 색공간자체미지원단정0;기존4native속성FAIL도유지.
+새시험은no-text합성sharedexecutor검증이며font owner/실제Composer/전체132완료가아니다.
+마지막fixture초기실패finally정리보완후targeted/checkPASS,native전체재실행미수행.
+
+현재 BLOCKED_VERIFICATION,next SPEC132_PIXEL_PROFILE_TECHNICAL_REVIEW. Founder대기NONE.
+FP3/S28/FP4유효. 다음target최초context소유권/색공간증명·PNG단계분리기술검토는재승인없이같은범위에서진행.
+검토없이getter검사삭제/오차완화/배경추가/새encoder·dependency/운영출력변경0.
+131 DONE,132부분구현. 실제Composer/font owner/print결속과native전체완료전전송보류.
+보호23SHA동일,예상외변경0,staged0,diff--checkPASS. HEAD102860e/로컬origin추적0/0,원격조회/fetch/commit/push0.
+자기staging6개WTozYM/alNvcQ/1sCaQc/lcbTSc/3Csxrf/9QM2rv부재,4183/4184/4185 LISTENING0.
+운영/실제데이터/배포/취득·설치/예약자동화0. 전체진척률분모는미확정,131완료/132진행을전체잔여개수로오인하지않는다.
+
+## 2026-09-14 — 132 색공간 생성 소유권·PNG 단계 정정 / 격리 target 검증 완료
+
+사용자 `이어서하자`로S34기술보완재개. S35계약/동일Codex검수후기존허용4 code/test파일과8문서수정.
+display를새Canvas최초context생성owner capability로한정. native없는필드를가짜값으로채우지않으며,
+기존외부target/가짜·해제된capability/명시색충돌은거부한다. 제품기본앱연결0.
+PNG진단12조건/엔진×3=36관찰:Canvas직접Bitmap은차이0,PNG후Firefox324/max2·WebKit648/max1,
+각6옵션동일/alpha변경0. 정확encoder/decoder원인미확정. 옵션변경/오차확대0.
+S33요구의같은단계비교로시험을정정:직접실행픽셀대격리표시,직접PNG대격리PNG모두exact.
+PNG전후raw무손실까지확대했던시험오류는S34실패와같이보존;제품PNG/투명도/색옵션변경0.
+
+최종targeted34/34,check3791/3791(3786+5;124파일),format/lint378·7typecheck·2build PASS.
+native최종Chromium8/8exit0,Firefox8/8exit0,WebKit7/8exit1(옛literal4속성gate만FAIL).
+새격리9조건(3배율×3엔진)의표시/배율/PNG동일단계PASS. no-textprimitive이며font/Composer전체PASS아님.
+Chromium중간2실행은readback warning3개로7/8FAIL;원문확인후진단용decoded buffer만
+willReadFrequently:true설정. 제품context·console게이트불변. 최종3엔진은이보완뒤실행했다.
+Firefox단계정정전7/8,WebKit6/8FAIL이력도S35~36보존. 사후허용오차/조건부skip0.
+기존회귀138/138exit0(1.1m),지정6파일중제외11=0854+0883+0632+0802. 제외를PASS로계상0.
+
+최종code/test14+docs8unstaged,예상외0,보호23SHA동일,staged0,diff--checkPASS.
+고객JS346959/adminJS294910/CSS22675bytes·SHA는S28/S34동일. HEAD102860e/로컬origin추적0/0,
+새원격조회/fetch/commit/push0. 자기staging8개We1Ttj/vPhxfE/c4DHYg/ltXE9m/aKmwaw/SIYJLI/KU9bm7/AXnIEr부재,
+4183/4184/4185 LISTENING0. 시스템전체프로세스부재를주장하지않는다.
+CODEX_WORKING,next SPEC132_FONT_OWNER_IMPLEMENTATION_AND_VERIFICATION. Founder대기NONE.
+다음composer-font-proof.ts/test→같은plan binding→Composer/102capture/print/text native. 중요사항외재승인0.
+131 DONE/132진행,전체리빌드분모미확정. 실제UI·운영·배포·신규취득/설치·예약자동화0.
+
+## 2026-09-14 — 132 관리형 font owner 구현 / WebKit 축 증명 기술 차단
+
+사용자 `응 다음 진행해`에 따라 S19/S20/S24/S25/S33 범위에서 owner를 구현하고 실제 로컬 원본으로 검증했다.
+이번 코드 변경4: 신규 preview/composer-font-proof.ts/test.ts,기존 e2e/composer-room-source-fixture.tsx,
+tests/composer-room-source/source.spec.ts. 누적 task code/test16+docs8,실제Composer/제품폰트공급/운영등록0.
+새 owner58 test는 byte snapshot/hash 실패,단발load,늦은성공,폐기/등록/측정중재진입,descriptor/membership,
+unknown문자/style,차용·해제·oldcleanup을검증한다. fake는nativeglyph증명아님.
+초기lint의non-null assertion14경고는runtime검사로보완했고,폐기후load true재사용과attribute검사중
+ready부활을자체검수에서고쳐각각회귀를추가했다. 사후게이트완화0.
+Chromium첫실패와진단2회는kern1의native직렬화생략형불일치였다. 공식CSS근거와실측에맞춘canonical
+공급값으로고쳤으며비교삭제0. WebKitvariationSettings부재와unicodeRange표기차이는새기술차단으로유지한다.
+설치엔진의동작근거/공식W3C·WebKit소스/한계는132 S37~S38. 옛literalFAIL도그대로다.
+BLOCKED_VERIFICATION,next SPEC132_FONT_AXIS_OWNERSHIP_TECHNICAL_CONTRACT_REVIEW,Founder pending NONE.
+CSS-connected face/rule/byte/URL소유권은미채택·NOT TESTED 후보. 같은8문서에서정확계약검토부터한다.
+FP3/S28/FP4재승인질문0;검수전gate완화/CSS공급구현/실제Composer·capture·print연결/전송0.
+### 최종 검증·보존
+
+최종 targeted92/92(신규owner58+기존격리34), check3849/3849 PASS.
+최종 native Chromium9/9(exit0),Firefox9/9(exit0),WebKit7PASS/2FAIL(exit1).
+WebKit의 새owner gate1 + 옛literal gate1을 그대로 보존했다. native 검증 추가는1test/engine이며,
+전체132 통과·production 지원·실제 Composer/text 출력 결속으로 확대하지 않는다.
+최종 기존 회귀 명령 --composer-source-regression-only:138/138 PASS(exit0,1.1m).
+S26의 기존6파일/보호PNG 생성11건 제외 유지; 기본 전체E2E는NOT RUN. 제외11을PASS로세지않는다.
+
+보호23 SHA 불변,정확 task code/test16+문서8,추가범위0/staged0/git diff--check PASS.
+고객JS346959bytes SHA6182B4B409ACFC8B44550467F6942ED625538BCFB59E3C37AE57A14CE93ACE3C,
+adminJS294910bytes SHA2A25F27A178E6CC8877A46D515F2EB32DDED848F26DAA87B791139F7853AEF21,
+고객CSS22675bytes SHA6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81로S36동일.
+원본TTF3 size240164/285040/10414588,OFL2 size4482/4388 및 고정SHA는S12와동일.
+이번자기staging11개(ZAHNu8/FyJEAe/GE4Eza/MhbTBJ/wskP7l/HhtkJH/JpOWWO/HJ7wtU/vWrsUR/JAE8Js/cEc4VP)
+부재와4183/4184/4185 LISTENING0 확인. 타프로세스중지/임의폴더삭제0.
+HEAD102860e/로컬origin추적0/0,새원격조회/fetch/stage/commit/push0.
+Git globalignore 접근경고와LF→CRLF 경고는보존;설정변경0.
+동일Codex자체검수다. 기술차단상태/다음S38계약검토를STATE/NEXT/CURRENT/review/handoff/결정/live에동기화했다.
+
+## 2026-09-14 — 132 S39 CSS-connected 진단 완료 / FP-5 예외 제안
+
+사용자 '응 다음 작업 해줘 혹시 완성까지 자동진행 어렵니?'에 따라 S38 후보를 S39 선행 계약으로
+고정·자체검수한 뒤 기존 source.spec.ts에 진단1개를 추가했다. UI/제품 owner 추가변경0.
+승인 범위의 계약→진단→환경 보완→재검증→기록은 재승인 질문 없이 수행했다.
+완성까지의 무조건 진행이나 이전 명시 금지 해제는 보장/추정하지 않는다.
+
+최종 Chromium10/10 PASS,Firefox10/10 PASS,WebKit7PASS/3FAIL.
+WebKit 기존2FAIL을 보존했으며 새 CSS variation readback1FAIL이 추가됐다.
+DM opsz9↔40의12쌍(2face×3size×2weight)은 WebKit에서 폭·픽셀 차이0이다.
+세 엔진 모두10face load와CSS-connected delete=false/자기rule해제/새rule-faceidentity/최종ownedface0.
+Chrome/Firefox21비교쌍은 픽셀차이 양수. Firefox Noto3쌍의폭동일은픽셀동일이아니다.
+WebKit은 readback assert에서멈춰후속route-count assert를실행하지않았다. 외부egress전수PASS로기록하지않는다.
+초기WebKit2회실패(UUID부재,about:blank Blob FontFace.load NetworkError)는NodeUUID/기존localhostidlefixture로
+보완했다. 세번째WebKit이위최종실측;두실패의모든내부원인을확정한것은아니다.
+native3명령/계산/공식근거/범위는132 S39 결과에보존했다. CSS공급owner 미채택,실제Composer/text/print NOT VERIFIED.
+
+node scripts/check.mjs PASS:format/lint380파일,7typecheck,125unit파일3849/3849,2build.
+S37 targeted92/기존회귀138은이번재실행0,과거PASS로유지. 기본전체E2E NOT RUN.
+보호23 SHA불변,task code/test16+docs8(이번코드변경1),unexpected0/staged0/diff--check PASS.
+고객JS346959bytes SHA6182B4B409ACFC8B44550467F6942ED625538BCFB59E3C37AE57A14CE93ACE3C,
+adminJS294910bytes SHA2A25F27A178E6CC8877A46D515F2EB32DDED848F26DAA87B791139F7853AEF21,
+고객CSS22675bytes SHA6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81 불변.
+원본TTF3/OFL2의S12 SHA동일. 자기staging6bF8Wo/eR1oZP/Jy1IQ2/OHyOLe/MwDuTU 부재,
+4183/4184/4185 LISTENING0. 타프로세스종료/임의폴더삭제0.
+HEAD102860e/로컬origin추적0/0;새원격조회/fetch/stage/commit/push0.
+Gitglobalignore접근경고/LF→CRLF경고보존,설정변경0.
+
+다음 FP-5는 승인되지 않은 최소 예외 제안이다: 원본보존 + 검증용fontTools격리도입 +
+DM4/Noto2 full static 사본6개생성·로컬native검증. 일반루틴은기존폰트변환/설치/다운로드금지를해제하지않는다.
+공식fontTools instancer문서확인과PATH/bundled Python의find_spec읽기전용확인만수행했다.
+두환경모두fontTools NOT_INSTALLED;머신전체도구부재나후보성공을단정하지않는다.
+설치/다운로드/변환0. 승인후정확버전/hash/경로/라이선스·이름/명령/파일범위를먼저계약·검수한다.
+제품package/lockfile·원본변경·제품공급교체·배포는예외에포함하지않는다.
+
+state FOUNDER_DECISION_REQUIRED,next FOUNDER_FP5_LOCAL_STATIC_FONT_SCOPE.
+131 DONE/132부분구현;기존FP3/S28/FP4재질문0. STATE/NEXT/CURRENT/review/handoff/결정/spec/live8문서동기화.
+FP5결정전명시금지경계밖작업/다음스펙/운영/UI연결/예약자동화0. 전체리빌드잔여분모는이진단으로추정하지않는다.
+
+## 2026-09-14 — FP-5 직접 승인 / S40 계약 검수 후 로컬 진단 착수
+
+사용자 '응 승인'은 검증도구격리설치+로컬사본6개생성·검증만 승인한다. 제품적용/운영배포 제외.
+공식PyPI조회로fontTools4.65.0 wheel SHA/size/URL고정,S40설치경로·명령·변환·시험계약자체검수PASS.
+도구/사본은ignored test-results/spec-132-font-static/fp5-20260914/에만,추가폰트취득/전역설치/제품의존성0.
+원본/보호23불변시작확인. 기존WebKit3FAIL보존,일반절차재승인0. CODEX_WORKING,다음로컬static진단.
+
+## 2026-09-14 — FP5 승인 범위 완료 / static54 진단·정본 동등성 검토
+
+직전 사용자 '응 승인'으로 S40계약에 고정한 fontTools4.65.0 wheel1개를SHA검증하여격리설치했다.
+도구는 test-results/spec-132-font-static/fp5-20260914/packages/에만,제품의존성/전역설치0.
+최초sandbox metadata소켓거부→권한검사후조회;도구import권한제한→읽기전용확인후권한검사실행.
+6사본×2독립변환=12변환byte동일,원본3TTF/2OFL hash유지,cmap/glyph목록/license보존PASS.
+사본/output·OFL2·manifest·생성script는같은ignored경로에보존,Git전송0.
+사본별SHA/bytes·script/manifestSHA와명령은132 S40결과표가정본이다.
+
+source.spec.ts 진단1개만추가,이전10test/gate변경0. 같은사본반복폭·paint·PNG54조건PASS
+(6사본×3size×3엔진). 최종Chromium11/11,Firefox11/11 PASS,WebKit8PASS/3FAIL(exit1).
+WebKit기존CSS축/owner/literal3FAIL은유지한다.
+Chromium/Firefox 원본대비18조건씩중9동일/9픽셀차이. WebKit18조건은reference증명불가null이다.
+Chromium최대폭차이0.001708984375px/채널sample차이133,Firefox폭차이0/sample차이최대82.
+원본동일성FAIL과static반복진단PASS를구분한다. 모든문구영향상한/실제Composer완료NOT VERIFIED.
+세엔진별진단요청9=원본3+사본6,각1회,rejected0/error-warning0,자기face/URL잔류0.
+Firefox최초11건모두newPage._page오류로본문전실패→권한검사후동일명령11PASS,초기기록보존.
+WebKit첫8/3과집계출력보존재실행8/3동일. 정확Firefox내부원인전체는UNCONFIRMED.
+
+후속읽기전용glyph대조에서4사본의소수좌표→정수좌표차이관찰,S41에fontTools소스/수치기록.
+모든픽셀원인의일대일증명이나다른기술대안불가능을주장하지않는다.
+S19의동일원본byte alias전제와static사본의byte/metric차이를구분,조용한치환/오차완화0.
+FP5진단승인을폰트채택승인으로확대하지않는다.
+
+node scripts/check.mjs PASS:format/lint380,7typecheck,125unit파일3849/3849,2build.
+S37targeted92/기존회귀138이번재실행0,기본전체E2E NOT RUN.
+이번source.spec.ts1개+문서8,누적taskcode/test16+docs8unstaged,ignored도구/사본은별도다.
+보호23SHA동일,추가dirty0/staged0/diff--checkPASS.
+고객JS346959bytes SHA6182B4B409ACFC8B44550467F6942ED625538BCFB59E3C37AE57A14CE93ACE3C,
+adminJS294910bytes SHA2A25F27A178E6CC8877A46D515F2EB32DDED848F26DAA87B791139F7853AEF21,
+고객CSS22675bytes SHA6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81 유지.
+자기staging95xfhV/BgSgm7/W4gwod/xad4nn/J3KOPZ부재,4183/4184/4185 LISTENING0.
+타프로세스종료/임의삭제/ACL변경0. 원본TTF3/OFL2는S12 SHA불변.
+HEAD102860e/로컬origin추적0/0;새원격조회/fetch/stage/commit/push0.
+Gitglobalignore권한/EOL·NO_COLOR/FORCE_COLOR·buildchunk경고보존,설정변경0.
+
+현재 FOUNDER_DECISION_REQUIRED / FOUNDER_FP6_LOCAL_STATIC_CANONICAL_CONTRACT.
+FP6는사본6개를향후로컬리빌드의별도고정폰트정본으로채택하는계약작성의미승인제안이다.
+실제제품공급/운영/UI/배포·기존Space/legacy재해석은계속제외한다.
+선택후에도owner정적증명/gate대체/문구경계계약검수와native통합전에기존실패를지우지않는다.
+STATE/NEXT/CURRENT/review/handoff/결정/spec/live동기화. FP5진단COMPLETED,131DONE/132부분구현.
+자동화/다음스펙0. 재설치·재변환재승인질문이아니라폰트정본변경에대한별도결정만남겼다.
+
+## 2026-09-14 — FP-6 직접 승인 / S42 고정 정본 계약 작성·자체검수 완료
+
+사용자 '응 다음 승인'은직전FP6질문의별도고정폰트기준계약작성을승인한것이다.
+이번턴은문서8개만변경했다. 설치/변환/새시험/제품코드·UI연결/운영배포는수행하지않았다.
+기존S40의static6사본/hash를별도6revision으로고정하고원본variable의동일byte계약과구분했다.
+S42에내부staticfactory후보,caller임의증명거부,고정hash/길이→축부재증거→단발load,
+descriptor검사분리·snapshotdrift·수명/ABA/차용·제한진단문자집합·실패게이트보존을명시했다.
+static과variable을구분하지않고variationSettings필수검사를삭제하는방식은금지한다.
+실제고객문구/전수glyph/기존Space재현/기본제품공급으로증명범위를넓히지않는다.
+
+후속첫구현후보는기존4파일:
+apps/mockup/src/preview/composer-font-proof.ts,
+apps/mockup/src/preview/composer-font-proof.test.ts,
+apps/mockup/src/e2e/composer-room-source-fixture.tsx,
+tests/composer-room-source/source.spec.ts.
+이번에는수정0. static실제owner검증과그뒤Composer/102capture/print통합을분리했고,
+기존WebKit3FAIL은대체증거·통합검수전assert/skip/selector변경0으로고정했다.
+같은고정정본/동일엔진/동일plan의측정·픽셀비교허용오차0,원본대비차이를이유로완화0.
+
+DOCUMENT_REVIEW_PASSED_SAME_CODEX. 독립검수나구현PASS아니다.
+직전S40 check3849/Chromium11/Firefox11/WebKit8PASS3FAIL/static54조건PASS는과거결과;
+이번unit/typecheck/build/E2E재실행0. 새owner NOT IMPLEMENTED/NOT TESTED.
+검증: 기존code/test16+보호plan1=17경로의작업전후SHA동일,보호23 SHA동일,
+manifestSHA C9348AB342D60BAA08A7979536D119DAFA97FEC8E9B8FEDB2482782AAB029802 동일.
+누적taskcode/test16+docs8 unstaged(이번코드0),unexpected0/staged0/git diff--checkPASS.
+HEAD102860e/로컬origin추적0/0;원격실조회/fetch/commit/push0,Gitglobalignore/EOL경고보존.
+원본·도구·사본·config·Rules·package/lockfile쓰기0,자동화/다음스펙0.
+
+STATE/NEXT/CURRENT/review/handoff/결정/spec/live8문서동기화.
+상태 READY_FOR_CODEX,next SPEC132_STATIC_OWNER_IMPLEMENTATION_SCOPE_REVIEW.
+Founder제품방향pending NONE,FP6계약방향재질문0. 다음은S42의4파일첫구현단위최종범위대조이며
+이번계약작성승인만으로이번턴제품코드구현을시작하지않았다.
+131 DONE/132부분구현유지. 전체리빌드완료율/잔여분모를이번문서결과로추정하지않는다.
+
+## 2026-09-14 — S43 고정 owner 구현·자체검수 + S44 공유 plan 결합 검증 완료
+
+사용자 '응 검토하고 다음 루틴대로 쭉 진행해'에 따라 계약 대조 후 두 로컬 기술 단위를 연속 수행했다.
+FP3/FP4/FP6 및 S42 범위 유지,일반 재승인 질문0. 운영/기본제품폰트/UI 적용 승인이 아니다.
+
+이번 code/test 변경4개:
+- apps/mockup/src/preview/composer-font-proof.ts
+- apps/mockup/src/preview/composer-font-proof.test.ts
+- apps/mockup/src/e2e/composer-room-source-fixture.tsx
+- tests/composer-room-source/source.spec.ts
+
+S43:6revision+고정SHA/길이만허용하는static factory,caller임의증명거부,snapshot/hash→UUID/face,
+variable검사보존,rawdescriptor/currentness/차용/late-load/retire/ABA/정확문자집합검증.
+S44:그중fixture/test2개에서실제공유builder의줄바꿈/자간→같은plan의격리execute/present/encode를대조.
+독립기준은같은고정사본의별도face/측정/plan이며,실제plan재작성·기본폰트조용한치환0.
+실제PreviewComposer/source/capture/exportFramePng 연결은아직미구현이다.
+
+최종 게이트:
+- 표적130/130 = 기존variable58+static38+primitive34.
+- check PASS:format/lint380,7typecheck,125파일unit3887/3887(3849+38),2build.
+- Chromium149.0.7827.55:12/12 PASS;Firefox151.0:12/12 PASS.
+- WebKit26.5:9PASS/3FAIL(exit1);기존CSS축/variable owner/literal Canvas profile3FAIL보존.
+- 새static시험은3엔진PASS. 본문6×3×3=54,fragment(4×6+2×5)×3=102,
+  공유plan6×3정렬·자간×3배율×3엔진=162조건. 같은단계폭/픽셀/PNG 허용오차0.
+- 각새시험6static route각1회,거부요청0,pageerror/error/warning0,font/DOMCanvas/URL잔류0.
+- S44후최종 opt-in 기존6파일회귀138/138 PASS. 기본전체E2E/보호PNG생성군실행0.
+
+최초Chromium은 readback warning18건으로새시험1FAIL/11PASS.
+안전분류자로Canvas2D repeated getImageData 경고확인후검증용비교/decode backing만명시,
+warning0검사를그대로유지했다. S44 실제primitive/reference는기존기본backing옵션으로PASS.
+Tailwind가fixture의 !italic을CSS클래스로오인한38bytes추가도발견했다.
+22713-38=22675bytes 및메모리제외SHA가baseline과일치함을확인후동치boolean표현으로보완.
+CSS/config/제품화면수정0;고객번들정본hash복원. TS7023(toString반환형) 및
+getContext RenderingContext 추론오류/format중간실패를정정하고모든최종게이트를재실행했다.
+pnpm vitest launcher/존재하지않는tsgo·prettier entry실패는검증PASS로계산하지않았다.
+새설치없이실제기존Vitest/Biome/check entry를사용했다. NO_COLOR/FORCE_COLOR·buildchunk,
+Gitglobalignore권한/EOL경고는설정변경없이보존했다.
+
+고객JS346959bytes SHA6182B4B409ACFC8B44550467F6942ED625538BCFB59E3C37AE57A14CE93ACE3C,
+고객CSS22675bytes SHA6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81,
+adminJS294910bytes SHA2A25F27A178E6CC8877A46D515F2EB32DDED848F26DAA87B791139F7853AEF21.
+원본3/OFL2·사본6/OFL2·manifest고정SHA PASS,보호23 SHA불변,다른기존코드13경로SHA불변.
+누적taskcode/test16+문서8 unstaged,unexpected0/staged0/git diff--checkPASS.
+HEAD102860e=로컬origin추적0/0;새원격조회/fetch/stage/commit/push0.
+확인한자기staging16(68XJrA, 0thY13, bmsvm7, Po9BSm, XXeeL7, llFkiw, PZLU2k, 4KhxZu, BupGdI, sVv1AJ, EkkeFM, uT214e, EPTUsV, Nss8PS, pUk0Jp, FBroT2)은기존runner의검증된정리후부재확인.
+4183/4184/4185 LISTENING0,타프로세스종료/임의추가삭제0. 삭제된temp를다운로드가능artifact로안내하지않는다.
+
+LOCAL_STATIC_OWNER_AND_SHARED_PLAN_PASSED_SAME_CODEX,독립검수/전체132완료아님.
+STATE/NEXT/CURRENT/spec/review/handoff/결정/live8문서동기화.
+READY_FOR_CODEX / SPEC132_PLAN_BOUND_LIFETIME_CONTRACT_REVIEW,Founder pending NONE.
+S45에실제호출부대조와다음계약검토지시를남겼다. 새detacheddisplay생성/Reactcommit,
+plan+fontbinding/측정세션,102실제context-copyTo-release,asyncprint settlement가다음범위다.
+통합·증명대체검수전기존3FAIL삭제/skip/132 DONE/전송0. 다음스펙/예약자동화0.
+진척:131 DONE/132부분구현;고정폰트준비와공유plan 검증완료,실제연결·실기기·운영전환미완.
+전체작업분모미확정이므로근거없는전체진척률/잔여율상향0.
+
+## 2026-09-14 — S43/S44 마지막 snapshot 보완·최종 재검증
+
+마지막 같은 Codex 자체검수에서 ArrayBuffer.prototype.slice.call이 caller constructor/종별 생성
+훅을 호출하는 경계를 확인했다. caller 입력의 slice 메서드만 우회하는 것으로는 내부 사본 독점을
+보장하기 부족하다. constructor getter 회귀를 먼저 추가해 수정 전1FAIL/97PASS를 재현했다.
+공유·분리된 buffer 거부 회귀도 추가했다. 같은 허용 owner.ts/test만 보완:
+new ArrayBuffer(정확길이)+Uint8Array view 복사로 caller constructor/slice를 호출하지 않는다.
+합성 변수명의 lint 실패도 정정했다. 전역 intrinsic 변조 전체를 방어한다고 주장하지 않는다.
+
+최종결과는 위 초기130/3887을 다음으로 갱신한다:
+- 표적132/132 = 기존variable58 + static40 + 격리primitive34.
+- 공통check PASS:format/lint380,7typecheck,125파일unit3889/3889(3849+40),2build.
+- 보완후native3 모두 재실행:Chromium12/12,Firefox12/12,WebKit9PASS/기존3FAIL.
+- 새static/fragment/shared-plan 조건54/102/162 모두PASS,허용오차0,새실패0.
+- 보완후기존6파일 opt-in 회귀138/138 PASS. 기본전체E2E 실행0.
+- 고객JS/CSS/adminJS의직전S44 size/SHA불변. 원본/사본/manifest고정검사는native에서재수행.
+- 마지막자기staging4(siwzwD, DKDtLJ, 2pKItm, GPLqIa)도부재;확인한누적자기staging20부재.
+  4183/4184/4185 LISTENING0. runner자기temp정리외임의삭제·타프로세스종료0.
+
+STATE/NEXT/CURRENT/spec/review/handoff/결정/live의최신값을동기화했다.
+이번task code4+docs8,누적task code/test16+docs8 unstaged;보호23 SHA불변,
+unexpected0/staged0/diff--checkPASS. HEAD102860e/로컬origin추적0/0;원격조회/fetch/commit/push0.
+상태 READY_FOR_CODEX,next SPEC132_PLAN_BOUND_LIFETIME_CONTRACT_REVIEW,Founder pending NONE.
+131 DONE/132부분구현 유지. 실제Composer/source/capture/print와실기기·운영전환은남았고,
+전체분모미확정이므로새전체진행률은추정하지않는다. 운영/배포/자동화/다음스펙0.
+
+## 2026-09-14 — 사용자 요청으로 오늘 세션 종료
+
+사용자 '응 오늘 여기까지'에 따라 작업을 멈추고 STATE/NEXT/CURRENT/live4문서만 종료 상태로 동기화했다.
+131 DONE /132 부분 구현, READY_FOR_CODEX 유지. 마지막 검증 unit3889/3889,
+표적132/132, 기존회귀138/138 PASS; Chromium12/12,Firefox12/12,WebKit9PASS/기존3FAIL.
+이 값은 직전 검증 결과이며 이번 종료 정리에서 테스트·emulator·브라우저 실행0.
+기존3FAIL과 실제Composer/source/capture/print 연결 미완을 보존하며132 DONE으로 올리지 않는다.
+현재 누적 task code/test16+docs8 unstaged 보존. 종료 중 제품코드/보호파일 수정0,
+stage/commit/push/fetch/운영요청/배포/자동화0. 기존 Git global ignore 접근 경고도 숨기지 않는다.
+다음 사용자 재개 요청 시132 S45의 plan 수명·commit·async print 연결 계약 검토부터 이어간다.
+next_transition SPEC132_PLAN_BOUND_LIFETIME_CONTRACT_REVIEW / Founder pending NONE 유지.
+오늘 종료 지시는 작업 일시 중단이며 새 승인이나 다음 스펙 자동 시작이 아니다.
+
+## 2026-09-28 — 사용자 요청 부분 작업 checkpoint 준비
+
+사용자 '현재까지 한부분 커밋 푸시 한번해줄래'에 따라 기존 code/test16+docs8의 일반 commit/push를 준비한다.
+9월14일의 전송 보류를 부분 작업 저장에 한해 해제하며 기존 WebKit3FAIL/실제 연결 미완은 그대로 보존한다.
+131 DONE/132 부분 구현, READY_FOR_CODEX. 마지막 unit3889/표적132/회귀138 및 native 결과는9월14일 값이고 이번 재시험0.
+원격 fetch 확인: HEAD102860e=원격 rebuild/modern-studio, ahead/behind0/0.
+최초 sandbox fetch는 .git/FETCH_HEAD 권한 거부, 정식 권한 심사 후 동일 fetch 성공. 우회/merge/rebase/force0.
+보호/user23은 수정·복원·stage·commit 대상에서 제외한다. 폰트 원본/변환 사본 및 ignored 로컬 도구도 전송하지 않는다.
+따라서 새 clone에서 opt-in 폰트 시험에는 별도 로컬 검증 자산이 필요하며 이번 커밋이 모든 외부 자산을 포함한다고 주장하지 않는다.
+제품 추가 구현/운영/배포/자동화0. commit/push 결과는 후속 기록과 최종 Git 확인으로 구분한다.

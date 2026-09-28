@@ -305,6 +305,160 @@ const BEGIN = {
 };
 
 describe("createDragController", () => {
+  it("spec132 publishes pending synchronously before RAF and settled only after delivery", () => {
+    const order: string[] = [];
+    let frame: () => void = () => {};
+    const controller = createDragController({
+      requestFrame: (callback) => {
+        order.push("schedule");
+        frame = callback;
+        return 1;
+      },
+      cancelFrame: () => {},
+      commit: () => {
+        order.push("commit");
+        expect(controller.readInputStatus().phase).toBe("pending");
+      },
+      onInputStatusChange: (status) => {
+        expect(controller.readInputStatus()).toBe(status);
+        order.push(status.phase);
+      },
+    });
+    const initial = controller.readInputStatus();
+    controller.begin(BEGIN);
+    expect(controller.readInputStatus()).toBe(initial);
+    controller.move(7, { x: 10, y: 0 });
+    const pending = controller.readInputStatus();
+    expect(Object.isFrozen(pending)).toBe(true);
+    expect(order).toEqual(["pending", "schedule"]);
+    frame();
+    expect(order).toEqual(["pending", "schedule", "commit", "settled"]);
+    expect(controller.readInputStatus().revision).toBe(pending.revision + 1);
+    expect(controller.readInputStatus()).not.toBe(initial);
+  });
+
+  it("spec132 keeps identities for noops but never resurrects an A-B-A snapshot", () => {
+    const h = harness();
+    h.controller.begin(BEGIN);
+    const initial = h.controller.readInputStatus();
+    h.controller.move(8, { x: 10, y: 0 });
+    h.controller.move(7, { x: 0, y: 0 });
+    h.runFrames();
+    expect(h.controller.readInputStatus()).toBe(initial);
+    h.controller.move(7, { x: 10, y: 0 });
+    const first = h.controller.readInputStatus();
+    h.controller.move(7, { x: 10, y: 0 });
+    h.controller.move(7, { x: NaN, y: 0 });
+    expect(h.controller.readInputStatus()).toBe(first);
+    h.controller.move(7, { x: 20, y: 0 });
+    h.controller.move(7, { x: 10, y: 0 });
+    expect(h.controller.readInputStatus()).not.toBe(first);
+    expect(h.controller.readInputStatus().revision).toBe(first.revision + 2);
+  });
+
+  it.each(["pointercancel", "pointerup", "lostpointercapture"] as const)(
+    "spec132 settles %s without reviving the pre-drag identity",
+    (reason) => {
+      const h = harness();
+      const initial = h.controller.readInputStatus();
+      h.controller.begin(BEGIN);
+      h.controller.move(7, { x: 10, y: 0 });
+      h.controller.end(7, reason);
+      const settled = h.controller.readInputStatus();
+      expect(settled.phase).toBe("settled");
+      expect(settled).not.toBe(initial);
+      h.runFrames();
+      expect(h.controller.readInputStatus()).toBe(settled);
+      expect(h.commits).toHaveLength(reason === "pointerup" ? 1 : 0);
+    },
+  );
+
+  it("spec132 settles scheduling failure without delivering the dropped draft", () => {
+    const commit = vi.fn();
+    const c = createDragController({
+      requestFrame: () => {
+        throw new Error("synthetic");
+      },
+      cancelFrame: () => {},
+      commit,
+    });
+    c.begin(BEGIN);
+    const initial = c.readInputStatus();
+    c.move(7, { x: 10, y: 0 });
+    expect(c.readInputStatus()).toEqual({ phase: "settled", revision: 2 });
+    expect(c.readInputStatus()).not.toBe(initial);
+    expect(commit).not.toHaveBeenCalled();
+  });
+
+  it.each(["throw", "dispose", "replace"])(
+    "spec132 notice %s cannot schedule stale work",
+    (mode) => {
+      const requestFrame = vi.fn(() => 1);
+      const c = createDragController({
+        requestFrame,
+        cancelFrame: () => {},
+        commit: () => {},
+        onInputStatusChange: (status) => {
+          if (status.phase !== "pending") return;
+          if (mode === "throw") throw new Error("synthetic");
+          if (mode === "dispose") c.dispose();
+          else {
+            c.abort("selection");
+            c.begin({ ...BEGIN, pointerId: 8 });
+          }
+        },
+      });
+      c.begin(BEGIN);
+      expect(() => c.move(7, { x: 10, y: 0 })).not.toThrow();
+      expect(requestFrame).not.toHaveBeenCalled();
+      expect(c.readInputStatus().phase).toBe(mode === "replace" ? "settled" : "disposed");
+    },
+  );
+
+  it("spec132 synchronous RAF leaves no stale handle that blocks the next move", () => {
+    const commit = vi.fn();
+    const c = createDragController({
+      requestFrame: (callback) => {
+        callback();
+        return 1;
+      },
+      cancelFrame: () => {},
+      commit,
+    });
+    c.begin(BEGIN);
+    c.move(7, { x: 10, y: 0 });
+    c.move(7, { x: 20, y: 0 });
+    expect(commit).toHaveBeenCalledTimes(2);
+    expect(c.readInputStatus().phase).toBe("settled");
+    c.dispose();
+    const terminal = c.readInputStatus();
+    c.dispose();
+    expect(c.readInputStatus()).toBe(terminal);
+    expect(terminal.phase).toBe("disposed");
+  });
+
+  it("spec132 a commit callback's newer move stays pending until its own RAF", () => {
+    const frames: Array<() => void> = [];
+    let commits = 0;
+    const c = createDragController({
+      requestFrame: (cb) => {
+        frames.push(cb);
+        return frames.length;
+      },
+      cancelFrame: () => {},
+      commit: () => {
+        if (++commits === 1) c.move(7, { x: 20, y: 0 });
+      },
+    });
+    c.begin(BEGIN);
+    c.move(7, { x: 10, y: 0 });
+    frames[0]();
+    expect(c.readInputStatus().phase).toBe("pending");
+    frames[1]();
+    expect(c.readInputStatus().phase).toBe("settled");
+    expect(commits).toBe(2);
+  });
+
   it("merges every move in one animation frame and commits only the newest transform", () => {
     const h = harness();
     expect(h.controller.begin(BEGIN)).toBe(true);

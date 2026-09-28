@@ -1,5 +1,9 @@
 import type { PublicCatalogLoadResult, PublicCatalogReader } from "@denn/firebase";
+import type { CatalogDocumentV1 } from "@denn/shared";
 import type { PublicCatalogUiState } from "./types";
+
+/** A load-generation identity, not a deep immutability claim about the catalog. */
+export type ReadyCatalogIdentity = Readonly<{ document: CatalogDocumentV1 }>;
 
 // Non-sensitive fixed prefix; the suffix is an app-internal counter. No time / user / catalog
 // values are put into the correlationId (spec 015 §5).
@@ -20,12 +24,17 @@ export class PublicCatalogController {
   private state: PublicCatalogUiState = { status: "idle" };
   private generation = 0;
   private active = false;
+  private readyIdentity: ReadyCatalogIdentity | null = null;
   private current: AbortController | null = null;
   private readonly listeners = new Set<() => void>();
 
   constructor(private readonly reader: PublicCatalogReader) {}
 
   readonly getState = (): PublicCatalogUiState => this.state;
+
+  /** Synchronous, read-only: retained UI state after detach is not a live source. */
+  readonly readReadyIdentity = (): ReadyCatalogIdentity | null =>
+    this.active && this.state.status === "ready" ? this.readyIdentity : null;
 
   readonly subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
@@ -48,11 +57,13 @@ export class PublicCatalogController {
   /** Real unmount: stop applying results and abort the current caller (restartable via start). */
   readonly detach = (): void => {
     this.active = false;
+    this.readyIdentity = null;
     this.current?.abort();
     this.current = null;
   };
 
   private beginLoad(): void {
+    this.readyIdentity = null;
     this.active = true;
     const generation = ++this.generation;
     this.current?.abort();
@@ -73,6 +84,7 @@ export class PublicCatalogController {
     if (!result.ok && result.error.code === "REQUEST_ABORTED") return;
     this.current = null;
     if (result.ok) {
+      this.readyIdentity = Object.freeze({ document: result.document });
       this.setState({
         status: "ready",
         requestId: generation,

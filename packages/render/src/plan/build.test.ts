@@ -1459,6 +1459,114 @@ const textOf = (p: PreviewRenderPlan) => {
 };
 
 describe("buildPreviewRenderPlan — deterministic text (spec 031)", () => {
+  it.each(["left", "center", "right"])(
+    "spec132 matches separate glyph advances for %s",
+    (align) => {
+      const measured: string[] = [];
+      const p = plan(
+        buildPreviewRenderPlan(
+          frameWithText([
+            textZoneInput({
+              value: "AV",
+              align,
+              letterSpacingPercent: 20 / 3,
+            }),
+          ]),
+          {
+            measureText: ({ text }) => {
+              measured.push(text);
+              return text === "AV" ? 15 : 10;
+            },
+          },
+        ),
+      );
+      expect(textOf(p).lines).toEqual([{ text: "AV", width: 22 }]);
+      expect(textOf(p).align).toBe(align);
+      expect(measured).not.toContain("AV");
+    },
+  );
+
+  it("spec132 keeps whole-string shaping at zero spacing", () => {
+    const p = plan(
+      buildPreviewRenderPlan(frameWithText([textZoneInput({ value: "AV" })]), {
+        measureText: ({ text }) => (text === "AV" ? 15 : 10),
+      }),
+    );
+    expect(textOf(p).lines).toEqual([{ text: "AV", width: 15 }]);
+  });
+
+  it("spec132 wraps at the actual individual-glyph width", () => {
+    const p = plan(
+      buildPreviewRenderPlan(
+        frameWithText([
+          textZoneInput({
+            value: "AV",
+            boxWidthPercent: 20 / 3,
+            letterSpacingPercent: 20 / 3,
+          }),
+        ]),
+        { measureText: ({ text }) => (text === "AV" ? 15 : 10) },
+      ),
+    );
+    expect(textOf(p).lines).toEqual([
+      { text: "A", width: 10 },
+      { text: "V", width: 10 },
+    ]);
+  });
+
+  it("spec132 preserves negative spacing, one code point and explicit blank lines", () => {
+    const p = plan(
+      buildPreviewRenderPlan(
+        frameWithText([
+          textZoneInput({
+            value: "AV\n\n😀",
+            maxLines: 3,
+            letterSpacingPercent: -20 / 3,
+          }),
+        ]),
+        { measureText: ({ text }) => (text === "AV" ? 15 : 10) },
+      ),
+    );
+    expect(textOf(p).lines).toEqual([
+      { text: "AV", width: 18 },
+      { text: "", width: 0 },
+      { text: "😀", width: 10 },
+    ]);
+  });
+
+  it("spec132 rejects glyph measurement failure and accumulation overflow", () => {
+    for (const invalid of [NaN, Infinity, -1, Number.MAX_VALUE]) {
+      const result = buildPreviewRenderPlan(
+        frameWithText([
+          textZoneInput({
+            value: "AV",
+            letterSpacingPercent: 20 / 3,
+          }),
+        ]),
+        { measureText: ({ text }) => (text === "AV" ? 15 : invalid) },
+      );
+      expect(result).toEqual({ ok: false, code: "TEXT_MEASUREMENT_FAILED" });
+    }
+    expect(
+      buildPreviewRenderPlan(
+        frameWithText([
+          textZoneInput({
+            value: "AV",
+            letterSpacingPercent: 20 / 3,
+          }),
+        ]),
+        {
+          measureText: () => {
+            throw new Error("synthetic");
+          },
+        },
+      ),
+    ).toEqual({
+      ok: false,
+      code: "TEXT_MEASUREMENT_FAILED",
+    });
+  });
+
   it('emits nothing for an absent or empty value, but DOES emit for "0"', () => {
     const { port } = fixedWidth();
     for (const value of [undefined, ""]) {

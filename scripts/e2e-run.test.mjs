@@ -5,11 +5,52 @@
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { isDisposableStagingPath, selectPlaywrightArgs, STAGING_PREFIX } from "./e2e-run.mjs";
+import {
+  isDisposableStagingPath,
+  selectPlaywrightArgs,
+  selectPlaywrightExecution,
+  STAGING_PREFIX,
+} from "./e2e-run.mjs";
 
 const TEMP = resolve(tmpdir());
 
 describe("spec110 explicit E2E selection", () => {
+  it.each(["chromium", "firefox", "webkit", "regression"])(
+    "spec132 isolates %s and its working directory",
+    (part) => {
+      const selector = `--composer-source-${part}-only`;
+      const project = part === "regression" ? "regression-chromium" : part;
+      expect(selectPlaywrightArgs([selector])).toEqual([
+        "test",
+        "--config",
+        "tests/composer-room-source.config.ts",
+        `--project=${project}`,
+        "--workers=1",
+      ]);
+      const repo = resolve("synthetic repo");
+      const stage = join(TEMP, "denn-e2e-spec132");
+      expect(selectPlaywrightExecution([selector], repo, stage)).toEqual({
+        args: [
+          "test",
+          "--config",
+          `"${resolve(repo, "tests/composer-room-source.config.ts")}"`,
+          `--project=${project}`,
+          "--workers=1",
+        ],
+        cwd: stage,
+      });
+      expect(() => selectPlaywrightExecution([selector], repo, repo)).toThrow(
+        "Invalid E2E staging",
+      );
+      expect(() => selectPlaywrightArgs([selector, "--timeout=1"])).toThrow(
+        "Unsupported E2E selector",
+      );
+      expect(() => selectPlaywrightArgs([selector, "--local-image-owner-only"])).toThrow(
+        "Unsupported E2E selector",
+      );
+      expect(selectPlaywrightExecution([], repo, stage)).toEqual({ args: ["test"], cwd: repo });
+    },
+  );
   it.each(["firefox", "webkit", "chromium"])("spec131 isolates React room source %s", (engine) => {
     const selector = `--room-source-${engine}-only`;
     expect(selectPlaywrightArgs([selector])).toEqual([

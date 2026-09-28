@@ -1,32 +1,148 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-09-11
+updated_at: 2026-09-28
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-131-react-room-source # DONE / CODEX_PASSED; same Codex
 active_unit: spec-132-composer-room-source-adapter
-state: CONTRACT_REVIEW_IN_PROGRESS
-baseline_commit: 05d0971
-candidate_commit: NOT_IMPLEMENTED
+state: READY_FOR_CODEX
+baseline_commit: 102860e
+candidate_commit: PARTIAL_CHECKPOINT_TRANSFER_PENDING
 verified_commit: 595cb6a # check3732; targeted133; final native33+regression31 PASS
-origin_relation: "font binding docs8 pushed25273a7; verified HEAD=origin25273a7 0/0; final receipt5 only"
-working_tree: "font binding docs8 committed; final receipt5; protected22 + approved debug.log preserved/excluded; local font artifacts8 ignored"
+origin_relation: "2026-09-28 fetch confirmed HEAD102860e=remote branch, ahead/behind0/0 before checkpoint"
+working_tree: "checkpoint scope code/test16 + docs8; protected/user23 excluded; final transfer result to be recorded separately"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC132_CONSOLIDATED_CONTRACT_REVIEW
-pending_product_decision: NONE_FOR_DOCUMENT_REVIEW #FP1/FP2 and single debug preservation exception accepted
+next_transition: SPEC132_PLAN_BOUND_LIFETIME_CONTRACT_REVIEW
+pending_product_decision: NONE # FP6 direction approved; scoped implementation/review routine, no renewed permission request
+static_owner_implementation: LOCAL_STATIC_OWNER_AND_SHARED_PLAN_PASSED_SAME_CODEX # not whole132 or actual Composer integration
 debug_log_accepted_sha256: 2D4C9622F42F2F9DAEF857E0A0C4CBDC4385FBAF5B0D590DB67678F794A45A6F #1438bytes;keep untracked;not future-write approval
 font_supply_document_review: PASSED_SAME_CODEX
 font_supply_public_evidence_review: PASSED_SAME_CODEX #132 S-8~S-10; font bytes/glyph/native NOT TESTED
 font_supply_local_diagnostic: COMPLETED_SAME_CODEX #S-12:5 byte identities;3 limited sfnt;9 native load/paint;NOT product replay PASS
 input_parent_structure_review: DOCUMENT_REVIEW_PASSED_SAME_CODEX #S16-S18;22 structural paths;implementation/native NOT TESTED
 font_binding_design_review: DOCUMENT_REVIEW_PASSED_SAME_CODEX #S19-S23;runtime projection/lease;35 future paths;NOT implementation/native PASS
-automation_loop: user resumed scoped routine; auto-process routine steps, stop for material decisions/conflicts/authority; no scheduled automation
-session_status: "S19-S23 font binding design reviewed;spacing algorithm mismatch documented;next consolidate full contract;product font application still unapproved"
+automation_loop: paused by user session-end request on 2026-09-14; no automatic continuation or scheduled automation
+consolidated_document_review: PASSED_SAME_CODEX #S24-S27;local35 paths;new code/native NOT TESTED
+session_status: "2026-09-28 explicit user request: commit/push existing partial work only; no implementation resumption; prior WebKit3FAIL and incomplete integration preserved"
+native_preflight_review: "Chromium12/Firefox12 PASS; WebKit9PASS3FAIL preserved; new static owner body54/fragment102/shared-plan162 conditions PASS; no whole132 PASS or gate removal"
 git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
-commit_owner: "Codex spec132 docs8 only; protected/user23 excluded"
+commit_owner: "2026-09-28 user explicitly requests current work commit/push: code/test16 + docs8 partial checkpoint only; not gate waiver/DONE/deployment; protected/user23 excluded"
 ```
+
+## 최신 — 2026-09-14 S43~S44 고정 owner 구현·공유 plan 결합 검증 완료
+
+사용자 '응 검토하고 다음 루틴대로 쭉 진행해'에 따라 S42 계약을 검토하고
+고정 font owner 구현(4파일), 이어서 공유 builder/executor 결합 시험(그중2파일)을 수행했다.
+FP6 승인 유효, Founder 제품 방향 pending NONE. 새 승인 질문/자동화/운영 접근0.
+
+- 최종 표적 unit132/132 = 기존variable58 + static40 + primitive34.
+- 최종 공통 check PASS: format/lint380,7typecheck,125unit파일3889/3889,2build.
+- 최종 native: Chromium12/12,Firefox12/12,WebKit9PASS/3FAIL.
+- 새 static owner 시험은3엔진 PASS. 본문54조건·fragment102조건·공유plan162조건 PASS.
+  각각6×3×3, (4×6+2×5)×3, 6×3×3×3의 조건 수이며 test 개수와 구분한다.
+- 기존6파일 opt-in 회귀138/138 PASS. 기본전체E2E/보호PNG생성 시험은실행하지 않았다.
+- 기존WebKit3FAIL(CSS축/variable owner/literal Canvas profile)은유지하며 전체132 PASS가 아니다.
+- Chromium readback 경고와 fixture의 Tailwind 오인식38bytes를 보완했다.
+  오류/경고0 기준과 고객CSS/JS 기존SHA를 유지했다. 새 실패를 skip/완화하지 않았다.
+- 마지막 snapshot 자체검수에서 ArrayBuffer constructor/종별 생성 훅 호출을 제거했다.
+  내부 plain buffer에 직접 복사하며 Shared/detached 입력도 거부한다. 새2개 회귀 후
+  위 unit/native3/기존회귀138을 최종코드로 모두 다시 확인했다. 상세는 S44 마지막 보완 항목.
+
+동일 Codex 자체검수 LOCAL_STATIC_OWNER_AND_SHARED_PLAN_PASSED.
+READY_FOR_CODEX / SPEC132_PLAN_BOUND_LIFETIME_CONTRACT_REVIEW.
+다음은132 S45의 실제호출부 대조를 바탕으로 측정 세션·plan binding·commit·async print 수명
+계약을 고정하고 승인35파일 안에서 구현하는 단계다. 일반기술절차 재승인 질문0.
+S45는완성된binding API/실제통합PASS를선언한것이아니다.
+기존3FAIL의대체검수·실제Composer/131source/102capture/print연결 전132 DONE·전송은하지 않는다.
+
+진척:131 DONE 유지 /132부분구현. 고정폰트 준비와 공유plan 검증 완료,실제연결·실기기·운영전환은남았다.
+전체분모 미확정이므로 새진행률%를 추정하지 않는다.
+이번코드4+문서8,누적taskcode/test16+docs8 unstaged. 보호23/다른기존코드13경로 SHA불변.
+고객JS346959/CSS22675/adminJS294910bytes 및S44기록SHA 유지.
+HEAD102860e=로컬origin추적0/0;새원격실조회/fetch/stage/commit/push0.
+새의존성/다운로드/변환/Rules/config/UI/실제Firebase/배포0. 상세근거는132 S43~S45.
+아래 'FP6 계약작성만/새owner 미구현/3849' 등은 이전단계 이력이다.
+
+## 이력 — 2026-09-14 FP-6 승인 / 고정 정본 계약 자체검수 완료
+
+사용자 '응 다음 승인'으로 직전 FP6 **별도 고정 폰트 기준의 계약 작성**을 승인했다.
+132 S42에6revision→S40사본hash,static/variable검사분리,byte증거·수명·문자범위·후속4파일·게이트계약을기록했다.
+S19의동일원본alias전제는variable에유지;static은서로다른정본이며원본pixel-identical주장0.
+기존Space/legacy/catalog/운영화면/기본font공급/배포는변경하지않는다.
+동일Codex문서자체검수 PASS,새구현/native PASS아님. 이번변경은동일8문서만,제품코드변경0.
+
+상태 READY_FOR_CODEX / SPEC132_STATIC_OWNER_IMPLEMENTATION_SCOPE_REVIEW.
+Founder제품방향pending NONE;FP6재질문0. 다음첫범위는기존composer-font-proof.ts/test,
+composer-room-source-fixture.tsx,source.spec.ts의4파일계약대조다. 정확내용은S42 E~G를따른다.
+새staticfactory구현이나제품공급적용을이번계약작성승인으로실행하지않았다.
+기존WebKit3FAIL은유지한다. 향후staticowner시험PASS만으로이3개를삭제/skip하거나132 DONE처리0.
+
+직전S40:check3849/3849,Chromium11/11,Firefox11/11,WebKit8PASS3FAIL,static진단54조건PASS.
+이는과거실행값이며이번문서턴재시험0. 원본대비18/36픽셀차이와WebKit18비교불가보존.
+131 DONE/132부분구현,누적taskcode/test16+docs8unstaged;원본/보호/기존코드변경0.
+새설치/취득/변환/테스트실행/운영요청/자동화/stage/commit/push0.
+아래FP6 PENDING/결정대기는승인전이력이다.
+
+
+## 이력 — 2026-09-14 FP5 진단 완료 / FP-6 정본 변경 결정 대기
+
+FP5 직접 승인 범위(격리fontTools4.65.0+검증사본6개) 완료. 원본3/OFL2/보호23 SHA불변.
+6사본 각각2회독립변환 byte일치,cmap/glyph목록/license 보존. 제품package/lockfile/기본공급변경0.
+새static진단은3엔진×18=54조건 반복폭/paint/PNG·자기자원해제PASS.
+최종 Chromium11/11,Firefox11/11 PASS;WebKit8PASS/3FAIL(기존3유지).
+단,원본대비Chromium/Firefox각18중9조건픽셀차이,WebKit18조건은비교불가다.
+static진단PASS는원본동일/전체132완료가아니다. 정적화좌표반올림차이를읽기전용확인했다.
+공통check3849/3849·format/lint·7typecheck·2build PASS;이번기존회귀138재실행0.
+Firefox최초11건페이지생성실패→권한검사후동일명령11PASS 이력보존;내부원인전체UNCONFIRMED.
+
+FOUNDER_DECISION_REQUIRED / FOUNDER_FP6_LOCAL_STATIC_CANONICAL_CONTRACT.
+FP6미승인제안: 사본6개를향후로컬리빌드의별도고정폰트정본으로채택하는계약작성을허용할지.
+FP5진단승인을제품폰트채택으로확대0. 원본과일부픽셀/폭이다르므로동일원본alias라는S19전제가달라진다.
+선택후에도정확owner증명/gate대체/문구경계검증계약을먼저고정한다. 실제제품적용·UI·운영배포는제외한다.
+기존Space/legacy/발행시안조용한치환0,새정본내measure/render/print동일성완화0.
+승인전제품코드변경/3FAIL삭제/commit/push0. 다음상세는132 S40결과/S41.
+
+이번source.spec.ts1개+문서8,누적taskcode/test16+docs8unstaged;별도ignored도구/사본보존.
+131 DONE /132부분구현. 자동화0. 아래FP5착수/PENDING은이력이며재승인요청이아니다.
+
+
+## 이력 — 2026-09-14 FP-5 직접 승인 / 로컬 static 진단 착수
+
+사용자 '응 승인'은 직전 질문의 검증 전용 fontTools 격리 설치와 로컬 글꼴 사본6개 생성·검증에 대한
+직접 승인이다. FP-5 APPROVED. 제품 적용/운영 배포/추가폰트 취득/전역 설치/제품 의존성 변경은 제외한다.
+132 S40에 버전·wheel SHA·격리 경로·변환 조건·native 진단 계약을 고정하고 같은 Codex가 자체검토했다.
+CODEX_WORKING / SPEC132_STATIC_FONT_LOCAL_DIAGNOSTIC. 일반 절차 재승인 질문0.
+이하 FP5 PENDING은 승인 전 이력이다. 기존 WebKit3FAIL을 유지하며 전체132 DONE 아님.
+
+
+
+## 이력 — 2026-09-14 S39 CSS 축 진단 완료 / FP-5 최소 예외 검토 대기
+
+131 DONE / CODEX_PASSED 유지,132 부분 구현이다. S39 선행 계약을 같은 Codex가 검토하고
+기존 source.spec.ts에 진단1개만 추가했다. 최종 Chromium10/10·Firefox10/10 PASS,
+WebKit7PASS/3FAIL(exit1): 기존2FAIL + 새 CSS variation readback1FAIL. 기존 gate 삭제/완화0.
+WebKit26.5에서10개 face 모두 load/규칙 제거/새 identity 확인,잔류face0이나 variation readback은 빈 문자열.
+DM normal/italic의 opsz9↔40 비교12쌍(2face×3size×2weight)에서 폭·픽셀 차이0이다.
+따라서 CSS 후보도 현재 요구 축 증명을 충족하지 못한다. 모든 대안이 불가능하다는 결론은 아니다.
+공통 check3849/3849·format/lint·7typecheck·2build PASS; 기존 회귀138은 S37 결과,이번 재실행0.
+
+현재 FOUNDER_DECISION_REQUIRED / FOUNDER_FP5_LOCAL_STATIC_FONT_SCOPE.
+FP-5는 아직 미승인: 원본3개를 보존하고 격리된 로컬 도구로 축을 고정한 검증용 사본6개를 만드는 예외 후보.
+일반 루틴 승인을 기존 '폰트 변환·신규 도구 설치/다운로드 금지'의 해제로 확대하지 않는다.
+PATH Python과 Codex bundled Python 모두 fontTools 미설치임을 읽기 전용 확인했다.
+이 두 환경 밖의 도구 유무는 UNCONFIRMED. 설치·다운로드·변환은 수행하지 않았다.
+필요 결정은 검증용 fontTools 격리 도입 + 로컬 static 사본 생성/검증의 최소 예외이며 제품 의존성 추가는 제외한다.
+승인 후에도 먼저 정확 버전/공급처/hash/격리 경로/라이선스·이름/명령/허용파일 계약을 고정하고 검토한다.
+후보6개 = DM normal/italic×400/700(opsz9) 4개 + Noto400/700 2개.
+성공 보장·제품 폰트 교체·Composer 연결·운영/배포/원격 전송 승인 아님. 기존 FAIL은 계속 보존한다.
+
+이번 코드 변경1(source.spec.ts),누적 task code/test16+docs8 unstaged. commit/push/stage0.
+상세 근거·명령·실패 이력·안전 검증은 스펙132 S39 결과와 live 마지막 항목.
+아래 S37/S38 및 Founder pending NONE은 이전 시점 기록이다. FP3/S28/FP4 재질문0.
+
+
 
 ## 오늘 세션 종료 — 2026-09-09
 

@@ -40,11 +40,11 @@ export function isDisposableStagingPath(candidate, tempRoot) {
   return rest.startsWith(STAGING_PREFIX);
 }
 
-function run(command, args, env) {
+function run(command, args, env, cwd) {
   const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
   const binDir = join(repoRoot, "node_modules", ".bin");
   const result = spawnSync([command, ...args].join(" "), {
-    cwd: repoRoot,
+    cwd: cwd ?? repoRoot,
     env: { ...process.env, PATH: `${binDir}${delimiter}${process.env.PATH ?? ""}`, ...env },
     shell: true,
     stdio: "inherit",
@@ -54,6 +54,17 @@ function run(command, args, env) {
 
 export function selectPlaywrightArgs(args) {
   if (Array.isArray(args) && args.length === 0) return ["test"];
+  for (const part of ["chromium", "firefox", "webkit", "regression"]) {
+    if (Array.isArray(args) && args.length === 1 && args[0] === `--composer-source-${part}-only`) {
+      return [
+        "test",
+        "--config",
+        "tests/composer-room-source.config.ts",
+        `--project=${part === "regression" ? "regression-chromium" : part}`,
+        "--workers=1",
+      ];
+    }
+  }
   if (Array.isArray(args) && args.length === 1 && args[0] === "--local-image-owner-only") {
     return [
       "test",
@@ -173,10 +184,29 @@ export function selectPlaywrightArgs(args) {
   throw new Error("Unsupported E2E selector");
 }
 
+/** Only the spec132 selectors change Playwright cwd; build and every older selector stay put. */
+export function selectPlaywrightExecution(args, repoRoot, staging) {
+  const selected = selectPlaywrightArgs(args);
+  const isComposer = selected[2] === "tests/composer-room-source.config.ts";
+  if (!isComposer) return { args: selected, cwd: repoRoot };
+  if (!isDisposableStagingPath(staging, tmpdir())) throw new Error("Invalid E2E staging");
+  const absoluteConfig = resolve(repoRoot, selected[2]);
+  return {
+    args: [selected[0], selected[1], `"${absoluteConfig}"`, ...selected.slice(3)],
+    cwd: staging,
+  };
+}
+
 async function main() {
   // Validate before creating staging or spawning commands. Never forward arbitrary shell input.
-  const playwrightArgs = selectPlaywrightArgs(process.argv.slice(2));
+  const selectors = process.argv.slice(2);
+  selectPlaywrightArgs(selectors);
   const staging = mkdtempSync(join(tmpdir(), STAGING_PREFIX));
+  const playwright = selectPlaywrightExecution(
+    selectors,
+    dirname(dirname(fileURLToPath(import.meta.url))),
+    staging,
+  );
   const mockupOut = join(staging, "mockup");
   const adminOut = join(staging, "admin");
   const adminHostingOut = join(staging, "admin-hosting-source");
@@ -223,10 +253,10 @@ async function main() {
           ["build", "--config", "apps/admin/vite.e2e-fixture.config.ts"],
           { DENN_E2E_ADMIN_FIXTURE_OUT_DIR: adminOut },
         ],
-        ["playwright", playwrightArgs, { DENN_E2E_STAGING: staging }],
+        ["playwright", playwright.args, { DENN_E2E_STAGING: staging }],
       ];
       for (const [command, args, env] of steps) {
-        status = run(command, args, env);
+        status = run(command, args, env, command === "playwright" ? playwright.cwd : undefined);
         if (status !== 0) break;
       }
     }

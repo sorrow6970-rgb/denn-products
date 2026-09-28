@@ -11,6 +11,7 @@
 import type { PreviewRenderPlan } from "@denn/render";
 import { StrictMode, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { ComposerRoomSourceFixture } from "./composer-room-source-fixture";
 import { RoomBackgroundFileFixture } from "./room-background-file-fixture";
 import { RoomSourceFixture } from "./room-source-fixture";
 import "@denn/ui/theme.css";
@@ -495,7 +496,9 @@ const root = document.getElementById("root");
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      {window.location.search === "?roomSource=1" ? (
+      {window.location.search === "?composerSource=1" ? (
+        <ComposerRoomSourceFixture />
+      ) : window.location.search === "?roomSource=1" ? (
         <RoomSourceFixture />
       ) : window.location.search === "?roomBackgroundFile=1" ? (
         <RoomBackgroundFileFixture />

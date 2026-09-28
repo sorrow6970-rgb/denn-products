@@ -63,6 +63,55 @@ afterEach(() => {
 });
 
 describe("PublicCatalogController", () => {
+  it("spec132 exposes one immutable identity per live ready generation without extra I/O", async () => {
+    const result = okResult(0);
+    const q = queuedReader([Promise.resolve(result), Promise.resolve(result)]);
+    const c = new PublicCatalogController(q.reader);
+    expect(c.readReadyIdentity()).toBeNull();
+    c.start();
+    expect(c.readReadyIdentity()).toBeNull();
+    await Promise.resolve();
+    const first = c.readReadyIdentity();
+    expect(first).not.toBeNull();
+    expect(Object.isFrozen(first)).toBe(true);
+    expect(c.readReadyIdentity()).toBe(first);
+    c.retry(); // ready is not a retryable error
+    expect(q.calls()).toBe(1);
+    c.detach();
+    expect(c.getState().status).toBe("ready");
+    expect(c.readReadyIdentity()).toBeNull();
+    c.start();
+    expect(c.readReadyIdentity()).toBeNull();
+    await Promise.resolve();
+    expect(c.readReadyIdentity()).not.toBe(first);
+    expect(c.readReadyIdentity()?.document).toBe(first?.document);
+    expect(q.calls()).toBe(2);
+  });
+
+  it("spec132 exposes null on errors and never accepts an old or detached async result", async () => {
+    const old = deferred<PublicCatalogLoadResult>();
+    const next = deferred<PublicCatalogLoadResult>();
+    const c = new PublicCatalogController(queuedReader([old.promise, next.promise]).reader);
+    c.start();
+    c.start();
+    old.resolve(okResult(0));
+    next.resolve(errResult("NETWORK_TIMEOUT", true));
+    await Promise.resolve();
+    expect(c.readReadyIdentity()).toBeNull();
+    c.detach();
+    expect(c.readReadyIdentity()).toBeNull();
+  });
+
+  it("spec132 publishes the matching identity before notifying ready subscribers", async () => {
+    const c = new PublicCatalogController(queuedReader([Promise.resolve(okResult(0))]).reader);
+    c.subscribe(() => {
+      const state = c.getState();
+      if (state.status === "ready") expect(c.readReadyIdentity()?.document).toBe(state.document);
+      else expect(c.readReadyIdentity()).toBeNull();
+    });
+    c.start();
+    await Promise.resolve();
+  });
   it("goes idle → loading → ready and passes warningCount", async () => {
     const d = deferred<PublicCatalogLoadResult>();
     const c = new PublicCatalogController(queuedReader([d.promise]).reader);

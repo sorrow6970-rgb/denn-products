@@ -235,7 +235,14 @@ export interface DragSessionPorts {
   readonly cancelFrame: (handle: number) => void;
   /** called at most ONCE per animation frame with the newest transform. */
   readonly commit: (transform: NormalizedTransform) => void;
+  /** Spec132: synchronous notification after identity changes, before scheduling/React work. */
+  readonly onInputStatusChange?: (status: DragInputStatus) => void;
 }
+
+export type DragInputStatus = Readonly<{
+  revision: number;
+  phase: "settled" | "pending" | "disposed";
+}>;
 
 export interface DragBeginInput {
   readonly pointerId: number;
@@ -245,6 +252,7 @@ export interface DragBeginInput {
 }
 
 export interface DragController {
+  readInputStatus(): DragInputStatus;
   /** false = rejected (disposed, already dragging, or unusable input). */
   begin(input: DragBeginInput): boolean;
   /** a move from another pointer, after the end, or after dispose is ignored. */
@@ -274,15 +282,17 @@ export function createDragController(ports: DragSessionPorts): DragController {
   let generation = 0;
   let state: DragState | null = null;
   let disposed = false;
-  let frame: number | null = null;
+  let frame: { handle: number | null } | null = null;
   let pending: NormalizedTransform | null = null;
+  let delivered: NormalizedTransform = IDENTITY_TRANSFORM;
+  let status: DragInputStatus = Object.freeze({ revision: 0, phase: "settled" });
 
   /** Drop the pending transform (always) and cancel its frame (when one is scheduled). */
   const cancelFrame = (): void => {
-    const handle = frame;
+    const handle = frame?.handle;
     frame = null;
     pending = null;
-    if (handle === null) return;
+    if (handle === undefined || handle === null) return;
     try {
       ports.cancelFrame(handle);
     } catch {
@@ -290,32 +300,90 @@ export function createDragController(ports: DragSessionPorts): DragController {
     }
   };
 
+  const dispose = (): void => {
+    if (disposed) return;
+    disposed = true;
+    generation += 1;
+    state = null;
+    const revision =
+      status.revision < Number.MAX_SAFE_INTEGER ? status.revision + 1 : status.revision;
+    status = Object.freeze({ revision, phase: "disposed" });
+    cancelFrame();
+    try {
+      ports.onInputStatusChange?.(status);
+    } catch {
+      /* already terminal */
+    }
+  };
+
+  const publish = (phase: "pending" | "settled"): void => {
+    if (disposed) return;
+    if (status.revision >= Number.MAX_SAFE_INTEGER) {
+      dispose();
+      return;
+    }
+    status = Object.freeze({ revision: status.revision + 1, phase });
+    try {
+      ports.onInputStatusChange?.(status);
+    } catch {
+      dispose();
+    }
+  };
+
+  const settle = (captured: DragInputStatus): void => {
+    if (status === captured && status.phase === "pending") publish("settled");
+  };
+
+  const sameTransform = (a: NormalizedTransform, b: NormalizedTransform): boolean =>
+    a.scale === b.scale &&
+    a.x === b.x &&
+    a.y === b.y &&
+    a.rotationQuarterTurns === b.rotationQuarterTurns;
+
   const schedule = (current: DragState): void => {
     if (frame !== null) return; // already merged into the pending frame
     const captured = current.generation;
+    const ticket = { handle: null as number | null };
+    frame = ticket;
     try {
-      frame = ports.requestFrame(() => {
+      const handle = ports.requestFrame(() => {
         // Stale frame: the session ended (or another began) after this frame was scheduled. It
         // returns WITHOUT consuming `pending` — a session that ends always cancels its own frame, so
         // the pending value here belongs to the newer session and its own frame must still see it.
-        if (disposed || state === null || state.generation !== captured) return;
+        if (disposed || state === null || state.generation !== captured || frame !== ticket) return;
         frame = null;
         const next = pending;
+        const capturedStatus = status;
         pending = null;
         if (next === null) return;
+        delivered = next;
         try {
           ports.commit(next);
         } catch {
           // a throwing subscriber must not leave the session half-ended
         }
+        settle(capturedStatus);
       });
+      // A synchronous/reentrant scheduler may already have run, cancelled or replaced this ticket.
+      if (frame === ticket && !disposed && state === current) ticket.handle = handle;
+      else {
+        try {
+          ports.cancelFrame(handle);
+        } catch {
+          /* own returned handle only */
+        }
+      }
     } catch {
-      frame = null;
-      pending = null;
+      if (frame === ticket) {
+        frame = null;
+        pending = null;
+        settle(status);
+      }
     }
   };
 
   return {
+    readInputStatus: () => status,
     begin: (input: DragBeginInput): boolean => {
       if (disposed || state !== null) return false;
       if (!Number.isFinite(input.pointerId)) return false;
@@ -332,12 +400,18 @@ export function createDragController(ports: DragSessionPorts): DragController {
         startTransform: transform,
         maxPan: { x: input.maxPan.x, y: input.maxPan.y },
       };
+      delivered = transform;
       return true;
     },
     move: (pointerId: number, point: Point): void => {
       if (disposed || state === null || state.pointerId !== pointerId) return;
+      if (!isFiniteNumber(point.x) || !isFiniteNumber(point.y)) return;
       const current = state;
-      pending = dragTransform(current.startTransform, current.startPoint, point, current.maxPan);
+      const next = dragTransform(current.startTransform, current.startPoint, point, current.maxPan);
+      const changed = !sameTransform(pending ?? delivered, next);
+      pending = next;
+      if (changed) publish("pending");
+      if (disposed || state !== current) return;
       schedule(current);
     },
     /**
@@ -351,30 +425,32 @@ export function createDragController(ports: DragSessionPorts): DragController {
     end: (pointerId: number, reason: DragEndReason): void => {
       if (disposed || state === null || state.pointerId !== pointerId) return;
       const flush = reason === "pointerup" ? pending : null;
+      const capturedStatus = status;
       generation += 1;
+      const endedGeneration = generation;
       state = null;
       cancelFrame(); // also clears `pending`, so nothing else can commit this value
-      if (flush === null) return;
-      try {
-        ports.commit(flush);
-      } catch {
-        // a throwing subscriber must not leave the session half-ended
+      if (disposed || generation !== endedGeneration) return;
+      if (flush !== null) {
+        delivered = flush;
+        try {
+          ports.commit(flush);
+        } catch {
+          /* retain legacy subscriber exception boundary */
+        }
       }
+      settle(capturedStatus);
     },
     abort: (_reason: DragEndReason): void => {
       if (disposed || state === null) return;
+      const capturedStatus = status;
       generation += 1;
       state = null;
       cancelFrame();
+      settle(capturedStatus);
     },
     isDragging: (): boolean => state !== null,
     activePointerId: (): number | null => (state === null ? null : state.pointerId),
-    dispose: (): void => {
-      if (disposed) return;
-      disposed = true;
-      generation += 1;
-      state = null;
-      cancelFrame();
-    },
+    dispose,
   };
 }
