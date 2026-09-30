@@ -1,5 +1,17 @@
 # NEXT CLAUDE PROMPT
 
+## 최신 — 2026-09-30 리빌드 연속 진행 승인
+
+사용자가 문서화된 미완 리빌드 작업 전반과30분 간격 자동 재개·로컬 구현/검증·일반 커밋/fast-forward
+push를 승인했다. 앱 heartbeat `denn` / ACTIVE. 권한 정본은
+`docs/codex-claude-handoff/decisions/2026-09-30-rebuild-autonomous-delegation.md`.
+
+현재132 S45부터 계약 대조·작성·검토 후 정확 허용 범위의 구현·검증을 이어간다.
+확정된 요구에 근거한 후속 스펙은 작성·검토 후 연속 진행하며 사용자 최종 검증 항목을 모은다.
+기존WebKit3FAIL과132부분구현 상태를 유지하고 새 결과가 있을 때만 판정을 갱신한다.
+새 제품 결정·실기기·운영 접근/배포 등 승인 경계와 기존 보완 한도는 유지한다.
+아래9월14일 자동 정지 및9월28일 checkpoint-only 요청은 과거 이력이다.
+
 ## 최신 — 2026-09-28 부분 작업 checkpoint 전송 완료
 
 82343e9(code/test16+docs8) 일반 push 성공, 원격 ls-remote 일치 및 ahead/behind0/0 확인.

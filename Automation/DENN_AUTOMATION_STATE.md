@@ -1,7 +1,7 @@
 ﻿# DENN automation state
 
 ```yaml
-updated_at: 2026-09-28
+updated_at: 2026-09-30
 branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-131-react-room-source # DONE / CODEX_PASSED; same Codex
@@ -23,13 +23,21 @@ font_supply_public_evidence_review: PASSED_SAME_CODEX #132 S-8~S-10; font bytes/
 font_supply_local_diagnostic: COMPLETED_SAME_CODEX #S-12:5 byte identities;3 limited sfnt;9 native load/paint;NOT product replay PASS
 input_parent_structure_review: DOCUMENT_REVIEW_PASSED_SAME_CODEX #S16-S18;22 structural paths;implementation/native NOT TESTED
 font_binding_design_review: DOCUMENT_REVIEW_PASSED_SAME_CODEX #S19-S23;runtime projection/lease;35 future paths;NOT implementation/native PASS
-automation_loop: paused by user session-end request on 2026-09-14; no automatic continuation or scheduled automation
+automation_loop: ACTIVE # user approved 30-minute heartbeat; automationId denn
+automation_scope: documented-rebuild-local-work # scoped next-spec continuation approved; product/live/device boundaries retained
 consolidated_document_review: PASSED_SAME_CODEX #S24-S27;local35 paths;new code/native NOT TESTED
-session_status: "2026-09-28 explicit user request: commit/push existing partial work only; no implementation resumption; prior WebKit3FAIL and incomplete integration preserved"
+session_status: "2026-09-30 user approved rebuild continuation, 30-minute heartbeat and local implementation/verification/ordinary commit/fast-forward push; resume132 S45; prior WebKit3FAIL and incomplete integration preserved"
 native_preflight_review: "Chromium12/Firefox12 PASS; WebKit9PASS3FAIL preserved; new static owner body54/fragment102/shared-plan162 conditions PASS; no whole132 PASS or gate removal"
-git_transfer_authority: "2026-09-09 user: 응 승인해줘; current119 and future approved specs code/test/contracts/reviews/state, ordinary commit/push only, to https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio; exclude protected files, PII, secrets, operational data and deployment"
+git_transfer_authority: "2026-09-30 user approved recurring local implementation/verification/ordinary commit/fast-forward push; decision2026-09-30-rebuild-autonomous-delegation; prior destination https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio retained; protected/PII/secrets/operational data/deployment excluded"
 commit_owner: "2026-09-28 checkpoint82343e9 pushed: code/test16 + docs8; docs-only transfer record follows; not gate waiver/DONE/deployment; protected/user23 excluded"
 ```
+
+## 최신 — 2026-09-30 연속 진행 승인
+
+앱 heartbeat `denn` / ACTIVE / 30분 간격 생성 성공. 사용자 위임 정본은
+`docs/codex-claude-handoff/decisions/2026-09-30-rebuild-autonomous-delegation.md`.
+현재 포인터는132 S45이며 제품 코드 변경/새 검증0. 확정 기술 요구에 근거한 후속 스펙 진행 허용,
+새 제품 결정·실기기·운영 접근/배포·기존 보호/보완한도는 유지한다.
 
 ## 최신 — 2026-09-14 S43~S44 고정 owner 구현·공유 plan 결합 검증 완료
 

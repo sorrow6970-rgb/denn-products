@@ -1,5 +1,18 @@
 # 현재 상태
 
+## 최신 — 2026-09-30 리빌드 연속 진행 위임 / 자동 재개 활성
+
+사용자가 남은 리빌드 작업을 위임하고 최종 단계에서 직접 검증하겠다고 요청했으며,
+30분 간격 자동 재개·로컬 구현/검증·일반 커밋/fast-forward push를 명시적으로 승인했다.
+앱 heartbeat `denn` 생성 성공 / ACTIVE. 정확 권한은
+`decisions/2026-09-30-rebuild-autonomous-delegation.md`가 정본이다.
+
+spec 132 S45의 실제 호출부 대조와 plan 수명·commit·async print 연결 계약부터 재개한다.
+확정 요구에 근거한 후속 스펙 작성·검토·진행은 스펙 사이 재승인 없이 이어간다.
+새 제품 결정·실기기·운영 접근/배포 등 승인 경계와 기존 보완 한도는 유지한다.
+131 DONE / 132 부분 구현, 기존 WebKit 3FAIL 유지. 이번 설정에서 제품 코드 변경·새 테스트 실행0.
+아래 9월14일 세션 정지 및 9월28일 checkpoint-only 지시는 이전 이력이다.
+
 ## 최신 — 2026-09-28 부분 작업 checkpoint 전송
 
 82343e9(code/test16+docs8) push 성공, 원격 ls-remote 일치 및 ahead/behind0/0 확인.
