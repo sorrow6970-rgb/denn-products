@@ -10,8 +10,8 @@ state: READY_FOR_CODEX
 baseline_commit: bfa0da4 # upstream documentation preserved; implementation started at cc013c4
 candidate_commit: 1b25748 # S46-S48 code6 checkpoint only; not whole132 PASS
 verified_commit: 595cb6a # check3732; targeted133; final native33+regression31 PASS
-origin_relation: "2026-10-02 fetched upstream bfa0da4 and fast-forwarded; code1b25748 committed; checkpoint push verification pending"
-working_tree: "code6 committed; handoff docs8 pending checkpoint transfer; protected/user23 unchanged; final state in transfer record"
+origin_relation: "2026-10-02 checkpoint54977d9 remote equality verified, HEAD=origin ahead/behind0/0; final verification-record hash in session report"
+working_tree: "checkpoint code6/docs8 committed and pushed; only protected/user23 remain unchanged; record4 follows, staged0/diff check PASS"
 fix_round: 0
 max_fix_rounds: 3
 next_transition: SPEC132_REACT_SOURCE_COMMIT_CONTRACT_REVIEW
@@ -25,13 +25,24 @@ input_parent_structure_review: DOCUMENT_REVIEW_PASSED_SAME_CODEX #S16-S18;22 str
 font_binding_design_review: DOCUMENT_REVIEW_PASSED_SAME_CODEX #S19-S23;runtime projection/lease;35 future paths;NOT implementation/native PASS
 automation_loop: "foreground handoff only; 2026-09-30 heartbeat recorded upstream, runtime status NOT VERIFIED; no automation created/changed here"
 consolidated_document_review: PASSED_SAME_CODEX #S24-S27;local35 paths;new code/native NOT TESTED
-session_status: "2026-10-02 user requested home checkpoint/handoff only; check4001 and targeted343 rerun PASS; no further implementation"
+session_status: "2026-10-02 home checkpoint/handoff pushed and remote verified; foreground work finished; no further implementation"
 measurement_session_review: PASSED_SAME_CODEX_LOCAL_UNIT_ONLY # 41 new tests; native/React integration NOT TESTED
 plan_and_frame_binding_review: PASSED_SAME_CODEX_LOCAL_UNIT_ONLY #71 new tests; not native/React integration
 native_preflight_review: "Chromium12/Firefox12 PASS; WebKit9PASS3FAIL preserved; new static owner body54/fragment102/shared-plan162 conditions PASS; no whole132 PASS or gate removal"
 git_transfer_authority: "2026-09-30 user approved recurring local implementation/verification/ordinary commit/fast-forward push; decision2026-09-30-rebuild-autonomous-delegation; prior destination https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio retained; protected/PII/secrets/operational data/deployment excluded"
-commit_owner: "code1b25748 checkpoint committed; docs8 transfer follows by explicit user request; protected/user23 excluded; whole132 incomplete"
+commit_owner: "code1b25748 + handoff54977d9 committed/pushed; verification record4 follows; protected/user23 excluded; whole132 incomplete"
 ```
+
+## 전송 확인 — 2026-10-02 집 재개 준비 완료
+
+코드 `1b25748`(6파일) + 핸드오프 `54977d9`(문서8) 일반 push 성공.
+GitHub refs/heads/rebuild/modern-studio = `54977d9644d165d04b8115b93176e320683ce6a3` 실조회,
+당시 HEAD=origin·ahead/behind0/0 확인. 이 확인 기록4문서는 별도 일반 commit/push하며
+마지막 기록 commit의 자기 hash는 최종 보고를 참조한다.
+잔류는 보호/user23뿐이며 SHA불변·staged0·diff check PASS. 보호파일 전송0.
+READY_FOR_CODEX /132부분구현 유지. 집 재개는 아래 인계의 계약 검토부터,오늘 추가 구현0.
+ignored 폰트와 진단물은 Git에 없으므로 집 자산/SHA 및 기존 도구부터 확인한다.
+기존 heartbeat 기록은 보존하되 현재 실행상태 조회/설정변경0; 이번 새자동화0.
 
 ## 집 재개 인계 — 2026-10-02
 

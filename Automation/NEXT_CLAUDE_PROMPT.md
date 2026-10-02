@@ -1,5 +1,43 @@
 # NEXT CLAUDE PROMPT
 
+## 전송 확인 — 2026-10-02 집 재개 준비 완료
+
+코드 `1b25748`(6파일) + 핸드오프 `54977d9`(문서8) 일반 push 성공.
+GitHub refs/heads/rebuild/modern-studio = `54977d9644d165d04b8115b93176e320683ce6a3` 실조회,
+당시 HEAD=origin·ahead/behind0/0 확인. 이 확인 기록4문서는 별도 일반 commit/push하며
+마지막 기록 commit의 자기 hash는 최종 보고를 참조한다.
+잔류는 보호/user23뿐이며 SHA불변·staged0·diff check PASS. 보호파일 전송0.
+READY_FOR_CODEX /132부분구현 유지. 집 재개는 아래 인계의 계약 검토부터,오늘 추가 구현0.
+ignored 폰트와 진단물은 Git에 없으므로 집 자산/SHA 및 기존 도구부터 확인한다.
+기존 heartbeat 기록은 보존하되 현재 실행상태 조회/설정변경0; 이번 새자동화0.
+
+### 집에서 전달할 재개 프롬프트
+
+```text
+C:\repo\denn-products에서 rebuild/modern-studio 작업을 재개해.
+먼저 로컬 변경과 원격 상태를 확인하고, 내 변경을 보존하면서 fast-forward로만 동기화해.
+Automation/NEXT_CLAUDE_PROMPT.md 최상단, DENN_AUTOMATION_STATE.md,
+docs/codex-claude-handoff/CURRENT.md, live log 마지막 항목,
+docs/handoff/2026-09-11-spec-132-composer-source-handoff.md,
+스펙132 S45~S48 및 최신 결정 정본을 읽어.
+코드 체크포인트1b25748/핸드오프54977d9를 확인하고 스펙132의 실제 React/source/capture/print
+동일 commit·독립 수명 연결 계약 검토부터 이어가.
+계약을 먼저 문서에 고정한 뒤 기존 승인35파일 범위 안에서 구현·검증하고 상태/live log를 맞춰.
+일반 기술 절차는 재승인 없이 진행하되 중요한 새 결정·권한·스코프·충돌·검증 실패는 보고하고 멈춰.
+ignored 검증용 폰트와 기존 도구의 존재/SHA부터 확인해. 없으면 해당 native 검증을 중지하고
+임의 다운로드·설치·변환하거나 PASS로 기록하지 마.
+보호 파일/사용자 변경, 기존 WebKit3FAIL을 보존하고 실제 Firebase/live/운영/배포에 접근하지 마.
+새 예약자동화나 반복 작업을 만들거나 기존 자동화 설정을 변경하지 마.
+```
+
+집의 dirty 상태는 별도로 snapshot한다. 사무실 보호/user23 SHA와 다르다고 덮어쓰지 않는다.
+보호/제외: AGENTS.md,docs/rebuild/design/taste-v2/**,docs/rebuild/design/README.md,
+docs/rebuild/specs/038-page-design-prototype.md,spec018 browse PNG2,
+packages/render/src/plan/index.ts,pnpm-workspace.yaml,debug.log,
+docs/handoff/2026-09-07-spec-091-customer-compatibility-notice-handoff.md,
+docs/codex-claude-handoff/reviews/2026-09-07-rebuild-remaining-roadmap-review.md.
+위 경로와 그 밖의 사용자 변경을 수정/restore/checkout/stage/commit하지 않는다.
+
 ## 집 재개 인계 — 2026-10-02
 
 사용자가 '집에가서 이어할수있게 커밋푸시하고 핸드오프'를 직접 요청했다.

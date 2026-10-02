@@ -10096,3 +10096,22 @@ check재실행 exit0:format/lint382,7typecheck,126unit파일4001/4001,2build PAS
 별도 기존doc8에 집재개범위·금지경계·ignored폰트위치·도구/asset STOP 및 checkpoint권한을 기록했다.
 문서commit/push/원격검증은 다음 전송완료 기록에서 보고한다.현재132미완,READY_FOR_CODEX.
 다음계약 SPEC132_REACT_SOURCE_COMMIT_CONTRACT_REVIEW;오늘 신규제품구현/자동화/배포0.
+
+## 2026-10-02 — 집 재개 checkpoint·핸드오프 전송 완료
+
+- 코드커밋 `1b257489004326568ffb8c0c3c46a59cbebb7c6d`:소스·테스트6개.
+- 문서커밋 `54977d9644d165d04b8115b93176e320683ce6a3`:기존스펙132문서8개.
+- 일반push exit0:`bfa0da4..54977d9 HEAD -> rebuild/modern-studio`.
+  ls-remote 실조회 exact54977d9 일치,HEAD=origin·ahead/behind0/0 확인.
+- 보호/user23 SHA재확인불변,잔류23개만·task잔류0·staged0·diff--checkPASS.
+  코드6+문서8만 전송;protected/ignoredfont/log 전송0.복구stash eda18e6은로컬에보존.
+- 공통check4001/4001 및표적343/343은전송준비중실행한실측값.추가native/E2E/실기기0.
+  새검증완료나132DONE으로재분류0.기존WebKit3FAIL/포트NOT VERIFIED 유지.
+- STATE/NEXT/CURRENT/live4에이확인결과를기록하는별도문서커밋을일반push한다.
+  기록커밋자기hash/최종HEAD·원격일치는사용자최종보고참조.
+- 집재개정본: NEXT 최상단→집재개인계→132 S45~S48→현재코드6+130/131/102호출부.
+  actualcommit/source/capture/print 통합계약검토부터 재개.ignoredfont/기존도구부재는native검증STOP.
+  보호/실제Firebase/live/운영/배포/추가취득·설치금지유지.기존자동화runtime조회/변경0/새자동화0.
+
+131 DONE /132부분구현,READY_FOR_CODEX,pending새Founder제품결정NONE.
+오늘요청한전송·집재개핸드오프완료후새구현착수0.
