@@ -1,6 +1,191 @@
 import type { PreviewRenderPlan } from "@denn/render";
 import { executePreviewRenderPlan } from "./executePreviewPlan";
 import type { PreviewImageBindings } from "./types";
+import type { ExecutePreviewRenderPlanArgs, CanvasExecutionResult } from "./types";
+import type { ManagedFontExecutionBorrow } from "../preview/composer-font-proof";
+
+export interface FontExecutionLease extends ManagedFontExecutionBorrow {
+  execute(args: ExecutePreviewRenderPlanArgs): CanvasExecutionResult;
+}
+
+export interface FontBoundExecution {
+  isCurrent(): boolean;
+  acquire(): FontExecutionLease | null;
+}
+
+// Only this module's shared-executor bindings can enter the combined frame owner.
+const fontBindings = new WeakSet<object>();
+
+/** Internal lifetime binding, not an attestation of arbitrary caller plans. The managed product
+ * builder supplies its own deeply frozen plan and trusted session ports. No executor injection. */
+export function createFontBoundExecution(
+  plan: PreviewRenderPlan,
+  isCurrent: () => boolean,
+  borrow: () => ManagedFontExecutionBorrow | null,
+): FontBoundExecution {
+  let acquiring = false;
+  let validating = false;
+  const current = () => {
+    if (validating) return false;
+    validating = true;
+    try {
+      return isCurrent() === true;
+    } catch {
+      return false;
+    } finally {
+      validating = false;
+    }
+  };
+  const binding: FontBoundExecution = Object.freeze({
+    isCurrent: current,
+    acquire() {
+      if (acquiring) return null;
+      acquiring = true;
+      let fonts: ManagedFontExecutionBorrow | null = null;
+      let transferred = false;
+      try {
+        const frozenTree = (value: unknown, seen = new Set<object>()): boolean => {
+          if (value === null || typeof value !== "object") return typeof value !== "function";
+          if (!Object.isFrozen(value) || seen.has(value)) return false;
+          const proto = Object.getPrototypeOf(value);
+          if (proto !== Object.prototype && proto !== Array.prototype) return false;
+          seen.add(value);
+          for (const descriptor of Object.values(Object.getOwnPropertyDescriptors(value))) {
+            if (!("value" in descriptor) || !frozenTree(descriptor.value, seen)) return false;
+          }
+          seen.delete(value);
+          return true;
+        };
+        if (!frozenTree(plan) || !current()) return null;
+        fonts = borrow();
+        if (!fonts || !current() || !fonts.isCurrent()) return null;
+        const owned = fonts;
+        let alive = true;
+        let operations = 0;
+        let checking = false;
+        let preparing = false;
+        let executing = false;
+        let cleaned = false;
+        let prepared: CanvasRenderingContext2D | undefined;
+        const cleanup = () => {
+          if (alive || operations !== 0 || cleaned) return;
+          cleaned = true;
+          try {
+            owned.release();
+          } catch {
+            /* Logical disposal is terminal. */
+          }
+        };
+        const live = (): boolean => {
+          if (!alive || checking) return false;
+          checking = true;
+          operations++;
+          try {
+            return owned.isCurrent() === true && alive;
+          } catch {
+            return false;
+          } finally {
+            checking = false;
+            operations--;
+            cleanup();
+          }
+        };
+        const requireLive = () => {
+          if (!live()) throw new Error("FONT_EXECUTION_STALE");
+        };
+        const lease: FontExecutionLease = {
+          language: owned.language,
+          isCurrent: live,
+          prepare(context) {
+            if (!alive || preparing || executing || (prepared && prepared !== context))
+              return false;
+            preparing = true;
+            operations++;
+            try {
+              if (!live() || owned.prepare(context) !== true || !live()) return false;
+              prepared = context;
+              return true;
+            } catch {
+              return false;
+            } finally {
+              preparing = false;
+              operations--;
+              cleanup();
+            }
+          },
+          execute(args) {
+            if (!alive || executing || preparing)
+              return { ok: false, code: "INVALID_EXECUTOR_INPUT" };
+            executing = true;
+            operations++;
+            try {
+              // Snapshot once: a drifting args getter cannot replace a validated plan/context.
+              const context = args.context;
+              const candidate = args.plan;
+              const imageBindings = args.imageBindings;
+              if (candidate !== plan || !prepared || context !== prepared || !live())
+                return { ok: false, code: "INVALID_EXECUTOR_INPUT" };
+              if (!owned.prepare(prepared) || !live())
+                return { ok: false, code: "CANVAS_OPERATION_FAILED" };
+              // Guard every native read/write/call, not just the final result. Preserve native
+              // receivers and the primitive's already installed DPR/print transform.
+              const guarded = new Proxy(context, {
+                get(target, key) {
+                  requireLive();
+                  const value = Reflect.get(target, key, target);
+                  requireLive();
+                  if (typeof value !== "function") return value;
+                  return (...values: unknown[]) => {
+                    requireLive();
+                    const result = Reflect.apply(value, target, values);
+                    requireLive();
+                    return result;
+                  };
+                },
+                set(target, key, value) {
+                  requireLive();
+                  const result = Reflect.set(target, key, value, target);
+                  requireLive();
+                  return result;
+                },
+              });
+              const result = executePreviewRenderPlan({ context: guarded, plan, imageBindings });
+              if (!live() || !owned.prepare(prepared) || !live())
+                return { ok: false, code: "CANVAS_OPERATION_FAILED" };
+              return result;
+            } catch {
+              return { ok: false, code: "CANVAS_OPERATION_FAILED" };
+            } finally {
+              executing = false;
+              operations--;
+              cleanup();
+            }
+          },
+          release() {
+            alive = false;
+            prepared = undefined;
+            cleanup();
+          },
+        };
+        transferred = true;
+        return Object.freeze(lease);
+      } catch {
+        return null;
+      } finally {
+        acquiring = false;
+        if (!transferred && fonts) {
+          try {
+            fonts.release();
+          } catch {
+            /* Finish partial acquisition. */
+          }
+        }
+      }
+    },
+  });
+  fontBindings.add(binding);
+  return binding;
+}
 
 type Failure = {
   readonly ok: false;
@@ -106,6 +291,132 @@ export interface IsolatedPlanFrameRequest {
   readonly isCurrent: () => boolean;
   readonly prepare: (context: CanvasRenderingContext2D) => boolean;
   readonly execute?: typeof executePreviewRenderPlan;
+}
+
+export type FontBoundPlanFrameRequest = Omit<
+  IsolatedPlanFrameRequest,
+  "language" | "prepare" | "execute"
+> & { readonly fonts: FontBoundExecution };
+
+/** S48: own the independent font borrow until private frame release AND async settlement.
+ * Image/proof identity is the caller's explicit current port, not attested by this helper. */
+export function renderFontBoundPlanFrame(
+  request: FontBoundPlanFrameRequest,
+): { readonly ok: true; readonly frame: IsolatedPlanFrame } | Failure {
+  let fonts: FontExecutionLease | null = null;
+  let frame: IsolatedPlanFrame | undefined;
+  let alive = true;
+  let operations = 0;
+  let checking = false;
+  let presenting = false;
+  let encoding = false;
+  let cleaned = false;
+  let transferred = false;
+  const cleanup = () => {
+    if (alive || operations !== 0 || cleaned) return;
+    cleaned = true;
+    try {
+      fonts?.release();
+    } catch {
+      /* Logical disposal is terminal. */
+    }
+  };
+  const release = () => {
+    if (!alive) return;
+    alive = false;
+    try {
+      frame?.release();
+    } catch {
+      /* Still finish font disposal. */
+    }
+    cleanup();
+  };
+  try {
+    const {
+      fonts: binding,
+      plan,
+      imageBindings,
+      width,
+      height,
+      scale,
+      createCanvas,
+      isCurrent,
+    } = request;
+    if (!binding || !fontBindings.has(binding)) return fail("ISOLATED_INVALID_INPUT");
+    const current = (): boolean => {
+      if (!alive || checking) return false;
+      checking = true;
+      operations++;
+      try {
+        return isCurrent() === true && alive && fonts?.isCurrent() === true && alive;
+      } catch {
+        return false;
+      } finally {
+        checking = false;
+        operations--;
+        cleanup();
+      }
+    };
+    fonts = binding.acquire();
+    if (!fonts || !current()) return fail("ISOLATED_STALE");
+    const result = renderIsolatedPlanFrame({
+      plan,
+      imageBindings,
+      width,
+      height,
+      scale,
+      createCanvas,
+      language: fonts.language,
+      isCurrent: current,
+      prepare: fonts.prepare,
+      execute: fonts.execute,
+    });
+    if (!result.ok) return result;
+    frame = result.frame;
+    if (!current()) return fail("ISOLATED_STALE");
+    const owned = frame;
+    const owner: IsolatedPlanFrame = {
+      present(target) {
+        if (presenting || encoding) return fail("ISOLATED_ALREADY_USED");
+        if (!current()) return fail("ISOLATED_STALE");
+        presenting = true;
+        operations++;
+        try {
+          const outcome = owned.present(target);
+          return current() ? outcome : fail("ISOLATED_STALE");
+        } catch {
+          return fail("ISOLATED_PRESENT_FAILED");
+        } finally {
+          presenting = false;
+          operations--;
+          cleanup();
+        }
+      },
+      async encode() {
+        if (presenting || encoding) return fail("ISOLATED_ALREADY_USED");
+        if (!current()) return fail("ISOLATED_STALE");
+        encoding = true;
+        operations++;
+        try {
+          const outcome = await owned.encode();
+          return current() ? outcome : fail("ISOLATED_STALE");
+        } catch {
+          return fail("ISOLATED_ENCODE_FAILED");
+        } finally {
+          encoding = false;
+          operations--;
+          cleanup();
+        }
+      },
+      release,
+    };
+    transferred = true;
+    return { ok: true, frame: Object.freeze(owner) };
+  } catch {
+    return fail("ISOLATED_RENDER_FAILED");
+  } finally {
+    if (!transferred) release();
+  }
 }
 
 /**

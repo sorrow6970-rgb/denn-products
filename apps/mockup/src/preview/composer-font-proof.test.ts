@@ -1,13 +1,506 @@
 // Supply/Canvas/FontFace fakes verify protocol only, NOT glyph coverage or native shaping.
 import { describe, expect, it, vi } from "vitest";
 import {
+  createManagedFontMeasurementSession,
   createManagedFontOwner,
   createManagedStaticFontOwner,
   type ManagedFace,
   type ManagedFontEnvironment,
+  type ManagedFontLease,
+  type ManagedFontMeasurementSession,
+  type ManagedFontRequest,
   type ManagedFontSupply,
+  type ManagedStaticFontOwner,
   type ManagedStaticFontRevision,
 } from "./composer-font-proof";
+
+function sessionHarness(bold = false) {
+  const lease = {
+    identity: {},
+    alias: `denn_00000000-0000-4000-8000-00000000000${bold ? 2 : 1}`,
+    language: "en" as "en" | "ko",
+    isCurrent: vi.fn(() => true),
+    prepare: vi.fn(() => true),
+    measure: vi.fn((_text: string, _size: number): number | null => (bold ? 20 : 10)),
+    release: vi.fn(),
+  } satisfies ManagedFontLease;
+  const owner = {
+    revision: bold ? "fp5-static-v1/dm-normal-700" : "fp5-static-v1/dm-normal-400",
+    load: vi.fn(async () => true),
+    acquire: vi.fn((_request: ManagedFontRequest): ManagedFontLease | null => lease),
+    isCurrent: vi.fn(() => true),
+    subscribe: vi.fn(() => () => {}),
+    retire: vi.fn(),
+  } satisfies ManagedStaticFontOwner;
+  const request: ManagedFontRequest = {
+    family: "Synthetic face",
+    weight: bold ? "bold" : "normal",
+    italic: false,
+    texts: ["AV To"],
+  };
+  const entry = { owner, request };
+  const measureRequest = {
+    text: "AV",
+    font: {
+      family: lease.alias,
+      weight: request.weight,
+      italic: false,
+      fallback: "sans-serif" as const,
+      sizePx: 32,
+    },
+  };
+  return { lease, owner, request, entry, measureRequest };
+}
+
+describe("spec132 independent execution borrowing", () => {
+  function setup() {
+    const h = sessionHarness();
+    const session = required(createManagedFontMeasurementSession([h.entry]));
+    let alive = true;
+    const execution = {
+      ...h.lease,
+      isCurrent: vi.fn(() => alive),
+      prepare: vi.fn(() => alive),
+      release: vi.fn(() => {
+        alive = false;
+      }),
+    };
+    h.owner.acquire.mockReturnValue(execution);
+    return { ...h, session, execution };
+  }
+
+  it("rejects returning the measurement handle as an execution handle without disposing it", () => {
+    const h = sessionHarness();
+    const session = required(createManagedFontMeasurementSession([h.entry]));
+    expect(session.borrowExecution()).toBeNull();
+    expect(h.lease.release).not.toHaveBeenCalled();
+    expect(session.isCurrent()).toBe(true);
+    session.release();
+  });
+
+  it("rejects reusing a handle held by another active execution without releasing that handle", () => {
+    const h = setup();
+    const first = required(h.session.borrowExecution());
+    expect(h.session.borrowExecution()).toBeNull();
+    expect(h.execution.release).not.toHaveBeenCalled();
+    expect(first.isCurrent()).toBe(true);
+    first.release();
+    expect(h.execution.release).toHaveBeenCalledTimes(1);
+    h.session.release();
+  });
+
+  it("borrows fresh leases with the same request/stamp; measurement release is independent", () => {
+    const h = setup();
+    const borrowed = required(h.session.borrowExecution());
+    expect(Object.isFrozen(borrowed)).toBe(true);
+    expect(h.owner.acquire).toHaveBeenCalledTimes(2);
+    expect(h.owner.acquire.mock.calls[1][0]).toBe(h.owner.acquire.mock.calls[0][0]);
+    h.session.release();
+    expect(h.lease.release).toHaveBeenCalledTimes(1);
+    expect(borrowed.isCurrent()).toBe(true);
+    expect(borrowed.prepare({} as CanvasRenderingContext2D)).toBe(true);
+    expect(h.execution.release).not.toHaveBeenCalled();
+    expect(h.session.borrowExecution()).toBeNull();
+    borrowed.release();
+    borrowed.release();
+    expect(borrowed.isCurrent()).toBe(false);
+    expect(borrowed.prepare({} as CanvasRenderingContext2D)).toBe(false);
+    expect(h.execution.release).toHaveBeenCalledTimes(1);
+    expect(h.owner.retire).not.toHaveBeenCalled();
+  });
+
+  it.each(["identity", "alias", "language"])("rejects a changed %s stamp with cleanup", (key) => {
+    const h = setup();
+    Reflect.set(h.execution, key, key === "identity" ? {} : key === "alias" ? "other" : "ko");
+    expect(h.session.borrowExecution()).toBeNull();
+    expect(h.execution.release).toHaveBeenCalledTimes(1);
+    expect(h.lease.release).not.toHaveBeenCalled();
+    h.session.release();
+  });
+
+  it.each(["null", "throw", "stale"])(
+    "contains %s acquisition without retiring measurement",
+    (mode) => {
+      const h = setup();
+      if (mode === "null") h.owner.acquire.mockReturnValue(null);
+      else if (mode === "throw")
+        h.owner.acquire.mockImplementation(() => {
+          throw new Error("secret");
+        });
+      else h.execution.isCurrent.mockReturnValue(false);
+      expect(h.session.borrowExecution()).toBeNull();
+      expect(h.session.isCurrent()).toBe(true);
+      expect(h.execution.release).toHaveBeenCalledTimes(mode === "stale" ? 1 : 0);
+      h.session.release();
+    },
+  );
+
+  it("cleans all partial execution leases when the second owner fails", () => {
+    const a = sessionHarness(),
+      b = sessionHarness(true);
+    const session = required(createManagedFontMeasurementSession([a.entry, b.entry]));
+    const first = { ...a.lease, release: vi.fn() };
+    a.owner.acquire.mockReturnValue(first);
+    b.owner.acquire.mockReturnValue(null);
+    expect(session.borrowExecution()).toBeNull();
+    expect(first.release).toHaveBeenCalledTimes(1);
+    expect(a.lease.release).not.toHaveBeenCalled();
+    session.release();
+  });
+
+  it("blocks recursive borrow acquisition", () => {
+    const h = setup();
+    h.owner.acquire.mockImplementation(() => {
+      expect(h.session.borrowExecution()).toBeNull();
+      return h.execution;
+    });
+    required(h.session.borrowExecution()).release();
+    expect(h.owner.acquire).toHaveBeenCalledTimes(2);
+    h.session.release();
+  });
+
+  it("defers measurement cleanup during acquisition and cleans unsuccessful execution handoff", () => {
+    const h = setup();
+    h.owner.acquire.mockImplementation(() => {
+      h.session.release();
+      expect(h.lease.release).not.toHaveBeenCalled();
+      return h.execution;
+    });
+    expect(h.session.borrowExecution()).toBeNull();
+    expect(h.lease.release).toHaveBeenCalledTimes(1);
+    expect(h.execution.release).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["current", "prepare"])("defers execution cleanup during %s reentry", (port) => {
+    const h = setup();
+    const borrowed = required(h.session.borrowExecution());
+    const release = () => {
+      borrowed.release();
+      expect(borrowed.isCurrent()).toBe(false);
+      expect(h.execution.release).not.toHaveBeenCalled();
+      return true;
+    };
+    if (port === "current") h.execution.isCurrent.mockImplementation(release);
+    else h.execution.prepare.mockImplementation(release);
+    expect(borrowed.prepare({} as CanvasRenderingContext2D)).toBe(false);
+    expect(h.execution.release).toHaveBeenCalledTimes(1);
+    h.session.release();
+  });
+
+  it("genuine static owner survives session release until borrow release after retirement", async () => {
+    const h = staticHarness();
+    expect(await h.owner.load()).toBe(true);
+    const session = required(
+      createManagedFontMeasurementSession([{ owner: h.owner, request: h.request }]),
+    );
+    const first = required(session.borrowExecution());
+    const second = required(session.borrowExecution());
+    first.release();
+    session.release();
+    expect(second.isCurrent()).toBe(true);
+    expect(h.ports.delete).not.toHaveBeenCalled();
+    h.owner.retire();
+    expect(second.isCurrent()).toBe(false);
+    expect(h.ports.delete).not.toHaveBeenCalled();
+    second.release();
+    expect(h.ports.delete).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("spec132 pre-acquired measurement session (fake protocol only)", () => {
+  it("routes styles through exact aliases without acquiring during repeated trial measurements", () => {
+    const normal = sessionHarness();
+    const bold = sessionHarness(true);
+    const session = required(createManagedFontMeasurementSession([normal.entry, bold.entry]));
+    expect(Object.isFrozen(session)).toBe(true);
+    expect(Object.isFrozen(session.bindings)).toBe(true);
+    expect(session.bindings.every(Object.isFrozen)).toBe(true);
+    expect(session.bindings[0]).toEqual({
+      revision: normal.owner.revision,
+      family: normal.request.family,
+      weight: "normal",
+      italic: false,
+      alias: normal.lease.alias,
+      identity: normal.lease.identity,
+      language: "en",
+    });
+    for (let index = 0; index < 3; index++) {
+      expect(session.measureText(normal.measureRequest)).toBe(10);
+      expect(session.measureText(bold.measureRequest)).toBe(20);
+    }
+    for (const h of [normal, bold]) {
+      expect(h.owner.acquire).toHaveBeenCalledTimes(1);
+      expect(h.owner.load).not.toHaveBeenCalled();
+      expect(h.owner.retire).not.toHaveBeenCalled();
+      expect(h.lease.prepare).not.toHaveBeenCalled();
+      expect(h.lease.release).not.toHaveBeenCalled();
+    }
+    session.release();
+    session.release();
+    expect(session.isCurrent()).toBe(false);
+    expect(session.measureText(normal.measureRequest)).toBeNaN();
+    expect(normal.lease.release).toHaveBeenCalledTimes(1);
+    expect(bold.lease.release).toHaveBeenCalledTimes(1);
+  });
+
+  it("snapshots and freezes request text before acquisition", () => {
+    const h = sessionHarness();
+    const texts = ["AV To"];
+    const request = { ...h.request, texts };
+    const session = required(createManagedFontMeasurementSession([{ owner: h.owner, request }]));
+    texts[0] = "changed";
+    request.family = "changed";
+    const acquired = h.owner.acquire.mock.calls[0][0];
+    expect(acquired.texts).toEqual(["AV To"]);
+    expect(Object.isFrozen(acquired.texts)).toBe(true);
+    expect(Object.isFrozen(acquired)).toBe(true);
+    expect(session.bindings[0].family).toBe("Synthetic face");
+    session.release();
+  });
+
+  it("reads indexed requests rather than caller iterators that hide every owner", () => {
+    const h = sessionHarness();
+    const entries = [h.entry];
+    const iterator = vi.fn(() => ([] as typeof entries)[Symbol.iterator]());
+    entries[Symbol.iterator] = iterator;
+    const session = required(createManagedFontMeasurementSession(entries));
+    expect(session.bindings).toHaveLength(1);
+    expect(h.owner.acquire).toHaveBeenCalledTimes(1);
+    expect(iterator).not.toHaveBeenCalled();
+    session.release();
+  });
+
+  it("reads indexed text without caller iterator substitution", () => {
+    const h = sessionHarness();
+    const texts = ["AV To"];
+    const iterator = vi.fn(() => ["substituted"][Symbol.iterator]());
+    texts[Symbol.iterator] = iterator;
+    const session = required(
+      createManagedFontMeasurementSession([{ owner: h.owner, request: { ...h.request, texts } }]),
+    );
+    expect(h.owner.acquire.mock.calls[0][0].texts).toEqual(["AV To"]);
+    expect(iterator).not.toHaveBeenCalled();
+    session.release();
+  });
+
+  it.each([
+    { family: "" },
+    { weight: "other" },
+    { italic: "false" },
+    { texts: [] },
+    { texts: [1] },
+  ])("rejects malformed request %j before acquiring", (override) => {
+    const h = sessionHarness();
+    const request = { ...h.request, ...override } as ManagedFontRequest;
+    expect(createManagedFontMeasurementSession([{ owner: h.owner, request }])).toBeNull();
+    expect(h.owner.acquire).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unknown revision before acquiring", () => {
+    const h = sessionHarness();
+    const owner = { ...h.owner, revision: "not-registered" } as unknown as ManagedStaticFontOwner;
+    expect(createManagedFontMeasurementSession([{ owner, request: h.request }])).toBeNull();
+    expect(h.owner.acquire).not.toHaveBeenCalled();
+  });
+
+  it.each([null, [], Array(7).fill(null), [{ owner: null }]])(
+    "rejects malformed or out-of-profile input %j",
+    (input) => {
+      expect(
+        createManagedFontMeasurementSession(
+          input as Parameters<typeof createManagedFontMeasurementSession>[0],
+        ),
+      ).toBeNull();
+    },
+  );
+
+  it("rejects a duplicate original style before acquisition", () => {
+    const h = sessionHarness();
+    expect(createManagedFontMeasurementSession([h.entry, h.entry])).toBeNull();
+    expect(h.owner.acquire).not.toHaveBeenCalled();
+  });
+
+  it.each(["alias", "identity", "language", "unavailable", "throw", "stale"])(
+    "releases acquired leases on %s failure",
+    (mode) => {
+      const a = sessionHarness();
+      const b = sessionHarness(true);
+      if (mode === "alias") b.lease.alias = a.lease.alias;
+      if (mode === "identity") b.lease.identity = a.lease.identity;
+      if (mode === "language") b.lease.language = "ko";
+      if (mode === "unavailable") b.owner.acquire.mockReturnValue(null);
+      if (mode === "throw")
+        b.owner.acquire.mockImplementation(() => {
+          throw new Error("private");
+        });
+      if (mode === "stale") b.lease.isCurrent.mockReturnValue(false);
+      expect(createManagedFontMeasurementSession([a.entry, b.entry])).toBeNull();
+      expect(a.lease.release).toHaveBeenCalledTimes(1);
+      expect(b.lease.release).toHaveBeenCalledTimes(
+        mode === "unavailable" || mode === "throw" ? 0 : 1,
+      );
+    },
+  );
+
+  it.each([
+    { family: "Synthetic face" },
+    { family: "foreign alias" },
+    { weight: "bold" },
+    { italic: true },
+    { fallback: "serif" },
+    { sizePx: 0 },
+    { sizePx: Number.NaN },
+    { sizePx: Number.POSITIVE_INFINITY },
+  ])("rejects a mismatched measurement font %j before measurement", (override) => {
+    const h = sessionHarness();
+    const session = required(createManagedFontMeasurementSession([h.entry]));
+    const font = { ...h.measureRequest.font, ...override } as typeof h.measureRequest.font;
+    expect(session.measureText({ ...h.measureRequest, font })).toBeNaN();
+    expect(h.lease.measure).not.toHaveBeenCalled();
+    session.release();
+  });
+
+  it.each([null, -1, Number.NaN, Number.POSITIVE_INFINITY])("rejects invalid width %s", (width) => {
+    const h = sessionHarness();
+    const session = required(createManagedFontMeasurementSession([h.entry]));
+    h.lease.measure.mockReturnValue(width);
+    expect(session.measureText(h.measureRequest)).toBeNaN();
+    session.release();
+  });
+
+  it("accepts zero width and fails the entire session when any owner becomes stale", () => {
+    const a = sessionHarness();
+    const b = sessionHarness(true);
+    const session = required(createManagedFontMeasurementSession([a.entry, b.entry]));
+    a.lease.measure.mockReturnValue(0);
+    expect(session.measureText(a.measureRequest)).toBe(0);
+    b.lease.isCurrent.mockReturnValue(false);
+    expect(session.isCurrent()).toBe(false);
+    expect(session.measureText(a.measureRequest)).toBeNaN();
+    expect(a.lease.measure).toHaveBeenCalledTimes(1);
+    session.release();
+  });
+
+  it("rejects late invalidation after measure and contains callback exceptions", () => {
+    const h = sessionHarness();
+    const session = required(createManagedFontMeasurementSession([h.entry]));
+    h.lease.measure.mockImplementation(() => {
+      h.lease.isCurrent.mockReturnValue(false);
+      return 10;
+    });
+    expect(session.measureText(h.measureRequest)).toBeNaN();
+    h.lease.isCurrent.mockImplementation(() => {
+      throw new Error("private");
+    });
+    expect(session.isCurrent()).toBe(false);
+    expect(session.measureText(h.measureRequest)).toBeNaN();
+    session.release();
+  });
+
+  it.each(["measure", "current", "getter"])(
+    "defers cleanup across reentrant release in %s",
+    (mode) => {
+      const h = sessionHarness();
+      const session = required(createManagedFontMeasurementSession([h.entry]));
+      const releaseInside = () => {
+        session.release();
+        expect(session.isCurrent()).toBe(false);
+        expect(h.lease.release).not.toHaveBeenCalled();
+      };
+      let request = h.measureRequest;
+      if (mode === "measure")
+        h.lease.measure.mockImplementation(() => {
+          releaseInside();
+          return 10;
+        });
+      if (mode === "current")
+        h.lease.isCurrent.mockImplementation(() => {
+          releaseInside();
+          return true;
+        });
+      if (mode === "getter")
+        request = {
+          ...request,
+          get text() {
+            releaseInside();
+            return "AV";
+          },
+        };
+      expect(session.measureText(request)).toBeNaN();
+      expect(h.lease.release).toHaveBeenCalledTimes(1);
+      if (mode !== "measure") expect(h.lease.measure).not.toHaveBeenCalled();
+      session.release();
+      expect(h.lease.release).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("prevents nested measurement/current recursion and contains request getter throws", () => {
+    const h = sessionHarness();
+    const session = required(createManagedFontMeasurementSession([h.entry]));
+    h.lease.isCurrent.mockImplementation(() => {
+      expect(session.isCurrent()).toBe(false);
+      return true;
+    });
+    h.lease.measure.mockImplementation(() => {
+      expect(session.measureText(h.measureRequest)).toBeNaN();
+      return 10;
+    });
+    expect(session.measureText(h.measureRequest)).toBe(10);
+    expect(h.lease.measure).toHaveBeenCalledTimes(1);
+    expect(
+      session.measureText({
+        ...h.measureRequest,
+        get text(): string {
+          throw new Error("private");
+        },
+      }),
+    ).toBeNaN();
+    session.release();
+  });
+
+  it("continues releasing other leases when one release throws", () => {
+    const a = sessionHarness();
+    const b = sessionHarness(true);
+    const session = required(createManagedFontMeasurementSession([a.entry, b.entry]));
+    b.lease.release.mockImplementation(() => {
+      throw new Error("private");
+    });
+    session.release();
+    expect(a.lease.release).toHaveBeenCalledTimes(1);
+    expect(b.lease.release).toHaveBeenCalledTimes(1);
+    expect(session.isCurrent()).toBe(false);
+  });
+
+  it("holds independent leases for separate sessions with the real static owner protocol", async () => {
+    const h = staticHarness();
+    expect(await h.owner.load()).toBe(true);
+    const first = required(
+      createManagedFontMeasurementSession([{ owner: h.owner, request: h.request }]),
+    );
+    const second = required(
+      createManagedFontMeasurementSession([{ owner: h.owner, request: h.request }]),
+    );
+    const request: Parameters<ManagedFontMeasurementSession["measureText"]>[0] = {
+      text: "AV",
+      font: {
+        family: first.bindings[0].alias,
+        weight: "normal",
+        italic: false,
+        fallback: "sans-serif",
+        sizePx: 32,
+      },
+    };
+    expect(first.measureText(request)).toBe(10);
+    expect(first.measureText({ ...request, text: "unsupported" })).toBeNaN();
+    first.release();
+    expect(second.measureText(request)).toBe(10);
+    h.owner.retire();
+    expect(second.measureText(request)).toBeNaN();
+    expect(h.ports.delete).not.toHaveBeenCalled();
+    second.release();
+    expect(h.ports.delete).toHaveBeenCalledTimes(1);
+  });
+});
 
 function required<T>(value: T | null): T {
   if (value === null) throw new Error("Expected test capability");

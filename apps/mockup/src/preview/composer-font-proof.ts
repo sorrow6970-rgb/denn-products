@@ -1,3 +1,5 @@
+import type { TextMeasurePort } from "../canvas/productPlan";
+
 /** Spec132 internal, opt-in owner. No default font, DOM, network or global registry. */
 export interface ManagedFontSupply {
   readonly bytes: ArrayBuffer;
@@ -121,6 +123,337 @@ const staticRecords = Object.freeze({
 export type ManagedStaticFontRevision = keyof typeof staticRecords;
 export interface ManagedStaticFontOwner extends ManagedFontOwner {
   readonly revision: ManagedStaticFontRevision;
+}
+
+export interface ManagedMeasurementBinding {
+  readonly revision: ManagedStaticFontRevision;
+  readonly family: string;
+  readonly weight: "normal" | "bold";
+  readonly italic: boolean;
+  readonly alias: string;
+  readonly identity: object;
+  readonly language: "en" | "ko";
+}
+
+export interface ManagedFontMeasurementSession {
+  readonly bindings: readonly ManagedMeasurementBinding[];
+  readonly measureText: TextMeasurePort;
+  isCurrent(): boolean;
+  /** Call at execution time outside React render; the returned borrow owns independent leases. */
+  borrowExecution(): ManagedFontExecutionBorrow | null;
+  release(): void;
+}
+
+export interface ManagedFontExecutionBorrow {
+  readonly language: "en" | "ko";
+  isCurrent(): boolean;
+  prepare(context: CanvasRenderingContext2D): boolean;
+  release(): void;
+}
+
+function borrowExecutionFonts(
+  entries: readonly { owner: ManagedStaticFontOwner; request: ManagedFontRequest }[],
+  bindings: readonly ManagedMeasurementBinding[],
+  measurementLeases: readonly ManagedFontLease[],
+  activeExecutionLeases: Set<ManagedFontLease>,
+  parentCurrent: () => boolean,
+): ManagedFontExecutionBorrow | null {
+  const leases: ManagedFontLease[] = [];
+  let alive = true;
+  let operations = 0;
+  let checking = false;
+  let preparing = false;
+  let handedOff = false;
+  let cleaned = false;
+  const cleanup = () => {
+    if (alive || operations !== 0 || cleaned) return;
+    cleaned = true;
+    for (let index = leases.length - 1; index >= 0; index--) {
+      try {
+        leases[index].release();
+      } catch {
+        // Finish every independent borrow even if a trusted cleanup port throws.
+      } finally {
+        activeExecutionLeases.delete(leases[index]);
+      }
+    }
+  };
+  const release = () => {
+    alive = false;
+    cleanup();
+  };
+  const current = (): boolean => {
+    if (!alive || checking) return false;
+    checking = true;
+    operations++;
+    try {
+      for (const lease of leases) {
+        if (!alive || lease.isCurrent() !== true || !alive) return false;
+      }
+      return alive;
+    } catch {
+      return false;
+    } finally {
+      checking = false;
+      operations--;
+      cleanup();
+    }
+  };
+  try {
+    if (!parentCurrent()) return null;
+    for (let index = 0; index < entries.length; index++) {
+      if (!parentCurrent()) return null;
+      const { owner, request } = entries[index];
+      const lease = owner.acquire(request);
+      if (!lease) return null;
+      // A trusted owner must transfer a NEW handle, not release another operation's handle.
+      if (measurementLeases.includes(lease) || activeExecutionLeases.has(lease)) return null;
+      leases.push(lease);
+      activeExecutionLeases.add(lease);
+      const expected = bindings[index];
+      if (
+        lease.identity !== expected.identity ||
+        lease.alias !== expected.alias ||
+        lease.language !== expected.language ||
+        !current() ||
+        !parentCurrent()
+      )
+        return null;
+    }
+    const borrowed: ManagedFontExecutionBorrow = {
+      language: bindings[0].language,
+      isCurrent: current,
+      release,
+      prepare(context) {
+        if (!alive || preparing) return false;
+        preparing = true;
+        operations++;
+        try {
+          if (!current()) return false;
+          for (const lease of leases) {
+            if (!current() || lease.prepare(context) !== true || !current()) return false;
+          }
+          return current();
+        } catch {
+          return false;
+        } finally {
+          preparing = false;
+          operations--;
+          cleanup();
+        }
+      },
+    };
+    if (!parentCurrent() || !current()) return null;
+    handedOff = true;
+    return Object.freeze(borrowed);
+  } catch {
+    return null;
+  } finally {
+    if (!handedOff) release();
+  }
+}
+
+/**
+ * S46: create outside React render, from trusted, already-ready static owners. This does not
+ * load fonts or attest a plan. Render/trial/probe borrow the existing session without acquiring
+ * resources; a future print binding must independently hold its leases until encode settles.
+ */
+export function createManagedFontMeasurementSession(
+  input: readonly {
+    readonly owner: ManagedStaticFontOwner;
+    readonly request: ManagedFontRequest;
+  }[],
+): ManagedFontMeasurementSession | null {
+  const leases: ManagedFontLease[] = [];
+  const activeExecutionLeases = new Set<ManagedFontLease>();
+  const bindings: ManagedMeasurementBinding[] = [];
+  let alive = true;
+  let operations = 0;
+  let checking = false;
+  let measuring = false;
+  let borrowing = false;
+  let handedOff = false;
+  let cleaned = false;
+  const cleanup = () => {
+    if (alive || operations !== 0 || cleaned) return;
+    cleaned = true;
+    for (let index = leases.length - 1; index >= 0; index--) {
+      try {
+        leases[index].release();
+      } catch {
+        // A cleanup exception must not leak the remaining session-owned leases.
+      }
+    }
+  };
+  const release = () => {
+    alive = false;
+    cleanup();
+  };
+  const current = (): boolean => {
+    if (!alive || checking) return false;
+    checking = true;
+    operations++;
+    try {
+      for (const lease of leases) {
+        if (!alive || lease.isCurrent() !== true || !alive) return false;
+      }
+      return alive;
+    } catch {
+      return false;
+    } finally {
+      checking = false;
+      operations--;
+      cleanup();
+    }
+  };
+  try {
+    if (!Array.isArray(input)) return null;
+    const count = input.length;
+    if (!Number.isInteger(count) || count < 1 || count > 6) return null;
+    // Snapshot every request before acquisition; caller edits cannot expand the borrowed corpus.
+    // Do not use Array.from/map: caller iterators/species must not replace indexed data.
+    const entries: {
+      owner: ManagedStaticFontOwner;
+      revision: ManagedStaticFontRevision;
+      request: ManagedFontRequest;
+    }[] = [];
+    for (let index = 0; index < count; index++) {
+      const entry: { owner: ManagedStaticFontOwner; request: ManagedFontRequest } = input[index];
+      const owner = entry.owner;
+      const revision = owner.revision;
+      const request = entry.request;
+      const family = request.family;
+      const weight = request.weight;
+      const italic = request.italic;
+      const sourceTexts = request.texts;
+      if (
+        typeof revision !== "string" ||
+        !Object.hasOwn(staticRecords, revision) ||
+        typeof family !== "string" ||
+        family.length === 0 ||
+        (weight !== "normal" && weight !== "bold") ||
+        typeof italic !== "boolean" ||
+        !Array.isArray(sourceTexts)
+      )
+        throw new Error("INVALID_MEASUREMENT_SESSION");
+      const textCount = sourceTexts.length;
+      if (!Number.isSafeInteger(textCount) || textCount < 1)
+        throw new Error("INVALID_MEASUREMENT_SESSION");
+      const texts: string[] = [];
+      for (let textIndex = 0; textIndex < textCount; textIndex++) {
+        const text = sourceTexts[textIndex];
+        if (typeof text !== "string") throw new Error("INVALID_MEASUREMENT_SESSION");
+        texts.push(text);
+      }
+      entries.push({
+        owner,
+        revision,
+        request: Object.freeze({ family, weight, italic, texts: Object.freeze(texts) }),
+      });
+    }
+    for (const [index, entry] of entries.entries()) {
+      const { family, weight, italic } = entry.request;
+      if (
+        entries
+          .slice(0, index)
+          .some(
+            ({ request }) =>
+              request.family === family && request.weight === weight && request.italic === italic,
+          )
+      )
+        return null;
+    }
+    for (const { owner, revision, request } of entries) {
+      const lease = owner.acquire(request);
+      if (!lease) return null;
+      leases.push(lease);
+      const { identity, alias, language } = lease;
+      if (
+        typeof identity !== "object" ||
+        identity === null ||
+        typeof alias !== "string" ||
+        !/^denn_[a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}$/.test(alias) ||
+        (language !== "en" && language !== "ko") ||
+        bindings.some(
+          (binding) =>
+            binding.identity === identity ||
+            binding.alias === alias ||
+            binding.language !== language,
+        ) ||
+        !current()
+      )
+        return null;
+      bindings.push(
+        Object.freeze({
+          revision,
+          family: request.family,
+          weight: request.weight,
+          italic: request.italic,
+          identity,
+          alias,
+          language,
+        }),
+      );
+    }
+    if (!current()) return null;
+    const session: ManagedFontMeasurementSession = {
+      bindings: Object.freeze(bindings),
+      isCurrent: current,
+      release,
+      borrowExecution() {
+        if (measuring || checking || borrowing || !current()) return null;
+        borrowing = true;
+        operations++;
+        try {
+          return borrowExecutionFonts(entries, bindings, leases, activeExecutionLeases, current);
+        } finally {
+          borrowing = false;
+          operations--;
+          cleanup();
+        }
+      },
+      measureText(request) {
+        if (!alive || measuring) return Number.NaN;
+        measuring = true;
+        operations++;
+        try {
+          if (!current()) return Number.NaN;
+          const text = request.text;
+          const font = request.font;
+          const { family, weight, italic, fallback, sizePx } = font;
+          if (
+            typeof text !== "string" ||
+            fallback !== "sans-serif" ||
+            !Number.isFinite(sizePx) ||
+            sizePx <= 0 ||
+            !current()
+          )
+            return Number.NaN;
+          const index = bindings.findIndex(
+            (binding) =>
+              binding.alias === family && binding.weight === weight && binding.italic === italic,
+          );
+          if (index < 0) return Number.NaN;
+          const width = leases[index].measure(text, sizePx);
+          return current() && typeof width === "number" && Number.isFinite(width) && width >= 0
+            ? width
+            : Number.NaN;
+        } catch {
+          return Number.NaN;
+        } finally {
+          measuring = false;
+          operations--;
+          cleanup();
+        }
+      },
+    };
+    handedOff = true;
+    return Object.freeze(session);
+  } catch {
+    return null;
+  } finally {
+    if (!handedOff) release();
+  }
 }
 
 /** Only the finite S42 synthetic corpus; not general customer text/shaping certification. */
