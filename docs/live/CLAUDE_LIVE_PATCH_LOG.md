@@ -9999,3 +9999,100 @@ plan/index.ts는 status에 남지만 content diff가 없어 별도로 hash 검�
 Git EOL/global ignore 권한 경고는 유지했다. 이 검사는 포괄적 secret 보안 감사를 의미하지 않는다.
 STATE/NEXT/CURRENT/live4문서에 이 확인 결과를 후속 문서 커밋으로 기록한다.
 132 부분 구현/기존 WebKit3FAIL 유지, 재시험/추가 구현/배포/자동화0.
+
+## 2026-10-02 — 스펙132 재개 / S46 측정 세션 구현·자체검증
+
+사용자 '현재상태 검토하고 이어서하자'. 기준 cc013c4, 보호/user23만 dirty인 시작 상태 확인.
+S45 호출부를 대조하고 S46의 선행 측정 세션 계약을 작성한 뒤 기존 owner.ts/test2파일만 구현했다.
+실제 경로: apps/mockup/src/preview/composer-font-proof.ts 및 composer-font-proof.test.ts.
+준비된 static owner 사전 acquire, frozen revision/family/style/alias/identity binding,
+measure 전후 현재성, 부분 실패·예외 cleanup, 재진입 release의 논리 무효화/지연 해제를 추가했다.
+load/fetch/retire/새Canvas0; 렌더에서 호출하지 않는 것은 향후 실제 React 연결에서 별도 증명해야 한다.
+
+검증:
+- node node_modules/vitest/vitest.mjs run apps/mockup/src/preview/composer-font-proof.test.ts apps/mockup/src/canvas/font-bound-execution.test.ts → exit0,173/173=98+41+34.
+- node scripts/check.mjs → exit0,format/lint380,7typecheck,125unit파일3930/3930=3889+41,2build PASS.
+- 자체검토에서 caller iterator가 빈 request/다른 text를 공급하는 반례2건 발견. 먼저2FAIL/137PASS
+  재현 후 length 단일 읽기/index snapshot으로 보완. 중간 TS2322/2352 시험 타입 오류 수정 후 재검증.
+- native/E2E/전체Chromium/실기기/emulator 이번 실행0.9월14일12/12/9PASS3FAIL·회귀138은 과거값.
+  session helper는 기본 앱/native fixture에서 아직 미호출이며 이 단위의unit PASS가서버/native 증명은 아니다.
+- 고객 entry346959bytes SHA6182B4B409ACFC8B44550467F6942ED625538BCFB59E3C37AE57A14CE93ACE3C,
+  고객 CSS22675bytes SHA6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81,
+  admin entry294910bytes SHA2A25F27A178E6CC8877A46D515F2EB32DDED848F26DAA87B791139F7853AEF21 불변.
+  build gzip 각각106.39/5.15/91.40kB. 기존 큰 chunk 및 Git EOL/global ignore 권한 경고 유지.
+- 보호23SHA불변,정확code2+기존docs8만 변경,staged0/diff--checkPASS.
+  4183/4184/4185 LISTENING0,새temp/브라우저/타프로세스 종료0.
+- HEAD cc013c4=로컬origin추적0/0;새fetch/원격조회/commit/push0.
+
+READY_FOR_CODEX / SPEC132_PLAN_BINDING_CONTRACT_REVIEW; SAME_CODEX 자체검수,독립검수아님.
+131 DONE/132부분구현. 고정 owner→공유plan 시험→측정 session까지 진행했지만
+실제Composer/source/capture/asyncprint 결합과 기존3FAIL 증명대체 검수는 남았다.
+다음은 S46 끝의 정확plan binding/projection/commit 수명 계약 검토.새Founder 결정질문 없음.
+운영/배포/자산취득·변환/설치/자동화/다음스펙0. 전체분모미확정으로진척률%를추정하지않는다.
+
+## 2026-10-02 — 스펙132 S47~S48 plan 결속·private frame async 수명 구현
+
+사용자 '응 다음 진행해'. 기준 cc013c4,직전 S46 code2+docs8 및 보호/user23 변경 보존.
+S47과S48 계약을 먼저 작성한 후 승인35파일 중 아래6개만 구현/검증했다:
+- apps/mockup/src/preview/composer-font-proof.ts
+- apps/mockup/src/preview/composer-font-proof.test.ts
+- apps/mockup/src/preview/composer-room-source.ts (신규)
+- apps/mockup/src/preview/composer-room-source.test.ts (신규)
+- apps/mockup/src/canvas/font-bound-execution.ts
+- apps/mockup/src/canvas/font-bound-execution.test.ts
+위6개와 기존132 계약/STATE/NEXT/CURRENT/review/handoff/FP1/live8문서만 이번 작업 범위다.
+
+geometry/customer text 명시 snapshot→active 원래family/style의 alias projection→같은 공유builder
+→소유 final plan 전체 freeze→정확 plan identity에만 bound execution을 추가했다.
+측정 session과 실행별 font lease를 분리하며 stamp 일치/부분 실패 cleanup/재진입 해제를 검사한다.
+측정 handle 및 다른 활성 execution handle 재사용을 거부하여 한 실행이 다른 실행을 해제하지 못하게 했다.
+기존 shared executor/native receiver는 유지하면서 매 호출·속성 전후 current를 검사한다.
+combined private frame은 같은 모듈의 실제 shared-executor binding만 받고 구조 위조 binding을 거부한다.
+private primitive + font borrow는 draw/present/async encode까지 함께 소유한다.
+release의 논리 무효화는 즉시,physical font/bitmap cleanup은 encode settlement까지 지연한다.
+늦은 Blob 성공 인계/URL/download/retry0. 무응답 native encode의 절대 상한은 증명하지 않는다.
+
+검증:
+- 표적: node node_modules/vitest/vitest.mjs run apps/mockup/src/preview/composer-font-proof.test.ts apps/mockup/src/preview/composer-room-source.test.ts apps/mockup/src/canvas/font-bound-execution.test.ts apps/mockup/src/canvas/productPlan.test.ts
+  → 최종exit0,4파일343/343=직전 helper173+기존 productPlan99+새71.
+- node scripts/check.mjs → 최종exit0,format/lint382,7typecheck,126unit파일4001/4001=3930+71,2build PASS.
+  중간 lint unused import 및 TypeScript export/discriminant/fake callback return type 오류 수정 후
+  전체 최종게이트를 재실행했다. 자체검토의 handle 재사용/구조 위조 차단에도 회귀를 더하고 재실행했다.
+  같은 Codex 자체검수이며 별도 독립검수나 실제 glyph/React/native 통합 PASS가 아니다.
+- 이번 native/E2E/전체Chromium/실기기/emulator 실행0. 새 API는 기본 앱/native entry에서 미호출.
+  9월14일 Chromium12/Firefox12/WebKit9PASS3FAIL·기존 회귀138은 과거값이며 실패삭제/skip0.
+- 고객 entry346959bytes SHA6182B4B409ACFC8B44550467F6942ED625538BCFB59E3C37AE57A14CE93ACE3C,
+  고객 CSS22675bytes SHA6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81,
+  admin entry294910bytes SHA2A25F27A178E6CC8877A46D515F2EB32DDED848F26DAA87B791139F7853AEF21 불변。
+  build gzip106.39/5.15/91.40kB,기존 큰chunk 및Git EOL/global ignore 권한 경고 유지.
+- 보호/user23 SHA불변,code/test6+docs8만 변경,staged0,git diff --check PASS.
+  Rules/config/package/lockfile 및 보호파일의 이번 추가 변경0;pnpm-workspace.yaml 기존user3줄만 보존.
+- 포트4183/4184/4185 상태는 NOT VERIFIED: Get-NetTCPConnection -ErrorAction Stop가 접근 거부됐다.
+  앞선 SilentlyContinue 조회의 빈 출력을 잔류0으로 주장하지 않는다. 이번 서버/브라우저 실행0,
+  타프로세스 종료/권한 우회/추가 승인 요청0. 과거 세션의 포트0 결과와 구분한다.
+- HEAD cc013c4=로컬origin tracking0/0,새fetch/원격조회/stage/commit/push0.
+
+READY_FOR_CODEX / SPEC132_REACT_SOURCE_COMMIT_CONTRACT_REVIEW.
+131 DONE/132부분구현. 내부 plan·private frame async 수명까지 진행했고 실제Composer/131source/
+102capture/print commit 연결과 기존3FAIL 증명대체 검수는 남았다. 전체완료율분모미확정/%추정0.
+다음 일반기술범위는 실제호출부/이미지proof/React commit과 capture 경계 대조를 계약에 고정하는 것.
+새 Founder 제품결정 pending NONE. 실제운영/배포/자산취득·변환/설치/자동화/다음번호스펙0.
+
+## 2026-10-02 — 집 재개 checkpoint 전송 준비
+
+사용자 직접 요청: '집에가서 이어할수있게 커밋푸시하고 핸드오프 ... 프롬포트'.
+checkpoint에 한하여 부분132 전송보류 해제,기존WebKit3FAIL/132미완/실기기·운영미검증은 유지.
+기본 sandbox의 원격443 조회실패 후 정상 승인 권한으로 ls-remote하여 bfa0da4를 확인했다.
+fetch결과 로컬0ahead/1behind; 원격변경은 승인문서4개뿐이었다. 소스충돌0.
+task14파일만 선택 stash `eda18e61086df6ab46c7b67db72c19e415070a6d`에 임시보관했다.
+cherry-pick --ff로 원격1커밋을 그대로 반영(새merge커밋/이력재작성0),stash apply로 task복원.
+STATE/NEXT/CURRENT의 예상문서충돌3개는 양쪽 이력과9월30일 위임정본을 모두 보존하여 해결했다.
+선택stash는 복구가능하게 남기며 보호/user23을 stash/복원/stage/commit하지 않았다.
+원격heartbeat기록은 이력으로보존,현재앱자동화는 NOT VERIFIED/조회·설정변경0.
+
+check재실행 exit0:format/lint382,7typecheck,126unit파일4001/4001,2build PASS.
+동기화후 표적4파일343/343 exit0.보호/user23SHA재확인불변,새native/E2E/포트조회0.
+소스·테스트6개만 커밋: `1b257489004326568ffb8c0c3c46a59cbebb7c6d`.
+별도 기존doc8에 집재개범위·금지경계·ignored폰트위치·도구/asset STOP 및 checkpoint권한을 기록했다.
+문서commit/push/원격검증은 다음 전송완료 기록에서 보고한다.현재132미완,READY_FOR_CODEX.
+다음계약 SPEC132_REACT_SOURCE_COMMIT_CONTRACT_REVIEW;오늘 신규제품구현/자동화/배포0.

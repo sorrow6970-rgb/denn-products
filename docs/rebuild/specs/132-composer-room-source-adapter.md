@@ -1,7 +1,8 @@
 # 132 — 실제 Composer의 룸 source adapter
 
 2026-09-11 / 기준 e0f69e7=origin·0/0. 131 code595cb6a/docs e0f69e7 DONE.
-상태: READY_FOR_CODEX / PARTIALLY_IMPLEMENTED (2026-09-14). FP-3/S-28/FP-4/FP-5 및 FP-6 계약작성 승인 유효.
+상태: READY_FOR_CODEX / PARTIALLY_IMPLEMENTED (2026-10-02). FP-3/S-28/FP-4/FP-5 및 FP-6 계약작성 승인 유효.
+최신 S46: 측정 세션 helper/test 구현,표적173/공통3930 PASS. 실제 plan/React/print 연결·native 새 검증은 미완.
 최신 S43~S45: 고정owner 구현과 공유plan 결합 검증PASS;최종check3889,Chromium12/Firefox12/WebKit9PASS3FAIL.
 기존3FAIL보존,실제Composer/source/capture/print 통합 미완. 다음은plan-bound 수명 계약 검토(재승인 질문0).
 사용자 `응 승인,`으로 공유 빌더 수정에 따른 admin 번들 변화 허용. 아래 S-28 STOP은 승인 전 이력이다.
@@ -2311,3 +2312,182 @@ check3889/3889=3849+40(format/lint380·7typecheck·125unit파일·2build) PASS.
 그때만 정확 근거와 질문을 남긴다. 기존3FAIL은 통합·증명대체 검수 전 그대로 보존한다.
 131 DONE/132부분구현 유지. 고정폰트 준비→공유plan 결합 검증까지 진행했으며 실제Composer/source/
 capture/print 연결과실기기·운영전환은남았다. 확정된 전체 작업량 분모가 없어 전체%를 새로 추정하지 않는다.
+
+### S-46. 재개 / 측정 세션의 첫 구현 계약 — 2026-10-02
+
+기준 cc013c4(82343e9 부분 구현 checkpoint 포함). 사용자 '현재상태 검토하고 이어서하자'.
+131 DONE/132 부분 구현 및 기존 WebKit3FAIL 유지. 이번 계약은 S45 전체 연결 완료가 아니라
+그 선행 조건인 측정 세션만 다룬다. 같은 Codex의 코드 대조·계약 자체검토, Founder 신규 결정0.
+정확 코드 범위: apps/mockup/src/preview/composer-font-proof.ts 및 같은 .test.ts 두 파일.
+문서는 기존8개 범위 안에서만 갱신한다. 기본 앱/Composer/print/공유 API/보호 경로 변경0.
+
+#### 수명·호출 계약
+
+- createManagedFontMeasurementSession은 이미 준비된 고정 owner와 명시 요청 목록만 받는다.
+  각 항목은 {owner, request}; revision은 owner.revision에서 캡처한다. 임의 byte/descriptor/검증 boolean 입력0.
+- 생성은 향후 effect/명시적 수명 소유자가 render 밖에서 실행한다. 생성 중 기존 owner.acquire를
+  항목당 한 번만 호출하며 load/retire/fetch/DOM 생성은 호출하지 않는다. render/trial/probe의 측정은
+  이미 확보된 lease만 사용한다. 이 helper 자체로 React의 실제 호출 위치가 증명되는 것은 아니다.
+- 1~6개의 기존 static revision만 허용. 입력 요청을 복사하고 family/weight/italic/문자열을 검사한다.
+  같은 원래 family+weight+italic 중복, alias/identity 중복, 서로 다른 language 혼합은 거부한다.
+  혼합 language 지원이나 기존 제품 지원 축소의 결정이 아니라 이 로컬 단일 context 세션의 거부 경계다.
+- 세션은 frozen bindings(revision, 원래family/weight/italic, alias, identity, language)와
+  TextMeasurePort 호환 measureText, isCurrent, release를 제공한다. native face/bytes/owner는 노출0.
+- measureText는 정확 alias/weight/italic, sans-serif fallback, 양수 유한 크기와 문자열만 수용한다.
+  요청 문자열/fragment의 증명은 기존 owner.measure가 담당한다. family fallback/정규화/새 acquire0.
+  잘못된 입력·예외·부정/비유한 폭·재진입·현재성 상실은 NaN으로 builder의 기존 실패 경로에 전달한다.
+- 모든 lease의 현재성을 측정 전후 확인한다. 어느 하나라도 stale이면 세션 전체 실패.
+  release는 먼저 논리 무효화하고 외부 current/measure 호출이 끝난 뒤 자기 lease를 각각 한 번 해제한다.
+  일부 acquire 실패/throw/late validation 실패 때도 확보한 lease 전부 해제, 한 release 예외가 나머지를 막지 않는다.
+- 일반 문구 편집은 측정 요청만 변경하며 세션/owner를 retire하지 않는다. 소유자 교체/unmount에서
+  세션을 해제한다. 인쇄는 나중에 별도 plan-bound lease를 callback settlement까지 유지해야 한다.
+  세션.release를 print 수명의 대체물로 사용하지 않는다. 현재 세션 API는 plan/capture/print를 실행하지 않는다.
+
+#### 검증과 다음 순서
+
+합성 시험: 복수 style·alias routing, snapshot 불변, 반복 측정 acquire0, 부분 실패 cleanup,
+throw/invalid/duplicate/mixed language, 요청 getter 및 current/measure 중 release·재진입,
+부정·NaN·Infinity 폭, stale 전후, 여러 session 독립·멱등 release. fake는 native glyph/pixel 증명이 아니다.
+기존 owner/primitive 표적과 공통 check를 실행하며 보호23/정확 경로/번들SHA/diff를 대조한다.
+이2파일은 기본 앱 및 native fixture에서 새 API를 아직 호출하지 않으므로 이번 단계의 native/E2E는
+기존9월14일 결과와 분리하고 재실행하지 않는다. 실제 연결 시 S26의3엔진/회귀를 반드시 재실행한다.
+후속은 runtime geometry projection→최종 plan identity/내용 증명→동일 commit snapshot→private display/
+102 surface/async print 연결의 정확 계약 및 구현이다. 세션만으로 이 단계들이 완료됐다고 기록하지 않는다.
+전체132 게이트는 미충족이므로 자동 완료/자동 전송/다음 스펙0. 예약 반복 작업도 생성하지 않는다.
+
+#### S46 구현 결과 / 다음 계약 검토
+
+createManagedFontMeasurementSession 및 immutable bindings/measureText/isCurrent/release 구현.
+기존2파일 변경. request 배열과 text 배열의 caller iterator가 내용을 바꿔치기하는2시험을 추가해
+수정 전2FAIL/137PASS 재현 후 길이 단일 캡처+index 직접 읽기로 보완했다.
+중간 generator return/type narrowing 관련 TypeScript 오류를 수정했고 최종 공통게이트를 다시 실행했다.
+최종 표적173/173(기존 owner98+새session41+primitive34),unit3930/3930(3889+41),125파일,
+format/lint380·7typecheck·2build PASS. 동일 Codex 자체검수, 실제 폰트/React 통합 증명은 아니다.
+새 helper는 아직 호출부와 연결하지 않았으며 이번 native/E2E 미실행. 기존3FAIL 유지.
+고객 entry346959bytes/gzip106.39kB, CSS22675bytes/gzip5.15kB,
+admin entry294910bytes/gzip91.40kB; S44의3개SHA 모두 그대로다. 큰 chunk 경고는 숨기지 않았다.
+보호23SHA 불변, 허용code2+docs8만 변경,staged0/diff--checkPASS,4183/4184/4185 LISTENING0.
+새 temp/browser/emulator0. HEAD cc013c4=로컬origin추적0/0,새원격조회/stage/commit/push0.
+
+다음 SPEC132_PLAN_BINDING_CONTRACT_REVIEW에서는 session.bindings를 이용한 사전 geometry projection,
+probe/trial/final에 동일 session 사용, 최종plan에 대한 정확 객체 identity+runtime 내용 불변 증명을
+먼저 설계한다. 현재 binding 필드 목록만으로 실제 plan의 provenance를 증명했다고 하지 않는다.
+새 내부 helper는 승인목록의 composer-room-source.ts/test 또는 기존 font-bound-execution.ts/test 안에서
+정확 역할을 고정한 뒤 구현한다. plan을 사후 clone/alias 치환하거나 readonly만으로 신뢰하지 않는다.
+ordinary edit 동안 print lease 독립 유지, effect/commit cleanup과 owner retirement 구분을 시험한다.
+실제 React hookup 전 중단 render/no consumer I/O0/child-first commit의 정확 수명 계약을 선행한다.
+추가 Founder 결정은 현재 없음. 전체132 완료·운영 폰트 공급·실기기·배포는 계속 미완/금지다.
+
+### S-47. 최종 plan 생성·독립 실행 차용 계약 — 2026-10-02
+
+S46 위에 다음 연결을 구현한다. 같은 Codex 기술 검토, 기존 FP3/FP6 범위.
+코드6파일: composer-font-proof.ts/test, 새 composer-room-source.ts/test,
+canvas/font-bound-execution.ts/test(모두 S24 승인35 목록). 문서는 기존8개.
+
+- 새 buildManagedFrameProductPlan은 이미 검증된 frame geometry 및 customer text를 필드별 snapshot한다.
+  활성 문구 zone의 원래 family/weight/italic를 session.bindings에 정확히 대응시키고 별도 geometry의
+  fontFamily만 owner alias로 projection한다. 원래 geometry/catalog/map을 변경하지 않는다.
+  placeholder는 실행 입력에 넣지 않는다. 비활성 문구에는 font 공급을 요구하지 않는다.
+- 같은 기존 buildFrameProductPlan과 session.measureText로 plan을 생성한다. 외부 builder/plan 주입0.
+  생성 전후 session current 확인, 활성 문구의 모든 draw-text alias/style 확인 후 helper가 소유한
+  새 builder plan의 plain 객체/배열 전체를 deep-freeze한다. 값·줄·좌표·alias를 사후 재작성하지 않는다.
+  plan 내용 불변은 readonly 타입 대신 이 소유 객체의 runtime freeze로 강제한다. caller plan을
+  받아 동결하는 API가 아니다. 성공 반환은 정확 plan과 그 plan에만 결속된 FontBoundExecution이다.
+- 측정 세션에 borrowExecution을 추가한다. 생성 시 캡처한 owner/request를 새로 acquire하고
+  alias/identity/language가 측정 때 값과 같은지 전부 확인한다. 각 실행 차용은 독립 lease를 소유한다.
+  실패하면 부분 차용도 전부 해제한다. 새 borrow는 live measurement session에서만 가능하다.
+  이미 취득한 execution lease는 session.release 후에도 owner가 current이면 유지하며,
+  owner retire/오염/unmount에 대한 owner retirement가 발생하면 결과 성공 인계를 차단한다.
+- 실행 차용은 isCurrent/prepare/execute/release만 노출한다. prepare는 private native context의
+  프로필을 확인하며 scale을 변경하지 않는다. execute는 정확 bound plan만 허용하고 기존 shared
+  executor에 같은 plan 및 caller imageBindings를 전달한다. 외부 executor를 제품 proof로 주입0.
+  current/prepare/shared draw 전후 실패는 안전 코드만 반환. release 재진입 때 논리 무효화 후
+  외부 실행이 끝날 때까지 자기 font lease 물리 해제를 미룬다. 이미 일부 그린 실패는 성공0이다.
+- binding은 geometry/plan만 결속한다. image binding identity·130 proof·131 source·React commit
+  결속은 다음 연결 범위이며 여기서 완료로 기록하지 않는다. 일반 문구 편집의 새 plan 생성은
+  같은 session/owner를 retire하지 않는다. 이전 클릭의 plan/실행 lease를 유지한다.
+- 지금은 helper/fake만 연결한다. 실제 Composer/surface/print UI에는 아직 적용하지 않는다.
+  future print는 borrow를 draw부터 async encode settlement까지 보유하고 URL/download 직전 current를
+  다시 확인한다. 기존 isolated primitive의 frame release와 font release를 하나의 owner로 묶는 연결을
+  다음 단계에서 검증한다. native context 이외 capture102 capability를 임의 Canvas로 가정하지 않는다.
+
+합성 필수 행렬: 원래 geometry 불변/placeholder0/없는 family 실패/정확 style/최종 wrapping,
+runtime plan nested mutation 거부/동일 내용의 foreign plan 거부/scale 보존/모든 text 검사,
+execution acquire 실패 cleanup/measure session release 후 진행 중 차용 유지/owner retire 차단,
+current·prepare·draw 재진입/throw/중복 release/old plan 유지. 기존 helper/primitive/productPlan 회귀와
+공통 check, 번들/보호23/diff/정확파일을 확인한다. 실제 glyph/React/native PASS와 분리한다.
+새 API는 기본/native entry에서 미호출이라 이번 native3/회귀138 재실행0; 실제 연결 후 필수다.
+기존 WebKit3FAIL은 보존,132 부분 구현 유지. 다음은 private frame/async encode 수명 연결,
+그 후 실제 React/source/capture 통합이다. 기존 실패의 증명 대체 검수 전 완료·자동 전송0.
+
+### S-48. private frame·async encode 독립 수명 연결 계약 — 2026-10-02
+
+S47 내부 plan 결속 위에서 같은 승인 파일 canvas/font-bound-execution.ts/test만 연결한다.
+새 renderFontBoundPlanFrame은 FontBoundExecution과 정확 plan/이미지/크기/scale,
+외부 이미지·proof 현재성 및 새 private Canvas factory를 명시 입력으로 받는다.
+font execution lease를 먼저 취득한 후 기존 renderIsolatedPlanFrame을 호출한다.
+language/prepare/execute는 취득 lease에서만 공급하며 외부 executor 주입은 받지 않는다.
+같은 모듈이 생성한 shared-executor binding의 비공개 identity 기록을 요구하며, 구조만 흉내 낸
+binding/acquire/execute를 전달하여 성공을 위조하는 seam을 열지 않는다. 이 내부 identity는
+폰트/glyph/130 proof/native pixels 검증을 대신하는 attestation으로 주장하지 않는다.
+기존 primitive의 scale·private bitmap·display target 계약은 변경하지 않는다.
+
+반환 owner는 같은 IsolatedPlanFrame 표면을 유지하되 font borrow와 private frame을 함께 소유한다.
+present/encode 전후에 외부 현재성과 실행 lease 현재성을 모두 확인한다. 단, 취득 후 측정 session
+해제만으로 이미 진행 중인 출력의 폰트를 해제하지 않는다. 실제 owner retirement는 계속 차단한다.
+release는 논리적으로 즉시 무효화하고 private primitive를 release한다. 동기 present 또는 async
+encode가 진행 중이면 font 물리 해제는 해당 호출/Promise settlement까지 미룬다.
+late Blob을 성공으로 인계하지 않으며 새 URL/download/retry를 생성하지 않는다.
+callback이 오지 않는 encode 전체의 절대 시간 상한은 보장하지 않으며 임의 timeout으로
+진행 중 native resource를 해제하지 않는다. 호출자는 항상 finally에서 반환 frame을 release한다.
+
+필수 합성 시험: 성공 생성/present/encode·중복 release, 실패 생성의 부분 lease cleanup,
+외부 proof 및 font current 상실, encode 중 release·늦은 Blob 및 null/throw,
+동기 copy 재진입, 측정 session 해제 후 완료 유지, executor 주입 우회0.
+실제 React/131 source/102 capture/print UI wiring 및 native3 실행은 아직 포함하지 않는다.
+S47/S48 자체검증 후 다음은 위 실제 commit/source/capture 통합 계약 대조다.
+
+### S47~S48 구현 결과 (같은 Codex) — 2026-10-02
+
+위 계약 코드6파일 구현. 기존 S46 code2를 보존하고 plan projection/binding/frame lifetime을 더했다.
+성공 plan은 원래 geometry/values/placeholder를 건드리지 않는 정확 builder 결과이며 소유 tree만 동결.
+측정 및 다른 활성 execution handle 재사용 거부, 실행별 새 lease stamp 대조와 reverse cleanup,
+prepare/execute/current 재진입 guard·외부 호출 중 논리 무효화/지연 물리 해제 구현.
+shared executor를 변경하지 않고 native receiver 보존 Proxy로 각 호출/속성 전후 current를 검사한다.
+외부 executor 및 구조 위조 binding은 private frame owner에서 거부하며 scale 재설정0.
+같은 plan의 private bitmap + font borrow를 async encode settlement까지 유지한다.
+retire/release 뒤 늦은 Blob 성공 인계0. 측정 session 해제만으로 이전 클릭을 retire하지 않는다.
+
+실제 실행:
+- 표적 `node node_modules/vitest/vitest.mjs run apps/mockup/src/preview/composer-font-proof.test.ts apps/mockup/src/preview/composer-room-source.test.ts apps/mockup/src/canvas/font-bound-execution.test.ts apps/mockup/src/canvas/productPlan.test.ts`
+  → exit0,4파일343/343 = 직전2 helper173 + 기존 productPlan99 + 새71.
+- `node scripts/check.mjs` → exit0; format/lint382,7typecheck,126unit파일4001/4001
+  = 직전3930+새71,2build PASS. 중간 lint unused import/TypeScript export·discriminant·
+  fake callback return type 오류를 수정 후 최종 전체 재실행했다. 중간 결과를 최종 PASS로 대신하지 않는다.
+- 자체검토 후 execution handle 재사용·구조 위조 executor 우회 차단 및 새 회귀를 추가했다.
+  모든 새 테스트는 합성 protocol 또는 genuine owner + 합성 native 환경 시험이며 native glyph 증명이 아니다.
+- 새 API는 기본/native entry에서 미호출. 이번 native/E2E/실기기0,9월14일12/12/9PASS3FAIL 및138은 과거값.
+- 고객JS346959/CSS22675/adminJS294910bytes 및 S46 SHA3개 불변. 기존 chunk >500kB 경고는 보존.
+- code/test6+docs8만 새/추가 변경. 보호/user23 SHA불변,staged0,git diff --check PASS.
+  실제 Rules/config/의존성/자산 원본/운영 요청/배포/자동화/새 install0.
+- 포트4183/4184/4185 NOT VERIFIED: 명시 Get-NetTCPConnection 조회가 접근 거부됨.
+  앞선 오류 숨김 조회의 빈 출력으로 잔류0을 주장하지 않는다. 이번 서버/브라우저 실행0,권한 우회0.
+- HEAD cc013c4=로컬origin tracking0/0; 새 원격 조회/stage/commit/push0.
+
+READY_FOR_CODEX / SPEC132_REACT_SOURCE_COMMIT_CONTRACT_REVIEW.
+131 DONE/132 부분 구현 유지. S47/S48 local helper 수명 결속은 완료됐으나 실제 React/source/capture/
+print integration,기존 WebKit3FAIL의 증명 대체 검수,실기기 및 운영 전환은 미완이다.
+다음 일반 기술 작업은 동일 승인35 목록 안에서 실제 호출부와 130/131/102 proof 경계 대조,
+plan·binding·이미지의 동일 commit 및 async print owner 연결 계약을 먼저 고정하는 것이다.
+전체 로드맵 분모 미확정으로 리빌드 전체 완료율을 추정하지 않는다.
+
+### 집 재개 checkpoint 인계 — 2026-10-02
+
+사용자의 직접 commit/push/handoff 요청으로 S46~S48 부분 작업만 전송한다.
+원격 bfa0da4 문서1커밋을 그대로 fast-forward 반영하고 겹치는 상태3문서는 양쪽 이력을 보존했다.
+코드6 커밋1b25748,문서8 별도커밋/실제 전송 결과는 live 마지막 항목 및 최종보고 참조.
+당일 공통check4001/4001을 다시 확인했고 동기화 뒤 표적343/343 PASS.132 DONE이나 실패 면제0.
+다음은 실제 React/130/131/102/print의 동일 commit 및 독립 수명 연결 계약 대조부터다.
+Git에 없는 S11~S12 원본/고지와 S42 고정사본/고지는 집에서 존재/SHA를 확인해야 한다.
+자산/기존도구 부재는 해당 native 검증 STOP이며 추가 다운로드/변환/설치로 자동 보완하지 않는다.
+보호/user23 및 실제운영/배포 경계 유지. 실제자동화 상태 조회/변경0,오늘 새구현0.

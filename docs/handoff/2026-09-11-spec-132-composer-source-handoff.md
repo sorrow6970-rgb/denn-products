@@ -1,5 +1,79 @@
 # 132 실제 Composer source handoff
 
+## 집 재개 인계 — 2026-10-02
+
+사용자가 '집에가서 이어할수있게 커밋푸시하고 핸드오프'를 직접 요청했다.
+기존 전체 게이트 전 전송 보류는 이번 부분 작업 checkpoint 전송에만 해제한다.
+스펙132 DONE·WebKit3FAIL 면제·운영/배포 승인으로 해석하지 않는다.
+원격 bfa0da4(9월30일 위임 문서) 1커밋을 fetch로 발견하고 그대로 fast-forward 반영했다.
+상태3문서의 겹치는 이력은 모두 보존했다. merge 커밋/rebase/force push/보호 변경0.
+스펙132 S46~S48 소스·테스트6파일 커밋은 `1b25748`이다.
+본 핸드오프는 기존 문서8개만 별도 커밋한다. 실제 push/원격검증 결과는 live 마지막 항목과 최종 보고가 정본이다.
+
+전송 준비 중 공통check를 다시 실행하여4001/4001·382format/lint·7typecheck·2build PASS,
+동기화 뒤 표적4파일343/343 PASS. 자기검수 결과이며132 전체/native/실기기 PASS 아님.
+현재131 DONE /132부분구현, READY_FOR_CODEX; 다음 SPEC132_REACT_SOURCE_COMMIT_CONTRACT_REVIEW.
+집에서 먼저 실제 호출부·130proof·131source·102capture를 대조하여 plan/binding/이미지 동일 commit 및
+async print 수명 계약을 고정하고 기존 S24 승인35 목록 안에서만 구현·검증한다.
+이미 확정된 일반 기술 절차는 재승인 질문 없이 진행하되 새 제품/권한/스코프/실패는 중지한다.
+
+집 환경 주의:
+- Git push는 ignored 검증용 폰트/진단물과 보호/user23 변경을 옮기지 않는다. 집에 존재하는지 UNCONFIRMED.
+- 원본/고지5파일: test-results/spec-132-font-supply/8e44913e4ff26fc997e6856c1ec40ff4791c98c5/
+- 고정 사본6/고지2: test-results/spec-132-font-static/fp5-20260914/output/
+  정확 bytes/SHA는132 S11~S12/S42와 현재 static owner 정본을 대조한다.
+- native 검증 전 이미 설치된 도구/브라우저와 이 자산의 존재·SHA를 읽기 전용 확인한다.
+  없거나 불일치하면 해당 검증 STOP/NOT TESTED; 임의 다운로드/재변환/설치/대체 PASS0.
+- 기존 WebKit3FAIL을 지우거나 skip하지 않는다. unit PASS만으로132 종료0.
+- 포트 상태는 접근 거부로 NOT VERIFIED. 새 조회 성공 전 잔류0 주장/타프로세스 종료0.
+- 원격9월30일 heartbeat 기록은 보존했으나 앱의 현재 자동화 상태는 이번 조회/변경하지 않았다.
+  이번 전송은 자동화 생성·활성화·변경이나 백그라운드 계속 실행 요청이 아니다.
+
+오늘 새 구현을 더 시작하지 않고 전송과 재개 인계만 마무리한다. 아래 이전 검증/unstaged 기록은 당시 이력이다.
+
+## 최신 — 2026-10-02 S47~S48 plan 결속·private frame 수명 구현
+
+사용자 '응 다음 진행해'에 따라 S47/S48 계약을 먼저 기록하고 승인35파일 중6개만 구현했다.
+buildManagedFrameProductPlan이 geometry/customer text를 snapshot하여 active family/style을
+정확 alias로 projection하고 같은 공유 builder로 최종 plan을 만든다. 원래 입력/placeholder는
+변경하지 않으며 helper 소유 plan 전체만 동결한다. execution은 정확 plan identity만 허용한다.
+실행별 새 lease를 취득하며 측정 handle/다른 실행 handle 재사용은 거부한다. 이전 실행은
+측정 session 해제와 독립적으로 유지되지만 실제 font owner retirement는 차단한다.
+renderFontBoundPlanFrame은 기존 private primitive와 실행 lease를 함께 소유한다.
+release 후 늦은 Blob 성공 인계0, native encode settlement까지 font/bitmap 해제를 지연한다.
+새 URL/download/retry/외부 executor 주입0. 무응답 encode의 절대 시간 상한은 보장하지 않는다.
+
+최종 표적343/343=직전 helper173+기존 productPlan99+이번 새71.
+공통check4001/4001=직전3930+새71 PASS; format/lint382·7typecheck·126unit파일·2build.
+같은 Codex 자체검수, 독립검수 아님. 이번 native/E2E 실행0이며 새 API는 실제 UI/native entry 미호출.
+기존9월14일 Chromium12/Firefox12/WebKit9PASS3FAIL·회귀138은 과거값 그대로 유지한다.
+131 DONE/132부분구현. READY_FOR_CODEX / SPEC132_REACT_SOURCE_COMMIT_CONTRACT_REVIEW.
+다음은 실제 Composer/131 source/102 capture/print에 plan·binding·이미지를 같은 commit으로
+인계하는 계약 대조와 연결이다. 일반 기술 검토를 재승인 질문으로 바꾸지 않는다.
+code/test6+docs8 unstaged, 보호/user23 SHA불변, 고객JS/CSS/adminJS size·SHA불변.
+포트4183/4184/4185 상태 NOT VERIFIED: 명시적 조회가 접근 거부됨. 빈 출력으로0을 주장하지 않는다.
+이번 서버/브라우저 실행0,권한 우회/타프로세스 종료0. 과거 포트0 기록과 구분한다.
+HEAD cc013c4=로컬origin추적0/0(새 원격 조회0), staged0/diff--checkPASS; commit/push0.
+운영/배포/Rules/config/자산취득·변환/설치/자동화0. 전체 완료율 분모 미확정으로 %추정0.
+아래 S46과 이전 상태/수치는 당시 이력이다. 상세 근거는132 S47~S48 구현 결과와 live 마지막 항목.
+
+## 최신 — 2026-10-02 S46 측정 세션 구현·자체검증
+
+cc013c4에서 사용자 재개 요청으로 진행했다. 기존 owner/test2파일에 render 밖에서 준비하는
+고정폰트 측정 세션을 추가했다. alias/style/revision 결속, 사전 lease 취득, 전후 현재성 검사,
+부분 실패 해제·재진입 중 지연 해제를 검증했다. 실제 React/plan/print 연결 완료는 아니다.
+표적173/173=기존132+새41, 공통check3930/3930=기존3889+새41 PASS
+(format/lint380·7typecheck·125unit파일·2build). 같은 Codex 자체검수이며 독립검수 아님.
+사용자 iterator 우회2건 red→green 보완 및 중간 TypeScript 오류 수정 후 최종게이트 재실행.
+이번 native/E2E 실행0; 9월14일 Chromium12/Firefox12/WebKit9PASS3FAIL·회귀138은 과거값이다.
+기존WebKit3FAIL 삭제/skip/완료 판정0. 새 helper는 기본 앱 및 native fixture에서 아직 호출하지 않는다.
+131 DONE/132부분구현, READY_FOR_CODEX / SPEC132_PLAN_BINDING_CONTRACT_REVIEW.
+다음은 S46 이후 runtime geometry projection과 정확 plan identity/내용 결속 계약 검토다.
+session을 render에서 생성하지 않고 최종 plan/binding/이미지를 같은 commit에 전달하는 연결이 남았다.
+이번 code2+기존docs8 unstaged; 보호23 SHA불변, 고객JS/CSS/adminJS size·SHA불변.
+HEAD cc013c4=로컬origin추적0/0(새 원격 조회0), staged0/diff--checkPASS. commit/push0.
+예약자동화·운영·배포·폰트 취득/변환·설치0. 아래 이전 상태와 수치는 각 당시 이력이다.
+
 ## 최신 — 2026-09-14 S43~S44 고정 owner 구현·공유 plan 결합 검증 완료
 
 사용자 '응 검토하고 다음 루틴대로 쭉 진행해'에 따라 S42 계약을 검토하고
