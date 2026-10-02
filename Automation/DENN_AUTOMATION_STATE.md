@@ -6,15 +6,15 @@ branch: rebuild/modern-studio
 pipeline: rebuild-modern-studio
 completed_unit: spec-131-react-room-source # DONE / CODEX_PASSED; same Codex
 active_unit: spec-132-composer-room-source-adapter
-state: READY_FOR_CODEX
-baseline_commit: bfa0da4 # upstream documentation preserved; implementation started at cc013c4
+state: BLOCKED_STATIC_REFERENCE_RECOVERY
+baseline_commit: 1fac0d9 # home fast-forward checkpoint; implementation checkpoint remains 1b25748
 candidate_commit: 1b25748 # S46-S48 code6 checkpoint only; not whole132 PASS
 verified_commit: 595cb6a # check3732; targeted133; final native33+regression31 PASS
-origin_relation: "2026-10-02 checkpoint54977d9 remote equality verified, HEAD=origin ahead/behind0/0; final verification-record hash in session report"
-working_tree: "checkpoint code6/docs8 committed and pushed; only protected/user23 remain unchanged; record4 follows, staged0/diff check PASS"
+origin_relation: "2026-10-02 home fetch+ff to1fac0d9; HEAD=origin ahead/behind0/0"
+working_tree: "home documentation5 selected for user-requested checkpoint transfer; prior dirty4 stash53796c6 retained locally; workspace content diff0; code0"
 fix_round: 0
 max_fix_rounds: 3
-next_transition: SPEC132_REACT_SOURCE_COMMIT_CONTRACT_REVIEW
+next_transition: RECOVER_EXACT_FP5_REFERENCE_THEN_S49_COMMIT_ADAPTER_DETAIL
 pending_product_decision: NONE # FP6 direction approved; scoped implementation/review routine, no renewed permission request
 static_owner_implementation: LOCAL_STATIC_OWNER_AND_SHARED_PLAN_PASSED_SAME_CODEX # not whole132 or actual Composer integration
 debug_log_accepted_sha256: 2D4C9622F42F2F9DAEF857E0A0C4CBDC4385FBAF5B0D590DB67678F794A45A6F #1438bytes;keep untracked;not future-write approval
@@ -25,12 +25,12 @@ input_parent_structure_review: DOCUMENT_REVIEW_PASSED_SAME_CODEX #S16-S18;22 str
 font_binding_design_review: DOCUMENT_REVIEW_PASSED_SAME_CODEX #S19-S23;runtime projection/lease;35 future paths;NOT implementation/native PASS
 automation_loop: "foreground handoff only; 2026-09-30 heartbeat recorded upstream, runtime status NOT VERIFIED; no automation created/changed here"
 consolidated_document_review: PASSED_SAME_CODEX #S24-S27;local35 paths;new code/native NOT TESTED
-session_status: "2026-10-02 home checkpoint/handoff pushed and remote verified; foreground work finished; no further implementation"
+session_status: "user ended home work and requested docs5 commit/push for office continuation; S52 finalcheck4001/baseline3SHA PASS; exactFP5 recovery next; no further implementation"
 measurement_session_review: PASSED_SAME_CODEX_LOCAL_UNIT_ONLY # 41 new tests; native/React integration NOT TESTED
 plan_and_frame_binding_review: PASSED_SAME_CODEX_LOCAL_UNIT_ONLY #71 new tests; not native/React integration
 native_preflight_review: "Chromium12/Firefox12 PASS; WebKit9PASS3FAIL preserved; new static owner body54/fragment102/shared-plan162 conditions PASS; no whole132 PASS or gate removal"
 git_transfer_authority: "2026-09-30 user approved recurring local implementation/verification/ordinary commit/fast-forward push; decision2026-09-30-rebuild-autonomous-delegation; prior destination https://github.com/sorrow6970-rgb/denn-products.git refs/heads/rebuild/modern-studio retained; protected/PII/secrets/operational data/deployment excluded"
-commit_owner: "code1b25748 + handoff54977d9 committed/pushed; verification record4 follows; protected/user23 excluded; whole132 incomplete"
+commit_owner: "user requested home S49-S52 docs5 checkpoint transfer; exact hash/remote verification in final session report; protected/ignored assets excluded; whole132 incomplete"
 ```
 
 ## 전송 확인 — 2026-10-02 집 재개 준비 완료

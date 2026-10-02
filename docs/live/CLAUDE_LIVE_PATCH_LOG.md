@@ -10115,3 +10115,101 @@ check재실행 exit0:format/lint382,7typecheck,126unit파일4001/4001,2build PAS
 
 131 DONE /132부분구현,READY_FOR_CODEX,pending새Founder제품결정NONE.
 오늘요청한전송·집재개핸드오프완료후새구현착수0.
+
+## 2026-10-02 — 집 재개 FF·S49 계약 검토 / 검증환경 부재 STOP
+
+사용자 직접 요청으로 원격fetch exit0,bfa0da4→1fac0d9 fast-forward exit0.
+checkpoint1fac0d9 ancestor 검사exit0,HEAD=origin1fac0d9·ahead/behind0/0.
+시작dirty4문서는 선택stash53796c6ab2008915dafb546b575ff32f946a1e91에 보존;
+stash drop/apply0,옛 중단기록을 최신 인계에 덮어쓰기0,merge commit/rebase/force0.
+최신NEXT/STATE/CURRENT/live,132 S45~S48 및 실제Composer/130/131/102/print를 대조했다.
+S49에 동일committed record/측정session/plan/execution/image proof,old-click 독립 수명,
+managed display 생성순서·async encode/URL 재진입 경계와 필수부정시험을 기록했다.
+102 capture capability 변환과 managed DOM의 세부 계약은 미완이며 구현-ready 선언0.
+
+읽기전용 preflight:Node v24.18.0 존재,node_modules=False,
+test-results/spec-132-font-supply/8e44913e4ff26fc997e6856c1ec40ff4791c98c5=False,
+test-results/spec-132-font-static/fp5-20260914/output=False,manifest.json=False.
+파일부재로 SHA NOT VERIFIED;필수 unit/typecheck/build/native 실행불가로 구현STOP.
+이번 테스트실행0/새PASS0,과거4001/343·3엔진값을 새실측으로 사용0.
+기존WebKit3FAIL 및131 DONE/132부분구현 보존.설치/다운로드/변환/운영/배포/자동화변경0.
+변경은 기존문서5개(132/STATE/NEXT/CURRENT/live)만,code/CSS/test/config/보호변경0.
+문서 로컬보존,stage/commit/push0.재개조건은 기존승인자산/도구 환경복구 후 존재/SHA검증,
+S49 첫 committed candidate 세부계약→승인35경로 구현/검증.분모없는진척률추정0.
+
+## 2026-10-02 — S50 복구 승인 / 원본5 PASS·설치 정책 STOP
+
+사용자 '응 승인할게': 기존 계약의 검증용 원본/고지 재취득·static 재생성·로컬도구 설치.
+S50 계약 선행 후 고정 Google Fonts pin의 원본3+고지2만 ignored S11 root에 취득.
+파일별 고정contents metadata size/git blob SHA 및 S12 size/SHA2565/5 일치,고지header확인.
+packageManager11.15.1/Node24,corepack pnpm install --frozen-lockfile 실행 exit1.
+161packages 배치/239lock entry supply-chain 검사 완료 뒤 ERR_PNPM_IGNORED_BUILDS:
+@firebase/util1.15.2,protobufjs7.6.5.명령PASS/도구전체정상판정0.
+설치기가 pnpm-workspace.yaml에 allowBuilds placeholder3줄 자동추가(기존3줄유지).
+보호변경이므로 증거보존,수동수정/restore/approve-builds/stage/commit/push0.추가설치/구현/테스트STOP.
+node_modules Vitest/Biome 경로 존재만 확인. fontTools/browser 설치·static 변환 아직0.
+static6 정본 재생성에는 기존 ignored instantiate.py/manifest가 없다는 별도 장벽 유지.
+원본5 복구로 native전체/정본static PASS를 주장0;기존WebKit3FAIL 보존.
+현재 taskdocs5+설치기보호delta1,제품code/CSS/test/lock변경0.자동화/운영/배포0.
+필요결정: 설치기추가3줄/미실행build정책처리,원래script/manifest확보 또는 새자산revision계약.
+
+## 2026-10-02 — S50 ignore-scripts 복구 / 표적PASS·format STOP
+
+사용자 '응 다음 진행해줘'로 추가3줄제거·미실행script재시도 승인.
+apply_patch로설치기placeholder3줄만제거,workspace/package/lock내용diff0.
+corepack pnpm install --frozen-lockfile --ignore-scripts exit0(pnpm11.15.1),approve-builds0.
+표적4파일(composer-font-proof/composer-room-source/font-bound-execution/productPlan)343/343 exit0.
+node scripts/check.mjs exit1,첫format단계382파일/377errors/No fixes applied.
+lint/typecheck/전체unit/build는공통검사순서상NOT RUN,native/실기기0.
+원인읽기전용:시스템Gitcore.autocrlf=true,eol attr없음,예시3파일indexLF/worktreeCRLF;
+apps/packages/tests/scripts404파일LF/CRLF,5파일LF/LF.Biome출력CRLF→LF차이확인.
+전체377오류의EOL외추가차이전수분리0;보호포함일괄포맷/config완화/전역설정변경0.
+workspace statusM은내용diff0과구분,강제stage/restore0.코드수정/commit/push0.
+다음별도LF검증사본범위검토.static기존script/manifest부재·WebKit3FAIL별도보존.
+
+## 2026-10-02 — S51 LF사본 공통검사PASS / CSS동일성STOP
+
+사용자 '응 그대로 진행해줘',S51계약선행후ignored고유LF사본생성.
+run-ab3ce606-0c78-4b2c-a3f6-909f3b61c35d:tracked425파일/419텍스트LF정상화.
+원본/사본SHAmanifest,복사후및check후원본425파일변경0.
+offline/frozen/ignore-scripts install exit0,161reused/0downloaded.
+@denn/shared realpath사본packages/shared확인,원본dependency링크검증대체0.
+사본node scripts/check.mjs exit0:format382/lint382/typecheck7/126unit파일4001/4001/build2.
+고객JS346959/gzip106.39kB,adminJS294910/gzip91.40kB.
+고객CSS26511/gzip5.82kB는baseline22675보다3836증가,별도번들동일성FAIL/STOP.
+사본.gitignore/docs등source검색컨텍스트누락이후보이나원인미확정,기준값수정0.
+추가SHA확인:고객JS기준6182B4B4일치,adminJS는동일크기이나기준2A25F27A와다른BFC5DE79.
+전체SHA는132 S51기록,adminJS불일치도번들게이트STOP에포함/의미동일추정0.
+큰chunk/plugin timings경고보존.원본공통format377FAIL을PASS로재분류0.
+제품코드/config/보호일괄포맷/commit/push0.검증artifact는ignored사본에만보존.
+native/E2E/live/emulator/운영/배포/자동화0.static정본부재·WebKit3FAIL보존.
+다음source검색/ignore컨텍스트대조계약검토.사본공통PASS는132DONE이아니다.
+
+## 2026-10-02 — S52 탐색컨텍스트 통제실험 / 번들3기준 복구
+
+사용자 '응 다음 작업 진행해',S52문서선행후사본내실험.
+첫 .gitignore복사만build2 exit0이나customerCSS26640,adminJS불일치.실패이력보존.
+다음한변수:사본빈.git경계만추가(원본.git복사/변경0),build2 exit0.
+고객CSS22675SHA6CA8E14CA48C6202FD0440E421C03F75C3A4393FD251C5E53DCA20C79BCEED81,
+고객JS346959SHA6182B4B409ACFC8B44550467F6942ED625538BCFB59E3C37AE57A14CE93ACE3C,
+adminJS294910SHA2A25F27A178E6CC8877A46D515F2EB32DDED848F26DAA87B791139F7853AEF21 일치.
+같은사본최종node scripts/check.mjs exit0:format/lint382/typecheck7/unit126파일4001/4001/build2.
+재build후3SHA동일,고객gzip106.39/5.15kB·admin91.40kB.기존큰chunk경고보존.
+원본425파일SHA/.gitignoreSHA불변;사본artifact만수정,prepare.mjs재현조건보완.
+사본탐색/ignore경계문제재현,제품코드문제나native/font완료로확대0.
+제품code/config/보호변경/commit/push0.원본CRLFformatFAIL과기존WebKit3FAIL기록유지.
+남은native장벽:정확FP5 static6/instantiate.py/manifest 미보유.
+SHA만으로script/manifest원문복원불가,정본폴더복구또는새revision별도계약필요.
+실제운영/배포/자동화0,132미완/131DONE.새일반승인질문아닌정본증거문제를보고한다.
+
+## 2026-10-02 — 집 작업 종료 / 사무실 재개 문서전송
+
+사용자:'사무실에서이어서하자 커밋 푸시하고 프롬포트줘'.오늘신규구현중단.
+기준1fac0d9,선택전송문서5:132spec/STATE/NEXT/CURRENT/live만.
+NEXT최상단에사무실재개프롬프트,FP5정본확인순서와집LF검증/번들재현조건을기록했다.
+제품code/test/config/보호font/ignored검증사본/stash전송0.
+집기존dirty4는stash53796c6에보존,사무실사용자변경에apply/덮어쓰기금지.
+원격fetch후FF관계확인→5문서만일반commit/push→원격실조회로확인한다.
+전송hash/exit/HEAD=origin결과는세션최종보고참조.새PASS/132DONE선언0.
+최종집검증은S52 check4001/3번들SHA일치,과거WebKit3FAIL·native미실행유지.
+원격전송은제품운영/배포/자동화권한확대가아니다.다음사무실FP5정본/S49연결계약.

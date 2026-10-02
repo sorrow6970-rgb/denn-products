@@ -2481,6 +2481,226 @@ print integration,기존 WebKit3FAIL의 증명 대체 검수,실기기 및 운�
 plan·binding·이미지의 동일 commit 및 async print owner 연결 계약을 먼저 고정하는 것이다.
 전체 로드맵 분모 미확정으로 리빌드 전체 완료율을 추정하지 않는다.
 
+### S-49. 집 재개 / 실제 commit·출력 연결 계약 검토 — 2026-10-02
+
+기준 HEAD `1fac0d9f8a0318f025af4c01038dbc6ccc311e8e`, 코드 체크포인트 `1b25748`.
+사용자의 이번 직접 지시: 로컬 보존·fast-forward 동기화, 계약 선행, 보호/기존 WebKit 실패 보존,
+누락 도구·폰트 임의 설치/다운로드0, 실제 운영/배포/자동화 변경0. 아래는 동일 Codex의
+정적 호출부 검토와 연결 요구 계약이며, 실제 연결 구현/검증 PASS나 전체132 DONE이 아니다.
+
+#### 실제 코드 대조
+
+- PreviewComposer.tsx: `commitText`는 frameTrialRef와 기존 measureText로 trial을 만들고,
+  built의 buildWith가 probe/final을 각각 생성한다. frameTrialRef를 render 중 갱신한다.
+  S47 managed helper/session/execution은 아직 이 호출부에 연결되지 않았다.
+- 현재 props에는 managed 공급/source consumer 연결이 없고, PreviewCanvasSurface에는
+  plan/imageBindings만 전달된다. 기존 fonts.ready/check는 새 managed source의 증명으로 사용하지 않는다.
+- usePreviewCanvasSurface.ts: 첫 snapshot은 ref 초기값, 이후 plan/bindings는 passive effect로
+  별도 게시한다. 이것만으로 새 React commit과 source의 동일성을 증명할 수 없다.
+- 130 proof는 localImageBinding/templateArtBinding의 `readReadyProof`에서 exact ready identity를
+  검사한다. read-only liveness이며 drawable 보유·차용·cleanup 권한은 제공하지 않는다.
+- 131 useRoomCommittedSource는 caller의 입력 변경 전 invalidate를 요구한다. layout effect가
+  candidate를 129 owner에 commit한다. 129는 React commit 감지기나 pixel snapshot이 아니다.
+- 102 정본은 `room-placement/frame-snapshot.ts`이다. createSurface의 context/copyTo/release를
+  획득하고 transform→execute→current 확인 후 lease를 반환한다. 임의 Canvas/toBlob로 해석하지 않는다.
+- exportFramePng.ts: plan/bindings를 click request에서 읽고 동일 plan을 실행하지만 managed
+  execution을 차용하지 않는다. encode 후 disposed 검사는 있으나 font/image current 검사와
+  createObjectUrl/triggerDownload의 재진입 후 current 검사까지 갖춘 것은 아니다.
+
+#### 연결 요구 계약 — 다음 구현의 필수 불변식
+
+1. managed 공급과 source consumer는 S24 로컬 E2E opt-in으로만 연결한다. 기본 앱의
+   기존 preview/print·접근성·레이아웃을 유지하며 신규 fetch/font 등록/추가 Canvas I/O0.
+   공급 없이 text source를 성공으로 게시하지 않는다. case/clock을 frame source로 위장하지 않는다.
+2. 공급 수명 소유자는 render 밖에서 session을 준비/해제한다. render의 trial/probe/final은
+   이미 준비된 같은 session의 순수 측정만 사용한다. prepare 중단/StrictMode/unmount 정리를
+   명시하고 render 안 acquire/load/release, render 중 committed ref 갱신을 하지 않는다.
+   edit trial은 마지막 실제 commit의 입력/session에서만 수행하며 거부한 문구를 게시하지 않는다.
+3. adapter 소유의 불변 candidate는 exact final plan/execution/imageBindings, 입력·catalog epoch,
+   필요한 이미지별 exact ready proof, font/session identity와 trial 입력을 함께 결속한다.
+   plan 사후 clone/alias 재작성0, catalog/customer 입력 동결·변경0, probe는 source로 게시0.
+   get/proof/current 호출 전후 현재성 검사 및 throw/reentrant invalidate는 실패로 닫는다.
+4. render 후보와 committed 후보를 구분한다. managed preview snapshot·131 source candidate·
+   print click의 출발점을 같은 committed record로 고정한다. abandoned render는 이전 commit을
+   바꾸지 않는다. child-first layout/ref 순서에서 아직 게시되지 않은 후보를 ready로 보지 않는다.
+   managed branch는 commit publication 후 draw를 예약하고 callback/RAF 전후 epoch를 검사한다.
+   selection/catalog/photo/art/pending drag는 기존 S16~S18처럼 입력 변경 전에 source invalidate한다.
+5. source 현재성과 진행 중 print의 현재성은 별도다. ordinary text/transform commit은 source를
+   갱신하되 이미 click에서 취득한 font execution lease를 session 교체만으로 해제하지 않는다.
+   print는 클릭의 exact plan/bindings와 독립 lease를 보유한다. font owner retirement, 사용한
+   이미지 ready proof 상실, unmount/dispose는 성공 인계를 차단한다. 새로운 source identity와
+   다르다는 이유만으로 정상 old-click 출력을 취소하는 guard를 넣지 않는다.
+6. managed preview display는 trusted factory가 새 unused detached Canvas를 생성한 뒤 commit에서
+   attach한다. 기존 JSX Canvas를 createIsolatedDisplayTarget에 adopt하지 않는다. 같은 final plan의
+   private frame을 managed target에 1:1 present하고 effective DPR/observed CSS 규약을 유지한다.
+   attach/cleanup/failed draw의 display·font·frame 소유권을 분리하며 실패한 부분 bitmap을 ready로 표시0.
+7. capture는 기존102 API/129/131/shared executor를 수정하지 않고 승인 경로의 adapter로 연결한다.
+   102의 createSurface/context/copyTo/release와 managed private primitive 사이의 정확 capability
+   변환, transform 적용 주체, shared executor 1회, 실패 시 부분 cleanup을 먼저 시험 가능한
+   계약으로 확정한다. 기존102 execute test seam을 arbitrary executor 성공 증명으로 사용하지 않는다.
+   이 세부 adapter는 이번 정적 검토만으로 확정/구현 완료하지 않았다.
+8. managed print는 기존 size/fileName/one-export-at-a-time/URL creator 규약을 유지한다.
+   private frame에서 정확 plan을 한 번 렌더·encode하고 preview bitmap 확대0. font/frame 차용은
+   callback settlement까지 보유, finally release한다. encode 결과/URL 생성 전후/download 전후에
+   독립 current와 disposed를 검사한다. URL 생성 중 재진입 무효화면 그 URL을 정확히 회수하고
+   download를 시작하지 않는다. 이미 외부 download가 발생한 뒤의 무효화는 성공 보고를 차단할
+   수 있으나 발생한 외부 효과를 취소했다고 주장하지 않는다. timeout/retry/late Blob 성공0.
+
+#### 정확 범위·검증 계획·진행 경계
+
+다음 첫 구현 후보는 승인 목록의 composer-room-source.ts/test에 committed candidate 결속을
+추가하는 단위다. 이어 PreviewComposer.tsx/test, PreviewCanvasSurface.tsx/test,
+usePreviewCanvasSurface.ts/test, surface.ts/test, exportFramePng.ts/test, E2E fixture/test를
+각 계약 확정 후 연결한다. S24의35경로 밖 API/102/129/131/보호/shared barrel 변경0.
+새 제품 방향 결정은 현재 없다. capture capability의 정확 내부 형태와 managed display DOM
+연결은 후속 세부 계약·시험으로 확정할 기술 항목이며 이번 문서를 implementation-ready로 읽지 않는다.
+
+필수 합성 부정 시험: mixed plan/execution/image/proof, foreign plan/epoch, abandoned render,
+child-first publication, StrictMode cleanup, input invalidate-before-update, stale RAF/drag,
+ordinary edit 동안 old print 유지, photo/art/font retirement 차단, URL 생성 중 dispose,
+late/null/throw encode, 부분 attach/capture cleanup 및 no-consumer I/O0.
+도구 복구 후 표적 unit와 공통 check, 실제 Composer3엔진·기존 회귀를 실행한다.
+기존 WebKit3FAIL은 삭제/skip/추정 PASS0; 과거4001/343을 이번 실행값으로 재사용하지 않는다.
+
+집 preflight 실측: Node v24.18.0 존재. node_modules 없음, S11 원본/고지 root 없음,
+S42 고정 output root와 manifest.json 없음. SHA는 파일 부재로 NOT VERIFIED.
+Vitest/typecheck/build 및 native 필수 검증을 실행할 수 없어 코드 구현·검증·전송은 중지한다.
+설치/다운로드/변환/브라우저 취득0. 기존 자산/도구가 복구된 환경에서 동일 checkpoint와
+SHA를 확인한 뒤 위 첫 단위 세부 계약→구현→검증으로 재개한다.
+
+### S-50. 집 검증환경 복구 승인·실행 계약 — 2026-10-02
+
+사용자 `응 승인할게`: 직전 질문의 기존 계약 검증용 폰트 재취득·재생성 및 필요한 로컬
+검증 도구 설치를 직접 승인했다. S49의 설치/다운로드 금지는 아래 정확 복구에 한해 대체한다.
+운영/배포/자동화/제품 폰트 선정/새 의존성 버전/보호파일 변경 승인은 아니다.
+
+- S11 pin/URL의 원본3+고지2만 기존 ignored 경로에 재취득. 기존파일 덮어쓰기0,
+  contents metadata size/git blob SHA 및 S12 SHA256/size 일치를 검사한다.
+- packageManager pnpm11.15.1, Node24, 기존 lockfile의 frozen install만 허용.
+  package/lock/workspace 수정0, 공급망·engine 검사 우회0, 전역설치0.
+- Python3.14.5/pip26.1.1 존재 실측. S40 fontTools4.65.0 wheel URL/SHA를 그대로
+  --isolated/--no-deps/--no-compile/--no-cache-dir/--require-hashes/--target로 격리 복구.
+- static6 및 manifest는 S40/S42의 정확 정본 byte/hash를 유지한다. 원래 instantiate.py와
+  manifest는 ignored이고 이 PC에 없으며 tracked 저장소에도 생성 script 본문이 없다.
+  기존 script를 확보할 수 없으면 임의 구현으로 기존 SHA를 바꾸거나 정본을 갱신하지 않는다.
+  재생성 승인만으로 새 byte/revision/manifest를 기존 정본이라 주장하지 않는다.
+- Playwright는 lockfile 고정 버전에 대응하는 브라우저만 필요한 경우 로컬 복구 가능.
+  실제 native 실행 전 static 정본과 도구 상태를 검사한다. 기존 WebKit3FAIL 보존.
+- 복구 실패·정본 불일치는 기록 후 중지, 추정PASS/skip/대체font0.
+
+#### S50 복구 결과 / 설치 정책·보호 충돌 STOP
+
+원본3+고지2 다운로드 완료: S12 size/SHA256와 고정 contents metadata의 Git blob SHA
+5/5 일치, 고지 header 확인. 원본/고지는 ignored 경로만 사용하고 Git 전송0.
+corepack pnpm11.15.1 install --frozen-lockfile 실행 exit1.
+161개 package 배치와239개 lock entry 공급망검사는 완료됐으나 ERR_PNPM_IGNORED_BUILDS:
+@firebase/util1.15.2,protobufjs7.6.5 build script 차단. install PASS로 기록하지 않는다.
+설치기가 보호 pnpm-workspace.yaml에 allowBuilds 및 두 'set this to true or false' 줄을
+자동 추가했다. 시작3줄→6줄,기존3줄 유지. 수동수정/복원/stage/commit0,증거 그대로 보존.
+승인된 도구 설치가 보호파일 변경·build script 정책 해제를 허용한 것은 아니므로 중지한다.
+approve-builds/정책우회/추가설치/테스트/제품구현/전송0.
+node_modules의 Vitest/Biome 파일 존재는 확인했으나 전체 도구정상/게이트PASS가 아니다.
+fontTools 설치·static 변환·browser 설치는 아직 실행하지 않았다.
+기존 instantiate.py/manifest 부재와 정본 SHA 문제도 남아 있다. WebKit3FAIL 유지.
+재개에는 설치기 추가3줄 처리와 build script 미실행 설치방식의 명시 결정,
+원래 S40 script/manifest 확보 또는 별도의 새 검증자산 revision 계약이 필요하다.
+
+#### S50 설치기 추가분 처리 승인 — 2026-10-02
+
+사용자 `응 다음 진행해줘`: 직전 질문의 설치기 추가3줄만 제거하고 build script를
+실행하지 않는 --ignore-scripts 설치 재시도를 승인했다. 기존3줄/다른보호파일은 유지.
+정확명령 corepack pnpm install --frozen-lockfile --ignore-scripts.
+approve-builds/전역정책변경/의존성버전변경0. 기존 static script/manifest 정본 부재는 별도 미해결.
+
+#### S50 승인 후 재시도 결과 / checkout format 게이트 STOP
+
+설치기 추가3줄만 제거,원래 workspace3줄과 package/lock의 Git 내용 diff0.
+corepack pnpm install --frozen-lockfile --ignore-scripts exit0(pnpm11.15.1).
+공급망239entry 검사캐시통과·lock동일,build script 실행/approve-builds0.
+표적4파일 Vitest exit0,343/343 PASS(이번 집 실측).
+node scripts/check.mjs exit1: format382파일검사·377errors·수정0.
+첫 단계 실패이므로 lint/typecheck/전체unit/build는 이번 공통검사에서 NOT RUN.
+
+읽기전용 원인근거: 시스템Git core.autocrlf=true,
+apps/admin/src/App.test.tsx 및 composer-room-source.ts와 보호 render/plan/index.ts는
+index LF/worktree CRLF,eol attr없음. apps/packages/tests/scripts 중404파일은 i/lf w/crlf,
+5파일은 i/lf w/lf. Biome default LF와 checkout의CRLF 차이가 출력에서 확인된다.
+377개 각각의 추가 차이 여부까지 전수분리한 것은 아니므로 전부 EOL뿐이라 단정하지 않는다.
+보호 포함 일괄포맷/Git전역설정/config변경0,새 제품code수정/commit/push0.
+pnpm-workspace.yaml은내용diff0이나status에M이보일수있으며staging/강제복원으로숨기지않는다.
+일괄변경 대신 별도 LF 검증사본에서 게이트를 재현하는 범위를 검토 후 재개한다.
+static script/manifest 정본 부재 및 WebKit3FAIL은 별도 계속 보존.
+
+### S-51. 별도 LF 검증사본 계약 — 2026-10-02
+
+사용자 `응 그대로 진행해줘`: 원본작업트리를 그대로 두고 별도LF사본에서 재검증 승인.
+ignored test-results/spec-132-lf-validation 아래 고유 run 디렉터리만 생성한다.
+현재 working tree의 tracked apps/packages/scripts/tests 및 필요한 정적 root config/합성
+cutover candidate/rules 비교자료만 복사한다. legacy운영HTML/backup/secret/.git/실제데이터0.
+사본의 text만CRLF→LF,그외내용/바이너리동일. 원본각파일SHA를 전후확인하고manifest기록.
+의존성은 기존lockfile그대로offline/frozen/ignore-scripts install하여 workspace link가
+원본이 아닌 사본package를 참조하게 한다. 원본node_modules공유junction으로 검증을 위조0.
+사본cwd에서node scripts/check.mjs 실행,format/lint/typecheck/unit/build 결과를원본과구분.
+Firebase/live/emulator/배포/native실행0. 사본build출력은제품출력으로복사하지않는다.
+실패시정확단계와근거보고/중지,원본일괄포맷/config완화0. static 정본부재·WebKit3FAIL 유지.
+
+#### S51 실행 결과 / 사본 번들 동일성 STOP
+
+사본: test-results/spec-132-lf-validation/run-ab3ce606-0c78-4b2c-a3f6-909f3b61c35d.
+prepare.mjs로425파일복사/419텍스트LF정상화,manifest에원본/사본SHA기록.
+offline/frozen/ignore-scripts install exit0,161reused/0downloaded.
+@denn/shared realpath는사본packages/shared,원본workspace 링크사용0.
+node scripts/check.mjs exit0:format382/lint382,typecheck7,126unit파일4001/4001,build2 PASS.
+검사후 원본425파일SHA재확인 변경0.사본결과이며원본CRLFformat PASS로재기록하지않는다.
+큰chunk>500kB 경고 및plugin timings경고보존.이번native/E2E/emulator/live0.
+
+별도번들동일성: 고객JS346959bytes/adminJS294910bytes는기존값과동일이나
+고객CSS26511bytes(gzip5.82kB)는기준22675bytes보다3836bytes 증가,동일성FAIL.
+고객JS SHA6182B4B409ACFC8B44550467F6942ED625538BCFB59E3C37AE57A14CE93ACE3C는기준일치.
+adminJS는크기동일이나SHABFC5DE7970CBE014256FEE90A53BF52F97D9C12B39585339256A2A759EEAC5DE로
+기준2A25F27A178E6CC8877A46D515F2EB32DDED848F26DAA87B791139F7853AEF21와불일치한다.
+S51 사본에는 root.gitignore와docs등기본탐색자료가없다.자동source탐색 Tailwind의
+컨텍스트차이는원인후보이지입증된원인이아니다.제품CSS수정이나임의baseline갱신0.
+필수번들게이트차이로중지;기존ignored/font/native실패를숨기지않는다.
+다음기술검토는사본의source검색/ignore 컨텍스트를원본과대조해증가원인을분리하는것.
+보호포함원본포맷/config변경0,제품코드/commit/push0. static정본script/manifest부재도유지.
+
+### S-52. LF사본 source탐색 컨텍스트 원인분리 — 2026-10-02
+
+사용자 `응 다음 작업 진행해`: S51 번들차이의 읽기전용 대조와 사본내 재현 보완.
+기존 사본run-ab3ce606에서 현재산출물 byte/SHA 기록후 원본.gitignore만 그대로복사해
+build2를재실행한다. 하나의변수만추가,제품source/config/.git/운영자료변경0.
+사본결과SHA를 S44/S48의 고객JS/CSS/adminJS 정본과 각각대조한다.
+일치하지않으면검색컨텍스트 원인을추가분리하되 baseline완화/보호변경/추정PASS0.
+일치하면 같은사본 공통check재실행 및 원본425SHA불변을확인한다.
+기존 실패기록은이력유지,static정본부재/WebKit3FAIL의해결로확대0.
+
+#### S52 첫 실험 / 다음 한 변수
+
+.gitignore만복사한build2 exit0이나CSS26640/customerJS기준SHA일치/adminJS SHA변경.
+baseline동일성미해결. .gitignore추가로+129bytes도관찰,원인확정0.
+다음은 사본내빈.git 디렉터리만추가하여scanner의Git경계/ignore적용여부를분리한다.
+원본.git 읽기/복사/수정0,사본을실제Gitcheckout이나원격연결로만들지않는다.
+source/config/의존성변경0,재build동일성과반복실행안정성을확인한다.
+
+#### S52 재현 보완·최종 결과
+
+사본내빈.git 경계추가후build2 exit0,고객CSS22675bytes와기준SHA6CA8E14C…일치,
+adminJS294910bytes/SHA2A25F27A…일치,고객JS346959bytes/SHA6182B4B4…일치.
+다시같은사본에서node scripts/check.mjs exit0:format382/lint382/typecheck7,
+126unit파일4001/4001/build2 PASS.재build후에도3기준size/전체SHA동일.
+Git경계유무에따라source탐색/ignore 컨텍스트가달라지는사본문제임을통제실험으로재현했다.
+정확scanner내부원인전체를추적한것은아니며제품코드결함/폰트해결로확대하지않는다.
+원본425파일SHA불변,.gitignore원본SHA불변.원본.git읽기/복사/수정0.
+ignored prepare.mjs에.gitignore복사+빈.git경계생성을추가하여다음사본에서재발방지.
+고객CSS기준과adminJS기준을바꾸지않고S51번들동일성장벽해소.
+원본CRLFformat실패는이력보존,사본PASS와구분.이번native/E2E0/WebKit3FAIL유지.
+
+남은필수native장벽은기존static6/instantiate.py/manifest정본부재다.
+원본5재취득과로컬도구는복구됐으나원래script/manifest내용은SHA만으로복원할수없다.
+기존ignored FP5폴더전송또는새정본revision의별도계약/승인이필요;임의기존SHA교체0.
+현재문서5로컬보존,제품코드/보호config변경/commit/push0.
+
 ### 집 재개 checkpoint 인계 — 2026-10-02
 
 사용자의 직접 commit/push/handoff 요청으로 S46~S48 부분 작업만 전송한다.

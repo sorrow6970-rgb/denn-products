@@ -1,5 +1,61 @@
 # 현재 상태
 
+## 집 작업 종료·사무실 인계 — 2026-10-02
+
+사용자 직접요청으로오늘작업종료,계약/검증/상태문서5개만일반commit/push한다.
+제품코드/보호/ignoredfont·검증사본전송0.최종hash/원격확인은세션최종보고참조.
+131 DONE/132부분구현,FP5정본부재장벽·WebKit3FAIL유지.집LF사본check4001및3번들SHA일치.
+사무실NEXT최상단프롬프트→FP5정본존재/SHA→S49세부adapter계약/구현/검증으로재개.
+사무실user/protected dirty는집기준으로덮지않는다.운영/배포/자동화변경/오늘추가구현0.
+
+## 최신 — 2026-10-02 LF검증환경·번들기준 해소 / FP5정본 대기
+
+S52 통제재현:.gitignore+사본빈.git경계로기존고객JS/CSS/adminJS3SHA정확복구.
+최종사본check exit0:format/lint382,typecheck7,unit4001/4001,build2.
+원본425파일SHA/.gitignore불변,제품코드/보호config변경0.사본PASS/원본CRLF이력분리.
+기존FP5 static6/instantiate.py/manifest 부재로native재검증은여전히불가.
+정본폴더확보또는새revision의별도계약/승인이필요,기준교체0/WebKit3FAIL유지.
+132부분구현/131 DONE,문서5로컬보존/commit/push0.다음정본복구후S49세부adapter계약.
+
+## 최신 STOP — 2026-10-02 LF검증사본 번들차이
+
+S51 별도LF사본check exit0:format/lint382,typecheck7,unit4001/4001,build2.
+원본425파일SHA불변,offline의존성설치/사본workspace링크확인.원본CRLF와결과분리.
+고객CSS26511 vs기준22675bytes로번들동일성FAIL.탐색/ignore컨텍스트원인후보미확정.
+다음사본컨텍스트대조부터;제품코드/보호포맷/config/기준완화/commit/push0.
+static정본script/manifest부재·기존WebKit3FAIL·132부분구현유지.상세132 S51.
+
+## 최신 STOP — 2026-10-02 checkout format / static 정본
+
+승인받은 설치기추가3줄만 제거,ignore-scripts frozen install exit0.
+workspace/package/lock내용diff0,build script실행0.이번표적4파일343/343 PASS.
+공통check format382검사·377errors exit1;후속lint/typecheck/전체unit/build NOT RUN.
+시스템autocrlf=true/indexLF/worktreeCRLF근거확인,일괄포맷/보호/config/Git설정변경0.
+별도LF검증사본범위검토 및 static정본script/manifest확보가 다음장벽.
+132부분구현/131 DONE/기존WebKit3FAIL 유지,새제품code/전송0.상세132 S50.
+
+## 최신 STOP — 2026-10-02 설치 정책·보호 자동변경
+
+사용자 승인 S50로 원본font3+고지2 재취득,기존 size/SHA256/Git blob5/5 일치.
+corepack pnpm install --frozen-lockfile exit1: 두 build script 차단.
+설치기가 보호 pnpm-workspace.yaml에 allowBuilds placeholder3줄을 자동추가했다.
+기존내용 유지·추가분 보존,approve-builds/restore/수동수정/stage/전송0.
+정책/보호 충돌로 구현·테스트·추가설치 STOP. static script/manifest 부재도 미해결.
+132 부분구현/131 DONE/기존WebKit3FAIL 유지,새PASS0. 상세132 S50/NEXT 최신절.
+
+## 집 재개 — 2026-10-02 / BLOCKED_LOCAL_VALIDATION_TOOLS
+
+`1fac0d9`까지 fetch/fast-forward 완료,HEAD=origin·ahead/behind0/0.
+이전 dirty 문서4개는 stash53796c6(전체 hash는 NEXT)에 복구 가능하게 보존,drop/apply0.
+132 S49에 실제 화면/source/capture/print 호출부 대조와 동일commit/독립print 수명 계약을 기록.
+capture capability와 managed DOM 연결의 세부 계약은 미완;132 부분구현/131 DONE 유지.
+이번 코드변경0, 신규 unit/typecheck/build/native NOT TESTED, 기존 WebKit3FAIL 보존.
+집 node_modules·원본font root·고정output·manifest 부재 확인, SHA NOT VERIFIED.
+설치/다운로드/변환/운영/배포/자동화 조회·변경0. 문서만 로컬 보존,commit/push0.
+다음: 기존 검증환경 복구→자산SHA→S49 committed adapter 세부 계약/구현/검증.
+일반 기술절차 재승인 질문0; 누락 검증환경을 임의 취득하거나 추정PASS로 우회하지 않는다.
+아래 상태/검사수치는 각 당시 이력이다.
+
 ## 전송 확인 — 2026-10-02 집 재개 준비 완료
 
 코드 `1b25748`(6파일) + 핸드오프 `54977d9`(문서8) 일반 push 성공.

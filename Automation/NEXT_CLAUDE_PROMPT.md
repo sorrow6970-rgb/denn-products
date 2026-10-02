@@ -1,5 +1,105 @@
 # NEXT CLAUDE PROMPT
 
+## 사무실 재개 인계 — 2026-10-02 집 작업 종료
+
+사용자 요청:'사무실에서이어서하자 커밋 푸시하고 프롬포트줘'.이번문서5개만 일반전송한다.
+제품코드/폰트binary/ignored검증사본/보호파일전송0.출발HEAD1fac0d9,최종전송hash는세션최종보고.
+집 stash53796c6은이PC에만보존,사무실로전송되지않으며최신문서에무조건apply하지않는다.
+사무실의기존user/protected dirty는별도보존한다.집의SHA와다르다고덮어쓰지않는다.
+검증정본:132 S49~S52.최종LF사본check4001/4001/format·lint382/type7/build2 PASS,
+고객JS/CSS/adminJS기준3SHA일치.원본CRLFformat377FAIL과사본컨텍스트실패이력보존.
+새native/E2E/실기기0,기존WebKit3FAIL유지.131 DONE/132부분구현.
+재개첫단계는사무실FP5 ignored정본폴더존재/SHA확인,다음S49실제commit adapter세부계약이다.
+없으면기존SHA만으로생성script/manifest를복원하거나새revision을임의승인하지말고보고한다.
+오늘전송후신규구현/자동작업재개0,운영/배포/자동화변경0.
+
+### 사무실에서 Codex에 전달할 프롬프트
+
+```text
+C:\repo\denn-products의 rebuild/modern-studio 작업을 재개해.
+로컬 사용자·보호 변경을 보존하고 원격을 fetch해 fast-forward로만 동기화해.
+CLAUDE.md와 Automation/NEXT_CLAUDE_PROMPT.md 최상단, DENN_AUTOMATION_STATE.md,
+docs/codex-claude-handoff/CURRENT.md, docs/live/CLAUDE_LIVE_PATCH_LOG.md 마지막 항목,
+스펙132 S49~S52 및 최신 결정 정본을 읽어.
+먼저 사무실 test-results/spec-132-font-static/fp5-20260914의
+instantiate.py/manifest.json/output6·고지2와 원본 supply5의 존재·정확 SHA를 확인해.
+집에서 원본5와 도구는 복구했고 별도 LF사본 공통check4001/4001 및 번들3SHA는 일치했지만,
+FP5 고정 정본은 집에 없었어. 기존 WebKit3FAIL/native NOT TESTED를 그대로 보존해.
+정본이 있으면 S49의 실제 Composer/preview/131source/102capture/print 동일commit·
+독립print수명 연결 세부계약을 먼저 문서화하고 승인35파일 안에서 구현·검증을 이어가.
+없거나 불일치하면 임의 새정본/해시갱신/추정PASS 없이 필요한 결정만 보고하고 멈춰.
+CRLF 게이트가 재현되면 원본을 일괄포맷하지 말고 S51~S52의 별도 LF검증사본,
+동일.gitignore와 빈Git탐색경계 방식으로 원본SHA를 보존하며 검사해.
+일반 기술절차는 재승인 없이 진행하되 중요한 결정·충돌·검증실패는 보고하고 멈춰.
+보호파일·기존WebKit실패를 보존하고 운영/실제Firebase/live/배포/자동화 생성·변경은 하지 마.
+```
+
+## 최신 — 2026-10-02 S52 사본번들차이 해소 / static 정본 부재
+
+.gitignore만복사한실험은실패이력유지.사본내빈.git경계추가후기존3번들SHA정확일치.
+같은사본최종check exit0:format/lint382,typecheck7,unit4001/4001,build2.
+고객CSS22675/고객JS346959/adminJS294910 및기준3SHA 재build후동일.
+원본425파일/.gitignore SHA불변,원본.git변경/복사0;정확실험132 S52.
+prepare.mjs는다음사본에서.gitignore+빈경계를기본포함.원본CRLF검사실패와구분.
+남은native장벽:기존FP5 static6/instantiate.py/manifest 부재.
+사무실ignored test-results/spec-132-font-static/fp5-20260914 정본확보가우선.
+없으면새revision의별도계약/승인필요,기존SHA/시험을임의바꾸지않는다.
+132부분구현/기존WebKit3FAIL유지,제품코드/보호config/commit/push/운영/자동화0.
+아래사본번들STOP은이번통제재현으로해소한이전이력이다.
+
+## 최신 STOP — 2026-10-02 LF사본 공통PASS / CSS동일성FAIL
+
+승인S51 LF사본check exit0:format/lint382,typecheck7,unit126파일4001/4001,build2.
+사본run-ab3ce606-0c78-4b2c-a3f6-909f3b61c35d,원본425파일SHA불변.
+offline설치161reused/0downloaded,workspace링크사본내부.원본format실패와구분.
+고객CSS26511bytes는기존22675 대비+3836,번들동일성FAIL로중지.
+root.gitignore/docs등source탐색자료누락은원인후보/미확정;원인분리검토부터재개.
+제품코드/config/보호일괄포맷/기준완화/전송0.static정본script/manifest부재·WebKit3FAIL유지.
+아래CRLF게이트STOP은별도LF사본공통검사로진단진전된이전이력이다.
+
+## 최신 STOP — 2026-10-02 CRLF 검증환경·static 정본
+
+사용자 '응 다음 진행해줘'로 설치기추가3줄만제거/ignore-scripts 재설치 승인.
+frozen install --ignore-scripts exit0,workspace/package/lock내용diff0,build scripts실행0.
+표적4파일343/343 PASS.공통check exit1:format382검사/377errors,후속게이트NOT RUN.
+시스템core.autocrlf=true,indexLF/worktreeCRLF(보호index포함);원인근거132 S50.
+일괄포맷/보호변경/Git전역설정/config완화0.별도LF검증사본의범위검토부터 재개.
+static instantiate.py/manifest 부재·기존WebKit3FAIL도 유지,코드구현/전송STOP.
+아래 설치 정책STOP은 승인된3줄제거/미실행script방식으로 해소한 이전이력이다.
+
+## 最新 STOP — 2026-10-02 S50 검증환경 복구
+
+사용자 검증용 폰트 재취득/재생성·로컬도구 설치 승인. 정확한 범위/결과는132 S50.
+원본3+고지2 S12 size/SHA256/Git blob SHA5/5 일치로 ignored 경로 복구완료.
+frozen pnpm install은 package161 배치/공급망239 검사를 끝냈지만 exit1:
+ERR_PNPM_IGNORED_BUILDS(@firebase/util1.15.2,protobufjs7.6.5).
+설치기가 보호 pnpm-workspace.yaml에 allowBuilds placeholder3줄 자동추가.
+기존3줄 유지,추가분은 증거로 보존,수동수정/restore/approve-builds/stage0.
+이 정책/보호 충돌 해소 전 구현/테스트/추가설치/전송 중지. install PASS0.
+static instantiate.py/manifest도 부재;정본hash를 임의 갱신하지 않는다.
+기존 WebKit3FAIL 유지,fontTools/browser 설치·static 변환·운영/배포/자동화0.
+아래 '도구/원본 부재'는 복구 승인 전 이력이며 원본5는 이제 복구됐다.
+
+## 집 재개 실측 — 2026-10-02 / 도구·폰트 부재 중지
+
+집에서 fetch 후 `1fac0d9`까지 fast-forward 완료, HEAD=origin·ahead/behind0/0.
+이전 로컬 중단 기록4문서는 stash `53796c6ab2008915dafb546b575ff32f946a1e91`
+(`home-resume-preserve-2026-10-02-pre-1fac0d9`)에 그대로 보존했다. drop/apply0.
+최신 인계에 옛 STOP 문구를 덮어쓰지 않았다. 새 코드변경0.
+
+132 S49에 실제 Composer/preview/130proof/131source/102capture/print 호출부와
+동일 commit·old-click 독립 수명 연결 요구를 기록했다. capture capability/managed DOM의
+정확 세부 adapter 계약은 아직 미완, 구현-ready/통합PASS가 아니다.
+집에는 node_modules, S11 원본/고지root, S42 고정output 및 manifest 모두 없다.
+Node v24.18.0만 확인. 신규 unit/typecheck/build/native NOT TESTED; 기존 WebKit3FAIL 유지.
+임의 설치/다운로드/변환/운영/배포/자동화 조회·변경0. 이번 문서 로컬 보존,commit/push0.
+
+재개: 기존 승인 자산/도구가 갖춰진 PC에서 이 기록과 S49를 먼저 읽고 존재/SHA 확인.
+이전 stash는 과거 이력 복구용이므로 최신 상태에 무조건 apply하지 않는다.
+그 뒤 승인35경로 안에서 committed candidate의 첫 단위 세부 계약→구현→검증을 진행하고,
+managed display 및102 capture capability 변환 계약을 시험 가능한 형태로 마무리한다.
+도구/폰트 부재를 no-text/fake/과거 PASS로 대신하지 않는다. 아래 전송 인계는 이전 이력이다.
+
 ## 전송 확인 — 2026-10-02 집 재개 준비 완료
 
 코드 `1b25748`(6파일) + 핸드오프 `54977d9`(문서8) 일반 push 성공.
